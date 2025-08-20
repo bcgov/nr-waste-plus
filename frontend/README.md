@@ -1,7 +1,7 @@
-# Harvest Residue System
+# Harvest Residue System - Waste
 
 Report logging waste and residue data for billing and cut control
 
 ## Development
 
-For more developer information visit the [documentation](./docs/index.md) for a broader documentation.
+For more developer information visit the [documentation](https://github.com/bcgov/nr-hrs-waste/wiki/Project-Structure) for a broader documentation.
