@@ -1,0 +1,106 @@
+# General application
+server:
+  error:
+    include-message: always
+  port: ${SERVER_PORT:9090}
+  shutdown: graceful
+  max-http-request-header-size: 16KB
+
+spring:
+  application:
+    name: nr-hrs-legacy
+  mvc:
+    problemdetails:
+      enabled: true
+  datasource:
+    jdbcUrl: jdbc:oracle:thin:@tcps://${ca.bc.gov.nrs.oracle.host}:${DATABASE_PORT:1543}/${SERVICE_NAME:servicename}?javax.net.ssl.trustStore=${ca.bc.gov.nrs.oracle.keystore}&javax.net.ssl.trustStorePassword=${ca.bc.gov.nrs.oracle.secret}&javax.net.ssl.keyStore=${ca.bc.gov.nrs.oracle.keystore}&javax.net.ssl.keyStorePassword=${ca.bc.gov.nrs.oracle.secret}
+    url: ${spring.datasource.jdbcUrl}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+    hikari:
+      driver-class-name: oracle.jdbc.OracleDriver
+      jdbcUrl: ${spring.datasource.jdbcUrl}
+      url: ${spring.datasource.jdbcUrl}
+      username: ${spring.datasource.username}
+      password: ${spring.datasource.password}
+      connectionTimeout: 30000 # 30 seconds
+      idleTimeout: 60000 # 1 minute
+      maxLifetime: 180000 # 3 minutes
+      keepaliveTime: 60000 # 1 minute
+      poolName: HRSOracleConnPool
+      minimumIdle: 1
+      maximumPoolSize: 5
+      leakDetectionThreshold: 60000
+      connection-test-query: SELECT 1 FROM DUAL
+  jpa:
+    show-sql: false
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  sleuth:
+    propagation-keys:
+      - X-TRACE-ID
+      - X-USER
+    baggage-keys:
+      - X-TRACE-ID
+      - X-USER
+    log:
+      slf4j:
+        whitelisted-mdc-keys:
+          - X-TRACE-ID
+          - X-USER
+  jackson:
+    serialization:
+      FAIL_ON_EMPTY_BEANS: false
+
+# Actuator and ops
+management:
+  enable-native-support: true
+  endpoint:
+    metrics:
+      enabled: false
+    health:
+      show-details: always
+
+# Certificate for the Database
+ca:
+  bc:
+    gov:
+      nrs:
+        self-uri: ${SELF_URI:http://localhost:8080}
+        oracle:
+          keystore: ${ORACLEDB_KEYSTORE:jssecacerts-path}
+          secret: ${ORACLEDB_SECRET:changeit}
+          host: ${DATABASE_HOST:localhost}
+
+# Logging
+logging:
+  level:
+    ca.bc.gov.restapi.results: ${LOGGING_LEVEL:INFO}
+  pattern:
+    correlation: "[${spring.application.name:},%X{${X-TRACE-ID:traceId}:-},%X{spanId:-},%X{X-USER:-}] "
+
+# Profile Specific Properties
+---
+spring:
+  config:
+    activate:
+      on-profile: container
+  sleuth:
+    propagation-keys:
+      - X-TRACE-ID
+      - X-USER
+    baggage-keys:
+      - X-TRACE-ID
+      - X-USER
+    log:
+      slf4j:
+        whitelisted-mdc-keys:
+          - X-TRACE-ID
+          - X-USER
+
+logging:
+  pattern:
+    console: '{"time": "%d{${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd HH:mm:ss.SSS}}", "level": "${LOG_LEVEL:%5p}", "app":"${spring.application.name:-}", "user":"%X{X-USER:-}", "traceId":"%X{${X-TRACE-ID:traceId}:-}", "spanId":"%X{spanId:-}", "pid": "${PID: }", "thread": "%t", "source": "%logger{63}:%L", "message": "%m", "exception":"${LOG_EXCEPTION_CONVERSION_WORD:%wEx}"}%n'

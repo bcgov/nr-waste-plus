@@ -1,0 +1,26 @@
+spring:
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+  jpa:
+    show-sql: true
+  datasource:
+    hikari:
+      driver-class-name: oracle.jdbc.OracleDriver
+      connectionTimeout: 300000
+      idleTimeout: 120000
+      maxLifetime: 360000
+      keepaliveTime: 180000
+      poolName: HRSOracleConnPool
+      minimumIdle: 1
+      maximumPoolSize: 5
+      leakDetectionThreshold: 300000
+      connection-test-query: SELECT 1 FROM DUAL
+
+logging:
+  level:
+    #root: DEBUG
+    ca.bc.gov.restapi.results: ${LOGGING_LEVEL:INFO}
+    org.springframework.web.client: DEBUG
+    org.springframework.http.client: DEBUG

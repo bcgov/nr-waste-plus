@@ -1,0 +1,46 @@
+package ca.bc.gov.nrs.hrs.dto.client;
+
+import java.beans.Transient;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import lombok.Builder;
+import lombok.With;
+
+/**
+ * This record represents a Forest Client object.
+ */
+@Builder
+@With
+public record ForestClientDto(
+  String clientNumber,
+  String clientName,
+  String legalFirstName,
+  String legalMiddleName,
+  ForestClientStatusEnum clientStatusCode,
+  ForestClientTypeEnum clientTypeCode,
+  String acronym,
+
+  String name
+) {
+
+  /**
+   * Returns the name of the client.
+   * It resolves it based on client type code, so it can be either individual with first, middle and
+   * last name, or a company with a single name.
+   *
+   * @return the name of the client
+   */
+  @Transient
+  public String name() {
+    if (Objects.equals(this.clientTypeCode, ForestClientTypeEnum.of('I'))) {
+      return Stream.of(this.legalFirstName, this.legalMiddleName, this.clientName)
+          .filter(Objects::nonNull)
+          .map(String::trim)
+          .collect(Collectors.joining(" "));
+    } else {
+      return this.clientName;
+    }
+  }
+
+}
