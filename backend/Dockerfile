@@ -1,37 +1,29 @@
+### Builder
+FROM ghcr.io/graalvm/native-image-community:24.0.2 AS build
+
+# Copy
+WORKDIR /app
+COPY pom.xml mvnw ./
+COPY src ./src
+COPY .mvn/ ./.mvn
+
 # Build
-FROM node:22.18.0-slim AS build
+RUN ./mvnw -Pnative package -DskipTests -Dskip.unit.tests=true -Dspring-boot.run.profiles=prod
 
-# Copy, build static files; see .dockerignore for exclusions
+### Deployer
+FROM gcr.io/distroless/java-base:nonroot
+ARG PORT=8080
+
+# Copy
 WORKDIR /app
-COPY . ./
-ENV PRISMA_CLI_BINARY_TARGETS=debian-openssl-3.0.x
-RUN npm run deploy
+COPY --from=build /app/target/nr-hrs-backend ./nr-hrs-backend
 
-# Dependencies
-FROM node:22.18.0-slim AS dependencies
+# User, port and health check
+USER 1001
+EXPOSE ${PORT}
+HEALTHCHECK CMD curl -f http://localhost:${PORT}/actuator/health | grep '"status":"UP"'
 
-# Copy, build static files; see .dockerignore for exclusions
-WORKDIR /app
-COPY . ./
-ENV PRISMA_CLI_BINARY_TARGETS=debian-openssl-3.0.x
-RUN npm ci --ignore-scripts --no-update-notifier --omit=dev
+ENV SPRING_PROFILES_ACTIVE=container,prod
 
-# Deploy using minimal Distroless image
-FROM gcr.io/distroless/nodejs22-debian12:nonroot
-ENV NODE_ENV=production
-
-# Copy app and dependencies
-WORKDIR /app
-COPY --from=dependencies /app/node_modules ./node_modules
-COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=build /app/node_modules/prisma ./node_modules/prisma
-COPY --from=build /app/dist ./dist
-
-# Boilerplate, not used in OpenShift/Kubernetes
-EXPOSE 3000
-HEALTHCHECK --interval=30s --timeout=3s CMD curl -f http://localhost:3000/api
-
-# Nonroot user, limit heap size to 50 MB
-USER nonroot
-CMD ["--max-old-space-size=50", "/app/dist/main"]
+# Startup
+ENTRYPOINT ["/app/nr-hrs-backend"]

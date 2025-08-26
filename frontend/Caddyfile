@@ -1,53 +1,66 @@
 {
-	metrics
 	auto_https off
-	admin 0.0.0.0:3003
+	admin off
 }
+
 :3000 {
+	root * /srv
+
+	encode gzip
+
 	log {
 		output stdout
-		format console
+		format console {
+			time_format iso8601
+			level_format color
+		}
 		level {$LOG_LEVEL}
 	}
-	root * /srv
-	encode zstd gzip
-	file_server
-	@spa_router {
-		not path /api*
-		file {
-			try_files {path} /index.html
-		}
-	}
-	rewrite @spa_router {http.matchers.file.relative}
-	# Proxy requests to API service
-	reverse_proxy /api* {$BACKEND_URL} {
-		header_up Host {http.reverse_proxy.upstream.hostport}
-		header_up X-Real-IP {remote_host}
-	}
+
 	header {
-		-Server
-		X-Frame-Options "SAMEORIGIN"
-		X-XSS-Protection "1;mode=block"
-		Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate"
+		X-Frame-Options "DENY"
+		X-XSS-Protection "1; mode=block"
 		X-Content-Type-Options "nosniff"
-		Strict-Transport-Security "max-age=31536000"
-		Content-Security-Policy "default-src 'self' https://*.gov.bc.ca;; 
-			script-src 'self'  https://*.gov.bc.ca ;
-			style-src 'self' https://fonts.googleapis.com https://use.fontawesome.com 'unsafe-inline'; 
-			font-src 'self' https://fonts.gstatic.com; 
-			img-src 'self' data: https://fonts.googleapis.com https://www.w3.org https://*.gov.bc.ca https://*.tile.openstreetmap.org;
-			frame-ancestors 'self'; 
-			form-action 'self';
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		Referrer-Policy "no-referrer, strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(self)"
+		Permissions-Policy "fullscreen=(self)"
+		Permissions-Policy "sync-xhr=(self)"
+		Permissions-Policy "notifications=(self)"
+		Permissions-Policy "web-share=(self)"
+		Permissions-Policy="accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), bluetooth=(), camera=(), clipboard-read=(), clipboard-write=(), conversion-measurement=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), gyroscope=(), hid=(), idle-detection=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), speaker-selection=(), usb=(), window-management=(), xr-spatial-tracking=()"
+		Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate"
+		Content-Security-Policy "
+			default-src 'self';
+			script-src 'self' {$BACKEND_URL}; 
+			img-src 'self';
+			style-src 'self';
+			connect-src 'self' {$BACKEND_URL} https://cognito-idp.{$COGNITO_REGION}.amazonaws.com https://{$COGNITO_DOMAIN}.auth.{$COGNITO_REGION}.amazoncognito.com;
+			form-action 'self' {$BACKEND_URL}; 
+			frame-src 'none';
+			manifest-src 'self';
+			worker-src 'self';
+			object-src 'none';
+			frame-ancestors 'none';
+			base-uri 'self';
+			upgrade-insecure-requests; 
 			block-all-mixed-content;
-			connect-src 'self' https://*.gov.bc.ca wss://*.gov.bc.ca;"
-		Referrer-Policy "same-origin"
-		Permissions-Policy "fullscreen=(self), camera=(), microphone=()"
-		Cross-Origin-Resource-Policy "cross-origin"
-		Cross-Origin-Opener-Policy "same-origin"
+		"
 	}
+
+  handle /health {
+		respond `{"status":"UP"}`
+	}
+
+	handle_path /* {
+		try_files {path} {path}/ {file} /index.html
+	}
+
+	file_server
 }
+
 :3001 {
 	handle /health {
-		respond "OK"
+		respond `{"status":"UP"}`
 	}
 }

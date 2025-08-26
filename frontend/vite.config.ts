@@ -1,73 +1,202 @@
-import { defineConfig } from 'vite'
-import { fileURLToPath, URL } from 'node:url'
-import react from '@vitejs/plugin-react'
-import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
+import { resolve } from 'path';
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    TanStackRouterVite({
-      target: 'react',
-      autoCodeSplitting: true,
-    }),
-    react(),
-  ],
-  server: {
-    port: parseInt(process.env.PORT),
-    fs: {
-      // Allow serving files from one level up to the project root
-      allow: ['..'],
-    },
-    proxy: {
-      // Proxy API requests to the backend
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
+import react from '@vitejs/plugin-react';
+import { defineConfig, loadEnv } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import { configDefaults } from 'vitest/config';
+
+export default defineConfig(({ mode }) => {
+  const define = {
+    global: {},
+  };
+  return {
+    define,
+    resolve: {
+      alias: {
+        //Debatable
+        '@': resolve(__dirname, 'src'),
       },
     },
-  },
-  resolve: {
-    // https://vitejs.dev/config/shared-options.html#resolve-alias
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-      '~': fileURLToPath(new URL('./node_modules', import.meta.url)),
-      '~bootstrap': fileURLToPath(
-        new URL('./node_modules/bootstrap', import.meta.url),
-      ),
-    },
-    extensions: ['.js', '.json', '.jsx', '.mjs', '.ts', '.tsx', '.vue'],
-  },
-  build: {
-    // Build Target
-    // https://vitejs.dev/config/build-options.html#build-target
-    target: 'esnext',
-    // Minify option
-    // https://vitejs.dev/config/build-options.html#build-minify
-    minify: 'esbuild',
-    // Rollup Options
-    // https://vitejs.dev/config/build-options.html#build-rollupoptions
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // Split external library from transpiled code.
-          react: ['react', 'react-dom'],
-          axios: ['axios'],
+    plugins: [
+      react(),
+      tsconfigPaths(),
+      VitePWA({
+        registerType: 'autoUpdate',
+        strategies: 'injectManifest',
+        srcDir: 'src',
+        filename: 'service-worker.ts',
+        injectRegister: 'auto',
+        devOptions: {
+          enabled: true,
+          type: 'module', // use module type for service worker in development
         },
+        workbox: {
+          navigateFallback: '/index.html',
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+          sourcemap: true,
+          maximumFileSizeToCacheInBytes: 6000000,
+        },
+        injectManifest: {
+          maximumFileSizeToCacheInBytes: 6000000,
+        },
+        manifest: {
+          id: '/',
+          lang: 'en',
+          short_name: 'HRS',
+          name: 'Harvest Residue System',
+          start_url: '.',
+          display: 'standalone',
+          theme_color: '#000000',
+          background_color: '#ffffff',
+          description: 'Report logging waste and residue data for billing and cut control',
+          icons: [
+            {
+              src: '/icons/favicon.ico',
+              sizes: '48x48',
+              type: 'image/x-icon',
+            },
+            {
+              src: '/icons/favicon-16x16.png',
+              sizes: '16x16',
+              type: 'image/png',
+            },
+            {
+              src: '/icons/favicon-32x32.png',
+              sizes: '32x32',
+              type: 'image/png',
+            },
+            {
+              src: '/icons/favicon-64x64.png',
+              sizes: '64x64',
+              type: 'image/png',
+            },
+            {
+              src: '/icons/android-chrome-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+            },
+            {
+              src: '/icons/android-chrome-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+            },
+          ],
+          screenshots: [
+            {
+              src: '/screenshots/homepage-light.jpeg',
+              sizes: '2434x1237',
+              type: 'image/jpeg',
+              form_factor: 'wide',
+            },
+            {
+              src: '/screenshots/homepage-dark.jpeg',
+              sizes: '2434x1237',
+              type: 'image/jpeg',
+              form_factor: 'wide',
+            },
+            {
+              src: '/screenshots/mobile-homepage-light.jpeg',
+              sizes: '320x920',
+              type: 'image/jpeg',
+            },
+            {
+              src: '/screenshots/mobile-homepage-dark.jpeg',
+              sizes: '320x920',
+              type: 'image/jpeg',
+            },
+          ],
+          display_override: ['window-controls-overlay', 'standalone'],
+        },
+      }),
+    ],
+    build: {
+      chunkSizeWarningLimit: 1024,
+      outDir: 'build',
+    },
+    optimizeDeps: {
+      include: [
+        '@tanstack/react-query',
+        'aws-amplify',
+        'aws-amplify/auth/cognito',
+        'aws-amplify/utils',
+        'react-dom/client',
+        '@tanstack/react-query-devtools',
+        'aws-amplify/auth',
+      ],
+    },
+    server: {
+      port: 3000,
+      hmr: {
+        overlay: false,
       },
     },
-  },
-  css: {
-    preprocessorOptions: {
-      scss: {
-        // Silence deprecation warnings caused by Bootstrap SCSS
-        // which is out of our control.
-        silenceDeprecations: [
-          'mixed-decls',
-          'color-functions',
-          'global-builtin',
-          'import',
+    preview: {
+      port: 3000,
+    },
+    test: {
+      env: loadEnv(mode, process.cwd(), ''),
+      globals: true,
+      exclude: [...configDefaults.exclude, 'dist/**', 'build/**'],
+      coverage: {
+        provider: 'v8',
+        reporter: ['lcov', 'cobertura', 'html', 'json', 'text'],
+        reportsDirectory: './coverage',
+        all: true,
+        exclude: [
+          '**/node_modules/**',
+          '**/tests/**',
+          '**/*.test.{ts,tsx}',
+          '**/vite-env.d.ts',
+          '**/types/**',
+          '**/constants/**',
+          '**/config/fam/*',
+          '**/config/react-query/*',
+          '**/config/tests/*',
+          '**/*.env.ts',
+          '**/*.scss',
+          '**/*.css',
+          '**/*.d.ts',
+          '**/types.ts',
+          '**/main.tsx',
+          '**/App.tsx',
         ],
+        include: ['src/**/*.ts', 'src/**/*.tsx'],
+        lines: 80,
+        functions: 80,
+        branches: 80,
+        statements: 80,
       },
+      projects: [
+        {
+          name: 'node',
+          extends: true,
+          test: {
+            setupFiles: [
+              './src/config/tests/setup-env.ts',
+              './src/config/tests/custom-matchers.ts',
+            ],
+            environment: 'happy-dom',
+            include: ['src/**/*.unit.test.{ts,tsx}'],
+          },
+        },
+        {
+          name: 'browser',
+          extends: true,
+          test: {
+            setupFiles: [
+              './src/config/tests/setup-browser.ts',
+              './src/config/tests/custom-matchers.ts',
+            ],
+            browser: {
+              enabled: true,
+              provider: 'playwright',
+              instances: [{ browser: 'chromium' }],
+            },
+            include: ['src/**/*.browser.test.{ts,tsx}'],
+          },
+        },
+      ],
     },
-  },
-})
+  };
+});

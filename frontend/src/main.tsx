@@ -1,26 +1,41 @@
-import '@bcgov/bc-sans/css/BC_Sans.css'
-import { StrictMode } from 'react'
-import * as ReactDOM from 'react-dom/client'
-import { RouterProvider, createRouter } from '@tanstack/react-router'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Amplify } from 'aws-amplify';
+import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
+import { CookieStorage } from 'aws-amplify/utils';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 
-// Import bootstrap styles
-import '@/scss/styles.scss'
+import '@/styles/index.scss';
+import App from '@/App.tsx';
+import amplifyconfig from '@/config/fam/config';
+import { queryClientConfig } from '@/config/react-query/config';
+import { AuthProvider } from '@/context/auth/AuthProvider';
+import NotificationProvider from '@/context/notification/NotificationProvider';
+import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
+import { PreferenceProvider } from '@/context/preference/PreferenceProvider.tsx';
+import ThemeProvider from '@/context/theme/ThemeProvider.tsx';
+import updateSW from '@/registerServiceWorker';
 
-// Import the generated route tree
-import { routeTree } from './routeTree.gen'
+const queryClient = new QueryClient(queryClientConfig);
+Amplify.configure(amplifyconfig);
+cognitoUserPoolsTokenProvider.setKeyValueStorage(new CookieStorage());
 
-// Create a new router instance
-const router = createRouter({ routeTree })
+updateSW();
 
-// Register the router instance for type safety
-declare module '@tanstack/react-router' {
-  interface Register {
-    router: typeof router
-  }
-}
-
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <PreferenceProvider>
+          <ThemeProvider>
+            <NotificationProvider>
+              <PageTitleProvider>
+                <App />
+              </PageTitleProvider>
+            </NotificationProvider>
+          </ThemeProvider>
+        </PreferenceProvider>
+      </QueryClientProvider>
+    </AuthProvider>
   </StrictMode>,
-)
+);

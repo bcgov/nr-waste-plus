@@ -1,0 +1,3 @@
+spring:
+  datasource:
+    jdbcUrl: jdbc:oracle:thin:@tcp://localhost:1521/FREEDB

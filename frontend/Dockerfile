@@ -1,23 +1,28 @@
-# Build
-FROM node:22-slim AS build
+FROM node:20-bullseye-slim AS build
 
-# Copy, build static files; see .dockerignore for exclusions
 WORKDIR /app
-COPY . ./
-RUN npm run deploy
 
-# Deploy using Caddy to host static files
+# Copy package.json and package-lock.json to install dependencies
+COPY package*.json ./
+RUN npm ci --ignore-scripts --omit=dev
+
+COPY . .
+RUN npm run build && \
+    rm -rf node_modules
+
+# Caddy
 FROM caddy:2.10.0-alpine
-RUN apk add --no-cache ca-certificates
+ENV LOG_LEVEL=info
 
-# Copy static files, verify Caddyfile formatting
-COPY --from=build /app/dist /srv
+# Copy static files and config
+COPY --from=build /app/build/ /srv
 COPY Caddyfile /etc/caddy/Caddyfile
-RUN caddy fmt /etc/caddy/Caddyfile
 
-# Boilerplate, not used in OpenShift/Kubernetes
-EXPOSE 3000 3001
-HEALTHCHECK --interval=30s --timeout=3s CMD curl -f http://localhost:3001/health
+# CA certs and Caddy format
+RUN apk add --no-cache ca-certificates && \
+    caddy fmt --overwrite /etc/caddy/Caddyfile
 
-# Nonroot user
+# User, port and healthcheck
 USER 1001
+EXPOSE 3000
+HEALTHCHECK CMD curl -f http://localhost:3000 || exit 1

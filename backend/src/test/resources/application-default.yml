@@ -1,0 +1,30 @@
+spring:
+#  flyway:
+#    enabled: true
+  # FAM
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://aws-cognito-issuer-uri.aws.com
+          jwk-set-uri: https://aws-cognito-issuer-uri.aws.com/.well-known/jwks.json
+  jpa:
+    show-sql: true
+
+# Users allowed to see and download WMS layers information
+ca:
+  bc:
+    gov:
+      nrs:
+        forest-client-api:
+          address: http://localhost:10000
+          key: 123456789abcdef
+        legacy-api:
+          address: http://localhost:10001
+
+logging:
+  level:
+    #root: DEBUG
+    ca.bc.gov.restapi.results: ${LOGGING_LEVEL:INFO}
+    org.springframework.web.client: DEBUG
+    org.springframework.http.client: DEBUG
