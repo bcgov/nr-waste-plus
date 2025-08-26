@@ -9,6 +9,7 @@ import ca.bc.gov.nrs.hrs.exception.TooManyRequestsException;
 import ca.bc.gov.nrs.hrs.exception.UnretriableException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
+import io.micrometer.observation.annotation.Observed;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -30,6 +31,7 @@ import org.springframework.web.client.RestClient;
  */
 @Slf4j
 @Component
+@Observed
 public class ForestClientApiProvider {
 
   private final RestClient restClient;

@@ -5,6 +5,7 @@ import ca.bc.gov.nrs.hrs.dto.client.ForestClientAutocompleteResultDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientLocationDto;
 import ca.bc.gov.nrs.hrs.provider.ForestClientApiProvider;
+import io.micrometer.observation.annotation.Observed;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Observed
 public class ForestClientService {
 
   private final ForestClientApiProvider forestClientApiProvider;
