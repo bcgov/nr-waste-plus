@@ -1,0 +1,19 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: nr-waste-plus
+  title: nr-waste-plus
+  description: Natural Resources - Waste Plus
+  annotations:
+    github.com/project-slug: bcgov/nr-waste-plus
+    backstage.io/techdocs-ref: dir:.
+    bcgovpubcode.gov.bc.ca/ministry: WLRS
+    bcgovpubcode.gov.bc.ca/product_name: Waste Plus
+    bcgovpubcode.gov.bc.ca/product_description: Natural Resources - Waste Plus
+    bcgovpubcode.gov.bc.ca/product_owner: Ziad Bhunnoo
+    bcgovpubcode.gov.bc.ca/hosting_platform: OpenShift private cloud
+    backstage.io/source-template: template:default/quickstart-openshift
+spec:
+  type: website
+  lifecycle: experimental
+  owner: group:default/team-alliance
