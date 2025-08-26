@@ -79,7 +79,7 @@
 		<timestamp>${maven.build.timestamp}</timestamp>
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
 		<commons-lang3.version>3.18.0</commons-lang3.version>
-		<opentelemetry.version>1.52.0</opentelemetry.version>
+		<opentelemetry.version>1.53.0</opentelemetry.version>
 		<logback.version>1.5.18</logback.version>
 		<spring-logging.version>3.5.0</spring-logging.version>
 		<oracle-database.version>23.8.0.25.04</oracle-database.version>
@@ -87,7 +87,7 @@
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 		<oci.revision>${project.version}</oci.revision>
 		<snakeyaml.version>2.2</snakeyaml.version>
-		<hibernate.version>6.6.3.Final</hibernate.version>
+		<hibernate.version>6.6.26.Final</hibernate.version>
 		<testcontainers.version>1.21.1</testcontainers.version>
 		<flyway.version>10.13.0</flyway.version>
 	</properties>
@@ -489,7 +489,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>3.6.0</version>
+				<version>3.6.1</version>
 				<executions>
 					<execution>
 						<id>default-cli</id>
