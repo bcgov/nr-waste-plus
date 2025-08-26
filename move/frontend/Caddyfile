@@ -1,0 +1,66 @@
+{
+	auto_https off
+	admin off
+}
+
+:3000 {
+	root * /srv
+
+	encode gzip
+
+	log {
+		output stdout
+		format console {
+			time_format iso8601
+			level_format color
+		}
+		level {$LOG_LEVEL}
+	}
+
+	header {
+		X-Frame-Options "DENY"
+		X-XSS-Protection "1; mode=block"
+		X-Content-Type-Options "nosniff"
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		Referrer-Policy "no-referrer, strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(self)"
+		Permissions-Policy "fullscreen=(self)"
+		Permissions-Policy "sync-xhr=(self)"
+		Permissions-Policy "notifications=(self)"
+		Permissions-Policy "web-share=(self)"
+		Permissions-Policy="accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), bluetooth=(), camera=(), clipboard-read=(), clipboard-write=(), conversion-measurement=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), gyroscope=(), hid=(), idle-detection=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), speaker-selection=(), usb=(), window-management=(), xr-spatial-tracking=()"
+		Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate"
+		Content-Security-Policy "
+			default-src 'self';
+			script-src 'self' {$BACKEND_URL}; 
+			img-src 'self';
+			style-src 'self';
+			connect-src 'self' {$BACKEND_URL} https://cognito-idp.{$COGNITO_REGION}.amazonaws.com https://{$COGNITO_DOMAIN}.auth.{$COGNITO_REGION}.amazoncognito.com;
+			form-action 'self' {$BACKEND_URL}; 
+			frame-src 'none';
+			manifest-src 'self';
+			worker-src 'self';
+			object-src 'none';
+			frame-ancestors 'none';
+			base-uri 'self';
+			upgrade-insecure-requests; 
+			block-all-mixed-content;
+		"
+	}
+
+  handle /health {
+		respond `{"status":"UP"}`
+	}
+
+	handle_path /* {
+		try_files {path} {path}/ {file} /index.html
+	}
+
+	file_server
+}
+
+:3001 {
+	handle /health {
+		respond `{"status":"UP"}`
+	}
+}

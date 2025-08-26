@@ -1,0 +1,16 @@
+@use '../../../styles/variables' as vars;
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/type' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+@use '@carbon/react/scss/theme' as *;
+@use '@bcgov-nr/nr-theme/design-tokens/colors.scss' as colors;
+@use '@carbon/type';
+
+.cds--side-nav__link-text {
+
+  svg {
+    margin-inline-end: 1.5rem;
+    fill: var(--#{vars.$bcgov-prefix}-link-primary);
+  }
+
+}
