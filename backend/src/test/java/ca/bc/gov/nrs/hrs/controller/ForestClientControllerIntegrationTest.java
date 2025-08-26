@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.hrs.provider;
+package ca.bc.gov.nrs.hrs.controller;
 
 import static ca.bc.gov.nrs.hrs.BackendConstants.X_TOTAL_COUNT;
 import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE;
@@ -12,21 +12,19 @@ import static com.github.tomakehurst.wiremock.client.WireMock.serviceUnavailable
 import static com.github.tomakehurst.wiremock.client.WireMock.status;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
-import ca.bc.gov.nrs.hrs.dto.client.ForestClientStatusEnum;
-import ca.bc.gov.nrs.hrs.dto.client.ForestClientTypeEnum;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
+import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
-import java.util.Optional;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -34,10 +32,18 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-
-@DisplayName("Integrated Test | Forest Client API Provider")
-class ForestClientApiProviderIntegrationTest extends AbstractTestContainerIntegrationTest {
+@AutoConfigureMockMvc
+@WithMockJwt
+@DisplayName("Integrated Test | Forest Client Controller")
+class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @RegisterExtension
   static WireMockExtension clientApiStub =
@@ -52,12 +58,11 @@ class ForestClientApiProviderIntegrationTest extends AbstractTestContainerIntegr
           .build();
 
   @Autowired
+  private MockMvc mockMvc;
+  @Autowired
   private CircuitBreakerRegistry circuitBreakerRegistry;
   @Autowired
   private RetryRegistry retryRegistry;
-
-  @Autowired
-  private ForestClientApiProvider forestClientApiProvider;
 
   @BeforeEach
   public void resetCircuitBreaker() {
@@ -73,27 +78,37 @@ class ForestClientApiProviderIntegrationTest extends AbstractTestContainerIntegr
   @DisplayName("Fetch client by number happy path should succeed")
   void fetchClientByNumber_shouldSucceed(
       String clientNumber,
-      ResponseDefinitionBuilder stubResponse
-  ) {
+      ResponseDefinitionBuilder stubResponse,
+      HttpStatusCode statusCode
+  ) throws Exception {
     clientApiStub.stubFor(
         get(urlPathEqualTo("/clients/findByClientNumber/" + clientNumber))
             .willReturn(stubResponse));
 
-    Optional<ForestClientDto> clientDto = forestClientApiProvider.fetchClientByNumber(clientNumber);
+    ResultActions response = mockMvc
+        .perform(
+            MockMvcRequestBuilders
+                .get("/api/forest-clients/{clientNumber}", clientNumber)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON)
+        );
 
-    if (clientDto.isPresent()) {
-      ForestClientDto forestClient = clientDto.get();
-      Assertions.assertEquals("00012797", forestClient.clientNumber());
-      Assertions.assertEquals("MINISTRY OF FORESTS", forestClient.clientName());
-      Assertions.assertNull(forestClient.legalFirstName());
-      Assertions.assertNull(forestClient.legalMiddleName());
-      Assertions.assertEquals(ForestClientStatusEnum.ACTIVE, forestClient.clientStatusCode());
-      Assertions.assertEquals(
-          ForestClientTypeEnum.MINISTRY_OF_FORESTS_AND_RANGE, forestClient.clientTypeCode());
-      Assertions.assertEquals("MOF", forestClient.acronym());
+    if (statusCode.is2xxSuccessful()) {
+      response
+          .andExpect(MockMvcResultMatchers.status().isOk())
+          .andExpect(content().contentType("application/json"))
+          .andExpect(jsonPath("$.clientNumber").value("00012797"))
+          .andExpect(jsonPath("$.clientName").value("MINISTRY OF FORESTS"))
+          .andExpect(jsonPath("$.legalFirstName").doesNotExist())
+          .andExpect(jsonPath("$.legalMiddleName").doesNotExist())
+          .andExpect(jsonPath("$.clientStatusCode.code").value("ACT"))
+          .andExpect(jsonPath("$.clientTypeCode.code").value("F"))
+          .andExpect(jsonPath("$.acronym").value("MOF"))
+          .andReturn();
     } else {
-      Assertions.assertEquals(Optional.empty(), clientDto);
+      response.andExpect(MockMvcResultMatchers.status().is(statusCode.value()));
     }
+
   }
 
   @ParameterizedTest
@@ -105,12 +120,24 @@ class ForestClientApiProviderIntegrationTest extends AbstractTestContainerIntegr
       String value,
       ResponseDefinitionBuilder stub,
       long expectedSize
-  ) {
+  ) throws Exception {
 
     clientApiStub.stubFor(get(urlPathEqualTo("/clients/search/by")).willReturn(stub));
 
-    var clients = forestClientApiProvider.searchClients(page, size, value);
-    Assertions.assertEquals(expectedSize, clients.getTotalElements());
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders
+                .get("/api/forest-clients/byNameAcronymNumber")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .param("page", String.valueOf(page))
+                .param("size", String.valueOf(size))
+                .param("value", value)
+                .accept(MediaType.APPLICATION_JSON)
+        )
+        .andExpect(MockMvcResultMatchers.status().isOk())
+        .andExpect(content().contentType("application/json"))
+        .andExpect(jsonPath("$.length()").value(expectedSize))
+        .andReturn();
   }
 
   @ParameterizedTest
@@ -120,35 +147,60 @@ class ForestClientApiProviderIntegrationTest extends AbstractTestContainerIntegr
       String clientNumber,
       ResponseDefinitionBuilder stub,
       long size
-  ) {
+  ) throws Exception {
 
     clientApiStub.stubFor(
         get(urlPathEqualTo("/clients/" + clientNumber + "/locations"))
             .willReturn(stub)
     );
 
-    var locations = forestClientApiProvider.fetchLocationsByClientNumber(clientNumber);
-
-    Assertions.assertEquals(size, locations.getTotalElements());
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders
+                .get("/api/forest-clients/{clientNumber}/locations", clientNumber)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON)
+        )
+        .andExpect(MockMvcResultMatchers.status().isOk())
+        .andExpect(content().contentType("application/json"))
+        .andExpect(jsonPath("$.length()").value(size))
+        .andReturn();
   }
 
 
-  private static Stream<Arguments> fetchClientLocations() {
-    return
-        Stream.of(
-            Arguments.argumentSet("Happy path",
-                "00012797",
-                okJson(TWO_LOCATIONS_LIST).withHeader(X_TOTAL_COUNT, "2"),
-                2
-            ),
-            Arguments.argumentSet(
-                "Circuit Breaker",
-                "00012798",
-                notFound(),
-                0
-            )
-
-        );
+  private static Stream<Arguments> fetchClientByNumber() {
+    return Stream.of(
+        Arguments.argumentSet(
+            "Happy path",
+            "00012797",
+            okJson(CLIENTNUMBER_RESPONSE),
+            HttpStatusCode.valueOf(200)
+        ),
+        Arguments.argumentSet(
+            "Not found breaker",
+            "00012898",
+            notFound(),
+            HttpStatusCode.valueOf(404)
+        ),
+        Arguments.argumentSet(
+            "Unavailable breaker",
+            "00012898",
+            serviceUnavailable(),
+            HttpStatusCode.valueOf(404)
+        ),
+        Arguments.argumentSet(
+            "Rate limiter breaker",
+            "00012898",
+            status(429),
+            HttpStatusCode.valueOf(404)
+        ),
+        Arguments.argumentSet(
+            "Bad request breaker",
+            "00012898",
+            badRequest(),
+            HttpStatusCode.valueOf(404)
+        )
+    );
   }
 
   private static Stream<Arguments> searchClients() {
@@ -196,34 +248,23 @@ class ForestClientApiProviderIntegrationTest extends AbstractTestContainerIntegr
     );
   }
 
-  private static Stream<Arguments> fetchClientByNumber() {
-    return Stream.of(
-        Arguments.argumentSet(
-            "Happy path",
-            "00012797",
-            okJson(CLIENTNUMBER_RESPONSE)
-        ),
-        Arguments.argumentSet(
-            "Not found breaker",
-            "00012898",
-            notFound()
-        ),
-        Arguments.argumentSet(
-            "Unavailable breaker",
-            "00012898",
-            serviceUnavailable()
-        ),
-        Arguments.argumentSet(
-            "Rate limiter breaker",
-            "00012898",
-            status(429)
-        ),
-        Arguments.argumentSet(
-            "Bad request breaker",
-            "00012898",
-            badRequest()
-        )
-    );
+  private static Stream<Arguments> fetchClientLocations() {
+    return
+        Stream.of(
+            Arguments.argumentSet("Happy path",
+                "00012797",
+                okJson(TWO_LOCATIONS_LIST).withHeader(X_TOTAL_COUNT, "2"),
+                2
+            ),
+            Arguments.argumentSet(
+                "Circuit Breaker",
+                "00012798",
+                notFound(),
+                0
+            )
+
+        );
   }
+
 
 }

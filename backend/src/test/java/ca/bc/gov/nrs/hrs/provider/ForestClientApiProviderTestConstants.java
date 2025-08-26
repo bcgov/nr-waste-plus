@@ -1,7 +1,5 @@
 package ca.bc.gov.nrs.hrs.provider;
 
-import ca.bc.gov.nrs.hrs.dto.CodeNameDto;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 

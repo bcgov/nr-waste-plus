@@ -36,14 +36,22 @@ public class ApiAuthorizationCustomizer implements
         .permitAll();
 
     authorize
-        // Protect everything under /api with authentication
-        .requestMatchers("/api/**")
-        .authenticated()
         // Allow OPTIONS requests to be accessed with authentication
         .requestMatchers(HttpMethod.OPTIONS, "/**")
         .authenticated()
 
+        // User Preferences can be accessed by authenticated users
         .requestMatchers("/api/users/preferences")
+        .authenticated()
+
+        // Codes can be accessed by authenticated users
+        // This is added as a repeat of the above rule to allow future customization
+        .requestMatchers("/api/codes/**")
+        .authenticated()
+
+        // Forest Clients can be accessed by authenticated users
+        // This is added as a repeat of the above rule to allow future customization
+        .requestMatchers("/api/forest-clients/**")
         .authenticated()
 
         // Deny all other requests

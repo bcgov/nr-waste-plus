@@ -88,16 +88,6 @@ public class ForestClientService {
             .toList();
   }
 
-  public Optional<ForestClientLocationDto> getClientLocation(String clientNumber,
-      String locationCode) {
-    String fixedNumber = checkClientNumber(clientNumber);
-    log.info("Fetching location {} for client number {}", locationCode, fixedNumber);
-
-    return forestClientApiProvider
-        .fetchLocationByClientNumberAndLocationCode(fixedNumber, locationCode);
-  }
-
-
   private String checkClientNumber(String clientNumber) {
     if (StringUtils.isEmpty(clientNumber)) {
       return "00000000";
