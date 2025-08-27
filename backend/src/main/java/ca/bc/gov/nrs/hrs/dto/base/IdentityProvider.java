@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.hrs.dto;
+package ca.bc.gov.nrs.hrs.dto.base;
 
 import java.util.Arrays;
 import java.util.Optional;

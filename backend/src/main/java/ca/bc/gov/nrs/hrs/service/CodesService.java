@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.hrs.service;
 
-import ca.bc.gov.nrs.hrs.dto.CodeNameDto;
+import ca.bc.gov.nrs.hrs.dto.base.CodeNameDto;
 import ca.bc.gov.nrs.hrs.provider.LegacyApiProvider;
 import io.micrometer.observation.annotation.Observed;
 import java.util.List;

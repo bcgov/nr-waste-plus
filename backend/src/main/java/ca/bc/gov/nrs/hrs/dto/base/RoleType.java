@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.hrs.dto;
+package ca.bc.gov.nrs.hrs.dto.base;
 
 /**
  * Enum representing the two types of roles in the system:

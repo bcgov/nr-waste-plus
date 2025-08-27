@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import ca.bc.gov.nrs.hrs.dto.Role;
-import ca.bc.gov.nrs.hrs.dto.RoleType;
+import ca.bc.gov.nrs.hrs.dto.base.Role;
+import ca.bc.gov.nrs.hrs.dto.base.RoleType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
