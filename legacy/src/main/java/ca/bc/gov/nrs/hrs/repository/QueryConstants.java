@@ -50,16 +50,16 @@ public class QueryConstants {
   private static final String SEARCH_REPORTING_UNIT_WHERE = """
       WHERE
          (
-             NVL(:#{#filter.mainSearchTerm},'NOVALUE') = 'NOVALUE' OR (
-               REGEXP_LIKE(:#{#filter.mainSearchTerm}, '^\\d+$')
-               AND (
-                   wru.REPORTING_UNIT_ID = TO_NUMBER(:#{#filter.mainSearchTerm})
-                   OR waa.DRAFT_CUT_BLOCK_ID = TO_NUMBER(:#{#filter.mainSearchTerm})
-               )
-             )
+            NVL(:#{#filter.mainSearchTerm},'NOVALUE') = 'NOVALUE' OR (
+              (
+                REGEXP_LIKE(:#{#filter.mainSearchTerm}, '^\\d+$')
+                AND wru.REPORTING_UNIT_ID = TO_NUMBER(:#{#filter.mainSearchTerm})
+              )
+             OR waa.DRAFT_CUT_BLOCK_ID = :#{#filter.mainSearchTerm}
+           )
          )
          AND (
-               'NOVALUE' in (:#{#filter.district}) OR ou.ORG_UNIT_CODE IN (:#{#filter.district}) -- district
+               'NOVALUE' in (:#{#filter.district}) OR ou.ORG_UNIT_CODE IN (:#{#filter.district})
            )
          AND (
                'NOVALUE' in (:#{#filter.sampling}) OR wru.waste_sampling_option_code IN (:#{#filter.sampling})
