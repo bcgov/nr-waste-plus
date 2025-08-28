@@ -11,8 +11,8 @@ public class QueryConstants {
   private static final String COUNT_CTE = "SELECT COUNT(1) OVER() AS total ";
 
   private static final String SEARCH_REPORTING_UNIT_SELECT = """
-      SELECT DISTINCT wru.REPORTING_UNIT_ID AS ru_number,
-      	waa.DRAFT_CUT_BLOCK_ID AS block_id,
+      SELECT wru.REPORTING_UNIT_ID AS ru_number,
+      	COALESCE(waa.CUT_BLOCK_ID,waa.DRAFT_CUT_BLOCK_ID) AS block_id,
       	wru.CLIENT_NUMBER AS client_number,
       	wru.CLIENT_LOCN_CODE  AS client_location,
       	wru.waste_sampling_option_code AS sampling_code,
@@ -49,13 +49,18 @@ public class QueryConstants {
 
   private static final String SEARCH_REPORTING_UNIT_WHERE = """
       WHERE
+        COALESCE(waa.CUT_BLOCK_ID,waa.DRAFT_CUT_BLOCK_ID) IS NOT NULL
+      	AND
          (
             NVL(:#{#filter.mainSearchTerm},'NOVALUE') = 'NOVALUE' OR (
               (
                 REGEXP_LIKE(:#{#filter.mainSearchTerm}, '^\\d+$')
                 AND wru.REPORTING_UNIT_ID = TO_NUMBER(:#{#filter.mainSearchTerm})
               )
-             OR waa.DRAFT_CUT_BLOCK_ID = :#{#filter.mainSearchTerm}
+             OR (
+                waa.DRAFT_CUT_BLOCK_ID = :#{#filter.mainSearchTerm}
+                OR waa.CUT_BLOCK_ID = :#{#filter.mainSearchTerm}
+              )
            )
          )
          AND (
