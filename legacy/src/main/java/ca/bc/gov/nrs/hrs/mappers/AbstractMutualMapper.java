@@ -55,4 +55,9 @@ public interface AbstractMutualMapper<D, E> {
     return value != null ? List.of(value) : List.of();
   }
 
+  @Named("MaxDateTimeQualifier")
+  default LocalDateTime maxDateTime(Object origin) {
+    return LocalDateTime.MAX;
+  }
+
 }

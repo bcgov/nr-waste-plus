@@ -36,4 +36,34 @@ class CodesEndpointIntegrationTest extends AbstractTestContainerIntegrationTest 
         .andReturn();
   }
 
+  @Test
+  @DisplayName("Get samplings")
+  void getSamplingCodes_happyPath_shouldSucceed() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/codes/samplings")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json"))
+        .andExpect(jsonPath("$[0].code").value("AGR"))
+        .andExpect(jsonPath("$[0].description").value("Aggregate"))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Get statuses")
+  void getStatusCodes_happyPath_shouldSucceed() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/codes/assess-area-statuses")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json"))
+        .andExpect(jsonPath("$[0].code").value("APP"))
+        .andExpect(jsonPath("$[0].description").value("Approved"))
+        .andReturn();
+  }
+
 }

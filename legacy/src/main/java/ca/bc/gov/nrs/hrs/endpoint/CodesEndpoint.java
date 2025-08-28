@@ -1,7 +1,9 @@
 package ca.bc.gov.nrs.hrs.endpoint;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.service.codes.AssessAreaStatusService;
 import ca.bc.gov.nrs.hrs.service.codes.DistrictService;
+import ca.bc.gov.nrs.hrs.service.codes.SamplingService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,14 +19,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class CodesEndpoint {
 
   private final DistrictService districtService;
+  private final SamplingService samplingService;
+  private final AssessAreaStatusService assessAreaStatusService;
 
-  /**
-   * Get the Org units list for the openings search API.
-   *
-   * @return List of OrgUnitEntity with found org units.
-   */
   @GetMapping("/districts")
-  public List<CodeDescriptionDto> getOpeningOrgUnits() {
+  public List<CodeDescriptionDto> getDistricts() {
     return districtService.findAllOrgUnits();
+  }
+
+  @GetMapping("/samplings")
+  public List<CodeDescriptionDto> getSamplingCodes() {
+    return samplingService.getSamplingCodes();
+  }
+
+  @GetMapping("/assess-area-statuses")
+  public List<CodeDescriptionDto> getStatusCodes() {
+    return assessAreaStatusService.getStatusCodes();
   }
 }
