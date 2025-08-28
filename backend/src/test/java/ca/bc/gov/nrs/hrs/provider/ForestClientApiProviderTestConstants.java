@@ -119,4 +119,27 @@ public class ForestClientApiProviderTestConstants {
             "totalPages": 0
         }
       }""";
+
+  public static final String CLIENT_00010002 = """
+      {
+        "clientNumber": "00010002",
+        "clientName": "WEST FRASER MILLS LTD",
+        "legalFirstName": null,
+        "legalMiddleName": null,
+        "clientStatusCode": "ACT",
+        "clientTypeCode": "F",
+        "acronym": "WFM"
+      }""";
+
+  public static final String CLIENT_LOCATION_00010002 = """
+      [
+        {
+          "locationCode": "00",
+          "locationName": "Head Office"
+        },
+        {
+          "locationCode": "03",
+          "locationName": "Vanderhoof"
+        }
+      ]""";
 }

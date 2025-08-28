@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ca.bc.gov.nrs.hrs.BackendConstants;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
@@ -43,7 +44,7 @@ import org.springframework.test.web.servlet.MockMvc;
 class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @RegisterExtension
-  static WireMockExtension clientApiStub =
+  static WireMockExtension legacyApiStub =
       WireMockExtension.newInstance()
           .options(
               wireMockConfig()
@@ -54,6 +55,20 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
           .configureStaticDsl(true)
           .build();
 
+  @RegisterExtension
+  static WireMockExtension clientApiStub =
+      WireMockExtension.newInstance()
+          .options(
+              wireMockConfig()
+                  .port(10000)
+                  .notifier(new WiremockLogNotifier())
+                  .asynchronousResponseEnabled(true)
+                  .stubRequestLoggingDisabled(false))
+          .configureStaticDsl(true)
+          .build();
+
+
+
   @Autowired
   private MockMvc mockMvc;
   @Autowired
@@ -63,6 +78,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
 
   @BeforeEach
   public void setUp() {
+    legacyApiStub.resetAll();
     clientApiStub.resetAll();
 
     CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("breaker");
@@ -81,9 +97,23 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
       ResponseDefinitionBuilder stubResponse,
       long size
   ) throws Exception {
-    clientApiStub.stubFor(
+    legacyApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(stubResponse));
+            .willReturn(stubResponse)
+    );
+
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/clients/findByClientNumber/00010002"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002))
+    );
+
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/clients/00010002/locations"))
+            .willReturn(
+                okJson(ForestClientApiProviderTestConstants.CLIENT_LOCATION_00010002)
+                    .withHeader(BackendConstants.X_TOTAL_COUNT, "1")
+            )
+    );
 
     mockMvc
         .perform(
