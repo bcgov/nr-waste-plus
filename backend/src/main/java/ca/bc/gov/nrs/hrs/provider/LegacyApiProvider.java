@@ -1,12 +1,20 @@
 package ca.bc.gov.nrs.hrs.provider;
 
-import ca.bc.gov.nrs.hrs.dto.CodeNameDto;
+import ca.bc.gov.nrs.hrs.dto.base.CodeNameDto;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.micrometer.observation.annotation.Observed;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -16,11 +24,16 @@ import org.springframework.web.client.RestClient;
 public class LegacyApiProvider {
 
   private final RestClient restClient;
+  private final ObjectMapper mapper;
 
   private static final String PROVIDER = "Legacy API";
 
-  LegacyApiProvider(@Qualifier("legacyApi") RestClient legacyApi) {
+  LegacyApiProvider(
+      @Qualifier("legacyApi") RestClient legacyApi,
+      ObjectMapper mapper
+  ) {
     this.restClient = legacyApi;
+    this.mapper = mapper;
   }
 
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyList")
@@ -32,6 +45,36 @@ public class LegacyApiProvider {
         .retrieve()
         .body(new ParameterizedTypeReference<>() {
         });
+  }
+
+  @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptySearchReportingUnit")
+  public Page<ReportingUnitSearchResultDto> searchReportingUnit(
+      ReportingUnitSearchParametersDto filters,
+      Pageable pageable
+  ) {
+    // Response is retrieved as JsonNode because the legacy sends back a page
+    // and a page cannot be deserialized
+    JsonNode pagedResponse = restClient
+        .get()
+        .uri(uriBuilder -> uriBuilder
+            .path("/api/search/reporting-units")
+            .queryParams(filters.toMultiMap(pageable))
+            .build(Map.of())
+        )
+        .retrieve()
+        .body(JsonNode.class);
+
+    List<ReportingUnitSearchResultDto> results = mapper.convertValue(
+        pagedResponse.get("content"),
+        mapper.getTypeFactory()
+            .constructCollectionType(List.class, ReportingUnitSearchResultDto.class)
+    );
+
+    return new PageImpl<>(
+        results,
+        pageable,
+        pagedResponse.get("page").get("totalElements").asLong()
+    );
   }
 
   private List<CodeNameDto> fallbackEmptyList(Throwable throwable) {
@@ -61,6 +104,15 @@ public class LegacyApiProvider {
         new CodeNameDto("DCS", "Cascades Natural Resource District"),
         new CodeNameDto("DCR", "Campbell River Natural Resource District")
     );
+  }
+
+  private Page<ReportingUnitSearchResultDto> fallbackEmptySearchReportingUnit(
+      ReportingUnitSearchParametersDto filters,
+      Pageable pageable,
+      Throwable throwable
+  ){
+    log.error("Error occurred while fetching search from {}: {}", PROVIDER, throwable.getMessage());
+    return new PageImpl<>(List.of(), pageable, 0);
   }
 
 }
