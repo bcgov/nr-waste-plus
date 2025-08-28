@@ -10,9 +10,9 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>ca.bc.gov.nrs</groupId>
-	<artifactId>nr-hrs-backend</artifactId>
+	<artifactId>nr-waste-plus-backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>Natural Resource - Harverst Residue System Backend</name>
+	<name>Waste Plus Backend</name>
 	<description>Report logging waste and residue data for billing and cut control - Backend</description>
 
 	<url>https://github.com/bcgov/nr-hrs</url>
@@ -192,6 +192,10 @@
 			<version>3.13.1</version>
 			<scope>test</scope>
 		</dependency>
+	</dependencies>
+
+	<dependencyManagement>
+	<dependencies>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-webmvc</artifactId>
@@ -203,6 +207,7 @@
 			<version>11.0.10</version>
 		</dependency>
 	</dependencies>
+	</dependencyManagement>
 
 	<profiles>
 		<!-- all tests: enables integration and unit tests, coverage and checkstyle -->
@@ -274,7 +279,7 @@
 	</profiles>
 
 	<build>
-		<finalName>nr-hrs-backend</finalName>
+		<finalName>nr-waste-plus-backend</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

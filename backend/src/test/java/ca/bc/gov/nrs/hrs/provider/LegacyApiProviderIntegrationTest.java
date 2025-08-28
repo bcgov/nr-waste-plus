@@ -6,7 +6,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.serviceUnavailable;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
@@ -48,8 +50,8 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
   }
 
   @Test
-  @DisplayName("fallback district codes should return expected list")
-  void shouldFetchDistrictCodes2() {
+  @DisplayName("fallback district when unavailable")
+  void shouldFetchDistrictCodesAndIsUnavailable() {
 
     clientApiStub.stubFor(
         get(urlPathEqualTo("/api/codes/districts"))
@@ -59,5 +61,4 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
     assertFalse(legacyApiProvider.getDistrictCodes().isEmpty());
     assertEquals(23, legacyApiProvider.getDistrictCodes().size());
   }
-
 }

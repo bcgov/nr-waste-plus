@@ -9,7 +9,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public enum IdentityProvider {
   IDIR("idir"),
-  BUSINESS_BCEID("bceidbusiness");
+  BUSINESS_BCEID("bceidbusiness"),
+  BCSC("bcsc");
 
   private final String claimName;
 

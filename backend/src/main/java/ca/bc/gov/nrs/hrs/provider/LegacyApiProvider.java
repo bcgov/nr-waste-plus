@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.hrs.provider;
 
 import ca.bc.gov.nrs.hrs.dto.CodeNameDto;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.micrometer.observation.annotation.Observed;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -11,6 +12,7 @@ import org.springframework.web.client.RestClient;
 
 @Slf4j
 @Component
+@Observed
 public class LegacyApiProvider {
 
   private final RestClient restClient;

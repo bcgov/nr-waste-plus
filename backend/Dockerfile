@@ -16,7 +16,7 @@ ARG PORT=8080
 
 # Copy
 WORKDIR /app
-COPY --from=build /app/target/nr-hrs-backend ./nr-hrs-backend
+COPY --from=build /app/target/nr-waste-plus-backend ./nr-waste-plus-backend
 
 # User, port and health check
 USER 1001
@@ -26,4 +26,4 @@ HEALTHCHECK CMD curl -f http://localhost:${PORT}/actuator/health | grep '"status
 ENV SPRING_PROFILES_ACTIVE=container,prod
 
 # Startup
-ENTRYPOINT ["/app/nr-hrs-backend"]
+ENTRYPOINT ["/app/nr-waste-plus-backend"]
