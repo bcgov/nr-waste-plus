@@ -36,7 +36,7 @@ class SearchEndpointIntegrationTest extends AbstractTestContainerIntegrationTest
         .andExpect(jsonPath("$.content[0].ruNumber").value(34906))
         .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(10))
+        .andExpect(jsonPath("$.page.totalElements").value(37))
         .andReturn();
   }
 
@@ -56,7 +56,7 @@ class SearchEndpointIntegrationTest extends AbstractTestContainerIntegrationTest
         .andExpect(jsonPath("$.content[0].ruNumber").value(34906))
         .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(5))
+        .andExpect(jsonPath("$.page.totalElements").value(32))
         .andReturn();
   }
 
@@ -67,14 +67,14 @@ class SearchEndpointIntegrationTest extends AbstractTestContainerIntegrationTest
         .perform(
             get("/api/search/reporting-units")
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .param("page", "3")
+                .param("page", "10")
                 .param("size", "10")
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.content.length()").value(0))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(10))
+        .andExpect(jsonPath("$.page.totalElements").value(37))
         .andReturn();
   }
 
