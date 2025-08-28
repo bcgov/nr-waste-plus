@@ -6,6 +6,7 @@ import lombok.With;
 
 @With
 public record ReportingUnitSearchResultDto(
+    String id,
     String blockId,
     Long ruNumber,
     CodeDescriptionDto client,
