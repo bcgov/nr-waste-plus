@@ -147,7 +147,7 @@ const AutoCompleteInput = <T,>({
       className="autocomplete-combobox"
       {...props}
       items={items}
-      onChange={(selectedItem) => onSelect(selectedItem as T | null | undefined)}
+      onChange={(selectedItem) => onSelect(selectedItem.selectedItem as T | null | undefined)}
       onInputChange={setTypedValue}
     />
   );
