@@ -1,22 +1,23 @@
-package ca.bc.gov.nrs.hrs.provider;
+package ca.bc.gov.nrs.hrs.controller;
 
-import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.DISTRICT_CODES_JSON;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.serviceUnavailable;
 import static com.github.tomakehurst.wiremock.client.WireMock.unauthorized;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
-import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
+import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
+import ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -25,16 +26,21 @@ import io.github.resilience4j.retry.RetryRegistry;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
-@DisplayName("Integrated Test | Legacy API Provider")
-class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationTest {
+@AutoConfigureMockMvc
+@WithMockJwt
+@DisplayName("Integrated Test | Search Controller")
+class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @RegisterExtension
   static WireMockExtension clientApiStub =
@@ -49,12 +55,14 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
           .build();
 
   @Autowired
+  private MockMvc mockMvc;
+  @Autowired
   private CircuitBreakerRegistry circuitBreakerRegistry;
   @Autowired
   private RetryRegistry retryRegistry;
 
   @BeforeEach
-  public void setUp(){
+  public void setUp() {
     clientApiStub.resetAll();
 
     CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("breaker");
@@ -64,88 +72,69 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
     retryRegistry.retry("apiRetry", retry);
   }
 
-  @Autowired
-  private LegacyApiProvider legacyApiProvider;
-
-  @Test
-  @DisplayName("Should fetch district codes successfully")
-  void shouldFetchDistrictCodes() {
-
-    clientApiStub.stubFor(
-        get(urlPathEqualTo("/api/codes/districts"))
-            .willReturn(okJson(DISTRICT_CODES_JSON)));
-
-    assertNotNull(legacyApiProvider.getDistrictCodes());
-    assertFalse(legacyApiProvider.getDistrictCodes().isEmpty());
-    assertEquals(23, legacyApiProvider.getDistrictCodes().size());
-  }
-
-  @Test
-  @DisplayName("fallback district when unavailable")
-  void shouldFetchDistrictCodesAndIsUnavailable() {
-
-    clientApiStub.stubFor(
-        get(urlPathEqualTo("/api/codes/districts"))
-            .willReturn(serviceUnavailable()));
-
-    assertNotNull(legacyApiProvider.getDistrictCodes());
-    assertFalse(legacyApiProvider.getDistrictCodes().isEmpty());
-    assertEquals(23, legacyApiProvider.getDistrictCodes().size());
-  }
-
-  void shouldSearchAndGet(
+  @ParameterizedTest
+  @MethodSource("searchReportingUnit")
+  @DisplayName("Search Reporting Unit")
+  void getOpeningCategories_happyPath_shouldSucceed(
       ReportingUnitSearchParametersDto filters,
       Pageable pageable,
       ResponseDefinitionBuilder stubResponse,
       long size
-  ){
+  ) throws Exception {
     clientApiStub.stubFor(
-        get(urlPathEqualTo("/api/search/reporting-units"))
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
             .willReturn(stubResponse));
 
-    Page<ReportingUnitSearchResultDto> result = legacyApiProvider.searchReportingUnit(filters, pageable);
-    assertNotNull(result);
-    assertEquals(size, result.getTotalElements());
-    assertEquals(size == 0, result.getContent().isEmpty());
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .queryParams(filters.toMultiMap(pageable))
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(jsonPath("$.content.length()").value(size))
+        .andReturn();
   }
 
-  private static Stream<Arguments> searchReportingUnit(){
+  private static Stream<Arguments> searchReportingUnit() {
     return Stream.of(
         Arguments.argumentSet(
             "Search with results and no filter",
             ReportingUnitSearchParametersDto.builder().build(),
-            PageRequest.of(0,10),
+            PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE),
             1L
         ),
         Arguments.argumentSet(
             "Search with no results",
             ReportingUnitSearchParametersDto.builder().build(),
-            PageRequest.of(0,10),
+            PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE),
             0L
         ),
         Arguments.argumentSet(
             "Circuit breaker for unavailable",
             ReportingUnitSearchParametersDto.builder().build(),
-            PageRequest.of(1,10),
+            PageRequest.of(1, 10),
             serviceUnavailable(),
             0L
         ),
         Arguments.argumentSet(
             "Circuit breaker for not found",
             ReportingUnitSearchParametersDto.builder().build(),
-            PageRequest.of(1,10),
+            PageRequest.of(1, 10),
             notFound(),
             0L
         ),
         Arguments.argumentSet(
             "Circuit breaker for unauthorized",
             ReportingUnitSearchParametersDto.builder().build(),
-            PageRequest.of(1,10),
+            PageRequest.of(1, 10),
             unauthorized(),
             0L
         )
     );
   }
+
 }

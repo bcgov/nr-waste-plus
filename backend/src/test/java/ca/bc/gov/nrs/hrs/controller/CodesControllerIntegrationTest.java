@@ -11,6 +11,11 @@ import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.retry.RetryRegistry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -38,9 +43,24 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Autowired
   private MockMvc mockMvc;
+  @Autowired
+  private CircuitBreakerRegistry circuitBreakerRegistry;
+  @Autowired
+  private RetryRegistry retryRegistry;
+
+  @BeforeEach
+  public void setUp(){
+    clientApiStub.resetAll();
+
+    CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("breaker");
+    breaker.reset();
+    RetryConfig retry = retryRegistry.retry("apiRetry").getRetryConfig();
+    retryRegistry.remove("apiRetry");
+    retryRegistry.retry("apiRetry", retry);
+  }
 
   @Test
-  @DisplayName("Get Opening Categories happy Path should Succeed")
+  @DisplayName("Get districts happy Path should Succeed")
   void getOpeningCategories_happyPath_shouldSucceed() throws Exception {
     CodeNameDto category = new CodeNameDto("DMH",
         "100 Mile House Natural Resource District");
