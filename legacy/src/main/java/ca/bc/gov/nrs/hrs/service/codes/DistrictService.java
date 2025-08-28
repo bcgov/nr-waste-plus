@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.service.codes;
 
+import ca.bc.gov.nrs.hrs.configuration.HrsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.mappers.codes.DistrictMapper;
 import ca.bc.gov.nrs.hrs.repository.codes.OrgUnitRepository;
@@ -20,6 +21,7 @@ public class DistrictService {
 
   private final OrgUnitRepository orgUnitRepository;
   private final DistrictMapper districtMapper;
+  private final HrsConfiguration configuration;
 
   /**
    * Find all Org Units for the Openings Search.
@@ -30,7 +32,7 @@ public class DistrictService {
     log.info("Getting all org units for the search openings");
 
     List<CodeDescriptionDto> orgUnits = orgUnitRepository
-        .findAll()
+        .findAllByOrgUnitCodeInOrderByOrgUnitCodeAsc(configuration.getDistricts())
         .stream()
         .map(districtMapper::fromProjection)
         .toList();
