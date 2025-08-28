@@ -11,7 +11,7 @@ import {
 
 import EmptySection from '@/components/core/EmptySection';
 
-import { type TableHeaderType, type PageableResponse, renderCell } from './types';
+import { type TableHeaderType, type PageableResponse, renderCell, type NestedKeyOf } from './types';
 
 /**
  * Pagination parameters for page change events.
@@ -36,7 +36,7 @@ type PaginationParams = {
  * @property {(params: PaginationParams) => void} [onPageChange] - Callback for handling page changes.
  */
 type TableResourceProps<T> = {
-  headers: TableHeaderType<T, keyof T>[];
+  headers: TableHeaderType<T, NestedKeyOf<T>>[];
   content: PageableResponse<T>;
   loading: boolean;
   error: boolean;
