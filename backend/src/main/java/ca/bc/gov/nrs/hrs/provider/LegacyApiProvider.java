@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.hrs.provider;
 
-import ca.bc.gov.nrs.hrs.dto.base.CodeNameDto;
+import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -36,12 +36,34 @@ public class LegacyApiProvider {
     this.mapper = mapper;
   }
 
-  @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyList")
-  public List<CodeNameDto> getDistrictCodes() {
+  @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackDistricts")
+  public List<CodeDescriptionDto> getDistrictCodes() {
     log.info("Starting {} request to /codes/districts", PROVIDER);
     return restClient
         .get()
         .uri("/api/codes/districts")
+        .retrieve()
+        .body(new ParameterizedTypeReference<>() {
+        });
+  }
+
+  @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyList")
+  public List<CodeDescriptionDto> getSamplingCodes() {
+    log.info("Starting {} request to /codes/samplings", PROVIDER);
+    return restClient
+        .get()
+        .uri("/api/codes/samplings")
+        .retrieve()
+        .body(new ParameterizedTypeReference<>() {
+        });
+  }
+
+  @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyList")
+  public List<CodeDescriptionDto> getStatusCodes() {
+    log.info("Starting {} request to /codes/assess-area-statuses", PROVIDER);
+    return restClient
+        .get()
+        .uri("/api/codes/assess-area-statuses")
         .retrieve()
         .body(new ParameterizedTypeReference<>() {
         });
@@ -77,40 +99,45 @@ public class LegacyApiProvider {
     );
   }
 
-  private List<CodeNameDto> fallbackEmptyList(Throwable throwable) {
+  private List<CodeDescriptionDto> fallbackDistricts(Throwable throwable) {
     log.error("Error occurred while fetching data from {}: {}", PROVIDER, throwable.getMessage());
     return List.of(
-        new CodeNameDto("DMH", "100 Mile House Natural Resource District"),
-        new CodeNameDto("DCC", "Cariboo-Chilcotin Natural Resource District"),
-        new CodeNameDto("DCK", "Chilliwack Natural Resource District"),
-        new CodeNameDto("DFN", "Fort Nelson Natural Resource District"),
-        new CodeNameDto("DQC", "Haida Gwaii Natural Resource District"),
-        new CodeNameDto("DMK", "Mackenzie Natural Resource District"),
-        new CodeNameDto("DND", "Nadina Natural Resource District"),
-        new CodeNameDto("DNI", "North Island - Central Coast Natural Resource District"),
-        new CodeNameDto("DPC", "Peace Natural Resource District"),
-        new CodeNameDto("DPG", "Prince George Natural Resource District"),
-        new CodeNameDto("DQU", "Quesnel Natural Resource District"),
-        new CodeNameDto("DRM", "Rocky Mountain Natural Resource District"),
-        new CodeNameDto("DSQ", "Sea to Sky Natural Resource District"),
-        new CodeNameDto("DSE", "Selkirk Natural Resource District"),
-        new CodeNameDto("DSS", "Skeena Stikine Natural Resource District"),
-        new CodeNameDto("DSI", "South Island Natural Resource District"),
-        new CodeNameDto("DVA", "Stuart Nechako Natural Resource District"),
-        new CodeNameDto("DSC", "Sunshine Coast Natural Resource District"),
-        new CodeNameDto("DKA", "Thompson Rivers Natural Resource District"),
-        new CodeNameDto("DKM", "Coast Mountains Natural Resource District"),
-        new CodeNameDto("DOS", "Okanagan Shuswap Natural Resource District"),
-        new CodeNameDto("DCS", "Cascades Natural Resource District"),
-        new CodeNameDto("DCR", "Campbell River Natural Resource District")
+        new CodeDescriptionDto("DCC", "Cariboo-Chilcotin Natural Resource District"),
+        new CodeDescriptionDto("DMH", "100 Mile House Natural Resource District"),
+        new CodeDescriptionDto("DCK", "Chilliwack Natural Resource District"),
+        new CodeDescriptionDto("DFN", "Fort Nelson Natural Resource District"),
+        new CodeDescriptionDto("DQC", "Haida Gwaii Natural Resource District"),
+        new CodeDescriptionDto("DMK", "Mackenzie Natural Resource District"),
+        new CodeDescriptionDto("DND", "Nadina Natural Resource District"),
+        new CodeDescriptionDto("DNI", "North Island - Central Coast Natural Resource District"),
+        new CodeDescriptionDto("DPC", "Peace Natural Resource District"),
+        new CodeDescriptionDto("DPG", "Prince George Natural Resource District"),
+        new CodeDescriptionDto("DQU", "Quesnel Natural Resource District"),
+        new CodeDescriptionDto("DRM", "Rocky Mountain Natural Resource District"),
+        new CodeDescriptionDto("DSQ", "Sea to Sky Natural Resource District"),
+        new CodeDescriptionDto("DSE", "Selkirk Natural Resource District"),
+        new CodeDescriptionDto("DSS", "Skeena Stikine Natural Resource District"),
+        new CodeDescriptionDto("DSI", "South Island Natural Resource District"),
+        new CodeDescriptionDto("DVA", "Stuart Nechako Natural Resource District"),
+        new CodeDescriptionDto("DSC", "Sunshine Coast Natural Resource District"),
+        new CodeDescriptionDto("DKA", "Thompson Rivers Natural Resource District"),
+        new CodeDescriptionDto("DKM", "Coast Mountains Natural Resource District"),
+        new CodeDescriptionDto("DOS", "Okanagan Shuswap Natural Resource District"),
+        new CodeDescriptionDto("DCS", "Cascades Natural Resource District"),
+        new CodeDescriptionDto("DCR", "Campbell River Natural Resource District")
     );
+  }
+
+  private List<CodeDescriptionDto> fallbackEmptyList(Throwable throwable) {
+    log.error("Error occurred while fetching data from {}: {}", PROVIDER, throwable.getMessage());
+    return List.of();
   }
 
   private Page<ReportingUnitSearchResultDto> fallbackEmptySearchReportingUnit(
       ReportingUnitSearchParametersDto filters,
       Pageable pageable,
       Throwable throwable
-  ){
+  ) {
     log.error("Error occurred while fetching search from {}: {}", PROVIDER, throwable.getMessage());
     return new PageImpl<>(List.of(), pageable, 0);
   }

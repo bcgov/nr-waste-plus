@@ -1,15 +1,19 @@
 package ca.bc.gov.nrs.hrs.controller;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.base.CodeNameDto;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -49,7 +53,7 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   private RetryRegistry retryRegistry;
 
   @BeforeEach
-  public void setUp(){
+  public void setUp() {
     clientApiStub.resetAll();
 
     CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("breaker");
@@ -61,9 +65,9 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
   @Test
   @DisplayName("Get districts happy Path should Succeed")
-  void getOpeningCategories_happyPath_shouldSucceed() throws Exception {
-    CodeNameDto category = new CodeNameDto("DMH",
-        "100 Mile House Natural Resource District");
+  void getDistricts_happyPath_shouldSucceed() throws Exception {
+    CodeDescriptionDto category = new CodeDescriptionDto("DCC",
+        "Cariboo-Chilcotin Natural Resource District");
 
     mockMvc
         .perform(
@@ -73,7 +77,50 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json"))
         .andExpect(jsonPath("$[0].code").value(category.code()))
-        .andExpect(jsonPath("$[0].name").value(category.name()))
+        .andExpect(jsonPath("$[0].description").value(category.description()))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Get sampling happy Path should Succeed")
+  void getSamplingOptions_happyPath_shouldSucceed() throws Exception {
+    CodeDescriptionDto category = new CodeDescriptionDto("AGR", "Aggregate");
+
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/codes/samplings"))
+            .willReturn(okJson(
+                "[{\"code\":\"AGR\",\"description\":\"Aggregate\"},{\"code\":\"BLK\",\"description\":\"Cutblock\"},{\"code\":\"OCU\",\"description\":\"Ocular\"}]")));
+
+    mockMvc
+        .perform(
+            get("/api/codes/samplings")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json"))
+        .andExpect(jsonPath("$[0].code").value(category.code()))
+        .andExpect(jsonPath("$[0].description").value(category.description()))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Get assess area status happy Path should Succeed")
+  void getAssessAreaStatus_happyPath_shouldSucceed() throws Exception {
+    CodeDescriptionDto category = new CodeDescriptionDto("APP", "Approved");
+
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/codes/assess-area-statuses"))
+            .willReturn(okJson("[{\"code\":\"APP\",\"description\":\"Approved\"}]")));
+
+    mockMvc
+        .perform(
+            get("/api/codes/assess-area-statuses")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json"))
+        .andExpect(jsonPath("$[0].code").value(category.code()))
+        .andExpect(jsonPath("$[0].description").value(category.description()))
         .andReturn();
   }
 
