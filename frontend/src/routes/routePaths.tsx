@@ -1,8 +1,8 @@
-import { DashboardReference } from '@carbon/icons-react';
+import { SearchLocate } from '@carbon/icons-react';
 import { Navigate, type RouteObject } from 'react-router-dom';
 
 import Layout from '@/components/Layout';
-import DashboardPage from '@/pages/Dashboard';
+import WasteSearchPage from '@/pages/Dashboard';
 import GlobalErrorPage from '@/pages/GlobalError';
 import LandingPage from '@/pages/Landing';
 import NotFoundPage from '@/pages/NotFound';
@@ -46,6 +46,12 @@ export const SYSTEM_ROUTES: RouteDescription[] = [
     protected: true,
   },
   {
+    path: '/dashboard',
+    id: 'Dashboard',
+    element: <Navigate to="/search" replace />,
+    isSideMenu: false,
+  },
+  {
     path: '/unauthorized',
     id: 'Unauthorized',
     element: <RoleErrorPage />,
@@ -82,10 +88,17 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/dashboard',
     id: 'Dashboard',
-    icon: DashboardReference,
+    element: <Navigate to="/search" replace />,
+    isSideMenu: false,
+    protected: true,
+  },
+  {
+    path: '/search',
+    id: 'Waste search',
+    icon: SearchLocate,
     element: (
       <Layout>
-        <DashboardPage />
+        <WasteSearchPage />
       </Layout>
     ),
     isSideMenu: true,
