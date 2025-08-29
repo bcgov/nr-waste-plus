@@ -1,4 +1,5 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { merge } from 'lodash';
 import { type FC, useEffect, useState } from 'react';
 
 import { PreferenceContext, type PreferenceProviderProps } from './PreferenceContext';
@@ -24,10 +25,7 @@ export const PreferenceProvider: FC<PreferenceProviderProps> = ({ children }) =>
 
   const updatePreferences = (preference: Partial<UserPreference>) => {
     if (!userPreference) return; // Don't update until loaded
-    const updatedPreferences = {
-      ...userPreference,
-      ...preference,
-    } as UserPreference;
+    const updatedPreferences = merge({}, userPreference, preference) as UserPreference;
     setUserPreference(updatedPreferences);
     mutateUserPreference.mutate(updatedPreferences);
   };
@@ -42,6 +40,7 @@ export const PreferenceProvider: FC<PreferenceProviderProps> = ({ children }) =>
   const contextValue = {
     userPreference: userPreference ?? initialValue,
     updatePreferences,
+    isLoaded: !!userPreference,
   };
 
   return <PreferenceContext.Provider value={contextValue}>{children}</PreferenceContext.Provider>;
