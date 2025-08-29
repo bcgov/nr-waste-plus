@@ -171,7 +171,7 @@ const TableResource = <T,>({
   return (
     <>
       {displayToolbar && (
-        <TableToolbar>
+        <TableToolbar data-testid="table-toolbar">
           <TableToolbarContent className="table-action-toolbar-content">
             {/* Extra toolbar entries */}
             <TableToolbarMenu
@@ -188,6 +188,7 @@ const TableResource = <T,>({
                   <Checkbox
                     key={`header-column-checkbox-${String(header.key)}`}
                     id={`header-column-checkbox-${String(header.key)}`}
+                    aria-label={`Toggle ${header.header} column`}
                     className="column-checkbox"
                     labelText={header.header}
                     checked={header.selected}

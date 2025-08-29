@@ -102,7 +102,21 @@ describe('TableResource', () => {
     expect(screen.queryByText('y')).toBeNull();
   });
 
-  it('calls onPageChange when pagination is used', async () => {
+  it('have pagination and item range', async () => {
+    const onPageChange = vi.fn();
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+      onPageChange,
+      displayRange: true,
+    });
+    expect(screen.getByTestId('pagination')).toBeDefined();
+    expect(screen.getByText('1-2 of 2 items')).toBeDefined();
+  });
+
+  it('check no item range', async () => {
     const onPageChange = vi.fn();
     await renderWithProps({
       headers,
@@ -112,5 +126,92 @@ describe('TableResource', () => {
       onPageChange,
     });
     expect(screen.getByTestId('pagination')).toBeDefined();
+    expect(screen.queryByText('1-2 of 2 items')).toBeNull();
+  });
+
+  it('calls onPageChange when pagination is used', async () => {
+    const onPageChange = vi.fn();
+
+    const contentMany: PageableResponse<TestObjectType> = {
+      content: Array.from({ length: 10 }, (_, i) => ({
+        id: i + 1,
+        name: `User ${i + 1}`,
+        custom: `Custom ${i + 1}`,
+        hidden: `Hidden ${i + 1}`,
+      })),
+      page: { number: 0, size: 10, totalElements: 15, totalPages: 2 },
+    };
+
+    await renderWithProps({
+      headers,
+      content: contentMany,
+      loading: false,
+      error: false,
+      onPageChange,
+      displayRange: true,
+    });
+    expect(screen.getByTestId('pagination')).toBeDefined();
+    expect(screen.getByText('1-10 of 15 items')).toBeDefined();
+    const button = screen.getByRole('button', { name: 'Next page' });
+    await act(async () => fireEvent.click(button));
+    expect(onPageChange).toHaveBeenCalledWith({ page: 1, pageSize: 10 });
+
+    const previousButton = screen.getByRole('button', { name: 'Previous page' });
+    await act(async () => fireEvent.click(previousButton));
+    expect(onPageChange).toHaveBeenCalledWith({ page: 0, pageSize: 10 });
+  });
+
+  it('Have toolbar visible', async () => {
+    const onPageChange = vi.fn();
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+      onPageChange,
+      displayToolbar: true,
+    });
+    expect(screen.getByRole('button', { name: 'Edit columns' })).toBeDefined();
+  });
+
+  it('Edit columns open and show columns', async () => {
+    const onPageChange = vi.fn();
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+      onPageChange,
+      displayToolbar: true,
+    });
+    const editColumns = screen.getByRole('button', { name: 'Edit columns' });
+    await act(async () => fireEvent.click(editColumns));
+    expect(screen.getByRole('checkbox', { name: 'Toggle Hidden column' })).toBeDefined();
+  });
+
+  it('Enable hidden column', async () => {
+    const onPageChange = vi.fn();
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+      onPageChange,
+      displayToolbar: true,
+    });
+
+    //Initially doesn't appear, because is hidden
+    const columnHeaderPre = screen.queryByRole('columnheader', { name: 'Hidden' });
+    expect(columnHeaderPre).toBeNull();
+    //Open the edit columns
+    const editColumns = screen.getByRole('button', { name: 'Edit columns' });
+    await act(async () => fireEvent.click(editColumns));
+    //Enable the hidden
+    const enableHiddenColumn = screen.getByRole('checkbox', { name: 'Toggle Hidden column' });
+    expect(enableHiddenColumn).toBeDefined();
+    await act(async () => fireEvent.click(enableHiddenColumn));
+    //Then is present
+    const columnHeader = screen.getByRole('columnheader', { name: 'Hidden' });
+    expect(columnHeader).toBeDefined();
   });
 });
