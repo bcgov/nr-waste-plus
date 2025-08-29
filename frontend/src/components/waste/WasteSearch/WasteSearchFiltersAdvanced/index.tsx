@@ -180,7 +180,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
           </Column>
 
           {/* Client and location code */}
-          <Column sm={4} md={4} lg={4}>
+          <Column sm={4} md={4} lg={8} className='group-together'>
             <AutoCompleteInput
               id="forestclient-client-ac"
               titleText="Client"
@@ -199,8 +199,6 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 }
               }}
             />
-          </Column>
-          <Column sm={4} md={4} lg={4}>
             <ComboBox
               id="forestclient-location-cb"
               titleText="Location code"
@@ -258,14 +256,23 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
 
           {/* Submitter WILL BECOME DROPDOWN */}
           <Column sm={4} md={4} lg={8}>
-            <TextInput
-              className="advanced-text-input"
-              id="submitter-text-input"
-              type="text"
-              labelText="Cutting permit"
-              value={filters.cuttingPermitId}
-              onBlur={onTextChange('cuttingPermitId')}
-              maxLength={MAX_TEXT_INPUT_LEN}
+            <AutoCompleteInput
+              id="submitter-ac"
+              titleText="Submitter"
+              helperText="Search by IDIR or BCeID "
+              onAutoCompleteChange={async (value) =>
+                await APIs.forestclient.searchForestClients(value, 0, 10)
+              }
+              itemToString={(item) =>
+                item
+                  ? `${(item as ForestClientAutocompleteResultDto).id} ${(item as ForestClientAutocompleteResultDto).name} (${(item as ForestClientAutocompleteResultDto).acronym})`
+                  : ''
+              }
+              onSelect={(data) => {
+                if (data) {
+                  onChange('clientNumber')((data as ForestClientAutocompleteResultDto).id || '');
+                }
+              }}
             />
           </Column>
 

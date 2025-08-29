@@ -1,0 +1,16 @@
+@use '@bcgov-nr/nr-theme/design-tokens/colors.scss' as colors;
+@use '../../../../styles/variables' as vars;
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/type' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+@use '@carbon/react/scss/theme' as *;
+
+.search-table {
+  margin-left: -1.25rem;
+  margin-right: -1.25rem;
+
+  @include breakpoint-down(md) {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}

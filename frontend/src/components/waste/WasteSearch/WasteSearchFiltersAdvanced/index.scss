@@ -9,8 +9,6 @@
 
       .advanced-search-grid {
         overflow-y: auto;
-        row-gap: 2rem;
-        column-gap: 2rem;
 
         .date-filter-container {
           width: 100%;
@@ -56,6 +54,13 @@
 
         .advanced-text-input {
           height: 100%;
+        }
+
+        .group-together {
+          display: flex;
+          column-gap: 0.5rem;
+          
+
         }
       }
     }

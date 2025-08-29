@@ -4,6 +4,7 @@ import { useState, type FC } from 'react';
 
 import TableResource from '@/components/Form/TableResource';
 import API from '@/services/APIs';
+import { removeEmpty } from '@/services/utils';
 
 import WasteSearchFilters from '../WasteSearchFilters';
 
@@ -14,6 +15,8 @@ import type {
   ReportingUnitSearchParametersDto,
   ReportingUnitSearchResultDto,
 } from '@/services/search.types';
+
+import './index.scss';
 
 const WasteSearchTable: FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
@@ -30,16 +33,22 @@ const WasteSearchTable: FC = () => {
     staleTime: 0,
   });
 
+  const executeSearch = () => {
+    if (Object.keys(removeEmpty(filters)).length > 0) {
+      setTimeout(refetch, 1);
+    }
+  };
+
   const handlePageChange = ({ page, pageSize }: { page: number; pageSize: number }) => {
     setCurrentPage(Math.min(Math.max(page, 0), (data?.page.totalPages ?? 1) - 1)); // Adjust for zero-based index
     setPageSize(pageSize);
-    setTimeout(refetch, 1);
+    executeSearch();
   };
 
   return (
     <>
       <Column lg={16} md={8} sm={4} className="search-filters">
-        <WasteSearchFilters value={filters} onChange={setFilters} onSearch={() => refetch()} />
+        <WasteSearchFilters value={filters} onChange={setFilters} onSearch={executeSearch} />
       </Column>
 
       <Column lg={16} md={8} sm={4} className="search-table">
