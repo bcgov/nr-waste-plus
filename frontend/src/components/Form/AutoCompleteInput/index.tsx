@@ -149,6 +149,7 @@ const AutoCompleteInput = <T,>({
       items={items}
       onChange={(selectedItem) => onSelect(selectedItem.selectedItem as T | null | undefined)}
       onInputChange={setTypedValue}
+      helperText={props.helperText}
     />
   );
 };
