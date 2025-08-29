@@ -1,0 +1,48 @@
+{
+  "folders": [
+    {
+      "path": ".."
+    }
+  ],
+  "settings": {
+    "editor.inlineSuggest.enabled": true,
+    "git.openRepositoryInParentFolders": "always",
+    "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
+    "editor.formatOnPaste": false,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    },
+    "editor.tabSize": 2,
+    "vs-code-prettier-eslint.prettierLast": true,
+    "eslint.enable": true,
+    "eslint.validate": [
+      "javascript",
+	  "typescript",
+	  "javascriptreact",
+	  "typescriptreact"
+    ],
+    "prettier.requireConfig": true,
+    "workbench.tree.indent": 20,
+    "workbench.iconTheme": "material-icon-theme",
+    "[typescript]": {
+      "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
+    },
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
+    },
+    "[javascriptreact]": {
+      "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
+    },
+    "[json]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "eslint.ignoreUntitled": true,
+    "eslint.options": {
+      "configFile": "./.eslintrc.js"
+    },
+    "scm.showHistoryGraph": false
+  }
+}
