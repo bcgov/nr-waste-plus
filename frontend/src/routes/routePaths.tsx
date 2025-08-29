@@ -2,11 +2,11 @@ import { SearchLocate } from '@carbon/icons-react';
 import { Navigate, type RouteObject } from 'react-router-dom';
 
 import Layout from '@/components/Layout';
-import WasteSearchPage from '@/pages/Dashboard';
 import GlobalErrorPage from '@/pages/GlobalError';
 import LandingPage from '@/pages/Landing';
 import NotFoundPage from '@/pages/NotFound';
 import RoleErrorPage from '@/pages/RoleError';
+import WasteSearchPage from '@/pages/WasteSearch';
 
 import ProtectedRoute from './ProtectedRoute';
 
