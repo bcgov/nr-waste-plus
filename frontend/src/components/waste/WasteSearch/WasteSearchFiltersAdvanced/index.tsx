@@ -254,27 +254,8 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
             </div>
           </Column>
 
-          {/* Submitter WILL BECOME DROPDOWN */}
-          <Column sm={4} md={4} lg={8}>
-            <AutoCompleteInput
-              id="submitter-ac"
-              titleText="Submitter"
-              helperText="Search by IDIR or BCeID "
-              onAutoCompleteChange={async (value) =>
-                await APIs.forestclient.searchForestClients(value, 0, 10)
-              }
-              itemToString={(item) =>
-                item
-                  ? `${(item as ForestClientAutocompleteResultDto).id} ${(item as ForestClientAutocompleteResultDto).name} (${(item as ForestClientAutocompleteResultDto).acronym})`
-                  : ''
-              }
-              onSelect={(data) => {
-                if (data) {
-                  onChange('clientNumber')((data as ForestClientAutocompleteResultDto).id || '');
-                }
-              }}
-            />
-          </Column>
+          {/* Submitter. Requires #77 to implement */}
+          <Column sm={4} md={4} lg={8}></Column>
 
           {/* License number */}
           <Column sm={4} md={4} lg={8}>

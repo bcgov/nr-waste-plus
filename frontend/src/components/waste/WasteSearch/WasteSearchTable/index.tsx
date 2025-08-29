@@ -53,12 +53,14 @@ const WasteSearchTable: FC = () => {
 
       <Column lg={16} md={8} sm={4} className="search-table">
         <TableResource
+          id="waste-search"
           headers={headers}
           content={data ?? ({} as PageableResponse<ReportingUnitSearchResultDto>)}
           loading={isLoading}
           error={!isFetching && isError}
           onPageChange={handlePageChange}
           displayRange
+          displayToolbar
         />
       </Column>
     </>
