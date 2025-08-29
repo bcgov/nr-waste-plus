@@ -4,7 +4,7 @@ const EmptyValueTag: FC<{ value: string }> = ({ value }) => {
   if (value) {
     return <span>{value}</span>;
   } else {
-    return <span>-</span>;
+    return <span data-testid="empty-value">-</span>;
   }
 };
 

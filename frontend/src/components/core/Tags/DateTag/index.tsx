@@ -6,7 +6,7 @@ const DateTag: FC<{ date: string }> = ({ date }) => {
   if (parsedDate.isValid) {
     return <span>{parsedDate.toFormat("MMMM dd, yyyy 'at' HH:mm")}</span>;
   } else {
-    return <span>{date}</span>;
+    return <span data-testid="invalid-date">{date}</span>;
   }
 };
 
