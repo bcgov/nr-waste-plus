@@ -113,8 +113,4 @@ describe('TableResource', () => {
     });
     expect(screen.getByTestId('pagination')).toBeDefined();
   });
-
-  //TODO: Add pagination test
-  //TODO: add item range test
-  //TODO: add column editing test
 });
