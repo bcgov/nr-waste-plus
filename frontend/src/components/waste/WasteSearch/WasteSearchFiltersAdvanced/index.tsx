@@ -102,11 +102,10 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
       className="advanced-search-modal"
       data-testid="advanced-search-modal"
       open={isModalOpen}
-      onClose={onClose}
       size="lg"
       selectorPrimaryFocus=".advanced-search-body"
     >
-      <ModalHeader title="Advanced search" />
+      <ModalHeader title="Advanced search" closeModal={onClose} />
       <ModalBody className="advanced-search-body">
         <Grid className="advanced-search-grid">
           <Column sm={4} md={8} lg={16}>
