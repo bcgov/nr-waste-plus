@@ -1,10 +1,12 @@
 package ca.bc.gov.nrs.hrs.configuration;
 
-import ca.bc.gov.nrs.hrs.dto.CodeDescriptionDto;
-import ca.bc.gov.nrs.hrs.dto.CodeNameDto;
+import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.base.CodeNameDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientAutocompleteResultDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientLocationDto;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.entity.users.UserPreferenceEntity;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
@@ -36,7 +38,9 @@ import org.springframework.web.client.RestClient;
     RetriableException.class,
     TooManyRequestsException.class,
     UnretriableException.class,
-    UserNotFoundException.class
+    UserNotFoundException.class,
+    ReportingUnitSearchResultDto.class,
+    ReportingUnitSearchParametersDto.class
 })
 @EnableJpaAuditing(auditorAwareRef = "databaseAuditor")
 public class GlobalConfiguration {

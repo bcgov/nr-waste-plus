@@ -54,6 +54,11 @@ public class ApiAuthorizationCustomizer implements
         .requestMatchers("/api/forest-clients/**")
         .authenticated()
 
+        // Search reporting units can be accessed by authenticated users
+        // This is added as a repeat of the above rule to allow future customization
+        .requestMatchers("/api/search/reporting-units")
+        .authenticated()
+
         // Deny all other requests
         .anyRequest().denyAll();
 

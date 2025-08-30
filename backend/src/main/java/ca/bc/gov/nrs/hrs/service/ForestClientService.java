@@ -1,9 +1,8 @@
 package ca.bc.gov.nrs.hrs.service;
 
-import ca.bc.gov.nrs.hrs.dto.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientAutocompleteResultDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
-import ca.bc.gov.nrs.hrs.dto.client.ForestClientLocationDto;
 import ca.bc.gov.nrs.hrs.provider.ForestClientApiProvider;
 import io.micrometer.observation.annotation.Observed;
 import java.util.List;

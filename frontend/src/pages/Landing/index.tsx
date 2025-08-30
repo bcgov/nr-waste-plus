@@ -54,7 +54,7 @@ const LandingPage: FC = () => {
 
             {/* Welcome - Title and Subtitle */}
             <h1 data-testid="landing-title" className="landing-title">
-              Harvest Residue System
+              Waste Plus
             </h1>
 
             <h2 data-testid="landing-subtitle" className="landing-subtitle">

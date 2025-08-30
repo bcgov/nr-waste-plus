@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.hrs.util;
 
-import ca.bc.gov.nrs.hrs.dto.IdentityProvider;
+import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;

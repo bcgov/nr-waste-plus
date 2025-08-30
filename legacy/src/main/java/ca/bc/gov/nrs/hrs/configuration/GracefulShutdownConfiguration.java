@@ -12,8 +12,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public class GracefulShutdownConfiguration implements
-    ApplicationListener<ContextClosedEvent> {
+public class GracefulShutdownConfiguration implements ApplicationListener<ContextClosedEvent> {
 
   private final EntityManager oracleEntityManager;
 

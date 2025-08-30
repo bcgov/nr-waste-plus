@@ -3,7 +3,7 @@ package ca.bc.gov.nrs.hrs.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import ca.bc.gov.nrs.hrs.dto.IdentityProvider;
+import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;

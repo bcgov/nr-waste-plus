@@ -1,0 +1,1047 @@
+-- Data Pump for THE.WASTE_SUBMITTER_ROLE_TYPE_CODE
+
+INSERT INTO THE.WASTE_SUBMITTER_ROLE_TYPE_CODE (WASTE_SUBMITTER_ROLE_TYPE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('LSC', 'Licensed Scaler', DATE '2005-05-31', DATE '2099-12-31', DATE '2009-12-08'),
+('LSR', 'Licensed Surveyor', DATE '2005-05-31', DATE '2099-12-31', DATE '2009-12-08'),
+('LSS', 'Licensed Surveyor and Scaler', DATE '2005-05-31', DATE '2099-12-31', DATE '2009-12-08'),
+('RFT', 'Registered Forest Technologist', DATE '2005-05-31', DATE '2099-12-31', DATE '2009-12-08'),
+('RPF', 'Registered Professional Forester', DATE '2005-05-31', DATE '2099-12-31', DATE '2009-12-08'),
+('USR', 'Unlicensed Surveyor', DATE '2005-05-31', DATE '2099-12-31', DATE '2009-12-08');
+-- Data pump for HBS_EDIT_ERR_MESSAGE_CODE
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('SD10','REL','M','No appraisal stumpage rate record exists for this scale date',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD11','BIL','M','More than one override rule in effect.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD12','REL','M','Range of daily load and scale dates spans two mark rate periods and no override rate rule in effect',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD13','REL','M','Daily loads entered for a date greater than return scale date',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD16','FMT','M','There are duplicate days within a return',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SDW01','SCL','I','Wt less Subsample Must be numeric and > Tare Weight',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SG00','FMT','M','Obsolete - EDI input species and grade cannot be blank',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SG01','LKP','M','Obsolete - EDI input species and grade combination is invalid',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SG02','FMT','I','Species and grade combination is invalid',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SGL01','SCL','I','Signing scaler licence does not exist in the Scale Control System (Quant License)',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SL00','FMT','M','EDI Input Scaler License cannot be blank',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SL01','LKP','M','Edi input scaler licence not in the quantification licence table',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SL02','FMT','I','Scaler licence not in the Scale Control System (Quant License)',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SL03','FMT','I','Scaler licence must be consistent throughout the tally',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SN01','FMT','I','There must be < 400 segregations in one sample return',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SP00','FMT','M','Obsolete - EDI input species product and grade cannot be blank',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SP01','LKP','M','Obsolete - EDI input species product and grade combination is invalid',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SP02','FMT','I','Species, product and grade combination is invalid',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SQ01','FMT','M','Obsolete - The first sequence number must be 00',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SQ02','FMT','M','Obsolete - Record sequence must be ascending',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('SQ03','FMT','M','Obsolete - Record sequence, page and line, must be ascending',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SQ04','FMT','M','Obsolete - The first sequence number must be 01',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SS01','FMT','I','Scale site does not exist in the Scale Site table',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SGL02','SCL','I','Signing Scaler Licence must match either the Primary or Secondary Scaler Licence',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SS01','SCL','I','Scale site does not exist in the Scale Site table',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SS02','FMT','M','Obsolete - Trading partner not authorized for this scale site in the trading partner submitter table',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SS02','SCL','M','Scale site is inactive',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SS03','FMT','I','Scale site must be consistent throughout the document',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SS04','REL','M','Obsolete - Waste tallies must have a scaling station of ZZZ',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SS05','REL','I','Non-waste tallies must not have a scaling station of ZZZ',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SSL01','SCL','I','Secondary scaler licence does not exist in the Scale Control System (Quant License)',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SSZZ','SCL','I','The Scale Site can not be = ZZZ',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('ST00','FMT','M','Obsolete - Edi input pop/strat/year must be an 8 digit numeric string',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('ST01','LKP','M','Obsolete - Edi input pop/strat/year not in the Stratum table',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('ST01','SCL','J','A sample tally, or a weigh slip with a billable event type and a billable mark, requires a billable stratum.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-11-21 16:17:28'),
+	 ('ST02','FMT','J','Pop/strat/year not in the Stratum table',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('ST02','SCL','J','A weigh slip with a non-billable event type requires a company-use stratum',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('NP01','VAL','I','Number of pieces must be > 0',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('NS00','VAL','I','Number of sections must be numeric or blank',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('NW00','FMT','I','Net weight must be a numeric greater than zero',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('NW01','VAL','I','Net weight must be > 0',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('OSL01','SCL','I','Original scaler licence does not exist in the Scale Control System (Quant License)',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('OSS01','SCL','I','Originating scale site does not exist in the Scale Site table',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('PI01','SCL','I','Parcel Identifier must be <= Parcel Count',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('PM00','FMT','I','Cruise, Field, and Waste scale data cannot be submitted on forms FS72',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('PSL01','SCL','I','Primary scaler licence does not exist in the Scale Control System (Quant License)',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('QV00','FMT','I','The quantity must be numeric',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('RC01','REL','M','Obsolete - Return category not BCOMB and greater than one timber mark in scale return segregations.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('RC02','REL','I','Multiple segregation marks only permitted on Beachcomb tallies.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('RE01','FMT','M','Obsolete - The first record in the tally must be type 0',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('RE02','FMT','M','Obsolete - The second record in the tally must be type 1',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('RE03','FMT','M','Obsolete - There must be at least one type 4 record in the tally.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('RE04','FMT','M','Obsolete - There must be one record type T in a tally from a trading partner.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('RE06','FMT','M','Obsolete - Record type must be 0, 1, or A',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('RE07','FMT','M','Obsolete - A mark summary record must be present',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('RN00','FMT','I','Return number must be 000 to 999',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('RN01','FMT','I','Return number must be consistent throughout the tally',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('RT00','FMT','M','Obsolete - Return type is not F or C',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('RT01','REL','M','Sum of daily loads is zero for a primary return',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('RT02','REL','M','Obsolete - Sum of daily loads is > zero for a nil or final return',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('SAM01','SCL','I','For Event Type SS, RS Sample Type must be Random or Forced',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SAM02','SCL','I','For Event Type PS, PD Sample Type must be Company or None',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD01','FMT','I','Scale date is not a valild date',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD02','SCL','M','Year of scale date is more than seven years prior to current year.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-02-28 00:00:00',TIMESTAMP'2013-02-13 08:22:29'),
+	 ('SD03','REL','I','Scale date is greater than the current date',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD03','SCL','I','Scale date is greater than the current date',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD04','REL','J','Scale date is less than stratum effective date',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD04','BIL','J','Scale date is less than stratum effective date',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD05','REL','J','Scale date is greater than stratum expiry date',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD05','BIL','J','Scale date is greater than stratum expiry date',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD06','REL','M','Obsolete - Scale date is outside the date range of the timber mark contract',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2004-11-15 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD06','BIL','M','Obsolete - Scale Date is outside the range of the timber mark contract.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2004-11-15 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD07','BIL','M','Obsolete - Scale date is greater than mark contract expiry date and more than one override rule in effect.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2004-11-15 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD08','REL','M','No Confirmed Appraisal Worksheet exists for this scale date',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD08','BIL','M','No Confirmed Appraisal Worksheet exists for this Scale Date',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD09','BIL','M','Obsolete - Scale date is greater than mark appraisal expiry date and more than one override rule in effect.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2004-11-15 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD10','BIL','M','No Appraisal Stumpage Rate Record exists for this Scale Date',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTBH05','FMT','I','Transport identifier required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTBH06','FMT','I','Source required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTBH07','FMT','I','Cutblock ID required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('FTBH11','FMT','I','Weigh slip number required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTBH13','FMT','I','Originating scale site number required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTBH19','FMT','I','Check scale required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWAH02','FMT','I','Scale site must be the same as recorded on the batch header',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWAH04','FMT','I','Scale date must be valid',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWAH05','FMT','I','Scale time must be valid',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWAH06','FMT','I','Incomming LDS number not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWAH07','FMT','I','Transport identifier not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWAH10','FMT','I','Sample deduction not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWAH11','FMT','I','Source not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWAH15','FMT','I','PSY not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWAH17','FMT','I','Outgoing LDS number not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWAH18','FMT','I','Destination not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWAH24','FMT','I','Duplicate weigh slip - DDN + DV already exist',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWAH28','FMT','I','Hash total re-computation failed  ',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWBH06','FMT','I','Incomming LDS number required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWBH07','FMT','I','Transport identifier required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWBH11','FMT','I','Source required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWBH15','FMT','I','PSY required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWBH17','FMT','I','Outgoing LDS number required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('FWBH18','FMT','I','Destination required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FWAH01','FMT','I','Return Type cannot be modified: sample or piece tally exists and this correction changes the document to a weigh slip',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FXA00','FMT','I','This is not a valid HBS XML file transmission',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FXA01','FMT','I','Batch count must match count of all batches in transmission file',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FXA02','FMT','I','All scale sites on all batch headers in transmission must be configured for detail submission',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FXA03','FMT','I','Creator must be a valid ministry client location code',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FXA04','FMT','I','Software vendors can only sumbit test transmissions',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('GR01','SCL','I','Species Grade combination does not exist.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('GW01','SCL','I','Gross Weight must be numeric and > 0',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('LC00','FMT','I','Log Count must be numeric',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('LC01','REL','I','Sum of the number of pieces must equal log count',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('LD00','FMT','I','No of loads must be numeric',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('LT01','SCL','I','Log length must be greater than zero',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-10-27 08:14:40'),
+	 ('LW01','FMT','M','Total loads/weight must equal the sum of daily loads/weight',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('LW02','FMT','M','Document total loads/weight must equal the sum of total loads/weight',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('NM00','FMT','M','Obsolete - NMV code must be A, U or blank for a WASTE tally',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('NM01','FMT','M','Obsolete - NMV code must be blank or N or S on a non- WASTE tally',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('NM02','VAL','I','NMV Indicator = false and the input mark is null',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('NM03','REL','I','Product codes is not logs and NMV Indicator = True',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('NP00','FMT','I','Number of pieces must be numeric',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('FBB05','FMT','I','For WSB, WSR batches, batch control total must match the sum of gross weights on weigh slips in batch ',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FBC05','FMT','I','For ARL, DPL, POT, WSO batches, batch control total must be the count of ledger entries or scale returns in batch',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLA02','FMT','I','Scale site must be the same as recorded on the batch header',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLA03','FMT','I','Arrival not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLA04','FMT','I','Arrival date must be valid',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLA08','FMT','I','Cutblock ID not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLA09','FMT','I','Field scale flag not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLA10','FMT','I','Weigh slip number not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLA11','FMT','I','Scale not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLA14','FMT','I','Split load not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLA17','FMT','I','Departure date must be valid',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLA21','FMT','I','Field scale deck ID not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLB03','FMT','I','Arrival required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLB08','FMT','I','Cutblock ID required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLB09','FMT','I','Field scale flag required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLB10','FMT','I','Weigh slip number required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLB11','FMT','I','Scale required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLB21','FMT','I','Field scale deck ID required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLC11','FMT','I','Scale date must be valid',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FSD01','SCL','I','Field Scale Deck ID must be present when Field Scale Flag =Y',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('FTAD01','FMT','I','Defect number must be unique within log ',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAH01','FMT','I','Return type cannot be changed from a piece scale or weight scale to a sample scale',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAH02','FMT','I','Scale site must be the same as recorded on the batch header',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAH03','FMT','I','Load arrival number not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAH04','FMT','I','Incomming LDS number not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAH05','FMT','I','Transport identifier not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAH06','FMT','I','Source not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAH07','FMT','I','Cutblock ID not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAH11','FMT','I','Weigh slip number not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAH13','FMT','I','Originating scale site number not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAH14','FMT','I','Scale date must be valid',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAH17','FMT','I','Split load not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAH19','FMT','I','Check scale not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAH23','FMT','I','Actual count of logs provided must balance to the log count field ',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAH29','FMT','I','Duplicate log tally - DDN + DV already exist',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAH33','FMT','I','Hash total re-computation failed  ',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAL01','FMT','I','Log number must be unique within tally ',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAL02','FMT','I','Timbermark only permitted for beachcomb tallies',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAL09','FMT','I','Log volume provided must  balance to computed log volume  ',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTAL10','FMT','I','Defect count provided must balance to computed defect count',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('FTBH01','FMT','I','Return type cannot be changed from a sample scale or weight scale to a piece scale',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTBH03','FMT','I','Load arrival number required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FTBH04','FMT','I','Incomming LDS number required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('BC01','SCL','I','Source must be a valid mark with File Type = B17 when tally is designated as Beachcomb.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('BC02','SCL','I','Source must not be a mark with File type = B17 when tally is not designated as Beachcomb.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('BC03','SCL','I','Obsolete - NMV indicator = true and the beachcomb mark is null',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2009-05-19 08:49:53',TIMESTAMP'2009-05-19 08:49:53'),
+	 ('BC04','SCL','I','Obsolete - If NMV = N Timbermark must be a valid Timbermark',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2009-05-19 08:49:53',TIMESTAMP'2009-05-19 08:49:53'),
+	 ('BM01','LKP','M','Obsolete - EDI input beachcomb timber mark not in the timber mark table.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('BM02','FMT','I','Beachcomb timber mark must be in Timber Mark table and in Mark Billed Client table.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('BM03','REL','M','Obsolete - Beachcomb timber mark status is not  HI, HA, HN, LC or HC',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-02-28 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('BM04','REL','M','When the beachcomb timber mark is a cash sale (payment method code = C), the SB4 Indicator must be true',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('BM05','REL','M','When the beachcomb timber mark is a cruise-based timber mark (cruise indicator = Y), the SB4 Indicator must be true',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('BT00','LKP','M','EDI input bill-to company not in the client location table',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('BT01','FMT','M','Bill to client not in the Forest Client table.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('BT01','SCL','I','Log butt must be greater than zero',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-10-27 08:14:40'),
+	 ('BT02','REL','M','Bill to Client status is "DAC" (de-activated)',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('BT03','FMT','M','Bill to client and location is not in the Client Location table',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('BT04','REL','M','Bill to Location expired indicator = "Y"',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CB00','VAL','I','Camp boom number must not be blank when the return category code = "field"',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CHKS01','SCL','M','Original scale return not found',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('CHKS02','SCL','M','More than one Original scale return found',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CHKS03','SCL','M','Original scale return found, but its event type cannot be Check Scale',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CT00','LKP','M','EDI input copy-to company not in the client location table',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CT01','FMT','M','Copy to client not in the Forest Client table.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CT02','REL','M','Copy to Client status is "DAC" (de-activated)',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CT03','FMT','M','Copy to client and location is not in the Client Location table',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CT04','REL','M','Copy to Location expired indicator = "Y"',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CTB00','SCL','I','Cutblock is not in the Cut Block table.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('DIGSIG','SCL','I','Digital Signature Validation Failed',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('DK00','FMT','I','Duplicate document submission',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('DL00','FMT','I','No of loads must be numeric',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('DS01','FMT','M','Document summary record must be present for EDI scale returns',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('ED00','FMT','M','Obsolete - Unknown Scale Type',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('ED01','FMT','M','Obsolete - Missing Document Begin Record',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('ED02','FMT','M','Obsolete - Srts Batch Date is invalid',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FBA01','FMT','I','Scale site must be valid',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FBA02','FMT','I','From scale date must be valid',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FBA03','FMT','I','To scale date must be valid',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FBA04','FMT','I','Document count  must match count of all documents in batch',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FBA05','FMT','I','For PSS, PPS batches, batch control total must match the sum of log counts on all tallies in batch',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('FBA06','FMT','I','For Ledger Batches, Site + Submitter Batch ID must be unique (ARL and DPL).',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('LC01','SCL','I','Log count must match actual number of logs.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLA13','FMT','I','Originating scale site number not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLB13','FMT','I','Originating scale site number required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SV00','FMT','I','Volume must be numeric',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SW01','SCL','I','Sample Weight must be >0',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('TB01','SCL','J','Timber Brand is not in the Scale Site table.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLA22','FMT','I','Originating scale site number not permitted',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FLB22','FMT','I','Originating scale site number required',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WT00','FMT','I','Weight must be numeric',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD11','REL','M','More than one override rule in effect.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('LA00','VAL','I','Load arrival number must be numeric and greater than zero',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('TC01','FMT','I','Sample Tally transaction code must be blank',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('NM04','VAL','I','NMV Indicator = true and the input mark is not null',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WR01','REL','M','Obsolete - Waste tallies must be prerated and no override rule in effect.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2004-11-15 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WR02','REL','M','Obsolete - Waste tallies must be prerated and no override rate in effect for segregation.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2004-11-15 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SR01','LKP','J','Sample ratio must be less than 10.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SR02','LKP','J','There are no ratios available for this population/stratum/sampling year.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2010-08-25 08:11:19'),
+	 ('LN02','VAL','I','Length (dm) must be > 0.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD17','REL','M','No rates for one or more segregation in effect for this scale date',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('TL01','REL','M','Total loads must equal the sum of daily loads',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('TM00','FMT','M','Obsolete - Edi input timber mark must not be blank',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-11-30 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('TM01','LKP','J','Timber mark must be in Timber Mark table and in Mark Billed Client table.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('TM01','SCL','J','Timber mark must be in Timber Mark table and in Mark Billed Client table.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('TM02','FMT','I','Billed timber mark is null',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('TM02','SCL','I','Billed timber mark is null',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('TM03','REL','M','Obsolete - Timber mark status is not in HI, HA, HN, LC or HC',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2005-02-28 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('TM04','REL','J','Cash-sale timber mark must be billed using GBS.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2009-05-19 08:49:53'),
+	 ('TM04','SCL','M','Obsolete - Timber Mark is not valid.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2009-05-19 08:49:53',TIMESTAMP'2009-05-19 08:49:53'),
+	 ('FB01','FMT','M','Can not issue a final bill for a exempted Timber Mark',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('TM05','REL','J','Obsolete - Cannot invoice a cruise-based timber mark.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2009-05-19 08:49:53',TIMESTAMP'2009-05-19 08:49:53'),
+	 ('TM05','SCL','J','Obsolete - Cash sale timber marks are not eligible for sampling.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2009-05-19 08:49:53',TIMESTAMP'2009-05-19 08:49:53'),
+	 ('TM06','REL','J','Return is Volume Estimate - Cruise but timber mark is not cruise-based.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2009-05-19 08:49:53'),
+	 ('TM06','SCL','J','Obsolete - Cruise-based timber marks are not eligible for sampling.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2009-05-19 08:49:53',TIMESTAMP'2009-05-19 08:49:53'),
+	 ('TM07','REL','J','Cannot sample a cruise-based timber mark.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2009-05-19 08:49:53'),
+	 ('TM08','REL','J','Cannot sample a cash-sale timber mark.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2009-05-19 08:49:53'),
+	 ('TM09','REL','J','Timber mark is cruise-based but return is not Volume Estimate - Cruise.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2009-05-19 08:49:53'),
+	 ('SG04','FMT','M','At least one segregation is needed on a piece scale return.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('TB02','SCL','I','Timberbrand Scale Site must be different than log tally scale site.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('TP01','SCL','I','Log top must be greater than zero',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-10-27 08:14:40');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('TW01','SCL','I','Tare must be numeric and < Gross Weight',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('TW01','REL','I','Total weight must equal the sum of daily weights',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SG03','FMT','M','Duplicate segregation',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('TB03','SCL','I','Timberbrand Scale Site must be different than weigh slip scale site.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SDW02','SCL','I','Wt less Subsample Must be numeric and < Gross Weight',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD09','REL','M','No rate available for a segregation on a prior WS return',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WSN01','SCL','I','Weigh slip number must be numeric',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD15','REL','M','No waste rates in effect for this scale date and timber mark',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('PC00','SCL','I','Parcel Count cannot be null when Parcel Identifier is not null',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('PC02','SCL','I','Parcel Count cannot be zero',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('PI00','SCL','I','Parcel Identifier cannot be null when Parcel Count is not null',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('PI02','SCL','I','Parcel Identifier cannot be zero',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('NM02','SCL','I','NMV Indicator = false and the input mark is null',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('NM04','SCL','I','NMV Indicator = true and the input mark is not null',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('BM02','SCL','I','Beachcomb timber mark must be in Timber Mark table and in Mark Billed Client table.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('NM02','REL','I','NMV Indicator = false and the input mark is null',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('NM04','REL','I','NMV Indicator = true and the input mark is not null',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('MM01','LKP','J','Matching weigh slip not found for this local sample tally at this site.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:20'),
+	 ('MM02','LKP','J','Matching weigh slip found for this local sample tally, but event type, mark, PSY or weight differ.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2009-05-19 11:26:20',TIMESTAMP'2009-05-19 11:26:20'),
+	 ('MM03','LKP','J','Matching weigh slip not found for this remote sample tally at originating  site.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:20');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('MM04','LKP','J','Matching weigh slip found for this remote sample tally, but event type, mark, PSY, weight or scale sites differ.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2009-05-19 11:26:20',TIMESTAMP'2009-05-19 11:26:20'),
+	 ('MM05','SCL','J','More than one matching sample tally found for this weigh slip.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('MM06','SCL','J','More than one matching red tag log tally found for this weigh slip.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SP01','SCL','I','Species product grade combination does not exist.',TIMESTAMP'2006-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SP02','SCL','I','Species product grade combination is not in effect on the scale date.',TIMESTAMP'2006-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CG01','SCL','I','Timber for this mark must be scaled using Coast grade codes.',TIMESTAMP'2006-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('IG01','SCL','I','Timber for this mark must be scaled using Interior grade codes.',TIMESTAMP'2006-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CG02','SCL','I','Timber for this mark must be scaled using Coast grade codes in effect on the scale date.',TIMESTAMP'2006-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('IG02','SCL','I','Timber for this mark must be scaled using Interior grade codes in effect on the scale date.',TIMESTAMP'2006-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CG03','SCL','I','Sampled timber from Coast marks must be placed in a Coastal stratum.',TIMESTAMP'2006-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('IG03','SCL','I','Sampled timber from Interior marks must be placed in an Interior stratum.',TIMESTAMP'2006-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CG04','SCL','I','Weighed timber from Coast marks must be placed in a Coastal stratum.',TIMESTAMP'2006-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('IG04','SCL','I','Weighed timber from Interior marks must be placed in an Interior stratum.',TIMESTAMP'2006-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CTB01','SCL','I','Cut block must be one of the cut blocks associated with this mark.',TIMESTAMP'2006-03-13 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CTB02','SCL','I','Cut block must be "NONE" when the mark has no cut blocks.',TIMESTAMP'2006-03-13 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('ST03','SCL','J','The Pop/Strat/Year must contain 8 or 10 characters.',TIMESTAMP'2006-03-13 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('BT05','FMT','M','Bill to Client Name is longer than 60 characters.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CT06','FMT','M','Required Copy to Client address information is incomplete.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('BT06','FMT','M','Required Bill to Client address information is incomplete.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CT05','FMT','M','Copy to Client Name is longer than 60 characters.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('FSX01','SCL','I','Field Deck ID on log tally must match Field Deck ID on a prior volume estimate.',TIMESTAMP'2006-03-13 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FSX02','SCL','I','Field Deck ID on weigh slip must match Field Deck ID on a prior volume estimate.',TIMESTAMP'2006-03-13 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('AD03','SCL','I','Arrival date is greater than the current date.',TIMESTAMP'2006-03-27 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('DD03','SCL','I','Departure date is greater than the current date.',TIMESTAMP'2006-03-27 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('DSS01','SCL','I','Destination scale site does not exist in the Scale Site table.',TIMESTAMP'2006-03-27 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CHKS00','SCL','M','Original scaler must be different from check scaler',TIMESTAMP'2006-04-05 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CHKS04','SCL','M','Original scale return found, but its event type cannot be SB4 Rescale',TIMESTAMP'2006-04-05 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CHKS05','SCL','M','Original scale return found, but its event type cannot be Company Use',TIMESTAMP'2006-04-05 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CHKS06','SCL','M','Original scale return found, but it has already been replaced',TIMESTAMP'2006-04-05 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CHKS07','SCL','M','Original scale return found, but its status is neither OIP/RDY, RCP/RDY nor RNP/RDY.',TIMESTAMP'2006-04-05 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-10-27 11:47:48'),
+	 ('CHKS08','SCL','M','Original scale return found, but scale site or weigh slip differ',TIMESTAMP'2006-04-05 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CHKS09','SCL','M','Original scale return found, but mark, PSY, or weight differ',TIMESTAMP'2006-04-05 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('MM07','LKP','M','Matching weigh slip not found for this local sample tally check scale',TIMESTAMP'2006-04-05 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('MM08','LKP','M','Matching weigh slip not found for this remote sample tally check scale',TIMESTAMP'2006-04-05 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('ST04','SCL','J','The sampling year must be numeric.',TIMESTAMP'2006-05-10 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FSX03','SCL','I','Field Scale Deck ID must be an upper case letter from A to Z or a number from 0 to 9.',TIMESTAMP'2006-06-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FSD02','SCL','I','In original versions, Field Scale Deck ID must not be present when Field Scale Flag = N',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('FSX04','SCL','I','Field Deck ID on arrival ledger entry must match Field Deck ID on a prior volume estimate.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('ST05','SCL','J','A weigh slip with a billable event type and a non-billable mark requires a company-use stratum',TIMESTAMP'2007-04-11 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF17','DTE','I','Year of survey date is more than seven years prior to current year',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2008-02-27 11:20:08');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('OLDSD1','FMT','I','Year of scale date is more than seven years prior to current year',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('OLDAD1','FMT','I','Year of arrival date is more than seven years prior to current year',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('OLDDD1','FMT','I','Year of departure date is more than seven years prior to current year',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('AD02','DTE','I','Year of arrival date is more than six years prior to current year.',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('DD02','DTE','I','Year of departure date is more than six years prior to current year.',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('SD02','DTE','I','Year of scale date is more than seven years prior to current year.',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2013-02-13 08:22:29'),
+	 ('WBIF00','REL','I','Another waste volume estimate summary return already exists with the same timber mark, cut block, and survey date.',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF04','FMT','I','Timber mark cannot be null',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF05','LKP','I','Timber mark must be in Timber Mark table',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF6$','REL','I','Waste assessment not permitted for a cash-sale timber mark.',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF6A','REL','I','Waste assessment not permitted for an oil-and-gas (area-based) timber mark.',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF6C','REL','I','Waste assessment not permitted for a cruise-based timber mark.',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF08','REL','I','Cut Block must be in the Cut Block table',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF8C','LKP','I','Grade does not exist in Coast Scale Grade Code table (for Coast Mark).',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF8I','LKP','I','Grade does not exist in Interior Scale Grade Code table (for Interior Mark).',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF09','REL','I','Cut Block must be one of the Cut Blocks associated with this Timber Mark',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF9C','REL','I','Grade exists in Coast Scale Grade Code table (for Coast Mark), but not for this survey date.',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF9I','REL','I','Grade exists in Interior Scale Grade Code table (for Interior Mark), but not for this survey date.',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF15','DTE','I','Survey Date cannot be null',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF16','DTE','I','Survey Date cannot be greater than current date',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('WBIF18','FMT','I','Document Control Number must be null',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF19','REL','I','No segregations exist for this assessment area',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF20','REL','I','Each avoidable segregation must have one and only one rate.',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF21','FMT','I','Avoidable Indicator cannot be null',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF23','FMT','I','Number of pieces cannot be null',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF24','VAL','I','Number of pieces cannot be zero',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF26','FMT','I','Scale grade code cannot be null',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF30','FMT','I','Scale Product Code cannot be null',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF32','FMT','I','Scale Species Code cannot be null',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF34','LKP','I','The species/product/grade combination does not exist  in the Species Product Grade XRef table',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF35','REL','I','The species/product/grade combination exists in the Species Product Grade XRef table but not for this survey date.',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF36','FMT','I','Waste Estimated Volume cannot be null',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('WBIF37','VAL','I','Waste Estimated Volume cannot be zero',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CHKSD1','SCL','M','Original scale return found, but its scale date is after the check scale date',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 09:13:29',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('CHKSD2','SCL','M','Original scale return found, but its scale date is more than 45 days before the check scale date',TIMESTAMP'2007-08-01 00:00:00',TIMESTAMP'2999-12-31 09:13:29',TIMESTAMP'2008-10-27 10:57:50'),
+	 ('AD04','SCL','I','Arrival Date is greater than Scale Date',TIMESTAMP'2008-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2008-02-27 11:20:08'),
+	 ('TPMax','SCL','I','Log top must be less than 200 rads',TIMESTAMP'2008-10-27 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2008-10-27 08:14:27'),
+	 ('BTMax','SCL','I','Log butt must be less than 200 rads',TIMESTAMP'2008-10-27 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2008-10-27 08:14:27'),
+	 ('CHKS11','SCL','M','There is no active tally with the specified Original DDN',TIMESTAMP'2008-10-27 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2008-10-27 10:57:51'),
+	 ('CHKS12','SCL','M','The scaler of the tally with Original DDN differs from the Original Scaler',TIMESTAMP'2008-10-27 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2008-10-27 10:57:51');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('CHKS13','SCL','M','Return number of the tally with Original DDN differs from the Original Return',TIMESTAMP'2008-10-27 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2008-10-27 10:57:51'),
+	 ('TM10','REL','J','Area-based timber mark must be billed using GBS.',TIMESTAMP'2008-10-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2009-05-19 08:49:53'),
+	 ('TM11','REL','J','Cannot sample an area-based timber mark.',TIMESTAMP'2008-10-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2009-05-19 08:49:53'),
+	 ('TM12','REL','M','Area-based marks must not have a confirmed appraisal.',TIMESTAMP'2008-10-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2009-05-19 08:49:53'),
+	 ('MM21','LKP','J','Matching weigh slip found for this local sample tally, but event types differ.',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:19'),
+	 ('MM22','LKP','J','Matching weigh slip found for this local sample tally, but populations differ.',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:19'),
+	 ('MM23','LKP','J','Matching weigh slip found for this local sample tally, but sampling years differ.',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:19'),
+	 ('MM24','LKP','J','Matching weigh slip found for this local sample tally, but stratums differ.',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:19'),
+	 ('MM25','LKP','J','Matching weigh slip found for this local sample tally, but timber marks differ.',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:19'),
+	 ('MM26','LKP','J','Matching weigh slip found for this local sample tally, but weights differ.',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:19'),
+	 ('MM41','LKP','J','Matching weigh slip found for this remote sample tally, but event types differ.',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:19'),
+	 ('MM42','LKP','J','Matching weigh slip found for this remote sample tally, but populations differ.',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:19'),
+	 ('MM43','LKP','J','Matching weigh slip found for this remote sample tally, but sampling years differ.',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:19'),
+	 ('MM44','LKP','J','Matching weigh slip found for this remote sample tally, but stratums differ. ',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:19'),
+	 ('MM45','LKP','J','Matching weigh slip found for this remote sample tally, but timber marks differ.',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:19'),
+	 ('MM46','LKP','J','Matching weigh slip found for this remote sample tally, but weights differ.',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:20'),
+	 ('MM47','LKP','J','Matching weigh slip found for this remote sample tally, but weigh slip destination <> sample site.',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:20'),
+	 ('MM11','LKP','J','More than one matching weigh slip found for this local sample tally at this site.',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:20'),
+	 ('MM13','LKP','J','More than one matching weigh slip found for this remote sample tally at originating site.',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:20'),
+	 ('MM17','LKP','M','More than one matching weigh slip found for this local sample tally check scale.',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:20');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('MM18','LKP','M','More than one matching weigh slip found for this remote sample tally check scale.',TIMESTAMP'2009-05-19 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2009-05-19 11:26:20'),
+	 ('LG00','SCL','I','Duplicate log numbers.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:05:57'),
+	 ('ICB1C','SCL','M','On and after 2010-07-01, Coniferous SRE Code in appraisal for Interior cruise-based mark must be B, C, D, or N.',TIMESTAMP'2010-07-01 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:27:56'),
+	 ('ICB1D','SCL','M','On and after 2010-07-01, Deciduous SRE Code in appraisal for Interior cruise-based mark must be B, C, D, or N.',TIMESTAMP'2010-07-01 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:27:56'),
+	 ('ICB2MM','SCL','M','Coniferous SRE Code in appraisal conflicts with Deciduous SRE Code.',TIMESTAMP'2010-07-01 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:27:56'),
+	 ('ICB4C','SCL','M','Before 2010-07-01, Coniferous SRE Code in appraisal for Interior cruise-based mark must be S, A, or N.',TIMESTAMP'2010-07-01 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:27:56'),
+	 ('ICB4D','SCL','M','Before 2010-07-01, Deciduous SRE Code appraisal for Interior cruise-based mark must be S, A, or N.',TIMESTAMP'2010-07-01 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:27:56'),
+	 ('ISB1C','SCL','M','Coniferous SRE Code in appraisal for Interior scale-based mark must be S, A or N.',TIMESTAMP'2010-07-01 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:27:56'),
+	 ('ISB1D','SCL','M','Deciduous SRE Code in appraisal for Interior scale-based mark must be S, A, or N.',TIMESTAMP'2010-07-01 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:27:56'),
+	 ('CSB1C','SCL','M','Coniferous SRE Code in appraisal for Coast timber mark must be S, A, or N.',TIMESTAMP'2010-07-01 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:27:56'),
+	 ('CSB1D','SCL','M','Deciduous SRE Code in appraisal for Coast timber mark must be S, A, or N.',TIMESTAMP'2010-07-01 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:27:56'),
+	 ('ICB789','SCL','M','Interior cruise-based volume estimate returns must use grade 7, grade 8, or grade 9.',TIMESTAMP'2010-07-01 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:27:56'),
+	 ('ISB789','SCL','M','Grades 7, 8 and 9 only permitted with Interior cruise-based volume estimate returns.',TIMESTAMP'2010-07-01 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:27:56'),
+	 ('CBSS01','SCL','M','Cruise volume estimates must use a dedicated cruise-based scale site.',TIMESTAMP'2010-07-01 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:27:56'),
+	 ('CBSS02','SCL','M','District of scale site conflicts with district of timber mark.',TIMESTAMP'2010-07-01 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:27:56'),
+	 ('CBSS00','SCL','M','Only cruise volume estimates can use a dedicated cruise-based scale site.',TIMESTAMP'2010-07-01 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:27:56'),
+	 ('CBOS00','SCL','M','A cruise-based scale site cannot be used as an originating scale site.',TIMESTAMP'2010-07-01 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:27:56'),
+	 ('CBDS00','SCL','M','A cruise-based scale site cannot be used as a destination scale site.',TIMESTAMP'2010-07-01 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-08-24 09:27:56'),
+	 ('SR03','LKP','J','Ratios for this population/stratum/sampling year are no longer available.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2010-08-25 08:11:37'),
+	 ('SRT01','SCL','J','Sample tallies not permitted for populations where Ratio Type is Default.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2010-08-25 08:37:34');
+INSERT INTO THE.HBS_EDIT_ERR_MESSAGE_CODE (HBS_EDIT_ERR_MESSAGE_CODE,HBS_EDIT_ERR_CATEGORY_CODE,HBS_EDIT_ERR_RESPONSIBLTY_CODE,DESCRIPTION,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 ('SRT02','SCL','J','Sample summaries not permitted for populations where Ratio Type is Default.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2010-08-25 08:37:34'),
+	 ('SRT03','SCL','J','Weigh slips for sampled loads not permitted for populations where Ratio Type is Default.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2010-08-25 08:37:34'),
+	 ('FSD03','SCL','I','Field Scale Deck ID not permitted for populations where Ratio Type is Default.',TIMESTAMP'2000-01-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2010-08-25 08:37:34'),
+	 ('CBTP01','SCL','M','Timber Mark Cruise Profile NOT Available.',TIMESTAMP'2010-06-17 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-06-17 11:16:08'),
+	 ('CBCV01','SCL','M','Appraisal volume per hectare (m3) must equal the sum of Cruise Based Billing profile records for the active Appraisal.',TIMESTAMP'2010-06-17 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-06-17 11:16:08'),
+	 ('CBSD01','SCL','I','Harvest Month End Date on an area based estimate must be the last day of the month, or the appraisal expiry date.',TIMESTAMP'2010-06-17 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-06-17 11:16:08'),
+	 ('CBSD02','SCL','I','An area based estimate for this Date has already been submitted.',TIMESTAMP'2010-06-17 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-06-17 11:16:08'),
+	 ('CBAF01','SCL','I','Total Area Cut will exceed Total Merchantable Area.',TIMESTAMP'2010-06-17 00:00:00',TIMESTAMP'9999-12-31 23:59:59',TIMESTAMP'2010-06-17 11:16:08'),
+	 ('MM09','SCL','J','Matching weigh slip found for this local sample tally, but sample was scaled before weigh slip',TIMESTAMP'1990-01-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2013-02-13 08:22:19'),
+	 ('MM10','SCL','J','Matching weigh slip found for this remote sample tally, but sample was scaled before weigh slip',TIMESTAMP'1990-01-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2013-02-13 08:22:19'),
+	 ('DSNP01','SCL','I','Digital Signature not provided',TIMESTAMP'2016-09-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2017-04-25 09:22:32'),
+	 ('DSEK01','SCL','I','Unknown Encryption Key',TIMESTAMP'2016-09-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2017-04-25 09:22:32'),
+	 ('DSEK02','SCL','I','Encryption Key not Active on Date Signed',TIMESTAMP'2016-09-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2017-04-25 09:22:32'),
+	 ('DSFMT1','SCL','I','Unable to Decrypt Signature',TIMESTAMP'2016-09-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2017-04-25 09:22:33'),
+	 ('DSFLR1','SCL','I','Digital Signature Validation Failed',TIMESTAMP'2016-09-01 00:00:00',TIMESTAMP'2999-12-31 23:59:59',TIMESTAMP'2017-04-25 09:22:33');
+
+-- Data pump for WASTE_DISPERSED_CV_CODE
+INSERT INTO WASTE_DISPERSED_CV_CODE (WASTE_DISPERSED_CV_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('100', 'CV 100', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03'),
+('110', 'CV 110', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03'),
+('120', 'CV 120', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03'),
+('130', 'CV 130', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03'),
+('50', 'CV 50', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03'),
+('60', 'CV 60', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03'),
+('70', 'CV 70', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03'),
+('80', 'CV 80', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03'),
+('90', 'CV 90', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03');
+-- Data pump for INTERIOR_WMRF_GRADE_CODE
+INSERT INTO INTERIOR_WMRF_GRADE_CODE (INTERIOR_WMRF_GRADE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+(' ', 'Ungraded', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('1', 'Grade 1', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('2', 'Grade 2', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31');
+-- Data pump for WASTE_RATE_SOURCE_CODE
+INSERT INTO WASTE_RATE_SOURCE_CODE (WASTE_RATE_SOURCE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('AC', 'Segregation Average', DATE '2005-12-16', DATE '2099-12-31', DATE '2021-08-04'),
+('AG', 'Grade Average', DATE '2005-12-16', DATE '2099-12-31', DATE '2021-08-04'),
+('AM', 'Mark Average', DATE '2005-12-16', DATE '2099-12-31', DATE '2021-08-04'),
+('AS', 'Species Average', DATE '2005-12-16', DATE '2099-12-31', DATE '2021-08-04'),
+('AU', 'User Override', DATE '2005-12-16', DATE '2099-12-31', DATE '2021-08-04'),
+('FR', 'Fibre Recovery Zone', DATE '2000-01-01', DATE '2099-12-31', DATE '2021-08-04'),
+('GA', 'GAS Rate', DATE '2014-01-01', DATE '2099-12-31', DATE '2021-08-04'),
+('HB', 'HBS Rate', DATE '2014-01-01', DATE '2099-12-31', DATE '2021-08-04');
+-- Data pump for COAST_WMRF_GRADE_CODE
+INSERT INTO COAST_WMRF_GRADE_CODE (COAST_WMRF_GRADE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+(' ', 'Ungraded', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('A', 'Grade A', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('B', 'Grade B', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('C', 'Grade C', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('D', 'Grade D', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('E', 'Grade E', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('F', 'Grade F', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('G', 'Grade G', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('H', 'Grade H', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('I', 'Grade I', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('J', 'Grade J', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('K', 'Grade K', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('L', 'Grade L', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('M', 'Grade M', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('U', 'Grade U', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('W', 'Grade W', DATE '2006-01-01', DATE '2099-12-31', DATE '2006-03-31'),
+('X', 'Grade X', DATE '2005-01-01', DATE '2099-12-31', DATE '2006-03-31');
+-- Data Pump for THE.WASTE_PARENT_BLOCK_TYPE_CODE
+
+INSERT INTO THE.WASTE_PARENT_BLOCK_TYPE_CODE (WASTE_PARENT_BLOCK_TYPE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('MM', 'Multi Mark', DATE '2005-11-10', DATE '2099-12-31', DATE '2005-12-02'),
+('PB', 'Parent Block', DATE '2005-11-10', DATE '2099-12-31', DATE '2005-12-02');
+-- Data pump for WASTE_AREA_RISK_RATING_CODE
+INSERT INTO WASTE_AREA_RISK_RATING_CODE (WASTE_AREA_RISK_RATING_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('H', 'High', DATE '2005-01-01', DATE '2099-12-31', DATE '2013-05-21'),
+('L', 'Low', DATE '2005-01-01', DATE '2099-12-31', DATE '2013-05-21'),
+('M', 'Medium', DATE '2005-01-01', DATE '2099-12-31', DATE '2013-05-21');
+-- Data pump for WASTE_SURVEY_CHECK_CODE
+INSERT INTO WASTE_SURVEY_CHECK_CODE (WASTE_SURVEY_CHECK_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('FAL', 'Fail', DATE '2002-08-29', DATE '2014-01-01', DATE '2015-06-18'),
+('FLD', 'Field', DATE '2014-01-01', DATE '2099-12-31', DATE '2015-06-18'),
+('NCK', 'No Check', DATE '2007-01-19', DATE '2099-12-31', DATE '2015-06-18'),
+('OFC', 'Office', DATE '2014-01-01', DATE '2099-12-31', DATE '2015-06-18'),
+('PAS', 'Pass', DATE '2007-01-19', DATE '2014-01-01', DATE '2015-06-18');
+-- Data Pump for THE.WASTE_DESIGNATION_TYPE_CODE
+
+INSERT INTO THE.WASTE_DESIGNATION_TYPE_CODE (WASTE_DESIGNATION_TYPE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('RFT', 'Registered Forest Technologist', DATE '2005-05-31', DATE '2099-12-31', DATE '2009-12-08'),
+('RPF', 'Registered Professional Forester', DATE '2005-05-31', DATE '2099-12-31', DATE '2009-12-08');
+-- Data pump for WASTE_ACCUMULATED_CV_CODE
+INSERT INTO WASTE_ACCUMULATED_CV_CODE (WASTE_ACCUMULATED_CV_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('100', 'CV 100', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03'),
+('110', 'CV 110', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03'),
+('120', 'CV 120', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03'),
+('130', 'CV 130', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03'),
+('50', 'CV 50', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03'),
+('60', 'CV 60', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03'),
+('70', 'CV 70', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03'),
+('80', 'CV 80', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03'),
+('90', 'CV 90', DATE '2005-01-10', DATE '2099-12-31', DATE '2005-05-03');
+
+-- Data pump for THE.SCALE_GRADE_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO SCALE_GRADE_CODE (SCALE_GRADE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('7', 'CB Live', DATE '2010-07-01', DATE '2099-12-31', DATE '2010-08-24'),
+('8', 'CB Dead', DATE '2010-07-01', DATE '2099-12-31', DATE '2010-08-24'),
+(' ', 'Ungraded', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('1', 'Grade 1', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('2', 'Grade 2', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('3', 'Grade 3', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('4', 'Grade 4', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('5', 'Grade 5', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('6', 'Grade 6', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('A', 'Grade A', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24');
+
+INSERT INTO SCALE_GRADE_CODE (SCALE_GRADE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('B', 'Grade B', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('C', 'Grade C', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('D', 'Grade D', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('E', 'Grade E', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('F', 'Grade F', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('G', 'Grade G', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('H', 'Grade H', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('I', 'Grade I', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('J', 'Grade J', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('K', 'Grade K', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24');
+
+INSERT INTO SCALE_GRADE_CODE (SCALE_GRADE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('L', 'Grade L', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('M', 'Grade M', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('U', 'Grade U', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('W', 'Grade W', DATE '2006-04-01', DATE '2099-12-31', DATE '2010-08-24'),
+('X', 'Grade X', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('Y', 'Grade Y', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('Z', 'Grade Z', DATE '2005-01-01', DATE '2099-12-31', DATE '2010-08-24');
+-- Data pump for THE.SCALE_SPECIES_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO SCALE_SPECIES_CODE (SCALE_SPECIES_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('AL', 'Alder', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('AR', 'Arbutus', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('AS', 'Aspen', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('BA', 'Balsam', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('BI', 'Birch', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('CE', 'Cedar', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('CO', 'Cottonwood', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('CY', 'Cypress', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('FI', 'Fir', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('HE', 'Hemlock', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23');
+
+INSERT INTO SCALE_SPECIES_CODE (SCALE_SPECIES_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('LA', 'Larch', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('LO', 'Lodge-Pine', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('MA', 'Maple', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('OT', 'Other Species', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('R', 'Rejects', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('SP', 'Spruce', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('UU', 'Yew', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('WA', 'Waste', DATE '2005-01-01', DATE '2002-10-04', DATE '2004-12-23'),
+('WB', 'White Bark Pine', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('WH', 'White Pine', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23');
+
+INSERT INTO SCALE_SPECIES_CODE (SCALE_SPECIES_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('WI', 'Willow', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23'),
+('YE', 'Yellow Pine', DATE '2005-01-01', DATE '2099-12-31', DATE '2004-12-23');
+-- Data pump for THE.SCALE_PRODUCT_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO SCALE_PRODUCT_CODE (SCALE_PRODUCT_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+(' ', 'Logs', DATE '2005-01-01', DATE '2099-12-31', DATE '2009-04-28'),
+('BK', 'Blanks', DATE '2001-01-31', DATE '2005-03-31', DATE '2009-04-28'),
+('BL', 'Building Logs', DATE '2005-01-01', DATE '2005-03-31', DATE '2009-04-28'),
+('CA', 'Cants', DATE '2005-01-01', DATE '2099-12-31', DATE '2009-04-28'),
+('CH', 'Woodchips', DATE '2009-04-01', DATE '2099-12-31', DATE '2009-04-28'),
+('CR', 'Cribbing', DATE '2005-01-01', DATE '2005-03-31', DATE '2009-04-28'),
+('CS', 'Car Stakes', DATE '2005-01-01', DATE '2005-03-31', DATE '2009-04-28'),
+('DH', 'Deadhead', DATE '2004-01-01', DATE '2099-12-31', DATE '2009-04-28'),
+('FW', 'Fire Wood', DATE '2005-01-01', DATE '2099-12-31', DATE '2009-04-28'),
+('GS', 'Grape Stakes', DATE '2005-01-01', DATE '2005-03-31', DATE '2009-04-28');
+
+INSERT INTO SCALE_PRODUCT_CODE (SCALE_PRODUCT_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('HF', 'Hogged Tree Material', DATE '2009-04-01', DATE '2099-12-31', DATE '2009-04-28'),
+('HP', 'Hop Poles', DATE '2005-01-01', DATE '2005-03-31', DATE '2009-04-28'),
+('LB', 'Shingle Bolts and Blocks', DATE '2005-01-01', DATE '2005-03-31', DATE '2009-04-28'),
+('LS', 'Lagging (Split)', DATE '2005-01-01', DATE '2005-03-31', DATE '2009-04-28'),
+('MT', 'Mining Timbers', DATE '2005-01-01', DATE '2099-12-31', DATE '2009-04-28'),
+('OL', 'Other Logs', DATE '2005-01-01', DATE '2005-03-31', DATE '2009-04-28'),
+('OP', 'Orchard Props', DATE '2005-01-01', DATE '2005-03-31', DATE '2009-04-28'),
+('PI', 'Pickets and Paling', DATE '2005-01-01', DATE '2005-03-31', DATE '2009-04-28'),
+('PP', 'Poles and Piling', DATE '2005-01-01', DATE '2005-03-31', DATE '2009-04-28'),
+('PR', 'Posts and Rails', DATE '2005-01-01', DATE '2099-12-31', DATE '2009-04-28');
+
+INSERT INTO SCALE_PRODUCT_CODE (SCALE_PRODUCT_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('PS', 'Fence Posts (Split)', DATE '2005-01-01', DATE '2005-03-31', DATE '2009-04-28'),
+('PW', 'Pulpwood', DATE '2005-01-01', DATE '2005-03-31', DATE '2009-04-28'),
+('RB', 'Rootbuck', DATE '2002-09-16', DATE '2099-12-31', DATE '2009-04-28'),
+('RR', 'Rails (Round)', DATE '2005-01-01', DATE '2005-03-31', DATE '2009-04-28'),
+('RS', 'Rails (Split)', DATE '2005-01-01', DATE '2005-03-31', DATE '2009-04-28'),
+('SB', 'Bolts, Blocks, Blanks', DATE '2005-01-01', DATE '2099-12-31', DATE '2009-04-28'),
+('SK', 'Shakes', DATE '2005-01-01', DATE '2099-12-31', DATE '2009-04-28'),
+('SS', 'Stakes and Sticks', DATE '2005-01-01', DATE '2099-12-31', DATE '2009-04-28'),
+('XM', 'Christmas Trees', DATE '2005-01-01', DATE '2099-12-31', DATE '2009-04-28');
+-- Data pump for THE.WASTE_PLOT_SIZE_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_PLOT_SIZE_CODE (WASTE_PLOT_SIZE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+(0, '50', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+(1, '100', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+(2, '200', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+(3, '300', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+(4, '400', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+(5, '500', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+(6, '600', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+(7, '1000', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+(8, '5000', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+(9, '10000', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27');
+-- Data pump for THE.INTERIOR_SCALE_GRADE_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO INTERIOR_SCALE_GRADE_CODE (INTERIOR_SCALE_GRADE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('7', 'CB Live', DATE '2010-07-01', DATE '2099-12-31', DATE '2010-08-24'),
+('8', 'CB Dead', DATE '2010-07-01', DATE '2099-12-31', DATE '2010-08-24'),
+(' ', 'Ungraded', DATE '1989-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('1', 'Grade 1', DATE '2006-04-01', DATE '2099-12-31', DATE '2010-08-24'),
+('2', 'Grade 2', DATE '2006-04-01', DATE '2099-12-31', DATE '2010-08-24'),
+('3', 'Grade 3', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24'),
+('4', 'Grade 4', DATE '1989-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('5', 'Grade 5', DATE '2015-12-01', DATE '2023-07-18', DATE '2023-07-17'),
+('6', 'Grade 6', DATE '1989-01-01', DATE '2099-12-31', DATE '2010-08-24'),
+('A', 'Grade A', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24');
+
+INSERT INTO INTERIOR_SCALE_GRADE_CODE (INTERIOR_SCALE_GRADE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('B', 'Grade B', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24'),
+('C', 'Grade C', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24'),
+('D', 'Grade D', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24'),
+('E', 'Grade E', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24'),
+('F', 'Grade F', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24'),
+('G', 'Grade G', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24'),
+('H', 'Grade H', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24'),
+('I', 'Grade I', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24'),
+('J', 'Grade J', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24'),
+('K', 'Grade K', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24');
+
+INSERT INTO INTERIOR_SCALE_GRADE_CODE (INTERIOR_SCALE_GRADE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('L', 'Grade L', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24'),
+('M', 'Grade M', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24'),
+('U', 'Grade U', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24'),
+('X', 'Grade X', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24'),
+('Y', 'Grade Y', DATE '1989-01-01', DATE '2006-03-31', DATE '2010-08-24'),
+('Z', 'Grade Z', DATE '1989-01-01', DATE '2099-12-31', DATE '2010-08-24');
+-- Data pump for THE.WASTE_STRATUM_TYPE_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_STRATUM_TYPE_CODE (WASTE_STRATUM_TYPE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('ACC', 'Accumulated', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('DIS', 'Dispersed', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('STR', 'Standing Tree', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27');
+-- Data pump for THE.MIME_TYPE_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO MIME_TYPE_CODE (MIME_TYPE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('BMP', 'image/bitmap', DATE '2004-08-20', DATE '2099-12-31', DATE '2006-06-23'),
+('CSV', 'text/x-csv', DATE '2001-10-22', DATE '2099-12-31', DATE '2006-06-23'),
+('DOC', 'application/msword', DATE '2001-10-22', DATE '2099-12-31', DATE '2006-06-23'),
+('GIF', 'GIF Graphic File', DATE '2002-05-28', DATE '2099-12-31', DATE '2006-06-23'),
+('HTM', 'text/html', DATE '2001-10-22', DATE '2099-12-31', DATE '2006-06-23'),
+('IFM', 'application/vnd shana informed formdata', DATE '2004-08-20', DATE '2099-12-31', DATE '2006-06-23'),
+('JPG', 'JPG Graphic File', DATE '2002-05-28', DATE '2099-12-31', DATE '2006-06-23'),
+('JPK', 'application/vnd shana informed package', DATE '2004-08-20', DATE '2099-12-31', DATE '2006-06-23'),
+('MDB', 'application/msaccess', DATE '2004-08-20', DATE '2099-12-31', DATE '2006-06-23'),
+('MDE', 'Microsoft Access MDE Database', DATE '2004-08-20', DATE '2099-12-31', DATE '2006-06-23');
+
+INSERT INTO MIME_TYPE_CODE (MIME_TYPE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('OBD', 'application/x-msbinder', DATE '2004-08-20', DATE '2099-12-31', DATE '2006-06-23'),
+('PDF', 'application/pdf', DATE '2001-10-22', DATE '2099-12-31', DATE '2006-06-23'),
+('PNG', 'image/png', DATE '2004-12-17', DATE '2099-12-31', DATE '2006-06-23'),
+('PPS', 'application/vnd ms-powerpoint', DATE '2004-08-20', DATE '2099-12-31', DATE '2006-06-23'),
+('PPT', 'application/vnd ms-powerpoint', DATE '2004-08-20', DATE '2099-12-31', DATE '2006-06-23'),
+('RPT', 'application/x-rpt', DATE '2001-10-22', DATE '2099-12-31', DATE '2006-06-23'),
+('RTF', 'application/msword', DATE '2001-10-22', DATE '2099-12-31', DATE '2006-06-23'),
+('TIF', 'TIF Graphic File', DATE '2002-05-28', DATE '2099-12-31', DATE '2006-06-23'),
+('TXT', 'text/plain', DATE '2004-08-20', DATE '2099-12-31', DATE '2006-06-23'),
+('WAV', 'audio/wav', DATE '2004-08-20', DATE '2099-12-31', DATE '2006-06-23');
+
+INSERT INTO MIME_TYPE_CODE (MIME_TYPE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('XLD', 'Excel Data Only', DATE '2004-08-12', DATE '2099-12-31', DATE '2006-06-23'),
+('XLS', 'application/vnd.ms-excel', DATE '2001-10-22', DATE '2099-12-31', DATE '2006-06-23'),
+('XML', 'text/xml', DATE '2003-07-22', DATE '2099-12-31', DATE '2006-06-23'),
+('ZIP', 'application/zip', DATE '2004-08-20', DATE '2099-12-31', DATE '2006-06-23');
+-- Data pump for THE.WASTE_ASSESSMENT_METHOD_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_ASSESSMENT_METHOD_CODE (WASTE_ASSESSMENT_METHOD_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('B', 'Pre-Harvest Waste Assessment', DATE '2015-11-12', DATE '2099-12-31', DATE '2019-09-25'),
+('C', 'Compiled', DATE '2018-12-09', DATE '2099-12-31', DATE '2019-09-25'),
+('S', '100 Percent Scale', DATE '2004-01-29', DATE '2099-12-31', DATE '2019-09-25'),
+('E', 'Percent Estimate', DATE '2004-01-29', DATE '2099-12-31', DATE '2019-09-25'),
+('O', 'Ocular Estimate', DATE '2004-01-29', DATE '2099-12-31', DATE '2019-09-25'),
+('P', 'Plot', DATE '2004-01-29', DATE '2099-12-31', DATE '2019-09-25');
+
+INSERT INTO THE.ORG_UNIT (ORG_UNIT_NO,ORG_UNIT_CODE,ORG_UNIT_NAME,LOCATION_CODE,AREA_CODE,TELEPHONE_NO,ORG_LEVEL_CODE,OFFICE_NAME_CODE,ROLLUP_REGION_NO,ROLLUP_REGION_CODE,ROLLUP_DIST_NO,ROLLUP_DIST_CODE,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 (1826,'DCC','Cariboo-Chilcotin Natural Resource District','024','250','3984345','D','CC',1903,'RCB',1826,'DCC',TIMESTAMP'2003-04-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (1828,'DCS','Cascades Natural Resource District','074','251','3788400','D','CS',1907,'RTA',1828,'DCS',TIMESTAMP'2003-04-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (1829,'DOS','Okanagan Shuswap Natural Resource District','077','252','5581700','D','OS',1907,'RTO',1829,'DOS',TIMESTAMP'2003-04-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (1831,'DRM','Rocky Mountain Natural Resource District','081','253','4261700','D','RM',1904,'RKB',1831,'DRM',TIMESTAMP'2003-04-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (1832,'DNI','North Island - Central Coast Natural Resource District','048','254','9565000','D','NI',1910,'RWC',1832,'DNI',TIMESTAMP'2003-04-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (18,'DPG','Prince George Natural Resource District','068','255','6147400','D','PG',1906,'ROM',18,'DPG',TIMESTAMP'1905-01-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (30,'DVA','Stuart Nechako Natural Resource District','070','256','5676363','D','VA',1906,'RAM',30,'DVA',TIMESTAMP'1905-01-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2018-06-23 10:30:31'),
+	 (32,'DKM','Coast Mountains Natural Resource District','056','257','6385100','D','KM',1908,'RSK',32,'DKM',TIMESTAMP'1905-01-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (38,'DMK','Mackenzie Natural Resource District','066','258','9972200','D','MK',1906,'REM',38,'DMK',TIMESTAMP'1905-01-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (46,'DFN','Fort Nelson Natural Resource District','062','259','7745511','D','FN',1905,'RNO',46,'DFN',TIMESTAMP'1905-01-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (21,'DKA','Thompson Rivers Natural Resource District','072','260','3716500','D','KA',1907,'RTF',21,'DKA',TIMESTAMP'1905-01-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (56,'DMH','100 Mile House Natural Resource District','088','271','3953812','D','MH',1903,'RCX',56,'DMH',TIMESTAMP'1905-01-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (50,'DQU','Quesnel Natural Resource District','089','261','9924400','D','QU',1903,'RCJ',50,'DQU',TIMESTAMP'1905-01-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (15,'DCK','Chilliwack Natural Resource District','044','604','7025700','D','CK',1909,'RSC',15,'DCK',TIMESTAMP'1905-01-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (23,'DSQ','Sea to Sky Natural Resource District','053','614','8982100','D','SQ',1909,'RSD',23,'DSQ',TIMESTAMP'1905-01-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (27,'DSC','Sunshine Coast Natural Resource District','052','624','4850700','D','SC',1909,'RXX',27,'DSC',TIMESTAMP'1905-01-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (43,'DCR','Campbell River Natural Resource District','025','263','2869300','D','CR',1910,'FWC',43,'DCR',TIMESTAMP'1905-01-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (48,'DQC','Haida Gwaii Natural Resource District','051','264','5596200','D','QC',1910,'GWC',48,'DQC',TIMESTAMP'1905-01-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (1619,'DSI','South Island Natural Resource District','047','265','7313000','D','SI',1910,'NWC',1619,'DSI',TIMESTAMP'1998-03-27 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (1823,'DND','Nadina Natural Resource District','058','266','6922200','D','ND',1908,'RZK',1823,'DND',TIMESTAMP'2003-04-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00');
+INSERT INTO THE.ORG_UNIT (ORG_UNIT_NO,ORG_UNIT_CODE,ORG_UNIT_NAME,LOCATION_CODE,AREA_CODE,TELEPHONE_NO,ORG_LEVEL_CODE,OFFICE_NAME_CODE,ROLLUP_REGION_NO,ROLLUP_REGION_CODE,ROLLUP_DIST_NO,ROLLUP_DIST_CODE,EFFECTIVE_DATE,EXPIRY_DATE,UPDATE_TIMESTAMP) VALUES
+	 (1824,'DSS','Skeena Stikine Natural Resource District','054','267','8476300','D','SS',1908,'ZSK',1824,'DSS',TIMESTAMP'2003-04-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (1825,'DPC','Peace Natural Resource District','061','268','7841200','D','PC',1905,'JNJ',1825,'DPC',TIMESTAMP'2003-04-01 00:00:00',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:21:00'),
+	 (1902,'DSE','Selkirk Natural Resource District','084','269','8254415','D','SE',1904,'RAA',1902,'DSE',TIMESTAMP'2014-06-28 08:20:45',TIMESTAMP'9999-12-31 00:00:00',TIMESTAMP'2014-06-28 08:20:45');
+
+-- Data pump for THE.COAST_SCALE_GRADE_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO COAST_SCALE_GRADE_CODE (COAST_SCALE_GRADE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+(' ', 'Ungraded', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02'),
+('3', 'Grade 3', DATE '1989-01-01', DATE '2006-03-31', DATE '2009-12-02'),
+('4', 'Grade 4', DATE '1989-01-01', DATE '2006-03-31', DATE '2009-12-02'),
+('5', 'Grade 5', DATE '1989-01-01', DATE '2006-03-31', DATE '2009-12-02'),
+('6', 'Grade 6', DATE '1989-01-01', DATE '2006-03-31', DATE '2009-12-02'),
+('A', 'Grade A', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02'),
+('B', 'Grade B', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02'),
+('C', 'Grade C', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02'),
+('D', 'Grade D', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02'),
+('E', 'Grade E', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02');
+
+INSERT INTO COAST_SCALE_GRADE_CODE (COAST_SCALE_GRADE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('F', 'Grade F', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02'),
+('G', 'Grade G', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02'),
+('H', 'Grade H', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02'),
+('I', 'Grade I', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02'),
+('J', 'Grade J', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02'),
+('K', 'Grade K', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02'),
+('L', 'Grade L', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02'),
+('M', 'Grade M', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02'),
+('U', 'Grade U', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02'),
+('W', 'Grade W', DATE '2006-04-01', DATE '2099-12-31', DATE '2009-12-02');
+
+INSERT INTO COAST_SCALE_GRADE_CODE (COAST_SCALE_GRADE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('X', 'Grade X', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02'),
+('Y', 'Grade Y', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02'),
+('Z', 'Grade Z', DATE '1989-01-01', DATE '2099-12-31', DATE '2009-12-02');
+-- Data pump for THE.WASTE_SITE_TYPE_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_SITE_TYPE_CODE (WASTE_SITE_TYPE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('DB', 'Dry Belt', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('TZ', 'Transition Zone', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('WB', 'Wet Belt', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27');
+-- Data pump for THE.WASTE_MATERIAL_CLASS_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_MATERIAL_CLASS_CODE (WASTE_MATERIAL_CLASS_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('A', 'Sawlog X and better', DATE '2004-02-17', DATE '2099-12-31', DATE '2009-02-17'),
+('D', 'Stumps', DATE '2004-02-17', DATE '2099-12-31', DATE '2009-02-17'),
+('E', 'Backwaste and Species Production', DATE '2004-02-17', DATE '2099-12-31', DATE '2009-02-17'),
+('F', 'Interior Grade 3 Endemic', DATE '2004-02-17', DATE '2099-12-31', DATE '2009-02-17'),
+('G', 'Interior Grade 3 Catastrophic', DATE '2004-02-17', DATE '2099-12-31', DATE '2009-02-17'),
+('H', 'Avoidable Breakage Sawlog', DATE '2004-02-17', DATE '2099-12-31', DATE '2009-02-17'),
+('I', 'Avoidable Breakage Y and 4', DATE '2004-02-17', DATE '2099-12-31', DATE '2009-02-17'),
+('K', 'Unavoidable Breakage', DATE '2004-02-17', DATE '2099-12-31', DATE '2009-02-17'),
+('L', 'Grade Y and Interior 4', DATE '2004-02-17', DATE '2099-12-31', DATE '2009-02-17'),
+('M', 'Grade 5 Coast/Interior', DATE '2004-02-17', DATE '2099-12-31', DATE '2009-02-17');
+
+INSERT INTO WASTE_MATERIAL_CLASS_CODE (WASTE_MATERIAL_CLASS_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('O', 'Offgrade/Interior 6', DATE '2004-02-17', DATE '2099-12-31', DATE '2009-02-17'),
+('P', 'Firmwood Reject', DATE '2004-02-17', DATE '2099-12-31', DATE '2009-02-17'),
+('T', 'Standing Tree', DATE '2004-02-17', DATE '2099-12-31', DATE '2009-02-17');
+-- Data pump for THE.WASTE_TYPE_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_TYPE_CODE (WASTE_TYPE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('C', 'Cold Deck', DATE '2004-01-29', DATE '2099-12-31', DATE '2015-12-23'),
+('D', 'Dispersed Retention', DATE '2004-01-29', DATE '2099-12-31', DATE '2015-12-23'),
+('F', 'Felled and Bucked', DATE '2004-01-29', DATE '2099-12-31', DATE '2015-12-23'),
+('G', 'Group Retention', DATE '2004-01-29', DATE '2099-12-31', DATE '2015-12-23'),
+('H', 'Historic Waste Information', DATE '2015-11-12', DATE '2099-12-31', DATE '2015-12-23'),
+('L', 'Landings', DATE '2004-01-29', DATE '2099-12-31', DATE '2015-12-23'),
+('O', 'Off Site Landing', DATE '2004-01-29', DATE '2099-12-31', DATE '2015-12-23'),
+('P', 'Spot Accumulation', DATE '2004-01-29', DATE '2099-12-31', DATE '2015-12-23'),
+('R', 'Roadside', DATE '2004-01-29', DATE '2099-12-31', DATE '2015-12-23'),
+('S', 'Clearcut', DATE '2004-01-29', DATE '2099-12-31', DATE '2015-12-23');
+
+INSERT INTO WASTE_TYPE_CODE (WASTE_TYPE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('T', 'Standing Stem', DATE '2004-01-29', DATE '2099-12-31', DATE '2015-12-23'),
+('W', 'Windrow Debuilt Road', DATE '2004-01-29', DATE '2099-12-31', DATE '2015-12-23');
+-- Data pump for THE.WASTE_COMMENT_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_COMMENT_CODE (WASTE_COMMENT_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('BK', 'Breakage', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('BN', 'Bunch Knots', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('BR', 'Buried', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('CA', 'Candelabra', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('CC', 'Creek Cleaning', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('CF', 'Catface', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('CK', 'Crook', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('CL', 'Culvert Log', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('CP', 'Company Piece', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('CR', 'Severe Crook', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18');
+
+INSERT INTO WASTE_COMMENT_CODE (WASTE_COMMENT_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('DP', 'Dead Potential', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('DU', 'Dead Useless', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('FC', 'Frostcrack', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('FK', 'Fork', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('FL', 'Fluted Butt', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('FP', 'Fence Post', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('FW', 'Fire Wood', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('GL', 'Guyline Stump', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('HK', 'Hooked', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('HN', 'Heavy Knots', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18');
+
+INSERT INTO WASTE_COMMENT_CODE (WASTE_COMMENT_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('HP', 'Helipad', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('HS', 'Holding Stump', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('IN', 'Inaccessable', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('KN', 'Knots', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('LB', 'Long Butt', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('LN', 'Large Knots', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('MB', 'Machine Breakage', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('MP', 'Multiple Part Piece', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('NP', 'Nil Plot', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('OB', 'Obstructed', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18');
+
+INSERT INTO WASTE_COMMENT_CODE (WASTE_COMMENT_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('ON', 'Oversize Knots', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('PR', 'Pocket Rot', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('RE', 'Reconstructed', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('S1', 'Segment 1', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('S2', 'Segment 2', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('S3', 'Segment 3', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('SA', 'Sapling', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('SB', 'Shake Block', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('SH', 'Shatter', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('SL', 'Slab', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18');
+
+INSERT INTO WASTE_COMMENT_CODE (WASTE_COMMENT_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('ST', 'Standing Tree', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('SW', 'Sweep', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('TR', 'Whole Tree', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('US', 'Unsafe', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('WD', 'Coarse Woody Debris', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('WF', 'Windfall', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('WS', 'Windshear', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18');
+-- Data pump for THE.WASTE_BORDERLINE_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_BORDERLINE_CODE (WASTE_BORDERLINE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('B', 'Borderline Piece', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('I', 'Piece completely inside plot', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27');
+-- Data pump for THE.WASTE_LEVEL_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_LEVEL_CODE (WASTE_LEVEL_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('H', 'Heavy', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('L', 'Light', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('M', 'Medium', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('X', 'Not Stratified', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27');
+-- Data pump for THE.WASTE_MATURITY_TYPE_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_MATURITY_TYPE_CODE (WASTE_MATURITY_TYPE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('IMM', 'Immature', DATE '2004-01-29', DATE '2099-12-31', DATE '2006-08-31'),
+('MAT', 'Mature', DATE '2004-01-29', DATE '2099-12-31', DATE '2006-08-31');
+-- Data pump for THE.WASTE_PIECE_END_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_PIECE_END_CODE (WASTE_PIECE_END_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('B', 'Broken', DATE '2004-01-29', DATE '2099-12-31', DATE '2006-08-02'),
+('C', 'Cut', DATE '2004-01-29', DATE '2099-12-31', DATE '2006-08-02'),
+('N', 'Natural', DATE '2004-01-29', DATE '2099-12-31', DATE '2006-08-02'),
+('U', 'Undercut', DATE '2006-06-27', DATE '2099-12-31', DATE '2006-08-02'),
+('X', 'Buried', DATE '2004-01-29', DATE '2099-12-31', DATE '2006-08-02');
+-- Data pump for THE.WASTE_ASSESS_AREA_STS_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_ASSESS_AREA_STS_CODE (WASTE_ASSESS_AREA_STS_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('ERR', 'Billing Error', DATE '2006-03-03', DATE '2099-12-31', DATE '2025-05-22'),
+('APP', 'Approved', DATE '2015-11-12', DATE '2099-12-31', DATE '2025-05-22'),
+('BIP', 'Billing in Progress', DATE '2005-12-16', DATE '2099-12-31', DATE '2025-05-22'),
+('BIS', 'Billing Issued', DATE '2005-12-16', DATE '2099-12-31', DATE '2025-05-22'),
+('DFT', 'Draft', DATE '2004-01-28', DATE '2099-12-31', DATE '2025-05-22'),
+('RTB', 'Ready To Bill', DATE '2006-03-02', DATE '2099-12-31', DATE '2025-05-22'),
+('BPR', 'Billing Processed', DATE '2004-01-28', DATE '2006-03-31', DATE '2025-05-22'),
+('REJ', 'Rejected', DATE '2004-01-28', DATE '2013-05-21', DATE '2025-05-22'),
+('SUB', 'Submitted', DATE '2004-01-28', DATE '2099-12-31', DATE '2025-05-22'),
+('COM', 'Complete', DATE '2005-01-01', DATE '2006-03-31', DATE '2025-05-22');
+
+INSERT INTO WASTE_ASSESS_AREA_STS_CODE (WASTE_ASSESS_AREA_STS_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('DAC', 'Deactivated (closed)', DATE '2005-01-01', DATE '2099-12-31', DATE '2025-05-22'),
+('HWR', 'Hold Waste Relief', DATE '2000-01-01', DATE '2099-12-31', DATE '2025-05-22'),
+('ISUB', 'Interim Submit', DATE '2000-01-01', DATE '2099-12-31', DATE '2025-05-22'),
+('RBL', 'Re-bill', DATE '2006-11-08', DATE '2099-12-31', DATE '2025-05-22'),
+('WRA', 'Waste Relief Approved', DATE '2000-01-01', DATE '2099-12-31', DATE '2025-05-22'),
+('FREJ', 'Field Rejected', DATE '2013-05-21', DATE '2099-12-31', DATE '2025-05-22'),
+('OREJ', 'Office Rejected', DATE '2013-05-21', DATE '2099-12-31', DATE '2025-05-22'),
+('REV', 'Reviewed', DATE '2014-01-01', DATE '2015-11-12', DATE '2025-05-22'),
+('HLD', 'Hold', DATE '2000-01-01', DATE '2099-12-31', DATE '2025-05-22');
+-- Data pump for THE.WASTE_BILLING_STS_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_BILLING_STS_CODE (WASTE_BILLING_STS_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('BRQ', 'Billing Requested', DATE '2004-02-17', DATE '2099-12-31', DATE '2004-05-27'),
+('SRB', 'Summary Return Built', DATE '2004-02-17', DATE '2099-12-31', DATE '2004-05-27'),
+('SRN', 'Summary Return Not Built', DATE '2004-02-17', DATE '2099-12-31', DATE '2004-05-27');
+-- Data pump for THE.WASTE_DECAY_TYPE_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_DECAY_TYPE_CODE (WASTE_DECAY_TYPE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('B', 'Butt Rot', DATE '2004-01-29', DATE '2099-12-31', DATE '2006-08-02'),
+('C', 'Conk Rot', DATE '2006-06-27', DATE '2099-12-31', DATE '2006-08-02'),
+('H', 'Heart Rot', DATE '2004-01-29', DATE '2099-12-31', DATE '2006-08-02'),
+('N', 'None', DATE '2004-01-29', DATE '2099-12-31', DATE '2006-08-02'),
+('P', 'Pocket Rot', DATE '2004-01-29', DATE '2099-12-31', DATE '2006-08-02'),
+('R', 'Ring Rot', DATE '2004-01-29', DATE '2099-12-31', DATE '2006-08-02'),
+('S', 'Sap Rot', DATE '2004-01-29', DATE '2099-12-31', DATE '2006-08-02'),
+('T', 'Top Rot', DATE '2004-01-29', DATE '2099-12-31', DATE '2006-08-02');
+-- Data pump for THE.WASTE_CLASS_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_CLASS_CODE (WASTE_CLASS_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('A', 'Avoidable', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18'),
+('U', 'Unavoidable', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-02-18');
+-- Data pump for THE.WASTE_SAMPLING_OPTION_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_SAMPLING_OPTION_CODE (WASTE_SAMPLING_OPTION_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('AGR', 'Aggregate', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('BLK', 'Cutblock', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('OCU', 'Ocular', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27');
+-- Data pump for THE.WASTE_CONDITION_TYPE_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_CONDITION_TYPE_CODE (WASTE_CONDITION_TYPE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('FK', 'Fire Kill', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('MPB', 'Mountain Pine Beetle Control', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('N', 'Normal', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27');
+-- Data pump for THE.WASTE_MATERIAL_KIND_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_MATERIAL_KIND_CODE (WASTE_MATERIAL_KIND_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('B', 'Breakage', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('D', 'Down Tree', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('L', 'Log', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('S', 'Stump', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('T', 'Standing Tree', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('W', 'Bucking Waste', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('X', 'Special Product', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27');
+-- Data pump for DATA_SOURCE_CODE
+INSERT INTO DATA_SOURCE_CODE (DATA_SOURCE_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('AP','Air Photo',DATE '1998-12-10',DATE '1999-12-31',DATE '2007-08-09'),
+('CDMS','CDMS',DATE '1999-10-27',DATE '1999-12-31',DATE '2007-08-09'),
+('FC1','Forest Cover Maps',DATE '1998-12-10',DATE '1999-12-31',DATE '2007-08-09'),
+('SAT','Satelite',DATE '1998-12-10',DATE '1999-12-31',DATE '2007-08-09'),
+('SUR','Survey',DATE '1998-12-10',DATE '1999-12-31',DATE '2007-08-09'),
+('TRIM','TRIM',DATE '1998-12-10',DATE '1999-12-31',DATE '2007-08-09'),
+('UNK','Unknown',DATE '1998-12-10',DATE '1999-12-31',DATE '2007-08-09');
+-- Data pump for THE.WASTE_HARVEST_METHOD_CODE
+-- Generated on 2025-08-15
+
+INSERT INTO WASTE_HARVEST_METHOD_CODE (WASTE_HARVEST_METHOD_CODE, DESCRIPTION, EFFECTIVE_DATE, EXPIRY_DATE, UPDATE_TIMESTAMP)
+VALUES
+('B', 'Hoechuck', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('C', 'Any Combination', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('G', 'Grapple Yarder', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('H', 'Helicopter', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('M', 'Hand Logging', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('O', 'Other', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('P', 'Horse Logging', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('R', 'Rubber-tired Skidder', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('S', 'Spar (high lead)', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27'),
+('T', 'Tractor', DATE '2004-01-29', DATE '2099-12-31', DATE '2004-05-27');

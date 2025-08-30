@@ -1,7 +1,7 @@
 package ca.bc.gov.nrs.hrs.security;
 
-import ca.bc.gov.nrs.hrs.dto.IdentityProvider;
-import ca.bc.gov.nrs.hrs.dto.Role;
+import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
+import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.exception.UserNotFoundException;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import java.util.function.Predicate;

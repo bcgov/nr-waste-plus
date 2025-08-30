@@ -8,19 +8,17 @@ server:
 
 spring:
   application:
-    name: nr-hrs-legacy
+    name: nr-waste-plus-legacy
   mvc:
     problemdetails:
       enabled: true
   datasource:
-    jdbcUrl: jdbc:oracle:thin:@tcps://${ca.bc.gov.nrs.oracle.host}:${DATABASE_PORT:1543}/${SERVICE_NAME:servicename}?javax.net.ssl.trustStore=${ca.bc.gov.nrs.oracle.keystore}&javax.net.ssl.trustStorePassword=${ca.bc.gov.nrs.oracle.secret}&javax.net.ssl.keyStore=${ca.bc.gov.nrs.oracle.keystore}&javax.net.ssl.keyStorePassword=${ca.bc.gov.nrs.oracle.secret}
-    url: ${spring.datasource.jdbcUrl}
+    url: jdbc:oracle:thin:@tcps://${DATABASE_HOST:localhost}:${DATABASE_PORT:1543}/${SERVICE_NAME:servicename}?javax.net.ssl.trustStore=${ca.bc.gov.nrs.oracle.keystore}&javax.net.ssl.trustStorePassword=${ca.bc.gov.nrs.oracle.secret}&javax.net.ssl.keyStore=${ca.bc.gov.nrs.oracle.keystore}&javax.net.ssl.keyStorePassword=${ca.bc.gov.nrs.oracle.secret}
     username: ${DATABASE_USER}
     password: ${DATABASE_PASSWORD}
+    driver-class-name: oracle.jdbc.OracleDriver
     hikari:
-      driver-class-name: oracle.jdbc.OracleDriver
-      jdbcUrl: ${spring.datasource.jdbcUrl}
-      url: ${spring.datasource.jdbcUrl}
+      jdbcUrl: ${spring.datasource.url}
       username: ${spring.datasource.username}
       password: ${spring.datasource.password}
       connectionTimeout: 30000 # 30 seconds
@@ -34,6 +32,9 @@ spring:
       connection-test-query: SELECT 1 FROM DUAL
   jpa:
     show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.OracleDialect
   http:
     encoding:
       charset: UTF-8
@@ -64,18 +65,20 @@ management:
     health:
       show-details: always
 
-# Certificate for the Database
 ca:
   bc:
     gov:
       nrs:
-        self-uri: ${SELF_URI:http://localhost:8080}
+        districts: ${ALLOWED_DISTRICTS:DCK,DSQ,DVA,DKM,DSC,DFN,DSI,DCR,DMK,DQC,DKA,DCS,DOS,DSE,DCC,DMH,DQU,DNI,DND,DRM,DPG,DSS,DPC}
         oracle:
           keystore: ${ORACLEDB_KEYSTORE:jssecacerts-path}
           secret: ${ORACLEDB_SECRET:changeit}
-          host: ${DATABASE_HOST:localhost}
+info:
+  app:
+    name: ${spring.application.name}
+    zone: ${APP_ZONE:local}
+    version: ${APP_VERSION:0.0.1-SNAPSHOT}
 
-# Logging
 logging:
   level:
     ca.bc.gov.restapi.results: ${LOGGING_LEVEL:INFO}

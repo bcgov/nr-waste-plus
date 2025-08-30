@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface OrgUnitRepository extends JpaRepository<OrgUnitEntity, Long> {
 
-  List<OrgUnitEntity> findAllByOrgUnitCodeIn(List<String> orgUnitCodes);
+  List<OrgUnitEntity> findAllByOrgUnitCodeInOrderByOrgUnitCodeAsc(List<String> orgUnitCodes);
 }

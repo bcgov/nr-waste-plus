@@ -6,10 +6,6 @@ import { useRouteError } from 'react-router-dom';
 import PageTitle from '@/components/core/PageTitle';
 
 const GlobalErrorPage: FC = () => {
-  //TODO: THis receives the actual error
-  //It would be nice to handle all kinds of error here to show a specific message
-  //Another idea would be to try to wrap any kind of error in a particular error like in Java
-  //And handle it appropriately, with an error code or something similar
   const error = useRouteError();
 
   let message = 'An unexpected error has occurred. Please try again later.';
@@ -18,7 +14,8 @@ const GlobalErrorPage: FC = () => {
   } else if (typeof error === 'string') {
     message = error;
   } else if (typeof error === 'object' && error !== null && 'statusText' in error) {
-    message = (error as { statusText?: string }).statusText ?? message;
+    const statusError = error as Error & { statusText?: string };
+    message = (statusError.statusText || statusError.message) ?? message;
   }
 
   return (

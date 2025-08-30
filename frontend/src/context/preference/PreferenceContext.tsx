@@ -5,6 +5,7 @@ import type { UserPreference } from './types';
 export type PreferenceContextType = {
   userPreference: UserPreference;
   updatePreferences: (preference: Partial<UserPreference>) => void;
+  isLoaded: boolean;
 };
 
 export type PreferenceProviderProps = {

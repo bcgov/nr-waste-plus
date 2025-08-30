@@ -2,7 +2,7 @@ package ca.bc.gov.nrs.hrs.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import ca.bc.gov.nrs.hrs.dto.Role;
+import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import org.junit.jupiter.api.Assertions;

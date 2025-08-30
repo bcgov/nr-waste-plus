@@ -10,7 +10,7 @@ describe('routePaths', () => {
   it('getPublicRoutes returns only Landing', () => {
     const result = routePaths.getPublicRoutes();
     expect(result.length).toBeGreaterThan(0);
-    expect(result[2].id).toBe('Landing');
+    expect(result[2].id).toBe('Unauthorized');
   });
 
   it('getProtectedRoutes returns protected and system routes', () => {

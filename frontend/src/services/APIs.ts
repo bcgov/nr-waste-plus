@@ -1,5 +1,9 @@
 import { getUserTokenFromCookie } from '@/context/auth/authUtils';
+import { SearchService } from '@/services//search.service';
+import { ForestClientService } from '@/services/forestclient.service';
 import { UserService } from '@/services/users.service';
+
+import { CodesService } from './codes.service';
 
 import type { APIConfig } from '@/config/api/types';
 
@@ -22,6 +26,9 @@ BackendApiConfig.TOKEN = async () => {
 // Register all services here
 const serviceConstructors = {
   user: new UserService(BackendApiConfig),
+  search: new SearchService(BackendApiConfig),
+  codes: new CodesService(BackendApiConfig),
+  forestclient: new ForestClientService(BackendApiConfig),
 } as const;
 
 type ExternalApiType = {

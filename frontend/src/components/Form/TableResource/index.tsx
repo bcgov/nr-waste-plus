@@ -1,4 +1,5 @@
 import {
+  Checkbox,
   DataTableSkeleton,
   Pagination,
   Table,
@@ -7,11 +8,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableToolbar,
+  TableToolbarContent,
+  TableToolbarMenu,
 } from '@carbon/react';
+import { Column as ColumnIcon } from '@carbon/react/icons';
+import { useEffect, useState } from 'react';
 
 import EmptySection from '@/components/core/EmptySection';
+import { usePreference } from '@/context/preference/usePreference';
 
-import { type TableHeaderType, type PageableResponse, renderCell } from './types';
+import { type TableHeaderType, type PageableResponse, renderCell, type NestedKeyOf } from './types';
+
+import './index.scss';
 
 /**
  * Pagination parameters for page change events.
@@ -36,11 +45,13 @@ type PaginationParams = {
  * @property {(params: PaginationParams) => void} [onPageChange] - Callback for handling page changes.
  */
 type TableResourceProps<T> = {
-  headers: TableHeaderType<T, keyof T>[];
+  id: string;
+  headers: TableHeaderType<T, NestedKeyOf<T>>[];
   content: PageableResponse<T>;
   loading: boolean;
   error: boolean;
   displayRange?: boolean;
+  displayToolbar?: boolean;
   onPageChange?: (params: PaginationParams) => void;
 };
 
@@ -53,16 +64,54 @@ type TableResourceProps<T> = {
  * @returns {JSX.Element} The rendered TableResource component.
  */
 const TableResource = <T,>({
+  id,
   headers,
   content,
   loading,
   error,
   displayRange,
+  displayToolbar,
   onPageChange,
 }: TableResourceProps<T>) => {
+  const [tableHeaders, setTableHeaders] = useState(headers);
+  const { userPreference, updatePreferences, isLoaded } = usePreference();
+
+  const loadTableFromPreferences = () => {
+    if (userPreference.tableHeaders) {
+      const savedKeys = (userPreference.tableHeaders as Record<string, NestedKeyOf<T>[]>)[
+        id
+      ] as NestedKeyOf<T>[];
+
+      if (savedKeys && Array.isArray(savedKeys)) {
+        setTableHeaders(
+          headers.map((header) => ({
+            ...header,
+            selected: savedKeys.includes(header.key),
+          })),
+        );
+      } else {
+        setTableHeaders(headers); // fallback to default
+      }
+    }
+  };
+
+  useEffect(() => {
+    const preferenceHeaders = tableHeaders
+      .filter((header) => header.selected)
+      .map((header) => header.key);
+    updatePreferences({ tableHeaders: { [id]: preferenceHeaders } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableHeaders]);
+
+  useEffect(() => {
+    loadTableFromPreferences();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded]);
+
   if (loading)
     return (
       <DataTableSkeleton
+        data-testid="loading-skeleton"
         className="default-table-skeleton"
         aria-label="loading table data"
         headers={headers
@@ -79,6 +128,7 @@ const TableResource = <T,>({
     return (
       <EmptySection
         className="initial-empty-section"
+        data-testid="empty-section"
         pictogram="Summit"
         title={error ? 'Something went wrong!' : 'Nothing to show yet!'}
         description={
@@ -105,12 +155,55 @@ const TableResource = <T,>({
 
   const noItemRangeText = () => '';
 
+  const onToggleHeader = (key: NestedKeyOf<T>) => {
+    setTableHeaders((prevHeaders) => {
+      return prevHeaders.map((header) => {
+        // Find the header to toggle
+        if (header.key === key) {
+          // Toggle the header's selected state
+          return { ...header, selected: !header.selected };
+        }
+        return header;
+      });
+    });
+  };
+
   return (
     <>
+      {displayToolbar && (
+        <TableToolbar data-testid="table-toolbar">
+          <TableToolbarContent className="table-action-toolbar-content">
+            {/* Extra toolbar entries */}
+            <TableToolbarMenu
+              className="table-action-menu-button column-menu-button"
+              menuOptionsClass="table-search-action-menu-option"
+              renderIcon={ColumnIcon}
+              iconDescription="Edit columns"
+              autoAlign
+              highContrast
+            >
+              <div className="table-action-menu-option-item">
+                <div className="helper-text">Select the columns you want to see</div>
+                {tableHeaders.map((header) => (
+                  <Checkbox
+                    key={`header-column-checkbox-${String(header.key)}`}
+                    id={`header-column-checkbox-${String(header.key)}`}
+                    aria-label={`Toggle ${header.header} column`}
+                    className="column-checkbox"
+                    labelText={header.header}
+                    checked={header.selected}
+                    onChange={() => onToggleHeader(header.key)}
+                  />
+                ))}
+              </div>
+            </TableToolbarMenu>
+          </TableToolbarContent>
+        </TableToolbar>
+      )}
       <Table useZebraStyles>
         <TableHead>
           <TableRow>
-            {headers
+            {tableHeaders
               .filter((header) => header.selected)
               .map((header) => (
                 <TableHeader key={`header-${String(header.key)}`}>{header.header}</TableHeader>
@@ -120,7 +213,7 @@ const TableResource = <T,>({
         <TableBody>
           {content.content.map((row) => (
             <TableRow key={row.id}>
-              {headers
+              {tableHeaders
                 .filter((header) => header.selected)
                 .map((header) => (
                   <TableCell key={`cell-${row.id}-${String(header.key)}`}>
@@ -133,6 +226,7 @@ const TableResource = <T,>({
       </Table>
       {onPageChange && (
         <Pagination
+          data-testid="pagination"
           page={content.page.number + 1}
           pageSize={content.page.size}
           pageSizes={[10, 20, 30]}

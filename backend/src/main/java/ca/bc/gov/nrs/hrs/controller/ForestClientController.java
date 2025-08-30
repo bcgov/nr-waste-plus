@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.hrs.controller;
 
-import ca.bc.gov.nrs.hrs.dto.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientAutocompleteResultDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
 import ca.bc.gov.nrs.hrs.service.ForestClientService;
