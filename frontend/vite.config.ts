@@ -158,6 +158,7 @@ export default defineConfig(({ mode }) => {
           '**/*.css',
           '**/*.d.ts',
           '**/types.ts',
+          '**/*.types.ts',
           '**/main.tsx',
           '**/App.tsx',
         ],
