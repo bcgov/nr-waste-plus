@@ -138,6 +138,7 @@ export default defineConfig(({ mode }) => {
       env: loadEnv(mode, process.cwd(), ''),
       globals: true,
       exclude: [...configDefaults.exclude, 'dist/**', 'build/**'],
+      tsconfig: './tsconfig.test.json',
       coverage: {
         provider: 'v8',
         reporter: ['lcov', 'cobertura', 'html', 'json', 'text'],
