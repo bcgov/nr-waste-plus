@@ -1,14 +1,13 @@
 import { Search as SearchIcon, FilterEdit as FilterIcon } from '@carbon/icons-react';
-import { Button, Column, DismissibleTag, Grid } from '@carbon/react';
+import { Button, Column, Grid } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState, type FC } from 'react';
 
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import SearchInput from '@/components/Form/SearchInput';
+import WasteSearchFiltersActive from '@/components/waste/WasteSearch/WasteSearchFiltersActive';
 import WasteSearchFiltersAdvanced from '@/components/waste/WasteSearch/WasteSearchFiltersAdvanced';
 import APIs from '@/services/APIs';
-
-import { mapDisplayFilter } from './utils';
 
 import type { CodeDescriptionDto } from '@/services/types';
 import type { ReportingUnitSearchParametersDto } from '@/services/types';
@@ -111,6 +110,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
           <ActiveMultiSelect
             placeholder="Sampling"
             id="sampling-multi-select"
+            data-testid="sampling-multi-select"
             items={samplingOptions ?? []}
             itemToString={(item) => (item ? `${item.code} - ${item.description}` : 'No selection')}
             onChange={handleActiveMultiSelectChange('sampling')}
@@ -153,6 +153,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
           <div className="search-buttons-container">
             <Button
               className="advanced-search-button"
+              data-testid="advanced-search-button-most"
               renderIcon={FilterIcon}
               iconDescription="Advanced Search"
               type="button"
@@ -165,6 +166,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
             </Button>
             <Button
               id="search-button-most"
+              data-testid="search-button-most"
               className="search-button"
               renderIcon={SearchIcon}
               iconDescription="Search"
@@ -184,6 +186,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
         <Column className="search-col-sm" sm={4} md={0} lg={0} max={0}>
           <Button
             className="advanced-search-button"
+            data-testid="advanced-search-button-sm"
             renderIcon={FilterIcon}
             iconDescription="Advanced Search"
             type="button"
@@ -199,6 +202,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
         <Column className="search-col-sm" sm={4} md={0} lg={0} max={0}>
           <Button
             id="search-button"
+            data-testid="search-button-sm"
             className="search-button"
             renderIcon={SearchIcon}
             iconDescription="Search"
@@ -215,51 +219,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
 
         {/* Active filters column */}
         <Column className="filter-bar-col" sm={4} md={8} lg={16}>
-          {(Object.keys(filters) as (keyof ReportingUnitSearchParametersDto)[])
-            .filter((filterKey) => {
-              if (filterKey === 'mainSearchTerm') return false; // Skip main search term
-              const value = filters[filterKey];
-              // Filter out:
-              // - `null` or `undefined`
-              // - Empty strings `""`
-              // - Empty arrays `[]`
-              if (
-                value === undefined ||
-                value === null ||
-                value === '' ||
-                (Array.isArray(value) && value.length === 0)
-              ) {
-                return false;
-              }
-              return true;
-            })
-            .map((filterKey) => {
-              const filterValue = filters[filterKey];
-
-              if (Array.isArray(filterValue)) {
-                return filterValue.map((subValue) => (
-                  <DismissibleTag
-                    key={`dt-${filterKey}-${subValue}`}
-                    className="silviculture-search-dismissible-tag"
-                    size="md"
-                    type="outline"
-                    text={`${mapDisplayFilter(filterKey)}: ${subValue}`}
-                    onClose={() => onRemoveFilter(filterKey, subValue)}
-                  />
-                ));
-              }
-
-              return (
-                <DismissibleTag
-                  className="search-dismissable-tag"
-                  key={`dt-${filterKey}-${filterValue}`}
-                  size="md"
-                  type="outline"
-                  text={`${mapDisplayFilter(filterKey)}${typeof filterValue === 'boolean' ? '' : `: ${filterValue}`}`}
-                  onClose={() => onRemoveFilter(filterKey)}
-                />
-              );
-            })}
+          <WasteSearchFiltersActive filters={filters} onRemoveFilter={onRemoveFilter} />
         </Column>
       </Grid>
       <WasteSearchFiltersAdvanced

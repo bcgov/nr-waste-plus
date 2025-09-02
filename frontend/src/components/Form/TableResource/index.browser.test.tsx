@@ -3,11 +3,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
-import { PreferenceProvider } from '../../../context/preference/PreferenceProvider';
-
-import { PageableResponse, TableHeaderType } from './types';
+import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 
 import TableResource from './index';
+
+import type { PageableResponse, TableHeaderType } from './types';
 
 type TestObjectType = {
   id: number;

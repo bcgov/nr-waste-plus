@@ -112,7 +112,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
             <SearchInput
               id="advanced-search-input"
               label="Search by RU No. or Block ID"
-              placeholder="Search by RU No., Licensee name, or Block ID"
+              placeholder="Search by RU No. or Block ID"
               value={filters.mainSearchTerm ?? ''}
               onChange={onChange('mainSearchTerm')}
             />
@@ -179,7 +179,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
           </Column>
 
           {/* Client and location code */}
-          <Column sm={4} md={4} lg={8} className='group-together'>
+          <Column sm={4} md={4} lg={8} className="group-together">
             <AutoCompleteInput
               id="forestclient-client-ac"
               titleText="Client"
@@ -226,6 +226,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 value={getStartDateValue(filters.updateDateStart)}
               >
                 <DatePickerInput
+                  data-testid="start-date-picker-input-id"
                   id="start-date-picker-input-id"
                   size="md"
                   labelText="Start Date"
@@ -244,6 +245,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 value={getEndDateValue(filters.updateDateEnd)}
               >
                 <DatePickerInput
+                  data-testid="end-date-picker-input-id"
                   id="end-date-picker-input-id"
                   size="md"
                   labelText="End Date"
@@ -287,6 +289,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
             <TextInput
               className="advanced-text-input"
               id="timber-mark-text-input"
+              data-testid="timber-mark-text-input"
               type="text"
               labelText="Timber mark"
               defaultValue={filters.timberMark}
