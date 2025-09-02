@@ -60,7 +60,7 @@ const EmptySection: FC<EmptySectionProps> = ({
       className={`${className ?? ''} empty-section-container ${whiteLayer ? 'empty-section-white-layer' : undefined}`}
     >
       {Img ? <Img className="empty-section-icon" data-testid="empty-section-icon" /> : null}
-      <div className="empty-section-title">{title}</div>
+      <div className="empty-section-title" data-testid="empty-section-title">{title}</div>
       <Subtitle className="empty-section-subtitle" text={description} />
     </div>
   );

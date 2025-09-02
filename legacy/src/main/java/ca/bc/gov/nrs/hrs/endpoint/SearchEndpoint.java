@@ -1,0 +1,39 @@
+package ca.bc.gov.nrs.hrs.endpoint;
+
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import ca.bc.gov.nrs.hrs.service.search.ReportingUnitSearchService;
+import io.micrometer.observation.annotation.Observed;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/search")
+@RequiredArgsConstructor
+@Slf4j
+@Observed
+public class SearchEndpoint {
+
+  private final ReportingUnitSearchService ruSearchService;
+
+  @GetMapping("/reporting-units")
+  public Page<ReportingUnitSearchResultDto> searchWasteEntries(
+      @ModelAttribute ReportingUnitSearchParametersDto filters,
+      @PageableDefault(sort = "lastUpdated", direction = Direction.DESC)
+      Pageable pageable
+  ) {
+
+    log.info("Searching waste entries with filters: {}, pageable: {}", filters, pageable);
+    return ruSearchService.search(filters, pageable);
+
+  }
+
+}

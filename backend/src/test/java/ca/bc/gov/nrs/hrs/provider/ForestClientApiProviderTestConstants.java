@@ -71,4 +71,75 @@ public class ForestClientApiProviderTestConstants {
         { "code": "DCR", "name": "Campbell River Natural Resource District" }
       ]
       """;
+
+  public static final String REPORTING_UNITS_SEARCH_RESPONSE = """
+      {
+           "content": [
+               {
+                   "blockId": "26",
+                   "ruNumber": 36834,
+                   "client": {
+                       "code": "00010002",
+                       "description": null
+                   },
+                   "clientLocation": {
+                       "code": "03",
+                       "description": null
+                   },
+                   "sampling": {
+                       "code": "BLK",
+                       "description": "Cutblock"
+                   },
+                   "district": {
+                       "code": "DND",
+                       "description": "Nadina Natural Resource District"
+                   },
+                   "status": {
+                       "code": "DFT",
+                       "description": "Draft"
+                   },
+                   "lastUpdated": "2025-08-24T09:10:28"
+               }
+           ],
+           "page": {
+               "size": 10,
+               "number": 0,
+               "totalElements": 1,
+               "totalPages": 1
+           }
+       }""";
+
+  public static final String REPORTING_UNITS_EMPTY_SEARCH_RESPONSE = """
+      {
+        "content": [],
+        "page": {
+            "size": 10,
+            "number": 0,
+            "totalElements": 0,
+            "totalPages": 0
+        }
+      }""";
+
+  public static final String CLIENT_00010002 = """
+      {
+        "clientNumber": "00010002",
+        "clientName": "WEST FRASER MILLS LTD",
+        "legalFirstName": null,
+        "legalMiddleName": null,
+        "clientStatusCode": "ACT",
+        "clientTypeCode": "F",
+        "acronym": "WFM"
+      }""";
+
+  public static final String CLIENT_LOCATION_00010002 = """
+      [
+        {
+          "locationCode": "00",
+          "locationName": "Head Office"
+        },
+        {
+          "locationCode": "03",
+          "locationName": "Vanderhoof"
+        }
+      ]""";
 }

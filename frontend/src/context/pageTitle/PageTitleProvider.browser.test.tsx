@@ -31,7 +31,7 @@ describe('PageTitleProvider', () => {
       </PageTitleProvider>,
     );
     await act(async () => await screen.getByText('Set Title').click());
-    expect(screen.getByTestId('page-title').textContent).toBe('Harvest Residue System - New Title');
+    expect(screen.getByTestId('page-title').textContent).toBe('Waste Plus - New Title');
   });
 
   it('shares the page title across multiple consumers', async () => {
@@ -46,9 +46,7 @@ describe('PageTitleProvider', () => {
       </PageTitleProvider>,
     );
     await act(async () => await screen.getByText('Set Title').click());
-    expect(screen.getByTestId('another-title').textContent).toBe(
-      'Harvest Residue System - New Title',
-    );
+    expect(screen.getByTestId('another-title').textContent).toBe('Waste Plus - New Title');
   });
 
   it('should fail if no provider is present', () => {

@@ -10,3 +10,13 @@ expect.extend({
     };
   },
 });
+
+expect.extend({
+  toBeEmptyDOMElement(received: HTMLElement) {
+    const pass = received instanceof HTMLElement && received.innerHTML === '';
+    return {
+      pass,
+      message: () => (pass ? 'Expected element not to be empty' : 'Expected element to be empty'),
+    };
+  },
+});

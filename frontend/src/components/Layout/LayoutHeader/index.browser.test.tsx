@@ -31,24 +31,24 @@ const renderWithProviders = async () => {
 };
 
 describe('LayoutHeader', () => {
-  it('renders header with title Harvest Residue System', async () => {
+  it('renders header with title Waste Plus', async () => {
     await renderWithProviders();
     const header = await screen.findByTestId('bc-header__header');
-    expect(header).toBeInTheDocument();
+    expect(header).toBeDefined();
 
-    const title = await screen.findByText(/Harvest Residue System/i);
-    expect(title).toBeInTheDocument();
+    const title = await screen.findByText(/Waste Plus/i);
+    expect(title).toBeDefined();
   });
 
   it('toggles side nav when menu button is clicked', async () => {
     await renderWithProviders();
 
     const toggleButton = await screen.findByLabelText(/open menu/i);
-    expect(toggleButton).toBeInTheDocument();
+    expect(toggleButton).toBeDefined();
 
     fireEvent.click(toggleButton);
 
     // After toggling once, aria-label should change to "Close menu"
-    expect(screen.getByLabelText(/close menu/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/close menu/i)).toBeDefined();
   });
 });

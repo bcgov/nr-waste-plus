@@ -43,8 +43,8 @@ export default defineConfig(({ mode }) => {
         manifest: {
           id: '/',
           lang: 'en',
-          short_name: 'HRS',
-          name: 'Harvest Residue System',
+          short_name: 'WastePlus',
+          name: 'Waste Plus',
           start_url: '.',
           display: 'standalone',
           theme_color: '#000000',
@@ -138,6 +138,7 @@ export default defineConfig(({ mode }) => {
       env: loadEnv(mode, process.cwd(), ''),
       globals: true,
       exclude: [...configDefaults.exclude, 'dist/**', 'build/**'],
+      tsconfig: './tsconfig.test.json',
       coverage: {
         provider: 'v8',
         reporter: ['lcov', 'cobertura', 'html', 'json', 'text'],
@@ -158,6 +159,7 @@ export default defineConfig(({ mode }) => {
           '**/*.css',
           '**/*.d.ts',
           '**/types.ts',
+          '**/*.types.ts',
           '**/main.tsx',
           '**/App.tsx',
         ],

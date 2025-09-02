@@ -10,10 +10,8 @@ import io.github.resilience4j.retry.RetryRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatusCode;
 
-@AutoConfigureMockMvc
 @DisplayName("Integrated Test | App Context")
 class BackendApplicationTests extends AbstractTestContainerIntegrationTest {
 
