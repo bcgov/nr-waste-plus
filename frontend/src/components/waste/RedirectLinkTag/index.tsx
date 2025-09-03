@@ -1,5 +1,6 @@
-import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 import { type FC } from 'react';
+
+import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 
 type RedirectLinkTagProps = {
   text: string;

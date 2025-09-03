@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 
 import APIs from '@/services/APIs';
 
@@ -46,7 +46,7 @@ afterEach(() => {
 
 describe('loadUserPreference', () => {
   it('returns initial default preference if nothing is stored and API returns nothing', async () => {
-    (APIs.user.getUserPreferences as vi.Mock).mockResolvedValueOnce({ theme: 'g10' });
+    (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'g10' });
 
     const result = await loadUserPreference();
     expect(result).toEqual(initialValue);
@@ -54,13 +54,13 @@ describe('loadUserPreference', () => {
 
   it('returns stored preference if available in localStorage', async () => {
     mockStorage.setItem('userPreference', JSON.stringify({ theme: 'white' }));
-    (APIs.user.getUserPreferences as vi.Mock).mockResolvedValueOnce({ theme: 'white' });
+    (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'white' });
     const result = await loadUserPreference();
     expect(result).toEqual({ theme: 'white' });
   });
 
   it('returns API preference if not in localStorage and API returns value', async () => {
-    (APIs.user.getUserPreferences as vi.Mock).mockResolvedValueOnce({ theme: 'g90' });
+    (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'g90' });
     mockStorage.clear();
     const result = await loadUserPreference();
     expect(result).toEqual({ theme: 'g90' });
@@ -73,7 +73,7 @@ describe('loadUserPreference', () => {
 
 describe('saveUserPreference', () => {
   it('saves merged preference to localStorage and API', async () => {
-    (APIs.user.getUserPreferences as vi.Mock).mockResolvedValueOnce({ theme: 'white' });
+    (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'white' });
     const result = await saveUserPreference({ theme: 'g10' });
     expect(result).toEqual({ theme: 'g10' });
     expect(mockStorage.setItem).toHaveBeenCalledWith(
@@ -83,7 +83,7 @@ describe('saveUserPreference', () => {
   });
 
   it('saves new preference when nothing exists in API', async () => {
-    (APIs.user.getUserPreferences as vi.Mock).mockResolvedValueOnce({});
+    (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({});
     const result = await saveUserPreference({ theme: 'g90' });
     expect(result).toEqual({ theme: 'g90' });
     expect(mockStorage.setItem).toHaveBeenCalledWith(

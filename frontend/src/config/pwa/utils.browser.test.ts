@@ -81,7 +81,9 @@ describe('registerBackgroundSync', () => {
 
     const result = await registerBackgroundSync('test-tag');
     expect(result).toBe(true);
-    expect((await navigator.serviceWorker.ready).sync.register).toHaveBeenCalledWith('test-tag');
+    expect((await (navigator.serviceWorker.ready as any)).sync.register).toHaveBeenCalledWith(
+      'test-tag',
+    );
   });
 
   it('should return false if permission is denied', async () => {
@@ -112,10 +114,9 @@ describe('registerPeriodicSync', () => {
 
     const result = await registerPeriodicSync('periodic-tag', 3600000);
     expect(result).toBe(true);
-    expect((await navigator.serviceWorker.ready).periodicSync.register).toHaveBeenCalledWith(
-      'periodic-tag',
-      { minInterval: 3600000 },
-    );
+    expect(
+      (await (navigator.serviceWorker.ready as any)).periodicSync.register,
+    ).toHaveBeenCalledWith('periodic-tag', { minInterval: 3600000 });
   });
 
   it('should return false if PeriodicSyncManager is not supported', async () => {

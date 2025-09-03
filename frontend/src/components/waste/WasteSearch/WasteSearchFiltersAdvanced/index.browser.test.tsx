@@ -160,6 +160,5 @@ describe('WasteSearchFiltersActive', () => {
 
     expect(onChange).toHaveBeenCalledWith('updateDateEnd');
     expect(innerFn).toHaveBeenCalledWith('2020-02-10');
-
   });
 });

@@ -20,7 +20,7 @@ vi.mock('./authUtils', () => ({
 describe('AuthProvider (extra coverage)', () => {
   it('calls login with IDIR and BCEIDBUSINESS', async () => {
     const { signInWithRedirect } = await import('aws-amplify/auth');
-    let context;
+    let context: any;
     render(
       <AuthProvider>
         <AuthContext.Consumer>
@@ -40,7 +40,7 @@ describe('AuthProvider (extra coverage)', () => {
 
   it('calls logout and sets user undefined', async () => {
     const { signOut } = await import('aws-amplify/auth');
-    let context;
+    let context: any;
     render(
       <AuthProvider>
         <AuthContext.Consumer>
@@ -59,7 +59,7 @@ describe('AuthProvider (extra coverage)', () => {
   it('calls userToken and returns value', async () => {
     const { getUserTokenFromCookie } = await import('./authUtils');
     (getUserTokenFromCookie as any).mockReturnValue('sometoken');
-    let context;
+    let context: any;
     render(
       <AuthProvider>
         <AuthContext.Consumer>

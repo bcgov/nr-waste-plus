@@ -1,6 +1,7 @@
 export const removeEmpty = <T extends object>(obj: T): Partial<T> => {
   return Object.fromEntries(
     Object.entries(obj)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       .filter(([_, v]) => {
         if (Array.isArray(v)) {
           // Remove invalid values from array

@@ -3,6 +3,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { UserService } from './users.service';
 
+import type { UserPreference } from '@/context/preference/types';
+
 vi.mock('axios');
 
 const mockConfig = { baseURL: 'http://localhost' };
@@ -26,7 +28,7 @@ describe('UserService', () => {
 
   it('updateUserPreferences should send preferences to API', async () => {
     (service as any).doRequest = vi.fn().mockResolvedValue(undefined);
-    const prefs = { theme: 'g100' };
+    const prefs: UserPreference = { theme: 'g100' };
     const result = await service.updateUserPreferences(prefs);
     expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
       method: 'PUT',

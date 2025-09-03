@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import ColorTag, { CarbonColors } from './index';
+import ColorTag, { type CarbonColors } from './index';
 
 describe('ColorTag', () => {
   const colorMap: Record<string, CarbonColors> = {

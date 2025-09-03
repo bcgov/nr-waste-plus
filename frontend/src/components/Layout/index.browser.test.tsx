@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, type Mock } from 'vitest';
 
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
@@ -49,7 +49,7 @@ const DummyChild = () => <div data-testid="dummy-child">Hello Child</div>;
 
 describe('Layout (browser)', () => {
   it('renders header, grid, and children', async () => {
-    (APIs.user.getUserPreferences as vi.Mock).mockResolvedValue({ theme: 'g10' });
+    (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
 
     const qc = new QueryClient();
     await act(async () =>
