@@ -11,7 +11,7 @@ RUN npm run build && \
     rm -rf node_modules
 
 # Caddy
-FROM caddy:2.10.0-alpine
+FROM caddy:2.10.2-alpine
 ENV LOG_LEVEL=info
 
 # Copy static files and config
