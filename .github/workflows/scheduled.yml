@@ -35,9 +35,9 @@ jobs:
 #        name: [backend, frontend]
 #        include:
 #          - name: backend
-#            target: https://nr-forest-client-test-backend.apps.silver.devops.gov.bc.ca
+#            target: https://${{ github.event.repository.name }}-test-backend.apps.silver.devops.gov.bc.ca
 #          - name: frontend
-#            target: https://forestclient-tst.nrs.gov.bc.ca
+#            target: https://wasteplus-tst.nrs.gov.bc.ca
 #    steps:
 #      - name: ZAP Scan
 #        uses: zaproxy/action-full-scan@75ee1686750ab1511a73b26b77a2aedd295053ed # v0.12.0
