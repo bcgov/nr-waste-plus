@@ -1,0 +1,227 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  app: ${NAME}-${ZONE}
+  app.kubernetes.io/part-of: ${NAME}-${ZONE}
+parameters:
+  - name: NAME
+    description: Product name
+    value: nr-waste-plus
+  - name: COMPONENT
+    description: Component name
+    value: legacydb
+  - name: ZONE
+    description: Deployment zone, e.g. pr-### or prod
+    required: true
+  - name: ORACLEDB_USER
+    description: Oracle database user
+    value: THE
+  - name: ORACLEDB_PASSWORD
+    description: Oracle database password
+    required: true
+  - name: TAG
+    description: Image tag to use
+    value: latest
+  - name: REGISTRY
+    description: Container registry to import from (internal is image-registry.openshift-image-registry.svc:5000)
+    value: ghcr.io
+  - name: ORG
+    description: Organization name
+    value: bcgov
+  - name: CPU_REQUEST
+    value: 125m
+  - name: MEMORY_REQUEST
+    value: 3.5Gi
+  - name: RANDOM_EXPRESSION
+    description: Random expression to make sure deployments update
+    from: "[a-zA-Z0-9]{32}"
+    generate: expression
+objects:
+  - kind: Deployment
+    apiVersion: apps/v1
+    metadata:
+      name: ${NAME}-${ZONE}-${COMPONENT}
+      labels:
+        app: ${NAME}-${ZONE}
+        appkind: ${NAME}-${COMPONENT}
+    spec:
+      replicas: 1        
+      selector:
+        matchLabels:
+          deployment: ${NAME}-${ZONE}-${COMPONENT}
+      strategy:
+        type: Recreate
+        recreateParams:
+          timeoutSeconds: 600
+        activeDeadlineSeconds: 21600
+      template:
+        metadata:
+          name: ${NAME}-${ZONE}-${COMPONENT}
+          labels:
+            app: ${NAME}-${ZONE}
+            deployment: ${NAME}-${ZONE}-${COMPONENT}
+        spec:          
+          containers:
+            - name: ${NAME}
+              image: ${REGISTRY}/${ORG}/${NAME}/${COMPONENT}:${TAG}
+              resources:
+                requests:
+                  cpu: ${CPU_REQUEST}
+                  memory: ${MEMORY_REQUEST}
+              ports:
+                - containerPort: 1521
+                  protocol: TCP
+              readinessProbe:
+                exec:
+                  command:
+                    - healthcheck.sh
+                failureThreshold: 30
+                initialDelaySeconds: 90
+                periodSeconds: 30
+                timeoutSeconds: 5
+              livenessProbe:
+                exec:
+                  command:
+                    - healthcheck.sh
+                failureThreshold: 30
+                initialDelaySeconds: 120
+                periodSeconds: 30
+                timeoutSeconds: 5
+              env:
+                - name: APP_USER_PASSWORD
+                  value: ${ORACLEDB_PASSWORD}
+                - name: ORACLE_RANDOM_PASSWORD
+                  value: "true"
+                - name: APP_USER
+                  value: ${ORACLEDB_USER}
+                - name: RANDOM_EXPRESSION
+                  value: ${RANDOM_EXPRESSION}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+              imagePullPolicy: Always
+          restartPolicy: Always
+          terminationGracePeriodSeconds: 30
+          dnsPolicy: ClusterFirst
+          schedulerName: default-scheduler
+  - kind: Service
+    apiVersion: v1    
+    metadata:
+      labels:
+        app: ${NAME}-${ZONE}
+      name: ${NAME}-${ZONE}-${COMPONENT}
+    spec:
+      ports:
+        - name: legacydb
+          nodePort: 0
+          port: 1521
+          protocol: TCP
+          targetPort: 1521
+      selector:
+        deployment: ${NAME}-${ZONE}-${COMPONENT}
+      sessionAffinity: None
+      type: ClusterIP
+  - kind: NetworkPolicy
+    apiVersion: networking.k8s.io/v1
+    metadata:
+      name: allow-d2723f-dev-legacy-access
+      namespace: d2723f-tools
+    spec:
+      podSelector: {}
+      policyTypes:
+      - Ingress
+      ingress:
+      - from:
+        - namespaceSelector:
+            matchLabels:
+              environment: dev  # Restrict to namespace d2723f-dev
+              name: d2723f  # Restrict to namespace d2723f-dev
+  - kind: NetworkPolicy
+    apiVersion: networking.k8s.io/v1    
+    metadata:
+      name: allow-same-namespace
+      labels:
+        template: quickstart-network-security-policy
+    spec:
+      podSelector: {}
+      ingress:
+        - from:
+            - podSelector: {}
+      policyTypes:
+        - Ingress
+  - kind: CronJob
+    apiVersion: batch/v1
+    metadata:
+      name: ${NAME}-${ZONE}-migratedb
+      labels:
+        app: ${NAME}-${ZONE}
+        cronjob: ${NAME}-${ZONE}
+    spec:
+      schedule: "0 0 31 2 *"
+      concurrencyPolicy: "Replace"
+      jobTemplate:
+        metadata:
+          labels:
+            app: ${NAME}-${ZONE}
+            cronjob: ${NAME}-${ZONE}
+        spec:
+          template:
+            metadata:
+              labels:
+                app: ${NAME}-${ZONE}
+                cronjob: ${NAME}-${ZONE}
+            spec:
+              initContainers:
+                - name: curl-container
+                  image: curlimages/curl
+                  command: ["/bin/sh", "-c"]
+                  args:
+                  - |
+                    echo "Downloading zip file from GitHub repository bcgov/nr-waste-plus/ branch ${BRANCH_NAME}"
+                    curl -L https://github.com/bcgov/nr-waste-plus/archive/refs/heads/${BRANCH_NAME}.zip -o /data/nr-waste-plus.zip
+                    
+                    unzip -q /data/nr-waste-plus.zip -d /data
+                    MIGRATION_DIR=$(find "/data" -type d -path "*/legacy/src/test/resources/db/migration" -print -quit)
+
+                    # Check if migration directory was found
+                    if [ -z "$MIGRATION_DIR" ]; then
+                      echo "Migration directory not found!"
+                      exit 1
+                    fi
+
+                    # Move the contents to the target directory
+                    mkdir -p "/data/sql"
+                    mv "$MIGRATION_DIR"/* "/data/sql"
+
+                    # Clean up
+                    rm -rf "nr-waste-plus*"
+
+                    echo "Migration files moved to /data/sql"              
+                  env:
+                    - name: BRANCH_NAME
+                      value: "main"
+                  volumeMounts:
+                  - name: data-volume
+                    mountPath: /data
+              containers:
+                - name: flyway
+                  image: flyway/flyway
+                  command: ["/bin/sh", "-c"]
+                  args: 
+                  - |
+                    flyway -url=${FLYWAY_URL}_${PR_NUMBER} -user=${FLYWAY_USER} -password=${FLYWAY_PASSWORD} -locations=filesystem:/data/sql migrate
+                  env:
+                    - name: FLYWAY_URL
+                      value: "jdbc:oracle:thin:@nr-waste-plus-tools-legacydb.d2723f-tools.svc.cluster.local:1521/PR"
+                    - name: FLYWAY_USER
+                      value: ${ORACLEDB_USER}
+                    - name: FLYWAY_PASSWORD
+                      value: ${ORACLEDB_PASSWORD}
+                    - name: PR_NUMBER
+                      value: "0"
+                  volumeMounts:
+                  - name: data-volume
+                    mountPath: /data
+              restartPolicy: OnFailure
+              volumes:
+                - name: data-volume
+                  emptyDir: {}
