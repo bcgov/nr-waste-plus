@@ -24,7 +24,6 @@ jobs:
       VITE_NODE_ENV: test
       VITE_COVERAGE: true
       VITE_PORT: 3000
-      CI: false
     steps:
       - uses: actions/checkout@v4
 

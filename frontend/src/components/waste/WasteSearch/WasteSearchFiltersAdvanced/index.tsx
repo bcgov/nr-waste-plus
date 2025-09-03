@@ -97,6 +97,8 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
     enabled: !!filters.clientNumber,
   });
 
+  if (!isModalOpen) return null;
+
   return (
     <ComposedModal
       className="advanced-search-modal"
