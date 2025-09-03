@@ -19,7 +19,10 @@ const HeaderPanelProfile: FC = () => {
           <AvatarImage userName={`${user?.firstName} ${user?.lastName}`} size="large" />
         </div>
         <div className="user-data">
-          <p className="user-name">{`${user?.firstName} ${user?.lastName}`}</p>
+          <p
+            className="user-name"
+            data-testid="user-fullname"
+          >{`${user?.firstName} ${user?.lastName}`}</p>
           <p>{`${user?.idpProvider ? user?.idpProvider + '\\' : null}${user?.userName}`}</p>
           <p>{`Email: ${user?.email}`}</p>
         </div>
