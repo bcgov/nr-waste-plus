@@ -4,30 +4,29 @@ import { render, screen, fireEvent, within, waitFor } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      codes: {
-        getSamplingOptions: vi.fn().mockResolvedValue([
-          { code: 'A', description: 'Sampling Option: A' },
-          { code: 'B', description: 'Sampling Option: B' },
-        ]),
-        getDistricts: vi.fn().mockResolvedValue([
-          { code: 'A', description: 'District: A' },
-          { code: 'B', description: 'District: B' },
-        ]),
-        getAssessAreaStatuses: vi.fn().mockResolvedValue([
-          { code: 'A', description: 'Assess area status: A' },
-          { code: 'B', description: 'Assess area status: B' },
-        ]),
-      },
-    },
-  };
-});
-
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import APIs from '@/services/APIs';
 
 import WasteSearchFilters from './index';
+
+vi.mock('@/services/APIs', () => ({
+  default: {
+    codes: {
+      getSamplingOptions: vi.fn().mockResolvedValue([
+        { code: 'A', description: 'Sampling Option: A' },
+        { code: 'B', description: 'Sampling Option: B' },
+      ]),
+      getDistricts: vi.fn().mockResolvedValue([
+        { code: 'A', description: 'District: A' },
+        { code: 'B', description: 'District: B' },
+      ]),
+      getAssessAreaStatuses: vi.fn().mockResolvedValue([
+        { code: 'A', description: 'Assess area status: A' },
+        { code: 'B', description: 'Assess area status: B' },
+      ]),
+    },
+  },
+}));
 
 const defaultFilters = {
   mainSearchTerm: '',
@@ -56,9 +55,9 @@ describe('WasteSearchFilters', () => {
   it('renders main search input and filter columns', async () => {
     renderWithProps({});
     expect(screen.getAllByPlaceholderText('Search by RU No. or Block ID')[0]).toBeDefined();
-    expect(screen.getByRole('combobox', { name: /Sampling/i })).toBeDefined();
-    expect(screen.getByRole('combobox', { name: /District/i })).toBeDefined();
-    expect(screen.getByRole('combobox', { name: /Status/i })).toBeDefined();
+    expect(screen.getByPlaceholderText(/Sampling/i)).toBeDefined();
+    expect(screen.getByPlaceholderText(/District/i)).toBeDefined();
+    expect(screen.getByPlaceholderText(/Status/i)).toBeDefined();
   });
 
   it('renders advanced search and search buttons (desktop)', async () => {
@@ -95,6 +94,7 @@ describe('WasteSearchFilters', () => {
 
   it('renders filter tags when filters are set', async () => {
     renderWithProps({});
+    expect(APIs.codes.getAssessAreaStatuses).toHaveBeenCalled();
 
     const samplingBox = screen.getByPlaceholderText(/Sampling/i);
     const samplingButton = samplingBox.parentElement?.querySelector('button');
@@ -139,7 +139,7 @@ describe('WasteSearchFilters', () => {
     const onChange = vi.fn();
     renderWithProps({ onChange });
 
-    const samplingBox = screen.getByRole('combobox', { name: /Sampling/i });
+    const samplingBox = screen.getByPlaceholderText(/Sampling/i);
     const samplingButton = samplingBox.parentElement?.querySelector('button');
     expect(samplingBox).toBeDefined();
     expect(samplingButton).toBeDefined();

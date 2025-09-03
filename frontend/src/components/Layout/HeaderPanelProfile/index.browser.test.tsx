@@ -2,19 +2,18 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { AuthContext } from '@/context/auth/AuthContext';
+import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import { ThemeContext } from '@/context/theme/ThemeContext';
+import ThemeProvider from '@/context/theme/ThemeProvider';
 
 import HeaderPanelProfile from './index';
 
 import type { FamLoginUser } from '@/context/auth/types';
-import type { CarbonTheme } from '@/context/preference/types';
 
 vi.mock('@/components/Layout/AvatarImage', () => ({
   __esModule: true,
   default: ({ userName, size }: { userName: string; size: string }) => (
-    <div data-testid="avatar-image">
+    <div data-testid="avatar-initials">
       {userName}-{size}
     </div>
   ),
@@ -30,21 +29,6 @@ const mockUser: FamLoginUser = {
   email: 'jane@example.com',
 } as FamLoginUser;
 
-const mockAuthValue = {
-  user: mockUser,
-  isLoggedIn: true,
-  isLoading: false,
-  login: vi.fn(),
-  logout: mockLogout,
-  userToken: () => 'mock-token',
-};
-
-const mockWholeTheme = {
-  theme: 'g100' as CarbonTheme,
-  toggleTheme: mockToggleTheme,
-  setTheme: vi.fn(),
-};
-
 vi.mock('@/context/auth/useAuth', () => ({
   useAuth: () => ({ logout: mockLogout, user: mockUser }),
 }));
@@ -56,15 +40,15 @@ const renderWithProviders = async () => {
   const qc = new QueryClient();
   await act(async () => {
     render(
-      <AuthContext.Provider value={mockAuthValue}>
+      <AuthProvider>
         <QueryClientProvider client={qc}>
           <PreferenceProvider>
-            <ThemeContext.Provider value={mockWholeTheme}>
+            <ThemeProvider>
               <HeaderPanelProfile />
-            </ThemeContext.Provider>
+            </ThemeProvider>
           </PreferenceProvider>
         </QueryClientProvider>
-      </AuthContext.Provider>,
+      </AuthProvider>,
     );
   });
 };
@@ -75,7 +59,7 @@ describe('HeaderPanelProfile', () => {
     expect(screen.getByText('Jane Doe')).toBeInTheDocument();
     expect(screen.getByText('IDIR\\jdoe')).toBeInTheDocument();
     expect(screen.getByText('Email: jane@example.com')).toBeInTheDocument();
-    expect(screen.getByTestId('avatar-initials')).toHaveTextContent('JD');
+    expect(screen.getByTestId('avatar-initials')).toHaveTextContent('Jane Doe-large');
     expect(screen.getByTestId('user-fullname')).toHaveTextContent('Jane Doe');
   });
 

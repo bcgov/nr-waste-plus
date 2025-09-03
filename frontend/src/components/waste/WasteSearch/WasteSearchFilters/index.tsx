@@ -118,9 +118,6 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
               (filters.sampling || []).includes(option.code),
             )}
           />
-          {samplingOptions?.map((x) => (
-            <span data-testid={`test-code-${x.code}`}>{x.code}</span>
-          ))}
         </Column>
 
         {/* District multiselect */}
