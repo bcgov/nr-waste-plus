@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 
 import { AuthProvider } from '@/context/auth/AuthProvider';
+import { LayoutProvider } from '@/context/layout/LayoutProvider';
 
 import { LayoutSideNav } from './index';
 
@@ -38,7 +39,9 @@ const renderWithProviders = async (pathname = '/dashboard') => {
     render(
       <AuthProvider>
         <MemoryRouter initialEntries={[pathname]}>
-          <LayoutSideNav />
+          <LayoutProvider>
+            <LayoutSideNav />
+          </LayoutProvider>
         </MemoryRouter>
       </AuthProvider>,
     ),

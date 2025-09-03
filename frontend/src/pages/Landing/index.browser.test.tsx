@@ -55,7 +55,9 @@ describe('LandingPage', () => {
   it('sets correct gap style for md breakpoint', async () => {
     mockBreakpoint = 'md';
     await renderWithProps();
-    const wrapper = screen.getByTestId('landing-title').closest('.landing-content-wrapper');
+    const wrapper = screen
+      .getByTestId('landing-title')
+      .closest('.landing-content-wrapper') as HTMLElement | null;
     expect(wrapper).not.toBeNull();
     expect(wrapper?.style.gap).toBe('3rem');
   });

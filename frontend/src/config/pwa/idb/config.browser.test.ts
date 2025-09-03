@@ -110,8 +110,8 @@ describe('idb config', () => {
   });
 
   it('runMutationTransaction works with callback', async () => {
-    const result = await idbConfig.runMutationTransaction('readonly', async (store) => {
-      await store.put({ test: 1 }, 'k');
+    const result = await idbConfig.runMutationTransaction('readwrite', async (store) => {
+      await store.put?.({ test: 1 }, 'k');
       return await store.getAll();
     });
     expect(Array.isArray(result)).toBe(true);

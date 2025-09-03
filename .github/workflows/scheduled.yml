@@ -1,0 +1,49 @@
+name: Scheduled
+
+on:
+  schedule: [cron: "0 11 * * 6"] # 3 AM PST = 12 PM UDT, Saturdays
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  # https://github.com/bcgov/quickstart-openshift-helpers
+  schema-spy:
+    name: SchemaSpy Documentation
+    permissions:
+      contents: write
+    uses: bcgov/quickstart-openshift-helpers/.github/workflows/.schema-spy.yml@d9b3d32fb3f03c4699c2dce83ddfff042cd31a1f # v1.0.0
+    with:
+      flyway_locations: 'filesystem:./backend/src/main/resources/db/migration'
+      flyway_schema: 'hrs'
+      schemaspy_schema: 'hrs'
+    
+#  zap_scan:
+#    runs-on: ubuntu-24.04
+#    name: Penetration Tests
+#    env:
+#      DOMAIN: apps.silver.devops.gov.bc.ca
+#      PREFIX: ${{ github.event.repository.name }}-test
+#    permissions:
+#      issues: write
+#    strategy:
+#      matrix:
+#        name: [backend, frontend]
+#        include:
+#          - name: backend
+#            target: https://${{ github.event.repository.name }}-test-backend.apps.silver.devops.gov.bc.ca
+#          - name: frontend
+#            target: https://wasteplus-tst.nrs.gov.bc.ca
+#    steps:
+#      - name: ZAP Scan
+#        uses: zaproxy/action-full-scan@75ee1686750ab1511a73b26b77a2aedd295053ed # v0.12.0
+#        with:
+#          allow_issue_writing: true
+#          artifact_name: "zap_${{ matrix.name }}"
+#          cmd_options: "-a"
+#          issue_title: "ZAP: ${{ matrix.name }}"
+#          target: ${{ matrix.target }}

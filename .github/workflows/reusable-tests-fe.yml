@@ -10,39 +10,50 @@ jobs:
     name: Frontend Unit Tests
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.54.1-noble   
+    env:
+      VITE_APP_NAME: Waste Plus
+      VITE_FEATURES_OFFLINE: true
+      VITE_ZONE: TEST
+      VITE_USER_POOLS_ID: ${{ secrets.COGNITO_USER_POOL }}
+      VITE_USER_POOLS_WEB_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
+      VITE_LEGACY_BASE_URL: https://apps.nrs.gov.bc.ca/ext/waste-for
+      VITE_CLIENT_BASE_URL: https://forestclient.nrs.gov.bc.ca
+      VITE_BACKEND_URL: http://localhost:8080          
+      VITE_NODE_ENV: test
+      VITE_COVERAGE: true
+      VITE_PORT: 3000
     steps:
-      - uses: bcgov/action-test-and-analyse@e2ba34132662c1638dbde806064eb7004b3761c3 # v1.3.0
-        env:
-          VITE_APP_NAME: Waste Plus
-          VITE_FEATURES_OFFLINE: true
-          VITE_ZONE: TEST
-          VITE_USER_POOLS_ID: ${{ secrets.COGNITO_USER_POOL }}
-          VITE_USER_POOLS_WEB_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
-          VITE_LEGACY_BASE_URL: https://apps.nrs.gov.bc.ca/ext/waste-for
-          VITE_CLIENT_BASE_URL: https://forestclient.nrs.gov.bc.ca
-          VITE_BACKEND_URL: http://localhost:8080          
-          VITE_NODE_ENV: test
-          VITE_COVERAGE: true
-          VITE_PORT: 3000
-        with:
-          node_version: 18
-          commands: |
-            npm ci
-            npm run test:coverage
-          dir: frontend
-#          sonar_args: >
-#            -Dsonar.exclusions=**/coverage/**,**/tests/**,**/stub/**,**/reports/**,**/cypress/**,,**/assets/**,,**/dto/**,**/CoreConstants.ts,**/src/CoreConstants.ts,**/main.ts,**/routes.ts,**/sims-vue.d.ts,**/styles.ts,**/components.d.ts
-#            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info            
-#            -Dsonar.organization=bcgov-sonarcloud
-#            -Dsonar.projectKey=forest-client-frontend
-#          sonar_token: ${{ secrets.SONAR_TOKEN_FRONTEND }}
-          triggers: ('frontend/')
+      - uses: actions/checkout@v4
 
-#      - uses: actions/upload-artifact@v4
-#        name: Upload Cypress Screenshots with error
-#        continue-on-error: true
-#        if: failure()
-#        with:
-#          name: cypress-screenshots
-#          path: frontend/cypress/screenshots
-#          retention-days: 7
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Dependencies
+        run: npm i
+        working-directory: frontend
+
+      - name: Run E2E Tests
+        run: npm run test:coverage
+        working-directory: frontend
+
+      - name: Publish Results
+        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3 # v5
+        continue-on-error: true
+        if: always()
+        with:
+          report_paths: frontend/result.xml
+          commit: ${{ github.event.pull_request.head.sha }}
+          summary: Playwright Test Results
+          detailed_summary: true
+          job_name: Frontend
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: E2E on built apps test results
+          path: frontend/test-results/

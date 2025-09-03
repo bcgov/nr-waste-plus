@@ -78,8 +78,10 @@ describe('AutoCompleteInput', () => {
   });
 
   it('handles loading state', async () => {
-    let resolve: (v: any) => void;
-    const onAutoCompleteChange = vi.fn(() => new Promise((r) => (resolve = r)));
+    let resolve: (v: any) => void = () => {};
+    const onAutoCompleteChange = vi
+      .fn()
+      .mockImplementation(() => new Promise((r) => (resolve = r)));
     const extractItems = (raw: any) => raw;
     await renderWithProps({ onAutoCompleteChange, extractItems });
     const input = screen.getByRole('combobox');

@@ -137,6 +137,9 @@ export default defineConfig(({ mode }) => {
     test: {
       env: loadEnv(mode, process.cwd(), ''),
       globals: true,
+      restoreMocks: true,
+      clearMocks: true,
+      mockReset: true,
       exclude: [...configDefaults.exclude, 'dist/**', 'build/**'],
       tsconfig: './tsconfig.test.json',
       coverage: {
@@ -199,6 +202,10 @@ export default defineConfig(({ mode }) => {
           },
         },
       ],
+      poolOptions: {
+        threads: { singleThread: true },
+        forks: { singleFork: true },
+      },
     },
   };
 });

@@ -1,13 +1,11 @@
-FROM node:20-bullseye-slim AS build
+FROM node:22.17-bullseye-slim AS build
 
+# Build static files
 WORKDIR /app
-
-# Copy package.json and package-lock.json to install dependencies
-COPY package*.json ./
-RUN npm ci --ignore-scripts --omit=dev
-
 COPY . .
-RUN npm run build && \
+
+RUN npm ci --ignore-scripts && \
+    npm run build && \
     rm -rf node_modules
 
 # Caddy
