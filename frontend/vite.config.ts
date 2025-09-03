@@ -137,6 +137,9 @@ export default defineConfig(({ mode }) => {
     test: {
       env: loadEnv(mode, process.cwd(), ''),
       globals: true,
+      restoreMocks: true,
+      clearMocks: true,
+      mockReset: true,
       exclude: [...configDefaults.exclude, 'dist/**', 'build/**'],
       tsconfig: './tsconfig.test.json',
       coverage: {
@@ -185,8 +188,6 @@ export default defineConfig(({ mode }) => {
         {
           name: 'browser',
           extends: true,
-          provider: 'playwright',
-          instances: [{ browser: 'chromium' }],
           test: {
             setupFiles: [
               './src/config/tests/setup-browser.ts',
@@ -201,6 +202,10 @@ export default defineConfig(({ mode }) => {
           },
         },
       ],
+      poolOptions: {
+        threads: { singleThread: true },
+        forks: { singleFork: true },
+      },
     },
   };
 });
