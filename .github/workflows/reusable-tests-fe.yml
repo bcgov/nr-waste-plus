@@ -40,17 +40,6 @@ jobs:
         run: npm run test:coverage
         working-directory: frontend
 
-      - name: Publish Results
-        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3 # v5
-        continue-on-error: true
-        if: always()
-        with:
-          report_paths: frontend/result.xml
-          commit: ${{ github.event.pull_request.head.sha }}
-          summary: Playwright Test Results
-          detailed_summary: true
-          job_name: Frontend
-
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
