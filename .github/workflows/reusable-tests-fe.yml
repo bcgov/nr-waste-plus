@@ -28,6 +28,7 @@ jobs:
           node_version: 22
           commands: |
             npm i
+            npx playwright install chromium
             npm run test:coverage
           dir: frontend
 #          sonar_args: >
