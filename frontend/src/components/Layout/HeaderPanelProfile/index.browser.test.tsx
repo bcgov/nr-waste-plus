@@ -1,5 +1,9 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+
+import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import ThemeProvider from '@/context/theme/ThemeProvider';
 
 import HeaderPanelProfile from './index';
 
@@ -30,8 +34,17 @@ vi.mock('@/context/theme/useTheme', () => ({
 }));
 
 const renderWithProviders = async () => {
+  const qc = new QueryClient();
   await act(async () => {
-    render(<HeaderPanelProfile />);
+    render(
+      <QueryClientProvider client={qc}>
+        <PreferenceProvider>
+          <ThemeProvider>
+            <HeaderPanelProfile />
+          </ThemeProvider>
+        </PreferenceProvider>
+      </QueryClientProvider>,
+    );
   });
 };
 
