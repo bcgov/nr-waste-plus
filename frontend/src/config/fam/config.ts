@@ -12,7 +12,7 @@ const returnUrlHost = isProd ? 'loginproxy' : 'test.loginproxy';
 const retUrl = `https://${returnUrlHost}.gov.bc.ca/auth/realms/standard/protocol/openid-connect/logout`;
 
 const redirectSignOut = env.VITE_REDIRECT_SIGN_OUT?.trim()
-  ? env.VITE_REDIRECT_SIGN_OUT
+  ? env.VITE_REDIRECT_SIGN_OUT.trim()
   : `${logoutDomain}/clp-cgi/logoff.cgi?retnow=1&returl=${retUrl}?redirect_uri=${redirectUri}/`;
 
 const verificationMethods: 'code' | 'token' = 'code';

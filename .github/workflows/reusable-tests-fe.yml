@@ -1,0 +1,48 @@
+name: Reusable Unit Tests and Analysis
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  tests-frontend:
+    name: Frontend Unit Tests
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: bcgov/action-test-and-analyse@e2ba34132662c1638dbde806064eb7004b3761c3 # v1.3.0
+        env:
+          VITE_APP_NAME: Waste Plus
+          VITE_FEATURES_OFFLINE: true
+          VITE_ZONE: TEST
+          VITE_USER_POOLS_ID: ${{ secrets.COGNITO_USER_POOL }}
+          VITE_USER_POOLS_WEB_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
+          VITE_LEGACY_BASE_URL: https://apps.nrs.gov.bc.ca/ext/waste-for
+          VITE_CLIENT_BASE_URL: https://forestclient.nrs.gov.bc.ca
+          VITE_BACKEND_URL: http://localhost:8080          
+          VITE_NODE_ENV: test
+          VITE_COVERAGE: true
+          VITE_PORT: 3000
+        with:
+          node_version: 18
+          commands: |
+            npm ci
+            npm run test:coverage
+          dir: frontend
+#          sonar_args: >
+#            -Dsonar.exclusions=**/coverage/**,**/tests/**,**/stub/**,**/reports/**,**/cypress/**,,**/assets/**,,**/dto/**,**/CoreConstants.ts,**/src/CoreConstants.ts,**/main.ts,**/routes.ts,**/sims-vue.d.ts,**/styles.ts,**/components.d.ts
+#            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info            
+#            -Dsonar.organization=bcgov-sonarcloud
+#            -Dsonar.projectKey=forest-client-frontend
+#          sonar_token: ${{ secrets.SONAR_TOKEN_FRONTEND }}
+          triggers: ('frontend/')
+
+#      - uses: actions/upload-artifact@v4
+#        name: Upload Cypress Screenshots with error
+#        continue-on-error: true
+#        if: failure()
+#        with:
+#          name: cypress-screenshots
+#          path: frontend/cypress/screenshots
+#          retention-days: 7
