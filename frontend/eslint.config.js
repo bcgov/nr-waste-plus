@@ -10,7 +10,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import { globalIgnores } from 'eslint/config';
 
 export default tseslint.config([
-  globalIgnores(['dist']),
+  globalIgnores(['dist','coverage','node_modules','dev-dist','.devcontainer']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
