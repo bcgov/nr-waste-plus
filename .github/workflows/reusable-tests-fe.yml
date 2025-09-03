@@ -31,7 +31,7 @@ jobs:
             npm run test:coverage
           dir: frontend
 #          sonar_args: >
-#            -Dsonar.exclusions=**/coverage/**,**/tests/**,**/stub/**,**/reports/**,**/cypress/**,,**/assets/**,,**/dto/**,**/CoreConstants.ts,**/src/CoreConstants.ts,**/main.ts,**/routes.ts,**/sims-vue.d.ts,**/styles.ts,**/components.d.ts
+#            -Dsonar.exclusions=**/coverage/**,**/dev-dist/****/node_modules/**,**/tests/**,**/*.test.ts,**/*.test.tsx,**/vite-env.d.ts,**/types/**,**/constants/**,**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx
 #            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info            
 #            -Dsonar.organization=bcgov-sonarcloud
 #            -Dsonar.projectKey=forest-client-frontend
