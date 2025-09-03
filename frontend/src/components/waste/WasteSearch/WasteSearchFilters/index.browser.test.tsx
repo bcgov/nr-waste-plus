@@ -93,19 +93,7 @@ describe('WasteSearchFilters', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 
-  it.only('renders filter tags when filters are set', async () => {
-    /*(APIs.codes.getSamplingOptions as Mock).mockResolvedValue([
-      { code: 'A', description: 'Sampling Option: A' },
-      { code: 'B', description: 'Sampling Option: B' },
-    ]);
-    (APIs.codes.getDistricts as Mock).mockResolvedValue([
-      { code: 'A', description: 'District: A' },
-      { code: 'B', description: 'District: B' },
-    ]);
-    (APIs.codes.getAssessAreaStatuses as Mock).mockResolvedValue([
-      { code: 'A', description: 'Assess area status: A' },
-      { code: 'B', description: 'Assess area status: B' },
-    ]);*/
+  it('renders filter tags when filters are set', async () => {
     renderWithProps({});
 
     const samplingBox = screen.getByPlaceholderText(/Sampling/i);
@@ -125,19 +113,15 @@ describe('WasteSearchFilters', () => {
 
     expect(samplingButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(samplingButton as HTMLButtonElement);
+    expect(screen.getByText('A - Sampling Option: A')).toBeDefined();
 
-    console.log('Test id',screen.queryByTestId("test-code-A"));
-
-    //console.log(fireEvent.click(samplingButton as HTMLButtonElement));
-    //expect(screen.getByText('A - Sampling Option: A')).toBeDefined();
-/*
     expect(districtButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(districtButton as HTMLButtonElement);
     expect(screen.getByText('B - District: B')).toBeDefined();
 
     expect(statusButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(statusButton as HTMLButtonElement);
-    expect(screen.getByText('A - Assess area status: A')).toBeDefined();*/
+    expect(screen.getByText('A - Assess area status: A')).toBeDefined();
   });
 
   it('calls onChange when search has new value', async () => {
