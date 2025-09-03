@@ -185,6 +185,8 @@ export default defineConfig(({ mode }) => {
         {
           name: 'browser',
           extends: true,
+          provider: 'playwright',
+          instances: [{ browser: 'chromium' }],
           test: {
             setupFiles: [
               './src/config/tests/setup-browser.ts',

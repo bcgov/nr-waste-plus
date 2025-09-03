@@ -24,7 +24,7 @@ jobs:
       VITE_NODE_ENV: test
       VITE_COVERAGE: true
       VITE_PORT: 3000
-      CI: true
+      CI: false
     steps:
       - uses: actions/checkout@v4
 
@@ -34,9 +34,7 @@ jobs:
           node-version: "22"
 
       - name: Install Dependencies
-        run: |
-          npm ci
-          npx playwright install chromium
+        run: npm i
         working-directory: frontend
 
       - name: Run E2E Tests
