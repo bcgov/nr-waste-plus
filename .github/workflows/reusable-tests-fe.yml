@@ -25,7 +25,7 @@ jobs:
           VITE_COVERAGE: true
           VITE_PORT: 3000
         with:
-          node_version: 18
+          node_version: 22
           commands: |
             npm ci
             npm run test:coverage
