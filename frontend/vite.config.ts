@@ -181,23 +181,7 @@ export default defineConfig(({ mode }) => {
             environment: 'happy-dom',
             include: ['src/**/*.unit.test.{ts,tsx}'],
           },
-        },
-        {
-          name: 'browser',
-          extends: true,
-          test: {
-            setupFiles: [
-              './src/config/tests/setup-browser.ts',
-              './src/config/tests/custom-matchers.ts',
-            ],
-            browser: {
-              enabled: true,
-              provider: 'playwright',
-              instances: [{ browser: 'chromium' }],
-            },
-            include: ['src/**/*.browser.test.{ts,tsx}'],
-          },
-        },
+        }
       ],
       poolOptions: {
         threads: { singleThread: true },

@@ -8,6 +8,7 @@ import APIs from '@/services/APIs';
 
 import { ThemeProvider } from './ThemeProvider';
 import { useTheme } from './useTheme';
+import userEvent from '@testing-library/user-event';
 
 vi.mock('@/services/APIs', () => {
   return {
@@ -67,13 +68,13 @@ describe('ThemeContext', () => {
     await renderWithProviders();
 
     // Default is g10, toggle should set to g100
-    act(() => screen.getByText('Toggle').click());
+    await userEvent.click(screen.getByText('Toggle'));
     await waitFor(() => {
       expect(screen.getByTestId('theme-value').textContent).toBe('g100');
     });
 
     // Toggle again should set back to g10
-    act(() => screen.getByText('Toggle').click());
+    await userEvent.click(screen.getByText('Toggle'));
     await waitFor(() => {
       expect(screen.getByTestId('theme-value').textContent).toBe('g10');
     });
