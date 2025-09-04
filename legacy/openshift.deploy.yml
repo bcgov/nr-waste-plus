@@ -1,0 +1,203 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  app: ${NAME}-${ZONE}
+  app.kubernetes.io/part-of: ${NAME}-${ZONE}
+parameters:
+  - name: NAME
+    description: Module name
+    value: nr-waste-plus
+  - name: COMPONENT
+    description: Component name
+    value: legacy
+  - name: ZONE
+    description: Deployment zone, e.g. pr-### or prod
+    required: true
+  - name: TAG
+    description: Image tag; e.g. PR number, latest or prod
+    required: true
+  - name: REGISTRY
+    description: Container registry to import from (internal is image-registry.openshift-image-registry.svc:5000)
+    value: ghcr.io
+  - name: ORG
+    description: Organization name
+    value: bcgov
+  - name: DOMAIN
+    value: apps.silver.devops.gov.bc.ca
+  - name: REGISTRY
+    description: Container registry to import from (internal is image-registry.openshift-image-registry.svc:5000)
+    value: ghcr.io
+  - name: ORACLEDB_KEYSTORE
+    description: Oracle database keystore file
+  - name: ORACLEDB_PORT
+    description: Oracle database port
+    value: "1543"
+  - name: CPU_REQUEST
+    value: 75m
+  - name: MEMORY_REQUEST
+    value: 200Mi
+  - name: CERT_PVC_SIZE
+    description: The amount of storage the cert PVC should have
+    value: 25Mi
+  - name: RANDOM_EXPRESSION
+    description: Random expression to make sure deployments update
+    from: "[a-zA-Z0-9]{32}"
+    generate: expression
+objects:  
+  - kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+      labels:
+        app: ${NAME}-${ZONE}
+      name: ${NAME}-${ZONE}-${COMPONENT}
+    spec:
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: ${CERT_PVC_SIZE}
+      storageClassName: netapp-file-standard
+  - kind: Deployment
+    apiVersion: apps/v1
+    metadata:
+      labels:
+        app: ${NAME}-${ZONE}
+        appkind: ${COMPONENT}
+      name: ${NAME}-${ZONE}-${COMPONENT}
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          deployment: ${NAME}-${ZONE}-${COMPONENT}
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          annotations:
+            prometheus.io/scrape: "true"
+            prometheus.io/port: "9000"
+            prometheus.io/path: "/metrics"
+          labels:
+            app: ${NAME}-${ZONE}
+            deployment: ${NAME}-${ZONE}-${COMPONENT}
+        spec:
+          volumes:
+            - name: ${NAME}-${ZONE}-certs
+              persistentVolumeClaim:
+                claimName: ${NAME}-${ZONE}-${COMPONENT}
+          initContainers:
+            - name: ${NAME}-init
+              image: ${REGISTRY}/bcgov/nr-forest-client-commons/certextractor:0.2.0
+              imagePullPolicy: Always
+              env:
+                - name: ORACLEDB_HOST
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: oracle-host
+                - name: ORACLEDB_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: oracle-secret
+                - name: ORACLEDB_PORT
+                  value: ${ORACLEDB_PORT}
+              volumeMounts:
+                - name: ${NAME}-${ZONE}-certs
+                  mountPath: /cert
+              resources:
+                requests:
+                  cpu: ${CPU_REQUEST}
+                  memory: ${MEMORY_REQUEST}
+          containers:
+            - image: ${REGISTRY}/${ORG}/${NAME}/${COMPONENT}:${TAG}
+              imagePullPolicy: Always
+              name: ${NAME}
+              env:
+                - name: ORACLEDB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: oracle-user
+                - name: ORACLEDB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: oracle-password
+                - name: ORACLEDB_DATABASE
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: oracle-database
+                - name: ORACLEDB_HOST
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: oracle-host
+                - name: ORACLEDB_SERVICENAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: oracle-service
+                - name: ORACLEDB_PORT
+                  value: ${ORACLEDB_PORT}
+                - name: SPRING_PROFILES_ACTIVE
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: spring-profiles-active
+                - name: ORACLEDB_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: oracle-secret
+                - name: ORACLEDB_KEYSTORE
+                  value: /cert/jssecacerts
+                - name: TZ
+                  value: America/Vancouver
+                - name: RANDOM_EXPRESSION
+                  value: ${RANDOM_EXPRESSION}
+              ports:
+                - containerPort: 9000
+                  protocol: TCP
+              resources:
+                requests:
+                  cpu: ${CPU_REQUEST}
+                  memory: ${MEMORY_REQUEST}
+              readinessProbe:
+                successThreshold: 1
+                failureThreshold: 30
+                httpGet:
+                  path: /health
+                  port: 9000
+                  scheme: HTTP
+                initialDelaySeconds: 3
+                periodSeconds: 30
+                timeoutSeconds: 5
+              livenessProbe:
+                successThreshold: 1
+                failureThreshold: 15
+                httpGet:
+                  path: /health
+                  port: 9000
+                  scheme: HTTP
+                initialDelaySeconds: 3
+                periodSeconds: 30
+                timeoutSeconds: 5
+              volumeMounts:
+                - mountPath: /cert
+                  name: ${NAME}-${ZONE}-certs
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      labels:
+        app: ${NAME}-${ZONE}
+      name: ${NAME}-${ZONE}-${COMPONENT}
+    spec:
+      ports:
+        - name: 9000-tcp
+          protocol: TCP
+          port: 80
+          targetPort: 9000
+      selector:
+        deployment: ${NAME}-${ZONE}-${COMPONENT}
