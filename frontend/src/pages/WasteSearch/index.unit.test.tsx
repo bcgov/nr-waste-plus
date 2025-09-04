@@ -1,12 +1,24 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, type Mock, beforeEach } from 'vitest';
 
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import APIs from '@/services/APIs';
 
 import WasteSearchPage from './index';
+
+vi.mock('@/services/APIs', () => {
+  return {
+    default: {
+      user: {
+        getUserPreferences: vi.fn(),
+        updateUserPreferences: vi.fn(),
+      },
+    },
+  };
+});
 
 const renderWithProps = async () => {
   const qc = new QueryClient();
@@ -26,6 +38,11 @@ const renderWithProps = async () => {
 };
 
 describe('WasteSearchPage', () => {
+  beforeEach(() => {
+    (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
+    (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
+  });
+
   it('renders the page title and subtitle', async () => {
     await renderWithProps();
     expect(screen.getByText('Waste search')).toBeDefined();
