@@ -13,8 +13,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: https://cognito-idp.${COGNITO_REGION}.amazonaws.com/${COGNITO_USER_POOL}/.well-known/jwks.json
-          issuer-uri: https://cognito-idp.${COGNITO_REGION}.amazonaws.com/${COGNITO_USER_POOL}
+          jwk-set-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}/.well-known/jwks.json
+          issuer-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}
   datasource:
     jdbcUrl: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRESQL_DATABASE:nr-hrs}
     url: ${spring.datasource.jdbcUrl}
