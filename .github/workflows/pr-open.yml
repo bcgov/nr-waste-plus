@@ -70,8 +70,7 @@ jobs:
 
   results:
     name: PR Results
-#    needs: [builds, deploy, tests]
-    needs: [builds]
+    needs: [builds, deploy]
     if: always()
     runs-on: ubuntu-24.04
     steps:
