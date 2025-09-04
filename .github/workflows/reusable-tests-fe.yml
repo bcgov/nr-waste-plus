@@ -11,7 +11,7 @@ jobs:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-24.04
     container:
-      image: mcr.microsoft.com/playwright:v1.54.1-noble   
+      image: mcr.microsoft.com/playwright:v1.55.0-noble   
     env:
       VITE_APP_NAME: Waste Plus
       VITE_FEATURES_OFFLINE: true
