@@ -87,19 +87,19 @@ objects:
                   value: http://${NAME}-${ZONE}-legacy                
                 - name: SELF_URI
                   value: https://${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}                
-                - name: POSTGRESQL_HOST
+                - name: POSTGRES_HOST
                   value: ${NAME}-${ZONE}-database                
                 - name: POSTGRESQL_DATABASE
                   valueFrom:
                     secretKeyRef:
                       name: ${NAME}-${ZONE}
                       key: database-name
-                - name: POSTGRESQL_PASSWORD
+                - name: POSTGRES_PASSWORD
                   valueFrom:
                     secretKeyRef:
                       name: ${NAME}-${ZONE}
                       key: database-password
-                - name: POSTGRESQL_USER
+                - name: POSTGRES_USER
                   valueFrom:
                     secretKeyRef:
                       name: ${NAME}-${ZONE}

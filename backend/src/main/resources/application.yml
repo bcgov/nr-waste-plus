@@ -16,7 +16,7 @@ spring:
           jwk-set-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}/.well-known/jwks.json
           issuer-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}
   datasource:
-    jdbcUrl: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRESQL_DATABASE:nr-hrs}
+    jdbcUrl: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRES_PASSWORD:nr-hrs}
     url: ${spring.datasource.jdbcUrl}
     username: ${POSTGRES_USER:nr-hrs}
     password: ${POSTGRES_PASSWORD:default}
