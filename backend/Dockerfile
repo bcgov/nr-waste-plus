@@ -1,5 +1,5 @@
 ### Builder
-FROM ghcr.io/graalvm/native-image-community:24.0.2 AS build
+FROM ghcr.io/graalvm/native-image-community:24.0.2@sha256:3101e115bb4b363791245fcb9f595bcec1f63ca8c5a380273f4cd91e05bfe6ff AS build
 
 # Copy
 WORKDIR /app
@@ -11,7 +11,7 @@ COPY .mvn/ ./.mvn
 RUN ./mvnw -Pnative package -DskipTests -Dskip.unit.tests=true -Dspring-boot.run.profiles=prod
 
 ### Deployer
-FROM gcr.io/distroless/java-base:nonroot
+FROM gcr.io/distroless/java-base:nonroot@sha256:72548e08b006f2511ea406518e851a6f0656270ca710dc025b94010fd7843b95
 ARG PORT=8080
 
 # Copy

@@ -1,4 +1,4 @@
-FROM node:22.17-bullseye-slim AS build
+FROM node:22.17-bullseye-slim@sha256:741a60f76e79ab4080ebb10d24ec0c2aa4527fc44e33a8d609c416cc351b4fff AS build
 
 # Build static files
 WORKDIR /app
@@ -9,7 +9,7 @@ RUN npm ci --ignore-scripts && \
     rm -rf node_modules
 
 # Caddy
-FROM caddy:2.10.2-alpine
+FROM caddy:2.10.2-alpine@sha256:a4180db0805b3725ddf936d2e6290553745c7339c003565da717ee612fd8a888
 ENV LOG_LEVEL=info
 
 # Copy static files and config
