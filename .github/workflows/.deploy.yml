@@ -94,40 +94,40 @@ jobs:
             -p CLIENT_BASE_KEY=${{ secrets.CLIENT_API_KEY }}
             -p VITE_CLIENT_BASE_URL=${{ secrets.CLIENT_APP_URL }}
 
-#  deploy:
-#    name: Deploy
-#    needs: [init, vars]
-#    environment: ${{ inputs.environment }}
-#    runs-on: ubuntu-24.04
-#    timeout-minutes: 20
-#    strategy:
-#      matrix:
-#        name: [database, legacy, backend, frontend]
-#        include:
-#          - name: database
-#            overwrite: false
-#          - name: legacy
-#            parameters:
-#              -p ORACLEDB_PORT=${{ inputs.oracledb-port }}
-#          - name: backend
-#            parameters:
-#              -p FRONTEND_URL=${{ inputs.url }}
-#              -p CONFIG_MAP="${{ inputs.configmap-backend }}"
-#            verification_path: health
-#          - name: frontend
-#            parameters:
-#              -p URL=${{ inputs.url }}
-#              -p CONFIG_MAP="${{ inputs.configmap-frontend }}"
-#    steps:
-#      - uses: bcgov/action-deployer-openshift@d972993c70aba88e4f2fe66a66c4b7149fa9fcad # v4.0.0
-#        id: deploys
-#        with:
-#          file: ${{ matrix.name }}/openshift.deploy.yml
-#          oc_namespace: ${{ secrets.oc_namespace }}
-#          oc_server: ${{ secrets.oc_server }}
-#          oc_token: ${{ secrets.oc_token }}
-#          overwrite: ${{ matrix.overwrite }}
-#          parameters:
-#            -p TAG=${{ needs.vars.outputs.tag }}
-#            -p ZONE=${{ inputs.target }}
-#            ${{ matrix.parameters }}
+  deploy:
+    name: Deploy
+    needs: [init, vars]
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        name: [database]
+        include:
+          - name: database
+            overwrite: false
+          - name: legacy
+            parameters:
+              -p ORACLEDB_PORT=${{ inputs.oracledb-port }}
+          - name: backend
+            parameters:
+              -p FRONTEND_URL=${{ inputs.url }}
+              -p CONFIG_MAP="${{ inputs.configmap-backend }}"
+            verification_path: health
+          - name: frontend
+            parameters:
+              -p URL=${{ inputs.url }}
+              -p CONFIG_MAP="${{ inputs.configmap-frontend }}"
+    steps:
+      - uses: bcgov/action-deployer-openshift@d972993c70aba88e4f2fe66a66c4b7149fa9fcad # v4.0.0
+        id: deploys
+        with:
+          file: ${{ matrix.name }}/openshift.deploy.yml
+          oc_namespace: ${{ secrets.oc_namespace }}
+          oc_server: ${{ secrets.oc_server }}
+          oc_token: ${{ secrets.oc_token }}
+          overwrite: ${{ matrix.overwrite }}
+          parameters:
+            -p TAG=${{ needs.vars.outputs.tag }}
+            -p ZONE=${{ inputs.target }}
+            ${{ matrix.parameters }}
