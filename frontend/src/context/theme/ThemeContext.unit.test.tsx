@@ -1,5 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { waitFor } from '@testing-library/dom';
+import { act, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, type Mock } from 'vitest';
 
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
@@ -67,13 +69,13 @@ describe('ThemeContext', () => {
     await renderWithProviders();
 
     // Default is g10, toggle should set to g100
-    act(() => screen.getByText('Toggle').click());
+    await userEvent.click(screen.getByText('Toggle'));
     await waitFor(() => {
       expect(screen.getByTestId('theme-value').textContent).toBe('g100');
     });
 
     // Toggle again should set back to g10
-    act(() => screen.getByText('Toggle').click());
+    await userEvent.click(screen.getByText('Toggle'));
     await waitFor(() => {
       expect(screen.getByTestId('theme-value').textContent).toBe('g10');
     });

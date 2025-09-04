@@ -24,10 +24,10 @@ jobs:
       cleanup: label
       packages: backend database frontend legacy
 
-#  remove-tools:
-#    name: Remove database and user
-#    secrets: inherit
-#    uses: ./.github/workflows/.tools-cleanup.yml
+  remove-tools:
+    name: Remove database and user
+    secrets: inherit
+    uses: ./.github/workflows/.tools-cleanup.yml
 
   promote-tools:
     name: Promote tools

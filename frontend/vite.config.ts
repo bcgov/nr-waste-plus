@@ -136,11 +136,8 @@ export default defineConfig(({ mode }) => {
     },
     test: {
       env: loadEnv(mode, process.cwd(), ''),
-      globals: true,
-      restoreMocks: true,
-      clearMocks: true,
-      mockReset: true,
       exclude: [...configDefaults.exclude, 'dist/**', 'build/**'],
+      globals: true,
       tsconfig: './tsconfig.test.json',
       coverage: {
         provider: 'v8',
@@ -181,31 +178,11 @@ export default defineConfig(({ mode }) => {
               './src/config/tests/setup-env.ts',
               './src/config/tests/custom-matchers.ts',
             ],
-            environment: 'happy-dom',
+            environment: 'jsdom',
             include: ['src/**/*.unit.test.{ts,tsx}'],
           },
         },
-        {
-          name: 'browser',
-          extends: true,
-          test: {
-            setupFiles: [
-              './src/config/tests/setup-browser.ts',
-              './src/config/tests/custom-matchers.ts',
-            ],
-            browser: {
-              enabled: true,
-              provider: 'playwright',
-              instances: [{ browser: 'chromium' }],
-            },
-            include: ['src/**/*.browser.test.{ts,tsx}'],
-          },
-        },
       ],
-      poolOptions: {
-        threads: { singleThread: true },
-        forks: { singleFork: true },
-      },
     },
   };
 });

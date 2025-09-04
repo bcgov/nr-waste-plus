@@ -14,7 +14,7 @@ const items = [
 
 const renderWithProps = async (props: any) => {
   const qc = new QueryClient();
-  await act(() =>
+  await act(async () =>
     render(
       <QueryClientProvider client={qc}>
         <AutoCompleteInput
@@ -36,7 +36,7 @@ describe('AutoCompleteInput', () => {
       items.filter((i) => i.name.toLowerCase().includes(val.toLowerCase())),
     );
     const extractItems = (raw: any) => raw;
-    renderWithProps({ onAutoCompleteChange, extractItems });
+    await renderWithProps({ onAutoCompleteChange, extractItems });
     const input = screen.getByRole('combobox');
     fireEvent.change(input, { target: { value: 'Al' } });
     await waitFor(() => expect(onAutoCompleteChange).toHaveBeenCalledWith('Al'));
@@ -46,7 +46,7 @@ describe('AutoCompleteInput', () => {
     const onAutoCompleteChange = vi.fn(async () => items);
     const extractItems = (raw: any) => raw;
     const onSelect = vi.fn();
-    renderWithProps({ onAutoCompleteChange, extractItems, onSelect });
+    await renderWithProps({ onAutoCompleteChange, extractItems, onSelect });
     const input = screen.getByRole('combobox');
     fireEvent.change(input, { target: { value: 'Al' } });
     await waitFor(() => expect(onAutoCompleteChange).toHaveBeenCalled());
@@ -58,7 +58,7 @@ describe('AutoCompleteInput', () => {
   it('uses custom itemToString if provided', async () => {
     const onAutoCompleteChange = vi.fn(async () => items);
     const extractItems = (raw: any) => raw;
-    renderWithProps({
+    await renderWithProps({
       onAutoCompleteChange,
       extractItems,
       itemToString: (item: { name: any }) => (item ? `Custom: ${item.name}` : ''),

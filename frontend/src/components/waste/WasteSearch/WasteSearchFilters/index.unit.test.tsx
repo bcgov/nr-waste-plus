@@ -2,32 +2,31 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, type Mock } from 'vitest';
-
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      codes: {
-        getSamplingOptions: vi.fn().mockResolvedValue([
-          { code: 'A', description: 'Sampling Option: A' },
-          { code: 'B', description: 'Sampling Option: B' },
-        ]),
-        getDistricts: vi.fn().mockResolvedValue([
-          { code: 'A', description: 'District: A' },
-          { code: 'B', description: 'District: B' },
-        ]),
-        getAssessAreaStatuses: vi.fn().mockResolvedValue([
-          { code: 'A', description: 'Assess area status: A' },
-          { code: 'B', description: 'Assess area status: B' },
-        ]),
-      },
-    },
-  };
-});
+import { describe, it, expect, vi } from 'vitest';
 
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import APIs from '@/services/APIs';
 
 import WasteSearchFilters from './index';
+
+vi.mock('@/services/APIs', () => ({
+  default: {
+    codes: {
+      getSamplingOptions: vi.fn().mockResolvedValue([
+        { code: 'A', description: 'Sampling Option: A' },
+        { code: 'B', description: 'Sampling Option: B' },
+      ]),
+      getDistricts: vi.fn().mockResolvedValue([
+        { code: 'A', description: 'District: A' },
+        { code: 'B', description: 'District: B' },
+      ]),
+      getAssessAreaStatuses: vi.fn().mockResolvedValue([
+        { code: 'A', description: 'Assess area status: A' },
+        { code: 'B', description: 'Assess area status: B' },
+      ]),
+    },
+  },
+}));
 
 const defaultFilters = {
   mainSearchTerm: '',
@@ -56,9 +55,9 @@ describe('WasteSearchFilters', () => {
   it('renders main search input and filter columns', async () => {
     renderWithProps({});
     expect(screen.getAllByPlaceholderText('Search by RU No. or Block ID')[0]).toBeDefined();
-    expect(screen.getByRole('combobox', { name: /Sampling/i })).toBeDefined();
-    expect(screen.getByRole('combobox', { name: /District/i })).toBeDefined();
-    expect(screen.getByRole('combobox', { name: /Status/i })).toBeDefined();
+    expect(screen.getByPlaceholderText(/Sampling/i)).toBeDefined();
+    expect(screen.getByPlaceholderText(/District/i)).toBeDefined();
+    expect(screen.getByPlaceholderText(/Status/i)).toBeDefined();
   });
 
   it('renders advanced search and search buttons (desktop)', async () => {
@@ -93,20 +92,9 @@ describe('WasteSearchFilters', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 
-  it.only('renders filter tags when filters are set', async () => {
-    /*(APIs.codes.getSamplingOptions as Mock).mockResolvedValue([
-      { code: 'A', description: 'Sampling Option: A' },
-      { code: 'B', description: 'Sampling Option: B' },
-    ]);
-    (APIs.codes.getDistricts as Mock).mockResolvedValue([
-      { code: 'A', description: 'District: A' },
-      { code: 'B', description: 'District: B' },
-    ]);
-    (APIs.codes.getAssessAreaStatuses as Mock).mockResolvedValue([
-      { code: 'A', description: 'Assess area status: A' },
-      { code: 'B', description: 'Assess area status: B' },
-    ]);*/
+  it('renders filter tags when filters are set', async () => {
     renderWithProps({});
+    expect(APIs.codes.getAssessAreaStatuses).toHaveBeenCalled();
 
     const samplingBox = screen.getByPlaceholderText(/Sampling/i);
     const samplingButton = samplingBox.parentElement?.querySelector('button');
@@ -125,19 +113,15 @@ describe('WasteSearchFilters', () => {
 
     expect(samplingButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(samplingButton as HTMLButtonElement);
+    expect(screen.getByText('A - Sampling Option: A')).toBeDefined();
 
-    console.log('Test id',screen.queryByTestId("test-code-A"));
-
-    //console.log(fireEvent.click(samplingButton as HTMLButtonElement));
-    //expect(screen.getByText('A - Sampling Option: A')).toBeDefined();
-/*
     expect(districtButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(districtButton as HTMLButtonElement);
     expect(screen.getByText('B - District: B')).toBeDefined();
 
     expect(statusButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(statusButton as HTMLButtonElement);
-    expect(screen.getByText('A - Assess area status: A')).toBeDefined();*/
+    expect(screen.getByText('A - Assess area status: A')).toBeDefined();
   });
 
   it('calls onChange when search has new value', async () => {
@@ -155,7 +139,7 @@ describe('WasteSearchFilters', () => {
     const onChange = vi.fn();
     renderWithProps({ onChange });
 
-    const samplingBox = screen.getByRole('combobox', { name: /Sampling/i });
+    const samplingBox = screen.getByPlaceholderText(/Sampling/i);
     const samplingButton = samplingBox.parentElement?.querySelector('button');
     expect(samplingBox).toBeDefined();
     expect(samplingButton).toBeDefined();

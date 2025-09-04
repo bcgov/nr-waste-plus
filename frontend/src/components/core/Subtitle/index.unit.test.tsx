@@ -9,7 +9,7 @@ describe('Subtitle', () => {
     const p = screen.getByText('Test Subtitle');
     expect(p).not.toBeNull();
     expect(p.tagName).toBe('P');
-    expect(p).toHaveClass('subtitle-section');
+    expect(p).toHaveProperty('className', 'subtitle-section');
   });
 
   it('renders the text prop as ReactNode', () => {
@@ -17,13 +17,12 @@ describe('Subtitle', () => {
     const span = screen.getByText('Node Subtitle');
     expect(span).not.toBeNull();
     expect(span.tagName).toBe('SPAN');
-    expect(span.parentElement).toHaveClass('subtitle-section');
+    expect(span.parentElement).toHaveProperty('className', 'subtitle-section');
   });
 
   it('applies custom className', () => {
     render(<Subtitle text="With Class" className="custom-class" />);
     const p = screen.getByText('With Class');
-    expect(p).toHaveClass('custom-class');
-    expect(p).toHaveClass('subtitle-section');
+    expect(p).toHaveProperty('className', 'custom-class subtitle-section');
   });
 });

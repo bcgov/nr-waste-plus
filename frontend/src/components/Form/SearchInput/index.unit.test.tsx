@@ -2,13 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
-import SearchInput from './index'; // co-located with the component (e.g., index.tsx)
-
-/**
- * Browser component tests
- * - Runs with Playwright provider via @vitest/browser
- * - setup-files: src/config/tests/setup-browser.ts + custom-matchers.ts
- */
+import SearchInput from './index';
 
 const setup = (overrides: Partial<React.ComponentProps<typeof SearchInput>> = {}) => {
   const props = {
@@ -29,11 +23,11 @@ describe('SearchInput (browser)', () => {
   it('renders with accessible label and placeholder', () => {
     const { props } = setup();
     // Root wrapper rendered
-    expect(screen.getByTestId(props.id)).toBeInTheDocument();
+    expect(screen.getByTestId(props.id)).toBeDefined();
     // Input is labeled for accessibility
-    expect(screen.getByRole('searchbox', { name: props.placeholder })).toBeInTheDocument();
+    expect(screen.getByRole('searchbox', { name: props.placeholder })).toBeDefined();
     // Clear button (from Carbon) should be present by its accessible name
-    expect(screen.getByLabelText('Clear search input')).toBeInTheDocument();
+    expect(screen.getByLabelText('Clear search input')).toBeDefined();
   });
 
   it('calls onChange with typed value when Enter blurs the input', async () => {

@@ -33,7 +33,7 @@ jobs:
       attestations: write
     strategy:
       matrix:
-        package: [backend, database, frontend, legacy]
+        package: [database, frontend, backend]
     steps:
       - uses: bcgov/action-builder-ghcr@1a3767a04ade69edf7e4857c44269d1100282581 # v4.1.0
         name: Build (${{ matrix.package }})
@@ -42,30 +42,21 @@ jobs:
           tag_fallback: latest
           triggers: ('${{ matrix.package }}/')
 
-#  deploy:
-#    name: Deploy (${{ github.event.number }})
-#    needs: [builds]
-#    secrets: inherit
-#    uses: ./.github/workflows/.deploy.yml
-#    with:
-#      oracledb-port: 1521
-#      oracledb-servicename: PR_${{ github.event.number }}
-#      oracledb-username: THE
-#      configmap-backend: |-
-#        features:
-#          staff:
-#            match: true
-#        info:
-#          app:
-#            component: backend
-#        ca:
-#          bc:
-#            gov:
-#              nrs:
-#                idirMaxSubmissions: 65535
-#                otherMaxSubmissions: 65535
-#      configmap-frontend: |-
-#        window.localStorage.setItem(\"VITE_FEATURE_FLAGS\",'{\"RELATED_CLIENTS\":true}');
+  deploy:
+    name: Deploy (${{ github.event.number }})
+    needs: [builds]
+    secrets: inherit
+    uses: ./.github/workflows/.deploy.yml
+    with:
+      oracledb-port: 1521
+      oracledb-servicename: PR_${{ github.event.number }}
+      oracledb-username: THE
+      configmap-backend: |-        
+        info:
+          app:
+            component: backend
+      configmap-frontend: |-
+        window.localStorage.setItem(\"VITE_FEATURE_FLAGS\",'{}');
 
 #  tests:
 #    name: Tests
@@ -79,8 +70,7 @@ jobs:
 
   results:
     name: PR Results
-#    needs: [builds, deploy, tests]
-    needs: [builds]
+    needs: [builds, deploy]
     if: always()
     runs-on: ubuntu-24.04
     steps:

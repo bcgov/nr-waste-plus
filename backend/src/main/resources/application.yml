@@ -13,10 +13,10 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${AWS_COGNITO_ISSUER_URI:aws-cognito-any-url.com}
-          jwk-set-uri: ${AWS_COGNITO_ISSUER_URI:aws-cognito-any-url.com}/.well-known/jwks.json
+          jwk-set-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}/.well-known/jwks.json
+          issuer-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}
   datasource:
-    jdbcUrl: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRES_DB:nr-hrs}
+    jdbcUrl: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRES_DATABASE:nr-hrs}
     url: ${spring.datasource.jdbcUrl}
     username: ${POSTGRES_USER:nr-hrs}
     password: ${POSTGRES_PASSWORD:default}
@@ -43,7 +43,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         boot.allow_jdbc_metadata_access: false
-        #hikari.connection.provider_class: org.hibernate.hikaricp.internal.HikariCPConnectionProvider
   mvc:
     problemdetails:
       enabled: true
@@ -76,6 +75,38 @@ management:
       enabled: false
     health:
       show-details: always
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      path-mapping:
+        prometheus: metrics
+      base-path: /
+      exposure:
+        include: health,info,metrics,otlp,tracing,httptrace,prometheus
+  httpexchanges:
+    recording:
+      include: principal,request-headers,response-headers,cookie-headers,time-taken,authorization-header,remote-address,session-id
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    enabled: false
+    baggage:
+      remote-fields:
+        - X-TRACE-ID
+        - X-USER
+      correlation:
+        fields:
+          - X-TRACE-ID
+          - X-USER
+    sampling:
+      probability: 0.75
+  zipkin:
+    metrics:
+      export:
+        enabled: true
 
 resilience4j:
   circuitbreaker:
@@ -102,8 +133,6 @@ resilience4j:
           - org.springframework.web.client.HttpClientErrorException
           - ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException
           - ca.bc.gov.nrs.hrs.exception.UnretriableException
-
-
 
 # Certificate for the Database
 ca:

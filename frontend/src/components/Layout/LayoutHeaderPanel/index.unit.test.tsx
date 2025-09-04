@@ -35,6 +35,6 @@ const renderWithProviders = async () => {
 describe('LayoutHeaderPanel', () => {
   it('renders when open', async () => {
     await renderWithProviders();
-    expect(screen.getByTestId('header-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('header-panel')).toBeDefined();
   });
 });

@@ -86,8 +86,6 @@ jobs:
             -p LANDING_URL=${{ inputs.url }}
             -p DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             -p SPRING_PROFILES_ACTIVE=${{ secrets.OC_NAMESPACE }}
-            -p VITE_APP_NAME=Waste Plus
-            -p VITE_FEATURES_OFFLINE=true
             -p VITE_ZONE=${{ inputs.environment || 'dev' }}
             -p VITE_LEGACY_BASE_URL=${{ secrets.GREEN_DOMAIN }}
             -p CLIENT_BASE_URL=${{ secrets.CLIENT_API_URL }}
@@ -102,22 +100,19 @@ jobs:
     timeout-minutes: 20
     strategy:
       matrix:
-        name: [database, legacy, backend, frontend]
+        name: [database, frontend, backend]
         include:
           - name: database
             overwrite: false
-          - name: legacy
+          - name: frontend
             parameters:
-              -p ORACLEDB_PORT=${{ inputs.oracledb-port }}
+              -p URL=${{ inputs.url }}
+              -p CONFIG_MAP="${{ inputs.configmap-frontend }}"
           - name: backend
             parameters:
               -p FRONTEND_URL=${{ inputs.url }}
               -p CONFIG_MAP="${{ inputs.configmap-backend }}"
             verification_path: health
-          - name: frontend
-            parameters:
-              -p URL=${{ inputs.url }}
-              -p CONFIG_MAP="${{ inputs.configmap-frontend }}"
     steps:
       - uses: bcgov/action-deployer-openshift@d972993c70aba88e4f2fe66a66c4b7149fa9fcad # v4.0.0
         id: deploys

@@ -1,4 +1,5 @@
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
 import { PageTitleProvider } from './PageTitleProvider';
@@ -21,7 +22,7 @@ describe('PageTitleProvider', () => {
         <TestComponent />
       </PageTitleProvider>,
     );
-    expect(screen.getByTestId('page-title').textContent).toBe('Vitest Browser Tester');
+    expect(screen.getByTestId('page-title').textContent).toBe('Waste Plus');
   });
 
   it('updates the page title when setPageTitle is called', async () => {
@@ -30,7 +31,8 @@ describe('PageTitleProvider', () => {
         <TestComponent />
       </PageTitleProvider>,
     );
-    await act(async () => await screen.getByText('Set Title').click());
+    //expect(screen.getByTestId('page-title').textContent).toBe('Waste Plus -');
+    await userEvent.click(screen.getByText('Set Title'));
     expect(screen.getByTestId('page-title').textContent).toBe('Waste Plus - New Title');
   });
 
@@ -45,7 +47,8 @@ describe('PageTitleProvider', () => {
         <AnotherComponent />
       </PageTitleProvider>,
     );
-    await act(async () => await screen.getByText('Set Title').click());
+    //expect(screen.getByTestId('page-title').textContent).toBe('Waste Plus -');
+    await userEvent.click(screen.getByText('Set Title'));
     expect(screen.getByTestId('another-title').textContent).toBe('Waste Plus - New Title');
   });
 

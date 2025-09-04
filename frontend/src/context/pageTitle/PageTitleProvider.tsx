@@ -5,7 +5,7 @@ import { env } from '@/env';
 import { PageTitleContext } from './PageTitleContext';
 
 export const PageTitleProvider = ({ children }: { children: ReactNode }) => {
-  const [pageTitle, setPageTitleState] = useState(document.title);
+  const [pageTitle, setPageTitleState] = useState(env.VITE_APP_NAME);
   const [currentHierarchy, setCurrentHierarchy] = useState(0);
 
   const resolveName = (title: string) =>
