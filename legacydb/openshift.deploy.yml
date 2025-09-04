@@ -123,8 +123,8 @@ objects:
   - kind: NetworkPolicy
     apiVersion: networking.k8s.io/v1
     metadata:
-      name: allow-d2723f-dev-legacy-access
-      namespace: d2723f-tools
+      name: allow-cffaf3-dev-legacy-access
+      namespace: cffaf3-tools
     spec:
       podSelector: {}
       policyTypes:
@@ -133,8 +133,8 @@ objects:
       - from:
         - namespaceSelector:
             matchLabels:
-              environment: dev  # Restrict to namespace d2723f-dev
-              name: d2723f  # Restrict to namespace d2723f-dev
+              environment: dev  # Restrict to namespace cffaf3-dev
+              name: cffaf3  # Restrict to namespace cffaf3-dev
   - kind: NetworkPolicy
     apiVersion: networking.k8s.io/v1    
     metadata:
@@ -211,7 +211,7 @@ objects:
                     flyway -url=${FLYWAY_URL}_${PR_NUMBER} -user=${FLYWAY_USER} -password=${FLYWAY_PASSWORD} -locations=filesystem:/data/sql migrate
                   env:
                     - name: FLYWAY_URL
-                      value: "jdbc:oracle:thin:@nr-waste-plus-tools-legacydb.d2723f-tools.svc.cluster.local:1521/PR"
+                      value: "jdbc:oracle:thin:@nr-waste-plus-tools-legacydb.cffaf3-tools.svc.cluster.local:1521/PR"
                     - name: FLYWAY_USER
                       value: ${ORACLEDB_USER}
                     - name: FLYWAY_PASSWORD
