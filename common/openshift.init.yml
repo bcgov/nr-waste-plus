@@ -126,13 +126,15 @@ objects:
       name: ${NAME}-${ZONE}-frontend
     data:
       config.js: |
-        window.config.setItem('VITE_BACKEND_URL', 'https://${NAME}-${ZONE}-backend.${DOMAIN}');
-        window.config.setItem('VITE_FRONTEND_URL', 'https://${URL_FRONTEND}');
-        window.config.setItem('VITE_NODE_ENV', '${VITE_NODE_ENV}');
-        window.config.setItem('VITE_APP_NAME', 'Waste Plus');
-        window.config.setItem('VITE_FEATURES_OFFLINE', 'true');
-        window.config.setItem('VITE_ZONE', '${VITE_ZONE}');
-        window.config.setItem('VITE_USER_POOLS_ID', '${COGNITO_USER_POOL}');
-        window.config.setItem('VITE_LEGACY_BASE_URL', '${VITE_LEGACY_BASE_URL}');
-        window.config.setItem('VITE_CLIENT_BASE_URL', '${CLIENT_BASE_URL}');
-        window.config.setItem('VITE_USER_POOLS_WEB_CLIENT_ID', '${COGNITO_CLIENT_ID}');
+        window.config = {
+          VITE_BACKEND_URL: 'https://${NAME}-${ZONE}-backend.${DOMAIN}',
+          VITE_FRONTEND_URL: 'https://${URL_FRONTEND}',
+          VITE_NODE_ENV: '${VITE_NODE_ENV}',
+          VITE_APP_NAME: 'Waste Plus',
+          VITE_FEATURES_OFFLINE: 'true',
+          VITE_ZONE: '${VITE_ZONE}',
+          VITE_USER_POOLS_ID: '${COGNITO_USER_POOL}',
+          VITE_LEGACY_BASE_URL: '${VITE_LEGACY_BASE_URL}',
+          VITE_CLIENT_BASE_URL: '${CLIENT_BASE_URL}',
+          VITE_USER_POOLS_WEB_CLIENT_ID: '${COGNITO_CLIENT_ID}'
+        };
