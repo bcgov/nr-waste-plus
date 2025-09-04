@@ -25,10 +25,10 @@ describe('ActiveMultiSelect', () => {
     const button = (await screen.findAllByTitle('Open'))[0] as HTMLButtonElement;
     await act(async () => button.click());
     const input = screen.getByRole('combobox');
-    expect(input).toHaveAttribute('placeholder', 'Select...');
-    expect(screen.getByText('A - Alpha')).toBeInTheDocument();
-    expect(screen.getByText('B - Beta')).toBeInTheDocument();
-    expect(screen.getByText('C - Gamma')).toBeInTheDocument();
+    expect(input).toHaveProperty('placeholder', 'Select...');
+    expect(screen.getByText('A - Alpha')).toBeDefined();
+    expect(screen.getByText('B - Beta')).toBeDefined();
+    expect(screen.getByText('C - Gamma')).toBeDefined();
   });
 
   it('calls onChange when an item is selected', async () => {
@@ -63,6 +63,6 @@ describe('ActiveMultiSelect', () => {
     );
     const button = (await screen.findAllByTitle('Open'))[0] as HTMLButtonElement;
     await act(async () => button.click());
-    expect(screen.getByText('B - Beta')).toBeInTheDocument();
+    expect(screen.getByText('B - Beta')).toBeDefined();
   });
 });
