@@ -33,7 +33,7 @@ describe('NotificationProvider', () => {
         <div>Child</div>
       </NotificationProvider>,
     );
-    expect(screen.getByText('Child')).toBeInTheDocument();
+    expect(screen.getByText('Child')).toBeDefined();
   });
 
   it('displays a notification when display is called', () => {
@@ -45,9 +45,9 @@ describe('NotificationProvider', () => {
     act(() => {
       screen.getByText('Show Notification').click();
     });
-    expect(screen.getByText('Test Title')).toBeInTheDocument();
-    expect(screen.getByText('Test Subtitle')).toBeInTheDocument();
-    expect(screen.getByText('Test Caption')).toBeInTheDocument();
+    expect(screen.getByText('Test Title')).toBeDefined();
+    expect(screen.getByText('Test Subtitle')).toBeDefined();
+    expect(screen.getByText('Test Caption')).toBeDefined();
   });
 
   it('removes the notification when onClose is triggered', () => {
@@ -65,7 +65,7 @@ describe('NotificationProvider', () => {
       closeBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     // Notification should be removed
-    expect(screen.queryByText('Test Title')).not.toBeInTheDocument();
+    expect(screen.queryByText('Test Title')).toBeNull();
   });
 
   it('should fail if no provider is present', () => {
