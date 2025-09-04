@@ -104,18 +104,6 @@ jobs:
         include:
           - name: database
             overwrite: false
-          - name: legacy
-            parameters:
-              -p ORACLEDB_PORT=${{ inputs.oracledb-port }}
-          - name: backend
-            parameters:
-              -p FRONTEND_URL=${{ inputs.url }}
-              -p CONFIG_MAP="${{ inputs.configmap-backend }}"
-            verification_path: health
-          - name: frontend
-            parameters:
-              -p URL=${{ inputs.url }}
-              -p CONFIG_MAP="${{ inputs.configmap-frontend }}"
     steps:
       - uses: bcgov/action-deployer-openshift@d972993c70aba88e4f2fe66a66c4b7149fa9fcad # v4.0.0
         id: deploys
