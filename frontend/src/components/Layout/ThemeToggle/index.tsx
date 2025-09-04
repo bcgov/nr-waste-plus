@@ -6,25 +6,24 @@ import { useTheme } from '@/context/theme/useTheme';
 
 const ThemeToggle: FC = () => {
   const { theme, toggleTheme } = useTheme();
-
-  const handleToggle = () => {
-    toggleTheme();
-  };
-
   return (
     <div
       className={`theme-toggle ${theme !== 'g10' ? 'on' : 'off'}`}
-      onClick={handleToggle}
+      onClick={toggleTheme}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
-          handleToggle();
+          toggleTheme();
         }
       }}
     >
       <div className="circle">
-        {theme !== 'g10' ? <AsleepFilled className="icon" /> : <LightFilled className="icon" />}
+        {theme !== 'g10' ? (
+          <AsleepFilled className="icon dark" />
+        ) : (
+          <LightFilled className="icon light" />
+        )}
       </div>
     </div>
   );
