@@ -32,7 +32,7 @@ public class ApiAuthorizationCustomizer implements
 
     authorize
         // Allow actuator endpoints to be accessed without authentication
-        .requestMatchers(HttpMethod.GET, "/actuator/**")
+        .requestMatchers(HttpMethod.GET, "/metrics","/health")
         .permitAll();
 
     authorize
