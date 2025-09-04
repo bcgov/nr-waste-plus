@@ -26,8 +26,8 @@ describe('PageTitle (browser)', () => {
   it('renders title and subtitle', () => {
     renderPageTitle({ title: 'Test Title', subtitle: 'Test Subtitle' });
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Test Title');
-    expect(screen.getByText('Test Subtitle')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 }).textContent).to.equal('Test Title');
+    expect(screen.getByText('Test Subtitle')).toBeDefined();
   });
 
   it('renders breadcrumbs', async () => {
@@ -41,7 +41,7 @@ describe('PageTitle (browser)', () => {
     renderPageTitle({ title: 'With Breadcrumbs', breadCrumbs });
 
     const dashboardCrumb = screen.getByText('Dashboard');
-    expect(dashboardCrumb).toBeInTheDocument();
+    expect(dashboardCrumb).toBeDefined();
 
     // We're not mocking navigation here — just verifying it doesn't crash
     await user.click(dashboardCrumb);
@@ -50,7 +50,7 @@ describe('PageTitle (browser)', () => {
   it('renders the experimental tag when experimental is true', () => {
     renderPageTitle({ title: 'Experimental Page', experimental: true });
     // UnderConstructionTag renders a tag with text 'Under Construction' by default
-    expect(screen.getByText(/under construction/i)).toBeInTheDocument();
+    expect(screen.getByText(/under construction/i)).toBeDefined();
   });
 
   it('renders children components', () => {
@@ -58,6 +58,6 @@ describe('PageTitle (browser)', () => {
       title: 'With Children',
       children: <span data-testid="custom-child">Child Content</span>,
     });
-    expect(screen.getByTestId('custom-child')).toHaveTextContent('Child Content');
+    expect(screen.getByTestId('custom-child').textContent).to.equal('Child Content');
   });
 });
