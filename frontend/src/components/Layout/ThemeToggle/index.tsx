@@ -20,9 +20,9 @@ const ThemeToggle: FC = () => {
     >
       <div className="circle">
         {theme !== 'g10' ? (
-          <AsleepFilled className="icon dark" />
+          <AsleepFilled className="icon dark" aria-label="dark mode" />
         ) : (
-          <LightFilled className="icon light" />
+          <LightFilled className="icon light" aria-label="light mode" />
         )}
       </div>
     </div>

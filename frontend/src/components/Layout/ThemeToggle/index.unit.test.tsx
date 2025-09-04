@@ -40,15 +40,17 @@ describe('ThemeToggle', () => {
   it('renders with light icon when theme is white', async () => {
     await renderWithProviders();
     expect(screen.getByRole('button')).toBeDefined();
-    // LightFilled icon should be present
-    expect(document.querySelector('.icon')).toBeDefined();
-    expect(document.querySelector('.icon')).toHaveProperty('className', 'icon light');
+    const icon = document.querySelector('.icon');
+    expect(icon).toBeDefined();
+    expect(icon?.ariaLabel).toContain('light');
   });
 
   it('renders with asleep icon when theme is not white', async () => {
     await renderWithProviders(mockCtxDark);
-    expect(document.querySelector('.icon')).toBeDefined();
-    expect(document.querySelector('.icon')).toHaveProperty('className', 'icon dark');
+    expect(screen.getByRole('button')).toBeDefined();
+    const icon = document.querySelector('.icon');
+    expect(icon).toBeDefined();
+    expect(icon?.ariaLabel).toContain('dark');
   });
 
   it('calls toggleTheme on click', async () => {
