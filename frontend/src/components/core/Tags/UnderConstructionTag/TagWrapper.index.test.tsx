@@ -19,7 +19,7 @@ const renderTagWrapper = (
 describe('TagWrapper (browser)', () => {
   it('renders children inside the wrapper', () => {
     renderTagWrapper({ children: <span>Test Tag</span> });
-    expect(screen.getByText('Test Tag')).toBeInTheDocument();
+    expect(screen.getByText('Test Tag')).toBeDefined();
   });
   it('applies the correct class', () => {
     renderTagWrapper();
