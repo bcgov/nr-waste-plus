@@ -86,8 +86,6 @@ jobs:
             -p LANDING_URL=${{ inputs.url }}
             -p DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             -p SPRING_PROFILES_ACTIVE=${{ secrets.OC_NAMESPACE }}
-            -p VITE_APP_NAME=Waste Plus
-            -p VITE_FEATURES_OFFLINE=true
             -p VITE_ZONE=${{ inputs.environment || 'dev' }}
             -p VITE_LEGACY_BASE_URL=${{ secrets.GREEN_DOMAIN }}
             -p CLIENT_BASE_URL=${{ secrets.CLIENT_API_URL }}
