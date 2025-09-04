@@ -51,16 +51,16 @@ const renderWithProviders = async (pathname = '/dashboard') => {
 describe('LayoutSideNav', () => {
   it('renders menu links and menu items', async () => {
     await renderWithProviders('/dashboard');
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('Settings')).toBeInTheDocument();
-    expect(screen.getByText('Profile')).toBeInTheDocument();
-    expect(screen.queryByText('Admin')).not.toBeInTheDocument();
-    expect(screen.queryByText('Hidden')).not.toBeInTheDocument();
+    expect(screen.getByText('Dashboard')).toBeDefined();
+    expect(screen.getByText('Settings')).toBeDefined();
+    expect(screen.getByText('Profile')).toBeDefined();
+    expect(screen.queryByText('Admin')).toBeNull();
+    expect(screen.queryByText('Hidden')).toBeNull();
   });
 
   it('marks the correct link as active', async () => {
     await renderWithProviders('/settings/profile');
     const profileLink = screen.getByText('Profile').closest('a');
-    expect(profileLink).toHaveClass('cds--side-nav__link--current');
+    expect(profileLink?.className).toContain('cds--side-nav__link--current');
   });
 });
