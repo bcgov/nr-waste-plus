@@ -89,7 +89,7 @@ objects:
                   value: https://${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}                
                 - name: POSTGRES_HOST
                   value: ${NAME}-${ZONE}-database                
-                - name: POSTGRESQL_DATABASE
+                - name: POSTGRES_DATABASE
                   valueFrom:
                     secretKeyRef:
                       name: ${NAME}-${ZONE}
