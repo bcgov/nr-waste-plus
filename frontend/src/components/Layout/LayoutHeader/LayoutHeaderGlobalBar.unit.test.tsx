@@ -26,9 +26,9 @@ const renderWithProviders = async () => {
 describe('LayoutHeaderGlobalBar', () => {
   it('renders ThemeToggle and user avatar', async () => {
     await renderWithProviders();
-    expect(screen.getByTestId('theme-toggle')).toBeInTheDocument();
-    expect(screen.getByLabelText('User settings')).toBeInTheDocument();
-    expect(screen.getByLabelText('Theme')).toBeInTheDocument();
+    expect(screen.getByTestId('theme-toggle')).toBeDefined();
+    expect(screen.getByLabelText('User settings')).toBeDefined();
+    expect(screen.getByLabelText('Theme')).toBeDefined();
   });
 
   it('calls toggleHeaderPanel when user settings is clicked', async () => {
