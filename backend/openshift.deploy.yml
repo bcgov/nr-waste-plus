@@ -1,0 +1,178 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  app: ${NAME}-${ZONE}
+  app.kubernetes.io/part-of: ${NAME}-${ZONE}
+parameters:
+  - name: NAME
+    description: Module name
+    value: nr-waste-plus
+  - name: COMPONENT
+    description: Component name
+    value: backend
+  - name: ZONE
+    description: Deployment zone, e.g. pr-### or prod
+    required: true
+  - name: TAG
+    description: Image tag; e.g. PR number, latest or prod
+    required: true
+  - name: REGISTRY
+    description: Container registry to import from (internal is image-registry.openshift-image-registry.svc:5000)
+    value: ghcr.io
+  - name: ORG
+    description: Organization name
+    value: bcgov
+  - name: DOMAIN
+    value: apps.silver.devops.gov.bc.ca
+  - name: REGISTRY
+    description: Container registry to import from (internal is image-registry.openshift-image-registry.svc:5000)
+    value: ghcr.io
+  - name: CPU_REQUEST
+    value: 75m
+  - name: MEMORY_REQUEST
+    value: 200Mi
+  - name: COGNITO_REGION
+    description: Cognito region to be used
+    value: 'ca-central-1'
+  - name: FRONTEND_URL
+    description: Frontend URL
+    required: true
+  - name: CONFIG_MAP
+    description: Configuration map for application.yml
+    required: true
+  - name: RANDOM_EXPRESSION
+    description: Random expression to make sure deployments update
+    from: "[a-zA-Z0-9]{32}"
+    generate: expression
+objects:
+  - kind: Deployment
+    apiVersion: apps/v1
+    metadata:
+      labels:
+        app: ${NAME}-${ZONE}
+      name: ${NAME}-${ZONE}-${COMPONENT}
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          deployment: ${NAME}-${ZONE}-${COMPONENT}
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          annotations:
+            prometheus.io/scrape: "true"
+            prometheus.io/port: "8080"
+            prometheus.io/path: "/metrics"
+          labels:
+            app: ${NAME}-${ZONE}
+            deployment: ${NAME}-${ZONE}-${COMPONENT}
+        spec:
+          volumes:
+            - name: ${COMPONENT}-config
+              configMap:
+                name: ${NAME}-${ZONE}-${COMPONENT}-config
+          containers:
+            - image: ${REGISTRY}/${ORG}/${NAME}/${COMPONENT}:${TAG}
+              imagePullPolicy: Always
+              name: ${NAME}
+              volumeMounts:
+                - name: ${COMPONENT}-config
+                  mountPath: /app/application.yml
+                  subPath: application.yml
+              env:
+                - name: FRONTEND_URL
+                  value: https://${FRONTEND_URL}
+                - name: LEGACY_URL
+                  value: http://${NAME}-${ZONE}-legacy                
+                - name: SELF_URI
+                  value: https://${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}                
+                - name: POSTGRESQL_HOST
+                  value: ${NAME}-${ZONE}-database                
+                - name: POSTGRESQL_DATABASE
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: database-name
+                - name: POSTGRESQL_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: database-password
+                - name: POSTGRESQL_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: database-user                
+                - name: COGNITO_USER_POOL
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: cognito-user-pool
+                - name: COGNITO_REGION
+                  value: ${COGNITO_REGION}
+                - name: TZ
+                  value: America/Vancouver
+                - name: APP_ZONE
+                  value: ${ZONE}
+                - name: APP_COMPONENT
+                  value: ${COMPONENT}                
+                - name: RANDOM_EXPRESSION
+                  value: ${RANDOM_EXPRESSION}
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+              resources:
+                requests:
+                  cpu: ${CPU_REQUEST}
+                  memory: ${MEMORY_REQUEST}
+              readinessProbe:
+                successThreshold: 1
+                failureThreshold: 15
+                httpGet:
+                  path: /health
+                  port: 8080
+                  scheme: HTTP
+                initialDelaySeconds: 10
+                periodSeconds: 30
+                timeoutSeconds: 5
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      labels:
+        app: ${NAME}-${ZONE}
+      name: ${NAME}-${ZONE}-${COMPONENT}
+    spec:
+      ports:
+        - name: 8080-tcp
+          protocol: TCP
+          port: 80
+          targetPort: 8080
+      selector:
+        deployment: ${NAME}-${ZONE}-${COMPONENT}
+  - kind: Route
+    apiVersion: route.openshift.io/v1
+    metadata:
+      labels:
+        app: ${NAME}-${ZONE}
+      name: ${NAME}-${ZONE}-${COMPONENT}
+    spec:
+      host: ${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}
+      port:
+        targetPort: 8080-tcp
+      to:
+        kind: Service
+        name: ${NAME}-${ZONE}-${COMPONENT}
+        weight: 100
+      tls:
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
+  - kind: ConfigMap
+    apiVersion: v1
+    metadata:
+      labels:
+        app: ${NAME}-${ZONE}
+      name: ${NAME}-${ZONE}-${COMPONENT}-config
+    data:
+      application.yml: |
+        ${CONFIG_MAP}
