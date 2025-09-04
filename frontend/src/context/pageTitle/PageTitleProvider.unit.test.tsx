@@ -21,7 +21,7 @@ describe('PageTitleProvider', () => {
         <TestComponent />
       </PageTitleProvider>,
     );
-    expect(screen.getByTestId('page-title').textContent).toBe('Vitest Browser Tester');
+    expect(screen.getByTestId('page-title').textContent).toBe('Waste Plus -');
   });
 
   it('updates the page title when setPageTitle is called', async () => {
