@@ -36,7 +36,7 @@ jobs:
         run: npm i
         working-directory: frontend
 
-      - name: Run E2E Tests
+      - name: Frontend Tests
         run: npm run test:coverage
         working-directory: frontend
 
