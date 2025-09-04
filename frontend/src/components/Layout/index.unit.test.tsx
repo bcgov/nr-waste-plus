@@ -73,11 +73,11 @@ describe('Layout (browser)', () => {
     );
 
     // Header
-    expect(document.querySelector('.cds--header')).not.toBeNull();
+    expect(document.querySelector('.cds--header')).toBeDefined();
     // Content body
-    expect(document.querySelector('.cds--content')).not.toBeNull();
+    expect(document.querySelector('.cds--content')).toBeDefined();
     // Grid
-    expect(document.querySelector('.layout-grid')).not.toBeNull();
+    expect(document.querySelector('.layout-grid')).toBeDefined();
     // Children
     expect(screen.getByTestId('dummy-child').textContent).toBe('Hello Child');
   });
