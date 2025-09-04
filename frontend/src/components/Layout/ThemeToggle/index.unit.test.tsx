@@ -39,16 +39,16 @@ const renderWithProviders = async (ctx: ThemeContextData = mockCtxLight) => {
 describe('ThemeToggle', () => {
   it('renders with light icon when theme is white', async () => {
     await renderWithProviders();
-    expect(screen.getByRole('button')).toBeInTheDocument();
+    expect(screen.getByRole('button')).toBeDefined();
     // LightFilled icon should be present
-    expect(document.querySelector('.icon')).toBeInTheDocument();
-    expect(document.querySelector('.icon')).toHaveClass('icon light');
+    expect(document.querySelector('.icon')).toBeDefined();
+    expect(document.querySelector('.icon')).toHaveProperty('className', 'icon light');
   });
 
   it('renders with asleep icon when theme is not white', async () => {
     await renderWithProviders(mockCtxDark);
-    expect(document.querySelector('.icon')).toBeInTheDocument();
-    expect(document.querySelector('.icon')).toHaveClass('icon dark');
+    expect(document.querySelector('.icon')).toBeDefined();
+    expect(document.querySelector('.icon')).toHaveProperty('className', 'icon dark');
   });
 
   it('calls toggleTheme on click', async () => {
