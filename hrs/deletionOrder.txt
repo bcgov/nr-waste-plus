@@ -1,0 +1,2 @@
+user_preferences
+flyway_schema_history
