@@ -11,6 +11,7 @@ import lombok.With;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -32,7 +33,9 @@ public class ReportingUnitSearchParametersDto {
   private List<String> status;
   private boolean requestByMe;
   private String requestUserId;
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private LocalDate updateDateStart;
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private LocalDate updateDateEnd;
   private String licenseeId;
   private String cuttingPermitId;
@@ -85,8 +88,8 @@ public class ReportingUnitSearchParametersDto {
 
     multiValueMap.add("requestByMe", BooleanUtils.toStringTrueFalse(requestByMe));
 
-    if (updateDateEnd != null) {
-      multiValueMap.add("updateDateEnd", updateDateEnd.format(DateTimeFormatter.ISO_LOCAL_DATE));
+    if (updateDateStart != null) {
+      multiValueMap.add("updateDateStart", updateDateStart.format(DateTimeFormatter.ISO_LOCAL_DATE));
     }
 
     if (updateDateEnd != null) {

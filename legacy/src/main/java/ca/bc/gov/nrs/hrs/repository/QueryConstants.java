@@ -61,16 +61,6 @@ public class QueryConstants {
              NVL(:#{#filter.requestUserId},'NOVALUE') = 'NOVALUE' OR wru.ENTRY_USERID = :#{#filter.requestUserId}
            )
          AND (
-            (
-             NVL(:#{#filter.updateDateStart},'NOVALUE') = 'NOVALUE' AND NVL(:#{#filter.updateDateEnd},'NOVALUE') = 'NOVALUE'
-             )
-         OR
-             (
-                 wru.update_timestamp IS NOT NULL AND
-                     to_char(wru.update_timestamp, 'YYYY-MM-DD') between :#{#filter.dateStart} AND :#{#filter.dateEnd}
-          )
-               )
-         AND (
              NVL(:#{#filter.licenseeId},'NOVALUE') = 'NOVALUE' OR waa.FOREST_FILE_ID = :#{#filter.licenseeId}
            )
          AND (
@@ -85,6 +75,16 @@ public class QueryConstants {
          AND (
              NVL(:#{#filter.clientNumber},'NOVALUE') = 'NOVALUE' OR wru.CLIENT_NUMBER = :#{#filter.clientNumber}
            )
+         AND (
+            (
+              NVL(:#{#filter.dateStart},'NOVALUE') = 'NOVALUE' AND NVL(:#{#filter.dateEnd},'NOVALUE') = 'NOVALUE'
+            )
+            OR
+            (
+              wru.update_timestamp IS NOT NULL AND
+              TO_DATE(to_char(wru.update_timestamp, 'YYYY-MM-DD'),'YYYY-MM-DD') between TO_DATE(:#{#filter.updateDateStart},'YYYY-MM-DD') AND TO_DATE(:#{#filter.updateDateEnd},'YYYY-MM-DD')
+            )
+         )
       """;
 
   public static final String SEARCH_REPORTING_UNIT_QUERY =
