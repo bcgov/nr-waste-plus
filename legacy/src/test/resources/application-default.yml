@@ -1,4 +1,10 @@
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://aws-cognito-issuer-uri.aws.com
+          jwk-set-uri: https://aws-cognito-issuer-uri.aws.com/.well-known/jwks.json
   flyway:
     schemas: THE
     default-schema: THE

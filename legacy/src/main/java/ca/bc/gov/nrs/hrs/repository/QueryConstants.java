@@ -24,21 +24,6 @@ public class QueryConstants {
       	wru.update_timestamp AS last_updated
       """;
 
-  private static final String SEARCH_REPORTING_UNIT_CTE_SELECT = """
-      SELECT
-      	ru_number,
-      	block_id,
-      	client_number,
-      	client_location,
-      	sampling_code,
-      	sampling_name,
-      	district_code,
-      	district_name,
-      	status_code,
-      	status_name,
-      	last_updated
-      """;
-
   private static final String SEARCH_REPORTING_UNIT_FROM_JOIN = """
       FROM WASTE_REPORTING_UNIT wru
         LEFT JOIN WASTE_SAMPLING_OPTION_CODE wsoc ON wsoc.waste_sampling_option_code = wru.waste_sampling_option_code
@@ -82,7 +67,7 @@ public class QueryConstants {
          OR
              (
                  wru.update_timestamp IS NOT NULL AND
-                     to_char(wru.update_timestamp, 'YYYY-MM-DD') between TO_DATE(:#{#filter.updateDateStart},'YYYY-MM-DD') AND TO_DATE(:#{#filter.updateDateEnd},'YYYY-MM-DD')
+                     to_char(wru.update_timestamp, 'YYYY-MM-DD') between :#{#filter.dateStart} AND :#{#filter.dateEnd}
           )
                )
          AND (
@@ -103,13 +88,9 @@ public class QueryConstants {
       """;
 
   public static final String SEARCH_REPORTING_UNIT_QUERY =
-      "WITH DistinctResults AS ("
-      + SEARCH_REPORTING_UNIT_SELECT
+      SEARCH_REPORTING_UNIT_SELECT
       + SEARCH_REPORTING_UNIT_FROM_JOIN
-      + SEARCH_REPORTING_UNIT_WHERE
-      + ") "
-      + SEARCH_REPORTING_UNIT_CTE_SELECT
-      + " FROM DistinctResults ";
+      + SEARCH_REPORTING_UNIT_WHERE;
 
   public static final String SEARCH_REPORTING_UNIT_COUNT =
       "WITH DistinctResults AS ("

@@ -12,6 +12,12 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}/.well-known/jwks.json
+          issuer-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}
   datasource:
     url: jdbc:oracle:thin:@tcps://${DATABASE_HOST:localhost}:${DATABASE_PORT:1543}/${SERVICE_NAME:servicename}?javax.net.ssl.trustStore=${ca.bc.gov.nrs.oracle.keystore}&javax.net.ssl.trustStorePassword=${ca.bc.gov.nrs.oracle.secret}&javax.net.ssl.keyStore=${ca.bc.gov.nrs.oracle.keystore}&javax.net.ssl.keyStorePassword=${ca.bc.gov.nrs.oracle.secret}
     username: ${DATABASE_USER}
@@ -69,6 +75,8 @@ ca:
   bc:
     gov:
       nrs:
+        self-uri: ${SELF_URI:http://localhost:8080}
+        environment: ${SECURITY_ENV:local}
         districts: ${ALLOWED_DISTRICTS:DCK,DSQ,DVA,DKM,DSC,DFN,DSI,DCR,DMK,DQC,DKA,DCS,DOS,DSE,DCC,DMH,DQU,DNI,DND,DRM,DPG,DSS,DPC}
         oracle:
           keystore: ${ORACLEDB_KEYSTORE:jssecacerts-path}
