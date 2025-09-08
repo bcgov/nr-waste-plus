@@ -99,4 +99,19 @@ public class QueryConstants {
       + SEARCH_REPORTING_UNIT_WHERE
       + ") SELECT COUNT(1) OVER () AS total FROM DistinctResults ";
 
+  public static final String SEARCH_USER = """
+      SELECT USERID
+      FROM (
+        SELECT ENTRY_USERID AS USERID FROM WASTE_REPORTING_UNIT
+        WHERE
+        'NOVALUE' in (:clientNumbers) OR CLIENT_NUMBER IN (:clientNumbers)
+
+        UNION
+
+        SELECT UPDATE_USERID FROM WASTE_REPORTING_UNIT
+        WHERE
+        'NOVALUE' in (:clientNumbers) OR CLIENT_NUMBER IN (:clientNumbers)
+      )
+      WHERE UTL_MATCH.JARO_WINKLER_SIMILARITY(REGEXP_SUBSTR(USERID, '[^\\\\]+$'),:userId) >= 90""";
+
 }

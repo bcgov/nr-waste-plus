@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
+import ca.bc.gov.nrs.hrs.dto.base.Role;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -277,6 +279,67 @@ class JwtPrincipalUtilTest {
     assertEquals(expected,
         JwtPrincipalUtil.getDisplayName(createJwtAuthenticationTokenWithAttributes(claims)));
     assertEquals(expected, JwtPrincipalUtil.getDisplayName(createJwt(claims)));
+  }
+
+  @Test
+  @DisplayName("Parse role")
+  void shouldGetRoles() {
+
+    Map<String, Object> claims =
+        Map.of(
+            "cognito:groups", List.of(
+                "Viewer",
+                "Submitter_00012120",
+                "Approver_00010040",
+                "Admin_00000111"
+            )
+        );
+
+    Map<Role, List<String>> result = Map.of(
+        Role.VIEWER, List.of(),
+        Role.SUBMITTER, List.of("00012120"),
+        Role.APPROVER, List.of("00010040"),
+        Role.ADMIN, List.of("00000111")
+    );
+
+    assertEquals(result,
+        JwtPrincipalUtil.getRoles(
+            createJwtAuthenticationTokenWithAttributes(claims)
+        )
+    );
+    assertEquals(result,
+        JwtPrincipalUtil.getRoles(
+            createJwt(claims)
+        )
+    );
+  }
+
+  @Test
+  @DisplayName("Parse client numbers")
+  void shouldGetClients() {
+
+    Map<String, Object> claims =
+        Map.of(
+            "cognito:groups", List.of(
+                "Viewer",
+                "Submitter_00012120",
+                "Approver_00010040",
+                "Admin_00000111"
+            )
+        );
+
+    List<String> result = List.of("00010040","00012120","00000111");
+
+    assertEquals(result,
+        JwtPrincipalUtil.getClientFromRoles(
+            createJwtAuthenticationTokenWithAttributes(claims)
+        )
+    );
+    assertEquals(result,
+        JwtPrincipalUtil.getClientFromRoles(
+            createJwt(claims)
+        )
+    );
   }
 
   private JwtAuthenticationToken createJwtAuthenticationTokenWithAttributes(
