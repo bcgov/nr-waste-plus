@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
 import org.apache.commons.lang3.BooleanUtils;
+import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  * <p>Search parameters for reporting unit search.</p>
@@ -25,7 +26,9 @@ public class ReportingUnitSearchParametersDto {
   private List<String> status;
   private boolean requestByMe;
   private String requestUserId;
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private LocalDate updateDateStart;
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private LocalDate updateDateEnd;
   private String licenseeId;
   private String cuttingPermitId;
