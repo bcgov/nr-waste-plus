@@ -67,7 +67,7 @@ public class QueryConstants {
          OR
              (
                  wru.update_timestamp IS NOT NULL AND
-                     to_char(wru.update_timestamp, 'YYYY-MM-DD') between TO_DATE(:#{#filter.updateDateStart},'YYYY-MM-DD') AND TO_DATE(:#{#filter.updateDateEnd},'YYYY-MM-DD')
+                     to_char(wru.update_timestamp, 'YYYY-MM-DD') between :#{#filter.dateStart} AND :#{#filter.dateEnd}
           )
                )
          AND (

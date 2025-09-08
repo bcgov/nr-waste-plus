@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.hrs.dto.search;
 
 import ca.bc.gov.nrs.hrs.LegacyConstants;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -61,5 +62,13 @@ public class ReportingUnitSearchParametersDto {
     return BooleanUtils.toString(
         requestByMe, requestUserId, LegacyConstants.NOVALUE
     );
+  }
+
+  public String getDateStart(){
+    return updateDateStart != null ? updateDateStart.format(DateTimeFormatter.ISO_DATE) : LegacyConstants.NOVALUE;
+  }
+
+  public String getDateEnd(){
+    return updateDateEnd != null ? updateDateEnd.format(DateTimeFormatter.ISO_DATE) : LegacyConstants.NOVALUE;
   }
 }
