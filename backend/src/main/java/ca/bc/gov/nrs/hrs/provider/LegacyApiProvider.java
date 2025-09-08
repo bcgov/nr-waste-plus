@@ -150,7 +150,7 @@ public class LegacyApiProvider {
     return List.of();
   }
 
-  private List<String> fallbackEmptyList(String userId, Throwable throwable) {
+  private List<String> fallbackEmptyUsersList(String userId, Throwable throwable) {
     log.error("Error occurred while fetching data from {}: {}", PROVIDER, throwable.getMessage());
     return List.of();
   }

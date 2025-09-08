@@ -83,6 +83,6 @@ public class SearchService {
   }
 
   public List<String> searchReportingUnitUser(String userId) {
-    return null;
+    return legacyApiProvider.searchReportingUnitUsers(userId);
   }
 }
