@@ -87,7 +87,7 @@
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 		<oci.revision>${project.version}</oci.revision>
 		<snakeyaml.version>2.2</snakeyaml.version>
-		<hibernate.version>6.6.27.Final</hibernate.version>
+		<hibernate.version>6.6.28.Final</hibernate.version>
 		<testcontainers.version>1.21.1</testcontainers.version>
 		<flyway.version>10.13.0</flyway.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
@@ -559,7 +559,7 @@
 					<dependency>
 						<groupId>com.puppycrawl.tools</groupId>
 						<artifactId>checkstyle</artifactId>
-						<version>11.0.0</version>
+						<version>11.0.1</version>
 					</dependency>
 				</dependencies>
 				<configuration>
