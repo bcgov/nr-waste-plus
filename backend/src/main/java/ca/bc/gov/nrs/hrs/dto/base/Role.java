@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.dto.base;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -35,5 +36,15 @@ public enum Role {
      */
     public boolean isAbstract() {
         return type == RoleType.ABSTRACT;
+    }
+
+    @JsonCreator
+    public static Role fromValue(String value){
+        for(Role role : values()){
+            if(role.name().equalsIgnoreCase(value)){
+                return role;
+            }
+        }
+        return null;
     }
 }

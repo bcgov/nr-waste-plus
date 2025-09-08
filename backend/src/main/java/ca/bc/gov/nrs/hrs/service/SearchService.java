@@ -7,6 +7,7 @@ import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.provider.LegacyApiProvider;
 import io.micrometer.observation.annotation.Observed;
+import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -79,5 +80,9 @@ public class SearchService {
                 )
             )
         );
+  }
+
+  public List<String> searchReportingUnitUser(String userId) {
+    return null;
   }
 }
