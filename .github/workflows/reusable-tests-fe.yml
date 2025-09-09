@@ -3,10 +3,7 @@ name: Reusable Unit Tests and Analysis
 on:
   workflow_call:
 
-permissions:
-  contents: read
-  actions: read
-  checks: write
+permissions: {}
 
 jobs:
   tests-frontend:
