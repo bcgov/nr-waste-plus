@@ -29,7 +29,7 @@ jobs:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     secrets: inherit
     permissions:
-      contents: read
+      contents: write
       checks: write
     uses: ./.github/workflows/reusable-tests-fe.yml
 
@@ -38,7 +38,7 @@ jobs:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     secrets: inherit
     permissions:
-      contents: read
+      contents: write
       checks: write
     uses: ./.github/workflows/reusable-tests-fe-extra.yml
 
