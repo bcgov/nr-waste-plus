@@ -24,7 +24,7 @@ describe('TagWrapper (browser)', () => {
   it('applies the correct class', () => {
     renderTagWrapper();
     const wrapper = screen.getByText('Wrapped Tag').parentElement;
-    expect(wrapper).toHaveClass('under-const-wrapper');
+    expect(wrapper?.className).toContain('under-const-wrapper');
   });
   it('renders the tag before the child when position is left', () => {
     renderTagWrapper({ position: 'left', children: <span data-testid="child">Child</span> });
@@ -42,6 +42,6 @@ describe('TagWrapper (browser)', () => {
   });
   it('renders any children passed to it', () => {
     renderTagWrapper({ children: <span data-testid="custom-child">Child Content</span> });
-    expect(screen.getByTestId('custom-child')).toHaveTextContent('Child Content');
+    expect(screen.getByTestId('custom-child').textContent).to.equal('Child Content');
   });
 });
