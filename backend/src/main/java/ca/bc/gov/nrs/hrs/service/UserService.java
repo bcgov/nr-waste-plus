@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.service;
 import ca.bc.gov.nrs.hrs.entity.users.UserPreferenceEntity;
 import ca.bc.gov.nrs.hrs.repository.UserPreferenceRepository;
 import io.micrometer.observation.annotation.Observed;
+import io.micrometer.tracing.annotation.NewSpan;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ public class UserService {
 
   private final UserPreferenceRepository preferenceRepository;
 
+  @NewSpan
   public Map<String, Object> getUserPreferences(String userId) {
 
     log.info("Retrieving preferences for user: {}", userId);
@@ -25,6 +27,7 @@ public class UserService {
         .orElse(Map.of());
   }
 
+  @NewSpan
   public void saveUserPreferences(String userId, Map<String, Object> preferences) {
 
 

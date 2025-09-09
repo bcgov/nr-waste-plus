@@ -10,6 +10,7 @@ import ca.bc.gov.nrs.hrs.exception.UnretriableException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.observation.annotation.Observed;
+import io.micrometer.tracing.annotation.NewSpan;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -49,6 +50,7 @@ public class ForestClientApiProvider {
    * @return the ForestClient with client number, if one exists
    */
   @Retry(name = "apiRetry", fallbackMethod = "fetchClientByNumberFallBack")
+  @NewSpan
   public Optional<ForestClientDto> fetchClientByNumber(String number) {
 
     log.info("Starting {} request to /clients/findByClientNumber/{}", PROVIDER, number);
@@ -98,6 +100,7 @@ public class ForestClientApiProvider {
    * @return List of ForestClientDto
    */
   @CircuitBreaker(name = "breaker", fallbackMethod = "paginatedFallback")
+  @NewSpan
   public Page<ForestClientDto> searchClients(
       int page,
       int size,
@@ -153,6 +156,7 @@ public class ForestClientApiProvider {
    * @return the list of ForestClientLocationDto for the client
    */
   @CircuitBreaker(name = "breaker", fallbackMethod = "paginatedFallback")
+  @NewSpan
   public Page<ForestClientLocationDto> fetchLocationsByClientNumber(String clientNumber) {
     log.info("Starting {} request to /clients/{}/locations", PROVIDER, clientNumber);
 
@@ -194,6 +198,9 @@ public class ForestClientApiProvider {
     );
   }
 
+
+  @CircuitBreaker(name = "breaker", fallbackMethod = "locationByClientNumberAndLocationCodeFallback")
+  @NewSpan
   public Optional<ForestClientLocationDto> fetchLocationByClientNumberAndLocationCode(
       String clientNumber,
       String locationCode
@@ -242,5 +249,13 @@ public class ForestClientApiProvider {
       Throwable ex
   ) {
     return paginatedFallback(0,10, value, ex);
+  }
+
+  private Optional<ForestClientLocationDto> locationByClientNumberAndLocationCodeFallback(
+      String clientNumber,
+      String locationCode,
+      Throwable ex
+  ){
+    return Optional.empty();
   }
 }

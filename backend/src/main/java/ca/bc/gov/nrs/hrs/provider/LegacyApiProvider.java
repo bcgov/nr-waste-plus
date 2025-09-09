@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.micrometer.observation.annotation.Observed;
+import io.micrometer.tracing.annotation.NewSpan;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,7 @@ public class LegacyApiProvider {
   }
 
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackDistricts")
+  @NewSpan
   public List<CodeDescriptionDto> getDistrictCodes() {
     log.info("Starting {} request to /codes/districts", PROVIDER);
     return restClient
@@ -48,6 +50,7 @@ public class LegacyApiProvider {
   }
 
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyList")
+  @NewSpan
   public List<CodeDescriptionDto> getSamplingCodes() {
     log.info("Starting {} request to /codes/samplings", PROVIDER);
     return restClient
@@ -59,6 +62,7 @@ public class LegacyApiProvider {
   }
 
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyList")
+  @NewSpan
   public List<CodeDescriptionDto> getStatusCodes() {
     log.info("Starting {} request to /codes/assess-area-statuses", PROVIDER);
     return restClient
@@ -70,6 +74,7 @@ public class LegacyApiProvider {
   }
 
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptySearchReportingUnit")
+  @NewSpan
   public Page<ReportingUnitSearchResultDto> searchReportingUnit(
       ReportingUnitSearchParametersDto filters,
       Pageable pageable

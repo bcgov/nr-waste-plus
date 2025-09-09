@@ -5,6 +5,7 @@ import ca.bc.gov.nrs.hrs.dto.client.ForestClientAutocompleteResultDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
 import ca.bc.gov.nrs.hrs.provider.ForestClientApiProvider;
 import io.micrometer.observation.annotation.Observed;
+import io.micrometer.tracing.annotation.NewSpan;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -30,6 +31,7 @@ public class ForestClientService {
    * @param clientNumber The client number to be fetched.
    * @return Optional of ForestsClientDto
    */
+  @NewSpan
   public Optional<ForestClientDto> getClientByNumber(String clientNumber) {
     String fixedNumber = checkClientNumber(clientNumber);
 
@@ -46,6 +48,7 @@ public class ForestClientService {
    * @param value The value to be searched.
    * @return List of {@link ForestClientAutocompleteResultDto} with found clients.
    */
+  @NewSpan
   public List<ForestClientAutocompleteResultDto> searchClients(
       int page,
       int size,
@@ -71,6 +74,7 @@ public class ForestClientService {
    * @param clientNumber The client number to be fetched.
    * @return List of {@link CodeDescriptionDto} with found locations.
    */
+  @NewSpan
   public List<CodeDescriptionDto> getClientLocations(String clientNumber) {
     String fixedNumber = checkClientNumber(clientNumber);
 

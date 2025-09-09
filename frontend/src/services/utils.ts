@@ -26,3 +26,15 @@ export const removeEmpty = <T extends object>(obj: T): Partial<T> => {
       }),
   ) as Partial<T>;
 };
+
+const generateHex = (length: number): string => {
+  const chars = 'abcdef0123456789';
+  return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+};
+
+export const getB3Headers = () => {
+  return {
+    'X-B3-TraceId': generateHex(32),
+    'X-B3-SpanId': generateHex(16),
+  };
+};

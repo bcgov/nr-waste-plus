@@ -7,6 +7,7 @@ import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.provider.LegacyApiProvider;
 import io.micrometer.observation.annotation.Observed;
+import io.micrometer.tracing.annotation.NewSpan;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class SearchService {
   private final LegacyApiProvider legacyApiProvider;
   private final ForestClientService forestClientService;
 
+  @NewSpan
   public Page<ReportingUnitSearchResultDto> search(
       ReportingUnitSearchParametersDto filters,
       Pageable pageable
@@ -82,6 +84,7 @@ public class SearchService {
         );
   }
 
+  @NewSpan
   public List<String> searchReportingUnitUser(String userId) {
     return legacyApiProvider.searchReportingUnitUsers(userId);
   }
