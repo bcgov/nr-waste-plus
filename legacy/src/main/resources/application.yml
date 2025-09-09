@@ -46,13 +46,6 @@ spring:
       charset: UTF-8
       enabled: true
       force: true
-  sleuth:
-    propagation-keys:
-      - X-TRACE-ID
-      - X-USER
-    baggage-keys:
-      - X-TRACE-ID
-      - X-USER
     log:
       slf4j:
         whitelisted-mdc-keys:
@@ -70,6 +63,54 @@ management:
       enabled: false
     health:
       show-details: always
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      path-mapping:
+        prometheus: metrics
+      base-path: /
+      exposure:
+        include: health,info,metrics,otlp,tracing,httptrace,prometheus
+  httpexchanges:
+    recording:
+      include: principal,request-headers,response-headers,cookie-headers,time-taken,authorization-header,remote-address,session-id
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  observations:
+    annotations:
+      enabled: true
+    key-values:
+      zone: ${APP_ZONE:local}
+      name: ${spring.application.name}
+  tracing:
+    enabled: true
+    propagation:
+      type: B3
+    sampling:
+      probability: 0.7
+    baggage:
+      enabled: true
+      correlation:
+        enabled: true
+        fields:
+          - X-B3-TraceId
+          - X-B3-SpanId
+        remote-fields:
+          - X-B3-TraceId
+          - X-B3-SpanId
+  otlp:
+    metrics:
+      export:
+        enabled: false
+    tracing:
+      export:
+        enabled: false
+    logging:
+      export:
+        enabled: false
 
 ca:
   bc:

@@ -5,6 +5,7 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.mappers.codes.DistrictMapper;
 import ca.bc.gov.nrs.hrs.repository.codes.OrgUnitRepository;
 import io.micrometer.observation.annotation.Observed;
+import io.micrometer.tracing.annotation.NewSpan;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,7 @@ public class DistrictService {
    *
    * @return List of org units.
    */
+  @NewSpan
   public List<CodeDescriptionDto> findAllOrgUnits() {
     log.info("Getting all org units for the search openings");
 

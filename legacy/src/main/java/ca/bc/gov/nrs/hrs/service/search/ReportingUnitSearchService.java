@@ -6,6 +6,7 @@ import ca.bc.gov.nrs.hrs.mappers.search.ReportingUnitSearchMapper;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.util.PaginationUtil;
 import io.micrometer.observation.annotation.Observed;
+import io.micrometer.tracing.annotation.NewSpan;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ public class ReportingUnitSearchService {
           Map.entry("lastUpdated", "last_updated")
       );
 
+  @NewSpan
   public Page<ReportingUnitSearchResultDto> search(
       ReportingUnitSearchParametersDto filters,
       Pageable page

@@ -18,6 +18,11 @@ spring:
       keepaliveTime: 1800000
       leakDetectionThreshold: 3000000
 
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+
 logging:
   level:
     #root: DEBUG
