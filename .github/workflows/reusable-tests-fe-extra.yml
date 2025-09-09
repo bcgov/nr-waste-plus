@@ -42,7 +42,7 @@ jobs:
 
       - name: Annotate PR with a11y results
         uses: dorny/test-reporter@v2
-        if: failure()
+        if: always()
         with:
           name: Accessibility Tests
           path: frontend/test-results/junit/report.xml
