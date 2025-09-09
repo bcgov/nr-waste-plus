@@ -16,18 +16,24 @@ import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -52,6 +58,8 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
   private CircuitBreakerRegistry circuitBreakerRegistry;
   @Autowired
   private RetryRegistry retryRegistry;
+  @Autowired
+  private ObjectMapper mapper;
 
   @BeforeEach
   public void setUp(){
@@ -91,6 +99,25 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
     assertNotNull(legacyApiProvider.getDistrictCodes());
     assertFalse(legacyApiProvider.getDistrictCodes().isEmpty());
     assertEquals(23, legacyApiProvider.getDistrictCodes().size());
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+      "jake, jake|jakelyn|jakesh",
+      "finn, ''",
+      "lemongrab, lemongrabber|lemon"
+  })
+  @DisplayName("Search for RU")
+  void shouldSearchForRuUsers(String userId, String roles) throws JsonProcessingException {
+    List<String> expected = Arrays.asList(roles.split("\\|"));
+    String json = mapper.writeValueAsString(expected);
+
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/search/reporting-units-users"))
+            .willReturn(okJson(json))
+        );
+
+    assertEquals(expected, legacyApiProvider.searchReportingUnitUsers(userId));
   }
 
   void shouldSearchAndGet(

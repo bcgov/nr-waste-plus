@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.service.search;
 
+import ca.bc.gov.nrs.hrs.LegacyConstants;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.mappers.search.ReportingUnitSearchMapper;
@@ -8,11 +9,12 @@ import ca.bc.gov.nrs.hrs.util.PaginationUtil;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -62,5 +64,18 @@ public class ReportingUnitSearchService {
             )
         )
         .map(mapper::fromProjection);
+  }
+
+  public List<String> searchReportingUnitUsers(String userId, List<String> clientFromRoles) {
+    log.info(
+        "Searching possible users that matches {} withing reporting units that belongs to clients {}",
+        userId, clientFromRoles);
+    List<String> clients = clientFromRoles != null && !clientFromRoles.isEmpty() ? clientFromRoles
+        : List.of(LegacyConstants.NOVALUE);
+    return ruRepository
+        .searchReportingUnitUsers(
+            userId.toUpperCase(Locale.ROOT),
+            clients
+        );
   }
 }

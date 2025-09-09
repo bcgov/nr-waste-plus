@@ -25,4 +25,12 @@ export class SearchService extends HttpClient {
       query: { ...removeEmpty(filters), ...removeEmpty(pageable) },
     });
   }
+
+  searchReportingUnitUsers(userId: string): CancelablePromise<string[]> {
+    return this.doRequest<string[]>(this.config, {
+      method: 'GET',
+      url: '/api/search/reporting-units-users',
+      query: { userId },
+    });
+  }
 }

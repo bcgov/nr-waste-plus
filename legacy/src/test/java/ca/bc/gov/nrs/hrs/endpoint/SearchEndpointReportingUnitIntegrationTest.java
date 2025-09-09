@@ -16,9 +16,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc
-@DisplayName("Integrated Test | Search Endpoint")
+@DisplayName("Integrated Test | Search Endpoint : Reporting Unit")
 @WithMockJwt
-class SearchEndpointIntegrationTest extends AbstractTestContainerIntegrationTest {
+class SearchEndpointReportingUnitIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @Autowired
   private MockMvc mockMvc;
