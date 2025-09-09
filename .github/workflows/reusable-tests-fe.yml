@@ -3,17 +3,16 @@ name: Reusable Unit Tests and Analysis
 on:
   workflow_call:
 
-permissions: {}
+permissions:
+  contents: read
+  actions: read
+  checks: write
 
 jobs:
   tests-frontend:
     name: Frontend Unit Tests
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    runs-on: ubuntu-24.04    
-    permissions:
-      contents: read
-      actions: read
-      checks: write
+    runs-on: ubuntu-24.04
     env:
       VITE_APP_NAME: Waste Plus
       VITE_FEATURES_OFFLINE: true
