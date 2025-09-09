@@ -39,9 +39,9 @@ public enum Role {
     }
 
     @JsonCreator
-    public static Role fromValue(String value){
-        for(Role role : values()){
-            if(role.name().equalsIgnoreCase(value)){
+    public static Role fromValue(String value) {
+        for (Role role : values()) {
+            if (role.name().equalsIgnoreCase(value)) {
                 return role;
             }
         }
