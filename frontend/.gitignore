@@ -178,3 +178,4 @@ sketch
 dev-dist/
 test-results/
 **/__screenshots__/
+**/user.*.json
