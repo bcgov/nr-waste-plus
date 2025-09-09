@@ -5,6 +5,7 @@ import ca.bc.gov.nrs.hrs.service.CodesService;
 import io.micrometer.observation.annotation.Observed;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,22 +14,26 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/codes")
 @AllArgsConstructor
 @Observed
+@Slf4j
 public class CodesController {
 
   private final CodesService service;
 
   @GetMapping("/districts")
   public List<CodeDescriptionDto> getDistrictCodes() {
+    log.info("Listing all districts");
     return service.getDistrictCodes();
   }
 
   @GetMapping("/samplings")
   public List<CodeDescriptionDto> getSamplingCodes() {
+    log.info("Listing all sampling codes");
     return service.getSamplingCodes();
   }
 
   @GetMapping("/assess-area-statuses")
   public List<CodeDescriptionDto> getStatusCodes() {
+    log.info("Listing all status codes");
     return service.getStatusCodes();
   }
 

@@ -15,7 +15,8 @@ import ca.bc.gov.nrs.hrs.exception.RetriableException;
 import ca.bc.gov.nrs.hrs.exception.TooManyRequestsException;
 import ca.bc.gov.nrs.hrs.exception.UnretriableException;
 import ca.bc.gov.nrs.hrs.exception.UserNotFoundException;
-import ca.bc.gov.nrs.hrs.security.JwtForwarderRequestInitializer;
+import ca.bc.gov.nrs.hrs.provider.B3HeaderForwarder;
+import ca.bc.gov.nrs.hrs.provider.JwtForwarderRequestInitializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.context.annotation.Bean;
@@ -48,25 +49,31 @@ import org.springframework.web.client.RestClient;
 public class GlobalConfiguration {
 
   @Bean
-  public RestClient forestClientApi(HrsConfiguration configuration) {
+  public RestClient forestClientApi(
+      HrsConfiguration configuration,
+      B3HeaderForwarder b3Header
+  ) {
     return RestClient
         .builder()
         .baseUrl(configuration.getForestClientApi().getAddress())
         .defaultHeader("X-API-KEY", configuration.getForestClientApi().getKey())
         .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .requestInitializer(b3Header)
         .build();
   }
 
   @Bean
   public RestClient legacyApi(
       HrsConfiguration configuration,
-      JwtForwarderRequestInitializer jwtForwarder
+      JwtForwarderRequestInitializer jwtForwarder,
+      B3HeaderForwarder b3Header
   ) {
     return RestClient
         .builder()
         .baseUrl(configuration.getLegacyApi().getAddress())
         .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
         .requestInitializer(jwtForwarder)
+        .requestInitializer(b3Header)
         .build();
   }
 

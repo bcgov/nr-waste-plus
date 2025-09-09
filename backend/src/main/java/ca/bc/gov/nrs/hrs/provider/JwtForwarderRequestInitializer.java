@@ -1,5 +1,6 @@
-package ca.bc.gov.nrs.hrs.security;
+package ca.bc.gov.nrs.hrs.provider;
 
+import ca.bc.gov.nrs.hrs.security.LoggedUserHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.ClientHttpRequest;

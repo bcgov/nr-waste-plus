@@ -91,22 +91,38 @@ management:
     export:
       prometheus:
         enabled: true
+  observations:
+    annotations:
+      enabled: true
+    key-values:
+      zone: ${APP_ZONE:local}
+      name: ${spring.application.name}
   tracing:
-    enabled: false
-    baggage:
-      remote-fields:
-        - X-TRACE-ID
-        - X-USER
-      correlation:
-        fields:
-          - X-TRACE-ID
-          - X-USER
+    enabled: true
+    propagation:
+      type: B3
     sampling:
-      probability: 0.75
-  zipkin:
+      probability: 0.7
+    baggage:
+      enabled: true
+      correlation:
+        enabled: true
+        fields:
+          - X-B3-TraceId
+          - X-B3-SpanId
+        remote-fields:
+          - X-B3-TraceId
+          - X-B3-SpanId
+  otlp:
     metrics:
       export:
-        enabled: true
+        enabled: false
+    tracing:
+      export:
+        enabled: false
+    logging:
+      export:
+        enabled: false
 
 resilience4j:
   circuitbreaker:
@@ -170,6 +186,12 @@ ca:
               - Range
               - Location
               - location
+              - X-B3-TraceId
+              - x-b3-traceid
+              - X-B3-TRACEID
+              - X-B3-SpanId
+              - x-b3-spanid
+              - X-B3-SPANID
             methods:
               - OPTIONS
               - GET
@@ -188,7 +210,7 @@ logging:
   level:
     ca.bc.gov.nrs.waste: ${LOGGING_LEVEL:INFO}
   pattern:
-    correlation: "[${spring.application.name:},%X{${X-TRACE-ID:traceId}:-},%X{spanId:-},%X{X-USER:-}] "
+    correlation: "[${spring.application.name:},%X{${X-B3-TraceId:traceId}:-},%X{${X-B3-SpanId:spanId}:-}] "
 
 # Profile Specific Properties
 ---
@@ -211,4 +233,4 @@ spring:
 
 logging:
   pattern:
-    console: '{"time": "%d{${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd HH:mm:ss.SSS}}", "level": "${LOG_LEVEL:%5p}", "app":"${spring.application.name:-}", "user":"%X{X-USER:-}", "traceId":"%X{${X-TRACE-ID:traceId}:-}", "spanId":"%X{spanId:-}", "pid": "${PID: }", "thread": "%t", "source": "%logger{63}:%L", "message": "%m", "exception":"${LOG_EXCEPTION_CONVERSION_WORD:%wEx}"}%n'
+    console: '{"time": "%d{${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd HH:mm:ss.SSS}}", "level": "${LOG_LEVEL:%5p}", "app":"${spring.application.name:-}", "traceId":"%X{${X-B3-TraceId:traceId}:-}", "spanId":"%X{${X-B3-SpanId:spanId}:-}", "pid": "${PID: }", "thread": "%t", "source": "%logger{63}:%L", "message": "%m", "exception":"${LOG_EXCEPTION_CONVERSION_WORD:%wEx}"}%n'
