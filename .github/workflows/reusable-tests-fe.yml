@@ -50,12 +50,12 @@ jobs:
 #          sonar_token: ${{ secrets.SONAR_TOKEN_FRONTEND }}
           triggers: ('frontend/')
 
-      - name: Annotate PR with frontend test results
-        if: always()
-        uses: dorny/test-reporter@v1
-        with:
-          name: Frontend Unit Tests
-          path: frontend/coverage/junit-report.xml
-          reporter: java-junit
-          only-summary: false
-          fail-on-error: true
+#      - name: Annotate PR with frontend test results
+#        if: always()
+#        uses: dorny/test-reporter@v1
+#        with:
+#          name: Frontend Unit Tests
+#          path: frontend/coverage/junit-report.xml
+#          reporter: java-junit
+#          only-summary: false
+#          fail-on-error: true

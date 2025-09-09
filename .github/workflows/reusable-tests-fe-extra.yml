@@ -40,15 +40,15 @@ jobs:
         run: npm run test:a11y
         working-directory: frontend
 
-      - name: Annotate PR with a11y results
-        uses: dorny/test-reporter@v2
-        if: always()
-        with:
-          name: Accessibility Tests
-          path: frontend/test-results/junit/report.xml
-          reporter: java-junit
-          only-summary: false
-          fail-on-error: true
+#      - name: Annotate PR with a11y results
+#        uses: dorny/test-reporter@v2
+#        if: always()
+#        with:
+#          name: Accessibility Tests
+#          path: frontend/test-results/junit/report.xml
+#          reporter: java-junit
+#          only-summary: false
+#          fail-on-error: true
 
       - name: Upload test videos
         uses: actions/upload-artifact@v4
