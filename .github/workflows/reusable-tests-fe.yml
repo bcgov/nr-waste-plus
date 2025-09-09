@@ -55,7 +55,7 @@ jobs:
         uses: dorny/test-reporter@v1
         with:
           name: Frontend Unit Tests
-          path: frontend/coverage/cobertura-coverage.xml
-          reporter: cobertura
+          path: frontend/coverage/junit-report.xml
+          reporter: java-junit
           only-summary: false
           fail-on-error: true

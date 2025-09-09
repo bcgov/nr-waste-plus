@@ -139,6 +139,10 @@ export default defineConfig(({ mode }) => {
       exclude: [...configDefaults.exclude, 'dist/**', 'build/**'],
       globals: true,
       tsconfig: './tsconfig.test.json',
+      reporters: ['default', ['junit', { suiteName: 'Unit tests' }]],
+      outputFile: {
+        junit: './coverage/junit-report.xml',
+      },
       coverage: {
         provider: 'v8',
         reporter: ['lcov', 'cobertura', 'html', 'json', 'text'],
