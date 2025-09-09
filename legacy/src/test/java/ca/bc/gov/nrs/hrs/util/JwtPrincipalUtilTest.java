@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.util;
 
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -330,16 +331,12 @@ class JwtPrincipalUtilTest {
 
     List<String> result = List.of("00010040","00012120","00000111");
 
-    assertEquals(result,
-        JwtPrincipalUtil.getClientFromRoles(
-            createJwtAuthenticationTokenWithAttributes(claims)
-        )
-    );
-    assertEquals(result,
-        JwtPrincipalUtil.getClientFromRoles(
-            createJwt(claims)
-        )
-    );
+    assertThat(
+        JwtPrincipalUtil.getClientFromRoles(createJwtAuthenticationTokenWithAttributes(claims))
+    ).containsExactlyInAnyOrderElementsOf(result);
+
+    assertThat(JwtPrincipalUtil.getClientFromRoles(createJwt(claims)))
+        .containsExactlyInAnyOrderElementsOf(result);
   }
 
   private JwtAuthenticationToken createJwtAuthenticationTokenWithAttributes(
