@@ -349,15 +349,15 @@ public class JwtPrincipalUtil {
    *     empty list is returned.
    * @return A map of Role-Clients mapping, or an empty map
    */
-  public static Map<Role,List<String>> getRoles(JwtAuthenticationToken jwtPrincipal){
+  public static Map<Role,List<String>> getRoles(JwtAuthenticationToken jwtPrincipal) {
     return getClaimGroups(getGroups(jwtPrincipal));
   }
 
-  public static List<String> getClientFromRoles(Jwt jwtPrincipal){
+  public static List<String> getClientFromRoles(Jwt jwtPrincipal) {
     return getRoles(jwtPrincipal).values().stream().flatMap(List::stream).distinct().toList();
   }
 
-  public static List<String> getClientFromRoles(JwtAuthenticationToken jwtPrincipal){
+  public static List<String> getClientFromRoles(JwtAuthenticationToken jwtPrincipal) {
     return getRoles(jwtPrincipal).values().stream().flatMap(List::stream).distinct().toList();
   }
 
