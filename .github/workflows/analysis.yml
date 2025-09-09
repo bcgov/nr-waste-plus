@@ -13,10 +13,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
-  actions: read
-  checks: write
+permissions: {}
 
 jobs:
   tests-java:
@@ -31,6 +28,9 @@ jobs:
     name: Frontend Unit Tests
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     secrets: inherit
+    permissions:
+      contents: read
+      checks: write
     uses: ./.github/workflows/reusable-tests-fe.yml
 
   trivy:
