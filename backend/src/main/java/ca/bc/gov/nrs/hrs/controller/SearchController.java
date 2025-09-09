@@ -45,7 +45,7 @@ public class SearchController {
   @GetMapping("/reporting-units-users")
   public List<String> searchReportingUnitUsers(
       @RequestParam String userId
-  ){
+  ) {
     log.info("Searching for users that matches {}",userId);
     return service.searchReportingUnitUser(userId);
   }
