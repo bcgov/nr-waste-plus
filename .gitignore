@@ -368,3 +368,5 @@ pyrightconfig.json
 
 # IDE
 .codebuddy
+
+.DS_*
