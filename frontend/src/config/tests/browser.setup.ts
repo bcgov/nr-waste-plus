@@ -2,7 +2,8 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { chromium, firefox, webkit, expect } from '@playwright/test';
+import { chromium, firefox, webkit } from '@playwright/test';
+import { injectAxe } from 'axe-playwright';
 
 const SELECTED_CLIENT_KEY = 'SELECTED_CLIENT' as const;
 
@@ -10,8 +11,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const baseURL = process.env.BASE_URL ?? 'http://localhost:3000';
-const bceidUser = process.env.TEST_BCEID_USERNAME ?? '';
-const bceidPassword = process.env.TEST_BCEID_PASSWORD ?? '';
 const isAllBrowsers = process.env.ALL_BROWSERS === 'true';
 
 const browserMap = {
@@ -20,10 +19,11 @@ const browserMap = {
   webkit,
 } as const;
 
-async function loginAndSaveStorage(browserTypeName: keyof typeof browserMap) {
+async function loadAndSaveStorage(browserTypeName: keyof typeof browserMap) {
   const browserType = browserMap[browserTypeName];
   const browser = await browserType.launch();
   const page = await browser.newPage();
+  await injectAxe(page);
 
   console.log(`Global setup - Browser: ${browserTypeName}, url: ${baseURL}`);
 
@@ -37,16 +37,6 @@ async function loginAndSaveStorage(browserTypeName: keyof typeof browserMap) {
     { key: SELECTED_CLIENT_KEY, value: '00012797' },
   );
 
-  await page.click('[data-testid="landing-button__bceid"]');
-  await page.waitForSelector('#user');
-  await page.fill('#user', bceidUser);
-  await page.fill('#password', bceidPassword);
-  await page.click('input[name="btnSubmit"]');
-  await page.waitForURL('**/search');
-  await page.waitForLoadState('networkidle');
-
-  await expect(page.getByRole('heading', { name: 'Waste search' })).toBeVisible();
-
   const authFile = path.join(__dirname, `./user.${browserTypeName}.json`);
   await page.context().storageState({ path: authFile });
 
@@ -55,16 +45,12 @@ async function loginAndSaveStorage(browserTypeName: keyof typeof browserMap) {
 }
 
 async function globalSetup() {
-  if (!bceidUser || !bceidPassword) {
-    throw new Error('No BCeID credentials set in environment variables');
-  }
-
   if (isAllBrowsers) {
     for (const name of Object.keys(browserMap)) {
-      await loginAndSaveStorage(name as keyof typeof browserMap);
+      await loadAndSaveStorage(name as keyof typeof browserMap);
     }
   } else {
-    await loginAndSaveStorage('chromium');
+    await loadAndSaveStorage('chromium');
   }
 }
 

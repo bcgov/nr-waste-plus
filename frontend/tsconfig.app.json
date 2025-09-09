@@ -27,7 +27,8 @@
     "types": [
       "@tanstack/react-query",
       "axios",
-      "@vitest/browser/providers/playwright"
+      "@vitest/browser/providers/playwright",
+      "axe-playwright"
     ],
     "baseUrl": ".",
     "paths": {
