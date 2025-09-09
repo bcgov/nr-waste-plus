@@ -27,4 +27,30 @@ describe('SearchService', () => {
     });
     expect(result).toEqual(mockData);
   });
+
+  it('searchReportingUnitUsers should list users', async () => {
+    const userId = 'testUser';
+    const mockData = ['IDIR\\TESTUSER', 'BCEID\\TESTUSERNAME'];
+    (service as any).doRequest = vi.fn().mockResolvedValue(mockData);
+    const result = await service.searchReportingUnitUsers(userId);
+    expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+      method: 'GET',
+      url: '/api/search/reporting-units-users',
+      query: { userId },
+    });
+    expect(result).toEqual(mockData);
+  });
+
+  it('searchReportingUnitUsers should return empty', async () => {
+    const userId = 'testUser';
+    const mockData: string[] = [];
+    (service as any).doRequest = vi.fn().mockResolvedValue(mockData);
+    const result = await service.searchReportingUnitUsers(userId);
+    expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+      method: 'GET',
+      url: '/api/search/reporting-units-users',
+      query: { userId },
+    });
+    expect(result).toEqual(mockData);
+  });
 });
