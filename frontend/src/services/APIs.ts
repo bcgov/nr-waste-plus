@@ -5,6 +5,7 @@ import { ForestClientService } from '@/services/forestclient.service';
 import { UserService } from '@/services/users.service';
 
 import { CodesService } from './codes.service';
+import { getB3Headers } from './utils';
 
 import type { APIConfig } from '@/config/api/types';
 
@@ -22,6 +23,10 @@ export const BackendApiConfig: APIConfig = {
 
 BackendApiConfig.TOKEN = async () => {
   return getUserTokenFromCookie() ?? '';
+};
+
+BackendApiConfig.HEADERS = async () => {
+  return getB3Headers();
 };
 
 // Register all services here
