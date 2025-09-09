@@ -159,6 +159,11 @@
                 <phase>package</phase>
               </execution>
             </executions>
+            <configuration>
+              <buildArgs>
+                <buildArg>-H:ServiceLoaderFeatureExcludeServices=org.springframework.security.core.context.ReactiveSecurityContextHolderThreadLocalAccessor</buildArg>
+              </buildArgs>
+            </configuration>
           </plugin>
         </plugins>
       </build>
