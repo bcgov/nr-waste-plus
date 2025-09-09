@@ -1,8 +1,10 @@
 package ca.bc.gov.nrs.hrs.util;
 
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
+import ca.bc.gov.nrs.hrs.dto.base.Role;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -319,6 +321,46 @@ public class JwtPrincipalUtil {
     return getClaimGroups(jwtPrincipal.getClaims());
   }
 
+  /**
+   * Retrieves a map of roles from the given Jwt. This method extracts the token
+   * attributes from the provided {@link Jwt}, then looks for the key "cognito:groups" in the token
+   * attributes. If the value associated with this key is a {@link List}, the method filters the
+   * elements to only include non-null values of type {@link String}. The resulting list of strings
+   * is then parsed to get the role-client mapping.
+   *
+   * @param jwtPrincipal The {@link Jwt} containing the token attributes. It must have the
+   *     "cognito:groups" key. If the key does not exist or the value is not a list of strings, an
+   *     empty list is returned.
+   * @return A map of Role-Clients mapping, or an empty map
+   */
+  public static Map<Role,List<String>> getRoles(Jwt jwtPrincipal){
+    return getClaimGroups(getGroups(jwtPrincipal));
+  }
+
+  /**
+   * Retrieves a map of roles from the given Jwt. This method extracts the token
+   * attributes from the provided {@link Jwt}, then looks for the key "cognito:groups" in the token
+   * attributes. If the value associated with this key is a {@link List}, the method filters the
+   * elements to only include non-null values of type {@link String}. The resulting list of strings
+   * is then parsed to get the role-client mapping.
+   *
+   * @param jwtPrincipal The {@link JwtAuthenticationToken} containing the token attributes. It must have the
+   *     "cognito:groups" key. If the key does not exist or the value is not a list of strings, an
+   *     empty list is returned.
+   * @return A map of Role-Clients mapping, or an empty map
+   */
+  public static Map<Role,List<String>> getRoles(JwtAuthenticationToken jwtPrincipal){
+    return getClaimGroups(getGroups(jwtPrincipal));
+  }
+
+  public static List<String> getClientFromRoles(Jwt jwtPrincipal){
+    return getRoles(jwtPrincipal).values().stream().flatMap(List::stream).distinct().toList();
+  }
+
+  public static List<String> getClientFromRoles(JwtAuthenticationToken jwtPrincipal){
+    return getRoles(jwtPrincipal).values().stream().flatMap(List::stream).distinct().toList();
+  }
+
   public static IdentityProvider getIdentityProvider(JwtAuthenticationToken jwtPrincipal) {
     return IdentityProvider.fromClaim(getProvider(jwtPrincipal)).orElseThrow();
   }
@@ -333,13 +375,30 @@ public class JwtPrincipalUtil {
     if (groups instanceof List) {
       return ((List<?>) groups)
           .stream()
-              .filter(Objects::nonNull)
-              .filter(String.class::isInstance)
-              .map(String.class::cast)
-              .collect(Collectors.toSet());
+          .filter(Objects::nonNull)
+          .filter(String.class::isInstance)
+          .map(String.class::cast)
+          .collect(Collectors.toSet());
     }
 
     return Collections.emptySet();
+  }
+
+  private static Map<Role,List<String>> getClaimGroups(Set<String> groups) {
+    return groups
+        .stream()
+        // Split into [role, clientNumber] or just [role]
+        .map(role -> role.split("_", 2))
+        .filter(parts -> Role.fromValue(parts[0]) != null)
+        .collect(Collectors.groupingBy(
+            //Key: The role
+            parts -> Role.fromValue(parts[0]),
+            Collectors.mapping(
+                // Value: client number or null
+                parts -> parts.length > 1 ? parts[1] : null,
+                Collectors.filtering(Objects::nonNull, Collectors.toList()) // Remove nulls
+            )
+        ));
   }
 
   /**

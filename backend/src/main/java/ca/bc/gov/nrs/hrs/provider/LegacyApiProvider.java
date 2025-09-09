@@ -99,6 +99,23 @@ public class LegacyApiProvider {
     );
   }
 
+  @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyUsersList")
+  public List<String> searchReportingUnitUsers(String userId) {
+    log.info("Searching {} request to /api/search/reporting-units-users for user that matches {}",
+        PROVIDER, userId);
+    return restClient
+        .get()
+        .uri(uriBuilder ->
+            uriBuilder
+                .path("/api/search/reporting-units-users")
+                .queryParam("userId", userId)
+                .build(Map.of())
+        )
+        .retrieve()
+        .body(new ParameterizedTypeReference<>() {
+        });
+  }
+
   private List<CodeDescriptionDto> fallbackDistricts(Throwable throwable) {
     log.error("Error occurred while fetching data from {}: {}", PROVIDER, throwable.getMessage());
     return List.of(
@@ -129,6 +146,11 @@ public class LegacyApiProvider {
   }
 
   private List<CodeDescriptionDto> fallbackEmptyList(Throwable throwable) {
+    log.error("Error occurred while fetching data from {}: {}", PROVIDER, throwable.getMessage());
+    return List.of();
+  }
+
+  private List<String> fallbackEmptyUsersList(String userId, Throwable throwable) {
     log.error("Error occurred while fetching data from {}: {}", PROVIDER, throwable.getMessage());
     return List.of();
   }

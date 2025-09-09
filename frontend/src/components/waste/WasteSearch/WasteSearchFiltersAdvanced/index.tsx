@@ -182,7 +182,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
 
           {/* Client and location code */}
           <Column sm={4} md={4} lg={8} className="group-together">
-            <AutoCompleteInput
+            <AutoCompleteInput<ForestClientAutocompleteResultDto>
               id="forestclient-client-ac"
               titleText="Client"
               placeholder="Search by client name, number, or acronym"
@@ -257,8 +257,33 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
             </div>
           </Column>
 
-          {/* Submitter. Requires #77 to implement */}
-          <Column sm={4} md={4} lg={8}></Column>
+          {/* Submitter */}
+          <Column sm={4} md={4} lg={8}>
+            <AutoCompleteInput<string>
+              id="submitter-name-ac"
+              titleText="Submitter"
+              helperText="Search by name, IDIR or BCeID"
+              onAutoCompleteChange={async (value) =>
+                await APIs.search.searchReportingUnitUsers(value)
+              }
+              itemToString={(item) => {
+                if (typeof item === 'string') return item;
+                if (item && typeof item === 'object') {
+                  // Detect if it's a character-indexed object
+                  const values = Object.values(item);
+                  if (values.every((char) => typeof char === 'string' && char.length === 1)) {
+                    return values.join('');
+                  }
+                }
+                return '';
+              }}
+              onSelect={(data) => {
+                if (data) {
+                  onChange('requestUserId')((data as string) || '');
+                }
+              }}
+            />
+          </Column>
 
           {/* License number */}
           <Column sm={4} md={4} lg={8}>
