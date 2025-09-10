@@ -18,7 +18,7 @@ jobs:
       VITE_USER_POOLS_WEB_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
       VITE_LEGACY_BASE_URL: https://apps.nrs.gov.bc.ca/ext/waste-for
       VITE_CLIENT_BASE_URL: https://forestclient.nrs.gov.bc.ca
-      VITE_BACKEND_URL: http://localhost:8080          
+      VITE_BACKEND_URL: http://localhost:8080
       VITE_NODE_ENV: test
       VITE_COVERAGE: true
       VITE_PORT: 3000
@@ -32,7 +32,7 @@ jobs:
           VITE_USER_POOLS_WEB_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
           VITE_LEGACY_BASE_URL: https://apps.nrs.gov.bc.ca/ext/waste-for
           VITE_CLIENT_BASE_URL: https://forestclient.nrs.gov.bc.ca
-          VITE_BACKEND_URL: http://localhost:8080          
+          VITE_BACKEND_URL: http://localhost:8080
           VITE_NODE_ENV: test
           VITE_COVERAGE: true
           VITE_PORT: 3000
@@ -44,18 +44,18 @@ jobs:
           dir: frontend
 #          sonar_args: >
 #            -Dsonar.exclusions=**/coverage/**,**/test-results/**,**/stub/**,**/reports/**,**/node_modules/**,**/tests/**,**/*.test.{ts,x},**/vite-env.d.ts,**/types/**,**/constants/**,**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx
-#            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info            
+#            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
 #            -Dsonar.organization=bcgov-sonarcloud
 #            -Dsonar.projectKey=waste-plus-frontend
 #          sonar_token: ${{ secrets.SONAR_TOKEN_FRONTEND }}
           triggers: ('frontend/')
 
-#      - name: Annotate PR with frontend test results
-#        if: always()
-#        uses: dorny/test-reporter@v1
-#        with:
-#          name: Frontend Unit Tests
-#          path: frontend/coverage/junit-report.xml
-#          reporter: java-junit
-#          only-summary: false
-#          fail-on-error: true
+      - name: Annotate PR with frontend test results
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Frontend Unit Tests
+          path: frontend/coverage/junit-report.xml
+          reporter: java-junit
+          only-summary: false
+          fail-on-error: true

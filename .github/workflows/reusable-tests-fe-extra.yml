@@ -11,7 +11,7 @@ jobs:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-24.04
     container:
-      image: mcr.microsoft.com/playwright:v1.55.0-noble   
+      image: mcr.microsoft.com/playwright:v1.55.0-noble
     env:
       VITE_APP_NAME: Waste Plus
       VITE_FEATURES_OFFLINE: true
@@ -20,7 +20,7 @@ jobs:
       VITE_USER_POOLS_WEB_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
       VITE_LEGACY_BASE_URL: https://apps.nrs.gov.bc.ca/ext/waste-for
       VITE_CLIENT_BASE_URL: https://forestclient.nrs.gov.bc.ca
-      VITE_BACKEND_URL: http://localhost:8080          
+      VITE_BACKEND_URL: http://localhost:8080
       VITE_NODE_ENV: test
       VITE_COVERAGE: true
       VITE_PORT: 3000
@@ -40,15 +40,15 @@ jobs:
         run: npm run test:a11y
         working-directory: frontend
 
-#      - name: Annotate PR with a11y results
-#        uses: dorny/test-reporter@v2
-#        if: always()
-#        with:
-#          name: Accessibility Tests
-#          path: frontend/test-reports/junit/report.xml
-#          reporter: java-junit
-#          only-summary: false
-#          fail-on-error: true
+      - name: Annotate PR with a11y results
+        uses: dorny/test-reporter@v2
+        if: always()
+        with:
+          name: Accessibility Tests
+          path: frontend/test-reports/junit/report.xml
+          reporter: java-junit
+          only-summary: false
+          fail-on-error: true
 
       - name: Upload test videos
         uses: actions/upload-artifact@v4
