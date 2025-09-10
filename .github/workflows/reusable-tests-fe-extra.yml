@@ -45,7 +45,7 @@ jobs:
 #        if: always()
 #        with:
 #          name: Accessibility Tests
-#          path: frontend/test-results/junit/report.xml
+#          path: frontend/test-reports/junit/report.xml
 #          reporter: java-junit
 #          only-summary: false
 #          fail-on-error: true
@@ -62,4 +62,4 @@ jobs:
         if: always()
         with:
           name: a11y-reports
-          path: frontend/test-results/report/
+          path: frontend/test-reports/report/

@@ -80,7 +80,7 @@ export default defineConfig({
   },
   reporter: [
     ['list'],
-    ['html', { outputFolder: 'test-results/report', open: 'never' }],
-    ['junit', { outputFile: 'test-results/junit/report.xml' }],
+    ['html', { outputFolder: 'test-reports/report', open: 'never' }],
+    ['junit', { outputFile: 'test-reports/junit/report.xml' }],
   ],
 });

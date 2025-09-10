@@ -177,5 +177,6 @@ sketch
 
 dev-dist/
 test-results/
+test-reports/
 **/__screenshots__/
 **/user.*.json
