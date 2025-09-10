@@ -24,44 +24,63 @@ const commonSettings = {
 const browserProjects = [
   {
     name: 'chromium',
-    device: devices['Desktop Chrome'],
-    storageState: './src/config/tests/user.chromium.json',
+    use: {
+      ...commonSettings,
+      device: devices['Desktop Chrome'],
+      storageState: './src/config/tests/user.chromium.json',
+    },
+    testMatch: '**/*.browser.test.{ts,tsx}',
   },
   {
     name: 'firefox',
-    device: devices['Desktop Firefox'],
-    storageState: './src/config/tests/user.firefox.json',
+    use: {
+      ...commonSettings,
+      device: devices['Desktop Firefox'],
+      storageState: './src/config/tests/user.firefox.json',
+    },
+    testMatch: '**/*.browser.test.{ts,tsx}',
   },
   {
     name: 'webkit',
-    device: devices['Desktop Safari'],
-    storageState: './src/config/tests/user.webkit.json',
+    use: {
+      ...commonSettings,
+      device: devices['Desktop Safari'],
+      storageState: './src/config/tests/user.webkit.json',
+    },
+    testMatch: '**/*.browser.test.{ts,tsx}',
   },
 ];
 
+const a11yProject = {
+  name: 'a11y-chromium',
+  use: {
+    ...commonSettings,
+    device: devices['Desktop Chrome'],
+    storageState: './src/config/tests/user.chromium.json',
+  },
+  testMatch: '**/*.a11y.test.{ts,tsx}',
+};
+
 // Filter based on ALL_BROWSERS env
-const projects = (isAllBrowsers ? browserProjects : [browserProjects[0]!]).map(
-  ({ name, device, storageState }) => ({
-    name,
-    use: {
-      ...commonSettings,
-      ...device,
-      storageState,
-    },
-  }),
-);
+const browserProjectsMapped = isAllBrowsers ? browserProjects : [browserProjects[0]!];
+
+const projects = [...browserProjectsMapped, a11yProject];
 
 export default defineConfig({
   timeout: THIRTY_SECONDS,
   retries: process.env.CI ? 2 : 0,
-  testMatch: '**/*.e2e.test.{ts,tsx}',
   testDir: './src',
-  globalSetup: './src/config/tests/auth.setup.ts',
-  globalTeardown: './src/config/tests/auth.teardown.ts',
+  globalSetup: './src/config/tests/browser.setup.ts',
+  globalTeardown: './src/config/tests/browser.teardown.ts',
   projects,
   webServer: {
     command: 'npm run dev',
     url: baseURL,
     reuseExistingServer: true,
   },
+  reporter: [
+    ['list'],
+    ['html', { outputFolder: 'test-reports/report', open: 'never' }],
+    ['junit', { outputFile: 'test-reports/junit/report.xml' }],
+  ],
 });

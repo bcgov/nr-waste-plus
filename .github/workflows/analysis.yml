@@ -28,7 +28,19 @@ jobs:
     name: Frontend Unit Tests
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     secrets: inherit
+    permissions:
+      contents: write
+      checks: write
     uses: ./.github/workflows/reusable-tests-fe.yml
+
+  tests-frontend-ex:
+    name: Frontend UI Tests
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    secrets: inherit
+    permissions:
+      contents: write
+      checks: write
+    uses: ./.github/workflows/reusable-tests-fe-extra.yml
 
   trivy:
     name: Repository Report
@@ -56,7 +68,7 @@ jobs:
   results:
     name: Analysis Results
     if: always()
-    needs: [tests-java, tests-frontend] # Restore trivy when/if fixed
+    needs: [tests-java, tests-frontend, tests-frontend-ex] # Restore trivy when/if fixed
     runs-on: ubuntu-24.04
     steps:
       - if: contains(needs.*.result, 'failure')||contains(needs.*.result, 'canceled')

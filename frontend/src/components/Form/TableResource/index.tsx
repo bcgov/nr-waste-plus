@@ -37,11 +37,13 @@ type PaginationParams = {
  * Props for the TableResource component.
  *
  * @template T
+ * @property {id} id - The table ID. Used as unique identifier and for customization persistence.
  * @property {TableHeaderType<T>[]} headers - Array of column definitions, including custom renderers and selection flags.
  * @property {PageableResponse<T>} content - Paginated data to display in the table.
  * @property {boolean} loading - Whether the table is in a loading state.
  * @property {boolean} error - Whether an error occurred while fetching data.
  * @property {boolean} [displayRange] - If true, shows the item range in the pagination component.
+ * @property {boolean} [displayToolbar] - If true, shows the toolbar, with the toolbar buttons, such as column customization.
  * @property {(params: PaginationParams) => void} [onPageChange] - Callback for handling page changes.
  */
 type TableResourceProps<T> = {
