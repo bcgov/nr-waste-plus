@@ -25,7 +25,21 @@
       .landing-content-wrapper {
         display: flex;
         flex-direction: column;
+        
+        main {
+          display: flex;
+          flex-direction: column;
+          gap: 2.5rem;
 
+          @include breakpoint-up(md) {
+            gap: 3rem;
+          }
+
+          @include breakpoint-up(max) {
+            gap: 4rem;
+          }
+        }
+        
         .landing-title {
           @include type.type-style('fluid-display-01', true);
         }
