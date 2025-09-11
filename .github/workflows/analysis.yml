@@ -19,8 +19,8 @@ jobs:
   tests-java:
     name: Backend Tests
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    permissions:
-      pull-requests: write
+    # permissions:
+    #   pull-requests: write
     secrets: inherit
     uses: ./.github/workflows/reusable-tests-be.yml
 
@@ -28,25 +28,25 @@ jobs:
     name: Frontend Unit Tests
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     secrets: inherit
-    permissions:
-      contents: write
-      checks: write
+    # permissions:
+    #   contents: write
+    #   checks: write
     uses: ./.github/workflows/reusable-tests-fe.yml
 
   tests-frontend-ex:
     name: Frontend UI Tests
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     secrets: inherit
-    permissions:
-      contents: write
-      checks: write
+    # permissions:
+    #   contents: write
+    #   checks: write
     uses: ./.github/workflows/reusable-tests-fe-extra.yml
 
   trivy:
     name: Repository Report
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    permissions:
-      security-events: write
+    # permissions:
+    #   security-events: write
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
