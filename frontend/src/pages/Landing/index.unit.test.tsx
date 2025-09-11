@@ -5,9 +5,9 @@ import { describe, it, expect, vi, afterEach, beforeEach, type Mock } from 'vite
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import { ThemeProvider } from '@/context/theme/ThemeProvider';
+import APIs from '@/services/APIs';
 
 import LandingPage from './index';
-import APIs from '@/services/APIs';
 
 const renderWithProps = async () => {
   const qc = new QueryClient();
