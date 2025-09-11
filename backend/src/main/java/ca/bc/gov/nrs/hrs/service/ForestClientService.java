@@ -91,6 +91,18 @@ public class ForestClientService {
             .toList();
   }
 
+  @NewSpan
+  public List<ForestClientDto> searchByClientNumbers(
+      int page,
+      int size,
+      List<String> values
+  ) {
+    log.info("Searching forest client by ids {}, page: {}, size: {}", values, page, size);
+    List<ForestClientDto> response = forestClientApiProvider.searchClientsByIds(page, size, values);
+    log.info("Found {} for {}",response,values);
+    return response;
+  }
+
   private String checkClientNumber(String clientNumber) {
     if (StringUtils.isEmpty(clientNumber)) {
       return "00000000";
@@ -103,5 +115,4 @@ public class ForestClientService {
       return "00000000";
     }
   }
-
 }
