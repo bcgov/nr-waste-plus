@@ -20,7 +20,7 @@ export type RouteDescription = {
   protected?: boolean;
   isSideMenu: boolean;
   children?: RouteDescription[];
-  roles?: string[];
+  roles?: FamRole[];
   offlineReady?: boolean;
   offlineOnly?: boolean;
 } & RouteObject;
@@ -114,7 +114,7 @@ const filterByOnlineStatus = (route: RouteDescription, isOnline: boolean): boole
   return isOnline;
 };
 
-const hasAccess = (route: RouteDescription, isOnline: boolean, roles: string[]): boolean => {
+const hasAccess = (route: RouteDescription, isOnline: boolean, roles: FamRole[]): boolean => {
   if (!route.protected) return true;
   if (!filterByOnlineStatus(route, isOnline)) return false;
   if (!route.roles || route.roles.length === 0) return true;
@@ -143,7 +143,7 @@ const filterRoutesRecursively = (
 const extractMenuItems = (
   routes: RouteDescription[],
   isOnline: boolean,
-  roles: string[],
+  roles: FamRole[],
 ): MenuItem[] => {
   return routes
     .filter((route) => route.isSideMenu && filterByOnlineStatus(route, isOnline))
@@ -157,11 +157,7 @@ const extractMenuItems = (
 };
 
 export const getMenuEntries = (isOnline: boolean, roles: FamRole[]): MenuItem[] => {
-  return extractMenuItems(
-    ROUTES,
-    isOnline,
-    roles.map((role) => role.role),
-  );
+  return extractMenuItems(ROUTES, isOnline, roles);
 };
 
 export const getPublicRoutes = (): RouteDescription[] => {
