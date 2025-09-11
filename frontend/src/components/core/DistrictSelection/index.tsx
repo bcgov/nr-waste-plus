@@ -6,9 +6,10 @@ import { useAuth } from '@/context/auth/useAuth';
 import { usePreference } from '@/context/preference/usePreference';
 import APIs from '@/services/APIs';
 
-import { MIN_CLIENTS_SHOW_SEARCH } from './constants';
+import { DESELECT_CLIENT, MIN_CLIENTS_SHOW_SEARCH } from './constants';
 import DistrictItem from './DistrictItem';
 import { filterClientByKeyword } from './utils';
+
 import './index.scss';
 
 const DistrictSelection: FC = () => {
@@ -47,10 +48,28 @@ const DistrictSelection: FC = () => {
         )}
         {!isLoading && (
           <ul className="district-list" aria-label="District list">
+            <li
+              data-testid="district-select-none"
+              className="district-list-item"
+              aria-label="Select no district"
+              title="Select no district"
+            >
+              <button
+                type="button"
+                className={`district-list-item-btn${!userPreference.selectedClient ? ' selected-district' : ''}`}
+                onClick={() => storeClient('')}
+              >
+                <DistrictItem
+                  client={DESELECT_CLIENT}
+                  isSelected={!userPreference.selectedClient}
+                />
+              </button>
+            </li>
             {data
               ?.filter((client) => filterClientByKeyword(client, filterText))
               .map((client) => (
                 <li
+                  data-testid={`district-select-${client.clientNumber}`}
                   key={client.clientNumber}
                   className="district-list-item"
                   aria-label={client.clientName}

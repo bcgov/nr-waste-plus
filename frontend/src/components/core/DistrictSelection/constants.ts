@@ -1,5 +1,7 @@
 import * as ICON from '@carbon/icons-react';
 
+import type { ForestClientDto } from '@/services/types';
+
 type ClientIconType = keyof typeof ICON;
 
 export const ClientTypeIconMap: Record<string, ClientIconType> = {
@@ -27,6 +29,14 @@ export const ClientTypeIconMap: Record<string, ClientIconType> = {
   T: 'GroupPresentation',
   // Unregistered Company
   U: 'Enterprise',
+  // Deselected / None
+  Z: 'Blockchain',
 };
 
 export const MIN_CLIENTS_SHOW_SEARCH = 4;
+
+export const DESELECT_CLIENT = {
+  name: 'No district selected',
+  clientStatusCode: { code: 'ACT', description: 'Active' },
+  clientTypeCode: { code: 'Z', description: 'None' },
+} as ForestClientDto;
