@@ -9,9 +9,11 @@ jobs:
   tests-frontend:
     name: Frontend Unit Tests
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    runs-on: ubuntu-24.04
     container:
       image: mcr.microsoft.com/playwright:v1.55.0-noble
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
     env:
       VITE_APP_NAME: Waste Plus
       VITE_FEATURES_OFFLINE: true
