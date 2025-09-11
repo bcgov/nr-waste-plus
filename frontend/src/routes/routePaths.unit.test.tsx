@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
+import { Role } from '@/context/auth/types';
+
 import * as routePaths from './routePaths';
 
 describe('routePaths', () => {
@@ -14,7 +16,7 @@ describe('routePaths', () => {
   });
 
   it('getProtectedRoutes returns protected and system routes', () => {
-    const result = routePaths.getProtectedRoutes(true, ['admin']);
+    const result = routePaths.getProtectedRoutes(true, [{ role: Role.ADMIN, clients: [] }]);
     expect(Array.isArray(result)).toBe(true);
     expect(result.some((r) => r.id === 'Dashboard')).toBe(true);
   });
