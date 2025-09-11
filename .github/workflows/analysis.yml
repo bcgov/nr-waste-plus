@@ -30,7 +30,7 @@ jobs:
     secrets: inherit
     permissions:
       contents: write
-      # checks: write
+      checks: write
     uses: ./.github/workflows/reusable-tests-fe.yml
 
   tests-frontend-ex:
@@ -39,7 +39,7 @@ jobs:
     secrets: inherit
     permissions:
       contents: write
-      # checks: write
+      checks: write
     uses: ./.github/workflows/reusable-tests-fe-extra.yml
 
   trivy:
