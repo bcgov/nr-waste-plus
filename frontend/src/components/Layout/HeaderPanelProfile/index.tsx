@@ -1,7 +1,8 @@
-import { Asleep, Light, UserFollow } from '@carbon/icons-react';
+import { Asleep, Light, Exit } from '@carbon/icons-react';
 import { SideNavLink } from '@carbon/react';
 import { type FC } from 'react';
 
+import DistrictSelection from '@/components/core/DistrictSelection';
 import AvatarImage from '@/components/Layout/AvatarImage';
 import { useAuth } from '@/context/auth/useAuth';
 import { useTheme } from '@/context/theme/useTheme';
@@ -32,6 +33,14 @@ const HeaderPanelProfile: FC = () => {
         <ul>
           <li>
             <div className="panel-section-light">
+              <span>Select organization</span>
+            </div>
+            <div className="district-selection-container">
+              <DistrictSelection />
+            </div>
+          </li>
+          <li>
+            <div className="panel-section-light">
               <span>Options</span>
             </div>
           </li>
@@ -42,7 +51,7 @@ const HeaderPanelProfile: FC = () => {
           >
             Change theme
           </SideNavLink>
-          <SideNavLink className="cursor-pointer" renderIcon={UserFollow} onClick={logout}>
+          <SideNavLink className="cursor-pointer" renderIcon={Exit} onClick={logout}>
             Log out
           </SideNavLink>
         </ul>
