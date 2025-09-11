@@ -10,6 +10,8 @@ import WasteSearchPage from '@/pages/WasteSearch';
 
 import ProtectedRoute from './ProtectedRoute';
 
+import type { FamRole } from '@/context/auth/types';
+
 export type RouteDescription = {
   id: string;
   path: string;
@@ -154,8 +156,12 @@ const extractMenuItems = (
     }));
 };
 
-export const getMenuEntries = (isOnline: boolean, roles: string[]): MenuItem[] => {
-  return extractMenuItems(ROUTES, isOnline, roles);
+export const getMenuEntries = (isOnline: boolean, roles: FamRole[]): MenuItem[] => {
+  return extractMenuItems(
+    ROUTES,
+    isOnline,
+    roles.map((role) => role.role),
+  );
 };
 
 export const getPublicRoutes = (): RouteDescription[] => {
