@@ -3,7 +3,7 @@ name: Reusable UI Tests and Analysis
 on:
   workflow_call:
 
-# permissions: {}
+permissions: {}
 
 jobs:
   tests-frontend:
@@ -11,8 +11,9 @@ jobs:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     container:
       image: mcr.microsoft.com/playwright:v1.55.0-noble
-    # permissions:
-    #   contents: write
+    permissions:
+      contents: write
+      checks: write
     runs-on: ubuntu-24.04
     env:
       VITE_APP_NAME: Waste Plus
