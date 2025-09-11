@@ -172,9 +172,13 @@ export const getPublicRoutes = (): RouteDescription[] => {
   );
 };
 
-export const getProtectedRoutes = (isOnline: boolean, roles: string[]): RouteDescription[] => {
+export const getProtectedRoutes = (isOnline: boolean, roles: FamRole[]): RouteDescription[] => {
   return [
-    ...filterRoutesRecursively(ROUTES, isOnline, roles),
+    ...filterRoutesRecursively(
+      ROUTES,
+      isOnline,
+      roles.map((role) => role.role),
+    ),
     ...SYSTEM_ROUTES.filter((route) => route.id !== 'Landing').filter((route) => route.protected),
   ].map((route) => ({
     ...route,
