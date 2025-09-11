@@ -1,4 +1,4 @@
-name: Reusable Unit Tests and Analysis
+name: Reusable Backend Tests and Analysis
 
 on:
   workflow_call:
