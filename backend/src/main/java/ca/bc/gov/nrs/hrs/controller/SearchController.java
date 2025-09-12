@@ -1,7 +1,9 @@
 package ca.bc.gov.nrs.hrs.controller;
 
+import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import ca.bc.gov.nrs.hrs.exception.InvalidSelectedValueException;
 import ca.bc.gov.nrs.hrs.service.SearchService;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
@@ -36,6 +38,13 @@ public class SearchController {
       @PageableDefault(sort = "lastUpdated", direction = Direction.DESC)
       Pageable pageable
   ) {
+    // #128: BCeID should filter out on client side, we increase the size to get more results.
+    if (JwtPrincipalUtil.getIdentityProvider(jwt).equals(IdentityProvider.BUSINESS_BCEID)) {
+      if (!JwtPrincipalUtil.getClientFromRoles(jwt).contains(filters.getClientNumber())) {
+        throw new InvalidSelectedValueException(
+            "Selected client number " + filters.getClientNumber() + " is not valid");
+      }
+    }
 
     log.info("Searching waste entries with filters: {}, pageable: {}", filters, pageable);
     return service.search(filters.withRequestUserId(JwtPrincipalUtil.getUserId(jwt)), pageable);
@@ -46,7 +55,7 @@ public class SearchController {
   public List<String> searchReportingUnitUsers(
       @RequestParam String userId
   ) {
-    log.info("Searching for users that matches {}",userId);
+    log.info("Searching for users that matches {}", userId);
     return service.searchReportingUnitUser(userId);
   }
 
