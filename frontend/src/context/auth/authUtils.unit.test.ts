@@ -1,12 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import {
-  getCookie,
-  getUserTokenFromCookie,
-  parseToken,
-  parsePrivileges,
-  extractGroups,
-} from './authUtils';
+import { getCookie, getUserTokenFromCookie, parseToken } from './authUtils';
 
 // Mock env
 vi.mock('@/env', () => ({
@@ -89,26 +83,6 @@ describe('authUtils', () => {
         lastName: 'Doe',
         providerUsername: 'IDIR\\jdoe',
       });
-    });
-  });
-
-  describe('parsePrivileges', () => {
-    it('parses roles with numbers and without', () => {
-      const input = ['Approver_1', 'Viewer'];
-      expect(parsePrivileges(input)).toEqual({ Approver: ['1'], Viewer: null });
-    });
-    it('returns empty object for no input', () => {
-      expect(parsePrivileges([])).toEqual({});
-    });
-  });
-
-  describe('extractGroups', () => {
-    it('returns groups from token', () => {
-      expect(extractGroups({ 'cognito:groups': ['ADMIN', 'USER'] })).toEqual(['ADMIN', 'USER']);
-    });
-    it('returns empty array if no groups', () => {
-      expect(extractGroups({})).toEqual([]);
-      expect(extractGroups(undefined)).toEqual([]);
     });
   });
 });

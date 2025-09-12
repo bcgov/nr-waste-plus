@@ -9,6 +9,7 @@ export type AuthContextType = {
   login: (provider: IdpProviderType) => void;
   logout: () => void;
   userToken: () => string | undefined;
+  getClients: () => string[];
 };
 
 export type AuthProviderProps = {

@@ -2,6 +2,7 @@ import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi, describe, afterEach, it, expect } from 'vitest';
 
+import { Role } from '@/context/auth/types';
 import * as useAuthModule from '@/context/auth/useAuth';
 
 import ProtectedRoute from './ProtectedRoute';
@@ -31,12 +32,12 @@ describe('ProtectedRoute', () => {
 
   it('redirects to /unauthorized if user lacks required role', () => {
     (useAuthModule.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
-      user: { roles: ['user'] },
+      user: { roles: [{ role: Role.VIEWER, clients: [] }] },
     });
 
     const { container } = render(
       <MemoryRouter initialEntries={['/admin']}>
-        <ProtectedRoute roles={['admin']}>
+        <ProtectedRoute roles={[{ role: Role.ADMIN, clients: [] }]}>
           <div>Admin Content</div>
         </ProtectedRoute>
       </MemoryRouter>,
@@ -46,12 +47,17 @@ describe('ProtectedRoute', () => {
 
   it('renders children if user is authenticated and has required role', () => {
     (useAuthModule.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
-      user: { roles: ['admin', 'user'] },
+      user: {
+        roles: [
+          { role: Role.ADMIN, clients: [] },
+          { role: Role.VIEWER, clients: [] },
+        ],
+      },
     });
 
     const { getByText } = render(
       <MemoryRouter initialEntries={['/admin']}>
-        <ProtectedRoute roles={['admin']}>
+        <ProtectedRoute roles={[{ role: Role.ADMIN, clients: [] }]}>
           <div>Admin Content</div>
         </ProtectedRoute>
       </MemoryRouter>,
@@ -61,7 +67,7 @@ describe('ProtectedRoute', () => {
 
   it('renders children if user is authenticated and no roles are required', () => {
     (useAuthModule.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
-      user: { roles: ['user'] },
+      user: { roles: [{ role: Role.VIEWER, clients: [] }] },
     });
 
     const { getByText } = render(

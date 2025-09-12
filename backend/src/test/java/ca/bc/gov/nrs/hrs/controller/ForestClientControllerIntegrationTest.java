@@ -167,6 +167,43 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
         .andReturn();
   }
 
+  @ParameterizedTest
+  @MethodSource("fetchClientByNumberList")
+  @DisplayName("Fetch client by number list happy path should succeed")
+  void fetchByClientNumberList_shouldSucceed(
+      String clientNumber,
+      ResponseDefinitionBuilder stubResponse,
+      HttpStatusCode statusCode
+  ) throws Exception {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/clients/search"))
+            .willReturn(stubResponse));
+
+    ResultActions response = mockMvc
+        .perform(
+            MockMvcRequestBuilders
+                .get("/api/forest-clients/searchByNumbers")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .param("values", clientNumber)
+                .accept(MediaType.APPLICATION_JSON)
+        )
+        .andExpect(MockMvcResultMatchers.status().isOk());
+
+    if (statusCode.is2xxSuccessful()) {
+      response
+          .andExpect(content().contentType("application/json"))
+          .andExpect(jsonPath("$.[0].clientNumber").value("00012797"))
+          .andExpect(jsonPath("$.[0].clientName").value("MINISTRY OF FORESTS"))
+          .andExpect(jsonPath("$.[0].legalFirstName").doesNotExist())
+          .andExpect(jsonPath("$.[0].legalMiddleName").doesNotExist())
+          .andExpect(jsonPath("$.[0].clientStatusCode.code").value("ACT"))
+          .andExpect(jsonPath("$.[0].clientTypeCode.code").value("F"))
+          .andExpect(jsonPath("$.[0].acronym").value("MOF"))
+          .andReturn();
+    }
+
+  }
+
 
   private static Stream<Arguments> fetchClientByNumber() {
     return Stream.of(
@@ -174,6 +211,41 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
             "Happy path",
             "00012797",
             okJson(CLIENTNUMBER_RESPONSE),
+            HttpStatusCode.valueOf(200)
+        ),
+        Arguments.argumentSet(
+            "Not found breaker",
+            "00012898",
+            notFound(),
+            HttpStatusCode.valueOf(404)
+        ),
+        Arguments.argumentSet(
+            "Unavailable breaker",
+            "00012898",
+            serviceUnavailable(),
+            HttpStatusCode.valueOf(404)
+        ),
+        Arguments.argumentSet(
+            "Rate limiter breaker",
+            "00012898",
+            status(429),
+            HttpStatusCode.valueOf(404)
+        ),
+        Arguments.argumentSet(
+            "Bad request breaker",
+            "00012898",
+            badRequest(),
+            HttpStatusCode.valueOf(404)
+        )
+    );
+  }
+
+  private static Stream<Arguments> fetchClientByNumberList() {
+    return Stream.of(
+        Arguments.argumentSet(
+            "Happy path",
+            "00012797",
+            okJson(ONE_BY_VALUE_LIST),
             HttpStatusCode.valueOf(200)
         ),
         Arguments.argumentSet(

@@ -7,11 +7,13 @@ import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.RetriableException;
 import ca.bc.gov.nrs.hrs.exception.TooManyRequestsException;
 import ca.bc.gov.nrs.hrs.exception.UnretriableException;
+import ca.bc.gov.nrs.hrs.util.UriUtils;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -229,6 +231,41 @@ public class ForestClientApiProvider {
     return Optional.empty();
   }
 
+
+  @CircuitBreaker(name = "breaker", fallbackMethod = "searchClientsByIdsFallback")
+  @NewSpan
+  public List<ForestClientDto> searchClientsByIds(
+      int page,
+      int size,
+      List<String> values
+  ) {
+    try {
+      log.info("Starting {} request to /clients/search", PROVIDER);
+
+      return restClient
+          .get()
+          .uri(uriBuilder ->
+              uriBuilder
+                  .path("/clients/search")
+                  .queryParam("page", page)
+                  .queryParam("size", size)
+                  .queryParams(UriUtils.buildMultiValueQueryParam("id", values))
+                  .build(Map.of())
+          )
+          .retrieve()
+          .body(new ParameterizedTypeReference<>() {
+          });
+    } catch (HttpClientErrorException | HttpServerErrorException httpExc) {
+      log.error(
+          "{} requested on search by - Response code error: {} with body: {}",
+          PROVIDER,
+          httpExc.getStatusCode(),
+          httpExc.getResponseBodyAsString());
+    }
+
+    return List.of();
+  }
+
   private Optional<ForestClientDto> fetchClientByNumberFallBack(String number, Throwable ex) {
     log.warn("Fallback for fetchClientByNumber for {} due to {}.", PROVIDER, ex.toString());
     return Optional.empty();
@@ -248,14 +285,24 @@ public class ForestClientApiProvider {
       String value,
       Throwable ex
   ) {
-    return paginatedFallback(0,10, value, ex);
+    return paginatedFallback(0, 10, value, ex);
   }
 
   private Optional<ForestClientLocationDto> locationByClientNumberAndLocationCodeFallback(
       String clientNumber,
       String locationCode,
       Throwable ex
-  ){
+  ) {
     return Optional.empty();
   }
+
+  private List<ForestClientDto> searchClientsByIdsFallback(
+      int page,
+      int size,
+      List<String> values,
+      Throwable ex
+  ){
+    return List.of();
+  }
+
 }
