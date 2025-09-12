@@ -52,13 +52,18 @@ public class ForestClientService {
   public List<ForestClientAutocompleteResultDto> searchClients(
       int page,
       int size,
-      String value
+      String value,
+      List<String> clients
   ) {
     log.info("Searching forest client by {} as name, acronym or number with page {} and size {}",
         value, page, size);
     return forestClientApiProvider
         .searchClients(page, size, value)
         .stream()
+        // #128 filter out clients if list is provided
+        .filter(client ->
+                clients.isEmpty() || clients.contains(client.clientNumber())
+            )
         .map(client -> new ForestClientAutocompleteResultDto(
                 client.clientNumber(),
                 client.name(),

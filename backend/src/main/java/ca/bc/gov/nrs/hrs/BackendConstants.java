@@ -7,5 +7,6 @@ import lombok.NoArgsConstructor;
 public class BackendConstants {
 
   public static final String X_TOTAL_COUNT = "X-Total-Count";
+  public static final String NOCLIENT = "NOCLIENT";
 
 }
