@@ -2,8 +2,10 @@ import { env } from '@/env';
 
 import {
   AVAILABLE_ROLES,
+  Role,
   validIdpProviders,
   type FamLoginUser,
+  type FamRole,
   type IdpProviderType,
   type JWT,
   type ROLE_TYPE,
@@ -57,6 +59,7 @@ export const parseToken = (idToken: JWT | undefined): FamLoginUser | undefined =
   const userName = (decodedIdToken?.['custom:idp_username'] as string) || '';
   const email = (decodedIdToken?.['email'] as string) || '';
   const cognitoGroups = extractGroups(decodedIdToken);
+  const roles = extractRoles(cognitoGroups);
   return {
     userName,
     displayName,
@@ -66,15 +69,11 @@ export const parseToken = (idToken: JWT | undefined): FamLoginUser | undefined =
     firstName: sanitizedFirstName,
     lastName,
     providerUsername: `${idpProvider}\\${userName}`,
+    roles,
   };
 };
 
-/**
- * Parses Cognito group strings into a user privilege object.
- * @param {string[]} input - Array of group strings from Cognito.
- * @returns {USER_PRIVILEGE_TYPE} The parsed privilege object.
- */
-export function parsePrivileges(input: string[]): USER_PRIVILEGE_TYPE {
+function parsePrivileges(input: string[]): USER_PRIVILEGE_TYPE {
   const result: USER_PRIVILEGE_TYPE = {};
   for (const item of input) {
     const parts = item.split('_');
@@ -96,15 +95,34 @@ export function parsePrivileges(input: string[]): USER_PRIVILEGE_TYPE {
   return result;
 }
 
-/**
- * Extracts Cognito groups from a decoded JWT payload.
- * @param {object | undefined} decodedIdToken - The decoded JWT payload.
- * @returns {string[]} Array of group strings, or empty array if none found.
- */
-export function extractGroups(decodedIdToken: object | undefined): string[] {
+function extractGroups(decodedIdToken: object | undefined): string[] {
   if (!decodedIdToken) return [];
   if ('cognito:groups' in decodedIdToken) {
     return decodedIdToken['cognito:groups'] as string[];
   }
   return [];
+}
+
+function extractRoles(roles: string[]): FamRole[] {
+  const roleMap = new Map<Role, Set<string>>();
+
+  for (const entry of roles) {
+    const [rolePart, clientId] = entry.split('_');
+    const role = rolePart.toUpperCase() as Role;
+
+    if (!Object.values(Role).includes(role)) continue;
+
+    if (!roleMap.has(role)) {
+      roleMap.set(role, new Set());
+    }
+
+    if (clientId) {
+      roleMap.get(role)?.add(clientId);
+    }
+  }
+
+  return Array.from(roleMap.entries()).map(([role, clientSet]) => ({
+    role,
+    clients: Array.from(clientSet),
+  }));
 }

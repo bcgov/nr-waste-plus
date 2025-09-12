@@ -2,6 +2,7 @@ import { UserAvatar } from '@carbon/icons-react';
 import { HeaderGlobalAction, HeaderGlobalBar } from '@carbon/react';
 import { type FC } from 'react';
 
+import HeaderDistrictDisplay from '@/components/Layout/HeaderDistrictDisplay';
 import ThemeToggle from '@/components/Layout/ThemeToggle';
 import { useLayout } from '@/context/layout/useLayout';
 
@@ -24,6 +25,7 @@ const LayoutHeaderGlobalBar: FC = () => {
         className="profile-action-button"
       >
         <UserAvatar size={20} />
+        <HeaderDistrictDisplay isActive={isHeaderPanelOpen} />
       </HeaderGlobalAction>
     </HeaderGlobalBar>
   );

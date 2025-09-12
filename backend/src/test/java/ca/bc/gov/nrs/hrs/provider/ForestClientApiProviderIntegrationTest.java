@@ -24,6 +24,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
@@ -130,6 +131,23 @@ class ForestClientApiProviderIntegrationTest extends AbstractTestContainerIntegr
     var locations = forestClientApiProvider.fetchLocationsByClientNumber(clientNumber);
 
     Assertions.assertEquals(size, locations.getTotalElements());
+  }
+
+  @ParameterizedTest
+  @MethodSource("searchClients")
+  @DisplayName("Search clients by list of ids")
+  void shouldSearchClientsByIds(
+      int page,
+      int size,
+      String value,
+      ResponseDefinitionBuilder stub,
+      long expectedSize
+  ) {
+
+    clientApiStub.stubFor(get(urlPathEqualTo("/clients/search")).willReturn(stub));
+
+    var clients = forestClientApiProvider.searchClientsByIds(page, size, List.of(value));
+    Assertions.assertEquals(expectedSize, clients.size());
   }
 
 

@@ -46,4 +46,16 @@ describe('ForestClientService', () => {
     });
     expect(result).toEqual(mockData);
   });
+
+  it('search by numbers to load data', async () => {
+    const mockData = [{ clientNumber: '789', name: 'Client789' }];
+    (service as any).doRequest = vi.fn().mockResolvedValue(mockData);
+    const result = await service.searchByClientNumbers(['789']);
+    expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+      method: 'GET',
+      url: '/api/forest-clients/searchByNumbers',
+      query: { page: 0, size: 10, values: ['789'] },
+    });
+    expect(result).toEqual(mockData);
+  });
 });

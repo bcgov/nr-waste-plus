@@ -14,13 +14,39 @@ export const validIdpProviders = ['IDIR', 'BCEIDBUSINESS'] as const;
 
 export type IdpProviderType = (typeof validIdpProviders)[number];
 
+export enum RoleType {
+  CONCRETE = 'CONCRETE',
+  ABSTRACT = 'ABSTRACT',
+}
+
+export enum Role {
+  VIEWER = 'VIEWER',
+  SUBMITTER = 'SUBMITTER',
+  APPROVER = 'APPROVER',
+  PLANNER = 'PLANNER',
+  ADMIN = 'ADMIN',
+}
+
+export const roleTypeMap: Record<Role, RoleType> = {
+  [Role.VIEWER]: RoleType.CONCRETE,
+  [Role.SUBMITTER]: RoleType.ABSTRACT,
+  [Role.APPROVER]: RoleType.ABSTRACT,
+  [Role.PLANNER]: RoleType.ABSTRACT,
+  [Role.ADMIN]: RoleType.ABSTRACT,
+};
+
+export type FamRole = {
+  role: Role;
+  clients: string[];
+};
+
 export type FamLoginUser = {
   providerUsername?: string;
   userName?: string;
   displayName?: string;
   email?: string;
   idpProvider?: IdpProviderType;
-  roles?: string[];
+  roles?: FamRole[];
   authToken?: string;
   exp?: number;
   privileges: USER_PRIVILEGE_TYPE;

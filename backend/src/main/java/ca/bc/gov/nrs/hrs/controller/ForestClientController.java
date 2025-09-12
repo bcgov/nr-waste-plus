@@ -66,4 +66,13 @@ public class ForestClientController {
   public List<CodeDescriptionDto> getForestClientLocations(@PathVariable String clientNumber) {
     return forestClientService.getClientLocations(clientNumber);
   }
+
+  @GetMapping("/searchByNumbers")
+  public List<ForestClientDto> searchByClientNumbers(
+      @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+      @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+      @RequestParam(value = "values") List<String> values) {
+    return forestClientService.searchByClientNumbers(page, size, values);
+  }
+
 }

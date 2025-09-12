@@ -3,13 +3,12 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import { AuthProvider } from '@/context/auth/AuthProvider';
+import { Role, type FamLoginUser } from '@/context/auth/types';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import ThemeProvider from '@/context/theme/ThemeProvider';
+import APIs from '@/services/APIs';
 
 import HeaderPanelProfile from './index';
-
-import type { FamLoginUser } from '@/context/auth/types';
-import APIs from '@/services/APIs';
 
 vi.mock('@/components/Layout/AvatarImage', () => ({
   __esModule: true,
@@ -22,16 +21,18 @@ vi.mock('@/components/Layout/AvatarImage', () => ({
 
 const mockToggleTheme = vi.fn();
 const mockLogout = vi.fn();
+const mockClients = vi.fn().mockReturnValue(['client1', 'client2']);
 const mockUser: FamLoginUser = {
   firstName: 'Jane',
   lastName: 'Doe',
   idpProvider: 'IDIR',
   userName: 'jdoe',
   email: 'jane@example.com',
+  roles: [{ role: Role.ADMIN, clients: ['client1', 'client2'] }],
 } as FamLoginUser;
 
 vi.mock('@/context/auth/useAuth', () => ({
-  useAuth: () => ({ logout: mockLogout, user: mockUser }),
+  useAuth: () => ({ logout: mockLogout, user: mockUser, getClients: mockClients }),
 }));
 vi.mock('@/context/theme/useTheme', () => ({
   useTheme: () => ({ theme: 'g100', toggleTheme: mockToggleTheme }),

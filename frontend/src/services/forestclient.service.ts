@@ -47,4 +47,20 @@ export class ForestClientService extends HttpClient {
       },
     });
   }
+
+  searchByClientNumbers(
+    values: string[],
+    page: number = 0,
+    size: number = 10,
+  ): CancelablePromise<Array<ForestClientDto>> {
+    return this.doRequest<Array<ForestClientDto>>(this.config, {
+      method: 'GET',
+      url: '/api/forest-clients/searchByNumbers',
+      query: {
+        page,
+        size,
+        values,
+      },
+    });
+  }
 }
