@@ -7,4 +7,5 @@ import lombok.NoArgsConstructor;
 public class LegacyConstants {
 
   public static final String NOVALUE = "NOVALUE";
+  public static final String NOCLIENT = "NOCLIENT";
 }

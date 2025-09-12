@@ -59,21 +59,7 @@ public class LoggedUserHelper {
    * @return true if the user has the role; false otherwise
    */
   public boolean hasConcreteRole(Role role) {
-    if (!role.isConcrete()) {
-      return false;
-    }
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-    if (authentication == null || !authentication.isAuthenticated()) {
-      return false;
-    }
-
-    return authentication
-        .getAuthorities()
-        .stream()
-        .map(GrantedAuthority::getAuthority)
-        .map(String::toUpperCase)
-        .anyMatch(auth -> auth.equals(role.name()));
+    return JwtPrincipalUtil.hasConcreteRole(getPrincipal(), role);
   }
 
   /**
@@ -85,21 +71,7 @@ public class LoggedUserHelper {
    * @return true if the user has the role; false otherwise
    */
   public boolean hasAbstractRole(Role role, String clientId) {
-    if (role.isConcrete()) {
-      return false;
-    }
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-    if (authentication == null || !authentication.isAuthenticated()) {
-      return false;
-    }
-
-    return authentication
-        .getAuthorities()
-        .stream()
-        .map(GrantedAuthority::getAuthority)
-        .map(String::toUpperCase)
-        .anyMatch(auth -> auth.equals(role.name() + "_" + clientId));
+    return JwtPrincipalUtil.hasAbstractRole(getPrincipal(), role, clientId);
   }
 
   /**

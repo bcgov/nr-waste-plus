@@ -354,11 +354,51 @@ public class JwtPrincipalUtil {
   }
 
   public static List<String> getClientFromRoles(Jwt jwtPrincipal){
-    return getRoles(jwtPrincipal).values().stream().flatMap(List::stream).distinct().toList();
+    return getRoles(jwtPrincipal)
+        .values()
+        .stream()
+        .flatMap(List::stream)
+        .distinct()
+        .filter(StringUtils::isNotBlank)
+        .toList();
   }
 
   public static List<String> getClientFromRoles(JwtAuthenticationToken jwtPrincipal){
-    return getRoles(jwtPrincipal).values().stream().flatMap(List::stream).distinct().toList();
+    return getRoles(jwtPrincipal)
+        .values()
+        .stream()
+        .flatMap(List::stream)
+        .distinct()
+        .filter(StringUtils::isNotBlank)
+        .toList();
+  }
+
+  public static boolean hasConcreteRole(Jwt jwtPrincipal, Role role){
+    if (!role.isConcrete()) {
+      return false;
+    }
+    return getRoles(jwtPrincipal).containsKey(role);
+  }
+
+  public static boolean hasConcreteRole(JwtAuthenticationToken jwtPrincipal, Role role){
+    if (!role.isConcrete()) {
+      return false;
+    }
+    return getRoles(jwtPrincipal).containsKey(role);
+  }
+
+  public static boolean hasAbstractRole(Jwt jwtPrincipal, Role role, String clientId){
+    if (role.isConcrete()) {
+      return false;
+    }
+    return getRoles(jwtPrincipal).getOrDefault(role,List.of()).contains(clientId);
+  }
+
+  public static boolean hasAbstractRole(JwtAuthenticationToken jwtPrincipal, Role role, String clientId){
+    if (role.isConcrete()) {
+      return false;
+    }
+    return getRoles(jwtPrincipal).getOrDefault(role,List.of()).contains(clientId);
   }
 
   public static IdentityProvider getIdentityProvider(JwtAuthenticationToken jwtPrincipal) {

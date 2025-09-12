@@ -2,7 +2,9 @@ package ca.bc.gov.nrs.hrs.util;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
@@ -42,7 +44,7 @@ class JwtPrincipalUtilTest {
 
     assertEquals(
         expectedTokenValue,
-        JwtPrincipalUtil.getProvider(createJwtAuthenticationTokenWithAttributes(claims)));
+        JwtPrincipalUtil.getProvider(createJwtAuthenticationToken(claims)));
     assertEquals(expectedJwtValue, JwtPrincipalUtil.getProvider(createJwt(claims)));
   }
 
@@ -65,7 +67,7 @@ class JwtPrincipalUtilTest {
             "custom:idp_name", idpName);
 
     assertEquals(
-        expected, JwtPrincipalUtil.getUserId(createJwtAuthenticationTokenWithAttributes(claims)));
+        expected, JwtPrincipalUtil.getUserId(createJwtAuthenticationToken(claims)));
     assertEquals(expected, JwtPrincipalUtil.getUserId(createJwt(claims)));
   }
 
@@ -89,7 +91,7 @@ class JwtPrincipalUtilTest {
 
     assertEquals(
         expected,
-        JwtPrincipalUtil.getIdpUsername(createJwtAuthenticationTokenWithAttributes(claims)));
+        JwtPrincipalUtil.getIdpUsername(createJwtAuthenticationToken(claims)));
     assertEquals(expected, JwtPrincipalUtil.getIdpUsername(createJwt(claims)));
   }
 
@@ -113,7 +115,7 @@ class JwtPrincipalUtilTest {
       assertThrows(
           NoSuchElementException.class,
           () -> JwtPrincipalUtil.getIdentityProvider(
-              createJwtAuthenticationTokenWithAttributes(claims)));
+              createJwtAuthenticationToken(claims)));
       assertThrows(
           NoSuchElementException.class,
           () -> JwtPrincipalUtil.getIdentityProvider(createJwt(claims))
@@ -122,7 +124,7 @@ class JwtPrincipalUtilTest {
 
       assertEquals(
           IdentityProvider.valueOf(expected),
-          JwtPrincipalUtil.getIdentityProvider(createJwtAuthenticationTokenWithAttributes(claims)));
+          JwtPrincipalUtil.getIdentityProvider(createJwtAuthenticationToken(claims)));
       assertEquals(IdentityProvider.valueOf(expected),
           JwtPrincipalUtil.getIdentityProvider(createJwt(claims)));
     }
@@ -135,7 +137,7 @@ class JwtPrincipalUtilTest {
     Map<String, Object> claims = Map.of("custom:idp_business_id", value);
 
     assertEquals(
-        value, JwtPrincipalUtil.getBusinessId(createJwtAuthenticationTokenWithAttributes(claims)));
+        value, JwtPrincipalUtil.getBusinessId(createJwtAuthenticationToken(claims)));
     assertEquals(value, JwtPrincipalUtil.getBusinessId(createJwt(claims)));
   }
 
@@ -147,7 +149,7 @@ class JwtPrincipalUtilTest {
 
     assertEquals(
         value,
-        JwtPrincipalUtil.getBusinessName(createJwtAuthenticationTokenWithAttributes(claims)));
+        JwtPrincipalUtil.getBusinessName(createJwtAuthenticationToken(claims)));
     assertEquals(value, JwtPrincipalUtil.getBusinessName(createJwt(claims)));
   }
 
@@ -158,7 +160,7 @@ class JwtPrincipalUtilTest {
     Map<String, Object> claims = Map.of("email", value);
 
     assertEquals(
-        value, JwtPrincipalUtil.getEmail(createJwtAuthenticationTokenWithAttributes(claims)));
+        value, JwtPrincipalUtil.getEmail(createJwtAuthenticationToken(claims)));
     assertEquals(value, JwtPrincipalUtil.getEmail(createJwt(claims)));
   }
 
@@ -188,7 +190,7 @@ class JwtPrincipalUtilTest {
             "custom:idp_display_name", displayName);
 
     assertEquals(
-        expected, JwtPrincipalUtil.getName(createJwtAuthenticationTokenWithAttributes(claims)));
+        expected, JwtPrincipalUtil.getName(createJwtAuthenticationToken(claims)));
     assertEquals(expected, JwtPrincipalUtil.getName(createJwt(claims)));
   }
 
@@ -218,7 +220,7 @@ class JwtPrincipalUtilTest {
             "custom:idp_display_name", displayName);
 
     assertEquals(
-        expected, JwtPrincipalUtil.getLastName(createJwtAuthenticationTokenWithAttributes(claims)));
+        expected, JwtPrincipalUtil.getLastName(createJwtAuthenticationToken(claims)));
     assertEquals(expected, JwtPrincipalUtil.getLastName(createJwt(claims)));
   }
 
@@ -248,7 +250,7 @@ class JwtPrincipalUtilTest {
             "custom:idp_display_name", displayName);
 
     assertEquals(expected,
-        JwtPrincipalUtil.getFirstName(createJwtAuthenticationTokenWithAttributes(claims)));
+        JwtPrincipalUtil.getFirstName(createJwtAuthenticationToken(claims)));
     assertEquals(expected, JwtPrincipalUtil.getFirstName(createJwt(claims)));
   }
 
@@ -278,7 +280,7 @@ class JwtPrincipalUtilTest {
             "custom:idp_display_name", displayName);
 
     assertEquals(expected,
-        JwtPrincipalUtil.getDisplayName(createJwtAuthenticationTokenWithAttributes(claims)));
+        JwtPrincipalUtil.getDisplayName(createJwtAuthenticationToken(claims)));
     assertEquals(expected, JwtPrincipalUtil.getDisplayName(createJwt(claims)));
   }
 
@@ -305,7 +307,7 @@ class JwtPrincipalUtilTest {
 
     assertEquals(result,
         JwtPrincipalUtil.getRoles(
-            createJwtAuthenticationTokenWithAttributes(claims)
+            createJwtAuthenticationToken(claims)
         )
     );
     assertEquals(result,
@@ -315,31 +317,73 @@ class JwtPrincipalUtilTest {
     );
   }
 
-  @Test
+  @ParameterizedTest
+  @MethodSource("clients")
   @DisplayName("Parse client numbers")
-  void shouldGetClients() {
+  void shouldGetClients(Map<String, Object> claims, List<String> result) {
+    if(result.isEmpty()){
+      assertThat(
+          JwtPrincipalUtil.getClientFromRoles(createJwtAuthenticationToken(claims))
+      ).isEmpty();
 
-    Map<String, Object> claims =
-        Map.of(
-            "cognito:groups", List.of(
-                "Viewer",
-                "Submitter_00012120",
-                "Approver_00010040",
-                "Admin_00000111"
-            )
-        );
+      assertThat(JwtPrincipalUtil.getClientFromRoles(createJwt(claims))
+          ).isEmpty();
+    }else {
+      assertThat(
+          JwtPrincipalUtil.getClientFromRoles(createJwtAuthenticationToken(claims))
+      )
+          .isNotNull()
+          .isNotEmpty()
+          .hasSize(result.size())
+          .containsExactlyInAnyOrderElementsOf(result);
 
-    List<String> result = List.of("00010040","00012120","00000111");
-
-    assertThat(
-        JwtPrincipalUtil.getClientFromRoles(createJwtAuthenticationTokenWithAttributes(claims))
-    ).containsExactlyInAnyOrderElementsOf(result);
-
-    assertThat(JwtPrincipalUtil.getClientFromRoles(createJwt(claims)))
-        .containsExactlyInAnyOrderElementsOf(result);
+      assertThat(JwtPrincipalUtil.getClientFromRoles(createJwt(claims)))
+          .isNotNull()
+          .isNotEmpty()
+          .hasSize(result.size())
+          .containsExactlyInAnyOrderElementsOf(result);
+    }
   }
 
-  private JwtAuthenticationToken createJwtAuthenticationTokenWithAttributes(
+  @ParameterizedTest
+  @MethodSource("concreteRoles")
+  @DisplayName("has concrete role?")
+  void shouldCheckConcreteRole(Map<String, Object> claims, Role role, boolean result) {
+    assertEquals(result,
+        JwtPrincipalUtil.hasConcreteRole(createJwtAuthenticationToken(claims),
+            role)
+    );
+
+    assertEquals(result,JwtPrincipalUtil.hasConcreteRole(createJwt(claims), role));
+  }
+
+  @ParameterizedTest
+  @MethodSource("abstractRoles")
+  @DisplayName("has abstract role?")
+  void shouldCheckAbstractRole(
+      Map<String, Object> claims,
+      Role role,
+      String client,
+      boolean result
+  ) {
+    assertEquals(result,
+        JwtPrincipalUtil.hasAbstractRole(
+            createJwtAuthenticationToken(claims),
+            role,
+            client
+        )
+    );
+
+    assertEquals(result,
+        JwtPrincipalUtil.hasAbstractRole(
+            createJwt(claims),
+            role,
+            client
+        )
+    );
+  }
+
+  private JwtAuthenticationToken createJwtAuthenticationToken(
       Map<String, Object> attributes) {
     return new JwtAuthenticationToken(createJwt(attributes), List.of());
   }
@@ -360,7 +404,7 @@ class JwtPrincipalUtilTest {
     JwtAuthenticationToken jwtAuthenticationToken =
         tokenAttributes == null
             ? null
-            : createJwtAuthenticationTokenWithAttributes(tokenAttributes);
+            : createJwtAuthenticationToken(tokenAttributes);
 
     Set<String> actualGroups = JwtPrincipalUtil.getGroups(jwtAuthenticationToken);
 
@@ -380,5 +424,173 @@ class JwtPrincipalUtilTest {
             Set.of()),
         Arguments.of(Map.of("otherKey", "someValue"), Set.of()),
         Arguments.of(null, Set.of()));
+  }
+
+  private static Stream<Arguments> concreteRoles(){
+    return
+        Stream.of(
+            Arguments.argumentSet(
+                "Concrete role I have",
+                Map.of(
+                    "cognito:groups", List.of(
+                        "Viewer",
+                        "Submitter_00012120",
+                        "Approver_00010040",
+                        "Admin_00000111"
+                    )
+                ),
+                Role.VIEWER,
+                true
+            ),
+            Arguments.argumentSet(
+                "Concrete role I don't have",
+                Map.of(
+                    "cognito:groups", List.of(
+                        "Submitter_00012120",
+                        "Approver_00010040",
+                        "Admin_00000111"
+                    )
+                ),
+                Role.VIEWER,
+                false
+            ),
+            Arguments.argumentSet(
+                "Abstract role I have",
+                Map.of(
+                    "cognito:groups", List.of(
+                        "Viewer",
+                        "Submitter_00012120",
+                        "Approver_00010040",
+                        "Admin_00000111"
+                    )
+                ),
+                Role.ADMIN,
+                false
+            ),
+            Arguments.argumentSet(
+                "Abstract role I don't have",
+                Map.of(
+                    "cognito:groups", List.of(
+                        "Viewer",
+                        "Submitter_00012120",
+                        "Approver_00010040"
+                    )
+                ),
+                Role.ADMIN,
+                false
+            )
+        );
+  }
+
+  private static Stream<Arguments> abstractRoles(){
+    return
+        Stream.of(
+            Arguments.argumentSet(
+                "Concrete role I have for client 00012120",
+                Map.of(
+                    "cognito:groups", List.of(
+                        "Viewer",
+                        "Submitter_00012120",
+                        "Approver_00010040",
+                        "Admin_00000111"
+                    )
+                ),
+                Role.VIEWER,
+                "00012120",
+                false
+            ),
+            Arguments.argumentSet(
+                "Concrete role I don't have for client 00012120",
+                Map.of(
+                    "cognito:groups", List.of(
+                        "Submitter_00012120",
+                        "Approver_00010040",
+                        "Admin_00000111"
+                    )
+                ),
+                Role.VIEWER,
+                "00012120",
+                false
+            ),
+            Arguments.argumentSet(
+                "Abstract role I have for client 00000111",
+                Map.of(
+                    "cognito:groups", List.of(
+                        "Viewer",
+                        "Submitter_00012120",
+                        "Approver_00010040",
+                        "Admin_00000111"
+                    )
+                ),
+                Role.ADMIN,
+                "00000111",
+                true
+            ),
+            Arguments.argumentSet(
+                "Abstract role I don't have for client 00000111",
+                Map.of(
+                    "cognito:groups", List.of(
+                        "Viewer",
+                        "Submitter_00012120",
+                        "Approver_00010040"
+                    )
+                ),
+                Role.ADMIN,
+                "00000111",
+                false
+            ),
+            Arguments.argumentSet(
+                "Abstract role I have for client 00000112 that I don't have",
+                Map.of(
+                    "cognito:groups", List.of(
+                        "Viewer",
+                        "Submitter_00012120",
+                        "Approver_00010040",
+                        "Admin_00000111"
+                    )
+                ),
+                Role.ADMIN,
+                "00000112",
+                false
+            )
+        );
+  }
+
+  private static Stream<Arguments> clients(){
+    return
+        Stream.of(
+            Arguments.argumentSet(
+                "Only concrete roles",
+                Map.of(
+                    "cognito:groups", List.of(
+                        "Viewer"
+                    )
+                ),
+                List.of()
+            ),
+            Arguments.argumentSet(
+                "Abstract with clients in all",
+                Map.of(
+                    "cognito:groups", List.of(
+                        "Submitter_00012120",
+                        "Approver_00010040",
+                        "Admin_00000111"
+                    )
+                ),
+                List.of("00010040", "00012120", "00000111")
+            ),
+            Arguments.argumentSet(
+                "Abstract with clients in some",
+                Map.of(
+                    "cognito:groups", List.of(
+                        "Submitter_00012120",
+                        "Approver",
+                        "Admin_00000111"
+                    )
+                ),
+                List.of("00012120", "00000111")
+            )
+
+        );
   }
 }
