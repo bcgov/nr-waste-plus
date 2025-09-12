@@ -36,6 +36,7 @@ public class ReportingUnitSearchParametersDto {
   private String timberMark;
   private String clientLocationCode;
   private String clientNumber;
+  private List<String> clientNumbers;
 
   public List<String> getDistrict() {
     if (district == null || district.isEmpty()) {
@@ -56,6 +57,13 @@ public class ReportingUnitSearchParametersDto {
       return List.of(LegacyConstants.NOVALUE);
     }
     return status;
+  }
+
+  public List<String> getClientNumbers() {
+    if (clientNumbers == null || clientNumbers.isEmpty()) {
+      return List.of(LegacyConstants.NOVALUE);
+    }
+    return clientNumbers;
   }
 
   public String getRequestUserId() {
