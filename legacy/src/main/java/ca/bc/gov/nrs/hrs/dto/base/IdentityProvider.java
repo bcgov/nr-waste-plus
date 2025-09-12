@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.dto.base;
 import java.util.Arrays;
 import java.util.Optional;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /** Enumeration of the identity providers our application works with. */
@@ -12,6 +13,7 @@ public enum IdentityProvider {
   BUSINESS_BCEID("bceidbusiness"),
   BCSC("bcsc");
 
+  @Getter
   private final String claimName;
 
   /**

@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import org.junit.jupiter.api.DisplayName;
@@ -45,6 +46,52 @@ class SearchEndpointReportingUnitIntegrationTest extends AbstractTestContainerIn
   @Test
   @DisplayName("Should search reporting units with client number")
   void shouldSearchReportingUnitsWithClientNumber() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .param("page", "0")
+                .param("size", "10")
+                .param("clientNumber", "00010004")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.content[0].ruNumber").value(34906))
+        .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
+        .andExpect(jsonPath("$.page.size").value(10))
+        .andExpect(jsonPath("$.page.totalElements").value(32))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Search reporting units with client number not being idir and fail")
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"Submitter_00070002","Viewer"}
+  )
+  void shouldSearchReportingUnitsWithClientNumberNotIdir() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .param("page", "0")
+                .param("size", "10")
+                .param("clientNumber", "00010004")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.page.size").value(10))
+        .andExpect(jsonPath("$.page.totalElements").value(37))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Search reporting units with client number not being idir and get it")
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"Submitter_00010004","Viewer"}
+  )
+  void shouldSearchReportingUnitsWithClientNumberNotIdirSuccess() throws Exception {
     mockMvc
         .perform(
             get("/api/search/reporting-units")

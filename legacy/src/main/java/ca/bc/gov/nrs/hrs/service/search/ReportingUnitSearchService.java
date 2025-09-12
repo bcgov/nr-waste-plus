@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -49,8 +50,18 @@ public class ReportingUnitSearchService {
   @NewSpan
   public Page<ReportingUnitSearchResultDto> search(
       ReportingUnitSearchParametersDto filters,
-      Pageable page
+      Pageable page,
+      List<String> userClientNumbers
   ) {
+
+    // #128: limit query by client numbers provided by the roles
+    if(StringUtils.isNotBlank(filters.getClientNumber())){
+      if(userClientNumbers.isEmpty() || userClientNumbers.contains(filters.getClientNumber())){
+        filters.setClientNumbers(List.of(filters.getClientNumber()));
+      }
+    } else {
+      filters.setClientNumbers(userClientNumbers);
+    }
 
     log.info("Searching reporting units with filters: {}, pageable: {}", filters, page);
 

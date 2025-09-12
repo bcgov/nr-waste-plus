@@ -73,7 +73,7 @@ public class QueryConstants {
              NVL(:#{#filter.clientLocationCode},'NOVALUE') = 'NOVALUE' OR wru.CLIENT_LOCN_CODE = :#{#filter.clientLocationCode}
            )
          AND (
-             NVL(:#{#filter.clientNumber},'NOVALUE') = 'NOVALUE' OR wru.CLIENT_NUMBER = :#{#filter.clientNumber}
+             'NOVALUE' in (:#{#filter.clientNumbers}) OR wru.CLIENT_NUMBER IN (:#{#filter.clientNumbers})
            )
          AND (
             (
