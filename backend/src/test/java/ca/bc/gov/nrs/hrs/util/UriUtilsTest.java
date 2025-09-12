@@ -20,7 +20,7 @@ class UriUtilsTest {
     MapAssert<String, List<String>> assertion = assertThat(UriUtils.buildMultiValueQueryParam("test", values))
         .isNotNull();
 
-    if(results == null || results.isEmpty()){
+    if (results == null || results.isEmpty()) {
       assertion.isEmpty();
     } else {
       assertion
