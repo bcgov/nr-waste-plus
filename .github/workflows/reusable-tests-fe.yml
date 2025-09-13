@@ -26,7 +26,7 @@ jobs:
       VITE_COVERAGE: true
       VITE_PORT: 3000
     steps:
-      - uses: bcgov/action-test-and-analyse@main # v1.3.1
+      - uses: bcgov/action-test-and-analyse@39bc4df8ca98a61e1f841b745c1a9b8e5860b3ef # v1.4.0
         id: tests
         env:
           VITE_APP_NAME: Waste Plus
