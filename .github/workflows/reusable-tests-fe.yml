@@ -26,7 +26,8 @@ jobs:
       VITE_COVERAGE: true
       VITE_PORT: 3000
     steps:
-      - uses: bcgov/action-test-and-analyse@8f4187df47aaf4d3da55da4cb66b97e1adeef731 # v1.3.1
+      - uses: bcgov/action-test-and-analyse@main # v1.3.1
+        id: tests
         env:
           VITE_APP_NAME: Waste Plus
           VITE_FEATURES_OFFLINE: true
@@ -54,7 +55,7 @@ jobs:
           triggers: ('frontend/')
 
       - name: Annotate PR with frontend test results
-        if: always()
+        if: steps.tests.outputs.triggered == 'true'
         uses: dorny/test-reporter@v1
         with:
           name: Frontend Unit Tests
