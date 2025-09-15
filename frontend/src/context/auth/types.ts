@@ -25,6 +25,8 @@ export enum Role {
   APPROVER = 'APPROVER',
   PLANNER = 'PLANNER',
   ADMIN = 'ADMIN',
+  IDIR = 'IDIR',
+  BCeID = 'BCeID',
 }
 
 export const roleTypeMap: Record<Role, RoleType> = {
@@ -33,6 +35,8 @@ export const roleTypeMap: Record<Role, RoleType> = {
   [Role.APPROVER]: RoleType.ABSTRACT,
   [Role.PLANNER]: RoleType.ABSTRACT,
   [Role.ADMIN]: RoleType.ABSTRACT,
+  [Role.IDIR]: RoleType.CONCRETE,
+  [Role.BCeID]: RoleType.CONCRETE,
 };
 
 export type FamRole = {

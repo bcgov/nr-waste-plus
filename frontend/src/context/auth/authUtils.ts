@@ -60,6 +60,10 @@ export const parseToken = (idToken: JWT | undefined): FamLoginUser | undefined =
   const email = (decodedIdToken?.['email'] as string) || '';
   const cognitoGroups = extractGroups(decodedIdToken);
   const roles = extractRoles(cognitoGroups);
+  roles.push(
+    idpProvider === 'IDIR' ? { role: Role.IDIR, clients: [] } : { role: Role.BCeID, clients: [] },
+  );
+
   return {
     userName,
     displayName,
