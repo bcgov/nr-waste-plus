@@ -1,7 +1,7 @@
 import { Search } from '@carbon/icons-react';
 import { Button, Column, Grid } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
-import { useState, type FC } from 'react';
+import { useEffect, useState, type FC } from 'react';
 
 import SearchInput from '@/components/Form/SearchInput';
 import TableResource from '@/components/Form/TableResource';
@@ -10,7 +10,7 @@ import API from '@/services/APIs';
 import { headers } from './constants';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { ForestClientDistrictDto } from '@/services/types';
+import type { MyForestClientDto } from '@/services/types';
 
 import './index.scss';
 
@@ -20,22 +20,15 @@ const MyClientListing: FC = () => {
   const [filter, setFilter] = useState<string>('');
 
   const { data, isLoading, isFetching, isError, refetch } = useQuery({
-    queryKey: [
-      'search',
-      'forest-client',
-      'districts',
-      { page: currentPage, size: pageSize, value: filter },
-    ],
-    queryFn: () => API.forestclient.searchForestClientsDistricts(filter, currentPage, pageSize),
-    enabled: true,
+    queryKey: ['search', 'my-forest-client', { page: currentPage, size: pageSize, value: filter }],
+    queryFn: () => API.forestclient.searchMyForestClients(filter, currentPage, pageSize),
+    enabled: false,
     gcTime: 0,
     staleTime: Infinity,
   });
 
   const executeSearch = () => {
-    if (filter && filter.trim().length > 0) {
-      setTimeout(refetch, 1);
-    }
+    setTimeout(refetch, 1);
   };
 
   const handlePageChange = ({ page, pageSize }: { page: number; pageSize: number }) => {
@@ -43,6 +36,11 @@ const MyClientListing: FC = () => {
     setPageSize(pageSize);
     executeSearch();
   };
+
+  useEffect(() => {
+    refetch();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <>
       <Column lg={16} md={8} sm={4} className="search-filters">
@@ -51,7 +49,7 @@ const MyClientListing: FC = () => {
             <SearchInput
               id="main-search"
               label="Search"
-              placeholder="Search by RU No. or Block ID"
+              placeholder="Search by name"
               value={filter ?? ''}
               onChange={setFilter}
             />
@@ -90,7 +88,7 @@ const MyClientListing: FC = () => {
         <TableResource
           id="districts-search"
           headers={headers}
-          content={data ?? ({} as PageableResponse<ForestClientDistrictDto>)}
+          content={data ?? ({} as PageableResponse<MyForestClientDto>)}
           loading={isLoading}
           error={!isFetching && isError}
           onPageChange={handlePageChange}

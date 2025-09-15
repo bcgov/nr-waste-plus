@@ -59,21 +59,21 @@ describe('ForestClientService', () => {
     expect(result).toEqual(mockData);
   });
 
-  it('search by districts', async () => {
+  it('search by my clients', async () => {
     const mockData = [
       {
-        client: { code: '789', description: 'District 789' },
+        client: { code: '789', description: 'Client 789' },
         submissionsCount: 2,
         blocksCount: 3,
         lastUpdate: '2020-01-01',
       },
     ];
     (service as any).doRequest = vi.fn().mockResolvedValue(mockData);
-    const result = await service.searchForestClientsDistricts('district', 1, 5);
+    const result = await service.searchMyForestClients('client', 1, 5);
     expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
       method: 'GET',
-      url: '/api/forest-clients/districts',
-      query: { page: 1, size: 5, value: 'district' },
+      url: '/api/forest-clients/clients',
+      query: { page: 1, size: 5, value: 'client' },
     });
     expect(result).toEqual(mockData);
   });

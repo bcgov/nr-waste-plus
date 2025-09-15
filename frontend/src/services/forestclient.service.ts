@@ -3,7 +3,7 @@ import { HttpClient, type APIConfig } from '@/config/api/types';
 import type {
   CodeDescriptionDto,
   ForestClientAutocompleteResultDto,
-  ForestClientDistrictDto,
+  MyForestClientDto,
   ForestClientDto,
 } from './types';
 import type { PageableResponse } from '@/components/Form/TableResource/types';
@@ -98,20 +98,20 @@ export class ForestClientService extends HttpClient {
   }
 
   /**
-   * Searches for forest client districts by value.
-   * @param value The search value for the district
+   * Searches for forest clients the user has access to.
+   * @param value the client name to search for.
    * @param page Optional page number for pagination
    * @param size Optional page size (default: 10)
-   * @returns Promise resolving to an array of ForestClientDistrictDto
+   * @returns Promise resolving to an array of MyForestClientDto
    */
-  searchForestClientsDistricts(
+  searchMyForestClients(
     value: string,
     page?: number,
     size: number = 10,
-  ): CancelablePromise<PageableResponse<ForestClientDistrictDto>> {
-    return this.doRequest<PageableResponse<ForestClientDistrictDto>>(this.config, {
+  ): CancelablePromise<PageableResponse<MyForestClientDto>> {
+    return this.doRequest<PageableResponse<MyForestClientDto>>(this.config, {
       method: 'GET',
-      url: '/api/forest-clients/districts',
+      url: '/api/forest-clients/clients',
       query: {
         page: page,
         size: size,

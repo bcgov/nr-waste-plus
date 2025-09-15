@@ -3,9 +3,9 @@ import RedirectLinkTag from '@/components/waste/RedirectLinkTag';
 import { env } from '@/env';
 
 import type { TableHeaderType } from '@/components/Form/TableResource/types';
-import type { ForestClientDistrictDto } from '@/services/types';
+import type { MyForestClientDto } from '@/services/types';
 
-export const headers: TableHeaderType<ForestClientDistrictDto>[] = [
+export const headers: TableHeaderType<MyForestClientDto>[] = [
   {
     key: 'client.code',
     header: 'Client No.',

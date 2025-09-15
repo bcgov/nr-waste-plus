@@ -31,7 +31,7 @@ const renderWithProviders = async (props = {}) => {
 
 describe('MyClientListing', () => {
   beforeEach(() => {
-    (APIs.forestclient.searchForestClientsDistricts as Mock).mockClear();
+    (APIs.forestclient.searchMyForestClients as Mock).mockClear();
   });
 
   it('renders search input and table', async () => {
@@ -49,7 +49,7 @@ describe('MyClientListing', () => {
     const searchBtn = screen.getAllByRole('button', { name: /search/i })[0];
     await userEvent.click(searchBtn);
     await waitFor(() => {
-      expect(APIs.forestclient.searchForestClientsDistricts).toHaveBeenCalledWith('test', 0, 10);
+      expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('test', 0, 10);
     });
   });
 });
