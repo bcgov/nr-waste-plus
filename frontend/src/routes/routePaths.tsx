@@ -1,16 +1,17 @@
-import { SearchLocate } from '@carbon/icons-react';
+import { Group, SearchLocate } from '@carbon/icons-react';
 import { Navigate, type RouteObject } from 'react-router-dom';
 
 import Layout from '@/components/Layout';
 import GlobalErrorPage from '@/pages/GlobalError';
 import LandingPage from '@/pages/Landing';
+import MyClientListPage from '@/pages/MyClientList';
 import NotFoundPage from '@/pages/NotFound';
 import RoleErrorPage from '@/pages/RoleError';
 import WasteSearchPage from '@/pages/WasteSearch';
 
 import ProtectedRoute from './ProtectedRoute';
 
-import type { FamRole } from '@/context/auth/types';
+import { Role, type FamRole } from '@/context/auth/types';
 
 export type RouteDescription = {
   id: string;
@@ -32,8 +33,8 @@ export type MenuItem = Pick<RouteDescription, 'id' | 'path' | 'icon'> & {
 export const SYSTEM_ROUTES: RouteDescription[] = [
   {
     path: '*',
-    id: 'Not Found',
-    element: <NotFoundPage />,
+    id: 'Not Found, Redirect',
+    element: <Navigate to="/" replace />,
     isSideMenu: false,
   },
   {
@@ -93,6 +94,19 @@ export const ROUTES: RouteDescription[] = [
     element: <Navigate to="/search" replace />,
     isSideMenu: false,
     protected: true,
+  },
+  {
+    path: '/clients',
+    id: 'My clients',
+    icon: Group,
+    element: (
+      <Layout>
+        <MyClientListPage />
+      </Layout>
+    ),
+    isSideMenu: true,
+    protected: true,
+    roles: [{ role: Role.BCeID, clients: [] }],
   },
   {
     path: '/search',

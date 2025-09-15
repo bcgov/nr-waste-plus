@@ -44,3 +44,10 @@ export type ForestClientAutocompleteResultDto = {
   name?: string;
   acronym?: string;
 };
+
+export type ForestClientDistrictDto = {
+  client: CodeDescriptionDto;
+  submissionsCount: number;
+  blocksCount: number;
+  lastUpdate: string;
+};
