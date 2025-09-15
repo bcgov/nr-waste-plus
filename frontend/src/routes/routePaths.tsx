@@ -2,6 +2,7 @@ import { Group, SearchLocate } from '@carbon/icons-react';
 import { Navigate, type RouteObject } from 'react-router-dom';
 
 import Layout from '@/components/Layout';
+import { Role, type FamRole } from '@/context/auth/types';
 import GlobalErrorPage from '@/pages/GlobalError';
 import LandingPage from '@/pages/Landing';
 import MyClientListPage from '@/pages/MyClientList';
@@ -10,8 +11,6 @@ import RoleErrorPage from '@/pages/RoleError';
 import WasteSearchPage from '@/pages/WasteSearch';
 
 import ProtectedRoute from './ProtectedRoute';
-
-import { Role, type FamRole } from '@/context/auth/types';
 
 export type RouteDescription = {
   id: string;
@@ -132,7 +131,7 @@ const hasAccess = (route: RouteDescription, isOnline: boolean, roles: FamRole[])
   if (!route.protected) return true;
   if (!filterByOnlineStatus(route, isOnline)) return false;
   if (!route.roles || route.roles.length === 0) return true;
-  return route.roles.some((role) => roles.includes(role));
+  return route.roles.some((role) => roles.map((userRole) => userRole.role).includes(role.role));
 };
 
 const filterRoutesRecursively = (
