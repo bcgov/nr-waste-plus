@@ -2,7 +2,9 @@ package ca.bc.gov.nrs.hrs.controller;
 
 import static ca.bc.gov.nrs.hrs.BackendConstants.X_TOTAL_COUNT;
 import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE;
+import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.MY_FOREST_CLIENTS_LEGACY;
 import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST;
+import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE;
 import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.TWO_LOCATIONS_LIST;
 import static com.github.tomakehurst.wiremock.client.WireMock.badRequest;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -15,6 +17,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
+import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
@@ -25,6 +28,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import java.util.stream.Stream;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -33,6 +37,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -51,6 +56,18 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
           .options(
               wireMockConfig()
                   .port(10000)
+                  .notifier(new WiremockLogNotifier())
+                  .asynchronousResponseEnabled(true)
+                  .stubRequestLoggingDisabled(false))
+          .configureStaticDsl(true)
+          .build();
+
+  @RegisterExtension
+  static WireMockExtension legacyApiStub =
+      WireMockExtension.newInstance()
+          .options(
+              wireMockConfig()
+                  .port(10001)
                   .notifier(new WiremockLogNotifier())
                   .asynchronousResponseEnabled(true)
                   .stubRequestLoggingDisabled(false))
@@ -204,6 +221,76 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
 
   }
 
+  @ParameterizedTest
+  @MethodSource("fetchMyClients")
+  @DisplayName("Fetch my client")
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"Approver_00010004","Approver_00012797"}
+  )
+  void fetchMyClientsWithValue(
+      String value,
+      ResponseDefinitionBuilder apiStub,
+      ResponseDefinitionBuilder legacyStub,
+      boolean hasResults
+  ) throws Exception {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/clients/search"))
+            .willReturn(apiStub));
+
+    legacyApiStub.stubFor(
+        get(urlPathEqualTo("/api/search/my-forest-clients"))
+            .willReturn(legacyStub));
+
+    var requestBuilder =  MockMvcRequestBuilders
+        .get("/api/forest-clients/clients")
+        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .accept(MediaType.APPLICATION_JSON);
+
+    if (StringUtils.isNotBlank(value))
+      requestBuilder = requestBuilder.queryParam("value",value);
+
+    ResultActions response = mockMvc
+        .perform(requestBuilder)
+        .andExpect(MockMvcResultMatchers.status().isOk());
+
+    if (hasResults) {
+      response
+          .andExpect(content().contentType("application/json"))
+          .andExpect(jsonPath("$.content.[0].client.code").value("00012797"))
+          .andExpect(jsonPath("$.content.[0].client.description").value("MINISTRY OF FORESTS"))
+          .andReturn();
+    } else {
+      response.andExpect(jsonPath("$.content").isEmpty());
+    }
+
+  }
+
+  private static Stream<Arguments> fetchMyClients(){
+    return Stream.of(
+        Arguments.argumentSet(
+            "No arguments, with return",
+            null,
+            okJson(ONE_BY_VALUE_LIST),
+            okJson(MY_FOREST_CLIENTS_LEGACY),
+            true
+        ),
+        Arguments.argumentSet(
+            "With arguments, with return",
+            "forest",
+            okJson(ONE_BY_VALUE_LIST),
+            okJson(MY_FOREST_CLIENTS_LEGACY),
+            true
+        ),
+        Arguments.argumentSet(
+            "With arguments, no return",
+            "kelp",
+            okJson("[]"),
+            okJson(REPORTING_UNITS_EMPTY_SEARCH_RESPONSE),
+            false
+        )
+    );
+  }
 
   private static Stream<Arguments> fetchClientByNumber() {
     return Stream.of(

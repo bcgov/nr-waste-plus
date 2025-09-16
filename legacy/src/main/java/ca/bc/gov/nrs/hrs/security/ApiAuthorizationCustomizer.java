@@ -1,10 +1,14 @@
 package ca.bc.gov.nrs.hrs.security;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,11 +16,13 @@ import org.springframework.stereotype.Component;
  * defined.
  */
 @Component
+@RequiredArgsConstructor
 public class ApiAuthorizationCustomizer implements
     Customizer<
         AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry
         > {
 
+  private final JwtRoleAuthorizationManagerFactory roleCheck;
   /**
    * The environment of the application, which is injected from the application properties. The
    * default value is "PROD".

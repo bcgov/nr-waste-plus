@@ -237,7 +237,8 @@ public class ForestClientApiProvider {
   public List<ForestClientDto> searchClientsByIds(
       int page,
       int size,
-      List<String> values
+      List<String> values,
+      String name
   ) {
     try {
       log.info("Starting {} request to /clients/search", PROVIDER);
@@ -250,6 +251,7 @@ public class ForestClientApiProvider {
                   .queryParam("page", page)
                   .queryParam("size", size)
                   .queryParams(UriUtils.buildMultiValueQueryParam("id", values))
+                  .queryParamIfPresent("name", Optional.ofNullable(name))
                   .build(Map.of())
           )
           .retrieve()
@@ -300,6 +302,7 @@ public class ForestClientApiProvider {
       int page,
       int size,
       List<String> values,
+      String name,
       Throwable ex
   ){
     return List.of();

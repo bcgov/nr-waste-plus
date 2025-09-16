@@ -2,10 +2,10 @@ package ca.bc.gov.nrs.hrs.util;
 
 
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Pageable;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -30,5 +30,19 @@ public class UriUtils {
           .forEach(value -> map.add(key, value));
     }
     return map;
+  }
+
+  public static MultiValueMap<String, String> buildPageableQueryParam(
+      Pageable page
+  ) {
+    MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
+    if (page != null) {
+      multiValueMap.add("page", String.valueOf(page.getPageNumber()));
+      multiValueMap.add("size", String.valueOf(page.getPageSize()));
+      if (page.getSort().isSorted()) {
+        multiValueMap.add("sort", page.getSort().toString().replace(": ", ","));
+      }
+    }
+    return multiValueMap;
   }
 }

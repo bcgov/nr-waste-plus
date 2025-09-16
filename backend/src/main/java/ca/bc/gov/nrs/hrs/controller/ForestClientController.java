@@ -1,15 +1,22 @@
 package ca.bc.gov.nrs.hrs.controller;
 
-import ca.bc.gov.nrs.hrs.BackendConstants;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientAutocompleteResultDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
+import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
+import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.service.ForestClientService;
+import ca.bc.gov.nrs.hrs.service.SearchService;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,7 +24,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 
 /**
  * This class holds resources for the Forest Client API interaction.
@@ -29,6 +35,7 @@ import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 public class ForestClientController {
 
   private final ForestClientService forestClientService;
+  private final SearchService searchService;
 
   /**
    * Get a {@link ForestClientDto} given a client number.
@@ -64,12 +71,12 @@ public class ForestClientController {
 
     // #128: BCeID should filter out on client side, we increase the size to get more results.
     if (JwtPrincipalUtil.getIdentityProvider(jwt).equals(IdentityProvider.BUSINESS_BCEID)) {
-      if (clientsFromRoles.isEmpty())
+      if (clientsFromRoles.isEmpty()) {
         return List.of(); // Abstract with no roles should not search
+      }
       // #128: Increased to 100, so we can filter down on our side.
       size = 100;
     }
-
 
     // #128 IDIR users should search unrestricted. Abstract filter out based on clients on role
     List<String> clients = JwtPrincipalUtil.getIdentityProvider(jwt).equals(IdentityProvider.IDIR)
@@ -95,7 +102,18 @@ public class ForestClientController {
       @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
       @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
       @RequestParam(value = "values") List<String> values) {
-    return forestClientService.searchByClientNumbers(page, size, values);
+    return forestClientService.searchByClientNumbers(page, size, values, null);
+  }
+
+  @GetMapping("/clients")
+  public Page<MyForestClientSearchResultDto> searchMyForestClients(
+      @RequestParam(required = false, defaultValue = StringUtils.EMPTY) String value,
+      @PageableDefault(sort = "lastUpdate", direction = Direction.DESC)
+      Pageable pageable,
+      @AuthenticationPrincipal Jwt jwt
+  ) {
+    return searchService.searchByMyForestClient(pageable, value,
+        JwtPrincipalUtil.getClientFromRoles(jwt));
   }
 
 }

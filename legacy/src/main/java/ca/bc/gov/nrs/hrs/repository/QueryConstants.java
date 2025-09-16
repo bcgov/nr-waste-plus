@@ -114,4 +114,48 @@ public class QueryConstants {
       )
       WHERE UTL_MATCH.JARO_WINKLER_SIMILARITY(REGEXP_SUBSTR(USERID, '[^\\\\]+$'),:userId) >= 90""";
 
+  public static final String MY_DISTRICTS_WAA = """
+        SELECT
+          REPORTING_UNIT_ID,
+          COUNT(*) AS VALID_BLOCK_COUNT,
+          MAX(UPDATE_TIMESTAMP) AS LAST_WAA_UPDATE
+        FROM THE.WASTE_ASSESSMENT_AREA
+        WHERE DRAFT_CUT_BLOCK_ID IS NOT NULL
+        GROUP BY REPORTING_UNIT_ID""";
+
+  public static final String MY_DISTRICTS_WRU = """
+      SELECT
+           WRU.CLIENT_NUMBER,
+           COUNT(*) AS SUBMISSIONS_COUNT,
+           MAX(WRU.UPDATE_TIMESTAMP) AS LAST_WRU_UPDATE,
+           SUM(COALESCE(VBC.VALID_BLOCK_COUNT, 0)) AS BLOCKS_COUNT,
+           MAX(VBC.LAST_WAA_UPDATE) AS LAST_WAA_UPDATE
+         FROM THE.WASTE_REPORTING_UNIT WRU
+         LEFT JOIN ValidBlockCounts VBC
+           ON WRU.REPORTING_UNIT_ID = VBC.REPORTING_UNIT_ID
+         WHERE WRU.CLIENT_NUMBER IN (:clientNumbers)
+         GROUP BY WRU.CLIENT_NUMBER""";
+
+  public static final String MY_DISTRICTS_STATUS = """
+      SELECT
+      CLIENT_NUMBER,
+      SUBMISSIONS_COUNT,
+      BLOCKS_COUNT,
+      GREATEST(
+        COALESCE(LAST_WRU_UPDATE, TO_TIMESTAMP('1900-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS')),
+        COALESCE(LAST_WAA_UPDATE, TO_TIMESTAMP('1900-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS'))
+      ) AS LAST_UPDATE
+      FROM ClientStats
+      """;
+
+  public static final String MY_DISTRICTS_QUERY =
+      "WITH ValidBlockCounts AS ("+MY_DISTRICTS_WAA+"),"
+      + "ClientStats AS ("+MY_DISTRICTS_WRU+")"
+      + MY_DISTRICTS_STATUS;
+
+  public static final String MY_DISTRICTS_COUNT =
+      "WITH ValidBlockCounts AS ("+MY_DISTRICTS_WAA+"),"
+      + "ClientStats AS ("+MY_DISTRICTS_WRU+")"
+      + "SELECT count(1) FROM ClientStats";
+
 }

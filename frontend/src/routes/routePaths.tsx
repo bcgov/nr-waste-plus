@@ -1,16 +1,16 @@
-import { SearchLocate } from '@carbon/icons-react';
+import { Group, SearchLocate } from '@carbon/icons-react';
 import { Navigate, type RouteObject } from 'react-router-dom';
 
 import Layout from '@/components/Layout';
+import { Role, type FamRole } from '@/context/auth/types';
 import GlobalErrorPage from '@/pages/GlobalError';
 import LandingPage from '@/pages/Landing';
+import MyClientListPage from '@/pages/MyClientList';
 import NotFoundPage from '@/pages/NotFound';
 import RoleErrorPage from '@/pages/RoleError';
 import WasteSearchPage from '@/pages/WasteSearch';
 
 import ProtectedRoute from './ProtectedRoute';
-
-import type { FamRole } from '@/context/auth/types';
 
 export type RouteDescription = {
   id: string;
@@ -32,8 +32,8 @@ export type MenuItem = Pick<RouteDescription, 'id' | 'path' | 'icon'> & {
 export const SYSTEM_ROUTES: RouteDescription[] = [
   {
     path: '*',
-    id: 'Not Found',
-    element: <NotFoundPage />,
+    id: 'Not Found, Redirect',
+    element: <Navigate to="/" replace />,
     isSideMenu: false,
   },
   {
@@ -95,6 +95,19 @@ export const ROUTES: RouteDescription[] = [
     protected: true,
   },
   {
+    path: '/clients',
+    id: 'My clients',
+    icon: Group,
+    element: (
+      <Layout>
+        <MyClientListPage />
+      </Layout>
+    ),
+    isSideMenu: true,
+    protected: true,
+    roles: [{ role: Role.BCeID, clients: [] }],
+  },
+  {
     path: '/search',
     id: 'Waste search',
     icon: SearchLocate,
@@ -118,7 +131,7 @@ const hasAccess = (route: RouteDescription, isOnline: boolean, roles: FamRole[])
   if (!route.protected) return true;
   if (!filterByOnlineStatus(route, isOnline)) return false;
   if (!route.roles || route.roles.length === 0) return true;
-  return route.roles.some((role) => roles.includes(role));
+  return route.roles.some((role) => roles.map((userRole) => userRole.role).includes(role.role));
 };
 
 const filterRoutesRecursively = (

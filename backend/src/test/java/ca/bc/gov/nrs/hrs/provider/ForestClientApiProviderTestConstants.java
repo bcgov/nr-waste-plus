@@ -142,4 +142,23 @@ public class ForestClientApiProviderTestConstants {
           "locationName": "Vanderhoof"
         }
       ]""";
+
+  public static final String MY_FOREST_CLIENTS_LEGACY = """
+      {
+        "content": [{
+            "client": {
+                "code": "00012797",
+                "description": null
+            },
+            "submissionsCount": 2,
+            "blocksCount": 2,
+            "lastUpdate": "2024-08-20T14:22:31"
+        }],
+        "page": {
+            "size": 10,
+            "number": 0,
+            "totalElements": 0,
+            "totalPages": 0
+        }
+      }""";
 }

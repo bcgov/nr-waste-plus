@@ -1,8 +1,10 @@
 package ca.bc.gov.nrs.hrs.provider;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import ca.bc.gov.nrs.hrs.util.UriUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -10,6 +12,7 @@ import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
@@ -24,6 +27,7 @@ import org.springframework.web.client.RestClient;
 @Observed
 public class LegacyApiProvider {
 
+  public static final String FALLBACK_ERROR = "Error occurred while fetching data from {}: {}";
   private final RestClient restClient;
   private final ObjectMapper mapper;
 
@@ -121,8 +125,43 @@ public class LegacyApiProvider {
         });
   }
 
+  @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackSearchMyClients")
+  @NewSpan
+  public Page<MyForestClientSearchResultDto> searchMyClients(
+      Set<String> values,
+      Pageable pageable
+  ) {
+    log.info("Searching {} request to /api/search/my-forest-clients for values that match {}",
+        PROVIDER, values);
+
+    // Response is retrieved as JsonNode because the legacy sends back a page
+    // and a page cannot be deserialized
+    JsonNode pagedResponse = restClient
+        .get()
+        .uri(uriBuilder -> uriBuilder
+            .path("/api/search/my-forest-clients")
+            .queryParam("values", values)
+            .queryParams(UriUtils.buildPageableQueryParam(pageable))
+            .build(Map.of())
+        )
+        .retrieve()
+        .body(JsonNode.class);
+
+    List<MyForestClientSearchResultDto> results = mapper.convertValue(
+        pagedResponse.get("content"),
+        mapper.getTypeFactory()
+            .constructCollectionType(List.class, MyForestClientSearchResultDto.class)
+    );
+
+    return new PageImpl<>(
+        results,
+        pageable,
+        pagedResponse.get("page").get("totalElements").asLong()
+    );
+  }
+
   private List<CodeDescriptionDto> fallbackDistricts(Throwable throwable) {
-    log.error("Error occurred while fetching data from {}: {}", PROVIDER, throwable.getMessage());
+    log.error(FALLBACK_ERROR, PROVIDER, throwable.getMessage());
     return List.of(
         new CodeDescriptionDto("DCC", "Cariboo-Chilcotin Natural Resource District"),
         new CodeDescriptionDto("DMH", "100 Mile House Natural Resource District"),
@@ -151,12 +190,12 @@ public class LegacyApiProvider {
   }
 
   private List<CodeDescriptionDto> fallbackEmptyList(Throwable throwable) {
-    log.error("Error occurred while fetching data from {}: {}", PROVIDER, throwable.getMessage());
+    log.error(FALLBACK_ERROR, PROVIDER, throwable.getMessage());
     return List.of();
   }
 
   private List<String> fallbackEmptyUsersList(String userId, Throwable throwable) {
-    log.error("Error occurred while fetching data from {}: {}", PROVIDER, throwable.getMessage());
+    log.error(FALLBACK_ERROR, PROVIDER, throwable.getMessage());
     return List.of();
   }
 
@@ -165,7 +204,16 @@ public class LegacyApiProvider {
       Pageable pageable,
       Throwable throwable
   ) {
-    log.error("Error occurred while fetching search from {}: {}", PROVIDER, throwable.getMessage());
+    log.error(FALLBACK_ERROR, PROVIDER, throwable.getMessage());
+    return new PageImpl<>(List.of(), pageable, 0);
+  }
+
+  private Page<MyForestClientSearchResultDto> fallbackSearchMyClients(
+      Set<String> values,
+      Pageable pageable,
+      Throwable throwable
+  ) {
+    log.error(FALLBACK_ERROR, PROVIDER, throwable.getMessage());
     return new PageImpl<>(List.of(), pageable, 0);
   }
 

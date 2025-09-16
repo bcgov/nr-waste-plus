@@ -1,0 +1,34 @@
+@use '@bcgov-nr/nr-theme/design-tokens/colors.scss' as colors;
+@use '../../styles/variables' as vars;
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/type' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+@use '@carbon/react/scss/theme' as *;
+
+.search-column__banner {
+  padding-top: $spacing-05;
+  padding-left: $spacing-06;
+  padding-bottom: calc($spacing-09 * 2);
+}
+
+.search-column__content {
+  padding-top: $spacing-09;
+  padding-bottom: $spacing-09;
+}
+
+.search-column__content {
+  margin-left: -1.25rem;
+  margin-right: -1.25rem;
+
+  @include breakpoint-down(md) {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+.search-column__banner {
+  @include breakpoint-down(md) {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}

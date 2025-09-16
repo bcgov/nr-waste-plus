@@ -30,7 +30,7 @@ const WasteSearchTable: FC = () => {
     queryFn: () => API.search.searchReportingUnit(filters, { page: currentPage, size: pageSize }),
     enabled: false,
     gcTime: 0,
-    staleTime: 0,
+    staleTime: Infinity,
   });
 
   const executeSearch = () => {

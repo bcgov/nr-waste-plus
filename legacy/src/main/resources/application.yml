@@ -132,7 +132,7 @@ logging:
   level:
     ca.bc.gov.restapi.results: ${LOGGING_LEVEL:INFO}
   pattern:
-    correlation: "[${spring.application.name:},%X{${X-TRACE-ID:traceId}:-},%X{spanId:-},%X{X-USER:-}] "
+    correlation: "[${spring.application.name:},%X{${X-B3-TraceId:traceId}:-},%X{${X-B3-SpanId:spanId}:-}] "
 
 # Profile Specific Properties
 ---
