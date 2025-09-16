@@ -63,8 +63,8 @@ public class ForestClientController {
     List<String> clientsFromRoles = JwtPrincipalUtil.getClientFromRoles(jwt);
 
     // #128: BCeID should filter out on client side, we increase the size to get more results.
-    if(JwtPrincipalUtil.getIdentityProvider(jwt).equals(IdentityProvider.BUSINESS_BCEID)) {
-      if(clientsFromRoles.isEmpty())
+    if (JwtPrincipalUtil.getIdentityProvider(jwt).equals(IdentityProvider.BUSINESS_BCEID)) {
+      if (clientsFromRoles.isEmpty())
         return List.of(); // Abstract with no roles should not search
       // #128: Increased to 100, so we can filter down on our side.
       size = 100;
