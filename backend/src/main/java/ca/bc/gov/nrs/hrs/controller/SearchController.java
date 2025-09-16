@@ -39,7 +39,7 @@ public class SearchController {
       Pageable pageable
   ) {
     // #128: BCeID should filter out on client side, we increase the size to get more results.
-    if (JwtPrincipalUtil.getIdentityProvider(jwt).equals(IdentityProvider.BUSINESS_BCEID)) {
+    if (IdentityProvider.BUSINESS_BCEID.equals(JwtPrincipalUtil.getIdentityProvider(jwt))) {
       if (!JwtPrincipalUtil.getClientFromRoles(jwt).contains(filters.getClientNumber())) {
         throw new InvalidSelectedValueException(
             "Selected client number " + filters.getClientNumber() + " is not valid");
