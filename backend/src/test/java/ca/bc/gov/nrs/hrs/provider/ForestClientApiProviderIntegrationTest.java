@@ -146,7 +146,7 @@ class ForestClientApiProviderIntegrationTest extends AbstractTestContainerIntegr
 
     clientApiStub.stubFor(get(urlPathEqualTo("/clients/search")).willReturn(stub));
 
-    var clients = forestClientApiProvider.searchClientsByIds(page, size, List.of(value));
+    var clients = forestClientApiProvider.searchClientsByIds(page, size, List.of(value), null);
     Assertions.assertEquals(expectedSize, clients.size());
   }
 

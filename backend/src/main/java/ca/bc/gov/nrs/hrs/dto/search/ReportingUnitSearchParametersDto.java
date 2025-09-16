@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.dto.search;
 
+import ca.bc.gov.nrs.hrs.util.UriUtils;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -96,13 +97,7 @@ public class ReportingUnitSearchParametersDto {
       multiValueMap.add("updateDateEnd", updateDateEnd.format(DateTimeFormatter.ISO_LOCAL_DATE));
     }
 
-    if (page != null) {
-      multiValueMap.add("page", String.valueOf(page.getPageNumber()));
-      multiValueMap.add("size", String.valueOf(page.getPageSize()));
-      if (page.getSort().isSorted()) {
-        multiValueMap.add("sort", page.getSort().toString().replace(": ", ","));
-      }
-    }
+    multiValueMap.addAll(UriUtils.buildPageableQueryParam(page));
 
     return multiValueMap;
   }

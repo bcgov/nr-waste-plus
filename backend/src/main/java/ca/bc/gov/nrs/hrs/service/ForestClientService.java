@@ -95,12 +95,11 @@ public class ForestClientService {
   public List<ForestClientDto> searchByClientNumbers(
       int page,
       int size,
-      List<String> values
+      List<String> values,
+      String name
   ) {
     log.info("Searching forest client by ids {}, page: {}, size: {}", values, page, size);
-    List<ForestClientDto> response = forestClientApiProvider.searchClientsByIds(page, size, values);
-    log.info("Found {} for {}",response,values);
-    return response;
+    return forestClientApiProvider.searchClientsByIds(page, size, values,name);
   }
 
   private String checkClientNumber(String clientNumber) {

@@ -9,6 +9,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.testcontainers.shaded.org.checkerframework.checker.signature.qual.MethodDescriptor;
 
 @DisplayName("Unit Test | UriUtils")
 class UriUtilsTest {
@@ -32,6 +37,31 @@ class UriUtilsTest {
 
   }
 
+  @ParameterizedTest
+  @MethodSource("buildPageableQueryParam")
+  @DisplayName("building pageable map")
+  void shouldBuildPageable(
+      Pageable page, boolean isEmpty, int size, int pageNumber, String sort
+  ){
+    MapAssert<String, List<String>> assertion = assertThat(UriUtils.buildPageableQueryParam(page))
+        .isNotNull();
+
+    if (isEmpty) {
+      assertion.isEmpty();
+    } else {
+      assertion
+          .isNotEmpty()
+          .hasSize(sort == null || sort.isBlank() ? 2 : 3)
+          .hasFieldOrPropertyWithValue("size",List.of(String.valueOf(size)))
+          .hasFieldOrPropertyWithValue("page",List.of(String.valueOf(pageNumber)));
+
+      if (sort != null && !sort.isBlank()) {
+        assertion.hasFieldOrPropertyWithValue("sort",List.of(sort));
+      }
+    }
+
+  }
+
   private static Stream<Arguments> buildMultiValueQueryParam(){
     return
         Stream.of(
@@ -51,6 +81,38 @@ class UriUtilsTest {
                 "Values on list",
                 List.of("james", "john","don"),List.of("james", "john","don")
             )
+        );
+  }
+
+  private static Stream<Arguments> buildPageableQueryParam(){
+    return
+        Stream.of(
+            Arguments.argumentSet(
+                "Null values",
+                null,
+                true, 0, 0, ""
+            ),
+            Arguments.argumentSet(
+                "Empty values",
+                PageRequest.ofSize(10),
+                false, 10, 0, ""
+            ),
+            Arguments.argumentSet(
+                "No sort",
+                PageRequest.of(3, 12),
+                false, 12, 3, ""
+            ),
+            Arguments.argumentSet(
+                "Sort",
+                PageRequest.of(0, 10, Direction.DESC,"name"),
+                false, 10, 0, "name,DESC"
+            ),
+            Arguments.argumentSet(
+                "Sort",
+                PageRequest.of(0,10, Sort.by(Direction.DESC,"name")),
+                false, 10, 0, "name,DESC"
+            )
+
         );
   }
 
