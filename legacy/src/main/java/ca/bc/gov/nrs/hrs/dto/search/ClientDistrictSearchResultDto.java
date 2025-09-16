@@ -8,5 +8,5 @@ public record ClientDistrictSearchResultDto(
   Long submissionsCount,
   Long blocksCount,
   LocalDateTime lastUpdate
-){
+) {
 }
