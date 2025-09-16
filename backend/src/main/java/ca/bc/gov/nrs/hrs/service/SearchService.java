@@ -111,7 +111,7 @@ public class SearchService {
     if (StringUtils.isNotBlank(value)) {
       log.info("Filtering search by clients: {}", response.keySet());
 
-      if(response.isEmpty()){
+      if (response.isEmpty()) {
         return new PageImpl<>(List.of(), PageRequest.of(0,10),0);
       }
     }
