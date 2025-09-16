@@ -34,7 +34,7 @@ class CodesEndpointIntegrationTest extends AbstractTestContainerIntegrationTest 
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json"))
         .andExpect(jsonPath("$[0].code").value("DCC"))
-        .andExpect(jsonPath("$[0].description").value("Cariboo-Chilcotin Natural Resource District"))
+        .andExpect(jsonPath("$[0].description").value("Cariboo-Chilcotin"))
         .andReturn();
   }
 

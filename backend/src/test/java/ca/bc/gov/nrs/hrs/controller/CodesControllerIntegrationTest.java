@@ -67,7 +67,7 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   @DisplayName("Get districts happy Path should Succeed")
   void getDistricts_happyPath_shouldSucceed() throws Exception {
     CodeDescriptionDto category = new CodeDescriptionDto("DCC",
-        "Cariboo-Chilcotin Natural Resource District");
+        "Cariboo-Chilcotin");
 
     mockMvc
         .perform(
