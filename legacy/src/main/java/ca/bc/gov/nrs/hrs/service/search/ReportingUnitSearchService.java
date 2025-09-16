@@ -55,8 +55,8 @@ public class ReportingUnitSearchService {
   ) {
 
     // #128: limit query by client numbers provided by the roles
-    if(StringUtils.isNotBlank(filters.getClientNumber())){
-      if(userClientNumbers.isEmpty() || userClientNumbers.contains(filters.getClientNumber())){
+    if (StringUtils.isNotBlank(filters.getClientNumber())) {
+      if (userClientNumbers.isEmpty() || userClientNumbers.contains(filters.getClientNumber())) {
         filters.setClientNumbers(List.of(filters.getClientNumber()));
       }
     } else {
