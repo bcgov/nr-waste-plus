@@ -42,7 +42,7 @@ class UriUtilsTest {
   @DisplayName("building pageable map")
   void shouldBuildPageable(
       Pageable page, boolean isEmpty, int size, int pageNumber, String sort
-  ){
+  ) {
     MapAssert<String, List<String>> assertion = assertThat(UriUtils.buildPageableQueryParam(page))
         .isNotNull();
 
