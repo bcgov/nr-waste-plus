@@ -247,7 +247,7 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
         .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
         .accept(MediaType.APPLICATION_JSON);
 
-    if(StringUtils.isNotBlank(value))
+    if (StringUtils.isNotBlank(value))
       requestBuilder = requestBuilder.queryParam("value",value);
 
     ResultActions response = mockMvc
