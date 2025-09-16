@@ -78,11 +78,12 @@ public class ReportingUnitSearchService {
   }
 
   public List<String> searchReportingUnitUsers(String userId, List<String> clientFromRoles) {
-    log.info(
-        "Searching possible users that matches {} withing reporting units that belongs to clients {}",
+    log.info("Searching users that matches {} withing reporting units that belongs to clients {}",
         userId, clientFromRoles);
+
     List<String> clients = clientFromRoles != null && !clientFromRoles.isEmpty() ? clientFromRoles
         : List.of(LegacyConstants.NOVALUE);
+
     return ruRepository
         .searchReportingUnitUsers(
             userId.toUpperCase(Locale.ROOT),

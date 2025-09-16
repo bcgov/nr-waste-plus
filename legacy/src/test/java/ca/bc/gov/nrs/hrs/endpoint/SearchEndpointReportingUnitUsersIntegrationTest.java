@@ -58,7 +58,26 @@ class SearchEndpointReportingUnitUsersIntegrationTest extends AbstractTestContai
   }
 
   @Test
+  @DisplayName("Lump Space Princess, I can see you")
+  void shouldReturnIfIdir() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units-users")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .param("userId", "lsp")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.length()").value(1))
+        .andReturn();
+  }
+
+  @Test
   @DisplayName("Lump Space Princess, where are you?")
+  @WithMockJwt(
+      cognitoGroups = {"Submitter_00010002","Viewer"},
+      idp = "bceidbusiness"
+  )
   void shouldReturnNothingWhenClientNotListed() throws Exception {
     mockMvc
         .perform(
