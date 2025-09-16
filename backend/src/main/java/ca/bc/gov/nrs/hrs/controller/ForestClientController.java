@@ -1,12 +1,17 @@
 package ca.bc.gov.nrs.hrs.controller;
 
+import ca.bc.gov.nrs.hrs.BackendConstants;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientAutocompleteResultDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
 import ca.bc.gov.nrs.hrs.service.ForestClientService;
+import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,9 +56,27 @@ public class ForestClientController {
   public List<ForestClientAutocompleteResultDto> searchForestClients(
       @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
       @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
-      @RequestParam(value = "value") String value
+      @RequestParam(value = "value") String value,
+      @AuthenticationPrincipal Jwt jwt
   ) {
-    return forestClientService.searchClients(page, size, value);
+
+    List<String> clientsFromRoles = JwtPrincipalUtil.getClientFromRoles(jwt);
+
+    // #128: BCeID should filter out on client side, we increase the size to get more results.
+    if (JwtPrincipalUtil.getIdentityProvider(jwt).equals(IdentityProvider.BUSINESS_BCEID)) {
+      if (clientsFromRoles.isEmpty())
+        return List.of(); // Abstract with no roles should not search
+      // #128: Increased to 100, so we can filter down on our side.
+      size = 100;
+    }
+
+
+    // #128 IDIR users should search unrestricted. Abstract filter out based on clients on role
+    List<String> clients = JwtPrincipalUtil.getIdentityProvider(jwt).equals(IdentityProvider.IDIR)
+        ? List.of()
+        : clientsFromRoles;
+
+    return forestClientService.searchClients(page, size, value, clients);
   }
 
   /**

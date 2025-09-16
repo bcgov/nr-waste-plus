@@ -33,13 +33,19 @@ public class SearchEndpoint {
 
   @GetMapping("/reporting-units")
   public Page<ReportingUnitSearchResultDto> searchWasteEntries(
+      @AuthenticationPrincipal Jwt jwt,
       @ModelAttribute ReportingUnitSearchParametersDto filters,
       @PageableDefault(sort = "lastUpdated", direction = Direction.DESC)
       Pageable pageable
   ) {
 
+    List<String> userClientNumbers =
+    JwtPrincipalUtil.getIdentityProvider(jwt).equals(IdentityProvider.IDIR)
+        ? List.of()
+        : JwtPrincipalUtil.getClientFromRoles(jwt);
+
     log.info("Searching waste entries with filters: {}, pageable: {}", filters, pageable);
-    return ruSearchService.search(filters, pageable);
+    return ruSearchService.search(filters, pageable, userClientNumbers);
 
   }
 
