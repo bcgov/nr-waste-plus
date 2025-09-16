@@ -44,7 +44,7 @@ public class SearchEndpoint {
         : JwtPrincipalUtil.getClientFromRoles(jwt);
 
     log.info("Searching waste entries with filters: {}, pageable: {}", filters, pageable);
-    return ruSearchService.search(filters, pageable,userClientNumbers);
+    return ruSearchService.search(filters, pageable, userClientNumbers);
 
   }
 
