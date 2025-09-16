@@ -9,6 +9,7 @@ import io.micrometer.tracing.annotation.NewSpan;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 /**
@@ -37,6 +38,13 @@ public class DistrictService {
         .findAllByOrgUnitCodeInOrderByOrgUnitCodeAsc(configuration.getDistricts())
         .stream()
         .map(districtMapper::fromProjection)
+        .map(code -> code.withDescription(
+                code
+                    .description()
+                    .replaceAll("Natural Resource District", StringUtils.EMPTY)
+                    .trim()
+            )
+        )
         .toList();
 
     log.info("Found {} org units by codes", orgUnits.size());
