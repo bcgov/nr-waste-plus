@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, vi, type Mock } from 'vitest';
 
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
@@ -11,7 +11,17 @@ import MyClientListing from './index';
 vi.mock('@/services/APIs', () => ({
   default: {
     forestclient: {
-      searchForestClientsDistricts: vi.fn(),
+      searchMyForestClients: vi.fn().mockResolvedValue({
+        content: [
+          {
+            client: { code: '123', description: 'Test Client' },
+            submissionsCount: 5,
+            blocksCount: 10,
+            lastUpdate: '2023-01-01',
+          },
+        ],
+        page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
+      }),
     },
   },
 }));
@@ -30,23 +40,23 @@ const renderWithProviders = async (props = {}) => {
 };
 
 describe('MyClientListing', () => {
-  beforeEach(() => {
-    (APIs.forestclient.searchMyForestClients as Mock).mockClear();
-  });
-
   it('renders search input and table', async () => {
     await renderWithProviders();
-    expect(screen.getByRole('searchbox', { name: 'Search by RU No. or Block ID' })).toBeDefined();
-    expect(screen.getByPlaceholderText('Search by RU No. or Block ID')).toBeDefined();
-    expect(screen.getAllByRole('button', { name: /search/i })[0]).toBeDefined();
-    expect(screen.getByRole('table')).toBeDefined();
+    expect(screen.getByRole('searchbox', { name: 'Search by name' })).toBeDefined();
+    expect(screen.getByTestId('search-button-other')).toBeDefined();
+    await waitFor(() => {
+      expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalled();
+    });
+    expect(screen.getByText('Test Client')).toBeDefined();
   });
 
   it('calls API on search button click with filter', async () => {
     await renderWithProviders();
-    const input = screen.getByPlaceholderText('Search by RU No. or Block ID');
+    const input = screen.getByPlaceholderText('Search by name');
     await userEvent.type(input, 'test');
-    const searchBtn = screen.getAllByRole('button', { name: /search/i })[0];
+    await userEvent.tab();
+    const searchBtn = screen.getByTestId('search-button-other');
+    expect(searchBtn).toBeDefined();
     await userEvent.click(searchBtn);
     await waitFor(() => {
       expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('test', 0, 10);

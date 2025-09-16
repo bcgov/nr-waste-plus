@@ -25,9 +25,18 @@ const MyClientListing: FC = () => {
     enabled: false,
     gcTime: 0,
     staleTime: Infinity,
+    select: (data) =>
+      ({
+        ...data,
+        content: data.content.map((item) => ({
+          ...item,
+          id: item.client.code,
+        })),
+      }) as PageableResponse<MyForestClientDto>,
   });
 
   const executeSearch = () => {
+    console.log('Executing search with filter:', filter);
     setTimeout(refetch, 1);
   };
 
@@ -57,7 +66,7 @@ const MyClientListing: FC = () => {
           <Column max={2} lg={2} md={2} sm={0} className="filters-column">
             <Button
               id="search-button"
-              data-testid="search-button-sm"
+              data-testid="search-button-other"
               className="search-button"
               renderIcon={Search}
               iconDescription="Search"
