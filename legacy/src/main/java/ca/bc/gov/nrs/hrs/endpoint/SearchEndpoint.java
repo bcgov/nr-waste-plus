@@ -1,6 +1,8 @@
 package ca.bc.gov.nrs.hrs.endpoint;
 
 import ca.bc.gov.nrs.hrs.dto.search.ClientDistrictSearchResultDto;
+import ca.bc.gov.nrs.hrs.LegacyConstants;
+import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.service.search.ReportingUnitSearchService;
@@ -33,13 +35,19 @@ public class SearchEndpoint {
 
   @GetMapping("/reporting-units")
   public Page<ReportingUnitSearchResultDto> searchWasteEntries(
+      @AuthenticationPrincipal Jwt jwt,
       @ModelAttribute ReportingUnitSearchParametersDto filters,
       @PageableDefault(sort = "lastUpdated", direction = Direction.DESC)
       Pageable pageable
   ) {
 
+    List<String> userClientNumbers =
+    JwtPrincipalUtil.getIdentityProvider(jwt).equals(IdentityProvider.IDIR)
+        ? List.of()
+        : JwtPrincipalUtil.getClientFromRoles(jwt);
+
     log.info("Searching waste entries with filters: {}, pageable: {}", filters, pageable);
-    return ruSearchService.search(filters, pageable);
+    return ruSearchService.search(filters, pageable, userClientNumbers);
 
   }
 
@@ -47,10 +55,18 @@ public class SearchEndpoint {
   public List<String> searchReportingUnitUsers(
       @RequestParam String userId,
       @AuthenticationPrincipal Jwt jwt
-  ) {
-    log.info("Searching for reporting unit users that matches {}", userId);
-    return ruSearchService.searchReportingUnitUsers(userId,
-        JwtPrincipalUtil.getClientFromRoles(jwt));
+  ){
+    log.info("Searching for reporting unit users that matches {}",userId);
+
+    List<String> clientsFromRoles = JwtPrincipalUtil.getClientFromRoles(jwt);
+
+    // #129 IDIR users should search unrestricted. Abstract with no roles should not search
+    List<String> clients = JwtPrincipalUtil.getIdentityProvider(jwt).equals(IdentityProvider.IDIR)
+        ? List.of()
+        : clientsFromRoles.isEmpty() ? List.of(LegacyConstants.NOCLIENT) : clientsFromRoles;
+
+
+    return ruSearchService.searchReportingUnitUsers(userId,clients);
   }
 
   @GetMapping("/my-forest-clients")
