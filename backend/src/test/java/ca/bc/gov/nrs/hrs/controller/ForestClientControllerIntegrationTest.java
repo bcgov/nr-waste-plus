@@ -17,6 +17,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
+import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
@@ -45,9 +46,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 @AutoConfigureMockMvc
-@WithMockJwt(
-    cognitoGroups = {"Approver_00010004","Approver_00012797"}
-)
+@WithMockJwt
 @DisplayName("Integrated Test | Forest Client Controller")
 class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
 
@@ -225,6 +224,10 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
   @ParameterizedTest
   @MethodSource("fetchMyClients")
   @DisplayName("Fetch my client")
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"Approver_00010004","Approver_00012797"}
+  )
   void fetchMyClientsWithValue(
       String value,
       ResponseDefinitionBuilder apiStub,
