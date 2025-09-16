@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.endpoint;
 
+import ca.bc.gov.nrs.hrs.dto.search.ClientDistrictSearchResultDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.service.search.ReportingUnitSearchService;
@@ -8,6 +9,7 @@ import io.micrometer.observation.annotation.Observed;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
@@ -45,9 +47,27 @@ public class SearchEndpoint {
   public List<String> searchReportingUnitUsers(
       @RequestParam String userId,
       @AuthenticationPrincipal Jwt jwt
-  ){
-    log.info("Searching for reporting unit users that matches {}",userId);
-    return ruSearchService.searchReportingUnitUsers(userId,JwtPrincipalUtil.getClientFromRoles(jwt));
+  ) {
+    log.info("Searching for reporting unit users that matches {}", userId);
+    return ruSearchService.searchReportingUnitUsers(userId,
+        JwtPrincipalUtil.getClientFromRoles(jwt));
+  }
+
+  @GetMapping("/my-forest-clients")
+  public Page<ClientDistrictSearchResultDto> searchMyClients(
+      @RequestParam(required = false, defaultValue = StringUtils.EMPTY) List<String> values,
+      @PageableDefault(sort = "lastUpdate", direction = Direction.DESC)
+      Pageable pageable,
+      @AuthenticationPrincipal Jwt jwt
+  ) {
+
+    log.info("Searching client districts with filters: {}, pageable: {}", values, pageable);
+    return ruSearchService.searchMyClients(
+        values.isEmpty()
+            ? JwtPrincipalUtil.getClientFromRoles(jwt)
+            : values,
+        pageable
+    );
   }
 
 }
