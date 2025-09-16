@@ -12,5 +12,5 @@ public record MyForestClientSearchResultDto(
     Long submissionsCount,
     Long blocksCount,
     LocalDateTime lastUpdate
-){
+) {
 }
