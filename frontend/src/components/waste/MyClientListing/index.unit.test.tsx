@@ -22,17 +22,6 @@ vi.mock('@/services/APIs', () => ({
         ],
         page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
       }),
-      searchMyForestClients: vi.fn().mockResolvedValue({
-        content: [
-          {
-            client: { code: '123', description: 'Test Client' },
-            submissionsCount: 5,
-            blocksCount: 10,
-            lastUpdate: '2023-01-01',
-          },
-        ],
-        page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
-      }),
     },
   },
 }));
@@ -70,14 +59,11 @@ describe('MyClientListing', () => {
   it('calls API on search button click with filter', async () => {
     await renderWithProviders();
     const input = screen.getByPlaceholderText('Search by name');
-    const input = screen.getByPlaceholderText('Search by name');
     await userEvent.type(input, 'test');
     await userEvent.tab();
     const searchBtn = screen.getByTestId('search-button-other');
     expect(searchBtn).toBeDefined();
     await userEvent.tab();
-    const searchBtn = screen.getByTestId('search-button-other');
-    expect(searchBtn).toBeDefined();
     await userEvent.click(searchBtn);
     await waitFor(() => {
       expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('test', 0, 10);
