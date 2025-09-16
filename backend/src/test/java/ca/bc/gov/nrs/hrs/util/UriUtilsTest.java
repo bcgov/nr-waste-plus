@@ -84,7 +84,7 @@ class UriUtilsTest {
         );
   }
 
-  private static Stream<Arguments> buildPageableQueryParam(){
+  private static Stream<Arguments> buildPageableQueryParam() {
     return
         Stream.of(
             Arguments.argumentSet(
