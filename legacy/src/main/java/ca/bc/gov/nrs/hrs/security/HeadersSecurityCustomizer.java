@@ -49,26 +49,26 @@ public class HeadersSecurityCustomizer implements Customizer<HeadersConfigurer<H
 
     if (SecurityEnvironmentUtil.isLocalEnvironment(environment)) {
       policyDirectives = String.join("; ",
-        "default-src 'self'",
-        "connect-src 'self' " + selfUri,
-        "script-src 'self' 'unsafe-inline'",
-        "style-src 'self' 'unsafe-inline'",
-        "img-src 'self' data:",
-        "object-src 'none'",
-        "base-uri 'none'",
-        "frame-ancestors 'none'",
-        "report-uri " + selfUri
+          "default-src 'self'",
+          "connect-src 'self' " + selfUri,
+          "script-src 'self' 'unsafe-inline'",
+          "style-src 'self' 'unsafe-inline'",
+          "img-src 'self' data:",
+          "object-src 'none'",
+          "base-uri 'none'",
+          "frame-ancestors 'none'",
+          "report-uri " + selfUri
       );
     } else {
       policyDirectives = String.join("; ",
-        "default-src 'none'",
-        "connect-src 'self' " + selfUri,
-        "script-src 'strict-dynamic' 'nonce-" + UUID.randomUUID() + "' https:",
-        "object-src 'none'",
-        "base-uri 'none'",
-        "frame-ancestors 'none'",
-        "require-trusted-types-for 'script'",
-        "report-uri " + selfUri
+          "default-src 'none'",
+          "connect-src 'self' " + selfUri,
+          "script-src 'strict-dynamic' 'nonce-" + UUID.randomUUID() + "' https:",
+          "object-src 'none'",
+          "base-uri 'none'",
+          "frame-ancestors 'none'",
+          "require-trusted-types-for 'script'",
+          "report-uri " + selfUri
       );
     }
 
