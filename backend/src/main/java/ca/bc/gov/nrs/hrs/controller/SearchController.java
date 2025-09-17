@@ -10,6 +10,7 @@ import io.micrometer.observation.annotation.Observed;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
@@ -40,7 +41,8 @@ public class SearchController {
   ) {
     // #128: BCeID should filter out on client side, we increase the size to get more results.
     if (IdentityProvider.BUSINESS_BCEID.equals(JwtPrincipalUtil.getIdentityProvider(jwt))) {
-      if (!JwtPrincipalUtil.getClientFromRoles(jwt).contains(filters.getClientNumber())) {
+      if (StringUtils.isNotBlank(filters.getClientNumber()) && !JwtPrincipalUtil.getClientFromRoles(
+          jwt).contains(filters.getClientNumber())) {
         throw new InvalidSelectedValueException(
             "Selected client number " + filters.getClientNumber() + " is not valid");
       }
