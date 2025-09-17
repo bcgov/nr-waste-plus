@@ -23,7 +23,7 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
   {
     key: 'ruNumber',
     header: 'RU No.',
-    sortable: true,
+    sortable: false,
     selected: true,
     renderAs: (value) => (
       <RedirectLinkTag

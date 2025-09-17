@@ -18,7 +18,9 @@ import { useEffect, useState } from 'react';
 import EmptySection from '@/components/core/EmptySection';
 import { usePreference } from '@/context/preference/usePreference';
 
-import { type TableHeaderType, type PageableResponse, renderCell, type NestedKeyOf } from './types';
+import { type TableHeaderType, type PageableResponse, renderCell } from './types';
+
+import type { NestedKeyOf, SortDirectionType } from '@/services/types';
 
 import './index.scss';
 
@@ -33,6 +35,8 @@ type PaginationParams = {
   pageSize: number;
 };
 
+type SortingKeys<T> = Record<NestedKeyOf<T>, SortDirectionType>;
+
 /**
  * Props for the TableResource component.
  *
@@ -45,6 +49,7 @@ type PaginationParams = {
  * @property {boolean} [displayRange] - If true, shows the item range in the pagination component.
  * @property {boolean} [displayToolbar] - If true, shows the toolbar, with the toolbar buttons, such as column customization.
  * @property {(params: PaginationParams) => void} [onPageChange] - Callback for handling page changes.
+ * @property {(sortKeys: SortingKeys<T>) => void} [onSortChange] - Callback for handling column sort changes.
  */
 type TableResourceProps<T> = {
   id: string;
@@ -55,6 +60,7 @@ type TableResourceProps<T> = {
   displayRange?: boolean;
   displayToolbar?: boolean;
   onPageChange?: (params: PaginationParams) => void;
+  onSortChange?: (sortKeys: SortingKeys<T>) => void;
 };
 
 /**
@@ -74,9 +80,18 @@ const TableResource = <T,>({
   displayRange,
   displayToolbar,
   onPageChange,
+  onSortChange,
 }: TableResourceProps<T>) => {
   const [tableHeaders, setTableHeaders] = useState(headers);
   const { userPreference, updatePreferences, isLoaded } = usePreference();
+  const [sortState, setSortState] = useState<SortingKeys<T>>(
+    headers
+      .filter((header) => header.sortable)
+      .reduce((acc, header) => {
+        acc[header.key] = 'NONE';
+        return acc;
+      }, {} as SortingKeys<T>),
+  );
 
   const loadTableFromPreferences = () => {
     if (userPreference.tableHeaders) {
@@ -170,6 +185,26 @@ const TableResource = <T,>({
     });
   };
 
+  const handleSortClick = (key: NestedKeyOf<T>) => {
+    if (headers.find((h) => h.key === key && !h.sortable)) {
+      return;
+    }
+    let sortingKeys: SortingKeys<T> = {} as SortingKeys<T>;
+
+    setSortState((prevState) => {
+      const current = prevState[key];
+      const next = current === 'NONE' ? 'ASC' : current === 'ASC' ? 'DESC' : 'NONE';
+      const currState = { ...prevState, [key]: next };
+      sortingKeys = Object.fromEntries(
+        Object.entries(currState).filter(([key, value]) => key && value !== 'NONE'),
+      ) as SortingKeys<T>;
+      return currState;
+    });
+    if (onSortChange) {
+      onSortChange(sortingKeys);
+    }
+  };
+
   return (
     <>
       {displayToolbar && (
@@ -208,7 +243,17 @@ const TableResource = <T,>({
             {tableHeaders
               .filter((header) => header.selected)
               .map((header) => (
-                <TableHeader key={`header-${String(header.key)}`}>{header.header}</TableHeader>
+                <TableHeader
+                  key={`header-${String(header.key)}`}
+                  isSortable={Boolean(header.sortable) && Boolean(onSortChange)}
+                  isSortHeader={sortState[header.key] !== 'NONE'}
+                  sortDirection={
+                    sortState[header.key] === 'NONE' ? undefined : sortState[header.key]
+                  }
+                  onClick={() => handleSortClick(header.key)}
+                >
+                  {header.header}
+                </TableHeader>
               ))}
           </TableRow>
         </TableHead>
