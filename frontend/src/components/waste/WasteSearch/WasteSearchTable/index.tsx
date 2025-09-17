@@ -3,10 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, type FC } from 'react';
 
 import TableResource from '@/components/Form/TableResource';
+import WasteSearchFilters from '@/components/waste/WasteSearch/WasteSearchFilters';
 import API from '@/services/APIs';
-import { removeEmpty } from '@/services/utils';
-
-import WasteSearchFilters from '../WasteSearchFilters';
+import { removeEmpty, generateSortArray } from '@/services/utils';
 
 import { headers } from './constants';
 
@@ -15,6 +14,7 @@ import type {
   ReportingUnitSearchParametersDto,
   ReportingUnitSearchResultDto,
 } from '@/services/search.types';
+import type { SortDirectionType } from '@/services/types';
 
 import './index.scss';
 
@@ -24,10 +24,16 @@ const WasteSearchTable: FC = () => {
   const [filters, setFilters] = useState<ReportingUnitSearchParametersDto>(
     {} as ReportingUnitSearchParametersDto,
   );
+  const [sort, setSort] = useState<Record<string, SortDirectionType>>({});
 
   const { data, isLoading, isFetching, isError, refetch } = useQuery({
-    queryKey: ['search', 'ru', { page: currentPage, size: pageSize, ...filters }],
-    queryFn: () => API.search.searchReportingUnit(filters, { page: currentPage, size: pageSize }),
+    queryKey: ['search', 'ru', { page: currentPage, size: pageSize, ...filters, ...sort }],
+    queryFn: () =>
+      API.search.searchReportingUnit(filters, {
+        page: currentPage,
+        size: pageSize,
+        sort: generateSortArray<ReportingUnitSearchResultDto>(sort),
+      }),
     enabled: false,
     gcTime: 0,
     staleTime: Infinity,
@@ -42,6 +48,11 @@ const WasteSearchTable: FC = () => {
   const handlePageChange = ({ page, pageSize }: { page: number; pageSize: number }) => {
     setCurrentPage(Math.min(Math.max(page, 0), (data?.page.totalPages ?? 1) - 1)); // Adjust for zero-based index
     setPageSize(pageSize);
+    executeSearch();
+  };
+
+  const handleSort = (sortingKeys: Record<string, SortDirectionType>) => {
+    setSort(sortingKeys);
     executeSearch();
   };
 
@@ -61,6 +72,7 @@ const WasteSearchTable: FC = () => {
           onPageChange={handlePageChange}
           displayRange
           displayToolbar
+          onSortChange={handleSort}
         />
       </Column>
     </>

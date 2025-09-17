@@ -1,3 +1,5 @@
+import type { NestedKeyOf, SortDirectionType, ValueByPath } from './types';
+
 export const removeEmpty = <T extends object>(obj: T): Partial<T> => {
   return Object.fromEntries(
     Object.entries(obj)
@@ -38,3 +40,15 @@ export const getB3Headers = () => {
     'X-B3-SpanId': generateHex(16),
   };
 };
+
+export const getValueByPath = <T, P extends NestedKeyOf<T>>(obj: T, path: P): ValueByPath<T, P> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return path.split('.').reduce((acc, key) => acc && acc[key], obj as any) as ValueByPath<T, P>;
+};
+
+export const generateSortArray = <T>(
+  sort: Record<NestedKeyOf<T>, SortDirectionType>,
+): Array<`${NestedKeyOf<T>},${SortDirectionType}`> =>
+  Object.entries(sort)
+    .filter(([, direction]) => direction !== 'NONE')
+    .map(([key, direction]) => `${key},${direction}` as `${NestedKeyOf<T>},${SortDirectionType}`);

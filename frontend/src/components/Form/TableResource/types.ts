@@ -1,21 +1,5 @@
-export type NestedKeyOf<T> = {
-  [K in keyof T & (string | number)]: T[K] extends object
-    ? `${K}` | `${K}.${NestedKeyOf<T[K]>}`
-    : `${K}`;
-}[keyof T & (string | number)];
-
-export type ValueByPath<T, P extends string> = P extends `${infer K}.${infer Rest}`
-  ? K extends keyof T
-    ? ValueByPath<T[K], Rest>
-    : never
-  : P extends keyof T
-    ? T[P]
-    : never;
-
-export const getValueByPath = <T, P extends NestedKeyOf<T>>(obj: T, path: P): ValueByPath<T, P> => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return path.split('.').reduce((acc, key) => acc && acc[key], obj as any) as ValueByPath<T, P>;
-};
+import { type NestedKeyOf, type ValueByPath } from '@/services/types';
+import { getValueByPath } from '@/services/utils';
 
 export type TableHeaderType<T, K extends NestedKeyOf<T> = NestedKeyOf<T>> = {
   key: K;
@@ -50,8 +34,6 @@ export type PageableResponse<T> = {
   content: IdentifiableContent<T>[];
   page: PageType;
 };
-
-export type SortDirectionType = 'ASC' | 'DESC' | 'NONE';
 
 export function renderCell<T>(row: T, header: TableHeaderType<T, NestedKeyOf<T>>): React.ReactNode {
   const value = getValueByPath(row, header.key);

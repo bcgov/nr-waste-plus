@@ -40,7 +40,12 @@ public class UriUtils {
       multiValueMap.add("page", String.valueOf(page.getPageNumber()));
       multiValueMap.add("size", String.valueOf(page.getPageSize()));
       if (page.getSort().isSorted()) {
-        multiValueMap.add("sort", page.getSort().toString().replace(": ", ","));
+        page
+            .getSort()
+            .forEach(order ->
+                multiValueMap
+                    .add("sort",order.toString().replace(": ", ","))
+            );
       }
     }
     return multiValueMap;
