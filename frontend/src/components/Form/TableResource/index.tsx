@@ -49,6 +49,7 @@ type SortingKeys<T> = Record<NestedKeyOf<T>, SortDirectionType>;
  * @property {boolean} [displayRange] - If true, shows the item range in the pagination component.
  * @property {boolean} [displayToolbar] - If true, shows the toolbar, with the toolbar buttons, such as column customization.
  * @property {(params: PaginationParams) => void} [onPageChange] - Callback for handling page changes.
+ * @property {(sortKeys: SortingKeys<T>) => void} [onSortChange] - Callback for handling column sort changes.
  */
 type TableResourceProps<T> = {
   id: string;
