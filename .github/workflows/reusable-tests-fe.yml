@@ -56,7 +56,7 @@ jobs:
 
       - name: Annotate PR with frontend test results
         if: steps.tests.outputs.triggered == 'true'
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         with:
           name: Frontend Unit Tests
           path: frontend/coverage/junit-report.xml
