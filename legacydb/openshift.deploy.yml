@@ -64,7 +64,7 @@ objects:
         spec:          
           containers:
             - name: ${NAME}
-              image: ${REGISTRY}/${ORG}/${NAME}/${COMPONENT}:${TAG}
+              image: ${REGISTRY}/${ORG}/nr-forest-client/${COMPONENT}:latest
               resources:
                 requests:
                   cpu: ${CPU_REQUEST}
