@@ -22,19 +22,19 @@ export enum RoleType {
 export enum Role {
   VIEWER = 'VIEWER',
   SUBMITTER = 'SUBMITTER',
-  APPROVER = 'APPROVER',
-  PLANNER = 'PLANNER',
+  DISTRICT = 'DISTRICT',
+  AREA = 'AREA',
   ADMIN = 'ADMIN',
   IDIR = 'IDIR',
   BCeID = 'BCeID',
 }
 
 export const roleTypeMap: Record<Role, RoleType> = {
-  [Role.VIEWER]: RoleType.CONCRETE,
+  [Role.VIEWER]: RoleType.ABSTRACT,
   [Role.SUBMITTER]: RoleType.ABSTRACT,
-  [Role.APPROVER]: RoleType.ABSTRACT,
-  [Role.PLANNER]: RoleType.ABSTRACT,
-  [Role.ADMIN]: RoleType.ABSTRACT,
+  [Role.DISTRICT]: RoleType.CONCRETE,
+  [Role.AREA]: RoleType.CONCRETE,
+  [Role.ADMIN]: RoleType.CONCRETE,
   [Role.IDIR]: RoleType.CONCRETE,
   [Role.BCeID]: RoleType.CONCRETE,
 };
