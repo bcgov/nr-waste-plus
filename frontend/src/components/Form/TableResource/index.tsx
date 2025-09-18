@@ -2,9 +2,13 @@ import {
   Checkbox,
   DataTableSkeleton,
   Pagination,
+  SkeletonText,
   Table,
   TableBody,
   TableCell,
+  TableExpandedRow,
+  TableExpandHeader,
+  TableExpandRow,
   TableHead,
   TableHeader,
   TableRow,
@@ -13,7 +17,7 @@ import {
   TableToolbarMenu,
 } from '@carbon/react';
 import { Column as ColumnIcon } from '@carbon/react/icons';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 
 import EmptySection from '@/components/core/EmptySection';
 import { usePreference } from '@/context/preference/usePreference';
@@ -23,6 +27,8 @@ import { type TableHeaderType, type PageableResponse, renderCell } from './types
 import type { NestedKeyOf, SortDirectionType } from '@/services/types';
 
 import './index.scss';
+import TableResourceExpandRow from './TableResourceExpandRow';
+import TableResourceRow from './TableResourceRow';
 
 /**
  * Pagination parameters for page change events.
@@ -61,6 +67,7 @@ type TableResourceProps<T> = {
   displayToolbar?: boolean;
   onPageChange?: (params: PaginationParams) => void;
   onSortChange?: (sortKeys: SortingKeys<T>) => void;
+  onRowExpanded?: (rowId: string | number) => Promise<ReactNode>;
 };
 
 /**
@@ -81,9 +88,11 @@ const TableResource = <T,>({
   displayToolbar,
   onPageChange,
   onSortChange,
+  onRowExpanded,
 }: TableResourceProps<T>) => {
   const [tableHeaders, setTableHeaders] = useState(headers);
   const { userPreference, updatePreferences, isLoaded } = usePreference();
+  const [expandedRow, setExpandedRow] = useState<string | undefined>(undefined);
   const [sortState, setSortState] = useState<SortingKeys<T>>(
     headers
       .filter((header) => header.sortable)
@@ -91,6 +100,9 @@ const TableResource = <T,>({
         acc[header.key] = 'NONE';
         return acc;
       }, {} as SortingKeys<T>),
+  );
+  const [expandedRowComponent, setExpandedRowComponent] = useState<ReactNode | undefined>(
+    undefined,
   );
 
   const loadTableFromPreferences = () => {
@@ -168,7 +180,7 @@ const TableResource = <T,>({
   }
 
   const itemRangeText = (min: number, max: number, total: number) =>
-    `${min}-${max} of ${total} items`;
+    `${min}-${max} of ${total} items :: DEBUG ${expandedRow}`;
 
   const noItemRangeText = () => '';
 
@@ -202,6 +214,17 @@ const TableResource = <T,>({
     });
     if (onSortChange) {
       onSortChange(sortingKeys);
+    }
+  };
+
+  const handleRowExpansion = (rowId: string | number) => {
+    if (onRowExpanded) {
+      setExpandedRowComponent(undefined);
+      setExpandedRow((prevState) => {
+        if (prevState && prevState === `row-${rowId}`) return undefined;
+        return `row-${rowId}`;
+      });
+      onRowExpanded(rowId).then((content) => setExpandedRowComponent(content));
     }
   };
 
@@ -240,6 +263,7 @@ const TableResource = <T,>({
       <Table useZebraStyles>
         <TableHead>
           <TableRow>
+            {Boolean(onRowExpanded) && <TableExpandHeader />}
             {tableHeaders
               .filter((header) => header.selected)
               .map((header) => (
@@ -258,17 +282,31 @@ const TableResource = <T,>({
           </TableRow>
         </TableHead>
         <TableBody>
-          {content.content.map((row) => (
-            <TableRow key={row.id}>
-              {tableHeaders
-                .filter((header) => header.selected)
-                .map((header) => (
-                  <TableCell key={`cell-${row.id}-${String(header.key)}`}>
-                    {renderCell(row, header)}
-                  </TableCell>
-                ))}
-            </TableRow>
-          ))}
+          {content.content.map((row) => {
+            const cells = tableHeaders
+              .filter((header) => header.selected)
+              .map((header) => (
+                <TableCell key={`cell-${row.id}-${String(header.key)}`}>
+                  {renderCell(row, header)}
+                </TableCell>
+              ));
+
+            const isExpandable = Boolean(onRowExpanded);
+
+            return isExpandable ? (
+              <TableResourceExpandRow
+                key={row.id}
+                columns={tableHeaders.filter((header) => header.selected).length}
+                isExpanded={expandedRow === `row-${row.id}`}
+                onExpand={() => handleRowExpansion(row.id)}
+                expandedChild={expandedRowComponent}
+              >
+                {cells}
+              </TableResourceExpandRow>
+            ) : (
+              <TableResourceRow key={row.id}>{cells}</TableResourceRow>
+            );
+          })}
         </TableBody>
       </Table>
       {onPageChange && (
