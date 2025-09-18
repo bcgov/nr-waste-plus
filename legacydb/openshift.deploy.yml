@@ -31,7 +31,8 @@ parameters:
   - name: CPU_REQUEST
     value: 125m
   - name: MEMORY_REQUEST
-    value: 3.5Gi
+    #value: 3.5Gi
+    value: 2Gi
   - name: RANDOM_EXPRESSION
     description: Random expression to make sure deployments update
     from: "[a-zA-Z0-9]{32}"
