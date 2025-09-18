@@ -53,6 +53,7 @@ type SortingKeys<T> = Record<NestedKeyOf<T>, SortDirectionType>;
  * @property {boolean} [displayToolbar] - If true, shows the toolbar, with the toolbar buttons, such as column customization.
  * @property {(params: PaginationParams) => void} [onPageChange] - Callback for handling page changes.
  * @property {(sortKeys: SortingKeys<T>) => void} [onSortChange] - Callback for handling column sort changes.
+ * @property {(rowId: string | number) => Promise<ReactNode>} [onRowExpanded] - Callback for handling row expansion data loading. If declared it will show row expansion, otherwise it will display as normal table row.
  */
 type TableResourceProps<T> = {
   id: string;
