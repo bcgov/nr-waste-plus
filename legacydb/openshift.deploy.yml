@@ -105,6 +105,7 @@ objects:
           dnsPolicy: ClusterFirst
           schedulerName: default-scheduler
           securityContext:
+            fsGroup: 54321  # oracle's primary group
             supplementalGroups:
               - 54321  # oracle's primary group
               - 54322  # dba
