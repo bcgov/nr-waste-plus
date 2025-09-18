@@ -64,7 +64,7 @@ objects:
         spec:          
           containers:
             - name: ${NAME}
-              image: ${REGISTRY}/${ORG}/${NAME}/${COMPONENT}:latest
+              image: ${REGISTRY}/${ORG}/${NAME}/${COMPONENT}:${TAG}
               resources:
                 requests:
                   cpu: ${CPU_REQUEST}
