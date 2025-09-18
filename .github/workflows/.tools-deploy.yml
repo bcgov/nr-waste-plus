@@ -11,18 +11,18 @@ concurrency:
 permissions: {}
 
 jobs:
-#  builds:
-#    name: Builds
-#    runs-on: ubuntu-24.04
-#    permissions:
-#      packages: write
-#    steps:
-#      - uses: bcgov/action-builder-ghcr@1a3767a04ade69edf7e4857c44269d1100282581 # v4.1.0
-#        name: Build (legacydb)
-#        with:
-#          package: legacydb
-#          tag_fallback: latest
-#          triggers: ('legacydb/')
+  builds:
+    name: Builds
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+    steps:
+      - uses: bcgov/action-builder-ghcr@1a3767a04ade69edf7e4857c44269d1100282581 # v4.1.0
+        name: Build (legacydb)
+        with:
+          package: legacydb
+          tag_fallback: latest
+          triggers: ('legacydb/')
 
   pre-tools:
     name: Pre Deploy Tools
@@ -53,8 +53,8 @@ jobs:
 
   deploy-oracle:
     name: Deploy Oracle Database
-#    needs: [pre-tools, builds]
-    needs: [pre-tools]
+    needs: [pre-tools, builds]
+#    needs: [pre-tools]
     runs-on: ubuntu-24.04
     steps:
       - name: Initializing Deployment
