@@ -104,6 +104,15 @@ objects:
           terminationGracePeriodSeconds: 30
           dnsPolicy: ClusterFirst
           schedulerName: default-scheduler
+          securityContext:
+            supplementalGroups:
+              - 54321  # oracle's primary group
+              - 54322  # dba
+              - 54323  # oper
+              - 54324  # backupdba
+              - 54325  # dgdba
+              - 54326  # kmdba
+              - 54330  # racdba
   - kind: Service
     apiVersion: v1    
     metadata:
