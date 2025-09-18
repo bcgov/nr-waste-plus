@@ -177,7 +177,7 @@ const TableResource = <T,>({
   }
 
   const itemRangeText = (min: number, max: number, total: number) =>
-    `${min}-${max} of ${total} items :: DEBUG ${expandedRow}`;
+    `${min}-${max} of ${total} items`;
 
   const noItemRangeText = () => '';
 
