@@ -35,7 +35,7 @@ jobs:
       matrix:
         package: [database, frontend, backend]
     steps:
-      - uses: bcgov/action-builder-ghcr@1a3767a04ade69edf7e4857c44269d1100282581 # v4.1.0
+      - uses: bcgov/action-builder-ghcr@1e4295b9766963ca36612b78560db6235120b80f # v4.1.1
         name: Build (${{ matrix.package }})
         with:
           package: ${{ matrix.package }}
@@ -51,7 +51,7 @@ jobs:
       oracledb-port: 1521
       oracledb-servicename: PR_${{ github.event.number }}
       oracledb-username: THE
-      configmap-backend: |-        
+      configmap-backend: |-
         info:
           app:
             component: backend
