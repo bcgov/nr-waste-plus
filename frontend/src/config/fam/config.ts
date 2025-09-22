@@ -7,13 +7,11 @@ const isProd = ZONE === 'prod';
 
 const logoutDomain = isProd ? 'https://logon7.gov.bc.ca' : 'https://logontest7.gov.bc.ca';
 
-const returnUrlHost = isProd ? 'loginproxy' : 'test.loginproxy';
+const returnUrlHost = isProd ? '' : `${ZONE}.`;
 
-const retUrl = `https://${returnUrlHost}.gov.bc.ca/auth/realms/standard/protocol/openid-connect/logout`;
+const retUrl = `https://${returnUrlHost}loginproxy.gov.bc.ca/auth/realms/standard/protocol/openid-connect/logout`;
 
-const redirectSignOut = env.VITE_REDIRECT_SIGN_OUT?.trim()
-  ? env.VITE_REDIRECT_SIGN_OUT.trim()
-  : `${logoutDomain}/clp-cgi/logoff.cgi?retnow=1&returl=${retUrl}?redirect_uri=${redirectUri}/`;
+const redirectSignOut = `${logoutDomain}/clp-cgi/logoff.cgi?retnow=1&returl=${retUrl}?redirect_uri=${redirectUri}/`;
 
 const verificationMethods: 'code' | 'token' = 'code';
 

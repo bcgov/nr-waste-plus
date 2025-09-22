@@ -11,22 +11,21 @@ concurrency:
 permissions: {}
 
 jobs:
-  builds:
-    name: Builds
-    runs-on: ubuntu-24.04
-    permissions:
-      packages: write
-    steps:
-      - uses: bcgov/action-builder-ghcr@1e4295b9766963ca36612b78560db6235120b80f # v4.1.2
-        name: Build (legacydb)
-        with:
-          package: legacydb
-          tag_fallback: latest
-          triggers: ('legacydb/')
+#  builds:
+#    name: Builds
+#    runs-on: ubuntu-24.04
+#    permissions:
+#      packages: write
+#    steps:
+#      - uses: bcgov/action-builder-ghcr@chore/cleanupStep
+#        name: Build (legacydb)
+#        with:
+#          package: legacydb
+#          tag_fallback: latest
+#          triggers: ('legacydb/')
 
   pre-tools:
     name: Pre Deploy Tools
-    needs: [builds]
     runs-on: ubuntu-24.04
     steps:
       - name: Scale down legacy
@@ -55,6 +54,7 @@ jobs:
 #  deploy-oracle:
 #    name: Deploy Oracle Database
 #    needs: [pre-tools, builds]
+#    needs: [pre-tools]
 #    runs-on: ubuntu-24.04
 #    steps:
 #      - name: Initializing Deployment
@@ -143,7 +143,7 @@ jobs:
 #            BRANCH_NAME="${{ github.head_ref }}"
 #            ESCAPED_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/[\/&]/\\&/g')
 #            oc create job --from=cronjob/nr-waste-plus-tools-migratedb migrate-pr${{ github.event.number }}-${{ github.run_attempt }}-$(date +%s) --dry-run=client -o yaml | sed "s/value: main/value: ${ESCAPED_BRANCH_NAME}/" | sed "s/value: \"0\"/value: \"${{ github.event.number }}\"/" | oc apply -f -
-#
+
   scale-up-legacy:
     name: Scale up legacy
 #    needs: [deploy-tools]

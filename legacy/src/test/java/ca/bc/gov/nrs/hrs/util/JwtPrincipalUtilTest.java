@@ -291,18 +291,18 @@ class JwtPrincipalUtilTest {
     Map<String, Object> claims =
         Map.of(
             "cognito:groups", List.of(
-                "Viewer",
+                "Viewer_00010040",
                 "Submitter_00012120",
-                "Approver_00010040",
-                "Admin_00000111"
+                "Admin",
+                "District"
             )
         );
 
     Map<Role, List<String>> result = Map.of(
-        Role.VIEWER, List.of(),
+        Role.VIEWER, List.of("00010040"),
         Role.SUBMITTER, List.of("00012120"),
-        Role.APPROVER, List.of("00010040"),
-        Role.ADMIN, List.of("00000111")
+        Role.ADMIN, List.of(),
+        Role.DISTRICT, List.of()
     );
 
     assertEquals(result,
@@ -327,7 +327,7 @@ class JwtPrincipalUtilTest {
       ).isEmpty();
 
       assertThat(JwtPrincipalUtil.getClientFromRoles(createJwt(claims))
-          ).isEmpty();
+      ).isEmpty();
     }else {
       assertThat(
           JwtPrincipalUtil.getClientFromRoles(createJwtAuthenticationToken(claims))
@@ -433,13 +433,13 @@ class JwtPrincipalUtilTest {
                 "Concrete role I have",
                 Map.of(
                     "cognito:groups", List.of(
-                        "Viewer",
+                        "Viewer_00012120",
                         "Submitter_00012120",
-                        "Approver_00010040",
-                        "Admin_00000111"
+                        "Area",
+                        "Admin"
                     )
                 ),
-                Role.VIEWER,
+                Role.AREA,
                 true
             ),
             Arguments.argumentSet(
@@ -447,36 +447,35 @@ class JwtPrincipalUtilTest {
                 Map.of(
                     "cognito:groups", List.of(
                         "Submitter_00012120",
-                        "Approver_00010040",
-                        "Admin_00000111"
+                        "Area",
+                        "Admin"
                     )
                 ),
-                Role.VIEWER,
+                Role.DISTRICT,
                 false
             ),
             Arguments.argumentSet(
                 "Abstract role I have",
                 Map.of(
                     "cognito:groups", List.of(
-                        "Viewer",
+                        "Viewer_00000111",
                         "Submitter_00012120",
-                        "Approver_00010040",
-                        "Admin_00000111"
+                        "Area",
+                        "Admin"
                     )
                 ),
-                Role.ADMIN,
+                Role.VIEWER,
                 false
             ),
             Arguments.argumentSet(
                 "Abstract role I don't have",
                 Map.of(
                     "cognito:groups", List.of(
-                        "Viewer",
-                        "Submitter_00012120",
-                        "Approver_00010040"
+                        "Viewer_00010040",
+                        "District"
                     )
                 ),
-                Role.ADMIN,
+                Role.SUBMITTER,
                 false
             )
         );
@@ -489,13 +488,13 @@ class JwtPrincipalUtilTest {
                 "Concrete role I have for client 00012120",
                 Map.of(
                     "cognito:groups", List.of(
-                        "Viewer",
+                        "Viewer_00012120",
                         "Submitter_00012120",
                         "Approver_00010040",
-                        "Admin_00000111"
+                        "Admin"
                     )
                 ),
-                Role.VIEWER,
+                Role.ADMIN,
                 "00012120",
                 false
             ),
@@ -504,11 +503,11 @@ class JwtPrincipalUtilTest {
                 Map.of(
                     "cognito:groups", List.of(
                         "Submitter_00012120",
-                        "Approver_00010040",
-                        "Admin_00000111"
+                        "District",
+                        "Admin"
                     )
                 ),
-                Role.VIEWER,
+                Role.DISTRICT,
                 "00012120",
                 false
             ),
@@ -516,13 +515,13 @@ class JwtPrincipalUtilTest {
                 "Abstract role I have for client 00000111",
                 Map.of(
                     "cognito:groups", List.of(
-                        "Viewer",
+                        "Viewer_00000111",
                         "Submitter_00012120",
                         "Approver_00010040",
-                        "Admin_00000111"
+                        "Admin"
                     )
                 ),
-                Role.ADMIN,
+                Role.VIEWER,
                 "00000111",
                 true
             ),
@@ -530,12 +529,11 @@ class JwtPrincipalUtilTest {
                 "Abstract role I don't have for client 00000111",
                 Map.of(
                     "cognito:groups", List.of(
-                        "Viewer",
                         "Submitter_00012120",
                         "Approver_00010040"
                     )
                 ),
-                Role.ADMIN,
+                Role.VIEWER,
                 "00000111",
                 false
             ),
@@ -543,13 +541,13 @@ class JwtPrincipalUtilTest {
                 "Abstract role I have for client 00000112 that I don't have",
                 Map.of(
                     "cognito:groups", List.of(
-                        "Viewer",
+                        "Viewer_00000111",
                         "Submitter_00012120",
                         "Approver_00010040",
-                        "Admin_00000111"
+                        "Admin"
                     )
                 ),
-                Role.ADMIN,
+                Role.VIEWER,
                 "00000112",
                 false
             )
@@ -563,7 +561,7 @@ class JwtPrincipalUtilTest {
                 "Only concrete roles",
                 Map.of(
                     "cognito:groups", List.of(
-                        "Viewer"
+                        "District"
                     )
                 ),
                 List.of()
@@ -573,8 +571,8 @@ class JwtPrincipalUtilTest {
                 Map.of(
                     "cognito:groups", List.of(
                         "Submitter_00012120",
-                        "Approver_00010040",
-                        "Admin_00000111"
+                        "Viewer_00010040",
+                        "Viewer_00000111"
                     )
                 ),
                 List.of("00010040", "00012120", "00000111")
@@ -584,8 +582,8 @@ class JwtPrincipalUtilTest {
                 Map.of(
                     "cognito:groups", List.of(
                         "Submitter_00012120",
-                        "Approver",
-                        "Admin_00000111"
+                        "Viewer",
+                        "Submitter_00000111"
                     )
                 ),
                 List.of("00012120", "00000111")

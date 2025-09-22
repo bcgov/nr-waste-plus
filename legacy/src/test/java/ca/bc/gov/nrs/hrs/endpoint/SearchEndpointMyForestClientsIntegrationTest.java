@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @DisplayName("Integrated Test | Search Endpoint : My Forest Clients")
 @WithMockJwt(
-    cognitoGroups = {"Approver_00010004"}
+    cognitoGroups = {"Submitter_00010004"}
 )
 public class SearchEndpointMyForestClientsIntegrationTest extends
     AbstractTestContainerIntegrationTest {
