@@ -299,10 +299,10 @@ class JwtPrincipalUtilTest {
         );
 
     Map<Role, List<String>> result = Map.of(
-        Role.VIEWER, List.of(),
+        Role.ADMIN, List.of(),
         Role.SUBMITTER, List.of("00012120"),
-        Role.APPROVER, List.of("00010040"),
-        Role.ADMIN, List.of("00000111")
+        Role.VIEWER, List.of("00010040"),
+        Role.DISTRICT, List.of()
     );
 
     assertEquals(result,

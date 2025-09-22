@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 public class RoleConstants {
     public final Role VIEWER = Role.VIEWER;
     public final Role SUBMITTER = Role.SUBMITTER;
-    public final Role APPROVER = Role.APPROVER;
-    public final Role PLANNER = Role.PLANNER;
+    public final Role AREA = Role.AREA;
+    public final Role DISTRICT = Role.DISTRICT;
     public final Role ADMIN = Role.ADMIN;
 }

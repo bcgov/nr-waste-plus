@@ -15,30 +15,20 @@ class RoleTest {
   @Test
   @DisplayName("Role types should be correctly assigned")
   void testRoleTypes() {
-    assertEquals(RoleType.CONCRETE, Role.VIEWER.getType(), "VIEWER should be CONCRETE");
+    assertEquals(RoleType.ABSTRACT, Role.VIEWER.getType(), "VIEWER should be ABSTRACT");
     assertEquals(RoleType.ABSTRACT, Role.SUBMITTER.getType(), "SUBMITTER should be ABSTRACT");
-    assertEquals(RoleType.ABSTRACT, Role.APPROVER.getType(), "APPROVER should be ABSTRACT");
-    assertEquals(RoleType.ABSTRACT, Role.PLANNER.getType(), "PLANNER should be ABSTRACT");
-    assertEquals(RoleType.ABSTRACT, Role.ADMIN.getType(), "ADMIN should be ABSTRACT");
+    assertEquals(RoleType.CONCRETE, Role.AREA.getType(), "AREA should be CONCRETE");
+    assertEquals(RoleType.CONCRETE, Role.DISTRICT.getType(), "DISTRICT should be CONCRETE");
+    assertEquals(RoleType.CONCRETE, Role.ADMIN.getType(), "ADMIN should be CONCRETE");
   }
 
   @Test
   @DisplayName("Concrete role should return true for isConcrete()")
   void testIsConcrete() {
-    assertTrue(Role.VIEWER.isConcrete(), "VIEWER should be concrete");
-    assertFalse(Role.SUBMITTER.isConcrete(), "SUBMITTER should not be concrete");
-    assertFalse(Role.APPROVER.isConcrete(), "APPROVER should not be concrete");
-    assertFalse(Role.PLANNER.isConcrete(), "PLANNER should not be concrete");
-    assertFalse(Role.ADMIN.isConcrete(), "ADMIN should not be concrete");
-  }
-
-  @Test
-  @DisplayName("Abstract roles should return true for isAbstract()")
-  void testIsAbstract() {
-    assertFalse(Role.VIEWER.isAbstract(), "VIEWER should not be abstract");
-    assertTrue(Role.SUBMITTER.isAbstract(), "SUBMITTER should be abstract");
-    assertTrue(Role.APPROVER.isAbstract(), "APPROVER should be abstract");
-    assertTrue(Role.PLANNER.isAbstract(), "PLANNER should be abstract");
-    assertTrue(Role.ADMIN.isAbstract(), "ADMIN should be abstract");
+    assertTrue(Role.VIEWER.isAbstract(), "VIEWER should be concrete");
+    assertTrue(Role.SUBMITTER.isAbstract(), "SUBMITTER should not be concrete");
+    assertFalse(Role.AREA.isAbstract(), "AREA should be concrete");
+    assertFalse(Role.DISTRICT.isAbstract(), "DISTRICT should be concrete");
+    assertFalse(Role.ADMIN.isAbstract(), "ADMIN should be concrete");
   }
 }
