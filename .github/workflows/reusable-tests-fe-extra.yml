@@ -10,7 +10,7 @@ jobs:
     name: Frontend UI Tests
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     container:
-      image: mcr.microsoft.com/playwright:v1.55.0-noble
+      image: mcr.microsoft.com/playwright:v1.55.1-noble
     permissions:
       contents: write
       checks: write
