@@ -46,12 +46,12 @@ jobs:
             npm i
             npm run test:coverage
           dir: frontend
-#          sonar_args: >
-#            -Dsonar.exclusions=**/coverage/**,**/test-results/**,**/stub/**,**/reports/**,**/node_modules/**,**/tests/**,**/*.test.{ts,x},**/vite-env.d.ts,**/types/**,**/constants/**,**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx
-#            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-#            -Dsonar.organization=bcgov-sonarcloud
-#            -Dsonar.projectKey=waste-plus-frontend
-#          sonar_token: ${{ secrets.SONAR_TOKEN_FRONTEND }}
+          sonar_args: >
+            -Dsonar.exclusions=**/coverage/**,**/test-results/**,**/stub/**,**/reports/**,**/node_modules/**,**/tests/**,**/*.test.{ts,x},**/vite-env.d.ts,**/types/**,**/constants/**,**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.organization=bcgov-sonarcloud
+            -Dsonar.projectKey=nr-waste-plus-frontend
+          sonar_token: ${{ secrets.SONAR_TOKEN_FRONTEND }}
           triggers: ('frontend/')
 
       - name: Annotate PR with frontend test results
