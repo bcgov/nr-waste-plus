@@ -15,8 +15,7 @@ import org.springframework.stereotype.Component;
  * Customize OAuth2 resource server configuration to extract authorities
  * from the JWT's {@code cognito:groups} claim and to configure the JWK set URI.
  *
- * <p>
- * The customizer sets a JwtAuthenticationConverter that uses the
+ * <p>The customizer sets a JwtAuthenticationConverter that uses the
  * {@code cognito:groups} claim as the source of granted authorities and
  * removes any prefix from authority names to match application roles.
  * </p>
@@ -35,12 +34,12 @@ public class Oauth2SecurityCustomizer implements
   }
 
   private Converter<Jwt, AbstractAuthenticationToken> converter() {
-    JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-    grantedAuthoritiesConverter.setAuthoritiesClaimName("cognito:groups");
-    grantedAuthoritiesConverter.setAuthorityPrefix("");
+    JwtGrantedAuthoritiesConverter authConverter = new JwtGrantedAuthoritiesConverter();
+    authConverter.setAuthoritiesClaimName("cognito:groups");
+    authConverter.setAuthorityPrefix("");
 
     JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-    converter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+    converter.setJwtGrantedAuthoritiesConverter(authConverter);
     return converter;
   }
 

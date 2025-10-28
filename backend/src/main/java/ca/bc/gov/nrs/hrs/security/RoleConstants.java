@@ -5,13 +5,11 @@ import org.springframework.stereotype.Component;
 
 
 /**
- * Exposes role constants as Spring beans for use in SpEL expressions within
- * {@code @PreAuthorize} annotations.
+ * Exposes role constants as Spring beans for use in SpEL expressions within {@code @PreAuthorize}
+ * annotations.
  *
- * <p>
- * The constants are available as a bean named {@code roles} and allow
- * concise expressions such as:
- * </p>
+ * <p>The constants are available as a bean named {@code roles}
+ * and allow concise expressions such as:</p>
  *
  * <pre>
  * {@code
@@ -23,18 +21,28 @@ import org.springframework.stereotype.Component;
 @Component("roles")
 public class RoleConstants {
 
-  /** Role representing a viewer-level permission. */
-  public final Role VIEWER = Role.VIEWER;
+  /**
+   * Role representing a viewer-level permission.
+   */
+  public static final Role VIEWER = Role.VIEWER;
 
-  /** Role representing a submitter-level permission. */
-  public final Role SUBMITTER = Role.SUBMITTER;
+  /**
+   * Role representing a submitter-level permission.
+   */
+  public static final Role SUBMITTER = Role.SUBMITTER;
 
-  /** Role scoped to an area. */
-  public final Role AREA = Role.AREA;
+  /**
+   * Role scoped to an area.
+   */
+  public static final Role AREA = Role.AREA;
 
-  /** Role scoped to a district. */
-  public final Role DISTRICT = Role.DISTRICT;
+  /**
+   * Role scoped to a district.
+   */
+  public static final Role DISTRICT = Role.DISTRICT;
 
-  /** Administrative role with elevated privileges. */
-  public final Role ADMIN = Role.ADMIN;
+  /**
+   * Administrative role with elevated privileges.
+   */
+  public static final Role ADMIN = Role.ADMIN;
 }

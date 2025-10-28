@@ -13,8 +13,7 @@ import org.springframework.util.MultiValueMap;
  * Utility helpers for building URI query parameters, particularly for
  * multi-value query parameters and pageable parameters.
  *
- * <p>
- * These helpers return {@link MultiValueMap} instances suitable for use
+ * <p>These helpers return {@link MultiValueMap} instances suitable for use
  * with Spring's {@code UriComponentsBuilder#queryParams()} calls.
  * </p>
  */
@@ -60,7 +59,7 @@ public class UriUtils {
             .getSort()
             .forEach(order ->
                 multiValueMap
-                    .add("sort",order.toString().replace(": ", ","))
+                    .add("sort", order.toString().replace(": ", ","))
             );
       }
     }

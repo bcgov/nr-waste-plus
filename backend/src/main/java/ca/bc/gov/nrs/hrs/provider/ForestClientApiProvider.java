@@ -33,10 +33,9 @@ import org.springframework.web.client.RestClient;
 /**
  * Provider that integrates with the external ForestClient API.
  *
- * <p>
- * Contains methods to fetch clients, locations and perform searches against
- * the downstream ForestClient service. Resilience (retry/circuit breaker)
- * and response handling are applied where appropriate.
+ * <p>Contains methods to fetch clients, locations and perform searches against
+ * the downstream ForestClient service. Resilience (retry/circuit breaker) and response handling are
+ * applied where appropriate.
  * </p>
  */
 @Slf4j
@@ -48,6 +47,11 @@ public class ForestClientApiProvider {
 
   private static final String PROVIDER = "ForestClient API";
 
+  /**
+   * Constructor for ForestClientApiProvider.
+   *
+   * @param forestClientApi the RestClient configured for ForestClient API
+   */
   ForestClientApiProvider(@Qualifier("forestClientApi") RestClient forestClientApi) {
     this.restClient = forestClientApi;
   }
@@ -55,11 +59,10 @@ public class ForestClientApiProvider {
   /**
    * Fetch a ForestClient by its number.
    *
-   * <p>
-   * Handles downstream response status codes mapping them to appropriate
+   * <p>Handles downstream response status codes mapping them to appropriate
    * domain exceptions (404 -> {@link ForestClientNotFoundException}, 429 ->
-   * {@link TooManyRequestsException}, 4xx -> {@link UnretriableException},
-   * 5xx -> {@link RetriableException}).
+   * {@link TooManyRequestsException}, 4xx -> {@link UnretriableException}, 5xx ->
+   * {@link RetriableException}).
    * </p>
    *
    * @param number the client number to search for
@@ -110,13 +113,12 @@ public class ForestClientApiProvider {
   /**
    * Search client by name, acronym or number.
    *
-   * <p>
-   * Returns a pageable result of {@link ForestClientDto}. The total count is
+   * <p>Returns a pageable result of {@link ForestClientDto}. The total count is
    * read from the {@code X-Total-Count} response header.
    * </p>
    *
-   * @param page pagination page
-   * @param size pagination size
+   * @param page  pagination page
+   * @param size  pagination size
    * @param value search value for name/acronym/number
    * @return a {@link Page} of {@link ForestClientDto}
    */
@@ -173,8 +175,7 @@ public class ForestClientApiProvider {
   /**
    * Fetch all locations for a client.
    *
-   * <p>
-   * Returns a pageable list of {@link ForestClientLocationDto}. On 404 the
+   * <p>Returns a pageable list of {@link ForestClientLocationDto}. On 404 the
    * call throws {@link ForestClientNotFoundException}.
    * </p>
    *
@@ -268,10 +269,10 @@ public class ForestClientApiProvider {
   /**
    * Search clients by a list of IDs with optional name filter.
    *
-   * @param page Page number
-   * @param size Number of items per page
+   * @param page   Page number
+   * @param size   Number of items per page
    * @param values List of client IDs to search
-   * @param name Optional name filter
+   * @param name   Optional name filter
    * @return List of matching ForestClientDto
    */
   @CircuitBreaker(name = "breaker", fallbackMethod = "searchClientsByIdsFallback")
@@ -352,7 +353,7 @@ public class ForestClientApiProvider {
       List<String> values,
       String name,
       Throwable ex
-  ){
+  ) {
     logFallbackWarn("searchClientsByIds", ex);
     return ForestClientConstants.EMPTY_FOREST_CLIENT_LIST;
   }
