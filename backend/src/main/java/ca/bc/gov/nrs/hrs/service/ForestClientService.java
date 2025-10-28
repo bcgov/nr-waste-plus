@@ -15,7 +15,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 /**
- * This service contains methods for interacting with Forest Client API.
+ * Service containing helpers that interact with the Forest Client API via
+ * {@link ForestClientApiProvider}.
+ *
+ * <p>Provides convenience methods used by controllers to fetch client details,
+ * locations and to perform searches. Input normalization (client number
+ * formatting) is applied where needed.
+ * </p>
  */
 @Slf4j
 @Service
@@ -29,7 +35,7 @@ public class ForestClientService {
    * Get a {@link ForestClientDto} given a client number.
    *
    * @param clientNumber The client number to be fetched.
-   * @return Optional of ForestsClientDto
+   * @return Optional of {@link ForestClientDto}
    */
   @NewSpan
   public Optional<ForestClientDto> getClientByNumber(String clientNumber) {
@@ -43,9 +49,10 @@ public class ForestClientService {
   /**
    * Search for clients by name, acronym or number.
    *
-   * @param page  The page number to be fetched.
-   * @param size  The size of the page to be fetched.
+   * @param page The page number to be fetched.
+   * @param size The size of the page to be fetched.
    * @param value The value to be searched.
+   * @param clients optional client number filter; when empty, no filtering is applied
    * @return List of {@link ForestClientAutocompleteResultDto} with found clients.
    */
   @NewSpan
@@ -96,6 +103,15 @@ public class ForestClientService {
             .toList();
   }
 
+  /**
+   * Search clients by explicit list of client numbers.
+   *
+   * @param page page index
+   * @param size page size
+   * @param values list of client numbers
+   * @param name optional name filter
+   * @return list of matching {@link ForestClientDto}
+   */
   @NewSpan
   public List<ForestClientDto> searchByClientNumbers(
       int page,
@@ -104,7 +120,7 @@ public class ForestClientService {
       String name
   ) {
     log.info("Searching forest client by ids {}, page: {}, size: {}", values, page, size);
-    return forestClientApiProvider.searchClientsByIds(page, size, values,name);
+    return forestClientApiProvider.searchClientsByIds(page, size, values, name);
   }
 
   private String checkClientNumber(String clientNumber) {
