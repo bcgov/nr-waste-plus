@@ -1,6 +1,8 @@
 package ca.bc.gov.nrs.hrs.exception;
 
 import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.web.server.ResponseStatusException;
@@ -9,14 +11,20 @@ import org.springframework.web.server.ResponseStatusException;
  * Exception for downstream failures that may be retried after a suggested
  * delay.
  *
- * <p>
- * The exception can capture a {@code Retry-After} value—either a number of
+ * <p>The exception can capture a {@code Retry-After} value—either a number of
  * seconds or an HTTP-date—and exposes it as an {@link Optional}{@code <Duration>}.
  * </p>
  */
 public class RetriableException extends ResponseStatusException {
   private final Duration retryAfter;
 
+  /**
+   * Constructor with retry-after value.
+   *
+   * @param status     the HTTP status code
+   * @param value      the parameter value that caused the failure
+   * @param retryAfter the retry-after header value
+   */
   public RetriableException(HttpStatusCode status, String value, String retryAfter) {
     super(status,
         String.format(
@@ -25,6 +33,12 @@ public class RetriableException extends ResponseStatusException {
     this.retryAfter = parseRetryAfter(retryAfter);
   }
 
+  /**
+   * Constructor without retry-after value.
+   *
+   * @param status  the HTTP status code
+   * @param message the exception message
+   */
   public RetriableException(HttpStatusCode status, String message) {
     super(status, message);
     this.retryAfter = Duration.ofSeconds(10); // Default retry after 10 seconds
@@ -40,14 +54,16 @@ public class RetriableException extends ResponseStatusException {
   }
 
   private Duration parseRetryAfter(String header) {
-    if (header == null) return null;
+    if (header == null) {
+      return null;
+    }
     try {
       // Retry-After can be seconds or HTTP-date
       if (header.matches("\\d+")) {
         return Duration.ofSeconds(Long.parseLong(header));
       } else {
-        var date = java.time.ZonedDateTime.parse(header, java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME);
-        return Duration.between(java.time.ZonedDateTime.now(), date);
+        var date = ZonedDateTime.parse(header, DateTimeFormatter.RFC_1123_DATE_TIME);
+        return Duration.between(ZonedDateTime.now(), date);
       }
     } catch (Exception e) {
       return null;

@@ -7,8 +7,7 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * Generic exception indicating a requested resource was not found.
  *
- * <p>
- * Annotated with {@link ResponseStatus} so when thrown from a controller it
+ * <p>Annotated with {@link ResponseStatus} so when thrown from a controller it
  * translates to an HTTP 404 (Not Found) response with a descriptive message.
  * </p>
  */
@@ -31,6 +30,9 @@ public class NotFoundGenericException extends ResponseStatusException {
    * @param value the identifier value that was not found
    */
   public NotFoundGenericException(String entityName, String value) {
-    super(HttpStatus.NOT_FOUND, String.format("%s record(s) with id %s not found!", entityName, value));
+    super(
+        HttpStatus.NOT_FOUND,
+        String.format("%s record(s) with id %s not found!", entityName, value)
+    );
   }
 }

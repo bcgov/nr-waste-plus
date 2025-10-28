@@ -11,7 +11,12 @@ import org.springframework.web.server.ResponseStatusException;
 @ResponseStatus(value = HttpStatus.FORBIDDEN)
 public class InvalidSelectedValueException extends ResponseStatusException {
 
+  /**
+   * Constructs a new InvalidSelectedValueException with the given message.
+   *
+   * @param message the detail message
+   */
   public InvalidSelectedValueException(String message) {
-    super(HttpStatus.FORBIDDEN,message);
+    super(HttpStatus.FORBIDDEN, message);
   }
 }
