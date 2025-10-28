@@ -226,47 +226,6 @@ public class ForestClientApiProvider {
   }
 
   /**
-   * Circuit breaker protected method to fetch a specific client location by client number and
-   * location code.
-   *
-   * @param clientNumber client number to lookup
-   * @param locationCode location code to lookup
-   * @return an {@link Optional} containing the {@link ForestClientLocationDto} if found
-   */
-  @CircuitBreaker(
-      name = "breaker",
-      fallbackMethod = "locationByClientNumberAndLocationCodeFallback"
-  )
-  @NewSpan
-  public Optional<ForestClientLocationDto> fetchLocationByClientNumberAndLocationCode(
-      String clientNumber,
-      String locationCode
-  ) {
-    log.info("Starting {} request to /clients/{}/locations/{}", PROVIDER, clientNumber,
-        locationCode);
-
-    try {
-      return
-          Optional
-              .ofNullable(
-                  restClient
-                      .get()
-                      .uri("/clients/{clientNumber}/locations/{locationCode}", clientNumber,
-                          locationCode)
-                      .retrieve()
-                      .body(ForestClientLocationDto.class)
-              );
-    } catch (HttpClientErrorException | HttpServerErrorException httpExc) {
-      log.error("Client location {} request - Response code error: {}",
-          PROVIDER,
-          httpExc.getStatusCode()
-      );
-    }
-
-    return Optional.empty();
-  }
-
-  /**
    * Search clients by a list of IDs with optional name filter.
    *
    * @param page   Page number
@@ -334,16 +293,6 @@ public class ForestClientApiProvider {
       Throwable ex
   ) {
     return paginatedFallback(0, 10, value, ex);
-  }
-
-  @SuppressWarnings("unused")
-  private Optional<ForestClientLocationDto> locationByClientNumberAndLocationCodeFallback(
-      String clientNumber,
-      String locationCode,
-      Throwable ex
-  ) {
-    logFallbackWarn("locationByClientNumberAndLocationCode", ex);
-    return Optional.empty();
   }
 
   @SuppressWarnings("unused")

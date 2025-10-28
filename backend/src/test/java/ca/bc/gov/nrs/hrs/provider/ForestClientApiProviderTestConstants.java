@@ -161,4 +161,10 @@ public class ForestClientApiProviderTestConstants {
             "totalPages": 0
         }
       }""";
+
+  public static final String EMPTY_JSON = "{}";
+  public static final String EMPTY_PAGED_NOPAGE = """
+      {
+        "content": []
+      }""";
 }
