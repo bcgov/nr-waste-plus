@@ -9,6 +9,12 @@ import lombok.With;
 
 /**
  * This record represents a Forest Client object.
+ * <p>
+ * It models information about a forest client including identification,
+ * legal person names and type/status codes. The {@link #name()} accessor
+ * resolves a display name depending on whether the client represents an
+ * individual or an organization.
+ * </p>
  */
 @Builder
 @With
@@ -26,10 +32,13 @@ public record ForestClientDto(
 
   /**
    * Returns the name of the client.
-   * It resolves it based on client type code, so it can be either individual with first, middle and
-   * last name, or a company with a single name.
+   * <p>
+   * The value is resolved based on the client type: for individuals (type
+   * code 'I') it concatenates legal first, middle and last name parts; for
+   * other types it returns the clientName (company or organization name).
+   * </p>
    *
-   * @return the name of the client
+   * @return the resolved display name of the client
    */
   @Transient
   public String name() {
