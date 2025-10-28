@@ -5,7 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 /**
- * This enum contains all forest client statuses codes and descriptions.
+ * Enum containing all forest client status codes and descriptions.
+ *
+ * <p>
+ * Each enum constant exposes {@code code} and {@code description} properties
+ * (via Lombok's {@link Getter}) and is serialized as a JSON object because
+ * of {@link JsonFormat#shape()} usage. Individual JSON property names are
+ * provided with {@link JsonProperty} annotations.
+ * </p>
  */
 @Getter
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
@@ -32,8 +39,8 @@ public enum ForestClientStatusEnum {
   /**
    * Get a {@link ForestClientStatusEnum} instance given the status code.
    *
-   * @param code The status code.
-   * @return ForestClientStatusEnum
+   * @param code the code to look up
+   * @return the matching {@link ForestClientStatusEnum} or {@code null} if not found
    */
   public static ForestClientStatusEnum of(String code) {
     for (ForestClientStatusEnum status : values()) {

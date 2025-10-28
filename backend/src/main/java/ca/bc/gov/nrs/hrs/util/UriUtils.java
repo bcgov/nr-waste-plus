@@ -9,6 +9,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+/**
+ * Utility helpers for building URI query parameters, particularly for
+ * multi-value query parameters and pageable parameters.
+ *
+ * <p>These helpers return {@link MultiValueMap} instances suitable for use
+ * with Spring's {@code UriComponentsBuilder#queryParams()} calls.
+ * </p>
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class UriUtils {
 
@@ -32,6 +40,13 @@ public class UriUtils {
     return map;
   }
 
+  /**
+   * Convert a {@link Pageable} into a MultiValueMap of query parameters which
+   * include page, size and any sort orders.
+   *
+   * @param page the pageable to convert
+   * @return MultiValueMap of pageable query parameters
+   */
   public static MultiValueMap<String, String> buildPageableQueryParam(
       Pageable page
   ) {
@@ -44,7 +59,7 @@ public class UriUtils {
             .getSort()
             .forEach(order ->
                 multiValueMap
-                    .add("sort",order.toString().replace(": ", ","))
+                    .add("sort", order.toString().replace(": ", ","))
             );
       }
     }

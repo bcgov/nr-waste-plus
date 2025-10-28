@@ -3,7 +3,13 @@ package ca.bc.gov.nrs.hrs.dto.client;
 import lombok.With;
 
 /**
- * The type Forest client autocomplete result dto.
+ * DTO used to represent a forest client in autocomplete or lightweight
+ * search responses.
+ *
+ * <p>
+ * Contains an identifier, display name and optional acronym suited for
+ * compact UI elements such as autocomplete dropdowns.
+ * </p>
  */
 @With
 public record ForestClientAutocompleteResultDto(

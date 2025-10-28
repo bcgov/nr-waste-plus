@@ -34,6 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -120,6 +121,9 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
     assertEquals(expected, legacyApiProvider.searchReportingUnitUsers(userId));
   }
 
+  @ParameterizedTest
+  @MethodSource("searchReportingUnit")
+  @DisplayName("Search Reporting Unit with various filters and responses")
   void shouldSearchAndGet(
       ReportingUnitSearchParametersDto filters,
       Pageable pageable,
@@ -171,6 +175,19 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
             ReportingUnitSearchParametersDto.builder().build(),
             PageRequest.of(1,10),
             unauthorized(),
+            0L
+        ),
+        Arguments.argumentSet(
+            "Search with no results object",
+            ReportingUnitSearchParametersDto.builder().build(),
+            PageRequest.of(0,10),
+            okJson(ForestClientApiProviderTestConstants.EMPTY_JSON),
+            0L
+        ),Arguments.argumentSet(
+            "Search with no results page",
+            ReportingUnitSearchParametersDto.builder().build(),
+            PageRequest.of(0,10),
+            okJson(ForestClientApiProviderTestConstants.EMPTY_PAGED_NOPAGE),
             0L
         )
     );

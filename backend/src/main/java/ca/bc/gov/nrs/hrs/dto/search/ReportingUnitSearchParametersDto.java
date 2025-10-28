@@ -18,8 +18,14 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 /**
- * <p>Search parameters for reporting unit search.</p>
- * Some getters are overridden to provide default values if the lists are null or empty.
+ * Search parameters for reporting unit searches.
+ *
+ * <p>Contains the set of filter values that can be applied when searching for
+ * reporting units. Some getters are overridden (via Lombok 'With') to provide
+ * a convenient immutable-style builder; lists may be null or empty and the
+ * helper method {@link #toMultiMap(Pageable)} converts the populated fields
+ * into request query parameters.
+ * </p>
  */
 @Data
 @NoArgsConstructor
@@ -44,6 +50,16 @@ public class ReportingUnitSearchParametersDto {
   private String clientLocationCode;
   private String clientNumber;
 
+  /**
+   * Convert the populated search parameters into a {@link MultiValueMap} of
+   * query parameters suitable for building a request URL. Only non-empty
+   * fields are included. The provided {@code page} will be translated into
+   * paging parameters and appended.
+   *
+   * @param page the pageable to include in the produced query parameters; may
+   *     be null
+   * @return a {@link MultiValueMap} containing non-empty query parameters
+   */
   public MultiValueMap<String, String> toMultiMap(Pageable page) {
     LinkedMultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
 
@@ -90,7 +106,8 @@ public class ReportingUnitSearchParametersDto {
     multiValueMap.add("requestByMe", BooleanUtils.toStringTrueFalse(requestByMe));
 
     if (updateDateStart != null) {
-      multiValueMap.add("updateDateStart", updateDateStart.format(DateTimeFormatter.ISO_LOCAL_DATE));
+      multiValueMap.add("updateDateStart", updateDateStart.format(DateTimeFormatter.ISO_LOCAL_DATE)
+      );
     }
 
     if (updateDateEnd != null) {
@@ -102,6 +119,12 @@ public class ReportingUnitSearchParametersDto {
     return multiValueMap;
   }
 
+  /**
+   * Convert the populated search parameters into a {@link MultiValueMap} of
+   * query parameters without paging information.
+   *
+   * @return a {@link MultiValueMap} containing non-empty query parameters
+   */
   public MultiValueMap<String, String> toMultiMap() {
     return toMultiMap(null);
   }

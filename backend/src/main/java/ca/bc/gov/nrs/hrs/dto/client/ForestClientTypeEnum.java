@@ -5,7 +5,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 /**
- * This enum contains all forest client types codes and descriptions.
+ * Enum containing all forest client type codes and their descriptions.
+ *
+ * <p>
+ * Each enum constant exposes a {@code code} and {@code description} and is
+ * serialized as a JSON object due to {@link JsonFormat#shape()}.
+ * </p>
  */
 @Getter
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
@@ -46,8 +51,8 @@ public enum ForestClientTypeEnum {
   /**
    * Get a {@link ForestClientTypeEnum} instance given the type code.
    *
-   * @param code The type code.
-   * @return ForestClientTypeEnum
+   * @param code the type code to look up
+   * @return the matching {@link ForestClientTypeEnum} or {@code null} if not found
    */
   public static ForestClientTypeEnum of(Character code) {
     for (ForestClientTypeEnum type : values()) {

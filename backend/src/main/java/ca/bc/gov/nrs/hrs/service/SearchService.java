@@ -24,6 +24,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service responsible for searching reporting units and client-related data.
+ *
+ * <p>This service delegates to {@link LegacyApiProvider} for legacy reporting unit
+ * queries and enriches results with client and location details obtained via
+ * {@link ForestClientService}.
+ * </p>
+ */
 @Slf4j
 @Service
 @Observed
@@ -33,6 +41,17 @@ public class SearchService {
   private final LegacyApiProvider legacyApiProvider;
   private final ForestClientService forestClientService;
 
+  /**
+   * Search reporting units using the supplied filters and pageable settings.
+   *
+   * <p>Results are enriched with client names and client location details by
+   * calling the Forest Client service.
+   * </p>
+   *
+   * @param filters search filters
+   * @param pageable paging parameters
+   * @return a page of {@link ReportingUnitSearchResultDto} enriched with client info
+   */
   @NewSpan
   public Page<ReportingUnitSearchResultDto> search(
       ReportingUnitSearchParametersDto filters,
@@ -91,11 +110,29 @@ public class SearchService {
         );
   }
 
+  /**
+   * Search reporting units associated with a user.
+   *
+   * @param userId the user id to query
+   * @return list of reporting unit ids as strings
+   */
   @NewSpan
   public List<String> searchReportingUnitUser(String userId) {
     return legacyApiProvider.searchReportingUnitUsers(userId);
   }
 
+  /**
+   * Search clients for a user's My Forest view.
+   *
+   * <p>When a textual value is provided the method filters clients accordingly and
+   * may return an empty page if none match.
+   * </p>
+   *
+   * @param pageable paging parameters
+   * @param value optional filter value
+   * @param allClients list of clients to consider
+   * @return a page of {@link MyForestClientSearchResultDto} enriched with client info
+   */
   @NewSpan
   public Page<MyForestClientSearchResultDto> searchByMyForestClient(
       Pageable pageable,
@@ -112,7 +149,7 @@ public class SearchService {
       log.info("Filtering search by clients: {}", response.keySet());
 
       if (response.isEmpty()) {
-        return new PageImpl<>(List.of(), PageRequest.of(0,10),0);
+        return new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
       }
     }
 
