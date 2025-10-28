@@ -19,6 +19,7 @@ import org.springframework.util.MultiValueMap;
 
 /**
  * Search parameters for reporting unit searches.
+ *
  * <p>
  * Contains the set of filter values that can be applied when searching for
  * reporting units. Some getters are overridden (via Lombok 'With') to provide

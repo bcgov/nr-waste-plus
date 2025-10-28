@@ -4,6 +4,7 @@ import lombok.With;
 
 /**
  * Data Transfer Object that pairs a code with its human-readable description.
+ *
  * <p>
  * Represents a small immutable record used throughout the application to
  * return or transport a code and its corresponding description.

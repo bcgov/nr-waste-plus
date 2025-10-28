@@ -143,8 +143,10 @@ public class LegacyApiProvider {
         .retrieve()
         .body(JsonNode.class);
 
-    if (pagedResponse == null || pagedResponse.get(LegacyApiConstants.CONTENT_CONST) == null || pagedResponse.get(
-        LegacyApiConstants.PAGE_CONST) == null) {
+    if (pagedResponse == null
+        || pagedResponse.get(LegacyApiConstants.CONTENT_CONST) == null
+        || pagedResponse.get(LegacyApiConstants.PAGE_CONST) == null
+    ) {
       logFallbackError(null);
       return new PageImpl<>(LegacyApiConstants.RU_SEARCH_LIST, pageable, 0);
     }
@@ -249,7 +251,10 @@ public class LegacyApiProvider {
 
     long totalElements = 0L;
     try {
-      totalElements = pagedResponse.get(LegacyApiConstants.PAGE_CONST).get("totalElements").asLong();
+      totalElements = pagedResponse
+          .get(LegacyApiConstants.PAGE_CONST)
+          .get("totalElements")
+          .asLong();
     } catch (Exception e) {
       logFallbackError(e);
     }

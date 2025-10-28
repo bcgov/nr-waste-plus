@@ -69,11 +69,12 @@ public class ForestClientController {
 
   /**
    * Search for clients by name, acronym or number.
+   *
    * <p>
    * The behavior of this endpoint is affected by the caller's identity
    * provider (determined from the provided JWT):
    * </p>
-   * 
+   *
    * <ul>
    *   <li>BCeID callers will have the result size increased to allow client-side
    *       filtering and will only be allowed to search if they have clients in
@@ -146,6 +147,7 @@ public class ForestClientController {
 
   /**
    * Search page of the current user's Forest clients.
+   *
    * <p>
    * This endpoint performs a paged search scoped to the clients associated
    * with the authenticated user's roles (as extracted from the JWT). The
