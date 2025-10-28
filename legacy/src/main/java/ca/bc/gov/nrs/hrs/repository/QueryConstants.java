@@ -3,6 +3,15 @@ package ca.bc.gov.nrs.hrs.repository;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+/**
+ * QueryConstants is a utility class that holds SQL query fragments and constants used throughout
+ * the application for querying reporting units, user information, and district data related to
+ * waste assessment and reporting.
+ *
+ * <p>This class is not meant to be instantiated, hence the private constructor.
+ * The constants defined in this class are used in repository classes to fetch data from
+ * the database.</p>
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class QueryConstants {
 
@@ -12,30 +21,33 @@ public class QueryConstants {
 
   private static final String SEARCH_REPORTING_UNIT_SELECT = """
       SELECT wru.REPORTING_UNIT_ID AS ru_number,
-      	COALESCE(waa.CUT_BLOCK_ID,waa.DRAFT_CUT_BLOCK_ID) AS block_id,
-      	wru.CLIENT_NUMBER AS client_number,
-      	wru.CLIENT_LOCN_CODE  AS client_location,
-      	wru.waste_sampling_option_code AS sampling_code,
-      	wsoc.DESCRIPTION AS sampling_name,
-      	ou.ORG_UNIT_CODE AS district_code,
-      	ou.ORG_UNIT_NAME AS district_name,
-      	waa.WASTE_ASSESS_AREA_STS_CODE AS status_code,
-      	waasc.DESCRIPTION AS status_name,
-      	wru.update_timestamp AS last_updated
+        COALESCE(waa.CUT_BLOCK_ID,waa.DRAFT_CUT_BLOCK_ID) AS block_id,
+        wru.CLIENT_NUMBER AS client_number,
+        wru.CLIENT_LOCN_CODE  AS client_location,
+        wru.waste_sampling_option_code AS sampling_code,
+        wsoc.DESCRIPTION AS sampling_name,
+        ou.ORG_UNIT_CODE AS district_code,
+        ou.ORG_UNIT_NAME AS district_name,
+        waa.WASTE_ASSESS_AREA_STS_CODE AS status_code,
+        waasc.DESCRIPTION AS status_name,
+        wru.update_timestamp AS last_updated
       """;
 
   private static final String SEARCH_REPORTING_UNIT_FROM_JOIN = """
       FROM WASTE_REPORTING_UNIT wru
-        LEFT JOIN WASTE_SAMPLING_OPTION_CODE wsoc ON wsoc.waste_sampling_option_code = wru.waste_sampling_option_code
-        LEFT JOIN WASTE_ASSESSMENT_AREA waa ON waa.REPORTING_UNIT_ID = wru.REPORTING_UNIT_ID
-        LEFT JOIN WASTE_ASSESS_AREA_STS_CODE waasc ON waasc.WASTE_ASSESS_AREA_STS_CODE = waa.WASTE_ASSESS_AREA_STS_CODE
+        LEFT JOIN WASTE_SAMPLING_OPTION_CODE wsoc
+        ON wsoc.waste_sampling_option_code = wru.waste_sampling_option_code
+        LEFT JOIN WASTE_ASSESSMENT_AREA waa
+        ON waa.REPORTING_UNIT_ID = wru.REPORTING_UNIT_ID
+        LEFT JOIN WASTE_ASSESS_AREA_STS_CODE waasc
+        ON waasc.WASTE_ASSESS_AREA_STS_CODE = waa.WASTE_ASSESS_AREA_STS_CODE
         LEFT JOIN ORG_UNIT ou ON ou.ORG_UNIT_NO = wru.ORG_UNIT_NO
       """;
 
   private static final String SEARCH_REPORTING_UNIT_WHERE = """
       WHERE
         COALESCE(waa.CUT_BLOCK_ID,waa.DRAFT_CUT_BLOCK_ID) IS NOT NULL
-      	AND
+        AND
          (
             NVL(:#{#filter.mainSearchTerm},'NOVALUE') = 'NOVALUE' OR (
               (
@@ -52,37 +64,48 @@ public class QueryConstants {
                'NOVALUE' in (:#{#filter.district}) OR ou.ORG_UNIT_CODE IN (:#{#filter.district})
            )
          AND (
-               'NOVALUE' in (:#{#filter.sampling}) OR wru.waste_sampling_option_code IN (:#{#filter.sampling})
+               'NOVALUE' in (:#{#filter.sampling})
+               OR wru.waste_sampling_option_code IN (:#{#filter.sampling})
            )
          AND (
-               'NOVALUE' in (:#{#filter.status}) OR waa.WASTE_ASSESS_AREA_STS_CODE IN (:#{#filter.status})
+               'NOVALUE' in (:#{#filter.status})
+               OR waa.WASTE_ASSESS_AREA_STS_CODE IN (:#{#filter.status})
            )
          AND (
-             NVL(:#{#filter.requestUserId},'NOVALUE') = 'NOVALUE' OR wru.ENTRY_USERID = :#{#filter.requestUserId}
+             NVL(:#{#filter.requestUserId},'NOVALUE') = 'NOVALUE'
+             OR wru.ENTRY_USERID = :#{#filter.requestUserId}
            )
          AND (
-             NVL(:#{#filter.licenseeId},'NOVALUE') = 'NOVALUE' OR waa.FOREST_FILE_ID = :#{#filter.licenseeId}
+             NVL(:#{#filter.licenseeId},'NOVALUE') = 'NOVALUE'
+             OR waa.FOREST_FILE_ID = :#{#filter.licenseeId}
            )
          AND (
-             NVL(:#{#filter.cuttingPermitId},'NOVALUE') = 'NOVALUE' OR waa.DRAFT_CUTTING_PERMIT_ID = :#{#filter.cuttingPermitId}
+             NVL(:#{#filter.cuttingPermitId},'NOVALUE') = 'NOVALUE'
+             OR waa.DRAFT_CUTTING_PERMIT_ID = :#{#filter.cuttingPermitId}
            )
          AND (
-             NVL(:#{#filter.timberMark},'NOVALUE') = 'NOVALUE' OR waa.draft_timber_mark = :#{#filter.timberMark}
+             NVL(:#{#filter.timberMark},'NOVALUE') = 'NOVALUE'
+             OR waa.draft_timber_mark = :#{#filter.timberMark}
            )
          AND (
-             NVL(:#{#filter.clientLocationCode},'NOVALUE') = 'NOVALUE' OR wru.CLIENT_LOCN_CODE = :#{#filter.clientLocationCode}
+             NVL(:#{#filter.clientLocationCode},'NOVALUE') = 'NOVALUE'
+             OR wru.CLIENT_LOCN_CODE = :#{#filter.clientLocationCode}
            )
          AND (
-             'NOVALUE' in (:#{#filter.clientNumbers}) OR wru.CLIENT_NUMBER IN (:#{#filter.clientNumbers})
+             'NOVALUE' in (:#{#filter.clientNumbers})
+             OR wru.CLIENT_NUMBER IN (:#{#filter.clientNumbers})
            )
          AND (
             (
-              NVL(:#{#filter.dateStart},'NOVALUE') = 'NOVALUE' AND NVL(:#{#filter.dateEnd},'NOVALUE') = 'NOVALUE'
+              NVL(:#{#filter.dateStart},'NOVALUE') = 'NOVALUE'
+              AND NVL(:#{#filter.dateEnd},'NOVALUE') = 'NOVALUE'
             )
             OR
             (
               wru.update_timestamp IS NOT NULL AND
-              TO_DATE(to_char(wru.update_timestamp, 'YYYY-MM-DD'),'YYYY-MM-DD') between TO_DATE(:#{#filter.updateDateStart},'YYYY-MM-DD') AND TO_DATE(:#{#filter.updateDateEnd},'YYYY-MM-DD')
+              TO_DATE(to_char(wru.update_timestamp, 'YYYY-MM-DD'),'YYYY-MM-DD')
+              between TO_DATE(:#{#filter.updateDateStart},'YYYY-MM-DD')
+              AND TO_DATE(:#{#filter.updateDateEnd},'YYYY-MM-DD')
             )
          )
       """;
@@ -105,23 +128,23 @@ public class QueryConstants {
         SELECT ENTRY_USERID AS USERID FROM WASTE_REPORTING_UNIT
         WHERE
         'NOVALUE' in (:clientNumbers) OR CLIENT_NUMBER IN (:clientNumbers)
-
+      
         UNION
-
+      
         SELECT UPDATE_USERID FROM WASTE_REPORTING_UNIT
         WHERE
         'NOVALUE' in (:clientNumbers) OR CLIENT_NUMBER IN (:clientNumbers)
       )
-      WHERE UTL_MATCH.JARO_WINKLER_SIMILARITY(REGEXP_SUBSTR(USERID, '[^\\\\]+$'),:userId) >= 90""";
+      WHERE UTL_MATCH.JARO_WINKLER_SIMILARITY(REGEXP_SUBSTR(USERID, '[^\\]+$'),:userId) >= 90""";
 
   public static final String MY_DISTRICTS_WAA = """
-        SELECT
-          REPORTING_UNIT_ID,
-          COUNT(*) AS VALID_BLOCK_COUNT,
-          MAX(UPDATE_TIMESTAMP) AS LAST_WAA_UPDATE
-        FROM THE.WASTE_ASSESSMENT_AREA
-        WHERE DRAFT_CUT_BLOCK_ID IS NOT NULL
-        GROUP BY REPORTING_UNIT_ID""";
+      SELECT
+        REPORTING_UNIT_ID,
+        COUNT(*) AS VALID_BLOCK_COUNT,
+        MAX(UPDATE_TIMESTAMP) AS LAST_WAA_UPDATE
+      FROM THE.WASTE_ASSESSMENT_AREA
+      WHERE DRAFT_CUT_BLOCK_ID IS NOT NULL
+      GROUP BY REPORTING_UNIT_ID""";
 
   public static final String MY_DISTRICTS_WRU = """
       SELECT
@@ -149,13 +172,13 @@ public class QueryConstants {
       """;
 
   public static final String MY_DISTRICTS_QUERY =
-      "WITH ValidBlockCounts AS ("+MY_DISTRICTS_WAA+"),"
-      + "ClientStats AS ("+MY_DISTRICTS_WRU+")"
+      "WITH ValidBlockCounts AS (" + MY_DISTRICTS_WAA + "),"
+      + "ClientStats AS (" + MY_DISTRICTS_WRU + ")"
       + MY_DISTRICTS_STATUS;
 
   public static final String MY_DISTRICTS_COUNT =
-      "WITH ValidBlockCounts AS ("+MY_DISTRICTS_WAA+"),"
-      + "ClientStats AS ("+MY_DISTRICTS_WRU+")"
+      "WITH ValidBlockCounts AS (" + MY_DISTRICTS_WAA + "),"
+      + "ClientStats AS (" + MY_DISTRICTS_WRU + ")"
       + "SELECT count(1) FROM ClientStats";
 
 }

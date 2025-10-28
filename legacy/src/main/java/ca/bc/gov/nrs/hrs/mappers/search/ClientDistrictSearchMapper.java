@@ -9,6 +9,16 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 
+/**
+ * MapStruct mapper that converts a {@link ClientDistrictSearchProjection} into a
+ * {@link ClientDistrictSearchResultDto}.
+ *
+ * <p>Uses expressions defined in {@link MapperConstants} to construct nested
+ * {@code CodeDescriptionDto} instances for the {@code client} field.</p>
+ *
+ * <p>The mapper is configured as a Spring component and ignores unmapped targets to allow
+ * partial mapping from query projections.</p>
+ */
 @Mapper(
     componentModel = MappingConstants.ComponentModel.SPRING,
     unmappedTargetPolicy = ReportingPolicy.IGNORE

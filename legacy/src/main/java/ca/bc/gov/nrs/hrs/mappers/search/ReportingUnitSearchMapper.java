@@ -8,8 +8,17 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
-import org.springframework.stereotype.Component;
 
+/**
+ * MapStruct mapper converting a {@link ReportingUnitSearchProjection} returned from queries into a
+ * {@link ReportingUnitSearchResultDto} used by the API.
+ *
+ * <p>The mapper uses expressions from {@link MapperConstants} to produce nested
+ * {@code CodeDescriptionDto} values for fields such as status, sampling and district.</p>
+ *
+ * <p>Configured with Spring component model and ignores unmapped targets to allow
+ * mapping from partial projection results.</p>
+ */
 @Mapper(
     componentModel = MappingConstants.ComponentModel.SPRING,
     unmappedTargetPolicy = ReportingPolicy.IGNORE
@@ -17,6 +26,16 @@ import org.springframework.stereotype.Component;
 public interface ReportingUnitSearchMapper extends
     AbstractSingleMapper<ReportingUnitSearchResultDto, ReportingUnitSearchProjection> {
 
+  /**
+   * Map a {@link ReportingUnitSearchProjection} to a {@link ReportingUnitSearchResultDto}.
+   *
+   * <p>The mapping uses expressions defined in {@link MapperConstants} to construct nested
+   * {@code CodeDescriptionDto} instances for the {@code status}, {@code sampling},
+   * {@code district}, {@code clientLocation} and {@code client} fields.</p>
+   *
+   * @param projection the projection returned by repository queries
+   * @return the mapped {@link ReportingUnitSearchResultDto}
+   */
   @Override
   @Mapping(target = "status", expression = MapperConstants.STATUS_AS_DTO)
   @Mapping(target = "sampling", expression = MapperConstants.SAMPLING_AS_DTO)
