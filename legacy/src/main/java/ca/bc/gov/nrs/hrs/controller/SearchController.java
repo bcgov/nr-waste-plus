@@ -1,8 +1,8 @@
 package ca.bc.gov.nrs.hrs.controller;
 
-import ca.bc.gov.nrs.hrs.dto.search.ClientDistrictSearchResultDto;
 import ca.bc.gov.nrs.hrs.LegacyConstants;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
+import ca.bc.gov.nrs.hrs.dto.search.ClientDistrictSearchResultDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.service.search.ReportingUnitSearchService;
@@ -47,8 +47,8 @@ public class SearchController {
    * <p>The authenticated JWT is inspected to determine client scoping for non-IDIR users. IDIR
    * users perform unrestricted searches.</p>
    *
-   * @param jwt the authenticated JWT principal
-   * @param filters the search filter parameters bound from request parameters
+   * @param jwt      the authenticated JWT principal
+   * @param filters  the search filter parameters bound from request parameters
    * @param pageable paging and sorting information
    * @return a page of {@link ReportingUnitSearchResultDto} matching the supplied criteria
    */
@@ -61,9 +61,9 @@ public class SearchController {
   ) {
 
     List<String> userClientNumbers =
-    JwtPrincipalUtil.getIdentityProvider(jwt).equals(IdentityProvider.IDIR)
-        ? List.of()
-        : JwtPrincipalUtil.getClientFromRoles(jwt);
+        JwtPrincipalUtil.getIdentityProvider(jwt).equals(IdentityProvider.IDIR)
+            ? List.of()
+            : JwtPrincipalUtil.getClientFromRoles(jwt);
 
     log.info("Searching waste entries with filters: {}, pageable: {}", filters, pageable);
     return ruSearchService.search(filters, pageable, userClientNumbers);
@@ -77,15 +77,15 @@ public class SearchController {
    * using roles or a fallback NOCLIENT value when no clients are present.</p>
    *
    * @param userId the user identifier fragment to search for
-   * @param jwt the authenticated JWT principal
+   * @param jwt    the authenticated JWT principal
    * @return a list of matching user identifiers (client-specific when applicable)
    */
   @GetMapping("/reporting-units-users")
   public List<String> searchReportingUnitUsers(
       @RequestParam String userId,
       @AuthenticationPrincipal Jwt jwt
-  ){
-    log.info("Searching for reporting unit users that matches {}",userId);
+  ) {
+    log.info("Searching for reporting unit users that matches {}", userId);
 
     List<String> clientsFromRoles = JwtPrincipalUtil.getClientFromRoles(jwt);
     List<String> processedClientsFromClient = clientsFromRoles.isEmpty()
@@ -97,8 +97,7 @@ public class SearchController {
         ? List.of()
         : processedClientsFromClient;
 
-
-    return ruSearchService.searchReportingUnitUsers(userId,clients);
+    return ruSearchService.searchReportingUnitUsers(userId, clients);
   }
 
   /**
@@ -107,9 +106,9 @@ public class SearchController {
    * <p>If the optional {@code values} list is empty, clients are derived from the authenticated
    * user's roles. Otherwise the provided values are used as filters.</p>
    *
-   * @param values optional list of client filter values
+   * @param values   optional list of client filter values
    * @param pageable paging information
-   * @param jwt the authenticated JWT principal
+   * @param jwt      the authenticated JWT principal
    * @return a page of {@link ClientDistrictSearchResultDto} representing client districts
    */
   @GetMapping("/my-forest-clients")

@@ -8,8 +8,7 @@ import lombok.RequiredArgsConstructor;
 /**
  * Enum representing all roles in the system, each associated with a {@link RoleType}.
  *
- * <p>
- * Roles are used for authorization checks (for example in Spring Security
+ * <p>Roles are used for authorization checks (for example in Spring Security
  * expressions such as @PreAuthorize) and are typed as ABSTRACT or CONCRETE via
  * the {@link RoleType} enum. The {@link #fromValue(String)} factory supports
  * case-insensitive deserialization from strings.
@@ -47,8 +46,7 @@ public enum Role {
   /**
    * Factory method to create a Role from a string value.
    *
-   * <p>
-   * This method performs a case-insensitive comparison to find a matching
+   * <p>This method performs a case-insensitive comparison to find a matching
    * enum constant. If no match is found, null is returned.
    * </p>
    *

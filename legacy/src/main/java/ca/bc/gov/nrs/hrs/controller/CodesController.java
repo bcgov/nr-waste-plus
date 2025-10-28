@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>This controller returns small, read-only code sets such as districts, sampling codes and
  * assessment-area statuses. These endpoints are intended for populating dropdowns and other
  * UI widgets.</p>
- *
- * Existing single-line comment retained: "The Codes endpoint. Returns all the codes used by the frontend.".
  */
 @RestController
 @RequestMapping("/api/codes")

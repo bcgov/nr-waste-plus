@@ -15,9 +15,8 @@ import org.springframework.format.annotation.DateTimeFormat;
  * Search parameters used when searching for reporting units.
  *
  * <p>This DTO captures the set of filters the frontend can supply when querying the
- * reporting-unit search endpoint. Several getters are overridden to provide safe,
- * default values when list-based filters are null or empty.</p>
- *
+ * reporting-unit search endpoint. Several getters are overridden to provide safe, default values
+ * when list-based filters are null or empty.</p>
  * Some getters are overridden to provide default values if the lists are null or empty.
  */
 @Data
@@ -108,8 +107,8 @@ public class ReportingUnitSearchParametersDto {
    * Returns the request user id when the request is explicitly "by me".
    *
    * <p>Uses {@link org.apache.commons.lang3.BooleanUtils#toString(boolean, String, String)}
-   * semantics: if {@code requestByMe} is {@code true} the configured {@code requestUserId}
-   * is returned; otherwise {@link LegacyConstants#NOVALUE} is returned.</p>
+   * semantics: if {@code requestByMe} is {@code true} the configured {@code requestUserId} is
+   * returned; otherwise {@link LegacyConstants#NOVALUE} is returned.</p>
    *
    * @return the effective request user id or {@code NOVALUE} when not applicable
    */
@@ -120,22 +119,23 @@ public class ReportingUnitSearchParametersDto {
   }
 
   /**
-   * Returns the start date formatted as ISO date (yyyy-MM-dd) or {@code NOVALUE} when
-   * not provided.
+   * Returns the start date formatted as ISO date (yyyy-MM-dd) or {@code NOVALUE} when not
+   * provided.
    *
    * @return the ISO-formatted start date or {@link LegacyConstants#NOVALUE} when {@code null}
    */
-  public String getDateStart(){
-    return updateDateStart != null ? updateDateStart.format(DateTimeFormatter.ISO_DATE) : LegacyConstants.NOVALUE;
+  public String getDateStart() {
+    return updateDateStart != null ? updateDateStart.format(DateTimeFormatter.ISO_DATE)
+        : LegacyConstants.NOVALUE;
   }
 
   /**
-   * Returns the end date formatted as ISO date (yyyy-MM-dd) or {@code NOVALUE} when
-   * not provided.
+   * Returns the end date formatted as ISO date (yyyy-MM-dd) or {@code NOVALUE} when not provided.
    *
    * @return the ISO-formatted end date or {@link LegacyConstants#NOVALUE} when {@code null}
    */
-  public String getDateEnd(){
-    return updateDateEnd != null ? updateDateEnd.format(DateTimeFormatter.ISO_DATE) : LegacyConstants.NOVALUE;
+  public String getDateEnd() {
+    return updateDateEnd != null ? updateDateEnd.format(DateTimeFormatter.ISO_DATE)
+        : LegacyConstants.NOVALUE;
   }
 }

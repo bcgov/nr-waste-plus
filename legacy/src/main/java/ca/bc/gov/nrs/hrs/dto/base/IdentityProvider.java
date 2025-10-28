@@ -9,8 +9,7 @@ import lombok.RequiredArgsConstructor;
 /**
  * Enumeration of the identity providers our application works with.
  *
- * <p>
- * Each enum constant holds the claim name as it appears in the JWT so the
+ * <p>Each enum constant holds the claim name as it appears in the JWT so the
  * application can map incoming tokens to one of the supported providers.
  * </p>
  */

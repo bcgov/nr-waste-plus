@@ -12,7 +12,7 @@ import lombok.With;
  * <p>(Maintains the original brief description: "The type Code description dto.")
  * </p>
  *
- * @param code the code value
+ * @param code        the code value
  * @param description the human-readable description for the code
  */
 @With

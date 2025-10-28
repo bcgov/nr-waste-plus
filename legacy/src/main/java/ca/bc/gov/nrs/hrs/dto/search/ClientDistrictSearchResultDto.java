@@ -9,9 +9,10 @@ import java.time.LocalDateTime;
  * <p>Contains a client description, counts of submissions and blocks and the last update time.</p>
  */
 public record ClientDistrictSearchResultDto(
-  CodeDescriptionDto client,
-  Long submissionsCount,
-  Long blocksCount,
-  LocalDateTime lastUpdate
+    CodeDescriptionDto client,
+    Long submissionsCount,
+    Long blocksCount,
+    LocalDateTime lastUpdate
 ) {
+
 }
