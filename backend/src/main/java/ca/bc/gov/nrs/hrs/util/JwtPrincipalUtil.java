@@ -4,7 +4,6 @@ import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -19,66 +18,80 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 /**
- * This is a utility class for handling JWT principals. It provides methods to extract various
- * attributes from a JwtAuthenticationToken object. The class is designed with a private constructor
- * to prevent instantiation.
+ * Utility methods for extracting common attributes from JWT principals.
+ *
+ * <p>
+ * This class provides helpers to read claims and attributes from {@link JwtAuthenticationToken} and
+ * {@link Jwt} instances. Methods include retrieval of provider, user id, business identifiers,
+ * names, groups and role/client mappings. The class is non-instantiable.
+ * </p>
  */
 @NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public class JwtPrincipalUtil {
 
   private static final String FIRST_NAME = "firstName";
   private static final String LAST_NAME = "lastName";
+  public static final String FULL_NAME = "fullName";
 
   /**
-   * Retrieves the provider of the JWT token from the given JwtAuthenticationToken principal. The
-   * provider is extracted from the token attributes under the key "custom:idp_name". If the
-   * provider starts with "ca.bc.gov.flnr.fam.", it is replaced with "BCSC". If the provider is not
-   * blank, it is returned in uppercase. If the provider is blank, an empty string is returned.
+   * Retrieves the provider of the JWT token from the given JwtAuthenticationToken principal.
+   *
+   * <p>
+   * The provider is read from the claim/key {@code custom:idp_name}. If the provider value starts
+   * with {@code ca.bc.gov.flnr.fam.} it is normalized to {@code BCSC}; otherwise the value is
+   * upper-cased. If missing, an empty string is returned.
+   * </p>
    *
    * @param principal JwtAuthenticationToken object from which the provider is to be extracted.
    * @return The provider of the JWT token in uppercase, or an empty string if the provider is
-   *     blank.
+   * blank.
    */
   public static String getProvider(JwtAuthenticationToken principal) {
     return getProviderValue(principal.getTokenAttributes());
   }
 
   /**
-   * Retrieves the identity provider from the given Jwt token. It extracts the value under the
-   * "custom:idp_name" claim.
+   * Retrieves the identity provider from the given Jwt token.
+   *
+   * <p>
+   * The provider is extracted from the {@code custom:idp_name} claim.
+   * </p>
    *
    * @param principal the Jwt token containing the claims
    * @return the identity provider as a string, or an empty string if the claim is missing or not a
-   *     string
+   * string
    */
   public static String getProvider(Jwt principal) {
     return getProviderValue(principal.getClaims());
   }
 
   /**
-   * Retrieves the user ID from the given JwtAuthenticationToken principal. The user ID is extracted
-   * from the token attributes under the key "custom:idp_username". If the user ID is blank, the
-   * value under the key "custom:idp_user_id" is used. If both values are blank, an empty string is
-   * returned. If the user ID is not blank, it is prefixed with the provider in uppercase and a
-   * backslash.
+   * Retrieves the user ID from the given JwtAuthenticationToken principal.
+   *
+   * <p>
+   * The user id is taken from {@code custom:idp_username} or {@code custom:idp_user_id} and is
+   * prefixed with the provider (e.g. {@code BCSC\someuser}) when present.
+   * </p>
    *
    * @param principal JwtAuthenticationToken object from which the user ID is to be extracted.
    * @return The user ID prefixed with the provider in uppercase and a backslash, or an empty string
-   *     if the user ID is blank.
+   * if the user ID is blank.
    */
   public static String getUserId(JwtAuthenticationToken principal) {
     return getUserIdValue(principal.getTokenAttributes());
   }
 
   /**
-   * Retrieves the user ID from the given Jwt principal. The user ID is extracted from the token
-   * attributes under the key "custom:idp_username". If the user ID is blank, the value under the
-   * key "custom:idp_user_id" is used. If both values are blank, an empty string is returned. If the
-   * user ID is not blank, it is prefixed with the provider in uppercase and a backslash.
+   * Retrieves the user ID from the given Jwt principal.
+   *
+   * <p>
+   * The user id is taken from {@code custom:idp_username} or {@code custom:idp_user_id} and is
+   * prefixed with the provider (e.g. {@code BCSC\someuser}) when present.
+   * </p>
    *
    * @param principal Jwt object from which the user ID is to be extracted.
    * @return The user ID prefixed with the provider in uppercase and a backslash, or an empty string
-   *     if the user ID is blank.
+   * if the user ID is blank.
    */
   public static String getUserId(Jwt principal) {
     return getUserIdValue(principal.getClaims());
@@ -113,7 +126,8 @@ public class JwtPrincipalUtil {
    * is extracted from the token attributes under the key "custom:idp_business_name". If the
    * business name is blank, an empty string is returned.
    *
-   * @param principal JwtAuthenticationToken object from which the business name is to be extracted.
+   * @param principal JwtAuthenticationToken object from which the business name is to be
+   *                  extracted.
    * @return The business name, or an empty string if the business name is blank.
    */
   public static String getBusinessName(JwtAuthenticationToken principal) {
@@ -137,7 +151,8 @@ public class JwtPrincipalUtil {
    * is extracted from the token attributes under the key "custom:idp_business_name". If the
    * business name is blank, an empty string is returned.
    *
-   * @param principal JwtAuthenticationToken object from which the business name is to be extracted.
+   * @param principal JwtAuthenticationToken object from which the business name is to be
+   *                  extracted.
    * @return The business name, or an empty string if the business name is blank.
    */
   public static String getEmail(JwtAuthenticationToken principal) {
@@ -164,7 +179,7 @@ public class JwtPrincipalUtil {
    *
    * @param principal JwtAuthenticationToken object from which the display name is to be extracted.
    * @return The display name, or the concatenated first and last names, or an empty string if both
-   *     the display name and the first and last names are blank.
+   * the display name and the first and last names are blank.
    */
   public static String getName(JwtAuthenticationToken principal) {
     return getNameValue(principal.getTokenAttributes());
@@ -178,7 +193,7 @@ public class JwtPrincipalUtil {
    *
    * @param principal Jwt object from which the display name is to be extracted.
    * @return The display name, or the concatenated first and last names, or an empty string if both
-   *     the display name and the first and last names are blank.
+   * the display name and the first and last names are blank.
    */
   public static String getName(Jwt principal) {
     return getNameValue(principal.getClaims());
@@ -222,7 +237,8 @@ public class JwtPrincipalUtil {
 
   /**
    * Retrieves the last name from the given Jwt principal. The last name is extracted from the token
-   * attributes under the key "family_name". If the last name is blank, an empty string is returned.
+   * attributes under the key "family_name". If the last name is blank, an empty string is
+   * returned.
    *
    * @param principal Jwt object from which the last name is to be extracted.
    * @return The last name or an empty string if the last name is blank.
@@ -284,15 +300,15 @@ public class JwtPrincipalUtil {
   /**
    * Retrieves a list of groups from the given JwtPrincipal. This method extracts the token
    * attributes from the provided {@link JwtAuthenticationToken}, then looks for the key
-   * "cognito:groups" in the token attributes. If the value associated with this key is a {@link
-   * List}, the method filters the elements to only include non-null values of type {@link String}.
-   * The resulting list of strings is returned.
+   * "cognito:groups" in the token attributes. If the value associated with this key is a
+   * {@link List}, the method filters the elements to only include non-null values of type
+   * {@link String}. The resulting list of strings is returned.
    *
    * @param jwtPrincipal The {@link JwtAuthenticationToken} containing the token attributes. It must
-   *     have the "cognito:groups" key. If the key does not exist or the value is not a list of
-   *     strings, an empty list is returned.
+   *                     have the "cognito:groups" key. If the key does not exist or the value is
+   *                     not a list of strings, an empty list is returned.
    * @return A list of group names, or an empty list if the key is missing or the value is not a
-   *     list of strings.
+   * list of strings.
    */
   public static Set<String> getGroups(JwtAuthenticationToken jwtPrincipal) {
     if (jwtPrincipal == null || jwtPrincipal.getTokenAttributes() == null) {
@@ -309,10 +325,10 @@ public class JwtPrincipalUtil {
    * is returned.
    *
    * @param jwtPrincipal The {@link Jwt} containing the token attributes. It must have the
-   *     "cognito:groups" key. If the key does not exist or the value is not a list of strings, an
-   *     empty list is returned.
+   *                     "cognito:groups" key. If the key does not exist or the value is not a list
+   *                     of strings, an empty list is returned.
    * @return A list of group names, or an empty list if the key is missing or the value is not a
-   *     list of strings.
+   * list of strings.
    */
   public static Set<String> getGroups(Jwt jwtPrincipal) {
     if (jwtPrincipal == null || jwtPrincipal.getClaims() == null) {
@@ -322,38 +338,40 @@ public class JwtPrincipalUtil {
   }
 
   /**
-   * Retrieves a map of roles from the given Jwt. This method extracts the token
-   * attributes from the provided {@link Jwt}, then looks for the key "cognito:groups" in the token
-   * attributes. If the value associated with this key is a {@link List}, the method filters the
-   * elements to only include non-null values of type {@link String}. The resulting list of strings
-   * is then parsed to get the role-client mapping.
+   * Produce a mapping of {@link Role} to the list of client IDs the principal has for that role.
    *
-   * @param jwtPrincipal The {@link Jwt} containing the token attributes. It must have the
-   *     "cognito:groups" key. If the key does not exist or the value is not a list of strings, an
-   *     empty list is returned.
-   * @return A map of Role-Clients mapping, or an empty map
+   * <p>
+   * The method parses the value of {@code cognito:groups} and groups elements by role.
+   * </p>
+   *
+   * @param jwtPrincipal the JWT containing the groups claim
+   * @return a map where the key is the role and the value is a list of client ids for that role
    */
-  public static Map<Role,List<String>> getRoles(Jwt jwtPrincipal){
+  public static Map<Role, List<String>> getRoles(Jwt jwtPrincipal) {
     return getClaimGroups(getGroups(jwtPrincipal));
   }
 
   /**
-   * Retrieves a map of roles from the given Jwt. This method extracts the token
-   * attributes from the provided {@link Jwt}, then looks for the key "cognito:groups" in the token
-   * attributes. If the value associated with this key is a {@link List}, the method filters the
-   * elements to only include non-null values of type {@link String}. The resulting list of strings
-   * is then parsed to get the role-client mapping.
+   * Produce a mapping of {@link Role} to the list of client IDs the principal has for that role.
    *
-   * @param jwtPrincipal The {@link JwtAuthenticationToken} containing the token attributes. It must have the
-   *     "cognito:groups" key. If the key does not exist or the value is not a list of strings, an
-   *     empty list is returned.
-   * @return A map of Role-Clients mapping, or an empty map
+   * <p>
+   * The method parses the value of {@code cognito:groups} and groups elements by role.
+   * </p>
+   *
+   * @param jwtPrincipal the authentication token containing the groups claim
+   * @return a map where the key is the role and the value is a list of client ids for that role
    */
-  public static Map<Role,List<String>> getRoles(JwtAuthenticationToken jwtPrincipal){
+  public static Map<Role, List<String>> getRoles(JwtAuthenticationToken jwtPrincipal) {
     return getClaimGroups(getGroups(jwtPrincipal));
   }
 
-  public static List<String> getClientFromRoles(Jwt jwtPrincipal){
+  /**
+   * Extract a distinct list of client ids from the parsed roles map.
+   *
+   * @param jwtPrincipal the JWT containing groups/roles
+   * @return list of client ids (distinct, non-blank)
+   */
+  public static List<String> getClientFromRoles(Jwt jwtPrincipal) {
     return getRoles(jwtPrincipal)
         .values()
         .stream()
@@ -363,7 +381,13 @@ public class JwtPrincipalUtil {
         .toList();
   }
 
-  public static List<String> getClientFromRoles(JwtAuthenticationToken jwtPrincipal){
+  /**
+   * Extract a distinct list of client ids from the parsed roles map.
+   *
+   * @param jwtPrincipal the authentication token containing groups/roles
+   * @return list of client ids (distinct, non-blank)
+   */
+  public static List<String> getClientFromRoles(JwtAuthenticationToken jwtPrincipal) {
     return getRoles(jwtPrincipal)
         .values()
         .stream()
@@ -373,38 +397,81 @@ public class JwtPrincipalUtil {
         .toList();
   }
 
-  public static boolean hasConcreteRole(Jwt jwtPrincipal, Role role){
+  /**
+   * Check whether the JWT contains the supplied concrete role.
+   *
+   * @param jwtPrincipal the JWT to inspect
+   * @param role         the role to check (must be concrete)
+   * @return true when the role exists in the token
+   */
+  public static boolean hasConcreteRole(Jwt jwtPrincipal, Role role) {
     if (!role.isConcrete()) {
       return false;
     }
     return getRoles(jwtPrincipal).containsKey(role);
   }
 
-  public static boolean hasConcreteRole(JwtAuthenticationToken jwtPrincipal, Role role){
+  /**
+   * Check whether the authentication token contains the supplied concrete role.
+   *
+   * @param jwtPrincipal the authentication token to inspect
+   * @param role         the role to check (must be concrete)
+   * @return true when the role exists in the token
+   */
+  public static boolean hasConcreteRole(JwtAuthenticationToken jwtPrincipal, Role role) {
     if (!role.isConcrete()) {
       return false;
     }
     return getRoles(jwtPrincipal).containsKey(role);
   }
 
-  public static boolean hasAbstractRole(Jwt jwtPrincipal, Role role, String clientId){
+  /**
+   * Check whether the JWT contains an abstract role for the supplied client id.
+   *
+   * @param jwtPrincipal the JWT to inspect
+   * @param role         the role prefix (must be abstract)
+   * @param clientId     the client id to check
+   * @return true when the role+clientId pair exists
+   */
+  public static boolean hasAbstractRole(Jwt jwtPrincipal, Role role, String clientId) {
     if (role.isConcrete()) {
       return false;
     }
-    return getRoles(jwtPrincipal).getOrDefault(role,List.of()).contains(clientId);
+    return getRoles(jwtPrincipal).getOrDefault(role, List.of()).contains(clientId);
   }
 
-  public static boolean hasAbstractRole(JwtAuthenticationToken jwtPrincipal, Role role, String clientId){
+  /**
+   * Check whether the authentication token contains an abstract role for the supplied client id.
+   *
+   * @param jwtPrincipal the authentication token to inspect
+   * @param role         the role prefix (must be abstract)
+   * @param clientId     the client id to check
+   * @return true when the role+clientId pair exists
+   */
+  public static boolean hasAbstractRole(JwtAuthenticationToken jwtPrincipal, Role role,
+      String clientId) {
     if (role.isConcrete()) {
       return false;
     }
-    return getRoles(jwtPrincipal).getOrDefault(role,List.of()).contains(clientId);
+    return getRoles(jwtPrincipal).getOrDefault(role, List.of()).contains(clientId);
   }
 
+  /**
+   * Resolve the {@link IdentityProvider} from the authentication token.
+   *
+   * @param jwtPrincipal authentication token
+   * @return the identity provider enum or throws if not present
+   */
   public static IdentityProvider getIdentityProvider(JwtAuthenticationToken jwtPrincipal) {
     return IdentityProvider.fromClaim(getProvider(jwtPrincipal)).orElseThrow();
   }
 
+  /**
+   * Resolve the {@link IdentityProvider} from the jwt.
+   *
+   * @param jwtPrincipal jwt token
+   * @return the identity provider enum or throws if not present
+   */
   public static IdentityProvider getIdentityProvider(Jwt jwtPrincipal) {
     return IdentityProvider.fromClaim(getProvider(jwtPrincipal)).orElseThrow();
   }
@@ -424,7 +491,7 @@ public class JwtPrincipalUtil {
     return Collections.emptySet();
   }
 
-  private static Map<Role,List<String>> getClaimGroups(Set<String> groups) {
+  private static Map<Role, List<String>> getClaimGroups(Set<String> groups) {
     return groups
         .stream()
         // Split into [role, clientNumber] or just [role]
@@ -445,10 +512,10 @@ public class JwtPrincipalUtil {
    * Retrieves the value of a specified claim from the claims map. If the claim is not present,
    * returns an empty string.
    *
-   * @param claims The map containing the JWT claims.
+   * @param claims    The map containing the JWT claims.
    * @param claimName The name of the claim to retrieve.
    * @return The value of the specified claim as a String, or an empty string if the claim is not
-   *     present.
+   * present.
    */
   private static String getClaimValue(Map<String, Object> claims, String claimName) {
     return claims.getOrDefault(claimName, StringUtils.EMPTY).toString();
@@ -462,7 +529,7 @@ public class JwtPrincipalUtil {
    *
    * @param claims The map containing the JWT claims.
    * @return The provider's name in uppercase or "BCSC" if it starts with "ca.bc.gov.flnr.fam.", or
-   *     an empty string if the provider is not specified.
+   * an empty string if the provider is not specified.
    */
   private static String getProviderValue(Map<String, Object> claims) {
     String provider = getClaimValue(claims, "custom:idp_name");
@@ -498,7 +565,7 @@ public class JwtPrincipalUtil {
    *
    * @param claims The map containing the JWT claims.
    * @return The constructed user ID in the format "Provider\Username" or "Provider\UserID", or an
-   *     empty string if neither the username nor the user ID is present in the claims.
+   * empty string if neither the username nor the user ID is present in the claims.
    */
   private static String getUserIdValue(Map<String, Object> claims) {
     return Stream.of(
@@ -554,7 +621,7 @@ public class JwtPrincipalUtil {
    *
    * @param claims The map containing the JWT claims.
    * @return The display name value as a String, or an empty string if the "custom:idp_display_name"
-   *     claim is not present.
+   * claim is not present.
    */
   private static String getDisplayNameValue(Map<String, Object> claims) {
     return getClaimValue(claims, "custom:idp_display_name");
@@ -568,10 +635,10 @@ public class JwtPrincipalUtil {
    * business name, first name, last name, and full name (a concatenation of first and last names).
    *
    * @param claims The map containing the JWT claims from which the name information is to be
-   *     extracted.
+   *               extracted.
    * @return A map with keys "businessName", "firstName", "lastName", and "fullName", containing the
-   *     extracted and/or computed name information. If specific name components are not found,
-   *     their values in the map will be empty strings.
+   * extracted and/or computed name information. If specific name components are not found, their
+   * values in the map will be empty strings.
    */
   private static Map<String, String> processName(Map<String, Object> claims) {
     Map<String, String> additionalInfo = new HashMap<>();
@@ -597,7 +664,7 @@ public class JwtPrincipalUtil {
     additionalInfo.put("displayName", getDisplayNameValue(claims));
     additionalInfo.put(FIRST_NAME, firstName.trim());
     additionalInfo.put(LAST_NAME, lastName.trim());
-    additionalInfo.put("fullName", String.join(" ", firstName, lastName).trim());
+    additionalInfo.put(FULL_NAME, String.join(" ", firstName, lastName).trim());
 
     return additionalInfo;
   }
@@ -611,21 +678,21 @@ public class JwtPrincipalUtil {
    * @return The last name extracted from the JWT claims, or an empty string if not specified.
    */
   private static String getLastNameValue(Map<String, Object> claims) {
-    return processName(claims).get("lastName");
+    return processName(claims).get(LAST_NAME);
   }
 
   /**
-   * Retrieves the full name value from the JWT claims. This method leverages the {@code
-   * processName} method to extract and assemble user name information from the JWT claims, focusing
-   * on assembling the full name (a concatenation of first and last names). If both first and last
-   * names are not specified, an empty string is returned.
+   * Retrieves the full name value from the JWT claims. This method leverages the
+   * {@code processName} method to extract and assemble user name information from the JWT claims,
+   * focusing on assembling the full name (a concatenation of first and last names). If both first
+   * and last names are not specified, an empty string is returned.
    *
    * @param claims The map containing the JWT claims.
    * @return The full name (concatenation of first and last names) extracted from the JWT claims, or
-   *     an empty string if not specified.
+   * an empty string if not specified.
    */
   private static String getNameValue(Map<String, Object> claims) {
-    return processName(claims).get("fullName");
+    return processName(claims).get(FULL_NAME);
   }
 
   private static String getFirstNameValue(Map<String, Object> claims) {
