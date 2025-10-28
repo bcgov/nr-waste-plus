@@ -22,6 +22,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+/**
+ * Provider that forwards requests to the legacy backend API and adapts
+ * responses for use in the newer HRS backend.
+ *
+ * <p>
+ * This component centralizes calls to the legacy API for code lists and
+ * search endpoints. It applies resilience patterns (circuit breaker)
+ * and contains fallback implementations when the legacy system is
+ * unavailable. Static fallback data has been centralized in
+ * {@link LegacyApiConstants}.
+ * </p>
+ */
 @Slf4j
 @Component
 @Observed
@@ -41,6 +53,13 @@ public class LegacyApiProvider {
     this.mapper = mapper;
   }
 
+  /**
+   * Retrieve district code list from the legacy API.
+   *
+   * <p>
+   * Returns a list of {@link CodeDescriptionDto} representing district codes.
+   * </p>
+   */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackDistricts")
   @NewSpan
   public List<CodeDescriptionDto> getDistrictCodes() {
@@ -53,6 +72,13 @@ public class LegacyApiProvider {
         });
   }
 
+  /**
+   * Retrieve sampling codes from the legacy API.
+   *
+   * <p>
+   * Returns a list of {@link CodeDescriptionDto} representing sampling codes.
+   * </p>
+   */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyList")
   @NewSpan
   public List<CodeDescriptionDto> getSamplingCodes() {
@@ -65,6 +91,14 @@ public class LegacyApiProvider {
         });
   }
 
+  /**
+   * Retrieve status codes from the legacy API.
+   *
+   * <p>
+   * Returns a list of {@link CodeDescriptionDto} representing assess area
+   * statuses.
+   * </p>
+   */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyList")
   @NewSpan
   public List<CodeDescriptionDto> getStatusCodes() {
@@ -77,6 +111,20 @@ public class LegacyApiProvider {
         });
   }
 
+  /**
+   * Search reporting units in the legacy API using provided filters and
+   * pageable information.
+   *
+   * <p>
+   * The legacy API responds with a paged JSON structure; this method
+   * retrieves the raw {@link JsonNode} and converts its content portion into
+   * a {@link Page} of {@link ReportingUnitSearchResultDto}.
+   * </p>
+   *
+   * @param filters search filters to apply
+   * @param pageable pageable information to include in the request
+   * @return a {@link Page} of {@link ReportingUnitSearchResultDto}
+   */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptySearchReportingUnit")
   @NewSpan
   public Page<ReportingUnitSearchResultDto> searchReportingUnit(
@@ -95,19 +143,41 @@ public class LegacyApiProvider {
         .retrieve()
         .body(JsonNode.class);
 
+    if (pagedResponse == null || pagedResponse.get("content") == null || pagedResponse.get("page") == null) {
+      logFallbackError(null);
+      return new PageImpl<>(LegacyApiConstants.EMPTY_REPORTING_UNIT_SEARCH_RESULTS, pageable, 0);
+    }
+
     List<ReportingUnitSearchResultDto> results = mapper.convertValue(
         pagedResponse.get("content"),
         mapper.getTypeFactory()
             .constructCollectionType(List.class, ReportingUnitSearchResultDto.class)
     );
 
+    long totalElements = 0L;
+    try {
+      totalElements = pagedResponse.get("page").get("totalElements").asLong();
+    } catch (Exception e) {
+      logFallbackError(e);
+    }
+
     return new PageImpl<>(
         results,
         pageable,
-        pagedResponse.get("page").get("totalElements").asLong()
+        totalElements
     );
   }
 
+  /**
+   * Search for reporting unit users that match a partial user id.
+   *
+   * <p>
+   * Returns a list of user ids as strings.
+   * </p>
+   *
+   * @param userId the search term for user id
+   * @return a list of matching user ids
+   */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyUsersList")
   public List<String> searchReportingUnitUsers(String userId) {
     log.info("Searching {} request to /api/search/reporting-units-users for user that matches {}",
@@ -125,6 +195,18 @@ public class LegacyApiProvider {
         });
   }
 
+  /**
+   * Search "My Forest" clients in the legacy API.
+   *
+   * <p>
+   * The legacy API returns a paged JSON structure; this method converts the
+   * content field into a {@link Page} of {@link MyForestClientSearchResultDto}.
+   * </p>
+   *
+   * @param values the set of client values to search for
+   * @param pageable pageable information to include in the request
+   * @return a {@link Page} of {@link MyForestClientSearchResultDto}
+   */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackSearchMyClients")
   @NewSpan
   public Page<MyForestClientSearchResultDto> searchMyClients(
@@ -147,74 +229,72 @@ public class LegacyApiProvider {
         .retrieve()
         .body(JsonNode.class);
 
+    if (pagedResponse == null || pagedResponse.get("content") == null || pagedResponse.get("page") == null) {
+      logFallbackError(null);
+      return new PageImpl<>(LegacyApiConstants.EMPTY_MY_FOREST_CLIENT_SEARCH_RESULTS, pageable, 0);
+    }
+
     List<MyForestClientSearchResultDto> results = mapper.convertValue(
         pagedResponse.get("content"),
         mapper.getTypeFactory()
             .constructCollectionType(List.class, MyForestClientSearchResultDto.class)
     );
 
+    long totalElements = 0L;
+    try {
+      totalElements = pagedResponse.get("page").get("totalElements").asLong();
+    } catch (Exception e) {
+      logFallbackError(e);
+    }
+
     return new PageImpl<>(
         results,
         pageable,
-        pagedResponse.get("page").get("totalElements").asLong()
+        totalElements
     );
   }
 
+  @SuppressWarnings("unused")
   private List<CodeDescriptionDto> fallbackDistricts(Throwable throwable) {
-    log.error(FALLBACK_ERROR, PROVIDER, throwable.getMessage());
-    return List.of(
-        new CodeDescriptionDto("DCC", "Cariboo-Chilcotin"),
-        new CodeDescriptionDto("DMH", "100 Mile House"),
-        new CodeDescriptionDto("DCK", "Chilliwack"),
-        new CodeDescriptionDto("DFN", "Fort Nelson"),
-        new CodeDescriptionDto("DQC", "Haida Gwaii"),
-        new CodeDescriptionDto("DMK", "Mackenzie"),
-        new CodeDescriptionDto("DND", "Nadina"),
-        new CodeDescriptionDto("DNI", "North Island - Central Coast"),
-        new CodeDescriptionDto("DPC", "Peace"),
-        new CodeDescriptionDto("DPG", "Prince George"),
-        new CodeDescriptionDto("DQU", "Quesnel"),
-        new CodeDescriptionDto("DRM", "Rocky Mountain"),
-        new CodeDescriptionDto("DSQ", "Sea to Sky"),
-        new CodeDescriptionDto("DSE", "Selkirk"),
-        new CodeDescriptionDto("DSS", "Skeena Stikine"),
-        new CodeDescriptionDto("DSI", "South Island"),
-        new CodeDescriptionDto("DVA", "Stuart Nechako"),
-        new CodeDescriptionDto("DSC", "Sunshine Coast"),
-        new CodeDescriptionDto("DKA", "Thompson Rivers"),
-        new CodeDescriptionDto("DKM", "Coast Mountains"),
-        new CodeDescriptionDto("DOS", "Okanagan Shuswap"),
-        new CodeDescriptionDto("DCS", "Cascades"),
-        new CodeDescriptionDto("DCR", "Campbell River")
-    );
+    logFallbackError(throwable);
+    return LegacyApiConstants.DEFAULT_DISTRICTS;
   }
 
+  @SuppressWarnings("unused")
   private List<CodeDescriptionDto> fallbackEmptyList(Throwable throwable) {
-    log.error(FALLBACK_ERROR, PROVIDER, throwable.getMessage());
-    return List.of();
+    logFallbackError(throwable);
+    return LegacyApiConstants.EMPTY_CODE_LIST;
   }
 
+  @SuppressWarnings("unused")
   private List<String> fallbackEmptyUsersList(String userId, Throwable throwable) {
-    log.error(FALLBACK_ERROR, PROVIDER, throwable.getMessage());
-    return List.of();
+    logFallbackError(throwable);
+    return LegacyApiConstants.EMPTY_STRING_LIST;
   }
 
+  @SuppressWarnings("unused")
   private Page<ReportingUnitSearchResultDto> fallbackEmptySearchReportingUnit(
       ReportingUnitSearchParametersDto filters,
       Pageable pageable,
       Throwable throwable
   ) {
-    log.error(FALLBACK_ERROR, PROVIDER, throwable.getMessage());
-    return new PageImpl<>(List.of(), pageable, 0);
+    logFallbackError(throwable);
+    return new PageImpl<>(LegacyApiConstants.EMPTY_REPORTING_UNIT_SEARCH_RESULTS, pageable, 0);
   }
 
+  @SuppressWarnings("unused")
   private Page<MyForestClientSearchResultDto> fallbackSearchMyClients(
       Set<String> values,
       Pageable pageable,
       Throwable throwable
   ) {
-    log.error(FALLBACK_ERROR, PROVIDER, throwable.getMessage());
-    return new PageImpl<>(List.of(), pageable, 0);
+    logFallbackError(throwable);
+    return new PageImpl<>(LegacyApiConstants.EMPTY_MY_FOREST_CLIENT_SEARCH_RESULTS, pageable, 0);
+  }
+
+  // Central helper to log fallback errors which avoids repeated log.error calls
+  private void logFallbackError(Throwable throwable) {
+    log.error(FALLBACK_ERROR, PROVIDER, throwable == null ? "unknown" : throwable.getMessage());
   }
 
 }
