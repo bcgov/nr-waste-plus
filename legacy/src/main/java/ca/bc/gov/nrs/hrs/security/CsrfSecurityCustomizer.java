@@ -7,7 +7,12 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.stereotype.Component;
 
 /**
- * This class holds the configuration for CSRF handling.
+ * CSRF security customizer that configures token repository and CSRF handling
+ * for the application.
+ *
+ * <p>The customizer uses a {@link CookieCsrfTokenRepository} to store the CSRF
+ * token in a secure cookie so the client can retrieve it for request headers.
+ * </p>
  */
 @Component
 public class CsrfSecurityCustomizer implements Customizer<CsrfConfigurer<HttpSecurity>> {

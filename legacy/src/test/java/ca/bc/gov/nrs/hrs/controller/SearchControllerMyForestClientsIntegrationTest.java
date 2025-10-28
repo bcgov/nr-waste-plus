@@ -20,7 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @WithMockJwt(
     cognitoGroups = {"Submitter_00010004"}
 )
-public class SearchControllerMyForestClientsIntegrationTest extends
+class SearchControllerMyForestClientsIntegrationTest extends
     AbstractTestContainerIntegrationTest {
 
   @Autowired
