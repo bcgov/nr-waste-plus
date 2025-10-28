@@ -153,7 +153,6 @@ public class ForestClientApiProvider {
             .toEntity(new ParameterizedTypeReference<>() {
             });
 
-    if (response.getStatusCode().is2xxSuccessful()) {
       return new PageImpl<>(
           response.getBody() != null ? response.getBody() : List.of(),
           PageRequest.of(page, size),
@@ -164,12 +163,6 @@ public class ForestClientApiProvider {
               )
           )
       );
-    }
-
-    return paginatedFallback(page, size, value, new RuntimeException(
-        "Failed to fetch clients with status: " + response.getStatusCode())
-    );
-
   }
 
   /**
@@ -207,7 +200,6 @@ public class ForestClientApiProvider {
         .toEntity(new ParameterizedTypeReference<>() {
         });
 
-    if (response.getStatusCode().is2xxSuccessful()) {
       return new PageImpl<>(
           response.getBody() != null ? response.getBody() : List.of(),
           PageRequest.of(0, 50),
@@ -218,11 +210,6 @@ public class ForestClientApiProvider {
               )
           )
       );
-    }
-
-    return paginatedFallback(0, 50, clientNumber, new RuntimeException(
-        "Failed to fetch client locations with status: " + response.getStatusCode())
-    );
   }
 
   /**
@@ -242,7 +229,6 @@ public class ForestClientApiProvider {
       List<String> values,
       String name
   ) {
-    try {
       log.info("Starting {} request to /clients/search", PROVIDER);
 
       return restClient
@@ -259,15 +245,6 @@ public class ForestClientApiProvider {
           .retrieve()
           .body(new ParameterizedTypeReference<>() {
           });
-    } catch (HttpClientErrorException | HttpServerErrorException httpExc) {
-      log.error(
-          "{} requested on search by - Response code error: {} with body: {}",
-          PROVIDER,
-          httpExc.getStatusCode(),
-          httpExc.getResponseBodyAsString());
-    }
-
-    return List.of();
   }
 
   @SuppressWarnings("unused")

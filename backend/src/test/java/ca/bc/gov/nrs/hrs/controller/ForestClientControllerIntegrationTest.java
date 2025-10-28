@@ -293,14 +293,14 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
         ),
         Arguments.argumentSet(
             "With return but no page",
-            "kelp",
+            null,
             okJson("[]"),
             okJson(EMPTY_PAGED_NOPAGE),
             false
         ),
         Arguments.argumentSet(
             "With empty return",
-            "kelp",
+            null,
             okJson("[]"),
             okJson(EMPTY_JSON),
             false
