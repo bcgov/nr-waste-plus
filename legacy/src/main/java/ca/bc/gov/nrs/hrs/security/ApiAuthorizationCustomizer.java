@@ -9,8 +9,12 @@ import org.springframework.security.config.annotation.web.configurers.AuthorizeH
 import org.springframework.stereotype.Component;
 
 /**
- * This class contains the configuration for API authorization. This is where our security rules are
- * defined.
+ * API authorization configuration: defines security rules for HTTP routes.
+ *
+ * <p>This customizer registers route-level authorization rules such as which
+ * endpoints require authentication, which are permitted anonymously, and
+ * custom access checks using {@link JwtRoleAuthorizationManagerFactory}.
+ * </p>
  */
 @Component
 @RequiredArgsConstructor
@@ -20,6 +24,7 @@ public class ApiAuthorizationCustomizer implements
         > {
 
   private final JwtRoleAuthorizationManagerFactory roleCheck;
+
   /**
    * The environment of the application, which is injected from the application properties. The
    * default value is "PROD".

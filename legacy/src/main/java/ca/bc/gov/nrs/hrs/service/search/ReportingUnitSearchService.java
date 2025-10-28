@@ -21,6 +21,18 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service that provides search capabilities for reporting units and related aggregates.
+ *
+ * <p>This service exposes methods used by controller endpoints to perform paged searches of
+ * reporting units, search for matching reporting-unit users, and to aggregate client/district
+ * level statistics ("my forest clients"). Queries are executed via {@link ReportingUnitRepository}
+ * and results are mapped to DTOs using MapStruct mappers.</p>
+ *
+ * <p>Sorting is resolved using {@link PaginationUtil} which maps client-visible property names
+ * to database columns; sort mappings are defined in {@code SORT_FIELDS} and
+ * {@code SORT_DISTRICT_FIELDS}.</p>
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -58,6 +70,20 @@ public class ReportingUnitSearchService {
           Map.entry("lastUpdate", "last_update")
       );
 
+  /**
+   * Search reporting units using the provided filters and pageable settings.
+   *
+   * <p>The method scopes results by client numbers derived from the caller's roles unless a
+   * specific client number filter is supplied (see #128 behavior). Sorting is resolved via
+   * {@link PaginationUtil#resolveSort(org.springframework.data.domain.Sort, String, Map)}.
+   * The repository returns projection objects which are then mapped to
+   * {@link ReportingUnitSearchResultDto} instances.</p>
+   *
+   * @param filters search filter DTO containing various optional criteria
+   * @param page paging and sorting information
+   * @param userClientNumbers client numbers derived from the caller's roles for scoping
+   * @return a page of {@link ReportingUnitSearchResultDto} matching the supplied criteria
+   */
   @NewSpan
   public Page<ReportingUnitSearchResultDto> search(
       ReportingUnitSearchParametersDto filters,
@@ -88,6 +114,17 @@ public class ReportingUnitSearchService {
         .map(ruSearchMapper::fromProjection);
   }
 
+  /**
+   * Search reporting-unit users matching the supplied userId fragment.
+   *
+   * <p>This method performs an approximate match (repository-side) and scopes the search
+   * by the provided client list; when the caller has no clients the repository is passed
+   * a sentinel value to avoid an unrestricted search.</p>
+   *
+   * @param userId the user identifier fragment to find (case-insensitive)
+   * @param clientFromRoles list of client numbers derived from the caller's roles
+   * @return a list of matching user identifiers
+   */
   public List<String> searchReportingUnitUsers(String userId, List<String> clientFromRoles) {
     log.info("Searching users that matches {} withing reporting units that belongs to clients {}",
         userId, clientFromRoles);
@@ -102,6 +139,17 @@ public class ReportingUnitSearchService {
         );
   }
 
+  /**
+   * Search client districts aggregated for the authenticated user's forest ("my forest clients").
+   *
+   * <p>The method executes an aggregation query via the repository which computes submission and
+   * block counts per client and returns a paged projection mapped to
+   * {@link ClientDistrictSearchResultDto}.</p>
+   *
+   * @param clients optional list of clients to include; when empty, caller's clients should be used
+   * @param page paging and sorting information
+   * @return a page of {@link ClientDistrictSearchResultDto} representing aggregated client stats
+   */
   public Page<ClientDistrictSearchResultDto> searchMyClients(
       List<String> clients, Pageable page
   ) {

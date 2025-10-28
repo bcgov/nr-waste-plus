@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.hrs.endpoint;
+package ca.bc.gov.nrs.hrs.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -17,7 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @DisplayName("Integrated Test | Codes Endpoint")
 @WithMockJwt
-class CodesEndpointIntegrationTest extends AbstractTestContainerIntegrationTest {
+class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @Autowired
   private MockMvc mockMvc;

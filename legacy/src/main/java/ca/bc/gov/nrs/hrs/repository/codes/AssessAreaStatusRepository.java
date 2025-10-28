@@ -6,9 +6,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Repository interface for accessing assess area status data.
+ */
 @Repository
 public interface AssessAreaStatusRepository extends JpaRepository<AssessAreaStatusEntity, String> {
 
+  /**
+   * Retrieves all valid assess area statuses.
+   *
+   * @return a list of valid {@link AssessAreaStatusEntity} objects
+   */
   @Query(
       nativeQuery = true,
       value = """

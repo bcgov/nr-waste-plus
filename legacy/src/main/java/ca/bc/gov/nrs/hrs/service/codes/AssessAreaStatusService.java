@@ -10,6 +10,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service that exposes assessment-area status codes for use by the search UI and API.
+ *
+ * <p>Wraps repository access and maps entities to {@link CodeDescriptionDto} instances using
+ * {@link AssessAreaStatusMapper}.</p>
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -19,6 +25,14 @@ public class AssessAreaStatusService {
   private final AssessAreaStatusRepository repository;
   private final AssessAreaStatusMapper codeMapping;
 
+  /**
+   * Retrieve all valid assessment-area status codes.
+   *
+   * <p>This method loads active rows from the code table via the repository, maps each
+   * entity to a {@link CodeDescriptionDto} and returns the resulting list.</p>
+   *
+   * @return list of status {@link CodeDescriptionDto} suitable for UI selection lists
+   */
   @NewSpan
   public List<CodeDescriptionDto> getStatusCodes() {
     log.info("Getting all assessment area status for the search openings");

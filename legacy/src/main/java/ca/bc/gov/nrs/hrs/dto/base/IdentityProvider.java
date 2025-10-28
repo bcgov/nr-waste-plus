@@ -6,7 +6,13 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-/** Enumeration of the identity providers our application works with. */
+/**
+ * Enumeration of the identity providers our application works with.
+ *
+ * <p>Each enum constant holds the claim name as it appears in the JWT so the
+ * application can map incoming tokens to one of the supported providers.
+ * </p>
+ */
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public enum IdentityProvider {
   IDIR("idir"),
@@ -17,10 +23,11 @@ public enum IdentityProvider {
   private final String claimName;
 
   /**
-   * Extract the identity provider from a Jwt.
+   * Extract the identity provider from a claim value.
    *
-   * @param provider The provider name
-   * @return the identity provider, if one is found
+   * @param provider the provider claim value (may be null)
+   * @return the matching {@link IdentityProvider} wrapped in {@link Optional},
+   *     or {@link Optional#empty()} if no match is found
    */
   public static Optional<IdentityProvider> fromClaim(String provider) {
     return Arrays.stream(values())

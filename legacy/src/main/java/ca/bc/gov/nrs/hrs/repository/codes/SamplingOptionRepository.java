@@ -6,9 +6,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Repository interface for accessing sampling option data.
+ */
 @Repository
 public interface SamplingOptionRepository extends JpaRepository<SamplingOptionEntity, String> {
 
+  /**
+   * Retrieves all valid sampling options.
+   *
+   * @return a list of valid {@link SamplingOptionEntity} objects
+   */
   @Query(
       nativeQuery = true,
       value = """
