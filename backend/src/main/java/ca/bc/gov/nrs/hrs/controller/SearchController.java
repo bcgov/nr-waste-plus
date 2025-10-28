@@ -23,6 +23,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Controller exposing search-related REST endpoints for reporting units.
+ * <p>
+ * Provides endpoints to search reporting units with filtering and paging,
+ * and to search for users associated with reporting units. The controller
+ * consults the caller's JWT to apply identity-provider-specific validation
+ * and scoping rules (for example to restrict BCEID callers to their
+ * assigned clients).
+ * </p>
+ */
 @RestController
 @RequestMapping("/api/search")
 @RequiredArgsConstructor
@@ -32,6 +42,29 @@ public class SearchController {
 
   private final SearchService service;
 
+  /**
+   * Search for reporting units (waste entries) using the provided filters and
+   * pageable information.
+   * <p>
+   * For callers authenticated via BCeID (IdentityProvider.BUSINESS_BCEID), an
+   * additional validation is applied: if the {@code clientNumber} filter is
+   * specified it must be present in the caller's client roles. If not, an
+   * {@link InvalidSelectedValueException} is thrown.
+   * </p>
+   * <p>
+   * NOTE: The existing inline comment {@code #128} that mentions BCeID
+   * behaviour is preserved here because the size adjustment and client-side
+   * filtering are implemented where appropriate in other endpoints.
+   * </p>
+   *
+   * @param jwt the JWT principal for the authenticated caller
+   * @param filters the search filters (mapped from request parameters)
+   * @param pageable pageable information (page, size, sort)
+   * @return a page of {@link ReportingUnitSearchResultDto} matching the
+   *     provided filters
+   * @throws InvalidSelectedValueException when a BCEID caller specifies a
+   *     client number that is not present in their assigned client roles
+   */
   @GetMapping("/reporting-units")
   public Page<ReportingUnitSearchResultDto> searchWasteEntries(
       @AuthenticationPrincipal Jwt jwt,
@@ -53,6 +86,12 @@ public class SearchController {
 
   }
 
+  /**
+   * Search for reporting unit users by a partial or full user id.
+   *
+   * @param userId the user id to search for
+   * @return a list of user ids that match the provided value
+   */
   @GetMapping("/reporting-units-users")
   public List<String> searchReportingUnitUsers(
       @RequestParam String userId

@@ -41,10 +41,7 @@ public class CorsConfiguration implements WebMvcConfigurer {
    *
    * <p>The method reads the frontend URL from {@code configuration.getFrontend().getUrl()}.
    * If the URL contains commas it will be split into multiple allowed origins. The resulting list
-   * is applied to the {@code /api/**} mapping via
-   * {@link
-   * org.springframework.web.servlet.config.annotation.CorsRegistration#allowedOriginPatterns(String...)
-   * allowedOriginPatterns}.
+   * is applied to the {@code /api/**} mapping
    * </p>
    *
    * <p>Note: actuator endpoints are registered separately to allow any origin

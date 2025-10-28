@@ -26,7 +26,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * This class holds resources for the Forest Client API interaction.
+ * REST controller exposing endpoints to query and search Forest Client data.
+ * <p>
+ * Provides operations to retrieve a single forest client by client number,
+ * search for clients by name, acronym or number, retrieve client locations,
+ * look up multiple clients by numbers, and perform paged searches for the
+ * currently authenticated user's associated forest clients.
+ * </p>
+ * <p>
+ * This controller relies on {@link ForestClientService} for client-related
+ * data access and {@link SearchService} for the paged "my forest clients"
+ * search. Authentication information is read from the JWT principal (when
+ * available) using {@link JwtPrincipalUtil} to apply identity-provider-specific
+ * behavior (for example BCEID vs IDIR filtering).
+ * </p>
  */
 @RestController
 @RequestMapping("/api/forest-clients")
@@ -40,9 +53,10 @@ public class ForestClientController {
   /**
    * Get a {@link ForestClientDto} given a client number.
    *
-   * @param clientNumber The client number to be fetched.
-   * @return ForestsClientDto
-   * @throws ForestClientNotFoundException when client not found
+   * @param clientNumber the client number to be fetched
+   * @return the {@link ForestClientDto} for the given client number
+   * @throws ForestClientNotFoundException when the client with the provided
+   *     number is not found
    */
   @GetMapping("/{clientNumber}")
   public ForestClientDto getForestClient(@PathVariable String clientNumber) {
@@ -53,11 +67,24 @@ public class ForestClientController {
 
   /**
    * Search for clients by name, acronym or number.
+   * <p>
+   * The behavior of this endpoint is affected by the caller's identity
+   * provider (determined from the provided JWT):
+   * </p>
+   * <ul>
+   *   <li>BCeID callers will have the result size increased to allow client-side
+   *       filtering and will only be allowed to search if they have clients in
+   *       their roles.</li>
+   *   <li>IDIR callers will search without client-based restrictions.</li>
+   * </ul>
    *
-   * @param page  The page number to be fetched.
-   * @param size  The size of the page to be fetched.
-   * @param value The value to be searched.
-   * @return List of {@link ForestClientAutocompleteResultDto} with found clients.
+   * @param page the page index to fetch (zero-based)
+   * @param size the page size to fetch
+   * @param value the search value (name, acronym or number)
+   * @param jwt the JWT principal of the authenticated caller (injected by
+   *     Spring Security)
+   * @return a list of {@link ForestClientAutocompleteResultDto} matching the
+   *     search criteria
    */
   @GetMapping("/byNameAcronymNumber")
   public List<ForestClientAutocompleteResultDto> searchForestClients(
@@ -89,14 +116,23 @@ public class ForestClientController {
   /**
    * Get the locations of a client.
    *
-   * @param clientNumber The client number to be fetched.
-   * @return List of {@link CodeDescriptionDto} with found locations.
+   * @param clientNumber the client number to be fetched
+   * @return a list of {@link CodeDescriptionDto} representing the client's
+   *     locations
    */
   @GetMapping("/{clientNumber}/locations")
   public List<CodeDescriptionDto> getForestClientLocations(@PathVariable String clientNumber) {
     return forestClientService.getClientLocations(clientNumber);
   }
 
+  /**
+   * Search for clients by a list of client numbers.
+   *
+   * @param page the page index to fetch (zero-based)
+   * @param size the page size to fetch
+   * @param values the list of client numbers to look up
+   * @return a list of {@link ForestClientDto} for the matching client numbers
+   */
   @GetMapping("/searchByNumbers")
   public List<ForestClientDto> searchByClientNumbers(
       @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
@@ -105,6 +141,20 @@ public class ForestClientController {
     return forestClientService.searchByClientNumbers(page, size, values, null);
   }
 
+  /**
+   * Search page of the current user's Forest clients.
+   * <p>
+   * This endpoint performs a paged search scoped to the clients associated
+   * with the authenticated user's roles (as extracted from the JWT). The
+   * pageable default sorts by {@code lastUpdate} in descending order.
+   * </p>
+   *
+   * @param value optional free-text search value; defaults to an empty string
+   * @param pageable the pageable specification (page number, size, sort)
+   * @param jwt the JWT principal used to determine the caller's client roles
+   * @return a {@link Page} of {@link MyForestClientSearchResultDto} matching
+   *     the search and client-role restrictions
+   */
   @GetMapping("/clients")
   public Page<MyForestClientSearchResultDto> searchMyForestClients(
       @RequestParam(required = false, defaultValue = StringUtils.EMPTY) String value,
