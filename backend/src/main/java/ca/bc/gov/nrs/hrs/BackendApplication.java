@@ -11,7 +11,7 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport;
  * Main Spring Boot application bootstrap for the HRS backend.
  *
  * <p>This class serves as the application's entry point and enables a couple of
- * framework features via annotations:
+ * framework features via annotations:</p>
  *
  * <ul>
  *   <li>AspectJ auto-proxying ({@link EnableAspectJAutoProxy}) to support AOP-based
@@ -19,9 +19,10 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport;
  *   <li>Spring Data web support ({@link EnableSpringDataWebSupport}) configured to
  *       serialize page responses via DTOs (see {@code VIA_DTO}).</li>
  * </ul>
+ *
  * <p>
  * The class intentionally contains only the {@code main} method so that component
- * scanning starts from this package.
+ * scanning starts from this package.</p>
  *
  * @since 1.0.0
  */
