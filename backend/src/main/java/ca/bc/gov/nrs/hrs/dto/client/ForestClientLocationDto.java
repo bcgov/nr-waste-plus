@@ -5,6 +5,7 @@ import lombok.With;
 
 /**
  * This record represents a Forest Client Location object.
+ *
  * <p>
  * It contains contact and addressing information for a single client
  * location together with metadata such as whether the location is expired or

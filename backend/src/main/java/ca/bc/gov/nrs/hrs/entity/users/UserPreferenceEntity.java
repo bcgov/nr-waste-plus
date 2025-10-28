@@ -21,12 +21,14 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * JPA entity that stores user preferences.
+ *
  * <p>
  * Maps to the database table {@code hrs.user_preferences} and persists a
  * JSONB {@code preferences} column containing arbitrary user preference
  * key/value pairs. Preferences are represented in the application as a
  * {@link Map}&lt;String, Object&gt; to allow flexible structured values.
  * </p>
+ *
  * <p>
  * The entity is auditable: {@link #updatedAt} is populated with the last
  * modification timestamp (via Spring Data auditing) and {@link #revision}
@@ -53,6 +55,7 @@ public class UserPreferenceEntity {
   /**
    * JSONB column that stores the user's preferences as arbitrary
    * key/value pairs. Example structure: {@code { "theme": "dark", "pageSize": 25 }}.
+   *
    * <p>
    * The column is declared with {@code columnDefinition = "jsonb"} and the
    * Hibernate {@link org.hibernate.type.SqlTypes#JSON} mapping via

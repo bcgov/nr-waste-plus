@@ -8,6 +8,7 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * Exception for downstream failures that may be retried after a suggested
  * delay.
+ *
  * <p>
  * The exception can capture a {@code Retry-After} value—either a number of
  * seconds or an HTTP-date—and exposes it as an {@link Optional}{@code <Duration>}.

@@ -45,8 +45,10 @@ public final class LegacyApiConstants {
       new CodeDescriptionDto("DCR", "Campbell River")
   );
 
-  public static final List<CodeDescriptionDto> EMPTY_CODE_LIST = List.of();
+  public static final List<CodeDescriptionDto> CODE_LIST = List.of();
   public static final List<String> EMPTY_STRING_LIST = List.of();
-  public static final List<ReportingUnitSearchResultDto> EMPTY_REPORTING_UNIT_SEARCH_RESULTS = List.of();
-  public static final List<MyForestClientSearchResultDto> EMPTY_MY_FOREST_CLIENT_SEARCH_RESULTS = List.of();
+  public static final List<ReportingUnitSearchResultDto> RU_SEARCH_LIST = List.of();
+  public static final List<MyForestClientSearchResultDto> MY_CLIENTS_LIST = List.of();
+  public static final String CONTENT_CONST = "content";
+  public static final String PAGE_CONST = "page";
 }

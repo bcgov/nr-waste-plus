@@ -6,6 +6,7 @@ import lombok.Getter;
 
 /**
  * Enum containing all forest client status codes and descriptions.
+ *
  * <p>
  * Each enum constant exposes {@code code} and {@code description} properties
  * (via Lombok's {@link Getter}) and is serialized as a JSON object because

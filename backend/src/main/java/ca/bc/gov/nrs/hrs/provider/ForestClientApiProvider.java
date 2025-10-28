@@ -224,7 +224,13 @@ public class ForestClientApiProvider {
     );
   }
 
-
+  /**
+   * Circuit breaker protected method to fetch a specific client location by client number and
+   * location code.
+   * @param clientNumber client number to lookup
+   * @param locationCode location code to lookup
+   * @return an {@link Optional} containing the {@link ForestClientLocationDto} if found
+   */
   @CircuitBreaker(
       name = "breaker",
       fallbackMethod = "locationByClientNumberAndLocationCodeFallback"
@@ -258,7 +264,14 @@ public class ForestClientApiProvider {
     return Optional.empty();
   }
 
-
+  /**
+   * Search clients by a list of IDs with optional name filter.
+   * @param page Page number
+   * @param size Number of items per page
+   * @param values List of client IDs to search
+   * @param name Optional name filter
+   * @return List of matching ForestClientDto
+   */
   @CircuitBreaker(name = "breaker", fallbackMethod = "searchClientsByIdsFallback")
   @NewSpan
   public List<ForestClientDto> searchClientsByIds(
@@ -344,7 +357,11 @@ public class ForestClientApiProvider {
 
   // Centralized fallback logger to reduce repeated code
   private void logFallbackWarn(String method, Throwable ex) {
-    log.warn("Fallback for {} for {} due to {}.", method, PROVIDER, ex == null ? "unknown" : ex.toString());
+    log.warn("Fallback for {} for {} due to {}.",
+        method,
+        PROVIDER,
+        ex == null ? "unknown" : ex.toString()
+    );
   }
 
 }

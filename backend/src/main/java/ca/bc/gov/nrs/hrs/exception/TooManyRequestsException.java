@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * Exception thrown when a downstream service indicates too many requests.
+ *
  * <p>
  * This extends {@link RetriableException} and is annotated with
  * {@link ResponseStatus} to map to HTTP 429 (Too Many Requests). The

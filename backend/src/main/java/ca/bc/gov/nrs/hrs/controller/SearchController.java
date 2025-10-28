@@ -46,12 +46,14 @@ public class SearchController {
   /**
    * Search for reporting units (waste entries) using the provided filters and
    * pageable information.
+   *
    * <p>
    * For callers authenticated via BCeID (IdentityProvider.BUSINESS_BCEID), an
    * additional validation is applied: if the {@code clientNumber} filter is
    * specified it must be present in the caller's client roles. If not, an
    * {@link InvalidSelectedValueException} is thrown.
    * </p>
+   *
    * <p>
    * NOTE: The existing inline comment {@code #128} that mentions BCeID
    * behaviour is preserved here because the size adjustment and client-side

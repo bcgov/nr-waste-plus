@@ -6,6 +6,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Generic exception indicating a requested resource was not found.
+ *
  * <p>
  * Annotated with {@link ResponseStatus} so when thrown from a controller it
  * translates to an HTTP 404 (Not Found) response with a descriptive message.

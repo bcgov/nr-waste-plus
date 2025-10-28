@@ -8,6 +8,7 @@ import lombok.With;
  * Represents a small immutable record used throughout the application to
  * return or transport a code and its corresponding description.
  * </p>
+ *
  * <p>
  * (Maintains the original brief description: "The type Code description dto.")
  * </p>

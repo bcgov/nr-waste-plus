@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
  * look up multiple clients by numbers, and perform paged searches for the
  * currently authenticated user's associated forest clients.
  * </p>
+ *
  * <p>
  * This controller relies on {@link ForestClientService} for client-related
  * data access and {@link SearchService} for the paged "my forest clients"
@@ -72,6 +73,7 @@ public class ForestClientController {
    * The behavior of this endpoint is affected by the caller's identity
    * provider (determined from the provided JWT):
    * </p>
+   * 
    * <ul>
    *   <li>BCeID callers will have the result size increased to allow client-side
    *       filtering and will only be allowed to search if they have clients in

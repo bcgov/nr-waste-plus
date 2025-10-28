@@ -5,6 +5,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Exception representing a downstream failure that should not be retried.
+ *
  * <p>
  * The exception message includes the failing status and a diagnostic value.
  * </p>

@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.hrs.exception;
 
 /**
  * Exception thrown when a requested Forest Client cannot be found.
+ *
  * <p>
  * When thrown from a controller, this results in an HTTP 404 (Not Found)
  * response due to the superclass behaviour. The original short description

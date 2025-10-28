@@ -9,6 +9,7 @@ import lombok.With;
 
 /**
  * This record represents a Forest Client object.
+ *
  * <p>
  * It models information about a forest client including identification,
  * legal person names and type/status codes. The {@link #name()} accessor
@@ -32,6 +33,7 @@ public record ForestClientDto(
 
   /**
    * Returns the name of the client.
+   *
    * <p>
    * The value is resolved based on the client type: for individuals (type
    * code 'I') it concatenates legal first, middle and last name parts; for

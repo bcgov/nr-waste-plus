@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 /**
  * Client request initializer that forwards the currently authenticated user's
  * JWT to outgoing downstream requests by adding an Authorization header.
+ *
  * <p>
  * When present, the initializer extracts the token value from the
  * {@link JwtAuthenticationToken} in the Spring Security context and sets the

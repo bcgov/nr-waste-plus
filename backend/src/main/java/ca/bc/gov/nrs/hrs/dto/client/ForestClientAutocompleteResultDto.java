@@ -5,6 +5,7 @@ import lombok.With;
 /**
  * DTO used to represent a forest client in autocomplete or lightweight
  * search responses.
+ *
  * <p>
  * Contains an identifier, display name and optional acronym suited for
  * compact UI elements such as autocomplete dropdowns.

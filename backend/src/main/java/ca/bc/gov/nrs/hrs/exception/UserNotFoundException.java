@@ -6,6 +6,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Exception thrown when a user record cannot be found.
+ *
  * <p>
  * When thrown from a controller this results in an HTTP 404 (Not Found)
  * response due to the {@link ResponseStatus} annotation.

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 /**
  * Client request initializer that forwards B3 tracing headers (X-B3-TraceId and
  * X-B3-SpanId) from the current Micrometer {@link Span} to outgoing requests.
+ *
  * <p>
  * When a current span is available from the configured {@link Tracer}, this
  * initializer reads the trace and span ids and adds them as headers on the

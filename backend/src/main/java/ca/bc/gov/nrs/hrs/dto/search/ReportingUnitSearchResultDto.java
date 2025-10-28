@@ -7,6 +7,7 @@ import lombok.With;
 /**
  * DTO representing a reporting unit search result returned by the search
  * endpoints.
+ *
  * <p>
  * This immutable record contains summary information about a reporting unit
  * that is useful for search result listings: identifiers, human-readable

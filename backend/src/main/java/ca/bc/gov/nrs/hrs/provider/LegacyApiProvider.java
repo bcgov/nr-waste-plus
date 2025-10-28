@@ -143,20 +143,24 @@ public class LegacyApiProvider {
         .retrieve()
         .body(JsonNode.class);
 
-    if (pagedResponse == null || pagedResponse.get("content") == null || pagedResponse.get("page") == null) {
+    if (pagedResponse == null || pagedResponse.get(LegacyApiConstants.CONTENT_CONST) == null || pagedResponse.get(
+        LegacyApiConstants.PAGE_CONST) == null) {
       logFallbackError(null);
-      return new PageImpl<>(LegacyApiConstants.EMPTY_REPORTING_UNIT_SEARCH_RESULTS, pageable, 0);
+      return new PageImpl<>(LegacyApiConstants.RU_SEARCH_LIST, pageable, 0);
     }
 
     List<ReportingUnitSearchResultDto> results = mapper.convertValue(
-        pagedResponse.get("content"),
+        pagedResponse.get(LegacyApiConstants.CONTENT_CONST),
         mapper.getTypeFactory()
             .constructCollectionType(List.class, ReportingUnitSearchResultDto.class)
     );
 
     long totalElements = 0L;
     try {
-      totalElements = pagedResponse.get("page").get("totalElements").asLong();
+      totalElements = pagedResponse
+          .get(LegacyApiConstants.PAGE_CONST)
+          .get("totalElements")
+          .asLong();
     } catch (Exception e) {
       logFallbackError(e);
     }
@@ -229,20 +233,23 @@ public class LegacyApiProvider {
         .retrieve()
         .body(JsonNode.class);
 
-    if (pagedResponse == null || pagedResponse.get("content") == null || pagedResponse.get("page") == null) {
+    if (pagedResponse == null
+        || pagedResponse.get(LegacyApiConstants.CONTENT_CONST) == null
+        || pagedResponse.get(LegacyApiConstants.PAGE_CONST) == null
+    ) {
       logFallbackError(null);
-      return new PageImpl<>(LegacyApiConstants.EMPTY_MY_FOREST_CLIENT_SEARCH_RESULTS, pageable, 0);
+      return new PageImpl<>(LegacyApiConstants.MY_CLIENTS_LIST, pageable, 0);
     }
 
     List<MyForestClientSearchResultDto> results = mapper.convertValue(
-        pagedResponse.get("content"),
+        pagedResponse.get(LegacyApiConstants.CONTENT_CONST),
         mapper.getTypeFactory()
             .constructCollectionType(List.class, MyForestClientSearchResultDto.class)
     );
 
     long totalElements = 0L;
     try {
-      totalElements = pagedResponse.get("page").get("totalElements").asLong();
+      totalElements = pagedResponse.get(LegacyApiConstants.PAGE_CONST).get("totalElements").asLong();
     } catch (Exception e) {
       logFallbackError(e);
     }
@@ -263,7 +270,7 @@ public class LegacyApiProvider {
   @SuppressWarnings("unused")
   private List<CodeDescriptionDto> fallbackEmptyList(Throwable throwable) {
     logFallbackError(throwable);
-    return LegacyApiConstants.EMPTY_CODE_LIST;
+    return LegacyApiConstants.CODE_LIST;
   }
 
   @SuppressWarnings("unused")
@@ -279,7 +286,7 @@ public class LegacyApiProvider {
       Throwable throwable
   ) {
     logFallbackError(throwable);
-    return new PageImpl<>(LegacyApiConstants.EMPTY_REPORTING_UNIT_SEARCH_RESULTS, pageable, 0);
+    return new PageImpl<>(LegacyApiConstants.RU_SEARCH_LIST, pageable, 0);
   }
 
   @SuppressWarnings("unused")
@@ -289,7 +296,7 @@ public class LegacyApiProvider {
       Throwable throwable
   ) {
     logFallbackError(throwable);
-    return new PageImpl<>(LegacyApiConstants.EMPTY_MY_FOREST_CLIENT_SEARCH_RESULTS, pageable, 0);
+    return new PageImpl<>(LegacyApiConstants.MY_CLIENTS_LIST, pageable, 0);
   }
 
   // Central helper to log fallback errors which avoids repeated log.error calls

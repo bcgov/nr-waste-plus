@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 /**
  * Simple enum representing a yes/no flag using single-character codes
  * "Y" and "N".
+ *
  * <p>
  * The enum exposes a {@link #value()} method annotated with {@link JsonValue}
  * so instances are serialized as their single-character codes. A static
