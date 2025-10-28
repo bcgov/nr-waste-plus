@@ -1,11 +1,10 @@
-package ca.bc.gov.nrs.hrs.endpoint;
+package ca.bc.gov.nrs.hrs.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import org.junit.jupiter.api.DisplayName;
@@ -19,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @DisplayName("Integrated Test | Search Endpoint : Reporting Unit")
 @WithMockJwt
-class SearchEndpointReportingUnitIntegrationTest extends AbstractTestContainerIntegrationTest {
+class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @Autowired
   private MockMvc mockMvc;

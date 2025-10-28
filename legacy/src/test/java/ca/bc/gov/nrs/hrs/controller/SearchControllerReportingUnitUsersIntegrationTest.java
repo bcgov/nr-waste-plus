@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.hrs.endpoint;
+package ca.bc.gov.nrs.hrs.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -16,84 +16,78 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc
-@DisplayName("Integrated Test | Search Endpoint : My Forest Clients")
+@DisplayName("Integrated Test | Search Endpoint : Reporting Unit as Users")
 @WithMockJwt(
-    cognitoGroups = {"Submitter_00010004"}
+    cognitoGroups = {"Submitter_00010002","Viewer"}
 )
-public class SearchEndpointMyForestClientsIntegrationTest extends
-    AbstractTestContainerIntegrationTest {
+class SearchControllerReportingUnitUsersIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @Autowired
   private MockMvc mockMvc;
 
   @Test
-  @DisplayName("Should search my forest clients")
-  void shouldSearchMyForestClients() throws Exception {
+  @DisplayName("List ru users that matches jake")
+  void shouldListReportingUnitsUsersFromJake() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/my-forest-clients")
+            get("/api/search/reporting-units-users")
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .param("userId", "jake")
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.content[0].submissionsCount").value(2))
-        .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
-        .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(1))
+        .andExpect(jsonPath("$.length()").value(2))
+        .andExpect(jsonPath("$.[0]").value("BCEID\\JAKE"))
+        .andExpect(jsonPath("$.[1]").value("IDIR\\JAKE"))
         .andReturn();
   }
 
   @Test
-  @DisplayName("Should search my forest clients other page")
-  void shouldSearchMyForestClientsOtherPage() throws Exception {
+  @DisplayName("Jonny can't be found")
+  void shouldSearchRuUsersAndFoundNothing() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/my-forest-clients")
+            get("/api/search/reporting-units-users")
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .param("page", "3")
-                .param("size", "10")
+                .param("userId", "jonny")
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.content.length()").value(0))
-        .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(1))
+        .andExpect(jsonPath("$.length()").value(0))
         .andReturn();
   }
 
   @Test
-  @DisplayName("Should search my forest clients with ids valid")
-  void shouldSearchMyForestClientsWithIdsValid() throws Exception {
+  @DisplayName("Lump Space Princess, I can see you")
+  void shouldReturnIfIdir() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/my-forest-clients")
+            get("/api/search/reporting-units-users")
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .queryParam("values","00010004")
+                .param("userId", "lsp")
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.content[0].submissionsCount").value(2))
-        .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
-        .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(1))
+        .andExpect(jsonPath("$.length()").value(1))
         .andReturn();
   }
 
   @Test
-  @DisplayName("Should search my forest clients with ids invalid")
-  void shouldSearchMyForestClientsWithIdsInValid() throws Exception {
+  @DisplayName("Lump Space Princess, where are you?")
+  @WithMockJwt(
+      cognitoGroups = {"Submitter_00010002","Viewer"},
+      idp = "bceidbusiness"
+  )
+  void shouldReturnNothingWhenClientNotListed() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/my-forest-clients")
+            get("/api/search/reporting-units-users")
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .queryParam("values","00040004")
+                .param("userId", "lsp")
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.content.length()").value(0))
-        .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(0))
+        .andExpect(jsonPath("$.length()").value(0))
         .andReturn();
   }
-
 }
