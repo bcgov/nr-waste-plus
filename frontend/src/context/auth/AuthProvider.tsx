@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FamLoginUser | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
 
-  const appEnv = isNaN(Number(env.VITE_ZONE)) ? (env.VITE_ZONE ?? 'TEST') : 'TEST';
+  const appEnv = Number.isNaN(Number(env.VITE_ZONE)) ? (env.VITE_ZONE ?? 'TEST') : 'TEST';
 
   const refreshUserState = async () => {
     setIsLoading(true);
