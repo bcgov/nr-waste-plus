@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Controller exposing search-related REST endpoints for reporting units.
+ *
  * <p>
  * Provides endpoints to search reporting units with filtering and paging,
  * and to search for users associated with reporting units. The controller

@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST controller exposing endpoints to query and search Forest Client data.
+ *
  * <p>
  * Provides operations to retrieve a single forest client by client number,
  * search for clients by name, acronym or number, retrieve client locations,

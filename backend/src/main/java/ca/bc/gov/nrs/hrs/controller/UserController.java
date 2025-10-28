@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * REST endpoints for user-specific operations such as reading and updating
  * user preferences.
+ *
  * <p>
  * This controller exposes simple operations to get and persist a user's
  * preferences. The authenticated user's id is resolved from the provided JWT
