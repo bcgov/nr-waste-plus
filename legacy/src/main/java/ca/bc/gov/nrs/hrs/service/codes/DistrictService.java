@@ -13,7 +13,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 /**
- * This class contains methods to handle Districts.
+ * Service for retrieving district (organization unit) code lists used by the search UI.
+ *
+ * <p>Loads configured districts from {@link HrsConfiguration} and maps database projections
+ * to {@link CodeDescriptionDto} objects via {@link DistrictMapper}.</p>
  */
 @Slf4j
 @Service
@@ -28,7 +31,10 @@ public class DistrictService {
   /**
    * Find all Org Units for the Openings Search.
    *
-   * @return List of org units.
+   * <p>Fetches configured org-unit codes and maps them to DTOs. The description text is cleaned
+   * to remove the phrase "Natural Resource District" for compact display.</p>
+   *
+   * @return List of {@link CodeDescriptionDto} representing org units
    */
   @NewSpan
   public List<CodeDescriptionDto> findAllOrgUnits() {
