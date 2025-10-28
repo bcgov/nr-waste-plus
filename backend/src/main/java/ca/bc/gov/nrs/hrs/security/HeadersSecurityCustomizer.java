@@ -16,7 +16,13 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 import org.springframework.stereotype.Component;
 
 /**
- * This class holds the configuration for HTTP headers security.
+ * Configuration for HTTP security headers applied to the application.
+ *
+ * <p>
+ * This customizer builds a Content-Security-Policy and other security
+ * headers. The CSP differs between local and non-local environments to
+ * enable development conveniences when needed.
+ * </p>
  */
 @RequiredArgsConstructor
 @Component
@@ -37,8 +43,8 @@ public class HeadersSecurityCustomizer implements Customizer<HeadersConfigurer<H
   );
 
   /**
-   * The environment of the application, which is injected from the application properties. The
-   * default value is "PROD".
+   * The environment of the application, which is injected from the
+   * application properties. The default value is "PROD".
    */
   @Value("${ca.bc.gov.nrs.environment:PROD}")
   String environment;

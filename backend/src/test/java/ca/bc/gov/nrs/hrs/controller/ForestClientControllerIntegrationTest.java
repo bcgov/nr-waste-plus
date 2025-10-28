@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.hrs.controller;
 
 import static ca.bc.gov.nrs.hrs.BackendConstants.X_TOTAL_COUNT;
 import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE;
+import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.EMPTY_JSON;
+import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.EMPTY_PAGED_NOPAGE;
 import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.MY_FOREST_CLIENTS_LEGACY;
 import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST;
 import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE;
@@ -287,6 +289,20 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
             "kelp",
             okJson("[]"),
             okJson(REPORTING_UNITS_EMPTY_SEARCH_RESPONSE),
+            false
+        ),
+        Arguments.argumentSet(
+            "With return but no page",
+            null,
+            okJson("[]"),
+            okJson(EMPTY_PAGED_NOPAGE),
+            false
+        ),
+        Arguments.argumentSet(
+            "With empty return",
+            null,
+            okJson("[]"),
+            okJson(EMPTY_JSON),
             false
         )
     );
