@@ -20,8 +20,7 @@ import org.springframework.util.MultiValueMap;
 /**
  * Search parameters for reporting unit searches.
  *
- * <p>
- * Contains the set of filter values that can be applied when searching for
+ * <p>Contains the set of filter values that can be applied when searching for
  * reporting units. Some getters are overridden (via Lombok 'With') to provide
  * a convenient immutable-style builder; lists may be null or empty and the
  * helper method {@link #toMultiMap(Pageable)} converts the populated fields
@@ -107,7 +106,8 @@ public class ReportingUnitSearchParametersDto {
     multiValueMap.add("requestByMe", BooleanUtils.toStringTrueFalse(requestByMe));
 
     if (updateDateStart != null) {
-      multiValueMap.add("updateDateStart", updateDateStart.format(DateTimeFormatter.ISO_LOCAL_DATE));
+      multiValueMap.add("updateDateStart", updateDateStart.format(DateTimeFormatter.ISO_LOCAL_DATE)
+      );
     }
 
     if (updateDateEnd != null) {
