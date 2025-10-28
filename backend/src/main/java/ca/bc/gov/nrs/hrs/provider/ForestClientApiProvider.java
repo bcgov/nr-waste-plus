@@ -153,16 +153,16 @@ public class ForestClientApiProvider {
             .toEntity(new ParameterizedTypeReference<>() {
             });
 
-      return new PageImpl<>(
-          response.getBody() != null ? response.getBody() : List.of(),
-          PageRequest.of(page, size),
-          Long.parseLong(
-              Objects.toString(
-                  response.getHeaders().getFirst(BackendConstants.X_TOTAL_COUNT),
-                  "0"
-              )
-          )
-      );
+    return new PageImpl<>(
+        response.getBody() != null ? response.getBody() : List.of(),
+        PageRequest.of(page, size),
+        Long.parseLong(
+            Objects.toString(
+                response.getHeaders().getFirst(BackendConstants.X_TOTAL_COUNT),
+                "0"
+            )
+        )
+    );
   }
 
   /**
@@ -200,16 +200,16 @@ public class ForestClientApiProvider {
         .toEntity(new ParameterizedTypeReference<>() {
         });
 
-      return new PageImpl<>(
-          response.getBody() != null ? response.getBody() : List.of(),
-          PageRequest.of(0, 50),
-          Long.parseLong(
-              Objects.toString(
-                  response.getHeaders().getFirst(BackendConstants.X_TOTAL_COUNT),
-                  "0"
-              )
-          )
-      );
+    return new PageImpl<>(
+        response.getBody() != null ? response.getBody() : List.of(),
+        PageRequest.of(0, 50),
+        Long.parseLong(
+            Objects.toString(
+                response.getHeaders().getFirst(BackendConstants.X_TOTAL_COUNT),
+                "0"
+            )
+        )
+    );
   }
 
   /**
@@ -229,22 +229,22 @@ public class ForestClientApiProvider {
       List<String> values,
       String name
   ) {
-      log.info("Starting {} request to /clients/search", PROVIDER);
+    log.info("Starting {} request to /clients/search", PROVIDER);
 
-      return restClient
-          .get()
-          .uri(uriBuilder ->
-              uriBuilder
-                  .path("/clients/search")
-                  .queryParam("page", page)
-                  .queryParam("size", size)
-                  .queryParams(UriUtils.buildMultiValueQueryParam("id", values))
-                  .queryParamIfPresent("name", Optional.ofNullable(name))
-                  .build(Map.of())
-          )
-          .retrieve()
-          .body(new ParameterizedTypeReference<>() {
-          });
+    return restClient
+        .get()
+        .uri(uriBuilder ->
+            uriBuilder
+                .path("/clients/search")
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .queryParams(UriUtils.buildMultiValueQueryParam("id", values))
+                .queryParamIfPresent("name", Optional.ofNullable(name))
+                .build(Map.of())
+        )
+        .retrieve()
+        .body(new ParameterizedTypeReference<>() {
+        });
   }
 
   @SuppressWarnings("unused")
