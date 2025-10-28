@@ -5,6 +5,14 @@ import java.util.Optional;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Exception for downstream failures that may be retried after a suggested
+ * delay.
+ * <p>
+ * The exception can capture a {@code Retry-After} value—either a number of
+ * seconds or an HTTP-date—and exposes it as an {@link Optional}{@code <Duration>}.
+ * </p>
+ */
 public class RetriableException extends ResponseStatusException {
   private final Duration retryAfter;
 
@@ -21,6 +29,11 @@ public class RetriableException extends ResponseStatusException {
     this.retryAfter = Duration.ofSeconds(10); // Default retry after 10 seconds
   }
 
+  /**
+   * Get the parsed retry-after duration if available.
+   *
+   * @return an Optional containing the suggested retry delay
+   */
   public Optional<Duration> getRetryAfter() {
     return Optional.ofNullable(retryAfter);
   }
