@@ -4,13 +4,12 @@ import { useAuth } from '@/context/auth/useAuth';
 
 import type { FamRole } from '@/context/auth/types';
 
-export default function ProtectedRoute({
-  children,
-  roles,
-}: {
+type ProtectedRouteProps = Readonly<{
   children: React.ReactNode;
-  roles?: FamRole[];
-}) {
+  roles?: readonly FamRole[];
+}>;
+
+export default function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
   const { user } = useAuth();
 
   if (!user) return <Navigate to="/login" />;

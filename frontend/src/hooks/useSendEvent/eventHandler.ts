@@ -16,11 +16,11 @@ class EventHandler {
   };
 
   /**
-   * Initializes the EventHandler and sets up a bridge to listen for global window events.
+   * Initializes the EventHandler and sets up a bridge to listen for global globalThis events.
    * When a global event is received, it dispatches it to the appropriate listeners.
    */
   constructor() {
-    window.addEventListener(BRIDGED_EVENT, (event: Event) => {
+    globalThis.addEventListener(BRIDGED_EVENT, (event: Event) => {
       if ('detail' in event && (event as CustomEvent).detail) {
         const dispatchedEvent = (event as CustomEvent).detail;
         this.dispatch(dispatchedEvent.eventType, dispatchedEvent);
@@ -57,7 +57,9 @@ class EventHandler {
    */
   dispatch(eventName: EventType, payload: GlobalEvent) {
     if (!this.listeners[eventName]) return;
-    this.listeners[eventName].forEach((listener) => listener(payload));
+    for (const listener of this.listeners[eventName]) {
+      listener(payload);
+    }
   }
 }
 
@@ -67,10 +69,10 @@ class EventHandler {
 export const eventHandler = new EventHandler();
 
 /**
- * Sends a global event by dispatching a CustomEvent on the window object.
+ * Sends a global event by dispatching a CustomEvent on the globalThis object.
  * This will be picked up by the EventHandler bridge and routed to listeners.
  * @param detail - The event payload to send.
  */
 export const sendEvent = (detail: GlobalEvent) => {
-  window.dispatchEvent(new CustomEvent(BRIDGED_EVENT, { detail }));
+  globalThis.dispatchEvent(new CustomEvent(BRIDGED_EVENT, { detail }));
 };

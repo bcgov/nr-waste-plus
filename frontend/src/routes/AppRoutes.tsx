@@ -20,7 +20,7 @@ const AppRoutes: FC = () => {
   const browserRouter = useMemo(() => createBrowserRouter(routesToUse), [routesToUse]);
 
   useEffect(() => {
-    const currentRoute = routesToUse.find((route) => route.path === window.location.pathname);
+    const currentRoute = routesToUse.find((route) => route.path === globalThis.location.pathname);
     if (currentRoute) {
       setPageTitle(currentRoute.id || '', 1);
     }
