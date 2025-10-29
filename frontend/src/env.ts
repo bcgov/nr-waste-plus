@@ -1,7 +1,10 @@
 declare global {
   interface Window {
-    config: object;
+    config: Record<string, string>;
   }
 }
 
-export const env: Record<string, string> = { ...import.meta.env, ...window.config };
+export const env: Record<string, string> = {
+  ...import.meta.env,
+  ...((globalThis as unknown as Window).config ?? {}),
+};
