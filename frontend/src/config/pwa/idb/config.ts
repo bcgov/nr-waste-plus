@@ -88,7 +88,7 @@ export const getOfflineItem = async <T>(
           });
           return;
         }
-        resolve(data.value as T);
+        resolve(data.value);
       }
     });
   });
