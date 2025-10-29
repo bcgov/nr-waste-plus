@@ -76,10 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 const loadUserToken = async (): Promise<JWT | undefined> => {
-  if (env.NODE_ENV !== 'test') {
-    const { idToken } = (await fetchAuthSession()).tokens ?? {};
-    return idToken;
-  } else {
+  if (env.NODE_ENV === 'test') {
     // This is for test only
     const token = getUserTokenFromCookie();
     if (token) {
@@ -91,5 +88,8 @@ const loadUserToken = async (): Promise<JWT | undefined> => {
       throw new Error('Error parsing token');
     }
     throw new Error('No token found');
+  } else {
+    const { idToken } = (await fetchAuthSession()).tokens ?? {};
+    return idToken;
   }
 };

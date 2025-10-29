@@ -1,5 +1,5 @@
 export const registerBackgroundSync = async (tag: string): Promise<boolean> => {
-  if ('serviceWorker' in navigator && 'SyncManager' in window) {
+  if ('serviceWorker' in navigator && 'SyncManager' in globalThis) {
     try {
       const permission = await checkPeriodicSyncPermission('background-sync');
       if (permission === 'denied') return false;
@@ -16,7 +16,7 @@ export const registerBackgroundSync = async (tag: string): Promise<boolean> => {
 };
 
 export const registerPeriodicSync = async (tag: string, minInterval: number): Promise<boolean> => {
-  if ('serviceWorker' in navigator && 'PeriodicSyncManager' in window) {
+  if ('serviceWorker' in navigator && 'PeriodicSyncManager' in globalThis) {
     try {
       const permission = await checkPeriodicSyncPermission('periodic-background-sync');
       if (permission === 'denied') return false;
