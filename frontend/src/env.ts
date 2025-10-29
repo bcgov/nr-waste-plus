@@ -6,5 +6,5 @@ declare global {
 
 export const env: Record<string, string> = {
   ...import.meta.env,
-  ...((globalThis as unknown as Window).config ?? {}),
+  ...(globalThis as unknown as Window).config,
 };
