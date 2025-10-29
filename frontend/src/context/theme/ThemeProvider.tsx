@@ -1,5 +1,5 @@
 import { Theme } from '@carbon/react';
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode, useMemo } from 'react';
 
 import { type CarbonTheme } from '@/context/preference/types';
 import { usePreference } from '@/context/preference/usePreference';
@@ -13,15 +13,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   // Set theme when userPreference.theme changes
   useEffect(() => {
-    if (userPreference && userPreference.theme) {
+    if (userPreference?.theme) {
       setTheme(userPreference.theme);
       document.documentElement.dataset.carbonTheme = userPreference.theme;
     }
   }, [userPreference]);
-
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === 'g10' ? 'g100' : 'g10'));
-  };
 
   // Sync theme changes to preferences, but only after initial load
   useEffect(() => {
@@ -31,9 +27,21 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [theme]);
 
+  const contextValue = useMemo(() => {
+    const toggleTheme = () => {
+      setTheme((prevTheme) => (prevTheme === 'g10' ? 'g100' : 'g10'));
+    };
+
+    return {
+      theme: theme ?? 'g10',
+      setTheme,
+      toggleTheme,
+    };
+  }, [theme, setTheme]);
+
   // Only render Theme when theme is set
   return (
-    <ThemeContext.Provider value={{ theme: theme ?? 'g10', setTheme, toggleTheme }}>
+    <ThemeContext.Provider value={contextValue}>
       {theme ? <Theme theme={theme}>{children}</Theme> : null}
     </ThemeContext.Provider>
   );

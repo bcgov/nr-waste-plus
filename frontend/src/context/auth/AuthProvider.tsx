@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FamLoginUser | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
 
-  const appEnv = isNaN(Number(env.VITE_ZONE)) ? (env.VITE_ZONE ?? 'TEST') : 'TEST';
+  const appEnv = Number.isNaN(Number(env.VITE_ZONE)) ? (env.VITE_ZONE ?? 'TEST') : 'TEST';
 
   const refreshUserState = async () => {
     setIsLoading(true);
@@ -76,10 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 const loadUserToken = async (): Promise<JWT | undefined> => {
-  if (env.NODE_ENV !== 'test') {
-    const { idToken } = (await fetchAuthSession()).tokens ?? {};
-    return idToken;
-  } else {
+  if (env.NODE_ENV === 'test') {
     // This is for test only
     const token = getUserTokenFromCookie();
     if (token) {
@@ -91,5 +88,8 @@ const loadUserToken = async (): Promise<JWT | undefined> => {
       throw new Error('Error parsing token');
     }
     throw new Error('No token found');
+  } else {
+    const { idToken } = (await fetchAuthSession()).tokens ?? {};
+    return idToken;
   }
 };

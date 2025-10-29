@@ -47,7 +47,7 @@ jobs:
             npm run test:coverage
           dir: frontend
           sonar_args: >
-            -Dsonar.exclusions=**/coverage/**,**/test-results/**,**/stub/**,**/reports/**,**/node_modules/**,**/tests/**,**/*.test.{ts,x},**/vite-env.d.ts,**/types/**,**/constants/**,**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx
+            -Dsonar.exclusions=**/coverage/**,**/test-results/**,**/test-reports/**,**/node_modules/**,**/stub/**,**/reports/**,**/tests/**,**/*.test.{ts,tsx},**/vite-env.d.ts,**/types/**,**/*types.{ts,tsx},**/constants.{ts,tsx},**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.organization=bcgov-sonarcloud
             -Dsonar.projectKey=nr-waste-plus-frontend

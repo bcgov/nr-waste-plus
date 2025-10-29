@@ -38,17 +38,17 @@ export const offlineDataMiddleware = (cacheable?: IdbMiddlewareOptions): ApiMidd
       const key = cacheable?.idbKey || error.config?.url || '';
       const entry = await getOfflineItem(key);
       if (entry) {
-        return Promise.resolve({
+        return {
           ...error.config,
           status: 200,
           statusText: 'OK (offline cache)',
           data: entry,
           headers: { ...error.config?.headers, 'x-offline-cache': 'true' },
           config: error.config,
-        });
+        };
       }
     }
-    return Promise.reject(error);
+    throw error;
   },
 });
 
@@ -83,15 +83,15 @@ export const offlineMutationMiddleware = (cacheable?: IdbMiddlewareOptions): Api
       error.config?.method?.toUpperCase() || '',
     );
     if (cacheable?.idbSave && !onlineStatusStore.getStatus() && isMutation) {
-      return Promise.resolve({
+      return {
         ...error.config,
         status: 204,
         statusText: 'No Content (offline mutation queued)',
         data: null,
         headers: {},
         config: error.config,
-      });
+      };
     }
-    return Promise.reject(error);
+    throw error;
   },
 });

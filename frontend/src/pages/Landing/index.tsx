@@ -91,7 +91,14 @@ const LandingPage: FC = () => {
             </main>
           </div>
         </Column>
-        <Column className="landing-img-col" sm={4} md={8} lg={8} role="complementary">
+        <Column
+          className="landing-img-col"
+          sm={4}
+          md={8}
+          lg={8}
+          as="aside"
+          aria-label="Landing image"
+        >
           <img src={LandingImg} alt="Landing cover" className="landing-img" />
         </Column>
       </Grid>

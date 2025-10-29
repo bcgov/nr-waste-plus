@@ -43,7 +43,7 @@ export const getB3Headers = () => {
 
 export const getValueByPath = <T, P extends NestedKeyOf<T>>(obj: T, path: P): ValueByPath<T, P> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return path.split('.').reduce((acc, key) => acc && acc[key], obj as any) as ValueByPath<T, P>;
+  return path.split('.').reduce((acc, key) => acc?.[key], obj as any) as ValueByPath<T, P>;
 };
 
 export const generateSortArray = <T>(

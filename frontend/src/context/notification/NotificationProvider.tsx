@@ -1,5 +1,5 @@
 import { ToastNotification } from '@carbon/react';
-import { useState, useEffect, type ReactNode, useCallback } from 'react';
+import { useState, useEffect, type ReactNode, useCallback, useMemo } from 'react';
 
 import { NotificationContext, type NotificationContent } from './NotificationContext';
 
@@ -29,8 +29,10 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [notificationClass, notificationContent]);
 
+  const contextValue = useMemo(() => ({ display }), [display]);
+
   return (
-    <NotificationContext.Provider value={{ display }}>
+    <NotificationContext.Provider value={contextValue}>
       {children}
       {notificationContent && (
         <ToastNotification
@@ -41,7 +43,6 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
           kind={notificationContent.kind}
           onClose={onClose}
           onCloseButtonClick={notificationContent.onCloseButtonClick}
-          role="status"
           statusIconDescription="notification"
           subtitle={notificationContent.subtitle}
           timeout={notificationContent.timeout}

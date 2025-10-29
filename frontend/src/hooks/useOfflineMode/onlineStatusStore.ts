@@ -16,17 +16,19 @@ class OnlineStatusStore {
   private listeners: Listener[] = [];
 
   constructor() {
-    window.addEventListener('online', this.setOnlineTrue);
-    window.addEventListener('offline', this.setOnlineFalse);
+    globalThis.addEventListener('online', this.setOnlineTrue);
+    globalThis.addEventListener('offline', this.setOnlineFalse);
   }
 
-  private setOnlineTrue = () => this.setOnline(true);
-  private setOnlineFalse = () => this.setOnline(false);
+  private readonly setOnlineTrue = () => this.setOnline(true);
+  private readonly setOnlineFalse = () => this.setOnline(false);
 
   private setOnline(value: boolean) {
     if (!env.VITE_FEATURES_OFFLINE) return;
     this.isOnline = value;
-    this.listeners.forEach((listener) => listener(this.isOnline));
+    for (const listener of this.listeners) {
+      listener(this.isOnline);
+    }
   }
 
   getStatus() {
