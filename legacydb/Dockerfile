@@ -6,6 +6,7 @@ COPY --chown=oracle:oracle removeDatabase ${ORACLE_BASE}/removeDatabase
 # Give permission to the scripts
 RUN chmod +x ${ORACLE_BASE}/removeDatabase
 
+# Modify the oracle user to run with a specific UID/GID to match OpenShift requirements
 USER root
 RUN usermod -u 1010470000 oracle
 USER oracle
