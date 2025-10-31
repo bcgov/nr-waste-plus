@@ -145,8 +145,8 @@ jobs:
 
   scale-up-legacy:
     name: Scale up legacy
-#    needs: [deploy-tools]
-    needs: [pre-tools]
+    needs: [deploy-tools]
+#    needs: [pre-tools]
     if: always()
     runs-on: ubuntu-24.04
     steps:
