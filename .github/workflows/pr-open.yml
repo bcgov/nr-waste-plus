@@ -33,7 +33,7 @@ jobs:
       attestations: write
     strategy:
       matrix:
-        package: [database, frontend, backend]
+        package: [database, frontend, backend, legacy]
     steps:
       - uses: bcgov/action-builder-ghcr@1e4295b9766963ca36612b78560db6235120b80f # v4.1.1
         name: Build (${{ matrix.package }})

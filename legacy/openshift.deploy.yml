@@ -114,7 +114,7 @@ objects:
               name: ${NAME}
               env:
                 - name: SELF_URI
-                - value: https://${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}
+                  value: https://${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}
                 - name: SECURITY_ENV
                   value: ${ZONE}
                 - name: ORACLEDB_USER
