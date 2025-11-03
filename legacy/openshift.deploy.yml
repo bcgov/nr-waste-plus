@@ -43,6 +43,9 @@ parameters:
     description: Random expression to make sure deployments update
     from: "[a-zA-Z0-9]{32}"
     generate: expression
+  - name: COGNITO_REGION
+    description: Cognito region to be used
+    value: 'ca-central-1'
 objects:  
   - kind: PersistentVolumeClaim
     apiVersion: v1
