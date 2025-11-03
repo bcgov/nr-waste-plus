@@ -19,9 +19,9 @@ spring:
           jwk-set-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}/.well-known/jwks.json
           issuer-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}
   datasource:
-    url: jdbc:oracle:thin:@tcps://${DATABASE_HOST:localhost}:${DATABASE_PORT:1543}/${SERVICE_NAME:servicename}?javax.net.ssl.trustStore=${ca.bc.gov.nrs.oracle.keystore}&javax.net.ssl.trustStorePassword=${ca.bc.gov.nrs.oracle.secret}&javax.net.ssl.keyStore=${ca.bc.gov.nrs.oracle.keystore}&javax.net.ssl.keyStorePassword=${ca.bc.gov.nrs.oracle.secret}
-    username: ${DATABASE_USER}
-    password: ${DATABASE_PASSWORD}
+    url: jdbc:oracle:thin:@tcps://${ca.bc.gov.nrs.oracle.host}:${ca.bc.gov.nrs.oracle.port}/${ca.bc.gov.nrs.oracle.service}?javax.net.ssl.trustStore=${ca.bc.gov.nrs.oracle.keystore}&javax.net.ssl.trustStorePassword=${ca.bc.gov.nrs.oracle.secret}&javax.net.ssl.keyStore=${ca.bc.gov.nrs.oracle.keystore}&javax.net.ssl.keyStorePassword=${ca.bc.gov.nrs.oracle.secret}
+    username: ${ca.bc.gov.nrs.oracle.username}
+    password: ${ca.bc.gov.nrs.oracle.host}
     driver-class-name: oracle.jdbc.OracleDriver
     hikari:
       jdbcUrl: ${spring.datasource.url}
@@ -122,6 +122,12 @@ ca:
         oracle:
           keystore: ${ORACLEDB_KEYSTORE:jssecacerts-path}
           secret: ${ORACLEDB_SECRET:changeit}
+          service: ${ORACLEDB_SERVICENAME:fsa-forest}
+          database: ${ORACLEDB_DATABASE:fsa-forest}
+          host: ${ORACLEDB_HOST:localhost}
+          port: ${ORACLEDB_PORT:1543}
+          username: ${ORACLEDB_USER:user}
+          password: ${ORACLEDB_PASSWORD:passwd}
 info:
   app:
     name: ${spring.application.name}
