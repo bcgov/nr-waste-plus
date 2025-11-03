@@ -158,6 +158,13 @@ objects:
                   value: /cert/jssecacerts
                 - name: TZ
                   value: America/Vancouver
+                - name: COGNITO_USER_POOL
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: cognito-user-pool
+                - name: COGNITO_REGION
+                  value: ${COGNITO_REGION}
                 - name: RANDOM_EXPRESSION
                   value: ${RANDOM_EXPRESSION}
               ports:
