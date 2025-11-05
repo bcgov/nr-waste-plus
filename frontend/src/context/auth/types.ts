@@ -2,7 +2,7 @@ import type { JWT as AmplifyJWT } from '@aws-amplify/core';
 
 export type JWT = AmplifyJWT;
 
-export const AVAILABLE_ROLES = ['Viewer', 'Submitter', 'Approver', 'Planner', 'Admin'] as const;
+export const AVAILABLE_ROLES = ['Viewer', 'Submitter', 'District', 'Area', 'Admin'] as const;
 
 export type ROLE_TYPE = (typeof AVAILABLE_ROLES)[number];
 

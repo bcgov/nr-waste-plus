@@ -489,18 +489,28 @@ public class JwtPrincipalUtil {
   }
 
   private static Map<Role, List<String>> getClaimGroups(Set<String> groups) {
-    return groups
-        .stream()
-        // Split into [role, clientNumber] or just [role]
-        .map(role -> role.split("_", 2))
-        .filter(parts -> Role.fromValue(parts[0]) != null)
+    if (groups == null || groups.isEmpty()) {
+      return Collections.emptyMap();
+    }
+
+    return groups.stream()
+        //Removing prefix
+        .map(roleStr -> roleStr.replace("WASTE_PLUS_", StringUtils.EMPTY))
+        .map(roleStr -> {
+          String[] parts = roleStr.split("_", 2);
+          Role r = Role.fromValue(parts[0]);
+          if (r == null) {
+            return null;
+          }
+          String client = parts.length > 1 ? parts[1] : null;
+          return new java.util.AbstractMap.SimpleEntry<>(r, client);
+        })
+        .filter(Objects::nonNull)
         .collect(Collectors.groupingBy(
-            // Key: The role
-            parts -> Role.fromValue(parts[0]),
+            java.util.AbstractMap.SimpleEntry::getKey,
             Collectors.mapping(
-                // Value: client number or null
-                parts -> parts.length > 1 ? parts[1] : null,
-                Collectors.filtering(Objects::nonNull, Collectors.toList()) // Remove nulls
+                java.util.AbstractMap.SimpleEntry::getValue,
+                Collectors.filtering(Objects::nonNull, Collectors.toList())
             )
         ));
   }
