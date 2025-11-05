@@ -43,6 +43,9 @@ parameters:
     description: Random expression to make sure deployments update
     from: "[a-zA-Z0-9]{32}"
     generate: expression
+  - name: COGNITO_REGION
+    description: Cognito region to be used
+    value: 'ca-central-1'
 objects:  
   - kind: PersistentVolumeClaim
     apiVersion: v1
@@ -114,7 +117,7 @@ objects:
               name: ${NAME}
               env:
                 - name: SELF_URI
-                - value: https://${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}
+                  value: https://${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}
                 - name: SECURITY_ENV
                   value: ${ZONE}
                 - name: ORACLEDB_USER
@@ -158,10 +161,17 @@ objects:
                   value: /cert/jssecacerts
                 - name: TZ
                   value: America/Vancouver
+                - name: COGNITO_USER_POOL
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: cognito-user-pool
+                - name: COGNITO_REGION
+                  value: ${COGNITO_REGION}
                 - name: RANDOM_EXPRESSION
                   value: ${RANDOM_EXPRESSION}
               ports:
-                - containerPort: 9000
+                - containerPort: 9090
                   protocol: TCP
               resources:
                 requests:
@@ -172,7 +182,7 @@ objects:
                 failureThreshold: 30
                 httpGet:
                   path: /health
-                  port: 9000
+                  port: 9090
                   scheme: HTTP
                 initialDelaySeconds: 3
                 periodSeconds: 30
@@ -182,7 +192,7 @@ objects:
                 failureThreshold: 15
                 httpGet:
                   path: /health
-                  port: 9000
+                  port: 9090
                   scheme: HTTP
                 initialDelaySeconds: 3
                 periodSeconds: 30
@@ -198,9 +208,9 @@ objects:
       name: ${NAME}-${ZONE}-${COMPONENT}
     spec:
       ports:
-        - name: 9000-tcp
+        - name: 9090-tcp
           protocol: TCP
           port: 80
-          targetPort: 9000
+          targetPort: 9090
       selector:
         deployment: ${NAME}-${ZONE}-${COMPONENT}

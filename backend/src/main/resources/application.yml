@@ -162,7 +162,7 @@ ca:
         legacy-api:
           address: ${LEGACY_URL:http://127.0.0.1:9090}
         frontend:
-          url: ${ALLOWED_ORIGINS:http://localhost:3000}
+          url: ${FRONTEND_URL:http://localhost:3000}
           cors:
             headers:
               - x-requested-with

@@ -119,6 +119,11 @@ objects:
                   value: ${COMPONENT}                
                 - name: RANDOM_EXPRESSION
                   value: ${RANDOM_EXPRESSION}
+                - name: FORESTCLIENTAPI_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: client-base-key
               ports:
                 - containerPort: 8080
                   protocol: TCP

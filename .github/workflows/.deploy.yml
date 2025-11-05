@@ -101,7 +101,7 @@ jobs:
     timeout-minutes: 20
     strategy:
       matrix:
-        name: [database, frontend, backend]
+        name: [database, frontend, backend, legacy]
         include:
           - name: database
             overwrite: false
@@ -113,6 +113,9 @@ jobs:
             parameters:
               -p FRONTEND_URL=${{ inputs.url }}
               -p CONFIG_MAP="${{ inputs.configmap-backend }}"
+          - name: legacy
+            parameters:
+              -p ORACLEDB_PORT=${{ inputs.oracledb-port }}
             verification_path: health
     steps:
       - uses: bcgov/action-deployer-openshift@d972993c70aba88e4f2fe66a66c4b7149fa9fcad # v4.0.0
