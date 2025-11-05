@@ -79,13 +79,17 @@ export const parseToken = (idToken: JWT | undefined): FamLoginUser | undefined =
 
 function parsePrivileges(input: string[]): USER_PRIVILEGE_TYPE {
   const result: USER_PRIVILEGE_TYPE = {};
+  const knownPrefix = 'WASTE_PLUS_';
   for (const item of input) {
-    const parts = item.split('_');
+    const normalized = item.toUpperCase().startsWith(knownPrefix)
+      ? item.toUpperCase().slice(knownPrefix.length)
+      : item.toUpperCase();
+    const parts = normalized.split('_');
     const last = parts.at(-1) ?? '';
     const isNumeric = last !== '' && Number.isFinite(Number(last));
     if (isNumeric) {
       const roleName = parts.slice(0, -1).join('_');
-      if (AVAILABLE_ROLES.includes(roleName as ROLE_TYPE)) {
+      if (AVAILABLE_ROLES.map((role) => role.toUpperCase()).includes(roleName as ROLE_TYPE)) {
         const role = roleName as ROLE_TYPE;
         result[role] ??= [];
         result[role].push(last);
@@ -107,9 +111,14 @@ function extractGroups(decodedIdToken: object | undefined): string[] {
 
 function extractRoles(roles: string[]): FamRole[] {
   const roleMap = new Map<Role, Set<string>>();
+  const knownPrefix = 'WASTE_PLUS_';
 
   for (const entry of roles) {
-    const [rolePart, clientId] = entry.split('_');
+    const normalized = entry.toUpperCase().startsWith(knownPrefix)
+      ? entry.toUpperCase().slice(knownPrefix.length)
+      : entry.toUpperCase();
+
+    const [rolePart, clientId] = normalized.split('_');
     const role = rolePart.toUpperCase() as Role;
 
     if (!Object.values(Role).includes(role)) continue;

@@ -23,7 +23,7 @@ const amplifyconfig = {
       signUpVerificationMethod: verificationMethods,
       loginWith: {
         oauth: {
-          domain: 'prod-fam-user-pool-domain.auth.ca-central-1.amazoncognito.com',
+          domain: env.VITE_FAM_DOMAIN,
           scopes: ['openid'],
           redirectSignIn: [`${redirectUri}/dashboard`],
           redirectSignOut: [redirectSignOut],

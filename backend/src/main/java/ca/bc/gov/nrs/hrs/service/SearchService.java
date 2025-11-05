@@ -139,7 +139,7 @@ public class SearchService {
       String value,
       List<String> allClients
   ) {
-    log.info("Loading my clients with filter: {}, pageable: {}", value, pageable);
+    log.info("Loading my clients with filter: {}, pageable: {}, possible values: {}", value, pageable, allClients);
     // #127 if we have a value to filter by, we need to load only those clients
     Map<String, CodeDescriptionDto> response = StringUtils.isNotBlank(value)
         ? mapClients(allClients, value)
@@ -176,6 +176,7 @@ public class SearchService {
   }
 
   private Map<String, CodeDescriptionDto> mapClients(List<String> clients, String value) {
+    System.out.println("Mapping clients: " + clients + " with filter: " + value);
     return forestClientService.searchByClientNumbers(
             0,
             clients.size(),
@@ -183,6 +184,7 @@ public class SearchService {
             value
         )
         .stream()
+        .peek(System.out::println)
         .map(entry -> new CodeDescriptionDto(entry.clientNumber(), entry.name()))
         .collect(Collectors.toMap(CodeDescriptionDto::code, client -> client));
   }

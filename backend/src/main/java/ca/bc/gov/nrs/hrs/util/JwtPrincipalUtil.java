@@ -487,6 +487,7 @@ public class JwtPrincipalUtil {
     }
 
     return groups.stream()
+        .map(roleStr -> roleStr.replace("WASTE_PLUS_",StringUtils.EMPTY)) //Removing prefix
         .map(roleStr -> {
           String[] parts = roleStr.split("_", 2);
           Role r = Role.fromValue(parts[0]);

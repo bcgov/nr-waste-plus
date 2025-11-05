@@ -36,7 +36,6 @@ const MyClientListing: FC = () => {
   });
 
   const executeSearch = () => {
-    console.log('Executing search with filter:', filter);
     setTimeout(refetch, 1);
   };
 
