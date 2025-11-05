@@ -94,8 +94,10 @@ function parsePrivileges(input: string[]): USER_PRIVILEGE_TYPE {
         result[role] ??= [];
         result[role].push(last);
       }
-    } else if (AVAILABLE_ROLES.includes(item as ROLE_TYPE)) {
-      result[item as ROLE_TYPE] = null;
+    } else if (
+      AVAILABLE_ROLES.map((role) => role.toUpperCase()).includes(normalized as ROLE_TYPE)
+    ) {
+      result[normalized as ROLE_TYPE] = null;
     }
   }
   return result;

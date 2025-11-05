@@ -69,7 +69,7 @@ describe('authUtils', () => {
           'custom:idp_name': 'idir',
           'custom:idp_username': 'jdoe',
           'email': 'john@example.com',
-          'cognito:groups': ['Approver_1', 'Viewer'],
+          'cognito:groups': ['WASTE_PLUS_VIEWER_1', 'WASTE_PLUS_ADMIN'],
         },
       };
       const user = parseToken(jwt);
@@ -78,7 +78,7 @@ describe('authUtils', () => {
         displayName: 'Doe, John',
         email: 'john@example.com',
         idpProvider: 'IDIR',
-        privileges: { Approver: ['1'], Viewer: null },
+        privileges: { VIEWER: ['1'], ADMIN: null },
         firstName: 'John',
         lastName: 'Doe',
         providerUsername: 'IDIR\\jdoe',
