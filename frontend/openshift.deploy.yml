@@ -53,9 +53,6 @@ parameters:
   - name: COGNITO_REGION
     description: Cognito region
     value: "ca-central-1"
-  - name: COGNITO_DOMAIN
-    description: Cognito domain
-    value: "prod-fam-user-pool-domain"
 objects:
   - kind: Deployment
     apiVersion: apps/v1
@@ -102,7 +99,10 @@ objects:
                 - name: COGNITO_REGION
                   value: ${COGNITO_REGION}
                 - name: COGNITO_DOMAIN
-                  value: ${COGNITO_DOMAIN}
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: fam-domain
                 - name: RANDOM_EXPRESSION
                   value: ${RANDOM_EXPRESSION}
               imagePullPolicy: Always
