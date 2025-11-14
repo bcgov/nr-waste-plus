@@ -35,7 +35,7 @@
 			script-src 'self' {$BACKEND_URL}; 
 			img-src 'self';
 			style-src 'self';
-			connect-src 'self' {$BACKEND_URL} https://cognito-idp.{$COGNITO_REGION}.amazonaws.com https://{$COGNITO_DOMAIN}.auth.{$COGNITO_REGION}.amazoncognito.com;
+			connect-src 'self' {$BACKEND_URL} https://cognito-idp.{$COGNITO_REGION}.amazonaws.com https://{$COGNITO_DOMAIN};
 			form-action 'self' {$BACKEND_URL}; 
 			frame-src 'none';
 			manifest-src 'self';
