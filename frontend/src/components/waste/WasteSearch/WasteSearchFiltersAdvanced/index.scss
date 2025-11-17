@@ -25,9 +25,6 @@
             width: calc((100% / 3) - 0.25rem);
           }
 
-          .#{vars.$bcgov-prefix}--dropdown__wrapper {
-            min-width: calc((100% / 3) - 0.25rem);
-          }
 
           .#{vars.$bcgov-prefix}--date-picker {
             height: 100%;
@@ -54,13 +51,6 @@
 
         .advanced-text-input {
           height: 100%;
-        }
-
-        .group-together {
-          display: flex;
-          column-gap: 0.5rem;
-          
-
         }
       }
     }

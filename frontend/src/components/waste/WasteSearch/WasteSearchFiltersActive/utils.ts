@@ -1,4 +1,4 @@
-import type { ReportingUnitSearchParametersDto } from '@/services/types';
+import type { CodeDescriptionDto, ReportingUnitSearchParametersDto } from '@/services/types';
 
 export const mapDisplayFilter = (key: keyof ReportingUnitSearchParametersDto): string => {
   switch (key) {
@@ -10,6 +10,8 @@ export const mapDisplayFilter = (key: keyof ReportingUnitSearchParametersDto): s
       return 'Assess area status';
     case 'requestByMe':
       return 'Created By Me';
+    case 'multiMark':
+      return 'Multi-mark blocks';
     case 'requestUserId':
       return 'Submitter';
     case 'updateDateStart':
@@ -30,3 +32,5 @@ export const mapDisplayFilter = (key: keyof ReportingUnitSearchParametersDto): s
       return key;
   }
 };
+
+export const activeMSItemToString = (item: CodeDescriptionDto | null): string => (item ? `${item.code} - ${item.description}` : 'No selection');

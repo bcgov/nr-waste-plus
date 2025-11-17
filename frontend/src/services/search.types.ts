@@ -20,6 +20,7 @@ export type ReportingUnitSearchParametersDto = {
   sampling?: string[];
   status?: string[];
   requestByMe?: boolean;
+  multiMark?: boolean;
   requestUserId?: string;
   updateDateStart?: string;
   updateDateEnd?: string;

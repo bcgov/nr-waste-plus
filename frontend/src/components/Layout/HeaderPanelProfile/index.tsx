@@ -1,16 +1,14 @@
-import { Asleep, Light, Exit } from '@carbon/icons-react';
+import { Exit } from '@carbon/icons-react';
 import { SideNavLink } from '@carbon/react';
 import { type FC } from 'react';
 
 import DistrictSelection from '@/components/core/DistrictSelection';
 import AvatarImage from '@/components/Layout/AvatarImage';
 import { useAuth } from '@/context/auth/useAuth';
-import { useTheme } from '@/context/theme/useTheme';
 
 import './index.scss';
 
 const HeaderPanelProfile: FC = () => {
-  const { theme, toggleTheme } = useTheme();
   const { logout, user } = useAuth();
 
   return (
@@ -31,7 +29,7 @@ const HeaderPanelProfile: FC = () => {
       <hr className="divisory" />
       <nav className="account-nav">
         <ul>
-          <li>
+          <li className='district-panel'>
             <div className="panel-section-light">
               <span>Select organization</span>
             </div>
@@ -39,21 +37,10 @@ const HeaderPanelProfile: FC = () => {
               <DistrictSelection />
             </div>
           </li>
-          <li>
-            <div className="panel-section-light">
-              <span>Options</span>
-            </div>
-          </li>
-          <SideNavLink
-            className="cursor-pointer"
-            renderIcon={theme === 'g100' ? Light : Asleep}
-            onClick={toggleTheme}
-          >
-            Change theme
-          </SideNavLink>
-          <SideNavLink className="cursor-pointer" renderIcon={Exit} onClick={logout}>
-            Log out
-          </SideNavLink>
+
+        <SideNavLink className="cursor-pointer" renderIcon={Exit} onClick={logout}>
+          Log out
+        </SideNavLink>
         </ul>
       </nav>
     </div>
