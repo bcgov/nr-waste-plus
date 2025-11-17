@@ -39,6 +39,7 @@ public class ReportingUnitSearchParametersDto {
   private List<String> sampling;
   private List<String> status;
   private boolean requestByMe;
+  private boolean multiMark;
   private String requestUserId;
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private LocalDate updateDateStart;
@@ -104,6 +105,7 @@ public class ReportingUnitSearchParametersDto {
     }
 
     multiValueMap.add("requestByMe", BooleanUtils.toStringTrueFalse(requestByMe));
+    multiValueMap.add("multiMark", BooleanUtils.toStringTrueFalse(multiMark));
 
     if (updateDateStart != null) {
       multiValueMap.add("updateDateStart", updateDateStart.format(DateTimeFormatter.ISO_LOCAL_DATE)

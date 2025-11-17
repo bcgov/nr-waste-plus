@@ -73,7 +73,7 @@ class UserControllerIntegrationTest extends AbstractTestContainerIntegrationTest
                 .content(preferencesJson)
                 .accept(MediaType.APPLICATION_JSON)
                 .with(csrf()))
-        .andExpect(status().isOk())
+        .andExpect(status().isAccepted())
         .andReturn();
   }
 

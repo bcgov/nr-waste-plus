@@ -88,10 +88,6 @@ public class QueryConstants {
              OR waa.draft_timber_mark = :#{#filter.timberMark}
            )
          AND (
-             NVL(:#{#filter.clientLocationCode},'NOVALUE') = 'NOVALUE'
-             OR wru.CLIENT_LOCN_CODE = :#{#filter.clientLocationCode}
-           )
-         AND (
              'NOVALUE' in (:#{#filter.clientNumbers})
              OR wru.CLIENT_NUMBER IN (:#{#filter.clientNumbers})
            )
@@ -107,6 +103,10 @@ public class QueryConstants {
               between TO_DATE(:#{#filter.updateDateStart},'YYYY-MM-DD')
               AND TO_DATE(:#{#filter.updateDateEnd},'YYYY-MM-DD')
             )
+         )
+         AND (
+          NVL(:#{#filter.multiMark}, 0) = 0
+          OR (NVL(:#{#filter.multiMark}, 0) = 1 AND waa.MULTI_MARK_IND = 'Y')
          )
       """;
 
