@@ -30,12 +30,16 @@ const HeaderPanelProfile: FC = () => {
       <nav className="account-nav">
         <ul>
           <li className='district-panel'>
-            <div className="panel-section-light">
-              <span>Select organization</span>
-            </div>
-            <div className="district-selection-container">
-              <DistrictSelection />
-            </div>
+            {user?.idpProvider !== 'IDIR' && (
+              <>
+                <div className="panel-section-light">
+                  <span>Select organization</span>
+                </div>
+                <div className="district-selection-container">
+                  <DistrictSelection />
+                </div>
+              </>
+            )}
           </li>
 
         <SideNavLink className="cursor-pointer" renderIcon={Exit} onClick={logout}>
