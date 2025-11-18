@@ -26,8 +26,8 @@ export const mapDisplayFilter = (key: keyof ReportingUnitSearchParametersDto): s
       return 'Timber Mark';
     case 'clientLocationCode':
       return 'Client Location Code';
-    case 'clientNumber':
-      return 'Client number';
+    case 'clientNumbers':
+      return 'Client';
     default:
       return key;
   }

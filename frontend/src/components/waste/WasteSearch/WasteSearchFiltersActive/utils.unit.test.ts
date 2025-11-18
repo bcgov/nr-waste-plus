@@ -9,6 +9,7 @@ describe('mapDisplayFilter', () => {
     expect(mapDisplayFilter('sampling')).toBe('Sampling Option');
     expect(mapDisplayFilter('status')).toBe('Assess area status');
     expect(mapDisplayFilter('requestByMe')).toBe('Created By Me');
+    expect(mapDisplayFilter('multiMark')).toBe('Multi-mark blocks');
     expect(mapDisplayFilter('requestUserId')).toBe('Submitter');
     expect(mapDisplayFilter('updateDateStart')).toBe('Update Date Start');
     expect(mapDisplayFilter('updateDateEnd')).toBe('Update Date End');
@@ -16,7 +17,7 @@ describe('mapDisplayFilter', () => {
     expect(mapDisplayFilter('cuttingPermitId')).toBe('Cutting Permit');
     expect(mapDisplayFilter('timberMark')).toBe('Timber Mark');
     expect(mapDisplayFilter('clientLocationCode')).toBe('Client Location Code');
-    expect(mapDisplayFilter('clientNumber')).toBe('Client number');
+    expect(mapDisplayFilter('clientNumbers')).toBe('Client');
   });
 
   it('returns key itself for unknown keys', () => {
