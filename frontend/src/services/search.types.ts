@@ -28,5 +28,5 @@ export type ReportingUnitSearchParametersDto = {
   cuttingPermitId?: string;
   timberMark?: string;
   clientLocationCode?: string;
-  clientNumber?: string;
+  clientNumbers?: string[];
 };

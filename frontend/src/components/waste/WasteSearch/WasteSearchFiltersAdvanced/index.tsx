@@ -36,8 +36,10 @@ import type {
   ReportingUnitSearchParametersDto,
 } from '@/services/types';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
+import { useAuth } from '@/context/auth/useAuth';
 
 import './index.scss';
+import { useQuery } from '@tanstack/react-query';
 
 type WasteSearchFiltersAdvancedProps = {
   filters: ReportingUnitSearchParametersDto;
@@ -62,6 +64,8 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
   onChange,
   onSearch,
 }) => {
+  const auth = useAuth();
+
   const onCheckBoxChange =
     (key: keyof ReportingUnitSearchParametersDto) =>
     (_: React.ChangeEvent<HTMLInputElement>, data: { checked: boolean; id: string }) => {
@@ -91,6 +95,15 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
   };
 
   if (!isModalOpen) return null;
+
+  const { data: myClients } = useQuery({
+    queryKey: ['search', 'my-forest-client', { page: 0, size: auth.getClients().length || 10 }],
+    queryFn: () => APIs.forestclient.searchMyForestClients('', 0, auth.getClients().length || 10),
+    enabled: auth.user?.idpProvider !== 'IDIR',
+    gcTime: 0,
+    staleTime: Infinity,
+    select: (data) => data.content.map((item) => item.client),
+  });
 
   
   return (
@@ -166,6 +179,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
 
           {/* Client Autocomplete or Select */}
           <Column sm={4} md={4} lg={8}>
+          {auth.user?.idpProvider === 'IDIR' && (
             <AutoCompleteInput<ForestClientAutocompleteResultDto>
               id="as-forestclient-client-ac"
               titleText="Client"
@@ -181,10 +195,24 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
               }
               onSelect={(data) => {
                 if (data) {
-                  onChange('clientNumber')((data as ForestClientAutocompleteResultDto).id || '');
+                  onChange('clientNumbers')((data as ForestClientAutocompleteResultDto).id || '');
                 }
               }}
             />
+            )}
+            {auth.user?.idpProvider === 'BCEIDBUSINESS' && (
+              <ActiveMultiSelect
+                placeholder="Client"
+                titleText="Client"
+                id="as-client-multi-select"
+                items={myClients ?? []}
+                itemToString={activeMSItemToString}
+                onChange={onActiveMultiSelectChange('clientNumbers')}
+                selectedItems={(myClients ?? []).filter((option) =>
+                  (filters.clientNumbers || []).includes(option.code),
+                )}
+              />
+              )}
           </Column>
 
           {/* Submitter */}

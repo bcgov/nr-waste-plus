@@ -14,6 +14,7 @@ import type { ReportingUnitSearchParametersDto } from '@/services/types';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 
 import './index.scss';
+import { usePreference } from '@/context/preference/usePreference';
 
 type WasteSearchFiltersProps = {
   value: ReportingUnitSearchParametersDto;
@@ -24,6 +25,7 @@ type WasteSearchFiltersProps = {
 const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSearch }) => {
   const [filters, setFilters] = useState<ReportingUnitSearchParametersDto>(value);
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState<boolean>(false);
+    const { userPreference } = usePreference();
 
   const { data: samplingOptions } = useQuery({
     queryKey: ['samplingOptions'],
@@ -92,6 +94,13 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
   useEffect(() => {
     onChange(filters);
   }, [filters, onChange]);
+
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      clientNumbers: userPreference.selectedClient ? [userPreference.selectedClient as string] : [],
+    }));
+  }, [userPreference.selectedClient]);
 
   return (
     <>

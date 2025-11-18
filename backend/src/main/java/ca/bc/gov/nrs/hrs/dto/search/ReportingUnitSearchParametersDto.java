@@ -49,7 +49,7 @@ public class ReportingUnitSearchParametersDto {
   private String cuttingPermitId;
   private String timberMark;
   private String clientLocationCode;
-  private List<String> clientNumber;
+  private List<String> clientNumbers;
 
   /**
    * Convert the populated search parameters into a {@link MultiValueMap} of
@@ -100,8 +100,8 @@ public class ReportingUnitSearchParametersDto {
       multiValueMap.add("clientLocationCode", clientLocationCode);
     }
 
-    if (!CollectionUtils.isEmpty(clientNumber)) {
-      clientNumber.forEach(value -> multiValueMap.add("clientNumber", value));
+    if (!CollectionUtils.isEmpty(clientNumbers)) {
+      clientNumbers.forEach(value -> multiValueMap.add("clientNumbers", value));
     }
 
     multiValueMap.add("requestByMe", BooleanUtils.toStringTrueFalse(requestByMe));

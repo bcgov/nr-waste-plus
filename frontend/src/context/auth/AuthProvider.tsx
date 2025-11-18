@@ -67,7 +67,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       login,
       logout,
       userToken,
-      getClients: () => user?.roles?.flatMap((role) => role.clients ?? []) ?? [],
+      getClients: () => user?.roles?.flatMap((role) => role.clients ?? [])
+      .filter((role, indexOfMap, self) => indexOfMap === self.indexOf(role)) ?? [],
     }),
     [user, isLoading, login, userToken],
   );

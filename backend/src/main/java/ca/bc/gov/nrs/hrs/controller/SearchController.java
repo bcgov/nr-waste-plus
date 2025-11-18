@@ -79,12 +79,12 @@ public class SearchController {
     // #128: BCeID should filter out on client side, we increase the size to get more results.
     if (IdentityProvider.BUSINESS_BCEID.equals(JwtPrincipalUtil.getIdentityProvider(jwt))) {
       if (
-          !CollectionUtils.isEmpty(filters.getClientNumber())
+          !CollectionUtils.isEmpty(filters.getClientNumbers())
           && !new HashSet<>(JwtPrincipalUtil.getClientFromRoles(jwt))
-              .containsAll(filters.getClientNumber())
+              .containsAll(filters.getClientNumbers())
       ) {
         throw new InvalidSelectedValueException(
-            "Selected client number " + filters.getClientNumber() + " is not valid");
+            "Selected client number " + filters.getClientNumbers() + " is not valid");
       }
     }
 

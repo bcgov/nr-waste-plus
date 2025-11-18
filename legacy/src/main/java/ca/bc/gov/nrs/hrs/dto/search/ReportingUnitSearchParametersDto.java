@@ -40,7 +40,6 @@ public class ReportingUnitSearchParametersDto {
   private String cuttingPermitId;
   private String timberMark;
   private String clientLocationCode;
-  private String clientNumber;
   private List<String> clientNumbers;
 
   /**
