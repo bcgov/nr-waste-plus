@@ -159,26 +159,46 @@ public class QueryConstants {
          WHERE WRU.CLIENT_NUMBER IN (:clientNumbers)
          GROUP BY WRU.CLIENT_NUMBER""";
 
+  public static final String MY_DISTRICTS_MYCLIENTS = """
+      SELECT
+        COLUMN_VALUE AS client_number,
+        0 AS submissions_count,
+        NULL AS LAST_WRU_UPDATE,
+        0 AS BLOCKS_COUNT,
+        NULL AS LAST_WAA_UPDATE
+      FROM TABLE(SYS.ODCIVARCHAR2LIST(:clientNumbers))""";
+
   public static final String MY_DISTRICTS_STATUS = """
       SELECT
-      CLIENT_NUMBER,
-      SUBMISSIONS_COUNT,
-      BLOCKS_COUNT,
-      GREATEST(
-        COALESCE(LAST_WRU_UPDATE, TO_TIMESTAMP('1900-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS')),
-        COALESCE(LAST_WAA_UPDATE, TO_TIMESTAMP('1900-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS'))
-      ) AS LAST_UPDATE
-      FROM ClientStats
+        CLIENT_NUMBER,
+        MAX(SUBMISSIONS_COUNT) AS SUBMISSIONS_COUNT,
+        MAX(BLOCKS_COUNT) AS BLOCKS_COUNT,
+        GREATEST(
+          COALESCE(MAX(LAST_WRU_UPDATE), TO_TIMESTAMP('1900-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS')),
+          COALESCE(MAX(LAST_WAA_UPDATE), TO_TIMESTAMP('1900-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS'))
+        ) AS LAST_UPDATE
+      FROM Together
+      GROUP BY CLIENT_NUMBER
+      """;
+
+  public static final String MY_DISTRICTS_UNION = """
+      SELECT * FROM ClientList
+      	UNION
+      	SELECT * FROM ClientStats
       """;
 
   public static final String MY_DISTRICTS_QUERY =
       "WITH ValidBlockCounts AS (" + MY_DISTRICTS_WAA + "),"
-      + "ClientStats AS (" + MY_DISTRICTS_WRU + ")"
+      + "ClientStats AS (" + MY_DISTRICTS_WRU + "),"
+      + "ClientList AS (" + MY_DISTRICTS_MYCLIENTS + "),"
+      + "Together AS (" + MY_DISTRICTS_UNION + ") "
       + MY_DISTRICTS_STATUS;
 
   public static final String MY_DISTRICTS_COUNT =
       "WITH ValidBlockCounts AS (" + MY_DISTRICTS_WAA + "),"
-      + "ClientStats AS (" + MY_DISTRICTS_WRU + ")"
-      + "SELECT count(1) FROM ClientStats";
+      + "ClientStats AS (" + MY_DISTRICTS_WRU + "),"
+      + "ClientList AS (" + MY_DISTRICTS_MYCLIENTS + "),"
+      + "Together AS (" + MY_DISTRICTS_UNION + ") "
+      + "SELECT count(DISTINCT CLIENT_NUMBER) FROM Together";
 
 }

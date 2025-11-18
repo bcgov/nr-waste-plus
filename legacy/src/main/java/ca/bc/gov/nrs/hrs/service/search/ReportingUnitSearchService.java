@@ -153,6 +153,7 @@ public class ReportingUnitSearchService {
   public Page<ClientDistrictSearchResultDto> searchMyClients(
       List<String> clients, Pageable page
   ) {
+    log.info("Loading my clients with filters: {}, pageable: {}", clients, page);
     return
         ruRepository
             .searchMyClients(
