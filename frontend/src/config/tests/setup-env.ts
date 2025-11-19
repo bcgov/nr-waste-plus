@@ -8,8 +8,8 @@ class MockResizeObserver {
     this._cb = cb;
   }
   observe = vi.fn((_el: Element) => {
-    // Optionally invoke callback once if needed:
-    // this._cb([], this);
+    // Invoke the callback with an empty entries array to mark usage
+    this._cb([], this as unknown as ResizeObserver);
   });
   unobserve = vi.fn((_el: Element) => {});
   disconnect = vi.fn(() => {});
