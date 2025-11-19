@@ -194,7 +194,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
               }
               onSelect={(data) => {
                 if (data) {
-                  onChange('clientNumbers')((data as ForestClientAutocompleteResultDto).id || '');
+                  onChange('clientNumbers')([(data as ForestClientAutocompleteResultDto).id || '']);
                 }
               }}
             />
