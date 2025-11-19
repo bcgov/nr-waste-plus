@@ -10,7 +10,6 @@ import ca.bc.gov.nrs.hrs.repository.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.util.PaginationUtil;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
