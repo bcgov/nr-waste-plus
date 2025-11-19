@@ -92,7 +92,7 @@ class SearchControllerMyForestClientsIntegrationTest extends
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.content.length()").value(1))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(0))
+        .andExpect(jsonPath("$.page.totalElements").value(1))
         .andReturn();
   }
 
