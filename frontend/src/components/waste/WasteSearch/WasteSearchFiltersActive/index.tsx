@@ -81,7 +81,7 @@ const WasteSearchFiltersActive: FC<WasteSearchFiltersActiveProps> = ({
     const filterValue = filters[filterKey];
 
     if (Array.isArray(filterValue)) {
-      filterValue.map((subValue) => (onRemoveFilter(filterKey, subValue)));
+      filterValue.forEach((subValue) => onRemoveFilter(filterKey, subValue));
     }
 
     onRemoveFilter(filterKey);
