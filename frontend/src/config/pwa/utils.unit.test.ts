@@ -65,6 +65,9 @@ const mockWorker = (
     ...buildSW(periodicSync === 'fail' || sync === 'fail'),
     ...buildPerm(permission, state),
   });
+  // Provide stubbed managers when feature is expected to exist
+  if (periodicSync === 'have') (window as any).PeriodicSyncManager = (window as any).PeriodicSyncManager || {};
+  if (sync === 'have') (window as any).SyncManager = (window as any).SyncManager || {};
   if (periodicSync === 'donthave') delete (window as any).PeriodicSyncManager;
   if (sync === 'donthave') delete (window as any).SyncManager;
 };

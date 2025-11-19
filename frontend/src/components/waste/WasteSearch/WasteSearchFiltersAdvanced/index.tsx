@@ -75,7 +75,6 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
   const onActiveMultiSelectChange =
     (key: keyof ReportingUnitSearchParametersDto) =>
     (changes: { selectedItems: CodeDescriptionDto[] }): void => {
-      console.log(`Selected items for ${key}:`, changes.selectedItems);
       onChange(key)(changes.selectedItems?.map((item) => item.code));
     };
 
@@ -114,7 +113,6 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
       onClose={onClose}
       size="lg"
       selectorPrimaryFocus=".advanced-search-body"
-      preventCloseOnClickOutside={false}
     >
       <ModalHeader title="Advanced search" closeModal={onClose} />
       <ModalBody className="advanced-search-body">
@@ -124,6 +122,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
             <TextInput
               className="advanced-text-input"
               id="as-ru-or-block-text-input"
+              data-testid="ru-or-block-text-input"
               type="text"
               labelText="Block ID or Reporting Unit No."
               defaultValue={filters.mainSearchTerm ?? ''}

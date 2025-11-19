@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: ${NAME}
   annotations:
-    description: "Wase Plus"
+    description: "Waste Plus"
     tags: "nrhrs"
     iconClass: icon-js
 labels:

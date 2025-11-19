@@ -8,6 +8,7 @@ import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
 
 import WasteSearchPage from './index';
+import { AuthProvider } from '@/context/auth/AuthProvider';
 
 vi.mock('@/services/APIs', () => {
   return {
@@ -22,14 +23,16 @@ vi.mock('@/services/APIs', () => {
 
 const renderWithProps = async () => {
   const qc = new QueryClient();
-  await act(() =>
+  await act(async () =>
     render(
       <QueryClientProvider client={qc}>
         <PreferenceProvider>
           <MemoryRouter>
-            <PageTitleProvider>
-              <WasteSearchPage />
-            </PageTitleProvider>
+            <AuthProvider>
+              <PageTitleProvider>
+                <WasteSearchPage />
+              </PageTitleProvider>
+            </AuthProvider>
           </MemoryRouter>
         </PreferenceProvider>
       </QueryClientProvider>,

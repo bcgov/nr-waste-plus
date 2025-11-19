@@ -1,6 +1,19 @@
 import { cleanup } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
 
+class MockResizeObserver {
+  private readonly _cb: ResizeObserverCallback;
+  constructor(cb: ResizeObserverCallback) {
+    this._cb = cb;
+  }
+  observe = vi.fn((_el: Element) => {
+    // Optionally invoke callback once if needed:
+    // this._cb([], this);
+  });
+  unobserve = vi.fn((_el: Element) => {});
+  disconnect = vi.fn(() => {});
+}
+
 // runs a cleanup after each test case (e.g. clearing jsdom)
 afterEach(() => {
   cleanup();
@@ -21,11 +34,7 @@ window.matchMedia =
     };
   };
 
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+global.ResizeObserver = MockResizeObserver;
 
 Object.defineProperty(global.SVGElement.prototype, 'getScreenCTM', {
   writable: true,

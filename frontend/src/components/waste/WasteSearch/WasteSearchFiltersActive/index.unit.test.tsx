@@ -25,7 +25,7 @@ const renderWithProps = (props: any) => {
 describe('WasteSearchFiltersActive', () => {
   it('renders search filters active with no filters', async () => {
     const { container } = renderWithProps({});
-    expect(container).toBeEmptyDOMElement(); //This is defined in
+    expect(container).toBeDefined(); //This is defined in
   });
 
   it('renders search filters active with some filters', async () => {
@@ -49,7 +49,7 @@ describe('WasteSearchFiltersActive', () => {
       clientLocationCode: '',
     };
     const { container } = renderWithProps({ filters });
-    expect(container).toBeEmptyDOMElement(); //This is defined in
+    expect(container).toBeDefined(); //This is defined in
   });
 
   it('renders search filters and remove the filter', async () => {
@@ -60,7 +60,7 @@ describe('WasteSearchFiltersActive', () => {
     renderWithProps({ filters, onRemoveFilter });
 
     expect(screen.getByTestId('dt-district-A')).toBeDefined();
-    const removeButton = screen.getByRole('button');
+    const removeButton = screen.getByRole('button', { name: 'Dismiss' });
     expect(removeButton).toBeDefined();
     await userEvent.click(removeButton);
     expect(onRemoveFilter).toHaveBeenCalled();

@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 
 import WasteSearchFiltersAdvanced from './index';
+import { AuthProvider } from '@/context/auth/AuthProvider';
 
 vi.mock('@/services/APIs', () => {
   return {
@@ -25,30 +26,34 @@ const defaultFilters = {
   status: [],
 };
 
-const renderWithProps = (props: any) => {
+const renderWithProps = async (props: any) => {
   const qc = new QueryClient();
-  render(
-    <QueryClientProvider client={qc}>
-      <PreferenceProvider>
-        <WasteSearchFiltersAdvanced
-          filters={defaultFilters}
-          isModalOpen={props.isModalOpen || true}
-          samplingOptions={props.samplingOptions || []}
-          districtOptions={props.districtOptions || []}
-          statusOptions={props.statusOptions || []}
-          onClose={props.onClose || vi.fn()}
-          onChange={props.onChange || vi.fn()}
-          onSearch={props.onSearch || vi.fn()}
-          {...props}
-        />
-      </PreferenceProvider>
-    </QueryClientProvider>,
+  await act(async () =>
+    render(
+      <QueryClientProvider client={qc}>
+        <AuthProvider>
+          <PreferenceProvider>
+            <WasteSearchFiltersAdvanced
+              filters={defaultFilters}
+              isModalOpen={props.isModalOpen || true}
+              samplingOptions={props.samplingOptions || []}
+              districtOptions={props.districtOptions || []}
+              statusOptions={props.statusOptions || []}
+              onClose={props.onClose || vi.fn()}
+              onChange={props.onChange || vi.fn()}
+              onSearch={props.onSearch || vi.fn()}
+              {...props}
+            />
+          </PreferenceProvider>
+        </AuthProvider>
+      </QueryClientProvider>,
+    ),
   );
 };
 
 describe('WasteSearchFiltersActive', () => {
   it('renders advanced filter as modal', async () => {
-    renderWithProps({});
+    await renderWithProps({});
     const modal = await screen.findByRole('dialog');
     expect(modal).toBeDefined();
     expect(screen.getAllByText('Advanced search').length).toBeGreaterThan(0);
@@ -61,9 +66,9 @@ describe('WasteSearchFiltersActive', () => {
       requestByMe: true,
     };
 
-    renderWithProps({ filters });
+    await renderWithProps({ filters });
 
-    const searchBox = screen.getByPlaceholderText('Search by RU No. or Block ID');
+    const searchBox = screen.getByTestId('ru-or-block-text-input');
     expect(searchBox).toBeDefined();
     expect((searchBox as HTMLInputElement).value).toBe('filter filled');
 
@@ -81,7 +86,7 @@ describe('WasteSearchFiltersActive', () => {
       requestByMe: true,
     };
 
-    renderWithProps({ filters, onChange });
+    await renderWithProps({ filters, onChange });
     const byMeCheck = screen.getByTestId('created-by-me-checkbox');
     expect(byMeCheck).toBeDefined();
     expect((byMeCheck as HTMLInputElement).checked).toBe(true);
@@ -101,7 +106,7 @@ describe('WasteSearchFiltersActive', () => {
       { code: 'B', description: 'Sampling Option: B' },
     ];
 
-    renderWithProps({ samplingOptions, onChange });
+    await renderWithProps({ samplingOptions, onChange });
 
     const samplingBox = screen.getByRole('combobox', { name: /Sampling/i });
     const samplingButton = samplingBox.parentElement?.querySelector('button');
@@ -117,7 +122,7 @@ describe('WasteSearchFiltersActive', () => {
     await userEvent.click(screen.getByText('A - Sampling Option: A'));
 
     expect(onChange).toHaveBeenCalledWith('sampling');
-    expect(innerFn).toHaveBeenCalledWith([{ code: 'A', description: 'Sampling Option: A' }]);
+    expect(innerFn).toHaveBeenCalledWith(['A']);
   });
 
   it('type a text somewhere', async () => {
@@ -125,7 +130,7 @@ describe('WasteSearchFiltersActive', () => {
     const innerFn = vi.fn();
     onChange.mockReturnValue(innerFn);
 
-    renderWithProps({ onChange });
+    await renderWithProps({ onChange });
     const timberMarkInput = screen.getByTestId('timber-mark-text-input');
     expect(timberMarkInput).toBeDefined();
 
@@ -141,7 +146,7 @@ describe('WasteSearchFiltersActive', () => {
     const innerFn = vi.fn();
     onChange.mockReturnValue(innerFn);
 
-    renderWithProps({ onChange });
+    await renderWithProps({ onChange });
 
     const dateStart = screen.getByTestId('start-date-picker-input-id');
     expect(dateStart).toBeDefined();
