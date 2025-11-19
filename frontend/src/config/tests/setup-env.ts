@@ -1,4 +1,4 @@
-//@ts-ignore no-check
+// @ts-nocheck
 import { cleanup } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
 
