@@ -72,7 +72,6 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
     key: keyof ReportingUnitSearchParametersDto,
     value: string | CodeDescriptionDto[] | boolean | string[],
   ) => {
-    console.log('handleChange', key, value);
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
