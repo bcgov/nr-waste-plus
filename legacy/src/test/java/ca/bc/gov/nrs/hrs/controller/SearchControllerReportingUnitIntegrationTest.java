@@ -110,6 +110,10 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
 
   @Test
   @DisplayName("Should search reporting units with paging")
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"Submitter_00070002","Viewer_00070002"}
+  )
   void shouldSearchReportingUnitsWithPageAndSize() throws Exception {
     mockMvc
         .perform(

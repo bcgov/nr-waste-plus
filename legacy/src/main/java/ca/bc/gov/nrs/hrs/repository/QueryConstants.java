@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
  * waste assessment and reporting.
  *
  * <p>This class is not meant to be instantiated, hence the private constructor.
- * The constants defined in this class are used in repository classes to fetch data from
- * the database.</p>
+ * The constants defined in this class are used in repository classes to fetch data from the
+ * database.</p>
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class QueryConstants {
@@ -141,7 +141,7 @@ public class QueryConstants {
       SELECT
         REPORTING_UNIT_ID,
         COUNT(*) AS VALID_BLOCK_COUNT,
-        MAX(UPDATE_TIMESTAMP) AS LAST_WAA_UPDATE
+        MAX(UPDATE_TIMESTAMP) AS WAA_UPDATE
       FROM THE.WASTE_ASSESSMENT_AREA
       WHERE DRAFT_CUT_BLOCK_ID IS NOT NULL
       GROUP BY REPORTING_UNIT_ID""";
@@ -150,9 +150,9 @@ public class QueryConstants {
       SELECT
            WRU.CLIENT_NUMBER,
            COUNT(*) AS SUBMISSIONS_COUNT,
-           MAX(WRU.UPDATE_TIMESTAMP) AS LAST_WRU_UPDATE,
+           MAX(WRU.UPDATE_TIMESTAMP) AS WRU_UPDATE,
            SUM(COALESCE(VBC.VALID_BLOCK_COUNT, 0)) AS BLOCKS_COUNT,
-           MAX(VBC.LAST_WAA_UPDATE) AS LAST_WAA_UPDATE
+           MAX(VBC.WAA_UPDATE) AS WAA_UPDATE
          FROM THE.WASTE_REPORTING_UNIT WRU
          LEFT JOIN ValidBlockCounts VBC
            ON WRU.REPORTING_UNIT_ID = VBC.REPORTING_UNIT_ID
@@ -163,9 +163,9 @@ public class QueryConstants {
       SELECT
         COLUMN_VALUE AS client_number,
         0 AS submissions_count,
-        NULL AS LAST_WRU_UPDATE,
+        NULL AS WRU_UPDATE,
         0 AS BLOCKS_COUNT,
-        NULL AS LAST_WAA_UPDATE
+        NULL AS WAA_UPDATE
       FROM TABLE(SYS.ODCIVARCHAR2LIST(:clientNumbers))""";
 
   public static final String MY_DISTRICTS_STATUS = """
@@ -174,8 +174,8 @@ public class QueryConstants {
         MAX(SUBMISSIONS_COUNT) AS SUBMISSIONS_COUNT,
         MAX(BLOCKS_COUNT) AS BLOCKS_COUNT,
         GREATEST(
-          COALESCE(MAX(LAST_WRU_UPDATE), TO_TIMESTAMP('1900-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS')),
-          COALESCE(MAX(LAST_WAA_UPDATE), TO_TIMESTAMP('1900-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS'))
+          COALESCE(MAX(WRU_UPDATE), TO_TIMESTAMP('1900-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS')),
+          COALESCE(MAX(WAA_UPDATE), TO_TIMESTAMP('1900-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS'))
         ) AS LAST_UPDATE
       FROM Together
       GROUP BY CLIENT_NUMBER
@@ -183,8 +183,8 @@ public class QueryConstants {
 
   public static final String MY_DISTRICTS_UNION = """
       SELECT * FROM ClientList
-      	UNION
-      	SELECT * FROM ClientStats
+      UNION
+      SELECT * FROM ClientStats
       """;
 
   public static final String MY_DISTRICTS_QUERY =
