@@ -8,8 +8,21 @@ class MockResizeObserver {
     this._cb = cb;
   }
   observe = vi.fn((_el: Element) => {
-    // Invoke the callback with an empty entries array to mark usage
-    this._cb([], this as unknown as ResizeObserver);
+    // Provide a minimal ResizeObserverEntry with contentRect to avoid undefined errors
+    const entry: Partial<ResizeObserverEntry> = {
+      target: _el,
+      contentRect: {
+        x: 0,
+        y: 0,
+        top: 0,
+        left: 0,
+        bottom: 0,
+        right: 0,
+        width: (_el as HTMLElement)?.offsetWidth || 0,
+        height: (_el as HTMLElement)?.offsetHeight || 0,
+      } as DOMRectReadOnly,
+    };
+    this._cb([entry as ResizeObserverEntry], this as unknown as ResizeObserver);
   });
   unobserve = vi.fn((_el: Element) => {});
   disconnect = vi.fn(() => {});
