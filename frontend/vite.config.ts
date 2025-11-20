@@ -152,6 +152,7 @@ export default defineConfig(({ mode }) => {
           '**/node_modules/**',
           '**/tests/**',
           '**/*.test.{ts,tsx}',
+          '**/*.unit.test.{ts,tsx}',
           '**/vite-env.d.ts',
           '**/types/**',
           '**/constants/**',
