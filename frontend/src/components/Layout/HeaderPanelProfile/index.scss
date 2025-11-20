@@ -7,15 +7,24 @@
 @use '@carbon/type';
 
 .my-profile-container {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
   .user-info-section {
     padding: 1rem;
     display: flex;
-  }
 
-  .user-data {
-    margin-left: 2rem;
-  }
+    .user-data {
+      margin-left: 2rem;
+    }
 
+    .user-image {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+  
   .user-name {
     @include font-weight(semibold);
   }
@@ -26,6 +35,20 @@
 
   .account-nav {
     padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+
+    ul {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+
+      li.district-panel {
+        flex-grow: 1;
+      }
+    }
+
     a {
       width: 100%;
       @include font-weight(semibold);

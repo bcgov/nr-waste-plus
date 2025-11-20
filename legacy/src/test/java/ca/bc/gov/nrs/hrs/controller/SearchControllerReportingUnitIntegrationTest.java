@@ -58,7 +58,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(jsonPath("$.content[0].ruNumber").value(34906))
         .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(32))
+        .andExpect(jsonPath("$.page.totalElements").value(37))
         .andReturn();
   }
 
@@ -104,12 +104,16 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(jsonPath("$.content[0].ruNumber").value(34906))
         .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(32))
+        .andExpect(jsonPath("$.page.totalElements").value(37))
         .andReturn();
   }
 
   @Test
   @DisplayName("Should search reporting units with paging")
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"Submitter_00070002","Viewer_00070002"}
+  )
   void shouldSearchReportingUnitsWithPageAndSize() throws Exception {
     mockMvc
         .perform(

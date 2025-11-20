@@ -1,5 +1,7 @@
 import React from 'react';
 
+import './index.scss';
+
 type Size = 'small' | 'large';
 
 interface AvatarImageProps {

@@ -148,10 +148,12 @@ export default defineConfig(({ mode }) => {
         reporter: ['lcov', 'cobertura', 'html', 'json', 'text'],
         reportsDirectory: './coverage',
         all: true,
+        excludeAfterRemap: true,
         exclude: [
           '**/node_modules/**',
           '**/tests/**',
           '**/*.test.{ts,tsx}',
+          '**/*.unit.test.{ts,tsx}',
           '**/vite-env.d.ts',
           '**/types/**',
           '**/constants/**',

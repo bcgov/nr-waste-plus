@@ -11,8 +11,10 @@ import APIs from '@/services/APIs';
 
 import type { CodeDescriptionDto } from '@/services/types';
 import type { ReportingUnitSearchParametersDto } from '@/services/types';
+import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 
 import './index.scss';
+import { usePreference } from '@/context/preference/usePreference';
 
 type WasteSearchFiltersProps = {
   value: ReportingUnitSearchParametersDto;
@@ -23,6 +25,7 @@ type WasteSearchFiltersProps = {
 const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSearch }) => {
   const [filters, setFilters] = useState<ReportingUnitSearchParametersDto>(value);
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState<boolean>(false);
+    const { userPreference } = usePreference();
 
   const { data: samplingOptions } = useQuery({
     queryKey: ['samplingOptions'],
@@ -67,7 +70,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
 
   const handleChange = (
     key: keyof ReportingUnitSearchParametersDto,
-    value: string | CodeDescriptionDto[] | boolean,
+    value: string | CodeDescriptionDto[] | boolean | string[],
   ) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
@@ -91,6 +94,13 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
     onChange(filters);
   }, [filters, onChange]);
 
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      clientNumbers: userPreference.selectedClient ? [userPreference.selectedClient as string] : [],
+    }));
+  }, [userPreference.selectedClient]);
+
   return (
     <>
       <Grid className="table-filters-grid">
@@ -105,31 +115,31 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
           />
         </Column>
 
-        {/* Sampling multiselect */}
-        <Column max={3} lg={4} md={2} sm={4} className="filters-column">
-          <ActiveMultiSelect
-            placeholder="Sampling"
-            id="sampling-multi-select"
-            data-testid="sampling-multi-select"
-            items={samplingOptions ?? []}
-            itemToString={(item) => (item ? `${item.code} - ${item.description}` : 'No selection')}
-            onChange={handleActiveMultiSelectChange('sampling')}
-            selectedItems={(samplingOptions ?? []).filter((option) =>
-              (filters.sampling || []).includes(option.code),
-            )}
-          />
-        </Column>
-
         {/* District multiselect */}
         <Column max={3} lg={4} md={2} sm={4} className="filters-column">
           <ActiveMultiSelect
             placeholder="District"
             id="district-multi-select"
             items={districtOptions ?? []}
-            itemToString={(item) => (item ? `${item.code} - ${item.description}` : 'No selection')}
+            itemToString={activeMSItemToString}
             onChange={handleActiveMultiSelectChange('district')}
             selectedItems={(districtOptions ?? []).filter((option) =>
               (filters.district || []).includes(option.code),
+            )}
+          />
+        </Column>
+
+        {/* Sampling multiselect */}
+        <Column max={3} lg={4} md={2} sm={4} className="filters-column">
+          <ActiveMultiSelect
+            placeholder="Sampling option"
+            id="sampling-multi-select"
+            data-testid="sampling-multi-select"
+            items={samplingOptions ?? []}
+            itemToString={activeMSItemToString}
+            onChange={handleActiveMultiSelectChange('sampling')}
+            selectedItems={(samplingOptions ?? []).filter((option) =>
+              (filters.sampling || []).includes(option.code),
             )}
           />
         </Column>
@@ -140,7 +150,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
             placeholder="Status"
             id="status-multi-select"
             items={statusOptions ?? []}
-            itemToString={(item) => (item ? `${item.code} - ${item.description}` : 'No selection')}
+            itemToString={activeMSItemToString}
             onChange={handleActiveMultiSelectChange('status')}
             selectedItems={(statusOptions ?? []).filter((option) =>
               (filters.status || []).includes(option.code),

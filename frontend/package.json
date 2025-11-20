@@ -14,7 +14,7 @@
     "test:ui:dev": "playwright test --ui",    
     "test:coverage": "vitest run --coverage --allowOnly",
     "pretest:watch": "npm run pretest:browser",
-    "test:watch": "vitest --coverage",
+    "test:watch": "vitest --coverage --pool=threads --maxWorkers=1 --bail=1",
     "pretest:a11y": "npm run pretest:browser",
     "test:a11y": "playwright test --project=a11y-chromium",
     "test:a11y:dev": "playwright test --project=a11y-chromium --ui"

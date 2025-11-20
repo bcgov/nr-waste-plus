@@ -1,15 +1,17 @@
-import { UserAvatar } from '@carbon/icons-react';
 import { HeaderGlobalAction, HeaderGlobalBar } from '@carbon/react';
 import { type FC } from 'react';
 
 import HeaderDistrictDisplay from '@/components/Layout/HeaderDistrictDisplay';
 import ThemeToggle from '@/components/Layout/ThemeToggle';
 import { useLayout } from '@/context/layout/useLayout';
+import AvatarImage from '@/components/Layout/AvatarImage';
+import { useAuth } from '@/context/auth/useAuth';
 
 import './LayoutHeaderGlobalBar.scss';
 
 const LayoutHeaderGlobalBar: FC = () => {
   const { toggleHeaderPanel, isHeaderPanelOpen } = useLayout();
+  const { user } = useAuth();
 
   return (
     <HeaderGlobalBar>
@@ -24,7 +26,7 @@ const LayoutHeaderGlobalBar: FC = () => {
         isActive={isHeaderPanelOpen}
         className="profile-action-button"
       >
-        <UserAvatar size={20} />
+        <AvatarImage userName={`${user?.firstName} ${user?.lastName}`} size="small" />
         <HeaderDistrictDisplay isActive={isHeaderPanelOpen} />
       </HeaderGlobalAction>
     </HeaderGlobalBar>

@@ -6,4 +6,4 @@ Report logging waste and residue data for billing and cut control
 
 ## Development
 
-For more developer information visit the [documentation](https://github.com/bcgov/nr-hrs-waste/wiki/Project-Structure) for a broader documentation.
+For more developer information visit the [documentation](https://github.com/bcgov/nr-waste-plus/wiki/Project-Structure) for a broader documentation.

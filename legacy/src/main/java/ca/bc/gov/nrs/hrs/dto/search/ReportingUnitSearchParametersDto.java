@@ -30,6 +30,7 @@ public class ReportingUnitSearchParametersDto {
   private List<String> sampling;
   private List<String> status;
   private boolean requestByMe;
+  private boolean multiMark;
   private String requestUserId;
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private LocalDate updateDateStart;
@@ -39,7 +40,6 @@ public class ReportingUnitSearchParametersDto {
   private String cuttingPermitId;
   private String timberMark;
   private String clientLocationCode;
-  private String clientNumber;
   private List<String> clientNumbers;
 
   /**

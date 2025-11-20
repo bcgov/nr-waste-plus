@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
@@ -8,6 +8,7 @@ import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
 
 import WasteSearchFilters from './index';
+import { AuthProvider } from '@/context/auth/AuthProvider';
 
 vi.mock('@/services/APIs', () => ({
   default: {
@@ -35,25 +36,29 @@ const defaultFilters = {
   status: [],
 };
 
-const renderWithProps = (props: any) => {
+const renderWithProps = async (props: any) => {
   const qc = new QueryClient();
-  render(
-    <QueryClientProvider client={qc}>
-      <PreferenceProvider>
-        <WasteSearchFilters
-          value={defaultFilters}
-          onChange={props.onChange || vi.fn()}
-          onSearch={props.onSearch || vi.fn()}
-          {...props}
-        />
-      </PreferenceProvider>
-    </QueryClientProvider>,
+  await act(async () =>
+    render(
+      <QueryClientProvider client={qc}>
+        <AuthProvider>
+          <PreferenceProvider>
+            <WasteSearchFilters
+              value={defaultFilters}
+              onChange={props.onChange || vi.fn()}
+              onSearch={props.onSearch || vi.fn()}
+              {...props}
+            />
+          </PreferenceProvider>
+        </AuthProvider>
+      </QueryClientProvider>,
+    ),
   );
 };
 
 describe('WasteSearchFilters', () => {
   it('renders main search input and filter columns', async () => {
-    renderWithProps({});
+    await renderWithProps({});
     expect(screen.getAllByPlaceholderText('Search by RU No. or Block ID')[0]).toBeDefined();
     expect(screen.getByPlaceholderText(/Sampling/i)).toBeDefined();
     expect(screen.getByPlaceholderText(/District/i)).toBeDefined();
@@ -61,14 +66,14 @@ describe('WasteSearchFilters', () => {
   });
 
   it('renders advanced search and search buttons (desktop)', async () => {
-    renderWithProps({});
+    await renderWithProps({});
     expect(screen.getAllByText('Advanced Search').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Search').length).toBeGreaterThan(0);
   });
 
   it('calls onSearch when search button is clicked', async () => {
     const onSearch = vi.fn();
-    renderWithProps({ onSearch });
+    await renderWithProps({ onSearch });
     const searchButton = screen.getByTestId('search-button-most');
     expect(searchButton).toBeDefined();
     fireEvent.click(searchButton);
@@ -76,7 +81,7 @@ describe('WasteSearchFilters', () => {
   });
 
   it('shows and closes advanced search modal', async () => {
-    renderWithProps({});
+    await renderWithProps({});
     //Open modal
     userEvent.click(screen.getByTestId('advanced-search-button-most'));
 
@@ -93,7 +98,7 @@ describe('WasteSearchFilters', () => {
   });
 
   it('renders filter tags when filters are set', async () => {
-    renderWithProps({});
+    await renderWithProps({});
     expect(APIs.codes.getAssessAreaStatuses).toHaveBeenCalled();
 
     const samplingBox = screen.getByPlaceholderText(/Sampling/i);
@@ -126,7 +131,7 @@ describe('WasteSearchFilters', () => {
 
   it('calls onChange when search has new value', async () => {
     const onChange = vi.fn();
-    renderWithProps({ onChange });
+    await renderWithProps({ onChange });
 
     const searchBox = screen.getAllByPlaceholderText('Search by RU No. or Block ID')[0];
     expect(searchBox).toBeDefined();
@@ -137,7 +142,7 @@ describe('WasteSearchFilters', () => {
 
   it('calls onChange when dropdown selected a new value', async () => {
     const onChange = vi.fn();
-    renderWithProps({ onChange });
+    await renderWithProps({ onChange });
 
     const samplingBox = screen.getByPlaceholderText(/Sampling/i);
     const samplingButton = samplingBox.parentElement?.querySelector('button');

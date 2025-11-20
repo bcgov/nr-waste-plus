@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 /**
  * Service that provides search capabilities for reporting units and related aggregates.
@@ -92,11 +93,7 @@ public class ReportingUnitSearchService {
   ) {
 
     // #128: limit query by client numbers provided by the roles
-    if (StringUtils.isNotBlank(filters.getClientNumber())) {
-      if (userClientNumbers.isEmpty() || userClientNumbers.contains(filters.getClientNumber())) {
-        filters.setClientNumbers(List.of(filters.getClientNumber()));
-      }
-    } else {
+    if (CollectionUtils.isEmpty(filters.getClientNumbers())) {
       filters.setClientNumbers(userClientNumbers);
     }
 
@@ -153,6 +150,7 @@ public class ReportingUnitSearchService {
   public Page<ClientDistrictSearchResultDto> searchMyClients(
       List<String> clients, Pageable page
   ) {
+    log.info("Loading my clients with filters: {}, pageable: {}", clients, page);
     return
         ruRepository
             .searchMyClients(

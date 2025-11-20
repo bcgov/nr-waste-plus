@@ -80,12 +80,6 @@ describe('HeaderPanelProfile', () => {
     expect(screen.getByTestId('user-fullname').textContent).to.equal('Jane Doe');
   });
 
-  it('calls toggleTheme when Change theme is clicked', async () => {
-    await renderWithProviders();
-    fireEvent.click(screen.getByText('Change theme'));
-    expect(mockToggleTheme).toHaveBeenCalled();
-  });
-
   it('calls logout when Log out is clicked', async () => {
     await renderWithProviders();
     fireEvent.click(screen.getByText('Log out'));

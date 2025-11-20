@@ -20,6 +20,7 @@ export type ReportingUnitSearchParametersDto = {
   sampling?: string[];
   status?: string[];
   requestByMe?: boolean;
+  multiMark?: boolean;
   requestUserId?: string;
   updateDateStart?: string;
   updateDateEnd?: string;
@@ -27,5 +28,5 @@ export type ReportingUnitSearchParametersDto = {
   cuttingPermitId?: string;
   timberMark?: string;
   clientLocationCode?: string;
-  clientNumber?: string;
+  clientNumbers?: string[];
 };
