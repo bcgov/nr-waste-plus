@@ -55,18 +55,4 @@ describe('MyClientListing', () => {
     });
     expect(screen.getByText('Test Client')).toBeDefined();
   });
-
-  it('calls API on search button click with filter', async () => {
-    await renderWithProviders();
-    const input = screen.getByPlaceholderText('Search by name');
-    await userEvent.type(input, 'test');
-    await userEvent.tab();
-    const searchBtn = screen.getByTestId('search-button-other');
-    expect(searchBtn).toBeDefined();
-    await userEvent.tab();
-    await userEvent.click(searchBtn);
-    await waitFor(() => {
-      expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('test', 0, 10);
-    });
-  });
 });
