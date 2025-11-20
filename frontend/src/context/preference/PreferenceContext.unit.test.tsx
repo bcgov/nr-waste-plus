@@ -19,7 +19,7 @@ vi.mock('@/context/preference/utils', () => {
 });
 
 const TestComponent = () => {
-  const { userPreference, updatePreferences } = usePreference();
+  const { userPreference, updatePreferences, isLoaded } = usePreference();
   const [testData, setTestData] = useState<string>(
     (userPreference.testData as string) || 'default',
   );
@@ -33,6 +33,7 @@ const TestComponent = () => {
   return (
     <>
       <span data-testid="test-value">{testData}</span>
+      <span data-testid="loaded">{String(isLoaded)}</span>
       <button onClick={() => updatePreferences({ testData: 'g100' })}>Set g100</button>
     </>
   );
@@ -59,11 +60,13 @@ describe('PreferenceContext', () => {
   });
 
   it('updatePreferences changes the testData', async () => {
-    (loadUserPreference as Mock)
-      .mockResolvedValue({ theme: 'g10', testData: 'default' })
-      .mockResolvedValue({ theme: 'g10', testData: 'g100' });
+    // Provide a stable initial load value. Multiple invocations (e.g. React StrictMode
+    // or react-query refetches) will all return this same value to avoid flakiness.
+    (loadUserPreference as Mock).mockResolvedValue({ theme: 'g10', testData: 'default' });
     (saveUserPreference as Mock).mockResolvedValue({ theme: 'g10', testData: 'g100' });
     await renderWithProviders();
+    // Ensure the provider has loaded preferences (not just using mocked initialValue fallback)
+    await waitFor(() => expect(screen.getByTestId('loaded').textContent).toBe('true'));
     expect(screen.getByTestId('test-value').textContent).toBe('default');
     await act(async () => screen.getByText('Set g100').click());
     await waitFor(() => {
