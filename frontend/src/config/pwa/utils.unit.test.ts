@@ -4,7 +4,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { registerBackgroundSync, registerPeriodicSync } from './utils';
 
 const originalNavigator = navigator;
-const originalWindow = window;
+const originalWindow = globalThis;
 
 type TestState = 'have' | 'donthave' | 'fail';
 
@@ -66,15 +66,15 @@ const mockWorker = (
     ...buildPerm(permission, state),
   });
   // Provide stubbed managers when feature is expected to exist
-  if (periodicSync === 'have') (window as any).PeriodicSyncManager = (window as any).PeriodicSyncManager || {};
-  if (sync === 'have') (window as any).SyncManager = (window as any).SyncManager || {};
-  if (periodicSync === 'donthave') delete (window as any).PeriodicSyncManager;
-  if (sync === 'donthave') delete (window as any).SyncManager;
+  if (periodicSync === 'have') (globalThis as any).PeriodicSyncManager = (globalThis as any).PeriodicSyncManager || {};
+  if (sync === 'have') (globalThis as any).SyncManager = (globalThis as any).SyncManager || {};
+  if (periodicSync === 'donthave') delete (globalThis as any).PeriodicSyncManager;
+  if (sync === 'donthave') delete (globalThis as any).SyncManager;
 };
 
 afterEach(() => {
-  (window as any).PeriodicSyncManager = (originalWindow as any).PeriodicSyncManager;
-  (window as any).SyncManager = (originalWindow as any).SyncManager;
+  (globalThis as any).PeriodicSyncManager = (originalWindow as any).PeriodicSyncManager;
+  (globalThis as any).SyncManager = (originalWindow as any).SyncManager;
   vi.stubGlobal('navigator', originalNavigator);
 });
 

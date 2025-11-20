@@ -93,8 +93,6 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
     onChange(isStartDate ? 'updateDateStart' : 'updateDateEnd')(formattedDate);
   };
 
-  if (!isModalOpen) return null;
-
   const { data: myClients } = useQuery({
     queryKey: ['search', 'my-forest-client', { page: 0, size: auth.getClients().length || 10 }],
     queryFn: () => APIs.forestclient.searchMyForestClients('', 0, auth.getClients().length || 10),
@@ -104,6 +102,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
     select: (data) => data.content.map((item) => item.client),
   });
 
+  if (!isModalOpen) return null;
   
   return (
     <ComposedModal

@@ -7,6 +7,47 @@ import { NoOfflineItemError, CacheVersionMismatchError } from '@/config/pwa/type
 
 import * as idbConfig from './config';
 
+const mockTransaction = (stores: Record<string, Record<string, any>>): (store: string, _mode: string) => { objectStore: () => { put: (value: any, key: string) => Promise<void>; getAll: () => Promise<any[]>; }; done: Promise<void>; } => {
+  return (store: string, _mode: string) => {
+    return {
+      objectStore: () => ({
+        put: async (value: any, key: string) => {
+          stores[store][key] = value;
+        },
+        getAll: async () => Object.values(stores[store]),
+      }),
+      done: Promise.resolve(),
+    };
+  };
+};
+
+const mockAdd = (stores: Record<string, Record<string, any>>): (store: string, value: any) => Promise<void>  =>{
+  return async (store: string, value: any) => {
+    const key = String(Object.keys(stores[store]).length + 1);
+    stores[store][key] = value;
+  };
+};
+
+const mockGetAll = (stores: Record<string, Record<string, any>>): (store: string) => Promise<any[]> => {
+  return async (store: string) => Object.values(stores[store]);
+};
+
+const mockDelete = (stores: Record<string, Record<string, any>>): (store: string, key: string) => Promise<void> => {
+  return async (store: string, key: string) => {
+    delete stores[store][key];
+  };
+};
+
+const mockGet = (stores: Record<string, Record<string, any>>): (store: string, key: string) => Promise<any> => {
+  return async (store: string, key: string) => stores[store][key];
+};
+
+const mockPut = (stores: Record<string, Record<string, any>>): (store: string, value: any, key: string) => Promise<void> => {
+  return async (store: string, value: any, key: string) => {
+    stores[store][key] = value;
+  };
+};
+
 // Mocks
 vi.mock('idb', () => {
   const stores: Record<string, Record<string, any>> = {
@@ -25,30 +66,13 @@ vi.mock('idb', () => {
       };
       if (upgrade) upgrade(db);
       return {
-        put: async (store: string, value: any, key: string) => {
-          stores[store][key] = value;
-        },
-        get: async (store: string, key: string) => stores[store][key],
-        delete: async (store: string, key: string) => {
-          delete stores[store][key];
-        },
-        getAll: async (store: string) => Object.values(stores[store]),
-        add: async (store: string, value: any) => {
-          const key = String(Object.keys(stores[store]).length + 1);
-          stores[store][key] = value;
-        },
+        put: mockPut(stores),
+        get: mockGet(stores),
+        delete: mockDelete(stores),
+        getAll: mockGetAll(stores),
+        add: mockAdd(stores),
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        transaction: (store: string, _mode: string) => {
-          return {
-            objectStore: () => ({
-              put: async (value: any, key: string) => {
-                stores[store][key] = value;
-              },
-              getAll: async () => Object.values(stores[store]),
-            }),
-            done: Promise.resolve(),
-          };
-        },
+        transaction: mockTransaction(stores),
       };
     }),
   };
