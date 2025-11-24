@@ -27,9 +27,9 @@ const useSyncPreferencesToFilters = <Filters extends Record<string, any>>(
       }
       return updated;
     });
-    // Only re-run when mapped preference values change
+    // Only re-run when preferences or mapping change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, Object.keys(mapping).map((k) => userPreference[k]));
+  }, [userPreference, mapping]);
 };
 
 export default useSyncPreferencesToFilters;
