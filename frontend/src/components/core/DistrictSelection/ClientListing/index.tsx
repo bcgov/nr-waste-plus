@@ -19,9 +19,7 @@ const ClientListing: FC = () => {
           || client.id.trim().toLowerCase() === keyword.toLowerCase();
   };
 
-  return (<DistrictSelection
-    queryHook={() =>
-      useQuery({
+  const {data, isLoading } = useQuery({
         queryKey: ['forest-clients', 'search', getClients()],
         queryFn: () => APIs.forestclient.searchByClientNumbers(getClients(), 0, getClients().length),
         enabled: !!getClients().length,
@@ -30,8 +28,10 @@ const ClientListing: FC = () => {
           name: client.name ?? client.clientName,
           kind: client.clientTypeCode?.code,
         })),
-      })
-    }
+      });
+
+  return (<DistrictSelection
+    queryHook={() => ({ data, isLoading })}
     preferenceKey="selectedClient"
     deselectLabel="Select no client"
     searchLabel="Search by client name or ID"

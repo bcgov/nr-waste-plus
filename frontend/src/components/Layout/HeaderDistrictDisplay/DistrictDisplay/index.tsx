@@ -11,20 +11,20 @@ type DistrictDisplayProps = {
 
 const DistrictDisplay: FC<DistrictDisplayProps> = ({ isActive }) => {  
   const { userPreference } = usePreference();
-
-  return (<HeaderDistrictDisplay 
-    isActive={isActive} 
-    noSelectionText='No district selected'
-    queryHook={() => 
-      useQuery({
+  const {data, isLoading } = useQuery({
         queryKey: ['districtOptions'],
         queryFn: async () => await APIs.codes.getDistricts(),
         enabled: true,
         select: (data) => data
         .map((district) => ({ id: district.code, name: district.description, kind: 'D' }))
         .find((client) => client.id === userPreference.selectedDistrict),
-      })}
-      />
+      });
+
+  return (<HeaderDistrictDisplay 
+    isActive={isActive} 
+    noSelectionText='No district selected'
+    queryHook={() => ({data, isLoading})}
+    />
   );
 };
 

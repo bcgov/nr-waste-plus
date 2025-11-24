@@ -17,9 +17,7 @@ const DistrictListing: FC = () => {
           || client.id.trim().toLowerCase() === keyword.toLowerCase();
   };
 
-  return (<DistrictSelection
-    queryHook={() =>
-      useQuery({
+  const {data, isLoading } = useQuery({
         queryKey: ['districtOptions'],
         queryFn: async () => await APIs.codes.getDistricts(),
         staleTime: Infinity,
@@ -29,8 +27,10 @@ const DistrictListing: FC = () => {
           name: district.description,
           kind: 'D',
         })),
-      })
-    }
+      });
+
+  return (<DistrictSelection
+    queryHook={() => ({ data, isLoading })}
     preferenceKey="selectedDistrict"
     deselectLabel="Select no district"
     searchLabel="Search by district name or code"

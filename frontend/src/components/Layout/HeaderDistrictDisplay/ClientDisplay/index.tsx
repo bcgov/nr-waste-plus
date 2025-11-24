@@ -13,20 +13,20 @@ type ClientDisplayProps = {
 const ClientDisplay: FC<ClientDisplayProps> = ({ isActive }) => {
   const { getClients } = useAuth();
   const { userPreference } = usePreference();
-
-  return (<HeaderDistrictDisplay 
-    isActive={isActive} 
-    noSelectionText='No client selected'
-    queryHook={() => 
-      useQuery({
+  const {data, isLoading} = useQuery({
         queryKey: ['forest-clients', 'search', getClients()],
         queryFn: () => APIs.forestclient.searchByClientNumbers(getClients(), 0, getClients().length),
         enabled: !!getClients().length,
         select: (data) => data
         .map((client) => ({ id: client.clientNumber, name: client.name ?? client.clientName, kind: client.clientTypeCode.code }))
         .find((client) => client.id === userPreference.selectedClient),
-      })}
-      />
+      });
+
+  return (<HeaderDistrictDisplay 
+    isActive={isActive} 
+    noSelectionText='No client selected'
+    queryHook={() => ({data, isLoading})}      
+    />
   );
 };
 
