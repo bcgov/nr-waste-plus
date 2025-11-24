@@ -59,6 +59,7 @@ const DistrictSelection = ({
               title={deselectLabel}
             >
               <button
+                type="button"
                 onClick={() => storeSelection('')}
                 className={`district-list-item-btn${userPreference[preferenceKey] ? '' : ' selected-district'}`}
               >
