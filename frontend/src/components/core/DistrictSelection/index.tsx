@@ -60,7 +60,7 @@ const DistrictSelection = ({
             >
               <button
                 onClick={() => storeSelection('')}
-                className={`district-list-item-btn${!userPreference[preferenceKey] ? ' selected-district' : ''}`}
+                className={`district-list-item-btn${userPreference[preferenceKey] ? '' : ' selected-district'}`}
               >
                 <DistrictItem
                   client={DESELECT_CLIENT}
