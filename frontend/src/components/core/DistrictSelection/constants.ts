@@ -1,6 +1,5 @@
 import * as ICON from '@carbon/icons-react';
 
-import type { ForestClientDto } from '@/services/types';
 import type { DistrictType } from './types';
 
 type ClientIconType = keyof typeof ICON;

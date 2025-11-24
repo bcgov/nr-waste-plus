@@ -44,7 +44,7 @@ vi.mock('@/hooks/useBreakpoint', () => ({
 
 vi.mock('@/context/auth/useAuth', () => ({
   useAuth: () => ({
-    getClients: () => mockedClientValues.map((c) => c.clientNumber),
+    getClients: () => mockedClientValues.map((c) => c.code),
   }),
 }));
 
