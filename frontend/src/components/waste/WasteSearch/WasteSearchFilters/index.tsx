@@ -98,6 +98,12 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
     { 
       selectedClient: 'clientNumbers',
       selectedDistrict: 'district',
+    },
+    (key, value) => {
+      if ((key === 'selectedClient' || key === 'selectedDistrict') && value) {
+        return [value];
+      }
+      return value;
     }
   );
 
