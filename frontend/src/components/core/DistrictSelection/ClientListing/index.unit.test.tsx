@@ -7,7 +7,7 @@ import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
 
-import DistrictSelection from './index';
+import ClientListing from './index';
 
 const mockedClientValues = [
   {
@@ -79,7 +79,7 @@ const renderWithProviders = async () => {
       <AuthProvider>
         <QueryClientProvider client={qc}>
           <PreferenceProvider>
-            <DistrictSelection />
+            <ClientListing />
           </PreferenceProvider>
         </QueryClientProvider>
       </AuthProvider>,
@@ -95,7 +95,7 @@ const checkSelected = async (clientNumber: string, selected: boolean) => {
   return button;
 };
 
-describe('DistrictSelection', () => {
+describe('ClientListing', () => {
   it('render multiple entries and select none', async () => {
     (APIs.forestclient.searchByClientNumbers as Mock).mockResolvedValue(mockedClientValues);
     mockedPreference = { selectedClient: '00000001' };
