@@ -37,7 +37,7 @@
 
 @include grid.flex-grid();
 
-:root[data-carbon-theme='g10'] {
+:root[data-carbon-theme='g10'], .#{variables.$bcgov-prefix}--g10  {  
   --cds-grid-gutter: 0;
   $button-tokens: utilities.merge(
     button-tokens.$button-tokens,
@@ -56,10 +56,10 @@
   @include theme.add-component-tokens($button-tokens);
   @include theme.add-component-tokens($tag-tokens);
   @include theme.add-component-tokens($notification-tokens);
-  @include theme.theme(themes.$g10);
+  @include theme.theme(light.$light-theme);
 }
 
-:root[data-carbon-theme='g100'] {
+:root[data-carbon-theme='g100'], .#{variables.$bcgov-prefix}--g100 {
   --cds-grid-gutter: 0;
   $button-tokens: utilities.merge(
     button-tokens.$button-tokens,
@@ -77,7 +77,7 @@
   @include theme.add-component-tokens($button-tokens);
   @include theme.add-component-tokens($tag-tokens);
   @include theme.add-component-tokens($notification-tokens);
-  @include theme.theme(themes.$g100);
+  @include theme.theme(dark.$dark-theme);
 }
 
 /* --------------------- Buttons --------------------- 
@@ -438,11 +438,13 @@ a.#{variables.$bcgov-prefix}--header__name {
 /// @link https://github.com/carbon-design-system/carbon/issues/3010
 .#{variables.$bcgov-prefix}--content {
   padding: 0;
-  background: var(--cds-background);
+  //background: var(--cds-background);
 }
 
 .#{variables.$bcgov-prefix}--header ~ .#{variables.$bcgov-prefix}--content, div:has(.#{variables.$bcgov-prefix}--header) ~ .#{variables.$bcgov-prefix}--content {
     margin-block-start: $layout-05;
+    min-height: calc(100vh - #{$layout-05});
+    overflow-y: auto;
 }
 
 .#{variables.$bcgov-prefix}--content .#{variables.$bcgov-prefix}--css-grid {
