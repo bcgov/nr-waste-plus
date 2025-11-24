@@ -2,7 +2,8 @@ import { Exit } from '@carbon/icons-react';
 import { SideNavLink } from '@carbon/react';
 import { type FC } from 'react';
 
-import DistrictSelection from '@/components/core/DistrictSelection';
+import ClientListing from '@/components/core/DistrictSelection/ClientListing';
+import DistrictListing from '@/components/core/DistrictSelection/DistrictListing';
 import AvatarImage from '@/components/Layout/AvatarImage';
 import { useAuth } from '@/context/auth/useAuth';
 
@@ -29,17 +30,17 @@ const HeaderPanelProfile: FC = () => {
       <hr className="divisory" />
       <nav className="account-nav">
         <ul>
-          <li className='district-panel'>
-            {user?.idpProvider !== 'IDIR' && (
-              <>
-                <div className="panel-section-light">
-                  <span>Select organization</span>
-                </div>
-                <div className="district-selection-container">
-                  <DistrictSelection />
-                </div>
-              </>
-            )}
+          <li className='district-panel'>            
+              <div className="panel-section-light">
+                <span>Select organization</span>
+              </div>
+              <div className="district-selection-container">
+                {user?.idpProvider === 'BCEIDBUSINESS' ? 
+                (<ClientListing />) 
+                :
+                (<DistrictListing />)
+                }
+              </div>
           </li>
 
         <SideNavLink className="cursor-pointer" renderIcon={Exit} onClick={logout}>
