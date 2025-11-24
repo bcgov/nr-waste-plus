@@ -1,40 +1,28 @@
 import { ChevronDown, ChevronUp } from '@carbon/icons-react';
-import { useQuery } from '@tanstack/react-query';
 import { useMemo, type FC } from 'react';
 
-import { useAuth } from '@/context/auth/useAuth';
-import { usePreference } from '@/context/preference/usePreference';
 import useBreakpoint from '@/hooks/useBreakpoint';
-import APIs from '@/services/APIs';
+import type { DistrictType } from '@/components/core/DistrictSelection/types';
 
 type HeaderDistrictDisplayProps = {
+  queryHook: () => { data: DistrictType | undefined; isLoading: boolean };
+  noSelectionText: string;
   isActive: boolean;
 };
 
-const HeaderDistrictDisplay: FC<HeaderDistrictDisplayProps> = ({ isActive }) => {
-  const { getClients } = useAuth();
+const HeaderDistrictDisplay: FC<HeaderDistrictDisplayProps> = ({ isActive, queryHook, noSelectionText }) => {
   const breakpoint = useBreakpoint();
-  const { userPreference } = usePreference();
-
-  const userClientQuery = useQuery({
-    queryKey: ['forest-clients', 'search', getClients()],
-    queryFn: () => APIs.forestclient.searchByClientNumbers(getClients(), 0, getClients().length),
-    enabled: !!getClients().length,
-    select: (data) => data.find((client) => client.clientNumber === userPreference.selectedClient),
-  });
+  const { data } = queryHook();
 
   const showSimpleView = useMemo(
-    () => breakpoint === 'sm' || !getClients().length,
-    [breakpoint, getClients],
+    () => breakpoint === 'sm',
+    [breakpoint, data],
   );
-
   return (
     <>
       {showSimpleView ? null : (
         <p className="client-name" data-testid="client-name">
-          {userClientQuery.data
-            ? (userClientQuery.data.name ?? userClientQuery.data.clientName)
-            : 'Client name not available'}
+          {data ? (data.name) : noSelectionText}
         </p>
       )}
       {showSimpleView ? null : isActive ? (

@@ -6,7 +6,7 @@ import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
 
-import HeaderDistrictDisplay from '.';
+import ClientDisplay from '.';
 
 let mockBreakpoint = 'md';
 let mockedClientValues = [
@@ -47,6 +47,8 @@ let mockedClientValues = [
     acronym: 'TBA',
   },
 ];
+let mockedPreference = { selectedClient: '' };
+const mockUpdatePreferences = vi.fn();
 
 vi.mock('@/services/APIs', () => ({
   default: {
@@ -66,6 +68,13 @@ vi.mock('@/context/auth/useAuth', () => ({
   }),
 }));
 
+vi.mock('@/context/preference/usePreference', () => ({
+  usePreference: () => ({
+    userPreference: mockedPreference,
+    updatePreferences: mockUpdatePreferences,
+  }),
+}));
+
 const renderWithProviders = async (active: boolean) => {
   const qc = new QueryClient();
   await act(async () =>
@@ -73,7 +82,7 @@ const renderWithProviders = async (active: boolean) => {
       <AuthProvider>
         <QueryClientProvider client={qc}>
           <PreferenceProvider>
-            <HeaderDistrictDisplay isActive={active} />
+            <ClientDisplay isActive={active} />
           </PreferenceProvider>
         </QueryClientProvider>
       </AuthProvider>,
@@ -81,7 +90,7 @@ const renderWithProviders = async (active: boolean) => {
   );
 };
 
-describe('HeaderDistrictDisplay', () => {
+describe('ClientDisplay', () => {
   beforeEach(() => {
     mockedClientValues = [
       {
@@ -121,8 +130,10 @@ describe('HeaderDistrictDisplay', () => {
         acronym: 'TBA',
       },
     ];
+    mockedPreference = { selectedClient: '' };
     (APIs.forestclient.searchByClientNumbers as Mock).mockResolvedValue(mockedClientValues);
   });
+
   it('small size or no client should not display anything', async () => {
     mockedClientValues = [];
     mockBreakpoint = 'sm';
@@ -132,29 +143,24 @@ describe('HeaderDistrictDisplay', () => {
     expect(name).toBeNull();
   });
 
-  it('max size and no client should not display anything', async () => {
-    mockedClientValues = [];
-    mockBreakpoint = 'max';
-
-    await renderWithProviders(false);
-    const name = screen.queryByTestId('client-name');
-    expect(name).toBeNull();
-  });
-
   it('small size with client should not display anything', async () => {
     mockBreakpoint = 'sm';
+    mockedPreference = { selectedClient: '00000004' };
 
     await renderWithProviders(false);
     const name = screen.queryByTestId('client-name');
     expect(name).toBeNull();
   });
 
-  it('no client selected should display that', async () => {
+  it('no client selected should display nothing', async () => {
     mockBreakpoint = 'max';
 
     await renderWithProviders(false);
+    const isActive = await screen.findByTestId('inactive');
+    expect(isActive).toBeDefined();
+    
     const name = await screen.findByTestId('client-name');
     expect(name).toBeDefined();
-    expect(name.textContent).toBe('Client name not available');
+    expect(name.textContent).toBe('No client selected');
   });
 });
