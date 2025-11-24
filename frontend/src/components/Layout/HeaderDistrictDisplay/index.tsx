@@ -16,7 +16,7 @@ const HeaderDistrictDisplay: FC<HeaderDistrictDisplayProps> = ({ isActive, query
 
   const showSimpleView = useMemo(
     () => breakpoint === 'sm',
-    [breakpoint, data],
+    [breakpoint],
   );
   return (
     <>
