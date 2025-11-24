@@ -45,7 +45,15 @@
       flex-grow: 1;
 
       li.district-panel {
+        display: flex;
+        flex-direction: column;
         flex-grow: 1;
+
+        div.district-selection-container {
+          display: flex;
+          flex-direction: column;
+          flex-grow: 1;
+        }
       }
     }
 
@@ -66,6 +74,8 @@
 
     .panel-section-light {
       background: var(--#{vars.$bcgov-prefix}-layer-02);
+      display: flex;
+      gap: 0.5rem;
     }
 
     .panel-section > span,

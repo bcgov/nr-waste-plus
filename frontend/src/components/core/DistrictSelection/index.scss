@@ -10,6 +10,7 @@
 .district-selection-grid {
   padding: 0;
   gap: 1rem;
+  height: 100%;
 
   .full-width-col {
     margin: 0 -0.2rem;
@@ -17,9 +18,12 @@
 
   .district-list {
     list-style: none;
-    gap: 0.2rem;
-    height: 40vh;
     overflow-y: auto;
+    height: 65vh;
+
+    .district-list-item {
+      margin-bottom: 0.5rem;
+    }
   }
 
   .skeleton-container {
@@ -37,13 +41,12 @@
     .district-list-item-btn {
       border-radius: 0.25rem;
       width: 100%;
-      padding: 1rem;
+      padding: 0.5rem;
       display: flex;
       flex-direction: column;
       border: none;
       background-color: transparent;
       align-items: flex-start;
-      row-gap: 0.25rem;
 
       .icon-and-name-row {
         display: flex;
