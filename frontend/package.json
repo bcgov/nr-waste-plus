@@ -11,7 +11,7 @@
     "test": "vitest run --allowOnly",
     "pretest:browser": "playwright install",
     "test:ui": "playwright test",
-    "test:ui:dev": "playwright test --ui",    
+    "test:ui:dev": "playwright test --ui",
     "test:coverage": "vitest run --coverage --allowOnly",
     "pretest:watch": "npm run pretest:browser",
     "test:watch": "vitest --coverage --pool=threads --maxWorkers=1 --bail=1",
@@ -81,5 +81,10 @@
   },
   "engines": {
     "node": ">=22.0.0"
+  },
+  "overrides": {
+    "workbox-build": {
+      "glob": "^10.5.0"
+    }
   }
 }
