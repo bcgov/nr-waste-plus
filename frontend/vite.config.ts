@@ -1,5 +1,3 @@
-import { resolve } from 'node:path';
-
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -14,8 +12,7 @@ export default defineConfig(({ mode }) => {
     define,
     resolve: {
       alias: {
-        //Debatable
-        '@': resolve(__dirname, 'src'),
+        '@/': new URL('./src/', import.meta.url).pathname,
       },
     },
     plugins: [
@@ -135,11 +132,16 @@ export default defineConfig(({ mode }) => {
       port: 3000,
     },
     test: {
+      alias: {
+        '@/': new URL('./src/', import.meta.url).pathname,
+      },
+      pool: 'forks',
       env: loadEnv(mode, process.cwd(), ''),
       exclude: [...configDefaults.exclude, 'dist/**', 'build/**'],
       globals: true,
       tsconfig: './tsconfig.test.json',
       reporters: ['default', ['junit', { suiteName: 'Unit tests' }]],
+      environment: 'jsdom',
       outputFile: {
         junit: './coverage/junit-report.xml',
       },
