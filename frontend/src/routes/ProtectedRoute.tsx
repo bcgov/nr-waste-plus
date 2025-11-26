@@ -1,8 +1,8 @@
 import { Navigate } from 'react-router-dom';
 
-import { useAuth } from '@/context/auth/useAuth';
-
 import type { FamRole } from '@/context/auth/types';
+
+import { useAuth } from '@/context/auth/useAuth';
 
 type ProtectedRouteProps = Readonly<{
   children: React.ReactNode;

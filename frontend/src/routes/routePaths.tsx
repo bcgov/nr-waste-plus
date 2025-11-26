@@ -1,6 +1,8 @@
 import { Group, SearchLocate } from '@carbon/icons-react';
 import { Navigate, type RouteObject } from 'react-router-dom';
 
+import ProtectedRoute from './ProtectedRoute';
+
 import Layout from '@/components/Layout';
 import { Role, type FamRole } from '@/context/auth/types';
 import GlobalErrorPage from '@/pages/GlobalError';
@@ -9,8 +11,6 @@ import MyClientListPage from '@/pages/MyClientList';
 import NotFoundPage from '@/pages/NotFound';
 import RoleErrorPage from '@/pages/RoleError';
 import WasteSearchPage from '@/pages/WasteSearch';
-
-import ProtectedRoute from './ProtectedRoute';
 
 export type RouteDescription = {
   id: string;

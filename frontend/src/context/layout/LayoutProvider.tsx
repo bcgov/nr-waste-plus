@@ -1,25 +1,28 @@
-import { useEffect, useMemo, useState } from 'react';
-
-import useBreakpoint from '@/hooks/useBreakpoint';
+import { useMemo, useState } from 'react';
 
 import { LayoutContext } from './LayoutContext';
+
+import useBreakpoint from '@/hooks/useBreakpoint';
 
 export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
   const breakpoint = useBreakpoint();
 
-  const [sideNavExpanded, setSideNavExpanded] = useState(
-    breakpoint !== 'sm' && breakpoint !== 'md',
-  );
+  // Track if user has manually toggled the side nav (null = no manual override)
+  const [userToggled, setUserToggled] = useState<boolean | null>(null);
   const [headerPanelOpen, setHeaderPanelOpen] = useState(false);
 
-  useEffect(() => {
-    setSideNavExpanded(breakpoint !== 'sm' && breakpoint !== 'md');
-  }, [breakpoint]);
+  // Derive expanded state: user's choice takes precedence, otherwise use breakpoint
+  const sideNavExpanded = useMemo(() => {
+    if (userToggled !== null && (breakpoint === 'sm' || breakpoint === 'md')) {
+      return userToggled;
+    }
+    return breakpoint !== 'sm' && breakpoint !== 'md';
+  }, [breakpoint, userToggled]);
 
   const contextValue = useMemo(
     () => ({
       isSideNavExpanded: sideNavExpanded,
-      toggleSideNav: () => setSideNavExpanded((prev) => !prev),
+      toggleSideNav: () => setUserToggled((prev) => !!prev),
       isHeaderPanelOpen: headerPanelOpen,
       toggleHeaderPanel: () => setHeaderPanelOpen((prev) => !prev),
       closeHeaderPanel: () => setHeaderPanelOpen(false),

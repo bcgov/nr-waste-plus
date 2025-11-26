@@ -1,9 +1,9 @@
 import { Button, DismissibleTag } from '@carbon/react';
 import { useCallback, type FC } from 'react';
 
-import { mapDisplayFilter } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
-
 import type { ReportingUnitSearchParametersDto } from '@/services/types';
+
+import { mapDisplayFilter } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 
 import './index.scss';
 
@@ -77,22 +77,27 @@ const WasteSearchFiltersActive: FC<WasteSearchFiltersActiveProps> = ({
     );
   });
 
-  const clearFilters = () => visibleFilters().forEach((filterKey) => {
-    const filterValue = filters[filterKey];
+  const clearFilters = () =>
+    visibleFilters().forEach((filterKey) => {
+      const filterValue = filters[filterKey];
 
-    if (Array.isArray(filterValue)) {
-      filterValue.forEach((subValue) => onRemoveFilter(filterKey, subValue));
-    }
+      if (Array.isArray(filterValue)) {
+        filterValue.forEach((subValue) => onRemoveFilter(filterKey, subValue));
+      }
 
-    onRemoveFilter(filterKey);
-  });
+      onRemoveFilter(filterKey);
+    });
 
-
-
-  return(<>
-    {renderFilters}
-    {visibleFilters().length > 0 && <Button id="clear-filters-button" kind="ghost" onClick={clearFilters}>Clear filters</Button>}
-  </>);
+  return (
+    <>
+      {renderFilters}
+      {visibleFilters().length > 0 && (
+        <Button id="clear-filters-button" kind="ghost" onClick={clearFilters}>
+          Clear filters
+        </Button>
+      )}
+    </>
+  );
 };
 
 export default WasteSearchFiltersActive;

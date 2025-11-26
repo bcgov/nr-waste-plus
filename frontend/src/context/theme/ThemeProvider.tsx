@@ -1,10 +1,10 @@
 import { Theme } from '@carbon/react';
 import { useState, useEffect, type ReactNode, useMemo } from 'react';
 
+import { ThemeContext } from './ThemeContext';
+
 import { type CarbonTheme } from '@/context/preference/types';
 import { usePreference } from '@/context/preference/usePreference';
-
-import { ThemeContext } from './ThemeContext';
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const preferences = usePreference();

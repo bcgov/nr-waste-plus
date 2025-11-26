@@ -2,17 +2,17 @@ import { Search as SearchIcon, FilterEdit as FilterIcon } from '@carbon/icons-re
 import { Button, Column, Grid } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState, type FC } from 'react';
-import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
+
+import type { CodeDescriptionDto } from '@/services/types';
+import type { ReportingUnitSearchParametersDto } from '@/services/types';
 
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import SearchInput from '@/components/Form/SearchInput';
 import WasteSearchFiltersActive from '@/components/waste/WasteSearch/WasteSearchFiltersActive';
-import WasteSearchFiltersAdvanced from '@/components/waste/WasteSearch/WasteSearchFiltersAdvanced';
-import APIs from '@/services/APIs';
-
-import type { CodeDescriptionDto } from '@/services/types';
-import type { ReportingUnitSearchParametersDto } from '@/services/types';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
+import WasteSearchFiltersAdvanced from '@/components/waste/WasteSearch/WasteSearchFiltersAdvanced';
+import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
+import APIs from '@/services/APIs';
 
 import './index.scss';
 
@@ -95,16 +95,16 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
 
   useSyncPreferencesToFilters(
     setFilters,
-    { 
+    {
       selectedClient: 'clientNumbers',
       selectedDistrict: 'district',
     },
     (key, value) => {
-      if ((key === 'selectedClient' || key === 'selectedDistrict') && value) {
-        return [value];
+      if (key === 'selectedClient' || key === 'selectedDistrict') {
+        return value ? [value] : [];
       }
       return value;
-    }
+    },
   );
 
   return (

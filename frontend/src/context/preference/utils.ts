@@ -1,6 +1,6 @@
-import APIs from '@/services/APIs';
-
 import { type UserPreference } from './types';
+
+import APIs from '@/services/APIs';
 
 export const initialValue: UserPreference = {
   theme: 'g10',

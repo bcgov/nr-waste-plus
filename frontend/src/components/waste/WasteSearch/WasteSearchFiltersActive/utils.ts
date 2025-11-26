@@ -33,4 +33,5 @@ export const mapDisplayFilter = (key: keyof ReportingUnitSearchParametersDto): s
   }
 };
 
-export const activeMSItemToString = (item: CodeDescriptionDto | null): string => (item ? `${item.code} - ${item.description}` : 'No selection');
+export const activeMSItemToString = (item: CodeDescriptionDto | null): string =>
+  item ? `${item.code} - ${item.description}` : 'No selection';

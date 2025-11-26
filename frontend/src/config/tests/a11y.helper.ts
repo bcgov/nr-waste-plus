@@ -11,4 +11,4 @@ export const runA11yAudit = async (page: Page, selector?: string) => {
       runOnly: ['wcag2a', 'wcag2aa'],
     },
   });
-}
+};

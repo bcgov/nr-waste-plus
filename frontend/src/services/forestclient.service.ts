@@ -1,5 +1,3 @@
-import { HttpClient, type APIConfig } from '@/config/api/types';
-
 import type {
   CodeDescriptionDto,
   ForestClientAutocompleteResultDto,
@@ -8,6 +6,8 @@ import type {
 } from './types';
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { CancelablePromise } from '@/config/api/CancelablePromise';
+
+import { HttpClient, type APIConfig } from '@/config/api/types';
 
 /**
  * Service that interacts with forest client-related API endpoints.

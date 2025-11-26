@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { cleanup } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
 
@@ -24,7 +23,7 @@ class MockResizeObserver {
     };
     this._cb([entry as ResizeObserverEntry], this as unknown as ResizeObserver);
   });
-  unobserve = vi.fn((_el: Element) => {});
+  unobserve = vi.fn(() => {});
   disconnect = vi.fn(() => {});
 }
 

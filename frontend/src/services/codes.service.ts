@@ -1,7 +1,7 @@
-import { HttpClient, type APIConfig } from '@/config/api/types';
-
 import type { CodeDescriptionDto } from './types';
 import type { CancelablePromise } from '@/config/api/CancelablePromise';
+
+import { HttpClient, type APIConfig } from '@/config/api/types';
 
 export class CodesService extends HttpClient {
   constructor(readonly config: APIConfig) {

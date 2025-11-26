@@ -2,12 +2,12 @@ import { Header, HeaderMenuButton, HeaderName, SkipToContent } from '@carbon/rea
 import { type FC } from 'react';
 import { Link } from 'react-router-dom';
 
+import LayoutHeaderGlobalBar from './LayoutHeaderGlobalBar';
+
 import { LayoutHeaderPanel } from '@/components/Layout/LayoutHeaderPanel';
 import { LayoutSideNav } from '@/components/Layout/LayoutSideNav';
 import { useLayout } from '@/context/layout/useLayout';
 import { env } from '@/env';
-
-import LayoutHeaderGlobalBar from './LayoutHeaderGlobalBar';
 
 import './index.scss';
 

@@ -1,10 +1,10 @@
 import { Content, Grid, HeaderContainer } from '@carbon/react';
 
-import { LayoutProvider } from '@/context/layout/LayoutProvider';
-
 import { LayoutHeader } from './LayoutHeader';
 
 import type { FC, ReactNode } from 'react';
+
+import { LayoutProvider } from '@/context/layout/LayoutProvider';
 
 const Layout: FC<{ children: ReactNode }> = ({ children }) => {
   return (

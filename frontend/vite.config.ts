@@ -135,7 +135,7 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@/': new URL('./src/', import.meta.url).pathname,
       },
-      pool: 'forks',
+      testTimeout: 5000,
       env: loadEnv(mode, process.cwd(), ''),
       exclude: [...configDefaults.exclude, 'dist/**', 'build/**'],
       globals: true,

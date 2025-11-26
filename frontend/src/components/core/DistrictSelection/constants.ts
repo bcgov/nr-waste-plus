@@ -31,7 +31,7 @@ export const ClientTypeIconMap: Record<string, ClientIconType> = {
   U: 'Enterprise',
   // Deselected / None
   Z: 'Blockchain',
-  D: 'Location' // District
+  D: 'Location', // District
 };
 
 export const MIN_CLIENTS_SHOW_SEARCH = 4;
