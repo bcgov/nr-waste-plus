@@ -11,10 +11,10 @@
     "test": "vitest run --allowOnly",
     "pretest:browser": "playwright install",
     "test:ui": "playwright test",
-    "test:coverage": "vitest run --coverage --allowOnly --maxWorkers=1 --bail=1",
+    "test:coverage": "vitest run --coverage --allowOnly --maxWorkers=2 --bail=1 --no-isolate --no-file-parallelism --pool=forks",
     "test:ui:dev": "playwright test --ui",
     "pretest:watch": "npm run pretest:browser",
-    "test:watch": "vitest --coverage --pool=threads --maxWorkers=1 --bail=1",
+    "test:watch": "vitest --allowOnly --maxWorkers=2 --bail=1 --no-isolate --no-file-parallelism --pool=forks",
     "pretest:a11y": "npm run pretest:browser",
     "test:a11y": "playwright test --project=a11y-chromium",
     "test:a11y:dev": "playwright test --project=a11y-chromium --ui"
