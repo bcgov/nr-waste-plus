@@ -64,7 +64,10 @@ describe('ThemeContext', () => {
   });
 
   it('toggleTheme toggles between g10 and g100', async () => {
-    (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
+    (APIs.user.getUserPreferences as Mock)
+      .mockResolvedValueOnce({ theme: 'g10' })
+      .mockResolvedValueOnce({ theme: 'g100' })
+      .mockResolvedValueOnce({ theme: 'g10' });
     (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
     await renderWithProviders();
 
