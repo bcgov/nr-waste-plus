@@ -1,7 +1,9 @@
 import { renderHook } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import useSyncPreferencesToFilters from './index';
 import { useState } from 'react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+import useSyncPreferencesToFilters from './index';
+
 import type { UserPreference } from '@/context/preference/types';
 
 type Filters = {
@@ -10,7 +12,7 @@ type Filters = {
   foo?: string;
 };
 
-let mockedPreference: UserPreference = {theme: 'g10', selectedDistrict: '', selectedClient: '' };
+let mockedPreference: UserPreference = { theme: 'g10', selectedDistrict: '', selectedClient: '' };
 const mockUpdatePreferences = vi.fn();
 
 vi.mock('@/context/preference/usePreference', () => ({
@@ -21,9 +23,8 @@ vi.mock('@/context/preference/usePreference', () => ({
 }));
 
 describe('useSyncPreferencesToFilters', () => {
-
   beforeEach(() => {
-    mockedPreference = {theme: 'g10', selectedDistrict: '', selectedClient: '' };
+    mockedPreference = { theme: 'g10', selectedDistrict: '', selectedClient: '' };
     mockUpdatePreferences.mockClear();
   });
 
@@ -31,10 +32,8 @@ describe('useSyncPreferencesToFilters', () => {
     mockedPreference = { ...mockedPreference, selectedClient: 'abc' };
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({});
-      useSyncPreferencesToFilters(
-        setFilters,
-        { selectedClient: 'clientNumbers' },
-        (key, value) => (key === 'selectedClient' ? [value] : value)
+      useSyncPreferencesToFilters(setFilters, { selectedClient: 'clientNumbers' }, (key, value) =>
+        key === 'selectedClient' ? [value] : value,
       );
       return filters;
     });

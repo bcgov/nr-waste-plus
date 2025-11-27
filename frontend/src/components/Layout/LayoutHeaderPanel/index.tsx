@@ -14,11 +14,10 @@ export const LayoutHeaderPanel: FC = () => {
 
   useOutsideClick(panelRef, closeHeaderPanel, isHeaderPanelOpen);
 
-
   if (!isHeaderPanelOpen) return null;
 
   return (
-    <HeaderPanel 
+    <HeaderPanel
       data-testid="header-panel"
       aria-label="User Profile Tab"
       className="profile-panel"

@@ -10,7 +10,7 @@ import type { DistrictType } from '../types';
 const mockClient = {
   id: '00000001',
   name: 'COMPANY ONE',
-  kind: 'C'
+  kind: 'C',
 } as DistrictType;
 
 describe('DistrictItem', () => {
@@ -41,11 +41,7 @@ describe('DistrictItem', () => {
   });
   it('renders default help icon', () => {
     render(
-      <DistrictItem
-        client={{ ...mockClient, kind: 'D' }}
-        isSelected={false}
-        isLoading={true}
-      />,
+      <DistrictItem client={{ ...mockClient, kind: 'D' }} isSelected={false} isLoading={true} />,
     );
     expect(screen.getByTestId('loading-skeleton')).toBeDefined();
     expect(screen.queryByText('COMPANY ONE')).toBeNull();

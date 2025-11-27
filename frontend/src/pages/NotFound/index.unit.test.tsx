@@ -2,9 +2,9 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect } from 'vitest';
 
-import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
-
 import NotFoundPage from './index';
+
+import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 
 describe('NotFoundPage', () => {
   it('renders not found message', () => {

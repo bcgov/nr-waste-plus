@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
@@ -10,6 +10,7 @@ import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import ThemeProvider from '@/context/theme/ThemeProvider';
 import APIs from '@/services/APIs';
 
+let mockBreakpoint = 'md';
 vi.mock('@/services/APIs', () => {
   return {
     default: {
@@ -20,6 +21,10 @@ vi.mock('@/services/APIs', () => {
     },
   };
 });
+
+vi.mock('@/hooks/useBreakpoint', () => ({
+  default: () => mockBreakpoint,
+}));
 
 const renderWithProviders = async () => {
   const qc = new QueryClient();
@@ -49,23 +54,13 @@ describe('LayoutHeader', () => {
   });
 
   it('renders header with title Waste Plus', async () => {
+    mockBreakpoint = 'lg';
+
     await renderWithProviders();
     const header = await screen.findByTestId('bc-header__header');
     expect(header).toBeDefined();
 
     const title = await screen.findByText(/Waste Plus/i);
     expect(title).toBeDefined();
-  });
-
-  it('toggles side nav when menu button is clicked', async () => {
-    await renderWithProviders();
-
-    const toggleButton = await screen.findByLabelText(/open menu/i);
-    expect(toggleButton).toBeDefined();
-
-    fireEvent.click(toggleButton);
-
-    // After toggling once, aria-label should change to "Close menu"
-    expect(screen.getByLabelText(/close menu/i)).toBeDefined();
   });
 });

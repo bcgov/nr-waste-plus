@@ -3,13 +3,13 @@ import { act, render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { describe, it, expect, vi, type Mock } from 'vitest';
 
+import Layout from './index';
+
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import ThemeProvider from '@/context/theme/ThemeProvider';
 import APIs from '@/services/APIs';
-
-import Layout from './index';
 
 vi.mock('@/routes/routePaths', () => ({
   getMenuEntries: () => [

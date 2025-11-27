@@ -8,7 +8,7 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
   const breakpoint = useBreakpoint();
 
   // Track if user has manually toggled the side nav (null = no manual override)
-  const [userToggled, setUserToggled] = useState<boolean | null>(null);
+  const [userToggled, setUserToggled] = useState<boolean | null>(false);
   const [headerPanelOpen, setHeaderPanelOpen] = useState(false);
 
   // Derive expanded state: user's choice takes precedence, otherwise use breakpoint
@@ -22,7 +22,7 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
   const contextValue = useMemo(
     () => ({
       isSideNavExpanded: sideNavExpanded,
-      toggleSideNav: () => setUserToggled((prev) => !!prev),
+      toggleSideNav: () => setUserToggled((prev) => !prev),
       isHeaderPanelOpen: headerPanelOpen,
       toggleHeaderPanel: () => setHeaderPanelOpen((prev) => !prev),
       closeHeaderPanel: () => setHeaderPanelOpen(false),

@@ -2,9 +2,9 @@ import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { describe, it, expect } from 'vitest';
 
-import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
-
 import GlobalErrorPage from './index';
+
+import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 
 const ThrowError: React.FC<{ error: unknown }> = ({ error }) => {
   throw error;

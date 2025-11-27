@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 
-import { Role } from '@/context/auth/types';
-
 import * as routePaths from './routePaths';
+
+import { Role } from '@/context/auth/types';
 
 describe('routePaths', () => {
   it('getMenuEntries returns menu items', () => {

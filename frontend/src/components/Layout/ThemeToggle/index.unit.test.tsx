@@ -2,12 +2,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
 
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import { ThemeContext, type ThemeContextData } from '@/context/theme/ThemeContext';
-
 import ThemeToggle from './index';
 
 import type { CarbonTheme } from '@/context/preference/types';
+
+import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import { ThemeContext, type ThemeContextData } from '@/context/theme/ThemeContext';
 
 const mockCtxLight: ThemeContextData = {
   theme: 'g10' as CarbonTheme,

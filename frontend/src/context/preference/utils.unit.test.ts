@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 
-import APIs from '@/services/APIs';
-
 import { loadUserPreference, saveUserPreference, initialValue } from './utils';
+
+import APIs from '@/services/APIs';
 
 const mockStorage = (() => {
   let store: Record<string, string> = {};

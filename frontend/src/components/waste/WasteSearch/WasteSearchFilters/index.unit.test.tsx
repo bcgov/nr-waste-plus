@@ -4,11 +4,11 @@ import { render, screen, fireEvent, within, waitFor, act } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
+import WasteSearchFilters from './index';
+
+import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
-
-import WasteSearchFilters from './index';
-import { AuthProvider } from '@/context/auth/AuthProvider';
 
 vi.mock('@/services/APIs', () => ({
   default: {

@@ -3,12 +3,23 @@
 import { DateTime, Settings } from 'luxon';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { NoOfflineItemError, CacheVersionMismatchError } from '@/config/pwa/types';
-
 import * as idbConfig from './config';
 
-const mockTransaction = (stores: Record<string, Record<string, any>>): (store: string, _mode: string) => { objectStore: () => { put: (value: any, key: string) => Promise<void>; getAll: () => Promise<any[]>; }; done: Promise<void>; } => {
-  return (store: string, _mode: string) => {
+import { NoOfflineItemError, CacheVersionMismatchError } from '@/config/pwa/types';
+
+const mockTransaction = (
+  stores: Record<string, Record<string, any>>,
+): ((
+  store: string,
+  _mode: string,
+) => {
+  objectStore: () => {
+    put: (value: any, key: string) => Promise<void>;
+    getAll: () => Promise<any[]>;
+  };
+  done: Promise<void>;
+}) => {
+  return (store: string) => {
     return {
       objectStore: () => ({
         put: async (value: any, key: string) => {
@@ -21,28 +32,38 @@ const mockTransaction = (stores: Record<string, Record<string, any>>): (store: s
   };
 };
 
-const mockAdd = (stores: Record<string, Record<string, any>>): (store: string, value: any) => Promise<void>  =>{
+const mockAdd = (
+  stores: Record<string, Record<string, any>>,
+): ((store: string, value: any) => Promise<void>) => {
   return async (store: string, value: any) => {
     const key = String(Object.keys(stores[store]).length + 1);
     stores[store][key] = value;
   };
 };
 
-const mockGetAll = (stores: Record<string, Record<string, any>>): (store: string) => Promise<any[]> => {
+const mockGetAll = (
+  stores: Record<string, Record<string, any>>,
+): ((store: string) => Promise<any[]>) => {
   return async (store: string) => Object.values(stores[store]);
 };
 
-const mockDelete = (stores: Record<string, Record<string, any>>): (store: string, key: string) => Promise<void> => {
+const mockDelete = (
+  stores: Record<string, Record<string, any>>,
+): ((store: string, key: string) => Promise<void>) => {
   return async (store: string, key: string) => {
     delete stores[store][key];
   };
 };
 
-const mockGet = (stores: Record<string, Record<string, any>>): (store: string, key: string) => Promise<any> => {
+const mockGet = (
+  stores: Record<string, Record<string, any>>,
+): ((store: string, key: string) => Promise<any>) => {
   return async (store: string, key: string) => stores[store][key];
 };
 
-const mockPut = (stores: Record<string, Record<string, any>>): (store: string, value: any, key: string) => Promise<void> => {
+const mockPut = (
+  stores: Record<string, Record<string, any>>,
+): ((store: string, value: any, key: string) => Promise<void>) => {
   return async (store: string, value: any, key: string) => {
     stores[store][key] = value;
   };
@@ -71,7 +92,7 @@ vi.mock('idb', () => {
         delete: mockDelete(stores),
         getAll: mockGetAll(stores),
         add: mockAdd(stores),
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
         transaction: mockTransaction(stores),
       };
     }),

@@ -66,7 +66,8 @@ const mockWorker = (
     ...buildPerm(permission, state),
   });
   // Provide stubbed managers when feature is expected to exist
-  if (periodicSync === 'have') (globalThis as any).PeriodicSyncManager = (globalThis as any).PeriodicSyncManager || {};
+  if (periodicSync === 'have')
+    (globalThis as any).PeriodicSyncManager = (globalThis as any).PeriodicSyncManager || {};
   if (sync === 'have') (globalThis as any).SyncManager = (globalThis as any).SyncManager || {};
   if (periodicSync === 'donthave') delete (globalThis as any).PeriodicSyncManager;
   if (sync === 'donthave') delete (globalThis as any).SyncManager;

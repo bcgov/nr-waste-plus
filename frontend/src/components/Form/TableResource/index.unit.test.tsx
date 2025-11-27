@@ -4,12 +4,12 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import APIs from '@/services/APIs';
-
 import TableResource from './index';
 
 import type { PageableResponse, TableHeaderType } from './types';
+
+import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import APIs from '@/services/APIs';
 
 vi.mock('@/services/APIs', () => {
   return {

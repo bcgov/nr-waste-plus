@@ -2,11 +2,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
+import ClientDisplay from '.';
+
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
-
-import ClientDisplay from '.';
 
 let mockBreakpoint = 'md';
 let mockedClientValues = [
@@ -158,7 +158,7 @@ describe('ClientDisplay', () => {
     await renderWithProviders(false);
     const isActive = await screen.findByTestId('inactive');
     expect(isActive).toBeDefined();
-    
+
     const name = await screen.findByTestId('client-name');
     expect(name).toBeDefined();
     expect(name.textContent).toBe('No client selected');

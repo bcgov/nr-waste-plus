@@ -32,9 +32,13 @@ describe('AuthProvider (extra coverage)', () => {
       </AuthProvider>,
     );
     await waitFor(() => expect(context).toBeDefined());
-    await act(() => context.login('IDIR'));
+    await act(async () => {
+      context.login('IDIR');
+    });
     expect(signInWithRedirect).toHaveBeenCalledWith({ provider: { custom: 'TEST-IDIR' } });
-    await act(() => context.login('BCEIDBUSINESS'));
+    await act(async () => {
+      context.login('BCEIDBUSINESS');
+    });
     expect(signInWithRedirect).toHaveBeenCalledWith({ provider: { custom: 'TEST-BCEIDBUSINESS' } });
   });
 
@@ -52,7 +56,9 @@ describe('AuthProvider (extra coverage)', () => {
       </AuthProvider>,
     );
     await waitFor(() => expect(context).toBeDefined());
-    await act(() => context.logout());
+    await act(async () => {
+      context.logout();
+    });
     expect(signOut).toHaveBeenCalled();
   });
 
