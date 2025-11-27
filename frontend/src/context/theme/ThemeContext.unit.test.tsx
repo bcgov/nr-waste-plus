@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { waitFor } from '@testing-library/dom';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, type Mock } from 'vitest';
+import { describe, it, expect, vi, type Mock, beforeEach } from 'vitest';
 
 import { ThemeProvider } from './ThemeProvider';
 import { useTheme } from './useTheme';
@@ -49,6 +49,10 @@ const renderWithProviders = async () => {
 };
 
 describe('ThemeContext', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('provides the default theme', async () => {
     (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'g10' });
     await renderWithProviders();

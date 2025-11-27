@@ -8,14 +8,26 @@ import RedirectLinkTag from '@/components/waste/RedirectLinkTag';
 import { env } from '@/env';
 
 const statusColorMap: Record<string, CarbonColors> = {
-  AMG: 'teal',
-  FG: 'green',
-  AMD: 'cyan',
-  APP: 'blue',
-  DFT: 'gray',
-  RET: 'red',
-  RMD: 'warm-gray',
-  SUB: 'magenta',
+  ERR: 'red',
+  FREJ: 'red',
+  OREJ: 'red',
+  REJ: 'red',
+  HLD: 'teal',
+  HWR: 'teal',
+  RBL: 'teal',
+  APP: 'green',
+  BIP: 'green',
+  BIS: 'green',
+  BPR: 'green',
+  COM: 'green',
+  REV: 'green',
+  RTB: 'green',
+  WRA: 'green',
+  SUB: 'blue',
+  DFT: 'outline',
+  ISUB: 'outline',
+  DAC: 'gray',
+  EXP: 'cyan',
 };
 
 export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
