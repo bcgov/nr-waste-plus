@@ -1,6 +1,8 @@
 import { Tag, Tooltip } from '@carbon/react';
 import { type FC } from 'react';
 
+import './index.scss';
+
 export type CarbonColors =
   | 'blue'
   | 'green'

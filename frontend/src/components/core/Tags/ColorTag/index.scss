@@ -1,0 +1,42 @@
+@use "../../../../styles/variables" as vars;
+@use "@bcgov-nr/nr-theme/design-tokens/colors.scss" as colors;
+
+
+.cds--tag--blue {
+  background-color: colors.$blue-60;
+  color: colors.$white;
+}
+
+.cds--tag--green {
+  background-color: colors.$green-60;
+  color: colors.$white;
+}
+
+.cds--tag--gray {
+  background-color: colors.$gray-40;
+  color: colors.$gray-100;
+}
+
+.cds--tag--red {
+  background-color: colors.$red-60;
+  color: colors.$white;
+}
+
+.cds--tag--teal {
+  background-color: colors.$yellow-60;
+  color: vars.$black;
+}
+
+.cds--tag--cyan {
+  color: colors.$red-40;
+  background-color: var(--cds-background);
+  outline: 1px solid colors.$red-40;
+  outline-offset: -1px;
+}
+
+:root[data-carbon-theme='g10'] {
+  .cds--tag--cyan {
+    color: colors.$red-60;
+    outline: 1px solid colors.$red-60;
+  }
+}
