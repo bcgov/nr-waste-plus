@@ -1,9 +1,9 @@
+import type { TableHeaderType } from '@/components/Form/TableResource/types';
+import type { MyForestClientDto } from '@/services/types';
+
 import DateTag from '@/components/core/Tags/DateTag';
 import RedirectLinkTag from '@/components/waste/RedirectLinkTag';
 import { env } from '@/env';
-
-import type { TableHeaderType } from '@/components/Form/TableResource/types';
-import type { MyForestClientDto } from '@/services/types';
 
 export const headers: TableHeaderType<MyForestClientDto>[] = [
   {

@@ -3,12 +3,12 @@ import { act, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, type Mock, beforeEach, vi } from 'vitest';
 
+import WasteSearchPage from './index';
+
+import { AuthProvider } from '@/context/auth/AuthProvider';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
-
-import WasteSearchPage from './index';
-import { AuthProvider } from '@/context/auth/AuthProvider';
 
 vi.mock('@/services/APIs', () => {
   return {
@@ -16,6 +16,14 @@ vi.mock('@/services/APIs', () => {
       user: {
         getUserPreferences: vi.fn(),
         updateUserPreferences: vi.fn(),
+      },
+      codes: {
+        getSamplingOptions: vi.fn(),
+        getDistricts: vi.fn(),
+        getAssessAreaStatuses: vi.fn(),
+      },
+      search: {
+        searchReportingUnit: vi.fn(),
       },
     },
   };
@@ -44,6 +52,18 @@ describe('WasteSearchPage', () => {
   beforeEach(() => {
     (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
     (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
+    (APIs.codes.getSamplingOptions as Mock).mockResolvedValue([]);
+    (APIs.codes.getDistricts as Mock).mockResolvedValue([]);
+    (APIs.codes.getAssessAreaStatuses as Mock).mockResolvedValue([]);
+    (APIs.search.searchReportingUnit as Mock).mockResolvedValue({
+      content: [],
+      page: {
+        number: 0,
+        size: 10,
+        totalElements: 0,
+        totalPages: 0,
+      },
+    });
   });
 
   it('renders the page title and subtitle', async () => {

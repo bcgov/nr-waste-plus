@@ -1,15 +1,15 @@
 import { Login } from '@carbon/icons-react';
 import { Button, Column, Grid } from '@carbon/react';
 
+import type { BreakpointType } from '@/hooks/useBreakpoint/types';
+import type { FC } from 'react';
+
 import logo_rev from '@/assets/img/bc-gov-logo-rev.png';
 import logo from '@/assets/img/bc-gov-logo.png';
 import LandingImg from '@/assets/img/landing.png';
 import { useAuth } from '@/context/auth/useAuth';
 import { useTheme } from '@/context/theme/useTheme';
 import useBreakpoint from '@/hooks/useBreakpoint';
-
-import type { BreakpointType } from '@/hooks/useBreakpoint/types';
-import type { FC } from 'react';
 
 import './index.scss';
 

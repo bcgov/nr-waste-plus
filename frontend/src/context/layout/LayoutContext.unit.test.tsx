@@ -1,5 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
-import React, { useState } from 'react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
 import { LayoutProvider } from './LayoutProvider';
@@ -13,21 +12,11 @@ const TestComponent = () => {
     toggleHeaderPanel,
     closeHeaderPanel,
   } = useLayout();
-  const [sideNav, setSideNav] = useState(isSideNavExpanded);
-  const [headerPanel, setHeaderPanel] = useState(isHeaderPanelOpen);
-
-  // Sync state with context
-  React.useEffect(() => {
-    setSideNav(isSideNavExpanded);
-  }, [isSideNavExpanded]);
-  React.useEffect(() => {
-    setHeaderPanel(isHeaderPanelOpen);
-  }, [isHeaderPanelOpen]);
 
   return (
     <>
-      <span data-testid="side-nav">{sideNav ? 'expanded' : 'collapsed'}</span>
-      <span data-testid="header-panel">{headerPanel ? 'open' : 'closed'}</span>
+      <span data-testid="side-nav">{isSideNavExpanded ? 'expanded' : 'collapsed'}</span>
+      <span data-testid="header-panel">{isHeaderPanelOpen ? 'open' : 'closed'}</span>
       <button onClick={toggleSideNav}>Toggle SideNav</button>
       <button onClick={toggleHeaderPanel}>Toggle HeaderPanel</button>
       <button onClick={closeHeaderPanel}>Close HeaderPanel</button>
@@ -57,11 +46,11 @@ describe('LayoutContext', () => {
     await renderWithProvider();
     const btn = screen.getByText('Toggle SideNav');
     const value = screen.getByTestId('side-nav');
-    const initial = value.textContent;
-    act(() => btn.click());
-    expect(value.textContent).not.toBe(initial);
-    act(() => btn.click());
-    expect(value.textContent).toBe(initial);
+    expect(value.textContent).toBe('collapsed');
+    act(() => fireEvent.click(btn));
+    expect(value.textContent).toBe('expanded');
+    act(() => fireEvent.click(btn));
+    expect(value.textContent).toBe('collapsed');
   });
 
   it('toggleHeaderPanel and closeHeaderPanel work as expected', async () => {

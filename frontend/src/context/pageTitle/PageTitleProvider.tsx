@@ -1,8 +1,8 @@
 import { useState, useEffect, type ReactNode, useCallback, useMemo } from 'react';
 
-import { env } from '@/env';
-
 import { PageTitleContext } from './PageTitleContext';
+
+import { env } from '@/env';
 
 export const PageTitleProvider = ({ children }: { children: ReactNode }) => {
   const [pageTitle, setPageTitle] = useState(env.VITE_APP_NAME);

@@ -4,10 +4,10 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-
 import WasteSearchFiltersAdvanced from './index';
+
 import { AuthProvider } from '@/context/auth/AuthProvider';
+import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 
 vi.mock('@/services/APIs', () => {
   return {

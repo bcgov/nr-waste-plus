@@ -2,11 +2,11 @@ import { Breadcrumb, BreadcrumbItem, Column } from '@carbon/react';
 import { useEffect, useMemo, type FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { type BreadCrumbType } from './types';
+
 import Subtitle from '@/components/core/Subtitle';
 import UnderConstructionTag from '@/components/core/Tags/UnderConstructionTag';
 import { usePageTitle } from '@/context/pageTitle/usePageTitle';
-
-import { type BreadCrumbType } from './types';
 
 import './index.scss';
 

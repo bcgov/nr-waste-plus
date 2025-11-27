@@ -2,11 +2,6 @@ import { Column } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
 import { useState, type FC } from 'react';
 
-import TableResource from '@/components/Form/TableResource';
-import WasteSearchFilters from '@/components/waste/WasteSearch/WasteSearchFilters';
-import API from '@/services/APIs';
-import { removeEmpty, generateSortArray } from '@/services/utils';
-
 import { headers } from './constants';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
@@ -15,6 +10,11 @@ import type {
   ReportingUnitSearchResultDto,
 } from '@/services/search.types';
 import type { SortDirectionType } from '@/services/types';
+
+import TableResource from '@/components/Form/TableResource';
+import WasteSearchFilters from '@/components/waste/WasteSearch/WasteSearchFilters';
+import API from '@/services/APIs';
+import { removeEmpty, generateSortArray } from '@/services/utils';
 
 import './index.scss';
 

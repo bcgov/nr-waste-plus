@@ -13,12 +13,9 @@ import {
   ModalHeader,
   TextInput,
 } from '@carbon/react';
+import { useQuery } from '@tanstack/react-query';
 import { DateTime } from 'luxon';
 import { type FC } from 'react';
-
-import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
-import AutoCompleteInput from '@/components/Form/AutoCompleteInput';
-import APIs from '@/services/APIs';
 
 import {
   DATE_PICKER_FORMAT,
@@ -35,11 +32,14 @@ import type {
   ForestClientAutocompleteResultDto,
   ReportingUnitSearchParametersDto,
 } from '@/services/types';
+
+import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
+import AutoCompleteInput from '@/components/Form/AutoCompleteInput';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import { useAuth } from '@/context/auth/useAuth';
+import APIs from '@/services/APIs';
 
 import './index.scss';
-import { useQuery } from '@tanstack/react-query';
 
 type WasteSearchFiltersAdvancedProps = {
   filters: ReportingUnitSearchParametersDto;
@@ -103,7 +103,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
   });
 
   if (!isModalOpen) return null;
-  
+
   return (
     <ComposedModal
       className="advanced-search-modal"
@@ -145,7 +145,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
             />
           </Column>
 
-         {/* Sampling option */}
+          {/* Sampling option */}
           <Column sm={4} md={4} lg={8}>
             <ActiveMultiSelect
               placeholder="Sampling Option"
@@ -177,26 +177,28 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
 
           {/* Client Autocomplete or Select */}
           <Column sm={4} md={4} lg={8}>
-          {auth.user?.idpProvider === 'IDIR' && (
-            <AutoCompleteInput<ForestClientAutocompleteResultDto>
-              id="as-forestclient-client-ac"
-              titleText="Client"
-              placeholder="Search by client name, number, or acronym"
-              helperText="Search by client name, number or acronym"
-              onAutoCompleteChange={async (value) =>
-                await APIs.forestclient.searchForestClients(value, 0, 10)
-              }
-              itemToString={(item) =>
-                item
-                  ? `${(item as ForestClientAutocompleteResultDto).id} ${(item as ForestClientAutocompleteResultDto).name} (${(item as ForestClientAutocompleteResultDto).acronym})`
-                  : ''
-              }
-              onSelect={(data) => {
-                if (data) {
-                  onChange('clientNumbers')([(data as ForestClientAutocompleteResultDto).id || '']);
+            {auth.user?.idpProvider === 'IDIR' && (
+              <AutoCompleteInput<ForestClientAutocompleteResultDto>
+                id="as-forestclient-client-ac"
+                titleText="Client"
+                placeholder="Search by client name, number, or acronym"
+                helperText="Search by client name, number or acronym"
+                onAutoCompleteChange={async (value) =>
+                  await APIs.forestclient.searchForestClients(value, 0, 10)
                 }
-              }}
-            />
+                itemToString={(item) =>
+                  item
+                    ? `${(item as ForestClientAutocompleteResultDto).id} ${(item as ForestClientAutocompleteResultDto).name} (${(item as ForestClientAutocompleteResultDto).acronym})`
+                    : ''
+                }
+                onSelect={(data) => {
+                  if (data) {
+                    onChange('clientNumbers')([
+                      (data as ForestClientAutocompleteResultDto).id || '',
+                    ]);
+                  }
+                }}
+              />
             )}
             {auth.user?.idpProvider === 'BCEIDBUSINESS' && (
               <ActiveMultiSelect
@@ -210,7 +212,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                   (filters.clientNumbers || []).includes(option.code),
                 )}
               />
-              )}
+            )}
           </Column>
 
           {/* Submitter */}
@@ -325,7 +327,6 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
             />
           </Column>
 
-
           <Column sm={4} md={8} lg={16}>
             <CheckboxGroup legendText="Reporting unit filters" orientation="horizontal">
               <Checkbox
@@ -344,7 +345,6 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
               />
             </CheckboxGroup>
           </Column>
-
         </Grid>
       </ModalBody>
       <ModalFooter>
@@ -365,7 +365,6 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
       </ModalFooter>
     </ComposedModal>
   );
-
 };
 
 export default WasteSearchFiltersAdvanced;

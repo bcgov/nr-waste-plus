@@ -17,6 +17,7 @@ describe('authUtils', () => {
       originalCookie = globalThis.document?.cookie;
       Object.defineProperty(document, 'cookie', {
         writable: true,
+        configurable: true,
         value:
           'foo=bar; CognitoIdentityServiceProvider.test-client-id.LastAuthUser=theuser; CognitoIdentityServiceProvider.test-client-id.theuser.idToken=thetoken',
       });
@@ -24,6 +25,7 @@ describe('authUtils', () => {
     afterEach(() => {
       Object.defineProperty(document, 'cookie', {
         writable: true,
+        configurable: true,
         value: originalCookie,
       });
     });
@@ -42,9 +44,13 @@ describe('authUtils', () => {
     beforeEach(() => {
       Object.defineProperty(document, 'cookie', {
         writable: true,
+        configurable: true,
         value:
           'CognitoIdentityServiceProvider.test-client-id.LastAuthUser=theuser; CognitoIdentityServiceProvider.test-client-id.theuser.idToken=thetoken',
       });
+    });
+    afterEach(() => {
+      vi.clearAllMocks();
     });
     it('returns the idToken from cookies', () => {
       expect(getUserTokenFromCookie()).toBe('thetoken');
@@ -52,6 +58,7 @@ describe('authUtils', () => {
     it('returns undefined if no userId', () => {
       Object.defineProperty(document, 'cookie', {
         writable: true,
+        configurable: true,
         value: '',
       });
       expect(getUserTokenFromCookie()).toBeUndefined();

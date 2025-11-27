@@ -2,10 +2,10 @@ import { act, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 
+import { LayoutSideNav } from './index';
+
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
-
-import { LayoutSideNav } from './index';
 
 vi.mock('@/context/layout/useLayout', () => ({
   useLayout: () => ({ isSideNavExpanded: true }),

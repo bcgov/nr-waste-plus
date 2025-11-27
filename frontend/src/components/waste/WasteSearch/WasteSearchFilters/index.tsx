@@ -3,18 +3,18 @@ import { Button, Column, Grid } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState, type FC } from 'react';
 
+import type { CodeDescriptionDto } from '@/services/types';
+import type { ReportingUnitSearchParametersDto } from '@/services/types';
+
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import SearchInput from '@/components/Form/SearchInput';
 import WasteSearchFiltersActive from '@/components/waste/WasteSearch/WasteSearchFiltersActive';
+import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import WasteSearchFiltersAdvanced from '@/components/waste/WasteSearch/WasteSearchFiltersAdvanced';
+import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
 import APIs from '@/services/APIs';
 
-import type { CodeDescriptionDto } from '@/services/types';
-import type { ReportingUnitSearchParametersDto } from '@/services/types';
-import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
-
 import './index.scss';
-import { usePreference } from '@/context/preference/usePreference';
 
 type WasteSearchFiltersProps = {
   value: ReportingUnitSearchParametersDto;
@@ -25,7 +25,6 @@ type WasteSearchFiltersProps = {
 const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSearch }) => {
   const [filters, setFilters] = useState<ReportingUnitSearchParametersDto>(value);
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState<boolean>(false);
-    const { userPreference } = usePreference();
 
   const { data: samplingOptions } = useQuery({
     queryKey: ['samplingOptions'],
@@ -94,12 +93,19 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
     onChange(filters);
   }, [filters, onChange]);
 
-  useEffect(() => {
-    setFilters((prev) => ({
-      ...prev,
-      clientNumbers: userPreference.selectedClient ? [userPreference.selectedClient as string] : [],
-    }));
-  }, [userPreference.selectedClient]);
+  useSyncPreferencesToFilters(
+    setFilters,
+    {
+      selectedClient: 'clientNumbers',
+      selectedDistrict: 'district',
+    },
+    (key, value): string | boolean | string[] | undefined => {
+      if (key === 'selectedClient' || key === 'selectedDistrict') {
+        return value ? [value as string] : [];
+      }
+      return value as string | boolean | string[] | undefined;
+    },
+  );
 
   return (
     <>

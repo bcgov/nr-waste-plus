@@ -4,12 +4,12 @@ import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, type Mock } from 'vitest';
 
+import { ThemeProvider } from './ThemeProvider';
+import { useTheme } from './useTheme';
+
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import { CARBON_THEMES } from '@/context/preference/types';
 import APIs from '@/services/APIs';
-
-import { ThemeProvider } from './ThemeProvider';
-import { useTheme } from './useTheme';
 
 vi.mock('@/services/APIs', () => {
   return {
@@ -64,7 +64,10 @@ describe('ThemeContext', () => {
   });
 
   it('toggleTheme toggles between g10 and g100', async () => {
-    (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
+    (APIs.user.getUserPreferences as Mock)
+      .mockResolvedValueOnce({ theme: 'g10' })
+      .mockResolvedValueOnce({ theme: 'g100' })
+      .mockResolvedValueOnce({ theme: 'g10' });
     (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
     await renderWithProviders();
 

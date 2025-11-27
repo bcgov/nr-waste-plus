@@ -1,6 +1,29 @@
-// @ts-nocheck
 import { cleanup } from '@testing-library/react';
-import { afterEach, vi } from 'vitest';
+import { afterEach, beforeAll, vi } from 'vitest';
+
+// Suppress flatpickr locale errors in test output
+beforeAll(() => {
+  const originalStderrWrite = process.stderr.write.bind(process.stderr);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  process.stderr.write = ((...args: any[]): boolean => {
+    const chunk = args[0];
+    const message = typeof chunk === 'string' ? chunk : chunk.toString();
+    
+    // Filter out flatpickr locale errors
+    if (message.includes('flatpickr: invalid locale')) {
+      // Suppress this error from stderr
+      const callback = args[args.length - 1];
+      if (typeof callback === 'function') {
+        callback();
+      }
+      return true;
+    }
+    
+    // Pass through all other messages
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    return originalStderrWrite(...(args as [any, any?, any?]));
+  }) as typeof process.stderr.write;
+});
 
 class MockResizeObserver {
   private readonly _cb: ResizeObserverCallback;
@@ -24,7 +47,7 @@ class MockResizeObserver {
     };
     this._cb([entry as ResizeObserverEntry], this as unknown as ResizeObserver);
   });
-  unobserve = vi.fn((_el: Element) => {});
+  unobserve = vi.fn(() => {});
   disconnect = vi.fn(() => {});
 }
 

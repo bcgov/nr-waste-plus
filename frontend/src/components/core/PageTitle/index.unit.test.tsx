@@ -5,9 +5,9 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect } from 'vitest';
 
-import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
-
 import PageTitle from './index';
+
+import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 
 // Helper function to render PageTitle with props
 const renderPageTitle = (

@@ -3,6 +3,9 @@
 import axios from 'axios';
 import FormData from 'form-data';
 
+import type { OnCancel } from '@/config/api/CancelablePromise';
+import type { AxiosError, AxiosRequestConfig, AxiosResponse, AxiosInstance } from 'axios';
+
 import { CancelablePromise } from '@/config/api/CancelablePromise';
 import {
   ApiError,
@@ -10,9 +13,6 @@ import {
   type ApiResult,
   type APIConfig,
 } from '@/config/api/types';
-
-import type { OnCancel } from '@/config/api/CancelablePromise';
-import type { AxiosError, AxiosRequestConfig, AxiosResponse, AxiosInstance } from 'axios';
 
 export const isDefined = <T>(
   value: T | null | undefined,

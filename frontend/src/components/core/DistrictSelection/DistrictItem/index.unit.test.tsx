@@ -5,15 +5,13 @@ import { DESELECT_CLIENT } from '../constants';
 
 import DistrictItem from './index';
 
-import type { ForestClientDto } from '@/services/types';
+import type { DistrictType } from '../types';
 
 const mockClient = {
-  clientNumber: '00000001',
-  clientName: 'COMPANY ONE',
-  clientStatusCode: { code: 'ACT', description: 'Active' },
-  clientTypeCode: { code: 'C', description: 'Corporation' },
-  acronym: 'CORP',
-} as ForestClientDto;
+  id: '00000001',
+  name: 'COMPANY ONE',
+  kind: 'C',
+} as DistrictType;
 
 describe('DistrictItem', () => {
   it('renders client info and avatar', () => {
@@ -43,11 +41,7 @@ describe('DistrictItem', () => {
   });
   it('renders default help icon', () => {
     render(
-      <DistrictItem
-        client={{ ...mockClient, clientTypeCode: { code: 'D', description: 'Defined' } }}
-        isSelected={false}
-        isLoading={true}
-      />,
+      <DistrictItem client={{ ...mockClient, kind: 'D' }} isSelected={false} isLoading={true} />,
     );
     expect(screen.getByTestId('loading-skeleton')).toBeDefined();
     expect(screen.queryByText('COMPANY ONE')).toBeNull();

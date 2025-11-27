@@ -1,11 +1,11 @@
+import type { TableHeaderType } from '@/components/Form/TableResource/types';
+import type { CodeDescriptionDto, ReportingUnitSearchResultDto } from '@/services/types';
+
 import ColorTag, { type CarbonColors } from '@/components/core/Tags/ColorTag';
 import DateTag from '@/components/core/Tags/DateTag';
 import CodeDescriptionTag from '@/components/waste/CodeDescriptionTag';
 import RedirectLinkTag from '@/components/waste/RedirectLinkTag';
 import { env } from '@/env';
-
-import type { TableHeaderType } from '@/components/Form/TableResource/types';
-import type { CodeDescriptionDto, ReportingUnitSearchResultDto } from '@/services/types';
 
 const statusColorMap: Record<string, CarbonColors> = {
   AMG: 'teal',

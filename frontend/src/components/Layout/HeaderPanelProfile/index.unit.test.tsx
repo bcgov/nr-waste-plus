@@ -2,13 +2,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
+import HeaderPanelProfile from './index';
+
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { Role, type FamLoginUser } from '@/context/auth/types';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import ThemeProvider from '@/context/theme/ThemeProvider';
 import APIs from '@/services/APIs';
-
-import HeaderPanelProfile from './index';
 
 vi.mock('@/components/Layout/AvatarImage', () => ({
   __esModule: true,

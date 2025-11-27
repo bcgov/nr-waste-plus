@@ -16,14 +16,14 @@ import {
 import { Column as ColumnIcon } from '@carbon/react/icons';
 import { useEffect, useState, type ReactNode } from 'react';
 
-import EmptySection from '@/components/core/EmptySection';
-import { usePreference } from '@/context/preference/usePreference';
-
 import TableResourceExpandRow from './TableResourceExpandRow';
 import TableResourceRow from './TableResourceRow';
 import { type TableHeaderType, type PageableResponse, renderCell } from './types';
 
 import type { NestedKeyOf, SortDirectionType } from '@/services/types';
+
+import EmptySection from '@/components/core/EmptySection';
+import { usePreference } from '@/context/preference/usePreference';
 
 import './index.scss';
 

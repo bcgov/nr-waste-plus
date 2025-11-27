@@ -2,12 +2,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach, beforeEach, type Mock } from 'vitest';
 
+import LandingPage from './index';
+
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import { ThemeProvider } from '@/context/theme/ThemeProvider';
 import APIs from '@/services/APIs';
-
-import LandingPage from './index';
 
 const renderWithProps = async () => {
   const qc = new QueryClient();

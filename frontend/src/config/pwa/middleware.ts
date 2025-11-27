@@ -6,13 +6,14 @@
  * Note: To activate offline behavior, you must provide a valid `IdbMiddlewareOptions` object with the `idbSave` property set to true.
  * If not provided, the middleware will not attempt to persist or retrieve data from IndexedDB.
  */
-import { addMutation, addOfflineItem, getOfflineItem } from '@/config/pwa/idb/config';
-import { onlineStatusStore } from '@/hooks/useOfflineMode/onlineStatusStore';
 
 import { registerPeriodicSync } from './utils';
 
 import type { ApiMiddleware } from '@/config/api/types';
 import type { IdbMiddlewareOptions } from '@/config/pwa/types';
+
+import { addMutation, addOfflineItem, getOfflineItem } from '@/config/pwa/idb/config';
+import { onlineStatusStore } from '@/hooks/useOfflineMode/onlineStatusStore';
 
 /**
  * Middleware implementation for caching GET/response data for offline usage.

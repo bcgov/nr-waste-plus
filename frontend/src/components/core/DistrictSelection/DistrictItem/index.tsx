@@ -2,19 +2,19 @@ import * as Icons from '@carbon/icons-react';
 import { ButtonSkeleton } from '@carbon/react';
 import { type FC } from 'react';
 
+import type { DistrictType } from '@/components/core/DistrictSelection/types';
+
 import { ClientTypeIconMap } from '@/components/core/DistrictSelection/constants';
 
-import type { ForestClientDto } from '@/services/types';
-
 type DistrictItemProps = {
-  client: ForestClientDto;
+  client: DistrictType;
   isSelected: boolean;
   isLoading?: boolean;
 };
 
 const DistrictItem: FC<DistrictItemProps> = ({ client, isSelected, isLoading }) => {
   const renderIcon = () => {
-    const clientIcon = ClientTypeIconMap[client.clientTypeCode.code ?? 'I'];
+    const clientIcon = ClientTypeIconMap[client.kind ?? 'I'];
     let Img = null;
     if (isSelected) {
       Img = Icons.CheckmarkFilled;
@@ -38,9 +38,9 @@ const DistrictItem: FC<DistrictItemProps> = ({ client, isSelected, isLoading }) 
     <>
       <span className="icon-and-name-row">
         {renderIcon()}
-        <p className="client-name">{client.name ?? client.clientName}</p>
+        <p className="client-name">{client.name}</p>
       </span>
-      {client.clientNumber && <span className="sub-info-row">{`ID ${client.clientNumber}`}</span>}
+      {client.id && <span className="sub-info-row">{`ID ${client.id}`}</span>}
     </>
   );
 };

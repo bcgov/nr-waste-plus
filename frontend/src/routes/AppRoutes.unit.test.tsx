@@ -1,10 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { vi, describe, afterEach, it, expect } from 'vitest';
 
+import AppRoutes from './AppRoutes';
+
 import * as useAuthModule from '@/context/auth/useAuth';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
-
-import AppRoutes from './AppRoutes';
 
 vi.mock('@/context/auth/useAuth', () => ({
   useAuth: vi.fn(),

@@ -3,10 +3,10 @@ import { act, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 
+import MyClientListPage from './index';
+
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-
-import MyClientListPage from './index';
 
 vi.mock('@/services/APIs', () => {
   return {

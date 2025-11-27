@@ -1,11 +1,11 @@
 import { fetchAuthSession, signInWithRedirect, signOut } from 'aws-amplify/auth';
 import { useEffect, useMemo, useState, useCallback, type ReactNode } from 'react';
 
-import { env } from '@/env';
-
 import { AuthContext, type AuthContextType } from './AuthContext';
 import { parseToken, getUserTokenFromCookie } from './authUtils';
 import { type FamLoginUser, type IdpProviderType, type JWT } from './types';
+
+import { env } from '@/env';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FamLoginUser | undefined>(undefined);
@@ -67,8 +67,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       login,
       logout,
       userToken,
-      getClients: () => user?.roles?.flatMap((role) => role.clients ?? [])
-      .filter((role, indexOfMap, self) => indexOfMap === self.indexOf(role)) ?? [],
+      getClients: () =>
+        user?.roles
+          ?.flatMap((role) => role.clients ?? [])
+          .filter((role, indexOfMap, self) => indexOfMap === self.indexOf(role)) ?? [],
     }),
     [user, isLoading, login, userToken],
   );

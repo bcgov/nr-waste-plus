@@ -2,10 +2,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
+import LayoutHeaderGlobalBar from './LayoutHeaderGlobalBar';
+
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-
-import LayoutHeaderGlobalBar from './LayoutHeaderGlobalBar';
 
 vi.mock('@/components/Layout/ThemeToggle', () => ({
   __esModule: true,

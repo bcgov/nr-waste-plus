@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import * as idbConfig from '@/config/pwa/idb/config';
-import { onlineStatusStore } from '@/hooks/useOfflineMode/onlineStatusStore';
-
 import { offlineDataMiddleware, offlineMutationMiddleware } from './middleware';
 import * as utils from './utils';
 
 import type { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+
+import * as idbConfig from '@/config/pwa/idb/config';
+import { onlineStatusStore } from '@/hooks/useOfflineMode/onlineStatusStore';
 
 describe('offlineDataMiddleware', () => {
   const key = '/api/test';

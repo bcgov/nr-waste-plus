@@ -6,24 +6,30 @@ import prettierPlugin from 'eslint-plugin-prettier';
 import js from '@eslint/js';
 import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
-import reactRefresh from 'eslint-plugin-react-refresh';
-import { globalIgnores } from 'eslint/config';
+import { FlatCompat } from '@eslint/eslintrc';
+import { globalIgnores, defineConfig } from 'eslint/config';
 
-export default tseslint.config([
+const compat = new FlatCompat();
+
+export default defineConfig([
   globalIgnores(['dist','coverage','node_modules','dev-dist','.devcontainer']),
+  ...compat.config({
+    extends: [
+      'plugin:react-hooks/recommended',
+    ],
+  }),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
-      reactHooks.configs['recommended-latest'],
-      reactRefresh.configs.vite,
       eslintConfigPrettier,
     ],
     plugins: {
       '@tanstack/query': tanstackQuery,
       import: eslintPluginImport,
       prettier: prettierPlugin,
+      'react-hooks': reactHooks,
     },
     rules: {
       '@tanstack/query/exhaustive-deps': 'warn',
@@ -59,7 +65,7 @@ export default tseslint.config([
       },
       'import/resolver': {
         alias: {
-          map: [['@', './src']],
+          map: [['@/', './src']],
           extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
         },
       },
