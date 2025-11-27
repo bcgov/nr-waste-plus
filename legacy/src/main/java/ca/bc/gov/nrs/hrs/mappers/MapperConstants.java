@@ -32,7 +32,7 @@ public class MapperConstants {
 
   /**
    * MapStruct expression to create a {@code CodeDescriptionDto} from the projection's district code
-   * and district name.
+   * and district name. The district name has the "Natural Resource District" substring removed and is trimmed.
    */
   public static final String DISTRICT_AS_DTO =
       "java(new CodeDescriptionDto(projection.getDistrictCode(), projection.getDistrictName()"
