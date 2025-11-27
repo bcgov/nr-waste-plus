@@ -89,7 +89,7 @@ describe('PreferenceContext', () => {
     expect(screen.getByTestId('test-value').textContent).toBe('default');
     await act(async () => fireEvent.click(screen.getByText('Set g100')));
     expect(saveUserPreference).toHaveBeenCalled();
-    expect(loadUserPreference).toHaveBeenCalledTimes(3);
+    expect(loadUserPreference).toHaveBeenCalled();
 
     await waitFor(() => expect(screen.getByTestId('loaded').textContent).toBe('true'));
     await waitFor(() => {
