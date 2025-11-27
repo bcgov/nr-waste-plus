@@ -1,5 +1,8 @@
 package ca.bc.gov.nrs.hrs.mappers;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /**
  * Constants used by MapStruct mapper definitions to map projection fields to DTOs.
  *
@@ -10,6 +13,7 @@ package ca.bc.gov.nrs.hrs.mappers;
  *
  * @since 1.0.0
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MapperConstants {
 
   /**
@@ -31,7 +35,8 @@ public class MapperConstants {
    * and district name.
    */
   public static final String DISTRICT_AS_DTO =
-      "java(new CodeDescriptionDto(projection.getDistrictCode(), projection.getDistrictName()))";
+      "java(new CodeDescriptionDto(projection.getDistrictCode(), projection.getDistrictName()"
+      + ".replaceAll(\"Natural Resource District\", \"\").trim()))";
 
   /**
    * MapStruct expression to create a {@code CodeDescriptionDto} from the projection's client
