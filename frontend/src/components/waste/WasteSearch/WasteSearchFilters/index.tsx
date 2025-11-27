@@ -99,11 +99,11 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
       selectedClient: 'clientNumbers',
       selectedDistrict: 'district',
     },
-    (key, value) => {
+    (key, value): string | boolean | string[] | undefined => {
       if (key === 'selectedClient' || key === 'selectedDistrict') {
-        return value ? [value] : [];
+        return value ? [value as string] : [];
       }
-      return value;
+      return value as string | boolean | string[] | undefined;
     },
   );
 

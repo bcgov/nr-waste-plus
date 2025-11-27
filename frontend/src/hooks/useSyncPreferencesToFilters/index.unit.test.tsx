@@ -32,8 +32,11 @@ describe('useSyncPreferencesToFilters', () => {
     mockedPreference = { ...mockedPreference, selectedClient: 'abc' };
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({});
-      useSyncPreferencesToFilters(setFilters, { selectedClient: 'clientNumbers' }, (key, value) =>
-        key === 'selectedClient' ? [value] : value,
+      useSyncPreferencesToFilters(
+        setFilters,
+        { selectedClient: 'clientNumbers' },
+        (key, value): string | string[] | undefined =>
+          key === 'selectedClient' ? [value as string] : (value as string | string[] | undefined),
       );
       return filters;
     });
