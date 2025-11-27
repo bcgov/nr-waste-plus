@@ -8,7 +8,7 @@ beforeAll(() => {
   process.stderr.write = ((...args: any[]): boolean => {
     const chunk = args[0];
     const message = typeof chunk === 'string' ? chunk : chunk.toString();
-    
+
     // Filter out flatpickr locale errors
     if (message.includes('flatpickr: invalid locale')) {
       // Suppress this error from stderr
@@ -18,9 +18,10 @@ beforeAll(() => {
       }
       return true;
     }
-    
+
     // Pass through all other messages
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return originalStderrWrite(...(args as [any, any?, any?]));
   }) as typeof process.stderr.write;
 });
