@@ -23,12 +23,36 @@ type ColorTagProps = {
   colorMap: Record<string, CarbonColors>;
 };
 
-const ColorTag: FC<ColorTagProps> = ({ value, colorMap }) => (
-  <Tooltip label={`${value.code} - ${value.description}`} align="top" autoAlign>
+const ColorTag: FC<ColorTagProps> = ({ value, colorMap }) => {
+  const hasCode = value.code !== null && value.code !== undefined && value.code !== '';
+  const hasDescription =
+    value.description !== null && value.description !== undefined && value.description !== '';
+
+  const tooltipLabel =
+    hasCode && hasDescription
+      ? `${value.code} - ${value.description}`
+      : hasCode
+        ? value.code
+        : hasDescription
+          ? value.description
+          : '';
+
+  const displayText = hasDescription ? value.description : '-';
+  const hasTooltipContent = hasCode || hasDescription;
+
+  const tag = (
     <Tag type={colorMap[value.code] ?? 'gray'} size="md">
-      {value.description}
+      {displayText}
     </Tag>
-  </Tooltip>
-);
+  );
+
+  return hasTooltipContent ? (
+    <Tooltip label={tooltipLabel} align="top" autoAlign>
+      {tag}
+    </Tooltip>
+  ) : (
+    tag
+  );
+};
 
 export default ColorTag;

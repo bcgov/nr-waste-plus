@@ -40,4 +40,95 @@ describe('ColorTag', () => {
       expect(screen.queryByText(tooltipText)).toBeDefined();
     }
   });
+
+  it('displays dash when description is null', () => {
+    render(
+      <ColorTag
+        value={{ code: 'A', description: null as unknown as string }}
+        colorMap={colorMap}
+      />,
+    );
+    expect(screen.getByText('-')).toBeDefined();
+  });
+
+  it('displays dash when description is empty string', () => {
+    render(<ColorTag value={{ code: 'A', description: '' }} colorMap={colorMap} />);
+    expect(screen.getByText('-')).toBeDefined();
+  });
+
+  it('displays dash when description is undefined', () => {
+    render(
+      <ColorTag
+        value={{ code: 'A', description: undefined as unknown as string }}
+        colorMap={colorMap}
+      />,
+    );
+    expect(screen.getByText('-')).toBeDefined();
+  });
+
+  it('omits code from tooltip when code is null', () => {
+    render(
+      <ColorTag
+        value={{ code: null as unknown as string, description: 'Test' }}
+        colorMap={colorMap}
+      />,
+    );
+    const elements = screen.getAllByText('Test');
+    expect(elements.length).toBeGreaterThan(0);
+    const tooltipContent = document.querySelector('.cds--popover-content.cds--tooltip-content');
+    if (tooltipContent) {
+      expect(tooltipContent.textContent).not.toContain(' - ');
+      expect(tooltipContent.textContent).toContain('Test');
+    }
+  });
+
+  it('omits code from tooltip when code is empty string', () => {
+    render(<ColorTag value={{ code: '', description: 'Test' }} colorMap={colorMap} />);
+    const elements = screen.getAllByText('Test');
+    expect(elements.length).toBeGreaterThan(0);
+    const tooltipContent = document.querySelector('.cds--popover-content.cds--tooltip-content');
+    if (tooltipContent) {
+      expect(tooltipContent.textContent).not.toContain(' - ');
+      expect(tooltipContent.textContent).toContain('Test');
+    }
+  });
+
+  it('omits code from tooltip when code is undefined', () => {
+    render(
+      <ColorTag
+        value={{ code: undefined as unknown as string, description: 'Test' }}
+        colorMap={colorMap}
+      />,
+    );
+    const elements = screen.getAllByText('Test');
+    expect(elements.length).toBeGreaterThan(0);
+    const tooltipContent = document.querySelector('.cds--popover-content.cds--tooltip-content');
+    if (tooltipContent) {
+      expect(tooltipContent.textContent).not.toContain(' - ');
+      expect(tooltipContent.textContent).toContain('Test');
+    }
+  });
+
+  it('handles both code and description being null', () => {
+    render(
+      <ColorTag
+        value={{ code: null as unknown as string, description: null as unknown as string }}
+        colorMap={colorMap}
+      />,
+    );
+    expect(screen.getByText('-')).toBeDefined();
+  });
+
+  it('does not render tooltip when both code and description are missing', () => {
+    render(
+      <ColorTag
+        value={{ code: null as unknown as string, description: null as unknown as string }}
+        colorMap={colorMap}
+      />,
+    );
+    const tag = screen.getByText('-');
+    // Tooltip should not be present in the DOM when there's no content
+    const tooltip = tag.closest('.cds--tooltip');
+    expect(tooltip).toBeNull();
+  });
 });
