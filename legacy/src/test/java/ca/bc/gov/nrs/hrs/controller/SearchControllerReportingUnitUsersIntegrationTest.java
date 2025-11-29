@@ -37,7 +37,7 @@ class SearchControllerReportingUnitUsersIntegrationTest extends AbstractTestCont
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.length()").value(2))
-        .andExpect(jsonPath("$.[0]").value("IDIR\\JAKE"))
+        .andExpect(jsonPath("$.[0]").value("BCEID\\JAKE"))
         .andExpect(jsonPath("$.[1]").value("IDIR\\JAKE"))
         .andReturn();
   }
