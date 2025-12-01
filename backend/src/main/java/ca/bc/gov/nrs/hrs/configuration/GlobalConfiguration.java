@@ -17,15 +17,16 @@ import ca.bc.gov.nrs.hrs.exception.UnretriableException;
 import ca.bc.gov.nrs.hrs.exception.UserNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.B3HeaderForwarder;
 import ca.bc.gov.nrs.hrs.provider.JwtForwarderRequestInitializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.web.client.RestClient;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.json.JsonMapper.Builder;
 
 /**
  * Global Spring configuration for the application.
@@ -118,18 +119,20 @@ public class GlobalConfiguration {
   }
 
   /**
-   * Provides the application's Jackson {@link ObjectMapper} instance.
+   * Provides the application's Jackson {@link JsonMapper} instance.
    *
-   * <p>The {@link Jackson2ObjectMapperBuilder} is used to construct and
-   * configure the {@code ObjectMapper} according to any customizations applied to the builder
+   * <p>The {@link JsonMapper.Builder} is used to construct and
+   * configure the {@code JsonMapper} according to any customizations applied to the builder
    * elsewhere in the application context.</p>
    *
    * @param builder the Jackson builder used to create the mapper
-   * @return a configured {@link ObjectMapper}
+   * @return a configured {@link JsonMapper}
    */
   @Bean
-  public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
-    return builder.build();
+  public JsonMapper objectMapper(Builder builder) {
+    return builder
+        .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+        .build();
   }
 
 }

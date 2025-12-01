@@ -44,9 +44,8 @@ public class ApiAuthorizationCustomizer implements
     authorize
         // Allow actuator endpoints to be accessed without authentication
         .requestMatchers(HttpMethod.GET, "/metrics", "/health")
-        .permitAll();
+        .permitAll()
 
-    authorize
         // Allow OPTIONS requests to be accessed with authentication
         .requestMatchers(HttpMethod.OPTIONS, "/**")
         .authenticated()
@@ -73,10 +72,7 @@ public class ApiAuthorizationCustomizer implements
         // Search reporting units can be accessed by authenticated users
         // This is added as a repeat of the above rule to allow future customization
         .requestMatchers("/api/search/**")
-        .authenticated()
-
-        // Deny all other requests
-        .anyRequest().denyAll();
+        .authenticated();
 
   }
 }

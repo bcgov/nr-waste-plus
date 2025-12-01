@@ -1,6 +1,10 @@
 package ca.bc.gov.nrs.hrs.extensions;
 
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContext;
@@ -13,16 +17,13 @@ public class WithMockJwtSecurityContextFactory implements WithSecurityContextFac
 
   @Override
   public SecurityContext createSecurityContext(WithMockJwt annotation) {
-    Jwt jwt = Jwt
-        .withTokenValue("token")
-        .header("alg", "none")
-        .claim("sub", annotation.value())
-        .claim("cognito:groups", List.of(annotation.cognitoGroups()))
-        .claim("custom:idp_name", annotation.idp())
-        .claim("custom:idp_username", annotation.value())
-        .claim("custom:idp_display_name", annotation.displayName())
-        .claim("email", annotation.email())
-        .build();
+    Jwt jwt = createJwt(
+        annotation.value(),
+        Arrays.asList(annotation.cognitoGroups()),
+        annotation.idp(),
+        annotation.displayName(),
+        annotation.email()
+    );
 
     List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(
         annotation.cognitoGroups());
@@ -32,5 +33,44 @@ public class WithMockJwtSecurityContextFactory implements WithSecurityContextFac
     context.setAuthentication(token);
 
     return context;
+  }
+
+  public static Jwt createJwt(
+      String value,
+      List<String> cognitoGroups,
+      String idp,
+      String displayName,
+      String email
+  ) {
+    Instant now = Instant.now();
+
+    return Jwt
+        .withTokenValue("token")
+        .header("alg", "none")
+        .header("typ", "JWT")
+        .subject(value)
+        .issuedAt(now)
+        .expiresAt(now.plusSeconds(3600))
+        .claims(jwtClaims -> jwtClaims.putAll(
+            createClaims(value, cognitoGroups, idp, displayName, email))
+        )
+        .build();
+  }
+
+  public static Map<String, Object> createClaims(
+      String value,
+      List<String> cognitoGroups,
+      String idp,
+      String displayName,
+      String email
+  ) {
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("sub", value);
+    claims.put("cognito:groups", cognitoGroups);
+    claims.put("custom:idp_name", idp);
+    claims.put("custom:idp_username", value);
+    claims.put("custom:idp_display_name", displayName);
+    claims.put("email", email);
+    return claims;
   }
 }

@@ -17,7 +17,6 @@ import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -39,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import tools.jackson.databind.json.JsonMapper;
 
 @DisplayName("Integrated Test | Legacy API Provider")
 class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationTest {
@@ -60,10 +60,10 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
   @Autowired
   private RetryRegistry retryRegistry;
   @Autowired
-  private ObjectMapper mapper;
+  private JsonMapper mapper;
 
   @BeforeEach
-  public void setUp(){
+  public void setUp() {
     clientApiStub.resetAll();
 
     CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("breaker");
@@ -116,7 +116,7 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
     clientApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units-users"))
             .willReturn(okJson(json))
-        );
+    );
 
     assertEquals(expected, legacyApiProvider.searchReportingUnitUsers(userId));
   }
@@ -129,64 +129,65 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
       Pageable pageable,
       ResponseDefinitionBuilder stubResponse,
       long size
-  ){
+  ) {
     clientApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
             .willReturn(stubResponse));
 
-    Page<ReportingUnitSearchResultDto> result = legacyApiProvider.searchReportingUnit(filters, pageable);
+    Page<ReportingUnitSearchResultDto> result = legacyApiProvider.searchReportingUnit(filters,
+        pageable);
     assertNotNull(result);
     assertEquals(size, result.getTotalElements());
     assertEquals(size == 0, result.getContent().isEmpty());
   }
 
-  private static Stream<Arguments> searchReportingUnit(){
+  private static Stream<Arguments> searchReportingUnit() {
     return Stream.of(
         Arguments.argumentSet(
             "Search with results and no filter",
             ReportingUnitSearchParametersDto.builder().build(),
-            PageRequest.of(0,10),
+            PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE),
             1L
         ),
         Arguments.argumentSet(
             "Search with no results",
             ReportingUnitSearchParametersDto.builder().build(),
-            PageRequest.of(0,10),
+            PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE),
             0L
         ),
         Arguments.argumentSet(
             "Circuit breaker for unavailable",
             ReportingUnitSearchParametersDto.builder().build(),
-            PageRequest.of(1,10),
+            PageRequest.of(1, 10),
             serviceUnavailable(),
             0L
         ),
         Arguments.argumentSet(
             "Circuit breaker for not found",
             ReportingUnitSearchParametersDto.builder().build(),
-            PageRequest.of(1,10),
+            PageRequest.of(1, 10),
             notFound(),
             0L
         ),
         Arguments.argumentSet(
             "Circuit breaker for unauthorized",
             ReportingUnitSearchParametersDto.builder().build(),
-            PageRequest.of(1,10),
+            PageRequest.of(1, 10),
             unauthorized(),
             0L
         ),
         Arguments.argumentSet(
             "Search with no results object",
             ReportingUnitSearchParametersDto.builder().build(),
-            PageRequest.of(0,10),
+            PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.EMPTY_JSON),
             0L
-        ),Arguments.argumentSet(
+        ), Arguments.argumentSet(
             "Search with no results page",
             ReportingUnitSearchParametersDto.builder().build(),
-            PageRequest.of(0,10),
+            PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.EMPTY_PAGED_NOPAGE),
             0L
         )

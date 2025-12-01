@@ -5,8 +5,6 @@ import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.util.UriUtils;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
@@ -21,16 +19,17 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Provider that forwards requests to the legacy backend API and adapts
- * responses for use in the newer HRS backend.
+ * Provider that forwards requests to the legacy backend API and adapts responses for use in the
+ * newer HRS backend.
  *
  * <p>
- * This component centralizes calls to the legacy API for code lists and
- * search endpoints. It applies resilience patterns (circuit breaker)
- * and contains fallback implementations when the legacy system is
- * unavailable. Static fallback data has been centralized in
+ * This component centralizes calls to the legacy API for code lists and search endpoints. It
+ * applies resilience patterns (circuit breaker) and contains fallback implementations when the
+ * legacy system is unavailable. Static fallback data has been centralized in
  * {@link LegacyApiConstants}.
  * </p>
  */
@@ -41,13 +40,13 @@ public class LegacyApiProvider {
 
   public static final String FALLBACK_ERROR = "Error occurred while fetching data from {}: {}";
   private final RestClient restClient;
-  private final ObjectMapper mapper;
+  private final JsonMapper mapper;
 
   private static final String PROVIDER = "Legacy API";
 
   LegacyApiProvider(
       @Qualifier("legacyApi") RestClient legacyApi,
-      ObjectMapper mapper
+      JsonMapper mapper
   ) {
     this.restClient = legacyApi;
     this.mapper = mapper;
@@ -95,8 +94,7 @@ public class LegacyApiProvider {
    * Retrieve status codes from the legacy API.
    *
    * <p>
-   * Returns a list of {@link CodeDescriptionDto} representing assess area
-   * statuses.
+   * Returns a list of {@link CodeDescriptionDto} representing assess area statuses.
    * </p>
    */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyList")
@@ -112,16 +110,15 @@ public class LegacyApiProvider {
   }
 
   /**
-   * Search reporting units in the legacy API using provided filters and
-   * pageable information.
+   * Search reporting units in the legacy API using provided filters and pageable information.
    *
    * <p>
-   * The legacy API responds with a paged JSON structure; this method
-   * retrieves the raw {@link JsonNode} and converts its content portion into
-   * a {@link Page} of {@link ReportingUnitSearchResultDto}.
+   * The legacy API responds with a paged JSON structure; this method retrieves the raw
+   * {@link JsonNode} and converts its content portion into a {@link Page} of
+   * {@link ReportingUnitSearchResultDto}.
    * </p>
    *
-   * @param filters search filters to apply
+   * @param filters  search filters to apply
    * @param pageable pageable information to include in the request
    * @return a {@link Page} of {@link ReportingUnitSearchResultDto}
    */
@@ -142,7 +139,6 @@ public class LegacyApiProvider {
         )
         .retrieve()
         .body(JsonNode.class);
-
     if (pagedResponse == null
         || pagedResponse.get(LegacyApiConstants.CONTENT_CONST) == null
         || pagedResponse.get(LegacyApiConstants.PAGE_CONST) == null
@@ -205,11 +201,11 @@ public class LegacyApiProvider {
    * Search "My Forest" clients in the legacy API.
    *
    * <p>
-   * The legacy API returns a paged JSON structure; this method converts the
-   * content field into a {@link Page} of {@link MyForestClientSearchResultDto}.
+   * The legacy API returns a paged JSON structure; this method converts the content field into a
+   * {@link Page} of {@link MyForestClientSearchResultDto}.
    * </p>
    *
-   * @param values the set of client values to search for
+   * @param values   the set of client values to search for
    * @param pageable pageable information to include in the request
    * @return a {@link Page} of {@link MyForestClientSearchResultDto}
    */
@@ -254,7 +250,7 @@ public class LegacyApiProvider {
       totalElements = pagedResponse
           .get(LegacyApiConstants.PAGE_CONST)
           .get("totalElements")
-          .asLong();
+          .asLong(0L);
     } catch (Exception e) {
       logFallbackError(e);
     }
