@@ -23,20 +23,13 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @ContextConfiguration
 public abstract class AbstractTestContainerIntegrationTest {
 
-  @Container
   static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17")
       .withDatabaseName("hrs")
       .withUsername("hrs")
       .withPassword(UUID.randomUUID().toString());
 
-  @BeforeAll
-  static void beforeAll() {
+  static {
     postgres.start();
-  }
-
-  @AfterAll
-  static void afterAll() {
-    postgres.stop();
   }
 
   @DynamicPropertySource

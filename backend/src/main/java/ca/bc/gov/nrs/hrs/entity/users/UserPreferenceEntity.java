@@ -41,7 +41,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @With
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = {"revision", "updatedAt", "preferences"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @EntityListeners(AuditingEntityListener.class)
 public class UserPreferenceEntity {
 
@@ -50,6 +50,7 @@ public class UserPreferenceEntity {
    * corresponds to the authenticated user's id used throughout the system.
    */
   @Id
+  @EqualsAndHashCode.Include
   private String userId;
 
   /**
