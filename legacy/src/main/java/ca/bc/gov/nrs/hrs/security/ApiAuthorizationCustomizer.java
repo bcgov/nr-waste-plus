@@ -41,19 +41,15 @@ public class ApiAuthorizationCustomizer implements
     authorize
         // Allow actuator endpoints to be accessed without authentication
         .requestMatchers(HttpMethod.GET, "/metrics", "/health")
-        .permitAll();
+        .permitAll()
 
-    authorize
         // Allow OPTIONS requests to be accessed with authentication
         .requestMatchers(HttpMethod.OPTIONS, "/**")
         .authenticated()
 
         // Allow unrestricted access to authenticated users
         .requestMatchers("/api/codes/**", "/api/search/**")
-        .authenticated()
-
-        // Deny all other requests
-        .anyRequest().denyAll();
+        .authenticated();
 
   }
 }

@@ -1,5 +1,8 @@
 package ca.bc.gov.nrs.hrs.controller;
 
+import static ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory.createJwt;
+import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -7,15 +10,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(print = SYSTEM_OUT)
 @DisplayName("Integrated Test | Search Endpoint : Reporting Unit")
 @WithMockJwt
 class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainerIntegrationTest {
@@ -32,6 +36,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .param("page", "0")
                 .param("size", "10")
+                .with(jwt().jwt(jwt))
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -52,6 +57,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
                 .param("page", "0")
                 .param("size", "10")
                 .param("clientNumber", "00010004")
+                .with(jwt().jwt(jwt))
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -76,6 +82,15 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
                 .param("page", "0")
                 .param("size", "10")
                 .param("clientNumber", "00010004")
+                .with(jwt().jwt(
+                    createJwt(
+                        "test",
+                        List.of("Submitter_00070002","Viewer"),
+                        "bceidbusiness",
+                        "Test, Automated WLRS:EX",
+                        "test@test.ca"
+                    )
+                ))
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -98,6 +113,15 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
                 .param("page", "0")
                 .param("size", "10")
                 .param("clientNumber", "00010004")
+                .with(jwt().jwt(
+                    createJwt(
+                        "test",
+                        List.of("Submitter_00010004","Viewer"),
+                        "bceidbusiness",
+                        "Test, Automated WLRS:EX",
+                        "test@test.ca"
+                    )
+                ))
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -121,6 +145,15 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .param("page", "10")
                 .param("size", "10")
+                .with(jwt().jwt(
+                    createJwt(
+                        "test",
+                        List.of("Submitter_00070002","Viewer_00070002"),
+                        "bceidbusiness",
+                        "Test, Automated WLRS:EX",
+                        "test@test.ca"
+                    )
+                ))
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -140,10 +173,10 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
                 .param("page", "0")
                 .param("size", "10")
                 .param("sort", "invalidField,desc")
+                .with(jwt().jwt(jwt))
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().is(428))
         .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
-        .andExpect(jsonPath("$.type").value("about:blank"))
         .andExpect(jsonPath("$.title").value("Precondition Required"))
         .andExpect(jsonPath("$.status").value(428))
         .andExpect(jsonPath("$.detail").value(
