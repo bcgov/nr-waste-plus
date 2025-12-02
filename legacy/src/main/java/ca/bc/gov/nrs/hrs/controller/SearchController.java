@@ -65,7 +65,9 @@ public class SearchController {
             ? List.of()
             : JwtPrincipalUtil.getClientFromRoles(jwt);
 
-    log.info("Searching waste entries with filters: {}, pageable: {}", filters, pageable);
+    log.info("Searching waste entries with filters: {}, pageable: {} for: {}",
+        filters, pageable,JwtPrincipalUtil.getUserId(jwt)
+    );
     return ruSearchService.search(filters, pageable, userClientNumbers);
 
   }
@@ -85,7 +87,9 @@ public class SearchController {
       @RequestParam String userId,
       @AuthenticationPrincipal Jwt jwt
   ) {
-    log.info("Searching for reporting unit users that matches {}", userId);
+    log.info("Searching for reporting unit users that matches {} for {}",
+        userId, JwtPrincipalUtil.getUserId(jwt)
+    );
 
     List<String> clientsFromRoles = JwtPrincipalUtil.getClientFromRoles(jwt);
     List<String> processedClientsFromClient = clientsFromRoles.isEmpty()
@@ -119,7 +123,9 @@ public class SearchController {
       @AuthenticationPrincipal Jwt jwt
   ) {
 
-    log.info("Searching client districts with filters: {}, pageable: {}", values, pageable);
+    log.info("Searching client districts with filters: {}, pageable: {} for {}",
+        values, pageable, JwtPrincipalUtil.getUserId(jwt)
+    );
     return ruSearchService.searchMyClients(
         values.isEmpty()
             ? JwtPrincipalUtil.getClientFromRoles(jwt)
