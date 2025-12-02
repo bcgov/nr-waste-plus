@@ -45,9 +45,8 @@ class JwtRoleAuthorizationManagerFactoryIntegrationTest {
     AuthorizationManager<RequestAuthorizationContext> manager = factory.gotRoleMatching(matcher);
     AuthorizationResult decision = manager.authorize(() -> null, context);
 
-    assertThat(decision.isGranted())
-        .isNotNull()
-        .isTrue();
+    assert decision != null;
+    assertThat(decision.isGranted()).isTrue();
     verify(roleChecker).hasRoleMatching(matcher);
   }
 
@@ -58,9 +57,8 @@ class JwtRoleAuthorizationManagerFactoryIntegrationTest {
     AuthorizationManager<RequestAuthorizationContext> manager = factory.gotRole("Viewer");
     AuthorizationResult decision = manager.authorize(() -> null, context);
 
-    assertThat(decision.isGranted())
-        .isNotNull()
-        .isTrue();
+    assert decision != null;
+    assertThat(decision.isGranted()).isTrue();
     verify(roleChecker).hasRole("Viewer");
   }
 
@@ -74,9 +72,8 @@ class JwtRoleAuthorizationManagerFactoryIntegrationTest {
 
     AuthorizationResult decision = manager.authorize(() -> null, context);
 
-    assertThat(decision.isGranted())
-        .isNotNull()
-        .isTrue();
+    assert decision != null;
+    assertThat(decision.isGranted()).isTrue();
     verify(roleChecker).hasAbstractRole("Approver", "12345678");
   }
 
@@ -87,9 +84,8 @@ class JwtRoleAuthorizationManagerFactoryIntegrationTest {
     AuthorizationManager<RequestAuthorizationContext> manager = factory.gotIdp("idir");
     AuthorizationResult decision = manager.authorize(() -> null, context);
 
-    assertThat(decision.isGranted())
-        .isNotNull()
-        .isTrue();
+    assert decision != null;
+    assertThat(decision.isGranted()).isTrue();
     verify(roleChecker).hasIdpProvider("idir");
   }
 
@@ -101,9 +97,8 @@ class JwtRoleAuthorizationManagerFactoryIntegrationTest {
     AuthorizationManager<RequestAuthorizationContext> manager = factory.gotIdp(provider);
     AuthorizationResult decision = manager.authorize(() -> null, context);
 
-    assertThat(decision.isGranted())
-        .isNotNull()
-        .isTrue();
+    assert decision != null;
+    assertThat(decision.isGranted()).isTrue();
     verify(roleChecker).hasIdpProvider(provider);
   }
 }
