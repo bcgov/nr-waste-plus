@@ -1,0 +1,13 @@
+[
+  {
+    "type": "org.springframework.security.config.annotation.web.builders.HttpSecurity",
+    "methods": [
+      {
+        "name": "csrf",
+        "parameterTypes": [
+          "org.springframework.security.config.Customizer"
+        ]
+      }
+    ]
+  }
+]
