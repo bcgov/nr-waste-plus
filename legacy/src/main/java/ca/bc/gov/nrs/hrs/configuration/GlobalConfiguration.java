@@ -8,6 +8,7 @@ import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.json.JsonMapper.Builder;
@@ -29,7 +30,8 @@ import tools.jackson.databind.json.JsonMapper.Builder;
     OrgUnitEntity.class,
     ReportingUnitSearchParametersDto.class,
     ReportingUnitSearchResultDto.class,
-    ReportingUnitEntity.class
+    ReportingUnitEntity.class,
+    HttpSecurity.class
 })
 public class GlobalConfiguration {
 
