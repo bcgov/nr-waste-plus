@@ -45,6 +45,7 @@ public class UserController {
    */
   @GetMapping("/preferences")
   public Map<String, Object> getPreferences(@AuthenticationPrincipal Jwt jwt) {
+    log.info("Retrieving preferences for user: {}", JwtPrincipalUtil.getUserId(jwt));
     return userService.getUserPreferences(JwtPrincipalUtil.getUserId(jwt));
   }
 
@@ -64,6 +65,7 @@ public class UserController {
       @AuthenticationPrincipal Jwt jwt,
       @RequestBody Map<String, Object> preferences
   ) {
+    log.info("Updating preferences for user: {}", JwtPrincipalUtil.getUserId(jwt));
     userService.saveUserPreferences(
         JwtPrincipalUtil.getUserId(jwt),
         preferences

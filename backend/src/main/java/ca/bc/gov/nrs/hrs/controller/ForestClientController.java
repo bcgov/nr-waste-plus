@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.hrs.controller;
 
-import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientAutocompleteResultDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
@@ -12,6 +11,7 @@ import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,24 +29,23 @@ import org.springframework.web.bind.annotation.RestController;
  * REST controller exposing endpoints to query and search Forest Client data.
  *
  * <p>
- * Provides operations to retrieve a single forest client by client number,
- * search for clients by name, acronym or number, retrieve client locations,
- * look up multiple clients by numbers, and perform paged searches for the
- * currently authenticated user's associated forest clients.
+ * Provides operations to retrieve a single forest client by client number, search for clients by
+ * name, acronym or number, retrieve client locations, look up multiple clients by numbers, and
+ * perform paged searches for the currently authenticated user's associated forest clients.
  * </p>
  *
  * <p>
- * This controller relies on {@link ForestClientService} for client-related
- * data access and {@link SearchService} for the paged "my forest clients"
- * search. Authentication information is read from the JWT principal (when
- * available) using {@link JwtPrincipalUtil} to apply identity-provider-specific
- * behavior (for example BCEID vs IDIR filtering).
+ * This controller relies on {@link ForestClientService} for client-related data access and
+ * {@link SearchService} for the paged "my forest clients" search. Authentication information is
+ * read from the JWT principal (when available) using {@link JwtPrincipalUtil} to apply
+ * identity-provider-specific behavior (for example BCEID vs IDIR filtering).
  * </p>
  */
 @RestController
 @RequestMapping("/api/forest-clients")
 @AllArgsConstructor
 @Observed
+@Slf4j
 public class ForestClientController {
 
   private final ForestClientService forestClientService;
@@ -57,11 +56,16 @@ public class ForestClientController {
    *
    * @param clientNumber the client number to be fetched
    * @return the {@link ForestClientDto} for the given client number
-   * @throws ForestClientNotFoundException when the client with the provided
-   *     number is not found
+   * @throws ForestClientNotFoundException when the client with the provided number is not found
    */
   @GetMapping("/{clientNumber}")
-  public ForestClientDto getForestClient(@PathVariable String clientNumber) {
+  public ForestClientDto getForestClient(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable String clientNumber
+  ) {
+    log.info("Fetching forest client with client number: {} for user: {}",
+        clientNumber, JwtPrincipalUtil.getUserId(jwt)
+    );
     return forestClientService
         .getClientByNumber(clientNumber)
         .orElseThrow(ForestClientNotFoundException::new);
@@ -71,8 +75,8 @@ public class ForestClientController {
    * Search for clients by name, acronym or number.
    *
    * <p>
-   * The behavior of this endpoint is affected by the caller's identity
-   * provider (determined from the provided JWT):
+   * The behavior of this endpoint is affected by the caller's identity provider (determined from
+   * the provided JWT):
    * </p>
    *
    * <ul>
@@ -82,13 +86,11 @@ public class ForestClientController {
    *   <li>IDIR callers will search without client-based restrictions.</li>
    * </ul>
    *
-   * @param page the page index to fetch (zero-based)
-   * @param size the page size to fetch
+   * @param page  the page index to fetch (zero-based)
+   * @param size  the page size to fetch
    * @param value the search value (name, acronym or number)
-   * @param jwt the JWT principal of the authenticated caller (injected by
-   *     Spring Security)
-   * @return a list of {@link ForestClientAutocompleteResultDto} matching the
-   *     search criteria
+   * @param jwt   the JWT principal of the authenticated caller (injected by Spring Security)
+   * @return a list of {@link ForestClientAutocompleteResultDto} matching the search criteria
    */
   @GetMapping("/byNameAcronymNumber")
   public List<ForestClientAutocompleteResultDto> searchForestClients(
@@ -102,11 +104,14 @@ public class ForestClientController {
 
     // #128: BCeID should filter out on client side, we increase the size to get more results.
     if (JwtPrincipalUtil.getIdentityProvider(jwt).equals(IdentityProvider.BUSINESS_BCEID)) {
+      log.info("BCeID user search - applying client role filtering");
       if (clientsFromRoles.isEmpty()) {
         return List.of(); // Abstract with no roles should not search
       }
       // #128: Increased to 100, so we can filter down on our side.
       size = 100;
+    } else {
+      log.info("IDIR user search - unrestricted");
     }
 
     // #128 IDIR users should search unrestricted. Abstract filter out based on clients on role
@@ -118,22 +123,10 @@ public class ForestClientController {
   }
 
   /**
-   * Get the locations of a client.
-   *
-   * @param clientNumber the client number to be fetched
-   * @return a list of {@link CodeDescriptionDto} representing the client's
-   *     locations
-   */
-  @GetMapping("/{clientNumber}/locations")
-  public List<CodeDescriptionDto> getForestClientLocations(@PathVariable String clientNumber) {
-    return forestClientService.getClientLocations(clientNumber);
-  }
-
-  /**
    * Search for clients by a list of client numbers.
    *
-   * @param page the page index to fetch (zero-based)
-   * @param size the page size to fetch
+   * @param page   the page index to fetch (zero-based)
+   * @param size   the page size to fetch
    * @param values the list of client numbers to look up
    * @return a list of {@link ForestClientDto} for the matching client numbers
    */
@@ -141,7 +134,12 @@ public class ForestClientController {
   public List<ForestClientDto> searchByClientNumbers(
       @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
       @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
-      @RequestParam(value = "values") List<String> values) {
+      @RequestParam(value = "values") List<String> values,
+      @AuthenticationPrincipal Jwt jwt
+  ) {
+    log.info("Searching forest clients by client numbers for user: {}",
+        JwtPrincipalUtil.getUserId(jwt)
+    );
     return forestClientService.searchByClientNumbers(page, size, values, null);
   }
 
@@ -149,16 +147,16 @@ public class ForestClientController {
    * Search page of the current user's Forest clients.
    *
    * <p>
-   * This endpoint performs a paged search scoped to the clients associated
-   * with the authenticated user's roles (as extracted from the JWT). The
-   * pageable default sorts by {@code lastUpdate} in descending order.
+   * This endpoint performs a paged search scoped to the clients associated with the authenticated
+   * user's roles (as extracted from the JWT). The pageable default sorts by {@code lastUpdate} in
+   * descending order.
    * </p>
    *
-   * @param value optional free-text search value; defaults to an empty string
+   * @param value    optional free-text search value; defaults to an empty string
    * @param pageable the pageable specification (page number, size, sort)
-   * @param jwt the JWT principal used to determine the caller's client roles
-   * @return a {@link Page} of {@link MyForestClientSearchResultDto} matching
-   *     the search and client-role restrictions
+   * @param jwt      the JWT principal used to determine the caller's client roles
+   * @return a {@link Page} of {@link MyForestClientSearchResultDto} matching the search and
+   * client-role restrictions
    */
   @GetMapping("/clients")
   public Page<MyForestClientSearchResultDto> searchMyForestClients(
@@ -167,6 +165,9 @@ public class ForestClientController {
       Pageable pageable,
       @AuthenticationPrincipal Jwt jwt
   ) {
+    log.info("Searching my forest clients for user: {}",
+        JwtPrincipalUtil.getUserId(jwt)
+    );
     return searchService.searchByMyForestClient(pageable, value,
         JwtPrincipalUtil.getClientFromRoles(jwt));
   }
