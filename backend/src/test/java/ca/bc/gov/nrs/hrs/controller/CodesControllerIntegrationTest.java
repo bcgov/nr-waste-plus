@@ -74,7 +74,6 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
         .perform(
             get("/api/codes/districts")
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .with(jwt().jwt(jwt))
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json"))
@@ -97,7 +96,6 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
         .perform(
             get("/api/codes/samplings")
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .with(jwt().jwt(jwt))
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json"))
@@ -119,7 +117,6 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
         .perform(
             get("/api/codes/assess-area-statuses")
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .with(jwt().jwt(jwt))
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json"))

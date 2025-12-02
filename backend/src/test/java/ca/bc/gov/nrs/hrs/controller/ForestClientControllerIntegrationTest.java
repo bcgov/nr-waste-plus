@@ -112,7 +112,6 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
             MockMvcRequestBuilders
                 .get("/api/forest-clients/{clientNumber}", clientNumber)
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .with(jwt().jwt(jwt))
                 .accept(MediaType.APPLICATION_JSON)
         );
 
@@ -155,40 +154,11 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
                 .param("page", String.valueOf(page))
                 .param("size", String.valueOf(size))
                 .param("value", value)
-                .with(jwt().jwt(jwt))
                 .accept(MediaType.APPLICATION_JSON)
         )
         .andExpect(MockMvcResultMatchers.status().isOk())
         .andExpect(content().contentType("application/json"))
         .andExpect(jsonPath("$.length()").value(expectedSize))
-        .andReturn();
-  }
-
-  @ParameterizedTest
-  @MethodSource("fetchClientLocations")
-  @DisplayName("Fetch client locations should succeed")
-  void fetchClientLocations_shouldSucceed(
-      String clientNumber,
-      ResponseDefinitionBuilder stub,
-      long size
-  ) throws Exception {
-
-    clientApiStub.stubFor(
-        get(urlPathEqualTo("/clients/" + clientNumber + "/locations"))
-            .willReturn(stub)
-    );
-
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders
-                .get("/api/forest-clients/{clientNumber}/locations", clientNumber)
-                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .with(jwt().jwt(jwt))
-                .accept(MediaType.APPLICATION_JSON)
-        )
-        .andExpect(MockMvcResultMatchers.status().isOk())
-        .andExpect(content().contentType("application/json"))
-        .andExpect(jsonPath("$.length()").value(size))
         .andReturn();
   }
 
@@ -210,7 +180,6 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
                 .get("/api/forest-clients/searchByNumbers")
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .param("values", clientNumber)
-                .with(jwt().jwt(jwt))
                 .accept(MediaType.APPLICATION_JSON)
         )
         .andExpect(MockMvcResultMatchers.status().isOk());
@@ -254,13 +223,6 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
     var requestBuilder = MockMvcRequestBuilders
         .get("/api/forest-clients/clients")
         .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-        .with(jwt().jwt(createJwt(
-            "test",
-            List.of("Approver_00010004", "Approver_00012797"),
-            "bceidbusiness",
-            "Test, Automated WLRS:EX",
-            "test@test.ca"
-        )))
         .accept(MediaType.APPLICATION_JSON);
 
     if (StringUtils.isNotBlank(value)) {
@@ -437,24 +399,5 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
         )
     );
   }
-
-  private static Stream<Arguments> fetchClientLocations() {
-    return
-        Stream.of(
-            Arguments.argumentSet("Happy path",
-                "00012797",
-                okJson(TWO_LOCATIONS_LIST).withHeader(X_TOTAL_COUNT, "2"),
-                2
-            ),
-            Arguments.argumentSet(
-                "Circuit Breaker",
-                "00012798",
-                notFound(),
-                0
-            )
-
-        );
-  }
-
 
 }

@@ -49,7 +49,6 @@ class UserControllerIntegrationTest extends AbstractTestContainerIntegrationTest
         .perform(
             get("/api/users/preferences")
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .with(jwt().jwt(jwt))
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json"))
@@ -74,7 +73,6 @@ class UserControllerIntegrationTest extends AbstractTestContainerIntegrationTest
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .content(preferencesJson)
                 .accept(MediaType.APPLICATION_JSON)
-                .with(jwt().jwt(jwt))
                 .with(csrf()))
         .andExpect(status().isAccepted())
         .andReturn();
@@ -88,7 +86,6 @@ class UserControllerIntegrationTest extends AbstractTestContainerIntegrationTest
         .perform(
             get("/api/users/preferences")
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .with(jwt().jwt(jwt))
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json"))

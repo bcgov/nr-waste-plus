@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.hrs.provider;
 import static ca.bc.gov.nrs.hrs.BackendConstants.X_TOTAL_COUNT;
 import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE;
 import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST;
-import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.TWO_LOCATIONS_LIST;
 import static com.github.tomakehurst.wiremock.client.WireMock.badRequest;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
@@ -115,25 +114,6 @@ class ForestClientApiProviderIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @ParameterizedTest
-  @MethodSource("fetchClientLocations")
-  @DisplayName("Fetch client locations should succeed")
-  void fetchClientLocations_shouldSucceed(
-      String clientNumber,
-      ResponseDefinitionBuilder stub,
-      long size
-  ) {
-
-    clientApiStub.stubFor(
-        get(urlPathEqualTo("/clients/" + clientNumber + "/locations"))
-            .willReturn(stub)
-    );
-
-    var locations = forestClientApiProvider.fetchLocationsByClientNumber(clientNumber);
-
-    Assertions.assertEquals(size, locations.getTotalElements());
-  }
-
-  @ParameterizedTest
   @MethodSource("searchClients")
   @DisplayName("Search clients by list of ids")
   void shouldSearchClientsByIds(
@@ -148,25 +128,6 @@ class ForestClientApiProviderIntegrationTest extends AbstractTestContainerIntegr
 
     var clients = forestClientApiProvider.searchClientsByIds(page, size, List.of(value), null);
     Assertions.assertEquals(expectedSize, clients.size());
-  }
-
-
-  private static Stream<Arguments> fetchClientLocations() {
-    return
-        Stream.of(
-            Arguments.argumentSet("Happy path",
-                "00012797",
-                okJson(TWO_LOCATIONS_LIST).withHeader(X_TOTAL_COUNT, "2"),
-                2
-            ),
-            Arguments.argumentSet(
-                "Circuit Breaker",
-                "00012798",
-                notFound(),
-                0
-            )
-
-        );
   }
 
   private static Stream<Arguments> searchClients() {
