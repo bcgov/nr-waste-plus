@@ -4,8 +4,6 @@ import static ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory.cre
 
 import java.util.List;
 import java.util.UUID;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -13,9 +11,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @Testcontainers
 @ExtendWith({SpringExtension.class})
@@ -23,7 +20,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @ContextConfiguration
 public abstract class AbstractTestContainerIntegrationTest {
 
-  static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17")
+  static final PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17")
       .withDatabaseName("hrs")
       .withUsername("hrs")
       .withPassword(UUID.randomUUID().toString());

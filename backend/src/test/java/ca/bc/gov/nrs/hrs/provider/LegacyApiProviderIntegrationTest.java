@@ -16,7 +16,6 @@ import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -109,7 +108,7 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
       "lemongrab, lemongrabber|lemon"
   })
   @DisplayName("Search for RU")
-  void shouldSearchForRuUsers(String userId, String roles) throws JsonProcessingException {
+  void shouldSearchForRuUsers(String userId, String roles) {
     List<String> expected = Arrays.asList(roles.split("\\|"));
     String json = mapper.writeValueAsString(expected);
 
