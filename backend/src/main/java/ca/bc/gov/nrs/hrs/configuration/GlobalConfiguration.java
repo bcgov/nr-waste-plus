@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
@@ -55,7 +56,8 @@ import tools.jackson.databind.json.JsonMapper.Builder;
     UnretriableException.class,
     UserNotFoundException.class,
     ReportingUnitSearchResultDto.class,
-    ReportingUnitSearchParametersDto.class
+    ReportingUnitSearchParametersDto.class,
+    HttpSecurity.class
 })
 @EnableJpaAuditing(auditorAwareRef = "databaseAuditor")
 public class GlobalConfiguration {
