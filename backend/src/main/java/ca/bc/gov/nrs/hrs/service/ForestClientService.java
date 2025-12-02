@@ -81,29 +81,6 @@ public class ForestClientService {
   }
 
   /**
-   * Get the locations of a client.
-   *
-   * @param clientNumber The client number to be fetched.
-   * @return List of {@link CodeDescriptionDto} with found locations.
-   */
-  @NewSpan
-  public List<CodeDescriptionDto> getClientLocations(String clientNumber) {
-    String fixedNumber = checkClientNumber(clientNumber);
-
-    log.info("Fetching locations for client number {}", fixedNumber);
-
-    return
-        forestClientApiProvider
-            .fetchLocationsByClientNumber(fixedNumber)
-            .stream()
-            .map(location -> new CodeDescriptionDto(
-                location.locationCode(),
-                Objects.toString(location.locationName(), "No name provided")
-            ))
-            .toList();
-  }
-
-  /**
    * Search clients by explicit list of client numbers.
    *
    * @param page page index

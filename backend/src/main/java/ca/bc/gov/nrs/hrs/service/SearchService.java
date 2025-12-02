@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -48,7 +47,7 @@ public class SearchService {
    * calling the Forest Client service.
    * </p>
    *
-   * @param filters search filters
+   * @param filters  search filters
    * @param pageable paging parameters
    * @return a page of {@link ReportingUnitSearchResultDto} enriched with client info
    */
@@ -75,22 +74,6 @@ public class SearchService {
             )
             .collect(toMap(CodeDescriptionDto::code, client -> client));
 
-    //Build a map of client locations and load details from Forest Client Service
-    var locations =
-        clients
-            .keySet()
-            .stream()
-            .map(client -> Pair.of(client, forestClientService.getClientLocations(client)))
-            .flatMap(entry ->
-                entry
-                    .getRight()
-                    .stream()
-                    .map(location ->
-                        Pair.of(String.format("%s-%s", entry.getLeft(), location.code()), location)
-                    )
-            )
-            .collect(toMap(Pair::getLeft, Pair::getRight));
-
     //Enrich the results with client and location details
     return result
         .map(entry -> entry.withId(
@@ -100,14 +83,7 @@ public class SearchService {
                     Objects.toString(entry.blockId(), "N/A"))
             )
         )
-        .map(entry -> entry.withClient(clients.get(entry.client().code())))
-        .map(entry -> entry
-            .withClientLocation(
-                locations.get(
-                    String.format("%s-%s", entry.client().code(), entry.clientLocation().code())
-                )
-            )
-        );
+        .map(entry -> entry.withClient(clients.get(entry.client().code())));
   }
 
   /**
@@ -128,8 +104,8 @@ public class SearchService {
    * may return an empty page if none match.
    * </p>
    *
-   * @param pageable paging parameters
-   * @param value optional filter value
+   * @param pageable   paging parameters
+   * @param value      optional filter value
    * @param allClients list of clients to consider
    * @return a page of {@link MyForestClientSearchResultDto} enriched with client info
    */

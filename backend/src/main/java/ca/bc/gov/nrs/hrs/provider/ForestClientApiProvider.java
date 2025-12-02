@@ -166,53 +166,6 @@ public class ForestClientApiProvider {
   }
 
   /**
-   * Fetch all locations for a client.
-   *
-   * <p>Returns a pageable list of {@link ForestClientLocationDto}. On 404 the
-   * call throws {@link ForestClientNotFoundException}.
-   * </p>
-   *
-   * @param clientNumber client number to lookup
-   * @return a pageable list of locations for the client
-   */
-  @CircuitBreaker(name = "breaker", fallbackMethod = "paginatedFallback")
-  @NewSpan
-  public Page<ForestClientLocationDto> fetchLocationsByClientNumber(String clientNumber) {
-    log.info("Starting {} request to /clients/{}/locations", PROVIDER, clientNumber);
-
-    ResponseEntity<List<ForestClientLocationDto>> response = restClient
-        .get()
-        .uri(uriBuilder ->
-            uriBuilder
-                .path("/clients/{clientNumber}/locations")
-                .queryParam("page", 0)
-                .queryParam("size", 100)
-                .build(clientNumber)
-        )
-        .retrieve()
-        .onStatus(status -> status.value() == 404,
-            (req, res) -> {
-              log.error("{} request - Client error: {}", PROVIDER,
-                  res.getStatusCode());
-              throw new ForestClientNotFoundException(clientNumber);
-            }
-        )
-        .toEntity(new ParameterizedTypeReference<>() {
-        });
-
-    return new PageImpl<>(
-        response.getBody() != null ? response.getBody() : List.of(),
-        PageRequest.of(0, 50),
-        Long.parseLong(
-            Objects.toString(
-                response.getHeaders().getFirst(BackendConstants.X_TOTAL_COUNT),
-                "0"
-            )
-        )
-    );
-  }
-
-  /**
    * Search clients by a list of IDs with optional name filter.
    *
    * @param page   Page number
@@ -263,13 +216,6 @@ public class ForestClientApiProvider {
     logFallbackWarn("searchClients", ex);
     List<T> empty = Collections.emptyList();
     return new PageImpl<>(empty, PageRequest.of(page, size), 0);
-  }
-
-  private <T> Page<T> paginatedFallback(
-      String value,
-      Throwable ex
-  ) {
-    return paginatedFallback(0, 10, value, ex);
   }
 
   @SuppressWarnings("unused")
