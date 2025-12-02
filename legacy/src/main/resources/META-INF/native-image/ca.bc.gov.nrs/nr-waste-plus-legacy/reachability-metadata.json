@@ -1,0 +1,35 @@
+[
+  {
+    "type": "org.springframework.security.config.annotation.web.builders.HttpSecurity",
+    "methods": [
+      {
+        "name": "headers",
+        "parameterTypes": [
+          "org.springframework.security.config.Customizer"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "org.springframework.security.config.annotation.web.builders.HttpSecurity",
+    "methods": [
+      {
+        "name": "csrf",
+        "parameterTypes": [
+          "org.springframework.security.config.Customizer"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "org.springframework.security.config.annotation.web.builders.HttpSecurity",
+    "methods": [
+      {
+        "name": "oauth2ResourceServer",
+        "parameterTypes": [
+          "org.springframework.security.config.Customizer"
+        ]
+      }
+    ]
+  }
+]
