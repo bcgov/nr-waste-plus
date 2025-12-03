@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.controller;
 
+import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -10,12 +11,12 @@ import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(print = SYSTEM_OUT)
 @DisplayName("Integrated Test | Search Endpoint : Reporting Unit")
 @WithMockJwt
 class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainerIntegrationTest {
@@ -66,7 +67,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   @DisplayName("Search reporting units with client number not being idir and fail")
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {"Submitter_00070002","Viewer"}
+      cognitoGroups = {"Submitter_00070002", "Viewer"}
   )
   void shouldSearchReportingUnitsWithClientNumberNotIdir() throws Exception {
     mockMvc
@@ -88,7 +89,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   @DisplayName("Search reporting units with client number not being idir and get it")
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {"Submitter_00010004","Viewer"}
+      cognitoGroups = {"Submitter_00010004", "Viewer"}
   )
   void shouldSearchReportingUnitsWithClientNumberNotIdirSuccess() throws Exception {
     mockMvc
@@ -112,7 +113,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   @DisplayName("Should search reporting units with paging")
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {"Submitter_00070002","Viewer_00070002"}
+      cognitoGroups = {"Submitter_00070002", "Viewer_00070002"}
   )
   void shouldSearchReportingUnitsWithPageAndSize() throws Exception {
     mockMvc
@@ -143,7 +144,6 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().is(428))
         .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
-        .andExpect(jsonPath("$.type").value("about:blank"))
         .andExpect(jsonPath("$.title").value("Precondition Required"))
         .andExpect(jsonPath("$.status").value(428))
         .andExpect(jsonPath("$.detail").value(

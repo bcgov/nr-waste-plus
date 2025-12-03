@@ -63,9 +63,6 @@ spring:
         whitelisted-mdc-keys:
           - X-TRACE-ID
           - X-USER
-  jackson:
-    serialization:
-      FAIL_ON_EMPTY_BEANS: false
 
 # Actuator and ops
 management:

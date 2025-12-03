@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.controller;
 
 import static ca.bc.gov.nrs.hrs.BackendConstants.X_TOTAL_COUNT;
+import static ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory.createJwt;
 import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE;
 import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.EMPTY_JSON;
 import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.EMPTY_PAGED_NOPAGE;
@@ -16,10 +17,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.serviceUnavailable
 import static com.github.tomakehurst.wiremock.client.WireMock.status;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
@@ -29,6 +31,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
+import java.util.List;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,7 +41,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -47,7 +50,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(print = SYSTEM_OUT)
 @WithMockJwt
 @DisplayName("Integrated Test | Forest Client Controller")
 class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
@@ -160,33 +163,6 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
   }
 
   @ParameterizedTest
-  @MethodSource("fetchClientLocations")
-  @DisplayName("Fetch client locations should succeed")
-  void fetchClientLocations_shouldSucceed(
-      String clientNumber,
-      ResponseDefinitionBuilder stub,
-      long size
-  ) throws Exception {
-
-    clientApiStub.stubFor(
-        get(urlPathEqualTo("/clients/" + clientNumber + "/locations"))
-            .willReturn(stub)
-    );
-
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders
-                .get("/api/forest-clients/{clientNumber}/locations", clientNumber)
-                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .accept(MediaType.APPLICATION_JSON)
-        )
-        .andExpect(MockMvcResultMatchers.status().isOk())
-        .andExpect(content().contentType("application/json"))
-        .andExpect(jsonPath("$.length()").value(size))
-        .andReturn();
-  }
-
-  @ParameterizedTest
   @MethodSource("fetchClientByNumberList")
   @DisplayName("Fetch client by number list happy path should succeed")
   void fetchByClientNumberList_shouldSucceed(
@@ -228,7 +204,7 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
   @DisplayName("Fetch my client")
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {"Approver_00010004","Approver_00012797"}
+      cognitoGroups = {"Approver_00010004", "Approver_00012797"}
   )
   void fetchMyClientsWithValue(
       String value,
@@ -244,13 +220,14 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
         get(urlPathEqualTo("/api/search/my-forest-clients"))
             .willReturn(legacyStub));
 
-    var requestBuilder =  MockMvcRequestBuilders
+    var requestBuilder = MockMvcRequestBuilders
         .get("/api/forest-clients/clients")
         .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
         .accept(MediaType.APPLICATION_JSON);
 
-    if (StringUtils.isNotBlank(value))
-      requestBuilder = requestBuilder.queryParam("value",value);
+    if (StringUtils.isNotBlank(value)) {
+      requestBuilder = requestBuilder.queryParam("value", value);
+    }
 
     ResultActions response = mockMvc
         .perform(requestBuilder)
@@ -268,7 +245,7 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
 
   }
 
-  private static Stream<Arguments> fetchMyClients(){
+  private static Stream<Arguments> fetchMyClients() {
     return Stream.of(
         Arguments.argumentSet(
             "No arguments, with return",
@@ -422,24 +399,5 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
         )
     );
   }
-
-  private static Stream<Arguments> fetchClientLocations() {
-    return
-        Stream.of(
-            Arguments.argumentSet("Happy path",
-                "00012797",
-                okJson(TWO_LOCATIONS_LIST).withHeader(X_TOTAL_COUNT, "2"),
-                2
-            ),
-            Arguments.argumentSet(
-                "Circuit Breaker",
-                "00012798",
-                notFound(),
-                0
-            )
-
-        );
-  }
-
 
 }

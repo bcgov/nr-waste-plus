@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.controller;
 
+import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -10,17 +11,18 @@ import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(print = SYSTEM_OUT)
 @DisplayName("Integrated Test | Search Endpoint : Reporting Unit as Users")
 @WithMockJwt(
-    cognitoGroups = {"Submitter_00010002","Viewer"}
+    cognitoGroups = {"Submitter_00010002", "Viewer"}
 )
-class SearchControllerReportingUnitUsersIntegrationTest extends AbstractTestContainerIntegrationTest {
+class SearchControllerReportingUnitUsersIntegrationTest extends
+    AbstractTestContainerIntegrationTest {
 
   @Autowired
   private MockMvc mockMvc;
@@ -74,7 +76,7 @@ class SearchControllerReportingUnitUsersIntegrationTest extends AbstractTestCont
   @Test
   @DisplayName("Lump Space Princess, where are you?")
   @WithMockJwt(
-      cognitoGroups = {"Submitter_00010002","Viewer"},
+      cognitoGroups = {"Submitter_00010002", "Viewer"},
       idp = "bceidbusiness"
   )
   void shouldReturnNothingWhenClientNotListed() throws Exception {

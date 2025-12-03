@@ -18,7 +18,6 @@ import lombok.With;
  * @param blockId the block identifier
  * @param ruNumber the numeric reporting unit number
  * @param client the client represented as a {@link CodeDescriptionDto}
- * @param clientLocation the client location represented as a {@link CodeDescriptionDto}
  * @param sampling the sampling type represented as a {@link CodeDescriptionDto}
  * @param district the district represented as a {@link CodeDescriptionDto}
  * @param status the reporting unit status represented as a {@link CodeDescriptionDto}
@@ -30,7 +29,6 @@ public record ReportingUnitSearchResultDto(
     String blockId,
     Long ruNumber,
     CodeDescriptionDto client,
-    CodeDescriptionDto clientLocation,
     CodeDescriptionDto sampling,
     CodeDescriptionDto district,
     CodeDescriptionDto status,

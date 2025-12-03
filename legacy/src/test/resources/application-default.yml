@@ -8,6 +8,7 @@ spring:
   flyway:
     schemas: THE
     default-schema: THE
+    enabled: true
   jpa:
     show-sql: true
   datasource:

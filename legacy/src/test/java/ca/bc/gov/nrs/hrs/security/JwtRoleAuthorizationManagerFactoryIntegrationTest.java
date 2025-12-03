@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.hrs.security;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 
 @DisplayName("Unit Test | Jwt Role Authorization Manager Factory")
@@ -43,9 +43,10 @@ class JwtRoleAuthorizationManagerFactoryIntegrationTest {
     when(roleChecker.hasRoleMatching(matcher)).thenReturn(true);
 
     AuthorizationManager<RequestAuthorizationContext> manager = factory.gotRoleMatching(matcher);
-    AuthorizationDecision decision = manager.check(() -> null, context);
+    AuthorizationResult decision = manager.authorize(() -> null, context);
 
-    assertTrue(decision.isGranted());
+    assert decision != null;
+    assertThat(decision.isGranted()).isTrue();
     verify(roleChecker).hasRoleMatching(matcher);
   }
 
@@ -54,9 +55,10 @@ class JwtRoleAuthorizationManagerFactoryIntegrationTest {
     when(roleChecker.hasRole("Viewer")).thenReturn(true);
 
     AuthorizationManager<RequestAuthorizationContext> manager = factory.gotRole("Viewer");
-    AuthorizationDecision decision = manager.check(() -> null, context);
+    AuthorizationResult decision = manager.authorize(() -> null, context);
 
-    assertTrue(decision.isGranted());
+    assert decision != null;
+    assertThat(decision.isGranted()).isTrue();
     verify(roleChecker).hasRole("Viewer");
   }
 
@@ -68,9 +70,10 @@ class JwtRoleAuthorizationManagerFactoryIntegrationTest {
     AuthorizationManager<RequestAuthorizationContext> manager =
         factory.gotAbstractRole("Approver", req -> req.getHeader("X-Client-Id"));
 
-    AuthorizationDecision decision = manager.check(() -> null, context);
+    AuthorizationResult decision = manager.authorize(() -> null, context);
 
-    assertTrue(decision.isGranted());
+    assert decision != null;
+    assertThat(decision.isGranted()).isTrue();
     verify(roleChecker).hasAbstractRole("Approver", "12345678");
   }
 
@@ -79,9 +82,10 @@ class JwtRoleAuthorizationManagerFactoryIntegrationTest {
     when(roleChecker.hasIdpProvider("idir")).thenReturn(true);
 
     AuthorizationManager<RequestAuthorizationContext> manager = factory.gotIdp("idir");
-    AuthorizationDecision decision = manager.check(() -> null, context);
+    AuthorizationResult decision = manager.authorize(() -> null, context);
 
-    assertTrue(decision.isGranted());
+    assert decision != null;
+    assertThat(decision.isGranted()).isTrue();
     verify(roleChecker).hasIdpProvider("idir");
   }
 
@@ -91,9 +95,10 @@ class JwtRoleAuthorizationManagerFactoryIntegrationTest {
     when(roleChecker.hasIdpProvider(provider)).thenReturn(true);
 
     AuthorizationManager<RequestAuthorizationContext> manager = factory.gotIdp(provider);
-    AuthorizationDecision decision = manager.check(() -> null, context);
+    AuthorizationResult decision = manager.authorize(() -> null, context);
 
-    assertTrue(decision.isGranted());
+    assert decision != null;
+    assertThat(decision.isGranted()).isTrue();
     verify(roleChecker).hasIdpProvider(provider);
   }
 }

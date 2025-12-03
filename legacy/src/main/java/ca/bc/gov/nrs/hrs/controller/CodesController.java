@@ -4,8 +4,12 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.service.codes.AssessAreaStatusService;
 import ca.bc.gov.nrs.hrs.service.codes.DistrictService;
 import ca.bc.gov.nrs.hrs.service.codes.SamplingService;
+import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/codes")
 @RequiredArgsConstructor
+@Slf4j
 public class CodesController {
 
   private final DistrictService districtService;
@@ -32,7 +37,8 @@ public class CodesController {
    * @return a list of {@link CodeDescriptionDto} representing districts
    */
   @GetMapping("/districts")
-  public List<CodeDescriptionDto> getDistricts() {
+  public List<CodeDescriptionDto> getDistricts(@AuthenticationPrincipal Jwt jwt) {
+    log.info("Fetching districts for user: {}", JwtPrincipalUtil.getUserId(jwt));
     return districtService.findAllOrgUnits();
   }
 
@@ -42,7 +48,8 @@ public class CodesController {
    * @return a list of {@link CodeDescriptionDto} representing sampling codes
    */
   @GetMapping("/samplings")
-  public List<CodeDescriptionDto> getSamplingCodes() {
+  public List<CodeDescriptionDto> getSamplingCodes(@AuthenticationPrincipal Jwt jwt) {
+    log.info("Fetching sampling codes for user: {}", JwtPrincipalUtil.getUserId(jwt));
     return samplingService.getSamplingCodes();
   }
 
@@ -52,7 +59,8 @@ public class CodesController {
    * @return a list of {@link CodeDescriptionDto} representing assess-area statuses
    */
   @GetMapping("/assess-area-statuses")
-  public List<CodeDescriptionDto> getStatusCodes() {
+  public List<CodeDescriptionDto> getStatusCodes(@AuthenticationPrincipal Jwt jwt) {
+    log.info("Fetching assessment area status codes for user: {}", JwtPrincipalUtil.getUserId(jwt));
     return assessAreaStatusService.getStatusCodes();
   }
 }
