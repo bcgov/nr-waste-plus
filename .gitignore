@@ -370,3 +370,7 @@ pyrightconfig.json
 .codebuddy
 
 .DS_*
+
+docker-compose.override.yml
+**/config/application-dev-*.yml
+**/config/application-dev-*.properties

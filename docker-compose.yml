@@ -1,0 +1,92 @@
+x-var:
+  - &POSTGRES_USER
+    postgres
+  - &POSTGRES_PASSWORD
+    default
+  - &POSTGRES_DATABASE
+    postgres
+  - &POSTGRES_HOST
+    database
+
+x-defaults: &defaults
+  logging:
+    driver: "json-file"
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  database:
+    container_name: *POSTGRES_HOST
+    environment:
+      POSTGRES_USER: *POSTGRES_USER
+      POSTGRES_PASSWORD: *POSTGRES_PASSWORD
+      POSTGRES_DB: *POSTGRES_DATABASE
+    build:
+      context: database
+      dockerfile: Dockerfile
+    ports: [5432:5432]
+    volumes: ["/pgdata"]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", *POSTGRES_USER]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    <<: *defaults
+
+  legacydb:
+    container_name: oracle
+    #build:
+    #  context: legacydb
+    #  dockerfile: Dockerfile
+    environment:
+      APP_USER_PASSWORD: default
+      APP_USER: THE
+      ORACLE_RANDOM_PASSWORD: yes
+    platform: "linux/amd64"
+    image: gvenzl/oracle-free:23.9-full-faststart
+    ports: [1521:1521]
+    volumes: [/opt/oracle/oradata]
+    healthcheck:
+      test: [ "CMD-SHELL", "healthcheck.sh" ]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    <<: *defaults
+
+  legacyflyway:
+    container_name: flyway
+    image: flyway/flyway
+    command: -url=jdbc:oracle:thin:@legacydb:1521/FREEPDB1 -user=THE -password=default -connectRetries=60 migrate    
+    volumes: [./legacy/src/test/resources/db/migration:/flyway/sql]
+    depends_on: [legacydb]
+    <<: *defaults
+
+  backend:
+    container_name: backend
+    #build:
+    #  context: backend
+    #  dockerfile: Dockerfile
+    image: ghcr.io/bcgov/nr-waste-plus/backend:283
+    ports: [8080:8080]
+    volumes: [./backend/config:/app/config]
+    depends_on: [database]
+    <<: *defaults
+
+  legacy:
+    container_name: legacy
+    build:
+      context: legacy
+      dockerfile: Dockerfile
+    ports: [9090:9090]
+    volumes: [./legacy/config:/app/config]
+    depends_on: [legacydb, legacyflyway]
+    <<: *defaults
+
+  frontend:
+    container_name: frontend
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    ports: [3000:3000]
+    <<: *defaults
