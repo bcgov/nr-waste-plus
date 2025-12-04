@@ -91,7 +91,8 @@ public class ReportingUnitSearchService {
       Pageable page,
       List<String> userClientNumbers
   ) {
-log.info(" :: search :: filters :: {}  :: page :: {}  :: userClientNumbers :: {} ", filters, page, userClientNumbers);
+
+    // If no client numbers are provided in the filters, or if the only value is the
     // #128: limit query by client numbers provided by the roles
     if (CollectionUtils.isEmpty(filters.getClientNumbers()) ||
         (filters.getClientNumbers().size() == 1 &&
@@ -100,7 +101,7 @@ log.info(" :: search :: filters :: {}  :: page :: {}  :: userClientNumbers :: {}
     ) {
       filters.setClientNumbers(userClientNumbers);
     }
-    log.info(" :: after client numbers check :: filters :: {} ", filters.getClientNumbers());
+
     log.info("Searching reporting units with filters: {}, pageable: {}", filters, page);
 
     return ruRepository
