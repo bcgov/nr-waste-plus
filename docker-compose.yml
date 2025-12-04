@@ -1,0 +1,135 @@
+# Definition of environment variables
+x-var:
+  - &POSTGRES_USER
+    postgres
+  - &POSTGRES_PASSWORD
+    ${POSTGRES_PASSWORD}
+  - &POSTGRES_DATABASE
+    postgres
+  - &POSTGRES_HOST
+    database
+
+# Default logging configuration
+x-defaults: &defaults
+  logging:
+    driver: "json-file"
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  # Postgres Database Service
+  # We use by default the docker image we build locally, but you can
+  # uncomment the image line to use the official image from Docker Hub,
+  # and comment out the build section.
+  database:
+    container_name: *POSTGRES_HOST
+    environment:
+      POSTGRES_USER: *POSTGRES_USER
+      POSTGRES_PASSWORD: *POSTGRES_PASSWORD
+      POSTGRES_DB: *POSTGRES_DATABASE
+    build:
+      context: database
+      dockerfile: Dockerfile
+    #image: postgres:13.23
+    ports: [5432:5432]
+    volumes: ["/pgdata"]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", *POSTGRES_USER]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    <<: *defaults
+
+  # Oracle Legacy Database Service
+  # We use by default the docker image we build locally, but you can
+  # uncomment the image line to use the official image from Docker Hub,
+  # and comment out the build section.
+  legacydb:
+    container_name: oracle
+    #build:
+    #  context: legacydb
+    #  dockerfile: Dockerfile
+    environment:
+      # Use an environment variable for the Oracle password. Set APP_USER_PASSWORD in your .env file or environment.
+      APP_USER_PASSWORD: ${APP_USER_PASSWORD}
+      APP_USER: THE
+      ORACLE_RANDOM_PASSWORD: yes
+    platform: "linux/amd64"
+    # This image is basically the same used in the Dockerfile, but prebuilt and
+    # available in Docker Hub for convenience.
+    image: gvenzl/oracle-free:23.9-slim-faststart
+    ports: [1521:1521]
+    volumes: [/opt/oracle/oradata]
+    healthcheck:
+      test: [ "CMD-SHELL", "healthcheck.sh" ]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    <<: *defaults
+
+  # Flyway service to initialize/migrate the legacy Oracle DB
+  # It depends on the legacydb service to ensure the DB is up before running migrations
+  legacyflyway:
+    container_name: flyway
+    image: flyway/flyway
+    command: -url=jdbc:oracle:thin:@legacydb:1521/FREEPDB1 -user=THE -password=default -connectRetries=60 migrate
+    volumes: [./legacy/src/test/resources/db/migration:/flyway/sql]
+    depends_on:
+      legacydb:
+        condition: service_healthy
+    <<: *defaults
+
+  # Backend Service
+  # We use by default the docker image we build locally, but you can
+  # uncomment the image line to use the official image from GitHub Container Registry,
+  # and comment out the build section.
+  backend:
+    container_name: backend
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    # When using the image from the registry, replace XXX with the desired tag
+    #image: ghcr.io/bcgov/nr-waste-plus/backend:XXX
+    ports: [8080:8080]
+    # We map the volume to override the default configuration with our local config
+    # It is easier than passing everything as environment variables
+    volumes: [./backend/config:/app/config]
+    depends_on:
+      database:
+        condition: service_healthy
+    <<: *defaults
+
+  # Legacy Service
+  # We use by default the docker image we build locally, but you can
+  # uncomment the image line to use the official image from GitHub Container Registry,
+  # and comment out the build section.
+  legacy:
+    container_name: legacy
+    build:
+      context: legacy
+      dockerfile: Dockerfile
+    # When using the image from the registry, replace XXX with the desired tag
+    #image: ghcr.io/bcgov/nr-waste-plus/legacy:XXX
+    ports: [9090:9090]
+    # We map the volume to override the default configuration with our local config
+    # It is easier like to than to pass everything as environment variables
+    volumes: [./legacy/config:/app/config]
+    depends_on: [legacydb, legacyflyway]
+    <<: *defaults
+
+  # Frontend Service
+  # We use by default the docker image we build locally, but you can
+  # uncomment the image line to use the official image from GitHub Container Registry,
+  # and comment out the build section.
+  # This service will be rarely used in development, as the frontend is usually run
+  # using npm directly
+  frontend:
+    container_name: frontend
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    # When using the image from the registry, replace XXX with the desired tag
+    #image: ghcr.io/bcgov/nr-waste-plus/frontend:XXX
+    ports: [3000:3000]
+    <<: *defaults
