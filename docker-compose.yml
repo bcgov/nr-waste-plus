@@ -1,3 +1,4 @@
+# Definition of environment variables
 x-var:
   - &POSTGRES_USER
     postgres
@@ -8,6 +9,7 @@ x-var:
   - &POSTGRES_HOST
     database
 
+# Default logging configuration
 x-defaults: &defaults
   logging:
     driver: "json-file"
@@ -16,6 +18,10 @@ x-defaults: &defaults
       max-file: "3"
 
 services:
+  # Postgres Database Service
+  # We use by default the docker image we build locally, but you can
+  # uncomment the image line to use the official image from Docker Hub,
+  # and comment out the build section.
   database:
     container_name: *POSTGRES_HOST
     environment:
@@ -25,6 +31,7 @@ services:
     build:
       context: database
       dockerfile: Dockerfile
+    #image: postgres:13.23
     ports: [5432:5432]
     volumes: ["/pgdata"]
     healthcheck:
@@ -34,6 +41,10 @@ services:
       retries: 10
     <<: *defaults
 
+  # Oracle Legacy Database Service
+  # We use by default the docker image we build locally, but you can
+  # uncomment the image line to use the official image from Docker Hub,
+  # and comment out the build section.
   legacydb:
     container_name: oracle
     #build:
@@ -44,7 +55,9 @@ services:
       APP_USER: THE
       ORACLE_RANDOM_PASSWORD: yes
     platform: "linux/amd64"
-    image: gvenzl/oracle-free:23.9-full-faststart
+    # This image is basically the same used in the Dockerfile, but prebuilt and
+    # available in Docker Hub for convenience.
+    image: gvenzl/oracle-free:23.9-slim-faststart
     ports: [1521:1521]
     volumes: [/opt/oracle/oradata]
     healthcheck:
@@ -54,6 +67,8 @@ services:
       retries: 10
     <<: *defaults
 
+  # Flyway service to initialize/migrate the legacy Oracle DB
+  # It depends on the legacydb service to ensure the DB is up before running migrations
   legacyflyway:
     container_name: flyway
     image: flyway/flyway
@@ -62,31 +77,54 @@ services:
     depends_on: [legacydb]
     <<: *defaults
 
+  # Backend Service
+  # We use by default the docker image we build locally, but you can
+  # uncomment the image line to use the official image from GitHub Container Registry,
+  # and comment out the build section.
   backend:
     container_name: backend
-    #build:
-    #  context: backend
-    #  dockerfile: Dockerfile
-    image: ghcr.io/bcgov/nr-waste-plus/backend:283
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    # When using the image from the registry, replace XXX with the desired tag
+    #image: ghcr.io/bcgov/nr-waste-plus/backend:XXX
     ports: [8080:8080]
+    # We map the volume to override the default configuration with our local config
+    # It is easier like to than to pass everything as environment variables
     volumes: [./backend/config:/app/config]
     depends_on: [database]
     <<: *defaults
 
+  # Legacy Service
+  # We use by default the docker image we build locally, but you can
+  # uncomment the image line to use the official image from GitHub Container Registry,
+  # and comment out the build section.
   legacy:
     container_name: legacy
     build:
       context: legacy
       dockerfile: Dockerfile
+    # When using the image from the registry, replace XXX with the desired tag
+    #image: ghcr.io/bcgov/nr-waste-plus/legacy:XXX
     ports: [9090:9090]
+    # We map the volume to override the default configuration with our local config
+    # It is easier like to than to pass everything as environment variables
     volumes: [./legacy/config:/app/config]
     depends_on: [legacydb, legacyflyway]
     <<: *defaults
 
+  # Frontend Service
+  # We use by default the docker image we build locally, but you can
+  # uncomment the image line to use the official image from GitHub Container Registry,
+  # and comment out the build section.
+  # This service will be rarely used in development, as the frontend is usually run
+  # using npm directly
   frontend:
     container_name: frontend
     build:
       context: frontend
       dockerfile: Dockerfile
+    # When using the image from the registry, replace XXX with the desired tag
+    #image: ghcr.io/bcgov/nr-waste-plus/frontend:XXX
     ports: [3000:3000]
     <<: *defaults

@@ -1,5 +1,5 @@
-# Natural Resource - Harverst Residue System - Waste
+# Natural Resource - Harverst Residue System - Waste Plus
 
-Waste ++
+Waste Plus
 
-For more information, check our [wiki](https://github.com/bcgov/nr-hrs-waste/wiki)
+For more information, check our [wiki](https://github.com/bcgov/nr-waste-plus/wiki)
