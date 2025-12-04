@@ -13,6 +13,8 @@ type Filters = {
   bar?: string;
 };
 
+type TransformResult = string | string[] | undefined;
+
 let mockedPreference: UserPreference = { theme: 'g10' };
 const mockUpdatePreferences = vi.fn();
 
@@ -33,11 +35,12 @@ describe('useSyncPreferencesToFilters', () => {
     mockedPreference = { theme: 'g10', selectedClient: 'abc' };
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({});
+
       useSyncPreferencesToFilters(
         setFilters,
         { selectedClient: 'clientNumbers' },
-        (key, value): string | string[] | undefined =>
-          key === 'selectedClient' ? [value as string] : (value as string | string[] | undefined),
+        (key, value): TransformResult =>
+          key === 'selectedClient' ? [value as string] : (value as TransformResult),
       );
       return filters;
     });
@@ -52,8 +55,8 @@ describe('useSyncPreferencesToFilters', () => {
       useSyncPreferencesToFilters(
         setFilters,
         { selectedClient: 'clientNumbers' },
-        (key, value): string | string[] | undefined =>
-          key === 'selectedClient' ? [value as string] : (value as string | string[] | undefined),
+        (key, value): TransformResult =>
+          key === 'selectedClient' ? [value as string] : (value as TransformResult),
       );
       return filters;
     });
@@ -115,8 +118,8 @@ describe('useSyncPreferencesToFilters', () => {
       useSyncPreferencesToFilters(
         wrappedSetFilters,
         { selectedClient: 'clientNumbers' },
-        (key, value): string | string[] | undefined =>
-          key === 'selectedClient' ? [value as string] : (value as string | string[] | undefined),
+        (key, value): TransformResult =>
+          key === 'selectedClient' ? [value as string] : (value as TransformResult),
       );
       return filters;
     });
@@ -249,11 +252,11 @@ describe('useSyncPreferencesToFilters', () => {
       useSyncPreferencesToFilters(
         setFilters,
         { selectedClient: 'clientNumbers', selectedDistrict: 'district' },
-        (key, value): string | string[] | undefined => {
+        (key, value): TransformResult => {
           if (key === 'selectedClient') {
             return value ? [value as string] : [];
           }
-          return value as string | string[] | undefined;
+          return value as TransformResult;
         },
       );
       return filters;
