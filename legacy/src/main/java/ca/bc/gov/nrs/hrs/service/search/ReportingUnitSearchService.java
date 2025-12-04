@@ -91,12 +91,16 @@ public class ReportingUnitSearchService {
       Pageable page,
       List<String> userClientNumbers
   ) {
-
+log.info(" :: search :: filters :: {}  :: page :: {}  :: userClientNumbers :: {} ", filters, page, userClientNumbers);
     // #128: limit query by client numbers provided by the roles
-    if (CollectionUtils.isEmpty(filters.getClientNumbers())) {
+    if (CollectionUtils.isEmpty(filters.getClientNumbers()) ||
+        (filters.getClientNumbers().size() == 1 &&
+         LegacyConstants.NOVALUE.equalsIgnoreCase(
+                filters.getClientNumbers().get(0)))
+    ) {
       filters.setClientNumbers(userClientNumbers);
     }
-
+    log.info(" :: after client numbers check :: filters :: {} ", filters.getClientNumbers());
     log.info("Searching reporting units with filters: {}, pageable: {}", filters, page);
 
     return ruRepository
