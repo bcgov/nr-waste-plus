@@ -93,7 +93,7 @@ services:
     #image: ghcr.io/bcgov/nr-waste-plus/backend:XXX
     ports: [8080:8080]
     # We map the volume to override the default configuration with our local config
-    # It is easier like to than to pass everything as environment variables
+    # It is easier than passing everything as environment variables
     volumes: [./backend/config:/app/config]
     depends_on:
       database:
