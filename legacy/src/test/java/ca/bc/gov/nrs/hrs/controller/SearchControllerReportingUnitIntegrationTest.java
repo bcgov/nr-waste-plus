@@ -67,7 +67,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   @DisplayName("Search reporting units with client number not being idir and fail")
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {"Submitter_00070002", "Viewer"}
+      cognitoGroups = {"Submitter_00070002", "Viewer_00010004"}
   )
   void shouldSearchReportingUnitsWithClientNumberNotIdir() throws Exception {
     mockMvc
@@ -81,7 +81,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(38))
+        .andExpect(jsonPath("$.page.totalElements").value(32))
         .andReturn();
   }
 
@@ -89,7 +89,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   @DisplayName("Search reporting units with client number not being idir and get it")
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {"Submitter_00010004", "Viewer"}
+      cognitoGroups = {"Submitter_00010004", "Viewer_00010004"}
   )
   void shouldSearchReportingUnitsWithClientNumberNotIdirSuccess() throws Exception {
     mockMvc
@@ -105,7 +105,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(jsonPath("$.content[0].ruNumber").value(34906))
         .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(38))
+        .andExpect(jsonPath("$.page.totalElements").value(32))
         .andReturn();
   }
 
@@ -113,7 +113,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   @DisplayName("Should search reporting units with paging")
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {"Submitter_00070002", "Viewer_00070002"}
+      cognitoGroups = {"Submitter_00010004", "Viewer_00010004"}
   )
   void shouldSearchReportingUnitsWithPageAndSize() throws Exception {
     mockMvc
@@ -127,7 +127,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.content.length()").value(0))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(38))
+        .andExpect(jsonPath("$.page.totalElements").value(32))
         .andReturn();
   }
 
