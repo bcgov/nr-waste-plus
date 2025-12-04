@@ -94,10 +94,11 @@ public class ReportingUnitSearchService {
 
     // If no client numbers are provided in the filters, or if the only value is the
     // #128: limit query by client numbers provided by the roles
-    if (CollectionUtils.isEmpty(filters.getClientNumbers()) ||
-        (filters.getClientNumbers().size() == 1 &&
-         LegacyConstants.NOVALUE.equalsIgnoreCase(
-                filters.getClientNumbers().get(0)))
+    if (CollectionUtils.isEmpty(filters.getClientNumbers())
+        || (
+            filters.getClientNumbers().size() == 1
+            && LegacyConstants.NOVALUE.equalsIgnoreCase(filters.getClientNumbers().get(0))
+        )
     ) {
       filters.setClientNumbers(userClientNumbers);
     }
