@@ -3,7 +3,7 @@ x-var:
   - &POSTGRES_USER
     postgres
   - &POSTGRES_PASSWORD
-    default
+    ${POSTGRES_PASSWORD}
   - &POSTGRES_DATABASE
     postgres
   - &POSTGRES_HOST
