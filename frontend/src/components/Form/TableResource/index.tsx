@@ -126,7 +126,7 @@ const TableResource = <T,>({
     const preferenceHeaders = tableHeaders
       .filter((header) => header.selected)
       .map((header) => header.key);
-    updatePreferences({ tableHeaders: { [id]: preferenceHeaders } });
+    updatePreferences({ tableHeaders: { [id]: [...new Set(preferenceHeaders)] } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tableHeaders]);
 
@@ -141,7 +141,7 @@ const TableResource = <T,>({
         data-testid="loading-skeleton"
         className="default-table-skeleton"
         aria-label="loading table data"
-        headers={headers
+        headers={tableHeaders
           .filter((header) => header.selected)
           .map((header) => header as { header: string })}
         rowCount={content.page?.size || 10}

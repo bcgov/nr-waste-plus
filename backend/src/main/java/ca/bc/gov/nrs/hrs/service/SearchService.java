@@ -78,9 +78,11 @@ public class SearchService {
     return result
         .map(entry -> entry.withId(
                 String.format(
-                    "RU-%d-Block-%s",
+                    "RU-%d-Block-%s-%d",
                     entry.ruNumber(),
-                    Objects.toString(entry.blockId(), "N/A"))
+                    Objects.toString(entry.blockId(), "N/A"),
+                    entry.hashCode()
+                )
             )
         )
         .map(entry -> entry.withClient(clients.get(entry.client().code())));
