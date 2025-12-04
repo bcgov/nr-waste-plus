@@ -1,4 +1,4 @@
-# Natural Resource - Harverst Residue System - Waste Plus
+# Natural Resource - Harvest Residue System - Waste Plus
 
 Waste Plus
 
