@@ -51,7 +51,8 @@ services:
     #  context: legacydb
     #  dockerfile: Dockerfile
     environment:
-      APP_USER_PASSWORD: default
+      # Use an environment variable for the Oracle password. Set APP_USER_PASSWORD in your .env file or environment.
+      APP_USER_PASSWORD: ${APP_USER_PASSWORD}
       APP_USER: THE
       ORACLE_RANDOM_PASSWORD: yes
     platform: "linux/amd64"
