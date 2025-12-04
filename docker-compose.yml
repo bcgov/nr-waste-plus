@@ -74,7 +74,9 @@ services:
     image: flyway/flyway
     command: -url=jdbc:oracle:thin:@legacydb:1521/FREEPDB1 -user=THE -password=default -connectRetries=60 migrate
     volumes: [./legacy/src/test/resources/db/migration:/flyway/sql]
-    depends_on: [legacydb]
+    depends_on:
+      legacydb:
+        condition: service_healthy
     <<: *defaults
 
   # Backend Service
