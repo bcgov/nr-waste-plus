@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { merge } from 'lodash';
-import { type FC, useCallback, useMemo } from 'react';
+import { isEqual, mergeWith } from 'lodash';
+import { type FC, useCallback, useEffect, useMemo } from 'react';
 
 import { PreferenceContext, type PreferenceProviderProps } from './PreferenceContext';
 import { type UserPreference } from './types';
@@ -10,7 +10,7 @@ export const PreferenceProvider: FC<PreferenceProviderProps> = ({ children }) =>
   const { isFetched, data, refetch } = useQuery({
     queryKey: ['userPreference'],
     queryFn: async () => await loadUserPreference(),
-    refetchOnMount: true,
+    enabled: false,
   });
 
   const { mutate } = useMutation({
@@ -20,12 +20,32 @@ export const PreferenceProvider: FC<PreferenceProviderProps> = ({ children }) =>
 
   const updatePreferences = useCallback(
     (preference: Partial<UserPreference>) => {
-      if (!isFetched) return; // Don't update until loaded
-      const updatedPreferences = merge({}, data, preference) as UserPreference;
+      // Customizer to handle array merging
+      const customizer = (objValue: unknown, srcValue: unknown) => {
+        if (Array.isArray(objValue) && Array.isArray(srcValue)) {
+          // Replace only if srcValue is non-empty, otherwise keep objValue
+          return srcValue.length ? srcValue : objValue;
+        }
+      };
+
+      // Merge existing data with new preference using customizer
+      const updatedPreferences = mergeWith({}, data, preference, customizer) as UserPreference;
+
+      // Check if preference actually contains changes compared to existing data
+      const hasChanges = !isEqual(updatedPreferences, data);
+
+      // Don't update until loaded and only if there are changes
+      if (!hasChanges || !isFetched) {
+        return;
+      }
       mutate(updatedPreferences);
     },
     [mutate, isFetched, data],
   );
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   const contextValue = useMemo(
     () => ({

@@ -7,14 +7,8 @@ export const initialValue: UserPreference = {
 };
 
 const loadUserPreference = async (): Promise<UserPreference> => {
-  const storedPreference = localStorage.getItem('userPreference');
-  if (storedPreference) {
-    return JSON.parse(storedPreference);
-  }
-  // Not found in localStorage, fetch from API
   const loadedPreferences = await APIs.user.getUserPreferences();
   if (loadedPreferences && Object.keys(loadedPreferences).length > 0) {
-    localStorage.setItem('userPreference', JSON.stringify(loadedPreferences));
     return loadedPreferences;
   }
   // Fallback to initialValue if API returns nothing
@@ -22,11 +16,9 @@ const loadUserPreference = async (): Promise<UserPreference> => {
 };
 
 const saveUserPreference = async (preference: Partial<UserPreference>): Promise<UserPreference> => {
-  // Get current preferences from API (not localStorage)
   const currentPreferences = await APIs.user.getUserPreferences();
   const updatedPreferences = { ...currentPreferences, ...preference } as UserPreference;
   await APIs.user.updateUserPreferences(updatedPreferences);
-  localStorage.setItem('userPreference', JSON.stringify(updatedPreferences));
   return updatedPreferences;
 };
 
