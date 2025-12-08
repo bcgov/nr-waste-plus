@@ -41,7 +41,7 @@ const MyClientListPage: FC = () => {
         <PageTitle title="My clients" />
       </Column>
       <Column lg={16} md={8} sm={4} className="notification-column">
-        {eventNotification && (
+        {eventNotification && eventNotification.title && (
           <InlineNotification
             lowContrast
             aria-label={`Closes ${eventNotification.eventType} notification`}
