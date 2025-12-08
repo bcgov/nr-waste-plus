@@ -13,21 +13,28 @@ const WasteSearchPage: FC = () => {
   const [eventNotification, setEventNotification] = useState<GlobalEvent | undefined>(undefined);
   const { subscribe } = useSendEvent();
 
-  subscribe('error', (payload) => {
-    if (payload.eventTarget !== 'waste-search') return;
-    setEventNotification(payload);
-  });
+  useEffect(() => {
+    const unsubscribeError = subscribe('error', (payload) => {
+      if (payload.eventTarget !== 'waste-search') return;
+      setEventNotification(payload);
+    });
 
-  subscribe('warning', (payload) => {
-    if (payload.eventTarget !== 'waste-search') return;
-    setEventNotification(payload);
-  });
+    const unsubscribeWarning = subscribe('warning', (payload) => {
+      if (payload.eventTarget !== 'waste-search') return;
+      setEventNotification(payload);
+    });
 
-  subscribe('info', (payload) => {
-    if (payload.eventTarget !== 'waste-search') return;
-    setEventNotification(payload);
-  });
+    const unsubscribeInfo = subscribe('info', (payload) => {
+      if (payload.eventTarget !== 'waste-search') return;
+      setEventNotification(payload);
+    });
 
+    return () => {
+      unsubscribeError();
+      unsubscribeWarning();
+      unsubscribeInfo();
+    };
+  }, [subscribe]);
   return (
     <>
       <Column lg={16} md={8} sm={4} className="search-column__banner">
