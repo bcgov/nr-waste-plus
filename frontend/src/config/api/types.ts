@@ -21,6 +21,27 @@ export type ApiMiddleware = {
   failure?: (error: AxiosError<unknown>) => Promise<unknown>;
 };
 
+/**
+ * RFC 7807 Problem Details for HTTP APIs
+ * https://datatracker.ietf.org/doc/html/rfc7807
+ *
+ * A standardized format for describing HTTP API errors.
+ */
+export type ProblemDetails = {
+  /** A URI reference that identifies the problem type */
+  type: string;
+  /** A short, human-readable summary of the problem type */
+  title: string;
+  /** The HTTP status code */
+  status: number;
+  /** A human-readable explanation specific to this occurrence */
+  detail?: string;
+  /** A URI reference that identifies the specific occurrence */
+  instance?: string;
+  /** Additional extension members (any other properties) */
+  [key: string]: unknown;
+};
+
 export type HttpMethod = 'GET' | 'PUT' | 'POST' | 'DELETE' | 'OPTIONS' | 'HEAD' | 'PATCH';
 
 export type ApiRequestOptions = {

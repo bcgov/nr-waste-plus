@@ -6,10 +6,12 @@ import { useEffect, useState, type FC } from 'react';
 import { headers } from './constants';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
+import type { ApiError, ProblemDetails } from '@/config/api/types';
 import type { MyForestClientDto } from '@/services/types';
 
 import SearchInput from '@/components/Form/SearchInput';
 import TableResource from '@/components/Form/TableResource';
+import useSendEvent from '@/hooks/useSendEvent';
 import API from '@/services/APIs';
 
 import './index.scss';
@@ -18,8 +20,9 @@ const MyClientListing: FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [filter, setFilter] = useState<string>('');
+  const { sendEvent } = useSendEvent();
 
-  const { data, isLoading, isFetching, isError, refetch } = useQuery({
+  const { data, isLoading, isFetching, isError, refetch, error } = useQuery({
     queryKey: ['search', 'my-forest-client', { page: currentPage, size: pageSize, value: filter }],
     queryFn: () => API.forestclient.searchMyForestClients(filter, currentPage, pageSize),
     enabled: false,
@@ -48,6 +51,18 @@ const MyClientListing: FC = () => {
   useEffect(() => {
     refetch();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (isError && error) {
+      const problemDetails = (error as ApiError).body as ProblemDetails;
+      sendEvent({
+        title: problemDetails.title,
+        description: problemDetails.detail || 'No additional details provided.',
+        eventType: 'error',
+        eventTarget: 'my-client-list',
+      });
+    }
+  }, [isError, error, sendEvent]);
 
   return (
     <>

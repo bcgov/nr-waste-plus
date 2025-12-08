@@ -24,6 +24,7 @@ describe('SearchService', () => {
       method: 'GET',
       url: '/api/search/reporting-units',
       query: { mainSearchTerm: 'Unit1', page: 1, size: 10 },
+      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toEqual(mockData);
   });
@@ -37,6 +38,7 @@ describe('SearchService', () => {
       method: 'GET',
       url: '/api/search/reporting-units-users',
       query: { userId },
+      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toEqual(mockData);
   });
@@ -50,6 +52,7 @@ describe('SearchService', () => {
       method: 'GET',
       url: '/api/search/reporting-units-users',
       query: { userId },
+      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toEqual(mockData);
   });

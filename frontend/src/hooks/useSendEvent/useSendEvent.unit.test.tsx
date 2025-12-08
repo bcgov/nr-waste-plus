@@ -7,10 +7,11 @@ import useSendEvent from './index';
 
 import type { GlobalEvent, EventType } from './types';
 
-const makeEvent = (eventType: EventType): GlobalEvent => ({
+const makeEvent = (eventType: EventType, eventTarget?: string): GlobalEvent => ({
   title: 'Test',
   description: 'Test description',
   eventType,
+  eventTarget,
 });
 
 describe('useSendEvent', () => {
@@ -115,5 +116,52 @@ describe('useSendEvent', () => {
         description: '',
       }),
     ).not.toThrow();
+  });
+
+  it('should include eventTarget in the event payload', () => {
+    const { result } = renderHook(() => useSendEvent());
+    const handler = vi.fn();
+    const event = makeEvent('info', 'test-target');
+
+    act(() => {
+      result.current.subscribe('info', handler);
+    });
+
+    act(() => {
+      result.current.sendEvent(event);
+    });
+
+    expect(handler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventTarget: 'test-target',
+      }),
+    );
+  });
+
+  it('should work with events that have no eventTarget', () => {
+    const { result } = renderHook(() => useSendEvent());
+    const handler = vi.fn();
+    const event = makeEvent('warning');
+
+    act(() => {
+      result.current.subscribe('warning', handler);
+    });
+
+    act(() => {
+      result.current.sendEvent(event);
+    });
+
+    expect(handler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: 'warning',
+        title: 'Test',
+        description: 'Test description',
+      }),
+    );
+    expect(handler).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        eventTarget: expect.anything(),
+      }),
+    );
   });
 });

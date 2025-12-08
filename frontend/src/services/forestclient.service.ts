@@ -7,6 +7,7 @@ import type {
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { CancelablePromise } from '@/config/api/CancelablePromise';
 
+import { problemDetailsMiddleware } from '@/config/api/problemDetailsMiddleware';
 import { HttpClient, type APIConfig } from '@/config/api/types';
 
 /**
@@ -33,6 +34,7 @@ export class ForestClientService extends HttpClient {
       path: {
         clientNumber: clientNumber,
       },
+      middleware: [problemDetailsMiddleware()],
     });
   }
 
@@ -48,6 +50,7 @@ export class ForestClientService extends HttpClient {
       path: {
         clientNumber: clientNumber,
       },
+      middleware: [problemDetailsMiddleware()],
     });
   }
 
@@ -71,6 +74,7 @@ export class ForestClientService extends HttpClient {
         size: size,
         value: value,
       },
+      middleware: [problemDetailsMiddleware()],
     });
   }
 
@@ -94,6 +98,7 @@ export class ForestClientService extends HttpClient {
         size,
         values,
       },
+      middleware: [problemDetailsMiddleware()],
     });
   }
 
@@ -117,6 +122,7 @@ export class ForestClientService extends HttpClient {
         size: size,
         value: value,
       },
+      middleware: [problemDetailsMiddleware()],
     });
   }
 }

@@ -8,6 +8,7 @@ import type {
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { CancelablePromise } from '@/config/api/CancelablePromise';
 
+import { problemDetailsMiddleware } from '@/config/api/problemDetailsMiddleware';
 import { HttpClient, type APIConfig } from '@/config/api/types';
 
 export class SearchService extends HttpClient {
@@ -23,6 +24,7 @@ export class SearchService extends HttpClient {
       method: 'GET',
       url: '/api/search/reporting-units',
       query: { ...removeEmpty(filters), ...removeEmpty(pageable) },
+      middleware: [problemDetailsMiddleware()],
     });
   }
 
@@ -31,6 +33,7 @@ export class SearchService extends HttpClient {
       method: 'GET',
       url: '/api/search/reporting-units-users',
       query: { userId },
+      middleware: [problemDetailsMiddleware()],
     });
   }
 }

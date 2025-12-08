@@ -1,6 +1,7 @@
 @use './mixins';
 @use './overrides';
 @use "./variables" as variables;
+@use '@carbon/react/scss/spacing' as *;
 
 /* Toast Notification - Set it to the top-right corner and animate */
 .#{variables.$bcgov-prefix}--toast-notification {
@@ -16,6 +17,16 @@
   }
   &.slide-out {
     animation: slide-out-right 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+}
+
+.notification-column {  
+  padding-left: $spacing-05;
+  padding-right: $spacing-03;
+
+  .#{variables.$bcgov-prefix}--inline-notification {
+    width: 100%;
+    max-inline-size: none;
   }
 }
 
