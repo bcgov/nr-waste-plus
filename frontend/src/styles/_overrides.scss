@@ -461,3 +461,7 @@ a.#{variables.$bcgov-prefix}--header__name {
     padding-right: 0;
   }
 }
+
+.#{variables.$bcgov-prefix}--inline-notification__title {
+  font-weight: var(--cds-heading-compact-01-font-weight, 600);
+}

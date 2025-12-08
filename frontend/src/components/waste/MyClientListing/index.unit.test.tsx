@@ -230,8 +230,7 @@ describe('MyClientListing', () => {
         expect(screen.getByText('Client 1')).toBeDefined();
       });
 
-      const initialCallCount = (APIs.forestclient.searchMyForestClients as Mock).mock.calls
-        .length;
+      const initialCallCount = (APIs.forestclient.searchMyForestClients as Mock).mock.calls.length;
 
       // Verify that pagination controls exist
       const pageSizeSelect = screen.getByLabelText('Items per page:');
