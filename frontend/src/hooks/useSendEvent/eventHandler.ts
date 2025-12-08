@@ -76,3 +76,11 @@ export const eventHandler = new EventHandler();
 export const sendEvent = (detail: GlobalEvent) => {
   globalThis.dispatchEvent(new CustomEvent(BRIDGED_EVENT, { detail }));
 };
+
+export const clearEvents = (eventTarget?: string) => {
+  globalThis.dispatchEvent(
+    new CustomEvent(BRIDGED_EVENT, {
+      detail: { eventType: 'info', title: 'clear-events', description: eventTarget || '' },
+    }),
+  );
+};

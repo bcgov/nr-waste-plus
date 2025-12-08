@@ -20,7 +20,7 @@ const MyClientListing: FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [filter, setFilter] = useState<string>('');
-  const { sendEvent } = useSendEvent();
+  const { sendEvent, clearEvents } = useSendEvent();
 
   const { data, isLoading, isFetching, isError, refetch, error } = useQuery({
     queryKey: ['search', 'my-forest-client', { page: currentPage, size: pageSize, value: filter }],
@@ -39,6 +39,7 @@ const MyClientListing: FC = () => {
   });
 
   const executeSearch = () => {
+    clearEvents('my-client-list');
     setTimeout(refetch, 1);
   };
 

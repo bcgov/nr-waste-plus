@@ -15,6 +15,7 @@ vi.mock('@/services/APIs');
 vi.mock('@/hooks/useSendEvent', () => ({
   default: vi.fn(() => ({
     sendEvent: vi.fn(),
+    clearEvents: vi.fn(),
   })),
 }));
 
@@ -293,8 +294,10 @@ describe('MyClientListing', () => {
     it('sends event when error occurs', async () => {
       const useSendEvent = await import('@/hooks/useSendEvent');
       const mockSendEvent = vi.fn();
+      const mockClearEvents = vi.fn();
       vi.mocked(useSendEvent.default).mockReturnValue({
         sendEvent: mockSendEvent,
+        clearEvents: mockClearEvents,
         subscribe: vi.fn(),
         unsubscribe: vi.fn(),
       });
@@ -324,8 +327,10 @@ describe('MyClientListing', () => {
     it('sends event with default detail when error has no detail', async () => {
       const useSendEvent = await import('@/hooks/useSendEvent');
       const mockSendEvent = vi.fn();
+      const mockClearEvents = vi.fn();
       vi.mocked(useSendEvent.default).mockReturnValue({
         sendEvent: mockSendEvent,
+        clearEvents: mockClearEvents,
         subscribe: vi.fn(),
         unsubscribe: vi.fn(),
       });

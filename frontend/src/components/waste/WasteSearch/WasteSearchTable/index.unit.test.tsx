@@ -99,12 +99,15 @@ const renderWithProps = async () => {
 
 describe('WasteSearchTable', () => {
   let sendEventMock: Mock;
+  let clearEventsMock: Mock;
 
   beforeEach(() => {
     vi.clearAllMocks();
     sendEventMock = vi.fn();
+    clearEventsMock = vi.fn();
     vi.spyOn(useSendEvent, 'default').mockReturnValue({
       sendEvent: sendEventMock,
+      clearEvents: clearEventsMock,
       subscribe: vi.fn(),
       unsubscribe: vi.fn(),
     });
@@ -212,7 +215,7 @@ describe('WasteSearchTable', () => {
       expect(APIs.search.searchReportingUnit).not.toHaveBeenCalled();
     });
 
-    it('sends event when search is executed', async () => {
+    it('clears events when search is executed', async () => {
       (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
@@ -223,12 +226,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(sendEventMock).toHaveBeenCalledWith(
-          expect.objectContaining({
-            eventType: 'error',
-            eventTarget: 'waste-search',
-          }),
-        );
+        expect(clearEventsMock).toHaveBeenCalledWith('waste-search');
       });
     });
   });

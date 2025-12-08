@@ -27,7 +27,7 @@ const WasteSearchTable: FC = () => {
     {} as ReportingUnitSearchParametersDto,
   );
   const [sort, setSort] = useState<Record<string, SortDirectionType>>({});
-  const { sendEvent } = useSendEvent();
+  const { sendEvent, clearEvents } = useSendEvent();
 
   const { data, isLoading, isFetching, isError, refetch, error } = useQuery({
     queryKey: ['search', 'ru', { page: currentPage, size: pageSize, ...filters, ...sort }],
@@ -43,12 +43,7 @@ const WasteSearchTable: FC = () => {
   });
 
   const executeSearch = () => {
-    sendEvent({
-      title: '',
-      description: '',
-      eventType: 'error',
-      eventTarget: 'waste-search',
-    });
+    clearEvents('waste-search');
     if (Object.keys(removeEmpty(filters)).length > 0) {
       setTimeout(refetch, 1);
     }

@@ -164,4 +164,101 @@ describe('useSendEvent', () => {
       }),
     );
   });
+
+  describe('clearEvents', () => {
+    it('should dispatch a clear-events info event with eventTarget', () => {
+      const { result } = renderHook(() => useSendEvent());
+      const handler = vi.fn();
+
+      act(() => {
+        result.current.subscribe('info', handler);
+      });
+
+      act(() => {
+        result.current.clearEvents('test-target');
+      });
+
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: 'info',
+          title: 'clear-events',
+          description: 'test-target',
+        }),
+      );
+    });
+
+    it('should dispatch a clear-events info event without eventTarget', () => {
+      const { result } = renderHook(() => useSendEvent());
+      const handler = vi.fn();
+
+      act(() => {
+        result.current.subscribe('info', handler);
+      });
+
+      act(() => {
+        result.current.clearEvents();
+      });
+
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: 'info',
+          title: 'clear-events',
+          description: '',
+        }),
+      );
+    });
+
+    it('should only trigger info listeners when clearing events', () => {
+      const { result } = renderHook(() => useSendEvent());
+      const infoHandler = vi.fn();
+      const errorHandler = vi.fn();
+      const successHandler = vi.fn();
+
+      act(() => {
+        result.current.subscribe('info', infoHandler);
+        result.current.subscribe('error', errorHandler);
+        result.current.subscribe('success', successHandler);
+      });
+
+      act(() => {
+        result.current.clearEvents('test-target');
+      });
+
+      expect(infoHandler).toHaveBeenCalledTimes(1);
+      expect(errorHandler).not.toHaveBeenCalled();
+      expect(successHandler).not.toHaveBeenCalled();
+    });
+
+    it('should work alongside regular sendEvent calls', () => {
+      const { result } = renderHook(() => useSendEvent());
+      const handler = vi.fn();
+
+      act(() => {
+        result.current.subscribe('info', handler);
+      });
+
+      act(() => {
+        result.current.sendEvent(makeEvent('info', 'regular-event'));
+      });
+
+      act(() => {
+        result.current.clearEvents('clear-target');
+      });
+
+      expect(handler).toHaveBeenCalledTimes(2);
+      expect(handler).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          eventTarget: 'regular-event',
+        }),
+      );
+      expect(handler).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          title: 'clear-events',
+          description: 'clear-target',
+        }),
+      );
+    });
+  });
 });
