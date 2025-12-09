@@ -48,17 +48,22 @@ type ColorTagProps = {
  * ```
  */
 const ColorTag: FC<ColorTagProps> = ({ value, colorMap }) => {
-  // If value is null, default to N/A
-  const actualValue = value ?? { code: 'N/A', description: 'Not Applicable' };
+  // Check if value is null or if both code and description are null/empty
+  const hasCode = Boolean(value?.code?.trim());
+  const hasDescription = Boolean(value?.description?.trim());
+  const shouldUseDefault = !value || (!hasCode && !hasDescription);
 
-  const hasCode = Boolean(actualValue.code?.trim());
-  const hasDescription = Boolean(actualValue.description?.trim());
+  // If value is null or both code and description are null/empty, default to N/A
+  const actualValue = shouldUseDefault ? { code: 'N/A', description: 'Not Applicable' } : value;
 
-  const displayText = hasDescription ? actualValue.description : '-';
+  const finalHasCode = Boolean(actualValue.code?.trim());
+  const finalHasDescription = Boolean(actualValue.description?.trim());
+
+  const displayText = finalHasDescription ? actualValue.description : '-';
 
   // Determine tooltip: show if we have both code and description
   const tooltipLabel =
-    hasCode && hasDescription ? `${actualValue.code} - ${actualValue.description}` : '';
+    finalHasCode && finalHasDescription ? `${actualValue.code} - ${actualValue.description}` : '';
 
   const tag = (
     <Tag type={colorMap[actualValue.code] ?? 'gray'} size="md">

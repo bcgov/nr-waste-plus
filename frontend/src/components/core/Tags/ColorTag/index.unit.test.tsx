@@ -103,14 +103,14 @@ describe('ColorTag', () => {
     expect(tooltip).toBeNull();
   });
 
-  it('handles both code and description being null', () => {
+  it('handles both code and description being null by defaulting to N/A', () => {
     render(
       <ColorTag
         value={{ code: null as unknown as string, description: null as unknown as string }}
         colorMap={colorMap}
       />,
     );
-    expect(screen.getByText('-')).toBeDefined();
+    expect(screen.getByText('Not Applicable')).toBeDefined();
   });
 
   it('handles null value by defaulting to N/A', () => {
@@ -124,5 +124,23 @@ describe('ColorTag', () => {
     // Tooltip should be present for null values
     const tooltip = tag.closest('.cds--tooltip');
     expect(tooltip).not.toBeNull();
+  });
+
+  it('renders tooltip with N/A when both code and description are null', () => {
+    render(
+      <ColorTag
+        value={{ code: null as unknown as string, description: null as unknown as string }}
+        colorMap={colorMap}
+      />,
+    );
+    const tag = screen.getByText('Not Applicable');
+    // Tooltip should be present when both code and description are null
+    const tooltip = tag.closest('.cds--tooltip');
+    expect(tooltip).not.toBeNull();
+  });
+
+  it('handles both code and description being empty strings by defaulting to N/A', () => {
+    render(<ColorTag value={{ code: '', description: '' }} colorMap={colorMap} />);
+    expect(screen.getByText('Not Applicable')).toBeDefined();
   });
 });
