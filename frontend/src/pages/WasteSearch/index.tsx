@@ -1,5 +1,5 @@
 import { Column, InlineNotification } from '@carbon/react';
-import { useState, type FC } from 'react';
+import { useEffect, useState, type FC } from 'react';
 
 import type { GlobalEvent } from '@/hooks/useSendEvent/types';
 
