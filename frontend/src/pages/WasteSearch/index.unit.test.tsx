@@ -91,7 +91,7 @@ describe('WasteSearchPage', () => {
     });
 
     expect(screen.getByText('Test Error')).toBeDefined();
-    expect(screen.getAllByText('This is a test error message')).toHaveLength(2);
+    expect(screen.getAllByText('This is a test error message')).toHaveLength(1);
   });
 
   it('displays warning notification when warning event is sent', async () => {
@@ -107,7 +107,7 @@ describe('WasteSearchPage', () => {
     });
 
     expect(screen.getByText('Test Warning')).toBeDefined();
-    expect(screen.getAllByText('This is a test warning message')).toHaveLength(2);
+    expect(screen.getAllByText('This is a test warning message')).toHaveLength(1);
   });
 
   it('displays info notification when info event is sent', async () => {
@@ -123,7 +123,7 @@ describe('WasteSearchPage', () => {
     });
 
     await waitFor(() => expect(screen.getByText('Test Info')).toBeDefined());
-    expect(screen.getAllByText('This is a test info message')).toHaveLength(2);
+    expect(screen.getAllByText('This is a test info message')).toHaveLength(1);
   });
 
   it('does not display notification when event target does not match', async () => {
