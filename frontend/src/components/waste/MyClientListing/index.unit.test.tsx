@@ -120,8 +120,6 @@ const mockLargeDataset: PageableResponse<MyForestClientDto> = {
   page: { number: 0, size: 10, totalElements: 25, totalPages: 3 },
 };
 
-
-
 const renderWithProps = async () => {
   const qc = new QueryClient({
     defaultOptions: {

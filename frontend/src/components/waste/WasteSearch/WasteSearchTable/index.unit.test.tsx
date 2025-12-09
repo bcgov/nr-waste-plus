@@ -445,7 +445,7 @@ describe('WasteSearchTable', () => {
       // Click on sortable column header (Block ID) - verifies sorting is available
       const blockIdHeader = screen.getByText('Block ID');
       expect(blockIdHeader).toBeDefined();
-      
+
       // Note: With mocked TableResource, we just verify the UI allows sorting
       // The actual sort functionality is tested through the onSortChange callback
     });
