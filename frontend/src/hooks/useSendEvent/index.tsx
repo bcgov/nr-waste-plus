@@ -1,4 +1,4 @@
-import { eventHandler, sendEvent } from './eventHandler';
+import { eventHandler, sendEvent, clearEvents } from './eventHandler';
 
 import type { EventType, EventListener } from './types';
 
@@ -32,6 +32,7 @@ const useSendEvent = () => {
     sendEvent,
     subscribe,
     unsubscribe,
+    clearEvents,
   };
 };
 

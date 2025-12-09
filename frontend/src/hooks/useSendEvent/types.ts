@@ -5,6 +5,7 @@ export interface GlobalEvent {
   description: string;
   eventType: EventType;
   timeout?: number;
+  eventTarget?: string;
 }
 
 export type EventListener = (payload: GlobalEvent) => void;

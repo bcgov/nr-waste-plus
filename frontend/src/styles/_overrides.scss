@@ -71,7 +71,7 @@
   );
   $notification-tokens: utilities.merge(
     notification-tokens.$notification-tokens,
-    light-notification-overrides.$light-notification-token-overrides
+    dark-notification-overrides.$dark-notification-token-overrides
   );
 
   @include theme.add-component-tokens($button-tokens);
@@ -438,7 +438,7 @@ a.#{variables.$bcgov-prefix}--header__name {
 /// @link https://github.com/carbon-design-system/carbon/issues/3010
 .#{variables.$bcgov-prefix}--content {
   padding: 0;
-  //background: var(--cds-background);
+  background: var(--cds-background);
 }
 
 .#{variables.$bcgov-prefix}--header ~ .#{variables.$bcgov-prefix}--content, div:has(.#{variables.$bcgov-prefix}--header) ~ .#{variables.$bcgov-prefix}--content {
@@ -460,4 +460,8 @@ a.#{variables.$bcgov-prefix}--header__name {
     padding-left: 16rem;
     padding-right: 0;
   }
+}
+
+.#{variables.$bcgov-prefix}--inline-notification__title {
+  font-weight: var(--cds-heading-compact-01-font-weight, 600);
 }

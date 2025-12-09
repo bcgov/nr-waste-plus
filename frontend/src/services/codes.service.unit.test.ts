@@ -18,6 +18,7 @@ describe('CodesService', () => {
     expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
       method: 'GET',
       url: '/api/codes/samplings',
+      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toEqual(mockData);
   });
@@ -29,6 +30,7 @@ describe('CodesService', () => {
     expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
       method: 'GET',
       url: '/api/codes/districts',
+      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toEqual(mockData);
   });
@@ -40,6 +42,7 @@ describe('CodesService', () => {
     expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
       method: 'GET',
       url: '/api/codes/assess-area-statuses',
+      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toEqual(mockData);
   });

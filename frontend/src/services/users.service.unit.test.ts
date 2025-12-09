@@ -22,6 +22,7 @@ describe('UserService', () => {
     expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
       method: 'GET',
       url: '/api/users/preferences',
+      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toEqual(mockPrefs);
   });
@@ -34,6 +35,7 @@ describe('UserService', () => {
       method: 'PUT',
       url: '/api/users/preferences',
       body: prefs,
+      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toBeUndefined();
   });
