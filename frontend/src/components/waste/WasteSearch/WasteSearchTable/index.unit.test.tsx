@@ -126,7 +126,6 @@ describe('WasteSearchTable', () => {
       { code: 'APP', description: 'Approved' },
       { code: 'SUB', description: 'Submitted' },
     ]);
-    (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockEmptyResults);
   });
 
   describe('initial rendering', () => {
@@ -153,7 +152,7 @@ describe('WasteSearchTable', () => {
 
   describe('search functionality', () => {
     it('executes search when search button is clicked with filters', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (APIs.search.searchReportingUnit as Mock).mockResolvedValueOnce(mockSearchResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -171,7 +170,7 @@ describe('WasteSearchTable', () => {
     });
 
     it('displays search results after successful search', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (APIs.search.searchReportingUnit as Mock).mockResolvedValueOnce(mockSearchResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -187,7 +186,7 @@ describe('WasteSearchTable', () => {
     });
 
     it('displays no results message when search returns empty', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockEmptyResults);
+      (APIs.search.searchReportingUnit as Mock).mockResolvedValueOnce(mockEmptyResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -216,7 +215,7 @@ describe('WasteSearchTable', () => {
     });
 
     it('clears events when search is executed', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (APIs.search.searchReportingUnit as Mock).mockResolvedValueOnce(mockSearchResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -242,7 +241,10 @@ describe('WasteSearchTable', () => {
           totalPages: 5,
         },
       };
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(largeResults);
+      (APIs.search.searchReportingUnit as Mock)
+        .mockResolvedValueOnce(largeResults)
+        .mockResolvedValueOnce(largeResults)
+        .mockResolvedValueOnce(largeResults);
 
       await renderWithProps();
 
@@ -278,7 +280,7 @@ describe('WasteSearchTable', () => {
           totalPages: 5,
         },
       };
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(largeResults);
+      (APIs.search.searchReportingUnit as Mock).mockResolvedValueOnce(largeResults);
 
       await renderWithProps();
 
@@ -314,7 +316,7 @@ describe('WasteSearchTable', () => {
           totalPages: 1,
         },
       };
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(largeResults);
+      (APIs.search.searchReportingUnit as Mock).mockResolvedValueOnce(largeResults);
 
       await renderWithProps();
 
@@ -335,7 +337,9 @@ describe('WasteSearchTable', () => {
 
   describe('sorting', () => {
     it('handles sort change correctly', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (APIs.search.searchReportingUnit as Mock)
+        .mockResolvedValueOnce(mockSearchResults)
+        .mockResolvedValueOnce(mockSearchResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -365,7 +369,7 @@ describe('WasteSearchTable', () => {
     });
 
     it('can sort by multiple columns', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (APIs.search.searchReportingUnit as Mock).mockResolvedValueOnce(mockSearchResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -476,7 +480,7 @@ describe('WasteSearchTable', () => {
 
   describe('filter integration', () => {
     it('updates search when filters change', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (APIs.search.searchReportingUnit as Mock).mockResolvedValueOnce(mockSearchResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -494,7 +498,7 @@ describe('WasteSearchTable', () => {
     });
 
     it('includes all filter parameters in search request', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (APIs.search.searchReportingUnit as Mock).mockResolvedValueOnce(mockSearchResults);
       await renderWithProps();
 
       // Open advanced filters
@@ -544,7 +548,7 @@ describe('WasteSearchTable', () => {
     });
 
     it('hides loading state after data is fetched', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (APIs.search.searchReportingUnit as Mock).mockResolvedValueOnce(mockSearchResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -569,7 +573,7 @@ describe('WasteSearchTable', () => {
     });
 
     it('clears cache on each search (gcTime: 0)', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (APIs.search.searchReportingUnit as Mock).mockResolvedValueOnce(mockSearchResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
