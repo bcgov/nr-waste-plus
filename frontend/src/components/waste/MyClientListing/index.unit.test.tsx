@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
@@ -17,6 +18,70 @@ vi.mock('@/hooks/useSendEvent', () => ({
     sendEvent: vi.fn(),
     clearEvents: vi.fn(),
   })),
+}));
+
+// Mock TableResource to avoid slow Carbon component rendering
+vi.mock('@/components/Form/TableResource', () => ({
+  default: ({ headers, content, loading, error, onPageChange, id }: any) => {
+    if (loading) {
+      return <div data-testid="loading-skeleton">Loading...</div>;
+    }
+    if (error) {
+      return <div>Something went wrong!</div>;
+    }
+    if (!content?.content || content.content.length === 0) {
+      return content?.page?.totalElements === 0 ? (
+        <div>No results</div>
+      ) : (
+        <div>Nothing to show yet!</div>
+      );
+    }
+    return (
+      <div data-testid={id}>
+        <table>
+          <thead>
+            <tr>
+              {headers.map((h: any) => (
+                <th key={h.key}>{h.header}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {content.content.map((row: any) => (
+              <tr key={row.id}>
+                <td>{row.client.code}</td>
+                <td>{row.client.description}</td>
+                <td>{row.submissionsCount}</td>
+                <td>{row.blocksCount}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div>
+          <label htmlFor="page-size-select">Items per page:</label>
+          <select
+            id="page-size-select"
+            aria-label="Items per page:"
+            onChange={(e) =>
+              onPageChange?.({ page: content.page.number, pageSize: Number(e.target.value) })
+            }
+          >
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+          <button
+            aria-label="Next page"
+            onClick={() =>
+              onPageChange?.({ page: content.page.number + 1, pageSize: content.page.size })
+            }
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  },
 }));
 
 const mockSearchResults: PageableResponse<MyForestClientDto> = {
@@ -55,10 +120,13 @@ const mockLargeDataset: PageableResponse<MyForestClientDto> = {
   page: { number: 0, size: 10, totalElements: 25, totalPages: 3 },
 };
 
+
+
 const renderWithProps = async () => {
   const qc = new QueryClient({
     defaultOptions: {
-      queries: { retry: false },
+      queries: { retry: false, gcTime: 0, staleTime: 0 },
+      mutations: { retry: false },
     },
   });
   await act(async () => {
