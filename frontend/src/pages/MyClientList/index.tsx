@@ -6,6 +6,7 @@ import type { GlobalEvent } from '@/hooks/useSendEvent/types';
 import PageTitle from '@/components/core/PageTitle';
 import MyClientListing from '@/components/waste/MyClientListing';
 import useSendEvent from '@/hooks/useSendEvent';
+import { eventIconDescription } from '@/hooks/useSendEvent/eventHandler';
 
 import './index.scss';
 
@@ -35,13 +36,14 @@ const MyClientListPage: FC = () => {
       unsubscribeInfo();
     };
   }, [subscribe]);
+
   return (
     <>
       <Column lg={16} md={8} sm={4} className="search-column__banner">
         <PageTitle title="My clients" />
       </Column>
       <Column lg={16} md={8} sm={4} className="notification-column">
-        {eventNotification && eventNotification.title && (
+        {eventNotification?.title && (
           <InlineNotification
             lowContrast
             aria-label={`Closes ${eventNotification.eventType} notification`}
@@ -49,15 +51,7 @@ const MyClientListPage: FC = () => {
             onClose={() => setEventNotification(undefined)}
             onCloseButtonClick={() => setEventNotification(undefined)}
             role="alert"
-            statusIconDescription={
-              eventNotification.eventType === 'error'
-                ? 'Error icon'
-                : eventNotification.eventType === 'warning'
-                ? 'Warning icon'
-                : eventNotification.eventType === 'info'
-                ? 'Info icon'
-                : 'Notification icon'
-            }
+            statusIconDescription={eventIconDescription(eventNotification)}
             subtitle={eventNotification.description}
             title={eventNotification.title}
           />

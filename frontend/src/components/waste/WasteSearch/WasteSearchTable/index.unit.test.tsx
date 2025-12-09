@@ -304,9 +304,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       // Wait a bit to ensure no search is triggered
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      });
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(APIs.search.searchReportingUnit).not.toHaveBeenCalled();
     });

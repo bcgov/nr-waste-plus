@@ -167,7 +167,13 @@ export const problemDetailsMiddleware = (): ApiMiddleware => ({
     // Create a synthetic response with Problem Details
     const modifiedError = {
       ...error,
-      response: { ...(error?.response || {}), data: problemDetail },
+      response: {
+        data: problemDetail,
+        status: 0,
+        statusText: '',
+        headers: {},
+        config: error.config!,
+      },
     };
 
     throw modifiedError;

@@ -6,6 +6,7 @@ import type { GlobalEvent } from '@/hooks/useSendEvent/types';
 import PageTitle from '@/components/core/PageTitle';
 import WasteSearch from '@/components/waste/WasteSearch/WasteSearchTable';
 import useSendEvent from '@/hooks/useSendEvent';
+import { eventIconDescription } from '@/hooks/useSendEvent/eventHandler';
 
 import './index.scss';
 
@@ -44,7 +45,7 @@ const WasteSearchPage: FC = () => {
         />
       </Column>
       <Column lg={16} md={8} sm={4} className="notification-column">
-        {eventNotification && eventNotification.title && (
+        {eventNotification?.title && (
           <InlineNotification
             lowContrast
             aria-label={`Closes ${eventNotification.eventType} notification`}
@@ -52,15 +53,7 @@ const WasteSearchPage: FC = () => {
             onClose={() => setEventNotification(undefined)}
             onCloseButtonClick={() => setEventNotification(undefined)}
             role="alert"
-            statusIconDescription={
-              eventNotification.eventType === 'error'
-                ? 'Error icon'
-                : eventNotification.eventType === 'warning'
-                ? 'Warning icon'
-                : eventNotification.eventType === 'info'
-                ? 'Information icon'
-                : 'Status icon'
-            }
+            statusIconDescription={eventIconDescription(eventNotification)}
             subtitle={eventNotification.description}
             title={eventNotification.title}
           />

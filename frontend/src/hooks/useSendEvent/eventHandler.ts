@@ -84,3 +84,16 @@ export const clearEvents = (eventTarget?: string) => {
     }),
   );
 };
+
+export const eventIconDescription = (event: GlobalEvent) => {
+  switch (event.eventType) {
+    case 'error':
+      return 'Error icon';
+    case 'warning':
+      return 'Warning icon';
+    case 'info':
+      return 'Info icon';
+    default:
+      return 'Notification icon';
+  }
+};

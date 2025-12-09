@@ -334,7 +334,7 @@ describe('MyClientListing', () => {
       await waitFor(() => {
         const calls = (APIs.forestclient.searchMyForestClients as Mock).mock.calls;
         // Verify it doesn't go beyond valid page range
-        expect(calls[calls.length - 1][1]).toBeLessThan(3);
+        expect(calls.at(-1)?.[1]).toBeLessThan(3);
       });
     });
   });
