@@ -116,6 +116,8 @@ describe('ColorTag', () => {
   it('handles null value by defaulting to N/A', () => {
     render(<ColorTag value={null} colorMap={colorMap} />);
     expect(screen.getByText('Not Applicable')).toBeDefined();
+    const tag = screen.getByText('Not Applicable').closest('.cds--tag');
+    expect(tag?.className).toContain('cds--tag--gray');
   });
 
   it('renders tooltip with N/A when value is null', () => {
