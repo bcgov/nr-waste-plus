@@ -131,7 +131,7 @@ describe('ColorTag', () => {
       expect(tooltipContent.textContent).toContain(tooltipText);
     } else {
       // fallback: check if tooltip text is in the document
-      expect(screen.queryByText(tooltipText)).toBeDefined();
+      expect(screen.queryByText(tooltipText)).not.toBeNull();
     }
   });
 });
