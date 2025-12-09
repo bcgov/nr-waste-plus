@@ -25,7 +25,7 @@ vi.mock('@/routes/routePaths', () => ({
       children: [
         {
           id: 'Profile',
-          path: '/settings/profile',
+          path: 'profile',
           isMenuItem: true,
         },
       ],
