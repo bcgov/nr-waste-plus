@@ -52,7 +52,15 @@ const WasteSearchPage: FC = () => {
             onClose={() => setEventNotification(undefined)}
             onCloseButtonClick={() => setEventNotification(undefined)}
             role="alert"
-            statusIconDescription={eventNotification.description}
+            statusIconDescription={
+              eventNotification.eventType === 'error'
+                ? 'Error icon'
+                : eventNotification.eventType === 'warning'
+                ? 'Warning icon'
+                : eventNotification.eventType === 'info'
+                ? 'Information icon'
+                : 'Status icon'
+            }
             subtitle={eventNotification.description}
             title={eventNotification.title}
           />

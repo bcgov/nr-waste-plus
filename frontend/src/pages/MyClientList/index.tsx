@@ -49,7 +49,15 @@ const MyClientListPage: FC = () => {
             onClose={() => setEventNotification(undefined)}
             onCloseButtonClick={() => setEventNotification(undefined)}
             role="alert"
-            statusIconDescription={eventNotification.description}
+            statusIconDescription={
+              eventNotification.eventType === 'error'
+                ? 'Error icon'
+                : eventNotification.eventType === 'warning'
+                ? 'Warning icon'
+                : eventNotification.eventType === 'info'
+                ? 'Info icon'
+                : 'Notification icon'
+            }
             subtitle={eventNotification.description}
             title={eventNotification.title}
           />

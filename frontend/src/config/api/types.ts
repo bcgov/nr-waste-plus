@@ -29,7 +29,7 @@ export type ApiMiddleware = {
  */
 export type ProblemDetails = {
   /** A URI reference that identifies the problem type */
-  type: string;
+  type?: string;
   /** A short, human-readable summary of the problem type */
   title: string;
   /** The HTTP status code */
