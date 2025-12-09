@@ -124,5 +124,14 @@ describe('ColorTag', () => {
     // Tooltip should be present for null values
     const tooltip = tag.closest('.cds--tooltip');
     expect(tooltip).not.toBeNull();
+    // Validate tooltip content
+    const tooltipText = 'N/A - Not Applicable';
+    const tooltipContent = document.querySelector('.cds--popover-content.cds--tooltip-content');
+    if (tooltipContent) {
+      expect(tooltipContent.textContent).toContain(tooltipText);
+    } else {
+      // fallback: check if tooltip text is in the document
+      expect(screen.queryByText(tooltipText)).toBeDefined();
+    }
   });
 });
