@@ -3,6 +3,7 @@ import type { CodeDescriptionDto, ReportingUnitSearchResultDto } from '@/service
 
 import ColorTag, { type CarbonColors } from '@/components/core/Tags/ColorTag';
 import DateTag from '@/components/core/Tags/DateTag';
+import YesNoTag from '@/components/core/Tags/YesNoTag';
 import CodeDescriptionTag from '@/components/waste/CodeDescriptionTag';
 import RedirectLinkTag from '@/components/waste/RedirectLinkTag';
 import { env } from '@/env';
@@ -32,6 +33,10 @@ const statusColorMap: Record<string, CarbonColors> = {
 
 export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
   { key: 'blockId', header: 'Block ID', sortable: true, selected: true },
+  { key: 'licenseNumber', header: 'License No.', sortable: true, selected: false },
+  { key: 'cuttingPermit', header: 'CP - Cutting permit', sortable: true, selected: false },
+  { key: 'timberMark', header: 'TM - Timber mark', sortable: true, selected: false },
+
   {
     key: 'ruNumber',
     header: 'RU No.',
@@ -59,9 +64,6 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
   },
   { key: 'client.description', header: 'Client Name', sortable: true, selected: true },
 
-  { key: 'clientLocation.code', header: 'Location Code', sortable: true },
-  { key: 'clientLocation.description', header: 'Location', sortable: true },
-
   {
     key: 'sampling',
     header: 'Sampling Option',
@@ -71,6 +73,14 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
   },
   { key: 'sampling.code', header: 'Sampling Code', sortable: true },
   { key: 'sampling.description', header: 'Sampling Name', sortable: true },
+
+  {
+    key: 'multiMark',
+    header: 'Multi-Mark (Y/N)',
+    sortable: true,
+    selected: false,
+    renderAs: (value) => <YesNoTag value={value as string | boolean | number | null | undefined} />,
+  },
 
   {
     key: 'district',
