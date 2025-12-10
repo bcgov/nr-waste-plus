@@ -4,7 +4,7 @@ FROM node:24-alpine AS build
 WORKDIR /app
 COPY . .
 
-RUN npm ci --ignore-scripts && \
+RUN npm install --ignore-scripts && \
     npm run build && \
     rm -rf node_modules
 
