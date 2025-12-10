@@ -1,8 +1,6 @@
 import {
   Checkbox,
   DataTableSkeleton,
-  OverflowMenu,
-  OverflowMenuItem,
   Pagination,
   Table,
   TableBody,
