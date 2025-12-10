@@ -82,10 +82,10 @@ public class ForestClientApiProviderTestConstants {
                        "code": "00010002",
                        "description": null
                    },
-                   "clientLocation": {
-                       "code": "03",
-                       "description": null
-                   },
+                   "licenseNumber": "C-12345",
+                   "cuttingPermit": "A12345",
+                   "timberMark": "TM12345",
+                   "multiMark": false,
                    "sampling": {
                        "code": "BLK",
                        "description": "Cutblock"

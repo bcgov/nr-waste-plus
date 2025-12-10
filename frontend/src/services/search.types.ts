@@ -7,7 +7,10 @@ export type ReportingUnitSearchResultDto = {
   blockId: string | null;
   ruNumber: number;
   client: CodeDescriptionDto;
-  clientLocation: CodeDescriptionDto;
+  licenseNumber: string | null;
+  cuttingPermit: string | null;
+  timberMark: string | null;
+  multiMark: boolean;
   sampling: CodeDescriptionDto;
   district: CodeDescriptionDto;
   status: CodeDescriptionDto;
