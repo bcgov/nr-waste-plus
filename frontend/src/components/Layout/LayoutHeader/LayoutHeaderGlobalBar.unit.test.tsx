@@ -6,6 +6,7 @@ import LayoutHeaderGlobalBar from './LayoutHeaderGlobalBar';
 
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import ThemeProvider from '@/context/theme/ThemeProvider';
 
 vi.mock('@/components/Layout/ThemeToggle', () => ({
   __esModule: true,
@@ -28,7 +29,9 @@ const renderWithProviders = async () => {
       <AuthProvider>
         <QueryClientProvider client={qc}>
           <PreferenceProvider>
-            <LayoutHeaderGlobalBar />
+            <ThemeProvider>
+              <LayoutHeaderGlobalBar />
+            </ThemeProvider>
           </PreferenceProvider>
         </QueryClientProvider>
       </AuthProvider>,
@@ -40,13 +43,13 @@ describe('LayoutHeaderGlobalBar', () => {
   it('renders ThemeToggle and user avatar', async () => {
     await renderWithProviders();
     expect(screen.getByTestId('theme-toggle')).toBeDefined();
-    expect(screen.getByLabelText('User settings')).toBeDefined();
-    expect(screen.getByLabelText('Theme')).toBeDefined();
+    expect(screen.getByLabelText('Profile settings')).toBeDefined();
+    expect(screen.getByLabelText('Switch to dark mode')).toBeDefined();
   });
 
-  it('calls toggleHeaderPanel when user settings is clicked', async () => {
+  it('calls toggleHeaderPanel when profile settings is clicked', async () => {
     await renderWithProviders();
-    fireEvent.click(screen.getByLabelText('User settings'));
+    fireEvent.click(screen.getByLabelText('Profile settings'));
     expect(mockToggleHeaderPanel).toHaveBeenCalled();
   });
 });
