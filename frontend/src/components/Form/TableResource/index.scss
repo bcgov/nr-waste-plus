@@ -39,3 +39,20 @@
     padding: 1rem;
   }
 }
+
+div.cds--tooltip-trigger__wrapper button.table-action-menu-button {
+  width: 10rem;
+
+  .toolbar-menu-columns-display {
+    display: flex;
+    flex: 1;
+
+    .toolbar-menu-columns-display-text {
+      flex-grow: 1;
+    }
+    .toolbar-menu-columns-display-icon {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+  }
+}
