@@ -36,7 +36,7 @@ public interface ReportingUnitSearchProjection {
   String getCuttingPermit();
 
   /**
-   * Timber mark
+   * Timber mark.
    */
   String getTimberMark();
 
