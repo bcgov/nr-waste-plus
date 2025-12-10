@@ -1,4 +1,4 @@
-FROM node:24.11-bullseye-slim AS build
+FROM node:24-alpine AS build
 
 # Build static files
 WORKDIR /app
@@ -9,7 +9,7 @@ RUN npm ci --ignore-scripts && \
     rm -rf node_modules
 
 # Caddy
-FROM caddy:2.10.2-alpine
+FROM caddy:2.9.1-alpine
 ENV LOG_LEVEL=info
 
 # Copy static files and config
