@@ -203,7 +203,7 @@ describe('TableResource', () => {
       onPageChange,
       displayToolbar: true,
     });
-    const editColumns = screen.getByRole('button', { name: '' });
+    const editColumns = screen.getByTitle('Edit columns');
     await userEvent.click(editColumns);
     fireEvent.click(editColumns);
     //TODO: vitest can't detect this update
@@ -225,7 +225,7 @@ describe('TableResource', () => {
     const columnHeaderPre = screen.queryByRole('columnheader', { name: 'Hidden' });
     expect(columnHeaderPre).toBeNull();
     //Open the edit columns
-    const editColumns = screen.getByRole('button', { name: '' });
+    const editColumns = screen.getByTitle('Edit columns');
     await userEvent.click(editColumns);
     //TODO: vitest can't detect this update
     //Enable the hidden
