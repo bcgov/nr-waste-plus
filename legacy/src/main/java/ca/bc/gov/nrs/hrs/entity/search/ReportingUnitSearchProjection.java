@@ -26,9 +26,24 @@ public interface ReportingUnitSearchProjection {
   String getClientNumber();
 
   /**
-   * Client location code.
+   * License number AKA Forest File ID.
    */
-  String getClientLocation();
+  String getLicenseNumber();
+
+  /**
+   * Cutting permit ID.
+   */
+  String getCuttingPermit();
+
+  /**
+   * Timber mark
+   */
+  String getTimberMark();
+
+  /**
+   * Is multi-mark or not
+   */
+  boolean isMultiMark();
 
   /**
    * Sampling option code.

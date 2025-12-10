@@ -40,7 +40,6 @@ public interface ReportingUnitSearchMapper extends
   @Mapping(target = "status", expression = MapperConstants.STATUS_AS_DTO)
   @Mapping(target = "sampling", expression = MapperConstants.SAMPLING_AS_DTO)
   @Mapping(target = "district", expression = MapperConstants.DISTRICT_AS_DTO)
-  @Mapping(target = "clientLocation", expression = MapperConstants.CLIENT_LOCATION_AS_DTO)
   @Mapping(target = "client", expression = MapperConstants.CLIENT_AS_DTO)
   ReportingUnitSearchResultDto fromProjection(ReportingUnitSearchProjection projection);
 
