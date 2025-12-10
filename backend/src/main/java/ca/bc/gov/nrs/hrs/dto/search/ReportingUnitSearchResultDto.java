@@ -18,6 +18,10 @@ import lombok.With;
  * @param blockId the block identifier
  * @param ruNumber the numeric reporting unit number
  * @param client the client represented as a {@link CodeDescriptionDto}
+ * @param licenseNumber the license number associated with the reporting unit
+ * @param cuttingPermit the cutting permit number
+ * @param timberMark the timber mark identifier
+ * @param multiMark indicates whether multiple marks are associated with the reporting unit
  * @param sampling the sampling type represented as a {@link CodeDescriptionDto}
  * @param district the district represented as a {@link CodeDescriptionDto}
  * @param status the reporting unit status represented as a {@link CodeDescriptionDto}
