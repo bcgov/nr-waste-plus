@@ -15,7 +15,7 @@ describe('NotFoundPage', () => {
         </MemoryRouter>
       </PageTitleProvider>,
     );
-    expect(screen.getByText('Not Found')).toBeDefined();
+    expect(screen.getByText('Content Not Found')).toBeDefined();
     expect(screen.getByText('The page you are looking for does not exist.')).toBeDefined();
   });
 });
