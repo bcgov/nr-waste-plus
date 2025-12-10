@@ -7,21 +7,25 @@ import DistrictDisplay from '@/components/Layout/HeaderDistrictDisplay/DistrictD
 import ThemeToggle from '@/components/Layout/ThemeToggle';
 import { useAuth } from '@/context/auth/useAuth';
 import { useLayout } from '@/context/layout/useLayout';
-
+import { useTheme } from '@/context/theme/useTheme';
 import './LayoutHeaderGlobalBar.scss';
 
 const LayoutHeaderGlobalBar: FC = () => {
   const { toggleHeaderPanel, isHeaderPanelOpen } = useLayout();
   const { user } = useAuth();
+  const { theme } = useTheme();
 
   return (
     <HeaderGlobalBar>
-      <HeaderGlobalAction aria-label="Theme" tooltipAlignment="end">
+      <HeaderGlobalAction
+        aria-label={`Switch to ${theme === 'g100' ? 'light' : 'dark'} mode`}
+        tooltipAlignment="end"
+      >
         <ThemeToggle />
       </HeaderGlobalAction>
 
       <HeaderGlobalAction
-        aria-label="User settings"
+        aria-label="Profile settings"
         tooltipAlignment="end"
         onClick={toggleHeaderPanel}
         isActive={isHeaderPanelOpen}
