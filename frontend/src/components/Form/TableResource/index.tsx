@@ -1,6 +1,8 @@
 import {
   Checkbox,
   DataTableSkeleton,
+  OverflowMenu,
+  OverflowMenuItem,
   Pagination,
   Table,
   TableBody,
@@ -235,10 +237,15 @@ const TableResource = <T,>({
             <TableToolbarMenu
               className="table-action-menu-button column-menu-button"
               menuOptionsClass="table-search-action-menu-option"
-              renderIcon={ColumnIcon}
               iconDescription="Edit columns"
               autoAlign
               highContrast
+              renderIcon={() => (
+                <div className="toolbar-menu-columns-display">
+                  <span className="toolbar-menu-columns-display-text">Edit columns</span>
+                  <ColumnIcon className="toolbar-menu-columns-display-icon" />
+                </div>
+              )}
             >
               <div className="table-action-menu-option-item">
                 <div className="helper-text">Select the columns you want to see</div>
