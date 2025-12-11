@@ -43,7 +43,7 @@ public interface ReportingUnitSearchProjection {
   /**
    * Is multi-mark or not
    */
-  boolean isMultiMark();
+  Boolean isMultiMark();
 
   /**
    * Sampling option code.
