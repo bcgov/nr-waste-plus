@@ -1,0 +1,47 @@
+[
+    {
+        "clientNumber": "90000001",
+        "clientName": "CANADIAN SAMPLE CO.",
+        "legalFirstName": null,
+        "legalMiddleName": null,
+        "clientStatusCode": {
+            "code": "ACT",
+            "description": "Active"
+        },
+        "clientTypeCode": {
+            "code": "C",
+            "description": "Corporation"
+        },
+        "acronym": "SMPL"
+    },
+    {
+        "clientNumber": "90000002",
+        "clientName": "WICK",
+        "legalFirstName": "JOHN",
+        "legalMiddleName": null,
+        "clientStatusCode": {
+            "code": "ACT",
+            "description": "Active"
+        },
+        "clientTypeCode": {
+            "code": "I",
+            "description": "Individual"
+        },
+        "acronym": null
+    },
+    {
+        "clientNumber": "90000003",
+        "clientName": "OAK HERITAGE LTD.",
+        "legalFirstName": null,
+        "legalMiddleName": null,
+        "clientStatusCode": {
+            "code": "ACT",
+            "description": "Active"
+        },
+        "clientTypeCode": {
+            "code": "C",
+            "description": "Corporation"
+        },
+        "acronym": "OAK"
+    }
+]

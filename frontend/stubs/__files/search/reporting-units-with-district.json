@@ -1,0 +1,62 @@
+{
+    "content": [
+        {
+            "id": "RU-123-Block-N/A-123456789",
+            "blockId": null,
+            "ruNumber": 123,
+            "client": {
+                "code": "90000001",
+                "description": "CANADIAN SAMPLE CO."
+            },
+            "licenseNumber": null,
+            "cuttingPermit": null,
+            "timberMark": null,
+            "multiMark": false,
+            "sampling": {
+                "code": "OCU",
+                "description": "Ocular"
+            },
+            "district": {
+                "code": "DCC",
+                "description": "Cariboo-Chilcotin"
+            },
+            "status": {
+                "code": null,
+                "description": null
+            },
+            "lastUpdated": "2007-03-30T11:08:20"
+        },
+        {
+            "id": "RU-321-Block-123A-12345677",
+            "blockId": "123A",
+            "ruNumber": 321,
+            "client": {
+                "code": "90000002",
+                "description": "JOHN WICK LOGGING LTD."
+            },
+            "licenseNumber": "A12345",
+            "cuttingPermit": "01",
+            "timberMark": "AB1001",
+            "multiMark": false,
+            "sampling": {
+                "code": "OCU",
+                "description": "Ocular"
+            },
+            "district": {
+                "code": "DCC",
+                "description": "Cariboo-Chilcotin"
+            },
+            "status": {
+                "code": "BIS",
+                "description": "Billing Issued"
+            },
+            "lastUpdated": "2006-09-08T08:24:17"
+        }
+    ],
+    "page": {
+        "size": 10,
+        "number": 0,
+        "totalElements": 2,
+        "totalPages": 1
+    }
+}

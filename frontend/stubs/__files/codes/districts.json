@@ -1,0 +1,94 @@
+[
+    {
+        "code": "DCC",
+        "description": "Cariboo-Chilcotin"
+    },
+    {
+        "code": "DCK",
+        "description": "Chilliwack"
+    },
+    {
+        "code": "DCR",
+        "description": "Campbell River"
+    },
+    {
+        "code": "DCS",
+        "description": "Cascades"
+    },
+    {
+        "code": "DFN",
+        "description": "Fort Nelson"
+    },
+    {
+        "code": "DKA",
+        "description": "Thompson Rivers"
+    },
+    {
+        "code": "DKM",
+        "description": "Coast Mountains"
+    },
+    {
+        "code": "DMH",
+        "description": "100 Mile House"
+    },
+    {
+        "code": "DMK",
+        "description": "Mackenzie"
+    },
+    {
+        "code": "DND",
+        "description": "Nadina"
+    },
+    {
+        "code": "DNI",
+        "description": "North Island - Central Coast"
+    },
+    {
+        "code": "DOS",
+        "description": "Okanagan Shuswap"
+    },
+    {
+        "code": "DPC",
+        "description": "Peace"
+    },
+    {
+        "code": "DPG",
+        "description": "Prince George"
+    },
+    {
+        "code": "DQC",
+        "description": "Haida Gwaii"
+    },
+    {
+        "code": "DQU",
+        "description": "Quesnel"
+    },
+    {
+        "code": "DRM",
+        "description": "Rocky Mountain"
+    },
+    {
+        "code": "DSC",
+        "description": "Sunshine Coast"
+    },
+    {
+        "code": "DSE",
+        "description": "Selkirk"
+    },
+    {
+        "code": "DSI",
+        "description": "South Island"
+    },
+    {
+        "code": "DSQ",
+        "description": "Sea to Sky"
+    },
+    {
+        "code": "DSS",
+        "description": "Skeena Stikine"
+    },
+    {
+        "code": "DVA",
+        "description": "Stuart Nechako"
+    }
+]

@@ -1,0 +1,62 @@
+{
+    "content": [
+        {
+            "id": "e1f2a3b4-c5d6-7890-4567-901234567890",
+            "blockId": "CAT2",
+            "ruNumber": 10501,
+            "client": {
+                "code": "92345678",
+                "description": "PACIFIC LOGGING LTD"
+            },
+            "licenseNumber": "TFL26",
+            "cuttingPermit": "22",
+            "timberMark": "26/22",
+            "multiMark": true,
+            "sampling": {
+                "code": "BLK",
+                "description": "Cutblock"
+            },
+            "district": {
+                "code": "DCS",
+                "description": "Cascades"
+            },
+            "status": {
+                "code": "BIS",
+                "description": "Billing Issued"
+            },
+            "lastUpdated": "2012-01-27T10:34:58"
+        },
+        {
+            "id": "f2a3b4c5-d6e7-8901-5678-012345678901",
+            "blockId": "G051C0TL",
+            "ruNumber": 2131,
+            "client": {
+                "code": "93456789",
+                "description": "MOUNTAIN FORESTRY INC"
+            },
+            "licenseNumber": "A58209",
+            "cuttingPermit": null,
+            "timberMark": "58209",
+            "multiMark": false,
+            "sampling": {
+                "code": "BLK",
+                "description": "Cutblock"
+            },
+            "district": {
+                "code": "DSS",
+                "description": "Skeena Stikine"
+            },
+            "status": {
+                "code": "BIS",
+                "description": "Billing Issued"
+            },
+            "lastUpdated": "2009-12-02T09:06:58"
+        }
+    ],
+    "page": {
+        "size": 10,
+        "number": 1,
+        "totalElements": 12,
+        "totalPages": 2
+    }
+}
