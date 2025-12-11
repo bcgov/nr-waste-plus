@@ -26,7 +26,7 @@ public class QueryConstants {
         waa.FOREST_FILE_ID AS license_number,
         COALESCE(waa.CUTTING_PERMIT_ID, waa.DRAFT_CUTTING_PERMIT_ID) AS cutting_permit,
         COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK) AS timber_mark,
-        CASE WHEN NVL(waa.MULTI_MARK_IND, 'N') = 'N' THEN FALSE ELSE TRUE END AS multi_mark,
+        CASE WHEN NVL(waa.MULTI_MARK_IND, 'N') = 'N' THEN 0 ELSE 1 END AS multi_mark,
         wru.waste_sampling_option_code AS sampling_code,
         wsoc.DESCRIPTION AS sampling_name,
         ou.ORG_UNIT_CODE AS district_code,

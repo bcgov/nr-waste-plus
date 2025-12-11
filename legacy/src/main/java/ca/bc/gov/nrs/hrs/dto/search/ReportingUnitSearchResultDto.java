@@ -19,7 +19,7 @@ public record ReportingUnitSearchResultDto(
     String licenseNumber,
     String cuttingPermit,
     String timberMark,
-    boolean multiMark,
+    Boolean multiMark,
     CodeDescriptionDto sampling,
     CodeDescriptionDto district,
     CodeDescriptionDto status,
