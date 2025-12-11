@@ -62,12 +62,14 @@ async function loadAndSaveStorage(browserTypeName: keyof typeof browserMap) {
     { key: SELECTED_CLIENT_KEY, value: '90000001' },
   );
 
-  await authenticate(
-    page,
-    process.env.TEST_BCEID_USERNAME ?? '',
-    process.env.TEST_BCEID_PASSWORD ?? '',
-    'bceid',
-  );
+  if (process.env.TEST_BCEID_USERNAME && process.env.TEST_BCEID_PASSWORD) {
+    await authenticate(
+      page,
+      process.env.TEST_BCEID_USERNAME ?? '',
+      process.env.TEST_BCEID_PASSWORD ?? '',
+      'bceid',
+    );
+  }
 
   // IMPORTANT: After auth, make sure we're back on localhost
   // and wait for any final redirects to complete
