@@ -15,6 +15,9 @@
     "test:ui:dev": "playwright test --ui",
     "pretest:watch": "npm run pretest:browser",
     "test:watch": "vitest --allowOnly",
+    "pretest:e2e": "playwright install",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "pretest:a11y": "npm run pretest:browser",
     "test:a11y": "playwright test --project=a11y-chromium",
     "test:a11y:dev": "playwright test --project=a11y-chromium --ui"

@@ -29,7 +29,7 @@ const browserProjects = [
       device: devices['Desktop Chrome'],
       storageState: './src/config/tests/user.chromium.json',
     },
-    testMatch: '**/*.browser.test.{ts,tsx}',
+    testMatch: '**/*.e2e.test.{ts,tsx}',
   },
   {
     name: 'firefox',
@@ -38,7 +38,7 @@ const browserProjects = [
       device: devices['Desktop Firefox'],
       storageState: './src/config/tests/user.firefox.json',
     },
-    testMatch: '**/*.browser.test.{ts,tsx}',
+    testMatch: '**/*.e2e.test.{ts,tsx}',
   },
   {
     name: 'webkit',
@@ -47,7 +47,7 @@ const browserProjects = [
       device: devices['Desktop Safari'],
       storageState: './src/config/tests/user.webkit.json',
     },
-    testMatch: '**/*.browser.test.{ts,tsx}',
+    testMatch: '**/*.e2e.test.{ts,tsx}',
   },
 ];
 
