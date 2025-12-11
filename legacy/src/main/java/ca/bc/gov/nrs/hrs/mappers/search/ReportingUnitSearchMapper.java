@@ -41,7 +41,10 @@ public interface ReportingUnitSearchMapper extends
   @Mapping(target = "sampling", expression = MapperConstants.SAMPLING_AS_DTO)
   @Mapping(target = "district", expression = MapperConstants.DISTRICT_AS_DTO)
   @Mapping(target = "client", expression = MapperConstants.CLIENT_AS_DTO)
-  @Mapping(target = "multiMark", expression = "java(projection.getMultiMark() != null && projection.getMultiMark() == 1)" )
+  @Mapping(
+      target = "multiMark",
+      expression = "java(Integer.valueOf(1).equals(projection.getMultiMark()))"
+  )
   ReportingUnitSearchResultDto fromProjection(ReportingUnitSearchProjection projection);
 
 }
