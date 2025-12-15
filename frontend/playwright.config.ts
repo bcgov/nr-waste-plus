@@ -23,31 +23,270 @@ const commonSettings = {
 
 const browserProjects = [
   {
-    name: 'chromium',
+    name: 'bceid-setup',
     use: {
       ...commonSettings,
       device: devices['Desktop Chrome'],
-      storageState: './src/config/tests/user.chromium.json',
+      storageState: 'src/config/tests/user.bceid.json',
     },
-    testMatch: '**/*.e2e.test.{ts,tsx}',
+    testMatch: '**/auth.setup.ts',
+    metadata: {
+      userType: 'bceid',
+      category: 'desktop',
+      browserName: 'chromium',
+      stateFile: 'user.bceid.json',
+      user: process.env.BCEID_USERNAME ?? '',
+      password: process.env.BCEID_PASSWORD ?? '',
+    },
   },
   {
-    name: 'firefox',
+    name: 'idir-setup',
+    use: {
+      ...commonSettings,
+      device: devices['Desktop Chrome'],
+      storageState: 'src/config/tests/user.idir.json',
+    },
+    testMatch: '**/auth.setup.ts',
+    metadata: {
+      userType: 'idir',
+      category: 'desktop',
+      browserName: 'chromium',
+      stateFile: 'user.idir.json',
+      user: process.env.IDIR_USERNAME ?? '',
+      password: process.env.IDIR_PASSWORD ?? '',
+    },
+  },
+  {
+    name: 'bceid-chromium',
+    use: {
+      ...commonSettings,
+      device: devices['Desktop Chrome'],
+      storageState: 'src/config/tests/user.bceid.json',
+    },
+    testMatch: '**/*.e2e.test.{ts,tsx}',
+    metadata: {
+      userType: 'bceid',
+      category: 'desktop',
+      browserName: 'chromium',
+      stateFile: 'user.bceid.json',
+    },
+    dependencies: ['bceid-setup'],
+  },
+  {
+    name: 'bceid-firefox',
     use: {
       ...commonSettings,
       device: devices['Desktop Firefox'],
-      storageState: './src/config/tests/user.firefox.json',
+      storageState: 'src/config/tests/user.bceid.json',
     },
     testMatch: '**/*.e2e.test.{ts,tsx}',
+    metadata: {
+      userType: 'bceid',
+      category: 'desktop',
+      browserName: 'firefox',
+      stateFile: 'user.bceid.json',
+    },
+    dependencies: ['bceid-setup'],
   },
   {
-    name: 'webkit',
+    name: 'bceid-webkit',
     use: {
       ...commonSettings,
       device: devices['Desktop Safari'],
-      storageState: './src/config/tests/user.webkit.json',
+      storageState: 'src/config/tests/user.bceid.json',
     },
     testMatch: '**/*.e2e.test.{ts,tsx}',
+    metadata: {
+      userType: 'bceid',
+      category: 'desktop',
+      browserName: 'webkit',
+      stateFile: 'user.bceid.json',
+    },
+    dependencies: ['bceid-setup'],
+  },
+  {
+    name: 'idir-chromium',
+    use: {
+      ...commonSettings,
+      device: devices['Desktop Chrome'],
+      storageState: 'src/config/tests/user.idir.json',
+    },
+    testMatch: '**/*.e2e.test.{ts,tsx}',
+    metadata: {
+      userType: 'idir',
+      category: 'desktop',
+      browserName: 'chromium',
+      stateFile: 'user.idir.json',
+    },
+    dependencies: ['idir-setup'],
+  },
+  {
+    name: 'idir-firefox',
+    use: {
+      ...commonSettings,
+      device: devices['Desktop Firefox'],
+      storageState: 'src/config/tests/user.idir.json',
+    },
+    testMatch: '**/*.e2e.test.{ts,tsx}',
+    metadata: {
+      userType: 'idir',
+      category: 'desktop',
+      browserName: 'firefox',
+      stateFile: 'user.idir.json',
+    },
+    dependencies: ['idir-setup'],
+  },
+  {
+    name: 'idir-webkit',
+    use: {
+      ...commonSettings,
+      device: devices['Desktop Safari'],
+      storageState: 'src/config/tests/user.idir.json',
+    },
+    testMatch: '**/*.e2e.test.{ts,tsx}',
+    metadata: {
+      userType: 'idir',
+      category: 'desktop',
+      browserName: 'webkit',
+      stateFile: 'user.idir.json',
+    },
+    dependencies: ['idir-setup'],
+  },
+  {
+    name: 'idir-android',
+    use: {
+      ...commonSettings,
+      ...devices['Pixel 7'],
+      device: devices['Pixel 7'],
+      storageState: 'src/config/tests/user.idir.json',
+    },
+    testMatch: '**/*.e2e.test.{ts,tsx}',
+    metadata: {
+      userType: 'idir',
+      category: 'android',
+      browserName: 'chromium',
+      stateFile: 'user.idir.json',
+    },
+    dependencies: ['idir-setup'],
+  },
+  {
+    name: 'idir-iphone',
+    use: {
+      ...commonSettings,
+      ...devices['iPhone 12'],
+      device: devices['iPhone 12'],
+      storageState: 'src/config/tests/user.idir.json',
+    },
+    testMatch: '**/*.e2e.test.{ts,tsx}',
+    metadata: {
+      userType: 'idir',
+      category: 'iphone',
+      browserName: 'webkit',
+      stateFile: 'user.idir.json',
+    },
+    dependencies: ['idir-setup'],
+  },
+  {
+    name: 'idir-ipad',
+    use: {
+      ...commonSettings,
+      ...devices['iPad Pro 11 landscape'],
+      device: devices['iPad Pro 11 landscape'],
+      storageState: 'src/config/tests/user.idir.json',
+    },
+    testMatch: '**/*.e2e.test.{ts,tsx}',
+    metadata: {
+      userType: 'idir',
+      category: 'ipad',
+      browserName: 'webkit',
+      stateFile: 'user.idir.json',
+    },
+    dependencies: ['idir-setup'],
+  },
+  {
+    name: 'idir-tablet',
+    use: {
+      ...commonSettings,
+      ...devices['Galaxy Tab S9 landscape'],
+      device: devices['Galaxy Tab S9 landscape'],
+      storageState: 'src/config/tests/user.idir.json',
+    },
+    testMatch: '**/*.e2e.test.{ts,tsx}',
+    metadata: {
+      userType: 'idir',
+      category: 'tablet',
+      browserName: 'chromium',
+      stateFile: 'user.idir.json',
+    },
+    dependencies: ['idir-setup'],
+  },
+  {
+    name: 'bceid-android',
+    use: {
+      ...commonSettings,
+      ...devices['Pixel 7'],
+      device: devices['Pixel 7'],
+      storageState: 'src/config/tests/user.bceid.json',
+    },
+    testMatch: '**/*.e2e.test.{ts,tsx}',
+    metadata: {
+      userType: 'bceid',
+      category: 'android',
+      browserName: 'chromium',
+      stateFile: 'user.bceid.json',
+    },
+    dependencies: ['bceid-setup'],
+  },
+  {
+    name: 'bceid-iphone',
+    use: {
+      ...commonSettings,
+      ...devices['iPhone 12'],
+      device: devices['iPhone 12'],
+      storageState: 'src/config/tests/user.bceid.json',
+    },
+    testMatch: '**/*.e2e.test.{ts,tsx}',
+    metadata: {
+      userType: 'bceid',
+      category: 'iphone',
+      browserName: 'webkit',
+      stateFile: 'user.bceid.json',
+    },
+    dependencies: ['bceid-setup'],
+  },
+  {
+    name: 'bceid-ipad',
+    use: {
+      ...commonSettings,
+      ...devices['iPad Pro 11 landscape'],
+      device: devices['iPad Pro 11 landscape'],
+      storageState: 'src/config/tests/user.bceid.json',
+    },
+    testMatch: '**/*.e2e.test.{ts,tsx}',
+    metadata: {
+      userType: 'bceid',
+      category: 'ipad',
+      browserName: 'webkit',
+      stateFile: 'user.bceid.json',
+    },
+    dependencies: ['bceid-setup'],
+  },
+  {
+    name: 'bceid-tablet',
+    use: {
+      ...commonSettings,
+      ...devices['Galaxy Tab S9 landscape'],
+      device: devices['Galaxy Tab S9 landscape'],
+      storageState: 'src/config/tests/user.bceid.json',
+    },
+    testMatch: '**/*.e2e.test.{ts,tsx}',
+    metadata: {
+      userType: 'bceid',
+      category: 'tablet',
+      browserName: 'chromium',
+      stateFile: 'user.bceid.json',
+    },
+    dependencies: ['bceid-setup'],
   },
 ];
 
@@ -56,13 +295,20 @@ const a11yProject = {
   use: {
     ...commonSettings,
     device: devices['Desktop Chrome'],
-    storageState: './src/config/tests/user.chromium.json',
+    storageState: 'src/config/tests/user.bceid.json',
   },
   testMatch: '**/*.a11y.test.{ts,tsx}',
+  metadata: {
+    userType: 'bceid',
+    category: 'desktop',
+    browserName: 'chromium',
+    stateFile: 'user.bceid.json',
+  },
+  dependencies: ['bceid-setup'],
 };
 
 // Filter based on ALL_BROWSERS env
-const browserProjectsMapped = isAllBrowsers ? browserProjects : [browserProjects[0]!];
+const browserProjectsMapped = browserProjects;
 
 const projects = [...browserProjectsMapped, a11yProject];
 
