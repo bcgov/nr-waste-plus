@@ -6,7 +6,6 @@ import { THIRTY_SECONDS } from './src/config/react-query/TimeUnits';
 dotenv.config();
 
 const baseURL = process.env.BASE_URL ?? 'http://localhost:3000';
-const isAllBrowsers = process.env.ALL_BROWSERS === 'true';
 
 const commonSettings = {
   headless: true,
@@ -21,7 +20,7 @@ const commonSettings = {
   },
 };
 
-const browserProjects = [
+const setupProjects = [
   {
     name: 'bceid-setup',
     use: {
@@ -56,6 +55,9 @@ const browserProjects = [
       password: process.env.IDIR_PASSWORD ?? '',
     },
   },
+];
+
+const chromiumBrowserProjects = [
   {
     name: 'bceid-chromium',
     use: {
@@ -72,6 +74,25 @@ const browserProjects = [
     },
     dependencies: ['bceid-setup'],
   },
+  {
+    name: 'idir-chromium',
+    use: {
+      ...commonSettings,
+      device: devices['Desktop Chrome'],
+      storageState: 'src/config/tests/user.idir.json',
+    },
+    testMatch: '**/*.e2e.test.{ts,tsx}',
+    metadata: {
+      userType: 'idir',
+      category: 'desktop',
+      browserName: 'chromium',
+      stateFile: 'user.idir.json',
+    },
+    dependencies: ['idir-setup'],
+  },
+];
+
+const browserProjects = [
   {
     name: 'bceid-firefox',
     use: {
@@ -105,22 +126,6 @@ const browserProjects = [
     dependencies: ['bceid-setup'],
   },
   {
-    name: 'idir-chromium',
-    use: {
-      ...commonSettings,
-      device: devices['Desktop Chrome'],
-      storageState: 'src/config/tests/user.idir.json',
-    },
-    testMatch: '**/*.e2e.test.{ts,tsx}',
-    metadata: {
-      userType: 'idir',
-      category: 'desktop',
-      browserName: 'chromium',
-      stateFile: 'user.idir.json',
-    },
-    dependencies: ['idir-setup'],
-  },
-  {
     name: 'idir-firefox',
     use: {
       ...commonSettings,
@@ -152,6 +157,9 @@ const browserProjects = [
     },
     dependencies: ['idir-setup'],
   },
+];
+
+const mobileProjects = [
   {
     name: 'idir-android',
     use: {
@@ -290,27 +298,37 @@ const browserProjects = [
   },
 ];
 
-const a11yProject = {
-  name: 'a11y-chromium',
-  use: {
-    ...commonSettings,
-    device: devices['Desktop Chrome'],
-    storageState: 'src/config/tests/user.bceid.json',
+const a11yProject = [
+  {
+    name: 'a11y-chromium',
+    use: {
+      ...commonSettings,
+      device: devices['Desktop Chrome'],
+      storageState: 'src/config/tests/user.bceid.json',
+    },
+    testMatch: '**/*.a11y.test.{ts,tsx}',
+    metadata: {
+      userType: 'bceid',
+      category: 'desktop',
+      browserName: 'chromium',
+      stateFile: 'user.bceid.json',
+    },
+    dependencies: ['bceid-setup'],
   },
-  testMatch: '**/*.a11y.test.{ts,tsx}',
-  metadata: {
-    userType: 'bceid',
-    category: 'desktop',
-    browserName: 'chromium',
-    stateFile: 'user.bceid.json',
-  },
-  dependencies: ['bceid-setup'],
-};
+];
 
-// Filter based on ALL_BROWSERS env
-const browserProjectsMapped = browserProjects;
+const projects = [...setupProjects, ...chromiumBrowserProjects];
 
-const projects = [...browserProjectsMapped, a11yProject];
+if (process.env.RUN_MOBILE_TESTS === 'true') {
+  projects.push(...mobileProjects);
+}
+if (process.env.RUN_BROWSERS_TESTS === 'true') {
+  projects.push(...browserProjects);
+}
+
+if (process.env.RUN_A11Y_TESTS === 'true') {
+  projects.push(...a11yProject);
+}
 
 export default defineConfig({
   timeout: THIRTY_SECONDS,
