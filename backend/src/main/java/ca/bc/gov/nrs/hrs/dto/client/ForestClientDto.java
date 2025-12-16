@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.hrs.dto.client;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.beans.Transient;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -24,9 +26,7 @@ public record ForestClientDto(
     String legalMiddleName,
     ForestClientStatusEnum clientStatusCode,
     ForestClientTypeEnum clientTypeCode,
-    String acronym,
-
-    String name
+    String acronym
 ) {
 
   /**
@@ -39,7 +39,7 @@ public record ForestClientDto(
    *
    * @return the resolved display name of the client
    */
-  @Transient
+  @JsonGetter
   public String name() {
     if (Objects.equals(this.clientTypeCode, ForestClientTypeEnum.of('I'))) {
       return Stream.of(this.legalFirstName, this.legalMiddleName, this.clientName)
