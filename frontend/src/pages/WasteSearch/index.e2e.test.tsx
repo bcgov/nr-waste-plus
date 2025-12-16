@@ -3,18 +3,25 @@ import { test, expect } from '@playwright/test';
 import { mockApi, mockApiResponses, mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 test.describe('Waste Search Page', () => {
-  test.beforeEach(async ({ page }) => {
-    await mockApiResponsesWithStub(page, 'users/preferences', 'users/preferences-GET-bceid.json');
+  test.beforeEach(async ({ page }, testInfo) => {
     await mockApiResponsesWithStub(
       page,
-      'forest-clients/searchByNumbers**',
-      'forest-clients/searchByNumbers-pg0.json',
+      'users/preferences',
+      `users/preferences-GET-${testInfo.project.metadata.userType}.json`,
     );
-    await mockApiResponsesWithStub(
-      page,
-      'forest-clients/clients**',
-      'forest-clients/clients-pg0.json',
-    );
+
+    if (testInfo.project.metadata.userType === 'bceid') {
+      await mockApiResponsesWithStub(
+        page,
+        'forest-clients/searchByNumbers**',
+        'forest-clients/searchByNumbers-pg0.json',
+      );
+      await mockApiResponsesWithStub(
+        page,
+        'forest-clients/clients**',
+        'forest-clients/clients-pg0.json',
+      );
+    }
 
     await mockApiResponsesWithStub(page, 'codes/districts', 'codes/districts.json');
 
@@ -83,7 +90,6 @@ test.describe('Waste Search Page', () => {
     await page.goto('/search');
     await page.waitForLoadState('networkidle');
   });
-
 
   test.describe('no search or params yet', () => {
     test('should display page title and subtitle', async ({ page }) => {
