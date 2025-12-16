@@ -12,7 +12,8 @@
             "code": "C",
             "description": "Corporation"
         },
-        "acronym": "SMPL"
+        "acronym": "SMPL",
+        "name": "CANADIAN SAMPLE CO."
     },
     {
         "clientNumber": "90000002",
@@ -27,7 +28,8 @@
             "code": "I",
             "description": "Individual"
         },
-        "acronym": null
+        "acronym": null,
+        "name": "JOHN WICK"
     },
     {
         "clientNumber": "90000003",
@@ -42,6 +44,7 @@
             "code": "C",
             "description": "Corporation"
         },
-        "acronym": "OAK"
+        "acronym": "OAK",
+        "name": "OAK HERITAGE LTD."
     }
 ]
