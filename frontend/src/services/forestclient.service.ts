@@ -39,22 +39,6 @@ export class ForestClientService extends HttpClient {
   }
 
   /**
-   * Retrieves the locations for a given forest client.
-   * @param clientNumber The client number to look up locations for
-   * @returns Promise resolving to an array of CodeDescriptionDto
-   */
-  getForestClientLocations(clientNumber: string): CancelablePromise<Array<CodeDescriptionDto>> {
-    return this.doRequest(this.config, {
-      method: 'GET',
-      url: '/api/forest-clients/{clientNumber}/locations',
-      path: {
-        clientNumber: clientNumber,
-      },
-      middleware: [problemDetailsMiddleware()],
-    });
-  }
-
-  /**
    * Searches for forest clients by name, acronym, or number.
    * @param value The search value (name, acronym, or number)
    * @param page Optional page number for pagination
