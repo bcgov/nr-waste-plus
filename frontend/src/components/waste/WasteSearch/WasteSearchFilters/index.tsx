@@ -118,6 +118,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
             placeholder="Search by RU No. or Block ID"
             value={filters.mainSearchTerm ?? ''}
             onChange={handleStringChange('mainSearchTerm')}
+            onSearch={onSearch}
           />
         </Column>
 

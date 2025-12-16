@@ -76,6 +76,7 @@ const MyClientListing: FC = () => {
               placeholder="Search by name"
               value={filter ?? ''}
               onChange={setFilter}
+              onSearch={executeSearch}
             />
           </Column>
           <Column max={2} lg={2} md={2} sm={0} className="filters-column">

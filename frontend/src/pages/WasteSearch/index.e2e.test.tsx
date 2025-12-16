@@ -4,11 +4,7 @@ import { mockApi, mockApiResponses, mockApiResponsesWithStub } from '@/config/te
 
 test.describe('Waste Search Page', () => {
   test.beforeEach(async ({ page }, testInfo) => {
-    await mockApiResponsesWithStub(
-      page,
-      'users/preferences',
-      `users/preferences-GET-${testInfo.project.metadata.userType}.json`,
-    );
+    await mockApiResponsesWithStub(page, 'users/preferences', `users/preferences-GET.json`);
 
     if (testInfo.project.metadata.userType === 'bceid') {
       await mockApiResponsesWithStub(
@@ -153,10 +149,10 @@ test.describe('Waste Search Page', () => {
       const districtMultiSelect = page.getByRole('combobox', { name: 'District' });
       await districtMultiSelect.click();
 
-      const option = page.getByRole('option', { name: 'Cariboo-Chilcotin' });
+      const option = page.getByRole('option', { name: 'Fort Nelson' });
       await option.click();
 
-      const districtFilterTag = page.getByTestId('dt-district-DCC');
+      const districtFilterTag = page.getByTestId('dt-district-DFN');
       await expect(districtFilterTag).toBeVisible();
     });
 
@@ -166,11 +162,11 @@ test.describe('Waste Search Page', () => {
       await districtMultiSelect.click();
 
       // Select two districts
-      await page.getByRole('option', { name: 'Cariboo-Chilcotin' }).click();
+      await page.getByRole('option', { name: 'Fort Nelson' }).click();
       await page.getByRole('option', { name: 'Chilliwack' }).click();
 
       // Verify both tags appear
-      await expect(page.getByTestId('dt-district-DCC')).toBeVisible();
+      await expect(page.getByTestId('dt-district-DFN')).toBeVisible();
       const districtFilterTag2 = page.getByTestId('dt-district-DCK');
       await expect(districtFilterTag2).toBeVisible();
 
@@ -178,8 +174,8 @@ test.describe('Waste Search Page', () => {
       const districtFilterDismissTag2 = districtFilterTag2.getByRole('button', { name: 'Dismiss' });
       await districtFilterDismissTag2.click();
 
-      // Verify only DCC tag remains
-      await expect(page.getByTestId('dt-district-DCC')).toBeVisible();
+      // Verify only DFN tag remains
+      await expect(page.getByTestId('dt-district-DFN')).toBeVisible();
       await expect(page.getByTestId('dt-district-DCK')).toHaveCount(0);
 
       // Now click clear all filters
@@ -187,7 +183,7 @@ test.describe('Waste Search Page', () => {
       await clearAllButton.click();
 
       // Verify no tags remain
-      await expect(page.getByTestId('dt-district-DCC')).toHaveCount(0);
+      await expect(page.getByTestId('dt-district-DFN')).toHaveCount(0);
       await expect(page.getByTestId('dt-district-DCK')).toHaveCount(0);
     });
   });

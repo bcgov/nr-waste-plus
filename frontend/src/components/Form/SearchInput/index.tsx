@@ -16,6 +16,7 @@ type SearchInputProps = {
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
+  onSearch?: () => void;
 };
 
 /**
@@ -25,7 +26,14 @@ type SearchInputProps = {
  * @param {SearchInputProps} props - The props for the component.
  * @returns {JSX.Element} The rendered SearchInput component.
  */
-const SearchInput: FC<SearchInputProps> = ({ id, label, placeholder, onChange, value }) => {
+const SearchInput: FC<SearchInputProps> = ({
+  id,
+  label,
+  placeholder,
+  onChange,
+  value,
+  onSearch,
+}) => {
   const mousePosition = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const searchButtonRefs = useRef<HTMLButtonElement[]>([]);
 
@@ -75,6 +83,9 @@ const SearchInput: FC<SearchInputProps> = ({ id, label, placeholder, onChange, v
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
           e.currentTarget.blur();
+          if (onSearch) {
+            onSearch();
+          }
         }
       }}
       defaultValue={value}

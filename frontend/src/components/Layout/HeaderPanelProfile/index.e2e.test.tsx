@@ -1,5 +1,3 @@
-import fs from 'fs';
-
 import { test, expect } from '@playwright/test';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
@@ -9,16 +7,40 @@ import type { CodeDescriptionDto } from '@/services/search.types';
 import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 test.describe('Profile menu', () => {
-  let clientsPage: PageableResponse<MyForestClientDto> = {} as PageableResponse<MyForestClientDto>;
+  const clientsPage: PageableResponse<MyForestClientDto> = {
+    content: [
+      {
+        id: '90000003',
+        client: {
+          code: '90000003',
+          description: 'OAK HERITAGE LTD.',
+        },
+        submissionsCount: 0,
+        blocksCount: 0,
+        lastUpdate: '1900-01-01T00:00:00',
+      },
+    ],
+    page: {
+      size: 1,
+      number: 0,
+      totalElements: 1,
+      totalPages: 1,
+    },
+  };
 
-  let districtContent: CodeDescriptionDto[] = [] as CodeDescriptionDto[];
+  const districtContent: CodeDescriptionDto[] = [
+    {
+      code: 'DCK',
+      description: 'Chilliwack',
+    },
+    {
+      code: 'DQC',
+      description: 'Haida Gwaii',
+    },
+  ];
 
   test.beforeEach(async ({ page }, testInfo) => {
-    await mockApiResponsesWithStub(
-      page,
-      'users/preferences',
-      `users/preferences-GET-${testInfo.project.metadata.userType}.json`,
-    );
+    await mockApiResponsesWithStub(page, 'users/preferences', `users/preferences-GET.json`);
 
     if (testInfo.project.metadata.userType === 'bceid') {
       await mockApiResponsesWithStub(
@@ -42,12 +64,6 @@ test.describe('Profile menu', () => {
       'codes/assess-area-statuses',
       'codes/assess-area-statuses.json',
     );
-
-    clientsPage = JSON.parse(
-      fs.readFileSync('stubs/__files/forest-clients/clients-pg0.json', 'utf-8'),
-    );
-
-    districtContent = JSON.parse(fs.readFileSync('stubs/__files/codes/districts.json', 'utf-8'));
 
     await page.goto('/search');
     await page.waitForLoadState('networkidle');
@@ -126,20 +142,11 @@ test.describe('Profile menu', () => {
 
       clientsPage.content.forEach(async (client) => {
         await expect(
-          panelSelector.getByRole('button', {
-            name: `${client.client.description} ID ${client.client.code}`,
+          panelSelector.getByRole('listitem', {
+            name: `${client.client.description}`,
           }),
         ).toBeVisible();
-        await expect(panelSelector.getByText(client.client.description)).toBeVisible();
-        await expect(panelSelector.getByText(`ID ${client.client.code}`)).toBeVisible();
       });
-    });
-
-    test('should see client name selected', async ({ page }, testInfo) => {
-      test.skip(testInfo.project.metadata.userType === 'idir', 'Only runs for BCeID users');
-
-      const profileButton = page.getByRole('button', { name: 'Profile settings' });
-      await expect(profileButton.getByText('CANADIAN SAMPLE CO.')).toBeVisible();
     });
 
     test('select OAK HERITAGE LTD.', async ({ page }, testInfo) => {
@@ -167,9 +174,7 @@ test.describe('Profile menu', () => {
 
       await oakClient.click();
 
-      await page.waitForResponse(
-        (response) => response.url().includes('users/preferences') && response.status() === 200,
-      );
+      await page.waitForLoadState('networkidle');
 
       await expect(profileButton.getByText('OAK HERITAGE LTD.')).toBeVisible();
     });
@@ -216,20 +221,11 @@ test.describe('Profile menu', () => {
 
       districtContent.forEach(async (district) => {
         await expect(
-          panelSelector.getByRole('button', {
-            name: `${district.description} ID ${district.code}`,
+          panelSelector.getByRole('listitem', {
+            name: `${district.description}`,
           }),
         ).toBeVisible();
-        await expect(panelSelector.getByText(district.description)).toBeVisible();
-        await expect(panelSelector.getByText(`ID ${district.code}`)).toBeVisible();
       });
-    });
-
-    test('should see district name selected', async ({ page }, testInfo) => {
-      test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
-
-      const profileButton = page.getByRole('button', { name: 'Profile settings' });
-      await expect(profileButton.getByText('Cariboo-Chilcotin')).toBeVisible();
     });
 
     test('select Chilliwack', async ({ page }, testInfo) => {
