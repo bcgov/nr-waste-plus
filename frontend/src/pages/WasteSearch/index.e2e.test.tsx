@@ -1,5 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 
+import { test } from '@/config/tests/coverage.setup';
 import { mockApi, mockApiResponses, mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 test.describe('Waste Search Page', () => {
