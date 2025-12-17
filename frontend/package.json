@@ -9,7 +9,7 @@
     "lint": "eslint ./src --ext .ts,.tsx",
     "test:unit": "vitest run --coverage --allowOnly",
     "test:unit:watch": "vitest --allowOnly",
-    "pretest:e2e": "playwright install",
+    "pretest:e2e": "playwright install-deps",
     "pretest:e2e:watch": "playwright install",
     "test:e2e": "playwright test",
     "test:e2e:watch": "playwright test --ui",
