@@ -41,9 +41,9 @@ public interface ReportingUnitSearchProjection {
   String getTimberMark();
 
   /**
-   * Is multi-mark or not
+   * Is multi-mark or not (1 = true, 0 = false).
    */
-  boolean isMultiMark();
+  Integer getMultiMark();
 
   /**
    * Sampling option code.
