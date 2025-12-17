@@ -8,7 +8,6 @@ export async function authenticate(page: Page, metadata: Record<string, any>): P
   // Fill credentials (use env vars for security)
   console.log(`Setup -  Auth: ${metadata.user} via ${metadata.userType.toLowerCase()}`);
   await page.goto('/landing');
-  await page.waitForLoadState('networkidle');
 
   const notFoundVisible = await page
     .getByRole('heading', { name: 'Content Not Found' })
@@ -20,12 +19,13 @@ export async function authenticate(page: Page, metadata: Record<string, any>): P
   }
 
   await Promise.all([
-    page.waitForNavigation(),
+    page.waitForNavigation({ waitUntil: 'load' }),
     page.click(`[data-testid="landing-button__${metadata.userType.toLowerCase()}"]`),
   ]);
 
   await page.waitForLoadState('networkidle');
-  await page.waitForSelector('#user', { timeout: 60000 });
+  await page.locator('#user').waitFor({ state: 'visible', timeout: 60000 });
+
 
   console.log(`Setup - Filling credentials for user: ${metadata.user}`);
   await page.fill('#user', metadata.user);
