@@ -7,6 +7,7 @@ permissions: {}
 
 jobs:
   tests-frontend:
+    environment: test
     name: Frontend Unit Tests
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     container:
@@ -48,6 +49,10 @@ jobs:
           VITE_NODE_ENV: test
           VITE_COVERAGE: true
           VITE_PORT: 3000
+          BCEID_USERNAME: ${{ secrets.BCEID_UAT_USERNAME }}
+          BCEID_PASSWORD: ${{ secrets.BCEID_UAT_PASSWORD }}
+          IDIR_USERNAME: ${{ secrets.IDIR_UAT_USERNAME }}
+          IDIR_PASSWORD: ${{ secrets.IDIR_UAT_PASSWORD}}
         with:
           node_version: 24
           commands: |
