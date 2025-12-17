@@ -1,44 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { MyForestClientDto } from '@/services/forestclient.types';
-import type { CodeDescriptionDto } from '@/services/search.types';
-
 import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 test.describe('Profile menu', () => {
-  const clientsPage: PageableResponse<MyForestClientDto> = {
-    content: [
-      {
-        id: '90000003',
-        client: {
-          code: '90000003',
-          description: 'OAK HERITAGE LTD.',
-        },
-        submissionsCount: 0,
-        blocksCount: 0,
-        lastUpdate: '1900-01-01T00:00:00',
-      },
-    ],
-    page: {
-      size: 1,
-      number: 0,
-      totalElements: 1,
-      totalPages: 1,
-    },
-  };
-
-  const districtContent: CodeDescriptionDto[] = [
-    {
-      code: 'DCK',
-      description: 'Chilliwack',
-    },
-    {
-      code: 'DQC',
-      description: 'Haida Gwaii',
-    },
-  ];
-
   test.beforeEach(async ({ page }, testInfo) => {
     await mockApiResponsesWithStub(page, 'users/preferences', `users/preferences-GET.json`);
 
