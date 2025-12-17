@@ -1,0 +1,62 @@
+[
+    {
+        "code": "APP",
+        "description": "Approved"
+    },
+    {
+        "code": "BIP",
+        "description": "Billing in Progress"
+    },
+    {
+        "code": "BIS",
+        "description": "Billing Issued"
+    },
+    {
+        "code": "DAC",
+        "description": "Deactivated (closed)"
+    },
+    {
+        "code": "DFT",
+        "description": "Draft"
+    },
+    {
+        "code": "ERR",
+        "description": "Billing Error"
+    },
+    {
+        "code": "FREJ",
+        "description": "Field Rejected"
+    },
+    {
+        "code": "HLD",
+        "description": "Hold"
+    },
+    {
+        "code": "HWR",
+        "description": "Hold Waste Relief"
+    },
+    {
+        "code": "ISUB",
+        "description": "Interim Submit"
+    },
+    {
+        "code": "OREJ",
+        "description": "Office Rejected"
+    },
+    {
+        "code": "RBL",
+        "description": "Re-bill"
+    },
+    {
+        "code": "RTB",
+        "description": "Ready To Bill"
+    },
+    {
+        "code": "SUB",
+        "description": "Submitted"
+    },
+    {
+        "code": "WRA",
+        "description": "Waste Relief Approved"
+    }
+]

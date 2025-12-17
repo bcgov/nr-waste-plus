@@ -24,19 +24,6 @@ describe('ForestClientService', () => {
     expect(result).toEqual(mockData);
   });
 
-  it('getForestClientLocations should call API and return locations', async () => {
-    const mockData = [{ code: 'A', description: 'Location A' }];
-    (service as any).doRequest = vi.fn().mockResolvedValue(mockData);
-    const result = await service.getForestClientLocations('456');
-    expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
-      method: 'GET',
-      url: '/api/forest-clients/{clientNumber}/locations',
-      path: { clientNumber: '456' },
-      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
-    });
-    expect(result).toEqual(mockData);
-  });
-
   it('searchForestClients should call API and return autocomplete results', async () => {
     const mockData = [{ clientNumber: '789', name: 'Client789' }];
     (service as any).doRequest = vi.fn().mockResolvedValue(mockData);

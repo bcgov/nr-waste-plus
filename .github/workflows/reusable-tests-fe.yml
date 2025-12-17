@@ -7,8 +7,11 @@ permissions: {}
 
 jobs:
   tests-frontend:
+    environment: test
     name: Frontend Unit Tests
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    container:
+      image: mcr.microsoft.com/playwright:v1.57.0-noble
     permissions:
       contents: write
       checks: write
@@ -25,7 +28,18 @@ jobs:
       VITE_NODE_ENV: test
       VITE_COVERAGE: true
       VITE_PORT: 3000
+      VITE_FAM_DOMAIN: ${{ secrets.FAM_DOMAIN }}
+      BCEID_USERNAME: ${{ secrets.BCEID_UAT_USERNAME }}
+      BCEID_PASSWORD: ${{ secrets.BCEID_UAT_PASSWORD }}
+      IDIR_USERNAME: ${{ secrets.IDIR_UAT_USERNAME }}
+      IDIR_PASSWORD: ${{ secrets.IDIR_UAT_PASSWORD}}
     steps:
+      - name: Fix safe.directory for GitHub Actions
+        run: git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
+      - name: Install unzip
+        run: |
+          apt-get update
+          apt-get install -y unzip
       - uses: bcgov/action-test-and-analyse@c20d16c26d9b7e6e486f01702880053ed4ebdc91 # v1.5.0
         id: tests
         env:
@@ -40,15 +54,22 @@ jobs:
           VITE_NODE_ENV: test
           VITE_COVERAGE: true
           VITE_PORT: 3000
+          BCEID_USERNAME: ${{ secrets.BCEID_UAT_USERNAME }}
+          BCEID_PASSWORD: ${{ secrets.BCEID_UAT_PASSWORD }}
+          IDIR_USERNAME: ${{ secrets.IDIR_UAT_USERNAME }}
+          IDIR_PASSWORD: ${{ secrets.IDIR_UAT_PASSWORD}}
         with:
-          node_version: 22
+          node_version: 24
           commands: |
+            git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
             npm i
+            npx playwright install-deps
+            npx playwright install
             npm run test:coverage
           dir: frontend
           sonar_args: >
-            -Dsonar.exclusions=**/*.test.ts,**/*.test.tsx,**/coverage/**,**/test-results/**,**/test-reports/**,**/node_modules/**,**/stub/**,**/reports/**,**/tests/**,**/vite-env.d.ts,**/types/**,**/*types.{ts,tsx},**/constants.{ts,tsx},**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx
-            -Dsonar.coverage.exclusions=**/*.test.ts,**/*.test.tsx,**/coverage/**,**/test-results/**,**/test-reports/**,**/node_modules/**,**/stub/**,**/reports/**,**/tests/**,**/vite-env.d.ts,**/types/**,**/*types.{ts,tsx},**/constants.{ts,tsx},**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx
+            -Dsonar.exclusions=**/*.test.ts,**/*.test.tsx,**/coverage/**,**/test-results/**,**/test-reports/**,**/node_modules/**,**/stub/**,**/reports/**,**/tests/**,**/vite-env.d.ts,**/types/**,**/*types.{ts,tsx},**/constants.{ts,tsx},**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx,**/playwright.config.ts
+            -Dsonar.coverage.exclusions=**/*.test.ts,**/*.test.tsx,**/coverage/**,**/test-results/**,**/test-reports/**,**/node_modules/**,**/stub/**,**/reports/**,**/tests/**,**/vite-env.d.ts,**/types/**,**/*types.{ts,tsx},**/constants.{ts,tsx},**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx,**/playwright.config.ts
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.organization=bcgov-sonarcloud
             -Dsonar.projectKey=nr-waste-plus-frontend
@@ -64,3 +85,27 @@ jobs:
           reporter: java-junit
           only-summary: false
           fail-on-error: true
+
+      - name: Annotate PR with e2e results
+        uses: dorny/test-reporter@v2
+        if: steps.tests.outputs.triggered == 'true'
+        with:
+          name: End-to-End Tests
+          path: frontend/test-reports/junit/report.xml
+          reporter: java-junit
+          only-summary: false
+          fail-on-error: true
+
+      - name: Upload test videos
+        uses: actions/upload-artifact@v5
+        if: steps.tests.outputs.triggered == 'true'
+        with:
+          name: e2e-videos
+          path: frontend/test-results/videos/
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v5
+        if: steps.tests.outputs.triggered == 'true'
+        with:
+          name: e2e-reports
+          path: frontend/test-reports/report/

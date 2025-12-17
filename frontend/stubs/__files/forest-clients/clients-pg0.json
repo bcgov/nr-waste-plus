@@ -1,0 +1,37 @@
+{
+    "content": [
+        {
+            "client": {
+                "code": "90000001",
+                "description": "CANADIAN SAMPLE CO."
+            },
+            "submissionsCount": 1,
+            "blocksCount": 0,
+            "lastUpdate": "2007-03-30T11:08:20"
+        },
+        {
+            "client": {
+                "code": "90000002",
+                "description": "JOHN WICK"
+            },
+            "submissionsCount": 1,
+            "blocksCount": 0,
+            "lastUpdate": "2006-09-08T08:24:17"
+        },
+        {
+            "client": {
+                "code": "90000003",
+                "description": "OAK HERITAGE LTD."
+            },
+            "submissionsCount": 0,
+            "blocksCount": 0,
+            "lastUpdate": "1900-01-01T00:00:00"
+        }
+    ],
+    "page": {
+        "size": 3,
+        "number": 0,
+        "totalElements": 3,
+        "totalPages": 1
+    }
+}

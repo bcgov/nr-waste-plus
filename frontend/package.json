@@ -7,17 +7,19 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint ./src --ext .ts,.tsx",
-    "preview": "vite preview",
-    "test": "vitest run --allowOnly",
-    "pretest:browser": "playwright install",
-    "test:ui": "playwright test",
-    "test:coverage": "vitest run --coverage --allowOnly",
-    "test:ui:dev": "playwright test --ui",
-    "pretest:watch": "npm run pretest:browser",
-    "test:watch": "vitest --allowOnly",
-    "pretest:a11y": "npm run pretest:browser",
+    "test:unit": "vitest run --coverage --allowOnly",
+    "test:unit:watch": "vitest --allowOnly",
+    "pretest:e2e": "playwright install-deps && playwright install",
+    "pretest:e2e:watch": "playwright install",
+    "test:e2e": "playwright test",
+    "test:e2e:watch": "playwright test --ui",
+    "pretest:a11y": "playwright install && npm run pretest:coverage",
+    "pretest:a11y:watch": "playwright install",
     "test:a11y": "playwright test --project=a11y-chromium",
-    "test:a11y:dev": "playwright test --project=a11y-chromium --ui"
+    "test:a11y:watch": "playwright test --project=a11y-chromium --ui",
+    "pretest:coverage": "echo '{}' > src/config/tests/user.bceid.json && echo '{}' > src/config/tests/user.idir.json",
+    "test:coverage": "npm run test:unit; UNIT=$?; npm run test:e2e; E2E=$?; exit $((UNIT||E2E))",
+    "posttest:coverage": "mkdir -p .nyc_output && cp coverage/coverage-final.json .nyc_output/unit-coverage.json && nyc merge .nyc_output .nyc_output/coverage.json && nyc report --reporter=lcov --reporter=cobertura --reporter=text-summary --report-dir=coverage"
   },
   "dependencies": {
     "@bcgov-nr/nr-theme": "^1.8.9",
@@ -67,11 +69,13 @@
     "globals": "^16.3.0",
     "jsdom": "^27.0.0",
     "lint-staged": "^16.1.4",
+    "nyc": "^17.1.0",
     "playwright": "^1.54.2",
     "prettier": "^3.6.2",
     "sass": "^1.90.0",
     "typescript": "~5.9.0",
     "typescript-eslint": "^8.35.1",
+    "v8-to-istanbul": "^9.3.0",
     "vite": "^7.2.7",
     "vite-plugin-pwa": "^1.2.0",
     "vite-tsconfig-paths": "^5.1.4",
@@ -85,5 +89,25 @@
     "workbox-build": {
       "glob": "^13.0.0"
     }
+  },
+  "nyc": {
+    "reporter": [
+      "lcov",
+      "text-summary"
+    ],
+    "report-dir": "coverage",
+    "include": [
+      "src/**/*.ts",
+      "src/**/*.tsx"
+    ],
+    "exclude": [
+      "**/*.spec.ts",
+      "**/__tests__/**",
+      "**/__e2e__/**"
+    ],
+    "extension": [
+      ".ts",
+      ".tsx"
+    ]
   }
 }

@@ -52,7 +52,7 @@ const DistrictSelection = ({
             <SkeletonPlaceholder />
           </div>
         ) : (
-          <ul className="district-list" aria-label="District list">
+          <ul className="district-list" aria-label="List of possible values">
             <li
               data-testid="district-select-none"
               className="district-list-item"
