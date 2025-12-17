@@ -49,6 +49,7 @@ jobs:
         working-directory: frontend
         env:
           RUN_A11Y_TESTS: true
+          VITE_FAM_DOMAIN: ${{ secrets.FAM_DOMAIN }}
           BCEID_USERNAME: ${{ secrets.BCEID_UAT_USERNAME }}
           BCEID_PASSWORD: ${{ secrets.BCEID_UAT_PASSWORD }}
           IDIR_USERNAME: ${{ secrets.IDIR_UAT_USERNAME }}
