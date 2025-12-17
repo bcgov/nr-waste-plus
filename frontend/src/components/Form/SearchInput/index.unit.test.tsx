@@ -51,4 +51,26 @@ describe('SearchInput (browser)', () => {
     await userEvent.type(input, '123{enter}');
     expect(props.onChange).toHaveBeenCalledWith('abc123');
   });
+
+  it('calls onSearch when Enter is pressed', async () => {
+    const onSearch = vi.fn();
+    const { input } = setup({ value: '', onSearch });
+    await userEvent.type(input, 'test query{enter}');
+    expect(onSearch).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call onSearch when onSearch is not provided', async () => {
+    const { input, props } = setup({ value: '' });
+    await userEvent.type(input, 'test{enter}');
+    // Should not throw error, just verify onChange was called
+    expect(props.onChange).toHaveBeenCalledWith('test');
+  });
+
+  it('calls onSearch without calling onChange multiple times on Enter', async () => {
+    const onSearch = vi.fn();
+    const { input, props } = setup({ value: '', onSearch });
+    await userEvent.type(input, 'search term{enter}');
+    expect(onSearch).toHaveBeenCalledTimes(1);
+    expect(props.onChange).toHaveBeenCalledTimes(1);
+  });
 });
