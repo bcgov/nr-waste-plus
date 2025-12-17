@@ -2,11 +2,10 @@ import { test, expect } from '@playwright/test';
 
 import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 test.beforeAll(async ({ browserName }, testInfo) => {
   test.skip(
     testInfo.project.metadata.userType === 'idir',
-    'This page is only valid for BCeID users',
+    `This page is only valid for BCeID users on [${browserName}]`,
   );
 });
 
