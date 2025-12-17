@@ -97,14 +97,14 @@ jobs:
           fail-on-error: true
 
       - name: Upload test videos
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: steps.tests.outputs.triggered == 'true'
         with:
           name: e2e-videos
           path: frontend/test-results/videos/
 
       - name: Upload test results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: steps.tests.outputs.triggered == 'true'
         with:
           name: e2e-reports

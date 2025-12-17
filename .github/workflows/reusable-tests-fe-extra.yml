@@ -66,14 +66,14 @@ jobs:
           fail-on-error: true
 
       - name: Upload test videos
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: a11y-videos
           path: frontend/test-results/videos/
 
       - name: Upload test results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: a11y-reports
