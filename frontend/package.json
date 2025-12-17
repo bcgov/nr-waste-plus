@@ -17,6 +17,7 @@
     "pretest:a11y:watch": "playwright install",
     "test:a11y": "playwright test --project=a11y-chromium",
     "test:a11y:watch": "playwright test --project=a11y-chromium --ui",
+    "pretest:coverage": "echo '{}' > src/config/tests/user.bceid.json && echo '{}' > src/config/tests/user.idir.json",
     "test:coverage": "npm run test:unit; UNIT=$?; npm run test:e2e; E2E=$?; exit $((UNIT||E2E))",
     "posttest:coverage": "mkdir -p .nyc_output && cp coverage/coverage-final.json .nyc_output/unit-coverage.json && nyc merge .nyc_output .nyc_output/coverage.json && nyc report --reporter=lcov --reporter=cobertura --reporter=text-summary --report-dir=coverage"
   },
