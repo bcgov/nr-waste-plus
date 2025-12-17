@@ -13,7 +13,7 @@
     "pretest:e2e:watch": "playwright install",
     "test:e2e": "playwright test",
     "test:e2e:watch": "playwright test --ui",
-    "pretest:a11y": "playwright install",
+    "pretest:a11y": "playwright install && npm run pretest:coverage",
     "pretest:a11y:watch": "playwright install",
     "test:a11y": "playwright test --project=a11y-chromium",
     "test:a11y:watch": "playwright test --project=a11y-chromium --ui",
