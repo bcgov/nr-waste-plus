@@ -19,8 +19,13 @@ export async function authenticate(page: Page, metadata: Record<string, any>): P
     return;
   }
 
-  await page.click(`[data-testid="landing-button__${metadata.userType.toLowerCase()}"]`);
-  await page.waitForSelector('#user');
+  await Promise.all([
+    page.waitForNavigation(),
+    page.click(`[data-testid="landing-button__${metadata.userType.toLowerCase()}"]`),
+  ]);
+
+  await page.waitForLoadState('networkidle');
+  await page.waitForSelector('#user', { timeout: 60000 });
 
   console.log(`Setup - Filling credentials for user: ${metadata.user}`);
   await page.fill('#user', metadata.user);
