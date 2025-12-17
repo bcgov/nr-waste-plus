@@ -9,6 +9,8 @@ jobs:
   tests-frontend:
     name: Frontend Unit Tests
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    container:
+      image: mcr.microsoft.com/playwright:v1.57.0-noble
     permissions:
       contents: write
       checks: write
@@ -29,7 +31,7 @@ jobs:
       BCEID_PASSWORD: ${{ secrets.BCEID_UAT_PASSWORD }}
       IDIR_USERNAME: ${{ secrets.IDIR_UAT_USERNAME }}
       IDIR_PASSWORD: ${{ secrets.IDIR_UAT_PASSWORD}}
-    steps:      
+    steps:
       - uses: bcgov/action-test-and-analyse@c20d16c26d9b7e6e486f01702880053ed4ebdc91 # v1.5.0
         id: tests
         env:
