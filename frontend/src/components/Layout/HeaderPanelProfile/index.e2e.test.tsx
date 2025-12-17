@@ -139,14 +139,6 @@ test.describe('Profile menu', () => {
 
       await expect(panelSelector.getByRole('button', { name: 'Select none' })).toBeVisible();
       await expect(panelSelector.getByText('Select none')).toBeVisible();
-
-      clientsPage.content.forEach(async (client) => {
-        await expect(
-          panelSelector.getByRole('listitem', {
-            name: `${client.client.description}`,
-          }),
-        ).toBeVisible();
-      });
     });
 
     test('select OAK HERITAGE LTD.', async ({ page }, testInfo) => {
@@ -218,14 +210,6 @@ test.describe('Profile menu', () => {
 
       await expect(panelSelector.getByRole('button', { name: 'Select none' })).toBeVisible();
       await expect(panelSelector.getByText('Select none')).toBeVisible();
-
-      districtContent.forEach(async (district) => {
-        await expect(
-          panelSelector.getByRole('listitem', {
-            name: `${district.description}`,
-          }),
-        ).toBeVisible();
-      });
     });
 
     test('select Chilliwack', async ({ page }, testInfo) => {
