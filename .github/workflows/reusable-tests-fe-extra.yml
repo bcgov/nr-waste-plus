@@ -7,6 +7,7 @@ permissions: {}
 
 jobs:
   tests-frontend:
+    environment: test
     name: Frontend UI Tests
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     container:
@@ -17,7 +18,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       VITE_APP_NAME: Waste Plus
-      VITE_FEATURES_OFFLINE: true
+      VITE_FEATURES_OFFLINE: false
       VITE_ZONE: TEST
       VITE_USER_POOLS_ID: ${{ secrets.COGNITO_USER_POOL }}
       VITE_USER_POOLS_WEB_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
@@ -27,6 +28,7 @@ jobs:
       VITE_NODE_ENV: test
       VITE_COVERAGE: true
       VITE_PORT: 3000
+      VITE_FAM_DOMAIN: ${{ secrets.FAM_DOMAIN }}
     steps:
       - uses: actions/checkout@v6
 
