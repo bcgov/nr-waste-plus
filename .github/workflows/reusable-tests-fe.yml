@@ -49,6 +49,7 @@ jobs:
         with:
           node_version: 24
           commands: |
+            git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
             npm i
             npx playwright install-deps
             npx playwright install
