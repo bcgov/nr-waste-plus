@@ -72,13 +72,12 @@ test.describe('My Client List Page', () => {
     await expect(page.getByRole('link', { name: '90000001' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'CANADIAN SAMPLE CO.' }).first()).toBeVisible();
 
-    const searchBox = page.getByTestId('main-search');;
+    const searchBox = page.getByTestId('main-search');
     await searchBox.fill('OAK');
     await searchBox.blur();
 
     const searchButton = page.getByTestId('search-button-other');
     await searchButton.click();
-
 
     await page.waitForLoadState('networkidle');
 
@@ -92,7 +91,7 @@ test.describe('My Client List Page', () => {
     await expect(page.getByRole('link', { name: '90000001' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'CANADIAN SAMPLE CO.' }).first()).toBeVisible();
 
-    const searchBox = page.getByTestId('main-search');;
+    const searchBox = page.getByTestId('main-search');
     await searchBox.fill('OAK');
     await searchBox.press('Enter');
 

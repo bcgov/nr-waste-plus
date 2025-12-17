@@ -1,5 +1,4 @@
 import type {
-  CodeDescriptionDto,
   ForestClientAutocompleteResultDto,
   MyForestClientDto,
   ForestClientDto,

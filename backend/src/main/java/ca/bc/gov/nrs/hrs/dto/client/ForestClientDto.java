@@ -1,8 +1,6 @@
 package ca.bc.gov.nrs.hrs.dto.client;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import java.beans.Transient;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -33,8 +31,8 @@ public record ForestClientDto(
    * Returns the name of the client.
    *
    * <p>The value is resolved based on the client type: for individuals (type code 'I')
-   * it concatenates legal first, middle and last name parts;
-   * for other types it returns the clientName (company or organization name).
+   * it concatenates legal first, middle and last name parts; for other types it returns the
+   * clientName (company or organization name).
    * </p>
    *
    * @return the resolved display name of the client
