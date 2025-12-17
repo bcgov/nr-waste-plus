@@ -25,7 +25,11 @@ jobs:
       VITE_NODE_ENV: test
       VITE_COVERAGE: true
       VITE_PORT: 3000
-    steps:
+      BCEID_USERNAME: ${{ secrets.BCEID_UAT_USERNAME }}
+      BCEID_PASSWORD: ${{ secrets.BCEID_UAT_PASSWORD }}
+      IDIR_USERNAME: ${{ secrets.IDIR_UAT_USERNAME }}
+      IDIR_PASSWORD: ${{ secrets.IDIR_UAT_PASSWORD}}
+    steps:      
       - uses: bcgov/action-test-and-analyse@c20d16c26d9b7e6e486f01702880053ed4ebdc91 # v1.5.0
         id: tests
         env:
@@ -41,9 +45,11 @@ jobs:
           VITE_COVERAGE: true
           VITE_PORT: 3000
         with:
-          node_version: 22
+          node_version: 24
           commands: |
             npm i
+            npx playwright install-deps
+            npx playwright install
             npm run test:coverage
           dir: frontend
           sonar_args: >
@@ -64,3 +70,27 @@ jobs:
           reporter: java-junit
           only-summary: false
           fail-on-error: true
+
+      - name: Annotate PR with e2e results
+        uses: dorny/test-reporter@v2
+        if: steps.tests.outputs.triggered == 'true'
+        with:
+          name: End-to-End Tests
+          path: frontend/test-reports/junit/report.xml
+          reporter: java-junit
+          only-summary: false
+          fail-on-error: true
+
+      - name: Upload test videos
+        uses: actions/upload-artifact@v5
+        if: steps.tests.outputs.triggered == 'true'
+        with:
+          name: e2e-videos
+          path: frontend/test-results/videos/
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v5
+        if: steps.tests.outputs.triggered == 'true'
+        with:
+          name: e2e-reports
+          path: frontend/test-reports/report/
