@@ -313,7 +313,6 @@ const a11yProject = [
       browserName: 'chromium',
       stateFile: 'user.bceid.json',
     },
-    dependencies: ['bceid-setup'],
   },
 ];
 
