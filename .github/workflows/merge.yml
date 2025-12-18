@@ -27,23 +27,22 @@ jobs:
         id: pr
         uses: bcgov/action-get-pr@35514fa1d4765547da319e967b509363598e8b46 # v0.1.0
 
-#  deploy-test:
-#    name: Deploy (TEST)
-#    secrets: inherit
-#    uses: ./.github/workflows/.deploy.yml
-#    with:
-#      environment: test
-#      target: test
-#      url: forestclient-tst.nrs.gov.bc.ca
-#      configmap-backend: |-
-#        features:
-#          staff:
-#            match: true
-#        info:
-#          app:
-#            component: backend
-#      configmap-frontend: |-
-#        window.localStorage.setItem(\"VITE_FEATURE_FLAGS\",'{\"RELATED_CLIENTS\":true}');
+  deploy-test:
+    name: Deploy (TEST)
+    secrets: inherit
+    uses: ./.github/workflows/.deploy.yml
+    with:
+      environment: test
+      target: test
+      url: nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca
+      configmap-backend: |-
+        info:
+          app:
+            component: backend
+      configmap-frontend: |-
+        window.localStorage.setItem(\"VITE_FEATURE_FLAGS\",'{}');
+        window.localStorage.setItem(\"VITE_FEATURES_OFFLINE\",'false');
+
 
 #  deploy-prod:
 #    name: Deploy (PROD)
