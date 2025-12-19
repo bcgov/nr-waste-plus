@@ -48,9 +48,13 @@ jobs:
     secrets: inherit
     uses: ./.github/workflows/.deploy.yml
     with:
-      oracledb-port: 1521
-      oracledb-servicename: PR_${{ github.event.number }}
-      oracledb-username: THE
+      environment: test
+      target: test
+      #oracledb-port: 1521
+      oracledb-port: 1543
+      #oracledb-servicename: PR_${{ github.event.number }}
+      #oracledb-username: THE
+      url: nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca
       configmap-backend: |-
         info:
           app:

@@ -35,6 +35,7 @@ jobs:
       environment: test
       target: test
       url: nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca
+      oracledb-port: 1543
       configmap-backend: |-
         info:
           app:
