@@ -50,8 +50,8 @@ jobs:
     with:
       environment: test
       target: test
-      #oracledb-port: 1521
-      oracledb-port: 1543
+      oracledb-port: 1521
+      #oracledb-port: 1543
       #oracledb-servicename: PR_${{ github.event.number }}
       #oracledb-username: THE
       url: nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca
