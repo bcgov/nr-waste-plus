@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.hrs.provider;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.util.UriUtils;
@@ -26,8 +27,7 @@ import tools.jackson.databind.json.JsonMapper;
  * Provider that forwards requests to the legacy backend API and adapts responses for use in the
  * newer HRS backend.
  *
- * <p>
- * This component centralizes calls to the legacy API for code lists and search endpoints. It
+ * <p>This component centralizes calls to the legacy API for code lists and search endpoints. It
  * applies resilience patterns (circuit breaker) and contains fallback implementations when the
  * legacy system is unavailable. Static fallback data has been centralized in
  * {@link LegacyApiConstants}.
@@ -55,9 +55,7 @@ public class LegacyApiProvider {
   /**
    * Retrieve district code list from the legacy API.
    *
-   * <p>
-   * Returns a list of {@link CodeDescriptionDto} representing district codes.
-   * </p>
+   * <p>Returns a list of {@link CodeDescriptionDto} representing district codes.</p>
    */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackDistricts")
   @NewSpan
@@ -74,9 +72,7 @@ public class LegacyApiProvider {
   /**
    * Retrieve sampling codes from the legacy API.
    *
-   * <p>
-   * Returns a list of {@link CodeDescriptionDto} representing sampling codes.
-   * </p>
+   * <p>Returns a list of {@link CodeDescriptionDto} representing sampling codes.</p>
    */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyList")
   @NewSpan
@@ -93,9 +89,7 @@ public class LegacyApiProvider {
   /**
    * Retrieve status codes from the legacy API.
    *
-   * <p>
-   * Returns a list of {@link CodeDescriptionDto} representing assess area statuses.
-   * </p>
+   * <p>Returns a list of {@link CodeDescriptionDto} representing assess area statuses.</p>
    */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyList")
   @NewSpan
@@ -112,8 +106,7 @@ public class LegacyApiProvider {
   /**
    * Search reporting units in the legacy API using provided filters and pageable information.
    *
-   * <p>
-   * The legacy API responds with a paged JSON structure; this method retrieves the raw
+   * <p>The legacy API responds with a paged JSON structure; this method retrieves the raw
    * {@link JsonNode} and converts its content portion into a {@link Page} of
    * {@link ReportingUnitSearchResultDto}.
    * </p>
@@ -171,16 +164,39 @@ public class LegacyApiProvider {
   }
 
   /**
+   * Retrieve expanded search details for a specific reporting unit and block from the legacy API.
+   *
+   * @param ruId    the reporting unit ID
+   * @param blockId the block ID
+   * @return a {@link ReportingUnitSearchExpandedDto} with expanded details
+   */
+  @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackSearchExpand")
+  @NewSpan
+  public ReportingUnitSearchExpandedDto getSearchExpanded(Long ruId, Long blockId) {
+    return restClient
+        .get()
+        .uri(uriBuilder -> uriBuilder
+            .path("/api/search/reporting-units/ex/{reportingUnitId}/{blockId}")
+            .build(Map.of(
+                    "reportingUnitId", ruId,
+                    "blockId", blockId
+                )
+            )
+        )
+        .retrieve()
+        .body(ReportingUnitSearchExpandedDto.class);
+  }
+
+  /**
    * Search for reporting unit users that match a partial user id.
    *
-   * <p>
-   * Returns a list of user ids as strings.
-   * </p>
+   * <p>Returns a list of user ids as strings.</p>
    *
    * @param userId the search term for user id
    * @return a list of matching user ids
    */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyUsersList")
+  @NewSpan
   public List<String> searchReportingUnitUsers(String userId) {
     log.info("Searching {} request to /api/search/reporting-units-users for user that matches {}",
         PROVIDER, userId);
@@ -200,8 +216,7 @@ public class LegacyApiProvider {
   /**
    * Search "My Forest" clients in the legacy API.
    *
-   * <p>
-   * The legacy API returns a paged JSON structure; this method converts the content field into a
+   * <p>The legacy API returns a paged JSON structure; this method converts the content field into a
    * {@link Page} of {@link MyForestClientSearchResultDto}.
    * </p>
    *
@@ -259,6 +274,24 @@ public class LegacyApiProvider {
         results,
         pageable,
         totalElements
+    );
+  }
+
+  private ReportingUnitSearchExpandedDto fallbackSearchExpand(Long ruId, Long blockId,
+      Throwable throwable) {
+    logFallbackError(throwable);
+    return new ReportingUnitSearchExpandedDto(
+        blockId,
+        null,
+        null,
+        null,
+        false,
+        false,
+        0.0,
+        null,
+        null,
+        null,
+        0
     );
   }
 
