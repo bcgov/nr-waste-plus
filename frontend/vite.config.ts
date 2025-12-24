@@ -149,7 +149,6 @@ export default defineConfig(({ mode }) => {
         provider: 'v8',
         reporter: ['lcov', 'cobertura', 'html', 'json', 'text'],
         reportsDirectory: './coverage',
-        all: false,
         excludeAfterRemap: true,
         exclude: [
           '**/node_modules/**',

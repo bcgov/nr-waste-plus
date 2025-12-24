@@ -26,7 +26,6 @@ export async function authenticate(page: Page, metadata: Record<string, any>): P
   await page.waitForLoadState('networkidle');
   await page.locator('#user').waitFor({ state: 'visible', timeout: 60000 });
 
-
   console.log(`Setup - Filling credentials for user: ${metadata.user}`);
   await page.fill('#user', metadata.user);
   await page.fill('#password', metadata.password);
