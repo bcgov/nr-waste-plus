@@ -81,7 +81,13 @@ const ReadonlyInput = ({
   if (tooltipText && !showSkeleton) {
     content = (
       <DefinitionTooltip definition={tooltipText} openOnHover>
-        {React.isValidElement(rawContent) ? rawContent : <span>{String(rawContent)}</span>}
+        {React.isValidElement(rawContent) ? (
+          rawContent
+        ) : typeof rawContent === 'string' || typeof rawContent === 'number' ? (
+          <span>{rawContent}</span>
+        ) : (
+          rawContent
+        )}
       </DefinitionTooltip>
     );
   }
