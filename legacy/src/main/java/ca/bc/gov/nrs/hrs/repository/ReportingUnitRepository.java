@@ -3,8 +3,10 @@ package ca.bc.gov.nrs.hrs.repository;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.search.ClientDistrictSearchProjection;
+import ca.bc.gov.nrs.hrs.entity.search.ReportingUnitSearchExpandedProjection;
 import ca.bc.gov.nrs.hrs.entity.search.ReportingUnitSearchProjection;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,8 +27,8 @@ public interface ReportingUnitRepository extends JpaRepository<ReportingUnitEnti
   /**
    * Execute a paged, parameterized native search for reporting units.
    *
-   * <p>The query is defined in {@link QueryConstants#SEARCH_REPORTING_UNIT_QUERY} and a
-   * separate count query is provided by {@link QueryConstants#SEARCH_REPORTING_UNIT_COUNT}.
+   * <p>The query is defined in {@link ReportingUnitQueryConstants#SEARCH_REPORTING_UNIT_QUERY} and a
+   * separate count query is provided by {@link ReportingUnitQueryConstants#SEARCH_REPORTING_UNIT_COUNT}.
    * The {@code filter} parameter is a DTO that supplies named parameters to the native query
    * (via Spring's native query parameter binding).</p>
    *
@@ -36,12 +38,18 @@ public interface ReportingUnitRepository extends JpaRepository<ReportingUnitEnti
    */
   @Query(
       nativeQuery = true,
-      value = QueryConstants.SEARCH_REPORTING_UNIT_QUERY,
-      countQuery = QueryConstants.SEARCH_REPORTING_UNIT_COUNT
+      value = ReportingUnitQueryConstants.SEARCH_REPORTING_UNIT_QUERY,
+      countQuery = ReportingUnitQueryConstants.SEARCH_REPORTING_UNIT_COUNT
   )
   Page<ReportingUnitSearchProjection> searchReportingUnits(
       ReportingUnitSearchParametersDto filter,
       Pageable page
+  );
+
+  @Query(nativeQuery = true, value = ReportingUnitQueryConstants.GET_SEARCH_BLOCK_EXPANDED_CONTENT)
+  Optional<ReportingUnitSearchExpandedProjection> getSearchExpandedContent(
+      Long reportingUnit,
+      Long blockId
   );
 
   /**
