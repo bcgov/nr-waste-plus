@@ -194,7 +194,7 @@ describe('WasteSearchTableExpandContent', () => {
           queries: { retry: false, gcTime: 0, staleTime: 0 },
         },
       });
-      let container: HTMLElement;
+      let container: HTMLElement = document.createElement('div');
       await act(async () => {
         const result = render(
           <QueryClientProvider client={qc}>
