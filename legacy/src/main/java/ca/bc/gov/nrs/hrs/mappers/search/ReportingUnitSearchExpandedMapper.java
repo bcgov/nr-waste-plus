@@ -29,7 +29,7 @@ public interface ReportingUnitSearchExpandedMapper extends
    *
    * <p>This method performs the following transformations:
    * <ul>
-   *   <li>Converts the attachment ID and name into a {@link ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto}</li>
+   *   <li>Converts attachment ID to {@link ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto}</li>
    *   <li>Transforms the multiMark integer (0/1) to a boolean value</li>
    *   <li>Transforms the exempted integer (0/1) to a boolean value</li>
    *   <li>Maps totalBlockCount to totalBlocks</li>
