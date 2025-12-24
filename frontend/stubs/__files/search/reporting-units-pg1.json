@@ -1,8 +1,8 @@
 {
     "content": [
         {
-            "id": "e1f2a3b4-c5d6-7890-4567-901234567890",
-            "blockId": "CAT2",
+            "id": "RU-10501-Block-2-61135270",
+            "cutBlockId": "CAT2",
             "ruNumber": 10501,
             "client": {
                 "code": "92345678",
@@ -24,11 +24,12 @@
                 "code": "BIS",
                 "description": "Billing Issued"
             },
-            "lastUpdated": "2012-01-27T10:34:58"
+            "lastUpdated": "2012-01-27T10:34:58",
+            "blockId": 2
         },
         {
-            "id": "f2a3b4c5-d6e7-8901-5678-012345678901",
-            "blockId": "G051C0TL",
+            "id": "RU-2131-Block-510-61564826",
+            "cutBlockId": "G051C0TL",
             "ruNumber": 2131,
             "client": {
                 "code": "93456789",
@@ -50,7 +51,8 @@
                 "code": "BIS",
                 "description": "Billing Issued"
             },
-            "lastUpdated": "2009-12-02T09:06:58"
+            "lastUpdated": "2009-12-02T09:06:58",
+            "blockId": 510
         }
     ],
     "page": {

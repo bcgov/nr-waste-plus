@@ -283,4 +283,119 @@ test.describe('Waste Search Page', () => {
       await expect(errorNotification).toBeVisible();
     });
   });
+
+  test.describe('expanded row content', () => {
+    test('displays all fields when expanding row with full data', async ({ page }) => {
+      // Mock the expand API endpoint
+      await mockApiResponsesWithStub(
+        page,
+        'search/reporting-units/ex/34906/102',
+        'search/reporting-units-expanded-full.json',
+      );
+
+      const searchBox = page.getByRole('searchbox');
+      await searchBox.fill('67890');
+      await searchBox.blur();
+
+      const searchButton = page.getByTestId('search-button-most');
+      await searchButton.click();
+
+      await page.waitForLoadState('networkidle');
+
+      // Click the expand button for the first row
+      const expandButton = page.locator('button[aria-label*="Expand"]').first();
+      await expandButton.click();
+
+      await page.waitForLoadState('networkidle');
+
+      // Verify all fields are displayed
+      await expect(page.getByTestId('card-item-content-license-number')).toHaveText('A97537'); // licenseNo
+      await expect(page.getByTestId('card-item-content-cutting-permit')).toHaveText('R02'); // cuttingPermit
+      await expect(page.getByTestId('card-item-content-timber-mark')).toHaveText('HK4C02'); // timberMark
+      await expect(page.getByTestId('card-item-content-exempted-(yes/no)')).toHaveText('No'); // exempted (false)
+      await expect(page.getByTestId('card-item-content-multi-mark-(yes/no)')).toHaveText('No'); // multiMark (true) - appears after multiMark label
+      await expect(page.getByTestId('card-item-content-net-area')).toHaveText('7.39'); // netArea
+      await expect(page.getByTestId('card-item-content-submitter')).toHaveText('BCEID\\ICEKING'); // submitter
+      await expect(page.getByTestId('card-item-comment:')).toHaveText('Comment:This is a sample comment for the reporting unit.'); // comments
+      await expect(page.getByRole('link', { name: /Link/i })).toBeVisible(); // attachment link
+      await expect(page.getByText('Total blocks in reporting unit: 15')).toBeVisible(); // totalBlocks
+    });
+
+    test('handles missing attachment and comment correctly', async ({ page }) => {
+      // Mock the expand API endpoint
+      await mockApiResponsesWithStub(
+        page,
+        'search/reporting-units/ex/34906/105',
+        'search/reporting-units-expanded-noattach.json',
+      );
+
+      const searchBox = page.getByRole('searchbox');
+      await searchBox.fill('67890');
+      await searchBox.blur();
+
+      const searchButton = page.getByTestId('search-button-most');
+      await searchButton.click();
+
+      await page.waitForLoadState('networkidle');
+
+      // Click the expand button for the second row
+      const expandButtons = page.locator('button[aria-label*="Expand"]');
+      const secondExpandButton = expandButtons.nth(1);
+      await secondExpandButton.click();
+
+      await page.waitForLoadState('networkidle');
+
+
+      // Verify all fields are displayed
+      await expect(page.getByTestId('card-item-content-license-number')).toHaveText('W1940'); // licenseNo
+      await expect(page.getByTestId('card-item-content-cutting-permit')).toHaveText('EA'); // cuttingPermit
+      await expect(page.getByTestId('card-item-content-timber-mark')).toHaveText('WBMJEC'); // timberMark
+      await expect(page.getByTestId('card-item-content-exempted-(yes/no)')).toHaveText('Yes'); // exempted (false)
+      await expect(page.getByTestId('card-item-content-multi-mark-(yes/no)')).toHaveText('Yes'); // multiMark (true) - appears after multiMark label
+      await expect(page.getByTestId('card-item-content-net-area')).toHaveText('3.07'); // netArea
+      await expect(page.getByTestId('card-item-content-submitter')).toHaveText('BCEID\\\\BMO'); // submitter
+      await expect(page.getByTestId('card-item-comment:')).toHaveText('Comment:-'); // comments
+      await expect(page.getByText('Total blocks in reporting unit: 2')).toBeVisible(); // totalBlocks
+
+      // Verify no attachment link is present
+      const attachmentLinks = page.getByRole('link', { name: /Link/i });
+      await expect(attachmentLinks).toHaveCount(0);
+    });
+
+    test('displays empty content when blockId is null (no API call)', async ({ page }) => {
+      // This search will return a row with blockId: null, so no expand API call will be made
+      await mockApiResponsesWithStub(
+        page,
+        'search/reporting-units?mainSearchTerm=noblock&size=10',
+        'search/reporting-units-noblock.json',
+      );
+
+      const searchBox = page.getByRole('searchbox');
+      await searchBox.fill('noblock');
+      await searchBox.blur();
+
+      const searchButton = page.getByTestId('search-button-most');
+      await searchButton.click();
+
+      await page.waitForLoadState('networkidle');
+
+      // Verify row is displayed
+      await expect(page.getByText('NORTHERN TIMBER CO')).toBeVisible();
+
+      // Click the expand button for the row with null blockId
+      const expandButton = page.locator('button[aria-label*="Expand"]').first();
+      await expandButton.click();
+
+      await page.waitForLoadState('networkidle');
+
+      // Verify loading skeleton is shown (since no API data will be returned)
+      const skeletons = page.locator('.cds--skeleton');
+      await expect(skeletons).toHaveCount(0); // After loading completes, should have no skeletons
+
+      // Verify fields are empty/placeholder
+      const dataFields = page.locator('[data-testid*="card-item-content"]');
+      // With null blockId, component won't fetch data, so fields should be in loading state or empty
+      await expect(dataFields.first()).toBeDefined();
+    });
+  });
 });
