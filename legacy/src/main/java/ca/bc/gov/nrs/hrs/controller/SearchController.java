@@ -71,12 +71,25 @@ public class SearchController {
             : JwtPrincipalUtil.getClientFromRoles(jwt);
 
     log.info("Searching waste entries with filters: {}, pageable: {} for: {}",
-        filters, pageable,JwtPrincipalUtil.getUserId(jwt)
+        filters, pageable, JwtPrincipalUtil.getUserId(jwt)
     );
     return ruSearchService.search(filters, pageable, userClientNumbers);
 
   }
 
+  /**
+   * Retrieve an expanded search entry for a specific reporting unit and block.
+   *
+   * <p>This endpoint fetches detailed information about a reporting unit block, including all
+   * related expanded data for the search view. If the reporting unit or block combination is not
+   * found, a {@link BlockNotFound} exception is thrown.</p>
+   *
+   * @param jwt             the authenticated JWT principal
+   * @param reportingUnitId the ID of the reporting unit
+   * @param blockId         the ID of the block within the reporting unit
+   * @return an expanded {@link ReportingUnitSearchExpandedDto} containing detailed search data
+   * @throws BlockNotFound if the reporting unit and block combination is not found
+   */
   @GetMapping("/reporting-units/ex/{reportingUnitId}/{blockId}")
   public ReportingUnitSearchExpandedDto getSearchExpandedEntry(
       @AuthenticationPrincipal Jwt jwt,

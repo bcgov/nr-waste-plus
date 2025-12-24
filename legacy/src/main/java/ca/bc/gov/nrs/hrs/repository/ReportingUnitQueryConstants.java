@@ -135,7 +135,8 @@ public final class ReportingUnitQueryConstants {
         aud.waste_assessment_area_id AS block_id,
         aud.WASTE_COMMENT
       FROM waste_assess_area_sts_audit aud
-      LEFT JOIN waste_assessment_area wa ON wa.waste_assessment_area_id = aud.waste_assessment_area_id
+      LEFT JOIN waste_assessment_area wa
+        ON wa.waste_assessment_area_id = aud.waste_assessment_area_id
       WHERE
           aud.update_userid != 'WAA_COMMENT_CONVERSION'
           AND aud.waste_assessment_area_id = :blockId
@@ -158,7 +159,9 @@ public final class ReportingUnitQueryConstants {
       waa.FOREST_FILE_ID AS license_no,
       COALESCE(waa.CUTTING_PERMIT_ID, waa.DRAFT_CUTTING_PERMIT_ID) AS cutting_permit,
       COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK) AS timber_mark,
-      CASE WHEN NVL(waa.CHILD_BLOCK_IND, 'N') = 'Y' AND waa.PARENT_WAA_ID IS NOT NULL THEN 1 ELSE 0 END AS exempted,
+      CASE
+        WHEN NVL(waa.CHILD_BLOCK_IND, 'N') = 'Y' AND waa.PARENT_WAA_ID IS NOT NULL
+        THEN 1 ELSE 0 END AS exempted,
       CASE WHEN NVL(waa.MULTI_MARK_IND, 'N') = 'N' THEN 0 ELSE 1 END AS multi_mark,
       TO_CHAR (waa.waste_net_area, '999.99') AS net_area,
       waa.ENTRY_USERID AS submitter,

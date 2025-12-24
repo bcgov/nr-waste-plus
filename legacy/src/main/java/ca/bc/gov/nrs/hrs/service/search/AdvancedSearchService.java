@@ -17,6 +17,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service for advanced search operations on reporting units and client districts.
+ *
+ * <p>This service provides functionality to search for reporting unit users and retrieve
+ * aggregated client district information for authenticated users. It handles client-scoping
+ * and pagination for search results, delegating database queries to the repository layer
+ * and mapping projection results to DTOs.</p>
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
