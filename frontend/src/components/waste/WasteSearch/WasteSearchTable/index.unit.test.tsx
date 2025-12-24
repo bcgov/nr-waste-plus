@@ -64,7 +64,7 @@ vi.mock('@/components/Form/TableResource', () => ({
           <tbody>
             {content.content.map((row: any) => (
               <tr key={row.id}>
-                <td>{row.blockId}</td>
+                <td>{row.cutBlockId}</td>
                 <td>{row.ruNumber}</td>
               </tr>
             ))}
@@ -120,7 +120,8 @@ const mockSearchResults: PageableResponse<ReportingUnitSearchResultDto> = {
   content: [
     {
       id: 'RU-4069-Block-411B-224813681',
-      blockId: '411B',
+      cutBlockId: '411B',
+      blockId: 411,
       ruNumber: 4069,
       client: { code: '00010005', description: 'JACOB FEHR' },
       licenseNumber: 'A12345',
@@ -134,7 +135,8 @@ const mockSearchResults: PageableResponse<ReportingUnitSearchResultDto> = {
     },
     {
       id: 'RU-4070-Block-412B-224813682',
-      blockId: '412B',
+      cutBlockId: '412B',
+      blockId: 412,
       ruNumber: 4070,
       client: { code: '00010006', description: 'TEST CLIENT' },
       licenseNumber: 'A12346',

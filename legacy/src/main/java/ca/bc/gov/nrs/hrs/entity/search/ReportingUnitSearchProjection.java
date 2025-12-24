@@ -13,7 +13,12 @@ public interface ReportingUnitSearchProjection {
   /**
    * Reporting unit block identifier.
    */
-  String getBlockId();
+  Long getBlockId();
+
+  /**
+   * Reporting unit block identifier.
+   */
+  String getCutBlockId();
 
   /**
    * Reporting unit number.

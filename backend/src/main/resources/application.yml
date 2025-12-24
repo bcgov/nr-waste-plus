@@ -37,6 +37,7 @@ spring:
   flyway:
     schemas: hrs
     default-schema: hrs
+    baseline-on-migrate: true
   jpa:
     show-sql: false
     properties:

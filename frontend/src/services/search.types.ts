@@ -4,7 +4,8 @@ export type CodeDescriptionDto = {
 };
 
 export type ReportingUnitSearchResultDto = {
-  blockId: string | null;
+  blockId: number | null;
+  cutBlockId: string | null;
   ruNumber: number;
   client: CodeDescriptionDto;
   licenseNumber: string | null;
@@ -32,4 +33,18 @@ export type ReportingUnitSearchParametersDto = {
   timberMark?: string;
   clientLocationCode?: string;
   clientNumbers?: string[];
+};
+
+export type ReportingUnitSearchExpandedDto = {
+  id: number;
+  licenseNo: string | null;
+  cuttingPermit: string | null;
+  timberMark: string | null;
+  exempted: boolean;
+  multiMark: boolean;
+  netArea: number;
+  submitter: string | null;
+  attachment: CodeDescriptionDto;
+  comments: string | null;
+  totalBlocks: number;
 };

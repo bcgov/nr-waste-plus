@@ -12,8 +12,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import ca.bc.gov.nrs.hrs.TestConstants;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
@@ -138,6 +140,48 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
     assertNotNull(result);
     assertEquals(size, result.getTotalElements());
     assertEquals(size == 0, result.getContent().isEmpty());
+  }
+
+  @ParameterizedTest
+  @MethodSource("expandedDetailsArguments")
+  @DisplayName("Get expanded details for reporting unit")
+  void shouldGetExpandedDetails(Long ruId, Long blockId, ResponseDefinitionBuilder stubResponse, ReportingUnitSearchExpandedDto expectedDto) {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/search/reporting-units/ex/" + ruId + "/" + blockId))
+            .willReturn(stubResponse));
+
+    var value = legacyApiProvider.getSearchExpanded(ruId, blockId);
+    assertNotNull(value);
+    assertEquals(expectedDto.id(), value.id());
+    assertEquals(expectedDto.licenseNo(), value.licenseNo());
+    assertEquals(expectedDto.cuttingPermit(), value.cuttingPermit());
+    assertEquals(expectedDto.timberMark(), value.timberMark());
+    assertEquals(expectedDto.exempted(), value.exempted());
+    assertEquals(expectedDto.multiMark(), value.multiMark());
+    assertEquals(expectedDto.netArea(), value.netArea());
+    assertEquals(expectedDto.submitter(), value.submitter());
+    assertEquals(expectedDto.attachment(), value.attachment());
+    assertEquals(expectedDto.comments(), value.comments());
+    assertEquals(expectedDto.totalBlocks(), value.totalBlocks());
+  }
+
+  private static Stream<Arguments> expandedDetailsArguments() {
+    ReportingUnitSearchExpandedDto fullDto = new ReportingUnitSearchExpandedDto(
+        201L, "LIC123", "CP01", "TMK456", true, false, 12.5, "submitter1", null, "Some comments", 3);
+    ReportingUnitSearchExpandedDto emptyDto = new ReportingUnitSearchExpandedDto(
+        202L, null, null, null, false, false, 0.0, null, null, null, 0);
+    ReportingUnitSearchExpandedDto fallbackDto = new ReportingUnitSearchExpandedDto(
+        203L, null, null, null, false, false, 0.0, null, null, null, 0);
+    ReportingUnitSearchExpandedDto nullDto = new ReportingUnitSearchExpandedDto(null, null, null, null, false, false, 0.0, null, null, null, 0);
+    ReportingUnitSearchExpandedDto negativeDto = new ReportingUnitSearchExpandedDto(-2L, null, null, null, false, false, 0.0, null, null, null, 0);
+
+    return Stream.of(
+        Arguments.argumentSet("101: Full details",101L, 201L, okJson(TestConstants.EXPANDED_101), fullDto),
+        Arguments.argumentSet("102: Empty details",102L, 202L, okJson(TestConstants.EXPANDED_102), emptyDto),
+        Arguments.argumentSet("103: Service unavailable", 103L, 203L, serviceUnavailable(), fallbackDto),
+        Arguments.argumentSet("null: get me null, even if it should not", null, null, okJson(TestConstants.EXPANDED_NULL), nullDto),
+        Arguments.argumentSet("-1: negative is a thing these days", -1L, -2L, okJson(TestConstants.EXPANDED_NEGATIVE), negativeDto)
+    );
   }
 
   private static Stream<Arguments> searchReportingUnit() {
