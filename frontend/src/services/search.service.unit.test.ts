@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { SearchService } from './search.service';
+
 import type {
   ReportingUnitSearchParametersDto,
   ReportingUnitSearchResultDto,
@@ -280,11 +281,7 @@ describe('SearchService', () => {
 
     it('should return multiple users when applicable', async () => {
       const userId = 'manager';
-      const mockData = [
-        'IDIR\\MANAGER_USER1',
-        'IDIR\\MANAGER_USER2',
-        'BCEID\\MANAGER_USER3',
-      ];
+      const mockData = ['IDIR\\MANAGER_USER1', 'IDIR\\MANAGER_USER2', 'BCEID\\MANAGER_USER3'];
       (service as any).doRequest = vi.fn().mockResolvedValue(mockData);
 
       const result = await service.searchReportingUnitUsers(userId);
