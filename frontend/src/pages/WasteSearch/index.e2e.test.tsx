@@ -316,7 +316,9 @@ test.describe('Waste Search Page', () => {
       await expect(page.getByTestId('card-item-content-multi-mark-(yes/no)')).toHaveText('No'); // multiMark (true) - appears after multiMark label
       await expect(page.getByTestId('card-item-content-net-area')).toHaveText('7.39'); // netArea
       await expect(page.getByTestId('card-item-content-submitter')).toHaveText('BCEID\\ICEKING'); // submitter
-      await expect(page.getByTestId('card-item-comment:')).toHaveText('Comment:This is a sample comment for the reporting unit.'); // comments
+      await expect(page.getByTestId('card-item-comment:')).toHaveText(
+        'Comment:This is a sample comment for the reporting unit.',
+      ); // comments
       await expect(page.getByRole('link', { name: /Link/i })).toBeVisible(); // attachment link
       await expect(page.getByText('Total blocks in reporting unit: 15')).toBeVisible(); // totalBlocks
     });
@@ -344,7 +346,6 @@ test.describe('Waste Search Page', () => {
       await secondExpandButton.click();
 
       await page.waitForLoadState('networkidle');
-
 
       // Verify all fields are displayed
       await expect(page.getByTestId('card-item-content-license-number')).toHaveText('W1940'); // licenseNo

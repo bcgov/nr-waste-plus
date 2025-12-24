@@ -431,7 +431,7 @@ describe('WasteSearchTableExpandContent', () => {
           queries: { retry: false, gcTime: 0, staleTime: Infinity },
         },
       });
-      
+
       await act(async () =>
         render(
           <QueryClientProvider client={qc}>
