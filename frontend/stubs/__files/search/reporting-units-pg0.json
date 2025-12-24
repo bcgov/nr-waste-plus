@@ -1,8 +1,8 @@
 {
     "content": [
         {
-            "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-            "blockId": "R102",
+            "id": "RU-34906-Block-102-56533357",
+            "cutBlockId": "R102",
             "ruNumber": 34906,
             "client": {
                 "code": "91234567",
@@ -24,11 +24,12 @@
                 "code": "SUB",
                 "description": "Submitted"
             },
-            "lastUpdated": "2025-08-25T10:35:06"
+            "lastUpdated": "2025-08-25T10:35:06",
+            "blockId": 102
         },
         {
-            "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
-            "blockId": "R105",
+            "id": "RU-34906-Block-105-16777836",
+            "cutBlockId": "R105",
             "ruNumber": 34906,
             "client": {
                 "code": "91234567",
@@ -50,11 +51,12 @@
                 "code": "SUB",
                 "description": "Submitted"
             },
-            "lastUpdated": "2025-08-25T10:35:06"
+            "lastUpdated": "2025-08-25T10:35:06",
+            "blockId": 105
         },
         {
-            "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
-            "blockId": "R571",
+            "id": "RU-34906-Block-571-21130094",
+            "cutBlockId": "R571",
             "ruNumber": 34906,
             "client": {
                 "code": "91234567",
@@ -76,11 +78,12 @@
                 "code": "SUB",
                 "description": "Submitted"
             },
-            "lastUpdated": "2025-08-25T10:35:06"
+            "lastUpdated": "2025-08-25T10:35:06",
+            "blockId": 571
         },
         {
-            "id": "d4e5f6a7-b8c9-0123-def0-234567890123",
-            "blockId": "R569",
+            "id": "RU-34906-Block-569-54499236",
+            "cutBlockId": "R569",
             "ruNumber": 34906,
             "client": {
                 "code": "91234567",
@@ -102,11 +105,12 @@
                 "code": "SUB",
                 "description": "Submitted"
             },
-            "lastUpdated": "2025-08-25T10:35:06"
+            "lastUpdated": "2025-08-25T10:35:06",
+            "blockId": 569
         },
         {
-            "id": "e5f6a7b8-c9d0-1234-ef01-345678901234",
-            "blockId": "R341",
+            "id": "RU-34906-Block-341-94613061",
+            "cutBlockId": "R341",
             "ruNumber": 34906,
             "client": {
                 "code": "91234567",
@@ -128,11 +132,12 @@
                 "code": "SUB",
                 "description": "Submitted"
             },
-            "lastUpdated": "2025-08-25T10:35:06"
+            "lastUpdated": "2025-08-25T10:35:06",
+            "blockId": 341
         },
         {
-            "id": "f6a7b8c9-d0e1-2345-f012-456789012345",
-            "blockId": "R336",
+            "id": "RU-34906-Block-336-32570121",
+            "cutBlockId": "R336",
             "ruNumber": 34906,
             "client": {
                 "code": "91234567",
@@ -154,11 +159,12 @@
                 "code": "SUB",
                 "description": "Submitted"
             },
-            "lastUpdated": "2025-08-25T10:35:06"
+            "lastUpdated": "2025-08-25T10:35:06",
+            "blockId": 336
         },
         {
-            "id": "a7b8c9d0-e1f2-3456-0123-567890123456",
-            "blockId": "R274",
+            "id": "RU-34906-Block-274-40929234",
+            "cutBlockId": "R274",
             "ruNumber": 34906,
             "client": {
                 "code": "91234567",
@@ -180,11 +186,12 @@
                 "code": "SUB",
                 "description": "Submitted"
             },
-            "lastUpdated": "2025-08-25T10:35:06"
+            "lastUpdated": "2025-08-25T10:35:06",
+            "blockId": 274
         },
         {
-            "id": "b8c9d0e1-f2a3-4567-1234-678901234567",
-            "blockId": "R218",
+            "id": "RU-34906-Block-218-29188714",
+            "cutBlockId": "R218",
             "ruNumber": 34906,
             "client": {
                 "code": "91234567",
@@ -206,11 +213,12 @@
                 "code": "SUB",
                 "description": "Submitted"
             },
-            "lastUpdated": "2025-08-25T10:35:06"
+            "lastUpdated": "2025-08-25T10:35:06",
+            "blockId": 218
         },
         {
-            "id": "c9d0e1f2-a3b4-5678-2345-789012345678",
-            "blockId": "26",
+            "id": "RU-36834-Block-26-84360965",
+            "cutBlockId": "26",
             "ruNumber": 36834,
             "client": {
                 "code": "92345678",
@@ -232,11 +240,12 @@
                 "code": "DFT",
                 "description": "Draft"
             },
-            "lastUpdated": "2025-08-24T09:10:28"
+            "lastUpdated": "2025-08-24T09:10:28",
+            "blockId": 26
         },
         {
-            "id": "d0e1f2a3-b4c5-6789-3456-890123456789",
-            "blockId": "CAT2",
+            "id": "RU-10501-Block-2-33684183",
+            "cutBlockId": "CAT2",
             "ruNumber": 10501,
             "client": {
                 "code": "92345678",
@@ -258,7 +267,8 @@
                 "code": "APP",
                 "description": "Approved"
             },
-            "lastUpdated": "2012-01-27T10:34:58"
+            "lastUpdated": "2012-01-27T10:34:58",
+            "blockId": 2
         }
     ],
     "page": {

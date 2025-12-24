@@ -2,6 +2,7 @@ import { removeEmpty } from './utils';
 
 import type {
   PageableRequest,
+  ReportingUnitSearchExpandedDto,
   ReportingUnitSearchParametersDto,
   ReportingUnitSearchResultDto,
 } from './types';
@@ -24,6 +25,17 @@ export class SearchService extends HttpClient {
       method: 'GET',
       url: '/api/search/reporting-units',
       query: { ...removeEmpty(filters), ...removeEmpty(pageable) },
+      middleware: [problemDetailsMiddleware()],
+    });
+  }
+
+  getReportingUnitSearchExpand(
+    ruId: number,
+    blockId: number,
+  ): CancelablePromise<ReportingUnitSearchExpandedDto> {
+    return this.doRequest<ReportingUnitSearchExpandedDto>(this.config, {
+      method: 'GET',
+      url: `/api/search/reporting-units/ex/${ruId}/${blockId}`,
       middleware: [problemDetailsMiddleware()],
     });
   }

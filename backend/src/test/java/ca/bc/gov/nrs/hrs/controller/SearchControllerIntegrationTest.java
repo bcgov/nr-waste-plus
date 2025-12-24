@@ -127,6 +127,85 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
         .andReturn();
   }
 
+  @ParameterizedTest
+  @MethodSource("searchReportingUnitExpanded")
+  @DisplayName("Get Expanded Details for Reporting Unit")
+  void shouldGetExpandedDetails(
+      Long ruId,
+      Long blockId,
+      ResponseDefinitionBuilder stubResponse,
+      String expectedJsonPath,
+      Object expectedValue
+  ) throws Exception {
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units/ex/" + ruId + "/" + blockId))
+            .willReturn(stubResponse)
+    );
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units/ex/" + ruId + "/" + blockId)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(jsonPath(expectedJsonPath).value(expectedValue))
+        .andReturn();
+  }
+
+  private static Stream<Arguments> searchReportingUnitExpanded() {
+    return Stream.of(
+        Arguments.argumentSet(
+            "Get expanded with full details",
+            101L,
+            201L,
+            okJson(ForestClientApiProviderTestConstants.REPORTING_UNIT_EXPANDED_FULL),
+            "$.id",
+            101
+        ),
+        Arguments.argumentSet(
+            "Get expanded with minimal details",
+            102L,
+            202L,
+            okJson(ForestClientApiProviderTestConstants.REPORTING_UNIT_EXPANDED_MINIMAL),
+            "$.id",
+            102
+        ),
+        Arguments.argumentSet(
+            "Get expanded with empty response (fallback)",
+            103L,
+            203L,
+            okJson(ForestClientApiProviderTestConstants.REPORTING_UNIT_EXPANDED_EMPTY),
+            "$.id",
+            203
+        ),
+        Arguments.argumentSet(
+            "Service unavailable triggers fallback",
+            104L,
+            204L,
+            serviceUnavailable(),
+            "$.id",
+            204
+        ),
+        Arguments.argumentSet(
+            "Not found triggers fallback",
+            105L,
+            205L,
+            notFound(),
+            "$.id",
+            205
+        ),
+        Arguments.argumentSet(
+            "Unauthorized triggers fallback",
+            106L,
+            206L,
+            unauthorized(),
+            "$.id",
+            206
+        )
+    );
+  }
+
   private static Stream<Arguments> searchReportingUnit() {
     return Stream.of(
         Arguments.argumentSet(

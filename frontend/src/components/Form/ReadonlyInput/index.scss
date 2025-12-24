@@ -1,0 +1,28 @@
+@use '@carbon/type';
+@use '../../../styles/variables' as vars;
+
+.card-item {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.25rem;
+
+  .card-item-label {
+    @include type.type-style('label-02');
+  }
+
+  .card-item-content {
+    @include type.type-style('body-compact-02');
+    width: 100%;
+    word-break: break-word;
+
+    .#{vars.$bcgov-prefix}--skeleton {
+      width: 100%;
+    }
+  }
+
+  .card-item-content-number {
+    @extend .card-item-content;
+    @include type.type-style('code-02');
+    font-size: 1rem;
+  }
+}

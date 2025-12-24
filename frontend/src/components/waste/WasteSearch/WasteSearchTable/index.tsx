@@ -1,6 +1,6 @@
 import { Column } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState, type FC } from 'react';
+import { useEffect, useState, type FC, type ReactNode } from 'react';
 
 import { headers } from './constants';
 
@@ -14,6 +14,7 @@ import type { SortDirectionType } from '@/services/types';
 
 import TableResource from '@/components/Form/TableResource';
 import WasteSearchFilters from '@/components/waste/WasteSearch/WasteSearchFilters';
+import WasteSearchTableExpandContent from '@/components/waste/WasteSearch/WasteSearchTableExpandContent';
 import useSendEvent from '@/hooks/useSendEvent';
 import API from '@/services/APIs';
 import { removeEmpty, generateSortArray } from '@/services/utils';
@@ -60,6 +61,10 @@ const WasteSearchTable: FC = () => {
     executeSearch();
   };
 
+  const onRowExpanded = (rowId: string | number): Promise<ReactNode> => {
+    return Promise.resolve(<WasteSearchTableExpandContent rowId={String(rowId)} />);
+  };
+
   useEffect(() => {
     if (isError && error) {
       const problemDetails = (error as ApiError).body as ProblemDetails;
@@ -89,6 +94,7 @@ const WasteSearchTable: FC = () => {
           displayRange
           displayToolbar
           onSortChange={handleSort}
+          onRowExpanded={onRowExpanded}
         />
       </Column>
     </>

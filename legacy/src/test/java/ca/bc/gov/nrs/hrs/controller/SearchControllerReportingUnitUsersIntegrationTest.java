@@ -34,12 +34,12 @@ class SearchControllerReportingUnitUsersIntegrationTest extends
         .perform(
             get("/api/search/reporting-units-users")
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .param("userId", "jake")
+                .param("userId", "jakedog")
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.length()").value(1))
-        .andExpect(jsonPath("$.[0]").value("IDIR\\JAKE"))
+        .andExpect(jsonPath("$.length()").value(2))
+        .andExpect(jsonPath("$.[0]").value("IDIR\\\\JAKEDOG"))
         .andReturn();
   }
 
@@ -65,7 +65,7 @@ class SearchControllerReportingUnitUsersIntegrationTest extends
         .perform(
             get("/api/search/reporting-units-users")
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .param("userId", "lsp")
+                .param("userId", "finnhero")
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
