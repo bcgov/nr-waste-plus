@@ -280,6 +280,7 @@ public class LegacyApiProvider {
   private ReportingUnitSearchExpandedDto fallbackSearchExpand(Long ruId, Long blockId,
       Throwable throwable) {
     logFallbackError(throwable);
+    log.error("Returning empty expanded search result for RU: {}, Block: {}", ruId, blockId);
     return new ReportingUnitSearchExpandedDto(
         blockId,
         null,
