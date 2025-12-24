@@ -76,18 +76,22 @@ const ReadonlyInput = ({
    * - If the content is not a valid React element, wraps it in a `<span>` to ensure it can be rendered inside the tooltip.
    * - Otherwise, renders the raw content or a fallback placeholder.
    */
+  const getTooltipContent = (): React.ReactNode => {
+    if (React.isValidElement(rawContent)) {
+      return rawContent;
+    }
+    if (typeof rawContent === 'string' || typeof rawContent === 'number') {
+      return <span>{rawContent}</span>;
+    }
+    return rawContent;
+  };
+
   let content: React.ReactNode = rawContent;
 
   if (tooltipText && !showSkeleton) {
     content = (
       <DefinitionTooltip definition={tooltipText} openOnHover>
-        {React.isValidElement(rawContent) ? (
-          rawContent
-        ) : typeof rawContent === 'string' || typeof rawContent === 'number' ? (
-          <span>{rawContent}</span>
-        ) : (
-          rawContent
-        )}
+        {getTooltipContent()}
       </DefinitionTooltip>
     );
   }
