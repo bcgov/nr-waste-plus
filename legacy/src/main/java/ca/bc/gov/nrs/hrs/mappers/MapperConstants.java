@@ -46,9 +46,13 @@ public class MapperConstants {
       "java(new CodeDescriptionDto(projection.getClientNumber(), null))";
 
   /**
-   * MapStruct expression to create a {@code CodeDescriptionDto} from the projection's client
-   * location. The display name is intentionally null in this expression.
+   * MapStruct expression to create a {@code CodeDescriptionDto} from the projection's attachment.
    */
-  public static final String CLIENT_LOCATION_AS_DTO =
-      "java(new CodeDescriptionDto(projection.getClientLocation(), null))";
+  public static final String ATTACHMENT_AS_DTO =
+      "java("
+      + "new CodeDescriptionDto("
+      + "java.util.Objects.toString(projection.getAttachmentId(),null),"
+      + "projection.getAttachmentName()"
+      + ")"
+      + ")";
 }

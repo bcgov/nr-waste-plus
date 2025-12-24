@@ -39,7 +39,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(jsonPath("$.content[0].ruNumber").value(34906))
         .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(38))
+        .andExpect(jsonPath("$.page.totalElements").value(44))
         .andReturn();
   }
 
@@ -59,7 +59,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(jsonPath("$.content[0].ruNumber").value(34906))
         .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(38))
+        .andExpect(jsonPath("$.page.totalElements").value(44))
         .andReturn();
   }
 
@@ -149,6 +149,38 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(jsonPath("$.detail").value(
             "Field invalidField is not a valid sorting field. Please check the documentation for valid sorting fields."))
         .andExpect(jsonPath("$.instance").value("/api/search/reporting-units"))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Should get expanded reporting unit details")
+  void shouldGetExpandedDetails() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units/ex/{reportingUnitId}/{blockId}", 34004, 161966)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+        )
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.id").value(161966))
+        .andExpect(jsonPath("$.licenseNo").value("A91320"))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Should fail to get expanded reporting unit details")
+  void shouldFailGetExpandedDetails() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units/ex/{reportingUnitId}/{blockId}", 1, 2)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+        )
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.detail").value("Block with ID 2 not found for Reporting Unit with ID 1."))
+        .andExpect(jsonPath("$.status").value(404))
         .andReturn();
   }
 

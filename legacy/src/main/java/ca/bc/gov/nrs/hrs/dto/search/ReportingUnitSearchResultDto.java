@@ -13,7 +13,8 @@ import lombok.With;
  */
 @With
 public record ReportingUnitSearchResultDto(
-    String blockId,
+    Long blockId,
+    String cutBlockId,
     Long ruNumber,
     CodeDescriptionDto client,
     String licenseNumber,

@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toMap;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.provider.LegacyApiProvider;
@@ -86,6 +87,21 @@ public class SearchService {
             )
         )
         .map(entry -> entry.withClient(clients.get(entry.client().code())));
+  }
+
+  /**
+   * Get expanded search details for a specific reporting unit and block.
+   *
+   * @param ruId the reporting unit id
+   * @param blockId the block id
+   * @return the expanded reporting unit search details
+   */
+  @NewSpan
+  public ReportingUnitSearchExpandedDto getSearchExpanded(
+      Long ruId, Long blockId
+  ) {
+    log.info("Loading expanded search for ruId: {}, blockId: {}", ruId, blockId);
+    return legacyApiProvider.getSearchExpanded(ruId, blockId);
   }
 
   /**

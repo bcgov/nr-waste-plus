@@ -47,7 +47,7 @@ jobs:
             -Dsonar.projectKey=nr-waste-plus-legacy
             -Dsonar.coverage.jacoco.xmlReportPaths=target/coverage-reports/merged-test-report/jacoco.xml
             -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml
-            -Dsonar.coverage.exclusions=**/src/test/**,**/configuration/**,**/exception/**,**/dto/**,**/entity/**,**/repository/**,**/*$*Builder*,**/LegacyApplication***/ApplicationConstants*
+            -Dsonar.coverage.exclusions=**/src/test/**,**/configuration/**,**/exception/**,**/dto/**,**/entity/**,**/repository/**,**/*$*Builder*,**/LegacyApplication*,**/*Constants.*
           sonar_token: ${{ secrets.SONAR_TOKEN_LEGACY }}
           triggers: ('legacy/')
 

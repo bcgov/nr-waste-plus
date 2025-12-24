@@ -3,8 +3,11 @@ package ca.bc.gov.nrs.hrs.controller;
 import ca.bc.gov.nrs.hrs.LegacyConstants;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.search.ClientDistrictSearchResultDto;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import ca.bc.gov.nrs.hrs.exception.BlockNotFound;
+import ca.bc.gov.nrs.hrs.service.search.AdvancedSearchService;
 import ca.bc.gov.nrs.hrs.service.search.ReportingUnitSearchService;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
@@ -20,6 +23,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,6 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SearchController {
 
   private final ReportingUnitSearchService ruSearchService;
+  private final AdvancedSearchService advancedSearchService;
 
   /**
    * Search reporting units using the provided filters and pageable settings.
@@ -66,10 +71,38 @@ public class SearchController {
             : JwtPrincipalUtil.getClientFromRoles(jwt);
 
     log.info("Searching waste entries with filters: {}, pageable: {} for: {}",
-        filters, pageable,JwtPrincipalUtil.getUserId(jwt)
+        filters, pageable, JwtPrincipalUtil.getUserId(jwt)
     );
     return ruSearchService.search(filters, pageable, userClientNumbers);
 
+  }
+
+  /**
+   * Retrieve an expanded search entry for a specific reporting unit and block.
+   *
+   * <p>This endpoint fetches detailed information about a reporting unit block, including all
+   * related expanded data for the search view. If the reporting unit or block combination is not
+   * found, a {@link BlockNotFound} exception is thrown.</p>
+   *
+   * @param jwt             the authenticated JWT principal
+   * @param reportingUnitId the ID of the reporting unit
+   * @param blockId         the ID of the block within the reporting unit
+   * @return an expanded {@link ReportingUnitSearchExpandedDto} containing detailed search data
+   * @throws BlockNotFound if the reporting unit and block combination is not found
+   */
+  @GetMapping("/reporting-units/ex/{reportingUnitId}/{blockId}")
+  public ReportingUnitSearchExpandedDto getSearchExpandedEntry(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable Long reportingUnitId,
+      @PathVariable Long blockId
+  ) {
+    log.info("Fetching expanded search entry for reporting unit ID: {} for: {}",
+        reportingUnitId, JwtPrincipalUtil.getUserId(jwt)
+    );
+
+    return ruSearchService
+        .getReportingUnitBlockExpanded(reportingUnitId, blockId)
+        .orElseThrow(() -> new BlockNotFound(reportingUnitId, blockId));
   }
 
   /**
@@ -101,14 +134,14 @@ public class SearchController {
         ? List.of()
         : processedClientsFromClient;
 
-    return ruSearchService.searchReportingUnitUsers(userId, clients);
+    return advancedSearchService.searchReportingUnitUsers(userId, clients);
   }
 
   /**
    * Search client districts for the authenticated user's forest ("my forest clients").
    *
    * <p>If the optional {@code values} list is empty, clients are derived from the authenticated
-   * user's roles. Otherwise the provided values are used as filters.</p>
+   * user's roles. Otherwise, the provided values are used as filters.</p>
    *
    * @param values   optional list of client filter values
    * @param pageable paging information
@@ -126,7 +159,7 @@ public class SearchController {
     log.info("Searching client districts with filters: {}, pageable: {} for {}",
         values, pageable, JwtPrincipalUtil.getUserId(jwt)
     );
-    return ruSearchService.searchMyClients(
+    return advancedSearchService.searchMyClients(
         values.isEmpty()
             ? JwtPrincipalUtil.getClientFromRoles(jwt)
             : values,

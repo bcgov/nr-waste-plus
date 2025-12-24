@@ -167,4 +167,36 @@ public class ForestClientApiProviderTestConstants {
       {
         "content": []
       }""";
+
+  public static final String REPORTING_UNIT_EXPANDED_FULL = """
+      {
+        "id": 101,
+        "licenseNo": "LIC123",
+        "cuttingPermit": "CP01",
+        "timberMark": "TMK456",
+        "exempted": true,
+        "multiMark": false,
+        "netArea": 12.5,
+        "submitter": "submitter1",
+        "comments": "Some comments",
+        "totalBlocks": 3
+      }""";
+
+  public static final String REPORTING_UNIT_EXPANDED_MINIMAL = """
+      {
+        "id": 102,
+        "exempted": false,
+        "multiMark": false,
+        "netArea": 0.0,
+        "totalBlocks": 0
+      }""";
+
+  public static final String REPORTING_UNIT_EXPANDED_EMPTY = """
+      {
+        "id": 203,
+        "exempted": false,
+        "multiMark": false,
+        "netArea": 0.0,
+        "totalBlocks": 0
+      }""";
 }
