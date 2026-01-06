@@ -117,7 +117,7 @@ ca:
         environment: ${SECURITY_ENV:local}
         districts: ${ALLOWED_DISTRICTS:DCK,DSQ,DVA,DKM,DSC,DFN,DSI,DCR,DMK,DQC,DKA,DCS,DOS,DSE,DCC,DMH,DQU,DNI,DND,DRM,DPG,DSS,DPC}
         oracle:
-          keystore: ${ORACLEDB_KEYSTORE:jssecacerts-path}
+          keystore: ${ORACLEDB_KEYSTORE:jssecacerts.jks}
           secret: ${ORACLEDB_SECRET:changeit}
           service: ${ORACLEDB_SERVICENAME:fsa-forest}
           database: ${ORACLEDB_DATABASE:fsa-forest}
