@@ -24,9 +24,6 @@ parameters:
     value: bcgov
   - name: DOMAIN
     value: apps.silver.devops.gov.bc.ca
-  - name: REGISTRY
-    description: Container registry to import from (internal is image-registry.openshift-image-registry.svc:5000)
-    value: ghcr.io
   - name: ORACLEDB_KEYSTORE
     description: Oracle database keystore file
   - name: ORACLEDB_PORT
@@ -46,7 +43,7 @@ parameters:
   - name: COGNITO_REGION
     description: Cognito region to be used
     value: 'ca-central-1'
-objects:  
+objects:
   - kind: PersistentVolumeClaim
     apiVersion: v1
     metadata:
