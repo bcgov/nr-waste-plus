@@ -1,5 +1,6 @@
 ### Builder
-FROM ghcr.io/graalvm/native-image-community:25.0.1 AS build
+# We can't use anything greater than 22.3.3 due to oracle connector issues
+FROM ghcr.io/graalvm/native-image:22.3.3 AS build
 
 # Copy
 WORKDIR /app
