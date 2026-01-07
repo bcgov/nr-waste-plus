@@ -1,5 +1,5 @@
 ### Builder
-# We can't use anything greater than 22.3.3 due to oracle connector issues
+# We can't use GraalVM versions higher than 22.3.3 because they cause SSL handshake failures with the Oracle database
 FROM ghcr.io/graalvm/native-image:22.3.3 AS build
 
 # Copy
