@@ -1,6 +1,6 @@
 ### Builder
 # We can't use GraalVM versions higher than Java 21 because they cause SSL handshake failures with the Oracle database
-FROM eclipse-temurin:17-jdk
+FROM ghcr.io/graalvm/native-image-community:21 AS build
 
 # Copy
 WORKDIR /app
