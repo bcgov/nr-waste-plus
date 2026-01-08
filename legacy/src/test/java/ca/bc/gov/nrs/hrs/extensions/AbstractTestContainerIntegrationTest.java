@@ -1,11 +1,7 @@
 package ca.bc.gov.nrs.hrs.extensions;
 
-import static ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory.createJwt;
-
-import java.util.List;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -35,13 +31,5 @@ public abstract class AbstractTestContainerIntegrationTest {
     registry.add("spring.datasource.hikari.username", oracle::getUsername);
     registry.add("spring.datasource.hikari.password", oracle::getPassword);
   }
-
-  public final Jwt jwt = createJwt(
-      "test",
-      List.of("Admin"),
-      "idir",
-      "Test, Automated WLRS:EX",
-      "test@test.ca"
-  );
 
 }

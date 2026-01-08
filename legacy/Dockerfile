@@ -1,5 +1,6 @@
 ### Builder
-FROM ghcr.io/graalvm/native-image-community:25.0.1 AS build
+# Use GraalVM Native Image with Java 25 to satisfy Native Image requirements
+FROM ghcr.io/graalvm/native-image-community:25 AS build
 
 # Copy
 WORKDIR /app
