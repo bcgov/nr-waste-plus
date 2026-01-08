@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.5.8</version>
+    <version>3.5.9</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
   <groupId>ca.bc.gov.nrs</groupId>
@@ -87,7 +87,7 @@
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <oci.revision>${project.version}</oci.revision>
     <snakeyaml.version>2.2</snakeyaml.version>
-    <hibernate.version>6.6.37.Final</hibernate.version>
+    <hibernate.version>6.6.40.Final</hibernate.version>
     <testcontainers.version>1.21.1</testcontainers.version>
     <flyway.version>10.13.0</flyway.version>
     <mapstruct.version>1.6.3</mapstruct.version>
@@ -292,12 +292,12 @@
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-webmvc</artifactId>
-				<version>6.2.14</version>
+				<version>6.2.15</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.tomcat.embed</groupId>
 				<artifactId>tomcat-embed-core</artifactId>
-				<version>11.0.14</version>
+				<version>11.0.15</version>
 			</dependency>
 			<dependency>
 				<groupId>com.nimbusds</groupId>
@@ -582,7 +582,7 @@
           <dependency>
             <groupId>com.puppycrawl.tools</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>12.1.2</version>
+            <version>12.3.1</version>
           </dependency>
         </dependencies>
         <configuration>
