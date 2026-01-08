@@ -1,6 +1,6 @@
 ### Builder
-# We can't use GraalVM versions higher than Java 21 because they cause SSL handshake failures with the Oracle database
-FROM ghcr.io/graalvm/native-image-community:21 AS build
+# Use GraalVM Native Image with Java 25 to satisfy Native Image requirements
+FROM ghcr.io/graalvm/native-image-community:25 AS build
 
 # Copy
 WORKDIR /app

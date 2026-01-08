@@ -94,7 +94,7 @@ public class HeadersSecurityCustomizer implements Customizer<HeadersConfigurer<H
         .referrerPolicy(referrerPolicySpec -> referrerPolicySpec.policy(
             ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
         // Set the Permissions-Policy header.
-        .permissionsPolicyHeader(permissionsPolicySpec ->
+        .permissionsPolicy(permissionsPolicySpec ->
             permissionsPolicySpec.policy(
                 PERMISSIONS
                     .stream()
