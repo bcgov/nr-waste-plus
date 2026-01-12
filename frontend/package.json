@@ -88,7 +88,8 @@
   "overrides": {
     "workbox-build": {
       "glob": "^13.0.0"
-    }
+    },
+    "@smithy/config-resolver": "^3.0.13"
   },
   "nyc": {
     "reporter": [
