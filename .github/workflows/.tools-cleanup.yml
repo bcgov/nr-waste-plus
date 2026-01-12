@@ -54,8 +54,24 @@ jobs:
             echo "Failed to find the pod after 5 attempts."
           fi
 
-      - name: Remove completed pods and jobs (cronjobs)
+      - name: Stop PR-specific CronJobs and clean PR resources
+        continue-on-error: true
         run: |
-          oc delete po --field-selector=status.phase==Succeeded
-          oc delete jobs --field-selector status.successful=1
-    
+          NS="${{ secrets.oc_namespace }}"
+          PR_NUMBER="${{ github.event.number }}"
+          oc project "$NS"
+
+          echo "Stopping CronJobs related to PR_$PR_NUMBER"
+          CRONJOBS=$(oc get cronjob -n "$NS" -l app=nr-waste-plus-tools \
+            -o jsonpath='{.items[?(@.metadata.name=="nr-waste-plus-tools-migratedb")].metadata.name}')
+          for CJ in $CRONJOBS; do
+            # Only stop the cronjob if it targets this PR
+            oc patch cronjob "$CJ" -p '{"spec":{"suspend":true}}'
+          done
+
+          echo "Deleting PR-specific Jobs and Pods"
+          oc delete job -l pr=$PR_NUMBER || true
+          oc delete pod -l pr=$PR_NUMBER || true
+
+          echo "Deleting PR-specific resources"
+          oc delete all,pvc,secret,cm -l pr=$PR_NUMBER || true
