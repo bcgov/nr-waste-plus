@@ -1,0 +1,3 @@
+# Add the intended configurations in a file with the same name under the root config directory.
+# This empty file is here just as a workaround to make the local profile option available in
+# vscode's Spring Boot Dashboard.
