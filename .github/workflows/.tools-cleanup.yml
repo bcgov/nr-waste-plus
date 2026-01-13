@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Scale down legacy
         continue-on-error: true
-        uses: bcgov/action-oc-runner@f900830adadd4d9eef3ca6ff80103e839ba8b7c0 # v1.3.0
+        uses: bcgov/action-oc-runner@f900830adadd4d9eef3ca6ff80103e839ba8b7c0
         with:
           oc_namespace: ${{ secrets.oc_namespace }}
           oc_token: ${{ secrets.oc_token }}
@@ -37,7 +37,7 @@ jobs:
             POD_NAME=$(oc get pods -l app=nr-waste-plus-tools-db -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
             if [ -n "$POD_NAME" ]; then
               echo "Using Oracle DB pod: $POD_NAME"
-              oc exec $POD_NAME -- /opt/oracle/removeDatabase "THE" "PR_${{ github.event.number }}"
+              oc exec "$POD_NAME" -- /opt/oracle/removeDatabase "THE" "PR_${{ github.event.number }}"
               break
             fi
             sleep 10
@@ -52,24 +52,21 @@ jobs:
 
           if [ -z "$POD_NAME" ]; then
             echo "ERROR: Oracle DB pod not found"
-            exit 1
+            exit 0
           fi
 
           echo "Removing Oracle service PR_$PR_NUMBER from $POD_NAME"
 
-          oc exec "$POD_NAME" -- bash -c "sqlplus / as sysdba <<SQL
+          oc exec "$POD_NAME" -- bash -c "echo \"
           BEGIN
             DBMS_SERVICE.DELETE_SERVICE(service_name => 'PR_$PR_NUMBER');
           END;
           /
           ALTER SYSTEM REGISTER;
-          SQL"
+          \" | sqlplus / as sysdba"
 
           echo "Remaining PR services:"
-          oc exec "$POD_NAME" -- bash -c "sqlplus / as sysdba <<'SQL'
-          SELECT name FROM v$services WHERE name LIKE 'PR_%';
-          SQL
-          "
+          oc exec "$POD_NAME" -- bash -c "echo \"SELECT name FROM v\\$services WHERE name LIKE 'PR_%';\" | sqlplus / as sysdba"
 
       - name: Stop PR-specific CronJobs and clean PR resources
         continue-on-error: true
