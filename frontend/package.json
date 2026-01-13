@@ -25,7 +25,7 @@
     "@bcgov-nr/nr-theme": "^1.8.9",
     "@carbon/charts": "^1.27.2",
     "@carbon/charts-react": "^1.27.2",
-    "@carbon/icons-react": "^11.73.0",
+    "@carbon/icons-react": "^11.71.0",
     "@carbon/pictograms-react": "^11.91.0",
     "@carbon/react": "^1.97.0",
     "@tanstack/react-query": "^5.90.16",
