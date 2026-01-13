@@ -57,16 +57,19 @@ jobs:
 
           echo "Removing Oracle service PR_$PR_NUMBER from $POD_NAME"
 
-          oc exec "$POD_NAME" -- bash -c "echo \"
+          oc exec "$POD_NAME" -- bash -c "sqlplus / as sysdba <<SQL
           BEGIN
             DBMS_SERVICE.DELETE_SERVICE(service_name => 'PR_$PR_NUMBER');
           END;
           /
           ALTER SYSTEM REGISTER;
-          \" | sqlplus / as sysdba"
+          SQL"
 
           echo "Remaining PR services:"
-          oc exec "$POD_NAME" -- sqlplus / as sysdba <<< \"SELECT name FROM v\\$services WHERE name LIKE 'PR_%';\"
+          oc exec "$POD_NAME" -- bash -c "sqlplus / as sysdba <<'SQL'
+          SELECT name FROM v$services WHERE name LIKE 'PR_%';
+          SQL
+          "
 
       - name: Stop PR-specific CronJobs and clean PR resources
         continue-on-error: true
