@@ -52,7 +52,7 @@ jobs:
 
           if [ -z "$POD_NAME" ]; then
             echo "ERROR: Oracle DB pod not found"
-            exit 0
+            exit 1
           fi
 
           echo "Removing Oracle service PR_$PR_NUMBER from $POD_NAME"
