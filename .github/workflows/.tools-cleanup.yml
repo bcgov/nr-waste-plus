@@ -34,7 +34,7 @@ jobs:
         continue-on-error: true
         run: |
           NS="${{ secrets.oc_namespace }}"
-          PR="${{ github.event.number }}"
+          PR_NUMBER="${{ github.event.number }}"
           oc project "$NS"
 
           echo "Locating Oracle DB pod..."
@@ -48,13 +48,13 @@ jobs:
 
           echo "Using Oracle pod: $POD_NAME"
 
-          echo "Dropping PDB PR_$PR"
-          oc exec "$POD_NAME" -- /opt/oracle/removeDatabase "THE" "PR_$PR" || true
+          echo "Dropping PDB PR_$PR_NUMBER"
+          oc exec "$POD_NAME" -- /opt/oracle/removeDatabase "THE" "PR_$PR_NUMBER" || true
 
-          echo "Deleting Oracle service PR_$PR"
+          echo "Deleting Oracle service PR_$PR_NUMBER"
           oc exec "$POD_NAME" -- bash -c "echo \"
           BEGIN
-            DBMS_SERVICE.DELETE_SERVICE(service_name => 'PR_$PR');
+            DBMS_SERVICE.DELETE_SERVICE(service_name => 'PR_$PR_NUMBER');
           END;
           /
           ALTER SYSTEM REGISTER;
