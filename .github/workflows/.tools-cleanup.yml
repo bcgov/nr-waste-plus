@@ -30,33 +30,28 @@ jobs:
               sleep 5
             done
 
-      - name: Remove the PR database
+      - name: Remove PR database and Oracle service
         continue-on-error: true
         run: |
-          for i in {1..5}; do
-            POD_NAME=$(oc get pods -l app=nr-waste-plus-tools-db -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
-            if [ -n "$POD_NAME" ]; then
-              echo "Using Oracle DB pod: $POD_NAME"
-              oc exec "$POD_NAME" -- /opt/oracle/removeDatabase "THE" "PR_${{ github.event.number }}"
-              break
-            fi
-            sleep 10
-          done
-
-      - name: Remove PR-specific Oracle service
-        continue-on-error: true
-        run: |
+          NS="${{ secrets.oc_namespace }}"
           PR_NUMBER="${{ github.event.number }}"
+          oc project "$NS"
 
-          POD_NAME=$(oc get pods -l app=nr-waste-plus-tools-db -o jsonpath='{.items[0].metadata.name}')
+          echo "Locating Oracle DB pod..."
+          POD_NAME=$(oc get pods -n "$NS" --no-headers | awk '/oracle|db|xe/ {print $1; exit}')
 
           if [ -z "$POD_NAME" ]; then
-            echo "ERROR: Oracle DB pod not found"
+            echo "ERROR: Could not find Oracle DB pod in namespace $NS"
+            oc get pods
             exit 0
           fi
 
-          echo "Removing Oracle service PR_$PR_NUMBER from $POD_NAME"
+          echo "Using Oracle pod: $POD_NAME"
 
+          echo "Dropping PDB PR_$PR_NUMBER"
+          oc exec "$POD_NAME" -- /opt/oracle/removeDatabase "THE" "PR_$PR_NUMBER" || true
+
+          echo "Deleting Oracle service PR_$PR_NUMBER"
           oc exec "$POD_NAME" -- bash -c "echo \"
           BEGIN
             DBMS_SERVICE.DELETE_SERVICE(service_name => 'PR_$PR_NUMBER');
