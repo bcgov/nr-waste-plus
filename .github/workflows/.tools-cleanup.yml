@@ -19,12 +19,12 @@ jobs:
           oc_token: ${{ secrets.oc_token }}
           oc_server: ${{ secrets.oc_server }}
           commands: |
-            # Only scale if the deployment exists
-            if oc get deployment "nr-waste-plus-${{ github.event.number }}-legacy" -n ${{ secrets.OC_NAMESPACE }} > /dev/null 2>&1; then
-              oc scale deployment/nr-waste-plus-${{ github.event.number }}-legacy --replicas=0 -n ${{ secrets.OC_NAMESPACE }}
+            # Skip scaling if deployment doesn't exist
+            if oc get deployment "nr-waste-plus-${{ github.event.number }}-legacy" -n ${{ secrets.oc_namespace }} > /dev/null 2>&1; then
+              oc scale deployment/nr-waste-plus-${{ github.event.number }}-legacy --replicas=0 -n ${{ secrets.oc_namespace }}
             fi
 
-      - name: Remove PR database
+      - name: Remove PR database and Oracle service
         continue-on-error: true
         run: |
           NS="${{ secrets.oc_namespace }}"
@@ -32,37 +32,21 @@ jobs:
           oc project "$NS"
 
           echo "Locating Oracle DB pod..."
-          POD_NAME=$(oc get pods -n "$NS" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{range .spec.containers[*]}{.name}{" "}{end}{"\n"}{end}' | grep -E 'oracle|legacydb|xe|db' | head -n1 | cut -d'|' -f1)
+          POD_NAME=$(oc get pods -n "$NS" -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-legacydb \
+                     -o jsonpath='{.items[0].metadata.name}')
 
           if [ -z "$POD_NAME" ]; then
-            echo "ERROR: No Oracle DB pod found in namespace $NS"
+            echo "ERROR: Oracle DB pod not found in namespace $NS"
             oc get pods
             exit 0
           fi
 
-          echo "Using Oracle pod: $POD_NAME"
+          echo "Using Oracle DB pod: $POD_NAME"
+
           echo "Dropping PDB PR_$PR_NUMBER"
           oc exec -n "$NS" "$POD_NAME" -- /opt/oracle/removeDatabase "THE" "PR_$PR_NUMBER" || true
 
-      - name: Remove PR-specific Oracle service
-        continue-on-error: true
-        run: |
-          NS="${{ secrets.oc_namespace }}"
-          PR_NUMBER="${{ github.event.number }}"
-          oc project "$NS"
-
-          echo "Locating Oracle DB pod..."
-          POD_NAME=$(oc get pods -n "$NS" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{range .spec.containers[*]}{.name}{" "}{end}{"\n"}{end}' | grep -E 'oracle|legacydb|xe|db' | head -n1 | cut -d'|' -f1)
-
-          if [ -z "$POD_NAME" ]; then
-            echo "ERROR: No Oracle DB pod found in namespace $NS"
-            oc get pods
-            exit 0
-          fi
-
-          echo "Using Oracle pod: $POD_NAME"
           echo "Deleting Oracle service PR_$PR_NUMBER"
-
           oc exec -n "$NS" "$POD_NAME" -- sqlplus / as sysdba <<EOF
           BEGIN
             DBMS_SERVICE.DELETE_SERVICE(service_name => 'PR_$PR_NUMBER');
