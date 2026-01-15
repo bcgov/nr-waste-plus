@@ -30,7 +30,7 @@ jobs:
               sleep 5
             done
 
-      - name: Remove PR database and Oracle service
+      - name: Remove PR database
         continue-on-error: true
         run: |
           NS="${{ secrets.oc_namespace }}"
@@ -38,30 +38,53 @@ jobs:
           oc project "$NS"
 
           echo "Locating Oracle DB pod..."
-          POD_NAME=$(oc get pods -n "$NS" --no-headers | awk '/oracle|db|xe/ {print $1; exit}')
+          POD_NAME=$(oc get pods -n "$NS" --no-headers | awk '/oracle|legacydb|xe|db/ && /Running/ {print $1; exit}')
 
           if [ -z "$POD_NAME" ]; then
-            echo "ERROR: Could not find Oracle DB pod in namespace $NS"
+            echo "ERROR: No Oracle DB pod found in namespace $NS"
             oc get pods
             exit 0
           fi
 
           echo "Using Oracle pod: $POD_NAME"
-
           echo "Dropping PDB PR_$PR_NUMBER"
-          oc exec "$POD_NAME" -- /opt/oracle/removeDatabase "THE" "PR_$PR_NUMBER" || true
+          oc exec -n "$NS" "$POD_NAME" -- /opt/oracle/removeDatabase "THE" "PR_$PR_NUMBER" || true
 
+      - name: Remove PR-specific Oracle service
+        continue-on-error: true
+        run: |
+          NS="${{ secrets.oc_namespace }}"
+          PR_NUMBER="${{ github.event.number }}"
+          oc project "$NS"
+
+          echo "Locating Oracle DB pod..."
+          POD_NAME=$(oc get pods -n "$NS" --no-headers | awk '/oracle|legacydb|xe|db/ && /Running/ {print $1; exit}')
+
+          if [ -z "$POD_NAME" ]; then
+            echo "ERROR: No Oracle DB pod found in namespace $NS"
+            oc get pods
+            exit 0
+          fi
+
+          echo "Using Oracle pod: $POD_NAME"
           echo "Deleting Oracle service PR_$PR_NUMBER"
-          oc exec "$POD_NAME" -- bash -c "echo \"
+
+          oc exec -n "$NS" "$POD_NAME" -- sqlplus / as sysdba <<EOF
           BEGIN
             DBMS_SERVICE.DELETE_SERVICE(service_name => 'PR_$PR_NUMBER');
+          EXCEPTION
+            WHEN OTHERS THEN NULL;
           END;
           /
           ALTER SYSTEM REGISTER;
-          \" | sqlplus / as sysdba"
+          EXIT;
+          EOF
 
           echo "Remaining PR services:"
-          oc exec "$POD_NAME" -- bash -c "echo \"SELECT name FROM v\\$services WHERE name LIKE 'PR_%';\" | sqlplus / as sysdba"
+          oc exec -n "$NS" "$POD_NAME" -- sqlplus / as sysdba <<EOF
+          SELECT name FROM v\\$services WHERE name LIKE 'PR_%';
+          EXIT;
+          EOF
 
       - name: Stop PR-specific CronJobs and clean PR resources
         continue-on-error: true
