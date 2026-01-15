@@ -19,16 +19,10 @@ jobs:
           oc_token: ${{ secrets.oc_token }}
           oc_server: ${{ secrets.oc_server }}
           commands: |
-            oc scale deployment/nr-waste-plus-${{ github.event.number }}-legacy --replicas=0 -n ${{ secrets.OC_NAMESPACE }}
-            undesired_replicas=0
-
-            while true; do
-              available_replicas=$(oc get deployment/nr-waste-plus-${{ github.event.number }}-legacy -n ${{ secrets.OC_NAMESPACE }} -o jsonpath='{.status.availableReplicas}')
-              if [[ "$available_replicas" -ge "$undesired_replicas" ]]; then
-                break
-              fi
-              sleep 5
-            done
+            # Only scale if the deployment exists
+            if oc get deployment "nr-waste-plus-${{ github.event.number }}-legacy" -n ${{ secrets.OC_NAMESPACE }} > /dev/null 2>&1; then
+              oc scale deployment/nr-waste-plus-${{ github.event.number }}-legacy --replicas=0 -n ${{ secrets.OC_NAMESPACE }}
+            fi
 
       - name: Remove PR database
         continue-on-error: true
@@ -38,7 +32,7 @@ jobs:
           oc project "$NS"
 
           echo "Locating Oracle DB pod..."
-          POD_NAME=$(oc get pods -n "$NS" --no-headers | awk '/oracle|legacydb|xe|db/ && /Running/ {print $1; exit}')
+          POD_NAME=$(oc get pods -n "$NS" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{range .spec.containers[*]}{.name}{" "}{end}{"\n"}{end}' | grep -E 'oracle|legacydb|xe|db' | head -n1 | cut -d'|' -f1)
 
           if [ -z "$POD_NAME" ]; then
             echo "ERROR: No Oracle DB pod found in namespace $NS"
@@ -58,7 +52,7 @@ jobs:
           oc project "$NS"
 
           echo "Locating Oracle DB pod..."
-          POD_NAME=$(oc get pods -n "$NS" --no-headers | awk '/oracle|legacydb|xe|db/ && /Running/ {print $1; exit}')
+          POD_NAME=$(oc get pods -n "$NS" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{range .spec.containers[*]}{.name}{" "}{end}{"\n"}{end}' | grep -E 'oracle|legacydb|xe|db' | head -n1 | cut -d'|' -f1)
 
           if [ -z "$POD_NAME" ]; then
             echo "ERROR: No Oracle DB pod found in namespace $NS"
