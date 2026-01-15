@@ -10,6 +10,7 @@ jobs:
     name: Cleanup tools environment
     environment: tools
     runs-on: ubuntu-24.04
+
     steps:
       - name: Scale down legacy
         continue-on-error: true
@@ -19,57 +20,46 @@ jobs:
           oc_token: ${{ secrets.oc_token }}
           oc_server: ${{ secrets.oc_server }}
           commands: |
-            oc scale deployment/nr-waste-plus-${{ github.event.number }}-legacy --replicas=0 -n ${{ secrets.OC_NAMESPACE }}
-            undesired_replicas=0
+            NS="${{ secrets.oc_namespace }}"
+            DEPLOYMENT="nr-waste-plus-${{ github.event.number }}-legacy"
 
-            while true; do
-              available_replicas=$(oc get deployment/nr-waste-plus-${{ github.event.number }}-legacy -n ${{ secrets.OC_NAMESPACE }} -o jsonpath='{.status.availableReplicas}')
-              if [[ "$available_replicas" -ge "$undesired_replicas" ]]; then
-                break
-              fi
-              sleep 5
-            done
+            echo "Checking for legacy deployment $DEPLOYMENT in $NS..."
 
-      - name: Remove PR database
+            if oc get deployment "$DEPLOYMENT" -n "$NS" > /dev/null 2>&1; then
+              echo "Scaling $DEPLOYMENT to 0 replicas"
+              oc scale deployment "$DEPLOYMENT" --replicas=0 -n "$NS"
+            else
+              echo "Legacy deployment not found — skipping scale down"
+            fi
+
+      - name: Remove PR database and Oracle service
         continue-on-error: true
         run: |
           NS="${{ secrets.oc_namespace }}"
           PR_NUMBER="${{ github.event.number }}"
+
           oc project "$NS"
 
           echo "Locating Oracle DB pod..."
-          POD_NAME=$(oc get pods -n "$NS" --no-headers | awk '/oracle|legacydb|xe|db/ && /Running/ {print $1; exit}')
+          POD_NAME=$(oc get pods -n "$NS" \
+            -l app=nr-waste-plus-tools \
+            -l deployment=nr-waste-plus-tools-legacydb \
+            -o jsonpath='{.items[0].metadata.name}')
 
           if [ -z "$POD_NAME" ]; then
-            echo "ERROR: No Oracle DB pod found in namespace $NS"
-            oc get pods
+            echo "ERROR: Oracle DB pod not found in namespace $NS"
+            oc get pods -n "$NS"
             exit 0
           fi
 
-          echo "Using Oracle pod: $POD_NAME"
+          echo "Using Oracle DB pod: $POD_NAME"
+
           echo "Dropping PDB PR_$PR_NUMBER"
-          oc exec -n "$NS" "$POD_NAME" -- /opt/oracle/removeDatabase "THE" "PR_$PR_NUMBER" || true
+          oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- \
+            /opt/oracle/removeDatabase "THE" "PR_$PR_NUMBER" || true
 
-      - name: Remove PR-specific Oracle service
-        continue-on-error: true
-        run: |
-          NS="${{ secrets.oc_namespace }}"
-          PR_NUMBER="${{ github.event.number }}"
-          oc project "$NS"
-
-          echo "Locating Oracle DB pod..."
-          POD_NAME=$(oc get pods -n "$NS" --no-headers | awk '/oracle|legacydb|xe|db/ && /Running/ {print $1; exit}')
-
-          if [ -z "$POD_NAME" ]; then
-            echo "ERROR: No Oracle DB pod found in namespace $NS"
-            oc get pods
-            exit 0
-          fi
-
-          echo "Using Oracle pod: $POD_NAME"
           echo "Deleting Oracle service PR_$PR_NUMBER"
-
-          oc exec -n "$NS" "$POD_NAME" -- sqlplus / as sysdba <<EOF
+          oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- sqlplus / as sysdba <<EOF
           BEGIN
             DBMS_SERVICE.DELETE_SERVICE(service_name => 'PR_$PR_NUMBER');
           EXCEPTION
@@ -81,7 +71,7 @@ jobs:
           EOF
 
           echo "Remaining PR services:"
-          oc exec -n "$NS" "$POD_NAME" -- sqlplus / as sysdba <<EOF
+          oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- sqlplus / as sysdba <<EOF
           SELECT name FROM v\\$services WHERE name LIKE 'PR_%';
           EXIT;
           EOF
@@ -93,6 +83,8 @@ jobs:
           PR_NUMBER="${{ github.event.number }}"
           oc project "$NS"
 
-          oc delete job -l pr=$PR_NUMBER || true
-          oc delete pod -l pr=$PR_NUMBER || true
-          oc delete all,pvc,secret,cm -l pr=$PR_NUMBER || true
+          echo "Deleting PR=$PR_NUMBER resources in $NS"
+
+          oc delete job  -l pr="$PR_NUMBER" || true
+          oc delete pod  -l pr="$PR_NUMBER" || true
+          oc delete all,pvc,secret,cm -l pr="$PR_NUMBER" || true
