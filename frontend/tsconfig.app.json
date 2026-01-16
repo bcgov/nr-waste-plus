@@ -24,11 +24,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "types": [
-      "@tanstack/react-query",
-      "axios",
-      "axe-playwright"
-    ],
+    "types": ["@tanstack/react-query", "axios", "axe-playwright"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
@@ -36,12 +32,12 @@
   },
   "include": ["src"],
   "exclude": [
-    "dist", 
+    "dist",
     "node_modules",
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/*.spec.ts",
     "**/*.spec.tsx",
-    "src/**/config/tests/**/*",
+    "src/**/config/tests/**/*"
   ]
 }

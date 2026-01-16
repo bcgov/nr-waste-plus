@@ -4,7 +4,7 @@
 @use '@carbon/react/scss/type' as *;
 @use '@carbon/react/scss/breakpoint' as *;
 @use '@carbon/react/scss/theme' as *;
-@use "@carbon/type/scss/font-family.scss";
+@use '@carbon/type/scss/font-family.scss';
 @use '@carbon/type';
 
 .district-selection-grid {
@@ -37,7 +37,6 @@
   }
 
   .district-list-item {
-
     .district-list-item-btn {
       border-radius: 0.25rem;
       width: 100%;
@@ -95,6 +94,5 @@
     &:hover {
       background-color: var(--#{vars.$bcgov-prefix}-layer-hover-01);
     }
-
   }
 }

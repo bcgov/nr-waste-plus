@@ -1,280 +1,280 @@
 {
-    "content": [
-        {
-            "id": "RU-34906-Block-102-56533357",
-            "cutBlockId": "R102",
-            "ruNumber": 34906,
-            "client": {
-                "code": "91234567",
-                "description": "NORTHERN TIMBER CO"
-            },
-            "licenseNumber": "XY7891",
-            "cuttingPermit": "R02",
-            "timberMark": "HK4R02",
-            "multiMark": false,
-            "sampling": {
-                "code": "AGR",
-                "description": "Aggregate"
-            },
-            "district": {
-                "code": "DKA",
-                "description": "Thompson Rivers"
-            },
-            "status": {
-                "code": "SUB",
-                "description": "Submitted"
-            },
-            "lastUpdated": "2025-08-25T10:35:06",
-            "blockId": 102
-        },
-        {
-            "id": "RU-34906-Block-105-16777836",
-            "cutBlockId": "R105",
-            "ruNumber": 34906,
-            "client": {
-                "code": "91234567",
-                "description": "NORTHERN TIMBER CO"
-            },
-            "licenseNumber": "BC4523",
-            "cuttingPermit": "B09",
-            "timberMark": "DW9B09",
-            "multiMark": true,
-            "sampling": {
-                "code": "AGR",
-                "description": "Aggregate"
-            },
-            "district": {
-                "code": "DKA",
-                "description": "Thompson Rivers"
-            },
-            "status": {
-                "code": "SUB",
-                "description": "Submitted"
-            },
-            "lastUpdated": "2025-08-25T10:35:06",
-            "blockId": 105
-        },
-        {
-            "id": "RU-34906-Block-571-21130094",
-            "cutBlockId": "R571",
-            "ruNumber": 34906,
-            "client": {
-                "code": "91234567",
-                "description": "NORTHERN TIMBER CO"
-            },
-            "licenseNumber": "XY7891",
-            "cuttingPermit": "R02",
-            "timberMark": "HK4R02",
-            "multiMark": true,
-            "sampling": {
-                "code": "AGR",
-                "description": "Aggregate"
-            },
-            "district": {
-                "code": "DKA",
-                "description": "Thompson Rivers"
-            },
-            "status": {
-                "code": "SUB",
-                "description": "Submitted"
-            },
-            "lastUpdated": "2025-08-25T10:35:06",
-            "blockId": 571
-        },
-        {
-            "id": "RU-34906-Block-569-54499236",
-            "cutBlockId": "R569",
-            "ruNumber": 34906,
-            "client": {
-                "code": "91234567",
-                "description": "NORTHERN TIMBER CO"
-            },
-            "licenseNumber": "XY7891",
-            "cuttingPermit": "R02",
-            "timberMark": "HK4R02",
-            "multiMark": true,
-            "sampling": {
-                "code": "AGR",
-                "description": "Aggregate"
-            },
-            "district": {
-                "code": "DKA",
-                "description": "Thompson Rivers"
-            },
-            "status": {
-                "code": "SUB",
-                "description": "Submitted"
-            },
-            "lastUpdated": "2025-08-25T10:35:06",
-            "blockId": 569
-        },
-        {
-            "id": "RU-34906-Block-341-94613061",
-            "cutBlockId": "R341",
-            "ruNumber": 34906,
-            "client": {
-                "code": "91234567",
-                "description": "NORTHERN TIMBER CO"
-            },
-            "licenseNumber": "XY7891",
-            "cuttingPermit": "R02",
-            "timberMark": "HK4R02",
-            "multiMark": true,
-            "sampling": {
-                "code": "AGR",
-                "description": "Aggregate"
-            },
-            "district": {
-                "code": "DKA",
-                "description": "Thompson Rivers"
-            },
-            "status": {
-                "code": "SUB",
-                "description": "Submitted"
-            },
-            "lastUpdated": "2025-08-25T10:35:06",
-            "blockId": 341
-        },
-        {
-            "id": "RU-34906-Block-336-32570121",
-            "cutBlockId": "R336",
-            "ruNumber": 34906,
-            "client": {
-                "code": "91234567",
-                "description": "NORTHERN TIMBER CO"
-            },
-            "licenseNumber": "XY7891",
-            "cuttingPermit": "R02",
-            "timberMark": "HK4R02",
-            "multiMark": true,
-            "sampling": {
-                "code": "AGR",
-                "description": "Aggregate"
-            },
-            "district": {
-                "code": "DKA",
-                "description": "Thompson Rivers"
-            },
-            "status": {
-                "code": "SUB",
-                "description": "Submitted"
-            },
-            "lastUpdated": "2025-08-25T10:35:06",
-            "blockId": 336
-        },
-        {
-            "id": "RU-34906-Block-274-40929234",
-            "cutBlockId": "R274",
-            "ruNumber": 34906,
-            "client": {
-                "code": "91234567",
-                "description": "NORTHERN TIMBER CO"
-            },
-            "licenseNumber": "XY7891",
-            "cuttingPermit": "R02",
-            "timberMark": "HK4R02",
-            "multiMark": true,
-            "sampling": {
-                "code": "AGR",
-                "description": "Aggregate"
-            },
-            "district": {
-                "code": "DKA",
-                "description": "Thompson Rivers"
-            },
-            "status": {
-                "code": "SUB",
-                "description": "Submitted"
-            },
-            "lastUpdated": "2025-08-25T10:35:06",
-            "blockId": 274
-        },
-        {
-            "id": "RU-34906-Block-218-29188714",
-            "cutBlockId": "R218",
-            "ruNumber": 34906,
-            "client": {
-                "code": "91234567",
-                "description": "NORTHERN TIMBER CO"
-            },
-            "licenseNumber": "XY7891",
-            "cuttingPermit": "R02",
-            "timberMark": "HK4R02",
-            "multiMark": true,
-            "sampling": {
-                "code": "AGR",
-                "description": "Aggregate"
-            },
-            "district": {
-                "code": "DKA",
-                "description": "Thompson Rivers"
-            },
-            "status": {
-                "code": "SUB",
-                "description": "Submitted"
-            },
-            "lastUpdated": "2025-08-25T10:35:06",
-            "blockId": 218
-        },
-        {
-            "id": "RU-36834-Block-26-84360965",
-            "cutBlockId": "26",
-            "ruNumber": 36834,
-            "client": {
-                "code": "92345678",
-                "description": "PACIFIC LOGGING LTD"
-            },
-            "licenseNumber": "WM194",
-            "cuttingPermit": "EA",
-            "timberMark": "WBMJEA",
-            "multiMark": false,
-            "sampling": {
-                "code": "BLK",
-                "description": "Cutblock"
-            },
-            "district": {
-                "code": "DND",
-                "description": "Nadina"
-            },
-            "status": {
-                "code": "DFT",
-                "description": "Draft"
-            },
-            "lastUpdated": "2025-08-24T09:10:28",
-            "blockId": 26
-        },
-        {
-            "id": "RU-10501-Block-2-33684183",
-            "cutBlockId": "CAT2",
-            "ruNumber": 10501,
-            "client": {
-                "code": "92345678",
-                "description": "PACIFIC LOGGING LTD"
-            },
-            "licenseNumber": "DD35K",
-            "cuttingPermit": " ",
-            "timberMark": "DD35':",
-            "multiMark": false,
-            "sampling": {
-                "code": "BLK",
-                "description": "Cutblock"
-            },
-            "district": {
-                "code": "DCS",
-                "description": "Cascades"
-            },
-            "status": {
-                "code": "APP",
-                "description": "Approved"
-            },
-            "lastUpdated": "2012-01-27T10:34:58",
-            "blockId": 2
-        }
-    ],
-    "page": {
-        "size": 10,
-        "number": 0,
-        "totalElements": 12,
-        "totalPages": 2
+  "content": [
+    {
+      "id": "RU-34906-Block-102-56533357",
+      "cutBlockId": "R102",
+      "ruNumber": 34906,
+      "client": {
+        "code": "91234567",
+        "description": "NORTHERN TIMBER CO"
+      },
+      "licenseNumber": "XY7891",
+      "cuttingPermit": "R02",
+      "timberMark": "HK4R02",
+      "multiMark": false,
+      "sampling": {
+        "code": "AGR",
+        "description": "Aggregate"
+      },
+      "district": {
+        "code": "DKA",
+        "description": "Thompson Rivers"
+      },
+      "status": {
+        "code": "SUB",
+        "description": "Submitted"
+      },
+      "lastUpdated": "2025-08-25T10:35:06",
+      "blockId": 102
+    },
+    {
+      "id": "RU-34906-Block-105-16777836",
+      "cutBlockId": "R105",
+      "ruNumber": 34906,
+      "client": {
+        "code": "91234567",
+        "description": "NORTHERN TIMBER CO"
+      },
+      "licenseNumber": "BC4523",
+      "cuttingPermit": "B09",
+      "timberMark": "DW9B09",
+      "multiMark": true,
+      "sampling": {
+        "code": "AGR",
+        "description": "Aggregate"
+      },
+      "district": {
+        "code": "DKA",
+        "description": "Thompson Rivers"
+      },
+      "status": {
+        "code": "SUB",
+        "description": "Submitted"
+      },
+      "lastUpdated": "2025-08-25T10:35:06",
+      "blockId": 105
+    },
+    {
+      "id": "RU-34906-Block-571-21130094",
+      "cutBlockId": "R571",
+      "ruNumber": 34906,
+      "client": {
+        "code": "91234567",
+        "description": "NORTHERN TIMBER CO"
+      },
+      "licenseNumber": "XY7891",
+      "cuttingPermit": "R02",
+      "timberMark": "HK4R02",
+      "multiMark": true,
+      "sampling": {
+        "code": "AGR",
+        "description": "Aggregate"
+      },
+      "district": {
+        "code": "DKA",
+        "description": "Thompson Rivers"
+      },
+      "status": {
+        "code": "SUB",
+        "description": "Submitted"
+      },
+      "lastUpdated": "2025-08-25T10:35:06",
+      "blockId": 571
+    },
+    {
+      "id": "RU-34906-Block-569-54499236",
+      "cutBlockId": "R569",
+      "ruNumber": 34906,
+      "client": {
+        "code": "91234567",
+        "description": "NORTHERN TIMBER CO"
+      },
+      "licenseNumber": "XY7891",
+      "cuttingPermit": "R02",
+      "timberMark": "HK4R02",
+      "multiMark": true,
+      "sampling": {
+        "code": "AGR",
+        "description": "Aggregate"
+      },
+      "district": {
+        "code": "DKA",
+        "description": "Thompson Rivers"
+      },
+      "status": {
+        "code": "SUB",
+        "description": "Submitted"
+      },
+      "lastUpdated": "2025-08-25T10:35:06",
+      "blockId": 569
+    },
+    {
+      "id": "RU-34906-Block-341-94613061",
+      "cutBlockId": "R341",
+      "ruNumber": 34906,
+      "client": {
+        "code": "91234567",
+        "description": "NORTHERN TIMBER CO"
+      },
+      "licenseNumber": "XY7891",
+      "cuttingPermit": "R02",
+      "timberMark": "HK4R02",
+      "multiMark": true,
+      "sampling": {
+        "code": "AGR",
+        "description": "Aggregate"
+      },
+      "district": {
+        "code": "DKA",
+        "description": "Thompson Rivers"
+      },
+      "status": {
+        "code": "SUB",
+        "description": "Submitted"
+      },
+      "lastUpdated": "2025-08-25T10:35:06",
+      "blockId": 341
+    },
+    {
+      "id": "RU-34906-Block-336-32570121",
+      "cutBlockId": "R336",
+      "ruNumber": 34906,
+      "client": {
+        "code": "91234567",
+        "description": "NORTHERN TIMBER CO"
+      },
+      "licenseNumber": "XY7891",
+      "cuttingPermit": "R02",
+      "timberMark": "HK4R02",
+      "multiMark": true,
+      "sampling": {
+        "code": "AGR",
+        "description": "Aggregate"
+      },
+      "district": {
+        "code": "DKA",
+        "description": "Thompson Rivers"
+      },
+      "status": {
+        "code": "SUB",
+        "description": "Submitted"
+      },
+      "lastUpdated": "2025-08-25T10:35:06",
+      "blockId": 336
+    },
+    {
+      "id": "RU-34906-Block-274-40929234",
+      "cutBlockId": "R274",
+      "ruNumber": 34906,
+      "client": {
+        "code": "91234567",
+        "description": "NORTHERN TIMBER CO"
+      },
+      "licenseNumber": "XY7891",
+      "cuttingPermit": "R02",
+      "timberMark": "HK4R02",
+      "multiMark": true,
+      "sampling": {
+        "code": "AGR",
+        "description": "Aggregate"
+      },
+      "district": {
+        "code": "DKA",
+        "description": "Thompson Rivers"
+      },
+      "status": {
+        "code": "SUB",
+        "description": "Submitted"
+      },
+      "lastUpdated": "2025-08-25T10:35:06",
+      "blockId": 274
+    },
+    {
+      "id": "RU-34906-Block-218-29188714",
+      "cutBlockId": "R218",
+      "ruNumber": 34906,
+      "client": {
+        "code": "91234567",
+        "description": "NORTHERN TIMBER CO"
+      },
+      "licenseNumber": "XY7891",
+      "cuttingPermit": "R02",
+      "timberMark": "HK4R02",
+      "multiMark": true,
+      "sampling": {
+        "code": "AGR",
+        "description": "Aggregate"
+      },
+      "district": {
+        "code": "DKA",
+        "description": "Thompson Rivers"
+      },
+      "status": {
+        "code": "SUB",
+        "description": "Submitted"
+      },
+      "lastUpdated": "2025-08-25T10:35:06",
+      "blockId": 218
+    },
+    {
+      "id": "RU-36834-Block-26-84360965",
+      "cutBlockId": "26",
+      "ruNumber": 36834,
+      "client": {
+        "code": "92345678",
+        "description": "PACIFIC LOGGING LTD"
+      },
+      "licenseNumber": "WM194",
+      "cuttingPermit": "EA",
+      "timberMark": "WBMJEA",
+      "multiMark": false,
+      "sampling": {
+        "code": "BLK",
+        "description": "Cutblock"
+      },
+      "district": {
+        "code": "DND",
+        "description": "Nadina"
+      },
+      "status": {
+        "code": "DFT",
+        "description": "Draft"
+      },
+      "lastUpdated": "2025-08-24T09:10:28",
+      "blockId": 26
+    },
+    {
+      "id": "RU-10501-Block-2-33684183",
+      "cutBlockId": "CAT2",
+      "ruNumber": 10501,
+      "client": {
+        "code": "92345678",
+        "description": "PACIFIC LOGGING LTD"
+      },
+      "licenseNumber": "DD35K",
+      "cuttingPermit": " ",
+      "timberMark": "DD35':",
+      "multiMark": false,
+      "sampling": {
+        "code": "BLK",
+        "description": "Cutblock"
+      },
+      "district": {
+        "code": "DCS",
+        "description": "Cascades"
+      },
+      "status": {
+        "code": "APP",
+        "description": "Approved"
+      },
+      "lastUpdated": "2012-01-27T10:34:58",
+      "blockId": 2
     }
+  ],
+  "page": {
+    "size": 10,
+    "number": 0,
+    "totalElements": 12,
+    "totalPages": 2
+  }
 }

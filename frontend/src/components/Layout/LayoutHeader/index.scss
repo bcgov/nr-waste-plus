@@ -5,7 +5,6 @@
 @use '@carbon/type';
 
 .#{vars.$bcgov-prefix}--header {
-
   .#{vars.$bcgov-prefix}--header__name {
     margin-left: 0.9375rem;
     color: colors.$white;
@@ -15,7 +14,7 @@
     }
 
     @include breakpoint-down(lg) {
-      margin-left: 0;      
+      margin-left: 0;
       padding: 0;
     }
   }
@@ -27,10 +26,8 @@
       color: var(--#{vars.$bcgov-prefix}-layer-selected-inverse);
     }
 
-    path{
+    path {
       fill: currentColor;
     }
-
   }
-
 }

@@ -1,6 +1,5 @@
-@use "../../../../styles/variables" as vars;
-@use "@bcgov-nr/nr-theme/design-tokens/colors.scss" as colors;
-
+@use '../../../../styles/variables' as vars;
+@use '@bcgov-nr/nr-theme/design-tokens/colors.scss' as colors;
 
 .cds--tag--blue {
   background-color: colors.$blue-60;

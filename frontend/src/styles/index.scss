@@ -1,6 +1,6 @@
 @use './mixins';
 @use './overrides';
-@use "./variables" as variables;
+@use './variables' as variables;
 @use '@carbon/react/scss/spacing' as *;
 
 /* Toast Notification - Set it to the top-right corner and animate */

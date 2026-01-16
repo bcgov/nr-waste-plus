@@ -3,7 +3,6 @@
 @use '@carbon/type';
 
 .#{vars.$bcgov-prefix}--header__global {
-
   button.#{vars.$bcgov-prefix}--header__action {
     border-radius: 0;
   }
@@ -21,21 +20,18 @@
     margin-left: 0.5rem;
     display: flex;
     gap: 0.5rem;
-        
+
     &:focus {
       outline: 0;
       border: none;
     }
-        
+
     &.#{vars.$bcgov-prefix}--header__action--active {
       color: var(--#{vars.$bcgov-prefix}-layer-selected-inverse);
     }
 
-    path{
+    path {
       fill: currentColor;
     }
-
   }
-  
-
 }

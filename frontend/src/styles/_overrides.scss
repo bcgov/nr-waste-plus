@@ -1,43 +1,44 @@
-@use "sass:map";
+@use 'sass:map';
 
-@use "@bcgov-nr/nr-theme/design-tokens/type-family.scss" as types;
-@use "@carbon/type/scss/font-family.scss" with (
+@use '@bcgov-nr/nr-theme/design-tokens/type-family.scss' as types;
+@use '@carbon/type/scss/font-family.scss' with (
   $font-families: types.$type-family,
   $font-weights: types.$font-weights
 );
 
-@use "@carbon/themes/scss/utilities";
-@use "./variables" as variables;
-@use "@bcgov-nr/nr-theme/design-tokens/light-theme.scss" as light;
-@use "@bcgov-nr/nr-theme/design-tokens/dark-theme.scss" as dark;
-@use "@bcgov-nr/nr-theme/design-tokens/colors.scss" as colors;
+@use '@carbon/themes/scss/utilities';
+@use './variables' as variables;
+@use '@bcgov-nr/nr-theme/design-tokens/light-theme.scss' as light;
+@use '@bcgov-nr/nr-theme/design-tokens/dark-theme.scss' as dark;
+@use '@bcgov-nr/nr-theme/design-tokens/colors.scss' as colors;
 
-@use "@carbon/react/scss/themes";
-@use "@carbon/react/scss/theme" with (
+@use '@carbon/react/scss/themes';
+@use '@carbon/react/scss/theme' with (
   $fallback: themes.$white,
   $theme: light.$light-theme
 );
 
-@use "@carbon/react/scss/components/button/tokens" as button-tokens;
-@use "@bcgov-nr/nr-theme/design-tokens/light-buttons.scss" as light-button-overrides;
-@use "@bcgov-nr/nr-theme/design-tokens/dark-buttons.scss" as dark-button-overrides;
+@use '@carbon/react/scss/components/button/tokens' as button-tokens;
+@use '@bcgov-nr/nr-theme/design-tokens/light-buttons.scss' as light-button-overrides;
+@use '@bcgov-nr/nr-theme/design-tokens/dark-buttons.scss' as dark-button-overrides;
 
-@use "@carbon/react/scss/components/tag/tokens" as tag-tokens;
-@use "@bcgov-nr/nr-theme/design-tokens/light-tags.scss" as light-tag-overrides;
-@use "@bcgov-nr/nr-theme/design-tokens/dark-tags.scss" as dark-tag-overrides;
+@use '@carbon/react/scss/components/tag/tokens' as tag-tokens;
+@use '@bcgov-nr/nr-theme/design-tokens/light-tags.scss' as light-tag-overrides;
+@use '@bcgov-nr/nr-theme/design-tokens/dark-tags.scss' as dark-tag-overrides;
 
-@use "@carbon/react/scss/components/notification/tokens" as notification-tokens;
-@use "@bcgov-nr/nr-theme/design-tokens/light-notifications.scss" as light-notification-overrides;
-@use "@bcgov-nr/nr-theme/design-tokens/dark-notifications.scss" as dark-notification-overrides;
+@use '@carbon/react/scss/components/notification/tokens' as notification-tokens;
+@use '@bcgov-nr/nr-theme/design-tokens/light-notifications.scss' as light-notification-overrides;
+@use '@bcgov-nr/nr-theme/design-tokens/dark-notifications.scss' as dark-notification-overrides;
 
-@use "@carbon/react";
-@use "@carbon/styles/scss/grid";
+@use '@carbon/react';
+@use '@carbon/styles/scss/grid';
 @use '@carbon/react/scss/spacing' as *;
 @use '@carbon/react/scss/breakpoint' as *;
 
 @include grid.flex-grid();
 
-:root[data-carbon-theme='g10'], .#{variables.$bcgov-prefix}--g10  {  
+:root[data-carbon-theme='g10'],
+.#{variables.$bcgov-prefix}--g10 {
   --cds-grid-gutter: 0;
   $button-tokens: utilities.merge(
     button-tokens.$button-tokens,
@@ -59,7 +60,8 @@
   @include theme.theme(light.$light-theme);
 }
 
-:root[data-carbon-theme='g100'], .#{variables.$bcgov-prefix}--g100 {
+:root[data-carbon-theme='g100'],
+.#{variables.$bcgov-prefix}--g100 {
   --cds-grid-gutter: 0;
   $button-tokens: utilities.merge(
     button-tokens.$button-tokens,
@@ -102,7 +104,7 @@
 ------------------------------------------------------- */
 .#{variables.$bcgov-prefix}--number
   .#{variables.$bcgov-prefix}--number__input-wrapper
-  input[type="number"] {
+  input[type='number'] {
   border-top-left-radius: 0.25rem;
   border-top-right-radius: 0.25rem;
 }
@@ -150,20 +152,16 @@
 /* ------------------ Time Picker ---------------------------
 - Border-radius: 4px on left top corner and right top corners, no border-radius in the middle
 ----------------------------------------------------------------- */
-.#{variables.$bcgov-prefix}--time-picker__input
-  > .#{variables.$bcgov-prefix}--text-input {
+.#{variables.$bcgov-prefix}--time-picker__input > .#{variables.$bcgov-prefix}--text-input {
   border-top-left-radius: 0.25rem;
   border-top-right-radius: 0;
 }
 
-.#{variables.$bcgov-prefix}--time-picker__select
-  > .#{variables.$bcgov-prefix}--select-input {
+.#{variables.$bcgov-prefix}--time-picker__select > .#{variables.$bcgov-prefix}--select-input {
   border-radius: 0;
 }
 
-.#{variables.$bcgov-prefix}--time-picker
-  :last-child
-  > .#{variables.$bcgov-prefix}--select-input {
+.#{variables.$bcgov-prefix}--time-picker :last-child > .#{variables.$bcgov-prefix}--select-input {
   border-top-left-radius: 0;
   border-top-right-radius: 0.25rem;
 }
@@ -193,7 +191,7 @@ div.#{variables.$bcgov-prefix}--inline-notification--low-contrast::before {
   filter: none;
 }
 
-$types: "error", "info", "success", "warning";
+$types: 'error', 'info', 'success', 'warning';
 @each $notificationType in $types {
   div.#{variables.$bcgov-prefix}--inline-notification--#{$notificationType} {
     border-left: 0.25rem
@@ -201,14 +199,10 @@ $types: "error", "info", "success", "warning";
       var(--#{variables.$bcgov-prefix}-support-#{$notificationType}-inverse);
   }
   div.#{variables.$bcgov-prefix}--inline-notification--low-contrast.#{variables.$bcgov-prefix}--inline-notification--#{$notificationType} {
-    border-left: 0.25rem
-      solid
-      var(--#{variables.$bcgov-prefix}-support-#{$notificationType});
+    border-left: 0.25rem solid var(--#{variables.$bcgov-prefix}-support-#{$notificationType});
   }
   div.#{variables.$bcgov-prefix}--inline-notification--low-contrast.#{variables.$bcgov-prefix}--inline-notification--#{$notificationType}::before {
-    border-color: var(
-      --#{variables.$bcgov-prefix}-notification-border-#{$notificationType}
-    );
+    border-color: var(--#{variables.$bcgov-prefix}-notification-border-#{$notificationType});
   }
 }
 
@@ -223,18 +217,10 @@ $types: "error", "info", "success", "warning";
       var(--#{variables.$bcgov-prefix}-support-#{$notificationType}-inverse);
   }
   div.#{variables.$bcgov-prefix}--toast-notification--low-contrast.#{variables.$bcgov-prefix}--toast-notification--#{$notificationType} {
-    border-left: 0.25rem
-      solid
-      var(--#{variables.$bcgov-prefix}-support-#{$notificationType});
-    border-top-color: var(
-      --#{variables.$bcgov-prefix}-notification-border-#{$notificationType}
-    );
-    border-bottom-color: var(
-      --#{variables.$bcgov-prefix}-notification-border-#{$notificationType}
-    );
-    border-right-color: var(
-      --#{variables.$bcgov-prefix}-notification-border-#{$notificationType}
-    );
+    border-left: 0.25rem solid var(--#{variables.$bcgov-prefix}-support-#{$notificationType});
+    border-top-color: var(--#{variables.$bcgov-prefix}-notification-border-#{$notificationType});
+    border-bottom-color: var(--#{variables.$bcgov-prefix}-notification-border-#{$notificationType});
+    border-right-color: var(--#{variables.$bcgov-prefix}-notification-border-#{$notificationType});
   }
 }
 
@@ -390,8 +376,8 @@ button.#{variables.$bcgov-prefix}--side-nav__submenu,
   }
 }
 
-nav.#{variables.$bcgov-prefix}--side-nav--expanded {  
-    border-right: 0.063rem solid var(--#{variables.$bcgov-prefix}-border-subtle-01);
+nav.#{variables.$bcgov-prefix}--side-nav--expanded {
+  border-right: 0.063rem solid var(--#{variables.$bcgov-prefix}-border-subtle-01);
 }
 
 /* ------------------ Header ---------------------------
@@ -411,13 +397,12 @@ nav.#{variables.$bcgov-prefix}--side-nav--expanded {
 
 a.#{variables.$bcgov-prefix}--header__name {
   // previously was .#{variables.$bcgov-prefix}--header-site-name
-  font-family: "BCSans", "Noto Sans", Verdana, Arial, sans-serif;
+  font-family: 'BCSans', 'Noto Sans', Verdana, Arial, sans-serif;
   font-size: 0.875rem;
   font-weight: 700;
   color: #f3f3f5;
   padding-left: 2rem;
 }
-
 
 /* ------------------ Other Overrides-------------------
 - Sets the grid gutter
@@ -441,10 +426,11 @@ a.#{variables.$bcgov-prefix}--header__name {
   background: var(--cds-background);
 }
 
-.#{variables.$bcgov-prefix}--header ~ .#{variables.$bcgov-prefix}--content, div:has(.#{variables.$bcgov-prefix}--header) ~ .#{variables.$bcgov-prefix}--content {
-    margin-block-start: $layout-05;
-    min-height: calc(100vh - #{$layout-05});
-    overflow-y: auto;
+.#{variables.$bcgov-prefix}--header ~ .#{variables.$bcgov-prefix}--content,
+div:has(.#{variables.$bcgov-prefix}--header) ~ .#{variables.$bcgov-prefix}--content {
+  margin-block-start: $layout-05;
+  min-height: calc(100vh - #{$layout-05});
+  overflow-y: auto;
 }
 
 .#{variables.$bcgov-prefix}--content .#{variables.$bcgov-prefix}--css-grid {
