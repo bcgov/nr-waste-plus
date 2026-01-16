@@ -61,22 +61,24 @@ jobs:
               /opt/oracle/removeDatabase "THE" "PR_$PR_NUMBER" || true
 
             echo "Deleting Oracle service PR_$PR_NUMBER"
-            oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- bash -s <<END_SCRIPT || true
+            oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- bash -c 'sqlplus / as sysdba <<EOF
 BEGIN
-  DBMS_SERVICE.DELETE_SERVICE(service_name => 'PR_$PR_NUMBER');
+  DBMS_SERVICE.DELETE_SERVICE(service_name => '\''PR_'$PR_NUMBER'\'');
 EXCEPTION
   WHEN OTHERS THEN NULL;
 END;
 /
 ALTER SYSTEM REGISTER;
 EXIT;
-END_SCRIPT
+EOF
+' || true
 
             echo "Remaining PR services:"
-            oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- bash -s <<END_SCRIPT || true
-SELECT name FROM v\$services WHERE name LIKE 'PR_%';
+            oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- bash -c 'sqlplus / as sysdba <<EOF
+SELECT name FROM v\$services WHERE name LIKE '\''PR_%'\'';
 EXIT;
-END_SCRIPT
+EOF
+' || true
 
       - name: Stop PR-specific CronJobs and clean PR resources
         continue-on-error: true
