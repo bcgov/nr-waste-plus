@@ -51,6 +51,7 @@ jobs:
 
             if [ -z "$POD_NAME" ]; then
               echo "WARNING: Oracle DB pod not found. Skipping DB cleanup."
+              oc get pods -n "$NS"
               exit 0
             fi
 
@@ -61,12 +62,26 @@ jobs:
               /opt/oracle/removeDatabase "THE" "PR_$PR_NUMBER" || true
 
             echo "Deleting Oracle service PR_$PR_NUMBER"
-            oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- bash -c \
-              "printf \$'BEGIN\n  DBMS_SERVICE.DELETE_SERVICE(service_name => '\\''PR_$PR_NUMBER'\\'');\nEXCEPTION\n  WHEN OTHERS THEN NULL;\nEND;\n/\nALTER SYSTEM REGISTER;\nEXIT;\n' | sqlplus / as sysdba" || true
+            oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- bash -c '
+cat <<'"'"'SQL'"'"' | sqlplus / as sysdba
+BEGIN
+  DBMS_SERVICE.DELETE_SERVICE(service_name => '"'"'PR_'"$PR_NUMBER"'"');
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END;
+/
+ALTER SYSTEM REGISTER;
+EXIT;
+SQL
+' || true
 
             echo "Remaining PR services:"
-            oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- bash -c \
-              "printf \$'SELECT name FROM v\\\$services WHERE name LIKE '\\''PR_%'\\'';\nEXIT;\n' | sqlplus / as sysdba" || true
+            oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- bash -c '
+cat <<'"'"'SQL'"'"' | sqlplus / as sysdba
+SELECT name FROM v$services WHERE name LIKE '"'"'PR_%'"'"';
+EXIT;
+SQL
+' || true
 
       - name: Stop PR-specific CronJobs and clean PR resources
         continue-on-error: true
@@ -80,6 +95,9 @@ jobs:
             PR_NUMBER="${{ github.event.number }}"
 
             echo "Deleting PR=$PR_NUMBER resources in $NS"
+
+            echo "Resources before deletion:"
+            oc get all -l pr="$PR_NUMBER" -n "$NS" || true
 
             oc delete job -l pr="$PR_NUMBER" || true
             oc delete pod -l pr="$PR_NUMBER" || true
