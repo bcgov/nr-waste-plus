@@ -34,56 +34,63 @@ jobs:
 
       - name: Remove PR database and Oracle service
         continue-on-error: true
-        run: |
-          NS="${{ secrets.oc_namespace }}"
-          PR_NUMBER="${{ github.event.number }}"
+        uses: bcgov/action-oc-runner@f900830adadd4d9eef3ca6ff80103e839ba8b7c0
+        with:
+          oc_namespace: ${{ secrets.oc_namespace }}
+          oc_token: ${{ secrets.oc_token }}
+          oc_server: ${{ secrets.oc_server }}
+          commands: |
+            NS="${{ secrets.oc_namespace }}"
+            PR_NUMBER="${{ github.event.number }}"
 
-          oc project "$NS"
+            echo "Locating Oracle DB pod..."
+            POD_NAME=$(oc get pods -n "$NS" \
+              -l app=nr-waste-plus-tools \
+              -l deployment=nr-waste-plus-tools-legacydb \
+              -o name | head -n1 | sed 's|pod/||')
 
-          echo "Locating Oracle DB pod..."
-          POD_NAME=$(oc get pods -n "$NS" \
-            -l app=nr-waste-plus-tools \
-            -l deployment=nr-waste-plus-tools-legacydb \
-            -o name | head -n1 | sed 's|pod/||')
+            if [ -z "$POD_NAME" ]; then
+              echo "WARNING: Oracle DB pod not found in namespace $NS. Skipping DB cleanup."
+              oc get pods -n "$NS"
+            else
+              echo "Using Oracle DB pod: $POD_NAME"
 
-          if [ -z "$POD_NAME" ]; then
-            echo "WARNING: Oracle DB pod not found in namespace $NS. Skipping DB cleanup."
-            oc get pods -n "$NS"
-          else
-            echo "Using Oracle DB pod: $POD_NAME"
+              echo "Dropping PDB PR_$PR_NUMBER"
+              oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- \
+                /opt/oracle/removeDatabase "THE" "PR_$PR_NUMBER" || true
 
-            echo "Dropping PDB PR_$PR_NUMBER"
-            oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- \
-              /opt/oracle/removeDatabase "THE" "PR_$PR_NUMBER" || true
+              echo "Deleting Oracle service PR_$PR_NUMBER"
+              oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- sqlplus / as sysdba <<EOF || true
+              BEGIN
+                DBMS_SERVICE.DELETE_SERVICE(service_name => 'PR_$PR_NUMBER');
+              EXCEPTION
+                WHEN OTHERS THEN NULL;
+              END;
+              /
+              ALTER SYSTEM REGISTER;
+              EXIT;
+              EOF
 
-            echo "Deleting Oracle service PR_$PR_NUMBER"
-            oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- sqlplus / as sysdba <<EOF || true
-            BEGIN
-              DBMS_SERVICE.DELETE_SERVICE(service_name => 'PR_$PR_NUMBER');
-            EXCEPTION
-              WHEN OTHERS THEN NULL;
-            END;
-            /
-            ALTER SYSTEM REGISTER;
-            EXIT;
-            EOF
-
-            echo "Remaining PR services:"
-            oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- sqlplus / as sysdba <<EOF || true
-            SELECT name FROM v\\$services WHERE name LIKE 'PR_%';
-            EXIT;
-            EOF
-          fi
+              echo "Remaining PR services:"
+              oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- sqlplus / as sysdba <<EOF || true
+              SELECT name FROM v\\$services WHERE name LIKE 'PR_%';
+              EXIT;
+              EOF
+            fi
 
       - name: Stop PR-specific CronJobs and clean PR resources
         continue-on-error: true
-        run: |
-          NS="${{ secrets.oc_namespace }}"
-          PR_NUMBER="${{ github.event.number }}"
-          oc project "$NS"
+        uses: bcgov/action-oc-runner@f900830adadd4d9eef3ca6ff80103e839ba8b7c0
+        with:
+          oc_namespace: ${{ secrets.oc_namespace }}
+          oc_token: ${{ secrets.oc_token }}
+          oc_server: ${{ secrets.oc_server }}
+          commands: |
+            NS="${{ secrets.oc_namespace }}"
+            PR_NUMBER="${{ github.event.number }}"
 
-          echo "Deleting PR=$PR_NUMBER resources in $NS"
+            echo "Deleting PR=$PR_NUMBER resources in $NS"
 
-          oc delete job  -l pr="$PR_NUMBER" || true
-          oc delete pod  -l pr="$PR_NUMBER" || true
-          oc delete all,pvc,secret,cm -l pr="$PR_NUMBER" || true
+            oc delete job -l pr="$PR_NUMBER" || true
+            oc delete pod -l pr="$PR_NUMBER" || true
+            oc delete all,pvc,secret,cm -l pr="$PR_NUMBER" || true
