@@ -18,8 +18,8 @@
   flex-direction: column;
 
   @include breakpoint-down(md) {
-      max-inline-size: 20rem !important;
-    }
+    max-inline-size: 20rem !important;
+  }
 }
 
 .right-title-section {

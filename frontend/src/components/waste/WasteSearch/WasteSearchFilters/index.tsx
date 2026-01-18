@@ -3,8 +3,7 @@ import { Button, Column, Grid } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState, type FC } from 'react';
 
-import type { CodeDescriptionDto } from '@/services/types';
-import type { ReportingUnitSearchParametersDto } from '@/services/types';
+import type { CodeDescriptionDto, ReportingUnitSearchParametersDto } from '@/services/types';
 
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import SearchInput from '@/components/Form/SearchInput';

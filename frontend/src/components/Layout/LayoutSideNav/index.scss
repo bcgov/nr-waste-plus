@@ -7,10 +7,8 @@
 @use '@carbon/type';
 
 .cds--side-nav__link-text {
-
   svg {
     margin-inline-end: 1.5rem;
     fill: var(--#{vars.$bcgov-prefix}-link-primary);
   }
-
 }

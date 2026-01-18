@@ -1,19 +1,19 @@
 {
-    "content": [        
-        {
-            "client": {
-                "code": "90000003",
-                "description": "OAK HERITAGE LTD."
-            },
-            "submissionsCount": 0,
-            "blocksCount": 0,
-            "lastUpdate": "1900-01-01T00:00:00"
-        }
-    ],
-    "page": {
-        "size": 1,
-        "number": 0,
-        "totalElements": 1,
-        "totalPages": 1
+  "content": [
+    {
+      "client": {
+        "code": "90000003",
+        "description": "OAK HERITAGE LTD."
+      },
+      "submissionsCount": 0,
+      "blocksCount": 0,
+      "lastUpdate": "1900-01-01T00:00:00"
     }
+  ],
+  "page": {
+    "size": 1,
+    "number": 0,
+    "totalElements": 1,
+    "totalPages": 1
+  }
 }

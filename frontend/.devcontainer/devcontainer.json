@@ -1,11 +1,9 @@
 {
-	"name": "Node.js & TypeScript",
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-18",
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"esbenp.prettier-vscode"
-			]
-		}
-	}
+  "name": "Node.js & TypeScript",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-18",
+  "customizations": {
+    "vscode": {
+      "extensions": ["esbenp.prettier-vscode"]
+    }
+  }
 }

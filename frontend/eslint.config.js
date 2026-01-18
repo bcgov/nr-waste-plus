@@ -12,23 +12,17 @@ import { globalIgnores, defineConfig } from 'eslint/config';
 const compat = new FlatCompat();
 
 export default defineConfig([
-  globalIgnores(['dist','coverage','node_modules','dev-dist','.devcontainer']),
+  globalIgnores(['dist', 'coverage', 'node_modules', 'dev-dist', '.devcontainer']),
   ...compat.config({
-    extends: [
-      'plugin:react-hooks/recommended',
-    ],
+    extends: ['plugin:react-hooks/recommended'],
   }),
   {
     files: ['**/*.{ts,tsx}'],
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.recommended,
-      eslintConfigPrettier,
-    ],
+    extends: [js.configs.recommended, tseslint.configs.recommended, eslintConfigPrettier],
     plugins: {
       '@tanstack/query': tanstackQuery,
-      import: eslintPluginImport,
-      prettier: prettierPlugin,
+      'import': eslintPluginImport,
+      'prettier': prettierPlugin,
       'react-hooks': reactHooks,
     },
     rules: {
@@ -37,7 +31,7 @@ export default defineConfig([
       'import/order': [
         'warn',
         {
-          groups: [
+          'groups': [
             'builtin',
             'external',
             'internal',
@@ -48,7 +42,7 @@ export default defineConfig([
             'type',
           ],
           'newlines-between': 'always',
-          alphabetize: { order: 'asc', caseInsensitive: true },
+          'alphabetize': { order: 'asc', caseInsensitive: true },
         },
       ],
       'no-console': 'warn',
@@ -60,7 +54,7 @@ export default defineConfig([
       globals: globals.browser,
     },
     settings: {
-      react: {
+      'react': {
         version: 'detect',
       },
       'import/resolver': {

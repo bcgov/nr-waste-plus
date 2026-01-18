@@ -3,7 +3,7 @@
 @use '@carbon/react/scss/type' as *;
 @use '@carbon/react/scss/breakpoint' as *;
 @use '@carbon/react/scss/theme' as *;
-@use "@carbon/type/scss/font-family.scss";
+@use '@carbon/type/scss/font-family.scss';
 @use '@carbon/type';
 
 .my-profile-container {
@@ -24,7 +24,7 @@
       justify-content: center;
     }
   }
-  
+
   .user-name {
     @include font-weight(semibold);
   }

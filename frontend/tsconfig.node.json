@@ -23,11 +23,11 @@
     "types": ["vitest", "node"]
   },
   "include": ["vite.config.ts"],
-   "exclude": [
-    "dist", 
+  "exclude": [
+    "dist",
     "node_modules",
     "**/*.test.{ts,tsx}",
     "**/*.spec.{ts,tsx}",
-    "src/**/config/tests/**/*",
+    "src/**/config/tests/**/*"
   ]
 }
