@@ -104,7 +104,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('License Number')).toBeDefined();
+        expect(screen.getByText('Licence number')).toBeDefined();
         expect(screen.getByText('Cutting permit')).toBeDefined();
         expect(screen.getByText('Timber mark')).toBeDefined();
         expect(screen.getByText('Exempted (Yes/No)')).toBeDefined();
