@@ -115,7 +115,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           showSkeleton={isLoading}
         >
           {data?.attachment.code ? (
-            <DefinitionTooltip definition={'Go to Waste 303 page'} openOnHover>
+            <DefinitionTooltip definition={'Go to Waste 303 page'} align="bottom" openOnHover>
               <RedirectLinkTag
                 text="Link"
                 url={`${env.VITE_LEGACY_BASE_URL}/waste303SubmissionAgreementAction.do?dataBean.p_waste_assessment_area_id=${blockId}&dataBean.p_revision_count=1&statusAction=Approve`}
