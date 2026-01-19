@@ -1,4 +1,4 @@
-import { Column, Grid } from '@carbon/react';
+import { Column, DefinitionTooltip, Grid } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState, type FC } from 'react';
 
@@ -115,10 +115,12 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           showSkeleton={isLoading}
         >
           {data?.attachment.code ? (
-            <RedirectLinkTag
-              text="Link"
-              url={`${env.VITE_LEGACY_BASE_URL}/waste303SubmissionAgreementAction.do?dataBean.p_waste_assessment_area_id=${blockId}&dataBean.p_revision_count=1&statusAction=Approve`}
-            />
+            <DefinitionTooltip definition={'Go to Waste 303 page'} align="bottom" openOnHover>
+              <RedirectLinkTag
+                text="Link"
+                url={`${env.VITE_LEGACY_BASE_URL}/waste303SubmissionAgreementAction.do?dataBean.p_waste_assessment_area_id=${blockId}&dataBean.p_revision_count=1&statusAction=Approve`}
+              />
+            </DefinitionTooltip>
           ) : (
             <EmptyValueTag value={data?.attachment.code ?? ''} />
           )}
