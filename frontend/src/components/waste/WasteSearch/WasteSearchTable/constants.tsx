@@ -1,3 +1,5 @@
+import { DefinitionTooltip } from '@carbon/react';
+
 import type { TableHeaderType } from '@/components/Form/TableResource/types';
 import type { CodeDescriptionDto, ReportingUnitSearchResultDto } from '@/services/types';
 
@@ -43,10 +45,12 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     sortable: false,
     selected: true,
     renderAs: (value) => (
-      <RedirectLinkTag
-        text={value as string}
-        url={`${env.VITE_LEGACY_BASE_URL}/waste101ReportUnitDetailsAction.do?dataBean.p_reporting_unit_id=${value}`}
-      />
+      <DefinitionTooltip definition={'Go to RU details'} align="top" openOnHover>
+        <RedirectLinkTag
+          text={value as string}
+          url={`${env.VITE_LEGACY_BASE_URL}/waste101ReportUnitDetailsAction.do?dataBean.p_reporting_unit_id=${value}`}
+        />
+      </DefinitionTooltip>
     ),
   },
 
@@ -56,10 +60,12 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     sortable: true,
     selected: true,
     renderAs: (value) => (
-      <RedirectLinkTag
-        text={value as string}
-        url={`${env.VITE_CLIENT_BASE_URL}/clients/details/${value}`}
-      />
+      <DefinitionTooltip definition={'View client details'} align="top" openOnHover>
+        <RedirectLinkTag
+          text={value as string}
+          url={`${env.VITE_CLIENT_BASE_URL}/clients/details/${value}`}
+        />
+      </DefinitionTooltip>
     ),
   },
   { key: 'client.description', header: 'Client Name', sortable: true, selected: true },
