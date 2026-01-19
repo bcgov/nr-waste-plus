@@ -78,8 +78,8 @@ jobs:
 
               echo "Remaining PR services:"
               cat <<'EOF' | oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- sqlplus / as sysdba || true
-            SELECT name FROM v$services WHERE name LIKE 'PR_%';
-            EXIT;
+              SELECT name FROM v$services WHERE name LIKE 'PR_%';
+              EXIT;
             EOF
             fi
 
