@@ -148,8 +148,8 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
           {/* Sampling option */}
           <Column sm={4} md={4} lg={8}>
             <ActiveMultiSelect
-              placeholder="Sampling Option"
-              titleText="Sampling Option"
+              placeholder="Sampling option"
+              titleText="Sampling option"
               id="as-sampling-multi-select"
               items={samplingOptions}
               itemToString={activeMSItemToString}
@@ -260,7 +260,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                   data-testid="start-date-picker-input-id"
                   id="as-start-date-picker-input-id"
                   size="md"
-                  labelText="Start Date"
+                  labelText="Start date"
                   placeholder="yyyy/mm/dd"
                 />
               </DatePicker>
@@ -280,7 +280,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                   data-testid="end-date-picker-input-id"
                   id="as-end-date-picker-input-id"
                   size="md"
-                  labelText="End Date"
+                  labelText="End date"
                   placeholder="yyyy/mm/dd"
                 />
               </DatePicker>

@@ -105,8 +105,8 @@ describe('WasteSearchTableExpandContent', () => {
 
       await waitFor(() => {
         expect(screen.getByText('License Number')).toBeDefined();
-        expect(screen.getByText('Cutting Permit')).toBeDefined();
-        expect(screen.getByText('Timber Mark')).toBeDefined();
+        expect(screen.getByText('Cutting permit')).toBeDefined();
+        expect(screen.getByText('Timber mark')).toBeDefined();
         expect(screen.getByText('Exempted (Yes/No)')).toBeDefined();
         expect(screen.getByText('Multi-mark (Yes/No)')).toBeDefined();
         expect(screen.getByText('Net area')).toBeDefined();
@@ -499,7 +499,7 @@ describe('WasteSearchTableExpandContent', () => {
         // Verify multiple fields are displayed
         expect(screen.getByText('License Number')).toBeDefined();
         expect(screen.getByText('LIC-12345')).toBeDefined();
-        expect(screen.getByText('Cutting Permit')).toBeDefined();
+        expect(screen.getByText('Cutting permit')).toBeDefined();
         expect(screen.getByText('CP-001')).toBeDefined();
         expect(screen.getByText('Total blocks in reporting unit: 5')).toBeDefined();
       });

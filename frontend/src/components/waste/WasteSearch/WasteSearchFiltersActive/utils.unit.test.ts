@@ -6,7 +6,7 @@ import { mapDisplayFilter } from './utils';
 describe('mapDisplayFilter', () => {
   it('returns correct display name for known keys', () => {
     expect(mapDisplayFilter('district')).toBe('District');
-    expect(mapDisplayFilter('sampling')).toBe('Sampling Option');
+    expect(mapDisplayFilter('sampling')).toBe('Sampling option');
     expect(mapDisplayFilter('status')).toBe('Assess area status');
     expect(mapDisplayFilter('requestByMe')).toBe('Created By Me');
     expect(mapDisplayFilter('multiMark')).toBe('Multi-mark blocks');
@@ -14,8 +14,8 @@ describe('mapDisplayFilter', () => {
     expect(mapDisplayFilter('updateDateStart')).toBe('Update Date Start');
     expect(mapDisplayFilter('updateDateEnd')).toBe('Update Date End');
     expect(mapDisplayFilter('licenseeId')).toBe('Licensee number');
-    expect(mapDisplayFilter('cuttingPermitId')).toBe('Cutting Permit');
-    expect(mapDisplayFilter('timberMark')).toBe('Timber Mark');
+    expect(mapDisplayFilter('cuttingPermitId')).toBe('Cutting permit');
+    expect(mapDisplayFilter('timberMark')).toBe('Timber mark');
     expect(mapDisplayFilter('clientLocationCode')).toBe('Client Location Code');
     expect(mapDisplayFilter('clientNumbers')).toBe('Client');
   });
