@@ -61,9 +61,9 @@ jobs:
 
               echo "Deleting Oracle service PR_$PR_NUMBER"
               cat <<EOF | oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- sqlplus / as sysdba || true
-            SET ECHO ON
-            SET FEEDBACK ON
-            SET SERVEROUTPUT ON
+              SET ECHO ON
+              SET FEEDBACK ON
+              SET SERVEROUTPUT ON
 
             BEGIN
               DBMS_SERVICE.DELETE_SERVICE(service_name => 'PR_${PR_NUMBER}');
