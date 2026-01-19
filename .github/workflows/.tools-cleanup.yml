@@ -60,13 +60,13 @@ jobs:
                 /opt/oracle/removeDatabase "THE" "PR_$PR_NUMBER" || true
 
               echo "Deleting Oracle service PR_$PR_NUMBER"
-              cat <<'EOF' | oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- sqlplus / as sysdba || true
+              cat <<EOF | oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- sqlplus / as sysdba || true
             SET ECHO ON
             SET FEEDBACK ON
             SET SERVEROUTPUT ON
 
             BEGIN
-              DBMS_SERVICE.DELETE_SERVICE(service_name => 'PR_'"$PR_NUMBER"');
+              DBMS_SERVICE.DELETE_SERVICE(service_name => 'PR_${PR_NUMBER}');
             EXCEPTION
               WHEN OTHERS THEN
                 DBMS_OUTPUT.PUT_LINE(SQLERRM);
@@ -78,7 +78,7 @@ jobs:
 
               echo "Remaining PR services:"
               cat <<'EOF' | oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- sqlplus / as sysdba || true
-            SELECT name FROM v\\$services WHERE name LIKE 'PR_%';
+            SELECT name FROM v$services WHERE name LIKE 'PR_%';
             EXIT;
             EOF
             fi
