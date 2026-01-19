@@ -497,7 +497,7 @@ describe('WasteSearchTableExpandContent', () => {
 
       await waitFor(() => {
         // Verify multiple fields are displayed
-        expect(screen.getByText('License Number')).toBeDefined();
+        expect(screen.getByText('Licence number')).toBeDefined();
         expect(screen.getByText('LIC-12345')).toBeDefined();
         expect(screen.getByText('Cutting permit')).toBeDefined();
         expect(screen.getByText('CP-001')).toBeDefined();
