@@ -10,7 +10,6 @@ jobs:
     name: Cleanup tools environment
     environment: tools
     runs-on: ubuntu-24.04
-
     steps:
       - name: Scale down legacy
         continue-on-error: true
@@ -20,82 +19,42 @@ jobs:
           oc_token: ${{ secrets.oc_token }}
           oc_server: ${{ secrets.oc_server }}
           commands: |
-            NS="${{ secrets.oc_namespace }}"
-            DEPLOYMENT="nr-waste-plus-${{ github.event.number }}-legacy"
+            oc scale deployment/nr-waste-plus-${{ github.event.number }}-legacy --replicas=0 -n ${{ secrets.OC_NAMESPACE }}
+            undesired_replicas=0
 
-            echo "Checking for legacy deployment $DEPLOYMENT in $NS..."
+            while true; do
+              available_replicas=$(oc get deployment/nr-waste-plus-${{ github.event.number }}-legacy -n ${{ secrets.OC_NAMESPACE }} -o jsonpath='{.status.availableReplicas}')
 
-            if oc get deployment "$DEPLOYMENT" -n "$NS" > /dev/null 2>&1; then
-              echo "Scaling $DEPLOYMENT to 0 replicas"
-              oc scale deployment "$DEPLOYMENT" --replicas=0 -n "$NS"
-            else
-              echo "Legacy deployment not found — skipping scale down"
-            fi
+              if [[ "$available_replicas" -ge "$undesired_replicas" ]]; then
+                echo "DeploymentConfig ${{ secrets.OC_NAMESPACE }}-${{ github.event.number }}-legacy is now available with $available_replicas replicas."
+                break
+              fi
 
-      - name: Remove PR database and Oracle service
+              echo "Waiting... ($available_replicas pods available)"
+              sleep 5
+            done
+
+      - name: Remove the PR database
         continue-on-error: true
-        uses: bcgov/action-oc-runner@f900830adadd4d9eef3ca6ff80103e839ba8b7c0 # v1.3.0
-        with:
-          oc_namespace: ${{ secrets.oc_namespace }}
-          oc_token: ${{ secrets.oc_token }}
-          oc_server: ${{ secrets.oc_server }}
-          commands: |
-            NS="${{ secrets.oc_namespace }}"
-            PR_NUMBER="${{ github.event.number }}"
-
-            echo "Locating Oracle DB pod..."
-            POD_NAME=$(oc get pods -n "$NS" \
-              -l app=nr-waste-plus-tools \
-              -l deployment=nr-waste-plus-tools-legacydb \
-              -o name | head -n1 | sed 's|pod/||')
-
-            if [ -z "$POD_NAME" ]; then
-              echo "WARNING: Oracle DB pod not found in namespace $NS. Skipping DB cleanup."
-              oc get pods -n "$NS"
+        run: |
+          # This removes a new pluggable database, user and service for the PR
+          for i in {1..5}; do
+            POD_NAME=$(oc get pods -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-legacydb -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+            if [ -n "$POD_NAME" ]; then
+              echo "Pod found: $POD_NAME"
+              oc exec $POD_NAME -- /opt/oracle/removeDatabase "THE" "PR_${{ github.event.number }}"
+              break
             else
-              echo "Using Oracle DB pod: $POD_NAME"
-
-              echo "Dropping PDB PR_$PR_NUMBER"
-              oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- \
-                /opt/oracle/removeDatabase "THE" "PR_$PR_NUMBER" || true
-
-              echo "Deleting Oracle service PR_$PR_NUMBER"
-              cat <<EOF | oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- sqlplus / as sysdba || true
-              SET ECHO ON
-              SET FEEDBACK ON
-              SET SERVEROUTPUT ON
-
-            BEGIN
-              DBMS_SERVICE.DELETE_SERVICE(service_name => 'PR_${PR_NUMBER}');
-            EXCEPTION
-              WHEN OTHERS THEN
-                DBMS_OUTPUT.PUT_LINE(SQLERRM);
-            END;
-            /
-            ALTER SYSTEM REGISTER;
-            EXIT;
-            EOF
-
-              echo "Remaining PR services:"
-              cat <<'EOF' | oc exec -n "$NS" "$POD_NAME" -c nr-waste-plus -- sqlplus / as sysdba || true
-              SELECT name FROM v$services WHERE name LIKE 'PR_%';
-              EXIT;
-            EOF
+              echo "Pod not found, retrying in 10 seconds... ($i/5)"
+              sleep 10
             fi
+          done
 
-      - name: Stop PR-specific CronJobs and clean PR resources
-        continue-on-error: true
-        uses: bcgov/action-oc-runner@f900830adadd4d9eef3ca6ff80103e839ba8b7c0 # v1.3.0
-        with:
-          oc_namespace: ${{ secrets.oc_namespace }}
-          oc_token: ${{ secrets.oc_token }}
-          oc_server: ${{ secrets.oc_server }}
-          commands: |
-            NS="${{ secrets.oc_namespace }}"
-            PR_NUMBER="${{ github.event.number }}"
+          if [ -z "$POD_NAME" ]; then
+            echo "Failed to find the pod after 5 attempts."
+          fi
 
-            echo "Deleting PR=$PR_NUMBER resources in $NS"
-
-            oc delete job -l pr="$PR_NUMBER" || true
-            oc delete pod -l pr="$PR_NUMBER" || true
-            oc delete all,pvc,secret,cm -l pr="$PR_NUMBER" || true
+      - name: Remove completed pods and jobs (cronjobs)
+        run: |
+          oc delete po --field-selector=status.phase==Succeeded
+          oc delete jobs --field-selector status.successful=1
