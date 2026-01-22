@@ -182,4 +182,41 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andReturn();
   }
 
+  @Test
+  @DisplayName("Should filter reporting units within date range")
+  void shouldFilterReportingUnitsWithinDateRange() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .param("page", "0")
+                .param("size", "10")
+                .param("dateStart", "2000-01-01")
+                .param("dateEnd", "2100-01-01")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.content.length()")
+            .value(org.hamcrest.Matchers.greaterThan(0)))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Should return no reporting units outside date range")
+  void shouldReturnNoReportingUnitsOutsideDateRange() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .param("page", "0")
+                .param("size", "10")
+                .param("dateStart", "1900-01-01")
+                .param("dateEnd", "1900-01-02")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.content.length()").value(0))
+        .andReturn();
+  }
+
 }
