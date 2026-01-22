@@ -46,66 +46,61 @@ public final class ReportingUnitQueryConstants {
 
   private static final String SEARCH_REPORTING_UNIT_WHERE = """
       WHERE
-         (
-            NVL(:#{#filter.mainSearchTerm},'NOVALUE') = 'NOVALUE' OR (
-              (
-                REGEXP_LIKE(:#{#filter.mainSearchTerm}, '^\\d+$')
-                AND wru.REPORTING_UNIT_ID = TO_NUMBER(:#{#filter.mainSearchTerm})
+          (
+              NVL(:#{#filter.mainSearchTerm}, 'NOVALUE') = 'NOVALUE'
+              OR (
+                  (
+                      REGEXP_LIKE(:#{#filter.mainSearchTerm}, '^\\d+$')
+                      AND wru.REPORTING_UNIT_ID = TO_NUMBER(:#{#filter.mainSearchTerm})
+                  )
+                  OR (
+                      waa.DRAFT_CUT_BLOCK_ID = :#{#filter.mainSearchTerm}
+                      OR waa.CUT_BLOCK_ID = :#{#filter.mainSearchTerm}
+                  )
               )
-             OR (
-                waa.DRAFT_CUT_BLOCK_ID = :#{#filter.mainSearchTerm}
-                OR waa.CUT_BLOCK_ID = :#{#filter.mainSearchTerm}
-              )
-           )
-         )
-         AND (
-               'NOVALUE' in (:#{#filter.district}) OR ou.ORG_UNIT_CODE IN (:#{#filter.district})
-           )
-         AND (
-               'NOVALUE' in (:#{#filter.sampling})
-               OR wru.waste_sampling_option_code IN (:#{#filter.sampling})
-           )
-         AND (
-               'NOVALUE' in (:#{#filter.status})
-               OR waa.WASTE_ASSESS_AREA_STS_CODE IN (:#{#filter.status})
-           )
-         AND (
-             NVL(:#{#filter.requestUserId},'NOVALUE') = 'NOVALUE'
-             OR wru.ENTRY_USERID = :#{#filter.requestUserId}
-           )
-         AND (
-             NVL(:#{#filter.licenseeId},'NOVALUE') = 'NOVALUE'
-             OR waa.FOREST_FILE_ID = :#{#filter.licenseeId}
-           )
-         AND (
-             NVL(:#{#filter.cuttingPermitId},'NOVALUE') = 'NOVALUE'
-             OR waa.DRAFT_CUTTING_PERMIT_ID = :#{#filter.cuttingPermitId}
-           )
-         AND (
-             NVL(:#{#filter.timberMark},'NOVALUE') = 'NOVALUE'
-             OR waa.draft_timber_mark = :#{#filter.timberMark}
-           )
-         AND (
-             'NOVALUE' in (:#{#filter.clientNumbers})
-             OR wru.CLIENT_NUMBER IN (:#{#filter.clientNumbers})
-           )
-         AND (
-            (
-              NVL(:#{#filter.dateStart},'NOVALUE') = 'NOVALUE'
-              AND NVL(:#{#filter.dateEnd},'NOVALUE') = 'NOVALUE'
-            )
-            OR
-            (
-              wru.update_timestamp IS NOT NULL AND
-              TO_DATE(to_char(wru.update_timestamp, 'YYYY-MM-DD'),'YYYY-MM-DD')
-              between TO_DATE(:#{#filter.updateDateStart},'YYYY-MM-DD')
-              AND TO_DATE(:#{#filter.updateDateEnd},'YYYY-MM-DD')
-            )
-         )
-         AND (
-          NVL(:#{#filter.multiMark}, 0) = 0
-          OR (NVL(:#{#filter.multiMark}, 0) = 1 AND waa.MULTI_MARK_IND = 'Y')
-         )
+          )
+          AND (
+              'NOVALUE' IN (:#{#filter.district})
+              OR ou.ORG_UNIT_CODE IN (:#{#filter.district})
+          )
+          AND (
+              'NOVALUE' IN (:#{#filter.sampling})
+              OR wru.waste_sampling_option_code IN (:#{#filter.sampling})
+          )
+          AND (
+              'NOVALUE' IN (:#{#filter.status})
+              OR waa.WASTE_ASSESS_AREA_STS_CODE IN (:#{#filter.status})
+          )
+          AND (
+              NVL(:#{#filter.requestUserId}, 'NOVALUE') = 'NOVALUE'
+              OR wru.ENTRY_USERID = :#{#filter.requestUserId}
+          )
+          AND (
+              NVL(:#{#filter.licenseeId}, 'NOVALUE') = 'NOVALUE'
+              OR waa.FOREST_FILE_ID = :#{#filter.licenseeId}
+          )
+          AND (
+              NVL(:#{#filter.cuttingPermitId}, 'NOVALUE') = 'NOVALUE'
+              OR waa.DRAFT_CUTTING_PERMIT_ID = :#{#filter.cuttingPermitId}
+          )
+          AND (
+              NVL(:#{#filter.timberMark}, 'NOVALUE') = 'NOVALUE'
+              OR waa.draft_timber_mark = :#{#filter.timberMark}
+          )
+          AND (
+              'NOVALUE' IN (:#{#filter.clientNumbers})
+              OR wru.CLIENT_NUMBER IN (:#{#filter.clientNumbers})
+          )
+          AND (
+              (:#{#filter.dateStart} = 'NOVALUE'
+                  OR TRUNC(wru.update_timestamp) >= TO_DATE(:#{#filter.dateStart}, 'YYYY-MM-DD'))
+              AND (:#{#filter.dateEnd} = 'NOVALUE'
+                  OR TRUNC(wru.update_timestamp) <= TO_DATE(:#{#filter.dateEnd}, 'YYYY-MM-DD'))
+          )
+          AND (
+              NVL(:#{#filter.multiMark}, 0) = 0
+              OR (NVL(:#{#filter.multiMark}, 0) = 1 AND waa.MULTI_MARK_IND = 'Y')
+          )
       """;
 
   public static final String SEARCH_REPORTING_UNIT_QUERY =
