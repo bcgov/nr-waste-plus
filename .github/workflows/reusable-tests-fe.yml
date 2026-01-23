@@ -40,7 +40,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y unzip
-      - uses: bcgov/action-test-and-analyse@ef62c54f099723b4714fa45fce178bf03ccee9ed
+      - uses: bcgov/action-test-and-analyse@5e1c5507e984c4007d33ff4714def6a06aa54871
         id: tests
         env:
           VITE_APP_NAME: Waste Plus
