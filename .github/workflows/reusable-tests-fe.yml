@@ -63,7 +63,9 @@ jobs:
           commands: |
             git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
             npm i
-            echo "Good enough for testing!"
+            npx playwright install-deps
+            npx playwright install
+            npm run test:coverage
           dir: frontend
           sonar_args: >
             -Dsonar.exclusions=**/*.test.ts,**/*.test.tsx,**/coverage/**,**/test-results/**,**/test-reports/**,**/node_modules/**,**/stub/**,**/reports/**,**/tests/**,**/vite-env.d.ts,**/types/**,**/*types.{ts,tsx},**/constants.{ts,tsx},**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx,**/playwright.config.ts
