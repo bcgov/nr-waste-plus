@@ -42,10 +42,13 @@ public final class ServiceConstants {
           Map.entry("cutBlockId", "cut_block_id"),
           Map.entry("client.code", CLIENT_NUMBER),
           Map.entry("client.description", CLIENT_NAME),
+          Map.entry("sampling", SAMPLING_CODE),
           Map.entry("sampling.code", SAMPLING_CODE),
           Map.entry("sampling.description", SAMPLING_CODE),
+          Map.entry("district", DISTRICT_CODE),
           Map.entry("district.code", DISTRICT_CODE),
           Map.entry("district.description", DISTRICT_CODE),
+          Map.entry("status", STATUS_CODE),
           Map.entry("status.code", STATUS_CODE),
           Map.entry("status.description", STATUS_CODE),
           Map.entry("lastUpdated", "last_updated")
