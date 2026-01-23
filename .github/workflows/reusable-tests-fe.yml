@@ -40,7 +40,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y unzip
-      - uses: bcgov/action-test-and-analyse@fix/restore-knip-json-validation
+      - uses: bcgov/action-test-and-analyse@25d52e6321853035146ccc6bd8d85b5410f1d071
         id: tests
         env:
           VITE_APP_NAME: Waste Plus
