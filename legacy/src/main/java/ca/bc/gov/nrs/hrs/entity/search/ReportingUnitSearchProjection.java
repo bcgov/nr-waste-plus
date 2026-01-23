@@ -29,6 +29,11 @@ public interface ReportingUnitSearchProjection {
    * Client (licensee) number.
    */
   String getClientNumber();
+  
+  /**
+   * Client (licensee) name.
+   */
+  String getClientName();
 
   /**
    * License number AKA Forest File ID.
