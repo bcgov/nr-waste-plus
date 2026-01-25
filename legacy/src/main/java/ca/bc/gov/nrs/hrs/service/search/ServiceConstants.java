@@ -18,6 +18,8 @@ public final class ServiceConstants {
 
   /* Database column name for client number field. */
   private static final String CLIENT_NUMBER = "client_number";
+  /* Database column/alias name for client name/description field. */
+  private static final String CLIENT_NAME = "client_name";
   /* Database column name for sampling code field. */
   private static final String SAMPLING_CODE = "sampling_code";
   /* Database column name for district code field. */
@@ -37,18 +39,18 @@ public final class ServiceConstants {
       Map.ofEntries(
           Map.entry("ruNumber", "ru_number"),
           Map.entry("blockId", "block_id"),
-          Map.entry("client", CLIENT_NUMBER),
-          Map.entry("clientNumber", CLIENT_NUMBER),
-          Map.entry("clientName", CLIENT_NUMBER),
+          Map.entry("cutBlockId", "cut_block_id"),
+          Map.entry("client.code", CLIENT_NUMBER),
+          Map.entry("client.description", CLIENT_NAME),
           Map.entry("sampling", SAMPLING_CODE),
-          Map.entry("samplingCode", SAMPLING_CODE),
-          Map.entry("samplingName", SAMPLING_CODE),
+          Map.entry("sampling.code", SAMPLING_CODE),
+          Map.entry("sampling.description", SAMPLING_CODE),
           Map.entry("district", DISTRICT_CODE),
-          Map.entry("districtCode", DISTRICT_CODE),
-          Map.entry("districtName", DISTRICT_CODE),
+          Map.entry("district.code", DISTRICT_CODE),
+          Map.entry("district.description", DISTRICT_CODE),
           Map.entry("status", STATUS_CODE),
-          Map.entry("statusCode", STATUS_CODE),
-          Map.entry("statusName", STATUS_CODE),
+          Map.entry("status.code", STATUS_CODE),
+          Map.entry("status.description", STATUS_CODE),
           Map.entry("lastUpdated", "last_updated")
       );
 
@@ -63,7 +65,7 @@ public final class ServiceConstants {
       Map.ofEntries(
           Map.entry("client", CLIENT_NUMBER),
           Map.entry("clientNumber", CLIENT_NUMBER),
-          Map.entry("clientName", CLIENT_NUMBER),
+          Map.entry("clientName", CLIENT_NAME),
           Map.entry("submissionsCount", "submissions_count"),
           Map.entry("blocksCount", "blocks_count"),
           Map.entry("lastUpdate", "last_update")

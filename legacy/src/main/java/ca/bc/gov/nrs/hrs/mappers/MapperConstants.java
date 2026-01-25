@@ -40,10 +40,10 @@ public class MapperConstants {
 
   /**
    * MapStruct expression to create a {@code CodeDescriptionDto} from the projection's client
-   * number. The display name is intentionally null in this expression.
+   * number and client name.
    */
   public static final String CLIENT_AS_DTO =
-      "java(new CodeDescriptionDto(projection.getClientNumber(), null))";
+      "java(new CodeDescriptionDto(projection.getClientNumber(), projection.getClientName()))";
 
   /**
    * MapStruct expression to create a {@code CodeDescriptionDto} from the projection's attachment.
