@@ -213,18 +213,18 @@
       <version>${wiremock.version}</version>
       <scope>test</scope>
     </dependency>
-    
+
     <dependency>
-	  <groupId>ch.qos.logback</groupId>
-	  <artifactId>logback-core</artifactId>
-	  <version>${logback.version}</version>
-	</dependency>
-	
-	<dependency>
-	  <groupId>ch.qos.logback</groupId>
-	  <artifactId>logback-classic</artifactId>
-	  <version>${logback.version}</version>
-	</dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <version>${logback.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>${logback.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-aspectj-test</artifactId>
