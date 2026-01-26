@@ -42,7 +42,7 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
   {
     key: 'ruNumber',
     header: 'RU No.',
-    sortable: false,
+    sortable: true,
     selected: true,
     renderAs: (value) => (
       <DefinitionTooltip definition={'Go to RU details'} align="top" openOnHover>
