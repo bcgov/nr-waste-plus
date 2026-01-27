@@ -1,4 +1,4 @@
-FROM node:24.12-bullseye-slim AS build
+FROM node:24.13-bullseye-slim AS build
 
 # Build static files
 WORKDIR /app
