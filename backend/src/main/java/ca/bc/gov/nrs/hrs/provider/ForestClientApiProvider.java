@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.hrs.provider;
 
 import ca.bc.gov.nrs.hrs.BackendConstants;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
-import ca.bc.gov.nrs.hrs.dto.client.ForestClientLocationDto;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.RetriableException;
 import ca.bc.gov.nrs.hrs.exception.TooManyRequestsException;
@@ -26,8 +25,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClient;
 
 /**

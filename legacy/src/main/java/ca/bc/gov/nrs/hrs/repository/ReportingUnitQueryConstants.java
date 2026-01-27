@@ -52,7 +52,7 @@ public final class ReportingUnitQueryConstants {
         ON waasc.WASTE_ASSESS_AREA_STS_CODE = waa.WASTE_ASSESS_AREA_STS_CODE
       LEFT JOIN ORG_UNIT ou
         ON ou.ORG_UNIT_NO = wru.ORG_UNIT_NO
-      LEFT JOIN FOREST_CLIENT fc
+      LEFT JOIN V_CLIENT_PUBLIC fc
         ON fc.CLIENT_NUMBER = wru.CLIENT_NUMBER
       """;
 
