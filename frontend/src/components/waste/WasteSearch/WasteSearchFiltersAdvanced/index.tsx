@@ -188,7 +188,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 }
                 itemToString={(item) => {
                   if (!item) return '';
-                  const { id, name, acronym } = item as ForestClientAutocompleteResultDto;
+                  const { id, name, acronym } = item;
                   return `${id} ${name}${acronym ? ` (${acronym})` : ''}`;
                 }}
                 onSelect={(data) => {
