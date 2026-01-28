@@ -8,16 +8,30 @@ import WasteSearchFiltersAdvanced from './index';
 
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import APIs from '@/services/APIs';
 
 vi.mock('@/services/APIs', () => {
   return {
     default: {
       forestclient: {
         getForestClientLocations: vi.fn(),
+        searchForestClients: vi.fn(),
       },
     },
   };
 });
+
+vi.mock('@/context/auth/useAuth', () => ({
+  useAuth: () => ({
+    user: { idpProvider: 'IDIR' },
+    isLoggedIn: true,
+    isLoading: false,
+    login: vi.fn(),
+    logout: vi.fn(),
+    userToken: vi.fn(),
+    getClients: () => [],
+  }),
+}));
 
 const defaultFilters = {
   mainSearchTerm: '',
@@ -165,5 +179,41 @@ describe('WasteSearchFiltersActive', () => {
 
     expect(onChange).toHaveBeenCalledWith('updateDateEnd');
     expect(innerFn).toHaveBeenCalledWith('2020-02-10');
+  });
+
+  it('renders forest client autocomplete options without null acronym', async () => {
+    const searchForestClientsMock = APIs.forestclient.searchForestClients as any;
+
+    searchForestClientsMock.mockResolvedValueOnce([
+      {
+        id: '123',
+        name: 'Some Client',
+        acronym: null,
+      },
+    ]);
+
+    vi.useFakeTimers();
+
+    await renderWithProps({});
+
+    const clientBox = screen.getByRole('combobox', { name: /Client/i });
+    expect(clientBox).toBeDefined();
+
+    await userEvent.type(clientBox, 'so');
+
+    await act(async () => {
+      vi.advanceTimersByTime(400);
+    });
+
+    const toggleButton = clientBox.parentElement?.querySelector('button');
+    if (toggleButton) {
+      await userEvent.click(toggleButton as HTMLButtonElement);
+    }
+
+    const option = await screen.findByText('123 Some Client');
+    expect(option).toBeDefined();
+    expect(screen.queryByText('123 Some Client (null)')).toBeNull();
+
+    vi.useRealTimers();
   });
 });
