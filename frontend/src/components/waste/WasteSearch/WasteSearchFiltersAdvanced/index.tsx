@@ -186,11 +186,11 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 onAutoCompleteChange={async (value) =>
                   await APIs.forestclient.searchForestClients(value, 0, 10)
                 }
-                itemToString={(item) =>
-                  item
-                    ? `${(item as ForestClientAutocompleteResultDto).id} ${(item as ForestClientAutocompleteResultDto).name} (${(item as ForestClientAutocompleteResultDto).acronym})`
-                    : ''
-                }
+                itemToString={(item) => {
+                  if (!item) return '';
+                  const { id, name, acronym } = item as ForestClientAutocompleteResultDto;
+                  return `${id} ${name}${acronym ? ` (${acronym})` : ''}`;
+                }}
                 onSelect={(data) => {
                   if (data) {
                     onChange('clientNumbers')([
