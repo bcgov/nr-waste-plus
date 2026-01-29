@@ -36,8 +36,8 @@ const statusColorMap: Record<string, CarbonColors> = {
 export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
   { key: 'cutBlockId', header: 'Block ID', sortable: true, selected: true },
   { key: 'licenseNumber', header: 'License No.', sortable: true, selected: false },
-  { key: 'cuttingPermit', header: 'CP - Cutting permit', sortable: true, selected: false },
-  { key: 'timberMark', header: 'TM - Timber mark', sortable: true, selected: false },
+  { key: 'cuttingPermit', header: 'Cutting permit', sortable: true, selected: false },
+  { key: 'timberMark', header: 'Timber mark', sortable: true, selected: false },
 
   {
     key: 'ruNumber',
