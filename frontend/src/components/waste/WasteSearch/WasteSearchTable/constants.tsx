@@ -108,7 +108,7 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     ),
   },
   { key: 'status.code', header: 'Status code', sortable: true },
-  { key: 'status.description', header: 'Status Name', sortable: true },
+  { key: 'status.description', header: 'Status name', sortable: true },
 
   {
     key: 'lastUpdated',
