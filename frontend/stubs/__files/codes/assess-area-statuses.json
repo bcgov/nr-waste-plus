@@ -25,7 +25,7 @@
   },
   {
     "code": "FREJ",
-    "description": "Field Rejected"
+    "description": "Field rejected"
   },
   {
     "code": "HLD",
@@ -41,7 +41,7 @@
   },
   {
     "code": "OREJ",
-    "description": "Office Rejected"
+    "description": "Office rejected"
   },
   {
     "code": "RBL",
@@ -57,6 +57,6 @@
   },
   {
     "code": "WRA",
-    "description": "Waste Relief Approved"
+    "description": "Waste relief approved"
   }
 ]

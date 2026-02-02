@@ -68,21 +68,21 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
       </DefinitionTooltip>
     ),
   },
-  { key: 'client.description', header: 'Client Name', sortable: true, selected: true },
+  { key: 'client.description', header: 'Client name', sortable: true, selected: true },
 
   {
     key: 'sampling',
-    header: 'Sampling Option',
+    header: 'Sampling option',
     sortable: true,
     selected: true,
     renderAs: (value) => <CodeDescriptionTag value={value as CodeDescriptionDto} />,
   },
-  { key: 'sampling.code', header: 'Sampling Code', sortable: true },
-  { key: 'sampling.description', header: 'Sampling Name', sortable: true },
+  { key: 'sampling.code', header: 'Sampling code', sortable: true },
+  { key: 'sampling.description', header: 'Sampling name', sortable: true },
 
   {
     key: 'multiMark',
-    header: 'Multi-Mark (Y/N)',
+    header: 'Multi-mark (Y/N)',
     sortable: true,
     selected: false,
     renderAs: (value) => <YesNoTag value={value as string | boolean | number | null | undefined} />,
@@ -95,8 +95,8 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     selected: true,
     renderAs: (value) => <CodeDescriptionTag value={value as CodeDescriptionDto} />,
   },
-  { key: 'district.code', header: 'District Code', sortable: true },
-  { key: 'district.description', header: 'District Name', sortable: true },
+  { key: 'district.code', header: 'District code', sortable: true },
+  { key: 'district.description', header: 'District name', sortable: true },
 
   {
     key: 'status',
@@ -107,12 +107,12 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
       <ColorTag value={value as { code: string; description: string }} colorMap={statusColorMap} />
     ),
   },
-  { key: 'status.code', header: 'Status Code', sortable: true },
+  { key: 'status.code', header: 'Status code', sortable: true },
   { key: 'status.description', header: 'Status Name', sortable: true },
 
   {
     key: 'lastUpdated',
-    header: 'Last Updated',
+    header: 'Last updated',
     sortable: true,
     selected: true,
     renderAs: (value) => <DateTag date={value as string} />,
