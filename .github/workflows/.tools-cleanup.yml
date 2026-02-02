@@ -8,7 +8,6 @@ permissions: {}
 jobs:
   tools-cleanup:
     name: Cleanup tools environment
-    environment: tools
     runs-on: ubuntu-24.04
     steps:
       - name: Scale down legacy
