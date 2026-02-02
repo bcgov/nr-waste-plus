@@ -114,17 +114,3 @@ echo "[removeDatabase] Post-drop cleanup complete. Current disk usage:"
 df -h || true
 
 # --- End: Automated cleanup ---
-
-# Then remove the PDB
-if [ -n "${PDB_TO_REMOVE}" ]; then
-  sqlplus -s / as sysdba <<EOF
-     -- Exit on any errors
-     WHENEVER SQLERROR EXIT SQL.SQLCODE
-
-     SELECT name FROM v\$services ORDER BY name;
-
-     ALTER PLUGGABLE DATABASE ${PDB_TO_REMOVE} CLOSE IMMEDIATE;
-     DROP PLUGGABLE DATABASE ${PDB_TO_REMOVE} INCLUDING DATAFILES;
-     exit;
-EOF
-fi;
