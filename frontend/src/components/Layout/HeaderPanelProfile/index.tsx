@@ -35,14 +35,14 @@ const HeaderPanelProfile: FC = () => {
       </div>
       <SideNavDivider />
       <nav className="account-nav">
+        <Tooltip label={tooltipText}>
+          <div className="panel-section-light">
+            <span>Select {entityType}</span>
+            <Help aria-label={`Help: About selecting a default ${entityType}`} tabIndex={0} />
+          </div>
+        </Tooltip>
         <ul>
           <li className="district-panel">
-            <Tooltip label={tooltipText}>
-              <div className="panel-section-light">
-                <span>Select {entityType}</span>
-                <Help aria-label={`Help: About selecting a default ${entityType}`} tabIndex={0} />
-              </div>
-            </Tooltip>
             <div className="district-selection-container">
               {user?.idpProvider === 'BCEIDBUSINESS' ? <ClientListing /> : <DistrictListing />}
             </div>
