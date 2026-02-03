@@ -102,8 +102,8 @@ describe('WasteSearchFiltersActive', () => {
     const innerFn = vi.fn();
     onChange.mockReturnValue(innerFn);
     const samplingOptions = [
-      { code: 'A', description: 'Sampling Option: A' },
-      { code: 'B', description: 'Sampling Option: B' },
+      { code: 'A', description: 'Sampling option: A' },
+      { code: 'B', description: 'Sampling option: B' },
     ];
 
     await renderWithProps({ samplingOptions, onChange });
@@ -117,9 +117,9 @@ describe('WasteSearchFiltersActive', () => {
 
     await userEvent.click(samplingButton as HTMLButtonElement);
 
-    expect(screen.getByText('A - Sampling Option: A')).toBeDefined();
+    expect(screen.getByText('A - Sampling option: A')).toBeDefined();
 
-    await userEvent.click(screen.getByText('A - Sampling Option: A'));
+    await userEvent.click(screen.getByText('A - Sampling option: A'));
 
     expect(onChange).toHaveBeenCalledWith('sampling');
     expect(innerFn).toHaveBeenCalledWith(['A']);

@@ -6,7 +6,7 @@ import { mapDisplayFilter } from './utils';
 describe('mapDisplayFilter', () => {
   it('returns correct display name for known keys', () => {
     expect(mapDisplayFilter('district')).toBe('District');
-    expect(mapDisplayFilter('sampling')).toBe('Sampling Option');
+    expect(mapDisplayFilter('sampling')).toBe('Sampling option');
     expect(mapDisplayFilter('status')).toBe('Assess area status');
     expect(mapDisplayFilter('requestByMe')).toBe('Created By Me');
     expect(mapDisplayFilter('multiMark')).toBe('Multi-mark blocks');

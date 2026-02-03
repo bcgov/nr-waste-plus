@@ -14,8 +14,8 @@ vi.mock('@/services/APIs', () => ({
   default: {
     codes: {
       getSamplingOptions: vi.fn().mockResolvedValue([
-        { code: 'A', description: 'Sampling Option: A' },
-        { code: 'B', description: 'Sampling Option: B' },
+        { code: 'A', description: 'Sampling option: A' },
+        { code: 'B', description: 'Sampling option: B' },
       ]),
       getDistricts: vi.fn().mockResolvedValue([
         { code: 'A', description: 'District: A' },
@@ -118,7 +118,7 @@ describe('WasteSearchFilters', () => {
 
     expect(samplingButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(samplingButton as HTMLButtonElement);
-    expect(screen.getByText('A - Sampling Option: A')).toBeDefined();
+    expect(screen.getByText('A - Sampling option: A')).toBeDefined();
 
     expect(districtButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(districtButton as HTMLButtonElement);
@@ -150,7 +150,7 @@ describe('WasteSearchFilters', () => {
     expect(samplingButton).toBeDefined();
     expect(samplingButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(samplingButton as HTMLButtonElement);
-    await userEvent.click(screen.getByText('A - Sampling Option: A'));
+    await userEvent.click(screen.getByText('A - Sampling option: A'));
     await waitFor(() => expect(onChange).toHaveBeenCalled());
   });
 });

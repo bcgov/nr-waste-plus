@@ -55,16 +55,16 @@ test.describe('My Client List Page', () => {
 
   test('should allow column selection', async ({ page }) => {
     // This column is visible / exists in the default columns
-    await expect(page.getByRole('columnheader', { name: 'Client Name' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Client name' })).toBeVisible();
 
     const columnSelector = page.getByRole('button', { name: 'Edit columns' });
     await columnSelector.click();
 
-    const addressOption = page.locator('#overflow-menu-1__menu-body').getByText('Client Name');
+    const addressOption = page.locator('#overflow-menu-1__menu-body').getByText('Client name');
     await addressOption.click();
 
     // This column is visible / exists in the default columns
-    await expect(page.getByRole('columnheader', { name: 'Client Name' })).not.toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Client name' })).not.toBeVisible();
   });
 
   test('filter OAK HERITAGE LTD.', async ({ page }) => {

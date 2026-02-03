@@ -5,7 +5,7 @@ export const mapDisplayFilter = (key: keyof ReportingUnitSearchParametersDto): s
     case 'district':
       return 'District';
     case 'sampling':
-      return 'Sampling Option';
+      return 'Sampling option';
     case 'status':
       return 'Assess area status';
     case 'requestByMe':

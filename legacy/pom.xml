@@ -605,6 +605,26 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <groupId>org.cyclonedx</groupId>
+        <artifactId>cyclonedx-maven-plugin</artifactId>
+        <version>2.9.1</version>
+        <executions>
+          <execution>
+            <phase>validate</phase>
+            <goals>
+              <goal>makeAggregateBom</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <skip>${checkstyle.skip}</skip>
+          <projectType>application</projectType>
+          <outputFormat>all</outputFormat>
+          <outputName>bom</outputName>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
