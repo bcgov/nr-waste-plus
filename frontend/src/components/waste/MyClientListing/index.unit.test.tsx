@@ -431,7 +431,7 @@ describe('MyClientListing', () => {
       await waitFor(() => {
         // Check headers
         expect(screen.getByText('Client No.')).toBeDefined();
-        expect(screen.getByText('Client Name')).toBeDefined();
+        expect(screen.getByText('Client name')).toBeDefined();
         expect(screen.getByText('Submission Count')).toBeDefined();
         expect(screen.getByText('Draft Block Count')).toBeDefined();
         expect(screen.getByText('Last Update')).toBeDefined();

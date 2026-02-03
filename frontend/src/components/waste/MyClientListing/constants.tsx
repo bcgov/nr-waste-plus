@@ -18,7 +18,7 @@ export const headers: TableHeaderType<MyForestClientDto>[] = [
       />
     ),
   },
-  { key: 'client.description', header: 'Client Name', sortable: true, selected: true },
+  { key: 'client.description', header: 'Client name', sortable: true, selected: true },
   { key: 'submissionsCount', header: 'Submission Count', sortable: false, selected: true },
   { key: 'blocksCount', header: 'Draft Block Count', sortable: false, selected: true },
   {

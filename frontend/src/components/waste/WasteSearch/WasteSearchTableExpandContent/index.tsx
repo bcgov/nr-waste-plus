@@ -39,7 +39,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
     <Grid>
       <Column lg={2} md={8} sm={4}>
         <ReadonlyInput
-          label="License Number"
+          label="Licence number"
           id={`${rowId}-license-number`}
           isNumber={false}
           showSkeleton={isLoading}
