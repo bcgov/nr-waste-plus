@@ -78,11 +78,11 @@
 
     .panel-section,
     .panel-section-light {
-      height: 3rem;
       display: flex;
       flex-direction: row;
       align-items: center;
-      padding: 0.94rem 1rem;
+      padding: 1rem;
+      padding-bottom: 0;
       background: var(--#{vars.$bcgov-prefix}-background-left-panel);
     }
 
