@@ -1,5 +1,5 @@
 import { Exit, Help } from '@carbon/icons-react';
-import { SideNavLink, Tooltip } from '@carbon/react';
+import { SideNavDivider, SideNavLink, Tooltip } from '@carbon/react';
 import { type FC } from 'react';
 
 import ClientListing from '@/components/core/DistrictSelection/ClientListing';
@@ -33,7 +33,7 @@ const HeaderPanelProfile: FC = () => {
           <p>{`Email: ${user?.email}`}</p>
         </div>
       </div>
-      <hr className="divisory" />
+      <SideNavDivider />
       <nav className="account-nav">
         <ul>
           <li className="district-panel">
@@ -47,6 +47,8 @@ const HeaderPanelProfile: FC = () => {
               {user?.idpProvider === 'BCEIDBUSINESS' ? <ClientListing /> : <DistrictListing />}
             </div>
           </li>
+
+          <SideNavDivider />
 
           <SideNavLink className="cursor-pointer" renderIcon={Exit} onClick={logout}>
             Log out

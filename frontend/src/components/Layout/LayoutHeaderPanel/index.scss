@@ -7,6 +7,7 @@
 @use '@carbon/type';
 
 .profile-panel {
+  height: calc(100vh - 3rem);
   max-inline-size: 25rem !important;
   inline-size: auto;
   background-color: var(--#{vars.$bcgov-prefix}-layer-02);
