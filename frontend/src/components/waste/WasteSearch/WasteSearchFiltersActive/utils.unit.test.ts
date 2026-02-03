@@ -14,8 +14,8 @@ describe('mapDisplayFilter', () => {
     expect(mapDisplayFilter('updateDateStart')).toBe('Update Date Start');
     expect(mapDisplayFilter('updateDateEnd')).toBe('Update Date End');
     expect(mapDisplayFilter('licenseeId')).toBe('Licensee number');
-    expect(mapDisplayFilter('cuttingPermitId')).toBe('Cutting permit');
-    expect(mapDisplayFilter('timberMark')).toBe('Timber mark');
+    expect(mapDisplayFilter('cuttingPermitId')).toBe('Cutting Permit');
+    expect(mapDisplayFilter('timberMark')).toBe('Timber Mark');
     expect(mapDisplayFilter('clientLocationCode')).toBe('Client Location Code');
     expect(mapDisplayFilter('clientNumbers')).toBe('Client');
   });

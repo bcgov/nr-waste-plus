@@ -54,7 +54,7 @@ const ColorTag: FC<ColorTagProps> = ({ value, colorMap }) => {
   const shouldUseDefault = !value || (!hasCode && !hasDescription);
 
   // If value is null or both code and description are null/empty, default to N/A
-  const actualValue = shouldUseDefault ? { code: 'N/A', description: 'Not applicable' } : value;
+  const actualValue = shouldUseDefault ? { code: 'N/A', description: 'Not Applicable' } : value;
 
   const finalHasCode = Boolean(actualValue.code?.trim());
   const finalHasDescription = Boolean(actualValue.description?.trim());

@@ -300,27 +300,27 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
             />
           </Column>
 
-          {/* Cutting permit */}
+          {/* Cutting Permit */}
           <Column sm={4} md={4} lg={8}>
             <TextInput
               className="advanced-text-input"
               id="as-cutting-permit-text-input"
               type="text"
-              labelText="Cutting permit"
+              labelText="Cutting Permit"
               defaultValue={filters.cuttingPermitId || ''}
               onBlur={onTextChange('cuttingPermitId')}
               maxLength={MAX_TEXT_INPUT_LEN}
             />
           </Column>
 
-          {/* Timber mark */}
+          {/* Timber Mark */}
           <Column sm={4} md={4} lg={8}>
             <TextInput
               className="advanced-text-input"
               id="as-timber-mark-text-input"
               data-testid="timber-mark-text-input"
               type="text"
-              labelText="Timber mark"
+              labelText="Timber Mark"
               defaultValue={filters.timberMark || ''}
               onBlur={onTextChange('timberMark')}
               maxLength={MAX_TEXT_INPUT_LEN}

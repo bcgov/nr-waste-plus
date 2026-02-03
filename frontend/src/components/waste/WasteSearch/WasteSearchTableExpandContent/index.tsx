@@ -49,7 +49,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
       </Column>
       <Column lg={2} md={8} sm={4}>
         <ReadonlyInput
-          label="Cutting permit"
+          label="Cutting Permit"
           id={`${rowId}-cutting-permit`}
           isNumber={false}
           showSkeleton={isLoading}
@@ -59,7 +59,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
       </Column>
       <Column lg={2} md={8} sm={4}>
         <ReadonlyInput
-          label="Timber mark"
+          label="Timber Mark"
           id={`${rowId}-timber-mark`}
           isNumber={false}
           showSkeleton={isLoading}

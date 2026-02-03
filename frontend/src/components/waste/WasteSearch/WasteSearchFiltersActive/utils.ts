@@ -21,9 +21,9 @@ export const mapDisplayFilter = (key: keyof ReportingUnitSearchParametersDto): s
     case 'licenseeId':
       return 'Licensee number';
     case 'cuttingPermitId':
-      return 'Cutting permit';
+      return 'Cutting Permit';
     case 'timberMark':
-      return 'Timber mark';
+      return 'Timber Mark';
     case 'clientLocationCode':
       return 'Client Location Code';
     case 'clientNumbers':
