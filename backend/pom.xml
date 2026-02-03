@@ -85,7 +85,6 @@
     <commons-lang3.version>3.20.0</commons-lang3.version>
     <resilience4j.version>2.3.0</resilience4j.version>
     <wiremock.version>3.13.2</wiremock.version>
-    <logback.version>1.5.26</logback.version>
   </properties>
 
   <dependencies>
@@ -213,18 +212,7 @@
       <version>${wiremock.version}</version>
       <scope>test</scope>
     </dependency>
-
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-      <version>${logback.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>${logback.version}</version>
-    </dependency>
+    
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-aspectj-test</artifactId>
