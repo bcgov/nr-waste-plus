@@ -66,10 +66,7 @@ public final class ReportingUnitQueryConstants {
             )
             OR (
               waa.DRAFT_CUT_BLOCK_ID = :#{#filter.mainSearchTerm}
-              OR (
-                COALESCE(waa.CUT_BLOCK_ID, waa.DRAFT_CUT_BLOCK_ID) IS NOT NULL
-                AND waa.CUT_BLOCK_ID = :#{#filter.mainSearchTerm}
-              )
+              OR waa.CUT_BLOCK_ID = :#{#filter.mainSearchTerm}
             )
           )
         )
