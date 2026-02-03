@@ -36,8 +36,7 @@
   }
 
   .user-name {
-    // @include font-weight(semibold);
-    @include type.type-style('body-01');
+    @include font-weight(semibold);
   }
 
   .divisory {

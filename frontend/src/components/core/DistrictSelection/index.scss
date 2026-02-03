@@ -13,7 +13,6 @@
   height: 100%;
 
   .full-width-col {
-    // margin: 0 -0.2rem; // source of issue with the width
     overflow-y: auto;
     display: flex;
   }
@@ -21,9 +20,6 @@
   .district-list {
     list-style: none;
     overflow-y: auto;
-    // height: 65vh;
-    // max-height: 31.875rem;
-    // max-height: 31rem;
     max-height: 23.875rem;
 
     .district-list-item {
