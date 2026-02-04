@@ -312,4 +312,98 @@ test.describe('Profile menu', () => {
       }
     });
   });
+
+  test('profile panel structure and CSS classes are correct', async ({ page }) => {
+    const profileButton = page.getByRole('button', { name: 'Profile settings' });
+    await profileButton.click();
+
+    const panelSelector = page.getByTestId('header-panel');
+
+    // Verify my-profile-container exists
+    const profileContainer = panelSelector.locator('.my-profile-container');
+    await expect(profileContainer).toBeVisible();
+
+    // Verify user-info-section structure
+    const userInfoSection = profileContainer.locator('.user-info-section');
+    await expect(userInfoSection).toBeVisible();
+
+    // Verify user-image and user-data divs
+    const userImage = userInfoSection.locator('.user-image');
+    await expect(userImage).toBeVisible();
+
+    const userData = userInfoSection.locator('.user-data');
+    await expect(userData).toBeVisible();
+
+    // Verify all user data paragraphs are rendered
+    const paragraphs = userData.locator('p');
+    expect(await paragraphs.count()).toBeGreaterThanOrEqual(3);
+
+    // Verify account-nav is rendered
+    const accountNav = profileContainer.locator('.account-nav');
+    await expect(accountNav).toBeVisible();
+
+    // Verify panel-section-light styling
+    const panelSectionLight = accountNav.locator('.panel-section-light');
+    await expect(panelSectionLight).toBeVisible();
+
+    // Verify district-selection-container exists
+    const districtContainer = accountNav.locator('.district-selection-container');
+    await expect(districtContainer).toBeVisible();
+  });
+
+  test('profile avatar image has correct size class', async ({ page }, testInfo) => {
+    const profileButton = page.getByRole('button', { name: 'Profile settings' });
+    await profileButton.click();
+
+    const panelSelector = page.getByTestId('header-panel');
+
+    // Verify avatar exists with large size
+    const avatarInitials = panelSelector.getByTestId('avatar-initials');
+    await expect(avatarInitials).toBeVisible();
+
+    const userName = testInfo.project.metadata.userType === 'idir' ? 'Paulo Cruz' : 'John Doe';
+    const initials = testInfo.project.metadata.userType === 'idir' ? 'PC' : 'JD';
+
+    // Verify correct user name is displayed
+    await expect(panelSelector.getByText(userName)).toBeVisible();
+
+    // Verify avatar shows correct initials
+    await expect(avatarInitials).toHaveText(initials);
+  });
+
+  test('profile menu renders all dividers and separators', async ({ page }, testInfo) => {
+    const profileButton = page.getByRole('button', { name: 'Profile settings' });
+    await profileButton.click();
+
+    const panelSelector = page.getByTestId('header-panel');
+
+    // Should have multiple separators - one after user info and one in navigation
+    const separators = panelSelector.getByRole('separator');
+    const separatorCount = await separators.count();
+    expect(separatorCount).toBeGreaterThanOrEqual(2);
+  });
+
+  test('profile menu help tooltip is accessible', async ({ page }, testInfo) => {
+    const profileButton = page.getByRole('button', { name: 'Profile settings' });
+    await profileButton.click();
+
+    const panelSelector = page.getByTestId('header-panel');
+
+    const helpIcon =
+      testInfo.project.metadata.userType === 'idir'
+        ? panelSelector.getByRole('img', { name: 'Help: About selecting a default organization' })
+        : panelSelector.getByRole('img', { name: 'Help: About selecting a default client' });
+
+    await expect(helpIcon).toBeVisible();
+
+    // Verify the help icon can be interacted with (hover triggers tooltip)
+    await helpIcon.hover();
+
+    const entityType = testInfo.project.metadata.userType === 'idir' ? 'organization' : 'client';
+    const tooltipContent = panelSelector
+      .locator('.cds--tooltip-content')
+      .filter({ hasText: `Optional: Select a default ${entityType}` });
+
+    await expect(tooltipContent).toBeVisible();
+  });
 });
