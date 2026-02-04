@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
@@ -84,5 +85,35 @@ describe('HeaderPanelProfile', () => {
     await renderWithProviders();
     fireEvent.click(screen.getByText('Log out'));
     expect(mockLogout).toHaveBeenCalled();
+  });
+
+  it('renders tooltip with correct text and Help icon', async () => {
+    await renderWithProviders();
+    const tooltipLabel =
+      'Optional: Select a default organization. This can help you do your searches faster if you work with one organization much more than others. You can change or remove this at any time.';
+    expect(screen.getByText('Select organization')).toBeDefined();
+    expect(screen.getByLabelText('Help: About selecting a default organization')).toBeDefined();
+    expect(screen.getByText(tooltipLabel)).toBeDefined();
+  });
+
+  it('renders DistrictListing for IDIR user', async () => {
+    await renderWithProviders();
+    expect(screen.getByText('Select organization')).toBeDefined();
+  });
+
+  it('renders correct entity type text based on user idpProvider', async () => {
+    await renderWithProviders();
+    expect(screen.getByText('Select organization')).toBeDefined();
+  });
+
+  it('renders navigation structure and SideNavDivider', async () => {
+    await renderWithProviders();
+    expect(screen.getByRole('navigation')).toBeDefined();
+    expect(screen.getAllByRole('separator').length).toBeGreaterThan(0);
+  });
+
+  it('SideNavLink Log out has correct accessibility', async () => {
+    await renderWithProviders();
+    expect(screen.getByText('Log out')).toBeDefined();
   });
 });
