@@ -371,7 +371,7 @@ test.describe('Profile menu', () => {
     await expect(avatarInitials).toHaveText(initials);
   });
 
-  test('profile menu renders all dividers and separators', async ({ page }, testInfo) => {
+  test('profile menu renders all dividers and separators', async ({ page }) => {
     const profileButton = page.getByRole('button', { name: 'Profile settings' });
     await profileButton.click();
 
