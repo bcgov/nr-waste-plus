@@ -95,7 +95,7 @@ test.describe('Waste Search Page', () => {
       await expect(title).toBeVisible();
 
       // Verify the subtitle is present
-      const subtitle = page.getByText('Search for reporting units, licensees, or blocks');
+      const subtitle = page.getByText('Search for reporting units, licencees, or blocks');
       await expect(subtitle).toBeVisible();
     });
 
@@ -306,16 +306,16 @@ test.describe('Waste Search Page', () => {
       const expandButton = page.locator('button[aria-label*="Expand"]').first();
       await expandButton.click();
 
-      await page.waitForLoadState('networkidle');
-
       // Verify all fields are displayed
-      await expect(page.getByTestId('card-item-content-license-number')).toHaveText('A97537'); // licenseNo
+      await expect(page.getByTestId('card-item-content-licence-number')).toHaveText('A97537'); // licenceNo
       await expect(page.getByTestId('card-item-content-cutting-permit')).toHaveText('R02'); // cuttingPermit
       await expect(page.getByTestId('card-item-content-timber-mark')).toHaveText('HK4C02'); // timberMark
       await expect(page.getByTestId('card-item-content-exempted-(yes/no)')).toHaveText('No'); // exempted (false)
       await expect(page.getByTestId('card-item-content-multi-mark-(yes/no)')).toHaveText('No'); // multiMark (true) - appears after multiMark label
       await expect(page.getByTestId('card-item-content-net-area')).toHaveText('7.39'); // netArea
-      await expect(page.getByTestId('card-item-content-submitter')).toHaveText('BCEID\\ICEKING'); // submitter
+      await expect(page.getByTestId('card-item-content-submitter')).toHaveText(
+        String.raw`BCEID\ICEKING`,
+      ); // submitter
       await expect(page.getByTestId('card-item-comment:')).toHaveText(
         'Comment:This is a sample comment for the reporting unit.',
       ); // comments
@@ -348,7 +348,7 @@ test.describe('Waste Search Page', () => {
       await page.waitForLoadState('networkidle');
 
       // Verify all fields are displayed
-      await expect(page.getByTestId('card-item-content-license-number')).toHaveText('W1940'); // licenseNo
+      await expect(page.getByTestId('card-item-content-licence-number')).toHaveText('W1940'); // licenceNo
       await expect(page.getByTestId('card-item-content-cutting-permit')).toHaveText('EA'); // cuttingPermit
       await expect(page.getByTestId('card-item-content-timber-mark')).toHaveText('WBMJEC'); // timberMark
       await expect(page.getByTestId('card-item-content-exempted-(yes/no)')).toHaveText('Yes'); // exempted (false)

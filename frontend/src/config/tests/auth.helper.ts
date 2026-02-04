@@ -19,8 +19,8 @@ export async function authenticate(page: Page, metadata: Record<string, any>): P
   }
 
   await Promise.all([
-    page.waitForNavigation({ waitUntil: 'load' }),
-    page.click(`[data-testid="landing-button__${metadata.userType.toLowerCase()}"]`),
+    page.waitForLoadState('networkidle'),
+    page.getByTestId(`landing-button__${metadata.userType.toLowerCase()}`).click(),
   ]);
 
   await page.waitForLoadState('networkidle');
