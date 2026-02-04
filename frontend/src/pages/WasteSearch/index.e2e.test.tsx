@@ -95,7 +95,7 @@ test.describe('Waste Search Page', () => {
       await expect(title).toBeVisible();
 
       // Verify the subtitle is present
-      const subtitle = page.getByText('Search for reporting units, licencees, or blocks');
+      const subtitle = page.getByText('Search for reporting units, licensees, or blocks');
       await expect(subtitle).toBeVisible();
     });
 
