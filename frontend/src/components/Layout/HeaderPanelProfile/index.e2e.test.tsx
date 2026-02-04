@@ -47,13 +47,27 @@ test.describe('Profile menu', () => {
 
     await expect(panelSelector.getByRole('button', { name: 'Close' })).toBeVisible();
 
-    await expect(panelSelector.getByRole('separator')).toBeVisible();
-
-    await expect(panelSelector.getByRole('navigation')).toBeVisible();
-
     await expect(
       panelSelector
         .getByRole('listitem')
+        .filter({ has: page.getByRole('separator') })
+        .first(), // the first separator in the header-panel
+    ).toBeVisible();
+
+    await expect(panelSelector.getByRole('navigation')).toBeVisible();
+
+    // the separator within the <nav> element
+    await expect(
+      panelSelector
+        .getByRole('navigation')
+        .getByRole('listitem')
+        .filter({ has: page.getByRole('separator') }),
+    ).toBeVisible();
+
+    // Text within the <nav> element
+    await expect(
+      panelSelector
+        .getByRole('navigation')
         .getByText(
           projectInfo.project.metadata.userType === 'idir'
             ? 'Select organization'
@@ -234,6 +248,68 @@ test.describe('Profile menu', () => {
 
       const chilliwackDistrict = panelSelector.getByRole('button', { name: 'Chilliwack' });
       await expect(chilliwackDistrict).not.toBeVisible();
+    });
+
+    test('tooltip is visible when label is hovered', async ({ page }, testInfo) => {
+      test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
+
+      const profileButton = page.getByRole('button', { name: 'Profile settings' });
+      await profileButton.click();
+
+      const panelSelector = page.getByTestId('header-panel');
+
+      const label = panelSelector.getByText('Select organization');
+      await label.hover();
+
+      const tooltip = panelSelector
+        .locator('.cds--tooltip-content')
+        .filter({ hasText: 'Optional: Select a default organization' });
+
+      // element is **fully** visible
+      await expect(tooltip).toBeInViewport({ ratio: 1 });
+    });
+
+    test('log out button is visible even on a small screen', async ({ page }, testInfo) => {
+      test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
+
+      await page.setViewportSize({
+        width: 800,
+        height: 600,
+      });
+
+      const profileButton = page.getByRole('button', { name: 'Profile settings' });
+      await profileButton.click();
+
+      const panelSelector = page.getByTestId('header-panel');
+
+      const logoutButton = panelSelector.getByRole('listitem').getByText('Log out');
+      await expect(logoutButton).toBeVisible();
+    });
+
+    test('log out button stays at the bottom even on a large screen', async ({
+      page,
+    }, testInfo) => {
+      test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
+
+      const viewport = page.viewportSize();
+
+      const profileButton = page.getByRole('button', { name: 'Profile settings' });
+      await profileButton.click();
+
+      const panelSelector = page.getByTestId('header-panel');
+
+      const logoutButton = panelSelector.getByRole('listitem').filter({ hasText: 'Log out' });
+      await expect(logoutButton).toBeVisible();
+
+      const buttonBox = await logoutButton.boundingBox();
+
+      expect(viewport).toBeDefined();
+      expect(buttonBox).toBeDefined();
+
+      if (viewport && buttonBox) {
+        // button is at the very bottom of the page
+        expect(buttonBox.y + buttonBox.height).toEqual(viewport.height);
+      }
     });
   });
 });
