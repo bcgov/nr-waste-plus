@@ -47,7 +47,6 @@ public final class ReportingUnitQueryConstants {
         ON wsoc.waste_sampling_option_code = wru.waste_sampling_option_code
       LEFT JOIN WASTE_ASSESSMENT_AREA waa
         ON waa.REPORTING_UNIT_ID = wru.REPORTING_UNIT_ID
-        AND COALESCE(waa.CUT_BLOCK_ID, waa.DRAFT_CUT_BLOCK_ID) IS NOT NULL
       LEFT JOIN WASTE_ASSESS_AREA_STS_CODE waasc
         ON waasc.WASTE_ASSESS_AREA_STS_CODE = waa.WASTE_ASSESS_AREA_STS_CODE
       LEFT JOIN ORG_UNIT ou
