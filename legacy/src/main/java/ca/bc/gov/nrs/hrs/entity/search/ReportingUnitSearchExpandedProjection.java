@@ -17,11 +17,11 @@ public interface ReportingUnitSearchExpandedProjection {
   Long getId();
 
   /**
-   * Gets the license number associated with the reporting unit.
+   * Gets the licence number associated with the reporting unit.
    *
-   * @return the license number associated with the reporting unit
+   * @return the licence number associated with the reporting unit
    */
-  String getLicenseNo();
+  String getLicenceNo();
 
   /**
    * Gets the cutting permit identifier.

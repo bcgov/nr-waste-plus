@@ -8,7 +8,7 @@
         "code": "92345678",
         "description": "PACIFIC LOGGING LTD"
       },
-      "licenseNumber": "TFL26",
+      "licenceNumber": "TFL26",
       "cuttingPermit": "22",
       "timberMark": "26/22",
       "multiMark": true,
@@ -35,7 +35,7 @@
         "code": "93456789",
         "description": "MOUNTAIN FORESTRY INC"
       },
-      "licenseNumber": "A58209",
+      "licenceNumber": "A58209",
       "cuttingPermit": null,
       "timberMark": "58209",
       "multiMark": false,

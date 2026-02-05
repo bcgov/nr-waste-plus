@@ -13,7 +13,7 @@ describe('mapDisplayFilter', () => {
     expect(mapDisplayFilter('requestUserId')).toBe('Submitter');
     expect(mapDisplayFilter('updateDateStart')).toBe('Update Date Start');
     expect(mapDisplayFilter('updateDateEnd')).toBe('Update Date End');
-    expect(mapDisplayFilter('licenseeId')).toBe('Licensee number');
+    expect(mapDisplayFilter('licenceeId')).toBe('Licencee number');
     expect(mapDisplayFilter('cuttingPermitId')).toBe('Cutting Permit');
     expect(mapDisplayFilter('timberMark')).toBe('Timber Mark');
     expect(mapDisplayFilter('clientLocationCode')).toBe('Client Location Code');

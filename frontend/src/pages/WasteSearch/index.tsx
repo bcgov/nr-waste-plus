@@ -41,7 +41,7 @@ const WasteSearchPage: FC = () => {
       <Column lg={16} md={8} sm={4} className="search-column__banner">
         <PageTitle
           title="Waste search"
-          subtitle="Search for reporting units, licensees, or blocks"
+          subtitle="Search for reporting units, licencees, or blocks"
         />
       </Column>
       <Column lg={16} md={8} sm={4} className="notification-column">

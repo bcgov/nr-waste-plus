@@ -36,7 +36,7 @@ describe('SearchService', () => {
             blockId: 1,
             cutBlockId: 'CB-001',
             client: { code: 'CLI01', description: 'Client One' },
-            licenseNumber: 'LIC-001',
+            licenceNumber: 'LIC-001',
             cuttingPermit: 'CP-001',
             timberMark: 'TM-001',
             multiMark: false,
@@ -150,7 +150,7 @@ describe('SearchService', () => {
       const blockId = 456;
       const mockData: ReportingUnitSearchExpandedDto = {
         id: 123,
-        licenseNo: 'LIC-001',
+        licenceNo: 'LIC-001',
         cuttingPermit: 'CP-001',
         timberMark: 'TM-001',
         exempted: false,
@@ -180,7 +180,7 @@ describe('SearchService', () => {
       const blockId = 888;
       const mockData: ReportingUnitSearchExpandedDto = {
         id: 999,
-        licenseNo: null,
+        licenceNo: null,
         cuttingPermit: null,
         timberMark: null,
         exempted: true,
@@ -207,7 +207,7 @@ describe('SearchService', () => {
       const blockId = 1;
       const mockData: ReportingUnitSearchExpandedDto = {
         id: 1,
-        licenseNo: null,
+        licenceNo: null,
         cuttingPermit: null,
         timberMark: null,
         exempted: false,
@@ -222,7 +222,7 @@ describe('SearchService', () => {
 
       const result = await service.getReportingUnitSearchExpand(ruId, blockId);
 
-      expect(result.licenseNo).toBeNull();
+      expect(result.licenceNo).toBeNull();
       expect(result.comments).toBeNull();
       expect(result.submitter).toBeNull();
     });

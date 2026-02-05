@@ -8,7 +8,7 @@
         "code": "90000001",
         "description": "CANADIAN SAMPLE CO."
       },
-      "licenseNumber": null,
+      "licenceNumber": null,
       "cuttingPermit": null,
       "timberMark": null,
       "multiMark": false,
@@ -35,7 +35,7 @@
         "code": "90000002",
         "description": "JOHN WICK LOGGING LTD."
       },
-      "licenseNumber": "A12345",
+      "licenceNumber": "A12345",
       "cuttingPermit": "01",
       "timberMark": "AB1001",
       "multiMark": false,

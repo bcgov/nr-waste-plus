@@ -47,7 +47,7 @@ public class ReportingUnitEntity {
   private String clientLocationCode;
 
   /**
-   * Client (licensee) number (8 chars).
+   * Client (licencee) number (8 chars).
    */
   @Column(name = "CLIENT_NUMBER", length = 8, nullable = false)
   private String clientNumber;

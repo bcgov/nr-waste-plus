@@ -36,7 +36,7 @@ public class ReportingUnitSearchParametersDto {
   private LocalDate updateDateStart;
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private LocalDate updateDateEnd;
-  private String licenseeId;
+  private String licenceeId;
   private String cuttingPermitId;
   private String timberMark;
   private String clientLocationCode;

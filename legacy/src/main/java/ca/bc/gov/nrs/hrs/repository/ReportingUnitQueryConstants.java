@@ -28,7 +28,7 @@ public final class ReportingUnitQueryConstants {
         ELSE
           NVL(fc.LEGAL_FIRST_NAME, '') || NVL(fc.LEGAL_MIDDLE_NAME, '') || fc.CLIENT_NAME
       END AS client_name,
-      waa.FOREST_FILE_ID AS license_number,
+      waa.FOREST_FILE_ID AS licence_number,
       COALESCE(waa.CUTTING_PERMIT_ID, waa.DRAFT_CUTTING_PERMIT_ID) AS cutting_permit,
       COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK) AS timber_mark,
       CASE WHEN NVL(waa.MULTI_MARK_IND, 'N') = 'N' THEN 0 ELSE 1 END AS multi_mark,
@@ -87,8 +87,8 @@ public final class ReportingUnitQueryConstants {
           OR wru.ENTRY_USERID = :#{#filter.requestUserId}
         )
         AND (
-          NVL(:#{#filter.licenseeId}, 'NOVALUE') = 'NOVALUE'
-          OR waa.FOREST_FILE_ID = :#{#filter.licenseeId}
+          NVL(:#{#filter.licenceeId}, 'NOVALUE') = 'NOVALUE'
+          OR waa.FOREST_FILE_ID = :#{#filter.licenceeId}
         )
         AND (
           NVL(:#{#filter.cuttingPermitId}, 'NOVALUE') = 'NOVALUE'
@@ -165,7 +165,7 @@ public final class ReportingUnitQueryConstants {
   public static final String GET_SEARCH_BLOCK_EXPANDED = """
       SELECT
         waa.WASTE_ASSESSMENT_AREA_ID AS id,
-        waa.FOREST_FILE_ID AS license_no,
+        waa.FOREST_FILE_ID AS licence_no,
         COALESCE(waa.CUTTING_PERMIT_ID, waa.DRAFT_CUTTING_PERMIT_ID) AS cutting_permit,
         COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK) AS timber_mark,
         CASE

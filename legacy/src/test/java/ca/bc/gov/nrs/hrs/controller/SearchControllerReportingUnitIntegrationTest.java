@@ -162,7 +162,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.id").value(161966))
-        .andExpect(jsonPath("$.licenseNo").value("A91320"))
+        .andExpect(jsonPath("$.licenceNo").value("A91320"))
         .andReturn();
   }
 

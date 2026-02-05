@@ -82,7 +82,7 @@ public class ForestClientApiProviderTestConstants {
                        "code": "00010002",
                        "description": null
                    },
-                   "licenseNumber": "C-12345",
+                   "licenceNumber": "C-12345",
                    "cuttingPermit": "A12345",
                    "timberMark": "TM12345",
                    "multiMark": false,
@@ -171,7 +171,7 @@ public class ForestClientApiProviderTestConstants {
   public static final String REPORTING_UNIT_EXPANDED_FULL = """
       {
         "id": 101,
-        "licenseNo": "LIC123",
+        "licenceNo": "LIC123",
         "cuttingPermit": "CP01",
         "timberMark": "TMK456",
         "exempted": true,

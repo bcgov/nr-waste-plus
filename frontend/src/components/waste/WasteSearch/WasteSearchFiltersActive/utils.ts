@@ -18,8 +18,8 @@ export const mapDisplayFilter = (key: keyof ReportingUnitSearchParametersDto): s
       return 'Update Date Start';
     case 'updateDateEnd':
       return 'Update Date End';
-    case 'licenseeId':
-      return 'Licensee number';
+    case 'licenceeId':
+      return 'Licencee number';
     case 'cuttingPermitId':
       return 'Cutting Permit';
     case 'timberMark':

@@ -26,19 +26,19 @@ public interface ReportingUnitSearchProjection {
   Long getRuNumber();
 
   /**
-   * Client (licensee) number.
+   * Client (licencee) number.
    */
   String getClientNumber();
   
   /**
-   * Client (licensee) name.
+   * Client (licencee) name.
    */
   String getClientName();
 
   /**
-   * License number AKA Forest File ID.
+   * Licence number AKA Forest File ID.
    */
-  String getLicenseNumber();
+  String getLicenceNumber();
 
   /**
    * Cutting permit ID.

@@ -70,7 +70,7 @@ describe('WasteSearchPage', () => {
   it('renders the page title and subtitle', async () => {
     await renderWithProps();
     expect(screen.getByText('Waste search')).toBeDefined();
-    expect(screen.getByText('Search for reporting units, licensees, or blocks')).toBeDefined();
+    expect(screen.getByText('Search for reporting units, licencees, or blocks')).toBeDefined();
   });
 
   it('renders the WasteSearch columns', async () => {

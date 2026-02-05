@@ -21,7 +21,7 @@ vi.mock('@/services/APIs', () => {
 
 const mockExpandedData: ReportingUnitSearchExpandedDto = {
   id: 4069,
-  licenseNo: 'LIC-12345',
+  licenceNo: 'LIC-12345',
   cuttingPermit: 'CP-001',
   timberMark: 'TM-001',
   exempted: false,
@@ -116,7 +116,7 @@ describe('WasteSearchTableExpandContent', () => {
       });
     });
 
-    it('displays license number correctly', async () => {
+    it('displays licence number correctly', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
       await renderWithProps(rowId);
 
@@ -233,10 +233,10 @@ describe('WasteSearchTableExpandContent', () => {
   });
 
   describe('null and empty field handling', () => {
-    it('displays empty string when licenseNo is null', async () => {
+    it('displays empty string when licenceNo is null', async () => {
       const dataWithNulls: ReportingUnitSearchExpandedDto = {
         ...mockExpandedData,
-        licenseNo: null,
+        licenceNo: null,
       };
       (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNulls);
 
@@ -410,7 +410,7 @@ describe('WasteSearchTableExpandContent', () => {
       );
 
       await waitFor(() => {
-        expect(container.querySelector(`#${rowId}-license-number`)).toBeDefined();
+        expect(container.querySelector(`#${rowId}-licence-number`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-cutting-permit`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-timber-mark`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-exempted`)).toBeDefined();

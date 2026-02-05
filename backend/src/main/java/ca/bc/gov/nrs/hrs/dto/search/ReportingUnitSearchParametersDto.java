@@ -45,7 +45,7 @@ public class ReportingUnitSearchParametersDto {
   private LocalDate updateDateStart;
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private LocalDate updateDateEnd;
-  private String licenseeId;
+  private String licenceeId;
   private String cuttingPermitId;
   private String timberMark;
   private String clientLocationCode;
@@ -84,8 +84,8 @@ public class ReportingUnitSearchParametersDto {
       multiValueMap.add("requestUserId", requestUserId);
     }
 
-    if (StringUtils.isNotBlank(licenseeId)) {
-      multiValueMap.add("licenseeId", licenseeId);
+    if (StringUtils.isNotBlank(licenceeId)) {
+      multiValueMap.add("licenceeId", licenceeId);
     }
 
     if (StringUtils.isNotBlank(cuttingPermitId)) {

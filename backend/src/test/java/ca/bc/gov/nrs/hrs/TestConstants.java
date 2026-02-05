@@ -9,7 +9,7 @@ public final class TestConstants {
   public static final String EXPANDED_101 = """
       {
         "id": 201,
-        "licenseNo": "LIC123",
+        "licenceNo": "LIC123",
         "cuttingPermit": "CP01",
         "timberMark": "TMK456",
         "exempted": true,

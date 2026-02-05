@@ -153,7 +153,7 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
     var value = legacyApiProvider.getSearchExpanded(ruId, blockId);
     assertNotNull(value);
     assertEquals(expectedDto.id(), value.id());
-    assertEquals(expectedDto.licenseNo(), value.licenseNo());
+    assertEquals(expectedDto.licenceNo(), value.licenceNo());
     assertEquals(expectedDto.cuttingPermit(), value.cuttingPermit());
     assertEquals(expectedDto.timberMark(), value.timberMark());
     assertEquals(expectedDto.exempted(), value.exempted());

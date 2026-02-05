@@ -29,7 +29,7 @@ public record ReportingUnitSearchResultDto(
     String cutBlockId,
     Long ruNumber,
     CodeDescriptionDto client,
-    String licenseNumber,
+    String licenceNumber,
     String cuttingPermit,
     String timberMark,
     boolean multiMark,

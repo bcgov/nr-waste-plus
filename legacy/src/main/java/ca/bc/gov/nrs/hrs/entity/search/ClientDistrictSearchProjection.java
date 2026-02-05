@@ -11,12 +11,12 @@ import java.time.LocalDateTime;
 public interface ClientDistrictSearchProjection {
 
   /**
-   * Client (licensee) number.
+   * Client (licencee) number.
    */
   String getClientNumber();
 
   /**
-   * Client (licensee) name or description.
+   * Client (licencee) name or description.
    */
   String getClientName();
 

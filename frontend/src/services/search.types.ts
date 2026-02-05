@@ -8,7 +8,7 @@ export type ReportingUnitSearchResultDto = {
   cutBlockId: string | null;
   ruNumber: number;
   client: CodeDescriptionDto;
-  licenseNumber: string | null;
+  licenceNumber: string | null;
   cuttingPermit: string | null;
   timberMark: string | null;
   multiMark: boolean;
@@ -28,7 +28,7 @@ export type ReportingUnitSearchParametersDto = {
   requestUserId?: string;
   updateDateStart?: string;
   updateDateEnd?: string;
-  licenseeId?: string;
+  licenceeId?: string;
   cuttingPermitId?: string;
   timberMark?: string;
   clientLocationCode?: string;
@@ -37,7 +37,7 @@ export type ReportingUnitSearchParametersDto = {
 
 export type ReportingUnitSearchExpandedDto = {
   id: number;
-  licenseNo: string | null;
+  licenceNo: string | null;
   cuttingPermit: string | null;
   timberMark: string | null;
   exempted: boolean;

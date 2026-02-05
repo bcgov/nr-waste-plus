@@ -5,15 +5,15 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 /**
  * DTO representing an expanded view of a reporting unit search result.
  *
- * <p>This record contains detailed information about a reporting unit including license details,
+ * <p>This record contains detailed information about a reporting unit including licence details,
  * cutting permit information, timber marking, exemption status, and related metadata. It is used
  * to provide comprehensive search results with all relevant reporting unit attributes.</p>
  */
 public record ReportingUnitSearchExpandedDto(
     /* The unique identifier of the reporting unit. */
     Long id,
-    /* The license number associated with the reporting unit. */
-    String licenseNo,
+    /* The licence number associated with the reporting unit. */
+    String licenceNo,
     /* The cutting permit identifier. */
     String cuttingPermit,
     /* The timber mark identifier. */

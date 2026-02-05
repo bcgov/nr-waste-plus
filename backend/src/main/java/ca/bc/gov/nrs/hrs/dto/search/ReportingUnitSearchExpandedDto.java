@@ -9,7 +9,7 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
  * that may be useful for detailed listings or reports.</p>
  *
  * @param id the unique identifier of the reporting unit
- * @param licenseNo the license number associated with the reporting unit
+ * @param licenceNo the licence number associated with the reporting unit
  * @param cuttingPermit the cutting permit associated with the reporting unit
  * @param timberMark the timber mark associated with the reporting unit
  * @param exempted indicates if the reporting unit is exempted
@@ -23,7 +23,7 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
  */
 public record ReportingUnitSearchExpandedDto(
     Long id,
-    String licenseNo,
+    String licenceNo,
     String cuttingPermit,
     String timberMark,
     Boolean exempted,
