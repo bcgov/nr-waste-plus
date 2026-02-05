@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
-import TolltipRedirectLinkTag from './index';
+import TooltipRedirectLinkTag from './index';
 
 vi.mock('@/components/waste/RedirectLinkTag', () => ({
   default: ({ text, url, sameTab }: { text: string; url: string; sameTab?: boolean }) => (
@@ -11,14 +11,14 @@ vi.mock('@/components/waste/RedirectLinkTag', () => ({
   ),
 }));
 
-describe('TolltipRedirectLinkTag', () => {
+describe('TooltipRedirectLinkTag', () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
 
   it('renders link with tooltip', () => {
     render(
-      <TolltipRedirectLinkTag
+      <TooltipRedirectLinkTag
         tooltip="Click to open link"
         text="Click here"
         url="https://example.com"
@@ -36,7 +36,7 @@ describe('TolltipRedirectLinkTag', () => {
 
   it('passes text prop to link', () => {
     render(
-      <TolltipRedirectLinkTag
+      <TooltipRedirectLinkTag
         tooltip="Helpful tooltip"
         text="My Custom Link"
         url="https://example.com"
@@ -50,7 +50,7 @@ describe('TolltipRedirectLinkTag', () => {
   it('passes url prop to link', () => {
     const testUrl = 'https://specific-domain.com/path';
 
-    render(<TolltipRedirectLinkTag tooltip="Visit site" text="Link text" url={testUrl} />);
+    render(<TooltipRedirectLinkTag tooltip="Visit site" text="Link text" url={testUrl} />);
 
     const linkTag = screen.getByTestId('redirect-link-tag');
     expect(linkTag).toHaveProperty('href', testUrl);
@@ -58,7 +58,7 @@ describe('TolltipRedirectLinkTag', () => {
 
   it('respects sameTab prop - opens in new tab by default', () => {
     render(
-      <TolltipRedirectLinkTag
+      <TooltipRedirectLinkTag
         tooltip="Opens in new tab"
         text="Link text"
         url="https://example.com"
@@ -71,7 +71,7 @@ describe('TolltipRedirectLinkTag', () => {
 
   it('respects sameTab prop - opens in same tab when specified', () => {
     render(
-      <TolltipRedirectLinkTag
+      <TooltipRedirectLinkTag
         tooltip="Opens in same tab"
         text="Link text"
         url="https://example.com"
@@ -86,7 +86,7 @@ describe('TolltipRedirectLinkTag', () => {
   it('renders tooltip with correct definition text', () => {
     const tooltipText = 'This is a detailed explanation';
 
-    render(<TolltipRedirectLinkTag tooltip={tooltipText} text="Link" url="https://example.com" />);
+    render(<TooltipRedirectLinkTag tooltip={tooltipText} text="Link" url="https://example.com" />);
 
     const tooltip = screen.getByText(tooltipText);
     expect(tooltip).toBeTruthy();
@@ -94,7 +94,7 @@ describe('TolltipRedirectLinkTag', () => {
 
   it('renders tooltip wrapper around link', () => {
     const { container } = render(
-      <TolltipRedirectLinkTag tooltip="Help text" text="Click me" url="https://example.com" />,
+      <TooltipRedirectLinkTag tooltip="Help text" text="Click me" url="https://example.com" />,
     );
 
     // DefinitionTooltip from Carbon should be in the component tree
