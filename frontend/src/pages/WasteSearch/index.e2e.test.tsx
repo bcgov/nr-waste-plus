@@ -205,7 +205,7 @@ test.describe('Waste Search Page', () => {
       await expect(page.getByRole('cell', { name: 'CANADIAN SAMPLE CO.' })).toBeVisible();
     });
 
-    test('should allow pagination of results', async ({ page }) => {
+    test('should allow pagination of results', async ({ page }, testInfo) => {
       const searchBox = page.getByRole('searchbox');
       await searchBox.fill('67890');
       await searchBox.blur();
@@ -216,7 +216,12 @@ test.describe('Waste Search Page', () => {
       await page.waitForLoadState('networkidle');
 
       // Verify mocked data appears
-      await expect(page.getByRole('link', { name: '91234567' }).first()).toBeVisible();
+
+      if (testInfo.project.metadata.userType === 'bceid') {
+        await expect(page.getByRole('cell', { name: '91234567' }).first()).toBeVisible();
+      } else {
+        await expect(page.getByRole('link', { name: '92345678' }).first()).toBeVisible();
+      }
       await expect(page.getByRole('cell', { name: 'NORTHERN TIMBER CO' }).first()).toBeVisible();
 
       const resultSize = page.getByText('-10 of 12 items');
@@ -230,8 +235,11 @@ test.describe('Waste Search Page', () => {
       await pagination.click();
 
       await page.waitForLoadState('networkidle');
-
-      await expect(page.getByRole('link', { name: '92345678' }).first()).toBeVisible();
+      if (testInfo.project.metadata.userType === 'bceid') {
+        await expect(page.getByRole('cell', { name: '92345678' })).toBeVisible();
+      } else {
+        await expect(page.getByRole('link', { name: '92345678' }).first()).toBeVisible();
+      }
       await expect(page.getByRole('cell', { name: 'PACIFIC LOGGING LTD' }).first()).toBeVisible();
     });
 
