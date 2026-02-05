@@ -287,13 +287,13 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
             </div>
           </Column>
 
-          {/* License number */}
+          {/* Licence number */}
           <Column sm={4} md={4} lg={8}>
             <TextInput
               className="advanced-text-input"
               id="as-license-number-text-input"
               type="text"
-              labelText="License number"
+              labelText="Licence number"
               defaultValue={filters.licenseeId || ''}
               onBlur={onTextChange('licenseeId')}
               maxLength={MAX_TEXT_INPUT_LEN}
