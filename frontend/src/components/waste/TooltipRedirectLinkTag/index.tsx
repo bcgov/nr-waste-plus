@@ -3,14 +3,14 @@ import { type FC } from 'react';
 
 import RedirectLinkTag from '@/components/waste/RedirectLinkTag';
 
-type TolltipRedirectLinkTagProps = {
+type TooltipRedirectLinkTagProps = {
   tooltip: string;
   text: string;
   url: string;
   sameTab?: boolean;
 };
 
-const TolltipRedirectLinkTag: FC<TolltipRedirectLinkTagProps> = ({
+const TooltipRedirectLinkTag: FC<TooltipRedirectLinkTagProps> = ({
   tooltip,
   text,
   url,
@@ -23,4 +23,4 @@ const TolltipRedirectLinkTag: FC<TolltipRedirectLinkTagProps> = ({
   );
 };
 
-export default TolltipRedirectLinkTag;
+export default TooltipRedirectLinkTag;

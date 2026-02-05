@@ -5,7 +5,7 @@ import ColorTag, { type CarbonColors } from '@/components/core/Tags/ColorTag';
 import DateTag from '@/components/core/Tags/DateTag';
 import YesNoTag from '@/components/core/Tags/YesNoTag';
 import CodeDescriptionTag from '@/components/waste/CodeDescriptionTag';
-import TolltipRedirectLinkTag from '@/components/waste/TolltipRedirectLinkTag';
+import TooltipRedirectLinkTag from '@/components/waste/TooltipRedirectLinkTag';
 import TooltipRoleBasedRedirectLinkTag from '@/components/waste/TooltipRoleBasedRedirectLinkTag';
 import { Role } from '@/context/auth/types';
 import { env } from '@/env';
@@ -45,7 +45,7 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     sortable: true,
     selected: true,
     renderAs: (value) => (
-      <TolltipRedirectLinkTag
+      <TooltipRedirectLinkTag
         text={value as string}
         url={`${env.VITE_LEGACY_BASE_URL}/waste101ReportUnitDetailsAction.do?dataBean.p_reporting_unit_id=${value}`}
         tooltip={'Go to RU details'}
