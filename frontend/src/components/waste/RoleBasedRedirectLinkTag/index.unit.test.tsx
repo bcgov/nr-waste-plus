@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
 import RoleBasedRedirectLinkTag from './index';
@@ -173,7 +173,7 @@ describe('RoleBasedRedirectLinkTag', () => {
   });
 
   describe('onRenderStateChange callback', () => {
-    it('calls onRenderStateChange with true when user has allowed role', async () => {
+    it('calls onRenderStateChange with true when user has allowed role', () => {
       const mockCallback = vi.fn();
       const userRoles: Role[] = [Role.ADMIN];
 
@@ -194,12 +194,10 @@ describe('RoleBasedRedirectLinkTag', () => {
         />,
       );
 
-      await waitFor(() => {
-        expect(mockCallback).toHaveBeenCalledWith(true);
-      });
+      expect(mockCallback).toHaveBeenCalledWith(true);
     });
 
-    it('calls onRenderStateChange with false when user does NOT have allowed role', async () => {
+    it('calls onRenderStateChange with false when user does NOT have allowed role', () => {
       const mockCallback = vi.fn();
       const userRoles: Role[] = [Role.VIEWER];
 
@@ -220,12 +218,10 @@ describe('RoleBasedRedirectLinkTag', () => {
         />,
       );
 
-      await waitFor(() => {
-        expect(mockCallback).toHaveBeenCalledWith(false);
-      });
+      expect(mockCallback).toHaveBeenCalledWith(false);
     });
 
-    it('calls onRenderStateChange with false when user is undefined', async () => {
+    it('calls onRenderStateChange with false when user is undefined', () => {
       const mockCallback = vi.fn();
 
       (useAuthModule.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
@@ -245,9 +241,7 @@ describe('RoleBasedRedirectLinkTag', () => {
         />,
       );
 
-      await waitFor(() => {
-        expect(mockCallback).toHaveBeenCalledWith(false);
-      });
+      expect(mockCallback).toHaveBeenCalledWith(false);
     });
 
     it('does not require onRenderStateChange callback (optional prop)', () => {
