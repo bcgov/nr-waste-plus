@@ -1,5 +1,3 @@
-import { DefinitionTooltip } from '@carbon/react';
-
 import type { TableHeaderType } from '@/components/Form/TableResource/types';
 import type { CodeDescriptionDto, ReportingUnitSearchResultDto } from '@/services/types';
 
@@ -7,7 +5,9 @@ import ColorTag, { type CarbonColors } from '@/components/core/Tags/ColorTag';
 import DateTag from '@/components/core/Tags/DateTag';
 import YesNoTag from '@/components/core/Tags/YesNoTag';
 import CodeDescriptionTag from '@/components/waste/CodeDescriptionTag';
-import RedirectLinkTag from '@/components/waste/RedirectLinkTag';
+import TolltipRedirectLinkTag from '@/components/waste/TolltipRedirectLinkTag';
+import TooltipRoleBasedRedirectLinkTag from '@/components/waste/TooltipRoleBasedRedirectLinkTag';
+import { Role } from '@/context/auth/types';
 import { env } from '@/env';
 
 const statusColorMap: Record<string, CarbonColors> = {
@@ -45,12 +45,11 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     sortable: true,
     selected: true,
     renderAs: (value) => (
-      <DefinitionTooltip definition={'Go to RU details'} align="top" openOnHover>
-        <RedirectLinkTag
-          text={value as string}
-          url={`${env.VITE_LEGACY_BASE_URL}/waste101ReportUnitDetailsAction.do?dataBean.p_reporting_unit_id=${value}`}
-        />
-      </DefinitionTooltip>
+      <TolltipRedirectLinkTag
+        text={value as string}
+        url={`${env.VITE_LEGACY_BASE_URL}/waste101ReportUnitDetailsAction.do?dataBean.p_reporting_unit_id=${value}`}
+        tooltip={'Go to RU details'}
+      />
     ),
   },
 
@@ -60,12 +59,12 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     sortable: true,
     selected: true,
     renderAs: (value) => (
-      <DefinitionTooltip definition={'View client details'} align="top" openOnHover>
-        <RedirectLinkTag
-          text={value as string}
-          url={`${env.VITE_CLIENT_BASE_URL}/clients/details/${value}`}
-        />
-      </DefinitionTooltip>
+      <TooltipRoleBasedRedirectLinkTag
+        tooltip="View client details"
+        text={value as string}
+        url={`${env.VITE_CLIENT_BASE_URL}/clients/details/${value}`}
+        allowedRoles={[Role.IDIR]}
+      />
     ),
   },
   { key: 'client.description', header: 'Client name', sortable: true, selected: true },
