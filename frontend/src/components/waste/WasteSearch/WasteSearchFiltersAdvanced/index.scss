@@ -60,7 +60,19 @@
       gap: 0.5rem;
       margin: 0 1rem 1rem 1rem;
       .cds--btn {
-        border-radius: 0.25rem;
+        border-radius: 0.25rem;        
+        align-items: center;
+        padding-block: var(--temp-padding-block-max);
+
+        .cds--btn__icon {
+          width: 1rem;      /* or whatever size you want */
+          height: 1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-top: 0.5rem;
+        }
+
       }
     }  
   }
