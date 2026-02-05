@@ -215,11 +215,51 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
             )}
           </Column>
 
+          {/* License number */}
+          <Column sm={4} md={4} lg={8}>
+            <TextInput
+              className="advanced-text-input"
+              id="as-license-number-text-input"
+              type="text"
+              labelText="License number"
+              defaultValue={filters.licenseeId || ''}
+              onBlur={onTextChange('licenseeId')}
+              maxLength={MAX_TEXT_INPUT_LEN}
+            />
+          </Column>
+
+          {/* Cutting Permit */}
+          <Column sm={4} md={4} lg={8}>
+            <TextInput
+              className="advanced-text-input"
+              id="as-cutting-permit-text-input"
+              type="text"
+              labelText="Cutting Permit"
+              defaultValue={filters.cuttingPermitId || ''}
+              onBlur={onTextChange('cuttingPermitId')}
+              maxLength={MAX_TEXT_INPUT_LEN}
+            />
+          </Column>
+
+          {/* Timber Mark */}
+          <Column sm={4} md={4} lg={8}>
+            <TextInput
+              className="advanced-text-input"
+              id="as-timber-mark-text-input"
+              data-testid="timber-mark-text-input"
+              type="text"
+              labelText="Timber Mark"
+              defaultValue={filters.timberMark || ''}
+              onBlur={onTextChange('timberMark')}
+              maxLength={MAX_TEXT_INPUT_LEN}
+            />
+          </Column>
+
           {/* Submitter */}
           <Column sm={4} md={4} lg={8}>
             <AutoCompleteInput<string>
               id="as-submitter-name-ac"
-              titleText="IDIR or BCeID"
+              titleText="Submitter IDIR/BCeID"
               onAutoCompleteChange={async (value) =>
                 await APIs.search.searchReportingUnitUsers(value)
               }
@@ -285,46 +325,6 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 />
               </DatePicker>
             </div>
-          </Column>
-
-          {/* License number */}
-          <Column sm={4} md={4} lg={8}>
-            <TextInput
-              className="advanced-text-input"
-              id="as-license-number-text-input"
-              type="text"
-              labelText="License number"
-              defaultValue={filters.licenseeId || ''}
-              onBlur={onTextChange('licenseeId')}
-              maxLength={MAX_TEXT_INPUT_LEN}
-            />
-          </Column>
-
-          {/* Cutting Permit */}
-          <Column sm={4} md={4} lg={8}>
-            <TextInput
-              className="advanced-text-input"
-              id="as-cutting-permit-text-input"
-              type="text"
-              labelText="Cutting Permit"
-              defaultValue={filters.cuttingPermitId || ''}
-              onBlur={onTextChange('cuttingPermitId')}
-              maxLength={MAX_TEXT_INPUT_LEN}
-            />
-          </Column>
-
-          {/* Timber Mark */}
-          <Column sm={4} md={4} lg={8}>
-            <TextInput
-              className="advanced-text-input"
-              id="as-timber-mark-text-input"
-              data-testid="timber-mark-text-input"
-              type="text"
-              labelText="Timber Mark"
-              defaultValue={filters.timberMark || ''}
-              onBlur={onTextChange('timberMark')}
-              maxLength={MAX_TEXT_INPUT_LEN}
-            />
           </Column>
 
           <Column sm={4} md={8} lg={16}>

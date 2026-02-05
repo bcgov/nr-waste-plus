@@ -54,3 +54,14 @@
     }
   }
 }
+
+.cds--modal-container-body {
+
+  .cds--modal-footer {
+    gap: 0.5rem;
+    margin: 0 1rem 1rem 1rem;
+    .cds--btn {
+      border-radius: 0.25rem;
+    }
+  }  
+}
