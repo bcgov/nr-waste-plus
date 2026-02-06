@@ -44,12 +44,17 @@ describe('WasteSearchFiltersActive', () => {
     const filters = {
       mainSearchTerm: 'not to be seen',
       district: [],
-      timberMark: null,
+      timberMark: false,
       clientNumber: undefined,
       clientLocationCode: '',
     };
-    const { container } = renderWithProps({ filters });
-    expect(container).toBeDefined(); //This is defined in
+    renderWithProps({ filters });
+
+    expect(screen.queryByTestId('dt-mainSearchTerm', { exact: false })).toBeNull();
+    expect(screen.queryByTestId('dt-district', { exact: false })).toBeNull();
+    expect(screen.queryByTestId('dt-timberMark', { exact: false })).toBeNull();
+    expect(screen.queryByTestId('dt-clientNumber', { exact: false })).toBeNull();
+    expect(screen.queryByTestId('dt-clientLocationCode', { exact: false })).toBeNull();
   });
 
   it('renders search filters and remove the filter', async () => {

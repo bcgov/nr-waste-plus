@@ -38,6 +38,7 @@ const WasteSearchFiltersActive: FC<WasteSearchFiltersActiveProps> = ({
           value === undefined ||
           value === null ||
           value === '' ||
+          value === false ||
           (Array.isArray(value) && value.length === 0)
         ) {
           return false;
