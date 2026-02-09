@@ -59,7 +59,17 @@ const ColorTag: FC<ColorTagProps> = ({ value, colorMap }) => {
   const finalHasCode = Boolean(actualValue.code?.trim());
   const finalHasDescription = Boolean(actualValue.description?.trim());
 
-  const displayText = finalHasDescription ? actualValue.description : '-';
+  // Apply sentence case only for multiple word content
+  const sentenceCase = (str: string): string => {
+    // Single word: keep as-is
+    if (!str.includes(' ')) {
+      return str;
+    }
+    // Multiple words: capitalize first letter, lowercase the rest
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+
+  const displayText = finalHasDescription ? sentenceCase(actualValue.description) : '-';
 
   // Determine tooltip: show if we have both code and description
   const tooltipLabel =
