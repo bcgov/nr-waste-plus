@@ -10,27 +10,37 @@ describe('ColorTag', () => {
     C: 'red',
   };
 
-  it('renders the tag with correct description', () => {
+  it('renders the tag with correct description (single word kept as-is)', () => {
     render(<ColorTag value={{ code: 'A', description: 'Alpha' }} colorMap={colorMap} />);
     expect(screen.getByText('Alpha')).toBeDefined();
   });
 
+  it('applies sentence case to multi-word descriptions', () => {
+    render(<ColorTag value={{ code: 'A', description: 'Billing Ready' }} colorMap={colorMap} />);
+    expect(screen.getByText('Billing ready')).toBeDefined();
+  });
+
+  it('keeps single word descriptions as-is regardless of case', () => {
+    render(<ColorTag value={{ code: 'A', description: 'UPPERCASE' }} colorMap={colorMap} />);
+    expect(screen.getByText('UPPERCASE')).toBeDefined();
+  });
+
   it('applies the correct color from colorMap', () => {
-    render(<ColorTag value={{ code: 'B', description: 'Bravo' }} colorMap={colorMap} />);
-    const tag = screen.getByText('Bravo').closest('.cds--tag');
+    render(<ColorTag value={{ code: 'B', description: 'Beta Bravo' }} colorMap={colorMap} />);
+    const tag = screen.getByText('Beta bravo').closest('.cds--tag');
     expect(tag?.className).toContain('cds--tag--green');
   });
 
   it('defaults to gray if code is not in colorMap', () => {
-    render(<ColorTag value={{ code: 'Z', description: 'Zulu' }} colorMap={colorMap} />);
-    const tag = screen.getByText('Zulu').closest('.cds--tag');
+    render(<ColorTag value={{ code: 'Z', description: 'Zone Zulu' }} colorMap={colorMap} />);
+    const tag = screen.getByText('Zone zulu').closest('.cds--tag');
     expect(tag?.className).toContain('cds--tag--gray');
   });
 
   it('shows tooltip with code and description', async () => {
-    render(<ColorTag value={{ code: 'C', description: 'Charlie' }} colorMap={colorMap} />);
+    render(<ColorTag value={{ code: 'C', description: 'Charlie Coast' }} colorMap={colorMap} />);
     // Find tooltip content by class
-    const tooltipText = 'C - Charlie';
+    const tooltipText = 'C - Charlie Coast';
     // If not found, try to find by class
     const tooltipContent = document.querySelector('.cds--popover-content.cds--tooltip-content');
     if (tooltipContent) {
@@ -69,21 +79,21 @@ describe('ColorTag', () => {
   it('does not render tooltip when code is null but description exists', () => {
     render(
       <ColorTag
-        value={{ code: null as unknown as string, description: 'Test' }}
+        value={{ code: null as unknown as string, description: 'Test Description' }}
         colorMap={colorMap}
       />,
     );
-    expect(screen.getByText('Test')).toBeDefined();
-    const tag = screen.getByText('Test');
+    expect(screen.getByText('Test description')).toBeDefined();
+    const tag = screen.getByText('Test description');
     // Tooltip should not be present when code is missing
     const tooltip = tag.closest('.cds--tooltip');
     expect(tooltip).toBeNull();
   });
 
   it('does not render tooltip when code is empty string but description exists', () => {
-    render(<ColorTag value={{ code: '', description: 'Test' }} colorMap={colorMap} />);
-    expect(screen.getByText('Test')).toBeDefined();
-    const tag = screen.getByText('Test');
+    render(<ColorTag value={{ code: '', description: 'Test Data' }} colorMap={colorMap} />);
+    expect(screen.getByText('Test data')).toBeDefined();
+    const tag = screen.getByText('Test data');
     // Tooltip should not be present when code is empty
     const tooltip = tag.closest('.cds--tooltip');
     expect(tooltip).toBeNull();
@@ -92,12 +102,12 @@ describe('ColorTag', () => {
   it('does not render tooltip when code is undefined but description exists', () => {
     render(
       <ColorTag
-        value={{ code: undefined as unknown as string, description: 'Test' }}
+        value={{ code: undefined as unknown as string, description: 'Test Value' }}
         colorMap={colorMap}
       />,
     );
-    expect(screen.getByText('Test')).toBeDefined();
-    const tag = screen.getByText('Test');
+    expect(screen.getByText('Test value')).toBeDefined();
+    const tag = screen.getByText('Test value');
     // Tooltip should not be present when code is undefined
     const tooltip = tag.closest('.cds--tooltip');
     expect(tooltip).toBeNull();
@@ -110,17 +120,17 @@ describe('ColorTag', () => {
         colorMap={colorMap}
       />,
     );
-    expect(screen.getByText('Not Applicable')).toBeDefined();
+    expect(screen.getByText('Not applicable')).toBeDefined();
   });
 
   it('handles null value by defaulting to N/A', () => {
     render(<ColorTag value={null} colorMap={colorMap} />);
-    expect(screen.getByText('Not Applicable')).toBeDefined();
+    expect(screen.getByText('Not applicable')).toBeDefined();
   });
 
   it('renders tooltip with N/A when value is null', () => {
     render(<ColorTag value={null} colorMap={colorMap} />);
-    const tag = screen.getByText('Not Applicable');
+    const tag = screen.getByText('Not applicable');
     // Tooltip should be present for null values
     const tooltip = tag.closest('.cds--tooltip');
     expect(tooltip).not.toBeNull();
@@ -133,7 +143,7 @@ describe('ColorTag', () => {
         colorMap={colorMap}
       />,
     );
-    const tag = screen.getByText('Not Applicable');
+    const tag = screen.getByText('Not applicable');
     // Tooltip should be present when both code and description are null
     const tooltip = tag.closest('.cds--tooltip');
     expect(tooltip).not.toBeNull();
@@ -141,6 +151,6 @@ describe('ColorTag', () => {
 
   it('handles both code and description being empty strings by defaulting to N/A', () => {
     render(<ColorTag value={{ code: '', description: '' }} colorMap={colorMap} />);
-    expect(screen.getByText('Not Applicable')).toBeDefined();
+    expect(screen.getByText('Not applicable')).toBeDefined();
   });
 });
