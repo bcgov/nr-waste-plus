@@ -53,6 +53,8 @@ public final class ServiceConstants {
           Map.entry("status.description", STATUS_CODE),
           Map.entry("lastUpdated", "last_updated"),
           Map.entry("licenseNumber", "license_number"),
+          // Parentheses required so JpaSort.unsafe sorts using the SELECT alias
+          // Alias contains TRIMM and NULLIF to standarize values
           Map.entry("cuttingPermit", "(cutting_permit)"),
           Map.entry("timberMark", "timber_mark")
       );
