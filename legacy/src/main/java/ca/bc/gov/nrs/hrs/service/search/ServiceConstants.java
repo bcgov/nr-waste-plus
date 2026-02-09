@@ -53,7 +53,7 @@ public final class ServiceConstants {
           Map.entry("status.description", STATUS_CODE),
           Map.entry("lastUpdated", "last_updated"),
           Map.entry("licenseNumber", "license_number"),
-          Map.entry("cuttingPermit", "cutting_permit"),
+          Map.entry("cuttingPermit", "(cutting_permit)"),
           Map.entry("timberMark", "timber_mark")
       );
 

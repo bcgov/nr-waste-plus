@@ -29,7 +29,7 @@ public final class ReportingUnitQueryConstants {
           NVL(fc.LEGAL_FIRST_NAME, '') || NVL(fc.LEGAL_MIDDLE_NAME, '') || fc.CLIENT_NAME
       END AS client_name,
       waa.FOREST_FILE_ID AS license_number,
-      COALESCE(waa.CUTTING_PERMIT_ID, waa.DRAFT_CUTTING_PERMIT_ID) AS cutting_permit,
+      NULLIF(TRIM(COALESCE(waa.CUTTING_PERMIT_ID, waa.DRAFT_CUTTING_PERMIT_ID)),'') AS cutting_permit,
       COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK) AS timber_mark,
       CASE WHEN NVL(waa.MULTI_MARK_IND, 'N') = 'N' THEN 0 ELSE 1 END AS multi_mark,
       wru.waste_sampling_option_code AS sampling_code,
