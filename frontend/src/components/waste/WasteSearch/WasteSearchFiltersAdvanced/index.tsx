@@ -215,11 +215,51 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
             )}
           </Column>
 
+          {/* Licence number */}
+          <Column sm={4} md={4} lg={8}>
+            <TextInput
+              className="advanced-text-input"
+              id="as-license-number-text-input"
+              type="text"
+              labelText="Licence number"
+              defaultValue={filters.licenseeId || ''}
+              onBlur={onTextChange('licenseeId')}
+              maxLength={MAX_TEXT_INPUT_LEN}
+            />
+          </Column>
+
+          {/* Cutting Permit */}
+          <Column sm={4} md={4} lg={8}>
+            <TextInput
+              className="advanced-text-input"
+              id="as-cutting-permit-text-input"
+              type="text"
+              labelText="Cutting Permit"
+              defaultValue={filters.cuttingPermitId || ''}
+              onBlur={onTextChange('cuttingPermitId')}
+              maxLength={MAX_TEXT_INPUT_LEN}
+            />
+          </Column>
+
+          {/* Timber Mark */}
+          <Column sm={4} md={4} lg={8}>
+            <TextInput
+              className="advanced-text-input"
+              id="as-timber-mark-text-input"
+              data-testid="timber-mark-text-input"
+              type="text"
+              labelText="Timber Mark"
+              defaultValue={filters.timberMark || ''}
+              onBlur={onTextChange('timberMark')}
+              maxLength={MAX_TEXT_INPUT_LEN}
+            />
+          </Column>
+
           {/* Submitter */}
           <Column sm={4} md={4} lg={8}>
             <AutoCompleteInput<string>
               id="as-submitter-name-ac"
-              titleText="IDIR or BCeID"
+              titleText="Submitter IDIR/BCeID"
               onAutoCompleteChange={async (value) =>
                 await APIs.search.searchReportingUnitUsers(value)
               }
@@ -262,6 +302,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                   size="md"
                   labelText="Start date"
                   placeholder="yyyy/mm/dd"
+                  helperText="Search by last update"
                 />
               </DatePicker>
               {/* End date */}
@@ -282,53 +323,14 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                   size="md"
                   labelText="End date"
                   placeholder="yyyy/mm/dd"
+                  helperText="   "
                 />
               </DatePicker>
             </div>
           </Column>
 
-          {/* Licence number */}
-          <Column sm={4} md={4} lg={8}>
-            <TextInput
-              className="advanced-text-input"
-              id="as-license-number-text-input"
-              type="text"
-              labelText="Licence number"
-              defaultValue={filters.licenseeId || ''}
-              onBlur={onTextChange('licenseeId')}
-              maxLength={MAX_TEXT_INPUT_LEN}
-            />
-          </Column>
-
-          {/* Cutting Permit */}
-          <Column sm={4} md={4} lg={8}>
-            <TextInput
-              className="advanced-text-input"
-              id="as-cutting-permit-text-input"
-              type="text"
-              labelText="Cutting Permit"
-              defaultValue={filters.cuttingPermitId || ''}
-              onBlur={onTextChange('cuttingPermitId')}
-              maxLength={MAX_TEXT_INPUT_LEN}
-            />
-          </Column>
-
-          {/* Timber Mark */}
-          <Column sm={4} md={4} lg={8}>
-            <TextInput
-              className="advanced-text-input"
-              id="as-timber-mark-text-input"
-              data-testid="timber-mark-text-input"
-              type="text"
-              labelText="Timber Mark"
-              defaultValue={filters.timberMark || ''}
-              onBlur={onTextChange('timberMark')}
-              maxLength={MAX_TEXT_INPUT_LEN}
-            />
-          </Column>
-
           <Column sm={4} md={8} lg={16}>
-            <CheckboxGroup legendText="Reporting unit filters" orientation="horizontal">
+            <CheckboxGroup legendText="" orientation="horizontal">
               <Checkbox
                 id="as-created-by-me-checkbox"
                 data-testid="created-by-me-checkbox"

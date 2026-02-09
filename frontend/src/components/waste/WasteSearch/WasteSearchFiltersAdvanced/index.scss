@@ -53,4 +53,29 @@
       }
     }
   }
+
+  .#{vars.$bcgov-prefix}--modal-container-body {
+
+    .#{vars.$bcgov-prefix}--modal-footer {
+      gap: 0.5rem;
+      margin: 0 1rem 1rem 1rem;
+      .#{vars.$bcgov-prefix}--btn {
+        border-radius: 0.25rem;
+        align-items: center;
+        padding-block: var(--temp-padding-block-max);
+
+        .#{vars.$bcgov-prefix}--btn__icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-top: 0.5rem;
+        }
+
+      }
+    }
+
+    .#{vars.$bcgov-prefix}--form__helper-text {
+      min-block-size: calc(var(--#{vars.$bcgov-prefix}-helper-text-01-font-size, 0.75rem) * var(--#{vars.$bcgov-prefix}-helper-text-01-line-height, 1.33333));
+    }
+  }
 }
