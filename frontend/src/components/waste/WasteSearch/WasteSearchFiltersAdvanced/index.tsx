@@ -302,6 +302,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                   size="md"
                   labelText="Start date"
                   placeholder="yyyy/mm/dd"
+                  helperText="Search by last update"
                 />
               </DatePicker>
               {/* End date */}
@@ -322,13 +323,14 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                   size="md"
                   labelText="End date"
                   placeholder="yyyy/mm/dd"
+                  helperText="   "
                 />
               </DatePicker>
             </div>
           </Column>
 
           <Column sm={4} md={8} lg={16}>
-            <CheckboxGroup legendText="Reporting unit filters" orientation="horizontal">
+            <CheckboxGroup legendText="" orientation="horizontal">
               <Checkbox
                 id="as-created-by-me-checkbox"
                 data-testid="created-by-me-checkbox"
