@@ -3,7 +3,7 @@ import { Button, Column, Grid } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState, type FC } from 'react';
 
-import type { CodeDescriptionDto, ReportingUnitSearchParametersDto } from '@/services/types';
+import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
 
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import SearchInput from '@/components/Form/SearchInput';
@@ -14,16 +14,19 @@ import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
 import APIs from '@/services/APIs';
 
 import './index.scss';
+import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
 
 type WasteSearchFiltersProps = {
-  value: ReportingUnitSearchParametersDto;
-  onChange: (filters: ReportingUnitSearchParametersDto) => void;
+  value: ReportingUnitSearchParametersViewDto;
+  onChange: (filters: ReportingUnitSearchParametersViewDto) => void;
   onSearch: () => void;
 };
 
 const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSearch }) => {
-  const [filters, setFilters] = useState<ReportingUnitSearchParametersDto>(value);
+  const [filters, setFilters] = useState<ReportingUnitSearchParametersViewDto>(value);
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState<boolean>(false);
+
+  const plainFilters = reportingUnitSearchParametersView2Plain(filters);
 
   const { data: samplingOptions } = useQuery({
     queryKey: ['samplingOptions'],
@@ -52,13 +55,14 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
     refetchOnMount: true,
   });
 
-  const handleStringChange = (key: keyof ReportingUnitSearchParametersDto) => (value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-    setTimeout(onSearch, 1);
-  };
+  const handleStringChange =
+    (key: keyof ReportingUnitSearchParametersViewDto) => (value: string) => {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+      setTimeout(onSearch, 1);
+    };
 
   const handleActiveMultiSelectChange =
-    (key: keyof ReportingUnitSearchParametersDto) =>
+    (key: keyof ReportingUnitSearchParametersViewDto) =>
     (changes: { selectedItems: CodeDescriptionDto[] }): void => {
       setFilters((prev) => ({
         ...prev,
@@ -67,13 +71,13 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
     };
 
   const handleChange = (
-    key: keyof ReportingUnitSearchParametersDto,
-    value: string | CodeDescriptionDto[] | boolean | string[],
+    key: keyof ReportingUnitSearchParametersViewDto,
+    value: ReportingUnitSearchParametersViewDto[typeof key],
   ) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const onRemoveFilter = (key: keyof ReportingUnitSearchParametersDto, value?: string) => {
+  const onRemoveFilter = (key: keyof ReportingUnitSearchParametersViewDto, value?: string) => {
     if (!value) {
       setFilters((prev) => {
         const newFilters = { ...prev };
@@ -235,7 +239,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
 
         {/* Active filters column */}
         <Column className="filter-bar-col" sm={4} md={8} lg={16}>
-          <WasteSearchFiltersActive filters={filters} onRemoveFilter={onRemoveFilter} />
+          <WasteSearchFiltersActive filters={plainFilters} onRemoveFilter={onRemoveFilter} />
         </Column>
       </Grid>
       <WasteSearchFiltersAdvanced

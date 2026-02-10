@@ -1,3 +1,5 @@
+import type { Override } from './utils';
+
 export type CodeDescriptionDto = {
   code: string;
   description: string;
@@ -35,6 +37,15 @@ export type ReportingUnitSearchParametersDto = {
   clientLocationCode?: string;
   clientNumbers?: string[];
 };
+
+export type ReportingUnitSearchParametersViewSpecific = {
+  clientNumbers?: CodeDescriptionDto[];
+};
+
+export type ReportingUnitSearchParametersViewDto = Override<
+  ReportingUnitSearchParametersDto,
+  ReportingUnitSearchParametersViewSpecific
+>;
 
 export type ReportingUnitSearchExpandedDto = {
   id: number;

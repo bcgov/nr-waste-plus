@@ -7,7 +7,7 @@ import { headers } from './constants';
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { ApiError, ProblemDetails } from '@/config/api/types';
 import type {
-  ReportingUnitSearchParametersDto,
+  ReportingUnitSearchParametersViewDto,
   ReportingUnitSearchResultDto,
 } from '@/services/search.types';
 import type { SortDirectionType } from '@/services/types';
@@ -17,6 +17,7 @@ import WasteSearchFilters from '@/components/waste/WasteSearch/WasteSearchFilter
 import WasteSearchTableExpandContent from '@/components/waste/WasteSearch/WasteSearchTableExpandContent';
 import useSendEvent from '@/hooks/useSendEvent';
 import API from '@/services/APIs';
+import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
 import { removeEmpty, generateSortArray } from '@/services/utils';
 
 import './index.scss';
@@ -24,16 +25,16 @@ import './index.scss';
 const WasteSearchTable: FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const [filters, setFilters] = useState<ReportingUnitSearchParametersDto>(
-    {} as ReportingUnitSearchParametersDto,
-  );
+  const [filters, setFilters] = useState<ReportingUnitSearchParametersViewDto>({});
   const [sort, setSort] = useState<Record<string, SortDirectionType>>({});
   const { sendEvent, clearEvents } = useSendEvent();
 
+  const plainFilters = reportingUnitSearchParametersView2Plain(filters);
+
   const { data, isLoading, isFetching, isError, refetch, error } = useQuery({
-    queryKey: ['search', 'ru', { page: currentPage, size: pageSize, ...filters, ...sort }],
+    queryKey: ['search', 'ru', { page: currentPage, size: pageSize, ...plainFilters, ...sort }],
     queryFn: () =>
-      API.search.searchReportingUnit(filters, {
+      API.search.searchReportingUnit(plainFilters, {
         page: currentPage,
         size: pageSize,
         sort: generateSortArray<ReportingUnitSearchResultDto>(sort),
@@ -45,7 +46,7 @@ const WasteSearchTable: FC = () => {
 
   const executeSearch = () => {
     clearEvents('waste-search');
-    if (Object.keys(removeEmpty(filters)).length > 0) {
+    if (Object.keys(removeEmpty(plainFilters)).length > 0) {
       setTimeout(refetch, 1);
     }
   };

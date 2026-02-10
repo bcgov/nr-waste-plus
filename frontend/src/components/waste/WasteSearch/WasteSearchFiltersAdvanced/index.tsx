@@ -29,7 +29,7 @@ import {
 
 import type {
   CodeDescriptionDto,
-  ForestClientAutocompleteResultDto,
+  ReportingUnitSearchParametersViewDto,
   ReportingUnitSearchParametersDto,
 } from '@/services/types';
 
@@ -38,19 +38,20 @@ import AutoCompleteInput from '@/components/Form/AutoCompleteInput';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import { useAuth } from '@/context/auth/useAuth';
 import APIs from '@/services/APIs';
+import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils';
 
 import './index.scss';
 
 type WasteSearchFiltersAdvancedProps = {
-  filters: ReportingUnitSearchParametersDto;
+  filters: ReportingUnitSearchParametersViewDto;
   isModalOpen: boolean;
   samplingOptions: CodeDescriptionDto[];
   districtOptions: CodeDescriptionDto[];
   statusOptions: CodeDescriptionDto[];
   onClose: () => void;
   onChange: (
-    key: keyof ReportingUnitSearchParametersDto,
-  ) => (value: string | CodeDescriptionDto[] | boolean | string[]) => void;
+    key: keyof ReportingUnitSearchParametersViewDto,
+  ) => (value: ReportingUnitSearchParametersViewDto[typeof key]) => void;
   onSearch: () => void;
 };
 
@@ -178,24 +179,24 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
           {/* Client Autocomplete or Select */}
           <Column sm={4} md={4} lg={8}>
             {auth.user?.idpProvider === 'IDIR' && (
-              <AutoCompleteInput<ForestClientAutocompleteResultDto>
+              <AutoCompleteInput<CodeDescriptionDto>
                 id="as-forestclient-client-ac"
                 titleText="Client"
                 placeholder="Search by client name, number, or acronym"
                 helperText="Search by client name, number or acronym"
+                selectedItem={filters.clientNumbers?.[0]}
                 onAutoCompleteChange={async (value) =>
-                  await APIs.forestclient.searchForestClients(value, 0, 10)
+                  (await APIs.forestclient.searchForestClients(value, 0, 10)).map((element) =>
+                    forestClientAutocompleteResult2CodeDescription(element),
+                  )
                 }
                 itemToString={(item) => {
                   if (!item) return '';
-                  const { id, name, acronym } = item;
-                  return `${id} ${name}${acronym ? ` (${acronym})` : ''}`;
+                  return item.description;
                 }}
                 onSelect={(data) => {
                   if (data) {
-                    onChange('clientNumbers')([
-                      (data as ForestClientAutocompleteResultDto).id || '',
-                    ]);
+                    onChange('clientNumbers')([(data as CodeDescriptionDto) || null]);
                   }
                 }}
               />
@@ -209,7 +210,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 itemToString={activeMSItemToString}
                 onChange={onActiveMultiSelectChange('clientNumbers')}
                 selectedItems={(myClients ?? []).filter((option) =>
-                  (filters.clientNumbers || []).includes(option.code),
+                  (filters.clientNumbers || []).some((item) => item.code === option.code),
                 )}
               />
             )}
@@ -260,6 +261,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
             <AutoCompleteInput<string>
               id="as-submitter-name-ac"
               titleText="Submitter IDIR/BCeID"
+              selectedItem={filters.requestUserId}
               onAutoCompleteChange={async (value) =>
                 await APIs.search.searchReportingUnitUsers(value)
               }
