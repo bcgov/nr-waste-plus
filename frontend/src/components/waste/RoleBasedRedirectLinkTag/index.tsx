@@ -1,4 +1,4 @@
-import { type FC } from 'react';
+import { type FC, useEffect } from 'react';
 
 import type { Role } from '@/context/auth/types';
 
@@ -25,7 +25,10 @@ const RoleBasedRedirectLinkTag: FC<RoleBasedRedirectLinkTagProps> = ({
   const userRoles = user?.roles ?? [];
   const allowedRoleNames = new Set(allowedRoles);
   const isUserAllowed = userRoles.some((userRole) => allowedRoleNames.has(userRole.role));
-  onRenderStateChange?.(isUserAllowed);
+
+  useEffect(() => {
+    onRenderStateChange?.(isUserAllowed);
+  }, [isUserAllowed, onRenderStateChange]);
 
   if (isUserAllowed) {
     return <RedirectLinkTag text={text} url={url} sameTab={sameTab} />;
