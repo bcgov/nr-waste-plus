@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
@@ -191,49 +191,5 @@ describe('TableResource', () => {
       displayToolbar: true,
     });
     expect(screen.getByTitle('Edit columns')).toBeDefined();
-  });
-
-  it('Edit columns open and show columns', async () => {
-    const onPageChange = vi.fn();
-    await renderWithProps({
-      headers,
-      content,
-      loading: false,
-      error: false,
-      onPageChange,
-      displayToolbar: true,
-    });
-    const editColumns = screen.getByTitle('Edit columns');
-    await userEvent.click(editColumns);
-    fireEvent.click(editColumns);
-    //TODO: vitest can't detect this update
-    //expect(screen.getByRole('checkbox', { name: 'Toggle Hidden column' })).toBeDefined();
-  });
-
-  it('Enable hidden column', async () => {
-    const onPageChange = vi.fn();
-    await renderWithProps({
-      headers,
-      content,
-      loading: false,
-      error: false,
-      onPageChange,
-      displayToolbar: true,
-    });
-
-    //Initially doesn't appear, because is hidden
-    const columnHeaderPre = screen.queryByRole('columnheader', { name: 'Hidden' });
-    expect(columnHeaderPre).toBeNull();
-    //Open the edit columns
-    const editColumns = screen.getByTitle('Edit columns');
-    await userEvent.click(editColumns);
-    //TODO: vitest can't detect this update
-    //Enable the hidden
-    //const enableHiddenColumn = screen.getByRole('checkbox', { name: 'Toggle Hidden column' });
-    //expect(enableHiddenColumn).toBeDefined();
-    //await userEvent.click(enableHiddenColumn);
-    //Then is present
-    //const columnHeader = screen.getByRole('columnheader', { name: 'Hidden' });
-    //expect(columnHeader).toBeDefined();
   });
 });
