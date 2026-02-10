@@ -90,7 +90,7 @@ const TableResource = <T,>({
 }: TableResourceProps<T>) => {
   const [tableHeaders, setTableHeaders] = useState(headers);
   const { userPreference, updatePreferences, isLoaded } = usePreference();
-  const [expandedRow, setExpandedRow] = useState<string | undefined>(undefined);
+  const [expandedRow, setExpandedRow] = useState<Set<string>>(new Set());
   const [sortState, setSortState] = useState<SortingKeys<T>>(
     headers
       .filter((header) => header.sortable)
@@ -99,8 +99,8 @@ const TableResource = <T,>({
         return acc;
       }, {} as SortingKeys<T>),
   );
-  const [expandedRowComponent, setExpandedRowComponent] = useState<ReactNode | undefined>(
-    undefined,
+  const [expandedRowComponent, setExpandedRowComponent] = useState<Map<string, ReactNode>>(
+    new Map(),
   );
 
   const loadTableFromPreferences = () => {
@@ -217,12 +217,30 @@ const TableResource = <T,>({
 
   const handleRowExpansion = (rowId: string | number) => {
     if (onRowExpanded) {
-      setExpandedRowComponent(undefined);
+      const rowKey = `row-${rowId}`;
       setExpandedRow((prevState) => {
-        if (prevState && prevState === `row-${rowId}`) return undefined;
-        return `row-${rowId}`;
+        const newSet = new Set(prevState);
+        if (newSet.has(rowKey)) {
+          // Toggle OFF: remove from set and map
+          newSet.delete(rowKey);
+          setExpandedRowComponent((prev) => {
+            const newMap = new Map(prev);
+            newMap.delete(rowKey);
+            return newMap;
+          });
+        } else {
+          // Toggle ON: add to set and start loading
+          newSet.add(rowKey);
+          onRowExpanded(rowId).then((content) =>
+            setExpandedRowComponent((prev) => {
+              const newMap = new Map(prev);
+              newMap.set(rowKey, content);
+              return newMap;
+            }),
+          );
+        }
+        return newSet;
       });
-      onRowExpanded(rowId).then((content) => setExpandedRowComponent(content));
     }
   };
 
@@ -296,13 +314,14 @@ const TableResource = <T,>({
 
             const isExpandable = Boolean(onRowExpanded);
 
+            const rowKey = `row-${row.id}`;
             return isExpandable ? (
               <TableResourceExpandRow
                 key={row.id}
                 columns={tableHeaders.filter((header) => header.selected).length}
-                isExpanded={expandedRow === `row-${row.id}`}
+                isExpanded={expandedRow.has(rowKey)}
                 onExpand={() => handleRowExpansion(row.id)}
-                expandedChild={expandedRowComponent}
+                expandedChild={expandedRowComponent.get(rowKey)}
               >
                 {cells}
               </TableResourceExpandRow>
@@ -319,7 +338,11 @@ const TableResource = <T,>({
           pageSize={content.page.size}
           pageSizes={[10, 20, 30]}
           totalItems={content.page.totalElements}
-          onChange={({ page, pageSize }) => onPageChange({ page: page - 1, pageSize })}
+          onChange={({ page, pageSize }) => {
+            setExpandedRow(new Set());
+            setExpandedRowComponent(new Map());
+            onPageChange({ page: page - 1, pageSize });
+          }}
           itemRangeText={displayRange ? itemRangeText : noItemRangeText}
         />
       )}
