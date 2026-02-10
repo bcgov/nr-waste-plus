@@ -404,7 +404,51 @@ test.describe('Waste Search Page', () => {
       // Verify fields are empty/placeholder
       const dataFields = page.locator('[data-testid*="card-item-content"]');
       // With null blockId, component won't fetch data, so fields should be in loading state or empty
-      await expect(dataFields.first()).toBeDefined();
+      expect(dataFields.first()).toBeDefined();
+    });
+
+    test('expand more than one entry', async ({ page }) => {
+      // Mock the expand API endpoint
+      await mockApiResponsesWithStub(
+        page,
+        'search/reporting-units/ex/34906/102',
+        'search/reporting-units-expanded-full.json',
+      );
+      await mockApiResponsesWithStub(
+        page,
+        'search/reporting-units/ex/34906/105',
+        'search/reporting-units-expanded-full.json',
+      );
+
+      const searchBox = page.getByRole('searchbox');
+      await searchBox.fill('67890');
+      await searchBox.blur();
+
+      const searchButton = page.getByTestId('search-button-most');
+      await searchButton.click();
+
+      await page.waitForLoadState('networkidle');
+
+      // Click the expand button for the first row
+      const row1 = page
+        .getByRole('row', {
+          name: 'Expand row for more details R102 34906 91234567 NORTHERN TIMBER CO AGR -',
+        })
+        .getByLabel('Expand row for more details');
+      const row2 = page
+        .getByRole('row', {
+          name: 'Expand row for more details R105 34906 91234567 NORTHERN TIMBER CO AGR -',
+        })
+        .getByLabel('Expand row for more details');
+
+      await row1.click();
+      await page.waitForLoadState('networkidle');
+
+      await row2.click();
+      await page.waitForLoadState('networkidle');
+
+      const expandedRows = page.locator('tr.cds--parent-row.cds--expandable-row');
+      await expect(expandedRows).toHaveCount(2);
     });
   });
 });

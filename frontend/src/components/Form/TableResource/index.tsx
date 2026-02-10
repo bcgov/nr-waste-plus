@@ -14,7 +14,7 @@ import {
   TableToolbarMenu,
 } from '@carbon/react';
 import { Column as ColumnIcon } from '@carbon/react/icons';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import TableResourceExpandRow from './TableResourceExpandRow';
 import TableResourceRow from './TableResourceRow';
@@ -91,6 +91,7 @@ const TableResource = <T,>({
   const [tableHeaders, setTableHeaders] = useState(headers);
   const { userPreference, updatePreferences, isLoaded } = usePreference();
   const [expandedRow, setExpandedRow] = useState<Set<string>>(new Set());
+  const expandedRowRef = useRef<Set<string>>(new Set());
   const [sortState, setSortState] = useState<SortingKeys<T>>(
     headers
       .filter((header) => header.sortable)
@@ -102,6 +103,13 @@ const TableResource = <T,>({
   const [expandedRowComponent, setExpandedRowComponent] = useState<Map<string, ReactNode>>(
     new Map(),
   );
+  // Track request tokens per row to invalidate stale responses
+  const pendingRowRequestsRef = useRef<Map<string, number>>(new Map());
+
+  // Keep ref in sync with state for reading current expanded rows
+  useEffect(() => {
+    expandedRowRef.current = expandedRow;
+  }, [expandedRow]);
 
   const loadTableFromPreferences = () => {
     if (userPreference.tableHeaders) {
@@ -218,29 +226,49 @@ const TableResource = <T,>({
   const handleRowExpansion = (rowId: string | number) => {
     if (onRowExpanded) {
       const rowKey = `row-${rowId}`;
-      setExpandedRow((prevState) => {
-        const newSet = new Set(prevState);
-        if (newSet.has(rowKey)) {
-          // Toggle OFF: remove from set and map
-          newSet.delete(rowKey);
-          setExpandedRowComponent((prev) => {
-            const newMap = new Map(prev);
-            newMap.delete(rowKey);
-            return newMap;
-          });
-        } else {
-          // Toggle ON: add to set and start loading
-          newSet.add(rowKey);
-          onRowExpanded(rowId).then((content) =>
+
+      // Read current state using ref to determine the toggle decision
+      const currentExpandedRows = expandedRowRef.current;
+      const isCurrentlyExpanded = currentExpandedRows.has(rowKey);
+
+      if (isCurrentlyExpanded) {
+        // Toggle OFF: remove from set and map, invalidate pending requests
+        const newSet = new Set(currentExpandedRows);
+        newSet.delete(rowKey);
+        setExpandedRow(newSet);
+
+        setExpandedRowComponent((prev) => {
+          const newMap = new Map(prev);
+          newMap.delete(rowKey);
+          return newMap;
+        });
+
+        // Invalidate any pending requests for this row
+        pendingRowRequestsRef.current.delete(rowKey);
+      } else {
+        // Toggle ON: add to set and fetch content
+        const newSet = new Set(currentExpandedRows);
+        newSet.add(rowKey);
+        setExpandedRow(newSet);
+
+        // Create a request token for this expansion
+        const requestToken = Date.now();
+        pendingRowRequestsRef.current.set(rowKey, requestToken);
+
+        onRowExpanded(rowId).then((content) => {
+          // Only update if the row is still expanded and this is the latest request
+          if (
+            expandedRowRef.current.has(rowKey) &&
+            pendingRowRequestsRef.current.get(rowKey) === requestToken
+          ) {
             setExpandedRowComponent((prev) => {
               const newMap = new Map(prev);
               newMap.set(rowKey, content);
               return newMap;
-            }),
-          );
-        }
-        return newSet;
-      });
+            });
+          }
+        });
+      }
     }
   };
 
@@ -341,6 +369,7 @@ const TableResource = <T,>({
           onChange={({ page, pageSize }) => {
             setExpandedRow(new Set());
             setExpandedRowComponent(new Map());
+            pendingRowRequestsRef.current.clear();
             onPageChange({ page: page - 1, pageSize });
           }}
           itemRangeText={displayRange ? itemRangeText : noItemRangeText}
