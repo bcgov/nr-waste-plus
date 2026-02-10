@@ -104,21 +104,6 @@ public class ReportingUnitSearchParametersDto {
   }
 
   /**
-   * Returns the request user id when the request is explicitly "by me".
-   *
-   * <p>Uses {@link org.apache.commons.lang3.BooleanUtils#toString(boolean, String, String)}
-   * semantics: if {@code requestByMe} is {@code true} the configured {@code requestUserId} is
-   * returned; otherwise {@link LegacyConstants#NOVALUE} is returned.</p>
-   *
-   * @return the effective request user id or {@code NOVALUE} when not applicable
-   */
-  public String getRequestUserId() {
-    return BooleanUtils.toString(
-        requestByMe, requestUserId, LegacyConstants.NOVALUE
-    );
-  }
-
-  /**
    * Returns the start date formatted as ISO date (yyyy-MM-dd) or {@code NOVALUE} when not
    * provided.
    *
