@@ -56,6 +56,7 @@ public class ReportingUnitSearchService {
    * @param filters           search filter DTO containing various optional criteria
    * @param page              paging and sorting information
    * @param userClientNumbers client numbers derived from the caller's roles for scoping
+   * @param currentUserId     current user id, used when requestByMe is selected
    * @return a page of {@link ReportingUnitSearchResultDto} matching the supplied criteria
    */
   @NewSpan
@@ -77,7 +78,7 @@ public class ReportingUnitSearchService {
       filters.setClientNumbers(userClientNumbers);
     }
 
-    if(BooleanUtils.isTrue(filters.isRequestByMe())){
+    if(filters.isRequestByMe()) {
       filters.setRequestUserId(currentUserId);
     }
 
