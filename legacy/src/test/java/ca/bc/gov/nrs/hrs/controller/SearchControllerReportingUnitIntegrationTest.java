@@ -220,4 +220,26 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andReturn();
   }
 
+  @Test
+  @DisplayName("Ice king wants to see only his own entries")
+  @WithMockJwt(
+      idp = "BCEID",
+      cognitoGroups = {"Submitter_00010004", "Viewer_00010004"},
+      value = "ICEKING"
+  )
+  void shouldSearchEntriesCreatedByMe() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .param("requestByMe", "true")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.content.length()").value(10))
+        .andExpect(jsonPath("$.page.size").value(10))
+        .andExpect(jsonPath("$.page.totalElements").value(15))
+        .andReturn();
+  }
+
 }

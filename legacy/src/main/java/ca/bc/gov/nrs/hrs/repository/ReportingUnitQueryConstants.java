@@ -84,7 +84,7 @@ public final class ReportingUnitQueryConstants {
         )
         AND (
           NVL(:#{#filter.requestUserId}, 'NOVALUE') = 'NOVALUE'
-          OR wru.ENTRY_USERID = :#{#filter.requestUserId}
+          OR waa.ENTRY_USERID = :#{#filter.requestUserId}
         )
         AND (
           NVL(:#{#filter.licenseeId}, 'NOVALUE') = 'NOVALUE'
