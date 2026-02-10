@@ -3,6 +3,7 @@ import type { CodeDescriptionDto, ReportingUnitSearchResultDto } from '@/service
 
 import ColorTag, { type CarbonColors } from '@/components/core/Tags/ColorTag';
 import DateTag from '@/components/core/Tags/DateTag';
+import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 import YesNoTag from '@/components/core/Tags/YesNoTag';
 import CodeDescriptionTag from '@/components/waste/CodeDescriptionTag';
 import TooltipRedirectLinkTag from '@/components/waste/TooltipRedirectLinkTag';
@@ -33,11 +34,37 @@ const statusColorMap: Record<string, CarbonColors> = {
   EXP: 'cyan',
 };
 
+const renderEmptyValueTag = (value: unknown) => <EmptyValueTag value={value as string} />;
+
 export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
-  { key: 'cutBlockId', header: 'Block ID', sortable: true, selected: true },
-  { key: 'licenseNumber', header: 'Licence No.', sortable: true, selected: false },
-  { key: 'cuttingPermit', header: 'Cutting Permit', sortable: true, selected: false },
-  { key: 'timberMark', header: 'Timber Mark', sortable: true, selected: false },
+  {
+    key: 'cutBlockId',
+    header: 'Block ID',
+    sortable: true,
+    selected: true,
+    renderAs: renderEmptyValueTag,
+  },
+  {
+    key: 'licenseNumber',
+    header: 'Licence No.',
+    sortable: true,
+    selected: false,
+    renderAs: renderEmptyValueTag,
+  },
+  {
+    key: 'cuttingPermit',
+    header: 'Cutting Permit',
+    sortable: true,
+    selected: false,
+    renderAs: renderEmptyValueTag,
+  },
+  {
+    key: 'timberMark',
+    header: 'Timber Mark',
+    sortable: true,
+    selected: false,
+    renderAs: renderEmptyValueTag,
+  },
 
   {
     key: 'ruNumber',
