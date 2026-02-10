@@ -73,7 +73,12 @@ public class SearchController {
     log.info("Searching waste entries with filters: {}, pageable: {} for: {}",
         filters, pageable, JwtPrincipalUtil.getUserId(jwt)
     );
-    return ruSearchService.search(filters, pageable, userClientNumbers);
+    return ruSearchService.search(
+        filters,
+        pageable,
+        userClientNumbers,
+        JwtPrincipalUtil.getUserId(jwt)
+    );
 
   }
 

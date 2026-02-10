@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -55,13 +56,15 @@ public class ReportingUnitSearchService {
    * @param filters           search filter DTO containing various optional criteria
    * @param page              paging and sorting information
    * @param userClientNumbers client numbers derived from the caller's roles for scoping
+   * @param currentUserId     current user id, used when requestByMe is selected
    * @return a page of {@link ReportingUnitSearchResultDto} matching the supplied criteria
    */
   @NewSpan
   public Page<ReportingUnitSearchResultDto> search(
       ReportingUnitSearchParametersDto filters,
       Pageable page,
-      List<String> userClientNumbers
+      List<String> userClientNumbers,
+      String currentUserId
   ) {
 
     // If no client numbers are provided in the filters, or if the only value is the
@@ -73,6 +76,10 @@ public class ReportingUnitSearchService {
         )
     ) {
       filters.setClientNumbers(userClientNumbers);
+    }
+
+    if(filters.isRequestByMe()) {
+      filters.setRequestUserId(currentUserId);
     }
 
     log.info("Searching reporting units with filters: {}, pageable: {}", filters, page);

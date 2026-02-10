@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 public enum IdentityProvider {
   IDIR("idir"),
   BUSINESS_BCEID("bceidbusiness"),
+  BCEID("bceid"),
   BCSC("bcsc");
 
   @Getter
