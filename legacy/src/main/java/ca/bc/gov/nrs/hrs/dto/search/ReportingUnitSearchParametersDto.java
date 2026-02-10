@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
-import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.format.annotation.DateTimeFormat;
 
 /**
@@ -16,8 +15,8 @@ import org.springframework.format.annotation.DateTimeFormat;
  *
  * <p>This DTO captures the set of filters the frontend can supply when querying the
  * reporting-unit search endpoint. Several getters are overridden to provide safe, default values
- * when list-based filters are null or empty.</p>
- * Some getters are overridden to provide default values if the lists are null or empty.
+ * when list-based filters are null or empty.</p> Some getters are overridden to provide default
+ * values if the lists are null or empty.
  */
 @Data
 @NoArgsConstructor
