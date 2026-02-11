@@ -34,10 +34,10 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.content[0].ruNumber").value(34906))
-        .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
+        .andExpect(jsonPath("$.content[0].ruNumber").value(879))
+        .andExpect(jsonPath("$.content[0].client.code").value("00001271"))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(56))
+        .andExpect(jsonPath("$.page.totalElements").value(60))
         .andReturn();
   }
 
@@ -54,10 +54,10 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.content[0].ruNumber").value(34906))
-        .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
+        .andExpect(jsonPath("$.content[0].ruNumber").value(879))
+        .andExpect(jsonPath("$.content[0].client.code").value("00001271"))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(56))
+        .andExpect(jsonPath("$.page.totalElements").value(60))
         .andReturn();
   }
 

@@ -53,6 +53,10 @@ public interface ReportingUnitSearchExpandedMapper extends
       target = "totalBlocks",
       expression = "java(projection.getTotalBlockCount())"
   )
+  @Mapping(
+      target = "secondaryTimberMarks",
+      expression = "java(projection.getSecondaryTimberMarks())"
+  )
   ReportingUnitSearchExpandedDto fromProjection(ReportingUnitSearchExpandedProjection projection);
 
 }

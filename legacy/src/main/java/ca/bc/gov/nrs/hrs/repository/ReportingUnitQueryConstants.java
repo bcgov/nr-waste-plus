@@ -162,6 +162,18 @@ public final class ReportingUnitQueryConstants {
       FETCH FIRST 1 ROW ONLY
       """;
 
+  public static final String GET_BLOCK_SECONDARY_MARK = """
+      SELECT
+        waa.PARENT_WAA_ID AS parent_id,
+        LISTAGG(
+          NULLIF(TRIM(COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK)),''),', ')
+          WITHIN GROUP (ORDER BY NULLIF(TRIM(COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK) ),'')
+        ) AS secondary_mark
+      FROM WASTE_ASSESSMENT_AREA waa
+      WHERE waa.PARENT_WAA_ID = :blockId
+      GROUP BY waa.PARENT_WAA_ID
+      """;
+
   public static final String GET_SEARCH_BLOCK_EXPANDED = """
       SELECT
         waa.WASTE_ASSESSMENT_AREA_ID AS id,
@@ -179,18 +191,21 @@ public final class ReportingUnitQueryConstants {
         ac.attachment_id AS attachment_id,
         ac.attachment_name AS attachment_name,
         c.WASTE_COMMENT AS comments,
-        TOTAL AS total_block_count
+        TOTAL AS total_block_count,
+        cv.secondary_mark AS secondary_timber_marks
       FROM WASTE_ASSESSMENT_AREA waa
       LEFT JOIN BlockCount bc ON bc.RU_ID = waa.REPORTING_UNIT_ID
       LEFT JOIN CommentsAudit c ON c.block_id = waa.WASTE_ASSESSMENT_AREA_ID
       LEFT JOIN AttachmentContent ac ON ac.block_id = waa.WASTE_ASSESSMENT_AREA_ID
+      LEFT JOIN ChildValues cv ON cv.parent_id = waa.WASTE_ASSESSMENT_AREA_ID
       WHERE waa.REPORTING_UNIT_ID = :reportingUnit
         AND waa.WASTE_ASSESSMENT_AREA_ID = :blockId
       """;
 
   public static final String GET_SEARCH_BLOCK_EXPANDED_CONTENT =
       "WITH BlockCount AS (" + GET_BLOCK_COUNT + "), "
-          + "CommentsAudit AS (" + GET_BLOCK_COMMENT_LATEST + "), "
-          + "AttachmentContent AS (" + GET_BLOCK_ATTACHMENT_LATEST + ") "
-          + GET_SEARCH_BLOCK_EXPANDED;
+      + "CommentsAudit AS (" + GET_BLOCK_COMMENT_LATEST + "), "
+      + "AttachmentContent AS (" + GET_BLOCK_ATTACHMENT_LATEST + "), "
+      + "ChildValues AS (" + GET_BLOCK_SECONDARY_MARK + ") "
+      + GET_SEARCH_BLOCK_EXPANDED;
 }

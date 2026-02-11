@@ -31,7 +31,9 @@ public record ReportingUnitSearchExpandedDto(
     /* Additional comments or notes about the reporting unit. */
     String comments,
     /* The total number of blocks associated with this reporting unit. */
-    Integer totalBlocks
+    Integer totalBlocks,
+    /* A comma-separated list of secondary timber marks associated with the block, if any. */
+    String secondaryTimberMarks
 ) {
 
 }
