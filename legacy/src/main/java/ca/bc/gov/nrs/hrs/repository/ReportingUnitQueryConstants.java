@@ -32,6 +32,7 @@ public final class ReportingUnitQueryConstants {
       NULLIF(TRIM(COALESCE(waa.CUTTING_PERMIT_ID, waa.DRAFT_CUTTING_PERMIT_ID)),'') AS cutting_permit,
       COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK) AS timber_mark,
       CASE WHEN NVL(waa.MULTI_MARK_IND, 'N') = 'N' THEN 0 ELSE 1 END AS multi_mark,
+      CASE WHEN waa.PARENT_WAA_ID IS NOT NULL THEN 1 ELSE 0 END AS secondary_entry,
       wru.waste_sampling_option_code AS sampling_code,
       wsoc.DESCRIPTION AS sampling_name,
       ou.ORG_UNIT_CODE AS district_code,
@@ -92,11 +93,27 @@ public final class ReportingUnitQueryConstants {
         )
         AND (
           NVL(:#{#filter.cuttingPermitId}, 'NOVALUE') = 'NOVALUE'
-          OR waa.DRAFT_CUTTING_PERMIT_ID = :#{#filter.cuttingPermitId}
+          OR (
+            waa.DRAFT_CUTTING_PERMIT_ID = :#{#filter.cuttingPermitId}
+            OR waa.CUTTING_PERMIT_ID = :#{#filter.cuttingPermitId}
+          )
         )
         AND (
           NVL(:#{#filter.timberMark}, 'NOVALUE') = 'NOVALUE'
-          OR waa.draft_timber_mark = :#{#filter.timberMark}
+          OR (
+            waa.draft_timber_mark = :#{#filter.timberMark}
+            OR waa.timber_mark = :#{#filter.timberMark}
+            OR (
+                EXISTS (
+                  SELECT 1 FROM WASTE_ASSESSMENT_AREA waa_child
+                  WHERE waa_child.parent_waa_id = waa.waste_assessment_area_id
+                  AND (
+                    waa_child.draft_timber_mark = :#{#filter.timberMark}
+                    OR waa_child.TIMBER_MARK = :#{#filter.timberMark}
+                  )
+                )
+            )
+          )
         )
         AND (
           'NOVALUE' IN (:#{#filter.clientNumbers})
@@ -174,6 +191,23 @@ public final class ReportingUnitQueryConstants {
       GROUP BY waa.PARENT_WAA_ID
       """;
 
+  public static final String GET_BLOCK_PRIMARY_MARK = """
+      SELECT
+        waa.WASTE_ASSESSMENT_AREA_ID AS id,
+        NULLIF( TRIM( COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK) ), '' ) AS primary_mark
+      FROM WASTE_ASSESSMENT_AREA waa
+      WHERE waa.REPORTING_UNIT_ID = :reportingUnit
+      AND waa.WASTE_ASSESSMENT_AREA_ID = (
+        SELECT
+          waa_p.PARENT_WAA_ID
+        FROM WASTE_ASSESSMENT_AREA waa_p
+        WHERE
+          waa_p.WASTE_ASSESSMENT_AREA_ID = :blockId
+          AND waa_p.REPORTING_UNIT_ID = :reportingUnit
+      	)
+      FETCH FIRST 1 ROW ONLY
+      """;
+
   public static final String GET_SEARCH_BLOCK_EXPANDED = """
       SELECT
         waa.WASTE_ASSESSMENT_AREA_ID AS id,
@@ -192,12 +226,14 @@ public final class ReportingUnitQueryConstants {
         ac.attachment_name AS attachment_name,
         c.WASTE_COMMENT AS comments,
         TOTAL AS total_block_count,
-        cv.secondary_mark AS secondary_timber_marks
+        cv.secondary_mark AS secondary_timber_marks,
+        pv.primary_mark AS primary_mark
       FROM WASTE_ASSESSMENT_AREA waa
       LEFT JOIN BlockCount bc ON bc.RU_ID = waa.REPORTING_UNIT_ID
       LEFT JOIN CommentsAudit c ON c.block_id = waa.WASTE_ASSESSMENT_AREA_ID
       LEFT JOIN AttachmentContent ac ON ac.block_id = waa.WASTE_ASSESSMENT_AREA_ID
       LEFT JOIN ChildValues cv ON cv.parent_id = waa.WASTE_ASSESSMENT_AREA_ID
+      LEFT JOIN PrimaryValue pv ON pv.id = waa.PARENT_WAA_ID
       WHERE waa.REPORTING_UNIT_ID = :reportingUnit
         AND waa.WASTE_ASSESSMENT_AREA_ID = :blockId
       """;
@@ -206,6 +242,7 @@ public final class ReportingUnitQueryConstants {
       "WITH BlockCount AS (" + GET_BLOCK_COUNT + "), "
       + "CommentsAudit AS (" + GET_BLOCK_COMMENT_LATEST + "), "
       + "AttachmentContent AS (" + GET_BLOCK_ATTACHMENT_LATEST + "), "
-      + "ChildValues AS (" + GET_BLOCK_SECONDARY_MARK + ") "
+      + "ChildValues AS (" + GET_BLOCK_SECONDARY_MARK + "), "
+      + "PrimaryValue AS (" + GET_BLOCK_PRIMARY_MARK + ") "
       + GET_SEARCH_BLOCK_EXPANDED;
 }

@@ -99,4 +99,12 @@ public interface ReportingUnitSearchExpandedProjection {
    * @return a comma-separated string of secondary timber marks, if any
    */
   String getSecondaryTimberMarks();
+
+  /**
+   * Gets the primary timber mark associated with the current block, if the block is a child block;
+   * otherwise, returns null.
+   *
+   * @return the primary timber mark, if any
+   */
+  String getPrimaryMark();
 }

@@ -56,6 +56,11 @@ public interface ReportingUnitSearchProjection {
   Integer getMultiMark();
 
   /**
+   * Is secondary entry or not (1 = true, 0 = false).
+   */
+  Integer getSecondaryEntry();
+
+  /**
    * Sampling option code.
    */
   String getSamplingCode();

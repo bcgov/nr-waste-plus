@@ -57,6 +57,10 @@ public interface ReportingUnitSearchExpandedMapper extends
       target = "secondaryTimberMarks",
       expression = "java(projection.getSecondaryTimberMarks())"
   )
+  @Mapping(
+      target = "primaryMark",
+      expression = "java(projection.getPrimaryMark())"
+  )
   ReportingUnitSearchExpandedDto fromProjection(ReportingUnitSearchExpandedProjection projection);
 
 }

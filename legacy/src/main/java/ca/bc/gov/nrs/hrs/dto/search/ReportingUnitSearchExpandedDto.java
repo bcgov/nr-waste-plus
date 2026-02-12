@@ -33,7 +33,10 @@ public record ReportingUnitSearchExpandedDto(
     /* The total number of blocks associated with this reporting unit. */
     Integer totalBlocks,
     /* A comma-separated list of secondary timber marks associated with the block, if any. */
-    String secondaryTimberMarks
+    String secondaryTimberMarks,
+    /* Gets the primary timber mark associated with the current block,
+      if the block is a child block; otherwise, returns null. */
+    String primaryMark
 ) {
 
 }
