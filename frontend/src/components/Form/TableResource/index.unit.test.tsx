@@ -192,4 +192,38 @@ describe('TableResource', () => {
     });
     expect(screen.getByTitle('Edit columns')).toBeDefined();
   });
+
+  it('renders tooltip for sortable headers when sort is enabled', async () => {
+    const onSortChange = vi.fn();
+    const sortableHeaders: TableHeaderType<TestObjectType>[] = headers.map((header) =>
+      header.key === 'id' ? { ...header, sortable: true } : header,
+    );
+
+    await renderWithProps({
+      headers: sortableHeaders,
+      content,
+      loading: false,
+      error: false,
+      onSortChange,
+    });
+
+    const headerWithTooltip = screen.getByText('ID');
+    expect(headerWithTooltip.className).to.contain('table-header-tooltip-trigger');
+  });
+
+  it('does not render tooltip when sort is disabled', async () => {
+    const sortableHeaders: TableHeaderType<TestObjectType>[] = headers.map((header) =>
+      header.key === 'id' ? { ...header, sortable: true } : header,
+    );
+
+    await renderWithProps({
+      headers: sortableHeaders,
+      content,
+      loading: false,
+      error: false,
+    });
+
+    const headerWithoutTooltip = screen.getByText('ID');
+    expect(headerWithoutTooltip.className).to.not.contain('table-header-tooltip-trigger');
+  });
 });
