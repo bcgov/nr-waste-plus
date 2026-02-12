@@ -256,6 +256,7 @@
       "cuttingPermit": " ",
       "timberMark": "DD35':",
       "multiMark": true,
+      "secondaryEntry": false,
       "sampling": {
         "code": "BLK",
         "description": "Cutblock"
