@@ -51,6 +51,19 @@ describe('ColorTag', () => {
     }
   });
 
+  it('does not render tooltip when showTooltip is false even if code and description exist', () => {
+    render(
+      <ColorTag
+        value={{ code: 'C', description: 'Charlie Coast' }}
+        colorMap={colorMap}
+        showTooltip={false}
+      />,
+    );
+    const tag = screen.getByText('Charlie coast');
+    const tooltip = tag.closest('.cds--tooltip');
+    expect(tooltip).toBeNull();
+  });
+
   it('displays dash when description is null', () => {
     render(
       <ColorTag

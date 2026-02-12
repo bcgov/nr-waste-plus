@@ -12,6 +12,7 @@ import {
   TableToolbar,
   TableToolbarContent,
   TableToolbarMenu,
+  Tooltip,
 } from '@carbon/react';
 import { Column as ColumnIcon } from '@carbon/react/icons';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
@@ -272,6 +273,17 @@ const TableResource = <T,>({
     }
   };
 
+  const getSortTooltip = (direction: SortDirectionType) => {
+    switch (direction) {
+      case 'ASC':
+        return 'Sort by descending order';
+      case 'DESC':
+        return 'Clear sort order';
+      default:
+        return 'Sort by ascending order';
+    }
+  };
+
   return (
     <>
       {displayToolbar && (
@@ -325,7 +337,13 @@ const TableResource = <T,>({
                   }
                   onClick={() => handleSortClick(header.key)}
                 >
-                  {header.header}
+                  {Boolean(header.sortable) && Boolean(onSortChange) ? (
+                    <Tooltip label={getSortTooltip(sortState[header.key])} align="top" autoAlign>
+                      <span className="table-header-tooltip-trigger">{header.header}</span>
+                    </Tooltip>
+                  ) : (
+                    header.header
+                  )}
                 </TableHeader>
               ))}
           </TableRow>
@@ -366,6 +384,8 @@ const TableResource = <T,>({
           pageSize={content.page.size}
           pageSizes={[10, 20, 30]}
           totalItems={content.page.totalElements}
+          backwardText="Go to previous page"
+          forwardText="Go to next page"
           onChange={({ page, pageSize }) => {
             setExpandedRow(new Set());
             setExpandedRowComponent(new Map());

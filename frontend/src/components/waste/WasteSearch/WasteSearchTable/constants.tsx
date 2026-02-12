@@ -130,7 +130,11 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     sortable: true,
     selected: true,
     renderAs: (value) => (
-      <ColorTag value={value as { code: string; description: string }} colorMap={statusColorMap} />
+      <ColorTag
+        value={value as { code: string; description: string }}
+        colorMap={statusColorMap}
+        showTooltip={true}
+      />
     ),
   },
   { key: 'status.code', header: 'Status code', sortable: true },
