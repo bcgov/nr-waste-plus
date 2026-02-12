@@ -182,9 +182,9 @@ public final class ReportingUnitQueryConstants {
   public static final String GET_BLOCK_SECONDARY_MARK = """
       SELECT
         waa.PARENT_WAA_ID AS parent_id,
-        LISTAGG(
-          NULLIF(TRIM(COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK)),''),', ')
-          WITHIN GROUP (ORDER BY NULLIF(TRIM(COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK) ),'')
+        LISTAGG(NULLIF(TRIM(COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK)),''),', ')
+        WITHIN GROUP (
+          ORDER BY NULLIF(TRIM(COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK) ),'')
         ) AS secondary_mark
       FROM WASTE_ASSESSMENT_AREA waa
       WHERE waa.PARENT_WAA_ID = :blockId
