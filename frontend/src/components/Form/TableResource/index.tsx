@@ -331,14 +331,20 @@ const TableResource = <T,>({
                 <TableHeader
                   key={`header-${String(header.key)}`}
                   isSortable={Boolean(header.sortable) && Boolean(onSortChange)}
-                  isSortHeader={sortState[header.key] !== 'NONE'}
+                  isSortHeader={(sortState[header.key] ?? 'NONE') !== 'NONE'}
                   sortDirection={
-                    sortState[header.key] === 'NONE' ? undefined : sortState[header.key]
+                    (sortState[header.key] ?? 'NONE') === 'NONE'
+                      ? undefined
+                      : sortState[header.key]
                   }
                   onClick={() => handleSortClick(header.key)}
                 >
                   {Boolean(header.sortable) && Boolean(onSortChange) ? (
-                    <Tooltip label={getSortTooltip(sortState[header.key])} align="top" autoAlign>
+                    <Tooltip
+                      label={getSortTooltip(sortState[header.key] ?? 'NONE')}
+                      align="top"
+                      autoAlign
+                    >
                       <span className="table-header-tooltip-trigger">{header.header}</span>
                     </Tooltip>
                   ) : (
