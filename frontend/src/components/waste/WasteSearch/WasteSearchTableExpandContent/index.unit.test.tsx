@@ -163,12 +163,12 @@ describe('WasteSearchTableExpandContent', () => {
       });
     });
 
-    it('displays total blocks in reporting unit', async () => {
+    it('displays total entries in reporting unit', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('Total blocks in reporting unit: 5')).toBeDefined();
+        expect(screen.getByText('Total entries in reporting unit: 5')).toBeDefined();
       });
     });
 
@@ -503,7 +503,7 @@ describe('WasteSearchTableExpandContent', () => {
         expect(screen.getByText('LIC-12345')).toBeDefined();
         expect(screen.getByText('Cutting Permit')).toBeDefined();
         expect(screen.getByText('CP-001')).toBeDefined();
-        expect(screen.getByText('Total blocks in reporting unit: 5')).toBeDefined();
+        expect(screen.getByText('Total entries in reporting unit: 5')).toBeDefined();
       });
     });
 
@@ -533,7 +533,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('Total blocks in reporting unit: 0')).toBeDefined();
+        expect(screen.getByText('Total entries in reporting unit: 0')).toBeDefined();
       });
     });
   });
