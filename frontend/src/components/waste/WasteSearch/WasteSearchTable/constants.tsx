@@ -133,7 +133,7 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
       <ColorTag
         value={value as { code: string; description: string }}
         colorMap={statusColorMap}
-        showTooltip={true}
+        showTooltip={false}
       />
     ),
   },
