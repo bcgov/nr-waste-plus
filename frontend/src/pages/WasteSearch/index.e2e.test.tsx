@@ -349,7 +349,7 @@ test.describe('Waste Search Page', () => {
         'Comment:This is a sample comment for the reporting unit.',
       ); // comments
       await expect(page.getByRole('link', { name: /Link/i })).toBeVisible(); // attachment link
-      await expect(page.getByText('Total blocks in reporting unit: 15')).toBeVisible(); // totalBlocks
+      await expect(page.getByText('Total entries in reporting unit: 15')).toBeVisible(); // totalBlocks
     });
 
     test('handles missing attachment and comment correctly', async ({ page }) => {
@@ -385,7 +385,7 @@ test.describe('Waste Search Page', () => {
       await expect(page.getByTestId('card-item-content-net-area')).toHaveText('3.07'); // netArea
       await expect(page.getByTestId('card-item-content-submitter')).toHaveText('BCEID\\\\BMO'); // submitter
       await expect(page.getByTestId('card-item-comment:')).toHaveText('Comment:-'); // comments
-      await expect(page.getByText('Total blocks in reporting unit: 2')).toBeVisible(); // totalBlocks
+      await expect(page.getByText('Total entries in reporting unit: 2')).toBeVisible(); // totalBlocks
 
       // Verify no attachment link is present
       const attachmentLinks = page.getByRole('link', { name: /Link/i });
