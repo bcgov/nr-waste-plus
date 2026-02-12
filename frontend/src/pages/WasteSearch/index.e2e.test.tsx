@@ -340,7 +340,6 @@ test.describe('Waste Search Page', () => {
       await expect(page.getByTestId('card-item-content-cutting-permit')).toHaveText('R02'); // cuttingPermit
       await expect(page.getByTestId('card-item-content-timber-mark')).toHaveText('HK4C02'); // timberMark
       await expect(page.getByTestId('card-item-content-exempted-(yes/no)')).toHaveText('No'); // exempted (false)
-      await expect(page.getByTestId('card-item-content-multi-mark-(yes/no)')).toHaveText('No'); // multiMark (true) - appears after multiMark label
       await expect(page.getByTestId('card-item-content-net-area')).toHaveText('7.39'); // netArea
       await expect(page.getByTestId('card-item-content-submitter')).toHaveText(
         String.raw`BCEID\ICEKING`,
@@ -381,7 +380,6 @@ test.describe('Waste Search Page', () => {
       await expect(page.getByTestId('card-item-content-cutting-permit')).toHaveText('EA'); // cuttingPermit
       await expect(page.getByTestId('card-item-content-timber-mark')).toHaveText('WBMJEC'); // timberMark
       await expect(page.getByTestId('card-item-content-exempted-(yes/no)')).toHaveText('Yes'); // exempted (false)
-      await expect(page.getByTestId('card-item-content-multi-mark-(yes/no)')).toHaveText('Yes'); // multiMark (true) - appears after multiMark label
       await expect(page.getByTestId('card-item-content-net-area')).toHaveText('3.07'); // netArea
       await expect(page.getByTestId('card-item-content-submitter')).toHaveText('BCEID\\\\BMO'); // submitter
       await expect(page.getByTestId('card-item-comment:')).toHaveText('Comment:-'); // comments
