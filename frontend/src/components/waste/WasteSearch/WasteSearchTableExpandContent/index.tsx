@@ -77,16 +77,30 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           <YesNoTag value={data?.exempted} />
         </ReadonlyInput>
       </Column>
-      <Column lg={2} md={8} sm={4}>
-        <ReadonlyInput
-          label="Multi-mark (Yes/No)"
-          id={`${rowId}-multi-mark`}
-          isNumber={false}
-          showSkeleton={isLoading}
-        >
-          <YesNoTag value={data?.multiMark} />
-        </ReadonlyInput>
-      </Column>
+      {data?.secondaryTimberMarks && (
+        <Column lg={2} md={8} sm={4}>
+          <ReadonlyInput
+            label="Secondary mark(s)"
+            id={`${rowId}-secondary-marks`}
+            isNumber={false}
+            showSkeleton={isLoading}
+          >
+            {data?.secondaryTimberMarks}
+          </ReadonlyInput>
+        </Column>
+      )}
+      {data?.primaryMark && (
+        <Column lg={2} md={8} sm={4}>
+          <ReadonlyInput
+            label="Primary mark"
+            id={`${rowId}-primary-mark`}
+            isNumber={false}
+            showSkeleton={isLoading}
+          >
+            {data?.primaryMark}
+          </ReadonlyInput>
+        </Column>
+      )}
       <Column lg={2} md={8} sm={4}>
         <ReadonlyInput
           label="Net area"
@@ -114,7 +128,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           isNumber={false}
           showSkeleton={isLoading}
         >
-          {data?.attachment.code ? (
+          {data?.attachment?.code ? (
             <DefinitionTooltip definition={'Go to Waste 303 page'} align="bottom" openOnHover>
               <RedirectLinkTag
                 text="Link"
@@ -137,7 +151,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
         </ReadonlyInput>
       </Column>
       <Column lg={16} md={8} sm={4}>
-        <p>Total blocks in reporting unit: {data?.totalBlocks ?? 0}</p>
+        <p>Total entries in reporting unit: {data?.totalBlocks ?? 0}</p>
       </Column>
     </Grid>
   );

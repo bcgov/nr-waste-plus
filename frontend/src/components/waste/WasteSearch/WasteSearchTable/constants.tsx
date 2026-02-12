@@ -113,6 +113,13 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     selected: false,
     renderAs: (value) => <YesNoTag value={value as string | boolean | number | null | undefined} />,
   },
+  {
+    key: 'secondaryEntry',
+    header: 'Secondary entry (Y/N)',
+    sortable: false,
+    selected: false,
+    renderAs: (value) => <YesNoTag value={value as string | boolean | number | null | undefined} />,
+  },
 
   {
     key: 'district',

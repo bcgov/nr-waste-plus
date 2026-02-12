@@ -12,6 +12,7 @@ export type ReportingUnitSearchResultDto = {
   cuttingPermit: string | null;
   timberMark: string | null;
   multiMark: boolean;
+  secondaryEntry: boolean;
   sampling: CodeDescriptionDto;
   district: CodeDescriptionDto;
   status: CodeDescriptionDto;
@@ -42,6 +43,8 @@ export type ReportingUnitSearchExpandedDto = {
   timberMark: string | null;
   exempted: boolean;
   multiMark: boolean;
+  secondaryTimberMarks: string | null;
+  primaryMark: string | null;
   netArea: number;
   submitter: string | null;
   attachment: CodeDescriptionDto;
