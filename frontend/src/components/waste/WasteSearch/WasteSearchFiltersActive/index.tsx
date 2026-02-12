@@ -1,21 +1,35 @@
 import { Button, DismissibleTag } from '@carbon/react';
 import { useCallback, type FC } from 'react';
 
-import type { ReportingUnitSearchParametersDto } from '@/services/types';
+import type { ReportingUnitSearchParametersViewDto } from '@/services/types';
+import type { ArrayKey, DefinedValue, ElementOf } from '@/services/utils.types';
 
 import { mapDisplayFilter } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
+import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
 
 import './index.scss';
 
+type LocalDefinedValue<K extends keyof ReportingUnitSearchParametersViewDto> = DefinedValue<
+  ReportingUnitSearchParametersViewDto,
+  K
+>;
+
+type LocalArrayKey = ArrayKey<ReportingUnitSearchParametersViewDto>;
+
 type WasteSearchFiltersActiveProps = {
-  filters: ReportingUnitSearchParametersDto;
-  onRemoveFilter: (key: keyof ReportingUnitSearchParametersDto, value?: string) => void;
+  filters: ReportingUnitSearchParametersViewDto;
+  onRemoveFilter: <K extends keyof ReportingUnitSearchParametersViewDto>(
+    key: K,
+    value?: ElementOf<LocalDefinedValue<K>>,
+  ) => void;
 };
 
 const WasteSearchFiltersActive: FC<WasteSearchFiltersActiveProps> = ({
   filters,
   onRemoveFilter,
 }) => {
+  const plainFilters = reportingUnitSearchParametersView2Plain(filters);
+
   /**
    * Filter out some parameters, keeping only parameters that should generate a visible tag
    * It filters out:
@@ -27,7 +41,7 @@ const WasteSearchFiltersActive: FC<WasteSearchFiltersActiveProps> = ({
    */
   const visibleFilters = useCallback(
     () =>
-      (Object.keys(filters) as (keyof ReportingUnitSearchParametersDto)[]).filter((filterKey) => {
+      (Object.keys(filters) as (keyof ReportingUnitSearchParametersViewDto)[]).filter((filterKey) => {
         if (filterKey === 'mainSearchTerm') return false; // Skip main search term
         const value = filters[filterKey];
         // Filter out:
@@ -52,17 +66,25 @@ const WasteSearchFiltersActive: FC<WasteSearchFiltersActiveProps> = ({
     const filterValue = filters[filterKey];
 
     if (Array.isArray(filterValue)) {
-      return filterValue.map((subValue) => (
-        <DismissibleTag
-          key={`dt-${filterKey}-${subValue}`}
-          data-testid={`dt-${filterKey}-${subValue}`}
-          className="silviculture-search-dismissible-tag"
-          size="md"
-          type="outline"
-          text={`${mapDisplayFilter(filterKey)}: ${subValue}`}
-          onClose={() => onRemoveFilter(filterKey, subValue)}
-        />
-      ));
+      const filterArrayKey = filterKey as LocalArrayKey;
+
+      return filterValue.map((subValueRaw, index) => {
+        if (Array.isArray(plainFilters[filterArrayKey])) {
+          const subValue = plainFilters[filterArrayKey][index];
+
+          return (
+            <DismissibleTag
+              key={`dt-${filterArrayKey}-${subValue}`}
+              data-testid={`dt-${filterArrayKey}-${subValue}`}
+              className="silviculture-search-dismissible-tag"
+              size="md"
+              type="outline"
+              text={`${mapDisplayFilter(filterArrayKey)}: ${subValue}`}
+              onClose={() => onRemoveFilter(filterArrayKey, subValueRaw)}
+            />
+          );
+        }
+      });
     }
 
     return (
@@ -83,7 +105,8 @@ const WasteSearchFiltersActive: FC<WasteSearchFiltersActiveProps> = ({
       const filterValue = filters[filterKey];
 
       if (Array.isArray(filterValue)) {
-        filterValue.forEach((subValue) => onRemoveFilter(filterKey, subValue));
+        const filterArrayKey = filterKey as LocalArrayKey;
+        filterValue.forEach((subValue) => onRemoveFilter(filterArrayKey, subValue));
       }
 
       onRemoveFilter(filterKey);

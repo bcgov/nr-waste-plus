@@ -59,8 +59,6 @@ export const generateSortArray = <T>(
     .filter(([, direction]) => direction !== 'NONE')
     .map(([key, direction]) => `${key},${direction}` as `${NestedKeyOf<T>},${SortDirectionType}`);
 
-export type Override<T, U> = Omit<T, keyof U> & U;
-
 export const forestClientAutocompleteResult2CodeDescription = (
   data: ForestClientAutocompleteResultDto,
 ): CodeDescriptionDto => {

@@ -1,4 +1,4 @@
-import type { Override } from './utils';
+import type { Override } from './utils.types';
 
 export type CodeDescriptionDto = {
   code: string;

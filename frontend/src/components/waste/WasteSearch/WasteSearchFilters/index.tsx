@@ -1,7 +1,7 @@
 import { Search as SearchIcon, FilterEdit as FilterIcon } from '@carbon/icons-react';
 import { Button, Column, Grid } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState, type FC } from 'react';
+import { useEffect, useState, type ComponentProps, type FC } from 'react';
 
 import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
 
@@ -14,7 +14,6 @@ import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
 import APIs from '@/services/APIs';
 
 import './index.scss';
-import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
 
 type WasteSearchFiltersProps = {
   value: ReportingUnitSearchParametersViewDto;
@@ -25,8 +24,6 @@ type WasteSearchFiltersProps = {
 const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSearch }) => {
   const [filters, setFilters] = useState<ReportingUnitSearchParametersViewDto>(value);
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState<boolean>(false);
-
-  const plainFilters = reportingUnitSearchParametersView2Plain(filters);
 
   const { data: samplingOptions } = useQuery({
     queryKey: ['samplingOptions'],
@@ -77,7 +74,10 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const onRemoveFilter = (key: keyof ReportingUnitSearchParametersViewDto, value?: string) => {
+  const onRemoveFilter: ComponentProps<typeof WasteSearchFiltersActive>['onRemoveFilter'] = (
+    key,
+    value,
+  ) => {
     if (!value) {
       setFilters((prev) => {
         const newFilters = { ...prev };
@@ -239,7 +239,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
 
         {/* Active filters column */}
         <Column className="filter-bar-col" sm={4} md={8} lg={16}>
-          <WasteSearchFiltersActive filters={plainFilters} onRemoveFilter={onRemoveFilter} />
+          <WasteSearchFiltersActive filters={filters} onRemoveFilter={onRemoveFilter} />
         </Column>
       </Grid>
       <WasteSearchFiltersAdvanced
