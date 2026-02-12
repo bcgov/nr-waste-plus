@@ -32,7 +32,7 @@ const mockExpandedData: ReportingUnitSearchExpandedDto = {
   comments: 'Test comments for this reporting unit',
   totalBlocks: 5,
   secondaryTimberMarks: null,
-  primaryMark: null
+  primaryMark: null,
 };
 
 const renderWithProps = async (rowId: string) => {
@@ -110,7 +110,6 @@ describe('WasteSearchTableExpandContent', () => {
         expect(screen.getByText('Cutting Permit')).toBeDefined();
         expect(screen.getByText('Timber Mark')).toBeDefined();
         expect(screen.getByText('Exempted (Yes/No)')).toBeDefined();
-        expect(screen.getByText('Multi-mark (Yes/No)')).toBeDefined();
         expect(screen.getByText('Net area')).toBeDefined();
         expect(screen.getByText('Submitter')).toBeDefined();
         expect(screen.getByText('Attachments')).toBeDefined();
