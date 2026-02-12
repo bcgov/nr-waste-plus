@@ -255,6 +255,27 @@ test.describe('Waste Search Page', () => {
 
       await expect(page.getByText('No results')).toBeVisible();
     });
+
+    test('primary and secondary are here', async ({ page }) => {
+      const searchBox = page.getByRole('searchbox');
+      await searchBox.fill('67890');
+      await searchBox.blur();
+
+      const searchButton = page.getByTestId('search-button-most');
+      await searchButton.click();
+
+      await page.waitForLoadState('networkidle');
+
+      // Verify mocked data appears
+      await expect(page.getByRole('columnheader', { name: 'Multi-mark (Y/N)' })).toBeVisible();
+      await expect(page.getByRole('columnheader', { name: 'Secondary entry (Y/N)' })).toBeVisible();
+
+      await expect(page.locator('tr:nth-child(9) > td:nth-child(7) > span')).toHaveText('No');
+      await expect(page.locator('tr:nth-child(9) > td:nth-child(8) > span')).toHaveText('Yes');
+
+      await expect(page.locator('tr:nth-child(10) > td:nth-child(7) > span')).toHaveText('Yes');
+      await expect(page.locator('tr:nth-child(10) > td:nth-child(8) > span')).toHaveText('No');
+    });
   });
 
   test.describe('API errors', () => {
@@ -319,7 +340,6 @@ test.describe('Waste Search Page', () => {
       await expect(page.getByTestId('card-item-content-cutting-permit')).toHaveText('R02'); // cuttingPermit
       await expect(page.getByTestId('card-item-content-timber-mark')).toHaveText('HK4C02'); // timberMark
       await expect(page.getByTestId('card-item-content-exempted-(yes/no)')).toHaveText('No'); // exempted (false)
-      await expect(page.getByTestId('card-item-content-multi-mark-(yes/no)')).toHaveText('No'); // multiMark (true) - appears after multiMark label
       await expect(page.getByTestId('card-item-content-net-area')).toHaveText('7.39'); // netArea
       await expect(page.getByTestId('card-item-content-submitter')).toHaveText(
         String.raw`BCEID\ICEKING`,
@@ -328,7 +348,7 @@ test.describe('Waste Search Page', () => {
         'Comment:This is a sample comment for the reporting unit.',
       ); // comments
       await expect(page.getByRole('link', { name: /Link/i })).toBeVisible(); // attachment link
-      await expect(page.getByText('Total blocks in reporting unit: 15')).toBeVisible(); // totalBlocks
+      await expect(page.getByText('Total entries in reporting unit: 15')).toBeVisible(); // totalBlocks
     });
 
     test('handles missing attachment and comment correctly', async ({ page }) => {
@@ -360,11 +380,10 @@ test.describe('Waste Search Page', () => {
       await expect(page.getByTestId('card-item-content-cutting-permit')).toHaveText('EA'); // cuttingPermit
       await expect(page.getByTestId('card-item-content-timber-mark')).toHaveText('WBMJEC'); // timberMark
       await expect(page.getByTestId('card-item-content-exempted-(yes/no)')).toHaveText('Yes'); // exempted (false)
-      await expect(page.getByTestId('card-item-content-multi-mark-(yes/no)')).toHaveText('Yes'); // multiMark (true) - appears after multiMark label
       await expect(page.getByTestId('card-item-content-net-area')).toHaveText('3.07'); // netArea
       await expect(page.getByTestId('card-item-content-submitter')).toHaveText('BCEID\\\\BMO'); // submitter
       await expect(page.getByTestId('card-item-comment:')).toHaveText('Comment:-'); // comments
-      await expect(page.getByText('Total blocks in reporting unit: 2')).toBeVisible(); // totalBlocks
+      await expect(page.getByText('Total entries in reporting unit: 2')).toBeVisible(); // totalBlocks
 
       // Verify no attachment link is present
       const attachmentLinks = page.getByRole('link', { name: /Link/i });
@@ -446,6 +465,50 @@ test.describe('Waste Search Page', () => {
 
       await row2.click();
       await page.waitForLoadState('networkidle');
+
+      const expandedRows = page.locator('tr.cds--parent-row.cds--expandable-row');
+      await expect(expandedRows).toHaveCount(2);
+    });
+
+    test('check primary and secondary', async ({ page }) => {
+      // Mock the expand API endpoint
+      await mockApiResponsesWithStub(
+        page,
+        'search/reporting-units/ex/10501/2',
+        'search/reporting-units-expanded-primary.json',
+      );
+      await mockApiResponsesWithStub(
+        page,
+        'search/reporting-units/ex/36834/26',
+        'search/reporting-units-expanded-secondary.json',
+      );
+
+      const searchBox = page.getByRole('searchbox');
+      await searchBox.fill('67890');
+      await searchBox.blur();
+
+      const searchButton = page.getByTestId('search-button-most');
+      await searchButton.click();
+
+      await page.waitForLoadState('networkidle');
+
+      // Click the expand button for the first row
+      const secondary = page.locator(
+        'tr:nth-child(9) > .cds--table-expand > .cds--table-expand__button',
+      );
+      await secondary.click();
+      await page.waitForLoadState('networkidle');
+
+      await expect(page.getByTestId('card-item-content-secondary-mark(s)')).toHaveText(
+        'AB12C3, A12345',
+      );
+
+      const primary = page.locator(
+        'tr:nth-child(11) > .cds--table-expand > .cds--table-expand__button',
+      );
+      await primary.click();
+      await page.waitForLoadState('networkidle');
+      await expect(page.getByTestId('card-item-content-primary-mark')).toHaveText('JY1009');
 
       const expandedRows = page.locator('tr.cds--parent-row.cds--expandable-row');
       await expect(expandedRows).toHaveCount(2);

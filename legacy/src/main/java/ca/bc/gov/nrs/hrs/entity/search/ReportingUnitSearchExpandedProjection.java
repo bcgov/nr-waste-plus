@@ -92,4 +92,19 @@ public interface ReportingUnitSearchExpandedProjection {
    * @return the total number of blocks in the reporting unit
    */
   Integer getTotalBlockCount();
+
+  /**
+   * Gets the aggregated timber marks of any secondary blocks associated with the current block.
+   *
+   * @return a comma-separated string of secondary timber marks, if any
+   */
+  String getSecondaryTimberMarks();
+
+  /**
+   * Gets the primary timber mark associated with the current block, if the block is a child block;
+   * otherwise, returns null.
+   *
+   * @return the primary timber mark, if any
+   */
+  String getPrimaryMark();
 }

@@ -45,6 +45,10 @@ public interface ReportingUnitSearchMapper extends
       target = "multiMark",
       expression = "java(Integer.valueOf(1).equals(projection.getMultiMark()))"
   )
+  @Mapping(
+      target = "secondaryEntry",
+      expression = "java(Integer.valueOf(1).equals(projection.getSecondaryEntry()))"
+  )
   ReportingUnitSearchResultDto fromProjection(ReportingUnitSearchProjection projection);
 
 }

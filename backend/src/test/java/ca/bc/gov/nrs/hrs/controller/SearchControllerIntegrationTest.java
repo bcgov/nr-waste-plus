@@ -107,14 +107,6 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002))
     );
 
-    clientApiStub.stubFor(
-        WireMock.get(urlPathEqualTo("/clients/00010002/locations"))
-            .willReturn(
-                okJson(ForestClientApiProviderTestConstants.CLIENT_LOCATION_00010002)
-                    .withHeader(BackendConstants.X_TOTAL_COUNT, "1")
-            )
-    );
-
     mockMvc
         .perform(
             get("/api/search/reporting-units")

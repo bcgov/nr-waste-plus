@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -78,7 +77,7 @@ public class ReportingUnitSearchService {
       filters.setClientNumbers(userClientNumbers);
     }
 
-    if(filters.isRequestByMe()) {
+    if (filters.isRequestByMe()) {
       filters.setRequestUserId(currentUserId);
     }
 
@@ -102,13 +101,13 @@ public class ReportingUnitSearchService {
    *
    * <p>This method fetches detailed information for a specific block within a reporting unit,
    * including all related expanded data necessary for the search detail view. The repository
-   * returns a projection object which is then mapped to a
-   * {@link ReportingUnitSearchExpandedDto} instance.</p>
+   * returns a projection object which is then mapped to a {@link ReportingUnitSearchExpandedDto}
+   * instance.</p>
    *
    * @param reportingUnit the ID of the reporting unit
    * @param blockId       the ID of the block to retrieve
-   * @return an Optional containing the {@link ReportingUnitSearchExpandedDto} if found,
-   *         or empty if the reporting unit or block does not exist
+   * @return an Optional containing the {@link ReportingUnitSearchExpandedDto} if found, or empty if
+   * the reporting unit or block does not exist
    */
   public Optional<ReportingUnitSearchExpandedDto> getReportingUnitBlockExpanded(
       Long reportingUnit,
