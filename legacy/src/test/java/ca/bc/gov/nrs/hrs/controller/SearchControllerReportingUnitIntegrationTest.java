@@ -242,4 +242,93 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andReturn();
   }
 
+  @Test
+  @DisplayName("Should get results with multi mark")
+  void shouldSearchForMultiMark() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .param("page", "0")
+                .param("size", "10")
+                .param("multiMark", "true")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.page.totalElements")
+            .value(org.hamcrest.Matchers.equalTo(14))
+        )
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Should get a secondary with primary")
+  void shouldSearchForSecondary() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .param("page", "0")
+                .param("size", "10")
+                .param("timberMark", "EM30R1")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.content.length()")
+            .value(org.hamcrest.Matchers.equalTo(2)))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Should get expanded with secondary mark")
+  void shouldGetExtendedWithSecondaryMark() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units/ex/{reportingUnitId}/{blockId}", 879, 1906)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+        )
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(
+            jsonPath("$.timberMark")
+                .value(org.hamcrest.Matchers.equalTo("JY1009"))
+        )
+        .andExpect(
+            jsonPath("$.primaryMark")
+                .value(org.hamcrest.Matchers.equalTo(null))
+        )
+        .andExpect(
+            jsonPath("$.secondaryTimberMarks")
+                .value(org.hamcrest.Matchers.equalTo("EM30R1, R21110"))
+        )
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Should get expanded with primary mark")
+  void shouldGetExtendedWithPrimaryMark() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units/ex/{reportingUnitId}/{blockId}", 879, 1907)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+        )
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(
+            jsonPath("$.timberMark")
+                .value(org.hamcrest.Matchers.equalTo("EM30R1"))
+        )
+        .andExpect(
+            jsonPath("$.primaryMark")
+                .value(org.hamcrest.Matchers.equalTo("JY1009"))
+        )
+        .andExpect(
+            jsonPath("$.secondaryTimberMarks")
+                .value(org.hamcrest.Matchers.equalTo(null))
+        )
+        .andReturn();
+  }
+
 }
