@@ -1,0 +1,18 @@
+{
+    "id": 1906,
+    "licenseNo": "A74531",
+    "cuttingPermit": "9",
+    "timberMark": "JY1009",
+    "exempted": false,
+    "multiMark": true,
+    "netArea": 27.02,
+    "submitter": "IDIR\\BMO",
+    "attachment": {
+        "code": "664",
+        "description": "Test_Empty_ZipFolder1.zip"
+    },
+    "comments": null,
+    "totalBlocks": 4,
+    "secondaryTimberMarks": "AB12C3, A12345",
+    "primaryMark": null
+}
