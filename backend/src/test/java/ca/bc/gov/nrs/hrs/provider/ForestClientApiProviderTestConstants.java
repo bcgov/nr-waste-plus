@@ -86,6 +86,7 @@ public class ForestClientApiProviderTestConstants {
                    "cuttingPermit": "A12345",
                    "timberMark": "TM12345",
                    "multiMark": false,
+                   "secondaryEntry": false,
                    "sampling": {
                        "code": "BLK",
                        "description": "Cutblock"
