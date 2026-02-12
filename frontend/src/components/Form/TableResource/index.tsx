@@ -384,8 +384,6 @@ const TableResource = <T,>({
           pageSize={content.page.size}
           pageSizes={[10, 20, 30]}
           totalItems={content.page.totalElements}
-          backwardText="Go to previous page"
-          forwardText="Go to next page"
           onChange={({ page, pageSize }) => {
             setExpandedRow(new Set());
             setExpandedRowComponent(new Map());
