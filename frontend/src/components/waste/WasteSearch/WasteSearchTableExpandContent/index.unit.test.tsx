@@ -31,6 +31,8 @@ const mockExpandedData: ReportingUnitSearchExpandedDto = {
   attachment: { code: 'ATT01', description: 'Attachment Type 1' },
   comments: 'Test comments for this reporting unit',
   totalBlocks: 5,
+  secondaryTimberMarks: null,
+  primaryMark: null
 };
 
 const renderWithProps = async (rowId: string) => {
