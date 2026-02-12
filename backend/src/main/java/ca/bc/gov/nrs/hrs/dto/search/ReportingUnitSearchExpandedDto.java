@@ -22,6 +22,8 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
  * @param totalBlocks the total number of blocks in the reporting unit
  * @param secondaryTimberMarks A comma-separated list of secondary timber marks
  *                             associated with the block, if any.
+ * @param primaryMark The primary timber mark associated with the current block,
+ *                    if the block is a child block; otherwise, returns null.
  */
 public record ReportingUnitSearchExpandedDto(
     Long id,
@@ -35,7 +37,8 @@ public record ReportingUnitSearchExpandedDto(
     CodeDescriptionDto attachment,
     String comments,
     Integer totalBlocks,
-    String secondaryTimberMarks
+    String secondaryTimberMarks,
+    String primaryMark
 ) {
 
 }

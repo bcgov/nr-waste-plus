@@ -293,6 +293,7 @@ public class LegacyApiProvider {
         null,
         null,
         0,
+        null,
         null
     );
   }
