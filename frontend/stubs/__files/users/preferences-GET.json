@@ -1,3 +1,17 @@
 {
-  "theme": "g100"
+  "theme": "g100",
+  "tableHeaders": {
+      "waste-search": [
+          "cutBlockId",
+          "ruNumber",
+          "client.code",
+          "client.description",
+          "sampling",
+          "multiMark",
+          "secondaryEntry",
+          "district",
+          "status",
+          "lastUpdated"
+      ]
+  }
 }

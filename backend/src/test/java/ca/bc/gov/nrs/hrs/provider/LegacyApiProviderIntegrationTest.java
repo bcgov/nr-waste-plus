@@ -145,7 +145,8 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
   @ParameterizedTest
   @MethodSource("expandedDetailsArguments")
   @DisplayName("Get expanded details for reporting unit")
-  void shouldGetExpandedDetails(Long ruId, Long blockId, ResponseDefinitionBuilder stubResponse, ReportingUnitSearchExpandedDto expectedDto) {
+  void shouldGetExpandedDetails(Long ruId, Long blockId, ResponseDefinitionBuilder stubResponse,
+      ReportingUnitSearchExpandedDto expectedDto) {
     clientApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units/ex/" + ruId + "/" + blockId))
             .willReturn(stubResponse));
@@ -167,20 +168,28 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
 
   private static Stream<Arguments> expandedDetailsArguments() {
     ReportingUnitSearchExpandedDto fullDto = new ReportingUnitSearchExpandedDto(
-        201L, "LIC123", "CP01", "TMK456", true, false, 12.5, "submitter1", null, "Some comments", 3);
+        201L, "LIC123", "CP01", "TMK456", true, false, 12.5, "submitter1", null, "Some comments", 3,
+        null,null);
     ReportingUnitSearchExpandedDto emptyDto = new ReportingUnitSearchExpandedDto(
-        202L, null, null, null, false, false, 0.0, null, null, null, 0);
+        202L, null, null, null, false, false, 0.0, null, null, null, 0, null, null);
     ReportingUnitSearchExpandedDto fallbackDto = new ReportingUnitSearchExpandedDto(
-        203L, null, null, null, false, false, 0.0, null, null, null, 0);
-    ReportingUnitSearchExpandedDto nullDto = new ReportingUnitSearchExpandedDto(null, null, null, null, false, false, 0.0, null, null, null, 0);
-    ReportingUnitSearchExpandedDto negativeDto = new ReportingUnitSearchExpandedDto(-2L, null, null, null, false, false, 0.0, null, null, null, 0);
+        203L, null, null, null, false, false, 0.0, null, null, null, 0, null, null);
+    ReportingUnitSearchExpandedDto nullDto = new ReportingUnitSearchExpandedDto(null, null, null,
+        null, false, false, 0.0, null, null, null, 0, null, null);
+    ReportingUnitSearchExpandedDto negativeDto = new ReportingUnitSearchExpandedDto(-2L, null, null,
+        null, false, false, 0.0, null, null, null, 0, null, null);
 
     return Stream.of(
-        Arguments.argumentSet("101: Full details",101L, 201L, okJson(TestConstants.EXPANDED_101), fullDto),
-        Arguments.argumentSet("102: Empty details",102L, 202L, okJson(TestConstants.EXPANDED_102), emptyDto),
-        Arguments.argumentSet("103: Service unavailable", 103L, 203L, serviceUnavailable(), fallbackDto),
-        Arguments.argumentSet("null: get me null, even if it should not", null, null, okJson(TestConstants.EXPANDED_NULL), nullDto),
-        Arguments.argumentSet("-1: negative is a thing these days", -1L, -2L, okJson(TestConstants.EXPANDED_NEGATIVE), negativeDto)
+        Arguments.argumentSet("101: Full details", 101L, 201L, okJson(TestConstants.EXPANDED_101),
+            fullDto),
+        Arguments.argumentSet("102: Empty details", 102L, 202L, okJson(TestConstants.EXPANDED_102),
+            emptyDto),
+        Arguments.argumentSet("103: Service unavailable", 103L, 203L, serviceUnavailable(),
+            fallbackDto),
+        Arguments.argumentSet("null: get me null, even if it should not", null, null,
+            okJson(TestConstants.EXPANDED_NULL), nullDto),
+        Arguments.argumentSet("-1: negative is a thing these days", -1L, -2L,
+            okJson(TestConstants.EXPANDED_NEGATIVE), negativeDto)
     );
   }
 

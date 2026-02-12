@@ -228,6 +228,7 @@
       "cuttingPermit": "EA",
       "timberMark": "WBMJEA",
       "multiMark": false,
+      "secondaryEntry": true,
       "sampling": {
         "code": "BLK",
         "description": "Cutblock"
@@ -254,7 +255,8 @@
       "licenseNumber": "DD35K",
       "cuttingPermit": " ",
       "timberMark": "DD35':",
-      "multiMark": false,
+      "multiMark": true,
+      "secondaryEntry": false,
       "sampling": {
         "code": "BLK",
         "description": "Cutblock"

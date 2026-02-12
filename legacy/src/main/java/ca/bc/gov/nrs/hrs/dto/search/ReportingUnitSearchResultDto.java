@@ -21,6 +21,7 @@ public record ReportingUnitSearchResultDto(
     String cuttingPermit,
     String timberMark,
     Boolean multiMark,
+    Boolean secondaryEntry,
     CodeDescriptionDto sampling,
     CodeDescriptionDto district,
     CodeDescriptionDto status,

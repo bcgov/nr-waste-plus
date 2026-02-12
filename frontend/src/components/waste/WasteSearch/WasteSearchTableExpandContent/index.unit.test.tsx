@@ -31,6 +31,8 @@ const mockExpandedData: ReportingUnitSearchExpandedDto = {
   attachment: { code: 'ATT01', description: 'Attachment Type 1' },
   comments: 'Test comments for this reporting unit',
   totalBlocks: 5,
+  secondaryTimberMarks: null,
+  primaryMark: null,
 };
 
 const renderWithProps = async (rowId: string) => {
@@ -108,7 +110,6 @@ describe('WasteSearchTableExpandContent', () => {
         expect(screen.getByText('Cutting Permit')).toBeDefined();
         expect(screen.getByText('Timber Mark')).toBeDefined();
         expect(screen.getByText('Exempted (Yes/No)')).toBeDefined();
-        expect(screen.getByText('Multi-mark (Yes/No)')).toBeDefined();
         expect(screen.getByText('Net area')).toBeDefined();
         expect(screen.getByText('Submitter')).toBeDefined();
         expect(screen.getByText('Attachments')).toBeDefined();
@@ -161,12 +162,12 @@ describe('WasteSearchTableExpandContent', () => {
       });
     });
 
-    it('displays total blocks in reporting unit', async () => {
+    it('displays total entries in reporting unit', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('Total blocks in reporting unit: 5')).toBeDefined();
+        expect(screen.getByText('Total entries in reporting unit: 5')).toBeDefined();
       });
     });
 
@@ -501,7 +502,7 @@ describe('WasteSearchTableExpandContent', () => {
         expect(screen.getByText('LIC-12345')).toBeDefined();
         expect(screen.getByText('Cutting Permit')).toBeDefined();
         expect(screen.getByText('CP-001')).toBeDefined();
-        expect(screen.getByText('Total blocks in reporting unit: 5')).toBeDefined();
+        expect(screen.getByText('Total entries in reporting unit: 5')).toBeDefined();
       });
     });
 
@@ -531,7 +532,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('Total blocks in reporting unit: 0')).toBeDefined();
+        expect(screen.getByText('Total entries in reporting unit: 0')).toBeDefined();
       });
     });
   });
