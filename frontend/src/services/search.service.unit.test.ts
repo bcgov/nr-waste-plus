@@ -7,8 +7,8 @@ import type {
   ReportingUnitSearchParametersDto,
   ReportingUnitSearchResultDto,
   ReportingUnitSearchExpandedDto,
+  PageableRequest,
 } from './types';
-import type { PageableRequest } from './types';
 
 const mockConfig = { baseURL: 'http://localhost' };
 let service: SearchService;
@@ -160,6 +160,8 @@ describe('SearchService', () => {
         attachment: { code: 'ATT01', description: 'Attachment Type 1' },
         comments: 'Test comments',
         totalBlocks: 5,
+        secondaryTimberMarks: null,
+        primaryMark: null,
       };
       (service as any).doRequest = vi.fn().mockResolvedValue(mockData);
 
@@ -190,6 +192,8 @@ describe('SearchService', () => {
         attachment: { code: 'ATT02', description: 'Attachment Type 2' },
         comments: null,
         totalBlocks: 1,
+        secondaryTimberMarks: null,
+        primaryMark: null,
       };
       (service as any).doRequest = vi.fn().mockResolvedValue(mockData);
 
@@ -217,6 +221,8 @@ describe('SearchService', () => {
         attachment: { code: 'ATT01', description: 'Attachment' },
         comments: null,
         totalBlocks: 1,
+        secondaryTimberMarks: null,
+        primaryMark: null,
       };
       (service as any).doRequest = vi.fn().mockResolvedValue(mockData);
 
