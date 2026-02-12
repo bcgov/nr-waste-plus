@@ -171,9 +171,9 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
         201L, "LIC123", "CP01", "TMK456", true, false, 12.5, "submitter1", null, "Some comments", 3,
         null,null);
     ReportingUnitSearchExpandedDto emptyDto = new ReportingUnitSearchExpandedDto(
-        202L, null, null, null, false, false, 0.0, null, null, null, 0, null,null);
+        202L, null, null, null, false, false, 0.0, null, null, null, 0, null, null);
     ReportingUnitSearchExpandedDto fallbackDto = new ReportingUnitSearchExpandedDto(
-        203L, null, null, null, false, false, 0.0, null, null, null, 0, null,null);
+        203L, null, null, null, false, false, 0.0, null, null, null, 0, null, null);
     ReportingUnitSearchExpandedDto nullDto = new ReportingUnitSearchExpandedDto(null, null, null,
         null, false, false, 0.0, null, null, null, 0, null,null);
     ReportingUnitSearchExpandedDto negativeDto = new ReportingUnitSearchExpandedDto(-2L, null, null,
