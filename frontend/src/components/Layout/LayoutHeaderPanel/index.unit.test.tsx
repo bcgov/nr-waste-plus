@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { LayoutHeaderPanel } from './index';
 
@@ -15,8 +15,20 @@ vi.mock('@/context/layout/useLayout', () => ({
   }),
 }));
 
+vi.mock('@/components/core/DistrictSelection/DistrictListing', () => ({
+  default: () => <div data-testid="district-listing">District Listing</div>,
+}));
+
+vi.mock('@/components/core/DistrictSelection/ClientListing', () => ({
+  default: () => <div data-testid="client-listing">Client Listing</div>,
+}));
+
 const renderWithProviders = async () => {
-  const qc = new QueryClient();
+  const qc = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
   await act(async () =>
     render(
       <QueryClientProvider client={qc}>
@@ -33,6 +45,10 @@ const renderWithProviders = async () => {
 };
 
 describe('LayoutHeaderPanel', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('renders when open', async () => {
     await renderWithProviders();
     expect(screen.getByTestId('header-panel')).toBeDefined();
