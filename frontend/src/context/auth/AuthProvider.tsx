@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch {
       setUser(undefined);
+      await signOut();
     } finally {
       setIsLoading(false);
     }
