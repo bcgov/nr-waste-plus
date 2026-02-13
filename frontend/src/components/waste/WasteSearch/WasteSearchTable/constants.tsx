@@ -94,7 +94,7 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
       />
     ),
   },
-  { key: 'client.description', header: 'Client name', sortable: true, selected: true },
+  { key: 'client.description', header: 'Client name', sortable: false, selected: true },
 
   {
     key: 'sampling',
@@ -109,7 +109,7 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
   {
     key: 'multiMark',
     header: 'Multi-mark (Y/N)',
-    sortable: true,
+    sortable: false,
     selected: false,
     renderAs: (value) => <YesNoTag value={value as string | boolean | number | null | undefined} />,
   },
@@ -137,7 +137,11 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     sortable: true,
     selected: true,
     renderAs: (value) => (
-      <ColorTag value={value as { code: string; description: string }} colorMap={statusColorMap} />
+      <ColorTag
+        value={value as { code: string; description: string }}
+        colorMap={statusColorMap}
+        showTooltip={false}
+      />
     ),
   },
   { key: 'status.code', header: 'Status code', sortable: true },

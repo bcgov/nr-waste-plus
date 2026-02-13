@@ -12,6 +12,7 @@ import {
   TableToolbar,
   TableToolbarContent,
   TableToolbarMenu,
+  Tooltip,
 } from '@carbon/react';
 import { Column as ColumnIcon } from '@carbon/react/icons';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
@@ -272,6 +273,17 @@ const TableResource = <T,>({
     }
   };
 
+  const getSortTooltip = (direction: SortDirectionType) => {
+    switch (direction) {
+      case 'ASC':
+        return 'Sort by descending order';
+      case 'DESC':
+        return 'Clear sort order';
+      default:
+        return 'Sort by ascending order';
+    }
+  };
+
   return (
     <>
       {displayToolbar && (
@@ -319,13 +331,25 @@ const TableResource = <T,>({
                 <TableHeader
                   key={`header-${String(header.key)}`}
                   isSortable={Boolean(header.sortable) && Boolean(onSortChange)}
-                  isSortHeader={sortState[header.key] !== 'NONE'}
+                  isSortHeader={(sortState[header.key] ?? 'NONE') !== 'NONE'}
                   sortDirection={
-                    sortState[header.key] === 'NONE' ? undefined : sortState[header.key]
+                    (sortState[header.key] ?? 'NONE') === 'NONE'
+                      ? undefined
+                      : sortState[header.key]
                   }
                   onClick={() => handleSortClick(header.key)}
                 >
-                  {header.header}
+                  {Boolean(header.sortable) && Boolean(onSortChange) ? (
+                    <Tooltip
+                      label={getSortTooltip(sortState[header.key] ?? 'NONE')}
+                      align="top"
+                      autoAlign
+                    >
+                      <span className="table-header-tooltip-trigger">{header.header}</span>
+                    </Tooltip>
+                  ) : (
+                    header.header
+                  )}
                 </TableHeader>
               ))}
           </TableRow>

@@ -29,6 +29,8 @@ type ColorTagProps = {
   value: { code: string; description: string } | null;
   /** Mapping of codes to Carbon color types */
   colorMap: Record<string, CarbonColors>;
+  /** Whether to show the tooltip when code and description are available (default: true) */
+  showTooltip?: boolean;
 };
 
 /**
@@ -37,6 +39,7 @@ type ColorTagProps = {
  * @param props - Component props
  * @param props.value - Object containing code and description to display
  * @param props.colorMap - Map of codes to Carbon Design System colors
+ * @param props.showTooltip - When true, wrap the tag in a Tooltip (default: true)
  * @returns A Carbon Tag component, optionally wrapped in a Tooltip
  *
  * @example
@@ -47,7 +50,7 @@ type ColorTagProps = {
  * />
  * ```
  */
-const ColorTag: FC<ColorTagProps> = ({ value, colorMap }) => {
+const ColorTag: FC<ColorTagProps> = ({ value, colorMap, showTooltip = true }) => {
   // Check if value is null or if both code and description are null/empty
   const hasCode = Boolean(value?.code?.trim());
   const hasDescription = Boolean(value?.description?.trim());
@@ -81,7 +84,7 @@ const ColorTag: FC<ColorTagProps> = ({ value, colorMap }) => {
     </Tag>
   );
 
-  return tooltipLabel ? (
+  return showTooltip && tooltipLabel ? (
     <Tooltip label={tooltipLabel} align="top" autoAlign>
       {tag}
     </Tooltip>

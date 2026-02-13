@@ -13,7 +13,11 @@ export async function authenticate(page: Page, metadata: Record<string, any>): P
     .getByRole('heading', { name: 'Content Not Found' })
     .isVisible({ timeout: 2000 }); // 2s max
 
-  if (notFoundVisible) {
+  const searchPageVisible = await page
+    .getByRole('heading', { name: 'Waste search' })
+    .isVisible({ timeout: 2000 }); // 2s max
+
+  if (notFoundVisible || searchPageVisible) {
     console.log('Setup - Already authenticated, skipping login');
     return;
   }
