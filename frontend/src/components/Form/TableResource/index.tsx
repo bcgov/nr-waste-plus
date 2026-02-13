@@ -333,9 +333,7 @@ const TableResource = <T,>({
                   isSortable={Boolean(header.sortable) && Boolean(onSortChange)}
                   isSortHeader={(sortState[header.key] ?? 'NONE') !== 'NONE'}
                   sortDirection={
-                    (sortState[header.key] ?? 'NONE') === 'NONE'
-                      ? undefined
-                      : sortState[header.key]
+                    (sortState[header.key] ?? 'NONE') === 'NONE' ? undefined : sortState[header.key]
                   }
                   onClick={() => handleSortClick(header.key)}
                 >

@@ -25,11 +25,9 @@ const TableResourceExpandRow: FC<TableResourceExpandRowProps> = ({
       >
         {children}
       </TableExpandRow>
-      {isExpanded && (
-        <TableExpandedRow colSpan={columns + 1}>
-          {expandedChild ? expandedChild : <SkeletonText lineCount={6} width="100%" />}
-        </TableExpandedRow>
-      )}
+      <TableExpandedRow colSpan={columns + 1}>
+        {expandedChild ? expandedChild : <SkeletonText lineCount={6} width="100%" />}
+      </TableExpandedRow>
     </>
   );
 };
