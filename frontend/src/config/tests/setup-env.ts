@@ -8,6 +8,34 @@ vi.mock('aws-amplify/auth', () => ({
   signOut: vi.fn(),
 }));
 
+// Mock the APIs service globally to prevent HTTP requests
+vi.mock('@/services/APIs', () => ({
+  default: {
+    user: {
+      getUserPreferences: vi.fn().mockResolvedValue({}),
+      updateUserPreferences: vi.fn().mockResolvedValue({}),
+    },
+    forestclient: {
+      searchByClientNumbers: vi.fn().mockResolvedValue([]),
+      searchClients: vi.fn().mockResolvedValue([]),
+    },
+    codes: {
+      getDistricts: vi.fn().mockResolvedValue([]),
+      getWasteCodes: vi.fn().mockResolvedValue([]),
+    },
+    search: {
+      search: vi.fn().mockResolvedValue({ items: [] }),
+    },
+  },
+}));
+
+// Mock global fetch to prevent real HTTP requests in jsdom tests
+beforeAll(() => {
+  globalThis.fetch = vi.fn(() =>
+    Promise.reject(new Error('Unexpected fetch call during test - please mock the API endpoint')),
+  ) as unknown as typeof fetch;
+});
+
 // Suppress flatpickr locale errors in test output
 beforeAll(() => {
   const originalStderrWrite = process.stderr.write.bind(process.stderr);
@@ -19,7 +47,7 @@ beforeAll(() => {
     // Filter out flatpickr locale errors
     if (message.includes('flatpickr: invalid locale')) {
       // Suppress this error from stderr
-      const callback = args[args.length - 1];
+      const callback = args.at(-1);
       if (typeof callback === 'function') {
         callback();
       }
