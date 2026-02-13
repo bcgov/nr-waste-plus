@@ -1,6 +1,13 @@
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeAll, vi } from 'vitest';
 
+// Mock AWS Amplify Auth globally for all tests
+vi.mock('aws-amplify/auth', () => ({
+  fetchAuthSession: vi.fn(),
+  signInWithRedirect: vi.fn(),
+  signOut: vi.fn(),
+}));
+
 // Suppress flatpickr locale errors in test output
 beforeAll(() => {
   const originalStderrWrite = process.stderr.write.bind(process.stderr);

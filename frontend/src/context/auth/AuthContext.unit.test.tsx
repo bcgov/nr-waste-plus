@@ -1,5 +1,5 @@
 import { render, screen, act } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { AuthProvider } from './AuthProvider';
 import { useAuth } from './useAuth';
@@ -28,6 +28,10 @@ const renderWithProvider = async () => {
 };
 
 describe('AuthContext', () => {
+  beforeEach(() => {
+    // Reset mocks before each test
+    vi.clearAllMocks();
+  });
   it('provides default auth values', async () => {
     await renderWithProvider();
     expect(screen.getByTestId('is-logged-in').textContent).toBe('no');
