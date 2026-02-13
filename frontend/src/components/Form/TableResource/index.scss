@@ -60,3 +60,11 @@ div.cds--tooltip-trigger__wrapper button.table-action-menu-button {
 .cds--popover-container.cds--popover--open {
   text-align: center;
 }
+
+table.cds--data-table--zebra {
+  tbody{
+    tr.cds--parent-row:nth-child(odd) + tr.cds--expandable-row {
+      background-color: var(--cds-layer);
+    }
+  }
+}
