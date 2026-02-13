@@ -51,6 +51,26 @@ describe('ColorTag', () => {
     }
   });
 
+  it('shows tooltip by default when code and description exist', () => {
+    render(<ColorTag value={{ code: 'C', description: 'Charlie Coast' }} colorMap={colorMap} />);
+    const tag = screen.getByText('Charlie coast');
+    const tooltip = tag.closest('.cds--tooltip');
+    expect(tooltip).not.toBeNull();
+  });
+
+  it('shows tooltip when showTooltip is explicitly true and code and description exist', () => {
+    render(
+      <ColorTag
+        value={{ code: 'C', description: 'Charlie Coast' }}
+        colorMap={colorMap}
+        showTooltip={true}
+      />,
+    );
+    const tag = screen.getByText('Charlie coast');
+    const tooltip = tag.closest('.cds--tooltip');
+    expect(tooltip).not.toBeNull();
+  });
+
   it('does not render tooltip when showTooltip is false even if code and description exist', () => {
     render(
       <ColorTag
@@ -60,6 +80,35 @@ describe('ColorTag', () => {
       />,
     );
     const tag = screen.getByText('Charlie coast');
+    const tooltip = tag.closest('.cds--tooltip');
+    expect(tooltip).toBeNull();
+  });
+
+  it('does not render tooltip when showTooltip is false even with null values (defaults to N/A)', () => {
+    render(<ColorTag value={null} colorMap={colorMap} showTooltip={false} />);
+    const tag = screen.getByText('Not applicable');
+    const tooltip = tag.closest('.cds--tooltip');
+    expect(tooltip).toBeNull();
+  });
+
+  it('does not render tooltip when showTooltip is false with only code present', () => {
+    render(
+      <ColorTag value={{ code: 'A', description: '' }} colorMap={colorMap} showTooltip={false} />,
+    );
+    const tag = screen.getByText('-');
+    const tooltip = tag.closest('.cds--tooltip');
+    expect(tooltip).toBeNull();
+  });
+
+  it('does not render tooltip when showTooltip is false with only description present', () => {
+    render(
+      <ColorTag
+        value={{ code: '', description: 'Test Description' }}
+        colorMap={colorMap}
+        showTooltip={false}
+      />,
+    );
+    const tag = screen.getByText('Test description');
     const tooltip = tag.closest('.cds--tooltip');
     expect(tooltip).toBeNull();
   });
