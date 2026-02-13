@@ -194,10 +194,9 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                   if (!item) return '';
                   return item.description;
                 }}
-                onSelect={(data) => {
-                  if (data) {
-                    onChange('clientNumbers')([(data as CodeDescriptionDto) || null]);
-                  }
+                onSelect={(rawData) => {
+                  const data = rawData ? [rawData as CodeDescriptionDto] : [];
+                  onChange('clientNumbers')(data);
                 }}
               />
             )}
@@ -276,10 +275,9 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 }
                 return '';
               }}
-              onSelect={(data) => {
-                if (data) {
-                  onChange('requestUserId')((data as string) || '');
-                }
+              onSelect={(rawData) => {
+                const data = (rawData as string) || undefined;
+                onChange('requestUserId')(data);
               }}
             />
           </Column>
