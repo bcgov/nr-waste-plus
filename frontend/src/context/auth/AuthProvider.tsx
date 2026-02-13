@@ -79,21 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };
 
-const loadUserToken = async (): Promise<JWT | undefined> => {
-  if (env.NODE_ENV === 'test') {
-    // This is for test only
-    const token = getUserTokenFromCookie();
-    if (token) {
-      const splittedToken = token.split('.')[1];
-      if (splittedToken) {
-        const jwtBody = JSON.parse(atob(splittedToken));
-        return { payload: jwtBody };
-      }
-      throw new Error('Error parsing token');
-    }
-    throw new Error('No token found');
-  } else {
-    const { idToken } = (await fetchAuthSession()).tokens ?? {};
-    return idToken;
-  }
+const loadUserToken = async (): Promise<JWT | undefined> => {  
+  const { idToken } = (await fetchAuthSession()).tokens ?? {};
+  return idToken;
 };
