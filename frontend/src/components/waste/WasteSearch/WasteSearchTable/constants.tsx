@@ -94,7 +94,7 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
       />
     ),
   },
-  { key: 'client.description', header: 'Client name', sortable: true, selected: true },
+  { key: 'client.description', header: 'Client name', sortable: false, selected: true },
 
   {
     key: 'sampling',
@@ -109,7 +109,7 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
   {
     key: 'multiMark',
     header: 'Multi-mark (Y/N)',
-    sortable: true,
+    sortable: false,
     selected: false,
     renderAs: (value) => <YesNoTag value={value as string | boolean | number | null | undefined} />,
   },
