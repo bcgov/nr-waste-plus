@@ -181,6 +181,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
             {auth.user?.idpProvider === 'IDIR' && (
               <AutoCompleteInput<CodeDescriptionDto>
                 id="as-forestclient-client-ac"
+                data-testid="forestclient-client-ac"
                 titleText="Client"
                 placeholder="Search by client name, number, or acronym"
                 helperText="Search by client name, number or acronym"
@@ -259,6 +260,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
           <Column sm={4} md={4} lg={8}>
             <AutoCompleteInput<string>
               id="as-submitter-name-ac"
+              data-testid="submitter-name-ac"
               titleText="Submitter IDIR/BCeID"
               selectedItem={filters.requestUserId}
               onAutoCompleteChange={async (value) =>
