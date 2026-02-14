@@ -1,10 +1,15 @@
 import { DateTime } from 'luxon';
 import { type FC } from 'react';
 
-const DateTag: FC<{ date: string }> = ({ date }) => {
+interface DateTagProps {
+  date: string;
+  format?: string;
+}
+
+const DateTag: FC<DateTagProps> = ({ date, format = "MMMM dd, yyyy 'at' HH:mm" }) => {
   const parsedDate = DateTime.fromISO(date);
   if (parsedDate.isValid) {
-    return <span>{parsedDate.toFormat("MMMM dd, yyyy 'at' HH:mm")}</span>;
+    return <span>{parsedDate.toFormat(format)}</span>;
   } else {
     return <span data-testid="invalid-date">{date}</span>;
   }
