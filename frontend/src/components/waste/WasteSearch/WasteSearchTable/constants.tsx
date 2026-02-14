@@ -154,4 +154,18 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     selected: true,
     renderAs: (value) => <DateTag date={value as string} />,
   },
+  {
+    key: 'lastUpdated',
+    header: 'Last updated date',
+    sortable: true,
+    selected: true,
+    renderAs: (value) => <DateTag date={value as string} format="MMMM dd, yyyy" />,
+  },
+  {
+    key: 'lastUpdated',
+    header: 'Last updated time',
+    sortable: true,
+    selected: true,
+    renderAs: (value) => <DateTag date={value as string} format="HH:mm" />,
+  },
 ];
