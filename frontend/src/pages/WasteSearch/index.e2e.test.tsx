@@ -194,7 +194,9 @@ test.describe('Waste Search Page', () => {
     let filterTag: Locator;
     let closeAdvancedSearchButton: Locator;
 
-    test.beforeEach(async ({ page }) => {
+    test.beforeEach(async ({ page }, testInfo) => {
+      test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
+
       // Open the advanced search
       advancedSearchButton = page.getByTestId('advanced-search-button-most');
       await advancedSearchButton.click();
