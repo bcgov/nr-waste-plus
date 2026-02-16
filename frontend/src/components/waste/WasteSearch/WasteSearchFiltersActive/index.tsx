@@ -69,8 +69,9 @@ const WasteSearchFiltersActive: FC<WasteSearchFiltersActiveProps> = ({
       const filterArrayKey = filterKey as LocalArrayKey;
 
       return filterValue.map((subValueRaw, index) => {
-        if (Array.isArray(plainFilters[filterArrayKey])) {
-          const subValue = plainFilters[filterArrayKey][index];
+        const plainFilterValue = plainFilters[filterArrayKey];
+        if (Array.isArray(plainFilterValue)) {
+          const subValue = plainFilterValue[index];
 
           return (
             <DismissibleTag
@@ -113,14 +114,14 @@ const WasteSearchFiltersActive: FC<WasteSearchFiltersActiveProps> = ({
     });
 
   return (
-    <>
+    <div data-testid="active-filters" className="display-contents">
       {renderFilters}
       {visibleFilters().length > 0 && (
         <Button id="clear-filters-button" kind="ghost" onClick={clearFilters}>
           Clear filters
         </Button>
       )}
-    </>
+    </div>
   );
 };
 
