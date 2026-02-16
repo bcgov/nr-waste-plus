@@ -1,4 +1,4 @@
-import { expect } from '@playwright/test';
+import { expect, type Locator } from '@playwright/test';
 
 import { test } from '@/config/tests/coverage.setup';
 import { mockApi, mockApiResponses, mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
@@ -186,6 +186,132 @@ test.describe('Waste Search Page', () => {
       // Verify no tags remain
       await expect(page.getByTestId('dt-district-DFN')).toHaveCount(0);
       await expect(page.getByTestId('dt-district-DCK')).toHaveCount(0);
+    });
+  });
+
+  test.describe('advanced search', () => {
+    let advancedSearchButton: Locator;
+    let filterTag: Locator;
+    let closeAdvancedSearchButton: Locator;
+
+    test.beforeEach(async ({ page }) => {
+      // Open the advanced search
+      advancedSearchButton = page.getByTestId('advanced-search-button-most');
+      await advancedSearchButton.click();
+    });
+
+    test.describe('Client', async () => {
+      const clientNumber = '00049597';
+      let clientInput: Locator;
+
+      test.beforeEach(async ({ page }) => {
+        // Look up and select a Client
+        clientInput = page.getByRole('combobox', { name: 'Client' });
+        await clientInput.fill(clientNumber);
+
+        // Select the client
+        await page.getByRole('option', { name: clientNumber, exact: false }).click();
+
+        const regex = new RegExp(clientNumber);
+        await expect(clientInput).toHaveValue(regex);
+
+        closeAdvancedSearchButton = page.getByRole('button', { name: 'Close' });
+        await closeAdvancedSearchButton.click();
+
+        // Verify tag appears
+        filterTag = page.getByTestId(`dt-clientNumbers-${clientNumber}`);
+        await expect(filterTag).toBeVisible();
+      });
+
+      test('should clear the Client input field', async () => {
+        // Dismiss tag
+        const dismissFilterTag = filterTag.getByRole('button', { name: 'Dismiss' });
+        await dismissFilterTag.click();
+
+        // Re-open the advanced search
+        await advancedSearchButton.click();
+
+        // Verify input got cleared
+        await expect(clientInput).toHaveValue('');
+      });
+
+      test('should remove the filter tag', async ({ page }) => {
+        // Re-open the advanced search
+        await advancedSearchButton.click();
+
+        // Clear the Client input field
+        const clientInputParent = page.locator('div').filter({ has: clientInput });
+        const clearClientButton = clientInputParent.getByRole('button', {
+          name: 'Clear selected item',
+        });
+        await clearClientButton.click();
+
+        // Verify input got cleared
+        await expect(clientInput).toHaveValue('');
+
+        await closeAdvancedSearchButton.click();
+
+        // Verify no tags remain
+        await expect(filterTag).toHaveCount(0);
+      });
+    });
+
+    test.describe('IDIR or BCeID', async () => {
+      let submitterInput: Locator;
+
+      test.beforeEach(async ({ page }) => {
+        const inputText = 'ZORO';
+
+        // Look up and select a Submitter IDIR/BCeID
+        submitterInput = page.getByRole('combobox', { name: 'IDIR or BCeID' });
+        await submitterInput.fill(inputText);
+
+        const userId = `BCEID\\${inputText}`;
+
+        // Select the client
+        await page.getByRole('option', { name: userId }).click();
+
+        await expect(submitterInput).toHaveValue(userId);
+
+        closeAdvancedSearchButton = page.getByRole('button', { name: 'Close' });
+        await closeAdvancedSearchButton.click();
+
+        // Verify tag appears
+        filterTag = page.getByTestId(`dt-requestUserId-${userId}`);
+        await expect(filterTag).toBeVisible();
+      });
+
+      test('should clear the IDIR or BCeID input field', async () => {
+        // Dismiss tag
+        const dismissFilterTag = filterTag.getByRole('button', { name: 'Dismiss' });
+        await dismissFilterTag.click();
+
+        // Re-open the advanced search
+        await advancedSearchButton.click();
+
+        // Verify input got cleared
+        await expect(submitterInput).toHaveValue('');
+      });
+
+      test('should remove the filter tag', async ({ page }) => {
+        // Re-open the advanced search
+        await advancedSearchButton.click();
+
+        // Clear the IDIR or BCeID input field
+        const submitterInputParent = page.locator('div').filter({ has: submitterInput });
+        const clearSubmitterButton = submitterInputParent.getByRole('button', {
+          name: 'Clear selected item',
+        });
+        await clearSubmitterButton.click();
+
+        // Verify input got cleared
+        await expect(submitterInput).toHaveValue('');
+
+        await closeAdvancedSearchButton.click();
+
+        // Verify no tags remain
+        await expect(filterTag).toHaveCount(0);
+      });
     });
   });
 
