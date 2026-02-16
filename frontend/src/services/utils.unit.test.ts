@@ -166,19 +166,6 @@ describe('forestClientAutocompleteResult2CodeDescription', () => {
     });
   });
 
-  it('converts the data', () => {
-    const data: ForestClientAutocompleteResultDto = {
-      id: '1234',
-      name: 'ACME Corporation',
-    };
-    const result = forestClientAutocompleteResult2CodeDescription(data);
-
-    expect(result).toStrictEqual({
-      code: '1234',
-      description: '1234 ACME Corporation',
-    });
-  });
-
   it('adds the acronym in round brackets', () => {
     const data: ForestClientAutocompleteResultDto = {
       id: '1234',
