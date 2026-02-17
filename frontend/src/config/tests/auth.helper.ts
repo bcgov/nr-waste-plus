@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-console */
-import path from 'path';
+import path from 'node:path';
 
 import type { Page } from '@playwright/test';
 
@@ -8,6 +8,8 @@ export async function authenticate(page: Page, metadata: Record<string, any>): P
   // Fill credentials (use env vars for security)
   console.log(`Setup -  Auth: ${metadata.user} via ${metadata.userType.toLowerCase()}`);
   await page.goto('/landing');
+
+  await page.waitForLoadState('networkidle');
 
   const notFoundVisible = await page
     .getByRole('heading', { name: 'Content Not Found' })
@@ -22,10 +24,7 @@ export async function authenticate(page: Page, metadata: Record<string, any>): P
     return;
   }
 
-  await Promise.all([
-    page.waitForLoadState('networkidle'),
-    page.getByTestId(`landing-button__${metadata.userType.toLowerCase()}`).click(),
-  ]);
+  await page.getByTestId(`landing-button__${metadata.userType.toLowerCase()}`).click();
 
   await page.waitForLoadState('networkidle');
   await page.locator('#user').waitFor({ state: 'visible', timeout: 60000 });

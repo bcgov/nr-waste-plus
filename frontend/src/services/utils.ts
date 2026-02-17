@@ -1,4 +1,10 @@
-import type { NestedKeyOf, SortDirectionType, ValueByPath } from './types';
+import type {
+  CodeDescriptionDto,
+  ForestClientAutocompleteResultDto,
+  NestedKeyOf,
+  SortDirectionType,
+  ValueByPath,
+} from './types';
 
 export const removeEmpty = <T extends object>(obj: T): Partial<T> => {
   return Object.fromEntries(
@@ -52,3 +58,15 @@ export const generateSortArray = <T>(
   Object.entries(sort)
     .filter(([, direction]) => direction !== 'NONE')
     .map(([key, direction]) => `${key},${direction}` as `${NestedKeyOf<T>},${SortDirectionType}`);
+
+export const forestClientAutocompleteResult2CodeDescription = (
+  data: ForestClientAutocompleteResultDto,
+): CodeDescriptionDto => {
+  const { id, name, acronym } = data;
+  const acronymSection = acronym ? ` (${acronym})` : '';
+  const description = `${id} ${name}${acronymSection}`;
+  return {
+    code: id ?? '',
+    description,
+  };
+};

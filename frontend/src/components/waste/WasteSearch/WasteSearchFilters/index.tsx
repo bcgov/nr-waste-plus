@@ -1,9 +1,9 @@
 import { Search as SearchIcon, FilterEdit as FilterIcon } from '@carbon/icons-react';
 import { Button, Column, Grid } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState, type FC } from 'react';
+import { useEffect, useState, type ComponentProps, type FC } from 'react';
 
-import type { CodeDescriptionDto, ReportingUnitSearchParametersDto } from '@/services/types';
+import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
 
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import SearchInput from '@/components/Form/SearchInput';
@@ -16,13 +16,13 @@ import APIs from '@/services/APIs';
 import './index.scss';
 
 type WasteSearchFiltersProps = {
-  value: ReportingUnitSearchParametersDto;
-  onChange: (filters: ReportingUnitSearchParametersDto) => void;
+  value: ReportingUnitSearchParametersViewDto;
+  onChange: (filters: ReportingUnitSearchParametersViewDto) => void;
   onSearch: () => void;
 };
 
 const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSearch }) => {
-  const [filters, setFilters] = useState<ReportingUnitSearchParametersDto>(value);
+  const [filters, setFilters] = useState<ReportingUnitSearchParametersViewDto>(value);
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState<boolean>(false);
 
   const { data: samplingOptions } = useQuery({
@@ -52,13 +52,14 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
     refetchOnMount: true,
   });
 
-  const handleStringChange = (key: keyof ReportingUnitSearchParametersDto) => (value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-    setTimeout(onSearch, 1);
-  };
+  const handleStringChange =
+    (key: keyof ReportingUnitSearchParametersViewDto) => (value: string) => {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+      setTimeout(onSearch, 1);
+    };
 
   const handleActiveMultiSelectChange =
-    (key: keyof ReportingUnitSearchParametersDto) =>
+    (key: keyof ReportingUnitSearchParametersViewDto) =>
     (changes: { selectedItems: CodeDescriptionDto[] }): void => {
       setFilters((prev) => ({
         ...prev,
@@ -67,13 +68,16 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
     };
 
   const handleChange = (
-    key: keyof ReportingUnitSearchParametersDto,
-    value: string | CodeDescriptionDto[] | boolean | string[],
+    key: keyof ReportingUnitSearchParametersViewDto,
+    value: ReportingUnitSearchParametersViewDto[typeof key],
   ) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const onRemoveFilter = (key: keyof ReportingUnitSearchParametersDto, value?: string) => {
+  const onRemoveFilter: ComponentProps<typeof WasteSearchFiltersActive>['onRemoveFilter'] = (
+    key,
+    value,
+  ) => {
     if (!value) {
       setFilters((prev) => {
         const newFilters = { ...prev };

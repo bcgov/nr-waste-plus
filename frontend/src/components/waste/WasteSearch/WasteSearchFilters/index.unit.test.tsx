@@ -1,10 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent, within, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
 import WasteSearchFilters from './index';
+
+import type { ComponentProps } from 'react';
 
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
@@ -36,7 +37,7 @@ const defaultFilters = {
   status: [],
 };
 
-const renderWithProps = async (props: any) => {
+const renderWithProps = async (props: Partial<ComponentProps<typeof WasteSearchFilters>>) => {
   const qc = new QueryClient();
   await act(async () =>
     render(
@@ -129,6 +130,17 @@ describe('WasteSearchFilters', () => {
     expect(screen.getByText('A - Assess area status: A')).toBeDefined();
   });
 
+  it('renders the filter tags area', async () => {
+    await renderWithProps({
+      value: {
+        sampling: ['A'],
+      },
+    });
+    expect(screen.getByTestId('active-filters')).toBeDefined();
+
+    expect(screen.getByTestId('dt-sampling-A')).toBeDefined();
+  });
+
   it('calls onChange when search has new value', async () => {
     const onChange = vi.fn();
     await renderWithProps({ onChange });
@@ -136,7 +148,7 @@ describe('WasteSearchFilters', () => {
     const searchBox = screen.getAllByPlaceholderText('Search by RU No. or Block ID')[0];
     expect(searchBox).toBeDefined();
 
-    await userEvent.type(searchBox!, 'supertest');
+    await userEvent.type(searchBox, 'supertest');
     await waitFor(() => expect(onChange).toHaveBeenCalled());
   });
 
