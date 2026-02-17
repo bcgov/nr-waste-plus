@@ -160,7 +160,7 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     key: 'lastUpdated',
     header: 'Timestamp',
     sortable: true,
-    selected: true,
+    selected: false,
     renderAs: (value) => <DateTag date={value as string} format="t" />,
   },
 ];

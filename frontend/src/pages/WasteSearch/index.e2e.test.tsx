@@ -416,6 +416,28 @@ test.describe('Waste Search Page', () => {
       await expect(page.locator('tr:nth-child(19) > td:nth-child(7) > span')).toHaveText('Yes');
       await expect(page.locator('tr:nth-child(19) > td:nth-child(8) > span')).toHaveText('No');
     });
+
+    test('enable timestamp column', async ({ page }) => {
+      const searchBox = page.getByRole('searchbox');
+      await searchBox.fill('67890');
+      await searchBox.blur();
+
+      const searchButton = page.getByTestId('search-button-most');
+      await searchButton.click();
+
+      await page.waitForLoadState('networkidle');
+
+      await page.getByRole('button', { name: 'Edit columns' }).click();
+
+      const timestampColumnHeader = page
+        .locator('button')
+        .filter({ hasText: 'TimestampSort by ascending' });
+      await expect(timestampColumnHeader).not.toBeVisible();
+
+      await page.locator('label').filter({ hasText: 'Timestamp' }).click();
+      await page.getByRole('button', { name: 'Edit columns' }).click();
+      await expect(timestampColumnHeader).toBeVisible();
+    });
   });
 
   test.describe('API errors', () => {
