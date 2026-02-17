@@ -207,6 +207,12 @@ test.describe('Waste Search Page', () => {
       let clientInput: Locator;
 
       test.beforeEach(async ({ page }) => {
+        await mockApiResponsesWithStub(
+          page,
+          'forest-clients/byNameAcronymNumber**',
+          'forest-clients/byNameAcronymNumber-pg0.json',
+        );
+
         // Look up and select a Client
         clientInput = page.getByRole('combobox', { name: 'Client' });
         await clientInput.fill(clientNumber);
@@ -264,8 +270,14 @@ test.describe('Waste Search Page', () => {
       test.beforeEach(async ({ page }) => {
         const inputText = 'ZORO';
 
+        await mockApiResponsesWithStub(
+          page,
+          'search/reporting-units-users**',
+          'search/reporting-units-users-pg0.json',
+        );
+
         // Look up and select a Submitter IDIR/BCeID
-        submitterInput = page.getByRole('combobox', { name: 'IDIR or BCeID' });
+        submitterInput = page.getByTestId('submitter-name-ac');
         await submitterInput.fill(inputText);
 
         const userId = `BCEID\\${inputText}`;
