@@ -2,12 +2,28 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import WasteSearchFiltersAdvanced from './index';
 
+import type { FamLoginUser } from '@/context/auth/types';
+import type { ReportingUnitSearchParametersViewDto } from '@/services/search.types';
+
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+
+const mockUser = {
+  idpProvider: 'IDIR',
+} as FamLoginUser;
+
+const mockClients = vi.fn().mockReturnValue(['client1', 'client2']);
+
+vi.mock('@/context/auth/useAuth', () => ({
+  useAuth: () => ({
+    user: mockUser,
+    getClients: mockClients,
+  }),
+}));
 
 vi.mock('@/services/APIs', () => {
   return {
@@ -75,6 +91,35 @@ describe('WasteSearchFiltersActive', () => {
     const byMeCheck = screen.getByTestId('created-by-me-checkbox');
     expect(byMeCheck).toBeDefined();
     expect((byMeCheck as HTMLInputElement).checked).toBe(true);
+  });
+
+  it('renders the Client filter with pre-filled value', async () => {
+    const filters: ReportingUnitSearchParametersViewDto = {
+      clientNumbers: [
+        {
+          code: 'code',
+          description: '1234 ACME Corporation',
+        },
+      ],
+    };
+
+    await renderWithProps({ filters });
+
+    const searchBox = screen.getByTestId('forestclient-client-ac');
+    expect(searchBox).toBeDefined();
+    expect((searchBox as HTMLInputElement).value).toBe('1234 ACME Corporation');
+  });
+
+  it('renders the IDIR or BCeID filter with pre-filled value', async () => {
+    const filters: ReportingUnitSearchParametersViewDto = {
+      requestUserId: 'JASON',
+    };
+
+    await renderWithProps({ filters });
+
+    const searchBox = screen.getByTestId('submitter-name-ac');
+    expect(searchBox).toBeDefined();
+    expect((searchBox as HTMLInputElement).value).toBe('JASON');
   });
 
   it('checkbox ticks', async () => {

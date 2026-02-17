@@ -1,8 +1,14 @@
 import { describe, it, expect } from 'vitest';
 
-import { generateSortArray, getB3Headers, getValueByPath, removeEmpty } from './utils';
+import {
+  forestClientAutocompleteResult2CodeDescription,
+  generateSortArray,
+  getB3Headers,
+  getValueByPath,
+  removeEmpty,
+} from './utils';
 
-import type { SortDirectionType } from './types';
+import type { ForestClientAutocompleteResultDto, SortDirectionType } from './types';
 
 type TestObject = {
   user: {
@@ -143,5 +149,34 @@ describe('generateSortArray', () => {
     };
     const result = generateSortArray<typeof sortState>(sortState);
     expect(result).toEqual(['user.name,ASC', 'user.age,DESC']);
+  });
+});
+
+describe('forestClientAutocompleteResult2CodeDescription', () => {
+  it('converts the data', () => {
+    const data: ForestClientAutocompleteResultDto = {
+      id: '1234',
+      name: 'ACME Corporation',
+    };
+    const result = forestClientAutocompleteResult2CodeDescription(data);
+
+    expect(result).toStrictEqual({
+      code: '1234',
+      description: '1234 ACME Corporation',
+    });
+  });
+
+  it('adds the acronym in round brackets', () => {
+    const data: ForestClientAutocompleteResultDto = {
+      id: '1234',
+      name: 'ACME Corporation',
+      acronym: 'ACME',
+    };
+    const result = forestClientAutocompleteResult2CodeDescription(data);
+
+    expect(result).toStrictEqual({
+      code: '1234',
+      description: '1234 ACME Corporation (ACME)',
+    });
   });
 });
