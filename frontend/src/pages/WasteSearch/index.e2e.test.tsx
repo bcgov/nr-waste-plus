@@ -398,11 +398,11 @@ test.describe('Waste Search Page', () => {
       await expect(page.getByRole('columnheader', { name: 'Multi-mark (Y/N)' })).toBeVisible();
       await expect(page.getByRole('columnheader', { name: 'Secondary entry (Y/N)' })).toBeVisible();
 
-      await expect(page.locator('tr:nth-child(9) > td:nth-child(7) > span')).toHaveText('No');
-      await expect(page.locator('tr:nth-child(9) > td:nth-child(8) > span')).toHaveText('Yes');
+      await expect(page.locator('tr:nth-child(17) > td:nth-child(7) > span')).toHaveText('No');
+      await expect(page.locator('tr:nth-child(17) > td:nth-child(8) > span')).toHaveText('Yes');
 
-      await expect(page.locator('tr:nth-child(10) > td:nth-child(7) > span')).toHaveText('Yes');
-      await expect(page.locator('tr:nth-child(10) > td:nth-child(8) > span')).toHaveText('No');
+      await expect(page.locator('tr:nth-child(19) > td:nth-child(7) > span')).toHaveText('Yes');
+      await expect(page.locator('tr:nth-child(19) > td:nth-child(8) > span')).toHaveText('No');
     });
   });
 
@@ -622,7 +622,7 @@ test.describe('Waste Search Page', () => {
 
       // Click the expand button for the first row
       const secondary = page.locator(
-        'tr:nth-child(9) > .cds--table-expand > .cds--table-expand__button',
+        'tr:nth-child(17) > .cds--table-expand > .cds--table-expand__button',
       );
       await secondary.click();
       await page.waitForLoadState('networkidle');
@@ -632,7 +632,7 @@ test.describe('Waste Search Page', () => {
       );
 
       const primary = page.locator(
-        'tr:nth-child(11) > .cds--table-expand > .cds--table-expand__button',
+        'tr:nth-child(19) > .cds--table-expand > .cds--table-expand__button',
       );
       await primary.click();
       await page.waitForLoadState('networkidle');
