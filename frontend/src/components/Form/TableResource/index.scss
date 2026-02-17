@@ -40,7 +40,7 @@
   }
 }
 
-div.cds--tooltip-trigger__wrapper button.table-action-menu-button {
+div.#{vars.$bcgov-prefix}--tooltip-trigger__wrapper button.table-action-menu-button {
   width: 10rem;
 
   .toolbar-menu-columns-display {
@@ -57,6 +57,14 @@ div.cds--tooltip-trigger__wrapper button.table-action-menu-button {
   }
 }
 
-.cds--popover-container.cds--popover--open {
+.#{vars.$bcgov-prefix}--popover-container.#{vars.$bcgov-prefix}--popover--open {
   text-align: center;
+}
+
+table.#{vars.$bcgov-prefix}--data-table--zebra {
+  tbody{
+    tr.#{vars.$bcgov-prefix}--parent-row:nth-child(odd) + tr.#{vars.$bcgov-prefix}--expandable-row {
+      background-color: var(--cds-layer);
+    }
+  }
 }
