@@ -341,9 +341,7 @@ const TableResource = <T,>({
                       align="top"
                       autoAlign
                     >
-                      <span className="table-header-tooltip-trigger">
-                        <strong>{header.header}</strong>
-                      </span>
+                      <strong className="table-header-tooltip-trigger">{header.header}</strong>
                     </Tooltip>
                   ) : (
                     <strong>{header.header}</strong>
