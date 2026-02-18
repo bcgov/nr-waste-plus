@@ -341,10 +341,10 @@ const TableResource = <T,>({
                       align="top"
                       autoAlign
                     >
-                      <span className="table-header-tooltip-trigger">{header.header}</span>
+                      <strong className="table-header-tooltip-trigger">{header.header}</strong>
                     </Tooltip>
                   ) : (
-                    header.header
+                    <strong>{header.header}</strong>
                   )}
                 </TableHeader>
               ))}
