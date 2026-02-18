@@ -41,24 +41,26 @@ const WasteSearchFiltersActive: FC<WasteSearchFiltersActiveProps> = ({
    */
   const visibleFilters = useCallback(
     () =>
-      (Object.keys(filters) as (keyof ReportingUnitSearchParametersViewDto)[]).filter((filterKey) => {
-        if (filterKey === 'mainSearchTerm') return false; // Skip main search term
-        const value = filters[filterKey];
-        // Filter out:
-        // - `null` or `undefined`
-        // - Empty strings `""`
-        // - Empty arrays `[]`
-        if (
-          value === undefined ||
-          value === null ||
-          value === '' ||
-          value === false ||
-          (Array.isArray(value) && value.length === 0)
-        ) {
-          return false;
-        }
-        return true;
-      }),
+      (Object.keys(filters) as (keyof ReportingUnitSearchParametersViewDto)[]).filter(
+        (filterKey) => {
+          if (filterKey === 'mainSearchTerm') return false; // Skip main search term
+          const value = filters[filterKey];
+          // Filter out:
+          // - `null` or `undefined`
+          // - Empty strings `""`
+          // - Empty arrays `[]`
+          if (
+            value === undefined ||
+            value === null ||
+            value === '' ||
+            value === false ||
+            (Array.isArray(value) && value.length === 0)
+          ) {
+            return false;
+          }
+          return true;
+        },
+      ),
     [filters],
   );
 

@@ -7,7 +7,7 @@ export const mapDisplayFilter = (key: keyof ReportingUnitSearchParametersDto): s
     case 'sampling':
       return 'Sampling option';
     case 'status':
-      return 'Assess area status';
+      return 'Status';
     case 'requestByMe':
       return 'Created By Me';
     case 'multiMark':
@@ -19,7 +19,7 @@ export const mapDisplayFilter = (key: keyof ReportingUnitSearchParametersDto): s
     case 'updateDateEnd':
       return 'Update Date End';
     case 'licenseeId':
-      return 'Licensee number';
+      return 'Licence number';
     case 'cuttingPermitId':
       return 'Cutting Permit';
     case 'timberMark':
