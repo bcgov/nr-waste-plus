@@ -6,6 +6,10 @@ export type TableHeaderType<T, K extends NestedKeyOf<T> = NestedKeyOf<T>> = {
   header: string;
   selected?: boolean;
   sortable?: boolean;
+  // Unique identifier for this column header. Used for React keys, tracking, and preferences.
+  // If not provided, falls back to using the key. Use this when you need multiple columns
+  // with the same data property (key) but different renderings.
+  id?: string;
   // renderAs function should expect as argument the value of the key in T
   // and return a React node to be rendered in the table cell
   // This is useful for custom rendering, like in the StatusTag component
@@ -34,6 +38,14 @@ export type PageableResponse<T> = {
   content: IdentifiableContent<T>[];
   page: PageType;
 };
+
+/**
+ * Get the effective unique identifier for a header.
+ * Returns the id if provided, otherwise returns the key as string.
+ */
+export function getHeaderId<T>(header: TableHeaderType<T>): string {
+  return header.id ?? String(header.key);
+}
 
 export function renderCell<T>(row: T, header: TableHeaderType<T, NestedKeyOf<T>>): React.ReactNode {
   const value = getValueByPath(row, header.key);

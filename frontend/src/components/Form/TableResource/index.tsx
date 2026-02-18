@@ -19,7 +19,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import TableResourceExpandRow from './TableResourceExpandRow';
 import TableResourceRow from './TableResourceRow';
-import { type TableHeaderType, type PageableResponse, renderCell } from './types';
+import { type TableHeaderType, type PageableResponse, renderCell, getHeaderId } from './types';
 
 import type { NestedKeyOf, SortDirectionType } from '@/services/types';
 
@@ -114,15 +114,13 @@ const TableResource = <T,>({
 
   const loadTableFromPreferences = () => {
     if (userPreference.tableHeaders) {
-      const savedKeys = (userPreference.tableHeaders as Record<string, NestedKeyOf<T>[]>)[
-        id
-      ] as NestedKeyOf<T>[];
+      const savedIds = (userPreference.tableHeaders as Record<string, string[]>)[id] as string[];
 
-      if (savedKeys && Array.isArray(savedKeys)) {
+      if (savedIds && Array.isArray(savedIds)) {
         setTableHeaders(
           headers.map((header) => ({
             ...header,
-            selected: savedKeys.includes(header.key),
+            selected: savedIds.includes(getHeaderId(header)),
           })),
         );
       } else {
@@ -134,7 +132,7 @@ const TableResource = <T,>({
   useEffect(() => {
     const preferenceHeaders = tableHeaders
       .filter((header) => header.selected)
-      .map((header) => header.key);
+      .map((header) => getHeaderId(header));
     updatePreferences({ tableHeaders: { [id]: [...new Set(preferenceHeaders)] } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tableHeaders]);
@@ -191,11 +189,11 @@ const TableResource = <T,>({
 
   const noItemRangeText = () => '';
 
-  const onToggleHeader = (key: NestedKeyOf<T>) => {
+  const onToggleHeader = (headerId: string) => {
     setTableHeaders((prevHeaders) => {
       return prevHeaders.map((header) => {
-        // Find the header to toggle
-        if (header.key === key) {
+        // Find the header to toggle by id
+        if (getHeaderId(header) === headerId) {
           // Toggle the header's selected state
           return { ...header, selected: !header.selected };
         }
@@ -307,13 +305,13 @@ const TableResource = <T,>({
                 <div className="helper-text">Select the columns you want to see</div>
                 {tableHeaders.map((header) => (
                   <Checkbox
-                    key={`header-column-checkbox-${String(header.key)}`}
-                    id={`header-column-checkbox-${String(header.key)}`}
+                    key={`header-column-checkbox-${getHeaderId(header)}`}
+                    id={`header-column-checkbox-${getHeaderId(header)}`}
                     aria-label={`Toggle ${header.header} column`}
                     className="column-checkbox"
                     labelText={header.header}
                     checked={header.selected}
-                    onChange={() => onToggleHeader(header.key)}
+                    onChange={() => onToggleHeader(getHeaderId(header))}
                   />
                 ))}
               </div>
@@ -329,7 +327,7 @@ const TableResource = <T,>({
               .filter((header) => header.selected)
               .map((header) => (
                 <TableHeader
-                  key={`header-${String(header.key)}`}
+                  key={`header-${getHeaderId(header)}`}
                   isSortable={Boolean(header.sortable) && Boolean(onSortChange)}
                   isSortHeader={(sortState[header.key] ?? 'NONE') !== 'NONE'}
                   sortDirection={
@@ -359,7 +357,7 @@ const TableResource = <T,>({
             const cells = tableHeaders
               .filter((header) => header.selected)
               .map((header) => (
-                <TableCell key={`cell-${row.id}-${String(header.key)}`}>
+                <TableCell key={`cell-${row.id}-${getHeaderId(header)}`}>
                   {renderCell(row, header)}
                 </TableCell>
               ));
