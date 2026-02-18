@@ -245,6 +245,10 @@ $types: 'error', 'info', 'success', 'warning';
   @include font-family.font-weight(semibold);
 }
 
+.#{variables.$bcgov-prefix}--table-header-label strong {
+  font-weight: 700;
+}
+
 .#{variables.$bcgov-prefix}--table-expand__button {
   border-radius: 0.25rem;
 }

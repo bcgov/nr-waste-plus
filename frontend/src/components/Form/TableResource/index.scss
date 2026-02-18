@@ -62,9 +62,16 @@ div.#{vars.$bcgov-prefix}--tooltip-trigger__wrapper button.table-action-menu-but
 }
 
 table.#{vars.$bcgov-prefix}--data-table--zebra {
-  tbody{
+  tbody {
     tr.#{vars.$bcgov-prefix}--parent-row:nth-child(odd) + tr.#{vars.$bcgov-prefix}--expandable-row {
       background-color: var(--cds-layer);
     }
+  }
+}
+
+table.#{vars.$bcgov-prefix}--data-table,
+table.#{vars.$bcgov-prefix}--data-table--zebra {
+  tbody tr td {
+    border-bottom: 1px solid var(--cds-border-subtle-01) !important;
   }
 }
