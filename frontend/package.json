@@ -86,6 +86,7 @@
     "node": ">=22.0.0"
   },
   "overrides": {
+    "fast-xml-parser": "^5.3.6",
     "workbox-build": {
       "glob": "^13.0.0"
     }
