@@ -18,26 +18,23 @@ import { DateTime } from 'luxon';
 import { type FC } from 'react';
 
 import {
-  DATE_PICKER_FORMAT,
   API_DATE_FORMAT,
+  DATE_PICKER_FORMAT,
   MAX_TEXT_INPUT_LEN,
-  getStartMaxDate,
-  getStartDateValue,
-  getEndMinDate,
   getEndDateValue,
+  getEndMinDate,
+  getStartDateValue,
+  getStartMaxDate,
 } from './utils';
 
-import type {
-  CodeDescriptionDto,
-  ReportingUnitSearchParametersViewDto,
-  ReportingUnitSearchParametersDto,
-} from '@/services/types';
+import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
 
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import AutoCompleteInput from '@/components/Form/AutoCompleteInput';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import { useAuth } from '@/context/auth/useAuth';
 import APIs from '@/services/APIs';
+import { getCodeDescriptionArrayConverter } from '@/services/search.utils';
 import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils';
 
 import './index.scss';
@@ -68,19 +65,21 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
   const auth = useAuth();
 
   const onCheckBoxChange =
-    (key: keyof ReportingUnitSearchParametersDto) =>
+    (key: keyof ReportingUnitSearchParametersViewDto) =>
     (_: React.ChangeEvent<HTMLInputElement>, data: { checked: boolean; id: string }) => {
       onChange(key)(data.checked);
     };
 
   const onActiveMultiSelectChange =
-    (key: keyof ReportingUnitSearchParametersDto) =>
+    (key: keyof ReportingUnitSearchParametersViewDto) =>
     (changes: { selectedItems: CodeDescriptionDto[] }): void => {
-      onChange(key)(changes.selectedItems?.map((item) => item.code));
+      const converter = getCodeDescriptionArrayConverter(key);
+      const result = converter(changes.selectedItems);
+      onChange(key)(result);
     };
 
   const onTextChange =
-    (key: keyof ReportingUnitSearchParametersDto) =>
+    (key: keyof ReportingUnitSearchParametersViewDto) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
       onChange(key)(event.target.value);
     };

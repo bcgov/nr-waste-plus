@@ -70,3 +70,6 @@ export const forestClientAutocompleteResult2CodeDescription = (
     description,
   };
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const isKeyof = <T extends object>(key: any, object: T): key is keyof T => key in object;
