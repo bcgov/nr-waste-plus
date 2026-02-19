@@ -7,31 +7,45 @@ import DistrictItem from './DistrictItem';
 import type { DistrictType } from './types';
 
 import { usePreference } from '@/context/preference/usePreference';
-
 import './index.scss';
 
-type DistrictSelectionProps = {
+type IsSelected<T = string> = (item: DistrictType, userPreferenceValue: T) => boolean;
+type DistrictTypeConverter<T = string> = (district: DistrictType) => T;
+
+type DistrictSelectionProps<T = string> = {
   queryHook: () => { data: DistrictType[] | undefined; isLoading: boolean };
   preferenceKey: string;
   deselectLabel: string;
   searchLabel: string;
   filterFn: (item: DistrictType, keyword: string) => boolean;
+  isSelected?: IsSelected<T>;
+  districtTypeConverter?: DistrictTypeConverter<T>;
 };
 
-const DistrictSelection = ({
+const DistrictSelection = <T,>({
   queryHook,
   preferenceKey,
   deselectLabel,
   searchLabel,
   filterFn,
-}: DistrictSelectionProps) => {
+  isSelected: isSelectedRaw,
+  districtTypeConverter: districtTypeConverterRaw,
+}: DistrictSelectionProps<T>) => {
   const [filterText, setFilterText] = useState<string>('');
   const { userPreference, updatePreferences } = usePreference();
   const { data, isLoading } = queryHook();
 
-  const storeSelection = (value: string) => {
+  const storeSelection = (value: unknown) => {
     updatePreferences({ [preferenceKey]: value });
   };
+
+  const isSelected: IsSelected<T> =
+    isSelectedRaw || ((item, userPreferenceValue) => userPreferenceValue === item.id);
+  const isItemSelected = (item: DistrictType) =>
+    isSelected(item, userPreference[preferenceKey] as T);
+
+  const districtTypeConverter: DistrictTypeConverter<T> =
+    districtTypeConverterRaw || ((district) => district.id as T);
 
   return (
     <Grid className="district-selection-grid">
@@ -82,13 +96,10 @@ const DistrictSelection = ({
                 >
                   <button
                     type="button"
-                    className={`district-list-item-btn${userPreference[preferenceKey] === item.id ? ' selected-district' : ''}`}
-                    onClick={() => storeSelection(item.id)}
+                    className={`district-list-item-btn${isItemSelected(item) ? ' selected-district' : ''}`}
+                    onClick={() => storeSelection(districtTypeConverter(item))}
                   >
-                    <DistrictItem
-                      client={item}
-                      isSelected={userPreference[preferenceKey] === item.id}
-                    />
+                    <DistrictItem client={item} isSelected={isItemSelected(item)} />
                   </button>
                 </li>
               ))}

@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { type FC } from 'react';
 
+import type { CodeDescriptionDto } from '@/services/search.types';
+
 import HeaderDistrictDisplay from '@/components/Layout/HeaderDistrictDisplay';
 import { useAuth } from '@/context/auth/useAuth';
 import { usePreference } from '@/context/preference/usePreference';
@@ -22,9 +24,12 @@ const ClientDisplay: FC<ClientDisplayProps> = ({ isActive }) => {
         .map((client) => ({
           id: client.clientNumber,
           name: client.name ?? client.clientName,
+          acronym: client.acronym,
           kind: client.clientTypeCode?.code,
         }))
-        .find((client) => client.id === userPreference.selectedClient),
+        .find(
+          (client) => client.id === (userPreference.selectedClient as CodeDescriptionDto)?.code,
+        ),
   });
 
   return (
