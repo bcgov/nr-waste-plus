@@ -15,6 +15,7 @@ type ClientDisplayProps = {
 const ClientDisplay: FC<ClientDisplayProps> = ({ isActive }) => {
   const { getClients } = useAuth();
   const { userPreference } = usePreference();
+  const selectedClient = userPreference.selectedClient as CodeDescriptionDto | undefined;
   const { data, isLoading } = useQuery({
     queryKey: ['forest-clients', 'search', getClients()],
     queryFn: () => APIs.forestclient.searchByClientNumbers(getClients(), 0, getClients().length),
@@ -27,9 +28,7 @@ const ClientDisplay: FC<ClientDisplayProps> = ({ isActive }) => {
           acronym: client.acronym,
           kind: client.clientTypeCode?.code,
         }))
-        .find(
-          (client) => client.id === (userPreference.selectedClient as CodeDescriptionDto)?.code,
-        ),
+        .find((client) => client.id === selectedClient?.code),
   });
 
   return (

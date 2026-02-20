@@ -186,8 +186,8 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 helperText="Search by client name, number or acronym"
                 selectedItem={filters.clientNumbers?.[0]}
                 onAutoCompleteChange={async (value) =>
-                  (await APIs.forestclient.searchForestClients(value, 0, 10)).map((element) =>
-                    forestClientAutocompleteResult2CodeDescription(element),
+                  (await APIs.forestclient.searchForestClients(value, 0, 10)).map(
+                    forestClientAutocompleteResult2CodeDescription,
                   )
                 }
                 itemToString={(item) => {
