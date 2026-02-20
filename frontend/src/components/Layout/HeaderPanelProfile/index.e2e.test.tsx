@@ -147,6 +147,9 @@ test.describe('Profile menu', () => {
       await page.waitForLoadState('networkidle');
 
       await expect(profileButton.getByText('OAK HERITAGE LTD.')).toBeVisible();
+
+      const filterTag = page.getByTestId('dt-clientNumbers-90000003');
+      await expect(filterTag).toBeVisible();
     });
   });
 
@@ -220,6 +223,9 @@ test.describe('Profile menu', () => {
       );
 
       await expect(profileButton.getByText('Chilliwack')).toBeVisible();
+
+      const filterTag = page.getByTestId('dt-district-DCK');
+      await expect(filterTag).toBeVisible();
     });
 
     test('filter Haida Gwaii', async ({ page }, testInfo) => {

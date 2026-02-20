@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import ClientDisplay from '.';
 
+import type { UserPreference } from '@/context/preference/types';
+
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
@@ -47,7 +49,7 @@ let mockedClientValues = [
     acronym: 'TBA',
   },
 ];
-let mockedPreference = { selectedClient: '' };
+let mockedPreference = { selectedClient: null } as Partial<UserPreference>;
 const mockUpdatePreferences = vi.fn();
 
 vi.mock('@/services/APIs', () => ({
@@ -130,7 +132,7 @@ describe('ClientDisplay', () => {
         acronym: 'TBA',
       },
     ];
-    mockedPreference = { selectedClient: '' };
+    mockedPreference = { selectedClient: null };
     (APIs.forestclient.searchByClientNumbers as Mock).mockResolvedValue(mockedClientValues);
   });
 
@@ -145,7 +147,12 @@ describe('ClientDisplay', () => {
 
   it('small size with client should not display anything', async () => {
     mockBreakpoint = 'sm';
-    mockedPreference = { selectedClient: '00000004' };
+    mockedPreference = {
+      selectedClient: {
+        code: '00000004',
+        description: '00000004 TIMBER SALES (TBA)',
+      },
+    };
 
     await renderWithProviders(false);
     const name = screen.queryByTestId('client-name');

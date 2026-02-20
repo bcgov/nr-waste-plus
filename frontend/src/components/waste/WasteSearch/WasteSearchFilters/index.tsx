@@ -102,9 +102,9 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
       selectedClient: 'clientNumbers',
       selectedDistrict: 'district',
     },
-    (key, value): string | boolean | string[] | undefined => {
+    (key, value): string | boolean | string[] | CodeDescriptionDto[] | undefined => {
       if (key === 'selectedClient' || key === 'selectedDistrict') {
-        return value ? [value as string] : [];
+        return (value ? [value] : []) as string[] | CodeDescriptionDto[];
       }
       return value as string | boolean | string[] | undefined;
     },
