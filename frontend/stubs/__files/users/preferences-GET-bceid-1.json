@@ -1,4 +1,7 @@
 {
   "theme": "g100",
-  "selectedClient": "90000003"
+  "selectedClient": {
+    "code": "90000003",
+    "description": "90000003 OAK HERITAGE LTD. (OAK)"
+  }
 }
