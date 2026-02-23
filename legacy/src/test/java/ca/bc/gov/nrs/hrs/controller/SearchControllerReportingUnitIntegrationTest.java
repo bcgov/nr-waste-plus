@@ -37,7 +37,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(jsonPath("$.content[0].ruNumber").value(879))
         .andExpect(jsonPath("$.content[0].client.code").value("00001271"))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(60))
+        .andExpect(jsonPath("$.page.totalElements").value(232))
         .andReturn();
   }
 
@@ -57,7 +57,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(jsonPath("$.content[0].ruNumber").value(879))
         .andExpect(jsonPath("$.content[0].client.code").value("00001271"))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(60))
+        .andExpect(jsonPath("$.page.totalElements").value(232))
         .andReturn();
   }
 
@@ -79,7 +79,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(41))
+        .andExpect(jsonPath("$.page.totalElements").value(43))
         .andReturn();
   }
 
@@ -103,7 +103,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(jsonPath("$.content[0].ruNumber").value(34906))
         .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(41))
+        .andExpect(jsonPath("$.page.totalElements").value(43))
         .andReturn();
   }
 
@@ -125,7 +125,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.content.length()").value(0))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(41))
+        .andExpect(jsonPath("$.page.totalElements").value(43))
         .andReturn();
   }
 
@@ -256,7 +256,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.page.totalElements")
-            .value(org.hamcrest.Matchers.equalTo(14))
+            .value(org.hamcrest.Matchers.equalTo(57))
         )
         .andReturn();
   }

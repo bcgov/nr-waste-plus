@@ -37,7 +37,7 @@ class SearchControllerReportingUnitUsersIntegrationTest extends
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.length()").value(2))
+        .andExpect(jsonPath("$.length()").value(1))
         .andExpect(jsonPath("$.[0]").value("IDIR\\JAKEDOG"))
         .andReturn();
   }
@@ -68,7 +68,7 @@ class SearchControllerReportingUnitUsersIntegrationTest extends
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$.length()").value(2))
         .andReturn();
   }
 
