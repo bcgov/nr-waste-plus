@@ -20,14 +20,6 @@ public final class ReportingUnitQueryConstants {
       waa.WASTE_ASSESSMENT_AREA_ID AS block_id,
       COALESCE(waa.CUT_BLOCK_ID, waa.DRAFT_CUT_BLOCK_ID) AS cut_block_id,
       wru.CLIENT_NUMBER AS client_number,
-      CASE
-        WHEN fc.LEGAL_FIRST_NAME IS NOT NULL AND fc.LEGAL_MIDDLE_NAME IS NOT NULL THEN
-          fc.LEGAL_FIRST_NAME || ' ' || fc.LEGAL_MIDDLE_NAME || ' ' || fc.CLIENT_NAME
-        WHEN fc.LEGAL_FIRST_NAME IS NOT NULL THEN
-          fc.LEGAL_FIRST_NAME || ' ' || fc.CLIENT_NAME
-        ELSE
-          NVL(fc.LEGAL_FIRST_NAME, '') || NVL(fc.LEGAL_MIDDLE_NAME, '') || fc.CLIENT_NAME
-      END AS client_name,
       waa.FOREST_FILE_ID AS license_number,
       NULLIF(TRIM(COALESCE(waa.CUTTING_PERMIT_ID, waa.DRAFT_CUTTING_PERMIT_ID)),'') AS cutting_permit,
       COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK) AS timber_mark,
@@ -52,8 +44,6 @@ public final class ReportingUnitQueryConstants {
         ON waasc.WASTE_ASSESS_AREA_STS_CODE = waa.WASTE_ASSESS_AREA_STS_CODE
       LEFT JOIN ORG_UNIT ou
         ON ou.ORG_UNIT_NO = wru.ORG_UNIT_NO
-      LEFT JOIN FOREST_CLIENT fc
-        ON fc.CLIENT_NUMBER = wru.CLIENT_NUMBER
       """;
 
   private static final String SEARCH_REPORTING_UNIT_WHERE = """

@@ -67,6 +67,12 @@ public class SearchService {
             .stream()
             .map(ReportingUnitSearchResultDto::client)
             .distinct()
+            .map(client -> 
+                forestClientService
+                    .getClientByNumber(client.code())
+                    .map(forestClientDto -> client.withDescription(forestClientDto.name()))
+                    .orElse(client)
+            )
             .collect(toMap(CodeDescriptionDto::code, client -> client));
 
     //Enrich the results with client and location details
