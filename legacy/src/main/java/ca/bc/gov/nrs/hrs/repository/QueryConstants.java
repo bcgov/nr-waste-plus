@@ -32,7 +32,9 @@ public final class QueryConstants {
         WHERE
         'NOVALUE' in (:clientNumbers) OR CLIENT_NUMBER IN (:clientNumbers)
       )
-      WHERE UTL_MATCH.JARO_WINKLER_SIMILARITY(REGEXP_SUBSTR(UPPER(USERID), '[^\\]+$'),:userId) >= 90""";
+      WHERE UTL_MATCH.JARO_WINKLER_SIMILARITY(
+          REGEXP_SUBSTR(UPPER(USERID), '[^\\]+$'),:userId
+        ) >= 90""";
 
   private static final String MY_DISTRICTS_WAA = """
       SELECT
