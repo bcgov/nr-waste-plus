@@ -1,4 +1,7 @@
 {
   "theme": "g100",
-  "selectedClient": "90000001"
+  "selectedClient": {
+    "code": "90000001",
+    "description": "90000001 CANADIAN SAMPLE CO. (SMPL)"
+  }
 }

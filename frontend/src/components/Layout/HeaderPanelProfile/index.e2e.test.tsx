@@ -150,6 +150,23 @@ test.describe('Profile menu', () => {
 
       const filterTag = page.getByTestId('dt-clientNumbers-90000003');
       await expect(filterTag).toBeVisible();
+
+      // Close Profile settings panel
+      await profileButton.click();
+
+      // Open the advanced search
+      const advancedSearchButton = page.getByTestId('advanced-search-button-most');
+      await advancedSearchButton.click();
+
+      // Checking the Client filter
+      const selectedCountDisplay = page.locator('#as-client-multi-select .cds--tag__label');
+      await expect(selectedCountDisplay).toHaveText('1');
+
+      const clientInput = page.getByRole('combobox', { name: 'Client' });
+      await clientInput.click();
+
+      const clientOption = page.getByRole('option', { name: 'OAK HERITAGE LTD.', exact: false });
+      await expect(clientOption.getByRole('checkbox')).toBeChecked();
     });
   });
 
