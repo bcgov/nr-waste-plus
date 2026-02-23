@@ -65,7 +65,6 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     selected: false,
     renderAs: renderEmptyValueTag,
   },
-
   {
     key: 'ruNumber',
     header: 'RU No.',
@@ -79,7 +78,6 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
       />
     ),
   },
-
   {
     key: 'client.code',
     header: 'Client No.',
@@ -95,7 +93,6 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     ),
   },
   { key: 'client.description', header: 'Client name', sortable: false, selected: true },
-
   {
     key: 'sampling',
     header: 'Sampling option',
@@ -105,7 +102,6 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
   },
   { key: 'sampling.code', header: 'Sampling code', sortable: true },
   { key: 'sampling.description', header: 'Sampling name', sortable: true },
-
   {
     key: 'multiMark',
     header: 'Multi-mark (Y/N)',
@@ -120,7 +116,6 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     selected: false,
     renderAs: (value) => <YesNoTag value={value as string | boolean | number | null | undefined} />,
   },
-
   {
     key: 'district',
     header: 'District',
@@ -130,7 +125,6 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
   },
   { key: 'district.code', header: 'District code', sortable: true },
   { key: 'district.description', header: 'District name', sortable: true },
-
   {
     key: 'status',
     header: 'Status',
@@ -146,7 +140,6 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
   },
   { key: 'status.code', header: 'Status code', sortable: true },
   { key: 'status.description', header: 'Status name', sortable: true },
-
   {
     id: 'lastUpdated',
     key: 'lastUpdated',
