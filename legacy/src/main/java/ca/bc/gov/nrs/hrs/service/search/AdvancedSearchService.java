@@ -56,7 +56,7 @@ public class AdvancedSearchService {
     return ruRepository
         .searchReportingUnitUsers(
             userId.toUpperCase(Locale.ROOT),
-            clients
+            clients.stream().map(String::toUpperCase).toList()
         );
   }
 

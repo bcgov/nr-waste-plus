@@ -56,8 +56,8 @@ public final class ReportingUnitQueryConstants {
               AND wru.REPORTING_UNIT_ID = TO_NUMBER(:#{#filter.mainSearchTerm})
             )
             OR (
-              waa.DRAFT_CUT_BLOCK_ID = :#{#filter.mainSearchTerm}
-              OR waa.CUT_BLOCK_ID = :#{#filter.mainSearchTerm}
+              UPPER(waa.DRAFT_CUT_BLOCK_ID) = :#{#filter.mainSearchTerm}
+              OR UPPER(waa.CUT_BLOCK_ID) = :#{#filter.mainSearchTerm}
             )
           )
         )
@@ -75,31 +75,31 @@ public final class ReportingUnitQueryConstants {
         )
         AND (
           NVL(:#{#filter.requestUserId}, 'NOVALUE') = 'NOVALUE'
-          OR waa.ENTRY_USERID = :#{#filter.requestUserId}
+          OR UPPER(waa.ENTRY_USERID) = :#{#filter.requestUserId}
         )
         AND (
           NVL(:#{#filter.licenseeId}, 'NOVALUE') = 'NOVALUE'
-          OR waa.FOREST_FILE_ID = :#{#filter.licenseeId}
+          OR UPPER(waa.FOREST_FILE_ID) = :#{#filter.licenseeId}
         )
         AND (
           NVL(:#{#filter.cuttingPermitId}, 'NOVALUE') = 'NOVALUE'
           OR (
-            waa.DRAFT_CUTTING_PERMIT_ID = :#{#filter.cuttingPermitId}
-            OR waa.CUTTING_PERMIT_ID = :#{#filter.cuttingPermitId}
+            UPPER(waa.DRAFT_CUTTING_PERMIT_ID) = :#{#filter.cuttingPermitId}
+            OR UPPER(waa.CUTTING_PERMIT_ID) = :#{#filter.cuttingPermitId}
           )
         )
         AND (
           NVL(:#{#filter.timberMark}, 'NOVALUE') = 'NOVALUE'
           OR (
-            waa.draft_timber_mark = :#{#filter.timberMark}
-            OR waa.timber_mark = :#{#filter.timberMark}
+            UPPER(waa.draft_timber_mark) = :#{#filter.timberMark}
+            OR UPPER(waa.timber_mark) = :#{#filter.timberMark}
             OR (
                 EXISTS (
                   SELECT 1 FROM WASTE_ASSESSMENT_AREA waa_child
                   WHERE waa_child.parent_waa_id = waa.waste_assessment_area_id
                   AND (
-                    waa_child.draft_timber_mark = :#{#filter.timberMark}
-                    OR waa_child.TIMBER_MARK = :#{#filter.timberMark}
+                    UPPER(waa_child.draft_timber_mark) = :#{#filter.timberMark}
+                    OR UPPER(waa_child.TIMBER_MARK) = :#{#filter.timberMark}
                   )
                 )
             )
