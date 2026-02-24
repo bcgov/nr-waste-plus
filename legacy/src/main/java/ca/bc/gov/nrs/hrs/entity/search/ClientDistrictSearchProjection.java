@@ -16,11 +16,6 @@ public interface ClientDistrictSearchProjection {
   String getClientNumber();
 
   /**
-   * Client (licensee) name or description.
-   */
-  String getClientName();
-
-  /**
    * Number of submissions for the given client.
    */
   Long getSubmissionsCount();
