@@ -1,12 +1,13 @@
 import type {
+  CodeDescriptionDto,
   ReportingUnitSearchParametersDto,
   ReportingUnitSearchParametersViewDto,
   ReportingUnitSearchParametersViewSpecific,
 } from './search.types';
 
 type ReportingUnitSearchParametersConverter<
-  T extends keyof ReportingUnitSearchParametersViewSpecific,
-> = (value: ReportingUnitSearchParametersViewDto[T]) => ReportingUnitSearchParametersDto[T];
+  K extends keyof ReportingUnitSearchParametersViewSpecific,
+> = (value: ReportingUnitSearchParametersViewDto[K]) => ReportingUnitSearchParametersDto[K];
 
 type ReportingUnitSearchParametersConverterMap = {
   [field in keyof ReportingUnitSearchParametersViewSpecific]-?: ReportingUnitSearchParametersConverter<field>;
@@ -21,6 +22,42 @@ const isViewSpecificKey = (
   key: keyof ReportingUnitSearchParametersViewDto,
 ): key is keyof ReportingUnitSearchParametersViewSpecific => {
   return key in reportingUnitSearchParametersConverterMap;
+};
+
+type CodeDescriptionArrayConverter<K extends keyof ReportingUnitSearchParametersViewDto> = (
+  value: CodeDescriptionDto[] | undefined,
+) => ReportingUnitSearchParametersViewDto[K];
+
+type CodeDescriptionArrayConverterMap = {
+  [field in keyof ReportingUnitSearchParametersViewDto]: CodeDescriptionArrayConverter<field>;
+};
+
+/**
+ * The default CodeDescriptionDto[] converter, which converts it to string[].
+ * @param value - the array to be converted
+ * @returns an array of `code` from each `value`'s item
+ */
+const defaultCodeDescriptionArrayConverter: CodeDescriptionArrayConverter<
+  keyof ReportingUnitSearchParametersViewDto
+> = (value) => value?.map((item) => item.code);
+
+/**
+ * Key-mapped custom converters from CodeDescriptionDto[] to the corresponding property type.
+ *
+ * Specially useful when property's type is different from string[], which the default converter
+ * already converts to.
+ */
+const customCodeDescriptionArrayConverterMap: CodeDescriptionArrayConverterMap = {
+  clientNumbers: (value) => value,
+};
+
+export const getCodeDescriptionArrayConverter = (
+  key: keyof ReportingUnitSearchParametersViewDto,
+) => {
+  const converter: CodeDescriptionArrayConverter<typeof key> =
+    customCodeDescriptionArrayConverterMap[key] || defaultCodeDescriptionArrayConverter;
+
+  return converter;
 };
 
 export const reportingUnitSearchParametersView2Plain = (

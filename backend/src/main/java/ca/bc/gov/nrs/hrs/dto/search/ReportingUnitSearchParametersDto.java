@@ -4,6 +4,7 @@ import ca.bc.gov.nrs.hrs.util.UriUtils;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -48,7 +49,6 @@ public class ReportingUnitSearchParametersDto {
   private String licenseeId;
   private String cuttingPermitId;
   private String timberMark;
-  private String clientLocationCode;
   private List<String> clientNumbers;
 
   /**
@@ -65,39 +65,35 @@ public class ReportingUnitSearchParametersDto {
     LinkedMultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
 
     if (StringUtils.isNotBlank(mainSearchTerm)) {
-      multiValueMap.add("mainSearchTerm", mainSearchTerm);
+      multiValueMap.add("mainSearchTerm", mainSearchTerm.toUpperCase(Locale.ROOT));
     }
 
     if (!CollectionUtils.isEmpty(district)) {
-      district.forEach(value -> multiValueMap.add("district", value));
+      district.forEach(value -> multiValueMap.add("district", value.toUpperCase(Locale.ROOT)));
     }
 
     if (!CollectionUtils.isEmpty(sampling)) {
-      sampling.forEach(value -> multiValueMap.add("sampling", value));
+      sampling.forEach(value -> multiValueMap.add("sampling", value.toUpperCase(Locale.ROOT)));
     }
 
     if (!CollectionUtils.isEmpty(status)) {
-      status.forEach(value -> multiValueMap.add("status", value));
+      status.forEach(value -> multiValueMap.add("status", value.toUpperCase(Locale.ROOT)));
     }
 
     if (StringUtils.isNotBlank(requestUserId)) {
-      multiValueMap.add("requestUserId", requestUserId);
+      multiValueMap.add("requestUserId", requestUserId.toUpperCase(Locale.ROOT));
     }
 
     if (StringUtils.isNotBlank(licenseeId)) {
-      multiValueMap.add("licenseeId", licenseeId);
+      multiValueMap.add("licenseeId", licenseeId.toUpperCase(Locale.ROOT));
     }
 
     if (StringUtils.isNotBlank(cuttingPermitId)) {
-      multiValueMap.add("cuttingPermitId", cuttingPermitId);
+      multiValueMap.add("cuttingPermitId", cuttingPermitId.toUpperCase(Locale.ROOT));
     }
 
     if (StringUtils.isNotBlank(timberMark)) {
-      multiValueMap.add("timberMark", timberMark);
-    }
-
-    if (StringUtils.isNotBlank(clientLocationCode)) {
-      multiValueMap.add("clientLocationCode", clientLocationCode);
+      multiValueMap.add("timberMark", timberMark.toUpperCase(Locale.ROOT));
     }
 
     if (!CollectionUtils.isEmpty(clientNumbers)) {

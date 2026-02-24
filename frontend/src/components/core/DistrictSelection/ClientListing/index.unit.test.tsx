@@ -79,7 +79,7 @@ vi.mock('@/context/auth/useAuth', () => ({
 
 vi.mock('@/context/preference/usePreference', () => ({
   usePreference: () => ({
-    userPreference: { selectedClient: '' },
+    userPreference: { selectedClient: null },
     updatePreferences: mockUpdatePreferences,
   }),
 }));

@@ -194,19 +194,19 @@ test.describe('Waste Search Page', () => {
     let filterTag: Locator;
     let closeAdvancedSearchButton: Locator;
 
-    test.beforeEach(async ({ page }, testInfo) => {
-      test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
-
+    test.beforeEach(async ({ page }) => {
       // Open the advanced search
       advancedSearchButton = page.getByTestId('advanced-search-button-most');
       await advancedSearchButton.click();
     });
 
-    test.describe('Client', async () => {
+    test.describe('Client single-select input (IDIR)', async () => {
       const clientNumber = '00049597';
       let clientInput: Locator;
 
-      test.beforeEach(async ({ page }) => {
+      test.beforeEach(async ({ page }, testInfo) => {
+        test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
+
         await mockApiResponsesWithStub(
           page,
           'forest-clients/byNameAcronymNumber**',
@@ -261,6 +261,72 @@ test.describe('Waste Search Page', () => {
 
         // Verify no tags remain
         await expect(filterTag).toHaveCount(0);
+      });
+    });
+
+    test.describe('Client multi-select input (BCeID)', async () => {
+      const clientNumber1 = '90000001';
+      const clientNumber2 = '90000003';
+      let clientInput: Locator;
+      let filterTag1: Locator;
+      let filterTag2: Locator;
+      let selectedCountDisplay: Locator;
+
+      test.beforeEach(async ({ page }, testInfo) => {
+        test.skip(testInfo.project.metadata.userType === 'idir', 'Only runs for BCeID users');
+
+        // Open up the Client combobox
+        clientInput = page.getByRole('combobox', { name: 'Client' });
+        await clientInput.click();
+
+        // Select two clients
+        await page.getByRole('option', { name: clientNumber1, exact: false }).click();
+        await page.getByRole('option', { name: clientNumber2, exact: false }).click();
+
+        selectedCountDisplay = page.locator('#as-client-multi-select .cds--tag__label');
+        await expect(selectedCountDisplay).toHaveText('2');
+
+        closeAdvancedSearchButton = page.getByRole('button', { name: 'Close' }).first();
+        await closeAdvancedSearchButton.click();
+
+        // Verify tags appear
+        filterTag1 = page.getByTestId(`dt-clientNumbers-${clientNumber1}`);
+        await expect(filterTag1).toBeVisible();
+        filterTag2 = page.getByTestId(`dt-clientNumbers-${clientNumber2}`);
+        await expect(filterTag2).toBeVisible();
+      });
+
+      test('should update the Client input field', async () => {
+        // Dismiss first tag
+        const dismissFilterTag1 = filterTag1.getByRole('button', { name: 'Dismiss' });
+        await dismissFilterTag1.click();
+
+        // Re-open the advanced search
+        await advancedSearchButton.click();
+
+        // Verify input got updated
+        await expect(selectedCountDisplay).toHaveText('1');
+      });
+
+      test('should remove the first filter tag', async ({ page }) => {
+        // Re-open the advanced search
+        await advancedSearchButton.click();
+
+        await clientInput.click();
+
+        // Unselect the first client
+        await page.getByRole('option', { name: clientNumber1, exact: false }).click();
+
+        // Verify input got updated
+        await expect(selectedCountDisplay).toHaveText('1');
+
+        await closeAdvancedSearchButton.click();
+
+        // Verify first tag was removed
+        await expect(filterTag1).toHaveCount(0);
+
+        // The other tag remains visible
+        await expect(filterTag2).toBeVisible();
       });
     });
 
