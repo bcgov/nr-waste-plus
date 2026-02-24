@@ -55,8 +55,6 @@ public final class QueryConstants {
          FROM THE.WASTE_REPORTING_UNIT WRU
          LEFT JOIN ValidBlockCounts VBC
            ON WRU.REPORTING_UNIT_ID = VBC.REPORTING_UNIT_ID
-         LEFT JOIN FOREST_CLIENT FC
-           ON FC.CLIENT_NUMBER = WRU.CLIENT_NUMBER
          WHERE WRU.CLIENT_NUMBER IN (:clientNumbers)
          GROUP BY WRU.CLIENT_NUMBER""";
 
