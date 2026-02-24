@@ -74,7 +74,7 @@ class SearchControllerMyForestClientsIntegrationTest extends
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.content[0].submissionsCount").value(3))
         .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
-        .andExpect(jsonPath("$.content[0].client.name").isEmpty())
+        .andExpect(jsonPath("$.content[0].client.name").doesNotExist())
         .andExpect(jsonPath("$.page.size").value(10))
         .andExpect(jsonPath("$.page.totalElements").value(1))
         .andReturn();
