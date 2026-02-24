@@ -43,7 +43,7 @@ public class MapperConstants {
    * number and client name.
    */
   public static final String CLIENT_AS_DTO =
-      "java(new CodeDescriptionDto(projection.getClientNumber(), projection.getClientName()))";
+      "java(new CodeDescriptionDto(projection.getClientNumber(), null))";
 
   /**
    * MapStruct expression to create a {@code CodeDescriptionDto} from the projection's attachment.

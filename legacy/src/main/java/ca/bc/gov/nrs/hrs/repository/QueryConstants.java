@@ -46,14 +46,6 @@ public final class QueryConstants {
   private static final String MY_DISTRICTS_WRU = """
       SELECT
            WRU.CLIENT_NUMBER,
-           CASE
-             WHEN FC.LEGAL_FIRST_NAME IS NOT NULL AND FC.LEGAL_MIDDLE_NAME IS NOT NULL THEN
-               FC.LEGAL_FIRST_NAME || ' ' || FC.LEGAL_MIDDLE_NAME || ' ' || FC.CLIENT_NAME
-             WHEN FC.LEGAL_FIRST_NAME IS NOT NULL THEN
-               FC.LEGAL_FIRST_NAME || ' ' || FC.CLIENT_NAME
-             ELSE
-               NVL(FC.LEGAL_FIRST_NAME, '') || NVL(FC.LEGAL_MIDDLE_NAME, '') || FC.CLIENT_NAME
-           END AS CLIENT_NAME,
            COUNT(*) AS SUBMISSIONS_COUNT,
            MAX(WRU.UPDATE_TIMESTAMP) AS WRU_UPDATE,
            SUM(COALESCE(VBC.VALID_BLOCK_COUNT, 0)) AS BLOCKS_COUNT,
@@ -64,20 +56,11 @@ public final class QueryConstants {
          LEFT JOIN FOREST_CLIENT FC
            ON FC.CLIENT_NUMBER = WRU.CLIENT_NUMBER
          WHERE WRU.CLIENT_NUMBER IN (:clientNumbers)
-         GROUP BY WRU.CLIENT_NUMBER,
-                  CASE
-                    WHEN FC.LEGAL_FIRST_NAME IS NOT NULL AND FC.LEGAL_MIDDLE_NAME IS NOT NULL THEN
-                      FC.LEGAL_FIRST_NAME || ' ' || FC.LEGAL_MIDDLE_NAME || ' ' || FC.CLIENT_NAME
-                    WHEN FC.LEGAL_FIRST_NAME IS NOT NULL THEN
-                      FC.LEGAL_FIRST_NAME || ' ' || FC.CLIENT_NAME
-                    ELSE
-                      NVL(FC.LEGAL_FIRST_NAME, '') || NVL(FC.LEGAL_MIDDLE_NAME, '') || FC.CLIENT_NAME
-                  END""";
+         GROUP BY WRU.CLIENT_NUMBER""";
 
   private static final String MY_DISTRICTS_MYCLIENTS = """
       SELECT
         COLUMN_VALUE AS client_number,
-        NULL AS CLIENT_NAME,
         0 AS submissions_count,
         NULL AS WRU_UPDATE,
         0 AS BLOCKS_COUNT,
@@ -87,7 +70,6 @@ public final class QueryConstants {
   private static final String MY_DISTRICTS_STATUS = """
       SELECT
         CLIENT_NUMBER,
-        CLIENT_NAME,
         MAX(SUBMISSIONS_COUNT) AS SUBMISSIONS_COUNT,
         MAX(BLOCKS_COUNT) AS BLOCKS_COUNT,
         GREATEST(
@@ -95,8 +77,7 @@ public final class QueryConstants {
           COALESCE(MAX(WAA_UPDATE), TO_TIMESTAMP('1900-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS'))
         ) AS LAST_UPDATE
       FROM Together
-      GROUP BY CLIENT_NUMBER,
-               CLIENT_NAME
+      GROUP BY CLIENT_NUMBER
       """;
 
   private static final String MY_DISTRICTS_UNION = """
