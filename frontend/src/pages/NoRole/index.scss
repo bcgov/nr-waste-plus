@@ -1,0 +1,20 @@
+@use '../../styles/variables' as vars;
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/type' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+@use '@carbon/react/scss/theme' as *;
+@use '@bcgov-nr/nr-theme/design-tokens/colors.scss' as colors;
+@use '@carbon/type';
+
+.unauthorized-block {
+  div.page-title-col {
+    div.page-title-container {
+        align-items: center;
+        text-align: center;
+        width: 100%;
+        max-height: 100vh;
+        height: 100vh;
+        justify-content: center;
+    }
+  }
+}
