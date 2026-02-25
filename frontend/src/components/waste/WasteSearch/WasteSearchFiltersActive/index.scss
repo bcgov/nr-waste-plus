@@ -1,4 +1,18 @@
-.silviculture-search-dismissible-tag {
+@use '../../../../styles/variables' as vars;
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/type' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+@use '@carbon/react/scss/theme' as *;
+@use '@carbon/type';
+
+.search-dismissible-tag {
   margin-right: 0.5rem;
   margin-top: 0.75rem;
+}
+
+div.display-contents {
+  .#{vars.$bcgov-prefix}--tag {
+    vertical-align: baseline !important;
+    margin-right: 0.5rem;
+  }
 }
