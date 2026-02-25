@@ -118,4 +118,20 @@ describe('NoRolePage', () => {
       screen.getByText("You don't have FAM authorization to access this system"),
     ).toBeDefined();
   });
+
+  it('renders unauthorized access message when logged in user has undefined roles', async () => {
+    mockIsLoggedIn = true;
+    mockUser = {
+      userName: 'testuser',
+      displayName: 'Test User',
+      roles: undefined,
+      privileges: {},
+    };
+    await renderWithProps();
+    expect(mockNavigate).not.toHaveBeenCalledWith('/');
+    expect(screen.getByText('Unauthorized Access')).toBeDefined();
+    expect(
+      screen.getByText("You don't have FAM authorization to access this system"),
+    ).toBeDefined();
+  });
 });

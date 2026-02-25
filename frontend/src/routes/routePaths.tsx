@@ -30,7 +30,7 @@ export type MenuItem = Pick<RouteDescription, 'id' | 'path' | 'icon'> & {
   children?: MenuItem[];
 };
 
-export const GLOBAL_ROLES: RouteDescription[] = [
+export const GLOBAL_ROUTES: RouteDescription[] = [
   {
     path: '/no-role',
     id: 'No Role',
@@ -199,7 +199,7 @@ export const getProtectedRoutes = (isOnline: boolean, roles: FamRole[]): RouteDe
       roles.map((role) => role.role),
     ),
     ...SYSTEM_ROUTES.filter((route) => route.id !== 'Landing').filter((route) => route.protected),
-    ...GLOBAL_ROLES,
+    ...GLOBAL_ROUTES,
   ].map((route) => ({
     ...route,
     element: route.protected ? (
