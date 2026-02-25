@@ -8,6 +8,7 @@ import { Role, type FamRole } from '@/context/auth/types';
 import GlobalErrorPage from '@/pages/GlobalError';
 import LandingPage from '@/pages/Landing';
 import MyClientListPage from '@/pages/MyClientList';
+import NoRolePage from '@/pages/NoRole';
 import NotFoundPage from '@/pages/NotFound';
 import RoleErrorPage from '@/pages/RoleError';
 import WasteSearchPage from '@/pages/WasteSearch';
@@ -28,6 +29,15 @@ export type RouteDescription = {
 export type MenuItem = Pick<RouteDescription, 'id' | 'path' | 'icon'> & {
   children?: MenuItem[];
 };
+
+export const GLOBAL_ROLES: RouteDescription[] = [
+  {
+    path: '/no-role',
+    id: 'No Role',
+    element: <NoRolePage />,
+    isSideMenu: false,
+  },
+];
 
 export const SYSTEM_ROUTES: RouteDescription[] = [
   {
@@ -189,14 +199,14 @@ export const getProtectedRoutes = (isOnline: boolean, roles: FamRole[]): RouteDe
       roles.map((role) => role.role),
     ),
     ...SYSTEM_ROUTES.filter((route) => route.id !== 'Landing').filter((route) => route.protected),
+    ...GLOBAL_ROLES,
   ].map((route) => ({
     ...route,
-    element:
-      route.roles && route.protected ? (
-        <ProtectedRoute roles={route.roles}>{route.element}</ProtectedRoute>
-      ) : (
-        route.element
-      ),
+    element: route.protected ? (
+      <ProtectedRoute roles={route.roles ?? []}>{route.element}</ProtectedRoute>
+    ) : (
+      route.element
+    ),
     errorElement: (
       <Layout>
         <GlobalErrorPage />
