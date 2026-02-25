@@ -13,7 +13,7 @@ export default function ProtectedRoute({ children, roles }: ProtectedRouteProps)
   const { user } = useAuth();
 
   if (!user) return <Navigate to="/login" />;
-  if (user.roles?.length === 0) return <Navigate to="/no-role" />;
+  if ((user.roles?.length ?? 0) === 0) return <Navigate to="/no-role" />;
   if (
     roles &&
     !roles.some((role) => user.roles?.map((userRole) => userRole.role).includes(role.role))
