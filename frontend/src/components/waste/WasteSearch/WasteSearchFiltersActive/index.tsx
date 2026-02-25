@@ -79,7 +79,7 @@ const WasteSearchFiltersActive: FC<WasteSearchFiltersActiveProps> = ({
             <DismissibleTag
               key={`dt-${filterArrayKey}-${subValue}`}
               data-testid={`dt-${filterArrayKey}-${subValue}`}
-              className="silviculture-search-dismissible-tag"
+              className="search-dismissible-tag"
               size="md"
               type="outline"
               text={`${mapDisplayFilter(filterArrayKey)}: ${subValue}`}
@@ -92,7 +92,7 @@ const WasteSearchFiltersActive: FC<WasteSearchFiltersActiveProps> = ({
 
     return (
       <DismissibleTag
-        className="search-dismissable-tag"
+        className="search-dismissible-tag"
         key={`dt-${filterKey}-${filterValue}`}
         data-testid={`dt-${filterKey}-${filterValue}`}
         size="md"
