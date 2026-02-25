@@ -203,7 +203,7 @@ export const getProtectedRoutes = (isOnline: boolean, roles: FamRole[]): RouteDe
   ].map((route) => ({
     ...route,
     element: route.protected ? (
-      <ProtectedRoute roles={route.roles ?? []}>{route.element}</ProtectedRoute>
+      <ProtectedRoute roles={route.roles}>{route.element}</ProtectedRoute>
     ) : (
       route.element
     ),
