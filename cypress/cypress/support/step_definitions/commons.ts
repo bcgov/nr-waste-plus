@@ -1,0 +1,41 @@
+import { BeforeStep, Given, Then } from "@badeball/cypress-cucumber-preprocessor";
+
+let idir = true;
+
+BeforeStep({ tags: "@loginAsBCeID" }, function () {
+  idir = false;
+});
+BeforeStep({ tags: "@loginAsIDIR" }, function () {
+  idir = true;
+});
+
+Given('I visit {string}', (url: string) => {
+  cy.visit(url).then(() => {
+    cy.window().then((win) => {
+      return new Cypress.Promise((resolve) => {
+        if (win.document.readyState === 'complete') {
+          resolve();
+        } else {
+          win.addEventListener('load', resolve);
+        }
+      });
+    });
+  });
+});
+
+Then('I can read {string}', (title: string) => {
+  cy.contains(title).should('be.visible');
+});
+
+Then('I cannot see {string}', (button: string) => {
+  cy.contains(button).should('not.exist');
+});
+
+Then('I wait for the text {string} to appear', (text: string) => {
+  cy.contains(text).should('be.visible');
+});
+
+Then('I wait for the text {string} to appear after {string}', (text: string,waitFor: string) => {
+  cy.wait(`@${waitFor}`,{ timeout: 10 * 1000 });
+  cy.contains(text).should('be.visible');
+});
