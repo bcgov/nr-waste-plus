@@ -55,7 +55,7 @@ When('I submit', () => {
 const buttonClick = (
   name: string,
   waitForIntercept: string = '',
-  waitForTime: number = 3,
+  waitForTime: number = 1,
   retries: number = 3,
   retryDelay: number = 100,
   selector: string = 'body'
@@ -108,6 +108,6 @@ const buttonClick = (
   if (waitForIntercept) {
     cy.wait(`@${waitForIntercept}`, { timeout });
   } else if (waitForTime) {
-    cy.wait(timeout);
+    cy.wait(waitForTime);
   }
 };

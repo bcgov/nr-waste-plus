@@ -1,0 +1,1 @@
+Avoid using fixtures if is not extremely necessary. Use the real API/data instead
