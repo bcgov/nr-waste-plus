@@ -36,7 +36,8 @@ When('I search', function () {
  *   2. button:contains("<name>")
  *   3. input[type="submit"][value="<name>"]
  *   4. [data-testid="<name>"]
- *   5. findByRole("button", { name }) — @testing-library fallback
+ *   5. .cds--tooltip-content — icon-only Carbon button (traces back via aria-labelledby)
+ *   6. findByRole("button", { name }) — @testing-library fallback
  */
 const buttonClick = (
   name: string,
@@ -66,6 +67,15 @@ const buttonClick = (
 
       if (matchedSelector) {
         cy.get(matchedSelector).first().click({ force: true });
+      } else if ($body.find(`.cds--tooltip-content:contains("${name}")`).length > 0) {
+        // Icon-only Carbon button: locate the tooltip text and trace back
+        // to the button via the tooltip's id / aria-labelledby relationship
+        cy.contains('.cds--tooltip-content', name)
+          .invoke('closest', '[id]')
+          .then($tooltip => {
+            const id = $tooltip.attr('id');
+            cy.get(`button[aria-labelledby="${id}"]`).click({ force: true });
+          });
       } else if (attempt < retries) {
         // Element may not have rendered yet — wait and retry
         cy.wait(retryDelay);

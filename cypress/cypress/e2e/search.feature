@@ -43,3 +43,9 @@ Feature: Simple search
     Then I can read "District: DCC"
     And I click on the "Clear filters" button    
     Then I cannot see "District: DCC"
+
+  @loginAsBCeID
+  Scenario: Open advanced search
+    Given I visit "/search"
+    When I click on the "Advanced Search" button
+    Then I can read "Advanced search"
