@@ -1,4 +1,4 @@
-import { When, BeforeStep } from "@badeball/cypress-cucumber-preprocessor";
+import { When, BeforeStep, Step } from "@badeball/cypress-cucumber-preprocessor";
 
 let idir = true;
 
@@ -15,24 +15,10 @@ When('I click on the {string} button', (name: string) => {
   buttonClick(name);
 });
 
-When('I click on next', () => {  
-  
-  if (!idir) {
-    cy.get('cds-button[data-text="Next"]').click().then(() => {cy.wait(15);});
-  } else {
-    cy.intercept('POST',  `**/api/clients/matches`).as('matches');  
-    cy.get('cds-button[data-text="Next"]').click().then(() => {cy.wait('@matches',{ timeout: 10 * 1000 });});
-  }
-  
-});
-
-When('I submit', () => {
-  if(idir){
-  cy.intercept('POST',  `**/api/clients/submissions/staff`).as('submit');
-  } else {
-    cy.intercept('POST',  `**/api/clients/submissions`).as('submit');
-  }
-  cy.get('cds-button[data-text="Submit"]').scrollIntoView().click().then(() => {cy.wait('@submit',{ timeout: 60 * 1000 });});  
+When('I search', function () {  
+  cy.intercept('GET',  `**/api/search/**`).as('submit');  
+  Step(this, 'I click on the "Search" button');
+  cy.wait('@submit',{ timeout: 60 * 1000 });
 });
 
 
