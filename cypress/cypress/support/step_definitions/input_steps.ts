@@ -19,11 +19,40 @@ Then('I clear the {string} input', (input: string) => {
   findInputByLabel(input).clear().blur();
 });
 
+Then('I type {string} into the {string} autocomplete', (text: string, input: string) => {
+  selectFromAutocomplete(input, text);
+});
+
 /* Filterable dropdown steps */
 
 Then('I select {string} from the {string} dropdown', (option: string, dropdown: string) => {
   selectFromFilterableDropdown(dropdown, option);
 });
+
+const selectFromAutocomplete = (label: string, option: string, url: string = '/api/search/reporting-units-users') => {
+
+  const pattern = new RegExp(String.raw`(?=.*\/api)(?=.*=${option})`);
+  cy.intercept(pattern).as('acUrl');
+  const autocomplete = findInputByLabel(label);
+
+  autocomplete
+  .then($input => {
+    if ($input) {
+      cy.wrap($input).type(option);
+
+      cy.wait(`@acUrl`, { timeout: 15 * 1000 });
+
+      cy.wrap($input)
+        .closest('.cds--list-box')
+        .find('ul[role="listbox"]')
+        .should('be.visible')
+        .find('li')
+        .contains(option,{ matchCase: false })
+        .click({ force: true });
+    }
+  });
+
+};
 
 /**
  * Selects an option from a Carbon filterable multi-select dropdown.
@@ -51,7 +80,7 @@ const selectFromFilterableDropdown = (label: string, option: string) => {
         .contains(option)
         .click({ force: true });
     }
-  })
+  });
 };
 
 /**
@@ -65,23 +94,17 @@ const selectFromFilterableDropdown = (label: string, option: string) => {
 const findInputByLabel = (labelText: string) => {
   // Synchronous check to decide which strategy to use
   return cy.document().then((doc) => {
-    const hasPlaceholder = doc.querySelector(`input[placeholder="${labelText}"]`);
-
-    if (hasPlaceholder) {
-      // Case 1: Use cy.get for retryability
-      return cy.get(`input[placeholder="${labelText}"]`).first();
-    }
-
-    // Case 2-4: Label-based lookup
+    
+    // Case 1-3: Label-based lookup
     return cy.contains('label', labelText).then(($label) => {
       const id = $label.attr('for');
 
       if (id) {
-        // Case 2: direct semantic link
+        // Case 1: direct semantic link
         return cy.get(`#${id}`);
       }
 
-      // Case 3: Carbon-style shared container
+      // Case 2: Carbon-style shared container
       const carbonContainer = $label.closest('.cds--form-item, .cds--search, .cds--text-input, div');
       if (carbonContainer.length) {
         const input = carbonContainer.find('input, textarea');
@@ -90,7 +113,7 @@ const findInputByLabel = (labelText: string) => {
         }
       }
 
-      // Case 4: fallback — search nearby
+      // Case 3: fallback — search nearby
       return cy.contains(labelText)
         .parentsUntil('form')
         .parent()
