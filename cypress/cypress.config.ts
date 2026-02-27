@@ -50,7 +50,6 @@ async function setupNodeEvents(
 }
 
 export default defineConfig({
-  allowCypressEnv: false,
   e2e: {
     reporter: require.resolve("@badeball/cypress-cucumber-preprocessor/pretty-reporter"),
     specPattern: "**/*.feature",
