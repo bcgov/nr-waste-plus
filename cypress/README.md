@@ -1,173 +1,42 @@
-# Automated End-to-End User journey tests with Cypress
+# Automated End-to-End User Journey Tests with Cypress
 
-This repository deals with automated user journey tests. We use cypress for automation and Cucumber and Gherking as the framework to describe the scenarios.
-The idea behind this is to allow a colaborative environment where anyone can write down a set operations that composes a Journey to be tested, and the developers will make sure to implement it.
+BDD-driven end-to-end tests using [Cypress](https://www.cypress.io/) + [Cucumber](https://cucumber.io/) / [Gherkin](https://cucumber.io/docs/gherkin/).
 
-The main objective is to cover as many cases as possible by allowing non developers to describe scenarios that sometimes are forgotten by the development team and allow different point of view for journeys.
+This project allows a collaborative environment where **anyone** — technical or not — can describe user journeys as test scenarios, and the development team will make sure they are automated.
 
-The below sections are intended to explain how the framework works, along with a few instructions. Please make sure to read it carefuly and don't be afraid to play around.
+## Documentation
 
-## Introduction to Writing Cucumber/Gherkin Files for End-to-End Tests
+| Guide | Audience | Description |
+| --- | --- | --- |
+| [Writing Test Scenarios](../../wiki/Writing-Test-Scenarios) | Everyone | How to create features, scenarios, and use authentication annotations |
+| [Step Reference](../../wiki/Step-Reference) | Everyone | Full list of ready-to-use step instructions |
+| [Developer Guide](../../wiki/Developer-Guide) | Developers | Environment setup, project structure, running tests, and CI configuration |
 
-[Cucumber](https://cucumber.io/) is a popular tool used for behavior-driven development (BDD) in software testing. It allows you to write executable specifications in a natural language format called Gherkin. Gherkin is a plain-text language that is easy to understand and can be used by non-technical stakeholders as well. In this tutorial, we will guide you through the basics of writing a Cucumber/Gherkin file for end-to-end tests. To learn more about Cucumber, Gherking and BDD, you can enroll on a [free course](https://school.cucumber.io/courses/bdd-overview-for-business-analysts-and-product-owners).
-
-It is always good to read about Gherkin language format before start but in summary, Gherkin is a writing format that leverages plain english to allow users to describe the expected behavior in simple steps that is simple to understand by non-technical persons, but also makes sense to be executed in that specific order. Think of it like a set of steps in a cake recipe.
-
-To make things easier for non-technical team members, we developed a strategy to leverage the use of [github issues](https://github.com/bcgov/nr-waste-plus/issues), something that is quite similar to Jira Tickets. Click on `New issue` and a list of possible issue types will appear, select the `User provided automated test-case` one, and a form will appear. Follow the instructions on it on how to fill up the form with the appropriate data. This will then be automatically converted to a `feature file` that will be used for test.
-
-    Pay attention to the format of the test description. Gherkin feature files are sensitive to spacing and the keywords are really picky when it comes to casing (uppercase x lowercase).
-
-Another thing that the development team did to facilitate the usage of Gherkin is the ready-to-use collection of instructions that can be used to speed up the writing of test cases. Check the [existing step instructions](#existing-step-instructions) topic for a list of steps already implemented.
-
-Without further ado, let's get started:
-
-### Creating a Feature
-
-Every test group is called a `Feature` on Gherkin. This is the first keyword here and it will have a meaningful name. This will contain your scenarios and it can include a short description of the feature you are testing, preceded by the Feature keyword. For example:
-
-```gherkin
-Feature: User Registration
-  As a new user I want to register on the website so that I can access exclusive content
-```
-
-    Be aware that the description should be a level deeper than the Feature itself. You can use tab or two spaces
-
-### Creating Scenarios
-
-Scenarios represent specific test cases. Each scenario consists of a series of steps. Steps can be one of the following: **Given**, **When**, **Then**, **And**, or **But**. Here's an example scenario for our user registration feature:
-
-```gherkin
-Scenario: Successful user registration
-  Given I am on the registration page
-  When I fill in the registration form with valid information
-  And I click the "Register" button
-  Then I should see a success message
-```
-
-    Be aware that each step should be a level deeper than the Scenario itself. You can use tab or two spaces
-    Also, keep in mind that this should be at least one level deeper than the feature above it.
-
-Here's the final product of the above feature and scenario combined.
-
-```gherkin
-Feature: User Registration
-  As a new user I want to register on the website so that I can access exclusive content
-    
-  Scenario: Successful user registration
-    Given I am on the registration page
-    When I fill in the registration form with valid information
-    And I click the "Register" button
-    Then I should see a success message
-```
-
-Congratulations! You have successfully written a basic Cucumber/Gherkin end-to-end tests. You can continue adding more scenarios and step definitions to cover different test cases in the application.
-
-Remember, the power of Cucumber lies in its ability to bridge the communication gap between technical and non-technical team members, enabling collaboration and providing a common language for defining software behavior.
-
-### Existing step instructions
-
-The development team created a set of pre-defined step definitions that can be used to leverage the use of Gherkin tests and speed up the adoption of it with non-technical team members. The below steps should be used `as-is`, without changing the case of any letter, except for `variables`.
-
-A variable is a piece of information that will be used to pass down a information. Every variable should be wrapped in double quotes (`"`). We will have two distinc group of variables described below, and they will be defined as `input` and `field name`. **Input** variables are the actual data that you want to select or insert in the form, such as the first name `James` or the `Individual` type of user. **Field name** is a type of variable used to identify a field in the form based on it's label name. Some examples are `First name` and `Client type`. They should have the exact name and casing as the form, otherwise the test won't be able to find the input to fill the data in.
-
-    The below list of instructions can be used in any of the steps, such as `Given`, `When`, `Then`, `And` or `But`. They are case sensitive and should be used as they are.
-
-Also, to speed up the process and avoid credentials being leaked everywhere, we have a special instruction that will be used to login using some specific user types. This instruction uses the `annotation` and it should be used at the `scenario` level. For more information, please refer to the [credentials](#credentials) topic below.
-
-Here's a list of instructions that are already implemented and can be used:
-
-| Step | Variables | Description | Example |
-| --- | --- | --- | --- |
-| I visit {input} | `input` as the URL | Navigate to a specific URL path | I visit "/landing" |
-| I can read {input} | `input` as the text on the screen | Look up for a specific text on the screen | I can read "Create new client" |
-| I cannot see {input} | `input` as the content of something that should not be on the screen | Look up for a specific text or component that should not be on the screen | I cannot see "Error" |
-| I wait for the text {input} to appear | `input` as the text to be waited to appear on the screen | Wait for a specific text to appear on the screen | I wait for the text "Success" to appear |
-| I wait for the text {input} to appear after {input} | `input` as the text to wait for and `input` as the name of the intercepted request to wait for before checking | Wait for a specific request to complete, then wait for a specific text to appear on the screen | I wait for the text "Success" to appear after "submit" |
-| I click on the {field name} button | `field name` as the text/name of the button to be clicked | Finds and click a button | I click on the "Next" button |
-| I search | - | Click on the search button and wait for search results to load | I search |
-| I type {input} into the {field name} input | `input` as the data to be inserted and `field name` as the field name, based on a label | Insert data into a input text field | I type "James" into the "First name" input |
-| I clear the {field name} input | `field name` as the field name, based on a label | Clear the content of a input text field | I clear the "First name" input |
-| I select {input} from the {field name} dropdown | `input` as the data to be selected and `field name` as the field name, based on a label | Select an option from a filterable dropdown | I select "Individual" from the "Client type" dropdown |
-
-## For Developers
-
-Each test is written in a file with the `.feature` extension and is saved inside [cypress/e2e](cypress/e2e) folder on this repo, you can check some of the existing files for reference. The developer will implement one `.ts` file for each `.feature` file, using the same name. Ex: `sample.feature` will have a corresponding `sample.ts` file. This `.ts` file is only required if the `.feature` file has any instruction that is too specific to be implemented as a common step verbate.
-
-    Avoid using names with spaces or special characters. Replace spaces with `_` and special characters for it's non-special character counterpart
-
-### Creating a Feature File
-
-Create a new file with the `.feature` extension inside the [cypress/e2e](cypress/e2e) folder. This file will contain your Gherkin scenarios. Start by writing a short description of the feature you are testing, preceded by the Feature keyword. For example:
-
-```gherkin
-Feature: User Registration
-  As a new user
-  I want to register on the website
-  So that I can access exclusive content
-```
-
-### Writing Scenarios
-
-Scenarios represent specific test cases. Each scenario consists of a series of steps. Steps can be one of the following: **Given**, **When**, **Then**, **And**, or **But**. Here's an example scenario for our user registration feature:
-
-```gherkin
-Scenario: Successful user registration
-  Given I am on the registration page
-  When I fill in the registration form with valid information
-  And I click the "Register" button
-  Then I should see a success message
-```
-
-### Writing Step Definitions
-
-Step definitions are the code implementation of the Gherkin steps. They define the actions to be taken for each step. For example, the step "I am on the registration page" could be implemented as follows in your programming language:
-
-```gherkin
-Given('I am on the registration page', () => {
-  // Code to navigate to the registration page
-});
-```
-
-### Running the Tests
-
-Once you have defined your scenarios and step definitions, you can run your Cucumber tests. To run, execute one of the commands, depending on your need:
-
-For an interface-guided execution, run:
+## Quick start
 
 ```bash
-npm run cy:open -- --config baseUrl=<ADDRESS OF THE APPLICATION>
+# Install dependencies
+npm ci
+
+# Interactive mode (Cypress UI) against localhost
+npm run cy:open:local
+
+# Headless mode against localhost
+npm run cy:run:local
+
+# Against a custom URL
+npm run cy:open -- --config baseUrl=https://your-app-url.example.com
 ```
 
-For a headless execution, run:
+> [!NOTE]
+> You need a `.env` file with login credentials before running the tests. See the [Developer Guide](../../wiki/Developer-Guide#local-development--env-file) for details.
 
-```bash
-npm run cy:run -- --config baseUrl=<ADDRESS OF THE APPLICATION>
-```
+## Submitting a test without coding
 
-You can use the deployed application for the test, or the local environment. Ideally the results would be the same on both cases.
+You can submit test scenarios directly through GitHub Issues — no coding required:
 
-## Automated test results
+1. Go to [Issues](https://github.com/bcgov/nr-waste-plus/issues) and click **New issue**.
+2. Select the **User provided automated test-case** template.
+3. Fill out the form following the provided instructions.
 
-After the tests are executed, it will generate a few artefacts as proof of execution, such as screenshots and videos. This is good for reference, in case of an error, or to validate a scenario with the rest of the team.
-
-When a feature file has a instruction without the corresponding implementation step, it will make the automated test fail. **DON'T PANIC**. This is a expected behavior if you're adding a new instruction. One of the developers will be notified when new things are created so they can deal with the implementation of that specific step.
-
-## Credentials
-
-To avoid credentials being leaked everywhere, we have a special instruction that will be used to login using some specific user types. This instruction uses the `annotation` and it should be used at the `scenario` level. The annotation should be written in the following format:
-
-```gherkin
-@loginAsIDIR
-Scenario: Submit individuals
-  When I click on the "Create client" button
-  And I can read "Create client"
-```
-
-The `@loginAsIDIR` is a special instruction that will be used to login as a specific user type. The `@` symbol is required to be used before the instruction, and it should be placed at the beginning of the scenario. The instruction itself should be written in camelCase, with the first letter of each word in uppercase. The instruction should be written right above the `Scenario` keyword. The possible values for it can be found down below. Keep in mind that it will only login and it will stop right after the login is done, on the expected page.
-
-Here's a list of possible instructions that can be used:
-
-| Instruction      | Description                           |
-| ---------------- | --------------------------------------|
-| @loginAsBCeID    | Login as a BCeID user type            |
-| @loginAsIDIR     | Login as an IDIR user type            |
+The issue will be automatically converted to a `.feature` file used for testing.
