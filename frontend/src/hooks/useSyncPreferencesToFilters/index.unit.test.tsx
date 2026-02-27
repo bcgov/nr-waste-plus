@@ -31,23 +31,6 @@ describe('useSyncPreferencesToFilters', () => {
     mockUpdatePreferences.mockClear();
   });
 
-  it('does not sync on initial mount', () => {
-    mockedPreference = { theme: 'g10', selectedClient: 'abc' };
-    const { result } = renderHook(() => {
-      const [filters, setFilters] = useState<Filters>({});
-
-      useSyncPreferencesToFilters(
-        setFilters,
-        { selectedClient: 'clientNumbers' },
-        (key, value): TransformResult =>
-          key === 'selectedClient' ? [value as string] : (value as TransformResult),
-      );
-      return filters;
-    });
-    // On initial mount, filters should remain empty (no sync)
-    expect(result.current.clientNumbers).toBeUndefined();
-  });
-
   it('syncs mapped preference to filter with transform when preference changes', () => {
     mockedPreference = { theme: 'g10', selectedClient: 'abc' };
     const { result, rerender } = renderHook(() => {
@@ -60,8 +43,9 @@ describe('useSyncPreferencesToFilters', () => {
       );
       return filters;
     });
-    // Initial mount - no sync
-    expect(result.current.clientNumbers).toBeUndefined();
+
+    // Initial mount
+    expect(result.current.clientNumbers).toEqual(['abc']);
 
     // Change preference - should sync
     mockedPreference = { ...mockedPreference, selectedClient: 'xyz' };
@@ -76,8 +60,8 @@ describe('useSyncPreferencesToFilters', () => {
       useSyncPreferencesToFilters(setFilters, { selectedDistrict: 'district' });
       return filters;
     });
-    // Initial mount - no sync
-    expect(result.current.district).toBeUndefined();
+    // Initial mount
+    expect(result.current.district).toBe('d1');
 
     // Change preference - should sync
     mockedPreference = { ...mockedPreference, selectedDistrict: 'd2' };
@@ -92,8 +76,8 @@ describe('useSyncPreferencesToFilters', () => {
       useSyncPreferencesToFilters(setFilters, { fooPref: 'foo' });
       return filters;
     });
-    // Initial mount - no sync
-    expect(result.current.foo).toBeUndefined();
+    // Initial mount
+    expect(result.current.foo).toBe('bar');
 
     // Change preference - should sync
     mockedPreference = { ...mockedPreference, fooPref: 'baz' };
@@ -142,12 +126,12 @@ describe('useSyncPreferencesToFilters', () => {
     });
 
     // Initial state
-    expect(result.current.foo).toBe('initial');
+    expect(result.current.foo).toBe('bar');
 
     // Change preference to null - filter should remain unchanged
     mockedPreference = { ...mockedPreference, fooPref: null };
     rerender();
-    expect(result.current.foo).toBe('initial');
+    expect(result.current.foo).toBe('bar');
   });
 
   it('does not update filter when tracked preference changes to undefined', () => {
@@ -159,12 +143,12 @@ describe('useSyncPreferencesToFilters', () => {
     });
 
     // Initial state
-    expect(result.current.foo).toBe('initial');
+    expect(result.current.foo).toBe('bar');
 
     // Change preference to undefined - filter should remain unchanged
     mockedPreference = { ...mockedPreference, fooPref: undefined };
     rerender();
-    expect(result.current.foo).toBe('initial');
+    expect(result.current.foo).toBe('bar');
   });
 
   it('updates filter when tracked preference changes from value to empty string', () => {
@@ -175,8 +159,8 @@ describe('useSyncPreferencesToFilters', () => {
       return filters;
     });
 
-    // Initial mount - no sync
-    expect(result.current.foo).toBeUndefined();
+    // Initial mount
+    expect(result.current.foo).toBe('bar');
 
     // Change to empty string - should update
     mockedPreference = { ...mockedPreference, fooPref: '' };
@@ -192,8 +176,8 @@ describe('useSyncPreferencesToFilters', () => {
       return filters;
     });
 
-    // Initial mount - no sync
-    expect(result.current.foo).toBeUndefined();
+    // Initial mount
+    expect(result.current.foo).toBe('');
 
     // Change from empty string to value - should update
     mockedPreference = { ...mockedPreference, fooPref: 'newValue' };
@@ -212,7 +196,7 @@ describe('useSyncPreferencesToFilters', () => {
     // Initial state - untracked values present
     expect(result.current.foo).toBe('manually-set');
     expect(result.current.bar).toBe('also-manual');
-    expect(result.current.district).toBeUndefined();
+    expect(result.current.district).toBe('d1');
 
     // Update tracked preference
     mockedPreference = { ...mockedPreference, selectedDistrict: 'd2' };
@@ -262,9 +246,9 @@ describe('useSyncPreferencesToFilters', () => {
       return filters;
     });
 
-    // Initial mount - no sync
-    expect(result.current.clientNumbers).toBeUndefined();
-    expect(result.current.district).toBeUndefined();
+    // Initial mount
+    expect(result.current.clientNumbers).toEqual(['abc']);
+    expect(result.current.district).toBe('d1');
 
     // Change both preferences
     mockedPreference = { ...mockedPreference, selectedClient: 'xyz', selectedDistrict: 'd2' };
