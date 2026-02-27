@@ -89,7 +89,8 @@
     "fast-xml-parser": "^5.3.6",
     "workbox-build": {
       "glob": "^13.0.0"
-    }
+    },
+    "rollup": "^4.54.0"
   },
   "nyc": {
     "reporter": [
