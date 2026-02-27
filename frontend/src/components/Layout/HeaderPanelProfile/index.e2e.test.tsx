@@ -168,6 +168,47 @@ test.describe('Profile menu', () => {
       const clientOption = page.getByRole('option', { name: 'OAK HERITAGE LTD.', exact: false });
       await expect(clientOption.getByRole('checkbox')).toBeChecked();
     });
+
+    test('re-syncs preferences to filters when returning to the search', async ({
+      page,
+    }, testInfo) => {
+      test.skip(testInfo.project.metadata.userType === 'idir', 'Only runs for BCeID users');
+
+      const profileButton = page.getByRole('button', { name: 'Profile settings' });
+      await profileButton.click();
+
+      const panelSelector = page.getByTestId('header-panel');
+
+      const oakClient = panelSelector.getByRole('button', { name: 'OAK HERITAGE LTD. ID' });
+
+      await mockApiResponsesWithStub(
+        page,
+        'users/preferences',
+        `users/preferences-GET-${testInfo.project.metadata.userType}-1.json`,
+      );
+
+      await oakClient.click();
+
+      await page.waitForLoadState('networkidle');
+
+      await expect(profileButton.getByText('OAK HERITAGE LTD.')).toBeVisible();
+
+      const filterTag = page.getByTestId('dt-clientNumbers-90000003');
+      await expect(filterTag).toBeVisible();
+
+      const myClientsLink = page.getByTestId('side-nav-link-My clients');
+      const searchLink = page.getByTestId('side-nav-link-Waste search');
+
+      // Go to My clients
+      await myClientsLink.click();
+      await expect(page.getByRole('heading', { name: 'My clients' })).toBeVisible();
+
+      // Go back to Waste search
+      await searchLink.click();
+
+      // The filter tag should still be visible
+      await expect(filterTag).toBeVisible();
+    });
   });
 
   test.describe('IDIR user', () => {
