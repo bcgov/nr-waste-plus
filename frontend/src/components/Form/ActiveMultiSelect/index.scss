@@ -1,0 +1,19 @@
+@use '@carbon/type';
+@use '../../../styles/variables' as vars;
+
+// Fix for Carbon FilterableMultiSelect persistent focus styling issue
+// Forces the outline to be removed when the component should not have focus
+.active-multi-select-wrapper {
+  .#{vars.$bcgov-prefix}--multi-select:not(:focus-within) {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  // When items are selected, style the placeholder to look like real text
+  .#{vars.$bcgov-prefix}--multi-select--selected {
+    .#{vars.$bcgov-prefix}--text-input::placeholder {
+      color: var(--cds-text-primary);
+      opacity: 1;
+    }
+  }
+}
