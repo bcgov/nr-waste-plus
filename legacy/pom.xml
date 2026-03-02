@@ -304,6 +304,11 @@
 				<artifactId>nimbus-jose-jwt</artifactId>
 				<version>10.8</version>
 			</dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>3.1.0</version>
+      </dependency>
 		</dependencies>
 	</dependencyManagement>
 
