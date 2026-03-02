@@ -24,11 +24,8 @@ const doLogin = (context: Mocha.Context, kind: string, afterLoginLocation: strin
         Step(context, 'I click on the "Log in with Business BCeID" button');
       }
 
-      cy.origin(
-        //Logontest is used here as this automation will only run on dev/test
-        'https://logontest7.gov.bc.ca', 
-        { args: { username, password } }, 
-        ({ username, password }) => {
+      //Logontest is used here as this automation will only run on dev/test
+      cy.origin('https://logontest7.gov.bc.ca',{ args: { username, password } }, ({ username, password }) => {
         // Log into the application, not using a step here to prevent password spillage
         cy.get("#user").type(username, { log: false });
         cy.get("#password").type(password, { log: false });
