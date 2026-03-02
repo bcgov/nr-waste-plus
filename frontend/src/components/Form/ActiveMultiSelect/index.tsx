@@ -75,11 +75,11 @@ const RenderMultiSelect = <ItemType extends HasCodeOrValue>({
 
   // Defer onChange callback to prevent "Cannot update a component while rendering a different component" warning
   const deferredOnChange = useCallback(
-    (changes: { selectedItems: ItemType[] }) => {
+    (...args: Parameters<NonNullable<FilterableMultiSelectProps<ItemType>['onChange']>>) => {
       if (onChange) {
         // Use queueMicrotask to defer the callback until after the current render cycle
         queueMicrotask(() => {
-          onChange(changes);
+          onChange(...args);
         });
       }
     },
