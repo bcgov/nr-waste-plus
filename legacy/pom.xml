@@ -308,7 +308,6 @@
 				<groupId>tools.jackson.core</groupId>
 				<artifactId>jackson-core</artifactId>
 				<version>3.1.0</version>
-				<scope>compile</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
