@@ -6,7 +6,7 @@
   "scripts": {
     "cy:open": "cypress open",
     "cy:run": "cypress run --reporter junit --reporter-options mochaFile=result.xml,toConsole=true",
-    "cy:run:local": "cypress run --reporter junit --reporter-options mochaFile=result.xml,toConsole=true --config \"baseUrl=http://127.0.0.1:3000\"",
+    "cy:run:local": "cypress run --reporter junit --reporter-options mochaFile=result.xml,toConsole=true --config \"baseUrl=http://localhost:3000\"",
     "cy:open:local": "cypress open --config \"baseUrl=http://localhost:3000\""
   },
   "keywords": [],
@@ -15,11 +15,10 @@
   "type": "commonjs",
   "devDependencies": {
     "@badeball/cypress-cucumber-preprocessor": "^24.0.1",
-    "@bahmutov/cypress-esbuild-preprocessor": "^2.2.8",
     "@cypress/webpack-preprocessor": "^7.0.2",
     "@testing-library/cypress": "^10.1.0",
     "@types/node": "^25.3.0",
-    "cypress": "^15.11.0",
+    "cypress": "^13.15.1",
     "dotenv": "^17.3.1",
     "esbuild": "^0.27.3",
     "ts-loader": "^9.5.4",
