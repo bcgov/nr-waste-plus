@@ -93,6 +93,8 @@
     <mapstruct.version>1.6.3</mapstruct.version>
     <tomcat.version>11.0.10</tomcat.version>
     <testcontainers.version>1.21.3</testcontainers.version>
+    <tools.jackson.core.version>3.1.0</tools.jackson.core.version>
+    <jackson-core.version>3.1.0</jackson-core.version>
   </properties>
 
   <profiles>
@@ -304,6 +306,7 @@
 				<artifactId>nimbus-jose-jwt</artifactId>
 				<version>10.8</version>
 			</dependency>
+			<!-- Jackson BOM import was removed to avoid resolution errors; rely on Spring Boot's dependency management or add a BOM later with a valid version -->
 		</dependencies>
 	</dependencyManagement>
 
