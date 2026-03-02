@@ -161,8 +161,9 @@ describe('ActiveMultiSelect', () => {
 
     // Select an item
     await act(async () => fireEvent.click(screen.getByText('A - Alpha')));
-    await act(async () => {});
-    expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
+    await waitFor(() => {
+      expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
+    });
 
     // Click the clear selection button rendered by Carbon
     const clearButton = await screen.findByTitle('Clear all selected items');
