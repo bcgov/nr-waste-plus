@@ -24,17 +24,15 @@ const doLogin = (context: Mocha.Context, kind: string, afterLoginLocation: strin
         Step(context, 'I click on the "Log in with Business BCeID" button');
       }
 
-      cy.waitForPageLoad('.site-title');
-
-      cy.origin('https://logontest7.gov.bc.ca',{args: { kind }}, ({ kind }) => {
-        const uName = Cypress.env(`${kind}_username`);
-        const pwd = Cypress.env(`${kind}_password`);
+      cy.origin('https://logontest7.gov.bc.ca', { args: { kind, username, password } }, ({ kind, username, password }) => {
+        cy.get('.site-title').should('be.visible').then(() => {
+          cy.log('Page loaded');
+        });
         // Log into the application, not using a step here to prevent password spillage
-        cy.get("#user").type(uName, { log: false });
-        cy.get("#password").type(pwd, { log: false });
-        cy.get('input[type="submit"]').click();});
-
-      
+        cy.get("#user").type(username, { log: false });
+        cy.get("#password").type(password, { log: false });
+        cy.get('input[type="submit"]').click();
+      });
 
       // Validate the login for session purposes
       cy.url().should('include', afterLoginLocation);      
