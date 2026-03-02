@@ -8,29 +8,31 @@ const doLogin = (context: Mocha.Context, kind: string, afterLoginLocation: strin
   if(!username || !password) {
     throw new Error(`Username or password for ${kind} not found.`);
   }
-    
+  
   cy.session(
     `${kind}-${username}`,
     () => {
+      const landingPage = '/';
       // Visit the landing page
-      Step(context, `I visit "/"`);
-      cy.waitForPageLoad('img');
-      Step(context, 'I can read "Waste Plus"');
+      Step(context, `I visit "${landingPage}"`);
       
+      cy.waitForPageLoad('img');
       // Click on the login button
-      if(kind !== 'bceid' && kind !== 'bcsc') {
+      if(kind !== 'bceid') {        
         Step(context, 'I click on the "Log in with IDIR" button');
       } else if(kind === 'bceid') {
         Step(context, 'I click on the "Log in with Business BCeID" button');
       }
 
-      //Logontest is used here as this automation will only run on dev/test
-      cy.origin('https://logontest7.gov.bc.ca',{ args: { username, password } }, ({ username, password }) => {
+      cy.origin('https://logontest7.gov.bc.ca',{args: { kind }}, ({ kind }) => {
+        const uName = Cypress.env(`${kind}_username`);
+        const pwd = Cypress.env(`${kind}_password`);
         // Log into the application, not using a step here to prevent password spillage
-        cy.get("#user").type(username, { log: false });
-        cy.get("#password").type(password, { log: false });
-        cy.contains('input[type="submit"]', 'Continue').click();
-      });
+        cy.get("#user").type(uName, { log: false });
+        cy.get("#password").type(pwd, { log: false });
+        cy.get('input[type="submit"]').click();});
+
+      
 
       // Validate the login for session purposes
       cy.url().should('include', afterLoginLocation);      
@@ -44,7 +46,8 @@ const doLogin = (context: Mocha.Context, kind: string, afterLoginLocation: strin
         cy.visit(afterLoginLocation);        
       },
     });
-  cy.visit(afterLoginLocation);
+    cy.visit(afterLoginLocation);
+    
 }
 
 Before({ tags: '@loginAsIDIR' }, function () {  

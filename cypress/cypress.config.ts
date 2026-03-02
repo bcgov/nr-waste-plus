@@ -63,7 +63,7 @@ export default defineConfig({
       bceid_password: process.env.bceid_password,
     },
   },
-  includeShadowDom: true,
+  includeShadowDom: false,
   viewportHeight: 1080,
   viewportWidth: 1920,
   retries: {    
