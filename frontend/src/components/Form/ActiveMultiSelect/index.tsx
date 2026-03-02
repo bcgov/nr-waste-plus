@@ -75,11 +75,11 @@ const RenderMultiSelect = <ItemType extends HasCodeOrValue>({
 
   // Defer onChange callback to prevent "Cannot update a component while rendering a different component" warning
   const deferredOnChange = useCallback(
-    (changes: { selectedItems: ItemType[] }) => {
+    (...args: Parameters<NonNullable<FilterableMultiSelectProps<ItemType>['onChange']>>) => {
       if (onChange) {
         // Use queueMicrotask to defer the callback until after the current render cycle
         queueMicrotask(() => {
-          onChange(changes);
+          onChange(...args);
         });
       }
     },
@@ -114,15 +114,11 @@ const RenderMultiSelect = <ItemType extends HasCodeOrValue>({
       }
     };
 
-    // Add listener with a slight delay (next macrotask, bubble phase) to ensure it runs
-    // after Carbon's internal handlers
-    const timeoutId = window.setTimeout(() => {
-      document.addEventListener('mousedown', handleDocumentClick);
-    }, 0);
+    // Add listener with a slight delay to ensure it runs after Carbon's internal handlers
+    document.addEventListener('mousedown', handleDocumentClick, true);
 
     return () => {
-      window.clearTimeout(timeoutId);
-      document.removeEventListener('mousedown', handleDocumentClick);
+      document.removeEventListener('mousedown', handleDocumentClick, true);
     };
   }, []);
 
