@@ -114,15 +114,11 @@ const RenderMultiSelect = <ItemType extends HasCodeOrValue>({
       }
     };
 
-    // Add listener with a slight delay (next macrotask, bubble phase) to ensure it runs
-    // after Carbon's internal handlers
-    const timeoutId = window.setTimeout(() => {
-      document.addEventListener('mousedown', handleDocumentClick);
-    }, 0);
+    // Add listener with a slight delay to ensure it runs after Carbon's internal handlers
+    document.addEventListener('mousedown', handleDocumentClick, true);
 
     return () => {
-      window.clearTimeout(timeoutId);
-      document.removeEventListener('mousedown', handleDocumentClick);
+      document.removeEventListener('mousedown', handleDocumentClick, true);
     };
   }, []);
 
