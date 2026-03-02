@@ -18,6 +18,9 @@ const doLogin = (context: Mocha.Context, kind: string, afterLoginLocation: strin
       cy.visit(landingPage);
       
       cy.waitForPageLoad('img');
+
+      Step(context, 'I can read "Waste Plus"');
+
       // Click on the login button
       if(kind !== 'bceid') {        
         Step(context, 'I click on the "Log in with IDIR" button');
