@@ -15,6 +15,7 @@ const doLogin = (context: Mocha.Context, kind: string, afterLoginLocation: strin
       const landingPage = '/';
       // Visit the landing page
       Step(context, `I visit "${landingPage}"`);
+      cy.visit(landingPage);
       
       cy.waitForPageLoad('img');
       // Click on the login button
@@ -24,15 +25,14 @@ const doLogin = (context: Mocha.Context, kind: string, afterLoginLocation: strin
         Step(context, 'I click on the "Log in with Business BCeID" button');
       }
 
-      cy.origin('https://logontest7.gov.bc.ca', { args: { kind, username, password } }, ({ kind, username, password }) => {
-        cy.get('.site-title').should('be.visible').then(() => {
-          cy.log('Page loaded');
-        });
-        // Log into the application, not using a step here to prevent password spillage
-        cy.get("#user").type(username, { log: false });
-        cy.get("#password").type(password, { log: false });
-        cy.get('input[type="submit"]').click();
-      });
+      // Wait for redirect to external domain
+      cy.url({ timeout: 10000 }).should('include', 'logontest7.gov.bc.ca');
+      cy.get('.site-title').should('be.visible');
+      
+      // Log into the application, not using a step here to prevent password spillage
+      cy.get("#user").type(username, { log: false });
+      cy.get("#password").type(password, { log: false });
+      cy.get('input[type="submit"]').click();
 
       // Validate the login for session purposes
       cy.url().should('include', afterLoginLocation);      

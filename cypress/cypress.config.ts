@@ -56,6 +56,7 @@ export default defineConfig({
     setupNodeEvents,
     defaultCommandTimeout: 10000,
     pageLoadTimeout: 60000,
+    chromeWebSecurity: false,
     env: { 
       idir_username: process.env.idir_username,
       idir_password: process.env.idir_password,
