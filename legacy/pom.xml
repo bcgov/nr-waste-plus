@@ -306,7 +306,6 @@
 				<artifactId>nimbus-jose-jwt</artifactId>
 				<version>10.8</version>
 			</dependency>
-			<!-- Jackson BOM import was removed to avoid resolution errors; rely on Spring Boot's dependency management or add a BOM later with a valid version -->
 		</dependencies>
 	</dependencyManagement>
 
