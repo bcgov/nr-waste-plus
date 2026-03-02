@@ -128,8 +128,6 @@ describe('ActiveMultiSelect', () => {
     await openDropdown();
 
     await act(async () => fireEvent.click(screen.getByText('A - Alpha')));
-    // Wait for deferred onChange microtask to propagate state to wrapper
-    await act(async () => {});
 
     await act(async () => fireEvent.click(screen.getByText('B - Beta')));
 
@@ -144,8 +142,9 @@ describe('ActiveMultiSelect', () => {
 
     // Select
     await act(async () => fireEvent.click(screen.getByText('A - Alpha')));
-    await act(async () => {});
-    expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
+    await waitFor(() => {
+      expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
+    });
 
     // Deselect by clicking the same item again
     await act(async () => fireEvent.click(screen.getByText('A - Alpha')));
@@ -161,8 +160,9 @@ describe('ActiveMultiSelect', () => {
 
     // Select an item
     await act(async () => fireEvent.click(screen.getByText('A - Alpha')));
-    await act(async () => {});
-    expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
+    await waitFor(() => {
+      expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
+    });
 
     // Click the clear selection button rendered by Carbon
     const clearButton = await screen.findByTitle('Clear all selected items');
@@ -255,8 +255,9 @@ describe('ActiveMultiSelect', () => {
 
       // Select an item
       await act(async () => fireEvent.click(screen.getByText('A - Alpha')));
-      await act(async () => {});
-      expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
+      await waitFor(() => {
+        expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
+      });
 
       // Externally set selectedItems to []
       await act(async () => fireEvent.click(screen.getByTestId('external-clear')));
@@ -283,8 +284,9 @@ describe('ActiveMultiSelect', () => {
       await openDropdown();
 
       await act(async () => fireEvent.click(screen.getByText('B - Beta')));
-      await act(async () => {});
-      expect(getPlaceholderInput()).toHaveProperty('placeholder', 'B');
+      await waitFor(() => {
+        expect(getPlaceholderInput()).toHaveProperty('placeholder', 'B');
+      });
 
       // Externally splice/delete all entries
       await act(async () => fireEvent.click(screen.getByTestId('external-clear')));
@@ -304,8 +306,9 @@ describe('ActiveMultiSelect', () => {
       await openDropdown();
 
       await act(async () => fireEvent.click(screen.getByText('C - Gamma')));
-      await act(async () => {});
-      expect(getPlaceholderInput()).toHaveProperty('placeholder', 'C');
+      await waitFor(() => {
+        expect(getPlaceholderInput()).toHaveProperty('placeholder', 'C');
+      });
 
       // Externally set selectedItems to undefined
       await act(async () => fireEvent.click(screen.getByTestId('external-clear')));
@@ -325,8 +328,9 @@ describe('ActiveMultiSelect', () => {
       await openDropdown();
 
       await act(async () => fireEvent.click(screen.getByText('A - Alpha')));
-      await act(async () => {});
-      expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
+      await waitFor(() => {
+        expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
+      });
 
       // Externally set selectedItems to null
       await act(async () => fireEvent.click(screen.getByTestId('external-clear')));
