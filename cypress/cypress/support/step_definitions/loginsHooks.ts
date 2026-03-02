@@ -37,8 +37,6 @@ const doLogin = (context: Mocha.Context, kind: string, afterLoginLocation: strin
       cy.get("#password").type(password, { log: false });
       cy.get('input[type="submit"]').click();
       
-      cy.waitForPageLoad('.cds--header__name');
-
       // Validate the login for session purposes
       cy.url().should('include', afterLoginLocation);      
       cy.getCookies().then((cookies) => {
