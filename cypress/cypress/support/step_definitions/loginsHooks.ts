@@ -24,6 +24,8 @@ const doLogin = (context: Mocha.Context, kind: string, afterLoginLocation: strin
         Step(context, 'I click on the "Log in with Business BCeID" button');
       }
 
+      cy.waitForPageLoad('.site-title');
+
       cy.origin('https://logontest7.gov.bc.ca',{args: { kind }}, ({ kind }) => {
         const uName = Cypress.env(`${kind}_username`);
         const pwd = Cypress.env(`${kind}_password`);
