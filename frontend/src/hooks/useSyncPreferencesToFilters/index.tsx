@@ -25,12 +25,9 @@ const useSyncPreferencesToFilters = <T, PrefKeys extends string>(
     const prevPreference = prevPreferenceRef.current;
     prevPreferenceRef.current = userPreference;
 
-    // On initial mount, skip syncing to avoid overwriting existing filters
-    if (!prevPreference) return;
-
     const changedKeys = Object.keys(userPreference).filter((key) => {
       const prefKey = key as keyof UserPreference;
-      return !isEqual(userPreference[prefKey], prevPreference[prefKey]);
+      return !prevPreference || !isEqual(userPreference[prefKey], prevPreference[prefKey]);
     });
     const relevantChanges = changedKeys.filter((key) => key in mapping);
 
