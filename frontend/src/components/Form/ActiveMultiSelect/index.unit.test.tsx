@@ -128,7 +128,7 @@ describe('ActiveMultiSelect', () => {
     await openDropdown();
 
     await act(async () => fireEvent.click(screen.getByText('A - Alpha')));
-    // Wait for deferred onChange microtask to propagate state to wrapper
+    // Wait for placeholder to update to 'A' before selecting next item
     await waitFor(() => {
       expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
     });
