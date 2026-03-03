@@ -1,14 +1,4 @@
-import { Then, BeforeStep } from "@badeball/cypress-cucumber-preprocessor";
-
-let idir = true;
-
-BeforeStep({ tags: "@loginAsBCeID" }, function () {
-  idir = false;
-});
-BeforeStep({ tags: "@loginAsIDIR" }, function () {
-  idir = true;
-});
-
+import { Then } from "@badeball/cypress-cucumber-preprocessor";
 /* Input Steps */
 
 Then('I type {string} into the {string} input', (text: string, input: string) => {
