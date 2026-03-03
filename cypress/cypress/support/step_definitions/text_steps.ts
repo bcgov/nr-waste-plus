@@ -1,14 +1,4 @@
-import { BeforeStep, Then } from "@badeball/cypress-cucumber-preprocessor";
-
-let idir = true;
-
-BeforeStep({ tags: "@loginAsBCeID" }, function () {
-  idir = false;
-});
-BeforeStep({ tags: "@loginAsIDIR" }, function () {
-  idir = true;
-});
-
+import { Then } from "@badeball/cypress-cucumber-preprocessor";
 Then('I can read {string}', (title: string) => {
   cy.contains(title).should('be.visible');
 });
