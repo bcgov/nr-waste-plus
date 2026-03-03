@@ -1,14 +1,4 @@
-import { When, BeforeStep, Step } from "@badeball/cypress-cucumber-preprocessor";
-
-let idir = true;
-
-BeforeStep({ tags: "@loginAsBCeID" }, function () {
-  idir = false;
-});
-BeforeStep({ tags: "@loginAsIDIR" }, function () {
-  idir = true;
-});
-
+import { When, Step } from "@badeball/cypress-cucumber-preprocessor";
 /* Button Step */
 
 When('I click on the {string} button', (name: string) => {
