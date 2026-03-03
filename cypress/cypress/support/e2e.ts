@@ -16,5 +16,13 @@ Cypress.on('window:before:load', (win) => {
 
 Cypress.on('uncaught:exception', (err, runnable) => {
   console.log(err);
-  return false;
+
+  // Only ignore known, non-breaking third-party errors.
+  // Adjust the condition below to match specific benign errors in your app.
+  if (err && err.message && err.message.includes('ResizeObserver')) {
+    return false;
+  }
+
+  // Let all other errors fail the test so real regressions are not hidden.
+  return true;
 })
