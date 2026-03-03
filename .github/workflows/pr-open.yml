@@ -58,19 +58,19 @@ jobs:
       configmap-frontend: |-
         window.localStorage.setItem(\"VITE_FEATURE_FLAGS\",'{}');
 
-#  tests:
-#    name: Tests
-#    needs: [deploy, vars]
-#    uses: ./.github/workflows/.automated-tests.yml
-#    permissions:
-#      pull-requests: write
-#    secrets: inherit
-#    with:
-#      url: ${{ needs.vars.outputs.url }}
+  tests:
+    name: Tests
+    needs: [deploy, vars]
+    uses: ./.github/workflows/.automated-tests.yml
+    permissions:
+      pull-requests: write
+    secrets: inherit
+    with:
+      url: ${{ needs.vars.outputs.url }}
 
   results:
     name: PR Results
-    needs: [builds, deploy]
+    needs: [builds, deploy, tests]
     if: always()
     runs-on: ubuntu-24.04
     steps:
