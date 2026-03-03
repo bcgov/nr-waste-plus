@@ -88,13 +88,12 @@
     <oci.revision>${project.version}</oci.revision>
     <snakeyaml.version>2.2</snakeyaml.version>
     <hibernate.version>6.6.42.Final</hibernate.version>
-    <testcontainers.version>1.21.1</testcontainers.version>
     <flyway.version>10.13.0</flyway.version>
     <mapstruct.version>1.6.3</mapstruct.version>
     <tomcat.version>11.0.10</tomcat.version>
     <testcontainers.version>1.21.3</testcontainers.version>
-    <tools.jackson.core.version>3.1.0</tools.jackson.core.version>
-    <jackson-core.version>3.1.0</jackson-core.version>
+    <jackson.version>2.21.1</jackson.version>
+    <jackson-bom.version>2.21.0</jackson-bom.version>
   </properties>
 
   <profiles>
