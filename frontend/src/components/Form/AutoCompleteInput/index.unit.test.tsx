@@ -163,7 +163,7 @@ describe('AutoCompleteInput', () => {
       expect(input.value).toBe('Beta');
 
       // selected item is not changed
-      expect(onSelect).not.toBeCalled();
+      expect(onSelect).not.toHaveBeenCalled();
     });
   });
 });
