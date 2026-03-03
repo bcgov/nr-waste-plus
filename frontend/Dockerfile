@@ -9,7 +9,7 @@ RUN npm ci --ignore-scripts && \
     rm -rf node_modules
 
 # Caddy
-FROM caddy:2.10.2-alpine
+FROM caddy:2.11.1-alpine
 ENV LOG_LEVEL=info
 
 # Copy static files and config
