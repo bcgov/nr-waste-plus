@@ -160,7 +160,7 @@ describe('AutoCompleteInput', () => {
       });
 
       // restores the input text
-      expect(input).toHaveValue('Beta');
+      expect(input.value).toBe('Beta');
 
       // selected item is not changed
       expect(onSelect).not.toBeCalled();

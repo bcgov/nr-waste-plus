@@ -1,5 +1,4 @@
 import { expect } from 'vitest';
-import '@testing-library/jest-dom/vitest';
 
 expect.extend({
   toContainText(received: HTMLElement, expected: string) {
