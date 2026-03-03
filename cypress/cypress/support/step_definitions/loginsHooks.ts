@@ -39,9 +39,6 @@ const doLogin = (context: Mocha.Context, kind: string, afterLoginLocation: strin
       
       // Validate the login for session purposes
       cy.url().should('include', afterLoginLocation);      
-      cy.getCookies().then((cookies) => {
-        cookies.forEach((cookie) => cy.setCookie(cookie.name, cookie.value));
-      });
     },
     {
       validate: () => {
