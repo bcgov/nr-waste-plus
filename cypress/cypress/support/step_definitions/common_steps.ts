@@ -1,14 +1,4 @@
-import { BeforeStep, Given } from "@badeball/cypress-cucumber-preprocessor";
-
-let idir = true;
-
-BeforeStep({ tags: "@loginAsBCeID" }, function () {
-  idir = false;
-});
-BeforeStep({ tags: "@loginAsIDIR" }, function () {
-  idir = true;
-});
-
+import { Given } from "@badeball/cypress-cucumber-preprocessor";
 Given('I visit {string}', (url: string) => {
   cy.visit(url).then(() => {
     cy.window().then((win) => {
