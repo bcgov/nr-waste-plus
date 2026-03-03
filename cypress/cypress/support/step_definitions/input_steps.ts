@@ -27,7 +27,7 @@ const selectFromAutocomplete = (label: string, option: string, url: string = '/a
 
   autocomplete
   .then($input => {
-    if ($input) {
+    if ($input.length) {
       cy.wrap($input).type(option);
 
       cy.wait(`@acUrl`, { timeout: 15 * 1000 });
