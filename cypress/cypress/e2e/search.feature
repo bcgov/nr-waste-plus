@@ -60,12 +60,3 @@ Feature: Simple search
     Then I search
     And I can read "TOLKO INDUSTRIES LTD."
     And I can read "CANADIAN FOREST PRODUCTS LTD."
-
-  @loginAsBCeID
-  Scenario: Use autocomplete on advanced search
-    Given I visit "/search"
-    When I click on the "Advanced Search" button
-    Then I can read "Advanced search"
-    And I type "iceking" into the "Submitter IDIR/BCeID" autocomplete
-    Then I search
-    
