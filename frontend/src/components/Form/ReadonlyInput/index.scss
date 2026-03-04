@@ -7,7 +7,9 @@
   row-gap: 0.25rem;
 
   .card-item-label {
-    @include type.type-style('label-02');
+    @include type.type-style('label-02');    
+    min-block-size: calc(var(--#{vars.$bcgov-prefix}-helper-text-01-font-size, 0.75rem) * var(--#{vars.$bcgov-prefix}-helper-text-01-line-height, 1.33333));
+    
   }
 
   .card-item-content {
