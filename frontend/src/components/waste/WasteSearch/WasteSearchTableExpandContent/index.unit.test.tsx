@@ -145,7 +145,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.findAllByAltText('TM-001')).toBeDefined();
+        expect(screen.getAllByText('TM-001')).toBeDefined();
       });
     });
 
