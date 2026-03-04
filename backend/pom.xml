@@ -85,8 +85,6 @@
     <commons-lang3.version>3.20.0</commons-lang3.version>
     <resilience4j.version>2.3.0</resilience4j.version>
     <wiremock.version>3.13.2</wiremock.version>
-    <jackson.version>2.21.1</jackson.version>
-    <jackson-bom.version>2.21.1</jackson-bom.version>
   </properties>
 
   <dependencies>
