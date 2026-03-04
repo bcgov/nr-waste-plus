@@ -221,7 +221,7 @@
   </dependencies>
 
   <profiles>
-        <!-- all tests: enables integration and unit tests, coverage and checkstyle -->
+    <!-- all tests: enables integration and unit tests, coverage and checkstyle -->
     <profile>
       <id>all-tests</id>
       <properties>
@@ -241,7 +241,7 @@
       </properties>
     </profile>
 
-	<!-- integration-tests: enables integration tests and disables unit tests -->
+    <!-- integration-tests: enables integration tests and disables unit tests -->
     <profile>
       <id>integration-test</id>
       <properties>
@@ -251,7 +251,7 @@
       </properties>
     </profile>
 
-	<!-- prod -->
+    <!-- prod -->
     <profile>
       <id>prod</id>
       <properties>
@@ -260,7 +260,7 @@
       </properties>
     </profile>
 
-	<!-- cloud native -->
+    <!-- cloud native -->
     <profile>
       <id>native</id>
       <properties>
@@ -322,7 +322,7 @@
         </configuration>
       </plugin>
 
-			<!--
+      <!--
         Failsafe: Integration tests
         More: https://maven.apache.org/surefire/maven-failsafe-plugin/
       -->
@@ -349,7 +349,7 @@
         </executions>
       </plugin>
 
-			<!--
+      <!--
         Surefire: Unit tests
         More: https://maven.apache.org/surefire/maven-surefire-plugin/
       -->
@@ -366,7 +366,7 @@
         </configuration>
       </plugin>
 
-			<!--
+      <!--
         Jacoco: coverage
         More: https://central.sonatype.com/artifact/org.jacoco/jacoco-maven-plugin
       -->
@@ -482,7 +482,7 @@
         </executions>
       </plugin>
 
-			<!--
+      <!--
         Enforcer: JDK Version and dependencies check
         More: https://maven.apache.org/enforcer/maven-enforcer-plugin/
       -->
@@ -526,7 +526,7 @@
         </executions>
       </plugin>
 
-			<!--
+      <!--
         Checkstyle: enforces formatting and code styling
         More: https://maven.apache.org/plugins/maven-checkstyle-plugin/
       -->
