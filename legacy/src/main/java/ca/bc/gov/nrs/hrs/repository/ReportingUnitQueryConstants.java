@@ -48,6 +48,8 @@ public final class ReportingUnitQueryConstants {
 
   private static final String SEARCH_REPORTING_UNIT_WHERE = """
       WHERE
+        waa.PARENT_WAA_ID IS NULL
+        AND
         (
           NVL(:#{#filter.mainSearchTerm}, 'NOVALUE') = 'NOVALUE'
           OR (
