@@ -141,7 +141,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
         </ReadonlyInput>
       </Column>
       {/* Visible on md and sm */}
-      {data?.secondaryMarks && (
+      {data?.secondaryMarks && data.secondaryMarks.length > 0 && (
         <>
           <Column lg={0} md={2} sm={1}>
             <ReadonlyInput
@@ -223,7 +223,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
       </Column>
 
       {/* Visible on lg+ */}
-      {data?.secondaryMarks && (
+      {data?.secondaryMarks && data.secondaryMarks.length > 0 && (
         <>
           <Column lg={4} md={0} sm={0}></Column>
           <Column lg={2} md={0} sm={0}>
