@@ -85,7 +85,7 @@
     <commons-lang3.version>3.20.0</commons-lang3.version>
     <resilience4j.version>2.3.0</resilience4j.version>
     <wiremock.version>3.13.2</wiremock.version>
-    <tools.jackson.version>3.1.0</tools.jackson.version>
+    <jackson.version>2.21.1</jackson.version>
   </properties>
 
   <dependencies>
@@ -214,9 +214,10 @@
       <scope>test</scope>
     </dependency>
 	<dependency>
-	  <groupId>tools.jackson.core</groupId>
-	  <artifactId>jackson-core</artifactId>
-	  <version>${tools.jackson.version}</version>
+      <groupId>com.fasterxml.jackson</groupId>
+      <artifactId>jackson-bom</artifactId>
+      <version>${jackson.version}</version>
+      <type>pom</type>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
