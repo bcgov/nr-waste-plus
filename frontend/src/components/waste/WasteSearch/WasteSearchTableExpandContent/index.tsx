@@ -128,15 +128,15 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           isNumber={false}
           showSkeleton={isLoading}
         >
-          {blockId === null ? (
-            <EmptyValueTag value="" />
-          ) : (
+          {Number.isFinite(blockId as number) ? (
             <DefinitionTooltip definition={'Go to Waste 303 page'} align="bottom" openOnHover>
               <RedirectLinkTag
                 text="Link"
                 url={`${env.VITE_LEGACY_BASE_URL}/waste303SubmissionAgreementAction.do?readOnlyMode=Y&dataBean.p_waste_assessment_area_id=${blockId}`}
               />
             </DefinitionTooltip>
+          ) : (
+            <EmptyValueTag value="" />
           )}
         </ReadonlyInput>
       </Column>
