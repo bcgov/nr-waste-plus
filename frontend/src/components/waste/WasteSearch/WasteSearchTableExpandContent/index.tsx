@@ -128,12 +128,16 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           isNumber={false}
           showSkeleton={isLoading}
         >
-          <DefinitionTooltip definition={'Go to Waste 303 page'} align="bottom" openOnHover>
-            <RedirectLinkTag
-              text="Link"
-              url={`${env.VITE_LEGACY_BASE_URL}/waste303SubmissionAgreementAction.do?readOnlyMode=Y&dataBean.p_waste_assessment_area_id=${blockId}`}
-            />
-          </DefinitionTooltip>
+          {blockId !== null ? (
+            <DefinitionTooltip definition={'Go to Waste 303 page'} align="bottom" openOnHover>
+              <RedirectLinkTag
+                text="Link"
+                url={`${env.VITE_LEGACY_BASE_URL}/waste303SubmissionAgreementAction.do?readOnlyMode=Y&dataBean.p_waste_assessment_area_id=${blockId}`}
+              />
+            </DefinitionTooltip>
+          ) : (
+            <EmptyValueTag value="" />
+          )}
         </ReadonlyInput>
       </Column>
       <Column lg={16} md={8} sm={4}>
