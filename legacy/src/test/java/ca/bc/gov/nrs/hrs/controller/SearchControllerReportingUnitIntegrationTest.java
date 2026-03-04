@@ -4,6 +4,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -295,12 +297,8 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
                 .value(org.hamcrest.Matchers.equalTo("JY1009"))
         )
         .andExpect(
-            jsonPath("$.primaryMark")
-                .value(org.hamcrest.Matchers.equalTo(null))
-        )
-        .andExpect(
-            jsonPath("$.secondaryTimberMarks")
-                .value(org.hamcrest.Matchers.equalTo("EM30R1, R21110"))
+            jsonPath("$.secondaryMarks[0].mark")
+                .value(org.hamcrest.Matchers.equalTo("EM30R1"))
         )
         .andReturn();
   }
@@ -321,12 +319,8 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
                 .value(org.hamcrest.Matchers.equalTo("EM30R1"))
         )
         .andExpect(
-            jsonPath("$.primaryMark")
-                .value(org.hamcrest.Matchers.equalTo("JY1009"))
-        )
-        .andExpect(
-            jsonPath("$.secondaryTimberMarks")
-                .value(org.hamcrest.Matchers.equalTo(null))
+            jsonPath("$.secondaryMarks")
+                .value(org.hamcrest.Matchers.equalTo(List.of()))
         )
         .andReturn();
   }

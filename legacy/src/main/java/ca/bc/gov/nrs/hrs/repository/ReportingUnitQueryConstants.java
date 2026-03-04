@@ -135,16 +135,27 @@ public final class ReportingUnitQueryConstants {
       + SEARCH_REPORTING_UNIT_WHERE
       + ") SELECT COUNT(1) OVER () AS total FROM DistinctResults ";
 
-  public static final String GET_BLOCK_COUNT = """
+  private static final String GET_BLOCK_COUNT = """
       SELECT
-        COUNT(1) AS TOTAL,
+        COUNT(1) AS TOTAL_BLOCKS,
         waa.REPORTING_UNIT_ID AS RU_ID
       FROM WASTE_ASSESSMENT_AREA waa
       WHERE waa.REPORTING_UNIT_ID = :reportingUnit
+            AND waa.PARENT_WAA_ID IS null
       GROUP BY waa.REPORTING_UNIT_ID
       """;
 
-  public static final String GET_BLOCK_COMMENT_LATEST = """
+  private static final String GET_CHILD_COUNT = """
+      SELECT
+        COUNT(1) AS TOTAL_CHILDS,
+        waa.REPORTING_UNIT_ID AS RU_ID
+      FROM WASTE_ASSESSMENT_AREA waa
+      WHERE waa.REPORTING_UNIT_ID = :reportingUnit
+            AND waa.PARENT_WAA_ID = :blockId
+      GROUP BY waa.REPORTING_UNIT_ID
+      """;
+
+  private static final String GET_BLOCK_COMMENT_LATEST = """
       SELECT
         aud.waste_assessment_area_audit_id AS audit_id,
         aud.waste_assessment_area_id AS block_id,
@@ -158,7 +169,7 @@ public final class ReportingUnitQueryConstants {
       FETCH FIRST 1 ROW ONLY
       """;
 
-  public static final String GET_BLOCK_ATTACHMENT_LATEST = """
+  private static final String GET_BLOCK_ATTACHMENT_LATEST = """
       SELECT
         wasm.WASTE_ASSESSMENT_SURVEY_MAP_ID AS attachment_id,
         wasm.WASTE_ASSESSMENT_AREA_ID AS block_id,
@@ -169,36 +180,33 @@ public final class ReportingUnitQueryConstants {
       FETCH FIRST 1 ROW ONLY
       """;
 
-  public static final String GET_BLOCK_SECONDARY_MARK = """
+  private static final String GET_BLOCK_SECONDARY_MARK = """
       SELECT
-        waa.PARENT_WAA_ID AS parent_id,
-        LISTAGG(NULLIF(TRIM(COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK)),''),', ')
-        WITHIN GROUP (
-          ORDER BY NULLIF(TRIM(COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK) ),'')
+        parent_id,
+        JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'mark'   VALUE mark,
+            'status' VALUE JSON_OBJECT( 'code' VALUE status, 'description' VALUE description ),
+            'area'   VALUE area
+          )
+          ORDER BY mark
         ) AS secondary_mark
-      FROM WASTE_ASSESSMENT_AREA waa
-      WHERE waa.PARENT_WAA_ID = :blockId
-      GROUP BY waa.PARENT_WAA_ID
+      FROM (
+            SELECT DISTINCT
+                waa.PARENT_WAA_ID AS parent_id,
+                NULLIF(TRIM(COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK)), '') AS mark,
+                waa.WASTE_ASSESS_AREA_STS_CODE AS status,
+                waasc.DESCRIPTION AS description,
+                waa.mark_area AS area
+            FROM WASTE_ASSESSMENT_AREA waa
+            LEFT JOIN WASTE_ASSESS_AREA_STS_CODE waasc
+            ON waasc.WASTE_ASSESS_AREA_STS_CODE = waa.WASTE_ASSESS_AREA_STS_CODE
+            WHERE waa.PARENT_WAA_ID = :blockId
+      )
+      GROUP BY parent_id
       """;
 
-  public static final String GET_BLOCK_PRIMARY_MARK = """
-      SELECT
-        waa.WASTE_ASSESSMENT_AREA_ID AS id,
-        NULLIF( TRIM( COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK) ), '' ) AS primary_mark
-      FROM WASTE_ASSESSMENT_AREA waa
-      WHERE waa.REPORTING_UNIT_ID = :reportingUnit
-      AND waa.WASTE_ASSESSMENT_AREA_ID = (
-        SELECT
-          waa_p.PARENT_WAA_ID
-        FROM WASTE_ASSESSMENT_AREA waa_p
-        WHERE
-          waa_p.WASTE_ASSESSMENT_AREA_ID = :blockId
-          AND waa_p.REPORTING_UNIT_ID = :reportingUnit
-      	)
-      FETCH FIRST 1 ROW ONLY
-      """;
-
-  public static final String GET_SEARCH_BLOCK_EXPANDED = """
+  private static final String GET_SEARCH_BLOCK_EXPANDED = """
       SELECT
         waa.WASTE_ASSESSMENT_AREA_ID AS id,
         waa.FOREST_FILE_ID AS license_no,
@@ -211,28 +219,33 @@ public final class ReportingUnitQueryConstants {
         END AS exempted,
         CASE WHEN NVL(waa.MULTI_MARK_IND, 'N') = 'N' THEN 0 ELSE 1 END AS multi_mark,
         TO_CHAR(waa.waste_net_area, '999.99') AS net_area,
+        TO_CHAR (waa.mark_area, '999.99') AS mark_area,
+        waa.waste_assess_area_sts_code AS status_code,
+        waasc.description AS status_name,
         waa.ENTRY_USERID AS submitter,
         ac.attachment_id AS attachment_id,
         ac.attachment_name AS attachment_name,
         c.WASTE_COMMENT AS comments,
-        TOTAL AS total_block_count,
-        cv.secondary_mark AS secondary_timber_marks,
-        pv.primary_mark AS primary_mark
+        bc.TOTAL_BLOCKS AS total_block_count,
+        cc.TOTAL_CHILDS AS total_child_count,
+        cv.secondary_mark AS secondary
       FROM WASTE_ASSESSMENT_AREA waa
       LEFT JOIN BlockCount bc ON bc.RU_ID = waa.REPORTING_UNIT_ID
+      LEFT JOIN ChildCount cc ON cc.RU_ID = waa.REPORTING_UNIT_ID
       LEFT JOIN CommentsAudit c ON c.block_id = waa.WASTE_ASSESSMENT_AREA_ID
       LEFT JOIN AttachmentContent ac ON ac.block_id = waa.WASTE_ASSESSMENT_AREA_ID
       LEFT JOIN ChildValues cv ON cv.parent_id = waa.WASTE_ASSESSMENT_AREA_ID
-      LEFT JOIN PrimaryValue pv ON pv.id = waa.PARENT_WAA_ID
+      LEFT JOIN WASTE_ASSESS_AREA_STS_CODE waasc
+        ON waasc.WASTE_ASSESS_AREA_STS_CODE = waa.WASTE_ASSESS_AREA_STS_CODE
       WHERE waa.REPORTING_UNIT_ID = :reportingUnit
         AND waa.WASTE_ASSESSMENT_AREA_ID = :blockId
       """;
 
   public static final String GET_SEARCH_BLOCK_EXPANDED_CONTENT =
       "WITH BlockCount AS (" + GET_BLOCK_COUNT + "), "
+      + "ChildCount AS (" + GET_CHILD_COUNT + "), "
       + "CommentsAudit AS (" + GET_BLOCK_COMMENT_LATEST + "), "
       + "AttachmentContent AS (" + GET_BLOCK_ATTACHMENT_LATEST + "), "
-      + "ChildValues AS (" + GET_BLOCK_SECONDARY_MARK + "), "
-      + "PrimaryValue AS (" + GET_BLOCK_PRIMARY_MARK + ") "
+      + "ChildValues AS (" + GET_BLOCK_SECONDARY_MARK + ") "
       + GET_SEARCH_BLOCK_EXPANDED;
 }

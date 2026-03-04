@@ -1,9 +1,13 @@
 package ca.bc.gov.nrs.hrs.mappers.search;
 
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
+import ca.bc.gov.nrs.hrs.dto.search.SearchExpandedSecondaryDto;
 import ca.bc.gov.nrs.hrs.entity.search.ReportingUnitSearchExpandedProjection;
 import ca.bc.gov.nrs.hrs.mappers.AbstractSingleMapper;
 import ca.bc.gov.nrs.hrs.mappers.MapperConstants;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
@@ -14,8 +18,8 @@ import org.mapstruct.ReportingPolicy;
  * ReportingUnitSearchExpandedDto.
  *
  * <p>This mapper handles the transformation of projection query results into DTOs used in
- * search API responses. It performs custom mappings for the attachment, multiMark, exempted,
- * and totalBlocks fields to ensure proper data conversion and type transformations.</p>
+ * search API responses. It performs custom mappings for the attachment, multiMark, exempted, and
+ * totalBlocks fields to ensure proper data conversion and type transformations.</p>
  */
 @Mapper(
     componentModel = MappingConstants.ComponentModel.SPRING,
@@ -43,24 +47,46 @@ public interface ReportingUnitSearchExpandedMapper extends
   @Mapping(target = "attachment", expression = MapperConstants.ATTACHMENT_AS_DTO)
   @Mapping(
       target = "multiMark",
-      expression = "java(Integer.valueOf(1).equals(projection.getMultiMark()))"
+      expression = "java(Integer.valueOf(1).equals(projection.getMultiMark().intValue()))"
   )
   @Mapping(
       target = "exempted",
-      expression = "java(Integer.valueOf(1).equals(projection.getExempted()))"
+      expression = "java(Integer.valueOf(1).equals(projection.getExempted().intValue()))"
   )
   @Mapping(
       target = "totalBlocks",
-      expression = "java(projection.getTotalBlockCount())"
+      expression = "java(projection.getTotalBlockCount().longValue())"
   )
   @Mapping(
-      target = "secondaryTimberMarks",
-      expression = "java(projection.getSecondaryTimberMarks())"
+      target = "secondaryMarks",
+      expression = "java(parseSecondaryJson(projection.getSecondary()))"
   )
   @Mapping(
-      target = "primaryMark",
-      expression = "java(projection.getPrimaryMark())"
+      target = "totalChildren",
+      expression = "java(projection.getTotalChildCount() != null ? projection.getTotalChildCount().longValue() : 0)"
+
   )
+  @Mapping(target = "status", expression = MapperConstants.STATUS_AS_DTO)
   ReportingUnitSearchExpandedDto fromProjection(ReportingUnitSearchExpandedProjection projection);
+
+
+  default List<SearchExpandedSecondaryDto> parseSecondaryJson(String json) {
+    if (json == null || json.isBlank()) {
+      return List.of();
+    }
+
+    try {
+      ObjectMapper mapper = new ObjectMapper();
+      return mapper.readValue(
+          json,
+          new TypeReference<List<SearchExpandedSecondaryDto>>() {
+          }
+      );
+    } catch (Exception e) {
+      System.out.println(e.getMessage());
+      return List.of();
+    }
+  }
+
 
 }
