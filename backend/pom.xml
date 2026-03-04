@@ -227,7 +227,7 @@
   </dependencies>
 
   <profiles>
-		<!-- all tests: enables integration and unit tests, coverage and checkstyle -->
+        <!-- all tests: enables integration and unit tests, coverage and checkstyle -->
     <profile>
       <id>all-tests</id>
       <properties>
