@@ -233,7 +233,7 @@
       </properties>
     </profile>
 
-		<!-- dev: development profile -->
+    <!-- dev: development profile -->
     <profile>
       <id>dev</id>
       <properties>
@@ -241,7 +241,7 @@
       </properties>
     </profile>
 
-		<!-- integration-tests: enables integration tests and disables unit tests -->
+	<!-- integration-tests: enables integration tests and disables unit tests -->
     <profile>
       <id>integration-test</id>
       <properties>
@@ -251,7 +251,7 @@
       </properties>
     </profile>
 
-		<!-- prod -->
+	<!-- prod -->
     <profile>
       <id>prod</id>
       <properties>
@@ -260,7 +260,7 @@
       </properties>
     </profile>
 
-		<!-- cloud native -->
+	<!-- cloud native -->
     <profile>
       <id>native</id>
       <properties>
