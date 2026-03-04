@@ -85,6 +85,7 @@
     <commons-lang3.version>3.20.0</commons-lang3.version>
     <resilience4j.version>2.3.0</resilience4j.version>
     <wiremock.version>3.13.2</wiremock.version>
+    <tools.jackson.version>3.1.0</tools.jackson.version>
   </properties>
 
   <dependencies>
@@ -212,7 +213,11 @@
       <version>${wiremock.version}</version>
       <scope>test</scope>
     </dependency>
-    
+	<dependency>
+	  <groupId>tools.jackson.core</groupId>
+	  <artifactId>jackson-core</artifactId>
+	  <version>${tools.jackson.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-aspectj-test</artifactId>
@@ -221,7 +226,7 @@
   </dependencies>
 
   <profiles>
-    <!-- all tests: enables integration and unit tests, coverage and checkstyle -->
+		<!-- all tests: enables integration and unit tests, coverage and checkstyle -->
     <profile>
       <id>all-tests</id>
       <properties>
@@ -233,7 +238,7 @@
       </properties>
     </profile>
 
-    <!-- dev: development profile -->
+		<!-- dev: development profile -->
     <profile>
       <id>dev</id>
       <properties>
@@ -241,7 +246,7 @@
       </properties>
     </profile>
 
-    <!-- integration-tests: enables integration tests and disables unit tests -->
+		<!-- integration-tests: enables integration tests and disables unit tests -->
     <profile>
       <id>integration-test</id>
       <properties>
@@ -251,7 +256,7 @@
       </properties>
     </profile>
 
-    <!-- prod -->
+		<!-- prod -->
     <profile>
       <id>prod</id>
       <properties>
@@ -260,7 +265,7 @@
       </properties>
     </profile>
 
-    <!-- cloud native -->
+		<!-- cloud native -->
     <profile>
       <id>native</id>
       <properties>
@@ -322,7 +327,7 @@
         </configuration>
       </plugin>
 
-      <!--
+			<!--
         Failsafe: Integration tests
         More: https://maven.apache.org/surefire/maven-failsafe-plugin/
       -->
@@ -349,7 +354,7 @@
         </executions>
       </plugin>
 
-      <!--
+			<!--
         Surefire: Unit tests
         More: https://maven.apache.org/surefire/maven-surefire-plugin/
       -->
@@ -366,7 +371,7 @@
         </configuration>
       </plugin>
 
-      <!--
+			<!--
         Jacoco: coverage
         More: https://central.sonatype.com/artifact/org.jacoco/jacoco-maven-plugin
       -->
@@ -482,7 +487,7 @@
         </executions>
       </plugin>
 
-      <!--
+			<!--
         Enforcer: JDK Version and dependencies check
         More: https://maven.apache.org/enforcer/maven-enforcer-plugin/
       -->
@@ -526,7 +531,7 @@
         </executions>
       </plugin>
 
-      <!--
+			<!--
         Checkstyle: enforces formatting and code styling
         More: https://maven.apache.org/plugins/maven-checkstyle-plugin/
       -->
