@@ -93,7 +93,7 @@
     <tomcat.version>11.0.10</tomcat.version>
     <testcontainers.version>1.21.3</testcontainers.version>
     <jackson.version>2.21.1</jackson.version>
-    <jackson-bom.version>2.21.0</jackson-bom.version>
+    <jackson-bom.version>2.21.1</jackson-bom.version>
   </properties>
 
   <profiles>
