@@ -91,6 +91,12 @@ const AutoCompleteInput = <T,>({
     if (typeof item === 'string') {
       return item;
     }
+    if (props.itemToString) {
+      const result = props.itemToString(item);
+      if (result !== undefined) {
+        return result;
+      }
+    }
     if (typeof item === 'object' && 'name' in item) {
       return (item as { name: string }).name;
     }
@@ -142,10 +148,10 @@ const AutoCompleteInput = <T,>({
 
   return (
     <ComboBox
-      itemToString={localItemToString}
       itemToElement={itemToElement}
       className="autocomplete-combobox"
       {...props}
+      itemToString={localItemToString}
       items={items}
       onChange={(selectedItem) => onSelect(selectedItem.selectedItem as T | null | undefined)}
       onInputChange={setTypedValue}

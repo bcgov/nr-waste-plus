@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import AutoCompleteInput from './index';
 
@@ -122,5 +122,48 @@ describe('AutoCompleteInput', () => {
     fireEvent.keyDown(input, { key: 'ArrowUp' });
     fireEvent.keyDown(input, { key: 'Enter' });
     fireEvent.keyDown(input, { key: 'Escape' });
+  });
+
+  describe('when item is preselected', () => {
+    const createSpy = () => vi.fn();
+    let onSelect: ReturnType<typeof createSpy>;
+
+    beforeEach(async () => {
+      onSelect = createSpy();
+      const onAutoCompleteChange = vi.fn(async (val) =>
+        items.filter((i) => i.name.toLowerCase().includes(val.toLowerCase())),
+      );
+      const initialSelectedItem = { name: 'Beta', id: 2 };
+      await renderWithProps({ onAutoCompleteChange, initialSelectedItem, onSelect });
+    });
+
+    it('calls onSelect with null when the text input gets cleared', () => {
+      const input = screen.getByRole('combobox');
+
+      // input text gets completely cleared
+      fireEvent.change(input, { target: { value: '' } });
+
+      act(() => {
+        input.blur();
+      });
+      expect(onSelect).toHaveBeenCalledWith(null);
+    });
+
+    it("restores the input text when it's been only partially changed", () => {
+      const input = screen.getByRole<HTMLInputElement>('combobox');
+
+      // input text gets changed but not cleared
+      fireEvent.change(input, { target: { value: 'B' } });
+
+      act(() => {
+        input.blur();
+      });
+
+      // restores the input text
+      expect(input.value).toBe('Beta');
+
+      // selected item is not changed
+      expect(onSelect).not.toHaveBeenCalled();
+    });
   });
 });
