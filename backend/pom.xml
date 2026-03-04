@@ -213,10 +213,11 @@
       <version>${wiremock.version}</version>
       <scope>test</scope>
     </dependency>
-	<dependency>
-	  <groupId>tools.jackson.core</groupId>
-	  <artifactId>jackson-core</artifactId>
-	  <version>${tools.jackson.version}</version>
+    <dependency>
+      <groupId>tools.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>${tools.jackson.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
