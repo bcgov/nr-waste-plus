@@ -37,7 +37,8 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
 
   return (
     <Grid>
-      <Column lg={2} md={8} sm={4}>
+      {/* Visible on All */}
+      <Column lg={2} md={2} sm={1}>
         <ReadonlyInput
           label="Licence number"
           id={`${rowId}-license-number`}
@@ -47,7 +48,8 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           {data?.licenseNo ?? ''}
         </ReadonlyInput>
       </Column>
-      <Column lg={2} md={8} sm={4}>
+      {/* Visible on All */}
+      <Column lg={2} md={2} sm={1}>
         <ReadonlyInput
           label="Cutting Permit"
           id={`${rowId}-cutting-permit`}
@@ -57,7 +59,8 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           {data?.cuttingPermit ?? ''}
         </ReadonlyInput>
       </Column>
-      <Column lg={2} md={8} sm={4}>
+      {/* Visible on Lg+ */}
+      <Column lg={2} md={0} sm={0}>
         <ReadonlyInput
           label="Timber Mark"
           id={`${rowId}-timber-mark`}
@@ -67,7 +70,119 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           {data?.timberMark ?? ''}
         </ReadonlyInput>
       </Column>
-      <Column lg={2} md={8} sm={4}>
+      {/* Visible on Lg+ */}
+      <Column lg={1} md={0} sm={0}>
+        <ReadonlyInput
+          label="Mark area"
+          id={`${rowId}-mark-area`}
+          isNumber={false}
+          showSkeleton={isLoading}
+        >
+          {data?.markArea ? `${data.markArea} ha` : ''}
+        </ReadonlyInput>
+      </Column>
+      {/* Visible on Lg+ */}
+      <Column lg={2} md={0} sm={0}>
+        <ReadonlyInput
+          label="Status"
+          id={`${rowId}-status`}
+          isNumber={false}
+          showSkeleton={isLoading}
+        >
+          {data?.status?.description ?? ''}
+        </ReadonlyInput>
+      </Column>
+      {/* Visible on All */}
+      <Column lg={1} md={2} sm={1}>
+        <ReadonlyInput
+          label="Net area"
+          id={`${rowId}-net-area`}
+          isNumber={true}
+          showSkeleton={isLoading}
+        >
+          {data?.netArea ? `${data.netArea} ha` : ''}
+        </ReadonlyInput>
+      </Column>
+
+      {/* Empty column for spacing on md and sm */}
+      <Column lg={0} md={2} sm={1}></Column>
+
+      {/* Visible on md and sm */}
+      <Column lg={0} md={2} sm={1}>
+        <ReadonlyInput
+          label="Timber Mark"
+          id={`${rowId}-timber-mark`}
+          isNumber={false}
+          showSkeleton={isLoading}
+        >
+          {data?.timberMark ?? ''}
+        </ReadonlyInput>
+      </Column>
+      {/* Visible on md and sm */}
+      <Column lg={0} md={2} sm={1}>
+        <ReadonlyInput
+          label="Mark area"
+          id={`${rowId}-mark-area`}
+          isNumber={false}
+          showSkeleton={isLoading}
+        >
+          {data?.markArea ? `${data.markArea} ha` : ''}
+        </ReadonlyInput>
+      </Column>
+      {/* Visible on md and sm */}
+      <Column lg={0} md={4} sm={2}>
+        <ReadonlyInput
+          label="Status"
+          id={`${rowId}-status`}
+          isNumber={false}
+          showSkeleton={isLoading}
+        >
+          {data?.status?.description ?? ''}
+        </ReadonlyInput>
+      </Column>
+      {/* Visible on md and sm */}
+      {data?.secondaryMarks && (
+        <>
+          <Column lg={0} md={2} sm={1}>
+            <ReadonlyInput
+              label="Secondary"
+              id={`${rowId}-secondary-marks`}
+              isNumber={false}
+              showSkeleton={isLoading}
+            >
+              {data.secondaryMarks.map((mark, index) => (
+                <p key={`${rowId}-secondary-mark-${index}`}>{mark.mark}</p>
+              ))}
+            </ReadonlyInput>
+          </Column>
+          <Column lg={0} md={2} sm={1}>
+            <ReadonlyInput
+              label=""
+              id={`${rowId}-secondary-areas`}
+              isNumber={false}
+              showSkeleton={isLoading}
+            >
+              {data.secondaryMarks.map((mark, index) => (
+                <p key={`${rowId}-secondary-mark-area-${index}`}>{mark.area} ha</p>
+              ))}
+            </ReadonlyInput>
+          </Column>
+          <Column lg={0} md={4} sm={2}>
+            <ReadonlyInput
+              label=""
+              id={`${rowId}-secondary-statuses`}
+              isNumber={false}
+              showSkeleton={isLoading}
+            >
+              {data.secondaryMarks.map((mark, index) => (
+                <p key={`${rowId}-secondary-mark-status-${index}`}>{mark.status.description}</p>
+              ))}
+            </ReadonlyInput>
+          </Column>
+        </>
+      )}
+
+      <Column lg={2} md={2} sm={1}>
         <ReadonlyInput
           label="Exempted (Yes/No)"
           id={`${rowId}-exempted`}
@@ -77,41 +192,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           <YesNoTag value={data?.exempted} />
         </ReadonlyInput>
       </Column>
-      {data?.secondaryTimberMarks && (
-        <Column lg={2} md={8} sm={4}>
-          <ReadonlyInput
-            label="Secondary mark(s)"
-            id={`${rowId}-secondary-marks`}
-            isNumber={false}
-            showSkeleton={isLoading}
-          >
-            {data?.secondaryTimberMarks}
-          </ReadonlyInput>
-        </Column>
-      )}
-      {data?.primaryMark && (
-        <Column lg={2} md={8} sm={4}>
-          <ReadonlyInput
-            label="Primary mark"
-            id={`${rowId}-primary-mark`}
-            isNumber={false}
-            showSkeleton={isLoading}
-          >
-            {data?.primaryMark}
-          </ReadonlyInput>
-        </Column>
-      )}
-      <Column lg={2} md={8} sm={4}>
-        <ReadonlyInput
-          label="Net area"
-          id={`${rowId}-net-area`}
-          isNumber={true}
-          showSkeleton={isLoading}
-        >
-          {data?.netArea}
-        </ReadonlyInput>
-      </Column>
-      <Column lg={2} md={8} sm={4}>
+      <Column lg={2} md={2} sm={1}>
         <ReadonlyInput
           label="Submitter"
           id={`${rowId}-submitter`}
@@ -121,7 +202,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           {data?.submitter}
         </ReadonlyInput>
       </Column>
-      <Column lg={2} md={8} sm={4}>
+      <Column lg={2} md={4} sm={2}>
         <ReadonlyInput
           label="Attachments"
           id={`${rowId}-attachments`}
@@ -140,6 +221,51 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           )}
         </ReadonlyInput>
       </Column>
+
+      {/* Visible on lg+ */}
+      {data?.secondaryMarks && (
+        <>
+          <Column lg={4} md={0} sm={0}></Column>
+          <Column lg={2} md={0} sm={0}>
+            <ReadonlyInput
+              label="Secondary"
+              id={`${rowId}-secondary-marks`}
+              isNumber={false}
+              showSkeleton={isLoading}
+            >
+              {data.secondaryMarks.map((mark, index) => (
+                <p key={`${rowId}-secondary-mark-${index}`}>{mark.mark}</p>
+              ))}
+            </ReadonlyInput>
+          </Column>
+          <Column lg={1} md={0} sm={0}>
+            <ReadonlyInput
+              label=""
+              id={`${rowId}-secondary-areas`}
+              isNumber={false}
+              showSkeleton={isLoading}
+            >
+              {data.secondaryMarks.map((mark, index) => (
+                <p key={`${rowId}-secondary-mark-area-${index}`}>{mark.area} ha</p>
+              ))}
+            </ReadonlyInput>
+          </Column>
+          <Column lg={2} md={0} sm={0}>
+            <ReadonlyInput
+              label=""
+              id={`${rowId}-secondary-statuses`}
+              isNumber={false}
+              showSkeleton={isLoading}
+            >
+              {data.secondaryMarks.map((mark, index) => (
+                <p key={`${rowId}-secondary-mark-status-${index}`}>{mark.status.description}</p>
+              ))}
+            </ReadonlyInput>
+          </Column>
+          <Column lg={7} md={0} sm={0}></Column>
+        </>
+      )}
+
       <Column lg={16} md={8} sm={4}>
         <ReadonlyInput
           label="Comment:"
@@ -150,8 +276,11 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           <EmptyValueTag value={data?.comments ?? ''} />
         </ReadonlyInput>
       </Column>
-      <Column lg={16} md={8} sm={4}>
-        <p>Total entries in reporting unit: {data?.totalBlocks ?? 0}</p>
+      <Column lg={2} md={2} sm={4}>
+        <p>No. of blocks in RU: {data?.totalBlocks ?? 0}</p>
+      </Column>
+      <Column lg={14} md={6} sm={4}>
+        <p>No. of secondary marks in RU: {data?.totalChildren ?? 0}</p>
       </Column>
     </Grid>
   );
