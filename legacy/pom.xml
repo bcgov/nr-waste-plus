@@ -87,13 +87,13 @@
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <oci.revision>${project.version}</oci.revision>
     <snakeyaml.version>2.2</snakeyaml.version>
-    <hibernate.version>6.6.43.Final</hibernate.version>
+    <hibernate.version>6.6.44.Final</hibernate.version>
     <flyway.version>10.13.0</flyway.version>
     <mapstruct.version>1.6.3</mapstruct.version>
     <tomcat.version>11.0.10</tomcat.version>
     <testcontainers.version>1.21.3</testcontainers.version>
     <jackson.version>2.21.1</jackson.version>
-    <jackson-bom.version>2.21.0</jackson-bom.version>
+    <jackson-bom.version>2.21.1</jackson-bom.version>
   </properties>
 
   <profiles>
@@ -584,7 +584,7 @@
           <dependency>
             <groupId>com.puppycrawl.tools</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>13.2.0</version>
+            <version>13.3.0</version>
           </dependency>
         </dependencies>
         <configuration>

@@ -32,11 +32,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
           CYPRESS_idir_password: ${{ secrets.IDIR_UAT_PASSWORD }}
           CYPRESS_idir_username: ${{ secrets.IDIR_UAT_USERNAME }}
-          CYPRESS_bceid_password: ${{ secrets.BCEID_UAT_PASSWORD }}
-          CYPRESS_bceid_username: ${{ secrets.BCEID_UAT_USERNAME }}          
+          CYPRESS_bceid_password: ${{ secrets.BCEID_UAT_PASSWORD2 }}
+          CYPRESS_bceid_username: ${{ secrets.BCEID_UAT_USERNAME2 }}          
 
       - name: Publish Cypress Results
-        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3 # v5
+        uses: mikepenz/action-junit-report@49b2ca06f62aa7ef83ae6769a2179271e160d8e4 # v6
         continue-on-error: true
         if: always()
         with:
@@ -67,7 +67,7 @@ jobs:
           fi
         id: check_artifacts
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         name: Upload Cypress Screenshots
         if: always()
         with:
@@ -75,7 +75,7 @@ jobs:
           path: cypress/cypress/screenshots
           retention-days: 7
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         name: Upload Cypress Videos
         if: always()
         with:

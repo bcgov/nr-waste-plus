@@ -11,7 +11,7 @@ jobs:
     name: Frontend Unit Tests
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     container:
-      image: mcr.microsoft.com/playwright:v1.57.0-noble
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
     permissions:
       contents: write
       checks: write
@@ -97,14 +97,14 @@ jobs:
           fail-on-error: true
 
       - name: Upload test videos
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: steps.tests.outputs.triggered == 'true'
         with:
           name: e2e-videos
           path: frontend/test-results/videos/
 
       - name: Upload test results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: steps.tests.outputs.triggered == 'true'
         with:
           name: e2e-reports

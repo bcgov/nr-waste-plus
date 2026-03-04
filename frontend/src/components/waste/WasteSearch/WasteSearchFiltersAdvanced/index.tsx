@@ -184,7 +184,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 titleText="Client"
                 placeholder="Search by client name, number, or acronym"
                 helperText="Search by client name, number or acronym"
-                selectedItem={filters.clientNumbers?.[0]}
+                initialSelectedItem={filters.clientNumbers?.[0]}
                 onAutoCompleteChange={async (value) =>
                   (await APIs.forestclient.searchForestClients(value, 0, 10)).map(
                     forestClientAutocompleteResult2CodeDescription,
@@ -261,7 +261,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
               id="as-submitter-name-ac"
               data-testid="submitter-name-ac"
               titleText="Submitter IDIR/BCeID"
-              selectedItem={filters.requestUserId}
+              initialSelectedItem={filters.requestUserId}
               onAutoCompleteChange={async (value) =>
                 await APIs.search.searchReportingUnitUsers(value)
               }
