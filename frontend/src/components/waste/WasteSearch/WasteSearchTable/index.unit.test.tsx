@@ -159,6 +159,92 @@ const mockSearchResults: PageableResponse<ReportingUnitSearchResultDto> = {
   },
 };
 
+const altMockSearchResults1: PageableResponse<ReportingUnitSearchResultDto> = {
+  content: [
+    {
+      id: 'RU-4069-Block-521B-224813681',
+      cutBlockId: '521B',
+      blockId: 521,
+      ruNumber: 4069,
+      client: { code: '00010005', description: 'JACOB FEHR' },
+      licenseNumber: 'A12345',
+      cuttingPermit: 'CP001',
+      timberMark: 'TM001',
+      multiMark: false,
+      secondaryEntry: false,
+      sampling: { code: 'OCU', description: 'Ocular' },
+      district: { code: 'DCC', description: 'Cariboo-Chilcotin' },
+      status: { code: 'BIS', description: 'Billing Issued' },
+      lastUpdated: '2006-09-08T08:24:17',
+    },
+    {
+      id: 'RU-4070-Block-522B-224813682',
+      cutBlockId: '522B',
+      blockId: 522,
+      ruNumber: 4070,
+      client: { code: '00010006', description: 'TEST CLIENT' },
+      licenseNumber: 'A12346',
+      cuttingPermit: 'CP002',
+      timberMark: 'TM002',
+      multiMark: true,
+      secondaryEntry: false,
+      sampling: { code: 'S2', description: 'Sampling Two' },
+      district: { code: 'D2', description: 'District Two' },
+      status: { code: 'SUB', description: 'Submitted' },
+      lastUpdated: '2025-01-16T10:00:00',
+    },
+  ],
+  page: {
+    number: 0,
+    size: 10,
+    totalElements: 2,
+    totalPages: 1,
+  },
+};
+
+const altMockSearchResults2: PageableResponse<ReportingUnitSearchResultDto> = {
+  content: [
+    {
+      id: 'RU-4069-Block-631B-224813681',
+      cutBlockId: '631B',
+      blockId: 631,
+      ruNumber: 4069,
+      client: { code: '00010005', description: 'JACOB FEHR' },
+      licenseNumber: 'A12345',
+      cuttingPermit: 'CP001',
+      timberMark: 'TM001',
+      multiMark: false,
+      secondaryEntry: false,
+      sampling: { code: 'OCU', description: 'Ocular' },
+      district: { code: 'DCC', description: 'Cariboo-Chilcotin' },
+      status: { code: 'BIS', description: 'Billing Issued' },
+      lastUpdated: '2006-09-08T08:24:17',
+    },
+    {
+      id: 'RU-4070-Block-632B-224813682',
+      cutBlockId: '632B',
+      blockId: 632,
+      ruNumber: 4070,
+      client: { code: '00010006', description: 'TEST CLIENT' },
+      licenseNumber: 'A12346',
+      cuttingPermit: 'CP002',
+      timberMark: 'TM002',
+      multiMark: true,
+      secondaryEntry: false,
+      sampling: { code: 'S2', description: 'Sampling Two' },
+      district: { code: 'D2', description: 'District Two' },
+      status: { code: 'SUB', description: 'Submitted' },
+      lastUpdated: '2025-01-16T10:00:00',
+    },
+  ],
+  page: {
+    number: 0,
+    size: 10,
+    totalElements: 2,
+    totalPages: 1,
+  },
+};
+
 const mockEmptyResults: PageableResponse<ReportingUnitSearchResultDto> = {
   content: [],
   page: {
@@ -433,6 +519,81 @@ describe('WasteSearchTable', () => {
           expect.anything(),
           expect.objectContaining({ page: 0 }),
         );
+      });
+    });
+
+    it('resets to first page when a new search is requested', async () => {
+      const largeResults: PageableResponse<ReportingUnitSearchResultDto> = {
+        ...mockSearchResults,
+        page: {
+          number: 0,
+          size: 10,
+          totalElements: 50,
+          totalPages: 5,
+        },
+      };
+      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(largeResults);
+
+      await renderWithProps();
+
+      const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
+      setInputValue(keywordInput, 'BLOCK');
+
+      const searchButton = screen.getByTestId('search-button-most');
+      await userEvent.click(searchButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('411B')).toBeDefined();
+      });
+
+      const secondPageResults: PageableResponse<ReportingUnitSearchResultDto> = {
+        ...altMockSearchResults1,
+        page: {
+          number: 1,
+          size: 10,
+          totalElements: 50,
+          totalPages: 5,
+        },
+      };
+      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(secondPageResults);
+
+      // Find and click the next page button
+      const nextPageButton = screen.getByLabelText('Next page');
+      await userEvent.click(nextPageButton);
+
+      await waitFor(() => {
+        expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
+          expect.objectContaining({ mainSearchTerm: 'BLOCK' }),
+          expect.objectContaining({ page: 1, size: 10 }),
+        );
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('521B')).toBeDefined();
+      });
+
+      const fewResults: PageableResponse<ReportingUnitSearchResultDto> = {
+        ...altMockSearchResults2,
+      };
+      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(fewResults);
+
+      // Perform a new search
+      setInputValue(keywordInput, 'LESS');
+      await userEvent.click(searchButton);
+
+      await waitFor(() => {
+        expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
+          expect.objectContaining({ mainSearchTerm: 'LESS' }),
+          expect.objectContaining({ page: 0 }),
+        );
+      });
+
+      await waitFor(() => {
+        /*
+        Current page was properly reset to 0.
+        Otherwise the results from the new search (like '631B') would not be rendered on the screen.
+        */
+        expect(screen.getByText('631B')).toBeDefined();
       });
     });
   });
