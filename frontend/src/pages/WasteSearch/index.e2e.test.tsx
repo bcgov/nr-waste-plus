@@ -617,9 +617,9 @@ test.describe('Waste Search Page', () => {
       await expect(page.getByTestId('card-item-comment:')).toHaveText('Comment:-'); // comments
       await expect(page.getByText('No. of blocks in RU: 2')).toBeVisible(); // totalBlocks
 
-      // Verify no attachment link is present
-      const attachmentLinks = page.getByRole('link', { name: /Link/i });
-      await expect(attachmentLinks).toHaveCount(0);
+      // Verify no submission agreement link is present
+      const submissionAgreementLinks = page.getByRole('link', { name: /Submission agreement/i });
+      await expect(submissionAgreementLinks).toHaveCount(0);
     });
 
     test('displays empty content when blockId is null (no API call)', async ({ page }) => {
