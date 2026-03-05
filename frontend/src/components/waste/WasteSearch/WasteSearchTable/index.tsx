@@ -51,6 +51,11 @@ const WasteSearchTable: FC = () => {
     }
   };
 
+  const executeNewSearch = () => {
+    setCurrentPage(0);
+    executeSearch();
+  };
+
   const handlePageChange = ({ page, pageSize }: { page: number; pageSize: number }) => {
     setCurrentPage(Math.min(Math.max(page, 0), (data?.page.totalPages ?? 1) - 1)); // Adjust for zero-based index
     setPageSize(pageSize);
@@ -81,7 +86,7 @@ const WasteSearchTable: FC = () => {
   return (
     <>
       <Column lg={16} md={8} sm={4} className="search-filters">
-        <WasteSearchFilters value={filters} onChange={setFilters} onSearch={executeSearch} />
+        <WasteSearchFilters value={filters} onChange={setFilters} onSearch={executeNewSearch} />
       </Column>
 
       <Column lg={16} md={8} sm={4} className="search-table">
