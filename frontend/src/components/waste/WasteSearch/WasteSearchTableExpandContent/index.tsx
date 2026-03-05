@@ -209,8 +209,8 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
       </Column>
       <Column lg={2} md={4} sm={2}>
         <ReadonlyInput
-          label="Attachments"
-          id={`${rowId}-attachments`}
+          label="Submission agreement"
+          id={`${rowId}-submission-agreement`}
           isNumber={false}
           showSkeleton={isLoading}
         >

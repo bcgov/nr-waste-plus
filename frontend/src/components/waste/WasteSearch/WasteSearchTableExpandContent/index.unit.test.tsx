@@ -378,7 +378,7 @@ describe('WasteSearchTableExpandContent', () => {
       );
 
       await waitFor(() => {
-        const attachmentsEl = container.querySelector(`#${rowId}-attachments`);
+        const attachmentsEl = container.querySelector(`#${rowId}-submission-agreement`);
         expect(attachmentsEl).toBeDefined();
 
         // When blockId is not a finite number (e.g. '411B'), the component should render EmptyValueTag
@@ -439,7 +439,7 @@ describe('WasteSearchTableExpandContent', () => {
         expect(container.querySelector(`#${rowId}-multi-mark`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-net-area`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-submitter`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-attachments`)).toBeDefined();
+        expect(container.querySelector(`#${rowId}-submission-agreement`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-comment`)).toBeDefined();
       });
     });
