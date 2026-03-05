@@ -180,3 +180,4 @@ test-results/
 test-reports/
 **/__screenshots__/
 **/user.*.json
+**/screenshots/**.png

@@ -400,3 +400,4 @@ config/application-dev-*.yml
 temp/
 config/*.jks
 *.iml
+**/screenshots/**.png
