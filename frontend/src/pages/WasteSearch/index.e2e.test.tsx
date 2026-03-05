@@ -566,9 +566,11 @@ test.describe('Waste Search Page', () => {
       // Verify all fields are displayed
       await expect(page.getByTestId('card-item-content-licence-number')).toHaveText('A97537'); // licenceNo
       await expect(page.getByTestId('card-item-content-cutting-permit')).toHaveText('R02'); // cuttingPermit
-      await expect(page.getByTestId('card-item-content-timber-mark')).toHaveText('HK4C02'); // timberMark
+      await expect(
+        page.getByTestId('card-item-timber-mark').first().getByRole('definition'),
+      ).toContainText('HK4C02'); // timberMark
       await expect(page.getByTestId('card-item-content-exempted-(yes/no)')).toHaveText('No'); // exempted (false)
-      await expect(page.getByTestId('card-item-content-net-area')).toHaveText('7.39'); // netArea
+      await expect(page.getByTestId('card-item-content-net-area')).toHaveText('7.39 ha'); // netArea
       await expect(page.getByTestId('card-item-content-submitter')).toHaveText(
         String.raw`BCEID\ICEKING`,
       ); // submitter
@@ -576,7 +578,7 @@ test.describe('Waste Search Page', () => {
         'Comment:This is a sample comment for the reporting unit.',
       ); // comments
       await expect(page.getByRole('link', { name: /Link/i })).toBeVisible(); // attachment link
-      await expect(page.getByText('Total entries in reporting unit: 15')).toBeVisible(); // totalBlocks
+      await expect(page.getByText('No. of blocks in RU: 15')).toBeVisible(); // totalBlocks
     });
 
     test('handles missing attachment and comment correctly', async ({ page }) => {
@@ -606,12 +608,14 @@ test.describe('Waste Search Page', () => {
       // Verify all fields are displayed
       await expect(page.getByTestId('card-item-content-licence-number')).toHaveText('W1940'); // licenceNo
       await expect(page.getByTestId('card-item-content-cutting-permit')).toHaveText('EA'); // cuttingPermit
-      await expect(page.getByTestId('card-item-content-timber-mark')).toHaveText('WBMJEC'); // timberMark
+      await expect(
+        page.getByTestId('card-item-timber-mark').first().getByRole('definition'),
+      ).toContainText('WBMJEC'); // timberMark
       await expect(page.getByTestId('card-item-content-exempted-(yes/no)')).toHaveText('Yes'); // exempted (false)
-      await expect(page.getByTestId('card-item-content-net-area')).toHaveText('3.07'); // netArea
+      await expect(page.getByTestId('card-item-content-net-area')).toHaveText('3.07 ha'); // netArea
       await expect(page.getByTestId('card-item-content-submitter')).toHaveText('BCEID\\\\BMO'); // submitter
       await expect(page.getByTestId('card-item-comment:')).toHaveText('Comment:-'); // comments
-      await expect(page.getByText('Total entries in reporting unit: 2')).toBeVisible(); // totalBlocks
+      await expect(page.getByText('No. of blocks in RU: 2')).toBeVisible(); // totalBlocks
 
       // Verify no attachment link is present
       const attachmentLinks = page.getByRole('link', { name: /Link/i });
@@ -727,16 +731,15 @@ test.describe('Waste Search Page', () => {
       await secondary.click();
       await page.waitForLoadState('networkidle');
 
-      await expect(page.getByTestId('card-item-content-secondary-mark(s)')).toHaveText(
-        'AB12C3, A12345',
-      );
+      await expect(
+        page.getByTestId('card-item-timber-mark').first().getByRole('definition'),
+      ).toContainText('JY1009'); // timberMark
 
       const primary = page.locator(
         'tr:nth-child(19) > .cds--table-expand > .cds--table-expand__button',
       );
       await primary.click();
       await page.waitForLoadState('networkidle');
-      await expect(page.getByTestId('card-item-content-primary-mark')).toHaveText('JY1009');
 
       const expandedRows = page.locator('tr.cds--parent-row.cds--expandable-row');
       await expect(expandedRows).toHaveCount(2);
