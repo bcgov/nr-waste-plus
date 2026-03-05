@@ -577,7 +577,7 @@ test.describe('Waste Search Page', () => {
       await expect(page.getByTestId('card-item-comment:')).toHaveText(
         'Comment:This is a sample comment for the reporting unit.',
       ); // comments
-      await expect(page.getByRole('link', { name: /Link/i })).toBeVisible(); // attachment link
+      await expect(page.getByRole('link', { name: /Submission agreement/i })).toBeVisible(); // submission agreement link
       await expect(page.getByText('No. of blocks in RU: 15')).toBeVisible(); // totalBlocks
     });
 
