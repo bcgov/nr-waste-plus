@@ -47,6 +47,12 @@ export type ReportingUnitSearchParametersViewDto = Override<
   ReportingUnitSearchParametersViewSpecific
 >;
 
+export type SearchExpandedSecondaryDto = {
+  mark: string;
+  status: CodeDescriptionDto;
+  area: number;
+};
+
 export type ReportingUnitSearchExpandedDto = {
   id: number;
   licenseNo: string | null;
@@ -54,11 +60,13 @@ export type ReportingUnitSearchExpandedDto = {
   timberMark: string | null;
   exempted: boolean;
   multiMark: boolean;
-  secondaryTimberMarks: string | null;
-  primaryMark: string | null;
+  status: CodeDescriptionDto;
+  secondaryMarks: SearchExpandedSecondaryDto[];
   netArea: number;
+  markArea: number;
   submitter: string | null;
   attachment: CodeDescriptionDto;
   comments: string | null;
   totalBlocks: number;
+  totalChildren: number;
 };

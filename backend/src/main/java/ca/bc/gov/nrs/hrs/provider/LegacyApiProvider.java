@@ -288,13 +288,15 @@ public class LegacyApiProvider {
         null,
         false,
         false,
+        null,
+        List.of(),
+        0.0,
         0.0,
         null,
         null,
         null,
-        0,
-        null,
-        null
+        0L,
+        0L
     );
   }
 
