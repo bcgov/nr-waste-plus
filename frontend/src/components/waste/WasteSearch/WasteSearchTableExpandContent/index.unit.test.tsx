@@ -369,6 +369,33 @@ describe('WasteSearchTableExpandContent', () => {
       });
     });
 
+    it('renders empty value when blockId is not finite (no redirect link)', async () => {
+      const rowId = 'RU-4069-Block-411B-224813681';
+      const qc = new QueryClient({
+        defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
+      });
+
+      const { container } = await act(async () =>
+        render(
+          <QueryClientProvider client={qc}>
+            <WasteSearchTableExpandContent rowId={rowId} />
+          </QueryClientProvider>,
+        ),
+      );
+
+      await waitFor(() => {
+        const attachmentsEl = container.querySelector(`#${rowId}-attachments`);
+        expect(attachmentsEl).toBeDefined();
+
+        // When blockId is not a finite number (e.g. '411B'), the component should render EmptyValueTag
+        const linkInside = attachmentsEl?.querySelector('a');
+        const emptyValue = attachmentsEl?.querySelector('[data-testid="empty-value"]');
+
+        expect(linkInside).toBeFalsy();
+        expect(emptyValue).toBeTruthy();
+      });
+    });
+
     it('renders empty value when attachment code is empty', async () => {
       const dataNoAttachment: ReportingUnitSearchExpandedDto = {
         ...mockExpandedData,
