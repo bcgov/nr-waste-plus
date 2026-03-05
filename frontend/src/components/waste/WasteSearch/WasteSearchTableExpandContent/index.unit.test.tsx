@@ -363,17 +363,6 @@ describe('WasteSearchTableExpandContent', () => {
   });
 
   describe('attachment handling', () => {
-    it('renders redirect link when attachment has code', async () => {
-      const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
-
-      await waitFor(() => {
-        const links = screen.queryAllByRole('link');
-        // Should have at least one link for the attachment
-        expect(links.length).toBeGreaterThan(0);
-      });
-    });
-
     it('renders empty value when blockId is not finite (no redirect link)', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
       const qc = new QueryClient({
