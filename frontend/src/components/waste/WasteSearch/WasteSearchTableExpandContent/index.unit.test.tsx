@@ -378,12 +378,12 @@ describe('WasteSearchTableExpandContent', () => {
       );
 
       await waitFor(() => {
-        const attachmentsEl = container.querySelector(`#${rowId}-submission-agreement`);
-        expect(attachmentsEl).toBeDefined();
+        const submissionAgreementEl = container.querySelector(`#${rowId}-submission-agreement`);
+        expect(submissionAgreementEl).toBeDefined();
 
         // When blockId is not a finite number (e.g. '411B'), the component should render EmptyValueTag
-        const linkInside = attachmentsEl?.querySelector('a');
-        const emptyValue = attachmentsEl?.querySelector('[data-testid="empty-value"]');
+        const linkInside = submissionAgreementEl?.querySelector('a');
+        const emptyValue = submissionAgreementEl?.querySelector('[data-testid="empty-value"]');
 
         expect(linkInside).toBeFalsy();
         expect(emptyValue).toBeTruthy();
