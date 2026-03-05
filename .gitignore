@@ -375,3 +375,4 @@ pyrightconfig.json
 docker-compose.override.yml
 **/config/application-dev-*.yml
 **/config/application-dev-*.properties
+**/screenshots/**.png
