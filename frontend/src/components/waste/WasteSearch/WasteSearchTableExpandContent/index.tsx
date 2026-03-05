@@ -111,7 +111,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
       <Column lg={0} md={2} sm={1}>
         <ReadonlyInput
           label="Timber Mark"
-          id={`${rowId}-timber-mark`}
+          id={`${rowId}-timber-mark-expand`}
           isNumber={false}
           showSkeleton={isLoading}
         >
@@ -122,7 +122,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
       <Column lg={0} md={2} sm={1}>
         <ReadonlyInput
           label="Mark area"
-          id={`${rowId}-mark-area`}
+          id={`${rowId}-mark-area-expand`}
           isNumber={false}
           showSkeleton={isLoading}
         >
@@ -133,7 +133,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
       <Column lg={0} md={4} sm={2}>
         <ReadonlyInput
           label="Status"
-          id={`${rowId}-status`}
+          id={`${rowId}-status-expand`}
           isNumber={false}
           showSkeleton={isLoading}
         >
@@ -145,37 +145,42 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
         <>
           <Column lg={0} md={2} sm={1}>
             <ReadonlyInput
-              label="Secondary"
-              id={`${rowId}-secondary-marks`}
+              label="Secondary marks"
+              displayLabel={false}
+              id={`${rowId}-secondary-marks-expand`}
               isNumber={false}
               showSkeleton={isLoading}
             >
               {data.secondaryMarks.map((mark, index) => (
-                <p key={`${rowId}-secondary-mark-${index}`}>{mark.mark}</p>
+                <p key={`${rowId}-secondary-mark-expand-${index}`}>{mark.mark}</p>
               ))}
             </ReadonlyInput>
           </Column>
           <Column lg={0} md={2} sm={1}>
             <ReadonlyInput
-              label=""
-              id={`${rowId}-secondary-areas`}
+              label="Secondary Area"
+              displayLabel={false}
+              id={`${rowId}-secondary-areas-expand`}
               isNumber={false}
               showSkeleton={isLoading}
             >
               {data.secondaryMarks.map((mark, index) => (
-                <p key={`${rowId}-secondary-mark-area-${index}`}>{mark.area} ha</p>
+                <p key={`${rowId}-secondary-mark-area-expand-${index}`}>{mark.area} ha</p>
               ))}
             </ReadonlyInput>
           </Column>
           <Column lg={0} md={4} sm={2}>
             <ReadonlyInput
-              label=""
-              id={`${rowId}-secondary-statuses`}
+              label="Secondary Status"
+              displayLabel={false}
+              id={`${rowId}-secondary-statuses-expand`}
               isNumber={false}
               showSkeleton={isLoading}
             >
               {data.secondaryMarks.map((mark, index) => (
-                <p key={`${rowId}-secondary-mark-status-${index}`}>{mark.status.description}</p>
+                <p key={`${rowId}-secondary-mark-status-expand-${index}`}>
+                  {mark.status.description}
+                </p>
               ))}
             </ReadonlyInput>
           </Column>
@@ -228,7 +233,8 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           <Column lg={4} md={0} sm={0}></Column>
           <Column lg={2} md={0} sm={0}>
             <ReadonlyInput
-              label="Secondary"
+              label="Secondary marks"
+              displayLabel={false}
               id={`${rowId}-secondary-marks`}
               isNumber={false}
               showSkeleton={isLoading}
@@ -240,7 +246,8 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           </Column>
           <Column lg={1} md={0} sm={0}>
             <ReadonlyInput
-              label=""
+              label="Secondary Area"
+              displayLabel={false}
               id={`${rowId}-secondary-areas`}
               isNumber={false}
               showSkeleton={isLoading}
@@ -252,7 +259,8 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           </Column>
           <Column lg={2} md={0} sm={0}>
             <ReadonlyInput
-              label=""
+              label="Secondary Status"
+              displayLabel={false}
               id={`${rowId}-secondary-statuses`}
               isNumber={false}
               showSkeleton={isLoading}

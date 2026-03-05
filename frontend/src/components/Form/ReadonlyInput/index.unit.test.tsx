@@ -217,4 +217,92 @@ describe('ReadonlyInput', () => {
     expect(container.querySelector('[data-testid="card-item-complete-field"]')).toBeDefined();
     expect(screen.getByText('12345')).toBeDefined();
   });
+
+  describe('displayLabel prop', () => {
+    it('hides label text when displayLabel is false', () => {
+      render(
+        <ReadonlyInput label="Hidden Label" displayLabel={false}>
+          Content
+        </ReadonlyInput>,
+      );
+      expect(screen.queryByText('Hidden Label')).toBeNull();
+    });
+
+    it('keeps aria-label when displayLabel is false', () => {
+      const { container } = render(
+        <ReadonlyInput label="Hidden Label" displayLabel={false}>
+          Content
+        </ReadonlyInput>,
+      );
+      const dt = container.querySelector('dt[aria-label="Hidden Label"]');
+      expect(dt).toBeDefined();
+    });
+
+    it('still renders dt element when displayLabel is false', () => {
+      const { container } = render(
+        <ReadonlyInput label="Hidden Label" displayLabel={false}>
+          Content
+        </ReadonlyInput>,
+      );
+      expect(container.querySelector('dt')).toBeDefined();
+    });
+
+    it('displays content normally when displayLabel is false', () => {
+      render(
+        <ReadonlyInput label="Hidden Label" displayLabel={false}>
+          Test Content
+        </ReadonlyInput>,
+      );
+      expect(screen.getByText('Test Content')).toBeDefined();
+    });
+
+    it('works with placeholder when displayLabel is false', () => {
+      render(<ReadonlyInput label="Hidden Label" displayLabel={false} />);
+      expect(screen.getByText(PLACE_HOLDER)).toBeDefined();
+    });
+
+    it('works with tooltip when displayLabel is false', () => {
+      const { container } = render(
+        <ReadonlyInput label="Hidden Label" displayLabel={false} tooltipText="Info">
+          Content
+        </ReadonlyInput>,
+      );
+      expect(container.querySelector('[data-tooltip-trigger]')).toBeDefined();
+    });
+
+    it('works with all props when displayLabel is false', () => {
+      const { container } = render(
+        <ReadonlyInput
+          label="Hidden Field"
+          displayLabel={false}
+          id="hidden-field-id"
+          isNumber={true}
+        >
+          12345
+        </ReadonlyInput>,
+      );
+      expect(container.querySelector('#hidden-field-id')).toBeDefined();
+      expect(container.querySelector('dd.card-item-content-number')).toBeDefined();
+      expect(screen.getByText('12345')).toBeDefined();
+      expect(screen.queryByText('Hidden Field')).toBeNull();
+    });
+
+    it('displays label text when displayLabel is true (default)', () => {
+      render(
+        <ReadonlyInput label="Visible Label" displayLabel={true}>
+          Content
+        </ReadonlyInput>,
+      );
+      expect(screen.getByText('Visible Label')).toBeDefined();
+    });
+
+    it('displays label text when displayLabel is not specified', () => {
+      render(
+        <ReadonlyInput label="Default Label">
+          Content
+        </ReadonlyInput>,
+      );
+      expect(screen.getByText('Default Label')).toBeDefined();
+    });
+  });
 });
