@@ -117,7 +117,7 @@ describe('WasteSearchTableExpandContent', () => {
         expect(screen.getByText('Exempted (Yes/No)')).toBeDefined();
         expect(screen.getByText('Net area')).toBeDefined();
         expect(screen.getByText('Submitter')).toBeDefined();
-        expect(screen.getByText('Attachments')).toBeDefined();
+        expect(screen.getByText('Submission agreement')).toBeDefined();
         expect(screen.getByText('Comment:')).toBeDefined();
       });
     });
