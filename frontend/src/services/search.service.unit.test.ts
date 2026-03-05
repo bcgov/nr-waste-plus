@@ -156,12 +156,17 @@ describe('SearchService', () => {
         exempted: false,
         multiMark: true,
         netArea: 1000.5,
-        submitter: 'IDIR\\TESTUSER',
+        markArea: 1200,
+        submitter: String.raw`IDIR\TESTUSER`,
         attachment: { code: 'ATT01', description: 'Attachment Type 1' },
         comments: 'Test comments',
         totalBlocks: 5,
-        secondaryTimberMarks: null,
-        primaryMark: null,
+        totalChildren: 3,
+        status: { code: 'ACTIVE', description: 'Active' },
+        secondaryMarks: [
+          { mark: 'SM-001', status: { code: 'ACTIVE', description: 'Active' }, area: 500 },
+          { mark: 'SM-002', status: { code: 'INACTIVE', description: 'Inactive' }, area: 300 },
+        ],
       };
       (service as any).doRequest = vi.fn().mockResolvedValue(mockData);
 
@@ -188,12 +193,17 @@ describe('SearchService', () => {
         exempted: true,
         multiMark: false,
         netArea: 500,
+        markArea: 600,
         submitter: null,
         attachment: { code: 'ATT02', description: 'Attachment Type 2' },
         comments: null,
         totalBlocks: 1,
-        secondaryTimberMarks: null,
-        primaryMark: null,
+        totalChildren: 3,
+        status: { code: 'ACTIVE', description: 'Active' },
+        secondaryMarks: [
+          { mark: 'SM-001', status: { code: 'ACTIVE', description: 'Active' }, area: 500 },
+          { mark: 'SM-002', status: { code: 'INACTIVE', description: 'Inactive' }, area: 300 },
+        ],
       };
       (service as any).doRequest = vi.fn().mockResolvedValue(mockData);
 
@@ -217,12 +227,17 @@ describe('SearchService', () => {
         exempted: false,
         multiMark: false,
         netArea: 100,
+        markArea: 150,
         submitter: null,
         attachment: { code: 'ATT01', description: 'Attachment' },
         comments: null,
         totalBlocks: 1,
-        secondaryTimberMarks: null,
-        primaryMark: null,
+        totalChildren: 3,
+        status: { code: 'ACTIVE', description: 'Active' },
+        secondaryMarks: [
+          { mark: 'SM-001', status: { code: 'ACTIVE', description: 'Active' }, area: 500 },
+          { mark: 'SM-002', status: { code: 'INACTIVE', description: 'Inactive' }, area: 300 },
+        ],
       };
       (service as any).doRequest = vi.fn().mockResolvedValue(mockData);
 
