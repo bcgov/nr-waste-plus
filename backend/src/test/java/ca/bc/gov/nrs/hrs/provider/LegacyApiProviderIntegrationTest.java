@@ -170,19 +170,19 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
   private static Stream<Arguments> expandedDetailsArguments() {
     ReportingUnitSearchExpandedDto fullDto = new ReportingUnitSearchExpandedDto(
         201L, "LIC123", "CP01", "TMK456", true, false,
-        new CodeDescriptionDto("APP","Approved"), List.of(),12.5, 12.0, "submitter1", null, "Some comments", 3L,
+        new CodeDescriptionDto("APP", "Approved"), List.of(),12.5, 12.0, "submitter1", null, "Some comments", 3L,
         0L);
     ReportingUnitSearchExpandedDto emptyDto = new ReportingUnitSearchExpandedDto(
         202L, null, null, null, false, false,
-        new CodeDescriptionDto("APP","Approved"), List.of(),0.0, 0.0, null, null, null, 0L, 0L);
+        new CodeDescriptionDto("APP", "Approved"), List.of(),0.0, 0.0, null, null, null, 0L, 0L);
     ReportingUnitSearchExpandedDto fallbackDto = new ReportingUnitSearchExpandedDto(
         203L, null, null, null, false, false,
-        new CodeDescriptionDto("APP","Approved"), List.of(),0.0, 0.0, null, null, null,0L, 0L);
+        new CodeDescriptionDto("APP", "Approved"), List.of(),0.0, 0.0, null, null, null,0L, 0L);
     ReportingUnitSearchExpandedDto nullDto = new ReportingUnitSearchExpandedDto(null, null, null,
-        null, false, false, new CodeDescriptionDto("APP","Approved"), List.of(),
+        null, false, false, new CodeDescriptionDto("APP", "Approved"), List.of(),
         0.0, 0.0, null, null, null, 0L, 0L);
     ReportingUnitSearchExpandedDto negativeDto = new ReportingUnitSearchExpandedDto(-2L, null, null,
-        null, false, false, new CodeDescriptionDto("APP","Approved"), List.of(),
+        null, false, false, new CodeDescriptionDto("APP", "Approved"), List.of(),
         0.0, 0.0, null, null, null, 0L, 0L);
 
     return Stream.of(
