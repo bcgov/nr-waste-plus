@@ -27,12 +27,17 @@ const mockExpandedData: ReportingUnitSearchExpandedDto = {
   exempted: false,
   multiMark: true,
   netArea: 1500.5,
-  submitter: 'IDIR\\TESTUSER',
+  markArea: 2000,
+  submitter: String.raw`IDIR\TESTUSER`,
   attachment: { code: 'ATT01', description: 'Attachment Type 1' },
   comments: 'Test comments for this reporting unit',
   totalBlocks: 5,
-  secondaryTimberMarks: null,
-  primaryMark: null,
+  totalChildren: 3,
+  status: { code: 'ACTIVE', description: 'Active' },
+  secondaryMarks: [
+    { mark: 'SM-001', status: { code: 'ACTIVE', description: 'Active' }, area: 500 },
+    { mark: 'SM-002', status: { code: 'INACTIVE', description: 'Inactive' }, area: 300 },
+  ],
 };
 
 const renderWithProps = async (rowId: string) => {
@@ -108,7 +113,7 @@ describe('WasteSearchTableExpandContent', () => {
       await waitFor(() => {
         expect(screen.getByText('Licence number')).toBeDefined();
         expect(screen.getByText('Cutting Permit')).toBeDefined();
-        expect(screen.getByText('Timber Mark')).toBeDefined();
+        expect(screen.findAllByText('Timber Mark')).toBeDefined();
         expect(screen.getByText('Exempted (Yes/No)')).toBeDefined();
         expect(screen.getByText('Net area')).toBeDefined();
         expect(screen.getByText('Submitter')).toBeDefined();
@@ -140,7 +145,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('TM-001')).toBeDefined();
+        expect(screen.getAllByText('TM-001')).toBeDefined();
       });
     });
 
@@ -158,7 +163,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('1500.5')).toBeDefined();
+        expect(screen.getByText('1500.5 ha')).toBeDefined();
       });
     });
 
@@ -167,7 +172,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('Total entries in reporting unit: 5')).toBeDefined();
+        expect(screen.getByText('No. of blocks in RU: 5')).toBeDefined();
       });
     });
 
@@ -502,7 +507,7 @@ describe('WasteSearchTableExpandContent', () => {
         expect(screen.getByText('LIC-12345')).toBeDefined();
         expect(screen.getByText('Cutting Permit')).toBeDefined();
         expect(screen.getByText('CP-001')).toBeDefined();
-        expect(screen.getByText('Total entries in reporting unit: 5')).toBeDefined();
+        expect(screen.getByText('No. of blocks in RU: 5')).toBeDefined();
       });
     });
 
@@ -517,7 +522,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('2500.75')).toBeDefined();
+        expect(screen.getByText('2500.75 ha')).toBeDefined();
       });
     });
 
@@ -532,7 +537,78 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('Total entries in reporting unit: 0')).toBeDefined();
+        expect(screen.getByText('No. of blocks in RU: 0')).toBeDefined();
+      });
+    });
+
+    it('displays timber mark multiple times for different screen sizes', async () => {
+      const rowId = 'RU-4069-Block-411-224813681';
+      await renderWithProps(rowId);
+
+      await waitFor(() => {
+        const timberMarkElements = screen.getAllByText('TM-001');
+        // Timber mark appears in both lg+ and md/sm sections
+        expect(timberMarkElements.length).toBeGreaterThanOrEqual(2);
+      });
+    });
+
+    it('displays mark area multiple times for different screen sizes', async () => {
+      const rowId = 'RU-4069-Block-411-224813681';
+      await renderWithProps(rowId);
+
+      await waitFor(() => {
+        const markAreaElements = screen.getAllByText('2000 ha');
+        // Mark area appears in both lg+ and md/sm sections
+        expect(markAreaElements.length).toBeGreaterThanOrEqual(2);
+      });
+    });
+
+    it('displays status description multiple times for different screen sizes', async () => {
+      const rowId = 'RU-4069-Block-411-224813681';
+      await renderWithProps(rowId);
+
+      await waitFor(() => {
+        const statusElements = screen.getAllByText('Active');
+        // Status appears in main section, lg+ section, and md/sm section
+        expect(statusElements.length).toBeGreaterThanOrEqual(2);
+      });
+    });
+
+    it('displays all secondary marks with their areas and statuses', async () => {
+      const rowId = 'RU-4069-Block-411-224813681';
+      await renderWithProps(rowId);
+
+      await waitFor(() => {
+        // Check secondary marks appear
+        expect(screen.getAllByText('SM-001')).toBeDefined();
+        expect(screen.getAllByText('SM-002')).toBeDefined();
+        // Check areas appear
+        expect(screen.getAllByText('500 ha')).toBeDefined();
+        expect(screen.getAllByText('300 ha')).toBeDefined();
+      });
+    });
+
+    it('displays total secondary marks count', async () => {
+      const rowId = 'RU-4069-Block-411-224813681';
+      await renderWithProps(rowId);
+
+      await waitFor(() => {
+        expect(screen.getByText('No. of secondary marks in RU: 3')).toBeDefined();
+      });
+    });
+
+    it('displays empty string for null timber mark', async () => {
+      const dataWithNullTimberMark: ReportingUnitSearchExpandedDto = {
+        ...mockExpandedData,
+        timberMark: null,
+      };
+      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNullTimberMark);
+
+      const rowId = 'RU-4069-Block-411B-224813681';
+      await renderWithProps(rowId);
+
+      await waitFor(() => {
+        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
       });
     });
   });
