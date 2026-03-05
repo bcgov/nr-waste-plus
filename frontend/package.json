@@ -87,6 +87,7 @@
   },
   "overrides": {
     "fast-xml-parser": "^5.3.6",
+    "immutable": "^5.1.5",
     "workbox-build": {
       "glob": "^13.0.0"
     },
