@@ -365,20 +365,10 @@ describe('WasteSearchTableExpandContent', () => {
   describe('attachment handling', () => {
     it('renders link when blockId is finite', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
-      const qc = new QueryClient({
-        defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
-      });
-
-      const { container } = await act(async () =>
-        render(
-          <QueryClientProvider client={qc}>
-            <WasteSearchTableExpandContent rowId={rowId} />
-          </QueryClientProvider>,
-        ),
-      );
+      await renderWithProps(rowId);
 
       await waitFor(() => {
-        const agreementsCommentsEl = container.querySelector(`#${rowId}-attachments-comments`);
+        const agreementsCommentsEl = document.querySelector(`#${rowId}-attachments-comments`);
         expect(agreementsCommentsEl).toBeDefined();
 
         // When blockId is finite, the component should render the link

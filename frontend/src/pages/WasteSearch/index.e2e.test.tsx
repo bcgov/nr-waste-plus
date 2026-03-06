@@ -617,7 +617,7 @@ test.describe('Waste Search Page', () => {
       await expect(page.getByTestId('card-item-comment:')).toHaveText('Comment:-'); // comments
       await expect(page.getByText('No. of blocks in RU: 2')).toBeVisible(); // totalBlocks
 
-      // Verify no attachments and comments link is present
+      // Verify attachments and comments link is present
       const attachmentsCommentsLinks = page.getByRole('link', {
         name: /Link/i,
       });
