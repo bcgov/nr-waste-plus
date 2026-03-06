@@ -117,7 +117,7 @@ describe('WasteSearchTableExpandContent', () => {
         expect(screen.getByText('Exempted (Yes/No)')).toBeDefined();
         expect(screen.getByText('Net area')).toBeDefined();
         expect(screen.getByText('Submitter')).toBeDefined();
-        expect(screen.getByText('Attachments')).toBeDefined();
+        expect(screen.getByText('Submission agreement')).toBeDefined();
         expect(screen.getByText('Comment:')).toBeDefined();
       });
     });
@@ -363,14 +363,30 @@ describe('WasteSearchTableExpandContent', () => {
   });
 
   describe('attachment handling', () => {
-    it('renders redirect link when attachment has code', async () => {
+    it('renders empty value when blockId is not finite (no redirect link)', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      const qc = new QueryClient({
+        defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
+      });
+
+      const { container } = await act(async () =>
+        render(
+          <QueryClientProvider client={qc}>
+            <WasteSearchTableExpandContent rowId={rowId} />
+          </QueryClientProvider>,
+        ),
+      );
 
       await waitFor(() => {
-        const links = screen.queryAllByRole('link');
-        // Should have at least one link for the attachment
-        expect(links.length).toBeGreaterThan(0);
+        const submissionAgreementEl = container.querySelector(`#${rowId}-submission-agreement`);
+        expect(submissionAgreementEl).toBeDefined();
+
+        // When blockId is not a finite number (e.g. '411B'), the component should render EmptyValueTag
+        const linkInside = submissionAgreementEl?.querySelector('a');
+        const emptyValue = submissionAgreementEl?.querySelector('[data-testid="empty-value"]');
+
+        expect(linkInside).toBeFalsy();
+        expect(emptyValue).toBeTruthy();
       });
     });
 
@@ -423,7 +439,7 @@ describe('WasteSearchTableExpandContent', () => {
         expect(container.querySelector(`#${rowId}-multi-mark`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-net-area`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-submitter`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-attachments`)).toBeDefined();
+        expect(container.querySelector(`#${rowId}-submission-agreement`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-comment`)).toBeDefined();
       });
     });
