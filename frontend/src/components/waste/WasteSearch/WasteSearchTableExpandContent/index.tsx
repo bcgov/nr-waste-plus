@@ -209,15 +209,15 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
       </Column>
       <Column lg={2} md={4} sm={2}>
         <ReadonlyInput
-          label="Submission agreement"
-          id={`${rowId}-submission-agreement`}
+          label="Attachments and comments"
+          id={`${rowId}-attachments-comments`}
           isNumber={false}
           showSkeleton={isLoading}
         >
           {Number.isFinite(blockId as number) && data?.attachment?.code ? (
             <DefinitionTooltip definition={'Go to Waste 303 page'} align="bottom" openOnHover>
               <RedirectLinkTag
-                text="Submission agreement"
+                text="Link"
                 url={`${env.VITE_LEGACY_BASE_URL}/waste303SubmissionAgreementAction.do?readOnlyMode=Y&dataBean.p_waste_assessment_area_id=${blockId}`}
               />
             </DefinitionTooltip>

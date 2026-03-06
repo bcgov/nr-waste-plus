@@ -117,7 +117,7 @@ describe('WasteSearchTableExpandContent', () => {
         expect(screen.getByText('Exempted (Yes/No)')).toBeDefined();
         expect(screen.getByText('Net area')).toBeDefined();
         expect(screen.getByText('Submitter')).toBeDefined();
-        expect(screen.getByText('Submission agreement')).toBeDefined();
+        expect(screen.getByText('Attachments and comments')).toBeDefined();
         expect(screen.getByText('Comment:')).toBeDefined();
       });
     });
@@ -378,12 +378,12 @@ describe('WasteSearchTableExpandContent', () => {
       );
 
       await waitFor(() => {
-        const submissionAgreementEl = container.querySelector(`#${rowId}-submission-agreement`);
-        expect(submissionAgreementEl).toBeDefined();
+        const agreementsCommentsEl = container.querySelector(`#${rowId}-attachments-comments`);
+        expect(agreementsCommentsEl).toBeDefined();
 
         // When blockId is not a finite number (e.g. '411B'), the component should render EmptyValueTag
-        const linkInside = submissionAgreementEl?.querySelector('a');
-        const emptyValue = submissionAgreementEl?.querySelector('[data-testid="empty-value"]');
+        const linkInside = agreementsCommentsEl?.querySelector('a');
+        const emptyValue = agreementsCommentsEl?.querySelector('[data-testid="empty-value"]');
 
         expect(linkInside).toBeFalsy();
         expect(emptyValue).toBeTruthy();
@@ -439,7 +439,7 @@ describe('WasteSearchTableExpandContent', () => {
         expect(container.querySelector(`#${rowId}-multi-mark`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-net-area`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-submitter`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-submission-agreement`)).toBeDefined();
+        expect(container.querySelector(`#${rowId}-attachments-comments`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-comment`)).toBeDefined();
       });
     });
