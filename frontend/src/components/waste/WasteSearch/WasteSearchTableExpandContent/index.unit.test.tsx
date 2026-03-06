@@ -363,6 +363,20 @@ describe('WasteSearchTableExpandContent', () => {
   });
 
   describe('attachment handling', () => {
+    it('renders link when blockId is finite', async () => {
+      const rowId = 'RU-4069-Block-411-224813681';
+      await renderWithProps(rowId);
+
+      await waitFor(() => {
+        const agreementsCommentsEl = document.querySelector(`#${rowId}-attachments-comments`);
+        expect(agreementsCommentsEl).toBeDefined();
+
+        // When blockId is finite, the component should render the link
+        const linkInside = agreementsCommentsEl?.querySelector('a');
+        expect(linkInside).toBeTruthy();
+      });
+    });
+
     it('renders empty value when blockId is not finite (no redirect link)', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
       const qc = new QueryClient({
