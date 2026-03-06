@@ -621,7 +621,7 @@ test.describe('Waste Search Page', () => {
       const attachmentsCommentsLinks = page.getByRole('link', {
         name: /Link/i,
       });
-      await expect(attachmentsCommentsLinks).toHaveCount(0);
+      await expect(attachmentsCommentsLinks).toHaveCount(1);
     });
 
     test('displays empty content when blockId is null (no API call)', async ({ page }) => {

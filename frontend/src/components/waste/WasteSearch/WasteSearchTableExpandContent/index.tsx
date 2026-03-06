@@ -214,7 +214,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           isNumber={false}
           showSkeleton={isLoading}
         >
-          {Number.isFinite(blockId as number) && data?.attachment?.code ? (
+          {Number.isFinite(blockId as number) ? (
             <DefinitionTooltip definition={'Go to Waste 303 page'} align="bottom" openOnHover>
               <RedirectLinkTag
                 text="Link"
