@@ -83,10 +83,10 @@ public class SearchController {
   }
 
   /**
-   * Retrieve an expanded search entry for a specific reporting unit and block.
+   * Retrieve an expanded search entry for a specific reporting unit and waste assessment area.
    *
-   * <p>This endpoint fetches detailed information about a reporting unit block, including all
-   * related expanded data for the search view. If the reporting unit or block combination is not
+   * <p>This endpoint fetches detailed information about a reporting unit and waste assessment area, including all
+   * related expanded data for the search view. If the reporting unit or waste assessment area combination is not
    * found, a {@link WasteAssessmentAreaNotFound} exception is thrown.</p>
    *
    * @param jwt             the authenticated JWT principal
