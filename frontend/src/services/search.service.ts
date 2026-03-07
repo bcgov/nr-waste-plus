@@ -31,11 +31,11 @@ export class SearchService extends HttpClient {
 
   getReportingUnitSearchExpand(
     ruId: number,
-    blockId: number,
+    wasteAssessmentAreaId: number,
   ): CancelablePromise<ReportingUnitSearchExpandedDto> {
     return this.doRequest<ReportingUnitSearchExpandedDto>(this.config, {
       method: 'GET',
-      url: `/api/search/reporting-units/ex/${ruId}/${blockId}`,
+      url: `/api/search/reporting-units/ex/${ruId}/${wasteAssessmentAreaId}`,
       middleware: [problemDetailsMiddleware()],
     });
   }

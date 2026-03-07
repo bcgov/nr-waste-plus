@@ -167,19 +167,19 @@ public class LegacyApiProvider {
    * Retrieve expanded search details for a specific reporting unit and block from the legacy API.
    *
    * @param ruId    the reporting unit ID
-   * @param blockId the block ID
+   * @param wasteAssessmentAreaId the waste assessment area ID
    * @return a {@link ReportingUnitSearchExpandedDto} with expanded details
    */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackSearchExpand")
   @NewSpan
-  public ReportingUnitSearchExpandedDto getSearchExpanded(Long ruId, Long blockId) {
+  public ReportingUnitSearchExpandedDto getSearchExpanded(Long ruId, Long wasteAssessmentAreaId) {
     return restClient
         .get()
         .uri(uriBuilder -> uriBuilder
-            .path("/api/search/reporting-units/ex/{reportingUnitId}/{blockId}")
+            .path("/api/search/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}")
             .build(Map.of(
                     "reportingUnitId", ruId,
-                    "blockId", blockId
+                    "wasteAssessmentAreaId", wasteAssessmentAreaId
                 )
             )
         )
@@ -277,12 +277,12 @@ public class LegacyApiProvider {
     );
   }
 
-  private ReportingUnitSearchExpandedDto fallbackSearchExpand(Long ruId, Long blockId,
+  private ReportingUnitSearchExpandedDto fallbackSearchExpand(Long ruId, Long wasteAssessmentAreaId,
       Throwable throwable) {
     logFallbackError(throwable);
-    log.error("Returning empty expanded search result for RU: {}, Block: {}", ruId, blockId);
+    log.error("Returning empty expanded search result for RU: {}, Block: {}", ruId, wasteAssessmentAreaId);
     return new ReportingUnitSearchExpandedDto(
-        blockId,
+        wasteAssessmentAreaId,
         null,
         null,
         null,

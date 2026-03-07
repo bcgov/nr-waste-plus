@@ -91,23 +91,23 @@ public class SearchController {
    *
    * @param jwt             the authenticated JWT principal
    * @param reportingUnitId the ID of the reporting unit
-   * @param blockId         the ID of the block within the reporting unit
+   * @param wasteAssessmentAreaId         the ID of the block within the reporting unit
    * @return an expanded {@link ReportingUnitSearchExpandedDto} containing detailed search data
    * @throws BlockNotFound if the reporting unit and block combination is not found
    */
-  @GetMapping("/reporting-units/ex/{reportingUnitId}/{blockId}")
+  @GetMapping("/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}")
   public ReportingUnitSearchExpandedDto getSearchExpandedEntry(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable Long reportingUnitId,
-      @PathVariable Long blockId
+      @PathVariable Long wasteAssessmentAreaId
   ) {
     log.info("Fetching expanded search entry for reporting unit ID: {} for: {}",
         reportingUnitId, JwtPrincipalUtil.getUserId(jwt)
     );
 
     return ruSearchService
-        .getReportingUnitBlockExpanded(reportingUnitId, blockId)
-        .orElseThrow(() -> new BlockNotFound(reportingUnitId, blockId));
+        .getReportingUnitBlockExpanded(reportingUnitId, wasteAssessmentAreaId)
+        .orElseThrow(() -> new BlockNotFound(reportingUnitId, wasteAssessmentAreaId));
   }
 
   /**

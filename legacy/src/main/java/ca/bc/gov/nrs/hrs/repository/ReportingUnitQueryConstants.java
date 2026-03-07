@@ -17,7 +17,7 @@ public final class ReportingUnitQueryConstants {
   private static final String SEARCH_REPORTING_UNIT_SELECT = """
       SELECT
       wru.REPORTING_UNIT_ID AS ru_number,
-      waa.WASTE_ASSESSMENT_AREA_ID AS block_id,
+      waa.WASTE_ASSESSMENT_AREA_ID AS waste_assessment_area_id,
       COALESCE(waa.CUT_BLOCK_ID, waa.DRAFT_CUT_BLOCK_ID) AS cut_block_id,
       wru.CLIENT_NUMBER AS client_number,
       waa.FOREST_FILE_ID AS license_number,
@@ -153,20 +153,20 @@ public final class ReportingUnitQueryConstants {
         waa.REPORTING_UNIT_ID AS RU_ID
       FROM WASTE_ASSESSMENT_AREA waa
       WHERE waa.REPORTING_UNIT_ID = :reportingUnit
-            AND waa.PARENT_WAA_ID = :blockId
+            AND waa.PARENT_WAA_ID = :wasteAssessmentAreaId
       GROUP BY waa.REPORTING_UNIT_ID
       """;
 
   private static final String GET_BLOCK_COMMENT_LATEST = """
       SELECT
         aud.waste_assessment_area_audit_id AS audit_id,
-        aud.waste_assessment_area_id AS block_id,
+        aud.waste_assessment_area_id AS waste_assessment_area_id,
         aud.WASTE_COMMENT
       FROM waste_assess_area_sts_audit aud
       LEFT JOIN waste_assessment_area wa
         ON wa.waste_assessment_area_id = aud.waste_assessment_area_id
       WHERE aud.update_userid != 'WAA_COMMENT_CONVERSION'
-        AND aud.waste_assessment_area_id = :blockId
+        AND aud.waste_assessment_area_id = :wasteAssessmentAreaId
       ORDER BY aud.ENTRY_TIMESTAMP DESC
       FETCH FIRST 1 ROW ONLY
       """;
@@ -174,10 +174,10 @@ public final class ReportingUnitQueryConstants {
   private static final String GET_BLOCK_ATTACHMENT_LATEST = """
       SELECT
         wasm.WASTE_ASSESSMENT_SURVEY_MAP_ID AS attachment_id,
-        wasm.WASTE_ASSESSMENT_AREA_ID AS block_id,
+        wasm.WASTE_ASSESSMENT_AREA_ID AS waste_assessment_area_id,
         wasm.SURVEY_MAP_DOCUMENT_NAME AS attachment_name
       FROM WASTE_ASSESSMENT_SURVEY_MAP wasm
-      WHERE wasm.WASTE_ASSESSMENT_AREA_ID = :blockId
+      WHERE wasm.WASTE_ASSESSMENT_AREA_ID = :wasteAssessmentAreaId
       ORDER BY wasm.ENTRY_TIMESTAMP DESC
       FETCH FIRST 1 ROW ONLY
       """;
@@ -203,7 +203,7 @@ public final class ReportingUnitQueryConstants {
             FROM WASTE_ASSESSMENT_AREA waa
             LEFT JOIN WASTE_ASSESS_AREA_STS_CODE waasc
             ON waasc.WASTE_ASSESS_AREA_STS_CODE = waa.WASTE_ASSESS_AREA_STS_CODE
-            WHERE waa.PARENT_WAA_ID = :blockId
+            WHERE waa.PARENT_WAA_ID = :wasteAssessmentAreaId
       )
       GROUP BY parent_id
       """;
@@ -234,13 +234,13 @@ public final class ReportingUnitQueryConstants {
       FROM WASTE_ASSESSMENT_AREA waa
       LEFT JOIN BlockCount bc ON bc.RU_ID = waa.REPORTING_UNIT_ID
       LEFT JOIN ChildCount cc ON cc.RU_ID = waa.REPORTING_UNIT_ID
-      LEFT JOIN CommentsAudit c ON c.block_id = waa.WASTE_ASSESSMENT_AREA_ID
-      LEFT JOIN AttachmentContent ac ON ac.block_id = waa.WASTE_ASSESSMENT_AREA_ID
+      LEFT JOIN CommentsAudit c ON c.waste_assessment_area_id = waa.WASTE_ASSESSMENT_AREA_ID
+      LEFT JOIN AttachmentContent ac ON ac.waste_assessment_area_id = waa.WASTE_ASSESSMENT_AREA_ID
       LEFT JOIN ChildValues cv ON cv.parent_id = waa.WASTE_ASSESSMENT_AREA_ID
       LEFT JOIN WASTE_ASSESS_AREA_STS_CODE waasc
         ON waasc.WASTE_ASSESS_AREA_STS_CODE = waa.WASTE_ASSESS_AREA_STS_CODE
       WHERE waa.REPORTING_UNIT_ID = :reportingUnit
-        AND waa.WASTE_ASSESSMENT_AREA_ID = :blockId
+        AND waa.WASTE_ASSESSMENT_AREA_ID = :wasteAssessmentAreaId
       """;
 
   public static final String GET_SEARCH_BLOCK_EXPANDED_CONTENT =
