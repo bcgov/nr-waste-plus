@@ -2,7 +2,7 @@
   "content": [
     {
       "id": "RU-400-Block-N/A-62371222",
-      "blockId": null,
+      "wasteAssessmentAreaId": null,
       "cutBlockId": null,
       "ruNumber": 400,
       "client": {

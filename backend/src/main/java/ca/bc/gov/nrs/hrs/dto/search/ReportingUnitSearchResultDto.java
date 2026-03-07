@@ -14,7 +14,7 @@ import lombok.With;
  * </p>
  *
  * @param id the unique identifier of the reporting unit
- * @param blockId the block identifier
+ * @param wasteAssessmentAreaId the block identifier (represents the wasteAssessmentAreaId)
  * @param ruNumber the numeric reporting unit number
  * @param client the client represented as a {@link CodeDescriptionDto}
  * @param sampling the sampling type represented as a {@link CodeDescriptionDto}
@@ -25,7 +25,7 @@ import lombok.With;
 @With
 public record ReportingUnitSearchResultDto(
     String id,
-    Long blockId,
+    Long wasteAssessmentAreaId,
     String cutBlockId,
     Long ruNumber,
     CodeDescriptionDto client,

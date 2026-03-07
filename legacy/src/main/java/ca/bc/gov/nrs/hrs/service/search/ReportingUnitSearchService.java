@@ -105,22 +105,22 @@ public class ReportingUnitSearchService {
    * instance.</p>
    *
    * @param reportingUnit the ID of the reporting unit
-   * @param blockId       the ID of the block to retrieve
+   * @param wasteAssessmentAreaId       the ID of the waste assessment area to retrieve
    * @return an Optional containing the {@link ReportingUnitSearchExpandedDto} if found, or empty if
    * the reporting unit or block does not exist
    */
   public Optional<ReportingUnitSearchExpandedDto> getReportingUnitBlockExpanded(
       Long reportingUnit,
-      Long blockId
+      Long wasteAssessmentAreaId
   ) {
 
-    log.info("Fetching expanded reporting unit block for RU: {}, Block: {}", reportingUnit,
-        blockId);
+    log.info("Fetching expanded reporting unit block for RU: {}, wasteAssessmentAreaId: {}",
+        reportingUnit, wasteAssessmentAreaId);
 
     return ruRepository
         .getSearchExpandedContent(
             reportingUnit,
-            blockId
+            wasteAssessmentAreaId
         )
         .map(expandedMapper::fromProjection);
   }

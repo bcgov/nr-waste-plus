@@ -81,7 +81,7 @@ public class SearchService {
                 String.format(
                     "RU-%d-Block-%s-%d",
                     entry.ruNumber(),
-                    Objects.toString(entry.blockId(), "N/A"),
+                    Objects.toString(entry.wasteAssessmentAreaId(), "N/A"),
                     entry.hashCode()
                 )
             )
@@ -93,15 +93,18 @@ public class SearchService {
    * Get expanded search details for a specific reporting unit and block.
    *
    * @param ruId the reporting unit id
-   * @param blockId the block id
+   * @param wasteAssessmentAreaId the waste assessment area ID
    * @return the expanded reporting unit search details
    */
   @NewSpan
   public ReportingUnitSearchExpandedDto getSearchExpanded(
-      Long ruId, Long blockId
+      Long ruId, Long wasteAssessmentAreaId
   ) {
-    log.info("Loading expanded search for ruId: {}, blockId: {}", ruId, blockId);
-    return legacyApiProvider.getSearchExpanded(ruId, blockId);
+    log.info(
+        "Loading expanded search for ruId: {}, wasteAssessmentAreaId: {}", 
+        ruId,
+        wasteAssessmentAreaId);
+    return legacyApiProvider.getSearchExpanded(ruId, wasteAssessmentAreaId);
   }
 
   /**

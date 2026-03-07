@@ -6,7 +6,7 @@ export type CodeDescriptionDto = {
 };
 
 export type ReportingUnitSearchResultDto = {
-  blockId: number | null;
+  wasteAssessmentAreaId: number | null;
   cutBlockId: string | null;
   ruNumber: number;
   client: CodeDescriptionDto;

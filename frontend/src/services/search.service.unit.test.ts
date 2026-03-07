@@ -33,7 +33,7 @@ describe('SearchService', () => {
         content: [
           {
             ruNumber: 1,
-            blockId: 1,
+            wasteAssessmentAreaId: 1,
             cutBlockId: 'CB-001',
             client: { code: 'CLI01', description: 'Client One' },
             licenseNumber: 'LIC-001',
@@ -145,9 +145,9 @@ describe('SearchService', () => {
   });
 
   describe('getReportingUnitSearchExpand', () => {
-    it('should call API with correct ruId and blockId parameters', async () => {
+    it('should call API with correct ruId and wasteAssessmentAreaId parameters', async () => {
       const ruId = 123;
-      const blockId = 456;
+      const wasteAssessmentAreaId = 456;
       const mockData: ReportingUnitSearchExpandedDto = {
         id: 123,
         licenseNo: 'LIC-001',
@@ -170,7 +170,7 @@ describe('SearchService', () => {
       };
       (service as any).doRequest = vi.fn().mockResolvedValue(mockData);
 
-      const result = await service.getReportingUnitSearchExpand(ruId, blockId);
+      const result = await service.getReportingUnitSearchExpand(ruId, wasteAssessmentAreaId);
 
       expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
         method: 'GET',
@@ -182,9 +182,9 @@ describe('SearchService', () => {
       expect(result.netArea).toBe(1000.5);
     });
 
-    it('should construct correct URL with different ruId and blockId values', async () => {
+    it('should construct correct URL with different ruId and wasteAssessmentAreaId values', async () => {
       const ruId = 999;
-      const blockId = 888;
+      const wasteAssessmentAreaId = 888;
       const mockData: ReportingUnitSearchExpandedDto = {
         id: 999,
         licenseNo: null,
@@ -207,7 +207,7 @@ describe('SearchService', () => {
       };
       (service as any).doRequest = vi.fn().mockResolvedValue(mockData);
 
-      await service.getReportingUnitSearchExpand(ruId, blockId);
+      await service.getReportingUnitSearchExpand(ruId, wasteAssessmentAreaId);
 
       expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
         method: 'GET',
@@ -218,7 +218,7 @@ describe('SearchService', () => {
 
     it('should handle expanded data with null optional fields', async () => {
       const ruId = 1;
-      const blockId = 1;
+      const wasteAssessmentAreaId = 1;
       const mockData: ReportingUnitSearchExpandedDto = {
         id: 1,
         licenseNo: null,
@@ -241,7 +241,7 @@ describe('SearchService', () => {
       };
       (service as any).doRequest = vi.fn().mockResolvedValue(mockData);
 
-      const result = await service.getReportingUnitSearchExpand(ruId, blockId);
+      const result = await service.getReportingUnitSearchExpand(ruId, wasteAssessmentAreaId);
 
       expect(result.licenseNo).toBeNull();
       expect(result.comments).toBeNull();

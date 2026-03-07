@@ -624,8 +624,10 @@ test.describe('Waste Search Page', () => {
       await expect(attachmentsCommentsLinks).toHaveCount(1);
     });
 
-    test('displays empty content when blockId is null (no API call)', async ({ page }) => {
-      // This search will return a row with blockId: null, so no expand API call will be made
+    test('displays empty content when wasteAssessmentAreaId is null (no API call)', async ({
+      page,
+    }) => {
+      // This search will return a row with wasteAssessmentAreaId: null, so no expand API call will be made
       await mockApiResponsesWithStub(
         page,
         'search/reporting-units?mainSearchTerm=noblock&size=10',
@@ -644,7 +646,7 @@ test.describe('Waste Search Page', () => {
       // Verify row is displayed
       await expect(page.getByText('NORTHERN TIMBER CO')).toBeVisible();
 
-      // Click the expand button for the row with null blockId
+      // Click the expand button for the row with null wasteAssessmentAreaId
       const expandButton = page.locator('button[aria-label*="Expand"]').first();
       await expandButton.click();
 
@@ -656,7 +658,7 @@ test.describe('Waste Search Page', () => {
 
       // Verify fields are empty/placeholder
       const dataFields = page.locator('[data-testid*="card-item-content"]');
-      // With null blockId, component won't fetch data, so fields should be in loading state or empty
+      // With null wasteAssessmentAreaId, component won't fetch data, so fields should be in loading state or empty
       expect(dataFields.first()).toBeDefined();
     });
 
