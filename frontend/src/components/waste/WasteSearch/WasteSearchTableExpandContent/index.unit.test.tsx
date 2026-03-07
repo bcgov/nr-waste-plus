@@ -420,7 +420,7 @@ describe('WasteSearchTableExpandContent', () => {
     });
 
     it('constructs correct attachment URL with wasteAssessmentAreaId', async () => {
-      const rowId = 'RU-4069-wasteAssessmentAreaId-411-224813681';
+      const rowId = 'RU-4069-Block-411-224813681';
       await renderWithProps(rowId);
 
       await waitFor(() => {
