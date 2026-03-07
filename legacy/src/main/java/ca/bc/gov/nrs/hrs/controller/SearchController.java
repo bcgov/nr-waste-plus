@@ -91,7 +91,7 @@ public class SearchController {
    *
    * @param jwt             the authenticated JWT principal
    * @param reportingUnitId the ID of the reporting unit
-   * @param wasteAssessmentAreaId         the ID of the block within the reporting unit
+   * @param wasteAssessmentAreaId         the ID of the waste assessment area within the reporting unit
    * @return an expanded {@link ReportingUnitSearchExpandedDto} containing detailed search data
    * @throws BlockNotFound if the reporting unit and block combination is not found
    */
