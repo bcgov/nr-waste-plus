@@ -364,7 +364,7 @@ describe('WasteSearchTableExpandContent', () => {
 
   describe('attachment handling', () => {
     it('renders link when wasteAssessmentAreaId is finite', async () => {
-      const rowId = 'RU-4069-wasteAssessmentAreaId-411-224813681';
+      const rowId = 'RU-4069-Block-411-224813681';
       await renderWithProps(rowId);
 
       await waitFor(() => {
@@ -378,7 +378,7 @@ describe('WasteSearchTableExpandContent', () => {
     });
 
     it('renders empty value when wasteAssessmentAreaId is not finite (no redirect link)', async () => {
-      const rowId = 'RU-4069-wasteAssessmentAreaId-411B-224813681';
+      const rowId = 'RU-4069-Block-411B-224813681';
       const qc = new QueryClient({
         defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
       });
