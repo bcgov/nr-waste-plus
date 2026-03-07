@@ -93,7 +93,7 @@ public class SearchService {
    * Get expanded search details for a specific reporting unit and block.
    *
    * @param ruId the reporting unit id
-   * @param wasteAssessmentAreaId the block id
+   * @param wasteAssessmentAreaId the waste assessment area ID
    * @return the expanded reporting unit search details
    */
   @NewSpan
