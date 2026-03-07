@@ -6,7 +6,7 @@ import ca.bc.gov.nrs.hrs.dto.search.ClientDistrictSearchResultDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
-import ca.bc.gov.nrs.hrs.exception.BlockNotFound;
+import ca.bc.gov.nrs.hrs.exception.WasteAssessmentAreaNotFound;
 import ca.bc.gov.nrs.hrs.service.search.AdvancedSearchService;
 import ca.bc.gov.nrs.hrs.service.search.ReportingUnitSearchService;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
@@ -87,13 +87,13 @@ public class SearchController {
    *
    * <p>This endpoint fetches detailed information about a reporting unit block, including all
    * related expanded data for the search view. If the reporting unit or block combination is not
-   * found, a {@link BlockNotFound} exception is thrown.</p>
+   * found, a {@link WasteAssessmentAreaNotFound} exception is thrown.</p>
    *
    * @param jwt             the authenticated JWT principal
    * @param reportingUnitId the ID of the reporting unit
    * @param wasteAssessmentAreaId         the ID of the waste assessment area within the reporting unit
    * @return an expanded {@link ReportingUnitSearchExpandedDto} containing detailed search data
-   * @throws BlockNotFound if the reporting unit and block combination is not found
+   * @throws WasteAssessmentAreaNotFound if the reporting unit and waste assessment area combination is not found
    */
   @GetMapping("/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}")
   public ReportingUnitSearchExpandedDto getSearchExpandedEntry(
@@ -107,7 +107,7 @@ public class SearchController {
 
     return ruSearchService
         .getReportingUnitBlockExpanded(reportingUnitId, wasteAssessmentAreaId)
-        .orElseThrow(() -> new BlockNotFound(reportingUnitId, wasteAssessmentAreaId));
+        .orElseThrow(() -> new WasteAssessmentAreaNotFound(reportingUnitId, wasteAssessmentAreaId));
   }
 
   /**

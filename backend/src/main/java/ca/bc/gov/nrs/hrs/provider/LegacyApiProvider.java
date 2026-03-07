@@ -164,7 +164,7 @@ public class LegacyApiProvider {
   }
 
   /**
-   * Retrieve expanded search details for a specific reporting unit and block from the legacy API.
+.   * Retrieve expanded search details for a specific reporting unit and waste assessment area from the legacy API.
    *
    * @param ruId    the reporting unit ID
    * @param wasteAssessmentAreaId the waste assessment area ID
@@ -280,7 +280,7 @@ public class LegacyApiProvider {
   private ReportingUnitSearchExpandedDto fallbackSearchExpand(Long ruId, Long wasteAssessmentAreaId,
       Throwable throwable) {
     logFallbackError(throwable);
-    log.error("Returning empty expanded search result for RU: {}, Block: {}", ruId, wasteAssessmentAreaId);
+    log.error("Returning empty expanded search result for RU: {}, Waste Assessment Area: {}", ruId, wasteAssessmentAreaId);
     return new ReportingUnitSearchExpandedDto(
         wasteAssessmentAreaId,
         null,
