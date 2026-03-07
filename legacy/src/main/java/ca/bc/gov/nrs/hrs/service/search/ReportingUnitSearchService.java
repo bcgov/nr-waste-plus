@@ -105,7 +105,7 @@ public class ReportingUnitSearchService {
    * instance.</p>
    *
    * @param reportingUnit the ID of the reporting unit
-   * @param wasteAssessmentAreaId       the ID of the waste assessment to retrieve
+   * @param wasteAssessmentAreaId       the ID of the waste assessment area to retrieve
    * @return an Optional containing the {@link ReportingUnitSearchExpandedDto} if found, or empty if
    * the reporting unit or block does not exist
    */
