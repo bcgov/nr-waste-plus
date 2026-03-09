@@ -95,6 +95,7 @@ public class HeadersSecurityCustomizer implements Customizer<HeadersConfigurer<H
         // Set the Referrer-Policy header.
         .referrerPolicy(referrerPolicySpec -> referrerPolicySpec.policy(
             ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+        
         // Set the Permissions-Policy header.
         .addHeaderWriter(new StaticHeadersWriter(
             "Permissions-Policy",
