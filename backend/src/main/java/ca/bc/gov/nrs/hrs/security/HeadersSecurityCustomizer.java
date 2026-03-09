@@ -13,6 +13,7 @@ import org.springframework.security.config.annotation.web.configurers.HeadersCon
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.XXssConfig;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 import org.springframework.stereotype.Component;
 
 /**
@@ -94,14 +95,13 @@ public class HeadersSecurityCustomizer implements Customizer<HeadersConfigurer<H
         // Set the Referrer-Policy header.
         .referrerPolicy(referrerPolicySpec -> referrerPolicySpec.policy(
             ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+        
         // Set the Permissions-Policy header.
-        .permissionsPolicyHeader(permissionsPolicySpec ->
-            permissionsPolicySpec.policy(
-                PERMISSIONS
-                    .stream()
-                    .map(permission -> String.format("%s=()", permission))
-                    .collect(Collectors.joining(", "))
-            )
-        );
+        .addHeaderWriter(new StaticHeadersWriter(
+            "Permissions-Policy",
+            PERMISSIONS.stream()
+                .map(permission -> String.format("%s=()", permission))
+                .collect(Collectors.joining(", "))
+        ));
   }
 }
