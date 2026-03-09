@@ -70,13 +70,13 @@ describe('SearchInput (browser)', () => {
     expect((input as HTMLInputElement).value).toBe('carbon');
   });
 
-  it('calls onChange on blur with the current value (without pressing Enter)', async () => {
+  it('does not call onChange again on blur when value has already been emitted', async () => {
     const { onChange } = setup();
     const input = screen.getByRole('searchbox', { name: 'Search...' });
     await userEvent.type(input, 'carbon');
     // Trigger blur explicitly; component onKeyDown handles Enter, but blur should work as well
     act(() => (input as HTMLInputElement).blur());
-    expect(onChange).toHaveBeenCalledTimes(7);
+    expect(onChange).toHaveBeenCalledTimes(6);
     expect(onChange).toHaveBeenCalledWith('carbon');
   });
 

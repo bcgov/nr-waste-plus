@@ -101,6 +101,32 @@ describe('useSyncFiltersToSearchParams', () => {
     expect(result.current.config).toEqual({ key: 'value' });
   });
 
+  it('hydrates numeric string as number when default type is number', () => {
+    mockSearchParams = new URLSearchParams({ count: '42' });
+
+    const { result } = renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ count: 0 });
+      useSyncFiltersToSearchParams(filters, setFilters);
+      return filters;
+    });
+
+    expect(result.current.count).toBe(42);
+    expect(typeof result.current.count).toBe('number');
+  });
+
+  it('keeps numeric-looking value as string when default type is string', () => {
+    mockSearchParams = new URLSearchParams({ search: '42' });
+
+    const { result } = renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ search: '' });
+      useSyncFiltersToSearchParams(filters, setFilters);
+      return filters;
+    });
+
+    expect(result.current.search).toBe('42');
+    expect(typeof result.current.search).toBe('string');
+  });
+
   it('does not call setFilters when URL has no search params', () => {
     mockSearchParams = new URLSearchParams();
     const setFiltersSpy = vi.fn();
@@ -200,6 +226,33 @@ describe('useSyncFiltersToSearchParams', () => {
     const lastCall = mockSetSearchParams.mock.calls.at(-1);
     const params = lastCall?.[0] as URLSearchParams;
     expect(params.get('count')).toBe('42');
+  });
+
+  it('preserves unrelated existing query params when syncing filters', () => {
+    mockSearchParams = new URLSearchParams({ tab: 'details' });
+
+    renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ search: 'test' });
+      useSyncFiltersToSearchParams(filters, setFilters);
+      return filters;
+    });
+
+    const lastCall = mockSetSearchParams.mock.calls.at(-1);
+    const params = lastCall?.[0] as URLSearchParams;
+    expect(params.get('tab')).toBe('details');
+    expect(params.get('search')).toBe('test');
+  });
+
+  it('does not call setSearchParams when computed params are unchanged', () => {
+    mockSearchParams = new URLSearchParams({ search: 'same' });
+
+    renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ search: 'same' });
+      useSyncFiltersToSearchParams(filters, setFilters);
+      return filters;
+    });
+
+    expect(mockSetSearchParams).not.toHaveBeenCalled();
   });
 
   it('uses replace: true when setting search params', () => {

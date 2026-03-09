@@ -9,7 +9,7 @@ import { useSearchParams } from 'react-router-dom';
  * they are automatically serialized into URL params, enabling:
  * - Persistent filter state across page reloads
  * - Shareable URLs with active filters pre-populated
- * - Browser back/forward navigation support
+ * - URL updates without creating additional history entries
  * - Scalable filter management without prop drilling
  *
  * @template T - The filter state object type
@@ -45,10 +45,16 @@ import { useSearchParams } from 'react-router-dom';
  * - Empty values are removed from URL unless includeEmpty is true
  *
  * Deserialization rules:
+ * - Values are deserialized using the current filter default type when available
  * - Values starting with '[' or '{' are parsed as JSON
- * - 'true'/'false' strings are converted to booleans
- * - Comma-separated values are split into arrays
+ * - Boolean defaults parse 'true'/'false' to booleans
+ * - Number defaults parse numeric strings to numbers
+ * - Array defaults parse to arrays (JSON array or comma-separated values)
  * - Other values remain as strings
+ *
+ * Notes:
+ * - Hydration runs only once on initial mount (does not re-hydrate on later URL changes)
+ * - URL updates use setSearchParams(..., { replace: true })
  */
 const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
   filters: T,
@@ -65,7 +71,7 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
   /**
    * Deserialize URL parameter values to appropriate types
    */
-  const deserializeValue = (value: string): unknown => {
+  const deserializeValue = (value: string, expectedValue?: unknown): unknown => {
     // Try JSON parsing first
     if (value.startsWith('[') || value.startsWith('{')) {
       try {
@@ -73,6 +79,27 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
       } catch {
         // Fall through if JSON parsing fails
       }
+    }
+
+    // If we know the expected type, prefer that over generic heuristics.
+    if (typeof expectedValue === 'boolean') {
+      if (value === 'true') return true;
+      if (value === 'false') return false;
+      return value;
+    }
+
+    if (typeof expectedValue === 'number') {
+      const parsed = Number(value);
+      if (!Number.isNaN(parsed) && value.trim() !== '') {
+        return parsed;
+      }
+      return value;
+    }
+
+    if (Array.isArray(expectedValue)) {
+      if (value === '') return [];
+      if (!value.includes(',')) return [value];
+      return value.split(',');
     }
 
     // Boolean strings
@@ -109,20 +136,29 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
     if (hasHydratedRef.current) return;
     hasHydratedRef.current = true;
 
-    const hydratedFilters: Partial<T> = {};
-    let hasChanges = false;
+    let hasHydrationParams = false;
 
-    searchParams.forEach((value, key) => {
-      if (excludeSet.has(key as keyof T)) return;
-
-      hasChanges = true;
-      hydratedFilters[key as keyof T] = deserializeValue(value) as T[keyof T];
+    searchParams.forEach((_value, key) => {
+      if (!excludeSet.has(key as keyof T)) {
+        hasHydrationParams = true;
+      }
     });
 
-    if (hasChanges) {
-      // Merge hydrated values with existing defaults
-      setFilters((prev) => ({ ...prev, ...hydratedFilters }));
-    }
+    if (!hasHydrationParams) return;
+
+    // Merge hydrated values with existing defaults and infer target types from existing filter values.
+    setFilters((prev) => {
+      const hydratedFilters: Partial<T> = {};
+
+      searchParams.forEach((value, key) => {
+        if (excludeSet.has(key as keyof T)) return;
+
+        const filterKey = key as keyof T;
+        hydratedFilters[filterKey] = deserializeValue(value, prev[filterKey]) as T[keyof T];
+      });
+
+      return { ...prev, ...hydratedFilters };
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -132,10 +168,14 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
   useEffect(() => {
     if (!hasHydratedRef.current) return;
 
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(searchParams);
+    const previousParamsString = params.toString();
 
     (Object.keys(filters) as (keyof T)[]).forEach((key) => {
       if (excludeSet.has(key)) return;
+
+      // Only manage keys owned by this filter object; keep unrelated query params intact.
+      params.delete(String(key));
 
       const value = filters[key];
 
@@ -155,8 +195,12 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
       params.set(String(key), serialized);
     });
 
+    if (params.toString() === previousParamsString) {
+      return;
+    }
+
     setSearchParams(params, { replace: true });
-  }, [filters, excludeSet, includeEmpty, setSearchParams]);
+  }, [filters, excludeSet, includeEmpty, searchParams, setSearchParams]);
 };
 
 export default useSyncFiltersToSearchParams;

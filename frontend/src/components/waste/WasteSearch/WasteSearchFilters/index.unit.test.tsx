@@ -168,4 +168,43 @@ describe('WasteSearchFilters', () => {
     await userEvent.click(screen.getByText('A - Sampling option: A'));
     await waitFor(() => expect(onChange).toHaveBeenCalled());
   });
+
+  it('syncs local filters when value prop changes', async () => {
+    const qc = new QueryClient();
+    const onChange = vi.fn();
+
+    const { rerender } = render(
+      <QueryClientProvider client={qc}>
+        <MemoryRouter>
+          <AuthProvider>
+            <PreferenceProvider>
+              <WasteSearchFilters value={defaultFilters} onChange={onChange} onSearch={vi.fn()} />
+            </PreferenceProvider>
+          </AuthProvider>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const hydratedValue = {
+      ...defaultFilters,
+      mainSearchTerm: 'hydrated-term',
+    };
+
+    rerender(
+      <QueryClientProvider client={qc}>
+        <MemoryRouter>
+          <AuthProvider>
+            <PreferenceProvider>
+              <WasteSearchFilters value={hydratedValue} onChange={onChange} onSearch={vi.fn()} />
+            </PreferenceProvider>
+          </AuthProvider>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      const searchBox = screen.getAllByPlaceholderText('Search by RU No. or Block ID')[0];
+      expect((searchBox as HTMLInputElement).value).toBe('hydrated-term');
+    });
+  });
 });

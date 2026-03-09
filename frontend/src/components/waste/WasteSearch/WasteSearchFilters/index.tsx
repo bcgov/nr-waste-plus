@@ -1,7 +1,14 @@
 import { Search as SearchIcon, FilterEdit as FilterIcon } from '@carbon/icons-react';
 import { Button, Column, Grid } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState, type ComponentProps, type FC } from 'react';
+import {
+  useCallback,
+  useState,
+  type ComponentProps,
+  type Dispatch,
+  type FC,
+  type SetStateAction,
+} from 'react';
 
 import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
 
@@ -23,8 +30,24 @@ type WasteSearchFiltersProps = {
 };
 
 const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSearch }) => {
-  const [filters, setFilters] = useState<ReportingUnitSearchParametersViewDto>(value);
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState<boolean>(false);
+  const filters = value;
+
+  const setFilters = useCallback<Dispatch<SetStateAction<ReportingUnitSearchParametersViewDto>>>(
+    (update) => {
+      const nextFilters =
+        typeof update === 'function'
+          ? (
+              update as (
+                prev: ReportingUnitSearchParametersViewDto,
+              ) => ReportingUnitSearchParametersViewDto
+            )(filters)
+          : update;
+
+      onChange(removeEmpty(nextFilters));
+    },
+    [filters, onChange],
+  );
 
   const { data: samplingOptions } = useQuery({
     queryKey: ['samplingOptions'],
@@ -91,10 +114,6 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
       }));
     }
   };
-
-  useEffect(() => {
-    onChange(removeEmpty(filters));
-  }, [filters, onChange]);
 
   useSyncPreferencesToFilters(
     setFilters,

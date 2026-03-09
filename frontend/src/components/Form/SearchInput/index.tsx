@@ -1,5 +1,5 @@
 import { Search } from '@carbon/react';
-import { type FC } from 'react';
+import { useEffect, useRef, type FC } from 'react';
 
 /**
  * Props for the SearchInput component.
@@ -34,6 +34,17 @@ const SearchInput: FC<SearchInputProps> = ({
   value,
   onSearch,
 }) => {
+  const lastEmittedValueRef = useRef(value);
+
+  useEffect(() => {
+    lastEmittedValueRef.current = value;
+  }, [value]);
+
+  const emitChange = (nextValue: string) => {
+    lastEmittedValueRef.current = nextValue;
+    onChange(nextValue);
+  };
+
   return (
     <Search
       aria-label={placeholder}
@@ -44,9 +55,14 @@ const SearchInput: FC<SearchInputProps> = ({
       labelText={label}
       closeButtonLabelText="Clear search input"
       id={id}
-      onClear={() => onChange('')}
-      onChange={(e) => onChange(e.currentTarget.value)}
-      onBlur={(e) => onChange(e.currentTarget.value)}
+      onClear={() => emitChange('')}
+      onChange={(e) => emitChange(e.currentTarget.value)}
+      onBlur={(e) => {
+        const nextValue = e.currentTarget.value;
+        if (nextValue !== lastEmittedValueRef.current) {
+          emitChange(nextValue);
+        }
+      }}
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
           e.currentTarget.blur();
