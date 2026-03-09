@@ -62,7 +62,7 @@ class UriUtilsTest {
 
   }
 
-  private static Stream<Arguments> buildMultiValueQueryParam(){
+  private static Stream<Arguments> buildMultiValueQueryParam() {
     return
         Stream.of(
             Arguments.argumentSet(

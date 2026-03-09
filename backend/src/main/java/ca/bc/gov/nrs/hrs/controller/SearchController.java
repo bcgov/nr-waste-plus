@@ -75,7 +75,7 @@ public class SearchController {
       Pageable pageable
   ) {
 
-    if(filters == null || filters.isEmpty()) {
+    if (filters == null || filters.isEmpty()) {
       return new PageImpl<>(List.of());
     }
 

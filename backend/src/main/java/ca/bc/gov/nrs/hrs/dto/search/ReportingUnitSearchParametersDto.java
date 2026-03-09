@@ -127,7 +127,7 @@ public class ReportingUnitSearchParametersDto {
     return toMultiMap(null);
   }
 
-  public boolean isEmpty(){
+  public boolean isEmpty() {
     return StringUtils.isBlank(mainSearchTerm)
         && CollectionUtils.isEmpty(district)
         && CollectionUtils.isEmpty(sampling)

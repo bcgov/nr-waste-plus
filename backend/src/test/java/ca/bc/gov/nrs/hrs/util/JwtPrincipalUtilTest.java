@@ -321,7 +321,7 @@ class JwtPrincipalUtilTest {
   @MethodSource("clients")
   @DisplayName("Parse client numbers")
   void shouldGetClients(Map<String, Object> claims, List<String> result) {
-    if(result.isEmpty()){
+    if (result.isEmpty()) {
       assertThat(
           JwtPrincipalUtil.getClientFromRoles(createJwtAuthenticationToken(claims))
       ).isEmpty();
@@ -426,7 +426,7 @@ class JwtPrincipalUtilTest {
         Arguments.of(null, Set.of()));
   }
 
-  private static Stream<Arguments> concreteRoles(){
+  private static Stream<Arguments> concreteRoles() {
     return
         Stream.of(
             Arguments.argumentSet(
@@ -481,7 +481,7 @@ class JwtPrincipalUtilTest {
         );
   }
 
-  private static Stream<Arguments> abstractRoles(){
+  private static Stream<Arguments> abstractRoles() {
     return
         Stream.of(
             Arguments.argumentSet(
@@ -554,7 +554,7 @@ class JwtPrincipalUtilTest {
         );
   }
 
-  private static Stream<Arguments> clients(){
+  private static Stream<Arguments> clients() {
     return
         Stream.of(
             Arguments.argumentSet(
