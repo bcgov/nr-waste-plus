@@ -15,6 +15,8 @@ const redirectSignOut = `${logoutDomain}/clp-cgi/logoff.cgi?retnow=1&returl=${re
 
 const verificationMethods: 'code' | 'token' = 'code';
 
+const backendUrl = env.VITE_BACKEND_URL;
+
 const amplifyconfig = {
   Auth: {
     Cognito: {
@@ -23,7 +25,10 @@ const amplifyconfig = {
       signUpVerificationMethod: verificationMethods,
       loginWith: {
         oauth: {
-          domain: env.VITE_FAM_DOMAIN,
+          domain:
+            ZONE === 'mock'
+              ? backendUrl.replace('http://', '').replace(':8080', ':8181')
+              : env.VITE_FAM_DOMAIN,
           scopes: ['openid'],
           redirectSignIn: [`${redirectUri}/dashboard`],
           redirectSignOut: [redirectSignOut],

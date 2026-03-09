@@ -76,10 +76,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [user, isLoading, login, userToken],
   );
 
-  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
-};
+  const loadUserToken = async (): Promise<JWT | undefined> => {
+    if (appEnv.toLowerCase() === 'mock') {
+      // This is for test only
+      const idToken = getUserTokenFromCookie();
+      const payload = idToken ? JSON.parse(atob(idToken.split('.')[1])) : null;
+      return payload ? { payload } : undefined;
+    } else {
+      const { idToken } = (await fetchAuthSession()).tokens ?? {};
+      return idToken;
+    }
+  };
 
-const loadUserToken = async (): Promise<JWT | undefined> => {
-  const { idToken } = (await fetchAuthSession()).tokens ?? {};
-  return idToken;
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };

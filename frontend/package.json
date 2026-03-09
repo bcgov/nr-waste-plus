@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint ./src --ext .ts,.tsx",
+    "stub:login": "wiremock --enable-stub-cors --global-response-templating --port 8180 --https-port 8181 --root-dir ./stub --verbose",
     "test:unit": "vitest run --coverage --allowOnly",
     "test:unit:watch": "vitest --allowOnly",
     "pretest:e2e": "playwright install-deps && playwright install",
@@ -37,7 +38,8 @@
     "luxon": "^3.7.2",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "react-router-dom": "^7.12.0"
+    "react-router-dom": "^7.12.0",
+    "wiremock": "^3.13.2"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",

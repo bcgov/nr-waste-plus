@@ -1,0 +1,50 @@
+{
+  "mappings": [
+    {
+      "name": "OAuth2 Authorize for IDIR",
+      "request": {
+        "urlPath": "/oauth2/authorize",
+        "method": "GET",
+        "queryParameters": {
+          "redirect_uri": {
+            "equalTo": "http://localhost:3000/dashboard"
+          },
+          "response_type": {
+            "equalTo": "code"
+          },
+          "client_id": {
+            "matches": "(.*)"
+          },
+          "identity_provider": {
+            "equalTo": "MOCK-IDIR"
+          },
+          "scope": {
+            "equalTo": "openid"
+          },
+          "state": {
+            "matches": "(.*)"
+          },
+          "code_challenge": {
+            "matches": "(.*)"
+          },
+          "code_challenge_method": {
+            "equalTo": "S256"
+          }
+        }
+      },
+      "response": {
+        "status": 302,
+        "transformers": [
+          "response-template"
+        ],
+        "headers": {
+          "Location": "http://{{request.host}}:3000/dashboard",
+          "Set-Cookie": [
+            "CognitoIdentityServiceProvider.24eecb7emheb8vkqqu5liun757.LastAuthUser=abc123; sameSite=Lax; path=/; Expires={{now offset='10 years' format='EEE, d MMM yyyy HH:mm:ss'}} GMT; domain={{request.host}}",            
+            "CognitoIdentityServiceProvider.24eecb7emheb8vkqqu5liun757.abc123.idToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2duaXRvOmdyb3VwcyI6WyJXQVNURV9QTFVTX0FETUlOIl0sInByZWZlcnJlZF91c2VybmFtZSI6ImI1ZWNkYjA5NGRmYjQxNDlhNmE4NDQ1YTAxYTk2YmYwQGlkaXIiLCJjdXN0b206aWRwX3VzZXJfaWQiOiJCNUVDREIwOTRERkI0MTQ5QTZBODQ0NUEwMUE5NkJGMCIsImN1c3RvbTppZHBfdXNlcm5hbWUiOiJKUllBTiIsImN1c3RvbTppZHBfZGlzcGxheV9uYW1lIjoiUnlhbiwgSmFjayBBZG1pbiBDSUE6SU4iLCJlbWFpbCI6ImphY2sucnlhbkBnb3YuYmMuY2EiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImN1c3RvbTppZHBfbmFtZSI6ImlkaXIifQ.hdx5vkjsCixRpEepjLh_tGEPRTml1zD4UeA0RjVMbu8; sameSite=Lax; path=/; Expires={{now offset='10 years' format='EEE, d MMM yyyy HH:mm:ss'}} GMT; domain={{request.host}}"
+          ]
+        }
+      }
+    }
+  ]
+}
