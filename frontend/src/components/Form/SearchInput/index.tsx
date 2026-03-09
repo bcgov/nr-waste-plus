@@ -1,5 +1,5 @@
 import { Search } from '@carbon/react';
-import { useEffect, useRef, type FC } from 'react';
+import { type FC } from 'react';
 
 /**
  * Props for the SearchInput component.
@@ -34,35 +34,6 @@ const SearchInput: FC<SearchInputProps> = ({
   value,
   onSearch,
 }) => {
-  const mousePosition = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const searchButtonRefs = useRef<HTMLButtonElement[]>([]);
-
-  // Track and update the mouse position globally
-  useEffect(() => {
-    const updateMousePosition = (e: MouseEvent) => {
-      mousePosition.current = { x: e.clientX, y: e.clientY };
-    };
-
-    document.addEventListener('mousemove', updateMousePosition);
-    return () => {
-      document.removeEventListener('mousemove', updateMousePosition);
-    };
-  }, []);
-
-  /**
-   * Returns `true` if the current mouse position is hovering
-   * over any of the visible Search buttons in the DOM.
-   */
-  const isMouseOverSearchButton = () => {
-    const { x, y } = mousePosition.current;
-
-    return searchButtonRefs.current.some((btn) => {
-      if (!btn?.offsetParent) return false; // skip hidden buttons
-      const rect = btn.getBoundingClientRect();
-      return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
-    });
-  };
-
   return (
     <Search
       aria-label={placeholder}

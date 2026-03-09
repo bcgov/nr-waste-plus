@@ -297,11 +297,7 @@ describe('ReadonlyInput', () => {
     });
 
     it('displays label text when displayLabel is not specified', () => {
-      render(
-        <ReadonlyInput label="Default Label">
-          Content
-        </ReadonlyInput>,
-      );
+      render(<ReadonlyInput label="Default Label">Content</ReadonlyInput>);
       expect(screen.getByText('Default Label')).toBeDefined();
     });
   });

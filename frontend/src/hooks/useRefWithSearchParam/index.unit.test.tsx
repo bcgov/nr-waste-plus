@@ -134,7 +134,7 @@ describe('useSyncFiltersToSearchParams', () => {
   // --- Syncing filters to URL ---
 
   it('syncs string filter to URL params', () => {
-    const { result, rerender } = renderHook(
+    renderHook(
       ({ filters }: { filters: Filters }) => {
         const [state, setState] = useState<Filters>(filters);
         useSyncFiltersToSearchParams(state, setState);

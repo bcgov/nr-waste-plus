@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };
 
-const loadUserToken = async (): Promise<JWT | undefined> => {  
+const loadUserToken = async (): Promise<JWT | undefined> => {
   const { idToken } = (await fetchAuthSession()).tokens ?? {};
   return idToken;
 };

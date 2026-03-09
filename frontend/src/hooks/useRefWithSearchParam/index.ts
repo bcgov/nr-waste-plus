@@ -121,7 +121,7 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
 
     if (hasChanges) {
       // Merge hydrated values with existing defaults
-      setFilters(prev => ({ ...prev, ...hydratedFilters }));
+      setFilters((prev) => ({ ...prev, ...hydratedFilters }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
