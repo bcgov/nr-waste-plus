@@ -1,0 +1,36 @@
+{
+  "mappings": [
+    {
+      "name": "Preferences IDIR user",
+      "request": {
+        "url": "/api/users/preferences",
+        "method": "GET",
+        "cookies": {
+          "CognitoIdentityServiceProvider.24eecb7emheb8vkqqu5liun757.LastAuthUser": {
+            "equalTo": "idirUser"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "users/preferences-GET-idir-1.json"
+      }
+    },
+    {
+      "name": "Preferences BCeID user",
+      "request": {
+        "url": "/api/users/preferences",
+        "method": "GET",
+        "cookies": {
+          "CognitoIdentityServiceProvider.24eecb7emheb8vkqqu5liun757.LastAuthUser": {
+            "equalTo": "bceidUser"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "users/preferences-GET-bceid-1.json"
+      }
+    }
+  ]
+}

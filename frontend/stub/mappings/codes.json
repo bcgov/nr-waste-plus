@@ -1,0 +1,37 @@
+{
+  "mappings": [
+    {
+      "name": "Assess area statuses",
+      "request": {
+        "url": "/api/codes/assess-area-statuses",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "codes/assess-area-statuses.json"
+      }
+    },
+    {
+      "name": "District Codes",
+      "request": {
+        "url": "/api/codes/districts",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "codes/districts.json"
+      }
+    },
+    {
+      "name": "Sampling Codes",
+      "request": {
+        "url": "/api/codes/samplings",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "codes/samplings.json"
+      }
+    }
+  ]
+}

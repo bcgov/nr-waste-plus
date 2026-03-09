@@ -1,0 +1,53 @@
+{
+  "mappings": [
+    {
+      "name": "Search by name, acronym or number",
+      "request": {
+        "urlPath": "/api/forest-clients/byNameAcronymNumber",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "forest-clients/byNameAcronymNumber-pg0.json"
+      }
+    },
+    {
+      "name": "Clients search all",
+      "request": {
+        "urlPath": "/api/forest-clients/clients",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "forest-clients/clients-pg0.json"
+      }
+    },
+    {
+      "name": "Clients search OAK",
+      "request": {
+        "urlPath": "/api/forest-clients/clients",
+        "method": "GET",
+        "queryParameters": {
+          "value": {
+            "matches": "(?i)OAK"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "forest-clients/clients-OAK-pg0.json"
+      }
+    },
+    {
+      "name": "Search by numbers",
+      "request": {
+        "urlPath": "/api/forest-clients/searchByNumbers",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "forest-clients/searchByNumbers-pg0.json"
+      }
+    }
+  ]
+}
