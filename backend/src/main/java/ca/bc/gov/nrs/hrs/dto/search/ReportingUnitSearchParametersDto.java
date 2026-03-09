@@ -126,4 +126,20 @@ public class ReportingUnitSearchParametersDto {
   public MultiValueMap<String, String> toMultiMap() {
     return toMultiMap(null);
   }
+
+  public boolean isEmpty(){
+    return StringUtils.isBlank(mainSearchTerm)
+        && CollectionUtils.isEmpty(district)
+        && CollectionUtils.isEmpty(sampling)
+        && CollectionUtils.isEmpty(status)
+        && !requestByMe
+        && !multiMark
+        && StringUtils.isBlank(requestUserId)
+        && updateDateStart == null
+        && updateDateEnd == null
+        && StringUtils.isBlank(licenseeId)
+        && StringUtils.isBlank(cuttingPermitId)
+        && StringUtils.isBlank(timberMark)
+        && CollectionUtils.isEmpty(clientNumbers);
+  }
 }

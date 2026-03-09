@@ -205,7 +205,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             ReportingUnitSearchParametersDto.builder().build(),
             PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE),
-            1L
+            0L
         ),
         Arguments.argumentSet(
             "Search with no results",
