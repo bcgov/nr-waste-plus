@@ -41,6 +41,18 @@ describe('useSyncFiltersToSearchParams', () => {
     expect(result.current.search).toBe('hello');
   });
 
+  it('hydrates values from URL when initial filters are empty object', () => {
+    mockSearchParams = new URLSearchParams({ search: 'hello' });
+
+    const { result } = renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({});
+      useSyncFiltersToSearchParams(filters, setFilters);
+      return filters;
+    });
+
+    expect(result.current.search).toBe('hello');
+  });
+
   it('hydrates comma-separated values as arrays from URL on mount', () => {
     mockSearchParams = new URLSearchParams({ status: 'open,closed' });
 
@@ -410,6 +422,28 @@ describe('useSyncFiltersToSearchParams', () => {
     const lastCall = mockSetSearchParams.mock.calls.at(-1);
     const params = lastCall?.[0] as URLSearchParams;
     expect(params.get('search')).toBe('second');
+  });
+
+  it('removes URL param when filter key is removed from state', () => {
+    mockSearchParams = new URLSearchParams({ search: 'first', tab: 'details' });
+
+    const { result } = renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ search: 'first' });
+      useSyncFiltersToSearchParams(filters, setFilters);
+      return { filters, setFilters };
+    });
+
+    mockSetSearchParams.mockClear();
+
+    act(() => {
+      result.current.setFilters({});
+    });
+
+    expect(mockSetSearchParams).toHaveBeenCalled();
+    const lastCall = mockSetSearchParams.mock.calls.at(-1);
+    const params = lastCall?.[0] as URLSearchParams;
+    expect(params.has('search')).toBe(false);
+    expect(params.get('tab')).toBe('details');
   });
 
   // --- Multiple filters ---

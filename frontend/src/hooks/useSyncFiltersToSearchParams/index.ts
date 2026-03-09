@@ -68,6 +68,7 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
   const excludeSet = useMemo(() => new Set(options?.exclude ?? []), [options?.exclude]);
   const includeEmpty = options?.includeEmpty ?? false;
   const hasHydratedRef = useRef(false);
+  const managedKeysRef = useRef<Set<string>>(new Set());
   /**
    * Deserialize URL parameter values to appropriate types
    */
@@ -135,11 +136,13 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
   useEffect(() => {
     if (hasHydratedRef.current) return;
     hasHydratedRef.current = true;
+    const allowUnknownKeysOnHydration = Object.keys(filters).length === 0;
 
     let hasHydrationParams = false;
 
     searchParams.forEach((_value, key) => {
-      if (!excludeSet.has(key as keyof T)) {
+      const isKnownFilterKey = Object.prototype.hasOwnProperty.call(filters, key);
+      if (!excludeSet.has(key as keyof T) && (isKnownFilterKey || allowUnknownKeysOnHydration)) {
         hasHydrationParams = true;
       }
     });
@@ -152,6 +155,9 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
 
       searchParams.forEach((value, key) => {
         if (excludeSet.has(key as keyof T)) return;
+        if (!allowUnknownKeysOnHydration && !Object.prototype.hasOwnProperty.call(prev, key)) {
+          return;
+        }
 
         const filterKey = key as keyof T;
         hydratedFilters[filterKey] = deserializeValue(value, prev[filterKey]) as T[keyof T];
@@ -171,11 +177,20 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
     const params = new URLSearchParams(searchParams);
     const previousParamsString = params.toString();
 
+    // Keep track of keys this hook has managed so removed filters are also cleaned from URL.
+    const managedKeys = new Set(managedKeysRef.current);
+    (Object.keys(filters) as (keyof T)[]).forEach((key) => {
+      if (!excludeSet.has(key)) {
+        managedKeys.add(String(key));
+      }
+    });
+
+    managedKeys.forEach((key) => {
+      params.delete(key);
+    });
+
     (Object.keys(filters) as (keyof T)[]).forEach((key) => {
       if (excludeSet.has(key)) return;
-
-      // Only manage keys owned by this filter object; keep unrelated query params intact.
-      params.delete(String(key));
 
       const value = filters[key];
 
@@ -194,6 +209,8 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
       const serialized = serializeValue(value);
       params.set(String(key), serialized);
     });
+
+    managedKeysRef.current = managedKeys;
 
     if (params.toString() === previousParamsString) {
       return;
