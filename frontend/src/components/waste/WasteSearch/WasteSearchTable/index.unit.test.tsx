@@ -97,6 +97,11 @@ vi.mock('@/components/Form/TableResource', () => ({
   },
 }));
 
+// Mock useSyncFiltersToSearchParams to avoid URL manipulation during tests
+vi.mock('@/hooks/useRefWithSearchParam', () => ({
+  default: vi.fn(),
+}));
+
 vi.mock('@/services/APIs', () => {
   return {
     default: {

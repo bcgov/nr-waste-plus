@@ -1,6 +1,6 @@
 import { Column } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState, type FC, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type FC, type ReactNode } from 'react';
 
 import { headers } from './constants';
 
@@ -15,6 +15,7 @@ import type { SortDirectionType } from '@/services/types';
 import TableResource from '@/components/Form/TableResource';
 import WasteSearchFilters from '@/components/waste/WasteSearch/WasteSearchFilters';
 import WasteSearchTableExpandContent from '@/components/waste/WasteSearch/WasteSearchTableExpandContent';
+import useSyncFiltersToSearchParams from '@/hooks/useRefWithSearchParam';
 import useSendEvent from '@/hooks/useSendEvent';
 import API from '@/services/APIs';
 import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
@@ -29,7 +30,10 @@ const WasteSearchTable: FC = () => {
   const [sort, setSort] = useState<Record<string, SortDirectionType>>({});
   const { sendEvent, clearEvents } = useSendEvent();
 
-  const plainFilters = reportingUnitSearchParametersView2Plain(filters);
+  // Sync filters with URL search parameters
+  useSyncFiltersToSearchParams(filters, setFilters);
+
+  const plainFilters = useMemo(() => reportingUnitSearchParametersView2Plain(filters), [filters]);
 
   const { data, isLoading, isFetching, isError, refetch, error } = useQuery({
     queryKey: ['search', 'ru', { page: currentPage, size: pageSize, ...plainFilters, ...sort }],
@@ -44,27 +48,34 @@ const WasteSearchTable: FC = () => {
     staleTime: Infinity,
   });
 
-  const executeSearch = () => {
+  const executeSearch = (pageOverride?: number, pageSizeOverride?: number) => {
     clearEvents('waste-search');
-    if (Object.keys(removeEmpty(plainFilters)).length > 0) {
+    const cleanedFilters = removeEmpty(plainFilters);
+    setCurrentPage(pageOverride ?? currentPage);
+    setPageSize(pageSizeOverride ?? pageSize);
+    if (Object.keys(cleanedFilters).length > 0) {
       setTimeout(refetch, 1);
     }
   };
 
   const executeNewSearch = () => {
-    setCurrentPage(0);
-    executeSearch();
+    executeSearch(0, pageSize);
   };
 
-  const handlePageChange = ({ page, pageSize }: { page: number; pageSize: number }) => {
-    setCurrentPage(Math.min(Math.max(page, 0), (data?.page.totalPages ?? 1) - 1)); // Adjust for zero-based index
-    setPageSize(pageSize);
-    executeSearch();
+  const handlePageChange = ({
+    page,
+    pageSize: newPageSize,
+  }: {
+    page: number;
+    pageSize: number;
+  }) => {
+    const adjustedPage = Math.min(Math.max(page, 0), (data?.page.totalPages ?? 1) - 1); // Adjust for zero-based index
+    executeSearch(adjustedPage, newPageSize);
   };
 
   const handleSort = (sortingKeys: Record<string, SortDirectionType>) => {
     setSort(sortingKeys);
-    executeSearch();
+    executeSearch(currentPage, pageSize);
   };
 
   const onRowExpanded = (rowId: string | number): Promise<ReactNode> => {

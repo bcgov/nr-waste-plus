@@ -73,13 +73,9 @@ const SearchInput: FC<SearchInputProps> = ({
       labelText={label}
       closeButtonLabelText="Clear search input"
       id={id}
-      onBlur={(e) => {
-        if (isMouseOverSearchButton()) {
-          onChange(e.currentTarget.value);
-        } else {
-          onChange(e.currentTarget.value);
-        }
-      }}
+      onClear={() => onChange('')}
+      onChange={(e) => onChange(e.currentTarget.value)}
+      onBlur={(e) => onChange(e.currentTarget.value)}
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
           e.currentTarget.blur();
@@ -88,7 +84,7 @@ const SearchInput: FC<SearchInputProps> = ({
           }
         }
       }}
-      defaultValue={value}
+      value={value}
     />
   );
 };
