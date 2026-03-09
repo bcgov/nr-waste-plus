@@ -66,7 +66,7 @@ describe('WasteSearchTableExpandContent', () => {
   });
 
   describe('data extraction from rowId', () => {
-    it('extracts ruId and blockId from rowId correctly', async () => {
+    it('extracts ruId and wasteAssessmentAreaId from rowId correctly', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
       await renderWithProps(rowId);
 
@@ -94,7 +94,7 @@ describe('WasteSearchTableExpandContent', () => {
       expect(APIs.search.getReportingUnitSearchExpand).not.toHaveBeenCalled();
     });
 
-    it('does not call API when blockId is null', async () => {
+    it('does not call API when wasteAssessmentAreaId is null', async () => {
       const rowId = 'RU-4069-Block-N/A-224813681';
       await renderWithProps(rowId);
 
@@ -117,7 +117,7 @@ describe('WasteSearchTableExpandContent', () => {
         expect(screen.getByText('Exempted (Yes/No)')).toBeDefined();
         expect(screen.getByText('Net area')).toBeDefined();
         expect(screen.getByText('Submitter')).toBeDefined();
-        expect(screen.getByText('Attachments')).toBeDefined();
+        expect(screen.getByText('Attachments and comments')).toBeDefined();
         expect(screen.getByText('Comment:')).toBeDefined();
       });
     });
@@ -363,14 +363,44 @@ describe('WasteSearchTableExpandContent', () => {
   });
 
   describe('attachment handling', () => {
-    it('renders redirect link when attachment has code', async () => {
-      const rowId = 'RU-4069-Block-411B-224813681';
+    it('renders link when wasteAssessmentAreaId is finite', async () => {
+      const rowId = 'RU-4069-Block-411-224813681';
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        const links = screen.queryAllByRole('link');
-        // Should have at least one link for the attachment
-        expect(links.length).toBeGreaterThan(0);
+        const agreementsCommentsEl = document.querySelector(`#${rowId}-attachments-comments`);
+        expect(agreementsCommentsEl).toBeDefined();
+
+        // When wasteAssessmentAreaId is finite, the component should render the link
+        const linkInside = agreementsCommentsEl?.querySelector('a');
+        expect(linkInside).toBeTruthy();
+      });
+    });
+
+    it('renders empty value when wasteAssessmentAreaId is not finite (no redirect link)', async () => {
+      const rowId = 'RU-4069-Block-411B-224813681';
+      const qc = new QueryClient({
+        defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
+      });
+
+      const { container } = await act(async () =>
+        render(
+          <QueryClientProvider client={qc}>
+            <WasteSearchTableExpandContent rowId={rowId} />
+          </QueryClientProvider>,
+        ),
+      );
+
+      await waitFor(() => {
+        const agreementsCommentsEl = container.querySelector(`#${rowId}-attachments-comments`);
+        expect(agreementsCommentsEl).toBeDefined();
+
+        // When wasteAssessmentAreaId is not a finite number (e.g. '411B'), the component should render EmptyValueTag
+        const linkInside = agreementsCommentsEl?.querySelector('a');
+        const emptyValue = agreementsCommentsEl?.querySelector('[data-testid="empty-value"]');
+
+        expect(linkInside).toBeFalsy();
+        expect(emptyValue).toBeTruthy();
       });
     });
 
@@ -389,7 +419,7 @@ describe('WasteSearchTableExpandContent', () => {
       });
     });
 
-    it('constructs correct attachment URL with blockId', async () => {
+    it('constructs correct attachment URL with wasteAssessmentAreaId', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
       await renderWithProps(rowId);
 
@@ -423,7 +453,7 @@ describe('WasteSearchTableExpandContent', () => {
         expect(container.querySelector(`#${rowId}-multi-mark`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-net-area`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-submitter`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-attachments`)).toBeDefined();
+        expect(container.querySelector(`#${rowId}-attachments-comments`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-comment`)).toBeDefined();
       });
     });

@@ -126,7 +126,7 @@ const mockSearchResults: PageableResponse<ReportingUnitSearchResultDto> = {
     {
       id: 'RU-4069-Block-411B-224813681',
       cutBlockId: '411B',
-      blockId: 411,
+      wasteAssessmentAreaId: 411,
       ruNumber: 4069,
       client: { code: '00010005', description: 'JACOB FEHR' },
       licenseNumber: 'A12345',
@@ -142,7 +142,7 @@ const mockSearchResults: PageableResponse<ReportingUnitSearchResultDto> = {
     {
       id: 'RU-4070-Block-412B-224813682',
       cutBlockId: '412B',
-      blockId: 412,
+      wasteAssessmentAreaId: 412,
       ruNumber: 4070,
       client: { code: '00010006', description: 'TEST CLIENT' },
       licenseNumber: 'A12346',
@@ -169,7 +169,7 @@ const altMockSearchResults1: PageableResponse<ReportingUnitSearchResultDto> = {
     {
       id: 'RU-4069-Block-521B-224813681',
       cutBlockId: '521B',
-      blockId: 521,
+      wasteAssessmentAreaId: 521,
       ruNumber: 4069,
       client: { code: '00010005', description: 'JACOB FEHR' },
       licenseNumber: 'A12345',
@@ -185,7 +185,7 @@ const altMockSearchResults1: PageableResponse<ReportingUnitSearchResultDto> = {
     {
       id: 'RU-4070-Block-522B-224813682',
       cutBlockId: '522B',
-      blockId: 522,
+      wasteAssessmentAreaId: 522,
       ruNumber: 4070,
       client: { code: '00010006', description: 'TEST CLIENT' },
       licenseNumber: 'A12346',
@@ -212,7 +212,7 @@ const altMockSearchResults2: PageableResponse<ReportingUnitSearchResultDto> = {
     {
       id: 'RU-4069-Block-631B-224813681',
       cutBlockId: '631B',
-      blockId: 631,
+      wasteAssessmentAreaId: 631,
       ruNumber: 4069,
       client: { code: '00010005', description: 'JACOB FEHR' },
       licenseNumber: 'A12345',
@@ -228,7 +228,7 @@ const altMockSearchResults2: PageableResponse<ReportingUnitSearchResultDto> = {
     {
       id: 'RU-4070-Block-632B-224813682',
       cutBlockId: '632B',
-      blockId: 632,
+      wasteAssessmentAreaId: 632,
       ruNumber: 4070,
       client: { code: '00010006', description: 'TEST CLIENT' },
       licenseNumber: 'A12346',
@@ -619,8 +619,8 @@ describe('WasteSearchTable', () => {
       });
 
       // Click on sortable column header (Block ID) - verifies sorting is available
-      const blockIdHeader = screen.getByText('Block ID');
-      expect(blockIdHeader).toBeDefined();
+      const wasteAssessmentAreaIdHeader = screen.getByText('Block ID');
+      expect(wasteAssessmentAreaIdHeader).toBeDefined();
 
       // Note: With mocked TableResource, we just verify the UI allows sorting
       // The actual sort functionality is tested through the onSortChange callback
@@ -641,8 +641,8 @@ describe('WasteSearchTable', () => {
       });
 
       // Verify sorting capability is available on sortable columns
-      const blockIdHeader = screen.getByText('Block ID');
-      expect(blockIdHeader).toBeDefined();
+      const wasteAssessmentAreaIdHeader = screen.getByText('Block ID');
+      expect(wasteAssessmentAreaIdHeader).toBeDefined();
 
       // TableResource component should handle sort changes through onSortChange callback
       // which is tested in the "handles sort change correctly" test above

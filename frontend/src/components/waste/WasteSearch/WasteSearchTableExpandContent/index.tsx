@@ -21,18 +21,20 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
   };
 
   const [ruId, setRuId] = useState<number | null>(extractNumericValue(1));
-  const [blockId, setBlockId] = useState<number | null>(extractNumericValue(3));
+  const [wasteAssessmentAreaId, setWasteAssessmentAreaId] = useState<number | null>(
+    extractNumericValue(3),
+  );
 
   const { data, isLoading } = useQuery({
-    queryKey: ['search', 'ru', 'ex', rowId, ruId, blockId],
-    queryFn: () => API.search.getReportingUnitSearchExpand(ruId!, blockId!),
-    enabled: ruId !== null && blockId !== null,
+    queryKey: ['search', 'ru', 'ex', rowId, ruId, wasteAssessmentAreaId],
+    queryFn: () => API.search.getReportingUnitSearchExpand(ruId!, wasteAssessmentAreaId!),
+    enabled: ruId !== null && wasteAssessmentAreaId !== null,
     staleTime: Infinity,
   });
 
   useEffect(() => {
     setRuId(extractNumericValue(1));
-    setBlockId(extractNumericValue(3));
+    setWasteAssessmentAreaId(extractNumericValue(3));
   }, [extractNumericValue, rowId]);
 
   return (
@@ -209,20 +211,20 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
       </Column>
       <Column lg={2} md={4} sm={2}>
         <ReadonlyInput
-          label="Attachments"
-          id={`${rowId}-attachments`}
+          label="Attachments and comments"
+          id={`${rowId}-attachments-comments`}
           isNumber={false}
           showSkeleton={isLoading}
         >
-          {data?.attachment?.code ? (
+          {Number.isFinite(wasteAssessmentAreaId as number) ? (
             <DefinitionTooltip definition={'Go to Waste 303 page'} align="bottom" openOnHover>
               <RedirectLinkTag
                 text="Link"
-                url={`${env.VITE_LEGACY_BASE_URL}/waste303SubmissionAgreementAction.do?readOnlyMode=Y&dataBean.p_waste_assessment_area_id=${blockId}`}
+                url={`${env.VITE_LEGACY_BASE_URL}/waste303SubmissionAgreementAction.do?readOnlyMode=Y&dataBean.p_waste_assessment_area_id=${wasteAssessmentAreaId}`}
               />
             </DefinitionTooltip>
           ) : (
-            <EmptyValueTag value={data?.attachment.code ?? ''} />
+            <EmptyValueTag value="" />
           )}
         </ReadonlyInput>
       </Column>

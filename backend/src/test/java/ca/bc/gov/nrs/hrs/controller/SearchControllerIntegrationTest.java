@@ -124,19 +124,19 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
   @DisplayName("Get Expanded Details for Reporting Unit")
   void shouldGetExpandedDetails(
       Long ruId,
-      Long blockId,
+      Long wasteAssessmentAreaId,
       ResponseDefinitionBuilder stubResponse,
       String expectedJsonPath,
       Object expectedValue
   ) throws Exception {
     legacyApiStub.stubFor(
-        WireMock.get(urlPathEqualTo("/api/search/reporting-units/ex/" + ruId + "/" + blockId))
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units/ex/" + ruId + "/" + wasteAssessmentAreaId))
             .willReturn(stubResponse)
     );
 
     mockMvc
         .perform(
-            get("/api/search/reporting-units/ex/" + ruId + "/" + blockId)
+            get("/api/search/reporting-units/ex/" + ruId + "/" + wasteAssessmentAreaId)
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())

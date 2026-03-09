@@ -100,20 +100,20 @@ public class SearchController {
    *
    * @param jwt             the JWT principal for the authenticated caller
    * @param reportingUnitId the reporting unit ID
-   * @param blockId         the block ID
+   * @param wasteAssessmentAreaId         the waste assessment area ID
    * @return the expanded search entry as a {@link ReportingUnitSearchExpandedDto}
    */
-  @GetMapping("/reporting-units/ex/{reportingUnitId}/{blockId}")
+  @GetMapping("/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}")
   public ReportingUnitSearchExpandedDto getSearchExpandedEntry(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable Long reportingUnitId,
-      @PathVariable Long blockId
+      @PathVariable Long wasteAssessmentAreaId
   ) {
     log.info("Fetching expanded search entry for reporting unit ID: {} for: {}",
         reportingUnitId, JwtPrincipalUtil.getUserId(jwt)
     );
 
-    return service.getSearchExpanded(reportingUnitId, blockId);
+    return service.getSearchExpanded(reportingUnitId, wasteAssessmentAreaId);
   }
 
   /**

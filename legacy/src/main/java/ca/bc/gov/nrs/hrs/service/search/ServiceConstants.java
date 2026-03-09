@@ -36,7 +36,7 @@ public final class ServiceConstants {
   static final Map<String, String> SORT_FIELDS =
       Map.ofEntries(
           Map.entry("ruNumber", "ru_number"),
-          Map.entry("blockId", "block_id"),
+          Map.entry("wasteAssessmentAreaId", "waste_assessment_area_id"),
           Map.entry("cutBlockId", "cut_block_id"),
           Map.entry("client.code", CLIENT_NUMBER),
           Map.entry("sampling", SAMPLING_CODE),

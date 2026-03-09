@@ -11,9 +11,9 @@ import java.time.LocalDateTime;
 public interface ReportingUnitSearchProjection {
 
   /**
-   * Reporting unit block identifier.
+   * Waste assessment area identifier (matches SQL alias waste_assessment_area_id).
    */
-  Long getBlockId();
+  Long getWasteAssessmentAreaId();
 
   /**
    * Reporting unit block identifier.

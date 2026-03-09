@@ -76,7 +76,7 @@ public class ForestClientApiProviderTestConstants {
       {
            "content": [
                {
-                   "blockId": "26",
+                   "wasteAssessmentAreaId": "26",
                    "ruNumber": 36834,
                    "client": {
                        "code": "00010002",
