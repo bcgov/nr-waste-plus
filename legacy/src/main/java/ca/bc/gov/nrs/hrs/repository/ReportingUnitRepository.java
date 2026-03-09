@@ -50,7 +50,7 @@ public interface ReportingUnitRepository extends JpaRepository<ReportingUnitEnti
   @Query(nativeQuery = true, value = ReportingUnitQueryConstants.GET_SEARCH_BLOCK_EXPANDED_CONTENT)
   Optional<ReportingUnitSearchExpandedProjection> getSearchExpandedContent(
       Long reportingUnit,
-      Long blockId
+      Long wasteAssessmentAreaId
   );
 
   /**

@@ -66,7 +66,7 @@ describe('WasteSearchTableExpandContent', () => {
   });
 
   describe('data extraction from rowId', () => {
-    it('extracts ruId and blockId from rowId correctly', async () => {
+    it('extracts ruId and wasteAssessmentAreaId from rowId correctly', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
       await renderWithProps(rowId);
 
@@ -94,7 +94,7 @@ describe('WasteSearchTableExpandContent', () => {
       expect(APIs.search.getReportingUnitSearchExpand).not.toHaveBeenCalled();
     });
 
-    it('does not call API when blockId is null', async () => {
+    it('does not call API when wasteAssessmentAreaId is null', async () => {
       const rowId = 'RU-4069-Block-N/A-224813681';
       await renderWithProps(rowId);
 
@@ -363,7 +363,7 @@ describe('WasteSearchTableExpandContent', () => {
   });
 
   describe('attachment handling', () => {
-    it('renders link when blockId is finite', async () => {
+    it('renders link when wasteAssessmentAreaId is finite', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
       await renderWithProps(rowId);
 
@@ -371,13 +371,13 @@ describe('WasteSearchTableExpandContent', () => {
         const agreementsCommentsEl = document.querySelector(`#${rowId}-attachments-comments`);
         expect(agreementsCommentsEl).toBeDefined();
 
-        // When blockId is finite, the component should render the link
+        // When wasteAssessmentAreaId is finite, the component should render the link
         const linkInside = agreementsCommentsEl?.querySelector('a');
         expect(linkInside).toBeTruthy();
       });
     });
 
-    it('renders empty value when blockId is not finite (no redirect link)', async () => {
+    it('renders empty value when wasteAssessmentAreaId is not finite (no redirect link)', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
       const qc = new QueryClient({
         defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
@@ -395,7 +395,7 @@ describe('WasteSearchTableExpandContent', () => {
         const agreementsCommentsEl = container.querySelector(`#${rowId}-attachments-comments`);
         expect(agreementsCommentsEl).toBeDefined();
 
-        // When blockId is not a finite number (e.g. '411B'), the component should render EmptyValueTag
+        // When wasteAssessmentAreaId is not a finite number (e.g. '411B'), the component should render EmptyValueTag
         const linkInside = agreementsCommentsEl?.querySelector('a');
         const emptyValue = agreementsCommentsEl?.querySelector('[data-testid="empty-value"]');
 
@@ -419,7 +419,7 @@ describe('WasteSearchTableExpandContent', () => {
       });
     });
 
-    it('constructs correct attachment URL with blockId', async () => {
+    it('constructs correct attachment URL with wasteAssessmentAreaId', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
       await renderWithProps(rowId);
 

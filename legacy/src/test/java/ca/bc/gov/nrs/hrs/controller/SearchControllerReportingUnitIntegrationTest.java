@@ -157,7 +157,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldGetExpandedDetails() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units/ex/{reportingUnitId}/{blockId}", 34004, 161966)
+            get("/api/search/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}", 34004, 161966)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
         )
@@ -173,13 +173,13 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldFailGetExpandedDetails() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units/ex/{reportingUnitId}/{blockId}", 1, 2)
+            get("/api/search/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}", 1, 2)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
         )
         .andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
-        .andExpect(jsonPath("$.detail").value("Block with ID 2 not found for Reporting Unit with ID 1."))
+        .andExpect(jsonPath("$.detail").value("Waste assessment area with ID 2 not found for Reporting Unit with ID 1."))
         .andExpect(jsonPath("$.status").value(404))
         .andReturn();
   }
@@ -286,7 +286,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldGetExtendedWithSecondaryMark() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units/ex/{reportingUnitId}/{blockId}", 879, 1906)
+            get("/api/search/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}", 879, 1906)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
         )
@@ -308,7 +308,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldGetExtendedWithPrimaryMark() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units/ex/{reportingUnitId}/{blockId}", 879, 1907)
+            get("/api/search/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}", 879, 1907)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
         )

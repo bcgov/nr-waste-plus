@@ -25,7 +25,7 @@
         "description": "Submitted"
       },
       "lastUpdated": "2025-08-25T10:35:06",
-      "blockId": 102
+      "wasteAssessmentAreaId": 102
     },
     {
       "id": "RU-34906-Block-105-16777836",
@@ -52,7 +52,7 @@
         "description": "Submitted"
       },
       "lastUpdated": "2025-08-25T10:35:06",
-      "blockId": 105
+      "wasteAssessmentAreaId": 105
     },
     {
       "id": "RU-34906-Block-571-21130094",
@@ -79,7 +79,7 @@
         "description": "Submitted"
       },
       "lastUpdated": "2025-08-25T10:35:06",
-      "blockId": 571
+      "wasteAssessmentAreaId": 571
     },
     {
       "id": "RU-34906-Block-569-54499236",
@@ -106,7 +106,7 @@
         "description": "Submitted"
       },
       "lastUpdated": "2025-08-25T10:35:06",
-      "blockId": 569
+      "wasteAssessmentAreaId": 569
     },
     {
       "id": "RU-34906-Block-341-94613061",
@@ -133,7 +133,7 @@
         "description": "Submitted"
       },
       "lastUpdated": "2025-08-25T10:35:06",
-      "blockId": 341
+      "wasteAssessmentAreaId": 341
     },
     {
       "id": "RU-34906-Block-336-32570121",
@@ -160,7 +160,7 @@
         "description": "Submitted"
       },
       "lastUpdated": "2025-08-25T10:35:06",
-      "blockId": 336
+      "wasteAssessmentAreaId": 336
     },
     {
       "id": "RU-34906-Block-274-40929234",
@@ -187,7 +187,7 @@
         "description": "Submitted"
       },
       "lastUpdated": "2025-08-25T10:35:06",
-      "blockId": 274
+      "wasteAssessmentAreaId": 274
     },
     {
       "id": "RU-34906-Block-218-29188714",
@@ -214,7 +214,7 @@
         "description": "Submitted"
       },
       "lastUpdated": "2025-08-25T10:35:06",
-      "blockId": 218
+      "wasteAssessmentAreaId": 218
     },
     {
       "id": "RU-36834-Block-26-84360965",
@@ -242,7 +242,7 @@
         "description": "Draft"
       },
       "lastUpdated": "2025-08-24T09:10:28",
-      "blockId": 26
+      "wasteAssessmentAreaId": 26
     },
     {
       "id": "RU-10501-Block-2-33684183",
@@ -270,7 +270,7 @@
         "description": "Approved"
       },
       "lastUpdated": "2012-01-27T10:34:58",
-      "blockId": 2
+      "wasteAssessmentAreaId": 2
     }
   ],
   "page": {

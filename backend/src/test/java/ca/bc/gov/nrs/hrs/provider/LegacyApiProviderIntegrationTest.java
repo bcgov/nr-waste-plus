@@ -146,13 +146,13 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
   @ParameterizedTest
   @MethodSource("expandedDetailsArguments")
   @DisplayName("Get expanded details for reporting unit")
-  void shouldGetExpandedDetails(Long ruId, Long blockId, ResponseDefinitionBuilder stubResponse,
+  void shouldGetExpandedDetails(Long ruId, Long wasteAssessmentAreaId, ResponseDefinitionBuilder stubResponse,
       ReportingUnitSearchExpandedDto expectedDto) {
     clientApiStub.stubFor(
-        get(urlPathEqualTo("/api/search/reporting-units/ex/" + ruId + "/" + blockId))
+        get(urlPathEqualTo("/api/search/reporting-units/ex/" + ruId + "/" + wasteAssessmentAreaId))
             .willReturn(stubResponse));
 
-    var value = legacyApiProvider.getSearchExpanded(ruId, blockId);
+    var value = legacyApiProvider.getSearchExpanded(ruId, wasteAssessmentAreaId);
     assertNotNull(value);
     assertEquals(expectedDto.id(), value.id());
     assertEquals(expectedDto.licenseNo(), value.licenseNo());

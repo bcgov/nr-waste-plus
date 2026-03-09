@@ -25,7 +25,7 @@
         "description": "Billing Issued"
       },
       "lastUpdated": "2012-01-27T10:34:58",
-      "blockId": 2
+      "wasteAssessmentAreaId": 2
     },
     {
       "id": "RU-2131-Block-510-61564826",
@@ -52,7 +52,7 @@
         "description": "Billing Issued"
       },
       "lastUpdated": "2009-12-02T09:06:58",
-      "blockId": 510
+      "wasteAssessmentAreaId": 510
     }
   ],
   "page": {
