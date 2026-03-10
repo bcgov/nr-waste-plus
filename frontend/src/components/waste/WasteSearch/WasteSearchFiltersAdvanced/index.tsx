@@ -7,11 +7,13 @@ import {
   ComposedModal,
   DatePicker,
   DatePickerInput,
+  Dropdown,
   Grid,
   ModalBody,
   ModalFooter,
   ModalHeader,
   TextInput,
+  type OnChangeData,
 } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
 import { DateTime } from 'luxon';
@@ -49,6 +51,7 @@ type WasteSearchFiltersAdvancedProps = {
   onChange: (
     key: keyof ReportingUnitSearchParametersViewDto,
   ) => (value: ReportingUnitSearchParametersViewDto[typeof key]) => void;
+  onReplaceFilters: (filters: Partial<ReportingUnitSearchParametersViewDto>) => void;
   onSearch: () => void;
 };
 
@@ -60,6 +63,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
   statusOptions,
   onClose,
   onChange,
+  onReplaceFilters,
   onSearch,
 }) => {
   const auth = useAuth();
@@ -87,8 +91,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
   const handleDateChange = (isStartDate: boolean) => (dates?: Date[]) => {
     if (!dates) return;
 
-    const formattedDate =
-      dates.length && dates[0] ? DateTime.fromJSDate(dates[0]).toFormat(API_DATE_FORMAT) : '';
+    const formattedDate = dates[0] ? DateTime.fromJSDate(dates[0]).toFormat(API_DATE_FORMAT) : '';
 
     onChange(isStartDate ? 'updateDateStart' : 'updateDateEnd')(formattedDate);
   };
@@ -101,6 +104,35 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
     staleTime: Infinity,
     select: (data) => data.content.map((item) => item.client),
   });
+
+  const savedSearchList: {
+    code: Partial<ReportingUnitSearchParametersViewDto>;
+    description: string;
+  }[] = [
+    {
+      code: { multiMark: true, cuttingPermitId: 'CB1' },
+      description: 'CB1 Multimarks',
+    },
+    {
+      code: { sampling: ['AGR'], status: ['APP'], district: ['DCK'] },
+      description: 'Chilliwack Approved Aggregates',
+    },
+    {
+      code: { clientNumbers: [{ code: '00001286', description: 'CANFOR LIMITED' }] },
+      description: 'CANFOR LIMITED',
+    },
+  ];
+
+  const onSelectSavedSearch = (
+    item: OnChangeData<{
+      code: Partial<ReportingUnitSearchParametersViewDto>;
+      description: string;
+    }>,
+  ) => {
+    if (item.selectedItem?.code) {
+      onReplaceFilters(item.selectedItem.code);
+    }
+  };
 
   if (!isModalOpen) return null;
 
@@ -328,6 +360,19 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 />
               </DatePicker>
             </div>
+          </Column>
+
+          <Column sm={4} md={8} lg={16}>
+            <Dropdown
+              id="saved-search-dropdown"
+              aria-label="Saved searches"
+              onChange={onSelectSavedSearch}
+              itemToString={(item) => (item ? String(item.description) : '')}
+              items={savedSearchList}
+              label="Select a previously saved search"
+              titleText="Saved searches"
+              type="default"
+            />
           </Column>
 
           <Column sm={4} md={8} lg={16}>

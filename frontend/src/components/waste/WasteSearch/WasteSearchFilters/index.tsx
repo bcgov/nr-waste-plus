@@ -273,6 +273,9 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
           onSearch();
         }}
         onChange={(key) => (value) => handleChange(key, value)}
+        onReplaceFilters={(newFilters) =>
+          setFilters(newFilters as ReportingUnitSearchParametersViewDto)
+        }
       />
     </>
   );
