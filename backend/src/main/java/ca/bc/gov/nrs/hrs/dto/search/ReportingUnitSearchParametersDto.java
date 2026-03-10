@@ -22,10 +22,9 @@ import org.springframework.util.MultiValueMap;
  * Search parameters for reporting unit searches.
  *
  * <p>Contains the set of filter values that can be applied when searching for
- * reporting units. Some getters are overridden (via Lombok 'With') to provide
- * a convenient immutable-style builder; lists may be null or empty and the
- * helper method {@link #toMultiMap(Pageable)} converts the populated fields
- * into request query parameters.
+ * reporting units. Some getters are overridden (via Lombok 'With') to provide a convenient
+ * immutable-style builder; lists may be null or empty and the helper method
+ * {@link #toMultiMap(Pageable)} converts the populated fields into request query parameters.
  * </p>
  */
 @Data
@@ -52,13 +51,11 @@ public class ReportingUnitSearchParametersDto {
   private List<String> clientNumbers;
 
   /**
-   * Convert the populated search parameters into a {@link MultiValueMap} of
-   * query parameters suitable for building a request URL. Only non-empty
-   * fields are included. The provided {@code page} will be translated into
-   * paging parameters and appended.
+   * Convert the populated search parameters into a {@link MultiValueMap} of query parameters
+   * suitable for building a request URL. Only non-empty fields are included. The provided
+   * {@code page} will be translated into paging parameters and appended.
    *
-   * @param page the pageable to include in the produced query parameters; may
-   *     be null
+   * @param page the pageable to include in the produced query parameters; may be null
    * @return a {@link MultiValueMap} containing non-empty query parameters
    */
   public MultiValueMap<String, String> toMultiMap(Pageable page) {
@@ -118,12 +115,28 @@ public class ReportingUnitSearchParametersDto {
   }
 
   /**
-   * Convert the populated search parameters into a {@link MultiValueMap} of
-   * query parameters without paging information.
+   * Convert the populated search parameters into a {@link MultiValueMap} of query parameters
+   * without paging information.
    *
    * @return a {@link MultiValueMap} containing non-empty query parameters
    */
   public MultiValueMap<String, String> toMultiMap() {
     return toMultiMap(null);
+  }
+
+  public boolean isEmpty() {
+    return StringUtils.isBlank(mainSearchTerm)
+           && CollectionUtils.isEmpty(district)
+           && CollectionUtils.isEmpty(sampling)
+           && CollectionUtils.isEmpty(status)
+           && !requestByMe
+           && !multiMark
+           && StringUtils.isBlank(requestUserId)
+           && updateDateStart == null
+           && updateDateEnd == null
+           && StringUtils.isBlank(licenseeId)
+           && StringUtils.isBlank(cuttingPermitId)
+           && StringUtils.isBlank(timberMark)
+           && CollectionUtils.isEmpty(clientNumbers);
   }
 }

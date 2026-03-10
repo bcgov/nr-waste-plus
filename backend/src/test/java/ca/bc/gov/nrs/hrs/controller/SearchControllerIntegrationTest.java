@@ -12,7 +12,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import ca.bc.gov.nrs.hrs.BackendConstants;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
@@ -25,9 +24,11 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -145,6 +146,114 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
         .andReturn();
   }
 
+  @ParameterizedTest
+  @MethodSource("searchReportingUnitBceid")
+  @DisplayName("Search Reporting Unit with BCeID user")
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"Viewer_00010002"}
+  )
+  void searchReportingUnit_bceid_shouldValidateClientNumbers(
+      ReportingUnitSearchParametersDto filters,
+      Pageable pageable,
+      ResponseDefinitionBuilder stubResponse,
+      int expectedStatus,
+      long size
+  ) throws Exception {
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(stubResponse)
+    );
+
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/clients/findByClientNumber/00010002"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002))
+    );
+
+    var result = mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .queryParams(filters.toMultiMap(pageable))
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().is(expectedStatus));
+
+    if (expectedStatus == 200) {
+      result
+          .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+          .andExpect(jsonPath("$.content.length()").value(size));
+    }
+  }
+
+  @Test
+  @DisplayName("Search Reporting Unit Users")
+  void searchReportingUnitUsers_shouldSucceed() throws Exception {
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units-users"))
+            .willReturn(okJson("[\"TESTUSER\"]"))
+    );
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units-users")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .queryParam("userId", "TEST")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$[0]").value("TESTUSER"))
+        .andReturn();
+  }
+
+  private static Stream<Arguments> searchReportingUnitBceid() {
+    return Stream.of(
+        Arguments.argumentSet(
+            "BCeID with valid client number in roles",
+            ReportingUnitSearchParametersDto.builder()
+                .mainSearchTerm("36834")
+                .clientNumbers(List.of("00010002"))
+                .build(),
+            PageRequest.of(0, 10),
+            okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE),
+            200,
+            1L
+        ),
+        Arguments.argumentSet(
+            "BCeID with invalid client number not in roles",
+            ReportingUnitSearchParametersDto.builder()
+                .mainSearchTerm("36834")
+                .clientNumbers(List.of("99999999"))
+                .build(),
+            PageRequest.of(0, 10),
+            okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE),
+            403,
+            0L
+        ),
+        Arguments.argumentSet(
+            "BCeID with no client numbers filter",
+            ReportingUnitSearchParametersDto.builder()
+                .mainSearchTerm("36834")
+                .build(),
+            PageRequest.of(0, 10),
+            okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE),
+            200,
+            1L
+        ),
+        Arguments.argumentSet(
+            "BCeID with partially valid client numbers",
+            ReportingUnitSearchParametersDto.builder()
+                .mainSearchTerm("36834")
+                .clientNumbers(List.of("00010002", "99999999"))
+                .build(),
+            PageRequest.of(0, 10),
+            okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE),
+            403,
+            0L
+        )
+    );
+  }
+
   private static Stream<Arguments> searchReportingUnitExpanded() {
     return Stream.of(
         Arguments.argumentSet(
@@ -203,6 +312,13 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
         Arguments.argumentSet(
             "Search with results and no filter",
             ReportingUnitSearchParametersDto.builder().build(),
+            PageRequest.of(0, 10),
+            okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE),
+            0L
+        ),
+        Arguments.argumentSet(
+            "Search with results and no filter",
+            ReportingUnitSearchParametersDto.builder().mainSearchTerm("36834").build(),
             PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE),
             1L
