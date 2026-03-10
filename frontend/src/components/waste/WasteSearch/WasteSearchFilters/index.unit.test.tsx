@@ -11,6 +11,12 @@ import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
 
+vi.mock('@/hooks/useSyncFiltersToSearchParams', () => ({
+  default: vi.fn((_filters, _setFilters) => {
+    // Mock implementation: does nothing, actual hook logic is tested separately
+  }),
+}));
+
 vi.mock('@/services/APIs', () => ({
   default: {
     codes: {
@@ -166,3 +172,6 @@ describe('WasteSearchFilters', () => {
     await waitFor(() => expect(onChange).toHaveBeenCalled());
   });
 });
+
+// Tests for useSyncFiltersToSearchParams integration are covered in utils.unit.test.ts
+// and in the hook's own test suite. This test focuses on the component's UI and event handling.
