@@ -75,8 +75,8 @@ public class SearchController {
       Pageable pageable
   ) {
 
-    if (filters == null || filters.isEmpty()) {
-      return new PageImpl<>(List.of());
+    if(filters == null || filters.isEmpty()) {
+      return Page.empty(pageable);
     }
     // #128: BCeID should filter out on client side, we increase the size to get more results.
     if (IdentityProvider.BUSINESS_BCEID.equals(JwtPrincipalUtil.getIdentityProvider(jwt))
