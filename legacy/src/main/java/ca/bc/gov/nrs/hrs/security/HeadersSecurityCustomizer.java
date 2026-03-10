@@ -89,12 +89,11 @@ public class HeadersSecurityCustomizer implements Customizer<HeadersConfigurer<H
         .xssProtection(XXssConfig::disable) // Disable the X-XSS-Protection header.
         // Set the X-Content-Type-Options header to its default value.
         .contentTypeOptions(Customizer.withDefaults())
-
         // Set the Referrer-Policy header.
         .referrerPolicy(referrerPolicySpec -> referrerPolicySpec.policy(
             ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
         // Set the Permissions-Policy header.
-        .permissionsPolicy(permissionsPolicySpec ->
+        .permissionsPolicyHeader(permissionsPolicySpec ->
             permissionsPolicySpec.policy(
                 PERMISSIONS
                     .stream()
