@@ -291,7 +291,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 className="advanced-date-picker"
                 datePickerType="single"
                 dateFormat="Y/m/d"
-                locale="en"
+                locale={{ locale: 'en' }}
                 allowInput
                 maxDate={getStartMaxDate(filters.updateDateStart)}
                 onChange={handleDateChange(true)}
@@ -311,7 +311,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 className="advanced-date-picker"
                 datePickerType="single"
                 dateFormat="Y/m/d"
-                locale="en"
+                locale={{ locale: 'en' }}
                 allowInput
                 minDate={getEndMinDate(filters.updateDateEnd)}
                 maxDate={DateTime.now().toFormat(DATE_PICKER_FORMAT)}

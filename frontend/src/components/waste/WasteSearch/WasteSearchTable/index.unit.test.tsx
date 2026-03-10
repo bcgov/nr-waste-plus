@@ -54,8 +54,11 @@ vi.mock('@/components/Form/TableResource', () => ({
         <table>
           <thead>
             <tr>
-              {headers.map((h: any) => (
-                <th key={h.key} onClick={() => h.isSortable && onSortChange?.({ [h.key]: 'ASC' })}>
+              {headers.map((h: any, idx: number) => (
+                <th
+                  key={`${idx}-${h.key}`}
+                  onClick={() => h.isSortable && onSortChange?.({ [h.key]: 'ASC' })}
+                >
                   {h.header}
                 </th>
               ))}
@@ -162,7 +165,7 @@ const mockSearchResults: PageableResponse<ReportingUnitSearchResultDto> = {
 const altMockSearchResults1: PageableResponse<ReportingUnitSearchResultDto> = {
   content: [
     {
-      id: 'RU-4069-Block-521B-224813681',
+      id: 'RU-4069-Block-521B-224813683',
       cutBlockId: '521B',
       wasteAssessmentAreaId: 521,
       ruNumber: 4069,
@@ -178,7 +181,7 @@ const altMockSearchResults1: PageableResponse<ReportingUnitSearchResultDto> = {
       lastUpdated: '2006-09-08T08:24:17',
     },
     {
-      id: 'RU-4070-Block-522B-224813682',
+      id: 'RU-4070-Block-522B-224813684',
       cutBlockId: '522B',
       wasteAssessmentAreaId: 522,
       ruNumber: 4070,
