@@ -34,33 +34,15 @@ const SearchInput: FC<SearchInputProps> = ({
   value,
   onSearch,
 }) => {
-  const mousePosition = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const searchButtonRefs = useRef<HTMLButtonElement[]>([]);
+  const lastEmittedValueRef = useRef(value);
 
-  // Track and update the mouse position globally
   useEffect(() => {
-    const updateMousePosition = (e: MouseEvent) => {
-      mousePosition.current = { x: e.clientX, y: e.clientY };
-    };
+    lastEmittedValueRef.current = value;
+  }, [value]);
 
-    document.addEventListener('mousemove', updateMousePosition);
-    return () => {
-      document.removeEventListener('mousemove', updateMousePosition);
-    };
-  }, []);
-
-  /**
-   * Returns `true` if the current mouse position is hovering
-   * over any of the visible Search buttons in the DOM.
-   */
-  const isMouseOverSearchButton = () => {
-    const { x, y } = mousePosition.current;
-
-    return searchButtonRefs.current.some((btn) => {
-      if (!btn?.offsetParent) return false; // skip hidden buttons
-      const rect = btn.getBoundingClientRect();
-      return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
-    });
+  const emitChange = (nextValue: string) => {
+    lastEmittedValueRef.current = nextValue;
+    onChange(nextValue);
   };
 
   return (
@@ -73,11 +55,12 @@ const SearchInput: FC<SearchInputProps> = ({
       labelText={label}
       closeButtonLabelText="Clear search input"
       id={id}
+      onClear={() => emitChange('')}
+      onChange={(e) => emitChange(e.currentTarget.value)}
       onBlur={(e) => {
-        if (isMouseOverSearchButton()) {
-          onChange(e.currentTarget.value);
-        } else {
-          onChange(e.currentTarget.value);
+        const nextValue = e.currentTarget.value;
+        if (nextValue !== lastEmittedValueRef.current) {
+          emitChange(nextValue);
         }
       }}
       onKeyDown={(e) => {
@@ -88,7 +71,7 @@ const SearchInput: FC<SearchInputProps> = ({
           }
         }
       }}
-      defaultValue={value}
+      value={value}
     />
   );
 };

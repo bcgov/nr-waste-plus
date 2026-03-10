@@ -12,6 +12,7 @@ import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearch
 import WasteSearchFiltersAdvanced from '@/components/waste/WasteSearch/WasteSearchFiltersAdvanced';
 import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
 import APIs from '@/services/APIs';
+import { removeEmpty } from '@/services/utils';
 
 import './index.scss';
 
@@ -55,7 +56,6 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
   const handleStringChange =
     (key: keyof ReportingUnitSearchParametersViewDto) => (value: string) => {
       setFilters((prev) => ({ ...prev, [key]: value }));
-      setTimeout(onSearch, 1);
     };
 
   const handleActiveMultiSelectChange =
@@ -93,7 +93,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
   };
 
   useEffect(() => {
-    onChange(filters);
+    onChange(removeEmpty(filters));
   }, [filters, onChange]);
 
   useSyncPreferencesToFilters(
