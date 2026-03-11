@@ -58,6 +58,15 @@ export async function authenticate(page: Page, metadata: Record<string, any>): P
   await page.context().storageState({ path: authFile });
 }
 
+const jwtfy = (jwtBody: any) => {
+  const header = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
+  const payload = btoa(JSON.stringify(jwtBody))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+  return `${header}.${payload}.`;
+};
+
 export async function mockAuthenticate(page: Page, metadata: Record<string, any>): Promise<void> {
   console.log(`Setup - Mock Auth: ${metadata.userType.toLowerCase()} user`);
 
@@ -73,14 +82,35 @@ export async function mockAuthenticate(page: Page, metadata: Record<string, any>
 
   const idirData: CookieData = {
     lastAuthUser: 'idirUser',
-    idToken:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2duaXRvOmdyb3VwcyI6WyJXQVNURV9QTFVTX0FETUlOIl0sInByZWZlcnJlZF91c2VybmFtZSI6ImI1ZWNkYjA5NGRmYjQxNDlhNmE4NDQ1YTAxYTk2YmYwQGlkaXIiLCJjdXN0b206aWRwX3VzZXJfaWQiOiJCNUVDREIwOTRERkI0MTQ5QTZBODQ0NUEwMUE5NkJGMCIsImN1c3RvbTppZHBfdXNlcm5hbWUiOiJKUllBTiIsImN1c3RvbTppZHBfZGlzcGxheV9uYW1lIjoiUnlhbiwgSmFjayBBZG1pbiBDSUE6SU4iLCJlbWFpbCI6ImphY2sucnlhbkBnb3YuYmMuY2EiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImN1c3RvbTppZHBfbmFtZSI6ImlkaXIifQ.hdx5vkjsCixRpEepjLh_tGEPRTml1zD4UeA0RjVMbu8',
+    idToken: jwtfy({
+      'cognito:groups': ['WASTE_PLUS_ADMIN'],
+      'preferred_username': 'b5ecdb094dfb4149a6a8445a01a96bf0@idir',
+      'custom:idp_user_id': 'B5ECDB094DFB4149A6A8445A01A96BF0',
+      'custom:idp_username': 'JRYAN',
+      'custom:idp_display_name': 'Ryan, Jack Admin CIA:IN',
+      'email': 'jack.ryan@gov.bc.ca',
+      'email_verified': false,
+      'custom:idp_name': 'idir',
+    }),
   };
 
   const bceidData: CookieData = {
     lastAuthUser: 'bceidUser',
-    idToken:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2duaXRvOmdyb3VwcyI6WyJXQVNURV9QTFVTX1ZJRVdFUl8wMDAxMDAwNSIsIldBU1RFX1BMVVNfVklFV0VSXzAwMDAxMjcxIiwiV0FTVEVfUExVU19WSUVXRVJfMDAxNDc2MDMiLCJXQVNURV9QTFVTX1NVQk1JVFRFUl8wMDAxMDAwNSIsIldBU1RFX1BMVVNfU1VCTUlUVEVSXzAwMDExNDU3IiwiV0FTVEVfUExVU19TVUJNSVRURVJfMDAwMDEyNzEiXSwiY3VzdG9tOmlkcF91c2VybmFtZSI6InVhdHRlc3QiLCJjdXN0b206aWRwX25hbWUiOiJiY2VpZGJ1c2luZXNzIiwiY3VzdG9tOmlkcF9idXNpbmVzc19pZCI6ImF1dG9tYXRpb25pbmMiLCJjdXN0b206aWRwX2Rpc3BsYXlfbmFtZSI6IlVhdCBUZXN0IiwiZW1haWwiOiJ1YXR0ZXN0QGdvdi5iYy5jYSJ9.bKqHc1bWAyXkTW3JjlU3lgQro6MNoJDdjoVtpfQ8UyY',
+    idToken: jwtfy({
+      'cognito:groups': [
+        'WASTE_PLUS_VIEWER_00010005',
+        'WASTE_PLUS_VIEWER_00001271',
+        'WASTE_PLUS_VIEWER_00147603',
+        'WASTE_PLUS_SUBMITTER_00010005',
+        'WASTE_PLUS_SUBMITTER_00011457',
+        'WASTE_PLUS_SUBMITTER_00001271',
+      ],
+      'custom:idp_username': 'uattest',
+      'custom:idp_name': 'bceidbusiness',
+      'custom:idp_business_id': 'automationinc',
+      'custom:idp_display_name': 'Uat Test',
+      'email': 'uattest@gov.bc.ca',
+    }),
   };
 
   const cookieData = metadata.userType.toLowerCase() === 'idir' ? idirData : bceidData;
