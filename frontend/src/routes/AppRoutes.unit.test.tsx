@@ -119,6 +119,26 @@ describe('AppRoutes', () => {
       expect(sessionStorage.getItem('redirectAfterLogin')).toBeNull();
     });
 
+    it('does not save when the current path is /dashboard', async () => {
+      globalThis.history.pushState({}, '', '/dashboard?district=DFN');
+
+      (useAuthModule.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
+        isLoading: false,
+        isLoggedIn: false,
+        user: undefined,
+      });
+
+      render(
+        <PageTitleProvider>
+          <AppRoutes />
+        </PageTitleProvider>,
+      );
+
+      await screen.findByText('Not Found');
+      expect(sessionStorage.getItem('redirectAfterLogin')).toBeNull();
+      expect(sessionStorage.getItem('returnTo')).toBeNull();
+    });
+
     it('does not clear redirectAfterLogin in AppRoutes when the user logs in', async () => {
       sessionStorage.setItem('redirectAfterLogin', '/search?district=DFN');
 

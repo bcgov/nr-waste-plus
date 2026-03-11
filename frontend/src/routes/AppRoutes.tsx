@@ -12,13 +12,9 @@ const RETURN_TO_KEY = 'returnTo';
 const RETURN_TO_FALLBACK_KEY = 'returnToFallback';
 const PATHS_NOT_TO_REDIRECT = new Set(['/', '/no-role', '/unauthorized']);
 
-const shouldCaptureRedirectUrl = (pathname: string, search: string): boolean => {
+const shouldCaptureRedirectUrl = (pathname: string): boolean => {
   if (PATHS_NOT_TO_REDIRECT.has(pathname)) return false;
-
-  if (pathname === '/dashboard') {
-    const params = new URLSearchParams(search);
-    if (params.has('code') && params.has('state')) return false;
-  }
+  if (pathname === '/dashboard') return false;
 
   return true;
 };
@@ -38,7 +34,7 @@ const AppRoutes: FC = () => {
 
   const [intendedUrl] = useState(() => {
     const { pathname, search } = globalThis.location;
-    return shouldCaptureRedirectUrl(pathname, search) ? `${pathname}${search}` : null;
+    return shouldCaptureRedirectUrl(pathname) ? `${pathname}${search}` : null;
   });
 
   useEffect(() => {
