@@ -6,7 +6,6 @@ import { AuthContext } from './AuthContext';
 import { AuthProvider } from './AuthProvider';
 
 import { jwtfy } from '@/config/tests/auth.helper';
-import { env } from '@/env';
 
 // Mocks
 vi.mock('aws-amplify/auth', () => ({
@@ -22,7 +21,8 @@ vi.mock('./authUtils', () => ({
 
 describe('AuthProvider (extra coverage)', () => {
   describe('when VITE_ZONE is TEST', () => {
-    beforeAll(() => {
+    beforeAll(async () => {
+      const { env } = await import('@/env');
       env.VITE_ZONE = 'TEST';
     });
 
@@ -109,7 +109,8 @@ describe('AuthProvider (extra coverage)', () => {
   });
 
   describe('when VITE_ZONE is MOCK', () => {
-    beforeAll(() => {
+    beforeAll(async () => {
+      const { env } = await import('@/env');
       env.VITE_ZONE = 'MOCK';
     });
 

@@ -136,6 +136,7 @@ export default defineConfig(({ mode }) => {
         '@/': new URL('./src/', import.meta.url).pathname,
       },
       testTimeout: 15000,
+      clearMocks: true,
       env: loadEnv(mode, process.cwd(), ''),
       exclude: [...configDefaults.exclude, 'dist/**', 'build/**'],
       globals: true,
