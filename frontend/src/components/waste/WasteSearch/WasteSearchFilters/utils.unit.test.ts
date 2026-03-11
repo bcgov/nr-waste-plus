@@ -38,6 +38,16 @@ describe('clientNumbersTransform', () => {
       expect(result).toEqual([{ code: 'X99', description: 'X99' }]);
     });
 
+    it('returns empty array for empty string', () => {
+      const result = clientNumbersTransform.clientNumbers.fromSearchParam('');
+      expect(result).toEqual([]);
+    });
+
+    it('returns empty array for whitespace-only string', () => {
+      const result = clientNumbersTransform.clientNumbers.fromSearchParam('   ');
+      expect(result).toEqual([]);
+    });
+
     it('converts array of codes to CodeDescriptionDto', () => {
       const result = clientNumbersTransform.clientNumbers.fromSearchParam(['C03', 'D04']);
       expect(result).toEqual([
@@ -58,6 +68,14 @@ describe('clientNumbersTransform', () => {
 
     it('trims whitespace from comma-separated values', () => {
       const result = clientNumbersTransform.clientNumbers.fromSearchParam('  A01  ,  B02  ');
+      expect(result).toEqual([
+        { code: 'A01', description: 'A01' },
+        { code: 'B02', description: 'B02' },
+      ]);
+    });
+
+    it('drops empty entries from comma-separated values', () => {
+      const result = clientNumbersTransform.clientNumbers.fromSearchParam('A01,   ,B02,');
       expect(result).toEqual([
         { code: 'A01', description: 'A01' },
         { code: 'B02', description: 'B02' },
