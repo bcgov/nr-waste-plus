@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
 import type { FamRole } from '@/context/auth/types';
 
@@ -11,8 +11,20 @@ type ProtectedRouteProps = Readonly<{
 
 export default function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
   const { user } = useAuth();
+  const location = useLocation();
 
-  if (!user) return <Navigate to="/login" />;
+  const captureReturnTo = () => {
+    const returnTo = `${location.pathname}${location.search}`;
+    sessionStorage.setItem('returnTo', returnTo);
+    localStorage.setItem('returnToFallback', returnTo);
+    sessionStorage.setItem('redirectAfterLogin', returnTo);
+    localStorage.setItem('redirectAfterLoginFallback', returnTo);
+  };
+
+  if (!user) {
+    captureReturnTo();
+    return <Navigate to="/login" replace />;
+  }
   if ((user.roles?.length ?? 0) === 0) return <Navigate to="/no-role" />;
   if (
     roles &&

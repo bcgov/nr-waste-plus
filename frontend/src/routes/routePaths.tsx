@@ -1,6 +1,7 @@
 import { Group, SearchLocate } from '@carbon/icons-react';
 import { Navigate, type RouteObject } from 'react-router-dom';
 
+import DashboardRedirect from './DashboardRedirect';
 import ProtectedRoute from './ProtectedRoute';
 
 import Layout from '@/components/Layout';
@@ -60,7 +61,7 @@ export const SYSTEM_ROUTES: RouteDescription[] = [
   {
     path: '/dashboard',
     id: 'Dashboard',
-    element: <Navigate to="/search" replace />,
+    element: <DashboardRedirect />,
     isSideMenu: false,
   },
   {
@@ -100,7 +101,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/dashboard',
     id: 'Dashboard',
-    element: <Navigate to="/search" replace />,
+    element: <DashboardRedirect />,
     isSideMenu: false,
     protected: true,
   },
