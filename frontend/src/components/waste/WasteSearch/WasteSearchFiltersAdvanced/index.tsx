@@ -15,7 +15,7 @@ import {
 } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
 import { DateTime } from 'luxon';
-import { type FC } from 'react';
+import { type FC, useEffect, useRef } from 'react';
 
 import {
   API_DATE_FORMAT,
@@ -101,6 +101,40 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
     staleTime: Infinity,
     select: (data) => data.content.map((item) => item.client),
   });
+
+  // When a client number arrives from URL params it only carries the code
+  // (description is the same as the code or missing).
+  // Detect that condition and look up the full client info so the AutoCompleteInput
+  // receives a complete initialSelectedItem that it can display.
+  const clientNumberEntry = filters.clientNumbers?.[0];
+  const hasClientCodeOnly = Boolean(
+    clientNumberEntry?.code &&
+    (clientNumberEntry?.description === clientNumberEntry?.code || !clientNumberEntry?.description),
+  );
+
+  const { data: resolvedClient } = useQuery({
+    queryKey: ['clientLookup', clientNumberEntry?.code],
+    queryFn: async () =>
+      (await APIs.forestclient.searchForestClients(clientNumberEntry!.code, 0, 1)).map(
+        forestClientAutocompleteResult2CodeDescription,
+      ),
+    enabled: isModalOpen && hasClientCodeOnly && auth.user?.idpProvider === 'IDIR',
+    staleTime: Infinity,
+  });
+
+  // Track the client code we have already promoted to avoid calling onChange
+  // again when only the onChange reference changes across parent re-renders.
+  const appliedClientCode = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+
+    const first = resolvedClient?.[0];
+    if (first && first.code !== appliedClientCode.current) {
+      appliedClientCode.current = first.code;
+      onChange('clientNumbers')([first]);
+    }
+  }, [isModalOpen, resolvedClient, onChange]);
 
   if (!isModalOpen) return null;
 
@@ -291,7 +325,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 className="advanced-date-picker"
                 datePickerType="single"
                 dateFormat="Y/m/d"
-                locale="en"
+                locale={{ locale: 'en' }}
                 allowInput
                 maxDate={getStartMaxDate(filters.updateDateStart)}
                 onChange={handleDateChange(true)}
@@ -311,7 +345,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 className="advanced-date-picker"
                 datePickerType="single"
                 dateFormat="Y/m/d"
-                locale="en"
+                locale={{ locale: 'en' }}
                 allowInput
                 minDate={getEndMinDate(filters.updateDateEnd)}
                 maxDate={DateTime.now().toFormat(DATE_PICKER_FORMAT)}

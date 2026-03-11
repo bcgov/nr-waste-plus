@@ -7,9 +7,11 @@ import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@
 
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import SearchInput from '@/components/Form/SearchInput';
+import { clientNumbersTransform } from '@/components/waste/WasteSearch/WasteSearchFilters/utils';
 import WasteSearchFiltersActive from '@/components/waste/WasteSearch/WasteSearchFiltersActive';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import WasteSearchFiltersAdvanced from '@/components/waste/WasteSearch/WasteSearchFiltersAdvanced';
+import useSyncFiltersToSearchParams from '@/hooks/useSyncFiltersToSearchParams';
 import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
 import APIs from '@/services/APIs';
 import { removeEmpty } from '@/services/utils';
@@ -25,6 +27,8 @@ type WasteSearchFiltersProps = {
 const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSearch }) => {
   const [filters, setFilters] = useState<ReportingUnitSearchParametersViewDto>(value);
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState<boolean>(false);
+
+  useSyncFiltersToSearchParams(filters, setFilters, { transforms: clientNumbersTransform });
 
   const { data: samplingOptions } = useQuery({
     queryKey: ['samplingOptions'],

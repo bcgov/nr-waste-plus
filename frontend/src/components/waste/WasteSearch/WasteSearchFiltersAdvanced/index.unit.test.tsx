@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import WasteSearchFiltersAdvanced from './index';
+import APIs from '@/services/APIs';
 
 import type { FamLoginUser } from '@/context/auth/types';
 import type { ReportingUnitSearchParametersViewDto } from '@/services/search.types';
@@ -30,6 +31,8 @@ vi.mock('@/services/APIs', () => {
     default: {
       forestclient: {
         getForestClientLocations: vi.fn(),
+        searchForestClients: vi.fn(),
+        searchMyForestClients: vi.fn(),
       },
     },
   };
@@ -51,7 +54,7 @@ const renderWithProps = async (props: any) => {
           <PreferenceProvider>
             <WasteSearchFiltersAdvanced
               filters={defaultFilters}
-              isModalOpen={props.isModalOpen || true}
+              isModalOpen={props.isModalOpen ?? true}
               samplingOptions={props.samplingOptions || []}
               districtOptions={props.districtOptions || []}
               statusOptions={props.statusOptions || []}
@@ -68,6 +71,11 @@ const renderWithProps = async (props: any) => {
 };
 
 describe('WasteSearchFiltersActive', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockClients.mockReturnValue(['client1', 'client2']);
+  });
+
   it('renders advanced filter as modal', async () => {
     await renderWithProps({});
     const modal = await screen.findByRole('dialog');
@@ -184,6 +192,63 @@ describe('WasteSearchFiltersActive', () => {
 
     expect(onChange).toHaveBeenCalledWith('timberMark');
     expect(innerFn).toHaveBeenCalledWith('mark1');
+  });
+
+  it('auto-resolves client name when only client code is provided (URL params scenario)', async () => {
+    const onChange = vi.fn();
+    const innerFn = vi.fn();
+    onChange.mockReturnValue(innerFn);
+
+    // Simulate what the URL params transform produces: code and description are both
+    // the raw client number string, triggering the code-only lookup.
+    const filters: ReportingUnitSearchParametersViewDto = {
+      clientNumbers: [{ code: '12345', description: '12345' }],
+    };
+
+    vi.mocked(APIs.forestclient.searchForestClients).mockResolvedValueOnce([
+      { id: '12345', name: 'ACME Corporation', acronym: 'ACME' } as any,
+    ]);
+
+    await renderWithProps({ filters, onChange });
+
+    await waitFor(() => {
+      expect(APIs.forestclient.searchForestClients).toHaveBeenCalledWith('12345', 0, 1);
+      expect(onChange).toHaveBeenCalledWith('clientNumbers');
+      expect(innerFn).toHaveBeenCalledWith([
+        { code: '12345', description: '12345 ACME Corporation (ACME)' },
+      ]);
+    });
+  });
+
+  it('does NOT trigger the client lookup when a full CodeDescriptionDto is already present', async () => {
+    const onChange = vi.fn();
+
+    const filters: ReportingUnitSearchParametersViewDto = {
+      clientNumbers: [{ code: '12345', description: '12345 ACME Corporation (ACME)' }],
+    };
+
+    await renderWithProps({ filters, onChange });
+
+    // The lookup query should never be fired because the description is already resolved.
+    expect(APIs.forestclient.searchForestClients).not.toHaveBeenCalled();
+    // onChange should not be called for clientNumbers at all during render.
+    expect(onChange).not.toHaveBeenCalledWith('clientNumbers');
+  });
+
+  it('does NOT trigger the client lookup while the modal is closed', async () => {
+    const onChange = vi.fn();
+    const innerFn = vi.fn();
+    onChange.mockReturnValue(innerFn);
+
+    const filters: ReportingUnitSearchParametersViewDto = {
+      clientNumbers: [{ code: '12345', description: '12345' }],
+    };
+
+    await renderWithProps({ filters, onChange, isModalOpen: false });
+
+    expect(APIs.forestclient.searchForestClients).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalledWith('clientNumbers');
+    expect(innerFn).not.toHaveBeenCalled();
   });
 
   it('date picking', async () => {

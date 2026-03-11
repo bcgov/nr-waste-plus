@@ -506,6 +506,98 @@ test.describe('Waste Search Page', () => {
     });
   });
 
+  test.describe('url-populated filters', () => {
+    test('fills main search term from URL', async ({ page }) => {
+      const term = 'RANDOM-TERM-123';
+
+      await page.goto(`/search?mainSearchTerm=${encodeURIComponent(term)}`);
+      await page.waitForLoadState('networkidle');
+
+      const searchBox = page.getByRole('searchbox');
+      await expect(searchBox).toHaveValue(term);
+    });
+
+    test('fills district with one value from URL', async ({ page }) => {
+      await page.goto('/search?district=DFN');
+      await page.waitForLoadState('networkidle');
+
+      const districtInput = page.locator('#district-multi-select-input');
+      await expect(page.getByTestId('dt-district-DFN')).toBeVisible();
+      await expect(districtInput).toHaveAttribute('placeholder', 'DFN');
+    });
+
+    test('fills district with multiple values from URL', async ({ page }) => {
+      await page.goto('/search?district=DFN,DCK');
+      await page.waitForLoadState('networkidle');
+
+      const districtInput = page.locator('#district-multi-select-input');
+      await expect(page.getByTestId('dt-district-DFN')).toBeVisible();
+      await expect(page.getByTestId('dt-district-DCK')).toBeVisible();
+      await expect(districtInput).toHaveAttribute('placeholder', /^(DFN, DCK|DCK, DFN)$/);
+    });
+
+    test('fills Client in advanced search from URL clientNumbers', async ({ page }, testInfo) => {
+      test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
+
+      await mockApiResponsesWithStub(
+        page,
+        'forest-clients/byNameAcronymNumber**',
+        'forest-clients/byNameAcronymNumber-pg0.json',
+      );
+
+      await page.goto('/search?clientNumbers=00049597');
+      await page.waitForLoadState('networkidle');
+
+      await page.getByTestId('advanced-search-button-most').click();
+
+      const clientInput = page.getByRole('combobox', { name: 'Client' });
+      await expect(clientInput).toHaveValue(/00049597/);
+    });
+
+    test('changes district placeholder from default to selected district code', async ({
+      page,
+    }) => {
+      const districtInput = page.locator('#district-multi-select-input');
+      await expect(districtInput).toHaveAttribute('placeholder', 'District');
+
+      await districtInput.click();
+      await page.getByRole('option', { name: 'Fort Nelson' }).click();
+
+      await expect(districtInput).toHaveAttribute('placeholder', 'DFN');
+    });
+
+    test('changes district placeholder style to vivid color when selected', async ({ page }) => {
+      const districtInput = page.locator('#district-multi-select-input');
+
+      const defaultPlaceholderColor = await districtInput.evaluate((el) => {
+        return globalThis.getComputedStyle(el, '::placeholder').color;
+      });
+
+      await districtInput.click();
+      await page.getByRole('option', { name: 'Fort Nelson' }).click();
+
+      const selectedPlaceholderColor = await districtInput.evaluate((el) => {
+        return globalThis.getComputedStyle(el, '::placeholder').color;
+      });
+
+      await expect(districtInput).toHaveAttribute('placeholder', 'DFN');
+      expect(selectedPlaceholderColor).not.toBe(defaultPlaceholderColor);
+    });
+
+    test('updates URL querystring when search values are set', async ({ page }) => {
+      const searchBox = page.getByRole('searchbox');
+      await searchBox.fill('query-sync-check');
+      await searchBox.blur();
+
+      const districtInput = page.locator('#district-multi-select-input');
+      await districtInput.click();
+      await page.getByRole('option', { name: 'Fort Nelson' }).click();
+
+      await expect(page).toHaveURL(/mainSearchTerm=query-sync-check/);
+      await expect(page).toHaveURL(/district=DFN/);
+    });
+  });
+
   test.describe('API errors', () => {
     test('API is unavailable', async ({ page }) => {
       const searchBox = page.getByRole('searchbox');
@@ -613,7 +705,9 @@ test.describe('Waste Search Page', () => {
       ).toContainText('WBMJEC'); // timberMark
       await expect(page.getByTestId('card-item-content-exempted-(yes/no)')).toHaveText('Yes'); // exempted (false)
       await expect(page.getByTestId('card-item-content-net-area')).toHaveText('3.07 ha'); // netArea
-      await expect(page.getByTestId('card-item-content-submitter')).toHaveText('BCEID\\\\BMO'); // submitter
+      await expect(page.getByTestId('card-item-content-submitter')).toHaveText(
+        String.raw`BCEID\\BMO`,
+      ); // submitter
       await expect(page.getByTestId('card-item-comment:')).toHaveText('Comment:-'); // comments
       await expect(page.getByText('No. of blocks in RU: 2')).toBeVisible(); // totalBlocks
 
@@ -747,6 +841,152 @@ test.describe('Waste Search Page', () => {
 
       const expandedRows = page.locator('tr.cds--parent-row.cds--expandable-row');
       await expect(expandedRows).toHaveCount(2);
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Redirect-after-login behaviour
+// These tests verify that the app saves the user's intended deep-link URL to
+// sessionStorage before the OAuth redirect and restores it once authenticated.
+// ---------------------------------------------------------------------------
+test.describe('redirect after login', () => {
+  // -------------------------------------------------------------------------
+  // Unauthenticated path: start without any stored auth state and visit a
+  // protected URL.  The app should land on the Landing page and preserve the
+  // intended destination in sessionStorage so login can pick it up.
+  // -------------------------------------------------------------------------
+  test.describe('when visiting a protected URL while not authenticated', () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
+
+    test.beforeEach(async ({ page }, testInfo) => {
+      await mockApiResponsesWithStub(page, 'users/preferences', 'users/preferences-GET.json');
+
+      if (testInfo.project.metadata.userType === 'bceid') {
+        await mockApiResponsesWithStub(
+          page,
+          'forest-clients/searchByNumbers**',
+          'forest-clients/searchByNumbers-pg0.json',
+        );
+        await mockApiResponsesWithStub(
+          page,
+          'forest-clients/clients**',
+          'forest-clients/clients-pg0.json',
+        );
+      }
+
+      await mockApiResponsesWithStub(page, 'codes/districts', 'codes/districts.json');
+      await mockApiResponsesWithStub(page, 'codes/samplings', 'codes/samplings.json');
+      await mockApiResponsesWithStub(
+        page,
+        'codes/assess-area-statuses',
+        'codes/assess-area-statuses.json',
+      );
+    });
+
+    test('shows the Landing page and saves the intended URL to sessionStorage', async ({
+      page,
+    }) => {
+      await page.goto('/search?district=DFN');
+      await page.waitForLoadState('networkidle');
+
+      // User must be shown the landing / login page, not the search page.
+      await expect(page.getByTestId('landing-title')).toBeVisible();
+
+      // The intended URL should be preserved for use after login.
+      const savedUrl = await page.evaluate(() => sessionStorage.getItem('redirectAfterLogin'));
+      expect(savedUrl).toBe('/search?district=DFN');
+    });
+
+    test('preserves the full querystring including multiple params', async ({ page }) => {
+      await page.goto('/search?mainSearchTerm=TIMBER&district=DFN');
+      await page.waitForLoadState('networkidle');
+
+      await expect(page.getByTestId('landing-title')).toBeVisible();
+
+      const savedUrl = await page.evaluate(() => sessionStorage.getItem('redirectAfterLogin'));
+      expect(savedUrl).toBe('/search?mainSearchTerm=TIMBER&district=DFN');
+    });
+
+    test('does NOT save the root path to sessionStorage', async ({ page }) => {
+      await page.goto('/');
+      await page.waitForLoadState('networkidle');
+
+      await expect(page.getByTestId('landing-title')).toBeVisible();
+
+      const savedUrl = await page.evaluate(() => sessionStorage.getItem('redirectAfterLogin'));
+      expect(savedUrl).toBeNull();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Authenticated path: simulate a user returning from OAuth with a previously
+  // saved redirect URL still in sessionStorage.  The app should navigate there
+  // automatically and then clear the sessionStorage entry.
+  // -------------------------------------------------------------------------
+  test.describe('when authenticated and a redirect URL is stored in sessionStorage', () => {
+    test.beforeEach(async ({ page }, testInfo) => {
+      if (testInfo.project.metadata.userType === 'bceid') {
+        await mockApiResponsesWithStub(
+          page,
+          'forest-clients/searchByNumbers**',
+          'forest-clients/searchByNumbers-pg0.json',
+        );
+        await mockApiResponsesWithStub(
+          page,
+          'forest-clients/clients**',
+          'forest-clients/clients-pg0.json',
+        );
+      }
+
+      await mockApiResponsesWithStub(page, 'users/preferences', 'users/preferences-GET.json');
+      await mockApiResponsesWithStub(page, 'codes/districts', 'codes/districts.json');
+      await mockApiResponsesWithStub(page, 'codes/samplings', 'codes/samplings.json');
+      await mockApiResponsesWithStub(
+        page,
+        'codes/assess-area-statuses',
+        'codes/assess-area-statuses.json',
+      );
+    });
+
+    test('navigates to the saved URL and clears sessionStorage after auth resolves', async ({
+      page,
+    }) => {
+      const targetUrl = '/search?district=DFN';
+
+      // Plant the intended URL in sessionStorage before the app boots, simulating
+      // the value that was saved just before signInWithRedirect() was called.
+      await page.addInitScript((url) => {
+        sessionStorage.setItem('redirectAfterLogin', url);
+      }, targetUrl);
+
+      // Land on root (the typical OAuth callback destination).
+      await page.goto('/');
+      await page.waitForLoadState('networkidle');
+
+      // The app should have redirected to the saved deep-link URL.
+      await expect(page).toHaveURL(/district=DFN/);
+
+      // sessionStorage must be cleared so the redirect only fires once.
+      const savedUrl = await page.evaluate(() => sessionStorage.getItem('redirectAfterLogin'));
+      expect(savedUrl).toBeNull();
+    });
+
+    test('navigates to a saved URL that includes a mainSearchTerm', async ({ page }) => {
+      const targetUrl = '/search?mainSearchTerm=TIMBER&district=DFN';
+
+      await page.addInitScript((url) => {
+        sessionStorage.setItem('redirectAfterLogin', url);
+      }, targetUrl);
+
+      await page.goto('/');
+      await page.waitForLoadState('networkidle');
+
+      await expect(page).toHaveURL(/mainSearchTerm=TIMBER/);
+      await expect(page).toHaveURL(/district=DFN/);
+
+      const savedUrl = await page.evaluate(() => sessionStorage.getItem('redirectAfterLogin'));
+      expect(savedUrl).toBeNull();
     });
   });
 });

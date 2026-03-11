@@ -258,4 +258,21 @@ describe('useSyncPreferencesToFilters', () => {
     expect(result.current.clientNumbers).toEqual(['xyz']);
     expect(result.current.district).toBe('d2');
   });
+
+  it('does not update filter when transform returns undefined', () => {
+    mockedPreference = { theme: 'g10', selectedDistrict: 'd1' };
+
+    const { result, rerender } = renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ district: 'from-url' });
+      useSyncPreferencesToFilters(setFilters, { selectedDistrict: 'district' }, () => undefined);
+      return filters;
+    });
+
+    expect(result.current.district).toBe('from-url');
+
+    mockedPreference = { ...mockedPreference, selectedDistrict: 'd2' };
+    rerender();
+
+    expect(result.current.district).toBe('from-url');
+  });
 });

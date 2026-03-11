@@ -1,16 +1,37 @@
 import { Loading } from '@carbon/react';
-import { Suspense, useEffect, useMemo, type FC } from 'react';
+import { Suspense, useEffect, useMemo, useState, type FC } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import { useAuth } from '@/context/auth/useAuth';
 import { usePageTitle } from '@/context/pageTitle/usePageTitle';
+import { persistRedirectUrl } from '@/routes/redirectStorage';
 import { getProtectedRoutes, getPublicRoutes } from '@/routes/routePaths';
+
+const PATHS_NOT_TO_REDIRECT = new Set(['/', '/no-role', '/unauthorized']);
+
+const shouldCaptureRedirectUrl = (pathname: string): boolean => {
+  if (PATHS_NOT_TO_REDIRECT.has(pathname)) return false;
+  if (pathname === '/dashboard') return false;
+
+  return true;
+};
 
 const AppRoutes: FC = () => {
   const { isLoggedIn, isLoading, user } = useAuth();
   const { setPageTitle } = usePageTitle();
 
   const displayLoading = () => <Loading data-testid="loading" withOverlay={true} />;
+
+  const [intendedUrl] = useState(() => {
+    const { pathname, search } = globalThis.location;
+    return shouldCaptureRedirectUrl(pathname) ? `${pathname}${search}` : null;
+  });
+
+  useEffect(() => {
+    if (!isLoading && !isLoggedIn && intendedUrl) {
+      persistRedirectUrl(intendedUrl);
+    }
+  }, [isLoading, isLoggedIn, intendedUrl]);
 
   const routesToUse = useMemo(() => {
     if (!isLoggedIn) return getPublicRoutes();
