@@ -1,6 +1,6 @@
 import { test as setup } from '@playwright/test';
 
-import { authenticate } from './auth.helper';
+import { mockAuthenticate } from './auth.helper';
 import { mockApiResponsesWithStub } from './e2e.helper';
 
 setup.beforeEach(async ({ page }) => {
@@ -29,5 +29,5 @@ setup.beforeEach(async ({ page }) => {
 });
 
 setup('authenticate', async ({ page }, testInfo) => {
-  await authenticate(page, testInfo.project.metadata);
+  await mockAuthenticate(page, testInfo.project.metadata);
 });

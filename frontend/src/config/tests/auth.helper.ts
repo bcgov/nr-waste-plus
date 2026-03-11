@@ -4,9 +4,7 @@ import path from 'node:path';
 
 import type { Page } from '@playwright/test';
 
-export async function authenticate(page: Page, metadata: Record<string, any>): Promise<void> {
-  // Fill credentials (use env vars for security)
-  console.log(`Setup -  Auth: ${metadata.user} via ${metadata.userType.toLowerCase()}`);
+async function initializeAndCheck(page: Page): Promise<boolean> {
   await page.goto('/landing');
 
   await page.waitForLoadState('networkidle');
@@ -21,6 +19,18 @@ export async function authenticate(page: Page, metadata: Record<string, any>): P
 
   if (notFoundVisible || searchPageVisible) {
     console.log('Setup - Already authenticated, skipping login');
+    return true;
+  }
+
+  return false;
+}
+
+export async function authenticate(page: Page, metadata: Record<string, any>): Promise<void> {
+  // Fill credentials (use env vars for security)
+  console.log(`Setup - Auth: ${metadata.user} via ${metadata.userType.toLowerCase()}`);
+
+  const alreadyAuthenticated = await initializeAndCheck(page);
+  if (alreadyAuthenticated) {
     return;
   }
 
@@ -41,6 +51,61 @@ export async function authenticate(page: Page, metadata: Record<string, any>): P
   await page.waitForLoadState('networkidle');
 
   console.log('Setup - Authentication verified successfully');
+
+  const authFile = path.resolve(process.cwd(), 'src/config/tests', metadata.stateFile);
+
+  console.log(`Setup - Saving storage state to ${authFile}`);
+  await page.context().storageState({ path: authFile });
+}
+
+export async function mockAuthenticate(page: Page, metadata: Record<string, any>): Promise<void> {
+  console.log(`Setup - Mock Auth: ${metadata.userType.toLowerCase()} user`);
+
+  const alreadyAuthenticated = await initializeAndCheck(page);
+  if (alreadyAuthenticated) {
+    return;
+  }
+
+  interface CookieData {
+    lastAuthUser: string;
+    idToken: string;
+  }
+
+  const idirData: CookieData = {
+    lastAuthUser: 'idirUser',
+    idToken:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2duaXRvOmdyb3VwcyI6WyJXQVNURV9QTFVTX0FETUlOIl0sInByZWZlcnJlZF91c2VybmFtZSI6ImI1ZWNkYjA5NGRmYjQxNDlhNmE4NDQ1YTAxYTk2YmYwQGlkaXIiLCJjdXN0b206aWRwX3VzZXJfaWQiOiJCNUVDREIwOTRERkI0MTQ5QTZBODQ0NUEwMUE5NkJGMCIsImN1c3RvbTppZHBfdXNlcm5hbWUiOiJKUllBTiIsImN1c3RvbTppZHBfZGlzcGxheV9uYW1lIjoiUnlhbiwgSmFjayBBZG1pbiBDSUE6SU4iLCJlbWFpbCI6ImphY2sucnlhbkBnb3YuYmMuY2EiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImN1c3RvbTppZHBfbmFtZSI6ImlkaXIifQ.hdx5vkjsCixRpEepjLh_tGEPRTml1zD4UeA0RjVMbu8',
+  };
+
+  const bceidData: CookieData = {
+    lastAuthUser: 'bceidUser',
+    idToken:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2duaXRvOmdyb3VwcyI6WyJXQVNURV9QTFVTX1ZJRVdFUl8wMDAxMDAwNSIsIldBU1RFX1BMVVNfVklFV0VSXzAwMDAxMjcxIiwiV0FTVEVfUExVU19WSUVXRVJfMDAxNDc2MDMiLCJXQVNURV9QTFVTX1NVQk1JVFRFUl8wMDAxMDAwNSIsIldBU1RFX1BMVVNfU1VCTUlUVEVSXzAwMDExNDU3IiwiV0FTVEVfUExVU19TVUJNSVRURVJfMDAwMDEyNzEiXSwiY3VzdG9tOmlkcF91c2VyX2lkIjoidWF0dGVzdCIsImN1c3RvbTppZHBfbmFtZSI6ImJjZWlkYnVzaW5lc3MiLCJjdXN0b206aWRwX2J1c2luZXNzX2lkIjoiYXV0b21hdGlvbmluYyIsImN1c3RvbTppZHBfZGlzcGxheV9uYW1lIjoiVWF0IFRlc3QiLCJlbWFpbCI6InVhdHRlc3RAZ292LmJjLmNhIn0.sDRk7erQU04iaMH7fElkDKrHHvtPe1AMJtRbnRHi-AE',
+  };
+
+  const cookieData = metadata.userType.toLowerCase() === 'idir' ? idirData : bceidData;
+
+  const { lastAuthUser, idToken } = cookieData;
+
+  page.context().addCookies([
+    {
+      name: 'CognitoIdentityServiceProvider.24eecb7emheb8vkqqu5liun757.LastAuthUser',
+      value: lastAuthUser,
+      sameSite: 'Lax',
+      expires: 2908989880,
+      path: '/',
+      domain: 'localhost',
+    },
+    {
+      name: `CognitoIdentityServiceProvider.24eecb7emheb8vkqqu5liun757.${lastAuthUser}.idToken`,
+      value: idToken,
+      sameSite: 'Lax',
+      expires: 2908989880,
+      path: '/',
+      domain: 'localhost',
+    },
+  ]);
+  await page.reload();
 
   const authFile = path.resolve(process.cwd(), 'src/config/tests', metadata.stateFile);
 
