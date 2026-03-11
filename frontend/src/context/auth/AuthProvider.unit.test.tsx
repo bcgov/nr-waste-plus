@@ -127,7 +127,7 @@ describe('AuthProvider (extra coverage)', () => {
         </AuthProvider>,
       );
       await waitFor(() => expect(context).toBeDefined());
-      expect(fetchAuthSession).not.toHaveBeenCalledWith();
+      expect(fetchAuthSession).not.toHaveBeenCalled();
     });
 
     it("calls getUserTokenFromCookie and sets the user token payload to the cookie's decoded value", async () => {
