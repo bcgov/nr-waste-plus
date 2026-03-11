@@ -29,6 +29,28 @@ const isOAuthCallbackQuery = (search: string): boolean => {
   return params.has('code') && params.has('state');
 };
 
+const getSafeRedirectTarget = (value: string | null): string | null => {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(value, globalThis.location.origin);
+
+    if (parsed.origin !== globalThis.location.origin) {
+      return null;
+    }
+
+    if (parsed.pathname === '/dashboard') {
+      return null;
+    }
+
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return null;
+  }
+};
+
 const DashboardRedirect: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,7 +60,7 @@ const DashboardRedirect: FC = () => {
     if (hasNavigatedRef.current) return;
     hasNavigatedRef.current = true;
 
-    const persistedRedirect = readPersistedRedirect();
+    const persistedRedirect = getSafeRedirectTarget(readPersistedRedirect());
 
     if (persistedRedirect) {
       clearPersistedRedirect();
