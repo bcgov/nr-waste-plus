@@ -1,6 +1,6 @@
 import { test as setup } from '@playwright/test';
 
-import { mockAuthenticate } from './auth.helper';
+import { authenticate, mockAuthenticate } from './auth.helper';
 import { mockApiResponsesWithStub } from './e2e.helper';
 
 setup.beforeEach(async ({ page }) => {
@@ -29,5 +29,8 @@ setup.beforeEach(async ({ page }) => {
 });
 
 setup('authenticate', async ({ page }, testInfo) => {
-  await mockAuthenticate(page, testInfo.project.metadata);
+  const authFunction = testInfo.project.metadata.shouldMockAuthentication
+    ? mockAuthenticate
+    : authenticate;
+  await authFunction(page, testInfo.project.metadata);
 });

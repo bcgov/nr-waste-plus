@@ -20,6 +20,8 @@ const commonSettings = {
   },
 };
 
+const shouldMockAuthentication = process.env.VITE_ZONE?.toLowerCase() === 'mock';
+
 const setupProjects = [
   {
     name: 'bceid-setup',
@@ -34,6 +36,7 @@ const setupProjects = [
       category: 'desktop',
       browserName: 'chromium',
       stateFile: 'user.bceid.json',
+      shouldMockAuthentication,
       user: process.env.BCEID_USERNAME ?? '',
       password: process.env.BCEID_PASSWORD ?? '',
     },
@@ -51,6 +54,7 @@ const setupProjects = [
       category: 'desktop',
       browserName: 'chromium',
       stateFile: 'user.idir.json',
+      shouldMockAuthentication,
       user: process.env.IDIR_USERNAME ?? '',
       password: process.env.IDIR_PASSWORD ?? '',
     },
