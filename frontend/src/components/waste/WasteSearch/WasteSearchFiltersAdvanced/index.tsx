@@ -118,7 +118,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
       (await APIs.forestclient.searchForestClients(clientNumberEntry!.code, 0, 1)).map(
         forestClientAutocompleteResult2CodeDescription,
       ),
-    enabled: hasClientCodeOnly && auth.user?.idpProvider === 'IDIR',
+    enabled: isModalOpen && hasClientCodeOnly && auth.user?.idpProvider === 'IDIR',
     staleTime: Infinity,
   });
 
@@ -127,12 +127,14 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
   const appliedClientCode = useRef<string | undefined>(undefined);
 
   useEffect(() => {
+    if (!isModalOpen) return;
+
     const first = resolvedClient?.[0];
     if (first && first.code !== appliedClientCode.current) {
       appliedClientCode.current = first.code;
       onChange('clientNumbers')([first]);
     }
-  }, [resolvedClient, onChange]);
+  }, [isModalOpen, resolvedClient, onChange]);
 
   if (!isModalOpen) return null;
 

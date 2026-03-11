@@ -54,7 +54,7 @@ const renderWithProps = async (props: any) => {
           <PreferenceProvider>
             <WasteSearchFiltersAdvanced
               filters={defaultFilters}
-              isModalOpen={props.isModalOpen || true}
+              isModalOpen={props.isModalOpen ?? true}
               samplingOptions={props.samplingOptions || []}
               districtOptions={props.districtOptions || []}
               statusOptions={props.statusOptions || []}
@@ -233,6 +233,22 @@ describe('WasteSearchFiltersActive', () => {
     expect(APIs.forestclient.searchForestClients).not.toHaveBeenCalled();
     // onChange should not be called for clientNumbers at all during render.
     expect(onChange).not.toHaveBeenCalledWith('clientNumbers');
+  });
+
+  it('does NOT trigger the client lookup while the modal is closed', async () => {
+    const onChange = vi.fn();
+    const innerFn = vi.fn();
+    onChange.mockReturnValue(innerFn);
+
+    const filters: ReportingUnitSearchParametersViewDto = {
+      clientNumbers: [{ code: '12345', description: '12345' }],
+    };
+
+    await renderWithProps({ filters, onChange, isModalOpen: false });
+
+    expect(APIs.forestclient.searchForestClients).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalledWith('clientNumbers');
+    expect(innerFn).not.toHaveBeenCalled();
   });
 
   it('date picking', async () => {
