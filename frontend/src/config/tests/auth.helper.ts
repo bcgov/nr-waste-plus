@@ -58,7 +58,7 @@ export async function authenticate(page: Page, metadata: Record<string, any>): P
   await page.context().storageState({ path: authFile });
 }
 
-const jwtfy = (jwtBody: any) => {
+export const jwtfy = (jwtBody: object) => {
   const header = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
   const payload = btoa(JSON.stringify(jwtBody))
     .replace(/\+/g, '-')
