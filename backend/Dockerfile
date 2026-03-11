@@ -1,5 +1,5 @@
 ### Builder
-FROM ghcr.io/graalvm/native-image-community:25.0.1 AS build
+FROM ghcr.io/graalvm/native-image-community:25.0.2 AS build
 
 # Copy
 WORKDIR /app
