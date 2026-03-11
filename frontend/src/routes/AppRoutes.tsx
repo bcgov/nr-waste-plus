@@ -4,12 +4,9 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import { useAuth } from '@/context/auth/useAuth';
 import { usePageTitle } from '@/context/pageTitle/usePageTitle';
+import { persistRedirectUrl } from '@/routes/redirectStorage';
 import { getProtectedRoutes, getPublicRoutes } from '@/routes/routePaths';
 
-const REDIRECT_AFTER_LOGIN_KEY = 'redirectAfterLogin';
-const REDIRECT_AFTER_LOGIN_FALLBACK_KEY = 'redirectAfterLoginFallback';
-const RETURN_TO_KEY = 'returnTo';
-const RETURN_TO_FALLBACK_KEY = 'returnToFallback';
 const PATHS_NOT_TO_REDIRECT = new Set(['/', '/no-role', '/unauthorized']);
 
 const shouldCaptureRedirectUrl = (pathname: string): boolean => {
@@ -17,13 +14,6 @@ const shouldCaptureRedirectUrl = (pathname: string): boolean => {
   if (pathname === '/dashboard') return false;
 
   return true;
-};
-
-const persistRedirectUrl = (url: string) => {
-  sessionStorage.setItem(REDIRECT_AFTER_LOGIN_KEY, url);
-  localStorage.setItem(REDIRECT_AFTER_LOGIN_FALLBACK_KEY, url);
-  sessionStorage.setItem(RETURN_TO_KEY, url);
-  localStorage.setItem(RETURN_TO_FALLBACK_KEY, url);
 };
 
 const AppRoutes: FC = () => {

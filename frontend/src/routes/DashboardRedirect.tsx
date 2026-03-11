@@ -1,28 +1,7 @@
 import { useEffect, useRef, type FC } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-const REDIRECT_KEYS = [
-  'redirectAfterLogin',
-  'returnTo',
-  'redirectAfterLoginFallback',
-  'returnToFallback',
-] as const;
-
-const readPersistedRedirect = (): string | null => {
-  return (
-    sessionStorage.getItem('redirectAfterLogin') ||
-    sessionStorage.getItem('returnTo') ||
-    localStorage.getItem('redirectAfterLoginFallback') ||
-    localStorage.getItem('returnToFallback')
-  );
-};
-
-const clearPersistedRedirect = () => {
-  REDIRECT_KEYS.forEach((key) => {
-    sessionStorage.removeItem(key);
-    localStorage.removeItem(key);
-  });
-};
+import { clearPersistedRedirect, readPersistedRedirect } from '@/routes/redirectStorage';
 
 const isOAuthCallbackQuery = (search: string): boolean => {
   const params = new URLSearchParams(search);
