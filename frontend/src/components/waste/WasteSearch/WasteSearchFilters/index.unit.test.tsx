@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent, within, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 
 import WasteSearchFilters from './index';
@@ -47,18 +48,20 @@ const renderWithProps = async (props: Partial<ComponentProps<typeof WasteSearchF
   const qc = new QueryClient();
   await act(async () =>
     render(
-      <QueryClientProvider client={qc}>
-        <AuthProvider>
-          <PreferenceProvider>
-            <WasteSearchFilters
-              value={defaultFilters}
-              onChange={props.onChange || vi.fn()}
-              onSearch={props.onSearch || vi.fn()}
-              {...props}
-            />
-          </PreferenceProvider>
-        </AuthProvider>
-      </QueryClientProvider>,
+      <MemoryRouter>
+        <QueryClientProvider client={qc}>
+          <AuthProvider>
+            <PreferenceProvider>
+              <WasteSearchFilters
+                value={defaultFilters}
+                onChange={props.onChange || vi.fn()}
+                onSearch={props.onSearch || vi.fn()}
+                {...props}
+              />
+            </PreferenceProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </MemoryRouter>,
     ),
   );
 };
@@ -172,6 +175,3 @@ describe('WasteSearchFilters', () => {
     await waitFor(() => expect(onChange).toHaveBeenCalled());
   });
 });
-
-// Tests for useSyncFiltersToSearchParams integration are covered in utils.unit.test.ts
-// and in the hook's own test suite. This test focuses on the component's UI and event handling.

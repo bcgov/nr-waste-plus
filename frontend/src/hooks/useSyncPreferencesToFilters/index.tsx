@@ -46,6 +46,10 @@ const useSyncPreferencesToFilters = <T, PrefKeys extends string>(
 
       const filterValue = transform ? transform(prefKey as PrefKeys, prefValue) : prefValue;
 
+      if (filterValue === undefined || filterValue === null) {
+        return acc;
+      }
+
       return {
         ...acc,
         [filterKey as string]: filterValue,
