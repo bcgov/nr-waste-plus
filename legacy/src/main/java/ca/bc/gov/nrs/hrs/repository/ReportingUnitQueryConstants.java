@@ -24,7 +24,9 @@ public final class ReportingUnitQueryConstants {
       NULLIF(TRIM(COALESCE(waa.CUTTING_PERMIT_ID, waa.DRAFT_CUTTING_PERMIT_ID)),'') AS cutting_permit,
       COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK) AS timber_mark,
       CASE WHEN NVL(waa.MULTI_MARK_IND, 'N') = 'N' THEN 0 ELSE 1 END AS multi_mark,
-      CASE WHEN waa.PARENT_WAA_ID IS NOT NULL THEN 1 ELSE 0 END AS secondary_entry,
+      CASE WHEN
+        (waa.PARENT_WAA_ID IS NOT NULL AND NVL(waa.CHILD_BLOCK_IND, 'N') = 'Y')
+        THEN 1 ELSE 0 END AS secondary_entry,
       wru.waste_sampling_option_code AS sampling_code,
       wsoc.DESCRIPTION AS sampling_name,
       ou.ORG_UNIT_CODE AS district_code,
@@ -212,7 +214,7 @@ public final class ReportingUnitQueryConstants {
           NULLIF(TRIM(COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK)), '') AS mark,
           waa.WASTE_ASSESS_AREA_STS_CODE AS status,
           waasc.DESCRIPTION AS description,
-          waa.WASTE_NET_AREA AS area
+          waa.mark_area AS area
         FROM WASTE_ASSESSMENT_AREA waa
         LEFT JOIN WASTE_ASSESS_AREA_STS_CODE waasc
           ON waasc.WASTE_ASSESS_AREA_STS_CODE = waa.WASTE_ASSESS_AREA_STS_CODE
