@@ -19,7 +19,8 @@ jobs:
     env:
       VITE_APP_NAME: Waste Plus
       VITE_FEATURES_OFFLINE: true
-      VITE_ZONE: MOCK
+      VITE_ZONE: TEST
+      VITE_MOCK_AUTH: true
       VITE_USER_POOLS_ID: ${{ secrets.COGNITO_USER_POOL }}
       VITE_USER_POOLS_WEB_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
       VITE_LEGACY_BASE_URL: https://apps.nrs.gov.bc.ca/ext/waste-for
@@ -41,7 +42,8 @@ jobs:
         env:
           VITE_APP_NAME: Waste Plus
           VITE_FEATURES_OFFLINE: true
-          VITE_ZONE: MOCK
+          VITE_ZONE: TEST
+          VITE_MOCK_AUTH: true
           VITE_USER_POOLS_ID: ${{ secrets.COGNITO_USER_POOL }}
           VITE_USER_POOLS_WEB_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
           VITE_LEGACY_BASE_URL: https://apps.nrs.gov.bc.ca/ext/waste-for
@@ -50,10 +52,6 @@ jobs:
           VITE_NODE_ENV: test
           VITE_COVERAGE: true
           VITE_PORT: 3000
-          BCEID_USERNAME: ${{ secrets.BCEID_UAT_USERNAME }}
-          BCEID_PASSWORD: ${{ secrets.BCEID_UAT_PASSWORD }}
-          IDIR_USERNAME: ${{ secrets.IDIR_UAT_USERNAME }}
-          IDIR_PASSWORD: ${{ secrets.IDIR_UAT_PASSWORD}}
         with:
           node_version: 24
           commands: |

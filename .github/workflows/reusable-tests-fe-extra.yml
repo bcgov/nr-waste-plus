@@ -19,7 +19,8 @@ jobs:
     env:
       VITE_APP_NAME: Waste Plus
       VITE_FEATURES_OFFLINE: false
-      VITE_ZONE: MOCK
+      VITE_ZONE: TEST
+      VITE_MOCK_AUTH: true
       VITE_USER_POOLS_ID: ${{ secrets.COGNITO_USER_POOL }}
       VITE_USER_POOLS_WEB_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
       VITE_LEGACY_BASE_URL: https://apps.nrs.gov.bc.ca/ext/waste-for
