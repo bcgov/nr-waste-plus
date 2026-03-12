@@ -12,6 +12,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const appEnv = Number.isNaN(Number(env.VITE_ZONE)) ? (env.VITE_ZONE ?? 'TEST') : 'TEST';
+  const isMock = env.VITE_MOCK_AUTH === 'true';
 
   const refreshUserState = async () => {
     setIsLoading(true);
@@ -77,7 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const loadUserToken = async (): Promise<JWT | undefined> => {
-    if (appEnv.toLowerCase() === 'mock') {
+    if (isMock) {
       // This is for test only
       const idToken = getUserTokenFromCookie();
       const payload = idToken ? JSON.parse(atob(idToken.split('.')[1])) : null;

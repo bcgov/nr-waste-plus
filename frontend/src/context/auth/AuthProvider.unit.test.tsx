@@ -20,10 +20,10 @@ vi.mock('./authUtils', () => ({
 }));
 
 describe('AuthProvider (extra coverage)', () => {
-  describe('when VITE_ZONE is TEST', () => {
+  describe('when VITE_MOCK_AUTH is false', () => {
     beforeAll(async () => {
       const { env } = await import('@/env');
-      env.VITE_ZONE = 'TEST';
+      env.VITE_MOCK_AUTH = 'false';
     });
 
     it('calls fetchAuthSession', async () => {
@@ -108,10 +108,10 @@ describe('AuthProvider (extra coverage)', () => {
     });
   });
 
-  describe('when VITE_ZONE is MOCK', () => {
+  describe('when VITE_MOCK_AUTH is true', () => {
     beforeAll(async () => {
       const { env } = await import('@/env');
-      env.VITE_ZONE = 'MOCK';
+      env.VITE_MOCK_AUTH = 'true';
     });
 
     it("doesn't call fetchAuthSession", async () => {

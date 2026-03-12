@@ -20,7 +20,7 @@ const commonSettings = {
   },
 };
 
-const shouldMockAuthentication = process.env.VITE_ZONE?.toLowerCase() === 'mock';
+const shouldMockAuthentication = process.env.VITE_MOCK_AUTH?.toLowerCase() === 'true';
 
 const userPoolsClientId = process.env.VITE_USER_POOLS_WEB_CLIENT_ID;
 
