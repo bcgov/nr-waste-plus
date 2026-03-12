@@ -117,9 +117,11 @@ export async function mockAuthenticate(page: Page, metadata: Record<string, any>
 
   const { lastAuthUser, idToken } = cookieData;
 
-  page.context().addCookies([
+  const clientId = metadata.userPoolsClientId;
+
+  await page.context().addCookies([
     {
-      name: 'CognitoIdentityServiceProvider.24eecb7emheb8vkqqu5liun757.LastAuthUser',
+      name: `CognitoIdentityServiceProvider.${clientId}.LastAuthUser`,
       value: lastAuthUser,
       sameSite: 'Lax',
       expires: 2908989880,
@@ -127,7 +129,7 @@ export async function mockAuthenticate(page: Page, metadata: Record<string, any>
       domain: 'localhost',
     },
     {
-      name: `CognitoIdentityServiceProvider.24eecb7emheb8vkqqu5liun757.${lastAuthUser}.idToken`,
+      name: `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.idToken`,
       value: idToken,
       sameSite: 'Lax',
       expires: 2908989880,

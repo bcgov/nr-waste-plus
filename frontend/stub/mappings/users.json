@@ -6,7 +6,7 @@
         "url": "/api/users/preferences",
         "method": "GET",
         "cookies": {
-          "CognitoIdentityServiceProvider.24eecb7emheb8vkqqu5liun757.LastAuthUser": {
+          "CognitoIdentityServiceProvider.{{systemValue key='VITE_USER_POOLS_WEB_CLIENT_ID'}}.LastAuthUser": {
             "equalTo": "idirUser"
           }
         }
@@ -22,7 +22,7 @@
         "url": "/api/users/preferences",
         "method": "GET",
         "cookies": {
-          "CognitoIdentityServiceProvider.24eecb7emheb8vkqqu5liun757.LastAuthUser": {
+          "CognitoIdentityServiceProvider.{{systemValue key='VITE_USER_POOLS_WEB_CLIENT_ID'}}.LastAuthUser": {
             "equalTo": "bceidUser"
           }
         }

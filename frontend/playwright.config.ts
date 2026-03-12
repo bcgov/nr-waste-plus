@@ -22,6 +22,8 @@ const commonSettings = {
 
 const shouldMockAuthentication = process.env.VITE_ZONE?.toLowerCase() === 'mock';
 
+const userPoolsClientId = process.env.VITE_USER_POOLS_WEB_CLIENT_ID;
+
 const setupProjects = [
   {
     name: 'bceid-setup',
@@ -37,6 +39,7 @@ const setupProjects = [
       browserName: 'chromium',
       stateFile: 'user.bceid.json',
       shouldMockAuthentication,
+      userPoolsClientId,
       user: process.env.BCEID_USERNAME ?? '',
       password: process.env.BCEID_PASSWORD ?? '',
     },
@@ -55,6 +58,7 @@ const setupProjects = [
       browserName: 'chromium',
       stateFile: 'user.idir.json',
       shouldMockAuthentication,
+      userPoolsClientId,
       user: process.env.IDIR_USERNAME ?? '',
       password: process.env.IDIR_PASSWORD ?? '',
     },
