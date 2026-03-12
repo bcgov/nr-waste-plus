@@ -1,8 +1,105 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-console */
+import crypto from 'node:crypto';
 import path from 'node:path';
 
 import type { Page } from '@playwright/test';
+
+interface CookieData {
+  lastAuthUser: string;
+  idToken: string;
+}
+
+const defaultGroups = {
+  bceid: [
+    'WASTE_PLUS_VIEWER_00010005',
+    'WASTE_PLUS_VIEWER_00001271',
+    'WASTE_PLUS_VIEWER_00147603',
+    'WASTE_PLUS_SUBMITTER_00010005',
+    'WASTE_PLUS_SUBMITTER_00011457',
+    'WASTE_PLUS_SUBMITTER_00001271',
+  ],
+  idir: ['WASTE_PLUS_ADMIN'],
+};
+
+const defaultClaims = (userId: string, businessId: string) => {
+  const idir = {
+    'custom:idp_name': 'idir',
+    'cognito:groups': defaultGroups.idir,
+    'cognito:username': `test-idir_${userId}@idir`,
+    'custom:idp_user_id': userId.toUpperCase(),
+    'custom:idp_username': 'JRYAN',
+    'custom:idp_display_name': 'Ryan, Jack Admin CIA:IN',
+    'email': 'jack.ryan@gov.bc.ca',
+    'preferred_username': `${userId}@idir`,
+    'email_verified': false,
+  };
+  const bceid = {
+    'custom:idp_name': 'bceidbusiness',
+    'cognito:groups': defaultGroups.bceid,
+    'custom:idp_business_id': businessId.toUpperCase(),
+    'cognito:username': `test-bceidbusiness_${userId}@bceidbusiness`,
+    'custom:idp_user_id': userId.toUpperCase(),
+    'custom:idp_username': 'uattest',
+    'custom:idp_display_name': 'Uat Test',
+    'email': 'uattest@gov.bc.ca',
+  };
+  return { idir, bceid };
+};
+
+const genRandomId = () => crypto.randomBytes(16).toString('hex');
+
+const setupCustomClaims = (
+  userType: 'idir' | 'bceid',
+  claimOverrides: Record<string, any> = {},
+): CookieData => {
+  const lastAuthUser = userType === 'idir' ? 'idirUser' : 'bceidUser';
+  const { idir, bceid } = defaultClaims(genRandomId(), genRandomId());
+
+  return {
+    lastAuthUser,
+    idToken: jwtfy(
+      userType === 'idir' ? { ...idir, ...claimOverrides } : { ...bceid, ...claimOverrides },
+    ),
+  };
+};
+
+export async function mockJwt(
+  page: Page,
+  metadata: Record<string, any>,
+  claimOverrides: Record<string, any> = {},
+) {
+  const cookieData = setupCustomClaims(metadata.userType.toLowerCase(), claimOverrides);
+
+  const { lastAuthUser, idToken } = cookieData;
+
+  const clientId = metadata.userPoolsClientId;
+  await page
+    .context()
+    .clearCookies({ name: `CognitoIdentityServiceProvider.${clientId}.LastAuthUser` });
+  await page
+    .context()
+    .clearCookies({ name: `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.idToken` });
+  await page.context().addCookies([
+    {
+      name: `CognitoIdentityServiceProvider.${clientId}.LastAuthUser`,
+      value: lastAuthUser,
+      sameSite: 'Lax',
+      expires: 2908989880,
+      path: '/',
+      domain: 'localhost',
+    },
+    {
+      name: `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.idToken`,
+      value: idToken,
+      sameSite: 'Lax',
+      expires: 2908989880,
+      path: '/',
+      domain: 'localhost',
+    },
+  ]);
+  await page.reload();
+}
 
 async function initializeAndCheck(page: Page): Promise<boolean> {
   await page.goto('/landing');
@@ -75,69 +172,9 @@ export async function mockAuthenticate(page: Page, metadata: Record<string, any>
     return;
   }
 
-  interface CookieData {
-    lastAuthUser: string;
-    idToken: string;
-  }
-
-  const idirData: CookieData = {
-    lastAuthUser: 'idirUser',
-    idToken: jwtfy({
-      'cognito:groups': ['WASTE_PLUS_ADMIN'],
-      'preferred_username': 'b5ecdb094dfb4149a6a8445a01a96bf0@idir',
-      'custom:idp_user_id': 'B5ECDB094DFB4149A6A8445A01A96BF0',
-      'custom:idp_username': 'JRYAN',
-      'custom:idp_display_name': 'Ryan, Jack Admin CIA:IN',
-      'email': 'jack.ryan@gov.bc.ca',
-      'email_verified': false,
-      'custom:idp_name': 'idir',
-    }),
-  };
-
-  const bceidData: CookieData = {
-    lastAuthUser: 'bceidUser',
-    idToken: jwtfy({
-      'cognito:groups': [
-        'WASTE_PLUS_VIEWER_00010005',
-        'WASTE_PLUS_VIEWER_00001271',
-        'WASTE_PLUS_VIEWER_00147603',
-        'WASTE_PLUS_SUBMITTER_00010005',
-        'WASTE_PLUS_SUBMITTER_00011457',
-        'WASTE_PLUS_SUBMITTER_00001271',
-      ],
-      'custom:idp_username': 'uattest',
-      'custom:idp_name': 'bceidbusiness',
-      'custom:idp_business_id': 'automationinc',
-      'custom:idp_display_name': 'Uat Test',
-      'email': 'uattest@gov.bc.ca',
-    }),
-  };
-
-  const cookieData = metadata.userType.toLowerCase() === 'idir' ? idirData : bceidData;
-
-  const { lastAuthUser, idToken } = cookieData;
-
-  const clientId = metadata.userPoolsClientId;
-
-  await page.context().addCookies([
-    {
-      name: `CognitoIdentityServiceProvider.${clientId}.LastAuthUser`,
-      value: lastAuthUser,
-      sameSite: 'Lax',
-      expires: 2908989880,
-      path: '/',
-      domain: 'localhost',
-    },
-    {
-      name: `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.idToken`,
-      value: idToken,
-      sameSite: 'Lax',
-      expires: 2908989880,
-      path: '/',
-      domain: 'localhost',
-    },
-  ]);
-  await page.reload();
+  // Set the JWT cookie directly to mock authentication without UI interaction
+  // We set no additional claims by default
+  await mockJwt(page, metadata);
 
   const authFile = path.resolve(process.cwd(), 'src/config/tests', metadata.stateFile);
 
