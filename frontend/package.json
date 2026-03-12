@@ -9,6 +9,7 @@
     "lint": "eslint ./src --ext .ts,.tsx",
     "stub": "dotenv -- wiremock --enable-stub-cors --global-response-templating --port 8080 --https-port 8181 --root-dir ./stub --verbose --permitted-system-keys=\"VITE_USER_POOLS_WEB_CLIENT_ID\"",
     "stub:login": "dotenv -- wiremock --enable-stub-cors --global-response-templating --port 8180 --https-port 8181 --root-dir ./stub --verbose --permitted-system-keys=\"VITE_USER_POOLS_WEB_CLIENT_ID\"",
+    "preview": "npm run dev & npm run stub",
     "test:unit": "vitest run --coverage --allowOnly",
     "test:unit:watch": "vitest --allowOnly",
     "pree2e": "echo '{}' > src/config/tests/user.bceid.json && echo '{}' > src/config/tests/user.idir.json",
