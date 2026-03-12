@@ -39,7 +39,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(jsonPath("$.content[0].ruNumber").value(879))
         .andExpect(jsonPath("$.content[0].client.code").value("00001271"))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(163))
+        .andExpect(jsonPath("$.page.totalElements").value(181))
         .andReturn();
   }
 
@@ -59,7 +59,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(jsonPath("$.content[0].ruNumber").value(879))
         .andExpect(jsonPath("$.content[0].client.code").value("00001271"))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(163))
+        .andExpect(jsonPath("$.page.totalElements").value(181))
         .andReturn();
   }
 
@@ -81,7 +81,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(24))
+        .andExpect(jsonPath("$.page.totalElements").value(35))
         .andReturn();
   }
 
@@ -105,7 +105,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(jsonPath("$.content[0].ruNumber").value(34906))
         .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(24))
+        .andExpect(jsonPath("$.page.totalElements").value(35))
         .andReturn();
   }
 
@@ -127,7 +127,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.content.length()").value(0))
         .andExpect(jsonPath("$.page.size").value(10))
-        .andExpect(jsonPath("$.page.totalElements").value(24))
+        .andExpect(jsonPath("$.page.totalElements").value(35))
         .andReturn();
   }
 
@@ -258,7 +258,7 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.page.totalElements")
-            .value(org.hamcrest.Matchers.equalTo(54))
+            .value(org.hamcrest.Matchers.equalTo(57))
         )
         .andReturn();
   }
@@ -299,6 +299,44 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andExpect(
             jsonPath("$.secondaryMarks[0].mark")
                 .value(org.hamcrest.Matchers.equalTo("EM30R1"))
+        )
+        .andExpect(
+            jsonPath("$.totalBlocks")
+                .value(org.hamcrest.Matchers.equalTo(2))
+        )
+        .andExpect(
+            jsonPath("$.totalChildren")
+                .value(org.hamcrest.Matchers.equalTo(2))
+        )
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Should get expanded with child block")
+  void shouldGetExtendedWithChildBlock() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}", 916, 1976)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+        )
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(
+            jsonPath("$.timberMark")
+                .value(org.hamcrest.Matchers.equalTo("JW1001"))
+        )
+        .andExpect(
+            jsonPath("$.secondaryMarks.length()")
+                .value(org.hamcrest.Matchers.equalTo(0))
+        )
+        .andExpect(
+            jsonPath("$.totalBlocks")
+                .value(org.hamcrest.Matchers.equalTo(4))
+        )
+        .andExpect(
+            jsonPath("$.totalChildren")
+                .value(org.hamcrest.Matchers.equalTo(0))
         )
         .andReturn();
   }

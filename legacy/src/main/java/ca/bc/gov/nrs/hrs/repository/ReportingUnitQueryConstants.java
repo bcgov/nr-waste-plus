@@ -48,7 +48,11 @@ public final class ReportingUnitQueryConstants {
 
   private static final String SEARCH_REPORTING_UNIT_WHERE = """
       WHERE
-        waa.PARENT_WAA_ID IS NULL
+        (
+          waa.PARENT_WAA_ID IS NULL
+          OR
+          (waa.PARENT_WAA_ID IS NOT NULL AND NVL(waa.CHILD_BLOCK_IND, 'N') = 'Y')
+        )
         AND
         (
           NVL(:#{#filter.mainSearchTerm}, 'NOVALUE') = 'NOVALUE'
@@ -143,18 +147,27 @@ public final class ReportingUnitQueryConstants {
         waa.REPORTING_UNIT_ID AS RU_ID
       FROM WASTE_ASSESSMENT_AREA waa
       WHERE waa.REPORTING_UNIT_ID = :reportingUnit
-            AND waa.PARENT_WAA_ID IS null
+        AND (
+          waa.PARENT_WAA_ID IS NULL
+          OR (
+            waa.PARENT_WAA_ID IS NOT NULL AND NVL(waa.CHILD_BLOCK_IND, 'N') = 'Y'
+          )
+        )
       GROUP BY waa.REPORTING_UNIT_ID
       """;
 
   private static final String GET_CHILD_COUNT = """
       SELECT
         COUNT(1) AS TOTAL_CHILDS,
-        waa.REPORTING_UNIT_ID AS RU_ID
-      FROM WASTE_ASSESSMENT_AREA waa
-      WHERE waa.REPORTING_UNIT_ID = :reportingUnit
-            AND waa.PARENT_WAA_ID = :wasteAssessmentAreaId
-      GROUP BY waa.REPORTING_UNIT_ID
+        child.REPORTING_UNIT_ID AS RU_ID
+      FROM WASTE_ASSESSMENT_AREA child
+      JOIN WASTE_ASSESSMENT_AREA parent
+        ON parent.WASTE_ASSESSMENT_AREA_ID = child.PARENT_WAA_ID
+      WHERE child.REPORTING_UNIT_ID = :reportingUnit
+        AND child.PARENT_WAA_ID = :wasteAssessmentAreaId
+        AND NVL(parent.MULTI_MARK_IND, 'N') = 'Y'
+        AND NVL(child.CHILD_BLOCK_IND, 'N') = 'N'
+      GROUP BY child.REPORTING_UNIT_ID
       """;
 
   private static final String GET_BLOCK_COMMENT_LATEST = """
@@ -194,17 +207,21 @@ public final class ReportingUnitQueryConstants {
           ORDER BY mark
         ) AS secondary_mark
       FROM (
-            SELECT DISTINCT
-                waa.PARENT_WAA_ID AS parent_id,
-                NULLIF(TRIM(COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK)), '') AS mark,
-                waa.WASTE_ASSESS_AREA_STS_CODE AS status,
-                waasc.DESCRIPTION AS description,
-                waa.mark_area AS area
-            FROM WASTE_ASSESSMENT_AREA waa
-            LEFT JOIN WASTE_ASSESS_AREA_STS_CODE waasc
-            ON waasc.WASTE_ASSESS_AREA_STS_CODE = waa.WASTE_ASSESS_AREA_STS_CODE
-            WHERE waa.PARENT_WAA_ID = :wasteAssessmentAreaId
-      )
+        SELECT DISTINCT
+          waa.PARENT_WAA_ID AS parent_id,
+          NULLIF(TRIM(COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK)), '') AS mark,
+          waa.WASTE_ASSESS_AREA_STS_CODE AS status,
+          waasc.DESCRIPTION AS description,
+          waa.WASTE_NET_AREA AS area
+        FROM WASTE_ASSESSMENT_AREA waa
+        LEFT JOIN WASTE_ASSESS_AREA_STS_CODE waasc
+          ON waasc.WASTE_ASSESS_AREA_STS_CODE = waa.WASTE_ASSESS_AREA_STS_CODE
+        LEFT JOIN WASTE_ASSESSMENT_AREA waap
+          ON waap.WASTE_ASSESSMENT_AREA_ID = waa.PARENT_WAA_ID
+        WHERE waa.PARENT_WAA_ID = :wasteAssessmentAreaId
+          AND NVL(waap.MULTI_MARK_IND, 'N') = 'Y'
+          AND NVL(waa.CHILD_BLOCK_IND, 'N') = 'N'
+        )
       GROUP BY parent_id
       """;
 
