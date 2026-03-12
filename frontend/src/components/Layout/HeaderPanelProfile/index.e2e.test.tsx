@@ -99,13 +99,13 @@ test.describe('Profile menu', () => {
 
       const avatarInitials = panelSelector.getByTestId('avatar-initials');
       await expect(avatarInitials).toBeVisible();
-      await expect(avatarInitials).toHaveText('JD');
+      await expect(avatarInitials).toHaveText('UT');
 
-      await expect(panelSelector.getByText('John Doe')).toBeVisible();
+      await expect(panelSelector.getByText('Uat Test')).toBeVisible();
 
-      await expect(panelSelector.getByText('BCEIDBUSINESS\\alliance_uat')).toBeVisible();
+      await expect(panelSelector.getByText('BCEIDBUSINESS\\uattest')).toBeVisible();
 
-      await expect(panelSelector.getByText('Email: notarealemail@gov.bc.ca')).toBeVisible();
+      await expect(panelSelector.getByText('Email: uattest@gov.bc.ca')).toBeVisible();
 
       await expect(
         panelSelector.getByRole('img', { name: 'Help: About selecting a default client' }),
@@ -223,13 +223,13 @@ test.describe('Profile menu', () => {
 
       const avatarInitials = panelSelector.getByTestId('avatar-initials');
       await expect(avatarInitials).toBeVisible();
-      await expect(avatarInitials).toHaveText('PC');
+      await expect(avatarInitials).toHaveText('JR');
 
-      await expect(panelSelector.getByText('Paulo Cruz')).toBeVisible();
+      await expect(panelSelector.getByText('Jack Ryan')).toBeVisible();
 
-      await expect(panelSelector.getByText('IDIR\\PCRUZ')).toBeVisible();
+      await expect(panelSelector.getByText('IDIR\\JRYAN')).toBeVisible();
 
-      await expect(panelSelector.getByText('Email: paulo.cruz@gov.bc.ca')).toBeVisible();
+      await expect(panelSelector.getByText('Email: jack.ryan@gov.bc.ca')).toBeVisible();
 
       await expect(
         panelSelector.getByRole('img', { name: 'Help: About selecting a default organization' }),
@@ -425,8 +425,8 @@ test.describe('Profile menu', () => {
     const avatarInitials = panelSelector.getByTestId('avatar-initials');
     await expect(avatarInitials).toBeVisible();
 
-    const userName = testInfo.project.metadata.userType === 'idir' ? 'Paulo Cruz' : 'John Doe';
-    const initials = testInfo.project.metadata.userType === 'idir' ? 'PC' : 'JD';
+    const userName = testInfo.project.metadata.userType === 'idir' ? 'Jack Ryan' : 'Uat Test';
+    const initials = testInfo.project.metadata.userType === 'idir' ? 'JR' : 'UT';
 
     // Verify correct user name is displayed
     await expect(panelSelector.getByText(userName)).toBeVisible();

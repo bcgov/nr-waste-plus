@@ -7,10 +7,14 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint ./src --ext .ts,.tsx",
+    "stub": "dotenv -- wiremock --enable-stub-cors --global-response-templating --port 8080 --https-port 8181 --root-dir ./stub --verbose --permitted-system-keys=\"VITE_USER_POOLS_WEB_CLIENT_ID\"",
+    "stub:login": "dotenv -- wiremock --enable-stub-cors --global-response-templating --port 8180 --https-port 8181 --root-dir ./stub --verbose --permitted-system-keys=\"VITE_USER_POOLS_WEB_CLIENT_ID\"",
+    "preview": "npm run dev & npm run stub",
     "test:unit": "vitest run --coverage --allowOnly",
     "test:unit:watch": "vitest --allowOnly",
-    "pretest:e2e": "playwright install-deps && playwright install",
-    "pretest:e2e:watch": "playwright install",
+    "pree2e": "echo '{}' > src/config/tests/user.bceid.json && echo '{}' > src/config/tests/user.idir.json",
+    "pretest:e2e": "playwright install-deps && playwright install && npm run pree2e",
+    "pretest:e2e:watch": "playwright install && npm run pree2e",
     "test:e2e": "playwright test",
     "test:e2e:watch": "playwright test --ui",
     "pretest:a11y": "playwright install && npm run pretest:coverage",
@@ -59,6 +63,7 @@
     "@vitest/coverage-v8": "^4.0.16",
     "axe-core": "^4.11.1",
     "axe-playwright": "^2.2.2",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-alias": "^1.1.2",
@@ -80,7 +85,8 @@
     "vite-plugin-pwa": "^1.2.0",
     "vite-tsconfig-paths": "^6.0.3",
     "vitest": "^4.0.16",
-    "vitest-browser-react": "^2.0.2"
+    "vitest-browser-react": "^2.0.2",
+    "wiremock": "^3.13.2"
   },
   "engines": {
     "node": ">=22.0.0"

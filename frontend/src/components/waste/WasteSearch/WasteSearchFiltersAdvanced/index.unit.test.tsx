@@ -5,13 +5,13 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import WasteSearchFiltersAdvanced from './index';
-import APIs from '@/services/APIs';
 
 import type { FamLoginUser } from '@/context/auth/types';
 import type { ReportingUnitSearchParametersViewDto } from '@/services/search.types';
 
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import APIs from '@/services/APIs';
 
 const mockUser = {
   idpProvider: 'IDIR',

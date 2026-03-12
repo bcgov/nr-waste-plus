@@ -20,6 +20,10 @@ const commonSettings = {
   },
 };
 
+const shouldMockAuthentication = process.env.VITE_MOCK_AUTH?.toLowerCase() === 'true';
+
+const userPoolsClientId = process.env.VITE_USER_POOLS_WEB_CLIENT_ID;
+
 const setupProjects = [
   {
     name: 'bceid-setup',
@@ -34,6 +38,8 @@ const setupProjects = [
       category: 'desktop',
       browserName: 'chromium',
       stateFile: 'user.bceid.json',
+      shouldMockAuthentication,
+      userPoolsClientId,
       user: process.env.BCEID_USERNAME ?? '',
       password: process.env.BCEID_PASSWORD ?? '',
     },
@@ -51,6 +57,8 @@ const setupProjects = [
       category: 'desktop',
       browserName: 'chromium',
       stateFile: 'user.idir.json',
+      shouldMockAuthentication,
+      userPoolsClientId,
       user: process.env.IDIR_USERNAME ?? '',
       password: process.env.IDIR_PASSWORD ?? '',
     },
@@ -71,6 +79,7 @@ const chromiumBrowserProjects = [
       category: 'desktop',
       browserName: 'chromium',
       stateFile: 'user.bceid.json',
+      userPoolsClientId,
     },
     dependencies: ['bceid-setup'],
   },
@@ -87,6 +96,7 @@ const chromiumBrowserProjects = [
       category: 'desktop',
       browserName: 'chromium',
       stateFile: 'user.idir.json',
+      userPoolsClientId,
     },
     dependencies: ['idir-setup'],
   },

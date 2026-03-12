@@ -1,0 +1,162 @@
+{
+  "mappings": [
+    {
+      "name": "Expanded row content - full",
+      "request": {
+        "url": "/api/search/reporting-units/ex/34906/102",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "search/reporting-units-expanded-full.json"
+      }
+    },
+    {
+      "name": "Expanded row content - missing attachment and comment",
+      "request": {
+        "url": "/api/search/reporting-units/ex/34906/105",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "search/reporting-units-expanded-full.json"
+      }
+    },
+    {
+      "name": "Expanded row content - primary",
+      "request": {
+        "url": "/api/search/reporting-units/ex/10501/2",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "search/reporting-units-expanded-primary.json"
+      }
+    },
+    {
+      "name": "Expanded row content - secondary",
+      "request": {
+        "url": "/api/search/reporting-units/ex/36834/26",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "search/reporting-units-expanded-secondary.json"
+      }
+    },
+    {
+      "name": "Expanded row content - no block",
+      "request": {
+        "urlPath": "/api/search/reporting-units",
+        "method": "GET",
+        "queryParameters": {
+          "mainSearchTerm": {
+            "matches": "noblock"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "search/reporting-units-noblock.json"
+      }
+    },
+    {
+      "name": "Search reporting units first page",
+      "request": {
+        "urlPath": "/api/search/reporting-units",
+        "method": "GET",
+        "queryParameters": {
+          "mainSearchTerm": {
+            "matches": "67890"
+          },
+          "size": {
+            "equalTo": "10"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "search/reporting-units-pg0.json"
+      }
+    },
+    {
+      "name": "Search reporting units second page",
+      "request": {
+        "urlPath": "/api/search/reporting-units",
+        "method": "GET",
+        "queryParameters": {
+          "mainSearchTerm": {
+            "matches": "67890"
+          },
+          "page": {
+            "equalTo": "1"
+          },
+          "size": {
+            "equalTo": "10"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "search/reporting-units-pg1.json"
+      }
+    },
+    {
+      "name": "Search reporting units (with district)",
+      "request": {
+        "urlPath": "/api/search/reporting-units",
+        "method": "GET",
+        "queryParameters": {
+          "mainSearchTerm": {
+            "matches": "12345"
+          },
+          "size": {
+            "equalTo": "10"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "search/reporting-units-with-district.json"
+      }
+    },
+    {
+      "name": "Search reporting units: non-existent",
+      "request": {
+        "urlPath": "/api/search/reporting-units",
+        "method": "GET",
+        "queryParameters": {
+          "mainSearchTerm": {
+            "matches": "NONEXISTENT"
+          },
+          "size": {
+            "equalTo": "10"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "content": [],
+          "page": {
+            "number": 0,
+            "size": 10,
+            "totalElements": 0,
+            "totalPages": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "Advanced search - IDIR or BCeID",
+      "request": {
+        "urlPath": "/api/search/reporting-units-users",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "search/reporting-units-users-pg0.json"
+      }
+    }
+  ]
+}

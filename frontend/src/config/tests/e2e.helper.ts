@@ -4,7 +4,7 @@ import path from 'path';
 import { type Page } from '@playwright/test';
 
 // Default stub files location (WireMock compatible)
-const STUBS_DIR = 'stubs/__files';
+const STUBS_DIR = 'stub/__files';
 
 export const mockApi = async (
   page: Page,
@@ -34,7 +34,7 @@ export const mockApiResponses = async (
  * This is the preferred method as Playwright handles the file loading
  * @param page - Playwright page object
  * @param routePath - API route path (e.g., 'v1/reporting-units/search')
- * @param stubFileName - Stub filename in stubs/__files (e.g., 'search-results.json')
+ * @param stubFileName - Stub filename in the STUBS_DIR (e.g., 'search-results.json')
  * @param status - HTTP status code (default: 200)
  */
 export const mockApiResponsesWithStub = async (
@@ -45,7 +45,7 @@ export const mockApiResponsesWithStub = async (
   contentType: string = 'application/json',
 ): Promise<void> => {
   await mockApi(page, routePath, async (route) => {
-    // Let Playwright handle the file loading directly from stubs/__files
+    // Let Playwright handle the file loading directly from the STUBS_DIR
     const stubPath = path.resolve(process.cwd(), STUBS_DIR, stubFileName);
 
     await route.fulfill({
