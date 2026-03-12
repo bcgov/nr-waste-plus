@@ -101,22 +101,6 @@ export async function mockJwt(
       domain: 'localhost',
     },
   ]);
-  // Use addInitScript so localStorage is overwritten AFTER Playwright's own
-  // storageState init script (which runs first and resets localStorage to the
-  // original saved token on every reload/navigation).
-  /*await page.addInitScript(
-    ({ lsClientId, lsLastAuthUser, lsIdToken }) => {
-      localStorage.setItem(
-        `CognitoIdentityServiceProvider.${lsClientId}.LastAuthUser`,
-        lsLastAuthUser,
-      );
-      localStorage.setItem(
-        `CognitoIdentityServiceProvider.${lsClientId}.${lsLastAuthUser}.idToken`,
-        lsIdToken,
-      );
-    },
-    { lsClientId: clientId, lsLastAuthUser: lastAuthUser, lsIdToken: idToken },
-  );*/
   await page.reload();
 }
 
