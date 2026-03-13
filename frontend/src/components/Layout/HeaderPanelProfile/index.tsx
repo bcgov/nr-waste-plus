@@ -5,6 +5,7 @@ import { type FC } from 'react';
 import ClientListing from '@/components/core/DistrictSelection/ClientListing';
 import DistrictListing from '@/components/core/DistrictSelection/DistrictListing';
 import AvatarImage from '@/components/Layout/AvatarImage';
+import { Role } from '@/context/auth/types';
 import { useAuth } from '@/context/auth/useAuth';
 
 import './index.scss';
@@ -12,7 +13,9 @@ import './index.scss';
 const HeaderPanelProfile: FC = () => {
   const { logout, user } = useAuth();
 
-  const entityType = user?.idpProvider === 'BCEIDBUSINESS' ? 'client' : 'organization';
+  const CLIENT_ROLES = new Set([Role.VIEWER, Role.SUBMITTER]);
+  const isClientUser = user?.roles?.some((r) => CLIENT_ROLES.has(r.role)) ?? false;
+  const entityType = isClientUser ? 'client' : 'organization';
   const tooltipText =
     `Optional: Select a default ${entityType}.` +
     ` This can help you do your searches faster if you work with one ${entityType} much more than others.` +
@@ -30,6 +33,7 @@ const HeaderPanelProfile: FC = () => {
             data-testid="user-fullname"
           >{`${user?.firstName} ${user?.lastName}`}</p>
           <p>{`${user?.idpProvider ? user?.idpProvider + '\\' : null}${user?.userName}`}</p>
+          <p>{`Role: ${user?.roles?.map((r) => r.role)?.join(', ') ?? ''}`}</p>
           <p>{`Email: ${user?.email}`}</p>
         </div>
       </div>
@@ -44,7 +48,7 @@ const HeaderPanelProfile: FC = () => {
         <ul>
           <li className="district-panel">
             <div className="district-selection-container">
-              {user?.idpProvider === 'BCEIDBUSINESS' ? <ClientListing /> : <DistrictListing />}
+              {isClientUser ? <ClientListing /> : <DistrictListing />}
             </div>
           </li>
 

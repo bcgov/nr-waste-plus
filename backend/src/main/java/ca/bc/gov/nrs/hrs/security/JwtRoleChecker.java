@@ -30,10 +30,11 @@ public class JwtRoleChecker {
    * @return true if the principal has the role, false otherwise
    */
   public boolean hasRole(String role) {
+    String normalizedRole = role.toUpperCase(Locale.ROOT);
     return hasRoleMatching(
-        currentRole -> currentRole.equalsIgnoreCase(role)
-                       || currentRole.startsWith((role + "_").toUpperCase(Locale.ROOT)
-        )
+        currentRole -> currentRole.equals(normalizedRole)
+            || currentRole.startsWith(normalizedRole + "_")
+            || currentRole.startsWith("WASTE_PLUS_" + normalizedRole + "_")
     );
   }
 
