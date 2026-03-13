@@ -59,9 +59,9 @@ public class ApiAuthorizationCustomizer implements
         .requestMatchers("/api/codes/**")
         .authenticated()
 
-        // Clients request should be accessed by users with BUSINESS_BCEID identity provider only
+        // Clients request should be accessed by users with Viewer or Submitter roles only
         .requestMatchers("/api/forest-clients/clients")
-        .access(roleCheck.gotRoleMatching(Role.VIEWER,Role.SUBMITTER))
+        .access(roleCheck.gotRoleMatching(Role.VIEWER, Role.SUBMITTER))
 
         // Forest Clients can be accessed by authenticated users
         // This is added as a repeat of the above rule to allow future customization
