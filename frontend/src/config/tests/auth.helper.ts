@@ -12,8 +12,6 @@ interface CookieData {
 
 const defaultGroups = {
   bceid: [
-    'WASTE_PLUS_VIEWER_00010005',
-    'WASTE_PLUS_VIEWER_00001271',
     'WASTE_PLUS_VIEWER_00147603',
     'WASTE_PLUS_SUBMITTER_00010005',
     'WASTE_PLUS_SUBMITTER_00011457',
