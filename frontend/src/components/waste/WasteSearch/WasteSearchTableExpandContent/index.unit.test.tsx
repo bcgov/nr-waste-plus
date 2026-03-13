@@ -623,7 +623,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('No. of secondary marks in RU: 3')).toBeDefined();
+        expect(screen.getByText('No. of secondary marks in block: 3')).toBeDefined();
       });
     });
 

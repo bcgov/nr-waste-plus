@@ -290,7 +290,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
         <p>No. of blocks in RU: {data?.totalBlocks ?? 0}</p>
       </Column>
       <Column lg={14} md={6} sm={4}>
-        <p>No. of secondary marks in RU: {data?.totalChildren ?? 0}</p>
+        <p>No. of secondary marks in block: {data?.totalChildren ?? 0}</p>
       </Column>
     </Grid>
   );
