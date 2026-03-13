@@ -1,9 +1,12 @@
 package ca.bc.gov.nrs.hrs.security;
 
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
+import ca.bc.gov.nrs.hrs.dto.base.Role;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Locale;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.AuthorizationManager;
@@ -14,7 +17,8 @@ import org.springframework.stereotype.Component;
  * Factory for creating {@link AuthorizationManager} instances that evaluate
  * role- and identity-provider-based decisions using {@link JwtRoleChecker}.
  *
- * <p>The factory methods return AuthorizationManager lambdas that can be used
+ * <p>
+ * The factory methods return AuthorizationManager lambdas that can be used
  * in security configuration to enforce role and provider checks per request.
  * </p>
  */
@@ -35,6 +39,15 @@ public class JwtRoleAuthorizationManagerFactory {
       Predicate<String> matcher) {
     return (authSupplier, context) ->
         new AuthorizationDecision(roleChecker.hasRoleMatching(matcher));
+  }
+
+  public AuthorizationManager<RequestAuthorizationContext> gotRoleMatching(Role... roles){
+    return gotRoleMatching(role ->
+        Stream
+            .of(roles)
+            .map(Role::getRoleName)
+            .anyMatch(requiredRole -> role.toUpperCase(Locale.ROOT).startsWith(requiredRole))
+    );
   }
 
   /**
