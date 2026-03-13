@@ -4,6 +4,8 @@ import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Locale;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -42,12 +44,20 @@ public class JwtRoleAuthorizationManagerFactory {
   }
 
   public AuthorizationManager<RequestAuthorizationContext> gotRoleMatching(Role... roles){
-    return gotRoleMatching(role ->
-        Stream
-            .of(roles)
-            .map(Role::getRoleName)
-            .anyMatch(requiredRole -> role.toUpperCase(Locale.ROOT).startsWith(requiredRole))
-    );
+    final Set<String> requiredRolePrefixes = new HashSet<>();
+    for (Role role : roles) {
+      requiredRolePrefixes.add(role.getRoleName());
+    }
+
+    return gotRoleMatching(role -> {
+      String upperRole = role.toUpperCase(Locale.ROOT);
+      for (String requiredRole : requiredRolePrefixes) {
+        if (upperRole.startsWith(requiredRole)) {
+          return true;
+        }
+      }
+      return false;
+    });
   }
 
   /**
