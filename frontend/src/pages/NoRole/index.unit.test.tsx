@@ -134,4 +134,23 @@ describe('NoRolePage', () => {
       screen.getByText("You don't have FAM authorization to access this system"),
     ).toBeDefined();
   });
+
+  it('renders unauthorized access message when the user only has a provider marker role', async () => {
+    mockIsLoggedIn = true;
+    mockUser = {
+      userName: 'testuser',
+      displayName: 'Test User',
+      idpProvider: 'BCEIDBUSINESS',
+      roles: [{ role: Role.BCeID, clients: [] }],
+      privileges: {},
+    };
+
+    await renderWithProps();
+
+    expect(mockNavigate).not.toHaveBeenCalledWith('/');
+    expect(screen.getByText('Unauthorized Access')).toBeDefined();
+    expect(
+      screen.getByText("You don't have FAM authorization to access this system"),
+    ).toBeDefined();
+  });
 });

@@ -4,13 +4,15 @@ import { Navigate } from 'react-router-dom';
 
 import PageTitle from '@/components/core/PageTitle';
 import { useAuth } from '@/context/auth/useAuth';
+import { getUserAccessStatus } from '@/context/auth/userAccessValidation';
 
 import './index.scss';
 
 const NoRolePage: FC = () => {
   const { isLoggedIn, user } = useAuth();
+  const accessStatus = getUserAccessStatus(user);
 
-  if (!isLoggedIn || !user || (user.roles?.length ?? 0) > 0) {
+  if (!isLoggedIn || !user || accessStatus.kind !== 'no-role') {
     return <Navigate to="/" />;
   }
 

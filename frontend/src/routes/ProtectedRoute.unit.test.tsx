@@ -11,9 +11,23 @@ vi.mock('@/context/auth/useAuth', () => ({
   useAuth: vi.fn(),
 }));
 
+const mockNavigate = vi.fn();
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    Navigate: ({ to }: { to: string }) => {
+      mockNavigate(to);
+      return null;
+    },
+  };
+});
+
 describe('ProtectedRoute', () => {
   afterEach(() => {
     vi.clearAllMocks();
+    mockNavigate.mockReset();
   });
 
   it('redirects to /login if user is not authenticated', () => {
@@ -28,11 +42,59 @@ describe('ProtectedRoute', () => {
     );
     // Should render a Navigate component (no children rendered)
     expect(container.textContent).not.toContain('Private Content');
+    expect(mockNavigate).toHaveBeenCalledWith('/login');
+  });
+
+  it('redirects to /no-role when the user only has the provider marker role', () => {
+    (useAuthModule.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
+      user: {
+        idpProvider: 'IDIR',
+        roles: [{ role: Role.IDIR, clients: [] }],
+      },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/private']}>
+        <ProtectedRoute>
+          <div>Private Content</div>
+        </ProtectedRoute>
+      </MemoryRouter>,
+    );
+
+    expect(mockNavigate).toHaveBeenCalledWith('/no-role');
+  });
+
+  it('redirects to a role error when the user violates the access rules', () => {
+    (useAuthModule.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
+      user: {
+        idpProvider: 'BCEIDBUSINESS',
+        roles: [
+          { role: Role.BCeID, clients: [] },
+          { role: Role.ADMIN, clients: [] },
+        ],
+      },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/private']}>
+        <ProtectedRoute>
+          <div>Private Content</div>
+        </ProtectedRoute>
+      </MemoryRouter>,
+    );
+
+    expect(mockNavigate).toHaveBeenCalledWith('/unauthorized?reason=BCEID_ASSIGNED_ROLES');
   });
 
   it('redirects to /unauthorized if user lacks required role', () => {
     (useAuthModule.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
-      user: { roles: [{ role: Role.VIEWER, clients: [] }] },
+      user: {
+        idpProvider: 'IDIR',
+        roles: [
+          { role: Role.IDIR, clients: [] },
+          { role: Role.VIEWER, clients: ['100'] },
+        ],
+      },
     });
 
     const { container } = render(
@@ -43,14 +105,16 @@ describe('ProtectedRoute', () => {
       </MemoryRouter>,
     );
     expect(container.textContent).not.toContain('Admin Content');
+    expect(mockNavigate).toHaveBeenCalledWith('/unauthorized');
   });
 
   it('renders children if user is authenticated and has required role', () => {
     (useAuthModule.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
       user: {
+        idpProvider: 'IDIR',
         roles: [
+          { role: Role.IDIR, clients: [] },
           { role: Role.ADMIN, clients: [] },
-          { role: Role.VIEWER, clients: [] },
         ],
       },
     });
@@ -67,7 +131,13 @@ describe('ProtectedRoute', () => {
 
   it('renders children if user is authenticated and no roles are required', () => {
     (useAuthModule.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
-      user: { roles: [{ role: Role.VIEWER, clients: [] }] },
+      user: {
+        idpProvider: 'IDIR',
+        roles: [
+          { role: Role.IDIR, clients: [] },
+          { role: Role.VIEWER, clients: ['100'] },
+        ],
+      },
     });
 
     const { getByText } = render(
