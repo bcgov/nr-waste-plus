@@ -1,8 +1,21 @@
 import { Role, RoleType, roleTypeMap, type FamLoginUser, type FamRole } from './types';
 
+/**
+ * Route for authenticated users that have no assigned business roles.
+ */
 export const NO_ROLE_PATH = '/no-role';
+
+/**
+ * Base unauthorized route used for rule violations.
+ */
 export const UNAUTHORIZED_PATH = '/unauthorized';
 
+/**
+ * Canonical mapping of access-rule violation codes to UI-safe messages.
+ *
+ * Keys are used in query string redirects (`/unauthorized?reason=<CODE>`) and
+ * must remain stable because they are consumed by tests and documentation.
+ */
 export const accessViolationMessages = {
   IDIR_MULTIPLE_ROLES: 'This account is not permitted to have multiple roles.',
   BCEID_ASSIGNED_ROLES: 'This account is not permitted to have assigned roles.',
@@ -12,6 +25,9 @@ export const accessViolationMessages = {
 
 export type AccessViolationCode = keyof typeof accessViolationMessages;
 
+/**
+ * Normalized access decision consumed by route guards.
+ */
 export type AccessStatus =
   | {
       kind: 'allowed';
@@ -30,18 +46,37 @@ export type AccessStatus =
 const PROVIDER_ROLES = new Set<Role>([Role.IDIR, Role.BCeID]);
 const BCEID_FORBIDDEN_ROLES = new Set<Role>([Role.ADMIN, Role.AREA, Role.DISTRICT]);
 
+/**
+ * Returns normalized, non-empty clients for a role.
+ */
 const normalizeClients = (role: FamRole): string[] => {
   return role.clients.map((client) => client.trim()).filter(Boolean);
 };
 
+/**
+ * Returns business-assigned roles only (provider marker roles are excluded).
+ */
 export const getAssignedRoles = (user: FamLoginUser | null | undefined): FamRole[] => {
   return (user?.roles ?? []).filter((role) => !PROVIDER_ROLES.has(role.role));
 };
 
+/**
+ * Creates an unauthorized route with a stable reason code.
+ */
 const buildUnauthorizedPath = (code: AccessViolationCode): string => {
   return `${UNAUTHORIZED_PATH}?reason=${encodeURIComponent(code)}`;
 };
 
+/**
+ * Evaluates a user against all role-access rules in deterministic order.
+ *
+ * Order is significant:
+ * 1) No assigned role
+ * 2) IDIR multi-role restriction
+ * 3) BCeID forbidden roles restriction
+ * 4) Abstract-role client requirement (strict per-role check)
+ * 5) Viewer/Submitter overlapping-client conflict
+ */
 export const getUserAccessStatus = (user: FamLoginUser | null | undefined): AccessStatus => {
   const assignedRoles = getAssignedRoles(user);
 
@@ -113,6 +148,9 @@ export const getUserAccessStatus = (user: FamLoginUser | null | undefined): Acce
   };
 };
 
+/**
+ * Resolves a rule code from query params to a user-facing message.
+ */
 export const getAccessViolationMessage = (code: string | null | undefined): string | undefined => {
   if (!code) return undefined;
   if (code in accessViolationMessages) {
