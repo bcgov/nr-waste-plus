@@ -1,9 +1,12 @@
 package ca.bc.gov.nrs.hrs.security;
 
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
+import ca.bc.gov.nrs.hrs.dto.base.Role;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Locale;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.AuthorizationManager;
@@ -36,6 +39,15 @@ public class JwtRoleAuthorizationManagerFactory {
       Predicate<String> matcher) {
     return (authSupplier, context) ->
         new AuthorizationDecision(roleChecker.hasRoleMatching(matcher));
+  }
+
+  public AuthorizationManager<RequestAuthorizationContext> gotRoleMatching(Role... roles){
+    return gotRoleMatching(role ->
+        Stream
+            .of(roles)
+            .map(Role::getRoleName)
+            .anyMatch(requiredRole -> role.toUpperCase(Locale.ROOT).startsWith(requiredRole))
+    );
   }
 
   /**

@@ -32,9 +32,9 @@ public class JwtRoleChecker {
   public boolean hasRole(String role) {
     return hasRoleMatching(
         currentRole -> currentRole.equalsIgnoreCase(role)
-                       || currentRole.startsWith((role + "_").toUpperCase(Locale.ROOT)
-        )
-    );
+             || currentRole.startsWith((role + "_").toUpperCase(Locale.ROOT))
+             || currentRole.toLowerCase(Locale.ROOT).contains(role.toLowerCase(Locale.ROOT))
+        );
   }
 
   /**

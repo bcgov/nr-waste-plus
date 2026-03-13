@@ -182,6 +182,7 @@ public class SearchService {
         )
         .stream()
         .map(entry -> new CodeDescriptionDto(entry.clientNumber(), entry.name()))
+        .peek(System.out::println)
         .collect(Collectors.toMap(CodeDescriptionDto::code, client -> client));
   }
 }

@@ -1,6 +1,8 @@
 package ca.bc.gov.nrs.hrs.security;
 
-import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
+import ca.bc.gov.nrs.hrs.dto.base.Role;
+import java.util.Locale;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
@@ -13,9 +15,9 @@ import org.springframework.stereotype.Component;
  * API authorization configuration: defines security rules for HTTP routes.
  *
  * <p>
- * This customizer registers route-level authorization rules such as which
- * endpoints require authentication, which are permitted anonymously, and
- * custom access checks using {@link JwtRoleAuthorizationManagerFactory}.
+ * This customizer registers route-level authorization rules such as which endpoints require
+ * authentication, which are permitted anonymously, and custom access checks using
+ * {@link JwtRoleAuthorizationManagerFactory}.
  * </p>
  */
 @RequiredArgsConstructor
@@ -61,13 +63,12 @@ public class ApiAuthorizationCustomizer implements
 
         // Clients request should be accessed by users with BUSINESS_BCEID identity provider only
         .requestMatchers("/api/forest-clients/clients")
-        .access(roleCheck.gotIdp(IdentityProvider.BUSINESS_BCEID))
+        .access(roleCheck.gotRoleMatching(Role.VIEWER,Role.SUBMITTER))
 
         // Forest Clients can be accessed by authenticated users
         // This is added as a repeat of the above rule to allow future customization
         .requestMatchers("/api/forest-clients/**")
         .authenticated()
-
 
         // Search reporting units can be accessed by authenticated users
         // This is added as a repeat of the above rule to allow future customization
