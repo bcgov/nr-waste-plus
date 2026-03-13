@@ -144,4 +144,8 @@ describe('userAccessValidation', () => {
   it('returns undefined for an unknown violation code', () => {
     expect(getAccessViolationMessage('NOT_A_REAL_REASON')).toBeUndefined();
   });
+
+  it('returns undefined for Object.prototype keys like toString', () => {
+    expect(getAccessViolationMessage('toString')).toBeUndefined();
+  });
 });

@@ -153,7 +153,7 @@ export const getUserAccessStatus = (user: FamLoginUser | null | undefined): Acce
  */
 export const getAccessViolationMessage = (code: string | null | undefined): string | undefined => {
   if (!code) return undefined;
-  if (code in accessViolationMessages) {
+  if (Object.prototype.hasOwnProperty.call(accessViolationMessages, code)) {
     return accessViolationMessages[code as AccessViolationCode];
   }
   return undefined;
