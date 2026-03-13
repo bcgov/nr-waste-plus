@@ -33,6 +33,7 @@ const HeaderPanelProfile: FC = () => {
             data-testid="user-fullname"
           >{`${user?.firstName} ${user?.lastName}`}</p>
           <p>{`${user?.idpProvider ? user?.idpProvider + '\\' : null}${user?.userName}`}</p>
+          <p>{`Role: ${user?.roles?.map((r) => r.role).join(', ')}`}</p>
           <p>{`Email: ${user?.email}`}</p>
         </div>
       </div>
