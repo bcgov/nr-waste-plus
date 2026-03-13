@@ -4,8 +4,10 @@ import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Locale;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authorization.AuthorizationDecision;
@@ -42,12 +44,17 @@ public class JwtRoleAuthorizationManagerFactory {
   }
 
   public AuthorizationManager<RequestAuthorizationContext> gotRoleMatching(Role... roles){
-    return gotRoleMatching(role ->
-        Stream
-            .of(roles)
-            .map(Role::getRoleName)
-            .anyMatch(requiredRole -> role.toUpperCase(Locale.ROOT).startsWith(requiredRole))
-    );
+    final Set<String> requiredRolePrefixes = Stream
+        .of(roles)
+        .map(Role::getRoleName)
+        .map(name -> name.toUpperCase(Locale.ROOT))
+        .collect(Collectors.toSet());
+
+    return gotRoleMatching(role -> {
+      String upperRole = role.toUpperCase(Locale.ROOT);
+      return requiredRolePrefixes.stream()
+          .anyMatch(upperRole::startsWith);
+    });
   }
 
   /**
