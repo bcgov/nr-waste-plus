@@ -11,7 +11,8 @@ import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 import { useTableToolbar } from './useTableToolbar';
 
 import type { TableHeaderType } from './types';
-import APIs from '@/services/APIs';
+
+import { usePreference } from '@/context/preference/usePreference';
 
 vi.mock('@/services/APIs', () => {
   return {
@@ -29,8 +30,6 @@ vi.mock('@/context/preference/usePreference', () => {
     usePreference: vi.fn(),
   };
 });
-
-import { usePreference } from '@/context/preference/usePreference';
 
 type TestObjectType = {
   id: number;

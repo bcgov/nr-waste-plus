@@ -460,7 +460,9 @@ test.describe('Profile menu', () => {
     const avatarInitials = panelSelector.getByTestId('avatar-initials');
     await expect(avatarInitials).toBeVisible();
 
-    const userName = hasClientAccessRole(testInfo.project.metadata.userType) ? 'Uat Test' : 'Jack Ryan';
+    const userName = hasClientAccessRole(testInfo.project.metadata.userType)
+      ? 'Uat Test'
+      : 'Jack Ryan';
     const initials = hasClientAccessRole(testInfo.project.metadata.userType) ? 'UT' : 'JR';
 
     // Verify correct user name is displayed
@@ -506,7 +508,9 @@ test.describe('Profile menu', () => {
     await expect(tooltipContent).toBeVisible();
   });
 
-  test('IDIR user with Viewer role sees client selector in profile panel', async ({ page }, testInfo) => {
+  test('IDIR user with Viewer role sees client selector in profile panel', async ({
+    page,
+  }, testInfo) => {
     test.skip(testInfo.project.metadata.userType !== 'idir', 'Only runs for IDIR project');
     test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
 
@@ -515,7 +519,11 @@ test.describe('Profile menu', () => {
       'forest-clients/searchByNumbers**',
       'forest-clients/searchByNumbers-pg0.json',
     );
-    await mockApiResponsesWithStub(page, 'forest-clients/clients**', 'forest-clients/clients-pg0.json');
+    await mockApiResponsesWithStub(
+      page,
+      'forest-clients/clients**',
+      'forest-clients/clients-pg0.json',
+    );
 
     await mockJwt(page, testInfo.project.metadata, {
       'custom:idp_name': 'idir',
@@ -549,7 +557,11 @@ test.describe('Profile menu', () => {
       'forest-clients/searchByNumbers**',
       'forest-clients/searchByNumbers-pg0.json',
     );
-    await mockApiResponsesWithStub(page, 'forest-clients/clients**', 'forest-clients/clients-pg0.json');
+    await mockApiResponsesWithStub(
+      page,
+      'forest-clients/clients**',
+      'forest-clients/clients-pg0.json',
+    );
 
     await mockJwt(page, testInfo.project.metadata, {
       'custom:idp_name': 'idir',

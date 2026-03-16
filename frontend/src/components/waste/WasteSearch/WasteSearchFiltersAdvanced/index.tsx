@@ -14,11 +14,11 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { type FC } from 'react';
 
-import { MAX_TEXT_INPUT_LEN } from './utils';
 import AdvancedFilterClientInput from './AdvancedFilterClientInput';
 import AdvancedFilterDateRange from './AdvancedFilterDateRange';
 import { useAdvancedFilterHandlers } from './useAdvancedFilterHandlers';
 import { useClientLookup } from './useClientLookup';
+import { MAX_TEXT_INPUT_LEN } from './utils';
 
 import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
 
@@ -77,8 +77,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
   const auth = useAuth();
 
   // Reusable handler factories for all input types
-  const { onCheckBoxChange, onTextChange, handleDateChange } =
-    useAdvancedFilterHandlers(onChange);
+  const { onCheckBoxChange, onTextChange, handleDateChange } = useAdvancedFilterHandlers(onChange);
 
   // Curried multiselect handlers with field-specific converters
   const onActiveMultiSelectChange =

@@ -44,9 +44,9 @@ const MyClientListing: FC = () => {
       }) as PageableResponse<MyForestClientDto>,
   });
 
-    /**
-     * Runs the current client search and clears page-scoped events first.
-     */
+  /**
+   * Runs the current client search and clears page-scoped events first.
+   */
   const executeSearch = () => {
     clearEvents('my-client-list');
     // Increment trigger to signal that state has settled and we should fetch.
@@ -55,11 +55,11 @@ const MyClientListing: FC = () => {
     setSearchTrigger((n) => n + 1);
   };
 
-    /**
-     * Applies a page change and fetches the corresponding client results.
-     *
-     * @param paging The requested page and page size.
-     */
+  /**
+   * Applies a page change and fetches the corresponding client results.
+   *
+   * @param paging The requested page and page size.
+   */
   const handlePageChange = ({ page, pageSize }: { page: number; pageSize: number }) => {
     setCurrentPage(Math.min(Math.max(page, 0), (data?.page.totalPages ?? 1) - 1)); // Adjust for zero-based index
     setPageSize(pageSize);

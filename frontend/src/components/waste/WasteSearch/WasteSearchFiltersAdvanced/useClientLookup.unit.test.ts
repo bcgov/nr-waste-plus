@@ -52,15 +52,9 @@ describe('useClientLookup', () => {
   it('does not trigger lookup when modal is closed', () => {
     const onChange = vi.fn();
 
-    renderHook(
-      () =>
-        useClientLookup(
-          false,
-          { code: '12345', description: '12345' },
-          onChange,
-        ),
-      { wrapper },
-    );
+    renderHook(() => useClientLookup(false, { code: '12345', description: '12345' }, onChange), {
+      wrapper,
+    });
 
     expect(APIs.forestclient.searchForestClients).not.toHaveBeenCalled();
   });
@@ -68,10 +62,7 @@ describe('useClientLookup', () => {
   it('does not trigger lookup when clientNumberEntry is undefined', () => {
     const onChange = vi.fn();
 
-    renderHook(
-      () => useClientLookup(true, undefined, onChange),
-      { wrapper },
-    );
+    renderHook(() => useClientLookup(true, undefined, onChange), { wrapper });
 
     expect(APIs.forestclient.searchForestClients).not.toHaveBeenCalled();
   });
@@ -101,22 +92,12 @@ describe('useClientLookup', () => {
       { id: '12345', name: 'ACME Corporation', acronym: 'ACME' } as any,
     ]);
 
-    renderHook(
-      () =>
-        useClientLookup(
-          true,
-          { code: '12345', description: '12345' },
-          onChange,
-        ),
-      { wrapper },
-    );
+    renderHook(() => useClientLookup(true, { code: '12345', description: '12345' }, onChange), {
+      wrapper,
+    });
 
     await waitFor(() => {
-      expect(APIs.forestclient.searchForestClients).toHaveBeenCalledWith(
-        '12345',
-        0,
-        1,
-      );
+      expect(APIs.forestclient.searchForestClients).toHaveBeenCalledWith('12345', 0, 1);
       expect(onChange).toHaveBeenCalledWith('clientNumbers');
       expect(innerFn).toHaveBeenCalledWith([
         { code: '12345', description: '12345 ACME Corporation (ACME)' },
@@ -129,15 +110,9 @@ describe('useClientLookup', () => {
 
     // The hook should not trigger queries for non-IDIR providers
     // because the enabled condition checks for auth.user?.idpProvider === 'IDIR'
-    const { rerender } = renderHook(
-      () =>
-        useClientLookup(
-          true,
-          { code: '12345', description: '12345' },
-          onChange,
-        ),
-      { wrapper },
-    );
+    renderHook(() => useClientLookup(true, { code: '12345', description: '12345' }, onChange), {
+      wrapper,
+    });
 
     // For IDIR it should trigger the lookup
     await waitFor(() => {
@@ -161,12 +136,7 @@ describe('useClientLookup', () => {
     ]);
 
     const { rerender } = renderHook(
-      ({ onChange }) =>
-        useClientLookup(
-          true,
-          { code: '12345', description: '12345' },
-          onChange,
-        ),
+      ({ onChange }) => useClientLookup(true, { code: '12345', description: '12345' }, onChange),
       {
         wrapper,
         initialProps: { onChange: onChange1 },
@@ -188,9 +158,12 @@ describe('useClientLookup', () => {
 
     // The hook should use ref tracking to prevent duplicate calls
     // So innerFn2 should NOT be called (or called much less than expected)
-    await waitFor(() => {
-      // innerFn should still have been called only once
-      expect(innerFn).toHaveBeenCalledTimes(1);
-    }, { timeout: 100 });
+    await waitFor(
+      () => {
+        // innerFn should still have been called only once
+        expect(innerFn).toHaveBeenCalledTimes(1);
+      },
+      { timeout: 100 },
+    );
   });
 });

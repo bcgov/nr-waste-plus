@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 
-import { API_DATE_FORMAT, MAX_TEXT_INPUT_LEN } from './utils';
+import { API_DATE_FORMAT } from './utils';
 
 import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
 

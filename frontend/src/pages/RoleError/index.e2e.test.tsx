@@ -117,12 +117,9 @@ test.describe('Role Error Page', () => {
     await expect(page.getByText('This account has conflicting client access roles')).toBeVisible();
   });
 
-  test('redirects to role error when any abstract role has no clients', async (
-    {
-      page,
-    },
-    testInfo,
-  ) => {
+  test('redirects to role error when any abstract role has no clients', async ({
+    page,
+  }, testInfo) => {
     test.skip(
       process.env.VITE_MOCK_AUTH?.toLowerCase() !== 'true',
       'Per-test role override requires VITE_MOCK_AUTH=true.',

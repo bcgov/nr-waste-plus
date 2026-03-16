@@ -70,9 +70,9 @@ const WasteSearchFiltersActive: FC<WasteSearchFiltersActiveProps> = ({
         },
       ),
     [filters],
-      /**
-       * Clears all currently visible filters.
-       */
+    /**
+     * Clears all currently visible filters.
+     */
   );
 
   const renderFilters = visibleFilters().map((filterKey) => {

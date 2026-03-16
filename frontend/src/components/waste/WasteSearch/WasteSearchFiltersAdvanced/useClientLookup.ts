@@ -41,8 +41,7 @@ export const useClientLookup = (
   // This indicates the entry came from URL params and needs full resolution.
   const hasClientCodeOnly = Boolean(
     clientNumberEntry?.code &&
-      (clientNumberEntry?.description === clientNumberEntry?.code ||
-        !clientNumberEntry?.description),
+    (clientNumberEntry?.description === clientNumberEntry?.code || !clientNumberEntry?.description),
   );
 
   // Query to resolve the full client details from the API.
