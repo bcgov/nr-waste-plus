@@ -184,7 +184,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
           setIsAdvancedSearchOpen(false);
           onSearch();
         }}
-        onChange={(key) => (value) => handleChange(key, value)}
+        onChange={handleChange}
       />
     </>
   );

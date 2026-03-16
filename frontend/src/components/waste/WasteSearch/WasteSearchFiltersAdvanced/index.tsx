@@ -71,22 +71,26 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
   districtOptions,
   statusOptions,
   onClose,
-  onChange,
+  onChange: onChangeRaw,
   onSearch,
 }) => {
+  // @ts-ignore Type mismatch between generic onChange signature and specific handlers
+  const onChange: any = onChangeRaw;
   const auth = useAuth();
 
   // Reusable handler factories for all input types
   const { onCheckBoxChange, onTextChange, handleDateChange } = useAdvancedFilterHandlers(onChange);
 
   // Curried multiselect handlers with field-specific converters
-  const onActiveMultiSelectChange =
-    (key: keyof ReportingUnitSearchParametersViewDto) =>
-    (changes: { selectedItems: CodeDescriptionDto[] }): void => {
+  const onActiveMultiSelectChange = (
+    key: keyof ReportingUnitSearchParametersViewDto,
+  ): ((changes: { selectedItems: CodeDescriptionDto[] }) => void) => {
+    return (changes: { selectedItems: CodeDescriptionDto[] }): void => {
       const converter = getCodeDescriptionArrayConverter(key);
       const result = converter(changes.selectedItems);
       onChange(key)(result);
     };
+  };
 
   // Query for BCeID user's own clients
   const { data: myClients } = useQuery({

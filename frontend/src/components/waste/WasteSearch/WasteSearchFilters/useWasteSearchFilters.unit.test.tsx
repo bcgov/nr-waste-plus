@@ -120,7 +120,7 @@ describe('useWasteSearchFilters', () => {
     const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()), { wrapper });
 
     act(() => {
-      result.current.handleChange('district', ['D1', 'D2']);
+      result.current.handleChange('district')(['D1', 'D2']);
     });
 
     expect(result.current.filters.district).toEqual(['D1', 'D2']);
@@ -134,7 +134,7 @@ describe('useWasteSearchFilters', () => {
     const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()), { wrapper });
 
     act(() => {
-      result.current.handleChange('district', ['D1']);
+      result.current.handleChange('district')(['D1']);
     });
 
     expect(result.current.filters.mainSearchTerm).toBe('keep me');

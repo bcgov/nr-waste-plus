@@ -18,8 +18,7 @@ type UseWasteSearchFiltersReturn = {
   ) => (changes: { selectedItems: CodeDescriptionDto[] }) => void;
   handleChange: (
     key: keyof ReportingUnitSearchParametersViewDto,
-    value: ReportingUnitSearchParametersViewDto[keyof ReportingUnitSearchParametersViewDto],
-  ) => void;
+  ) => (value: ReportingUnitSearchParametersViewDto[typeof key]) => void;
   onRemoveFilter: ComponentProps<typeof WasteSearchFiltersActive>['onRemoveFilter'];
 };
 
@@ -55,9 +54,10 @@ export const useWasteSearchFilters = (
 
   const handleChange = (
     key: keyof ReportingUnitSearchParametersViewDto,
-    value: ReportingUnitSearchParametersViewDto[keyof ReportingUnitSearchParametersViewDto],
-  ) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+  ): ((value: ReportingUnitSearchParametersViewDto[typeof key]) => void) => {
+    return (value: ReportingUnitSearchParametersViewDto[typeof key]) => {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+    };
   };
 
   const onRemoveFilter: ComponentProps<typeof WasteSearchFiltersActive>['onRemoveFilter'] = (
