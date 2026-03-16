@@ -1,20 +1,16 @@
 import { Search as SearchIcon, FilterEdit as FilterIcon } from '@carbon/icons-react';
 import { Button, Column, Grid } from '@carbon/react';
-import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState, type ComponentProps, type FC } from 'react';
+import { type FC } from 'react';
 
-import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
+import type { ReportingUnitSearchParametersViewDto } from '@/services/types';
 
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import SearchInput from '@/components/Form/SearchInput';
-import { clientNumbersTransform } from '@/components/waste/WasteSearch/WasteSearchFilters/utils';
+import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
+import { useWasteSearchFilters } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilters';
 import WasteSearchFiltersActive from '@/components/waste/WasteSearch/WasteSearchFiltersActive';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import WasteSearchFiltersAdvanced from '@/components/waste/WasteSearch/WasteSearchFiltersAdvanced';
-import useSyncFiltersToSearchParams from '@/hooks/useSyncFiltersToSearchParams';
-import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
-import APIs from '@/services/APIs';
-import { removeEmpty } from '@/services/utils';
 
 import './index.scss';
 
@@ -34,115 +30,16 @@ type WasteSearchFiltersProps = {
  * @returns The waste search filter controls and advanced search modal.
  */
 const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSearch }) => {
-  const [filters, setFilters] = useState<ReportingUnitSearchParametersViewDto>(value);
-  const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState<boolean>(false);
-
-  useSyncFiltersToSearchParams(filters, setFilters, { transforms: clientNumbersTransform });
-
-  const { data: samplingOptions } = useQuery({
-    queryKey: ['samplingOptions'],
-    queryFn: async () => await APIs.codes.getSamplingOptions(),
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
-    refetchOnMount: true,
-  });
-
-  const { data: districtOptions } = useQuery({
-    queryKey: ['districtOptions'],
-    queryFn: async () => await APIs.codes.getDistricts(),
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
-    refetchOnMount: true,
-  });
-
-  const { data: statusOptions } = useQuery({
-    queryKey: ['statusOptions'],
-    queryFn: async () => await APIs.codes.getAssessAreaStatuses(),
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
-    refetchOnMount: true,
-  });
-
-  /**
-   * Creates a string-field updater for the local filter state.
-   *
-   * @param key The filter key to update.
-   * @returns A setter for the string value.
-   */
-  const handleStringChange =
-    (key: keyof ReportingUnitSearchParametersViewDto) => (value: string) => {
-      setFilters((prev) => ({ ...prev, [key]: value }));
-    };
-
-  /**
-   * Creates a multiselect updater that stores selected option codes.
-   *
-   * @param key The filter key to update.
-   * @returns A change handler for ActiveMultiSelect selections.
-   */
-  const handleActiveMultiSelectChange =
-    (key: keyof ReportingUnitSearchParametersViewDto) =>
-    (changes: { selectedItems: CodeDescriptionDto[] }): void => {
-      setFilters((prev) => ({
-        ...prev,
-        [key]: changes.selectedItems.map((item) => item.code),
-      }));
-    };
-
-  /**
-   * Updates a filter value using the supplied key.
-   *
-   * @param key The filter key to update.
-   * @param value The next value for that filter.
-   */
-  const handleChange = (
-    key: keyof ReportingUnitSearchParametersViewDto,
-    value: ReportingUnitSearchParametersViewDto[typeof key],
-  ) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  };
-
-  /**
-   * Removes either a scalar filter or an individual array item from the active filters.
-   */
-  const onRemoveFilter: ComponentProps<typeof WasteSearchFiltersActive>['onRemoveFilter'] = (
-    key,
-    value,
-  ) => {
-    if (!value) {
-      setFilters((prev) => {
-        const newFilters = { ...prev };
-        delete newFilters[key];
-        return newFilters;
-      });
-    } else {
-      setFilters((prev) => ({
-        ...prev,
-        [key]: (prev[key] as string[]).filter((item) => item !== value),
-      }));
-    }
-  };
-
-  useEffect(() => {
-    onChange(removeEmpty(filters));
-  }, [filters, onChange]);
-
-  useSyncPreferencesToFilters(
-    setFilters,
-    {
-      selectedClient: 'clientNumbers',
-      selectedDistrict: 'district',
-    },
-    (key, value): string | boolean | string[] | CodeDescriptionDto[] | undefined => {
-      if (key === 'selectedClient' || key === 'selectedDistrict') {
-        return (value ? [value] : []) as string[] | CodeDescriptionDto[];
-      }
-      return value as string | boolean | string[] | undefined;
-    },
-  );
+  const { samplingOptions, districtOptions, statusOptions } = useWasteSearchFilterOptions();
+  const {
+    filters,
+    isAdvancedSearchOpen,
+    setIsAdvancedSearchOpen,
+    handleStringChange,
+    handleActiveMultiSelectChange,
+    handleChange,
+    onRemoveFilter,
+  } = useWasteSearchFilters(value, onChange);
 
   return (
     <>
@@ -164,10 +61,10 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
           <ActiveMultiSelect
             placeholder="District"
             id="district-multi-select"
-            items={districtOptions ?? []}
+            items={districtOptions}
             itemToString={activeMSItemToString}
             onChange={handleActiveMultiSelectChange('district')}
-            selectedItems={(districtOptions ?? []).filter((option) =>
+            selectedItems={districtOptions.filter((option) =>
               (filters.district || []).includes(option.code),
             )}
           />
@@ -179,10 +76,10 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
             placeholder="Sampling option"
             id="sampling-multi-select"
             data-testid="sampling-multi-select"
-            items={samplingOptions ?? []}
+            items={samplingOptions}
             itemToString={activeMSItemToString}
             onChange={handleActiveMultiSelectChange('sampling')}
-            selectedItems={(samplingOptions ?? []).filter((option) =>
+            selectedItems={samplingOptions.filter((option) =>
               (filters.sampling || []).includes(option.code),
             )}
           />
@@ -193,10 +90,10 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
           <ActiveMultiSelect
             placeholder="Status"
             id="status-multi-select"
-            items={statusOptions ?? []}
+            items={statusOptions}
             itemToString={activeMSItemToString}
             onChange={handleActiveMultiSelectChange('status')}
-            selectedItems={(statusOptions ?? []).filter((option) =>
+            selectedItems={statusOptions.filter((option) =>
               (filters.status || []).includes(option.code),
             )}
           />
@@ -279,9 +176,9 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
       <WasteSearchFiltersAdvanced
         filters={filters}
         isModalOpen={isAdvancedSearchOpen}
-        samplingOptions={samplingOptions ?? []}
-        districtOptions={districtOptions ?? []}
-        statusOptions={statusOptions ?? []}
+        samplingOptions={samplingOptions}
+        districtOptions={districtOptions}
+        statusOptions={statusOptions}
         onClose={() => setIsAdvancedSearchOpen(false)}
         onSearch={() => {
           setIsAdvancedSearchOpen(false);
