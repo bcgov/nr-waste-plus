@@ -14,16 +14,16 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "@badeball/cypress-cucumber-preprocessor": "^24.0.0",
+    "@badeball/cypress-cucumber-preprocessor": "^24.0.1",
     "@cypress/webpack-preprocessor": "^7.0.0",
     "@testing-library/cypress": "^10.1.0",
+    "@types/node": "^25.5.0",
     "cypress": "^15.0.0",
-    "ts-loader": "^9.4.2",
-    "typescript": "^5.0.4",
-    "webpack": "^5.81.0",    
-    "@types/node": "^25.3.0",
     "dotenv": "^17.3.1",
-    "ts-node": "^10.9.2"
+    "ts-loader": "^9.4.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.4",
+    "webpack": "^5.81.0"
   },
   "cypress-cucumber-preprocessor": {
     "nonGlobalStepDefinitions": true
