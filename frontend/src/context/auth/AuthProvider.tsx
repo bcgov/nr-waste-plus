@@ -7,6 +7,13 @@ import { type FamLoginUser, type IdpProviderType, type JWT } from './types';
 
 import { env } from '@/env';
 
+/**
+ * Provides authenticated user state and auth actions to the application tree.
+ *
+ * @param props The provider props.
+ * @param props.children The subtree that consumes auth state.
+ * @returns The auth context provider.
+ */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FamLoginUser | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
@@ -14,6 +21,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const appEnv = Number.isNaN(Number(env.VITE_ZONE)) ? (env.VITE_ZONE ?? 'TEST') : 'TEST';
   const isMock = env.VITE_MOCK_AUTH === 'true';
 
+  /**
+   * Refreshes the cached user state from the current authentication token.
+   */
   const refreshUserState = async () => {
     setIsLoading(true);
     try {

@@ -4,6 +4,13 @@ import { PageTitleContext } from './PageTitleContext';
 
 import { env } from '@/env';
 
+/**
+ * Maintains the current document title and exposes hierarchical title updates.
+ *
+ * @param props The provider props.
+ * @param props.children The subtree that can update the page title.
+ * @returns The page title context provider.
+ */
 export const PageTitleProvider = ({ children }: { children: ReactNode }) => {
   const [pageTitle, setPageTitle] = useState(env.VITE_APP_NAME);
   const [currentHierarchy, setCurrentHierarchy] = useState(0);
