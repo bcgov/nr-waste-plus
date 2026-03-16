@@ -42,6 +42,78 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
     staleTime: Infinity,
   });
 
+  const secondaryMarks = data?.secondaryMarks;
+  const hasSecondaryMarks = Boolean(secondaryMarks && secondaryMarks.length > 0);
+
+  const renderReadonlyColumn = (
+    lg: number,
+    md: number,
+    sm: number,
+    label: string,
+    idSuffix: string,
+    value: string,
+    isNumber = false,
+    displayLabel = true,
+  ) => (
+    <Column lg={lg} md={md} sm={sm}>
+      <ReadonlyInput
+        label={label}
+        id={`${rowId}-${idSuffix}`}
+        isNumber={isNumber}
+        showSkeleton={isLoading}
+        displayLabel={displayLabel}
+      >
+        {value}
+      </ReadonlyInput>
+    </Column>
+  );
+
+  const renderSecondaryMarksColumns = (idSuffix: string, lg: number, md: number, sm: number) => (
+    <>
+      <Column lg={lg} md={md} sm={sm}>
+        <ReadonlyInput
+          label="Secondary marks"
+          displayLabel={false}
+          id={`${rowId}-secondary-marks${idSuffix}`}
+          isNumber={false}
+          showSkeleton={isLoading}
+        >
+          {secondaryMarks?.map((mark, index) => (
+            <p key={`${rowId}-secondary-mark${idSuffix}-${index}`}>{mark.mark}</p>
+          ))}
+        </ReadonlyInput>
+      </Column>
+      <Column lg={lg === 2 ? 1 : 2} md={md} sm={sm}>
+        <ReadonlyInput
+          label="Secondary Area"
+          displayLabel={false}
+          id={`${rowId}-secondary-areas${idSuffix}`}
+          isNumber={false}
+          showSkeleton={isLoading}
+        >
+          {secondaryMarks?.map((mark, index) => (
+            <p key={`${rowId}-secondary-mark-area${idSuffix}-${index}`}>{mark.area} ha</p>
+          ))}
+        </ReadonlyInput>
+      </Column>
+      <Column lg={2} md={md === 2 ? 4 : md} sm={sm === 1 ? 2 : sm}>
+        <ReadonlyInput
+          label="Secondary Status"
+          displayLabel={false}
+          id={`${rowId}-secondary-statuses${idSuffix}`}
+          isNumber={false}
+          showSkeleton={isLoading}
+        >
+          {secondaryMarks?.map((mark, index) => (
+            <p key={`${rowId}-secondary-mark-status${idSuffix}-${index}`}>
+              {mark.status.description}
+            </p>
+          ))}
+        </ReadonlyInput>
+      </Column>
+    </>
+  );
+
   return (
     <Grid>
       {/* Visible on All */}
@@ -67,38 +139,18 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
         </ReadonlyInput>
       </Column>
       {/* Visible on Lg+ */}
-      <Column lg={2} md={0} sm={0}>
-        <ReadonlyInput
-          label="Timber Mark"
-          id={`${rowId}-timber-mark`}
-          isNumber={false}
-          showSkeleton={isLoading}
-        >
-          {data?.timberMark ?? ''}
-        </ReadonlyInput>
-      </Column>
+      {renderReadonlyColumn(2, 0, 0, 'Timber Mark', 'timber-mark', data?.timberMark ?? '')}
       {/* Visible on Lg+ */}
-      <Column lg={1} md={0} sm={0}>
-        <ReadonlyInput
-          label="Mark area"
-          id={`${rowId}-mark-area`}
-          isNumber={false}
-          showSkeleton={isLoading}
-        >
-          {data?.markArea ? `${data.markArea} ha` : ''}
-        </ReadonlyInput>
-      </Column>
+      {renderReadonlyColumn(
+        1,
+        0,
+        0,
+        'Mark area',
+        'mark-area',
+        data?.markArea ? `${data.markArea} ha` : '',
+      )}
       {/* Visible on Lg+ */}
-      <Column lg={2} md={0} sm={0}>
-        <ReadonlyInput
-          label="Status"
-          id={`${rowId}-status`}
-          isNumber={false}
-          showSkeleton={isLoading}
-        >
-          {data?.status?.description ?? ''}
-        </ReadonlyInput>
-      </Column>
+      {renderReadonlyColumn(2, 0, 0, 'Status', 'status', data?.status?.description ?? '')}
       {/* Visible on All */}
       <Column lg={1} md={2} sm={1}>
         <ReadonlyInput
@@ -115,84 +167,20 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
       <Column lg={0} md={2} sm={1}></Column>
 
       {/* Visible on md and sm */}
-      <Column lg={0} md={2} sm={1}>
-        <ReadonlyInput
-          label="Timber Mark"
-          id={`${rowId}-timber-mark-expand`}
-          isNumber={false}
-          showSkeleton={isLoading}
-        >
-          {data?.timberMark ?? ''}
-        </ReadonlyInput>
-      </Column>
+      {renderReadonlyColumn(0, 2, 1, 'Timber Mark', 'timber-mark-expand', data?.timberMark ?? '')}
       {/* Visible on md and sm */}
-      <Column lg={0} md={2} sm={1}>
-        <ReadonlyInput
-          label="Mark area"
-          id={`${rowId}-mark-area-expand`}
-          isNumber={false}
-          showSkeleton={isLoading}
-        >
-          {data?.markArea ? `${data.markArea} ha` : ''}
-        </ReadonlyInput>
-      </Column>
-      {/* Visible on md and sm */}
-      <Column lg={0} md={4} sm={2}>
-        <ReadonlyInput
-          label="Status"
-          id={`${rowId}-status-expand`}
-          isNumber={false}
-          showSkeleton={isLoading}
-        >
-          {data?.status?.description ?? ''}
-        </ReadonlyInput>
-      </Column>
-      {/* Visible on md and sm */}
-      {data?.secondaryMarks && data.secondaryMarks.length > 0 && (
-        <>
-          <Column lg={0} md={2} sm={1}>
-            <ReadonlyInput
-              label="Secondary marks"
-              displayLabel={false}
-              id={`${rowId}-secondary-marks-expand`}
-              isNumber={false}
-              showSkeleton={isLoading}
-            >
-              {data.secondaryMarks.map((mark, index) => (
-                <p key={`${rowId}-secondary-mark-expand-${index}`}>{mark.mark}</p>
-              ))}
-            </ReadonlyInput>
-          </Column>
-          <Column lg={0} md={2} sm={1}>
-            <ReadonlyInput
-              label="Secondary Area"
-              displayLabel={false}
-              id={`${rowId}-secondary-areas-expand`}
-              isNumber={false}
-              showSkeleton={isLoading}
-            >
-              {data.secondaryMarks.map((mark, index) => (
-                <p key={`${rowId}-secondary-mark-area-expand-${index}`}>{mark.area} ha</p>
-              ))}
-            </ReadonlyInput>
-          </Column>
-          <Column lg={0} md={4} sm={2}>
-            <ReadonlyInput
-              label="Secondary Status"
-              displayLabel={false}
-              id={`${rowId}-secondary-statuses-expand`}
-              isNumber={false}
-              showSkeleton={isLoading}
-            >
-              {data.secondaryMarks.map((mark, index) => (
-                <p key={`${rowId}-secondary-mark-status-expand-${index}`}>
-                  {mark.status.description}
-                </p>
-              ))}
-            </ReadonlyInput>
-          </Column>
-        </>
+      {renderReadonlyColumn(
+        0,
+        2,
+        1,
+        'Mark area',
+        'mark-area-expand',
+        data?.markArea ? `${data.markArea} ha` : '',
       )}
+      {/* Visible on md and sm */}
+      {renderReadonlyColumn(0, 4, 2, 'Status', 'status-expand', data?.status?.description ?? '')}
+      {/* Visible on md and sm */}
+      {hasSecondaryMarks && <>{renderSecondaryMarksColumns('-expand', 0, 2, 1)}</>}
 
       <Column lg={2} md={2} sm={1}>
         <ReadonlyInput
@@ -235,48 +223,10 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
       </Column>
 
       {/* Visible on lg+ */}
-      {data?.secondaryMarks && data.secondaryMarks.length > 0 && (
+      {hasSecondaryMarks && (
         <>
           <Column lg={4} md={0} sm={0}></Column>
-          <Column lg={2} md={0} sm={0}>
-            <ReadonlyInput
-              label="Secondary marks"
-              displayLabel={false}
-              id={`${rowId}-secondary-marks`}
-              isNumber={false}
-              showSkeleton={isLoading}
-            >
-              {data.secondaryMarks.map((mark, index) => (
-                <p key={`${rowId}-secondary-mark-${index}`}>{mark.mark}</p>
-              ))}
-            </ReadonlyInput>
-          </Column>
-          <Column lg={1} md={0} sm={0}>
-            <ReadonlyInput
-              label="Secondary Area"
-              displayLabel={false}
-              id={`${rowId}-secondary-areas`}
-              isNumber={false}
-              showSkeleton={isLoading}
-            >
-              {data.secondaryMarks.map((mark, index) => (
-                <p key={`${rowId}-secondary-mark-area-${index}`}>{mark.area} ha</p>
-              ))}
-            </ReadonlyInput>
-          </Column>
-          <Column lg={2} md={0} sm={0}>
-            <ReadonlyInput
-              label="Secondary Status"
-              displayLabel={false}
-              id={`${rowId}-secondary-statuses`}
-              isNumber={false}
-              showSkeleton={isLoading}
-            >
-              {data.secondaryMarks.map((mark, index) => (
-                <p key={`${rowId}-secondary-mark-status-${index}`}>{mark.status.description}</p>
-              ))}
-            </ReadonlyInput>
-          </Column>
+          {renderSecondaryMarksColumns('', 2, 0, 0)}
           <Column lg={7} md={0} sm={0}></Column>
         </>
       )}
