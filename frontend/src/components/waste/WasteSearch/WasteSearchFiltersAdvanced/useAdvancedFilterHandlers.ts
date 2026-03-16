@@ -13,6 +13,10 @@ type KeysOfType<T, V> = {
 }[keyof T];
 type BooleanFilterKey = KeysOfType<ReportingUnitSearchParametersViewDto, boolean>;
 type StringFilterKey = KeysOfType<ReportingUnitSearchParametersViewDto, string>;
+type CodeDescriptionArrayFilterKey = KeysOfType<
+  ReportingUnitSearchParametersViewDto,
+  CodeDescriptionDto[]
+>;
 
 /**
  * Provides curried handler factories for advanced filter inputs.
@@ -31,9 +35,7 @@ type StringFilterKey = KeysOfType<ReportingUnitSearchParametersViewDto, string>;
  * <TextInput onBlur={handlers.onTextChange('timberMark')} />
  * ```
  */
-export const useAdvancedFilterHandlers = (
-  onChange: OnChangeByKey,
-) => {
+export const useAdvancedFilterHandlers = (onChange: OnChangeByKey) => {
   /**
    * Creates a checkbox handler for boolean filters.
    *
@@ -53,9 +55,9 @@ export const useAdvancedFilterHandlers = (
    * @returns An ActiveMultiSelect change handler.
    */
   const onActiveMultiSelectChange =
-    (key: FilterKey) =>
+    (key: CodeDescriptionArrayFilterKey) =>
     (changes: { selectedItems: CodeDescriptionDto[] }): void => {
-      onChange(key)(changes.selectedItems as ReportingUnitSearchParametersViewDto[typeof key]);
+      onChange(key)(changes.selectedItems);
     };
 
   /**
@@ -64,11 +66,9 @@ export const useAdvancedFilterHandlers = (
    * @param key The filter key to update.
    * @returns A blur handler for text inputs.
    */
-  const onTextChange =
-    (key: StringFilterKey) =>
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      onChange(key)(event.target.value);
-    };
+  const onTextChange = (key: StringFilterKey) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(key)(event.target.value);
+  };
 
   /**
    * Creates a date picker handler that stores formatted API dates.

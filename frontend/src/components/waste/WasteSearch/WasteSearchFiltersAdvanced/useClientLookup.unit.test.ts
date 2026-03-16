@@ -8,7 +8,6 @@ import { useClientLookup } from './useClientLookup';
 
 import type { FamLoginUser } from '@/context/auth/types';
 
-import { AuthProvider } from '@/context/auth/AuthProvider';
 import APIs from '@/services/APIs';
 
 const mockUser = {
@@ -36,11 +35,7 @@ vi.mock('@/services/APIs', () => {
 
 const wrapper = ({ children }: { children: React.ReactNode }) => {
   const qc = new QueryClient();
-  return React.createElement(
-    QueryClientProvider,
-    { client: qc },
-    React.createElement(AuthProvider, { children }),
-  );
+  return React.createElement(QueryClientProvider, { client: qc }, children);
 };
 
 describe('useClientLookup', () => {

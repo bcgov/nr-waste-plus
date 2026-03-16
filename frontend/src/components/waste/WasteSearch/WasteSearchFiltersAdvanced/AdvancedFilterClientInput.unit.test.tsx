@@ -112,7 +112,7 @@ describe('AdvancedFilterClientInput', () => {
 
   it('returns null when provider is unknown', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { idpProvider: 'UNKNOWN' as any, privileges: {} } as FamLoginUser,
+      user: { idpProvider: 'UNKNOWN', privileges: {} } as unknown as FamLoginUser,
       getClients: vi.fn(),
       login: vi.fn(),
       logout: vi.fn(),

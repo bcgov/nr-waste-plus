@@ -54,10 +54,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [loadUserToken]);
 
   useEffect(() => {
-    refreshUserState();
-    const interval = setInterval(loadUserToken, 3 * 60 * 1000);
+    const safelyRefreshUserState = () => {
+      void refreshUserState().catch(() => {
+        setUser(undefined);
+        setIsLoading(false);
+      });
+    };
+
+    safelyRefreshUserState();
+    const interval = setInterval(safelyRefreshUserState, 3 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [loadUserToken, refreshUserState]);
+  }, [refreshUserState]);
 
   const login = useCallback(
     async (provider: IdpProviderType) => {

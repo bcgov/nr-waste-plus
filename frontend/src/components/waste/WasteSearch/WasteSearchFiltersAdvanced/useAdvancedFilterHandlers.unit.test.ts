@@ -27,12 +27,12 @@ describe('useAdvancedFilterHandlers', () => {
 
     const { result } = renderHook(() => useAdvancedFilterHandlers(onChange));
 
-    const handler = result.current.onActiveMultiSelectChange('sampling');
+    const handler = result.current.onActiveMultiSelectChange('clientNumbers');
     const items = [{ code: 'A', description: 'Option A' }];
 
     handler({ selectedItems: items });
 
-    expect(onChange).toHaveBeenCalledWith('sampling');
+    expect(onChange).toHaveBeenCalledWith('clientNumbers');
     expect(onChangeInner).toHaveBeenCalledWith(items);
   });
 
