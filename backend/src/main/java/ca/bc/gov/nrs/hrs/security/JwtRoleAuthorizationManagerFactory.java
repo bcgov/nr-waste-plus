@@ -43,7 +43,7 @@ public class JwtRoleAuthorizationManagerFactory {
         new AuthorizationDecision(roleChecker.hasRoleMatching(matcher));
   }
 
-  public AuthorizationManager<RequestAuthorizationContext> gotRoleMatching(Role... roles){
+  public AuthorizationManager<RequestAuthorizationContext> gotRoleMatching(Role... roles) {
     final Set<String> requiredRolePrefixes = Stream
         .of(roles)
         .map(Role::getRoleName)
