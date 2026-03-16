@@ -7,6 +7,11 @@ import { getAccessViolationMessage } from '@/context/auth/userAccessValidation';
 
 import './index.scss';
 
+/**
+ * Displays an access violation message for authenticated users who cannot view a route.
+ *
+ * @returns The unauthorized page content.
+ */
 const RoleErrorPage: FC = () => {
   const { search } = useLocation();
   const violationReason = new URLSearchParams(search).get('reason');

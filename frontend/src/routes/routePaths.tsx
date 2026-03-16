@@ -14,6 +14,9 @@ import NotFoundPage from '@/pages/NotFound';
 import RoleErrorPage from '@/pages/RoleError';
 import WasteSearchPage from '@/pages/WasteSearch';
 
+/**
+ * Extends a React Router route with metadata used for menus and access control.
+ */
 export type RouteDescription = {
   id: string;
   path: string;
@@ -27,10 +30,16 @@ export type RouteDescription = {
   offlineOnly?: boolean;
 } & RouteObject;
 
+/**
+ * Minimal menu metadata derived from the route registry.
+ */
 export type MenuItem = Pick<RouteDescription, 'id' | 'path' | 'icon'> & {
   children?: MenuItem[];
 };
 
+/**
+ * Global routes that remain available regardless of online status or menu context.
+ */
 export const GLOBAL_ROUTES: RouteDescription[] = [
   {
     path: '/no-role',
@@ -40,6 +49,9 @@ export const GLOBAL_ROUTES: RouteDescription[] = [
   },
 ];
 
+/**
+ * System routes used for landing, redirects, and application-wide error handling.
+ */
 export const SYSTEM_ROUTES: RouteDescription[] = [
   {
     path: '*',
@@ -93,6 +105,9 @@ export const SYSTEM_ROUTES: RouteDescription[] = [
   },
 ];
 
+/**
+ * Primary application routes available after authentication.
+ */
 export const ROUTES: RouteDescription[] = [
   {
     path: '/dashboard',
@@ -131,12 +146,27 @@ export const ROUTES: RouteDescription[] = [
   },
 ];
 
+/**
+ * Applies online and offline visibility rules to a route definition.
+ *
+ * @param route The route being evaluated.
+ * @param isOnline Whether the application is currently online.
+ * @returns True when the route should be available in the current connectivity state.
+ */
 const filterByOnlineStatus = (route: RouteDescription, isOnline: boolean): boolean => {
   if (route.offlineOnly) return !isOnline;
   if (route.offlineReady) return true;
   return isOnline;
 };
 
+/**
+ * Determines whether a user can access a route given connectivity and role constraints.
+ *
+ * @param route The route being evaluated.
+ * @param isOnline Whether the application is currently online.
+ * @param roles The authenticated user's roles.
+ * @returns True when the route is accessible.
+ */
 const hasAccess = (route: RouteDescription, isOnline: boolean, roles: FamRole[]): boolean => {
   if (!route.protected) return true;
   if (!filterByOnlineStatus(route, isOnline)) return false;
@@ -144,6 +174,14 @@ const hasAccess = (route: RouteDescription, isOnline: boolean, roles: FamRole[])
   return route.roles.some((role) => roles.map((userRole) => userRole.role).includes(role.role));
 };
 
+/**
+ * Filters a route tree by connectivity and preserves child route structure.
+ *
+ * @param routes The route definitions to filter.
+ * @param isOnline Whether the application is currently online.
+ * @param roles The user's role names.
+ * @returns A filtered route tree with children pruned recursively.
+ */
 const filterRoutesRecursively = (
   routes: RouteDescription[],
   isOnline: boolean,
@@ -163,6 +201,14 @@ const filterRoutesRecursively = (
     });
 };
 
+/**
+ * Extracts side navigation items from the route registry for the current user state.
+ *
+ * @param routes The route definitions to inspect.
+ * @param isOnline Whether the application is currently online.
+ * @param roles The authenticated user's roles.
+ * @returns The menu items that should be shown in the side navigation.
+ */
 const extractMenuItems = (
   routes: RouteDescription[],
   isOnline: boolean,
@@ -179,10 +225,22 @@ const extractMenuItems = (
     }));
 };
 
+/**
+ * Builds the side navigation entries for the current connectivity and role state.
+ *
+ * @param isOnline Whether the application is currently online.
+ * @param roles The authenticated user's roles.
+ * @returns The menu items to render in the side navigation.
+ */
 export const getMenuEntries = (isOnline: boolean, roles: FamRole[]): MenuItem[] => {
   return extractMenuItems(ROUTES, isOnline, roles);
 };
 
+/**
+ * Returns the routes available before a user is authenticated.
+ *
+ * @returns Public route definitions with system-only protected entries removed.
+ */
 export const getPublicRoutes = (): RouteDescription[] => {
   return filterRoutesRecursively(
     SYSTEM_ROUTES.filter((route) => !route.protected),
@@ -191,6 +249,13 @@ export const getPublicRoutes = (): RouteDescription[] => {
   );
 };
 
+/**
+ * Returns the route tree available to an authenticated user.
+ *
+ * @param isOnline Whether the application is currently online.
+ * @param roles The authenticated user's roles.
+ * @returns Protected routes wrapped with access control and route-level error handling.
+ */
 export const getProtectedRoutes = (isOnline: boolean, roles: FamRole[]): RouteDescription[] => {
   return [
     ...filterRoutesRecursively(

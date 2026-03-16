@@ -10,6 +10,11 @@ import { eventIconDescription } from '@/hooks/useSendEvent/eventHandler';
 
 import './index.scss';
 
+/**
+ * Hosts the waste search page banner, event notifications, and search results table.
+ *
+ * @returns The waste search page.
+ */
 const WasteSearchPage: FC = () => {
   const [eventNotification, setEventNotification] = useState<GlobalEvent | undefined>(undefined);
   const { subscribe } = useSendEvent();

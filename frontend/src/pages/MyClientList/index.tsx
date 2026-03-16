@@ -10,6 +10,11 @@ import { eventIconDescription } from '@/hooks/useSendEvent/eventHandler';
 
 import './index.scss';
 
+/**
+ * Hosts the saved client list page and its page-scoped notifications.
+ *
+ * @returns The my clients page.
+ */
 const MyClientListPage: FC = () => {
   const [eventNotification, setEventNotification] = useState<GlobalEvent | undefined>(undefined);
   const { subscribe } = useSendEvent();

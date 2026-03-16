@@ -11,6 +11,14 @@ type ProtectedRouteProps = Readonly<{
   roles?: readonly FamRole[];
 }>;
 
+/**
+ * Guards protected routes by validating authentication state and optional role membership.
+ *
+ * @param props The route guard props.
+ * @param props.children The protected content to render when access is allowed.
+ * @param props.roles Optional roles required to access the route.
+ * @returns The protected content or a redirect to the appropriate access page.
+ */
 export default function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
   const { user } = useAuth();
   const location = useLocation();

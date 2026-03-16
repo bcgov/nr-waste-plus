@@ -3,11 +3,23 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { clearPersistedRedirect, readPersistedRedirect } from '@/routes/redirectStorage';
 
+/**
+ * Detects whether the current query string looks like an OAuth callback payload.
+ *
+ * @param search The raw location search string.
+ * @returns True when the query contains the expected OAuth callback keys.
+ */
 const isOAuthCallbackQuery = (search: string): boolean => {
   const params = new URLSearchParams(search);
   return params.has('code') && params.has('state');
 };
 
+/**
+ * Validates a persisted redirect target and rejects external or unsafe paths.
+ *
+ * @param value The persisted redirect value from storage.
+ * @returns A safe in-app redirect target or `null` when the value should be ignored.
+ */
 const getSafeRedirectTarget = (value: string | null): string | null => {
   if (!value || !value.startsWith('/') || value.startsWith('//')) {
     return null;
@@ -30,6 +42,11 @@ const getSafeRedirectTarget = (value: string | null): string | null => {
   }
 };
 
+/**
+ * Redirects authenticated users from the dashboard entry point to their next destination.
+ *
+ * @returns `null` because this component only performs navigation side effects.
+ */
 const DashboardRedirect: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();

@@ -16,6 +16,9 @@ import { PreferenceProvider } from '@/context/preference/PreferenceProvider.tsx'
 import ThemeProvider from '@/context/theme/ThemeProvider.tsx';
 import updateSW from '@/registerServiceWorker';
 
+/**
+ * Shared React Query client used by the application root.
+ */
 const queryClient = new QueryClient(queryClientConfig);
 Amplify.configure(amplifyconfig);
 cognitoUserPoolsTokenProvider.setKeyValueStorage(new CookieStorage());

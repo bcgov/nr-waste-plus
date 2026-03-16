@@ -8,6 +8,11 @@ import { getUserAccessStatus } from '@/context/auth/userAccessValidation';
 
 import './index.scss';
 
+/**
+ * Explains that the current authenticated user does not have any FAM roles assigned.
+ *
+ * @returns The no-role page or a redirect when the user state does not match this case.
+ */
 const NoRolePage: FC = () => {
   const { isLoggedIn, user } = useAuth();
   const accessStatus = getUserAccessStatus(user);
