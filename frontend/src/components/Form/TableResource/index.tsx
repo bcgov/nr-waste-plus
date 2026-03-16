@@ -1,5 +1,4 @@
 import {
-  Checkbox,
   DataTableSkeleton,
   Pagination,
   Table,
@@ -11,20 +10,19 @@ import {
   TableRow,
   TableToolbar,
   TableToolbarContent,
-  TableToolbarMenu,
   Tooltip,
 } from '@carbon/react';
-import { Column as ColumnIcon } from '@carbon/react/icons';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Children, useEffect, useRef, useState, type ReactNode } from 'react';
 
+import ColumnCustomizationMenu from './ColumnCustomizationMenu';
 import TableResourceExpandRow from './TableResourceExpandRow';
 import TableResourceRow from './TableResourceRow';
 import { type TableHeaderType, type PageableResponse, renderCell, getHeaderId } from './types';
+import { useTableToolbar } from './useTableToolbar';
 
 import type { NestedKeyOf, SortDirectionType } from '@/services/types';
 
 import EmptySection from '@/components/core/EmptySection';
-import { usePreference } from '@/context/preference/usePreference';
 
 import './index.scss';
 
@@ -52,6 +50,7 @@ type SortingKeys<T> = Record<NestedKeyOf<T>, SortDirectionType>;
  * @property {boolean} error - Whether an error occurred while fetching data.
  * @property {boolean} [displayRange] - If true, shows the item range in the pagination component.
  * @property {boolean} [displayToolbar] - If true, shows the toolbar, with the toolbar buttons, such as column customization.
+ * @property {ReactNode[]} [toolbarEntries] - Optional array of extra React nodes (toolbar buttons/components) to render in the toolbar content area.
  * @property {(params: PaginationParams) => void} [onPageChange] - Callback for handling page changes.
  * @property {(sortKeys: SortingKeys<T>) => void} [onSortChange] - Callback for handling column sort changes.
  * @property {(rowId: string | number) => Promise<ReactNode>} [onRowExpanded] - Callback for handling row expansion data loading. If declared it will show row expansion, otherwise it will display as normal table row.
@@ -64,6 +63,7 @@ type TableResourceProps<T> = {
   error: boolean;
   displayRange?: boolean;
   displayToolbar?: boolean;
+  toolbarEntries?: ReactNode[];
   onPageChange?: (params: PaginationParams) => void;
   onSortChange?: (sortKeys: SortingKeys<T>) => void;
   onRowExpanded?: (rowId: string | number) => Promise<ReactNode>;
@@ -85,12 +85,12 @@ const TableResource = <T,>({
   error,
   displayRange,
   displayToolbar,
+  toolbarEntries,
   onPageChange,
   onSortChange,
   onRowExpanded,
 }: TableResourceProps<T>) => {
-  const [tableHeaders, setTableHeaders] = useState(headers);
-  const { userPreference, updatePreferences, isLoaded } = usePreference();
+  const { tableHeaders, onToggleHeader } = useTableToolbar(id, headers);
   const [expandedRow, setExpandedRow] = useState<Set<string>>(new Set());
   const expandedRowRef = useRef<Set<string>>(new Set());
   const [sortState, setSortState] = useState<SortingKeys<T>>(
@@ -106,101 +106,12 @@ const TableResource = <T,>({
   );
   // Track request tokens per row to invalidate stale responses
   const pendingRowRequestsRef = useRef<Map<string, number>>(new Map());
+  const requestCounterRef = useRef(0);
 
   // Keep ref in sync with state for reading current expanded rows
   useEffect(() => {
     expandedRowRef.current = expandedRow;
   }, [expandedRow]);
-
-  const loadTableFromPreferences = () => {
-    if (userPreference.tableHeaders) {
-      const savedIds = (userPreference.tableHeaders as Record<string, string[]>)[id] as string[];
-
-      if (savedIds && Array.isArray(savedIds)) {
-        setTableHeaders(
-          headers.map((header) => ({
-            ...header,
-            selected: savedIds.includes(getHeaderId(header)),
-          })),
-        );
-      } else {
-        setTableHeaders(headers); // fallback to default
-      }
-    }
-  };
-
-  useEffect(() => {
-    const preferenceHeaders = tableHeaders
-      .filter((header) => header.selected)
-      .map((header) => getHeaderId(header));
-    updatePreferences({ tableHeaders: { [id]: [...new Set(preferenceHeaders)] } });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableHeaders]);
-
-  useEffect(() => {
-    loadTableFromPreferences();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded]);
-
-  if (loading)
-    return (
-      <DataTableSkeleton
-        data-testid="loading-skeleton"
-        className="default-table-skeleton"
-        aria-label="loading table data"
-        headers={tableHeaders
-          .filter((header) => header.selected)
-          .map((header) => header as { header: string })}
-        rowCount={content.page?.size || 10}
-        showToolbar={false}
-        showHeader={false}
-        zebra={true}
-      />
-    );
-
-  if (!content || !content.content)
-    return (
-      <EmptySection
-        className="initial-empty-section"
-        data-testid="empty-section"
-        pictogram="Summit"
-        title={error ? 'Something went wrong!' : 'Nothing to show yet!'}
-        description={
-          error
-            ? 'Error occured while searching for results.'
-            : 'Enter at least one criteria to start the search. The list will display here.'
-        }
-      />
-    );
-
-  if (content?.page?.totalElements === 0) {
-    return (
-      <EmptySection
-        className="table-empty-section"
-        pictogram="UserSearch"
-        title="No results"
-        description="Consider adjusting your search term(s) and try again."
-      />
-    );
-  }
-
-  const itemRangeText = (min: number, max: number, total: number) =>
-    `${min}-${max} of ${total} items`;
-
-  const noItemRangeText = () => '';
-
-  const onToggleHeader = (headerId: string) => {
-    setTableHeaders((prevHeaders) => {
-      return prevHeaders.map((header) => {
-        // Find the header to toggle by id
-        if (getHeaderId(header) === headerId) {
-          // Toggle the header's selected state
-          return { ...header, selected: !header.selected };
-        }
-        return header;
-      });
-    });
-  };
 
   const handleSortClick = (key: NestedKeyOf<T>) => {
     if (headers.find((h) => h.key === key && !h.sortable)) {
@@ -251,7 +162,8 @@ const TableResource = <T,>({
         setExpandedRow(newSet);
 
         // Create a request token for this expansion
-        const requestToken = Date.now();
+        const requestToken = requestCounterRef.current + 1;
+        requestCounterRef.current = requestToken;
         pendingRowRequestsRef.current.set(rowKey, requestToken);
 
         onRowExpanded(rowId).then((content) => {
@@ -282,40 +194,62 @@ const TableResource = <T,>({
     }
   };
 
+  if (loading)
+    return (
+      <DataTableSkeleton
+        data-testid="loading-skeleton"
+        className="default-table-skeleton"
+        aria-label="loading table data"
+        headers={tableHeaders
+          .filter((header) => header.selected)
+          .map((header) => header as { header: string })}
+        rowCount={content.page?.size || 10}
+        showToolbar={false}
+        showHeader={false}
+        zebra={true}
+      />
+    );
+
+  if (!content || !content.content)
+    return (
+      <EmptySection
+        className="initial-empty-section"
+        data-testid="empty-section"
+        pictogram="Summit"
+        title={error ? 'Something went wrong!' : 'Nothing to show yet!'}
+        description={
+          error
+            ? 'Error occured while searching for results.'
+            : 'Enter at least one criteria to start the search. The list will display here.'
+        }
+      />
+    );
+
+  if (content?.page?.totalElements === 0) {
+    return (
+      <EmptySection
+        className="table-empty-section"
+        pictogram="UserSearch"
+        title="No results"
+        description="Consider adjusting your search term(s) and try again."
+      />
+    );
+  }
+
+  const itemRangeText = (min: number, max: number, total: number) =>
+    `${min}-${max} of ${total} items`;
+
+  const noItemRangeText = () => '';
+
   return (
     <>
       {displayToolbar && (
         <TableToolbar data-testid="table-toolbar">
           <TableToolbarContent className="table-action-toolbar-content">
-            {/* Extra toolbar entries */}
-            <TableToolbarMenu
-              className="table-action-menu-button column-menu-button"
-              menuOptionsClass="table-search-action-menu-option"
-              iconDescription="Edit columns"
-              autoAlign
-              highContrast
-              renderIcon={() => (
-                <div className="toolbar-menu-columns-display">
-                  <span className="toolbar-menu-columns-display-text">Edit columns</span>
-                  <ColumnIcon className="toolbar-menu-columns-display-icon" />
-                </div>
-              )}
-            >
-              <div className="table-action-menu-option-item">
-                <div className="helper-text">Select the columns you want to see</div>
-                {tableHeaders.map((header) => (
-                  <Checkbox
-                    key={`header-column-checkbox-${getHeaderId(header)}`}
-                    id={`header-column-checkbox-${getHeaderId(header)}`}
-                    aria-label={`Toggle ${header.header} column`}
-                    className="column-checkbox"
-                    labelText={header.header}
-                    checked={header.selected}
-                    onChange={() => onToggleHeader(getHeaderId(header))}
-                  />
-                ))}
-              </div>
-            </TableToolbarMenu>
+            {/* Built-in column customization menu */}
+            <ColumnCustomizationMenu headers={tableHeaders} onToggleHeader={onToggleHeader} />
+            {/* Extra toolbar entries provided by consumer */}
+            {toolbarEntries && Children.toArray(toolbarEntries)}
           </TableToolbarContent>
         </TableToolbar>
       )}

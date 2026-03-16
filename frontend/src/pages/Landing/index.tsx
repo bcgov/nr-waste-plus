@@ -13,6 +13,11 @@ import useBreakpoint from '@/hooks/useBreakpoint';
 
 import './index.scss';
 
+/**
+ * Displays the public landing page and authentication entry points.
+ *
+ * @returns The landing page content.
+ */
 const LandingPage: FC = () => {
   const { login } = useAuth();
   const breakpoint = useBreakpoint();
@@ -33,7 +38,7 @@ const LandingPage: FC = () => {
   const elementGap = elementMarginMap[breakpoint] || elementMarginMap.sm;
 
   /**
-   * Defines whether the login buttons should be on the same row.
+   * Determines whether the login buttons should share a single row.
    */
   const isBtnSingleRow = breakpoint === 'max' || breakpoint === 'xlg' || breakpoint === 'md';
 

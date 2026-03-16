@@ -6,6 +6,13 @@ import { ThemeContext } from './ThemeContext';
 import { type CarbonTheme } from '@/context/preference/types';
 import { usePreference } from '@/context/preference/usePreference';
 
+/**
+ * Synchronizes the active Carbon theme with persisted user preferences.
+ *
+ * @param props The provider props.
+ * @param props.children The subtree that should inherit the active theme.
+ * @returns The theme context provider and Carbon theme wrapper.
+ */
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const preferences = usePreference();
   const { updatePreferences, userPreference } = preferences;

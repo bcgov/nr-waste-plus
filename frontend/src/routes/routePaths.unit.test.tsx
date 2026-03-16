@@ -15,9 +15,7 @@ describe('routePaths', () => {
   });
 
   it('getMenuEntries includes clients entry for Submitter role', () => {
-    const entries = routePaths.getMenuEntries(true, [
-      { role: Role.SUBMITTER, clients: ['100'] },
-    ]);
+    const entries = routePaths.getMenuEntries(true, [{ role: Role.SUBMITTER, clients: ['100'] }]);
     expect(entries.some((e) => e.id === 'My clients')).toBe(true);
   });
 

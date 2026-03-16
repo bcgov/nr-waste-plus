@@ -5,6 +5,11 @@ import { useRouteError } from 'react-router-dom';
 
 import PageTitle from '@/components/core/PageTitle';
 
+/**
+ * Renders a route-level error boundary fallback for unhandled navigation errors.
+ *
+ * @returns The global error page.
+ */
 const GlobalErrorPage: FC = () => {
   const error = useRouteError();
 

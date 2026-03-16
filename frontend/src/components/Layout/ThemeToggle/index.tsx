@@ -4,6 +4,11 @@ import './index.scss';
 
 import { useTheme } from '@/context/theme/useTheme';
 
+/**
+ * Toggles between the supported Carbon light and dark themes.
+ *
+ * @returns An interactive theme toggle control.
+ */
 const ThemeToggle: FC = () => {
   const { theme, toggleTheme } = useTheme();
   return (

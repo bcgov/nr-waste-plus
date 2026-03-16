@@ -51,12 +51,9 @@ test.describe('No Role Page', () => {
     ).toBeVisible();
   });
 
-  test('navigates away from /no-role when user has an assigned role', async (
-    {
-      page,
-    },
-    testInfo,
-  ) => {
+  test('navigates away from /no-role when user has an assigned role', async ({
+    page,
+  }, testInfo) => {
     test.skip(
       process.env.VITE_MOCK_AUTH?.toLowerCase() !== 'true',
       'Per-test role override requires VITE_MOCK_AUTH=true.',

@@ -7,6 +7,13 @@ import { type FamLoginUser, type IdpProviderType, type JWT } from './types';
 
 import { env } from '@/env';
 
+/**
+ * Provides authenticated user state and auth actions to the application tree.
+ *
+ * @param props The provider props.
+ * @param props.children The subtree that consumes auth state.
+ * @returns The auth context provider.
+ */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FamLoginUser | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
@@ -14,7 +21,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const appEnv = Number.isNaN(Number(env.VITE_ZONE)) ? (env.VITE_ZONE ?? 'TEST') : 'TEST';
   const isMock = env.VITE_MOCK_AUTH === 'true';
 
-  const refreshUserState = async () => {
+  const loadUserToken = useCallback(async (): Promise<JWT | undefined> => {
+    if (isMock) {
+      // This is for test only
+      const idToken = getUserTokenFromCookie();
+      const payload = idToken ? JSON.parse(atob(idToken.split('.')[1])) : null;
+      return payload ? { payload } : undefined;
+    }
+
+    const { idToken } = (await fetchAuthSession()).tokens ?? {};
+    return idToken;
+  }, [isMock]);
+
+  /**
+   * Refreshes the cached user state from the current authentication token.
+   */
+  const refreshUserState = useCallback(async () => {
     setIsLoading(true);
     try {
       const idToken = await loadUserToken();
@@ -29,13 +51,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [loadUserToken]);
 
   useEffect(() => {
-    refreshUserState();
-    const interval = setInterval(loadUserToken, 3 * 60 * 1000);
+    const safelyRefreshUserState = () => {
+      void refreshUserState().catch(() => {
+        setUser(undefined);
+        setIsLoading(false);
+      });
+    };
+
+    safelyRefreshUserState();
+    const interval = setInterval(safelyRefreshUserState, 3 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [refreshUserState]);
 
   const login = useCallback(
     async (provider: IdpProviderType) => {
@@ -76,18 +105,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }),
     [user, isLoading, login, userToken],
   );
-
-  const loadUserToken = async (): Promise<JWT | undefined> => {
-    if (isMock) {
-      // This is for test only
-      const idToken = getUserTokenFromCookie();
-      const payload = idToken ? JSON.parse(atob(idToken.split('.')[1])) : null;
-      return payload ? { payload } : undefined;
-    } else {
-      const { idToken } = (await fetchAuthSession()).tokens ?? {};
-      return idToken;
-    }
-  };
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };

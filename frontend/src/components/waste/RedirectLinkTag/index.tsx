@@ -8,6 +8,15 @@ type RedirectLinkTagProps = {
   sameTab?: boolean;
 };
 
+/**
+ * Renders a link-like value, falling back to the shared empty-value presentation when needed.
+ *
+ * @param props The redirect link props.
+ * @param props.text The link text to display.
+ * @param props.url The target URL.
+ * @param props.sameTab When true, opens the URL in the current tab.
+ * @returns The rendered anchor element.
+ */
 const RedirectLinkTag: FC<RedirectLinkTagProps> = ({ text, url, sameTab }) => {
   return (
     <a

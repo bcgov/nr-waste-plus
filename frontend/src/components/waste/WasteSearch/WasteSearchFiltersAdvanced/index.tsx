@@ -5,8 +5,6 @@ import {
   CheckboxGroup,
   Column,
   ComposedModal,
-  DatePicker,
-  DatePickerInput,
   Grid,
   ModalBody,
   ModalFooter,
@@ -14,18 +12,13 @@ import {
   TextInput,
 } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
-import { DateTime } from 'luxon';
-import { type FC, useEffect, useRef } from 'react';
+import { type FC } from 'react';
 
-import {
-  API_DATE_FORMAT,
-  DATE_PICKER_FORMAT,
-  MAX_TEXT_INPUT_LEN,
-  getEndDateValue,
-  getEndMinDate,
-  getStartDateValue,
-  getStartMaxDate,
-} from './utils';
+import AdvancedFilterClientInput from './AdvancedFilterClientInput';
+import AdvancedFilterDateRange from './AdvancedFilterDateRange';
+import { useAdvancedFilterHandlers } from './useAdvancedFilterHandlers';
+import { useClientLookup } from './useClientLookup';
+import { MAX_TEXT_INPUT_LEN } from './utils';
 
 import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
 
@@ -35,7 +28,6 @@ import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearch
 import { useAuth } from '@/context/auth/useAuth';
 import APIs from '@/services/APIs';
 import { getCodeDescriptionArrayConverter } from '@/services/search.utils';
-import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils';
 
 import './index.scss';
 
@@ -46,12 +38,32 @@ type WasteSearchFiltersAdvancedProps = {
   districtOptions: CodeDescriptionDto[];
   statusOptions: CodeDescriptionDto[];
   onClose: () => void;
-  onChange: (
-    key: keyof ReportingUnitSearchParametersViewDto,
-  ) => (value: ReportingUnitSearchParametersViewDto[typeof key]) => void;
+  onChange: <K extends keyof ReportingUnitSearchParametersViewDto>(
+    key: K,
+  ) => (value: ReportingUnitSearchParametersViewDto[K]) => void;
   onSearch: () => void;
 };
 
+/**
+ * Renders the advanced waste-search modal with secondary filters and client lookups.
+ *
+ * This component is refactored to separate concerns:
+ * - useAdvancedFilterHandlers: Reusable curried handler factories
+ * - useClientLookup: Client resolution logic for code-only URL params
+ * - AdvancedFilterClientInput: Client selector UI (IDIR vs BCeID conditional)
+ * - AdvancedFilterDateRange: Date range pair with constraint validation
+ *
+ * @param props The advanced-filter props.
+ * @param props.filters The current filter state.
+ * @param props.isModalOpen Whether the modal should be rendered.
+ * @param props.samplingOptions Sampling option choices.
+ * @param props.districtOptions District choices.
+ * @param props.statusOptions Status choices.
+ * @param props.onClose Callback fired when the modal closes.
+ * @param props.onChange Factory for per-field change handlers.
+ * @param props.onSearch Callback fired when the user runs the search.
+ * @returns The advanced search modal or `null` when closed.
+ */
 const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
   filters,
   isModalOpen,
@@ -64,35 +76,21 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
 }) => {
   const auth = useAuth();
 
-  const onCheckBoxChange =
-    (key: keyof ReportingUnitSearchParametersViewDto) =>
-    (_: React.ChangeEvent<HTMLInputElement>, data: { checked: boolean; id: string }) => {
-      onChange(key)(data.checked);
-    };
+  // Reusable handler factories for all input types
+  const { onCheckBoxChange, onTextChange, handleDateChange } = useAdvancedFilterHandlers(onChange);
 
-  const onActiveMultiSelectChange =
-    (key: keyof ReportingUnitSearchParametersViewDto) =>
-    (changes: { selectedItems: CodeDescriptionDto[] }): void => {
+  // Curried multiselect handlers with field-specific converters
+  const onActiveMultiSelectChange = (
+    key: keyof ReportingUnitSearchParametersViewDto,
+  ): ((changes: { selectedItems: CodeDescriptionDto[] }) => void) => {
+    return (changes: { selectedItems: CodeDescriptionDto[] }): void => {
       const converter = getCodeDescriptionArrayConverter(key);
       const result = converter(changes.selectedItems);
       onChange(key)(result);
     };
-
-  const onTextChange =
-    (key: keyof ReportingUnitSearchParametersViewDto) =>
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      onChange(key)(event.target.value);
-    };
-
-  const handleDateChange = (isStartDate: boolean) => (dates?: Date[]) => {
-    if (!dates) return;
-
-    const formattedDate =
-      dates.length && dates[0] ? DateTime.fromJSDate(dates[0]).toFormat(API_DATE_FORMAT) : '';
-
-    onChange(isStartDate ? 'updateDateStart' : 'updateDateEnd')(formattedDate);
   };
 
+  // Query for BCeID user's own clients
   const { data: myClients } = useQuery({
     queryKey: ['search', 'my-forest-client', { page: 0, size: auth.getClients().length || 10 }],
     queryFn: () => APIs.forestclient.searchMyForestClients('', 0, auth.getClients().length || 10),
@@ -102,39 +100,8 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
     select: (data) => data.content.map((item) => item.client),
   });
 
-  // When a client number arrives from URL params it only carries the code
-  // (description is the same as the code or missing).
-  // Detect that condition and look up the full client info so the AutoCompleteInput
-  // receives a complete initialSelectedItem that it can display.
-  const clientNumberEntry = filters.clientNumbers?.[0];
-  const hasClientCodeOnly = Boolean(
-    clientNumberEntry?.code &&
-    (clientNumberEntry?.description === clientNumberEntry?.code || !clientNumberEntry?.description),
-  );
-
-  const { data: resolvedClient } = useQuery({
-    queryKey: ['clientLookup', clientNumberEntry?.code],
-    queryFn: async () =>
-      (await APIs.forestclient.searchForestClients(clientNumberEntry!.code, 0, 1)).map(
-        forestClientAutocompleteResult2CodeDescription,
-      ),
-    enabled: isModalOpen && hasClientCodeOnly && auth.user?.idpProvider === 'IDIR',
-    staleTime: Infinity,
-  });
-
-  // Track the client code we have already promoted to avoid calling onChange
-  // again when only the onChange reference changes across parent re-renders.
-  const appliedClientCode = useRef<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (!isModalOpen) return;
-
-    const first = resolvedClient?.[0];
-    if (first && first.code !== appliedClientCode.current) {
-      appliedClientCode.current = first.code;
-      onChange('clientNumbers')([first]);
-    }
-  }, [isModalOpen, resolvedClient, onChange]);
+  // Resolve code-only client entries from URL params to full CodeDescriptionDto
+  useClientLookup(isModalOpen, filters.clientNumbers?.[0], onChange);
 
   if (!isModalOpen) return null;
 
@@ -209,44 +176,13 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
             />
           </Column>
 
-          {/* Client Autocomplete or Select */}
+          {/* Client Selector (IDIR vs BCeID) */}
           <Column sm={4} md={4} lg={8}>
-            {auth.user?.idpProvider === 'IDIR' && (
-              <AutoCompleteInput<CodeDescriptionDto>
-                id="as-forestclient-client-ac"
-                data-testid="forestclient-client-ac"
-                titleText="Client"
-                placeholder="Search by client name, number, or acronym"
-                helperText="Search by client name, number or acronym"
-                initialSelectedItem={filters.clientNumbers?.[0]}
-                onAutoCompleteChange={async (value) =>
-                  (await APIs.forestclient.searchForestClients(value, 0, 10)).map(
-                    forestClientAutocompleteResult2CodeDescription,
-                  )
-                }
-                itemToString={(item) => {
-                  if (!item) return '';
-                  return item.description;
-                }}
-                onSelect={(rawData) => {
-                  const data = rawData ? [rawData as CodeDescriptionDto] : [];
-                  onChange('clientNumbers')(data);
-                }}
-              />
-            )}
-            {auth.user?.idpProvider === 'BCEIDBUSINESS' && (
-              <ActiveMultiSelect
-                placeholder="Client"
-                titleText="Client"
-                id="as-client-multi-select"
-                items={myClients ?? []}
-                itemToString={activeMSItemToString}
-                onChange={onActiveMultiSelectChange('clientNumbers')}
-                selectedItems={(myClients ?? []).filter((option) =>
-                  (filters.clientNumbers || []).some((item) => item.code === option.code),
-                )}
-              />
-            )}
+            <AdvancedFilterClientInput
+              selectedClients={filters.clientNumbers}
+              myClients={myClients}
+              onClientChange={onActiveMultiSelectChange('clientNumbers')}
+            />
           </Column>
 
           {/* Licence number */}
@@ -319,51 +255,15 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
 
           {/* Date range pickers */}
           <Column sm={4} md={4} lg={8}>
-            <div className="date-filter-container">
-              {/* Start date */}
-              <DatePicker
-                className="advanced-date-picker"
-                datePickerType="single"
-                dateFormat="Y/m/d"
-                locale={{ locale: 'en' }}
-                allowInput
-                maxDate={getStartMaxDate(filters.updateDateStart)}
-                onChange={handleDateChange(true)}
-                value={getStartDateValue(filters.updateDateStart)}
-              >
-                <DatePickerInput
-                  data-testid="start-date-picker-input-id"
-                  id="as-start-date-picker-input-id"
-                  size="md"
-                  labelText="Start date"
-                  placeholder="yyyy/mm/dd"
-                  helperText="Search by last update"
-                />
-              </DatePicker>
-              {/* End date */}
-              <DatePicker
-                className="advanced-date-picker"
-                datePickerType="single"
-                dateFormat="Y/m/d"
-                locale={{ locale: 'en' }}
-                allowInput
-                minDate={getEndMinDate(filters.updateDateEnd)}
-                maxDate={DateTime.now().toFormat(DATE_PICKER_FORMAT)}
-                onChange={handleDateChange(false)}
-                value={getEndDateValue(filters.updateDateEnd)}
-              >
-                <DatePickerInput
-                  data-testid="end-date-picker-input-id"
-                  id="as-end-date-picker-input-id"
-                  size="md"
-                  labelText="End date"
-                  placeholder="yyyy/mm/dd"
-                  helperText="   "
-                />
-              </DatePicker>
-            </div>
+            <AdvancedFilterDateRange
+              startDateValue={filters.updateDateStart}
+              endDateValue={filters.updateDateEnd}
+              onStartDateChange={handleDateChange(true)}
+              onEndDateChange={handleDateChange(false)}
+            />
           </Column>
 
+          {/* Checkboxes */}
           <Column sm={4} md={8} lg={16}>
             <CheckboxGroup legendText="" orientation="horizontal">
               <Checkbox

@@ -13,7 +13,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.testcontainers.shaded.org.checkerframework.checker.signature.qual.MethodDescriptor;
 
 @DisplayName("Unit Test | UriUtils")
 class UriUtilsTest {
@@ -62,7 +61,7 @@ class UriUtilsTest {
 
   }
 
-  private static Stream<Arguments> buildMultiValueQueryParam(){
+  private static Stream<Arguments> buildMultiValueQueryParam() {
     return
         Stream.of(
             Arguments.argumentSet(

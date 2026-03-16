@@ -11,6 +11,11 @@ import { env } from '@/env';
 
 import './index.scss';
 
+/**
+ * Renders the global application header, menu toggle, and shell actions.
+ *
+ * @returns The layout header component.
+ */
 export const LayoutHeader: FC = () => {
   const { isSideNavExpanded, toggleSideNav } = useLayout();
 

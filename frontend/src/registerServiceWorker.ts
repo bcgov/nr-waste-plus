@@ -2,6 +2,9 @@ import { registerSW } from 'virtual:pwa-register';
 
 import { sendEvent } from '@/hooks/useSendEvent/eventHandler';
 
+/**
+ * Registers the PWA service worker and emits user-facing events for lifecycle changes.
+ */
 const updateSW = registerSW({
   onRegistered() {
     sendEvent({

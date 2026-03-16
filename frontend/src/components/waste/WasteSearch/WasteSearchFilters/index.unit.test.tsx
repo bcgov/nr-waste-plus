@@ -13,7 +13,7 @@ import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
 
 vi.mock('@/hooks/useSyncFiltersToSearchParams', () => ({
-  default: vi.fn((_filters, _setFilters) => {
+  default: vi.fn(() => {
     // Mock implementation: does nothing, actual hook logic is tested separately
   }),
 }));

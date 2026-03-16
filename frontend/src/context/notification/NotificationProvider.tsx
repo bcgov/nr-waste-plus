@@ -3,6 +3,13 @@ import { useState, useEffect, type ReactNode, useCallback, useMemo } from 'react
 
 import { NotificationContext, type NotificationContent } from './NotificationContext';
 
+/**
+ * Displays transient toast notifications and exposes a `display` helper through context.
+ *
+ * @param props The provider props.
+ * @param props.children The subtree that can publish notifications.
+ * @returns The notification provider and rendered toast container.
+ */
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const [notificationContent, setNotificationContent] = useState<NotificationContent | null>(null);
   const [notificationClass, setNotificationClass] = useState<string>('slide-in');

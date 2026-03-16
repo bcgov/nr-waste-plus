@@ -22,6 +22,20 @@ type DistrictSelectionProps<T = string> = {
   districtTypeConverter?: DistrictTypeConverter<T>;
 };
 
+/**
+ * Renders a searchable preference-backed list for selecting a district or client value.
+ *
+ * @typeParam T The stored preference value type.
+ * @param props The selection component props.
+ * @param props.queryHook Hook returning the selectable items and loading state.
+ * @param props.preferenceKey Preference key to update when the selection changes.
+ * @param props.deselectLabel Accessible label for the clear-selection entry.
+ * @param props.searchLabel Label and placeholder for the search input.
+ * @param props.filterFn Predicate used to filter visible items.
+ * @param props.isSelected Optional custom selection comparator.
+ * @param props.districtTypeConverter Optional converter from item to stored preference value.
+ * @returns A searchable list of selectable items.
+ */
 const DistrictSelection = <T,>({
   queryHook,
   preferenceKey,
@@ -35,6 +49,11 @@ const DistrictSelection = <T,>({
   const { userPreference, updatePreferences } = usePreference();
   const { data, isLoading } = queryHook();
 
+  /**
+   * Persists the current selection to user preferences.
+   *
+   * @param value The preference value to store.
+   */
   const storeSelection = (value: unknown) => {
     updatePreferences({ [preferenceKey]: value });
   };

@@ -3,6 +3,11 @@ import { type FC } from 'react';
 
 import PageTitle from '@/components/core/PageTitle';
 
+/**
+ * Displays the fallback page for unknown routes.
+ *
+ * @returns The not found page content.
+ */
 const NotFoundPage: FC = () => {
   return (
     <Column lg={16} md={8} sm={4} className="dashboard-column__banner">

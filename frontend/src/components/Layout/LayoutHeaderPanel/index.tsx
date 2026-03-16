@@ -8,6 +8,11 @@ import { useOutsideClick } from '@/hooks/useOutsideClick';
 
 import './index.scss';
 
+/**
+ * Renders the user profile header panel when the shell panel is open.
+ *
+ * @returns The expanded header panel or `null` when it is closed.
+ */
 export const LayoutHeaderPanel: FC = () => {
   const { isHeaderPanelOpen, closeHeaderPanel } = useLayout();
   const panelRef = useRef<HTMLDivElement>(null);

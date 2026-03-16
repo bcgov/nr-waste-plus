@@ -1,5 +1,11 @@
 import type { CodeDescriptionDto, ReportingUnitSearchParametersDto } from '@/services/types';
 
+/**
+ * Maps a search filter key to the label shown in the active-filter tag list.
+ *
+ * @param key The search filter key.
+ * @returns A user-facing label for the filter.
+ */
 export const mapDisplayFilter = (key: keyof ReportingUnitSearchParametersDto): string => {
   switch (key) {
     case 'district':
@@ -33,5 +39,11 @@ export const mapDisplayFilter = (key: keyof ReportingUnitSearchParametersDto): s
   }
 };
 
+/**
+ * Formats a code-description option for ActiveMultiSelect display.
+ *
+ * @param item The selected option.
+ * @returns A human-readable item label.
+ */
 export const activeMSItemToString = (item: CodeDescriptionDto | null): string =>
   item ? `${item.code} - ${item.description}` : 'No selection';

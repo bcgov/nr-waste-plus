@@ -9,6 +9,9 @@ import { SearchService } from '@/services//search.service';
 import { ForestClientService } from '@/services/forestclient.service';
 import { UserService } from '@/services/users.service';
 
+/**
+ * Base configuration shared by all generated backend service clients.
+ */
 export const BackendApiConfig: APIConfig = {
   BASE: env.VITE_BACKEND_URL,
   VERSION: '0',
@@ -29,7 +32,9 @@ BackendApiConfig.HEADERS = async () => {
   return getB3Headers();
 };
 
-// Register all services here
+/**
+ * Lazily configured service instances available to the frontend.
+ */
 const serviceConstructors = {
   user: new UserService(BackendApiConfig),
   search: new SearchService(BackendApiConfig),
@@ -41,6 +46,9 @@ type ExternalApiType = {
   [K in keyof typeof serviceConstructors]: (typeof serviceConstructors)[K];
 };
 
+/**
+ * Registry of backend service clients used throughout the application.
+ */
 const API: ExternalApiType = serviceConstructors;
 
 export default API;

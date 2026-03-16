@@ -4,6 +4,13 @@ import { LayoutContext } from './LayoutContext';
 
 import useBreakpoint from '@/hooks/useBreakpoint';
 
+/**
+ * Provides responsive layout state for the header panel and side navigation.
+ *
+ * @param props The provider props.
+ * @param props.children The subtree that consumes layout state.
+ * @returns The layout context provider.
+ */
 export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
   const breakpoint = useBreakpoint();
 

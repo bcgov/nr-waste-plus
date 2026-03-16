@@ -13,11 +13,20 @@ type ReportingUnitSearchParametersConverterMap = {
   [field in keyof ReportingUnitSearchParametersViewSpecific]-?: ReportingUnitSearchParametersConverter<field>;
 };
 
+/**
+ * Field-specific converters from view-model search values to backend DTO values.
+ */
 export const reportingUnitSearchParametersConverterMap: ReportingUnitSearchParametersConverterMap =
   {
     clientNumbers: (value) => value?.map((item) => item.code),
   };
 
+/**
+ * Narrows a search view-model key to one that requires custom conversion.
+ *
+ * @param key The key being inspected.
+ * @returns True when the key maps to a field-specific converter.
+ */
 const isViewSpecificKey = (
   key: keyof ReportingUnitSearchParametersViewDto,
 ): key is keyof ReportingUnitSearchParametersViewSpecific => {
@@ -51,6 +60,12 @@ const customCodeDescriptionArrayConverterMap: CodeDescriptionArrayConverterMap =
   clientNumbers: (value) => value,
 };
 
+/**
+ * Returns the code-description converter for a specific search form field.
+ *
+ * @param key The search form field name.
+ * @returns The converter used to normalize that field.
+ */
 export const getCodeDescriptionArrayConverter = (
   key: keyof ReportingUnitSearchParametersViewDto,
 ) => {
@@ -60,6 +75,12 @@ export const getCodeDescriptionArrayConverter = (
   return converter;
 };
 
+/**
+ * Converts the search form view model into the plain DTO expected by the API.
+ *
+ * @param viewData The search form state.
+ * @returns A backend-ready search parameter DTO.
+ */
 export const reportingUnitSearchParametersView2Plain = (
   viewData: ReportingUnitSearchParametersViewDto,
 ): ReportingUnitSearchParametersDto => {
