@@ -1,6 +1,6 @@
 import { Column, DefinitionTooltip, Grid } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState, type FC } from 'react';
+import { type FC } from 'react';
 
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 import YesNoTag from '@/components/core/Tags/YesNoTag';
@@ -21,7 +21,6 @@ type WasteSearchTableExpandContentProps = {
  * @returns The expanded row content.
  */
 const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({ rowId }) => {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   /**
    * Extracts a numeric identifier from the composite row ID.
    *
@@ -33,10 +32,8 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
     return parts[position] === 'N/A' ? null : Number(parts[position]);
   };
 
-  const [ruId, setRuId] = useState<number | null>(extractNumericValue(1));
-  const [wasteAssessmentAreaId, setWasteAssessmentAreaId] = useState<number | null>(
-    extractNumericValue(3),
-  );
+  const ruId = extractNumericValue(1);
+  const wasteAssessmentAreaId = extractNumericValue(3);
 
   const { data, isLoading } = useQuery({
     queryKey: ['search', 'ru', 'ex', rowId, ruId, wasteAssessmentAreaId],
@@ -44,11 +41,6 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
     enabled: ruId !== null && wasteAssessmentAreaId !== null,
     staleTime: Infinity,
   });
-
-  useEffect(() => {
-    setRuId(extractNumericValue(1));
-    setWasteAssessmentAreaId(extractNumericValue(3));
-  }, [extractNumericValue, rowId]);
 
   return (
     <Grid>
