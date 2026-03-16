@@ -13,7 +13,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
@@ -75,7 +74,7 @@ public class SearchController {
       Pageable pageable
   ) {
 
-    if(filters == null || filters.isEmpty()) {
+    if (filters == null || filters.isEmpty()) {
       return Page.empty(pageable);
     }
     // #128: BCeID should filter out on client side, we increase the size to get more results.
