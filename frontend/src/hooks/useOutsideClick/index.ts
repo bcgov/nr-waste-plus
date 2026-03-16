@@ -1,5 +1,13 @@
 import { useEffect, type RefObject } from 'react';
 
+/**
+ * Invokes a callback when the user clicks outside of the referenced element.
+ *
+ * @typeParam T The referenced HTML element type.
+ * @param elementRef The element ref to guard.
+ * @param callback The callback to invoke on outside clicks.
+ * @param enabled When false, no listeners are registered.
+ */
 export const useOutsideClick = <T extends HTMLElement>(
   elementRef: RefObject<T | null>,
   callback: () => void,
