@@ -4,6 +4,9 @@ import type { DistrictType } from './types';
 
 type ClientIconType = keyof typeof ICON;
 
+/**
+ * Maps client and district kinds to Carbon icon names for the selection list.
+ */
 export const ClientTypeIconMap: Record<string, ClientIconType> = {
   // Association
   A: 'Partnership',
@@ -34,8 +37,14 @@ export const ClientTypeIconMap: Record<string, ClientIconType> = {
   D: 'Location', // District
 };
 
+/**
+ * Minimum number of selectable items before the search box is shown.
+ */
 export const MIN_CLIENTS_SHOW_SEARCH = 4;
 
+/**
+ * Synthetic option used to clear a district or client preference selection.
+ */
 export const DESELECT_CLIENT: DistrictType = {
   id: '',
   name: 'Select none',

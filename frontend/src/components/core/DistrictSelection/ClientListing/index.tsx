@@ -9,9 +9,21 @@ import { useAuth } from '@/context/auth/useAuth';
 import APIs from '@/services/APIs';
 import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils';
 
+/**
+ * Loads the current user's clients and renders the default client preference selector.
+ *
+ * @returns The client selection list.
+ */
 const ClientListing: FC = () => {
   const { getClients } = useAuth();
 
+  /**
+   * Matches clients by name or exact client number.
+   *
+   * @param client The client option being evaluated.
+   * @param keyword The user-entered search term.
+   * @returns True when the option should remain visible.
+   */
   const filter = (client: DistrictType, keyword: string): boolean => {
     return (
       client.name.trim().toLowerCase().includes(keyword.toLowerCase()) ||

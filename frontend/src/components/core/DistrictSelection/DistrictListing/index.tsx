@@ -6,7 +6,19 @@ import type { DistrictType } from '@/components/core/DistrictSelection/types';
 import DistrictSelection from '@/components/core/DistrictSelection';
 import APIs from '@/services/APIs';
 
+/**
+ * Loads district options and renders the default district preference selector.
+ *
+ * @returns The district selection list.
+ */
 const DistrictListing: FC = () => {
+  /**
+   * Matches districts by name or exact code.
+   *
+   * @param client The district option being evaluated.
+   * @param keyword The user-entered search term.
+   * @returns True when the option should remain visible.
+   */
   const filter = (client: DistrictType, keyword: string): boolean => {
     return (
       client.name.trim().toLowerCase().includes(keyword.toLowerCase()) ||
