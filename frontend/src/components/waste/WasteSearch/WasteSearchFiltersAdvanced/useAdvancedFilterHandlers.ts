@@ -4,6 +4,16 @@ import { API_DATE_FORMAT } from './utils';
 
 import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
 
+type FilterKey = keyof ReportingUnitSearchParametersViewDto;
+type OnChangeByKey = <K extends FilterKey>(
+  key: K,
+) => (value: ReportingUnitSearchParametersViewDto[K]) => void;
+type KeysOfType<T, V> = {
+  [K in keyof T]-?: Exclude<T[K], undefined> extends V ? K : never;
+}[keyof T];
+type BooleanFilterKey = KeysOfType<ReportingUnitSearchParametersViewDto, boolean>;
+type StringFilterKey = KeysOfType<ReportingUnitSearchParametersViewDto, string>;
+
 /**
  * Provides curried handler factories for advanced filter inputs.
  *
@@ -22,7 +32,7 @@ import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@
  * ```
  */
 export const useAdvancedFilterHandlers = (
-  onChange: (key: keyof ReportingUnitSearchParametersViewDto) => (value: unknown) => void,
+  onChange: OnChangeByKey,
 ) => {
   /**
    * Creates a checkbox handler for boolean filters.
@@ -31,7 +41,7 @@ export const useAdvancedFilterHandlers = (
    * @returns A checkbox change handler.
    */
   const onCheckBoxChange =
-    (key: keyof ReportingUnitSearchParametersViewDto) =>
+    (key: BooleanFilterKey) =>
     (_: React.ChangeEvent<HTMLInputElement>, data: { checked: boolean; id: string }) => {
       onChange(key)(data.checked);
     };
@@ -43,9 +53,9 @@ export const useAdvancedFilterHandlers = (
    * @returns An ActiveMultiSelect change handler.
    */
   const onActiveMultiSelectChange =
-    (key: keyof ReportingUnitSearchParametersViewDto) =>
+    (key: FilterKey) =>
     (changes: { selectedItems: CodeDescriptionDto[] }): void => {
-      onChange(key)(changes.selectedItems);
+      onChange(key)(changes.selectedItems as ReportingUnitSearchParametersViewDto[typeof key]);
     };
 
   /**
@@ -55,7 +65,7 @@ export const useAdvancedFilterHandlers = (
    * @returns A blur handler for text inputs.
    */
   const onTextChange =
-    (key: keyof ReportingUnitSearchParametersViewDto) =>
+    (key: StringFilterKey) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
       onChange(key)(event.target.value);
     };

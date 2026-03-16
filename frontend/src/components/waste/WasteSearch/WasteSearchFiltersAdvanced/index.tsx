@@ -38,9 +38,9 @@ type WasteSearchFiltersAdvancedProps = {
   districtOptions: CodeDescriptionDto[];
   statusOptions: CodeDescriptionDto[];
   onClose: () => void;
-  onChange: (
-    key: keyof ReportingUnitSearchParametersViewDto,
-  ) => (value: ReportingUnitSearchParametersViewDto[typeof key]) => void;
+  onChange: <K extends keyof ReportingUnitSearchParametersViewDto>(
+    key: K,
+  ) => (value: ReportingUnitSearchParametersViewDto[K]) => void;
   onSearch: () => void;
 };
 
@@ -71,11 +71,9 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
   districtOptions,
   statusOptions,
   onClose,
-  onChange: onChangeRaw,
+  onChange,
   onSearch,
 }) => {
-  // @ts-ignore Type mismatch between generic onChange signature and specific handlers
-  const onChange: any = onChangeRaw;
   const auth = useAuth();
 
   // Reusable handler factories for all input types

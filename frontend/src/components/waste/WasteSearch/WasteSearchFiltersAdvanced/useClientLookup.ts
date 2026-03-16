@@ -7,6 +7,10 @@ import { useAuth } from '@/context/auth/useAuth';
 import APIs from '@/services/APIs';
 import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils';
 
+type OnChangeByKey = <K extends keyof ReportingUnitSearchParametersViewDto>(
+  key: K,
+) => (value: ReportingUnitSearchParametersViewDto[K]) => void;
+
 /**
  * Resolves missing client descriptions from API when URL params carry code-only entries.
  *
@@ -33,7 +37,7 @@ import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils
 export const useClientLookup = (
   isModalOpen: boolean,
   clientNumberEntry: CodeDescriptionDto | undefined,
-  onChange: (key: keyof ReportingUnitSearchParametersViewDto) => (value: unknown) => void,
+  onChange: OnChangeByKey,
 ) => {
   const auth = useAuth();
 

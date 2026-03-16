@@ -16,9 +16,9 @@ type UseWasteSearchFiltersReturn = {
   handleActiveMultiSelectChange: (
     key: keyof ReportingUnitSearchParametersViewDto,
   ) => (changes: { selectedItems: CodeDescriptionDto[] }) => void;
-  handleChange: (
-    key: keyof ReportingUnitSearchParametersViewDto,
-  ) => (value: ReportingUnitSearchParametersViewDto[typeof key]) => void;
+  handleChange: <K extends keyof ReportingUnitSearchParametersViewDto>(
+    key: K,
+  ) => (value: ReportingUnitSearchParametersViewDto[K]) => void;
   onRemoveFilter: ComponentProps<typeof WasteSearchFiltersActive>['onRemoveFilter'];
 };
 
@@ -52,10 +52,10 @@ export const useWasteSearchFilters = (
       }));
     };
 
-  const handleChange = (
-    key: keyof ReportingUnitSearchParametersViewDto,
-  ): ((value: ReportingUnitSearchParametersViewDto[typeof key]) => void) => {
-    return (value: ReportingUnitSearchParametersViewDto[typeof key]) => {
+  const handleChange = <K extends keyof ReportingUnitSearchParametersViewDto>(
+    key: K,
+  ): ((value: ReportingUnitSearchParametersViewDto[K]) => void) => {
+    return (value: ReportingUnitSearchParametersViewDto[K]) => {
       setFilters((prev) => ({ ...prev, [key]: value }));
     };
   };
