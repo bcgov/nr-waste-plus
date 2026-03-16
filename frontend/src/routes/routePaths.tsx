@@ -73,11 +73,7 @@ export const SYSTEM_ROUTES: RouteDescription[] = [
   {
     path: '/unauthorized',
     id: 'Unauthorized',
-    element: (
-      <Layout>
-        <RoleErrorPage />
-      </Layout>
-    ),
+    element: <RoleErrorPage />,
     isSideMenu: false,
     protected: true,
   },
