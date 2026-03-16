@@ -22,7 +22,7 @@ vi.mock('@/components/Layout/AvatarImage', () => ({
 const mockToggleTheme = vi.fn();
 const mockLogout = vi.fn();
 const mockClients = vi.fn().mockReturnValue(['client1', 'client2']);
-const mockUser: FamLoginUser = {
+let mockUser: FamLoginUser = {
   firstName: 'Jane',
   lastName: 'Doe',
   idpProvider: 'IDIR',
@@ -67,6 +67,14 @@ const renderWithProviders = async () => {
 
 describe('HeaderPanelProfile', () => {
   beforeEach(() => {
+    mockUser = {
+      firstName: 'Jane',
+      lastName: 'Doe',
+      idpProvider: 'IDIR',
+      userName: 'jdoe',
+      email: 'jane@example.com',
+      roles: [{ role: Role.ADMIN, clients: ['client1', 'client2'] }],
+    } as FamLoginUser;
     (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
     (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
   });
@@ -95,12 +103,12 @@ describe('HeaderPanelProfile', () => {
     expect(screen.getByText(tooltipLabel)).toBeDefined();
   });
 
-  it('renders DistrictListing for IDIR user', async () => {
+  it('renders DistrictListing for user with District/Area/Admin role', async () => {
     await renderWithProviders();
     expect(screen.getByText('Select organization')).toBeDefined();
   });
 
-  it('renders correct entity type text based on user idpProvider', async () => {
+  it('renders correct entity type text based on user role', async () => {
     await renderWithProviders();
     expect(screen.getByText('Select organization')).toBeDefined();
   });
@@ -114,5 +122,35 @@ describe('HeaderPanelProfile', () => {
   it('SideNavLink Log out has correct accessibility', async () => {
     await renderWithProviders();
     expect(screen.getByText('Log out')).toBeDefined();
+  });
+
+  it('renders ClientListing and client entity text for user with Viewer role', async () => {
+    mockUser = {
+      firstName: 'Bob',
+      lastName: 'Smith',
+      idpProvider: 'BCEIDBUSINESS',
+      userName: 'bsmith',
+      email: 'bob@example.com',
+      roles: [{ role: Role.VIEWER, clients: ['client1'] }],
+    } as FamLoginUser;
+    await renderWithProviders();
+    expect(screen.getByText('Select client')).toBeDefined();
+    expect(screen.getByLabelText('Help: About selecting a default client')).toBeDefined();
+  });
+
+  it('renders ClientListing and client entity text for user with Submitter role', async () => {
+    mockUser = {
+      firstName: 'Alice',
+      lastName: 'Jones',
+      idpProvider: 'BCEIDBUSINESS',
+      userName: 'ajones',
+      email: 'alice@example.com',
+      roles: [{ role: Role.SUBMITTER, clients: ['client2'] }],
+    } as FamLoginUser;
+    await renderWithProviders();
+    const tooltipLabel =
+      'Optional: Select a default client. This can help you do your searches faster if you work with one client much more than others. You can change or remove this at any time.';
+    expect(screen.getByText('Select client')).toBeDefined();
+    expect(screen.getByText(tooltipLabel)).toBeDefined();
   });
 });

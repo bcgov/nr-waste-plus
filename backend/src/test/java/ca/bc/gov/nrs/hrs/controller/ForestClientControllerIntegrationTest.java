@@ -204,7 +204,7 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
   @DisplayName("Fetch my client")
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {"Approver_00010004", "Approver_00012797"}
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00010004", "WASTE_PLUS_SUBMITTER_00012797"}
   )
   void fetchMyClientsWithValue(
       String value,
