@@ -10,6 +10,11 @@ import { useAuth } from '@/context/auth/useAuth';
 
 import './index.scss';
 
+/**
+ * Displays the current user's profile details, default selection controls, and logout action.
+ *
+ * @returns The profile content rendered inside the header panel.
+ */
 const HeaderPanelProfile: FC = () => {
   const { logout, user } = useAuth();
 
