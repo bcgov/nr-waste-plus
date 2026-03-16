@@ -74,7 +74,7 @@ const AdvancedFilterDateRange: FC<AdvancedFilterDateRangeProps> = ({
         dateFormat="Y/m/d"
         locale={{ locale: 'en' }}
         allowInput
-        minDate={getEndMinDate(endDateValue)}
+        minDate={getEndMinDate(startDateValue)}
         maxDate={DateTime.now().toFormat(DATE_PICKER_FORMAT)}
         onChange={onEndDateChange}
         value={getEndDateValue(endDateValue)}
