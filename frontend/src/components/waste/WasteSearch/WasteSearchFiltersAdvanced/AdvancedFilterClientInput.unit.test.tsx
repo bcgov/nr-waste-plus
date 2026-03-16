@@ -7,15 +7,14 @@ import AdvancedFilterClientInput from './AdvancedFilterClientInput';
 import type { FamLoginUser } from '@/context/auth/types';
 
 import { AuthProvider } from '@/context/auth/AuthProvider';
+import { useAuth } from '@/context/auth/useAuth';
 
 const mockUser = {
   idpProvider: 'IDIR',
 } as FamLoginUser;
 
 vi.mock('@/context/auth/useAuth', () => ({
-  useAuth: () => ({
-    user: mockUser,
-  }),
+  useAuth: vi.fn(),
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => {
@@ -30,6 +29,15 @@ const wrapper = ({ children }: { children: React.ReactNode }) => {
 describe('AdvancedFilterClientInput', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useAuth).mockReturnValue({
+      user: mockUser,
+      getClients: vi.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      userToken: vi.fn(),
+      isLoading: false,
+      isLoggedIn: true,
+    });
   });
 
   it('renders autocomplete for IDIR users', async () => {
@@ -51,13 +59,14 @@ describe('AdvancedFilterClientInput', () => {
   });
 
   it('renders multiselect for BCeID users', async () => {
-    // Mock BCeID user
-    const mockUserBceid = {
-      idpProvider: 'BCEIDBUSINESS',
-    } as FamLoginUser;
-
-    vi.mocked({}).useAuth = () => ({
-      user: mockUserBceid,
+    vi.mocked(useAuth).mockReturnValue({
+      user: { idpProvider: 'BCEIDBUSINESS' } as FamLoginUser,
+      getClients: vi.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      userToken: vi.fn(),
+      isLoading: false,
+      isLoggedIn: true,
     });
 
     const onClientChange = vi.fn();
@@ -67,7 +76,7 @@ describe('AdvancedFilterClientInput', () => {
     ];
 
     await act(async () => {
-      const { unmount } = render(
+      render(
         <AdvancedFilterClientInput
           selectedClients={undefined}
           myClients={myClients}
@@ -75,11 +84,11 @@ describe('AdvancedFilterClientInput', () => {
         />,
         { wrapper },
       );
-
-      // The component should render based on the provider
-      // For BCeID, it would render a multiselect
-      unmount();
     });
+
+    expect(screen.queryByTestId('forestclient-client-ac')).toBeNull();
+    expect(document.querySelector('#as-client-multi-select')).toBeDefined();
+    expect(screen.getByPlaceholderText('Client')).toBeDefined();
   });
 
   it('passes selected clients to autocomplete', async () => {
@@ -102,9 +111,16 @@ describe('AdvancedFilterClientInput', () => {
   });
 
   it('returns null when provider is unknown', async () => {
-    // Test: When auth user provider is not IDIR or BCEIDBUSINESS, component returns null
-    // This is a documentation test - in real usage, these are the only two expected providers
-    // The component will render null for any unknown provider type
+    vi.mocked(useAuth).mockReturnValue({
+      user: { idpProvider: 'UNKNOWN' } as FamLoginUser,
+      getClients: vi.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      userToken: vi.fn(),
+      isLoading: false,
+      isLoggedIn: true,
+    });
+
     const onClientChange = vi.fn();
 
     let container: HTMLElement | null = null;
@@ -121,9 +137,7 @@ describe('AdvancedFilterClientInput', () => {
       container = result.container;
     });
 
-    // The component is designed to return null for unknown providers
-    // Since our mock returns IDIR by default, we'll just verify the component renders
-    // without errors for this test case
     expect(container).toBeDefined();
+    expect(container?.firstChild).toBeNull();
   });
 });
