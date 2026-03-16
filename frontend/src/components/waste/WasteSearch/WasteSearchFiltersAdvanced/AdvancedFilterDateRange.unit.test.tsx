@@ -38,7 +38,7 @@ describe('AdvancedFilterDateRange', () => {
       />,
     );
 
-    const startInput = screen.getByTestId('start-date-picker-input-id') as HTMLInputElement;
+    const startInput = screen.getByTestId('start-date-picker-input-id');
     // The value should be empty initially as default values are handled by the picker
     expect(startInput).toBeDefined();
   });
@@ -60,8 +60,10 @@ describe('AdvancedFilterDateRange', () => {
     await userEvent.type(startInput, '2020/01/25');
     fireEvent.blur(startInput);
 
-    // The handler should be called (exact call verification depends on date picker behavior)
-    expect(onStartDateChange).toBeDefined();
+    expect(onStartDateChange).toHaveBeenCalled();
+    const firstArg = onStartDateChange.mock.calls[0]?.[0];
+    expect(Array.isArray(firstArg)).toBe(true);
+    expect(firstArg?.[0]).toBeInstanceOf(Date);
   });
 
   it('calls onEndDateChange when end date is modified', async () => {
@@ -81,8 +83,10 @@ describe('AdvancedFilterDateRange', () => {
     await userEvent.type(endInput, '2020/02/10');
     fireEvent.blur(endInput);
 
-    // The handler should be called
-    expect(onEndDateChange).toBeDefined();
+    expect(onEndDateChange).toHaveBeenCalled();
+    const firstArg = onEndDateChange.mock.calls[0]?.[0];
+    expect(Array.isArray(firstArg)).toBe(true);
+    expect(firstArg?.[0]).toBeInstanceOf(Date);
   });
 
   it('shows correct labels on date inputs', () => {
@@ -135,8 +139,8 @@ describe('AdvancedFilterDateRange', () => {
       />,
     );
 
-    const startInput = screen.getByTestId('start-date-picker-input-id') as HTMLInputElement;
-    const endInput = screen.getByTestId('end-date-picker-input-id') as HTMLInputElement;
+    const startInput = screen.getByTestId<HTMLInputElement>('start-date-picker-input-id');
+    const endInput = screen.getByTestId<HTMLInputElement>('end-date-picker-input-id');
 
     expect(startInput.placeholder).toBe('yyyy/mm/dd');
     expect(endInput.placeholder).toBe('yyyy/mm/dd');
