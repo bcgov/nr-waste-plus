@@ -13,6 +13,17 @@ type RoleBasedRedirectLinkTagProps = {
   onRenderStateChange?: (isLink: boolean) => void;
 };
 
+/**
+ * Renders a link only when the current user has one of the allowed roles.
+ *
+ * @param props The role-based link props.
+ * @param props.text The display text.
+ * @param props.url The target URL.
+ * @param props.allowedRoles Roles allowed to see the link.
+ * @param props.sameTab When true, opens the URL in the current tab.
+ * @param props.onRenderStateChange Optional callback with the current link visibility state.
+ * @returns A link for authorized users or plain text otherwise.
+ */
 const RoleBasedRedirectLinkTag: FC<RoleBasedRedirectLinkTagProps> = ({
   text,
   url,

@@ -24,6 +24,14 @@ type WasteSearchFiltersActiveProps = {
   ) => void;
 };
 
+/**
+ * Displays dismissible tags for currently active waste-search filters.
+ *
+ * @param props The active-filter props.
+ * @param props.filters The current filter state.
+ * @param props.onRemoveFilter Callback used to remove a filter or filter value.
+ * @returns The active filter tag list and clear action.
+ */
 const WasteSearchFiltersActive: FC<WasteSearchFiltersActiveProps> = ({
   filters,
   onRemoveFilter,
@@ -62,6 +70,9 @@ const WasteSearchFiltersActive: FC<WasteSearchFiltersActiveProps> = ({
         },
       ),
     [filters],
+      /**
+       * Clears all currently visible filters.
+       */
   );
 
   const renderFilters = visibleFilters().map((filterKey) => {

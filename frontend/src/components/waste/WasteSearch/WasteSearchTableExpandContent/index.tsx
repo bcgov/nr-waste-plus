@@ -13,8 +13,21 @@ type WasteSearchTableExpandContentProps = {
   rowId: string;
 };
 
+/**
+ * Loads and displays the expanded reporting-unit detail panel for a search result row.
+ *
+ * @param props The expand-content props.
+ * @param props.rowId Composite row identifier used to resolve backend IDs.
+ * @returns The expanded row content.
+ */
 const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({ rowId }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  /**
+   * Extracts a numeric identifier from the composite row ID.
+   *
+   * @param position The segment position within the row ID.
+   * @returns The parsed numeric value or `null` when unavailable.
+   */
   const extractNumericValue = (position: number): number | null => {
     const parts = String(rowId).split('-');
     return parts[position] === 'N/A' ? null : Number(parts[position]);

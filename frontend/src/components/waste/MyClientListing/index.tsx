@@ -16,6 +16,11 @@ import API from '@/services/APIs';
 
 import './index.scss';
 
+/**
+ * Displays the authenticated user's client list with search and pagination controls.
+ *
+ * @returns The my-client listing view.
+ */
 const MyClientListing: FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
@@ -38,11 +43,19 @@ const MyClientListing: FC = () => {
       }) as PageableResponse<MyForestClientDto>,
   });
 
+    /**
+     * Runs the current client search and clears page-scoped events first.
+     */
   const executeSearch = () => {
     clearEvents('my-client-list');
     setTimeout(refetch, 1);
   };
 
+    /**
+     * Applies a page change and fetches the corresponding client results.
+     *
+     * @param paging The requested page and page size.
+     */
   const handlePageChange = ({ page, pageSize }: { page: number; pageSize: number }) => {
     setCurrentPage(Math.min(Math.max(page, 0), (data?.page.totalPages ?? 1) - 1)); // Adjust for zero-based index
     setPageSize(pageSize);

@@ -52,6 +52,20 @@ type WasteSearchFiltersAdvancedProps = {
   onSearch: () => void;
 };
 
+/**
+ * Renders the advanced waste-search modal with secondary filters and client lookups.
+ *
+ * @param props The advanced-filter props.
+ * @param props.filters The current filter state.
+ * @param props.isModalOpen Whether the modal should be rendered.
+ * @param props.samplingOptions Sampling option choices.
+ * @param props.districtOptions District choices.
+ * @param props.statusOptions Status choices.
+ * @param props.onClose Callback fired when the modal closes.
+ * @param props.onChange Factory for per-field change handlers.
+ * @param props.onSearch Callback fired when the user runs the search.
+ * @returns The advanced search modal or `null` when closed.
+ */
 const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
   filters,
   isModalOpen,
@@ -64,12 +78,24 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
 }) => {
   const auth = useAuth();
 
+  /**
+   * Creates a checkbox handler for boolean filters.
+   *
+   * @param key The filter key to update.
+   * @returns A checkbox change handler.
+   */
   const onCheckBoxChange =
     (key: keyof ReportingUnitSearchParametersViewDto) =>
     (_: React.ChangeEvent<HTMLInputElement>, data: { checked: boolean; id: string }) => {
       onChange(key)(data.checked);
     };
 
+  /**
+   * Creates a multiselect handler that converts selected items to the expected filter shape.
+   *
+   * @param key The filter key to update.
+   * @returns An ActiveMultiSelect change handler.
+   */
   const onActiveMultiSelectChange =
     (key: keyof ReportingUnitSearchParametersViewDto) =>
     (changes: { selectedItems: CodeDescriptionDto[] }): void => {
@@ -78,12 +104,24 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
       onChange(key)(result);
     };
 
+  /**
+   * Creates a text input handler for a filter field.
+   *
+   * @param key The filter key to update.
+   * @returns A blur handler for text inputs.
+   */
   const onTextChange =
     (key: keyof ReportingUnitSearchParametersViewDto) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
       onChange(key)(event.target.value);
     };
 
+  /**
+   * Creates a date picker handler that stores formatted API dates.
+   *
+   * @param isStartDate True to update the start date, false for the end date.
+   * @returns A date picker change handler.
+   */
   const handleDateChange = (isStartDate: boolean) => (dates?: Date[]) => {
     if (!dates) return;
 

@@ -24,6 +24,15 @@ type WasteSearchFiltersProps = {
   onSearch: () => void;
 };
 
+/**
+ * Renders the primary waste-search filter bar and keeps filter state synchronized.
+ *
+ * @param props The filter-bar props.
+ * @param props.value The current filter state.
+ * @param props.onChange Callback fired when filter state changes.
+ * @param props.onSearch Callback fired when the user triggers a search.
+ * @returns The waste search filter controls and advanced search modal.
+ */
 const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSearch }) => {
   const [filters, setFilters] = useState<ReportingUnitSearchParametersViewDto>(value);
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState<boolean>(false);
@@ -57,11 +66,23 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
     refetchOnMount: true,
   });
 
+  /**
+   * Creates a string-field updater for the local filter state.
+   *
+   * @param key The filter key to update.
+   * @returns A setter for the string value.
+   */
   const handleStringChange =
     (key: keyof ReportingUnitSearchParametersViewDto) => (value: string) => {
       setFilters((prev) => ({ ...prev, [key]: value }));
     };
 
+  /**
+   * Creates a multiselect updater that stores selected option codes.
+   *
+   * @param key The filter key to update.
+   * @returns A change handler for ActiveMultiSelect selections.
+   */
   const handleActiveMultiSelectChange =
     (key: keyof ReportingUnitSearchParametersViewDto) =>
     (changes: { selectedItems: CodeDescriptionDto[] }): void => {
@@ -71,6 +92,12 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
       }));
     };
 
+  /**
+   * Updates a filter value using the supplied key.
+   *
+   * @param key The filter key to update.
+   * @param value The next value for that filter.
+   */
   const handleChange = (
     key: keyof ReportingUnitSearchParametersViewDto,
     value: ReportingUnitSearchParametersViewDto[typeof key],
@@ -78,6 +105,9 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  /**
+   * Removes either a scalar filter or an individual array item from the active filters.
+   */
   const onRemoveFilter: ComponentProps<typeof WasteSearchFiltersActive>['onRemoveFilter'] = (
     key,
     value,
