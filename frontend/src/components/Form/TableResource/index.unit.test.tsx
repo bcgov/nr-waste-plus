@@ -193,6 +193,40 @@ describe('TableResource', () => {
     expect(screen.getByTitle('Edit columns')).toBeDefined();
   });
 
+  it('renders custom toolbar entries when provided', async () => {
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+      displayToolbar: true,
+      toolbarEntries: [
+        <button key="export-button" type="button">
+          Export
+        </button>,
+        <button key="refresh-button" type="button">
+          Refresh
+        </button>,
+      ],
+    });
+
+    expect(screen.getByRole('button', { name: 'Export' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Refresh' })).toBeDefined();
+  });
+
+  it('does not render custom toolbar entries when not provided', async () => {
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+      displayToolbar: true,
+    });
+
+    expect(screen.queryByRole('button', { name: 'Export' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Refresh' })).toBeNull();
+  });
+
   it('renders tooltip for sortable headers when sort is enabled', async () => {
     const onSortChange = vi.fn();
     const sortableHeaders: TableHeaderType<TestObjectType>[] = headers.map((header) =>
