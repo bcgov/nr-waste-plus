@@ -1,7 +1,18 @@
 import { env } from '@/env';
 
+/**
+ * Whether mock authentication mode is enabled for local or test environments.
+ */
 const mockAuth = env.VITE_MOCK_AUTH === 'true';
+
+/**
+ * Normalized deployment zone used to derive Cognito and logout endpoints.
+ */
 const ZONE = env.VITE_ZONE?.toLowerCase() ?? 'dev';
+
+/**
+ * Current application origin used for redirect URIs.
+ */
 const redirectUri = window.location.origin;
 
 const isProd = ZONE === 'prod';
@@ -18,6 +29,9 @@ const verificationMethods: 'code' | 'token' = 'code';
 
 const backendUrl = env.VITE_BACKEND_URL;
 
+/**
+ * Amplify authentication configuration for the FAM identity flow.
+ */
 const amplifyconfig = {
   Auth: {
     Cognito: {
