@@ -116,7 +116,10 @@ export const ROUTES: RouteDescription[] = [
     ),
     isSideMenu: true,
     protected: true,
-    roles: [{ role: Role.BCeID, clients: [] }],
+    roles: [
+      { role: Role.VIEWER, clients: [] },
+      { role: Role.SUBMITTER, clients: [] },
+    ],
   },
   {
     path: '/search',

@@ -1,12 +1,18 @@
 import { test, expect } from '@playwright/test';
 
+import { mockJwt } from '@/config/tests/auth.helper';
 import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
+
+const hasClientAccessRole = (userType: string): boolean => userType === 'bceid';
+const entityTypeForUser = (userType: string): 'client' | 'organization' =>
+  hasClientAccessRole(userType) ? 'client' : 'organization';
+const canOverrideClaims = (): boolean => process.env.VITE_MOCK_AUTH?.toLowerCase() === 'true';
 
 test.describe('Profile menu', () => {
   test.beforeEach(async ({ page }, testInfo) => {
     await mockApiResponsesWithStub(page, 'users/preferences', `users/preferences-GET.json`);
 
-    if (testInfo.project.metadata.userType === 'bceid') {
+    if (hasClientAccessRole(testInfo.project.metadata.userType)) {
       await mockApiResponsesWithStub(
         page,
         'forest-clients/searchByNumbers**',
@@ -69,13 +75,13 @@ test.describe('Profile menu', () => {
       panelSelector
         .getByRole('navigation')
         .getByText(
-          projectInfo.project.metadata.userType === 'idir'
+          entityTypeForUser(projectInfo.project.metadata.userType) === 'organization'
             ? 'Select organization'
             : 'Select client',
         ),
     ).toBeVisible();
 
-    if (projectInfo.project.metadata.userType === 'idir') {
+    if (entityTypeForUser(projectInfo.project.metadata.userType) === 'organization') {
       await expect(
         panelSelector.getByRole('searchbox', { name: 'Search by district name or code' }),
       ).toBeVisible();
@@ -87,9 +93,12 @@ test.describe('Profile menu', () => {
     await expect(panelSelector.getByRole('listitem').getByText('Log out')).toBeVisible();
   });
 
-  test.describe('BCeID user', () => {
-    test('profile info for BCeID', async ({ page }, testInfo) => {
-      test.skip(testInfo.project.metadata.userType === 'idir', 'Only runs for BCeID users');
+  test.describe('Client-access roles (Viewer/Submitter)', () => {
+    test('profile info for client-access user', async ({ page }, testInfo) => {
+      test.skip(
+        !hasClientAccessRole(testInfo.project.metadata.userType),
+        'Only runs for users with Viewer/Submitter access',
+      );
       const profileButton = page.getByRole('button', { name: 'Profile settings' });
       await profileButton.click();
 
@@ -103,7 +112,9 @@ test.describe('Profile menu', () => {
 
       await expect(panelSelector.getByText('Uat Test')).toBeVisible();
 
-      await expect(panelSelector.getByText('BCEIDBUSINESS\\uattest')).toBeVisible();
+      await expect(
+        panelSelector.getByText(new RegExp(String.raw`BCEIDBUSINESS\\uattest`)),
+      ).toBeVisible();
 
       await expect(panelSelector.getByText('Email: uattest@gov.bc.ca')).toBeVisible();
 
@@ -120,7 +131,10 @@ test.describe('Profile menu', () => {
     });
 
     test('select OAK HERITAGE LTD.', async ({ page }, testInfo) => {
-      test.skip(testInfo.project.metadata.userType === 'idir', 'Only runs for BCeID users');
+      test.skip(
+        !hasClientAccessRole(testInfo.project.metadata.userType),
+        'Only runs for users with Viewer/Submitter access',
+      );
 
       const profileButton = page.getByRole('button', { name: 'Profile settings' });
       await profileButton.click();
@@ -172,7 +186,10 @@ test.describe('Profile menu', () => {
     test('re-syncs preferences to filters when returning to the search', async ({
       page,
     }, testInfo) => {
-      test.skip(testInfo.project.metadata.userType === 'idir', 'Only runs for BCeID users');
+      test.skip(
+        !hasClientAccessRole(testInfo.project.metadata.userType),
+        'Only runs for users with Viewer/Submitter access',
+      );
 
       const profileButton = page.getByRole('button', { name: 'Profile settings' });
       await profileButton.click();
@@ -211,9 +228,12 @@ test.describe('Profile menu', () => {
     });
   });
 
-  test.describe('IDIR user', () => {
-    test('profile info for IDIR', async ({ page }, testInfo) => {
-      test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
+  test.describe('District-access roles (District/Area/Admin)', () => {
+    test('profile info for district-access user', async ({ page }, testInfo) => {
+      test.skip(
+        hasClientAccessRole(testInfo.project.metadata.userType),
+        'Only runs for users with District/Area/Admin access',
+      );
       const profileButton = page.getByRole('button', { name: 'Profile settings' });
       await profileButton.click();
 
@@ -227,7 +247,7 @@ test.describe('Profile menu', () => {
 
       await expect(panelSelector.getByText('Jack Ryan')).toBeVisible();
 
-      await expect(panelSelector.getByText('IDIR\\JRYAN')).toBeVisible();
+      await expect(panelSelector.getByText(new RegExp(String.raw`IDIR\\JRYAN`))).toBeVisible();
 
       await expect(panelSelector.getByText('Email: jack.ryan@gov.bc.ca')).toBeVisible();
 
@@ -252,7 +272,10 @@ test.describe('Profile menu', () => {
     });
 
     test('select Chilliwack', async ({ page }, testInfo) => {
-      test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
+      test.skip(
+        hasClientAccessRole(testInfo.project.metadata.userType),
+        'Only runs for users with District/Area/Admin access',
+      );
 
       const profileButton = page.getByRole('button', { name: 'Profile settings' });
       await profileButton.click();
@@ -287,7 +310,10 @@ test.describe('Profile menu', () => {
     });
 
     test('filter Haida Gwaii', async ({ page }, testInfo) => {
-      test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
+      test.skip(
+        hasClientAccessRole(testInfo.project.metadata.userType),
+        'Only runs for users with District/Area/Admin access',
+      );
 
       const profileButton = page.getByRole('button', { name: 'Profile settings' });
       await profileButton.click();
@@ -315,7 +341,10 @@ test.describe('Profile menu', () => {
     });
 
     test('tooltip is visible when label is hovered', async ({ page }, testInfo) => {
-      test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
+      test.skip(
+        hasClientAccessRole(testInfo.project.metadata.userType),
+        'Only runs for users with District/Area/Admin access',
+      );
 
       const profileButton = page.getByRole('button', { name: 'Profile settings' });
       await profileButton.click();
@@ -334,7 +363,10 @@ test.describe('Profile menu', () => {
     });
 
     test('log out button is visible even on a small screen', async ({ page }, testInfo) => {
-      test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
+      test.skip(
+        hasClientAccessRole(testInfo.project.metadata.userType),
+        'Only runs for users with District/Area/Admin access',
+      );
 
       await page.setViewportSize({
         width: 800,
@@ -353,7 +385,10 @@ test.describe('Profile menu', () => {
     test('log out button stays at the bottom even on a large screen', async ({
       page,
     }, testInfo) => {
-      test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
+      test.skip(
+        hasClientAccessRole(testInfo.project.metadata.userType),
+        'Only runs for users with District/Area/Admin access',
+      );
 
       const viewport = page.viewportSize();
 
@@ -425,8 +460,8 @@ test.describe('Profile menu', () => {
     const avatarInitials = panelSelector.getByTestId('avatar-initials');
     await expect(avatarInitials).toBeVisible();
 
-    const userName = testInfo.project.metadata.userType === 'idir' ? 'Jack Ryan' : 'Uat Test';
-    const initials = testInfo.project.metadata.userType === 'idir' ? 'JR' : 'UT';
+    const userName = hasClientAccessRole(testInfo.project.metadata.userType) ? 'Uat Test' : 'Jack Ryan';
+    const initials = hasClientAccessRole(testInfo.project.metadata.userType) ? 'UT' : 'JR';
 
     // Verify correct user name is displayed
     await expect(panelSelector.getByText(userName)).toBeVisible();
@@ -454,7 +489,7 @@ test.describe('Profile menu', () => {
     const panelSelector = page.getByTestId('header-panel');
 
     const helpIcon =
-      testInfo.project.metadata.userType === 'idir'
+      entityTypeForUser(testInfo.project.metadata.userType) === 'organization'
         ? panelSelector.getByRole('img', { name: 'Help: About selecting a default organization' })
         : panelSelector.getByRole('img', { name: 'Help: About selecting a default client' });
 
@@ -463,11 +498,74 @@ test.describe('Profile menu', () => {
     // Verify the help icon can be interacted with (hover triggers tooltip)
     await helpIcon.hover();
 
-    const entityType = testInfo.project.metadata.userType === 'idir' ? 'organization' : 'client';
+    const entityType = entityTypeForUser(testInfo.project.metadata.userType);
     const tooltipContent = panelSelector
       .locator('.cds--tooltip-content')
       .filter({ hasText: `Optional: Select a default ${entityType}` });
 
     await expect(tooltipContent).toBeVisible();
+  });
+
+  test('IDIR user with Viewer role sees client selector in profile panel', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.metadata.userType !== 'idir', 'Only runs for IDIR project');
+    test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
+
+    await mockApiResponsesWithStub(
+      page,
+      'forest-clients/searchByNumbers**',
+      'forest-clients/searchByNumbers-pg0.json',
+    );
+    await mockApiResponsesWithStub(page, 'forest-clients/clients**', 'forest-clients/clients-pg0.json');
+
+    await mockJwt(page, testInfo.project.metadata, {
+      'custom:idp_name': 'idir',
+      'cognito:groups': ['WASTE_PLUS_VIEWER_00010005'],
+    });
+
+    await page.goto('/search');
+    await page.waitForLoadState('networkidle');
+
+    const profileButton = page.getByRole('button', { name: 'Profile settings' });
+    await profileButton.click();
+
+    const panelSelector = page.getByTestId('header-panel');
+    await expect(panelSelector.getByText('Select client')).toBeVisible();
+    await expect(
+      panelSelector.getByRole('img', { name: 'Help: About selecting a default client' }),
+    ).toBeVisible();
+    await expect(
+      panelSelector.getByRole('searchbox', { name: 'Search by district name or code' }),
+    ).toHaveCount(0);
+  });
+
+  test('IDIR user with Submitter role sees client selector in profile panel', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.metadata.userType !== 'idir', 'Only runs for IDIR project');
+    test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
+
+    await mockApiResponsesWithStub(
+      page,
+      'forest-clients/searchByNumbers**',
+      'forest-clients/searchByNumbers-pg0.json',
+    );
+    await mockApiResponsesWithStub(page, 'forest-clients/clients**', 'forest-clients/clients-pg0.json');
+
+    await mockJwt(page, testInfo.project.metadata, {
+      'custom:idp_name': 'idir',
+      'cognito:groups': ['WASTE_PLUS_SUBMITTER_00010005'],
+    });
+
+    await page.goto('/search');
+    await page.waitForLoadState('networkidle');
+
+    const profileButton = page.getByRole('button', { name: 'Profile settings' });
+    await profileButton.click();
+
+    const panelSelector = page.getByTestId('header-panel');
+    await expect(panelSelector.getByText('Select client')).toBeVisible();
+    await expect(
+      panelSelector.getByRole('img', { name: 'Help: About selecting a default client' }),
+    ).toBeVisible();
   });
 });
