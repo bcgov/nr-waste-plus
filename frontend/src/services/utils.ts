@@ -7,11 +7,16 @@ import type {
 } from './types';
 
 /**
- * Removes empty, null, and undefined values from an object recursively.
+ * Removes non-meaningful values from an object recursively.
+ *
+ * Current behavior:
+ * - Drops top-level keys whose value is falsy (`''`, `null`, `undefined`, `0`, `false`).
+ * - For arrays, removes `null`, `undefined`, and `''`; removes the key entirely if the array becomes empty.
+ * - Recursively cleans nested objects and removes keys whose nested object becomes empty.
  *
  * @typeParam T The object type.
  * @param obj The object to clean.
- * @returns A copy containing only meaningful values.
+ * @returns A copy containing only retained values after cleanup.
  */
 export const removeEmpty = <T extends object>(obj: T): Partial<T> => {
   return Object.fromEntries(
