@@ -89,7 +89,7 @@
     "wiremock": "^3.13.2"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22.13.0"
   },
   "overrides": {
     "dompurify@<3.3.2": "^3.3.2",
