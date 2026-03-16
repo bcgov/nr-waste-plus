@@ -32,6 +32,7 @@ const WasteSearchTable: FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [filters, setFilters] = useState<ReportingUnitSearchParametersViewDto>({});
   const [sort, setSort] = useState<Record<string, SortDirectionType>>({});
+  const [searchTrigger, setSearchTrigger] = useState(0);
   const { sendEvent, clearEvents } = useSendEvent();
 
   const plainFilters = useMemo(() => reportingUnitSearchParametersView2Plain(filters), [filters]);
@@ -61,7 +62,10 @@ const WasteSearchTable: FC = () => {
     setCurrentPage(pageOverride ?? currentPage);
     setPageSize(pageSizeOverride ?? pageSize);
     if (Object.keys(cleanedFilters).length > 0) {
-      setTimeout(refetch, 1);
+      // Increment trigger to signal that state has settled and we should fetch.
+      // This explicit pattern avoids the implicit timing contract of setTimeout,
+      // ensuring the effect fires after React's synchronous state flush completes.
+      setSearchTrigger((n) => n + 1);
     }
   };
 
@@ -101,6 +105,12 @@ const WasteSearchTable: FC = () => {
   const onRowExpanded = (rowId: string | number): Promise<ReactNode> => {
     return Promise.resolve(<WasteSearchTableExpandContent rowId={String(rowId)} />);
   };
+
+  useEffect(() => {
+    if (searchTrigger > 0) {
+      refetch();
+    }
+  }, [searchTrigger, refetch]);
 
   useEffect(() => {
     if (isError && error) {

@@ -25,6 +25,7 @@ const MyClientListing: FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [filter, setFilter] = useState<string>('');
+  const [searchTrigger, setSearchTrigger] = useState(0);
   const { sendEvent, clearEvents } = useSendEvent();
 
   const { data, isLoading, isFetching, isError, refetch, error } = useQuery({
@@ -48,7 +49,10 @@ const MyClientListing: FC = () => {
      */
   const executeSearch = () => {
     clearEvents('my-client-list');
-    setTimeout(refetch, 1);
+    // Increment trigger to signal that state has settled and we should fetch.
+    // This explicit pattern avoids the implicit timing contract of setTimeout,
+    // ensuring the effect fires after React's synchronous state flush completes.
+    setSearchTrigger((n) => n + 1);
   };
 
     /**
@@ -63,8 +67,14 @@ const MyClientListing: FC = () => {
   };
 
   useEffect(() => {
+    if (searchTrigger > 0) {
+      refetch();
+    }
+  }, [searchTrigger, refetch]);
+
+  useEffect(() => {
     refetch();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refetch]);
 
   useEffect(() => {
     if (isError && error) {
