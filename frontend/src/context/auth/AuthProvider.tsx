@@ -35,34 +35,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   /**
    * Refreshes the cached user state from the current authentication token.
+   * When `silent` is true (periodic refresh), skips isLoading toggling and
+   * only updates user state when the underlying data actually changed.
    */
-  const refreshUserState = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const idToken = await loadUserToken();
-      if (idToken) {
-        setUser(parseToken(idToken));
-      } else {
+  const refreshUserState = useCallback(
+    async (silent = false) => {
+      if (!silent) setIsLoading(true);
+      try {
+        const idToken = await loadUserToken();
+        const newUser = idToken ? parseToken(idToken) : undefined;
+        setUser((prev) => (JSON.stringify(prev) === JSON.stringify(newUser) ? prev : newUser));
+      } catch {
         setUser(undefined);
+        if (!silent) await signOut();
+      } finally {
+        if (!silent) setIsLoading(false);
       }
-    } catch {
-      setUser(undefined);
-      await signOut();
-    } finally {
-      setIsLoading(false);
-    }
-  }, [loadUserToken]);
+    },
+    [loadUserToken],
+  );
 
   useEffect(() => {
-    const safelyRefreshUserState = () => {
-      void refreshUserState().catch(() => {
-        setUser(undefined);
-        setIsLoading(false);
-      });
-    };
+    void refreshUserState().catch(() => {
+      setUser(undefined);
+      setIsLoading(false);
+    });
 
-    safelyRefreshUserState();
-    const interval = setInterval(safelyRefreshUserState, 3 * 60 * 1000);
+    const interval = setInterval(
+      () => {
+        void refreshUserState(true).catch(() => {});
+      },
+      3 * 60 * 1000,
+    );
     return () => clearInterval(interval);
   }, [refreshUserState]);
 
