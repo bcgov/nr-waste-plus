@@ -1,4 +1,5 @@
 import { fetchAuthSession, signInWithRedirect, signOut } from 'aws-amplify/auth';
+import { isEqual } from 'lodash';
 import { useEffect, useMemo, useState, useCallback, type ReactNode } from 'react';
 
 import { AuthContext, type AuthContextType } from './AuthContext';
@@ -44,7 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const idToken = await loadUserToken();
         const newUser = idToken ? parseToken(idToken) : undefined;
-        setUser((prev) => (JSON.stringify(prev) === JSON.stringify(newUser) ? prev : newUser));
+        setUser((prev) => (isEqual(prev, newUser) ? prev : newUser));
       } catch {
         setUser(undefined);
         if (!silent) await signOut();
@@ -63,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const interval = setInterval(
       () => {
-        void refreshUserState(true).catch(() => {});
+        void refreshUserState(true);
       },
       3 * 60 * 1000,
     );
