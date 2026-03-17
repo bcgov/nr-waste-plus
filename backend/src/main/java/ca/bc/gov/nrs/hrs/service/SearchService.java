@@ -7,7 +7,7 @@ import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
-import ca.bc.gov.nrs.hrs.provider.LegacyApiProvider;
+import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import java.util.HashMap;

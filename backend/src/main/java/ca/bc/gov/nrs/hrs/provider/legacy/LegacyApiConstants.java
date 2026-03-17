@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.hrs.provider;
+package ca.bc.gov.nrs.hrs.provider.legacy;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
@@ -52,3 +52,4 @@ public final class LegacyApiConstants {
   public static final String CONTENT_CONST = "content";
   public static final String PAGE_CONST = "page";
 }
+

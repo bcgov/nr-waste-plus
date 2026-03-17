@@ -1,6 +1,5 @@
-package ca.bc.gov.nrs.hrs.provider;
+package ca.bc.gov.nrs.hrs.provider.legacy;
 
-import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.DISTRICT_CODES_JSON;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
@@ -9,16 +8,16 @@ import static com.github.tomakehurst.wiremock.client.WireMock.unauthorized;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import ca.bc.gov.nrs.hrs.TestConstants;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
-import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
+import ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -30,7 +29,6 @@ import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -42,8 +40,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import tools.jackson.databind.json.JsonMapper;
 
-@DisplayName("Integrated Test | Legacy API Provider")
-class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationTest {
+@DisplayName("Integrated Test | Legacy Reporting Unit Client")
+class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @RegisterExtension
   static WireMockExtension clientApiStub =
@@ -63,6 +61,8 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
   private RetryRegistry retryRegistry;
   @Autowired
   private JsonMapper mapper;
+  @Autowired
+  private LegacyReportingUnitClient legacyReportingUnitClient;
 
   @BeforeEach
   public void setUp() {
@@ -75,42 +75,13 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
     retryRegistry.retry("apiRetry", retry);
   }
 
-  @Autowired
-  private LegacyApiProvider legacyApiProvider;
-
-  @Test
-  @DisplayName("Should fetch district codes successfully")
-  void shouldFetchDistrictCodes() {
-
-    clientApiStub.stubFor(
-        get(urlPathEqualTo("/api/codes/districts"))
-            .willReturn(okJson(DISTRICT_CODES_JSON)));
-
-    assertNotNull(legacyApiProvider.getDistrictCodes());
-    assertFalse(legacyApiProvider.getDistrictCodes().isEmpty());
-    assertEquals(23, legacyApiProvider.getDistrictCodes().size());
-  }
-
-  @Test
-  @DisplayName("fallback district when unavailable")
-  void shouldFetchDistrictCodesAndIsUnavailable() {
-
-    clientApiStub.stubFor(
-        get(urlPathEqualTo("/api/codes/districts"))
-            .willReturn(serviceUnavailable()));
-
-    assertNotNull(legacyApiProvider.getDistrictCodes());
-    assertFalse(legacyApiProvider.getDistrictCodes().isEmpty());
-    assertEquals(23, legacyApiProvider.getDistrictCodes().size());
-  }
-
   @ParameterizedTest
   @CsvSource({
       "jake, jake|jakelyn|jakesh",
       "finn, ''",
       "lemongrab, lemongrabber|lemon"
   })
-  @DisplayName("Search for RU")
+  @DisplayName("Search reporting unit users")
   void shouldSearchForRuUsers(String userId, String roles) {
     List<String> expected = Arrays.asList(roles.split("\\|"));
     String json = mapper.writeValueAsString(expected);
@@ -120,12 +91,12 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
             .willReturn(okJson(json))
     );
 
-    assertEquals(expected, legacyApiProvider.searchReportingUnitUsers(userId));
+    assertEquals(expected, legacyReportingUnitClient.searchReportingUnitUsers(userId));
   }
 
   @ParameterizedTest
   @MethodSource("searchReportingUnit")
-  @DisplayName("Search Reporting Unit with various filters and responses")
+  @DisplayName("Search reporting units with various filters and responses")
   void shouldSearchAndGet(
       ReportingUnitSearchParametersDto filters,
       Pageable pageable,
@@ -136,8 +107,10 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
         get(urlPathEqualTo("/api/search/reporting-units"))
             .willReturn(stubResponse));
 
-    Page<ReportingUnitSearchResultDto> result = legacyApiProvider.searchReportingUnit(filters,
-        pageable);
+    Page<ReportingUnitSearchResultDto> result = legacyReportingUnitClient.searchReportingUnit(
+        filters,
+        pageable
+    );
     assertNotNull(result);
     assertEquals(size, result.getTotalElements());
     assertEquals(size == 0, result.getContent().isEmpty());
@@ -146,13 +119,17 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
   @ParameterizedTest
   @MethodSource("expandedDetailsArguments")
   @DisplayName("Get expanded details for reporting unit")
-  void shouldGetExpandedDetails(Long ruId, Long wasteAssessmentAreaId, ResponseDefinitionBuilder stubResponse,
-      ReportingUnitSearchExpandedDto expectedDto) {
+  void shouldGetExpandedDetails(
+      Long ruId,
+      Long wasteAssessmentAreaId,
+      ResponseDefinitionBuilder stubResponse,
+      ReportingUnitSearchExpandedDto expectedDto
+  ) {
     clientApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units/ex/" + ruId + "/" + wasteAssessmentAreaId))
             .willReturn(stubResponse));
 
-    var value = legacyApiProvider.getSearchExpanded(ruId, wasteAssessmentAreaId);
+    var value = legacyReportingUnitClient.getSearchExpanded(ruId, wasteAssessmentAreaId);
     assertNotNull(value);
     assertEquals(expectedDto.id(), value.id());
     assertEquals(expectedDto.licenseNo(), value.licenseNo());
@@ -170,19 +147,19 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
   private static Stream<Arguments> expandedDetailsArguments() {
     ReportingUnitSearchExpandedDto fullDto = new ReportingUnitSearchExpandedDto(
         201L, "LIC123", "CP01", "TMK456", true, false,
-        new CodeDescriptionDto("APP", "Approved"), List.of(),12.5, 12.0, "submitter1", null, "Some comments", 3L,
-        0L);
+        new CodeDescriptionDto("APP", "Approved"), List.of(), 12.5, 12.0, "submitter1", null,
+        "Some comments", 3L, 0L);
     ReportingUnitSearchExpandedDto emptyDto = new ReportingUnitSearchExpandedDto(
         202L, null, null, null, false, false,
-        new CodeDescriptionDto("APP", "Approved"), List.of(),0.0, 0.0, null, null, null, 0L, 0L);
+        new CodeDescriptionDto("APP", "Approved"), List.of(), 0.0, 0.0, null, null, null, 0L, 0L);
     ReportingUnitSearchExpandedDto fallbackDto = new ReportingUnitSearchExpandedDto(
         203L, null, null, null, false, false,
-        new CodeDescriptionDto("APP", "Approved"), List.of(),0.0, 0.0, null, null, null,0L, 0L);
-    ReportingUnitSearchExpandedDto nullDto = new ReportingUnitSearchExpandedDto(null, null, null,
-        null, false, false, new CodeDescriptionDto("APP", "Approved"), List.of(),
+        new CodeDescriptionDto("APP", "Approved"), List.of(), 0.0, 0.0, null, null, null, 0L, 0L);
+    ReportingUnitSearchExpandedDto nullDto = new ReportingUnitSearchExpandedDto(
+        null, null, null, null, false, false, new CodeDescriptionDto("APP", "Approved"), List.of(),
         0.0, 0.0, null, null, null, 0L, 0L);
-    ReportingUnitSearchExpandedDto negativeDto = new ReportingUnitSearchExpandedDto(-2L, null, null,
-        null, false, false, new CodeDescriptionDto("APP", "Approved"), List.of(),
+    ReportingUnitSearchExpandedDto negativeDto = new ReportingUnitSearchExpandedDto(
+        -2L, null, null, null, false, false, new CodeDescriptionDto("APP", "Approved"), List.of(),
         0.0, 0.0, null, null, null, 0L, 0L);
 
     return Stream.of(
@@ -242,7 +219,8 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
             PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.EMPTY_JSON),
             0L
-        ), Arguments.argumentSet(
+        ),
+        Arguments.argumentSet(
             "Search with no results page",
             ReportingUnitSearchParametersDto.builder().build(),
             PageRequest.of(0, 10),
@@ -252,3 +230,4 @@ class LegacyApiProviderIntegrationTest extends AbstractTestContainerIntegrationT
     );
   }
 }
+
