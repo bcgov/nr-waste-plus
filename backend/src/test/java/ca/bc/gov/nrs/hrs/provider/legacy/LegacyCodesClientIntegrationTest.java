@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.hrs.provider.legacy;
 
-import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.DISTRICT_CODES_JSON;
+import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.DISTRICT_CODES_JSON;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.serviceUnavailable;
