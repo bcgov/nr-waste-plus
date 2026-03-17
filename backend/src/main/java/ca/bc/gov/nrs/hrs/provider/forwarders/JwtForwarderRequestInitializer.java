@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.hrs.provider;
+package ca.bc.gov.nrs.hrs.provider.forwarders;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
