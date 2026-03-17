@@ -1,12 +1,12 @@
 package ca.bc.gov.nrs.hrs.controller;
 
 import static ca.bc.gov.nrs.hrs.BackendConstants.X_TOTAL_COUNT;
-import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE;
-import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.EMPTY_JSON;
-import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.EMPTY_PAGED_NOPAGE;
-import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.MY_FOREST_CLIENTS_LEGACY;
-import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST;
-import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE;
+import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE;
+import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.EMPTY_JSON;
+import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.EMPTY_PAGED_NOPAGE;
+import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.MY_FOREST_CLIENTS_LEGACY;
+import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST;
+import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE;
 import static com.github.tomakehurst.wiremock.client.WireMock.badRequest;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;

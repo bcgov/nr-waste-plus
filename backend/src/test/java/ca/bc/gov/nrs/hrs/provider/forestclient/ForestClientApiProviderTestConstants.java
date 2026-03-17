@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.hrs.provider;
+package ca.bc.gov.nrs.hrs.provider.forestclient;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

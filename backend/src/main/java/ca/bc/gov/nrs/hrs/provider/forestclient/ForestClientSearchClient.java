@@ -1,14 +1,9 @@
-package ca.bc.gov.nrs.hrs.provider;
+package ca.bc.gov.nrs.hrs.provider.forestclient;
 
 import ca.bc.gov.nrs.hrs.BackendConstants;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
-import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
-import ca.bc.gov.nrs.hrs.exception.RetriableException;
-import ca.bc.gov.nrs.hrs.exception.TooManyRequestsException;
-import ca.bc.gov.nrs.hrs.exception.UnretriableException;
 import ca.bc.gov.nrs.hrs.util.UriUtils;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import java.util.Collections;
@@ -22,89 +17,24 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 /**
- * Provider that integrates with the external ForestClient API.
- *
- * <p>Contains methods to fetch clients, locations and perform searches against
- * the downstream ForestClient service. Resilience (retry/circuit breaker) and response handling are
- * applied where appropriate.
- * </p>
+ * Client responsible for ForestClient search endpoints.
  */
 @Slf4j
 @Component
 @Observed
-public class ForestClientApiProvider {
-
-  private final RestClient restClient;
+public class ForestClientSearchClient {
 
   private static final String PROVIDER = "ForestClient API";
 
-  /**
-   * Constructor for ForestClientApiProvider.
-   *
-   * @param forestClientApi the RestClient configured for ForestClient API
-   */
-  ForestClientApiProvider(@Qualifier("forestClientApi") RestClient forestClientApi) {
+  private final RestClient restClient;
+
+  ForestClientSearchClient(@Qualifier("forestClientApi") RestClient forestClientApi) {
     this.restClient = forestClientApi;
-  }
-
-  /**
-   * Fetch a ForestClient by its number.
-   *
-   * <p>Handles downstream response status codes mapping them to appropriate
-   * domain exceptions (404 -> {@link ForestClientNotFoundException}, 429 ->
-   * {@link TooManyRequestsException}, 4xx -> {@link UnretriableException}, 5xx ->
-   * {@link RetriableException}).
-   * </p>
-   *
-   * @param number the client number to search for
-   * @return an {@link Optional} containing the {@link ForestClientDto} if found
-   */
-  @Retry(name = "apiRetry", fallbackMethod = "fetchClientByNumberFallBack")
-  @NewSpan
-  public Optional<ForestClientDto> fetchClientByNumber(String number) {
-
-    log.info("Starting {} request to /clients/findByClientNumber/{}", PROVIDER, number);
-
-    return Optional.ofNullable(
-        restClient
-            .get()
-            .uri("/clients/findByClientNumber/{number}", number)
-            .retrieve()
-            .onStatus(status -> status.value() == 404,
-                (req, res) -> {
-                  log.error("Finished {} request - Client error: {}", PROVIDER,
-                      res.getStatusCode());
-                  throw new ForestClientNotFoundException(number);
-                }
-            )
-            .onStatus(status -> status.value() == 429,
-                (req, res) -> {
-                  log.warn("Rate limit hit when fetching {}, status 429", number);
-                  String retryAfter = res.getHeaders().getFirst("Retry-After");
-                  throw new TooManyRequestsException("Forest Client", retryAfter);
-                }
-            )
-            .onStatus(HttpStatusCode::is4xxClientError,
-                (req, res) -> {
-                  log.error("Unhandled 4xx error: {}", res.getStatusCode());
-                  throw new UnretriableException(res.getStatusCode(), number);
-                }
-            )
-            .onStatus(HttpStatusCode::is5xxServerError,
-                (req, res) -> {
-                  log.error("Finished {} request - Server error: {}", PROVIDER,
-                      res.getStatusCode());
-                  throw new RetriableException(res.getStatusCode(), res.getStatusText());
-                }
-            )
-            .body(ForestClientDto.class)
-    );
   }
 
   /**
@@ -198,19 +128,16 @@ public class ForestClientApiProvider {
   }
 
   @SuppressWarnings("unused")
-  private Optional<ForestClientDto> fetchClientByNumberFallBack(String number, Throwable ex) {
-    logFallbackWarn("fetchClientByNumber", ex);
-    return Optional.empty();
-  }
-
-  @SuppressWarnings("unused")
   private <T> Page<T> paginatedFallback(
       int page,
       int size,
       String value,
       Throwable ex
   ) {
-    logFallbackWarn("searchClients", ex);
+    log.warn("Fallback for searchClients for {} due to {}.",
+        PROVIDER,
+        ex == null ? "unknown" : ex.toString()
+    );
     List<T> empty = Collections.emptyList();
     return new PageImpl<>(empty, PageRequest.of(page, size), 0);
   }
@@ -223,17 +150,11 @@ public class ForestClientApiProvider {
       String name,
       Throwable ex
   ) {
-    logFallbackWarn("searchClientsByIds", ex);
-    return ForestClientConstants.EMPTY_FOREST_CLIENT_LIST;
-  }
-
-  // Centralized fallback logger to reduce repeated code
-  private void logFallbackWarn(String method, Throwable ex) {
-    log.warn("Fallback for {} for {} due to {}.",
-        method,
+    log.warn("Fallback for searchClientsByIds for {} due to {}.",
         PROVIDER,
         ex == null ? "unknown" : ex.toString()
     );
+    return ForestClientConstants.EMPTY_FOREST_CLIENT_LIST;
   }
-
 }
+
