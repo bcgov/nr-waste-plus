@@ -76,8 +76,11 @@ table.#{vars.$bcgov-prefix}--data-table--zebra {
   }
 }
 
-.#{vars.$bcgov-prefix}--data-table {
-  td, th {
-    padding-inline: 1rem 0.5rem;
+.table-resource {
+  .#{vars.$bcgov-prefix}--data-table {
+    td,
+    th {
+      padding-inline: 1rem 0.5rem;
+    }
   }
 }
