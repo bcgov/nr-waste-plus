@@ -1,6 +1,8 @@
 import { type NestedKeyOf, type ValueByPath } from '@/services/types';
 import { getValueByPath } from '@/services/utils';
 
+type TableRowActionValue<T, R> = R | ((row: IdentifiableContent<T>) => R);
+
 export type TableHeaderType<T, K extends NestedKeyOf<T> = NestedKeyOf<T>> = {
   key: K;
   header: string;
@@ -26,6 +28,31 @@ export type PaginationOnChangeType = {
 };
 
 export type IdentifiableContent<T> = { id: string | number } & T;
+
+export type TableRowAction<T> = {
+  id: string;
+  label: TableRowActionValue<T, string>;
+  icon: TableRowActionValue<T, React.ReactNode>;
+  onClick: (row: IdentifiableContent<T>) => void | Promise<void>;
+  isDisabled?: TableRowActionValue<T, boolean>;
+  isLoading?: TableRowActionValue<T, boolean>;
+};
+
+export type TableResourceActionsProps<T> = {
+  row: IdentifiableContent<T>;
+  actions: TableRowAction<T>[];
+  maxInlineRowActions: number;
+};
+
+export function resolveTableRowActionValue<T, R>(
+  value: TableRowActionValue<T, R>,
+  row: IdentifiableContent<T>,
+): R {
+  if (typeof value === 'function') {
+    return (value as (row: IdentifiableContent<T>) => R)(row);
+  }
+  return value;
+}
 
 export type PageType = {
   size: number;

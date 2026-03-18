@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { CheckmarkFilled, CloseFilled, Edit } from '@carbon/icons-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -27,6 +28,7 @@ type TestObjectType = {
   name: string;
   hidden: string;
   custom: string;
+  active: boolean;
 };
 
 describe('TableResource', () => {
@@ -38,8 +40,8 @@ describe('TableResource', () => {
   ];
   const content: PageableResponse<TestObjectType> = {
     content: [
-      { id: 1, name: 'Alice', custom: 'A', hidden: 'x' },
-      { id: 2, name: 'Bob', custom: 'B', hidden: 'y' },
+      { id: 1, name: 'Alice', custom: 'A', hidden: 'x', active: true },
+      { id: 2, name: 'Bob', custom: 'B', hidden: 'y', active: false },
     ],
     page: { number: 0, size: 10, totalElements: 2, totalPages: 1 },
   };
@@ -259,5 +261,87 @@ describe('TableResource', () => {
 
     const headerWithoutTooltip = screen.getByText('ID');
     expect(headerWithoutTooltip.className).to.not.contain('table-header-tooltip-trigger');
+  });
+
+  it('renders actions column only when getRowActions is provided', async () => {
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+    });
+    expect(screen.queryByText('Actions')).toBeNull();
+
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+      getRowActions: () => [
+        {
+          id: 'toggle',
+          label: 'Toggle status',
+          icon: <Edit size={16} />,
+          onClick: vi.fn(),
+        },
+      ],
+    });
+
+    expect(screen.getByText('Actions')).toBeDefined();
+  });
+
+  it('calls inline row action callback with current row', async () => {
+    const toggleAction = vi.fn();
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+      getRowActions: () => [
+        {
+          id: 'toggle',
+          label: (row: TestObjectType & { id: string | number }) =>
+            row.active ? 'Deactivate' : 'Activate',
+          icon: (row: TestObjectType & { id: string | number }) =>
+            row.active ? <CheckmarkFilled size={16} /> : <CloseFilled size={16} />,
+          onClick: toggleAction,
+        },
+      ],
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Deactivate' }));
+
+    expect(toggleAction).toHaveBeenCalledWith(content.content[0]);
+  });
+
+  it('moves extra actions to overflow menu based on maxInlineRowActions', async () => {
+    const overflowAction = vi.fn();
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+      maxInlineRowActions: 1,
+      getRowActions: () => [
+        {
+          id: 'edit',
+          label: 'Edit',
+          icon: <Edit size={16} />,
+          onClick: vi.fn(),
+        },
+        {
+          id: 'activate',
+          label: 'Activate',
+          icon: <CheckmarkFilled size={16} />,
+          onClick: overflowAction,
+        },
+      ],
+    });
+
+    expect(screen.getAllByRole('button', { name: 'Edit' }).length).toBeGreaterThan(0);
+    await userEvent.click(screen.getAllByRole('button', { name: 'Options' })[0]);
+    await userEvent.click(screen.getAllByText('Activate')[0]);
+
+    expect(overflowAction).toHaveBeenCalledWith(content.content[0]);
   });
 });

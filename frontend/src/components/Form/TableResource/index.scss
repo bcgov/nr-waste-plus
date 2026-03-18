@@ -75,3 +75,9 @@ table.#{vars.$bcgov-prefix}--data-table--zebra {
     border-bottom: 1px solid var(--cds-border-subtle-01) !important;
   }
 }
+
+.#{vars.$bcgov-prefix}--data-table {
+  td, th {
+    padding-inline: 1rem 0.5rem;
+  }
+}
