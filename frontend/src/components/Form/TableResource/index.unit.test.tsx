@@ -159,6 +159,7 @@ describe('TableResource', () => {
         name: `User ${i + 1}`,
         custom: `Custom ${i + 1}`,
         hidden: `Hidden ${i + 1}`,
+        active: i % 2 === 0,
       })),
       page: { number: 0, size: 10, totalElements: 15, totalPages: 2 },
     };

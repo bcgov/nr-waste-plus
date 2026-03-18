@@ -19,7 +19,10 @@ const row: TestRow = {
   active: true,
 };
 
-const renderInTableRow = (actions: TableRowAction<Omit<TestRow, 'id'>>[], maxInlineRowActions = 2) => {
+const renderInTableRow = (
+  actions: TableRowAction<Omit<TestRow, 'id'>>[],
+  maxInlineRowActions = 2,
+) => {
   const onRowClick = vi.fn();
 
   render(
@@ -106,7 +109,7 @@ describe('TableResourceActions', () => {
       },
     ]);
 
-    expect(screen.getByRole('button', { name: 'Deactivate' }).disabled).toBe(true);
+    expect(screen.getByRole('button', { name: 'Deactivate' }).hasAttribute('disabled')).toBe(true);
   });
 
   it('disables actions while loading is true', () => {
@@ -120,7 +123,7 @@ describe('TableResourceActions', () => {
       },
     ]);
 
-    expect(screen.getByRole('button', { name: 'Deactivate' }).disabled).toBe(true);
+    expect(screen.getByRole('button', { name: 'Deactivate' }).hasAttribute('disabled')).toBe(true);
   });
 
   it('stops row click propagation for inline actions', async () => {
