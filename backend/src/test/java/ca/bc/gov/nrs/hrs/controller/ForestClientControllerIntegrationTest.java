@@ -114,7 +114,7 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
     if (statusCode.is2xxSuccessful()) {
       response
           .andExpect(MockMvcResultMatchers.status().isOk())
-          .andExpect(content().contentType("application/json"))
+          .andExpect(content().contentType("application/json;charset=UTF-8"))
           .andExpect(jsonPath("$.clientNumber").value("00012797"))
           .andExpect(jsonPath("$.clientName").value("MINISTRY OF FORESTS"))
           .andExpect(jsonPath("$.legalFirstName").doesNotExist())
@@ -153,7 +153,7 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
                 .accept(MediaType.APPLICATION_JSON)
         )
         .andExpect(MockMvcResultMatchers.status().isOk())
-        .andExpect(content().contentType("application/json"))
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath("$.length()").value(expectedSize))
         .andReturn();
   }
@@ -182,7 +182,7 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
 
     if (statusCode.is2xxSuccessful()) {
       response
-          .andExpect(content().contentType("application/json"))
+          .andExpect(content().contentType("application/json;charset=UTF-8"))
           .andExpect(jsonPath("$.[0].clientNumber").value("00012797"))
           .andExpect(jsonPath("$.[0].clientName").value("MINISTRY OF FORESTS"))
           .andExpect(jsonPath("$.[0].legalFirstName").doesNotExist())
@@ -231,7 +231,7 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
 
     if (hasResults) {
       response
-          .andExpect(content().contentType("application/json"))
+          .andExpect(content().contentType("application/json;charset=UTF-8"))
           .andExpect(jsonPath("$.content.[0].client.code").value("00012797"))
           .andExpect(jsonPath("$.content.[0].client.description").value("MINISTRY OF FORESTS"))
           .andReturn();

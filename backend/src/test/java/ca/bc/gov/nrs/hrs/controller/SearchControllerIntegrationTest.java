@@ -115,7 +115,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
                 .queryParams(filters.toMultiMap(pageable))
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath("$.content.length()").value(size))
         .andReturn();
   }
@@ -141,7 +141,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath(expectedJsonPath).value(expectedValue))
         .andReturn();
   }
@@ -180,7 +180,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
 
     if (expectedStatus == 200) {
       result
-          .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+          .andExpect(content().contentType("application/json;charset=UTF-8"))
           .andExpect(jsonPath("$.content.length()").value(size));
     }
   }
@@ -200,7 +200,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
                 .queryParam("userId", "TEST")
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath("$.length()").value(1))
         .andExpect(jsonPath("$[0]").value("TESTUSER"))
         .andReturn();
