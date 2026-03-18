@@ -1,7 +1,5 @@
 # General application
 server:
-  error:
-    include-message: always
   port: ${SERVER_PORT:8080}
   shutdown: graceful
   max-http-request-header-size: 16KB
@@ -9,6 +7,14 @@ server:
 spring:
   application:
     name: nr-waste-backend
+  web:
+    error:
+      include-message: always
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
   security:
     oauth2:
       resourceserver:
@@ -16,13 +22,12 @@ spring:
           jwk-set-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}/.well-known/jwks.json
           issuer-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}
   datasource:
-    jdbcUrl: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRES_DATABASE:nr-hrs}
-    url: ${spring.datasource.jdbcUrl}
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRES_DATABASE:nr-hrs}
     username: ${POSTGRES_USER:nr-hrs}
     password: ${POSTGRES_PASSWORD:default}
     hikari:
       driver-class-name: org.postgresql.Driver
-      jdbcUrl: ${spring.datasource.jdbcUrl}
+      jdbcUrl: ${spring.datasource.url}
       username: ${spring.datasource.username}
       password: ${spring.datasource.password}
       connectionTimeout: 30000 # 30 seconds
@@ -47,11 +52,6 @@ spring:
   mvc:
     problemdetails:
       enabled: true
-  http:
-    encoding:
-      charset: UTF-8
-      enabled: true
-      force: true
   sleuth:
     propagation-keys:
       - X-TRACE-ID
@@ -96,7 +96,8 @@ management:
       zone: ${APP_ZONE:local}
       name: ${spring.application.name}
   tracing:
-    enabled: true
+    export:
+      enabled: true
     propagation:
       type: B3
     sampling:

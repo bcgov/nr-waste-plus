@@ -28,14 +28,12 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * REST controller exposing endpoints to query and search Forest Client data.
  *
- * <p>
- * Provides operations to retrieve a single forest client by client number, search for clients by
+ * <p>Provides operations to retrieve a single forest client by client number, search for clients by
  * name, acronym or number, retrieve client locations, look up multiple clients by numbers, and
  * perform paged searches for the currently authenticated user's associated forest clients.
  * </p>
  *
- * <p>
- * This controller relies on {@link ForestClientService} for client-related data access and
+ * <p>This controller relies on {@link ForestClientService} for client-related data access and
  * {@link SearchService} for the paged "my forest clients" search. Authentication information is
  * read from the JWT principal (when available) using {@link JwtPrincipalUtil} to apply
  * identity-provider-specific behavior (for example BCEID vs IDIR filtering).
@@ -74,8 +72,7 @@ public class ForestClientController {
   /**
    * Search for clients by name, acronym or number.
    *
-   * <p>
-   * The behavior of this endpoint is affected by the caller's identity provider (determined from
+   * <p>The behavior of this endpoint is affected by the caller's identity provider (determined from
    * the provided JWT):
    * </p>
    *
@@ -146,17 +143,16 @@ public class ForestClientController {
   /**
    * Search page of the current user's Forest clients.
    *
-   * <p>
-   * This endpoint performs a paged search scoped to the clients associated with the authenticated
-   * user's roles (as extracted from the JWT). The pageable default sorts by {@code lastUpdate} in
-   * descending order.
+   * <p>This endpoint performs a paged search scoped to the clients associated
+   * with the authenticated user's roles (as extracted from the JWT).
+   * The pageable default sorts by {@code lastUpdate} in descending order.
    * </p>
    *
    * @param value    optional free-text search value; defaults to an empty string
    * @param pageable the pageable specification (page number, size, sort)
    * @param jwt      the JWT principal used to determine the caller's client roles
    * @return a {@link Page} of {@link MyForestClientSearchResultDto} matching the search and
-   * client-role restrictions
+   *     client-role restrictions
    */
   @GetMapping("/clients")
   public Page<MyForestClientSearchResultDto> searchMyForestClients(

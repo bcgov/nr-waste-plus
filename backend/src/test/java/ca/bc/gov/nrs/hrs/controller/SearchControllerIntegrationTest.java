@@ -16,7 +16,7 @@ import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
-import ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants;
+import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
@@ -115,7 +115,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
                 .queryParams(filters.toMultiMap(pageable))
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath("$.content.length()").value(size))
         .andReturn();
   }
@@ -141,7 +141,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath(expectedJsonPath).value(expectedValue))
         .andReturn();
   }
@@ -180,7 +180,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
 
     if (expectedStatus == 200) {
       result
-          .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+          .andExpect(content().contentType("application/json;charset=UTF-8"))
           .andExpect(jsonPath("$.content.length()").value(size));
     }
   }
@@ -200,7 +200,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
                 .queryParam("userId", "TEST")
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath("$.length()").value(1))
         .andExpect(jsonPath("$[0]").value("TESTUSER"))
         .andReturn();

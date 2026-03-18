@@ -75,7 +75,7 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType("application/json"))
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath("$[0].code").value(category.code()))
         .andExpect(jsonPath("$[0].description").value(category.description()))
         .andReturn();
@@ -97,7 +97,7 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType("application/json"))
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath("$[0].code").value(category.code()))
         .andExpect(jsonPath("$[0].description").value(category.description()))
         .andReturn();
@@ -118,7 +118,7 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType("application/json"))
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath("$[0].code").value(category.code()))
         .andExpect(jsonPath("$[0].description").value(category.description()))
         .andReturn();

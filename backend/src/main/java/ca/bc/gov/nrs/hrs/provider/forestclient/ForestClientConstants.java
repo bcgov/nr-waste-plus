@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.hrs.provider;
+package ca.bc.gov.nrs.hrs.provider.forestclient;
 
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientLocationDto;
@@ -7,7 +7,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 /**
- * Constants for {@link ForestClientApiProvider} fallback responses.
+ * Constants for ForestClient provider fallback responses.
  *
  * <p>
  * Centralizes empty/static return values used by fallback methods so they can

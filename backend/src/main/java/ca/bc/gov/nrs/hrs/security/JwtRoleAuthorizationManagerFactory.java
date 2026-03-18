@@ -19,8 +19,7 @@ import org.springframework.stereotype.Component;
  * Factory for creating {@link AuthorizationManager} instances that evaluate
  * role- and identity-provider-based decisions using {@link JwtRoleChecker}.
  *
- * <p>
- * The factory methods return AuthorizationManager lambdas that can be used
+ * <p>The factory methods return AuthorizationManager lambdas that can be used
  * in security configuration to enforce role and provider checks per request.
  * </p>
  */
@@ -43,6 +42,13 @@ public class JwtRoleAuthorizationManagerFactory {
         new AuthorizationDecision(roleChecker.hasRoleMatching(matcher));
   }
 
+  /**
+   * Creates an AuthorizationManager that checks whether the current user holds any of the
+   * specified roles.
+   *
+   * @param roles the roles to check against
+   * @return an AuthorizationManager for request contexts
+   */
   public AuthorizationManager<RequestAuthorizationContext> gotRoleMatching(Role... roles) {
     final Set<String> requiredRolePrefixes = Stream
         .of(roles)

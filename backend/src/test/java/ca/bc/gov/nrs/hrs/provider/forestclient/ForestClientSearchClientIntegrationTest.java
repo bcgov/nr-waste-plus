@@ -1,20 +1,13 @@
-package ca.bc.gov.nrs.hrs.provider;
+package ca.bc.gov.nrs.hrs.provider.forestclient;
 
 import static ca.bc.gov.nrs.hrs.BackendConstants.X_TOTAL_COUNT;
-import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE;
-import static ca.bc.gov.nrs.hrs.provider.ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST;
-import static com.github.tomakehurst.wiremock.client.WireMock.badRequest;
+import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.serviceUnavailable;
-import static com.github.tomakehurst.wiremock.client.WireMock.status;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
-import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
-import ca.bc.gov.nrs.hrs.dto.client.ForestClientStatusEnum;
-import ca.bc.gov.nrs.hrs.dto.client.ForestClientTypeEnum;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
@@ -24,7 +17,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,9 +27,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
-
-@DisplayName("Integrated Test | Forest Client API Provider")
-class ForestClientApiProviderIntegrationTest extends AbstractTestContainerIntegrationTest {
+@DisplayName("Integrated Test | Forest Client Search Client")
+class ForestClientSearchClientIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @RegisterExtension
   static WireMockExtension clientApiStub =
@@ -57,43 +48,15 @@ class ForestClientApiProviderIntegrationTest extends AbstractTestContainerIntegr
   private RetryRegistry retryRegistry;
 
   @Autowired
-  private ForestClientApiProvider forestClientApiProvider;
+  private ForestClientSearchClient forestClientSearchClient;
 
   @BeforeEach
-  public void resetCircuitBreaker() {
+  void resetCircuitBreaker() {
     CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("breaker");
     breaker.reset();
     RetryConfig retry = retryRegistry.retry("apiRetry").getRetryConfig();
     retryRegistry.remove("apiRetry");
     retryRegistry.retry("apiRetry", retry);
-  }
-
-  @ParameterizedTest
-  @MethodSource("fetchClientByNumber")
-  @DisplayName("Fetch client by number happy path should succeed")
-  void fetchClientByNumber_shouldSucceed(
-      String clientNumber,
-      ResponseDefinitionBuilder stubResponse
-  ) {
-    clientApiStub.stubFor(
-        get(urlPathEqualTo("/clients/findByClientNumber/" + clientNumber))
-            .willReturn(stubResponse));
-
-    Optional<ForestClientDto> clientDto = forestClientApiProvider.fetchClientByNumber(clientNumber);
-
-    if (clientDto.isPresent()) {
-      ForestClientDto forestClient = clientDto.get();
-      Assertions.assertEquals("00012797", forestClient.clientNumber());
-      Assertions.assertEquals("MINISTRY OF FORESTS", forestClient.clientName());
-      Assertions.assertNull(forestClient.legalFirstName());
-      Assertions.assertNull(forestClient.legalMiddleName());
-      Assertions.assertEquals(ForestClientStatusEnum.ACTIVE, forestClient.clientStatusCode());
-      Assertions.assertEquals(
-          ForestClientTypeEnum.MINISTRY_OF_FORESTS_AND_RANGE, forestClient.clientTypeCode());
-      Assertions.assertEquals("MOF", forestClient.acronym());
-    } else {
-      Assertions.assertEquals(Optional.empty(), clientDto);
-    }
   }
 
   @ParameterizedTest
@@ -109,7 +72,7 @@ class ForestClientApiProviderIntegrationTest extends AbstractTestContainerIntegr
 
     clientApiStub.stubFor(get(urlPathEqualTo("/clients/search/by")).willReturn(stub));
 
-    var clients = forestClientApiProvider.searchClients(page, size, value);
+    var clients = forestClientSearchClient.searchClients(page, size, value);
     Assertions.assertEquals(expectedSize, clients.getTotalElements());
   }
 
@@ -126,7 +89,7 @@ class ForestClientApiProviderIntegrationTest extends AbstractTestContainerIntegr
 
     clientApiStub.stubFor(get(urlPathEqualTo("/clients/search")).willReturn(stub));
 
-    var clients = forestClientApiProvider.searchClientsByIds(page, size, List.of(value), null);
+    var clients = forestClientSearchClient.searchClientsByIds(page, size, List.of(value), null);
     Assertions.assertEquals(expectedSize, clients.size());
   }
 
@@ -174,35 +137,5 @@ class ForestClientApiProviderIntegrationTest extends AbstractTestContainerIntegr
         )
     );
   }
-
-  private static Stream<Arguments> fetchClientByNumber() {
-    return Stream.of(
-        Arguments.argumentSet(
-            "Happy path",
-            "00012797",
-            okJson(CLIENTNUMBER_RESPONSE)
-        ),
-        Arguments.argumentSet(
-            "Not found breaker",
-            "00012898",
-            notFound()
-        ),
-        Arguments.argumentSet(
-            "Unavailable breaker",
-            "00012898",
-            serviceUnavailable()
-        ),
-        Arguments.argumentSet(
-            "Rate limiter breaker",
-            "00012898",
-            status(429)
-        ),
-        Arguments.argumentSet(
-            "Bad request breaker",
-            "00012898",
-            badRequest()
-        )
-    );
-  }
-
 }
+

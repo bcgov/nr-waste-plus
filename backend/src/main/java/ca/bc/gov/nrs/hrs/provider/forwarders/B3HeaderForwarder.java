@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.hrs.provider;
+package ca.bc.gov.nrs.hrs.provider.forwarders;
 
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.Tracer;

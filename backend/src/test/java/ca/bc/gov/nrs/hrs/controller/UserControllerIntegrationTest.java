@@ -50,7 +50,7 @@ class UserControllerIntegrationTest extends AbstractTestContainerIntegrationTest
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType("application/json"))
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath("$.length()").value(0))
         .andReturn();
   }
@@ -87,7 +87,7 @@ class UserControllerIntegrationTest extends AbstractTestContainerIntegrationTest
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType("application/json"))
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath("$.theme").value("dark"))
         .andExpect(jsonPath("$.notifications").value(true))
         .andExpect(jsonPath("$.itemsPerPage").value(20))
