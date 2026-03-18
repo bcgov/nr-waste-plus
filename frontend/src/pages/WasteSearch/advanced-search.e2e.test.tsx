@@ -22,7 +22,7 @@ test.describe('Waste Search - Advanced Search', () => {
     await advancedSearchButton.click();
   });
 
-  test.describe('Client single-select input (IDIR)', async () => {
+  test.describe('Client single-select input (IDIR)', () => {
     const clientNumber = '00049597';
     let clientInput: Locator;
 
@@ -86,7 +86,7 @@ test.describe('Waste Search - Advanced Search', () => {
     });
   });
 
-  test.describe('Client multi-select input (BCeID)', async () => {
+  test.describe('Client multi-select input (BCeID)', () => {
     const clientNumber1 = '90000001';
     const clientNumber2 = '90000003';
     let clientInput: Locator;
@@ -152,7 +152,7 @@ test.describe('Waste Search - Advanced Search', () => {
     });
   });
 
-  test.describe('IDIR or BCeID', async () => {
+  test.describe('IDIR or BCeID', () => {
     let submitterInput: Locator;
 
     test.beforeEach(async ({ page }) => {

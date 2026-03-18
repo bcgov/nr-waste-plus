@@ -61,6 +61,8 @@ type SortingKeys<T> = Record<NestedKeyOf<T>, SortDirectionType>;
  * @property {(params: PaginationParams) => void} [onPageChange] - Callback for handling page changes.
  * @property {(sortKeys: SortingKeys<T>) => void} [onSortChange] - Callback for handling column sort changes.
  * @property {(rowId: string | number) => Promise<ReactNode>} [onRowExpanded] - Callback for handling row expansion data loading. If declared it will show row expansion, otherwise it will display as normal table row.
+ * @property {(row: IdentifiableContent<T>) => TableRowAction<T>[]} [getRowActions] - When provided, appends an "Actions" column to the table. Receives each row and returns the actions to display for it. Actions are split into inline icon buttons and an overflow menu based on `maxInlineRowActions`.
+ * @property {number} [maxInlineRowActions=2] - Maximum number of actions shown as inline icon buttons per row. Any actions beyond this limit are placed into a Carbon OverflowMenu. Defaults to 2.
  */
 type TableResourceProps<T> = {
   id: string;
