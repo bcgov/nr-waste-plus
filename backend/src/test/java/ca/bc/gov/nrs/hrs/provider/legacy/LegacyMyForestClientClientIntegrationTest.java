@@ -48,7 +48,7 @@ class LegacyMyForestClientClientIntegrationTest extends AbstractTestContainerInt
   private LegacyMyForestClientClient legacyMyForestClientClient;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     clientApiStub.resetAll();
 
     CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("breaker");

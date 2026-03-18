@@ -16,12 +16,18 @@ import org.springframework.stereotype.Component;
 /**
  * Facade provider for calls to the legacy backend API.
  *
- * <p>
- * This class keeps a stable API for service-layer callers while delegating to
+ * <p>This class keeps a stable API for service-layer callers while delegating to
  * smaller, capability-focused clients:
  * {@link LegacyCodesClient}, {@link LegacyReportingUnitClient}, and
  * {@link LegacyMyForestClientClient}.
  * </p>
+ *
+ * <p>The LegacyApiProvider acts as a single entry point for all legacy API operations,
+ * abstracting away the complexity of multiple specialized client components. This facade
+ * pattern ensures that service layer code remains decoupled from the underlying
+ * implementation details of each client.
+ * </p>
+ *
  */
 @Component
 @Observed
@@ -34,6 +40,13 @@ public class LegacyApiProvider {
 
   /**
    * Retrieve district code list from the legacy API.
+   * 
+   * <p>Delegates to {@link LegacyCodesClient} to fetch a list of all available districts.
+   * If the legacy API is unavailable, returns default district codes.
+   * </p>
+   *
+   * @return a list of {@link CodeDescriptionDto} containing district codes and descriptions;
+   *         never null, may return default districts if API call fails
    */
   public List<CodeDescriptionDto> getDistrictCodes() {
     return codesClient.getDistrictCodes();
@@ -41,6 +54,13 @@ public class LegacyApiProvider {
 
   /**
    * Retrieve sampling codes from the legacy API.
+   * 
+   * <p>Delegates to {@link LegacyCodesClient} to fetch a list of all available sampling codes.
+   * If the legacy API is unavailable, returns an empty list.
+   * </p>
+   *
+   * @return a list of {@link CodeDescriptionDto} containing sampling codes and descriptions;
+   *         never null, may be empty if API call fails or no codes are available
    */
   public List<CodeDescriptionDto> getSamplingCodes() {
     return codesClient.getSamplingCodes();
@@ -48,6 +68,13 @@ public class LegacyApiProvider {
 
   /**
    * Retrieve status codes from the legacy API.
+   * 
+   * <p>Delegates to {@link LegacyCodesClient} to fetch a list of all available status codes
+   * for assessment areas. If the legacy API is unavailable, returns an empty list.
+   * </p>
+   *
+   * @return a list of {@link CodeDescriptionDto} containing status codes and descriptions;
+   *         never null, may be empty if API call fails or no codes are available
    */
   public List<CodeDescriptionDto> getStatusCodes() {
     return codesClient.getStatusCodes();

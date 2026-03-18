@@ -20,6 +20,17 @@ import tools.jackson.databind.JsonNode;
 
 /**
  * Client responsible for legacy reporting-unit search endpoints.
+ * 
+ * <p>This component handles all communication with legacy API reporting unit search endpoints,
+ * including paginated searches, expanded search details, and user lookups. It implements resilience
+ * patterns via circuit breaker to gracefully handle failures.
+ * </p>
+ * 
+ * <p>All search operations are protected by circuit breakers with fallback methods that return
+ * empty or default results, ensuring the application continues functioning even when the
+ * legacy API is unavailable.
+ * </p>
+ *
  */
 @Slf4j
 @Component
@@ -32,6 +43,13 @@ public class LegacyReportingUnitClient {
   private final RestClient restClient;
   private final LegacyPagedResponseMapper pageMapper;
 
+  /**
+   * Constructs a new LegacyReportingUnitClient.
+   *
+   * @param legacyApi the qualified RestClient bean for the legacy API, must not be null
+   * @param pageMapper the mapper for converting paged JSON responses to typed lists,
+   *                   must not be null
+   */
   LegacyReportingUnitClient(
       @Qualifier("legacyApi") RestClient legacyApi,
       LegacyPagedResponseMapper pageMapper
@@ -40,6 +58,37 @@ public class LegacyReportingUnitClient {
     this.pageMapper = pageMapper;
   }
 
+  /**
+   * Search reporting units in the legacy API using provided filters and pageable information.
+   *
+   * <p>This method executes a paginated search against the legacy API endpoint
+   * {@code GET /api/search/reporting-units} with the provided filter parameters and
+   * pagination settings. The response is expected to be a paged JSON structure with a
+   * {@code content} field containing the results and a {@code page} field containing
+   * pagination metadata.
+   * </p>
+   *
+   * <p>If the response is invalid or missing required fields, the method returns an empty page.
+   * If the total elements cannot be determined from the response metadata, it defaults to 0.
+   * </p>
+   *
+   * <p>This method is protected by a circuit breaker that will invoke
+   * {@link #fallbackEmptySearchReportingUnit(ReportingUnitSearchParametersDto, Pageable,
+   * Throwable)} if the API call fails.
+   * </p>
+   *
+   * @param filters the search filter parameters to apply; may include various reporting
+   *                unit criteria
+   * @param pageable the pagination information (page number, size, sort order)
+   * @return a {@link Page} of {@link ReportingUnitSearchResultDto} containing search results;
+   *         never null, may be empty if no results found or API fails
+   * @throws org.springframework.web.client.RestClientException if there's an unrecoverable
+   *                                                           HTTP error
+   *
+   * @see ReportingUnitSearchParametersDto
+   * @see Pageable
+   * @see LegacyPagedResponseMapper
+   */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptySearchReportingUnit")
   @NewSpan
   public Page<ReportingUnitSearchResultDto> searchReportingUnit(
@@ -76,6 +125,28 @@ public class LegacyReportingUnitClient {
     return new PageImpl<>(results, pageable, totalElements);
   }
 
+  /**
+   * Retrieve expanded search details for a specific reporting unit and waste assessment area.
+   *
+   * <p>This method retrieves detailed information about a specific reporting unit in the context
+   * of a waste assessment area. The query is made to the legacy API endpoint:
+   * {@code GET /api/search/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}}
+   * </p>
+   *
+   * <p>The returned object contains comprehensive details including assessment area information,
+   * coordinates, status, and associated lists. This method is protected by a circuit breaker
+   * that will invoke {@link #fallbackSearchExpand(Long, Long, Throwable)} if the API fails.
+   * </p>
+   *
+   * @param ruId the reporting unit ID; must not be null
+   * @param wasteAssessmentAreaId the waste assessment area ID; must not be null
+   * @return a {@link ReportingUnitSearchExpandedDto} containing expanded search details;
+   *         never null, returns a default empty object if API fails
+   * @throws org.springframework.web.client.RestClientException if there's an unrecoverable
+   *                                                           HTTP error
+   *
+   * @see ReportingUnitSearchExpandedDto
+   */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackSearchExpand")
   @NewSpan
   public ReportingUnitSearchExpandedDto getSearchExpanded(Long ruId, Long wasteAssessmentAreaId) {
@@ -93,6 +164,24 @@ public class LegacyReportingUnitClient {
         .body(ReportingUnitSearchExpandedDto.class);
   }
 
+  /**
+   * Search for reporting unit users that match a partial user ID.
+   *
+   * <p>This method queries the legacy API endpoint
+   * {@code GET /api/search/reporting-units-users} to find users whose ID matches or contains
+   * the provided search term. The response is a list of user IDs as strings.
+   * </p>
+   *
+   * <p>This method is protected by a circuit breaker that will invoke
+   * {@link #fallbackEmptyUsersList(String, Throwable)} if the API call fails.
+   * </p>
+   *
+   * @param userId the search term for user ID matching; used for partial matching
+   * @return a list of user IDs as strings that match the search criteria;
+   *         never null, returns empty list if no matches found or API fails
+   * @throws org.springframework.web.client.RestClientException if there's an unrecoverable
+   *                                                           HTTP error
+   */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyUsersList")
   @NewSpan
   public List<String> searchReportingUnitUsers(String userId) {
@@ -111,6 +200,19 @@ public class LegacyReportingUnitClient {
         });
   }
 
+  /**
+   * Fallback method invoked when expanded search retrieval fails.
+   *
+   * <p>Returns a default empty {@link ReportingUnitSearchExpandedDto} to ensure
+   * graceful degradation when the legacy API is unavailable.
+   * The returned object has default values with no associated lists or detailed information.
+   * </p>
+   *
+   * @param ruId the reporting unit ID for which expanded details were requested
+   * @param wasteAssessmentAreaId the waste assessment area ID
+   * @param throwable the exception that triggered the fallback
+   * @return a default {@link ReportingUnitSearchExpandedDto} with minimal information
+   */
   private ReportingUnitSearchExpandedDto fallbackSearchExpand(Long ruId, Long wasteAssessmentAreaId,
       Throwable throwable) {
     logFallbackError(throwable);
@@ -135,12 +237,35 @@ public class LegacyReportingUnitClient {
     );
   }
 
+  /**
+   * Fallback method invoked when user search fails.
+   *
+   * <p>Returns an empty list to allow the application to continue
+   * when the legacy API is unavailable.
+   * </p>
+   *
+   * @param userId the user ID search term that was requested
+   * @param throwable the exception that triggered the fallback
+   * @return an empty list of user IDs
+   */
   @SuppressWarnings("unused")
   private List<String> fallbackEmptyUsersList(String userId, Throwable throwable) {
     logFallbackError(throwable);
     return LegacyApiConstants.EMPTY_STRING_LIST;
   }
 
+  /**
+   * Fallback method invoked when reporting unit search fails.
+   *
+   * <p>Returns an empty page to allow the application to continue
+   * when the legacy API is unavailable.
+   * </p>
+   *
+   * @param filters the search filters that were applied
+   * @param pageable the pagination settings that were requested
+   * @param throwable the exception that triggered the fallback
+   * @return an empty page of reporting unit search results
+   */
   @SuppressWarnings("unused")
   private Page<ReportingUnitSearchResultDto> fallbackEmptySearchReportingUnit(
       ReportingUnitSearchParametersDto filters,
@@ -151,6 +276,15 @@ public class LegacyReportingUnitClient {
     return new PageImpl<>(LegacyApiConstants.RU_SEARCH_LIST, pageable, 0);
   }
 
+  /**
+   * Logs fallback errors for debugging and monitoring purposes.
+   *
+   * <p>This method standardizes error logging when circuit breaker fallbacks are triggered,
+   * providing consistent error information for troubleshooting.
+   * </p>
+   *
+   * @param throwable the exception that occurred, may be null if reason is unknown
+   */
   private void logFallbackError(Throwable throwable) {
     log.error(FALLBACK_ERROR, PROVIDER, throwable == null ? "unknown" : throwable.getMessage());
   }

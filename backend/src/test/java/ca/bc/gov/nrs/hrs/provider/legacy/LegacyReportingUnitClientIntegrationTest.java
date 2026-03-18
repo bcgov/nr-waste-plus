@@ -65,7 +65,7 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
   private LegacyReportingUnitClient legacyReportingUnitClient;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     clientApiStub.resetAll();
 
     CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("breaker");

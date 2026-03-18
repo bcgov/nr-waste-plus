@@ -124,6 +124,11 @@ public class ReportingUnitSearchParametersDto {
     return toMultiMap(null);
   }
 
+  /**
+   * Checks whether all search parameters are empty or unset.
+   *
+   * @return true if no search parameters have been set; false otherwise
+   */
   public boolean isEmpty() {
     return StringUtils.isBlank(mainSearchTerm)
            && CollectionUtils.isEmpty(district)

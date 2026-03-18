@@ -51,7 +51,7 @@ class ForestClientSearchClientIntegrationTest extends AbstractTestContainerInteg
   private ForestClientSearchClient forestClientSearchClient;
 
   @BeforeEach
-  public void resetCircuitBreaker() {
+  void resetCircuitBreaker() {
     CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("breaker");
     breaker.reset();
     RetryConfig retry = retryRegistry.retry("apiRetry").getRetryConfig();

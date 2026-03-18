@@ -46,7 +46,7 @@ class LegacyCodesClientIntegrationTest extends AbstractTestContainerIntegrationT
   private LegacyCodesClient legacyCodesClient;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     clientApiStub.resetAll();
 
     CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("breaker");
