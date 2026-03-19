@@ -6,15 +6,21 @@
   "scripts": {
     "cy:open": "cypress open",
     "report:md": "node scripts/generate-github-summary.js",
+    "report:clean": "rm -rf reports/mochawesome/*",
     
+    "precy:run": "npm run report:clean",
     "cy:run": "cypress run --reporter junit --reporter-options mochaFile=result.xml,toConsole=true",
     "postcy:run": "npm run report:md",
     
+    "precy:run:md": "npm run report:clean",
     "cy:run:md": "cypress run --reporter mochawesome --reporter-options reportDir=reports/mochawesome,overwrite=false,html=false,json=true --config \"baseUrl=https://nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca/\"",
+    "postcy:run:md": "npm run report:md",
     
+    "precy:run:local": "npm run report:clean",
     "cy:run:local": "cypress run --reporter junit --reporter-options mochaFile=result.xml,toConsole=true --config \"baseUrl=http://localhost:3000\"",
     "postcy:run:local": "npm run report:md",
 
+    "precy:run:md:local": "npm run report:clean",
     "cy:run:md:local": "cypress run --reporter mochawesome --reporter-options reportDir=reports/mochawesome,overwrite=false,html=false,json=true --config \"baseUrl=http://localhost:3000\"",
     "postcy:run:md:local": "npm run report:md",
         
