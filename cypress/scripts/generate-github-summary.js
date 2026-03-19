@@ -381,7 +381,7 @@ function createMarkdown({ reportCount, totals, failedTests, a11y }) {
   const nowIso = new Date().toISOString();
 
   let markdown = "";
-  markdown += "## Cypress Test Summary\n\n";
+  markdown += "# Cypress Test Summary\n\n";
   markdown += `**Status:** ${status}  \n`;
   markdown += `**Reports Processed:** ${reportCount}  \n`;
   markdown += `**Generated At:** ${nowIso}  \n\n`;
@@ -395,12 +395,12 @@ function createMarkdown({ reportCount, totals, failedTests, a11y }) {
   markdown += `| Skipped | ${totals.skipped} |\n`;
   markdown += `| Duration | ${formatDuration(totals.durationMs)} |\n\n`;
 
-  markdown += "### Accessibility checks\n\n";
+  markdown += "## Accessibility checks\n\n";
   markdown += `- Checks executed: ${a11y.totals.checks}\n`;
   markdown += `- Total violations: ${a11y.totals.violations}\n\n`;
 
   if (a11y.topViolations.length > 0) {
-    markdown += "### Top accessibility violations\n\n";
+    markdown += "## Top accessibility violations\n\n";
     for (const violation of a11y.topViolations) {
       markdown += formatA11yViolationItem(violation);
     }
@@ -408,7 +408,7 @@ function createMarkdown({ reportCount, totals, failedTests, a11y }) {
   }
 
   if (failedTests.length > 0) {
-    markdown += "### Failed tests\n\n";
+    markdown += "## Failed tests\n\n";
 
     const maxFailures = 50;
     const displayedFailures = failedTests.slice(0, maxFailures);
@@ -421,7 +421,7 @@ function createMarkdown({ reportCount, totals, failedTests, a11y }) {
       markdown += `\n_Only first ${maxFailures} failed tests are shown._\n`;
     }
   } else {
-    markdown += "### Failed tests\n\n";
+    markdown += "## Failed tests\n\n";
     markdown += "No failed tests 🎉\n";
   }
 
@@ -431,7 +431,7 @@ function createMarkdown({ reportCount, totals, failedTests, a11y }) {
 function createFallbackMarkdown(reason) {
   const nowIso = new Date().toISOString();
   return [
-    "## Cypress Test Summary",
+    "# Cypress Test Summary",
     "",
     "**Status:** ⚠️ No report data",
     `**Generated At:** ${nowIso}`,
