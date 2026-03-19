@@ -49,9 +49,13 @@ async function setupNodeEvents(
   return config;
 }
 
+const reporter = process.env.MOCHAWESOME_REPORT === "true"
+  ? "mochawesome"
+  : require.resolve("@badeball/cypress-cucumber-preprocessor/pretty-reporter");
+
 export default defineConfig({
   e2e: {
-    reporter: require.resolve("@badeball/cypress-cucumber-preprocessor/pretty-reporter"),
+    reporter,
     specPattern: "**/*.feature",
     setupNodeEvents,
     defaultCommandTimeout: 10000,
@@ -64,6 +68,8 @@ export default defineConfig({
       bceid_password: process.env.bceid_password,
     },
   },
+  video: true,
+  trashAssetsBeforeRuns: true,
   includeShadowDom: false,
   viewportHeight: 1080,
   viewportWidth: 1920,

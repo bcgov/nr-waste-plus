@@ -24,6 +24,9 @@ npm run cy:open:local
 # Headless mode against localhost
 npm run cy:run:local
 
+# Headless mode with mochawesome JSON output (for markdown summary)
+npm run cy:run:md:local
+
 # Against a custom URL
 npm run cy:open -- --config baseUrl=https://your-app-url.example.com
 ```
