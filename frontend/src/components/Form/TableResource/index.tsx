@@ -15,9 +15,16 @@ import {
 import { Children, useEffect, useRef, useState, type ReactNode } from 'react';
 
 import ColumnCustomizationMenu from './ColumnCustomizationMenu';
+import TableResourceActions from './TableResourceActions';
 import TableResourceExpandRow from './TableResourceExpandRow';
 import TableResourceRow from './TableResourceRow';
-import { type TableHeaderType, type PageableResponse, renderCell, getHeaderId } from './types';
+import {
+  type TableHeaderType,
+  type PageableResponse,
+  type TableRowAction,
+  renderCell,
+  getHeaderId,
+} from './types';
 import { useTableToolbar } from './useTableToolbar';
 
 import type { NestedKeyOf, SortDirectionType } from '@/services/types';
@@ -54,6 +61,8 @@ type SortingKeys<T> = Record<NestedKeyOf<T>, SortDirectionType>;
  * @property {(params: PaginationParams) => void} [onPageChange] - Callback for handling page changes.
  * @property {(sortKeys: SortingKeys<T>) => void} [onSortChange] - Callback for handling column sort changes.
  * @property {(rowId: string | number) => Promise<ReactNode>} [onRowExpanded] - Callback for handling row expansion data loading. If declared it will show row expansion, otherwise it will display as normal table row.
+ * @property {(row: IdentifiableContent<T>) => TableRowAction<T>[]} [getRowActions] - When provided, appends an "Actions" column to the table. Receives each row and returns the actions to display for it. Actions are split into inline icon buttons and an overflow menu based on `maxInlineRowActions`.
+ * @property {number} [maxInlineRowActions=2] - Maximum number of actions shown as inline icon buttons per row. Any actions beyond this limit are placed into a Carbon OverflowMenu. Defaults to 2.
  */
 type TableResourceProps<T> = {
   id: string;
@@ -67,6 +76,8 @@ type TableResourceProps<T> = {
   onPageChange?: (params: PaginationParams) => void;
   onSortChange?: (sortKeys: SortingKeys<T>) => void;
   onRowExpanded?: (rowId: string | number) => Promise<ReactNode>;
+  getRowActions?: (row: PageableResponse<T>['content'][number]) => TableRowAction<T>[];
+  maxInlineRowActions?: number;
 };
 
 /**
@@ -89,6 +100,8 @@ const TableResource = <T,>({
   onPageChange,
   onSortChange,
   onRowExpanded,
+  getRowActions,
+  maxInlineRowActions = 2,
 }: TableResourceProps<T>) => {
   const { tableHeaders, onToggleHeader } = useTableToolbar(id, headers);
   const [expandedRow, setExpandedRow] = useState<Set<string>>(new Set());
@@ -200,9 +213,12 @@ const TableResource = <T,>({
         data-testid="loading-skeleton"
         className="default-table-skeleton"
         aria-label="loading table data"
-        headers={tableHeaders
-          .filter((header) => header.selected)
-          .map((header) => header as { header: string })}
+        headers={[
+          ...tableHeaders
+            .filter((header) => header.selected)
+            .map((header) => header as { header: string }),
+          ...(getRowActions ? [{ header: 'Actions' }] : []),
+        ]}
         rowCount={content.page?.size || 10}
         showToolbar={false}
         showHeader={false}
@@ -240,6 +256,9 @@ const TableResource = <T,>({
     `${min}-${max} of ${total} items`;
 
   const noItemRangeText = () => '';
+  const hasActionsColumn = Boolean(getRowActions);
+  const visibleHeaderCount = tableHeaders.filter((header) => header.selected).length;
+  const inlineActionsLimit = Math.max(0, maxInlineRowActions);
 
   return (
     <>
@@ -282,6 +301,11 @@ const TableResource = <T,>({
                   )}
                 </TableHeader>
               ))}
+            {hasActionsColumn && (
+              <TableHeader key="header-actions">
+                <strong>Actions</strong>
+              </TableHeader>
+            )}
           </TableRow>
         </TableHead>
         <TableBody>
@@ -294,13 +318,26 @@ const TableResource = <T,>({
                 </TableCell>
               ));
 
+            if (hasActionsColumn) {
+              const rowActions = getRowActions ? getRowActions(row) : [];
+
+              cells.push(
+                <TableResourceActions
+                  key={`cell-${row.id}-actions`}
+                  row={row}
+                  actions={rowActions}
+                  maxInlineRowActions={inlineActionsLimit}
+                />,
+              );
+            }
+
             const isExpandable = Boolean(onRowExpanded);
 
             const rowKey = `row-${row.id}`;
             return isExpandable ? (
               <TableResourceExpandRow
                 key={row.id}
-                columns={tableHeaders.filter((header) => header.selected).length}
+                columns={visibleHeaderCount + (hasActionsColumn ? 1 : 0)}
                 isExpanded={expandedRow.has(rowKey)}
                 onExpand={() => handleRowExpansion(row.id)}
                 expandedChild={expandedRowComponent.get(rowKey)}

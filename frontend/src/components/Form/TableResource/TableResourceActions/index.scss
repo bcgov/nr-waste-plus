@@ -1,0 +1,13 @@
+@use '../../../../styles/variables' as vars;
+
+.table-row-actions-wrapper {
+  display: flex;
+  justify-content: flex-start;
+
+  .#{vars.$bcgov-prefix}--popover, .#{vars.$bcgov-prefix}--popover-content {
+    max-width: 8.5rem;
+    white-space: normal;
+    word-break: break-word;
+    z-index: 99999;
+  }
+}
