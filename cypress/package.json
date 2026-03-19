@@ -5,9 +5,21 @@
   "main": "index.js",
   "scripts": {
     "cy:open": "cypress open",
+    "report:md": "node scripts/generate-github-summary.js",
+    
     "cy:run": "cypress run --reporter junit --reporter-options mochaFile=result.xml,toConsole=true",
+    "postcy:run": "npm run report:md",
+    
+    "cy:run:md": "cypress run --reporter mochawesome --reporter-options reportDir=reports/mochawesome,overwrite=false,html=false,json=true --config \"baseUrl=https://nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca/\"",
+    
     "cy:run:local": "cypress run --reporter junit --reporter-options mochaFile=result.xml,toConsole=true --config \"baseUrl=http://localhost:3000\"",
-    "cy:open:local": "cypress open --config \"baseUrl=http://localhost:3000\""
+    "postcy:run:local": "npm run report:md",
+
+    "cy:run:md:local": "cypress run --reporter mochawesome --reporter-options reportDir=reports/mochawesome,overwrite=false,html=false,json=true --config \"baseUrl=http://localhost:3000\"",
+    "postcy:run:md:local": "npm run report:md",
+        
+    "cy:open:local": "cypress open --config \"baseUrl=http://localhost:3000\"",
+    "cy:open:remote": "cypress open --config \"baseUrl=https://nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca/\""    
   },
   "keywords": [],
   "author": "",
@@ -20,6 +32,7 @@
     "@types/node": "^25.5.0",
     "cypress": "^15.0.0",
     "dotenv": "^17.3.1",
+    "mochawesome": "^7.1.4",
     "ts-loader": "^9.4.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.0.4",
