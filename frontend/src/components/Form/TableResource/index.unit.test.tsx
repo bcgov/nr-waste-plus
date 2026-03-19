@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { CheckmarkFilled, CloseFilled, Edit } from '@carbon/icons-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -27,6 +28,7 @@ type TestObjectType = {
   name: string;
   hidden: string;
   custom: string;
+  active: boolean;
 };
 
 describe('TableResource', () => {
@@ -38,8 +40,8 @@ describe('TableResource', () => {
   ];
   const content: PageableResponse<TestObjectType> = {
     content: [
-      { id: 1, name: 'Alice', custom: 'A', hidden: 'x' },
-      { id: 2, name: 'Bob', custom: 'B', hidden: 'y' },
+      { id: 1, name: 'Alice', custom: 'A', hidden: 'x', active: true },
+      { id: 2, name: 'Bob', custom: 'B', hidden: 'y', active: false },
     ],
     page: { number: 0, size: 10, totalElements: 2, totalPages: 1 },
   };
@@ -157,6 +159,7 @@ describe('TableResource', () => {
         name: `User ${i + 1}`,
         custom: `Custom ${i + 1}`,
         hidden: `Hidden ${i + 1}`,
+        active: i % 2 === 0,
       })),
       page: { number: 0, size: 10, totalElements: 15, totalPages: 2 },
     };
@@ -259,5 +262,179 @@ describe('TableResource', () => {
 
     const headerWithoutTooltip = screen.getByText('ID');
     expect(headerWithoutTooltip.className).to.not.contain('table-header-tooltip-trigger');
+  });
+
+  it('renders actions column only when getRowActions is provided', async () => {
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+    });
+    expect(screen.queryByText('Actions')).toBeNull();
+
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+      getRowActions: () => [
+        {
+          id: 'toggle',
+          label: 'Toggle status',
+          icon: <Edit size={16} />,
+          onClick: vi.fn(),
+        },
+      ],
+    });
+
+    expect(screen.getByText('Actions')).toBeDefined();
+  });
+
+  it('calls inline row action callback with current row', async () => {
+    const toggleAction = vi.fn();
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+      getRowActions: () => [
+        {
+          id: 'toggle',
+          label: (row: TestObjectType & { id: string | number }) =>
+            row.active ? 'Deactivate' : 'Activate',
+          icon: (row: TestObjectType & { id: string | number }) =>
+            row.active ? <CheckmarkFilled size={16} /> : <CloseFilled size={16} />,
+          onClick: toggleAction,
+        },
+      ],
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Deactivate' }));
+
+    expect(toggleAction).toHaveBeenCalledWith(content.content[0]);
+  });
+
+  it('moves extra actions to overflow menu based on maxInlineRowActions', async () => {
+    const overflowAction = vi.fn();
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+      maxInlineRowActions: 1,
+      getRowActions: () => [
+        {
+          id: 'edit',
+          label: 'Edit',
+          icon: <Edit size={16} />,
+          onClick: vi.fn(),
+        },
+        {
+          id: 'activate',
+          label: 'Activate',
+          icon: <CheckmarkFilled size={16} />,
+          onClick: overflowAction,
+        },
+      ],
+    });
+
+    expect(screen.getAllByRole('button', { name: 'Edit' }).length).toBeGreaterThan(0);
+    await userEvent.click(screen.getAllByRole('button', { name: 'Options' })[0]);
+    await userEvent.click(screen.getAllByText('Activate')[0]);
+
+    expect(overflowAction).toHaveBeenCalledWith(content.content[0]);
+  });
+
+  it('cycles sort direction NONE → ASC → DESC → NONE on sortable header clicks', async () => {
+    const onSortChange = vi.fn();
+    const sortableHeaders: TableHeaderType<TestObjectType>[] = headers.map((header) =>
+      header.key === 'name' ? { ...header, sortable: true } : header,
+    );
+
+    await renderWithProps({
+      headers: sortableHeaders,
+      content,
+      loading: false,
+      error: false,
+      onSortChange,
+    });
+
+    const nameHeader = screen.getByText('Name');
+
+    // NONE → ASC
+    await userEvent.click(nameHeader);
+    expect(onSortChange).toHaveBeenLastCalledWith({ name: 'ASC' });
+
+    // ASC → DESC
+    await userEvent.click(nameHeader);
+    expect(onSortChange).toHaveBeenLastCalledWith({ name: 'DESC' });
+
+    // DESC → NONE (cleared)
+    await userEvent.click(nameHeader);
+    expect(onSortChange).toHaveBeenLastCalledWith({});
+  });
+
+  it('does not sort when clicking a non-sortable header', async () => {
+    const onSortChange = vi.fn();
+
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+      onSortChange,
+    });
+
+    const idHeader = screen.getByText('ID');
+    await userEvent.click(idHeader);
+
+    expect(onSortChange).not.toHaveBeenCalled();
+  });
+
+  it('expands and collapses a row when onRowExpanded is provided', async () => {
+    const onRowExpanded = vi.fn().mockResolvedValue(<div>Expanded content</div>);
+
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+      onRowExpanded,
+    });
+
+    // Expand first row
+    const expandButtons = screen.getAllByRole('button', { name: /expand/i });
+    await userEvent.click(expandButtons[0]);
+
+    expect(onRowExpanded).toHaveBeenCalledWith(1);
+
+    // Wait for expanded content to render
+    expect(await screen.findByText('Expanded content')).toBeDefined();
+
+    // Collapse the row
+    await userEvent.click(expandButtons[0]);
+
+    // The expanded content should be removed
+    expect(screen.queryByText('Expanded content')).toBeNull();
+  });
+
+  it('includes Actions column in skeleton loader when getRowActions is provided', async () => {
+    await renderWithProps({
+      headers,
+      content,
+      loading: true,
+      error: false,
+      getRowActions: () => [
+        {
+          id: 'edit',
+          label: 'Edit',
+          icon: <Edit size={16} />,
+          onClick: vi.fn(),
+        },
+      ],
+    });
+
+    expect(screen.getByTestId('loading-skeleton')).toBeDefined();
   });
 });

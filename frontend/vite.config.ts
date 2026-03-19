@@ -171,6 +171,7 @@ export default defineConfig(({ mode }) => {
           '**/*.types.ts',
           '**/main.tsx',
           '**/App.tsx',
+          '**/e2e.setup.ts',
         ],
         include: ['src/**/*.ts', 'src/**/*.tsx'],
         lines: 80,
