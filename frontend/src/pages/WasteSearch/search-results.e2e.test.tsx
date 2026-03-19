@@ -51,15 +51,16 @@ test.describe('Waste Search - Search Results', () => {
     await expect(resultSize).toBeVisible();
 
     // Check pagination controls are visible
-    const pagination = page.locator(
-      '.cds--popover-container.cds--popover--caret.cds--popover--high-contrast.cds--popover--top-end > .cds--tooltip-trigger__wrapper',
-    );
+    const pagination = page.getByTestId('pagination');
     await expect(pagination).toBeVisible();
-    await pagination.click();
+
+    const nextPageButton = pagination.getByRole('button', { name: 'Next page' });
+    await expect(nextPageButton).toBeVisible();
+    await nextPageButton.click();
 
     await page.waitForLoadState('networkidle');
     if (testInfo.project.metadata.userType === 'bceid') {
-      await expect(page.getByRole('cell', { name: '92345678' })).toBeVisible();
+      await expect(page.getByRole('cell', { name: '92345678' }).first()).toBeVisible();
     } else {
       await expect(page.getByRole('link', { name: '92345678' }).first()).toBeVisible();
     }
