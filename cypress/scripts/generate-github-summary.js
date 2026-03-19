@@ -3,8 +3,16 @@ const path = require("node:path");
 
 const DEFAULT_REPORT_DIR = path.resolve(__dirname, "..", "reports", "mochawesome");
 const DEFAULT_OUTPUT_FILE = path.resolve(__dirname, "..", "summary.md");
+const DEFAULT_A11Y_REPORT_FILE = path.resolve(
+  __dirname,
+  "..",
+  "reports",
+  "a11y",
+  "a11y-results.json"
+);
 const REPORT_DIR = process.env.MOCHAWESOME_DIR || DEFAULT_REPORT_DIR;
 const OUTPUT_FILE = process.env.GITHUB_SUMMARY_FILE || DEFAULT_OUTPUT_FILE;
+const A11Y_REPORT_FILE = process.env.A11Y_REPORT_FILE || DEFAULT_A11Y_REPORT_FILE;
 
 function getJsonFilesRecursively(dir) {
   if (!fs.existsSync(dir)) {
@@ -90,6 +98,116 @@ function readMochawesomeData(jsonFiles) {
   return parsedRuns;
 }
 
+function readA11yData(filePath) {
+  if (!fs.existsSync(filePath)) {
+    return [];
+  }
+
+  try {
+    const raw = fs.readFileSync(filePath, "utf8");
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed?.checks)) {
+      return parsed.checks;
+    }
+    return [];
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "unknown error";
+    console.warn(`Skipping invalid accessibility report: ${filePath} (${message})`);
+    return [];
+  }
+}
+
+function aggregateA11yData(checks) {
+  const totals = {
+    checks: 0,
+    violations: 0,
+  };
+
+  const byRule = new Map();
+
+  for (const check of checks) {
+    totals.checks += 1;
+    totals.violations += Number(check?.violationCount || 0);
+
+    const violations = Array.isArray(check?.violations) ? check.violations : [];
+    for (const violation of violations) {
+      const id = sanitize(violation?.id || "unknown-rule");
+      const impact = sanitize(violation?.impact || "unknown");
+      const nodes = Number(violation?.nodes || 0);
+      const help = sanitize(violation?.help || "");
+      const helpUrl = sanitize(violation?.helpUrl || "");
+      const key = `${id}::${impact}`;
+
+      if (!byRule.has(key)) {
+        byRule.set(key, {
+          id,
+          impact,
+          nodes: 0,
+          occurrences: 0,
+          help,
+          helpUrl,
+        });
+      }
+
+      const current = byRule.get(key);
+      current.nodes += nodes;
+      current.occurrences += 1;
+    }
+  }
+
+  const topViolations = Array.from(byRule.values())
+    .sort((left, right) => right.nodes - left.nodes || right.occurrences - left.occurrences)
+    .slice(0, 10);
+
+  return {
+    totals,
+    topViolations,
+  };
+}
+
+function createFailureRecord(test, file) {
+  const resolvedFile = test.file || file;
+  return {
+    title: sanitize(test.fullTitle || test.title || "Unnamed test"),
+    file: sanitize(resolvedFile),
+    durationMs: Number(test.duration || 0),
+    message: sanitize(test.err?.message || ""),
+    screenshots: findScreenshotsForTest(test.title, resolvedFile),
+    videos: findVideosForTest(resolvedFile),
+  };
+}
+
+function collectFailedTestsFromSuite(suite, file, acc) {
+  if (!suite || typeof suite !== "object") {
+    return;
+  }
+
+  if (Array.isArray(suite.tests)) {
+    for (const test of suite.tests) {
+      if (test && (test.fail === true || test.state === "failed")) {
+        acc.push(createFailureRecord(test, file));
+      }
+    }
+  }
+
+  if (Array.isArray(suite.suites)) {
+    for (const childSuite of suite.suites) {
+      collectFailedTestsFromSuite(childSuite, file, acc);
+    }
+  }
+}
+
+function collectFailedTestsFromResult(result, acc) {
+  const file = result.file || result.fullFile || "unknown";
+  if (!Array.isArray(result.suites)) {
+    return;
+  }
+
+  for (const suite of result.suites) {
+    collectFailedTestsFromSuite(suite, file, acc);
+  }
+}
+
 function aggregateData(runs) {
   const totals = {
     tests: 0,
@@ -113,46 +231,7 @@ function aggregateData(runs) {
 
     const results = Array.isArray(run.results) ? run.results : [];
     for (const result of results) {
-      const file = result.file || result.fullFile || "unknown";
-
-      if (Array.isArray(result.suites)) {
-        for (const suite of result.suites) {
-          if (Array.isArray(suite.tests)) {
-            for (const test of suite.tests) {
-              if (test && (test.fail === true || test.state === "failed")) {
-                const screenshots = findScreenshotsForTest(test.title, file);
-                const videos = findVideosForTest(file);
-                failedTests.push({
-                  title: sanitize(test.fullTitle || test.title || "Unnamed test"),
-                  file: sanitize(file),
-                  durationMs: Number(test.duration || 0),
-                  message: sanitize(test.err?.message || ""),
-                  screenshots,
-                  videos,
-                });
-              }
-            }
-          }
-
-          if (Array.isArray(suite.suites)) {
-            const childTests = collectTestsFromResult({ suites: suite.suites }, file);
-            for (const test of childTests) {
-              if (test && (test.fail === true || test.state === "failed")) {
-                const screenshots = findScreenshotsForTest(test.title, test.file || file);
-                const videos = findVideosForTest(test.file || file);
-                failedTests.push({
-                  title: sanitize(test.fullTitle || test.title || "Unnamed test"),
-                  file: sanitize(test.file || file),
-                  durationMs: Number(test.duration || 0),
-                  message: sanitize(test.err?.message || ""),
-                  screenshots,
-                  videos,
-                });
-              }
-            }
-          }
-        }
-      }
+      collectFailedTestsFromResult(result, failedTests);
     }
   }
 
@@ -177,7 +256,8 @@ function findVideosForTest(featureFile) {
       }
     }
   } catch (error) {
-    // Silently ignore video lookup errors
+    const message = error instanceof Error ? error.message : "unknown error";
+    console.warn(`Unable to read Cypress videos directory: ${videoDir} (${message})`);
   }
 
   return videos;
@@ -219,7 +299,8 @@ function findScreenshotsForTest(testTitle, featureFile) {
       }
     }
   } catch (error) {
-    // Silently ignore screenshot lookup errors
+    const message = error instanceof Error ? error.message : "unknown error";
+    console.warn(`Unable to read Cypress screenshots directory: ${screenshotDir} (${message})`);
   }
 
   return screenshots;
@@ -281,7 +362,21 @@ function formatFailureItem(failure) {
   return `${line}\n`;
 }
 
-function createMarkdown({ reportCount, totals, failedTests }) {
+function formatA11yViolationItem(violation) {
+  let line = `- **${violation.id}** (${violation.impact}) - ${violation.nodes} impacted node(s) across ${violation.occurrences} check(s)`;
+
+  if (violation.help) {
+    line += `\n  - ${violation.help}`;
+  }
+
+  if (violation.helpUrl) {
+    line += `\n  - ${violation.helpUrl}`;
+  }
+
+  return `${line}\n`;
+}
+
+function createMarkdown({ reportCount, totals, failedTests, a11y }) {
   const status = totals.failures > 0 ? "❌ Failed" : "✅ Passed";
   const nowIso = new Date().toISOString();
 
@@ -299,6 +394,18 @@ function createMarkdown({ reportCount, totals, failedTests }) {
   markdown += `| Pending | ${totals.pending} |\n`;
   markdown += `| Skipped | ${totals.skipped} |\n`;
   markdown += `| Duration | ${formatDuration(totals.durationMs)} |\n\n`;
+
+  markdown += "### Accessibility checks\n\n";
+  markdown += `- Checks executed: ${a11y.totals.checks}\n`;
+  markdown += `- Total violations: ${a11y.totals.violations}\n\n`;
+
+  if (a11y.topViolations.length > 0) {
+    markdown += "### Top accessibility violations\n\n";
+    for (const violation of a11y.topViolations) {
+      markdown += formatA11yViolationItem(violation);
+    }
+    markdown += "\n";
+  }
 
   if (failedTests.length > 0) {
     markdown += "### Failed tests\n\n";
@@ -338,6 +445,8 @@ function createFallbackMarkdown(reason) {
 
 function main() {
   const jsonFiles = getJsonFilesRecursively(REPORT_DIR);
+  const a11yChecks = readA11yData(A11Y_REPORT_FILE);
+  const a11y = aggregateA11yData(a11yChecks);
 
   if (jsonFiles.length === 0) {
     const markdown = createFallbackMarkdown(
@@ -366,6 +475,7 @@ function main() {
     reportCount: runs.length,
     totals: aggregated.totals,
     failedTests: aggregated.failedTests,
+    a11y,
   });
 
   fs.mkdirSync(path.dirname(OUTPUT_FILE), { recursive: true });

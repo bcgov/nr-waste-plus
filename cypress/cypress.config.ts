@@ -2,15 +2,49 @@ import { defineConfig } from "cypress";
 import webpack from "@cypress/webpack-preprocessor";
 import { addCucumberPreprocessorPlugin } from "@badeball/cypress-cucumber-preprocessor";
 import * as dotenv from "dotenv"; 
+import fs from "node:fs";
+import path from "node:path";
 
 dotenv.config();
+
+const A11Y_REPORT_FILE = path.resolve(__dirname, "reports", "a11y", "a11y-results.json");
 
 async function setupNodeEvents(
   on: Cypress.PluginEvents,
   config: Cypress.PluginConfigOptions
 ): Promise<Cypress.PluginConfigOptions> {
+  let a11yResults: Array<Record<string, unknown>> = [];
+
   // This is required for the preprocessor to be able to generate JSON reports after each run, and more,
   await addCucumberPreprocessorPlugin(on, config);
+
+  on("task", {
+    "a11y:record": (payload: Record<string, unknown>) => {
+      a11yResults.push(payload);
+      return null;
+    },
+    "a11y:reset": () => {
+      a11yResults = [];
+      return null;
+    },
+  });
+
+  on("before:run", () => {
+    a11yResults = [];
+    fs.mkdirSync(path.dirname(A11Y_REPORT_FILE), { recursive: true });
+    if (fs.existsSync(A11Y_REPORT_FILE)) {
+      fs.rmSync(A11Y_REPORT_FILE);
+    }
+  });
+
+  on("after:run", () => {
+    fs.mkdirSync(path.dirname(A11Y_REPORT_FILE), { recursive: true });
+    fs.writeFileSync(
+      A11Y_REPORT_FILE,
+      JSON.stringify({ generatedAt: new Date().toISOString(), checks: a11yResults }, null, 2),
+      "utf8"
+    );
+  });
 
   on(
     "file:preprocessor",
