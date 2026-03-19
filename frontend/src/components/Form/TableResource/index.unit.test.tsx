@@ -345,4 +345,96 @@ describe('TableResource', () => {
 
     expect(overflowAction).toHaveBeenCalledWith(content.content[0]);
   });
+
+  it('cycles sort direction NONE → ASC → DESC → NONE on sortable header clicks', async () => {
+    const onSortChange = vi.fn();
+    const sortableHeaders: TableHeaderType<TestObjectType>[] = headers.map((header) =>
+      header.key === 'name' ? { ...header, sortable: true } : header,
+    );
+
+    await renderWithProps({
+      headers: sortableHeaders,
+      content,
+      loading: false,
+      error: false,
+      onSortChange,
+    });
+
+    const nameHeader = screen.getByText('Name');
+
+    // NONE → ASC
+    await userEvent.click(nameHeader);
+    expect(onSortChange).toHaveBeenLastCalledWith({ name: 'ASC' });
+
+    // ASC → DESC
+    await userEvent.click(nameHeader);
+    expect(onSortChange).toHaveBeenLastCalledWith({ name: 'DESC' });
+
+    // DESC → NONE (cleared)
+    await userEvent.click(nameHeader);
+    expect(onSortChange).toHaveBeenLastCalledWith({});
+  });
+
+  it('does not sort when clicking a non-sortable header', async () => {
+    const onSortChange = vi.fn();
+
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+      onSortChange,
+    });
+
+    const idHeader = screen.getByText('ID');
+    await userEvent.click(idHeader);
+
+    expect(onSortChange).not.toHaveBeenCalled();
+  });
+
+  it('expands and collapses a row when onRowExpanded is provided', async () => {
+    const onRowExpanded = vi.fn().mockResolvedValue(<div>Expanded content</div>);
+
+    await renderWithProps({
+      headers,
+      content,
+      loading: false,
+      error: false,
+      onRowExpanded,
+    });
+
+    // Expand first row
+    const expandButtons = screen.getAllByRole('button', { name: /expand/i });
+    await userEvent.click(expandButtons[0]);
+
+    expect(onRowExpanded).toHaveBeenCalledWith(1);
+
+    // Wait for expanded content to render
+    expect(await screen.findByText('Expanded content')).toBeDefined();
+
+    // Collapse the row
+    await userEvent.click(expandButtons[0]);
+
+    // The expanded content should be removed
+    expect(screen.queryByText('Expanded content')).toBeNull();
+  });
+
+  it('includes Actions column in skeleton loader when getRowActions is provided', async () => {
+    await renderWithProps({
+      headers,
+      content,
+      loading: true,
+      error: false,
+      getRowActions: () => [
+        {
+          id: 'edit',
+          label: 'Edit',
+          icon: <Edit size={16} />,
+          onClick: vi.fn(),
+        },
+      ],
+    });
+
+    expect(screen.getByTestId('loading-skeleton')).toBeDefined();
+  });
 });

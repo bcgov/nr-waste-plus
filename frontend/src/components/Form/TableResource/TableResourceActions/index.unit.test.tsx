@@ -159,4 +159,56 @@ describe('TableResourceActions', () => {
 
     expect(asyncActionClick).toHaveBeenCalledWith(row);
   });
+
+  it('disables overflow menu items when isDisabled is true', async () => {
+    renderInTableRow(
+      [
+        {
+          id: 'edit',
+          label: 'Edit',
+          icon: <Edit size={16} />,
+          onClick: vi.fn(),
+        },
+        {
+          id: 'archive',
+          label: 'Archive',
+          icon: <Edit size={16} />,
+          isDisabled: true,
+          onClick: vi.fn(),
+        },
+      ],
+      1,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Options' }));
+
+    const archiveItem = screen.getByText('Archive').closest('button');
+    expect(archiveItem?.hasAttribute('disabled')).toBe(true);
+  });
+
+  it('disables overflow menu items when isLoading is true', async () => {
+    renderInTableRow(
+      [
+        {
+          id: 'edit',
+          label: 'Edit',
+          icon: <Edit size={16} />,
+          onClick: vi.fn(),
+        },
+        {
+          id: 'archive',
+          label: 'Archive',
+          icon: <Edit size={16} />,
+          isLoading: true,
+          onClick: vi.fn(),
+        },
+      ],
+      1,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Options' }));
+
+    const archiveItem = screen.getByText('Archive').closest('button');
+    expect(archiveItem?.hasAttribute('disabled')).toBe(true);
+  });
 });
