@@ -434,7 +434,9 @@ test.describe('Waste Search Page', () => {
       await expect(resultSize).toBeVisible();
 
       // Check pagination controls are visible
-      const pagination = page.getByTestId('pagination');
+      const pagination = page.locator(
+        '.cds--popover-container.cds--popover--caret.cds--popover--high-contrast.cds--popover--top-end > .cds--tooltip-trigger__wrapper',
+      );
       await expect(pagination).toBeVisible();
       await pagination.click();
 
