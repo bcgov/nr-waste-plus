@@ -33,7 +33,8 @@ jobs:
           CYPRESS_idir_password: ${{ secrets.IDIR_UAT_PASSWORD }}
           CYPRESS_idir_username: ${{ secrets.IDIR_UAT_USERNAME }}
           CYPRESS_bceid_password: ${{ secrets.BCEID_UAT_PASSWORD2 }}
-          CYPRESS_bceid_username: ${{ secrets.BCEID_UAT_USERNAME2 }}          
+          CYPRESS_bceid_username: ${{ secrets.BCEID_UAT_USERNAME2 }}
+          MOCHAWESOME_REPORT: true
 
       - name: Publish Cypress Results
         uses: mikepenz/action-junit-report@49b2ca06f62aa7ef83ae6769a2179271e160d8e4 # v6

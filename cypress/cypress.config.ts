@@ -196,13 +196,15 @@ async function setupNodeEvents(
   return config;
 }
 
-const reporter = process.env.MOCHAWESOME_REPORT === "true"
-  ? "mochawesome"
-  : require.resolve("@badeball/cypress-cucumber-preprocessor/pretty-reporter");
-
 export default defineConfig({
   e2e: {
-    reporter,
+    reporter: "mochawesome",
+    reporterOptions: {
+      reportDir: "reports/mochawesome",
+      overwrite: false,
+      html: false,
+      json: true,
+    },
     specPattern: "**/*.feature",
     setupNodeEvents,
     defaultCommandTimeout: 10000,
