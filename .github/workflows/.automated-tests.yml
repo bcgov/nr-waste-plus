@@ -27,6 +27,8 @@ jobs:
         uses: cypress-io/github-action@v5
         with:
           working-directory: cypress
+          browser: chrome
+          config: reporter=mochawesome,reporter-options=reportDir=reports/mochawesome,overwrite=false,html=false,json=true
         env:
           CYPRESS_baseUrl: https://${{ inputs.url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
@@ -43,6 +45,7 @@ jobs:
           npm run report:md
 
       - name: Add summary to GitHub Action
+        if: always()
         working-directory: cypress
         run: cat summary.md >> $GITHUB_STEP_SUMMARY
 
@@ -58,6 +61,7 @@ jobs:
           job_name: User Journeys
 
       - name: Check for Cypress Screenshots and Videos
+        if: always()
         run: |
           if [ -d "cypress/cypress/screenshots" ] && [ "$(ls -A cypress/cypress/screenshots)" ]; then
             echo "Screenshots folder is not empty, uploading artifacts."            
