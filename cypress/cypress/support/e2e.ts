@@ -1,6 +1,7 @@
 import './commands'
 import '@testing-library/cypress/add-commands';
 import 'cypress-axe';
+import 'cypress-audit/commands';
 import 'cypress-real-events';
 
 Cypress.on('window:before:load', (win) => {

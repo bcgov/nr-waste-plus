@@ -10,9 +10,18 @@ const DEFAULT_A11Y_REPORT_FILE = path.resolve(
   "a11y",
   "a11y-results.json"
 );
+const DEFAULT_LIGHTHOUSE_REPORT_FILE = path.resolve(
+  __dirname,
+  "..",
+  "reports",
+  "lighthouse",
+  "lighthouse-results.json"
+);
 const REPORT_DIR = process.env.MOCHAWESOME_DIR || DEFAULT_REPORT_DIR;
 const OUTPUT_FILE = process.env.GITHUB_SUMMARY_FILE || DEFAULT_OUTPUT_FILE;
 const A11Y_REPORT_FILE = process.env.A11Y_REPORT_FILE || DEFAULT_A11Y_REPORT_FILE;
+const LIGHTHOUSE_REPORT_FILE =
+  process.env.LIGHTHOUSE_REPORT_FILE || DEFAULT_LIGHTHOUSE_REPORT_FILE;
 
 function getJsonFilesRecursively(dir) {
   if (!fs.existsSync(dir)) {
@@ -117,6 +126,25 @@ function readA11yData(filePath) {
   }
 }
 
+function readLighthouseData(filePath) {
+  if (!fs.existsSync(filePath)) {
+    return [];
+  }
+
+  try {
+    const raw = fs.readFileSync(filePath, "utf8");
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed?.audits)) {
+      return parsed.audits;
+    }
+    return [];
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "unknown error";
+    console.warn(`Skipping invalid Lighthouse report: ${filePath} (${message})`);
+    return [];
+  }
+}
+
 function aggregateA11yData(checks) {
   const totals = {
     checks: 0,
@@ -162,6 +190,73 @@ function aggregateA11yData(checks) {
   return {
     totals,
     topViolations,
+  };
+}
+
+function aggregateLighthouseData(audits) {
+  const totals = {
+    audits: 0,
+  };
+
+  const categoryKeys = ["performance", "accessibility", "best-practices", "seo", "pwa"];
+  const metricKeys = [
+    "server-response-time",
+    "largest-contentful-paint",
+    "cumulative-layout-shift",
+    "total-blocking-time",
+    "speed-index",
+    "interactive",
+  ];
+
+  const categoryAverages = {};
+  for (const key of categoryKeys) {
+    categoryAverages[key] = { sum: 0, count: 0 };
+  }
+
+  const metricAverages = {};
+  for (const key of metricKeys) {
+    metricAverages[key] = { sum: 0, count: 0 };
+  }
+
+  for (const audit of audits) {
+    totals.audits += 1;
+
+    for (const key of categoryKeys) {
+      const value = Number(audit?.categories?.[key]);
+      if (Number.isFinite(value)) {
+        categoryAverages[key].sum += value;
+        categoryAverages[key].count += 1;
+      }
+    }
+
+    for (const key of metricKeys) {
+      const value = Number(audit?.audits?.[key]);
+      if (Number.isFinite(value)) {
+        metricAverages[key].sum += value;
+        metricAverages[key].count += 1;
+      }
+    }
+  }
+
+  const averageCategories = {};
+  for (const key of categoryKeys) {
+    const item = categoryAverages[key];
+    averageCategories[key] = item.count > 0 ? Math.round(item.sum / item.count) : null;
+  }
+
+  const averageMetrics = {};
+  for (const key of metricKeys) {
+    const item = metricAverages[key];
+    averageMetrics[key] = item.count > 0 ? Math.round((item.sum / item.count) * 100) / 100 : null;
+  }
+
+  const latest = audits.length > 0 ? audits[audits.length - 1] : null;
+
+  return {
+    totals,
+    latest,
+    averageCategories,
+    averageMetrics,
   };
 }
 
@@ -376,7 +471,27 @@ function formatA11yViolationItem(violation) {
   return `${line}\n`;
 }
 
-function createMarkdown({ reportCount, totals, failedTests, a11y }) {
+function formatLighthouseCategoryScore(value) {
+  if (!Number.isFinite(value)) {
+    return "-";
+  }
+
+  return `${Math.round(value)}`;
+}
+
+function formatLighthouseMetricValue(key, value) {
+  if (!Number.isFinite(value)) {
+    return "-";
+  }
+
+  if (key === "cumulative-layout-shift") {
+    return `${Math.round(value * 1000) / 1000}`;
+  }
+
+  return `${Math.round(value)} ms`;
+}
+
+function createMarkdown({ reportCount, totals, failedTests, a11y, lighthouse }) {
   const status = totals.failures > 0 ? "❌ Failed" : "✅ Passed";
   const nowIso = new Date().toISOString();
 
@@ -398,6 +513,65 @@ function createMarkdown({ reportCount, totals, failedTests, a11y }) {
   markdown += "## Accessibility checks\n\n";
   markdown += `- Checks executed: ${a11y.totals.checks}\n`;
   markdown += `- Total violations: ${a11y.totals.violations}\n\n`;
+
+  markdown += "## Lighthouse checks\n\n";
+  markdown += `- Audits executed: ${lighthouse.totals.audits}\n`;
+  if (lighthouse.latest?.finalUrl) {
+    markdown += `- Latest URL: ${sanitize(lighthouse.latest.finalUrl)}\n`;
+  }
+  markdown += "\n";
+
+  markdown += "### Lighthouse category scores (latest / average)\n\n";
+  markdown += "| Category | Latest | Average |\n";
+  markdown += "| --- | ---: | ---: |\n";
+  markdown += `| Performance | ${formatLighthouseCategoryScore(
+    lighthouse.latest?.categories?.performance
+  )} | ${formatLighthouseCategoryScore(lighthouse.averageCategories.performance)} |\n`;
+  markdown += `| Accessibility | ${formatLighthouseCategoryScore(
+    lighthouse.latest?.categories?.accessibility
+  )} | ${formatLighthouseCategoryScore(lighthouse.averageCategories.accessibility)} |\n`;
+  markdown += `| Best practices | ${formatLighthouseCategoryScore(
+    lighthouse.latest?.categories?.["best-practices"]
+  )} | ${formatLighthouseCategoryScore(lighthouse.averageCategories["best-practices"])} |\n`;
+  markdown += `| SEO | ${formatLighthouseCategoryScore(
+    lighthouse.latest?.categories?.seo
+  )} | ${formatLighthouseCategoryScore(lighthouse.averageCategories.seo)} |\n`;
+  markdown += `| PWA | ${formatLighthouseCategoryScore(
+    lighthouse.latest?.categories?.pwa
+  )} | ${formatLighthouseCategoryScore(lighthouse.averageCategories.pwa)} |\n\n`;
+
+  markdown += "### Lighthouse key metrics (latest / average)\n\n";
+  markdown += "| Metric | Latest | Average |\n";
+  markdown += "| --- | ---: | ---: |\n";
+  markdown += `| TTFB (server-response-time) | ${formatLighthouseMetricValue(
+    "server-response-time",
+    lighthouse.latest?.audits?.["server-response-time"]
+  )} | ${formatLighthouseMetricValue("server-response-time", lighthouse.averageMetrics["server-response-time"])} |\n`;
+  markdown += `| LCP (largest-contentful-paint) | ${formatLighthouseMetricValue(
+    "largest-contentful-paint",
+    lighthouse.latest?.audits?.["largest-contentful-paint"]
+  )} | ${formatLighthouseMetricValue(
+    "largest-contentful-paint",
+    lighthouse.averageMetrics["largest-contentful-paint"]
+  )} |\n`;
+  markdown += `| CLS (cumulative-layout-shift) | ${formatLighthouseMetricValue(
+    "cumulative-layout-shift",
+    lighthouse.latest?.audits?.["cumulative-layout-shift"]
+  )} | ${formatLighthouseMetricValue(
+    "cumulative-layout-shift",
+    lighthouse.averageMetrics["cumulative-layout-shift"]
+  )} |\n`;
+  markdown += `| TBT (total-blocking-time) | ${formatLighthouseMetricValue(
+    "total-blocking-time",
+    lighthouse.latest?.audits?.["total-blocking-time"]
+  )} | ${formatLighthouseMetricValue(
+    "total-blocking-time",
+    lighthouse.averageMetrics["total-blocking-time"]
+  )} |\n`;
+  markdown += `| Speed Index | ${formatLighthouseMetricValue(
+    "speed-index",
+    lighthouse.latest?.audits?.["speed-index"]
+  )} | ${formatLighthouseMetricValue("speed-index", lighthouse.averageMetrics["speed-index"])} |\n\n`;
 
   if (a11y.topViolations.length > 0) {
     markdown += "## Top accessibility violations\n\n";
@@ -446,7 +620,9 @@ function createFallbackMarkdown(reason) {
 function main() {
   const jsonFiles = getJsonFilesRecursively(REPORT_DIR);
   const a11yChecks = readA11yData(A11Y_REPORT_FILE);
+  const lighthouseAudits = readLighthouseData(LIGHTHOUSE_REPORT_FILE);
   const a11y = aggregateA11yData(a11yChecks);
+  const lighthouse = aggregateLighthouseData(lighthouseAudits);
 
   if (jsonFiles.length === 0) {
     const markdown = createFallbackMarkdown(
@@ -476,6 +652,7 @@ function main() {
     totals: aggregated.totals,
     failedTests: aggregated.failedTests,
     a11y,
+    lighthouse,
   });
 
   fs.mkdirSync(path.dirname(OUTPUT_FILE), { recursive: true });
