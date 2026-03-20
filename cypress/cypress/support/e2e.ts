@@ -1,5 +1,8 @@
 import './commands'
 import '@testing-library/cypress/add-commands';
+import 'cypress-axe';
+import 'cypress-audit/commands';
+import 'cypress-real-events';
 
 Cypress.on('window:before:load', (win) => {
   // Listen to browser console logs and pass them to the Cypress console
@@ -19,7 +22,7 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 
   // Only ignore known, non-breaking third-party errors.
   // Adjust the condition below to match specific benign errors in your app.
-  if (err && err.message && err.message.includes('ResizeObserver')) {
+  if (err?.message?.includes('ResizeObserver')) {
     return false;
   }
 
