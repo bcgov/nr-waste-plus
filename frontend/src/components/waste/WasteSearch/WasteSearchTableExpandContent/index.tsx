@@ -223,13 +223,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
       </Column>
 
       {/* Visible on lg+ */}
-      {hasSecondaryMarks && (
-        <>
-          <Column lg={4} md={0} sm={0}></Column>
-          {renderSecondaryMarksColumns('', 2, 0, 0)}
-          <Column lg={7} md={0} sm={0}></Column>
-        </>
-      )}
+      {hasSecondaryMarks && renderSecondaryMarksColumns('', 2, 0, 0)}
 
       <Column lg={16} md={8} sm={4}>
         <ReadonlyInput
