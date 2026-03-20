@@ -7,25 +7,20 @@
     "cy:open": "cypress open",
     "report:md": "node scripts/generate-github-summary.js",
     "report:clean": "rm -rf reports/mochawesome/* reports/a11y/*",
-    
     "precy:run": "npm run report:clean",
     "cy:run": "cypress run --reporter junit --reporter-options mochaFile=result.xml,toConsole=true",
     "postcy:run": "npm run report:md",
-    
     "precy:run:md": "npm run report:clean",
     "cy:run:md": "MOCHAWESOME_REPORT=true cypress run --reporter mochawesome --reporter-options reportDir=reports/mochawesome,overwrite=false,html=false,json=true --config \"baseUrl=https://nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca/\"",
     "postcy:run:md": "npm run report:md",
-    
     "precy:run:local": "npm run report:clean",
     "cy:run:local": "cypress run --reporter junit --reporter-options mochaFile=result.xml,toConsole=true --config \"baseUrl=http://localhost:3000\"",
     "postcy:run:local": "npm run report:md",
-
     "precy:run:md:local": "npm run report:clean",
     "cy:run:md:local": "MOCHAWESOME_REPORT=true cypress run --reporter mochawesome --reporter-options reportDir=reports/mochawesome,overwrite=false,html=false,json=true --config \"baseUrl=http://localhost:3000\"",
     "postcy:run:md:local": "npm run report:md",
-        
     "cy:open:local": "cypress open --config \"baseUrl=http://localhost:3000\"",
-    "cy:open:remote": "cypress open --config \"baseUrl=https://nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca/\""    
+    "cy:open:remote": "cypress open --config \"baseUrl=https://nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca/\""
   },
   "keywords": [],
   "author": "",
@@ -37,10 +32,12 @@
     "@testing-library/cypress": "^10.1.0",
     "@types/node": "^25.5.0",
     "axe-core": "^4.11.0",
+    "cypress": "^15.0.0",
+    "cypress-audit": "^1.1.0",
     "cypress-axe": "^1.7.0",
     "cypress-real-events": "^1.14.0",
-    "cypress": "^15.0.0",
     "dotenv": "^17.3.1",
+    "lighthouse": "^12.8.2",
     "mochawesome": "^7.1.4",
     "ts-loader": "^9.4.2",
     "ts-node": "^10.9.2",
