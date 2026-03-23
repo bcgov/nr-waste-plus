@@ -1,6 +1,7 @@
 import { defineConfig } from "cypress";
 import webpack from "@cypress/webpack-preprocessor";
 import { addCucumberPreprocessorPlugin } from "@badeball/cypress-cucumber-preprocessor";
+import { lighthouse, prepareAudit } from "@cypress-audit/lighthouse";
 import * as dotenv from "dotenv"; 
 import fs from "node:fs";
 import path from "node:path";
@@ -18,6 +19,10 @@ async function setupNodeEvents(
   // This is required for the preprocessor to be able to generate JSON reports after each run, and more,
   await addCucumberPreprocessorPlugin(on, config);
 
+  on("before:browser:launch", (browser, launchOptions) => {
+    prepareAudit(launchOptions);
+  });
+
   on("task", {
     "a11y:record": (payload: Record<string, unknown>) => {
       a11yResults.push(payload);
@@ -27,6 +32,7 @@ async function setupNodeEvents(
       a11yResults = [];
       return null;
     },
+    "lighthouse": lighthouse(),
   });
 
   on("before:run", () => {
