@@ -46,7 +46,7 @@ jobs:
       - name: Add summary to GitHub Action
         working-directory: cypress
         if: always()
-        run: cat cypress/summary.md >> $GITHUB_STEP_SUMMARY
+        run: cat summary.md >> $GITHUB_STEP_SUMMARY
 
       - name: Check for Cypress Screenshots and Videos
         continue-on-error: true
