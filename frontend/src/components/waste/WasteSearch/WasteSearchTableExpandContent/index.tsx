@@ -68,9 +68,25 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
     </Column>
   );
 
-  const renderSecondaryMarksColumns = (idSuffix: string, lg: number, md: number, sm: number) => (
+  type ColumnStart = {
+    lg?: number;
+    md?: number;
+    sm?: number;
+  };
+
+  const renderSecondaryMarksColumns = (
+    idSuffix: string,
+    lg: number,
+    md: number,
+    sm: number,
+    start: ColumnStart = {},
+  ) => (
     <>
-      <Column lg={lg} md={md} sm={sm}>
+      <Column
+        lg={{ span: lg, start: start.lg }}
+        md={{ span: md, start: start.md }}
+        sm={{ span: sm, start: start.sm }}
+      >
         <ReadonlyInput
           label="Secondary marks"
           displayLabel={false}
@@ -83,7 +99,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           ))}
         </ReadonlyInput>
       </Column>
-      <Column lg={lg === 2 ? 1 : 2} md={md} sm={sm}>
+      <Column lg={lg} md={md} sm={sm}>
         <ReadonlyInput
           label="Secondary Area"
           displayLabel={false}
@@ -96,7 +112,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           ))}
         </ReadonlyInput>
       </Column>
-      <Column lg={2} md={md === 2 ? 4 : md} sm={sm === 1 ? 2 : sm}>
+      <Column lg={lg} md={md === 2 ? 4 : md} sm={sm === 1 ? 2 : sm}>
         <ReadonlyInput
           label="Secondary Status"
           displayLabel={false}
@@ -142,7 +158,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
       {renderReadonlyColumn(2, 0, 0, 'Timber Mark', 'timber-mark', data?.timberMark ?? '')}
       {/* Visible on Lg+ */}
       {renderReadonlyColumn(
-        1,
+        2,
         0,
         0,
         'Mark area',
@@ -152,7 +168,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
       {/* Visible on Lg+ */}
       {renderReadonlyColumn(2, 0, 0, 'Status', 'status', data?.status?.description ?? '')}
       {/* Visible on All */}
-      <Column lg={1} md={2} sm={1}>
+      <Column lg={2} md={2} sm={1}>
         <ReadonlyInput
           label="Net area"
           id={`${rowId}-net-area`}
@@ -223,7 +239,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
       </Column>
 
       {/* Visible on lg+ */}
-      {hasSecondaryMarks && renderSecondaryMarksColumns('', 2, 0, 0)}
+      {hasSecondaryMarks && renderSecondaryMarksColumns('', 2, 0, 0, { lg: 5 })}
 
       <Column lg={16} md={8} sm={4}>
         <ReadonlyInput
