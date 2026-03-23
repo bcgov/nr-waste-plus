@@ -68,9 +68,25 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
     </Column>
   );
 
-  const renderSecondaryMarksColumns = (idSuffix: string, lg: number, md: number, sm: number) => (
+  type ColumnStart = {
+    lg?: number;
+    md?: number;
+    sm?: number;
+  };
+
+  const renderSecondaryMarksColumns = (
+    idSuffix: string,
+    lg: number,
+    md: number,
+    sm: number,
+    start: ColumnStart = {},
+  ) => (
     <>
-      <Column lg={{ span: lg, start: 5 }} md={md} sm={sm}>
+      <Column
+        lg={{ span: lg, start: start.lg }}
+        md={{ span: md, start: start.md }}
+        sm={{ span: sm, start: start.sm }}
+      >
         <ReadonlyInput
           label="Secondary marks"
           displayLabel={false}
@@ -223,7 +239,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
       </Column>
 
       {/* Visible on lg+ */}
-      {hasSecondaryMarks && renderSecondaryMarksColumns('', 2, 0, 0)}
+      {hasSecondaryMarks && renderSecondaryMarksColumns('', 2, 0, 0, { lg: 5 })}
 
       <Column lg={16} md={8} sm={4}>
         <ReadonlyInput
