@@ -1,0 +1,14 @@
+@use '../../../../styles/variables' as vars;
+@use '@bcgov-nr/nr-theme/design-tokens/colors.scss' as colors;
+
+.cds--data-table tbody tr:hover td {
+  .secondary {
+    color: var(--#{vars.$bcgov-prefix}-text-secondary, colors.$gray-70);
+  }
+}
+
+.cds--data-table td {
+  .secondary {
+    color: colors.$gray-55;
+  }
+}
