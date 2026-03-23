@@ -1,4 +1,5 @@
 import { Then } from "@badeball/cypress-cucumber-preprocessor";
+import { browserGuardAny } from "./browserHooks";
 
 interface LighthouseSnapshot {
   requestedUrl?: string;
@@ -11,13 +12,6 @@ interface LighthouseSnapshot {
 interface DataTableLike {
   rawTable: string[][];
 }
-
-const defaultLighthouseThresholds: Record<string, number> = {
-  performance: 0,
-  accessibility: 0,
-  "best-practices": 0,
-  seo: 0,
-};
 
 const mobileLighthouseOptions = {
   formFactor: "mobile",
@@ -85,18 +79,17 @@ const runLighthouseAudit = (): Cypress.Chainable<LighthouseSnapshot> => {
     );
   }
 
-  return cy
-    .lighthouse(defaultLighthouseThresholds, mobileLighthouseOptions)
-    .then(() => cy.task("lighthouse:getLatest"))
-    .then((latest) => {
-      if (!latest || typeof latest !== "object") {
-        throw new Error(
-          "No Lighthouse result was captured for this scenario. Ensure the run uses Chrome/Chromium and that cypress-audit plugin tasks are registered in cypress.config.ts."
-        );
-      }
-
-      return latest as LighthouseSnapshot;
-    });
+  return cy.url().then((url) =>
+    cy.task(
+      "lighthouse",
+      {
+        url,
+        formFactor: mobileLighthouseOptions.formFactor,
+        screenEmulation: mobileLighthouseOptions.screenEmulation,
+      },
+      { timeout: 120000 }
+    ) as Cypress.Chainable<LighthouseSnapshot>
+  );
 };
 
 const readMetricValue = (snapshot: LighthouseSnapshot, metric: string): number | null => {
@@ -152,15 +145,18 @@ const assertMinimumThresholds = (
   }
 };
 
-Then("the Lighthouse score should be at least:", (table: DataTableLike) => {
+Then("the Lighthouse score should be at least:",
+  browserGuardAny(["chrome", "chromium"],
+  (table: DataTableLike) => {
   const thresholds = parseThresholdTable(table);
 
   runLighthouseAudit().then((snapshot) => {
     assertMinimumThresholds(snapshot, thresholds);
   });
-});
+}));
 
-Then("the page should load quickly", () => {
+Then("the page should load quickly",
+  browserGuardAny(["chrome", "chromium"],() => {
   runLighthouseAudit().then((snapshot) => {
     assertMinimumThresholds(snapshot, {
       performance: 80,
@@ -170,9 +166,10 @@ Then("the page should load quickly", () => {
     assertMetricAtMost(snapshot, "largest-contentful-paint", 2500);
     assertMetricAtMost(snapshot, "cumulative-layout-shift", 0.1);
   });
-});
+}));
 
-Then("the page should be mobile friendly", () => {
+Then("the page should be mobile friendly",
+  browserGuardAny(["chrome", "chromium"],() => {
   runLighthouseAudit().then((snapshot) => {
     assertMinimumThresholds(snapshot, {
       accessibility: 85,
@@ -182,25 +179,28 @@ Then("the page should be mobile friendly", () => {
 
     assertMetricAtMost(snapshot, "cumulative-layout-shift", 0.25);
   });
-});
+}));
 
-Then("the page should follow best practices", () => {
+Then("the page should follow best practices",
+  browserGuardAny(["chrome", "chromium"],() => {
   runLighthouseAudit().then((snapshot) => {
     assertMinimumThresholds(snapshot, {
       "best-practices": 90,
     });
   });
-});
+}));
 
-Then("the page should be accessible to most users", () => {
+Then("the page should be accessible to most users",
+  browserGuardAny(["chrome", "chromium"],() => {
   runLighthouseAudit().then((snapshot) => {
     assertMinimumThresholds(snapshot, {
       accessibility: 90,
     });
   });
-});
+}));
 
-Then("the UX quality score should be acceptable", () => {
+Then("the UX quality score should be acceptable",
+  browserGuardAny(["chrome", "chromium"],() => {
   runLighthouseAudit().then((snapshot) => {
     assertMinimumThresholds(snapshot, {
       performance: 80,
@@ -213,20 +213,22 @@ Then("the UX quality score should be acceptable", () => {
     assertMetricAtMost(snapshot, "cumulative-layout-shift", 0.1);
     assertMetricAtMost(snapshot, "server-response-time", 800);
   });
-});
+}));
 
-Then("the Lighthouse metric {string} should be at least {string}", (metric: string, minimum: string) => {
+Then("the Lighthouse metric {string} should be at least {string}",
+  browserGuardAny(["chrome", "chromium"],(metric: string, minimum: string) => {
   const parsedMinimum = parseThresholdNumber(minimum);
 
   runLighthouseAudit().then((snapshot) => {
     assertMetricAtLeast(snapshot, metric, parsedMinimum);
   });
-});
+}));
 
-Then("the Lighthouse metric {string} should be at most {string}", (metric: string, maximum: string) => {
+Then("the Lighthouse metric {string} should be at most {string}",
+  browserGuardAny(["chrome", "chromium"],(metric: string, maximum: string) => {
   const parsedMaximum = parseThresholdNumber(maximum);
 
   runLighthouseAudit().then((snapshot) => {
     assertMetricAtMost(snapshot, metric, parsedMaximum);
   });
-});
+}));

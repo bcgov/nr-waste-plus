@@ -7,3 +7,10 @@ declare namespace Cypress {
     logAndScreenshot(message: string): Chainable<void>;
   }
 }
+
+declare module "cypress-audit" {
+  export function prepareAudit(launchOptions: unknown): void;
+  export function lighthouse(
+    onReport?: (lighthouseReport: unknown) => unknown
+  ): (options?: unknown) => unknown;
+}

@@ -1,7 +1,6 @@
 import { defineConfig } from "cypress";
 import webpack from "@cypress/webpack-preprocessor";
 import { addCucumberPreprocessorPlugin } from "@badeball/cypress-cucumber-preprocessor";
-import { lighthouse, prepareAudit } from "@cypress-audit/lighthouse";
 import * as dotenv from "dotenv"; 
 import fs from "node:fs";
 import path from "node:path";
@@ -9,6 +8,8 @@ import path from "node:path";
 dotenv.config();
 
 const A11Y_REPORT_FILE = path.resolve(__dirname, "reports", "a11y", "a11y-results.json");
+
+let debugPort = 0;
 
 async function setupNodeEvents(
   on: Cypress.PluginEvents,
@@ -19,8 +20,16 @@ async function setupNodeEvents(
   // This is required for the preprocessor to be able to generate JSON reports after each run, and more,
   await addCucumberPreprocessorPlugin(on, config);
 
-  on("before:browser:launch", (browser, launchOptions) => {
-    prepareAudit(launchOptions);
+    on("before:browser:launch", (browser, launchOptions) => {
+    if (browser.family === "chromium") {
+      const portArg = launchOptions.args.find((arg: string) =>
+        arg.startsWith("--remote-debugging-port=")
+      );
+      if (portArg) {
+        debugPort = Number.parseInt(portArg.split("=")[1], 10);
+      }
+    }
+    return launchOptions;
   });
 
   on("task", {
@@ -32,7 +41,42 @@ async function setupNodeEvents(
       a11yResults = [];
       return null;
     },
-    "lighthouse": lighthouse(),
+    async lighthouse(opts: {
+      url: string;
+      formFactor?: string;
+      screenEmulation?: Record<string, unknown>;
+    }) {
+      const { default: lighthouseFn } = await import("lighthouse");
+      const result = await lighthouseFn(opts.url, {
+        port: debugPort,
+        hostname: "127.0.0.1",
+        output: "json",
+        logLevel: "error",
+        formFactor: (opts.formFactor as "mobile" | "desktop") || "mobile",
+        screenEmulation: opts.screenEmulation,
+      });
+
+      if (!result) {
+        throw new Error("Lighthouse returned no result.");
+      }
+
+      return {
+        requestedUrl: result.lhr.requestedUrl,
+        finalUrl: result.lhr.finalDisplayedUrl,
+        fetchTime: result.lhr.fetchTime,
+        categories: Object.fromEntries(
+          Object.entries(result.lhr.categories).map(([k, v]) => [
+            k,
+            (v.score ?? 0) * 100,
+          ])
+        ),
+        audits: Object.fromEntries(
+          Object.entries(result.lhr.audits)
+            .filter(([, v]) => v.numericValue !== undefined)
+            .map(([k, v]) => [k, v.numericValue ?? null])
+        ),
+      };
+    },
   });
 
   on("before:run", () => {
