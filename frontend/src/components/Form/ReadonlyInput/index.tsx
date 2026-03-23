@@ -21,6 +21,11 @@ interface ReadonlyInputProps {
   displayLabel?: boolean;
 
   /**
+   * Additional CSS class name to be applied to the label.
+   */
+  labelClassName?: string;
+
+  /**
    * The children to display inside the card. If `showSkeleton` is false, this will be shown.
    */
   children?: React.ReactNode;
@@ -68,6 +73,7 @@ const ReadonlyInput = ({
   tooltipText,
   isNumber,
   displayLabel = true,
+  labelClassName = '',
 }: ReadonlyInputProps): React.ReactElement => {
   if (showSkeleton) {
     return <TextInputSkeleton />;
@@ -105,7 +111,7 @@ const ReadonlyInput = ({
 
   return (
     <dl className="card-item" id={id} data-testid={`card-item-${toKebabCase(label)}`}>
-      <dt className="card-item-label" aria-label={label}>
+      <dt className={`card-item-label ${labelClassName}`} aria-label={label}>
         {displayLabel ? label : ''}
       </dt>
       <dd
