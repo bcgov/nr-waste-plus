@@ -301,4 +301,20 @@ describe('ReadonlyInput', () => {
       expect(screen.getByText('Default Label')).toBeDefined();
     });
   });
+
+  describe('labelClassName prop', () => {
+    it('applies the supplied css classname along with the default one to the dt element that holds the label', () => {
+      const { container } = render(
+        <ReadonlyInput label="Thing" labelClassName="please">
+          Content
+        </ReadonlyInput>,
+      );
+
+      // default classname
+      expect(container.querySelector('dt')?.className).toContain('card-item-label');
+
+      // additional classname
+      expect(container.querySelector('dt')?.className).toContain('please');
+    });
+  });
 });

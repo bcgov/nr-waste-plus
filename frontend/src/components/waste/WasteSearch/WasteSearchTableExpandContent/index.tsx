@@ -1,6 +1,7 @@
 import { Column, DefinitionTooltip, Grid } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
 import { type FC } from 'react';
+import './index.scss';
 
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 import YesNoTag from '@/components/core/Tags/YesNoTag';
@@ -88,8 +89,8 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
         sm={{ span: sm, start: start.sm }}
       >
         <ReadonlyInput
-          label="Secondary marks"
-          displayLabel={false}
+          label="Secondary"
+          labelClassName="secondary"
           id={`${rowId}-secondary-marks${idSuffix}`}
           isNumber={false}
           showSkeleton={isLoading}
