@@ -439,7 +439,7 @@ function formatFailureItem(failure) {
         path.resolve(__dirname, ".."),
         screenshot
       );
-      line += `\n  - 📸 [${filename}](${relativePath})`;
+      line += `\n  - 📸 ![${filename}](${relativePath} "${filename}")`;
     }
   }
 

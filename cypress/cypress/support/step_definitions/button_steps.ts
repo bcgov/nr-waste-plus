@@ -1,5 +1,5 @@
 import { When, Step } from "@badeball/cypress-cucumber-preprocessor";
-/* Button Step */
+import { findButton } from "../helpers";
 
 When('I click on the {string} button', (name: string) => {
   buttonClick(name);
@@ -39,57 +39,8 @@ const buttonClick = (
 ) => {
   const timeout = waitForTime * 1000;
 
-  // Ordered list of jQuery-compatible selectors to try
-  const selectors = [
-    `button[aria-label="${name}"]`,
-    `button:contains("${name}")`,
-    `input[type="submit"][value="${name}"]`,
-    `[data-testid="${name}"]`,
-    `a:contains("${name}")`,
-    `a[aria-label="${name}"]`,
-  ];
-
-  const attemptClick = (attempt: number): void => {
-    cy.get(selector).then(($body) => {
-      const matchedSelector = selectors.find(
-        (sel) => $body.find(sel).length > 0
-      );
-
-      if (matchedSelector) {
-        cy.get(matchedSelector).first().click({ force: true });
-      } else if ($body.find(`.cds--tooltip-content:contains("${name}")`).length > 0) {
-        // Icon-only Carbon button: locate the tooltip text and trace back
-        // to the button via the tooltip's id / aria-labelledby relationship
-        cy.contains('.cds--tooltip-content', name)
-          .invoke('closest', '[id]')
-          .then($tooltip => {
-            const id = $tooltip.attr('id');
-            cy.get(`button[aria-labelledby="${id}"]`).click({ force: true });
-          });
-      } else if (attempt < retries) {
-        // Element may not have rendered yet — wait and retry
-        cy.wait(retryDelay);
-        attemptClick(attempt + 1);
-      } else {
-        // Last resort: use @testing-library/cypress findByRole
-        // Try button first, then link role — covers <a> acting as buttons
-        const nameRegex = new RegExp(name, 'i');
-        cy.get('body').then(($body) => {
-          const hasButton = Array.from($body.find('button, [role="button"]')).some((el) =>
-            nameRegex.test(el.textContent || '') || nameRegex.test(el.getAttribute('aria-label') || '')
-          );
-
-          if (hasButton) {
-            cy.findByRole('button', { name: nameRegex }).click({ force: true });
-          } else {
-            cy.findByRole('link', { name: nameRegex }).click({ force: true });
-          }
-        });
-      }
-    });
-  };
-
-  attemptClick(0);
+  const button = findButton(name, retries, retryDelay, selector);
+  button.click({ force: true });
 
   if (waitForIntercept) {
     cy.wait(`@${waitForIntercept}`, { timeout });

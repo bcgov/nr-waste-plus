@@ -3,22 +3,26 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "cy:open": "cypress open",
+  "scripts": {    
     "report:md": "node scripts/generate-github-summary.js",
     "report:clean": "rm -rf reports/mochawesome/* reports/a11y/*",
+    
     "precy:run": "npm run report:clean",
     "cy:run": "cypress run --browser chrome",
     "postcy:run": "npm run report:md",
+    
     "precy:run:md": "npm run report:clean",
     "cy:run:md": "cypress run --browser chrome --config \"baseUrl=https://nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca/\"",
     "postcy:run:md": "npm run report:md",
+    
     "precy:run:local": "npm run report:clean",
     "cy:run:local": "cypress run  --browser chrome --config \"baseUrl=http://localhost:3000\"",
     "postcy:run:local": "npm run report:md",
+    
     "precy:run:md:local": "npm run report:clean",
     "cy:run:md:local": "cypress run  --browser chrome --config \"baseUrl=http://localhost:3000\"",
     "postcy:run:md:local": "npm run report:md",
+    
     "cy:open:local": "cypress open --config \"baseUrl=http://localhost:3000\"",
     "cy:open:remote": "cypress open --config \"baseUrl=https://nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca/\""
   },

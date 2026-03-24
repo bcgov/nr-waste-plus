@@ -5,6 +5,23 @@ declare namespace Cypress {
     checkAccordionItemState(additionalSelector: string, open: boolean): Chainable<void>;
     waitForPageLoad(element: string): Chainable<void>;
     logAndScreenshot(message: string): Chainable<void>;
+    getTokenValue(token: string, property: string): Chainable<string>;
+    /**
+     * Validate that an element uses a Carbon typography token.
+     */
+    shouldUseTokenStyle(tokenName: string): Chainable<Element>;
+
+    /**
+     * Validate that an element has a specific CSS property/value pair.
+     * Example: cy.get('.card').shouldHaveStyle('margin', '16px')
+     */
+    shouldHaveStyle(property: string, expected: string): Chainable<Element>;
+
+    /**
+     * Validate that an element has all styles defined by a Carbon token.
+     * Example: cy.get('h1').shouldHaveAllStylesFromToken('productive-heading-01')
+     */
+    shouldHaveAllStylesFromToken(tokenName: string): Chainable<Element>;
   }
 }
 
