@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {    
     "report:md": "node scripts/parse-report.js",
-    "report:clean": "rm -rf reports/mochawesome/* reports/a11y/*",
+    "report:clean": "rm -rf reports/*",
     
     "precy:run": "npm run report:clean",
     "cy:run": "cypress run --browser chrome",
