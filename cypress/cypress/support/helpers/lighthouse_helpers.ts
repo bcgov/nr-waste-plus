@@ -1,3 +1,13 @@
+export function formatTiming(ms: number): string {
+  if (ms < 1000) return `${ms}ms`;
+  return `${(ms / 1000).toFixed(2)}s`;
+}
+
+export function severityFromScore(score: number): "info" | "minor" | "major" {
+  if (score >= 90) return "info";
+  if (score >= 70) return "minor";
+  return "major";
+}
 
 export interface LighthouseSnapshot {
   requestedUrl?: string;
@@ -68,77 +78,13 @@ export const parseThresholdTable = (table: DataTableLike): Record<string, number
   return thresholds;
 };
 
-export const runLighthouseAudit = (): Cypress.Chainable<LighthouseSnapshot> => {
-  const supportedBrowsers = new Set(["Chrome", "Chromium", "Canary"]);
-
-  if (!supportedBrowsers.has(Cypress.browser.displayName)) {
-    throw new Error(
-      `Lighthouse requires a Chromium browser. Current browser: "${Cypress.browser.displayName}". Run Cypress with --browser chrome or --browser chromium.`
-    );
-  }
-
-  return cy.url().then((url) =>
-    cy.task(
-      "lighthouse",
-      {
-        url,
-        formFactor: mobileLighthouseOptions.formFactor,
-        screenEmulation: mobileLighthouseOptions.screenEmulation,
-      },
-      { timeout: 120000 }
-    ) as Cypress.Chainable<LighthouseSnapshot>
-  );
+export const runReportTo = (fn: (report: any) => void) => {
+  cy
+    .url()
+    .then((currentUrl) => {
+      return cy.runLighthouseAudit(currentUrl)
+              .as("lhReport")
+              .then(fn);            
+    });
 };
 
-export const readMetricValue = (snapshot: LighthouseSnapshot, metric: string): number | null => {
-  const key = normalizeMetricKey(metric);
-
-  if (snapshot.categories && key in snapshot.categories) {
-    const categoryValue = snapshot.categories[key];
-    return typeof categoryValue === "number" ? categoryValue : null;
-  }
-
-  if (snapshot.audits && key in snapshot.audits) {
-    const auditValue = snapshot.audits[key];
-    return typeof auditValue === "number" ? auditValue : null;
-  }
-
-  return null;
-};
-
-export const assertMetricAtLeast = (snapshot: LighthouseSnapshot, metric: string, minimum: number) => {
-  const value = readMetricValue(snapshot, metric);
-  const normalizedMetric = normalizeMetricKey(metric);
-
-  if (value === null) {
-    throw new Error(`Lighthouse metric "${normalizedMetric}" was not present in the report.`);
-  }
-
-  expect(
-    value,
-    `Lighthouse metric "${normalizedMetric}" should be at least ${minimum}. Actual: ${value}`
-  ).to.be.gte(minimum);
-};
-
-export const assertMetricAtMost = (snapshot: LighthouseSnapshot, metric: string, maximum: number) => {
-  const value = readMetricValue(snapshot, metric);
-  const normalizedMetric = normalizeMetricKey(metric);
-
-  if (value === null) {
-    throw new Error(`Lighthouse metric "${normalizedMetric}" was not present in the report.`);
-  }
-
-  expect(
-    value,
-    `Lighthouse metric "${normalizedMetric}" should be at most ${maximum}. Actual: ${value}`
-  ).to.be.lte(maximum);
-};
-
-export const assertMinimumThresholds = (
-  snapshot: LighthouseSnapshot,
-  thresholds: Record<string, number>
-) => {
-  for (const [metric, minimum] of Object.entries(thresholds)) {
-    assertMetricAtLeast(snapshot, metric, minimum);
-  }
-};

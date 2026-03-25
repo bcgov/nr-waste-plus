@@ -22,6 +22,8 @@ declare namespace Cypress {
      * Example: cy.get('h1').shouldHaveAllStylesFromToken('productive-heading-01')
      */
     shouldHaveAllStylesFromToken(tokenName: string): Chainable<Element>;
+
+    runLighthouseAudit(url: string, options?: any): Chainable<LighthouseSnapshot>;
   }
 }
 

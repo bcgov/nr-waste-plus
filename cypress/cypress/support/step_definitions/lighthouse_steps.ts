@@ -1,99 +1,104 @@
-import { Then } from "@badeball/cypress-cucumber-preprocessor";
+import { Then, AfterAll } from "@badeball/cypress-cucumber-preprocessor";
 import { browserGuardAny } from "./browserHooks";
 import { 
   type DataTableLike,
-  parseThresholdTable, 
-  assertMinimumThresholds, 
-  runLighthouseAudit,
-  assertMetricAtMost,
-  parseThresholdNumber,
-  assertMetricAtLeast
+  parseThresholdTable,
+  runReportTo
 } from "../helpers";
+
+const defaultValues = {
+  performance: 50,
+  accessibility: 85,
+  "best-practices": 90,
+  seo: 80,
+  pwa: 0,
+}
+
+Then(
+  "the lighthouse {string} score should be above {int}",
+  browserGuardAny(["chrome", "chromium"],
+  (category: string, threshold: number) => runReportTo((report) => {    
+    expect(report.categories[category]).to.be.greaterThan(threshold);
+  })
+));
 
 Then("the Lighthouse score should be at least:",
   browserGuardAny(["chrome", "chromium"],
   (table: DataTableLike) => {
   const thresholds = parseThresholdTable(table);
 
-  runLighthouseAudit().then((snapshot) => {
-    assertMinimumThresholds(snapshot, thresholds);
-  });
-}));
-
-Then("the page should load quickly",
-  browserGuardAny(["chrome", "chromium"],() => {
-  runLighthouseAudit().then((snapshot) => {
-    assertMinimumThresholds(snapshot, {
-      performance: 80,
+    runReportTo((report) => {
+      for (const [category, minValue] of Object.entries(thresholds)) {
+        const score = report.categories[category];
+        expect(score, `Lighthouse ${category} score`).to.be.greaterThan(minValue);
+      }
     });
+  })
+);
 
-    assertMetricAtMost(snapshot, "server-response-time", 800);
-    assertMetricAtMost(snapshot, "largest-contentful-paint", 2500);
-    assertMetricAtMost(snapshot, "cumulative-layout-shift", 0.1);
-  });
-}));
+Then(
+  "the page should load quickly",
+  browserGuardAny(["chrome", "chromium"], () => {
+    runReportTo((report) => {
+      expect(report.categories.performance).to.be.gte(defaultValues.performance);
+      expect(report.metrics["server-response-time"]).to.be.lte(800);
+      expect(report.metrics["largest-contentful-paint"]).to.be.lte(2500);
+      expect(report.metrics["cumulative-layout-shift"]).to.be.lte(0.1);
+    });
+  })
+);
 
 Then("the page should be mobile friendly",
   browserGuardAny(["chrome", "chromium"],() => {
-  runLighthouseAudit().then((snapshot) => {
-    assertMinimumThresholds(snapshot, {
-      accessibility: 85,
-      seo: 80,
-      performance: 70,
+    runReportTo((report) => {
+      expect(report.categories.accessibility).to.be.gte(defaultValues.accessibility);
+      expect(report.categories.seo).to.be.gte(defaultValues.seo);
+      expect(report.categories.performance).to.be.gte(defaultValues.performance);
+      expect(report.metrics["cumulative-layout-shift"]).to.be.lte(0.1);
     });
-
-    assertMetricAtMost(snapshot, "cumulative-layout-shift", 0.25);
-  });
 }));
 
 Then("the page should follow best practices",
   browserGuardAny(["chrome", "chromium"],() => {
-  runLighthouseAudit().then((snapshot) => {
-    assertMinimumThresholds(snapshot, {
-      "best-practices": 90,
+  runReportTo((report) => {
+      expect(report.categories["best-practices"]).to.be.gte(defaultValues["best-practices"]);
     });
-  });
 }));
 
 Then("the page should be accessible to most users",
   browserGuardAny(["chrome", "chromium"],() => {
-  runLighthouseAudit().then((snapshot) => {
-    assertMinimumThresholds(snapshot, {
-      accessibility: 90,
+  runReportTo((report) => {
+      expect(report.categories.accessibility).to.be.gte(defaultValues.accessibility);
     });
-  });
 }));
 
 Then("the UX quality score should be acceptable",
   browserGuardAny(["chrome", "chromium"],() => {
-  runLighthouseAudit().then((snapshot) => {
-    assertMinimumThresholds(snapshot, {
-      performance: 50,  //This needs to be reworked in the future, but currently allows for the slowest possible Lighthouse audit to pass while we investigate and address underlying performance issues
-      accessibility: 90,
-      "best-practices": 90,
-      seo: 80,
+    runReportTo((report) => {
+      expect(report.categories.accessibility).to.be.gte(defaultValues.accessibility);
+      expect(report.categories.seo).to.be.gte(defaultValues.seo);
+      expect(report.categories.performance).to.be.gte(defaultValues.performance);
+      expect(report.categories["best-practices"]).to.be.gte(defaultValues["best-practices"]);
+
+      expect(report.metrics["cumulative-layout-shift"]).to.be.lte(0.1);
+      expect(report.metrics["largest-contentful-paint"]).to.be.lte(2500);
+      expect(report.metrics["server-response-time"]).to.be.lte(800);
     });
-
-    assertMetricAtMost(snapshot, "largest-contentful-paint", 16000); //This needs to be reworked in the future, but currently allows for the slowest possible Lighthouse audit to pass while we investigate and address underlying performance issues
-    assertMetricAtMost(snapshot, "cumulative-layout-shift", 0.1);
-    assertMetricAtMost(snapshot, "server-response-time", 100);
-  });
 }));
 
-Then("the Lighthouse metric {string} should be at least {string}",
-  browserGuardAny(["chrome", "chromium"],(metric: string, minimum: string) => {
-  const parsedMinimum = parseThresholdNumber(minimum);
+Then("the lighthouse {string} score should be at least {int}",
+  browserGuardAny(["chrome", "chromium"],(metric: string, minimum: number) => runReportTo((report) => {    
+    expect(report.categories[metric]).to.be.gte(minimum);
+  })
+));
 
-  runLighthouseAudit().then((snapshot) => {
-    assertMetricAtLeast(snapshot, metric, parsedMinimum);
-  });
-}));
+Then("the lighthouse {string} should be at most {int}",
+  browserGuardAny(["chrome", "chromium"],(metric: string, maximum: number)  => runReportTo((report) => {    
+    expect(report.categories[metric]).to.be.lte(maximum);
+  })
+));
 
-Then("the Lighthouse metric {string} should be at most {string}",
-  browserGuardAny(["chrome", "chromium"],(metric: string, maximum: string) => {
-  const parsedMaximum = parseThresholdNumber(maximum);
 
-  runLighthouseAudit().then((snapshot) => {
-    assertMetricAtMost(snapshot, metric, parsedMaximum);
-  });
-}));
+AfterAll(() => {
+  cy.task("lighthouse:reset");
+});

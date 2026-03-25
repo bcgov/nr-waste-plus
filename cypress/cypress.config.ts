@@ -34,6 +34,7 @@ async function setupNodeEvents(
 ): Promise<Cypress.PluginConfigOptions> {
   let a11yResults: Array<Record<string, unknown>> = [];
   let uiuxResults: Array<Record<string, unknown>> = [];
+  let lighthouseResults: Array<Record<string, unknown>> = [];
 
 
   // This is required for the preprocessor to be able to generate JSON reports after each run, and more,
@@ -68,42 +69,46 @@ async function setupNodeEvents(
       a11yResults = [];
       return null;
     },
-    async lighthouse(opts: {
-      url: string;
-      formFactor?: string;
-      screenEmulation?: Record<string, unknown>;
-    }) {
-      const { default: lighthouseFn } = await import("lighthouse");
-      const result = await lighthouseFn(opts.url, {
-        port: debugPort,
-        hostname: "127.0.0.1",
-        output: "json",
-        logLevel: "error",
-        formFactor: (opts.formFactor as "mobile" | "desktop") || "mobile",
-        screenEmulation: opts.screenEmulation,
-      });
-
-      if (!result) {
-        throw new Error("Lighthouse returned no result.");
-      }
-
-      return {
-        requestedUrl: result.lhr.requestedUrl,
-        finalUrl: result.lhr.finalDisplayedUrl,
-        fetchTime: result.lhr.fetchTime,
-        categories: Object.fromEntries(
-          Object.entries(result.lhr.categories).map(([k, v]) => [
-            k,
-            (v.score ?? 0) * 100,
-          ])
-        ),
-        audits: Object.fromEntries(
-          Object.entries(result.lhr.audits)
-            .filter(([, v]) => v.numericValue !== undefined)
-            .map(([k, v]) => [k, v.numericValue ?? null])
-        ),
-      };
+    "lighthouse:reset": () => {
+      lighthouseResults = [];
+      return null;
     },
+    async "lighthouse:run"({ url, options }) {
+    const lighthouse = await import("lighthouse");
+
+    if(lighthouseResults[url]) return lighthouseResults[url];
+
+    // Run Lighthouse
+    const result = await lighthouse.default(url, {
+      port: debugPort,
+      hostname: "127.0.0.1",
+      output: "json",
+      logLevel: "error",
+      formFactor: (options.formFactor as "mobile" | "desktop") || "mobile",
+      screenEmulation: options.screenEmulation,
+      ...options,
+    }) ?? {} as { lhr: any };
+
+    // Extract the useful parts
+    const lhr = result.lhr;
+
+    const report = {
+      categories: Object.fromEntries(
+          Object.entries(lhr.categories)
+            .filter(([, v]) => (v as any).score !== undefined)
+            .map(([k, v]) => [k, (v as any).score ?? 0])
+            .map(([k, v]) => [k, Math.round(v * 100)])
+        ),
+      metrics: Object.fromEntries(
+          Object.entries(result.lhr.audits)
+            .filter(([, v]) => (v as any).numericValue !== undefined)
+            .map(([k, v]) => [k, (v as any).numericValue ?? null])
+        ),      
+    };
+    lighthouseResults[url] = report;
+
+    return report;
+  },
   });
 
   on("before:run", () => {

@@ -111,9 +111,6 @@ Cypress.Commands.add(
   }
 );
 
-//
-// 3. shouldHaveAllStylesFromToken
-//
 Cypress.Commands.add(
   'shouldHaveAllStylesFromToken',
   { prevSubject: true },
@@ -178,3 +175,14 @@ Cypress.Commands.add(
     });
   }
 );
+
+Cypress.Commands.add(
+  "runLighthouseAudit",
+  (url: string, options: any = {}) => {
+    return cy
+    .task("lighthouse:run", { url, options })
+    .as("lhReport")
+    .then((report) => report);
+  }
+);
+
