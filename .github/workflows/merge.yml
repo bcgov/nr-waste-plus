@@ -33,6 +33,7 @@ jobs:
     uses: ./.github/workflows/.deploy.yml
     with:
       environment: test
+      zone: test
       target: test
       url: nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca
       configmap-backend: |-
