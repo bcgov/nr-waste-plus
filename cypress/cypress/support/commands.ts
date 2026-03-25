@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 /// <reference types="cypress" />
 
-import { getCssVarValue } from './tokens';
+import { getCssVarValue, getTaxonomy, getSeverity } from './tokens';
 
 Cypress.Commands.add('waitForPageLoad', (element: string, timeout?: number) => {
   cy.get(element, { timeout: timeout || 10000 }).should('be.visible');
@@ -15,51 +15,99 @@ Cypress.Commands.add('logAndScreenshot', (message: string) => {
   });
 });
 
-
-//
-// 1. shouldUseTokenStyle
-//
 Cypress.Commands.add(
   'shouldUseTokenStyle',
   { prevSubject: true },
   (subject, tokenName: string) => {
-    const el = subject[0] as Element;
-    const styles = getComputedStyle(el);
 
-    const expectedFontSize = getCssVarValue(el, `${tokenName}-font-size`);
-    const expectedFontWeight = getCssVarValue(el, `${tokenName}-font-weight`);
-    const expectedLineHeight = getCssVarValue(el, `${tokenName}-line-height`);
+    return cy.wrap(subject).then($el => {
+      const el = $el[0] as Element;
+      const styles = getComputedStyle(el);
 
-    if (expectedFontSize) {
-      expect(styles.fontSize).to.equal(expectedFontSize);
-    }
+      const checks = [
+        { property: "font-size", expected: getCssVarValue(el, `${tokenName}-font-size`), actual: styles.fontSize, taxonomy: "typography" },
+        { property: "font-weight", expected: getCssVarValue(el, `${tokenName}-font-weight`), actual: styles.fontWeight, taxonomy: "typography" },
+        { property: "line-height", expected: getCssVarValue(el, `${tokenName}-line-height`), actual: styles.lineHeight, taxonomy: "typography" }
+      ];
 
-    if (expectedFontWeight) {
-      expect(styles.fontWeight).to.equal(expectedFontWeight);
-    }
+      // Chain through each check sequentially
+      return checks
+        .reduce<Cypress.Chainable<any>>((chain, { property, expected, actual, taxonomy }) => {
+        return chain.then(() => {
 
-    if (expectedLineHeight) {
-      expect(styles.lineHeight).to.equal(expectedLineHeight);
-    }
+          const isMissing = !expected;        
+          const isMismatch = actual !== expected;
 
-    return subject;
+          const event = isMissing || isMismatch ? "violation" : "check";
+          const type = isMissing
+            ? "token-missing"
+            : isMismatch
+              ? "token-style-mismatch"
+              : "style-check";
+
+          const severity = getSeverity(taxonomy, event);
+
+          const taskRecord = {
+            event,
+            type,
+            taxonomy,
+            token: tokenName,
+            property,
+            expected: expected ?? null,
+            actual,
+            severity,
+            element: el.tagName.toLowerCase(),
+            selector: subject.selector,
+            scenario: Cypress.currentTest.title,
+            feature: Cypress.spec.relative,
+            timestamp: Date.now()
+          };
+
+          return cy.task("uiux:record", taskRecord).then(() => {
+            // Only assert when expected exists
+            if (!isMissing) {
+              expect(actual).to.equal(expected);
+            }
+          });
+        });
+      }, cy.wrap(null)).then(() => subject);
+    });
   }
 );
 
-//
-// 2. shouldHaveStyle
-//
+
 Cypress.Commands.add(
   'shouldHaveStyle',
   { prevSubject: true },
   (subject, property: string, expected: string) => {
-    const el = subject[0] as Element;
-    const styles = getComputedStyle(el);
+      
+      return cy.wrap(subject).then($el => {
+        const el = $el[0] as Element;
+        const styles = getComputedStyle(el);
+        const actual = styles.getPropertyValue(property).trim();
+        const taxonomy = getTaxonomy(property);
+        const isViolation = actual !== expected;
 
-    const actual = styles.getPropertyValue(property).trim();
-    expect(actual).to.equal(expected);
+        let taskRecord = {
+          event: isViolation ? "violation" : "check",
+          type: isViolation ? "style-mismatch" : "style-check",
+          taxonomy,
+          property,
+          expected,
+          actual,
+          severity: getSeverity(taxonomy, isViolation ? "violation" : "check"),
+          element: el.tagName.toLowerCase(),
+          selector: subject.selector,
+          scenario: Cypress.currentTest.title,
+          feature: Cypress.spec.relative,
+          timestamp: Date.now()
+        };
 
-    return subject;
+        return cy.task("uiux:record", taskRecord).then(() => {
+          expect(actual).to.equal(expected);
+          return subject;
+        });
+    });
   }
 );
 
@@ -70,30 +118,63 @@ Cypress.Commands.add(
   'shouldHaveAllStylesFromToken',
   { prevSubject: true },
   (subject, tokenName: string) => {
-    const el = subject[0] as Element;
-    const styles = getComputedStyle(el);
+    return cy.wrap(subject).then($el => {
+      const el = $el[0] as Element;
+      const styles = getComputedStyle(el);
 
-    const properties = [
-      'font-size',
-      'font-weight',
-      'line-height',
-      'color',
-      'background-color',
-      'border-color',
-      'padding',
-      'margin'
-    ];
+      const properties = [
+        'font-size',
+        'font-weight',
+        'line-height',
+        'color',
+        'background-color',
+        'border-color',
+        'padding',
+        'margin'
+      ];
 
-    properties.forEach((prop) => {
-      const cssVarName = `${tokenName}-${prop}`;
-      const expected = getCssVarValue(el, cssVarName);
-
-      if (expected) {
+      return properties.reduce<Cypress.Chainable<any>>((chain, prop) => {
+        return chain.then(() => {
+        const cssVarName = `${tokenName}-${prop}`;
+        const expected = getCssVarValue(el, cssVarName);
+        const taxonomy = getTaxonomy(prop);
         const actual = styles.getPropertyValue(prop).trim();
-        expect(actual).to.equal(expected);
-      }
-    });
 
-    return subject;
+        const isMissing = !expected;
+        const isMismatch = actual !== expected;
+
+        const event = isMissing || isMismatch ? "violation" : "check";
+        const type = isMissing
+            ? "token-missing"
+            : isMismatch
+              ? "token-style-mismatch"
+              : "style-check";
+        const severity = getSeverity(taxonomy, event);
+
+        const taskRecord = {
+            event,
+            type,
+            taxonomy,
+            token: tokenName,
+            property: prop,
+            expected: expected ?? null,
+            actual,
+            severity,
+            element: el.tagName.toLowerCase(),
+            selector: subject.selector,
+            scenario: Cypress.currentTest.title,
+            feature: Cypress.spec.relative,
+            timestamp: Date.now()
+          };
+
+        return cy.task("uiux:record", taskRecord).then(() => {
+            // Only assert when expected exists
+            if (!isMissing) {
+              expect(actual).to.equal(expected);
+            }
+          });
+        });
+      }, cy.wrap(null)).then(() => subject);
+    });
   }
 );

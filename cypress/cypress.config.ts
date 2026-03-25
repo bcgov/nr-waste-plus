@@ -8,14 +8,33 @@ import path from "node:path";
 dotenv.config();
 
 const A11Y_REPORT_FILE = path.resolve(__dirname, "reports", "a11y", "a11y-results.json");
+const UIUX_REPORT_FILE = path.resolve(__dirname, "reports", "uiux", "uiux-results.json");
 
 let debugPort = 0;
+
+const writeFile = (filePath: string, data: Array<Record<string, unknown>>) => {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(
+      filePath,
+      JSON.stringify({ generatedAt: new Date().toISOString(), checks: data }, null, 2),
+      "utf8"
+    );
+};
+
+const cleanFile = (filePath: string) => {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  if (fs.existsSync(filePath)) {
+    fs.rmSync(filePath);
+  }
+};
 
 async function setupNodeEvents(
   on: Cypress.PluginEvents,
   config: Cypress.PluginConfigOptions
 ): Promise<Cypress.PluginConfigOptions> {
   let a11yResults: Array<Record<string, unknown>> = [];
+  let uiuxResults: Array<Record<string, unknown>> = [];
+
 
   // This is required for the preprocessor to be able to generate JSON reports after each run, and more,
   await addCucumberPreprocessorPlugin(on, config);
@@ -33,6 +52,14 @@ async function setupNodeEvents(
   });
 
   on("task", {
+    "uiux:record": (payload: Record<string, unknown>) => {
+      uiuxResults.push(payload);
+      return null;
+    },
+    "uiux:reset": () => {
+      uiuxResults = [];
+      return null;
+    },
     "a11y:record": (payload: Record<string, unknown>) => {
       a11yResults.push(payload);
       return null;
@@ -81,19 +108,13 @@ async function setupNodeEvents(
 
   on("before:run", () => {
     a11yResults = [];
-    fs.mkdirSync(path.dirname(A11Y_REPORT_FILE), { recursive: true });
-    if (fs.existsSync(A11Y_REPORT_FILE)) {
-      fs.rmSync(A11Y_REPORT_FILE);
-    }
+    cleanFile(A11Y_REPORT_FILE);
+    cleanFile(UIUX_REPORT_FILE);
   });
 
   on("after:run", () => {
-    fs.mkdirSync(path.dirname(A11Y_REPORT_FILE), { recursive: true });
-    fs.writeFileSync(
-      A11Y_REPORT_FILE,
-      JSON.stringify({ generatedAt: new Date().toISOString(), checks: a11yResults }, null, 2),
-      "utf8"
-    );
+    writeFile(A11Y_REPORT_FILE, a11yResults);
+    writeFile(UIUX_REPORT_FILE, uiuxResults);
   });
 
   on(
