@@ -253,7 +253,8 @@ export const findInputElement = (inputIdentifier: string): Cypress.Chainable<JQu
 export const findFocusableElement = (label: string): Cypress.Chainable<JQuery<HTMLElement>> => {
   const exactLabel = label.trim();
 
-  return cy.document().then((doc) => {
+  return cy.get('div#root *:first', { timeout: 10000 }).then(($doc) => {
+    console.log(`Finding focusable element for label/text: "${exactLabel}"`,$doc);
     const asHTMLElement = (element: Element | null): HTMLElement | null => {
       if (element instanceof HTMLElement) {
         return element;
@@ -262,14 +263,14 @@ export const findFocusableElement = (label: string): Cypress.Chainable<JQuery<HT
       return null;
     };
 
-    const labelElement = Array.from(doc.querySelectorAll("label")).find(
+    const labelElement = Array.from($doc.find("label")).find(
       (candidate) => candidate.textContent?.trim() === exactLabel
     );
 
     if (labelElement) {
       const htmlFor = labelElement.getAttribute("for");
       if (htmlFor) {
-        const input = asHTMLElement(doc.getElementById(htmlFor));
+        const input = asHTMLElement($doc.find(`#${htmlFor}`)[0]);
         if (input) {
           return cy.wrap(input);
         }
@@ -283,12 +284,12 @@ export const findFocusableElement = (label: string): Cypress.Chainable<JQuery<HT
       }
     }
 
-    const ariaLabelElement = asHTMLElement(doc.querySelector(`[aria-label='${exactLabel}']`));
+    const ariaLabelElement = asHTMLElement($doc.find(`[aria-label='${exactLabel}']`)[0]);
     if (ariaLabelElement) {
       return cy.wrap(ariaLabelElement);
     }
 
-    const ariaLabelledByElement = Array.from(doc.querySelectorAll<HTMLElement>(focusableSelector)).find(
+    const ariaLabelledByElement = Array.from($doc.find(focusableSelector)).find(
       (candidate) => {
         const labelledBy = candidate.getAttribute("aria-labelledby");
         if (!labelledBy) {
@@ -297,7 +298,7 @@ export const findFocusableElement = (label: string): Cypress.Chainable<JQuery<HT
 
         return labelledBy
           .split(" ")
-          .map((id) => doc.getElementById(id)?.textContent?.trim())
+          .map((id) => $doc.find(`#${id}`)[0]?.textContent?.trim())
           .includes(exactLabel);
       }
     );
@@ -306,7 +307,7 @@ export const findFocusableElement = (label: string): Cypress.Chainable<JQuery<HT
       return cy.wrap(ariaLabelledByElement);
     }
 
-    const textMatchedFocusable = Array.from(doc.querySelectorAll<HTMLElement>(focusableSelector)).find(
+    const textMatchedFocusable = Array.from($doc.find(focusableSelector)).find(
       (candidate) => candidate.textContent?.trim() === exactLabel
     );
 
@@ -314,7 +315,7 @@ export const findFocusableElement = (label: string): Cypress.Chainable<JQuery<HT
       return cy.wrap(textMatchedFocusable);
     }
 
-    const placeholderElement = asHTMLElement(doc.querySelector(`input[placeholder='${exactLabel}']`));
+    const placeholderElement = asHTMLElement($doc.find(`input[placeholder='${exactLabel}']`)[0]);
     if (placeholderElement) {
       return cy.wrap(placeholderElement);
     }

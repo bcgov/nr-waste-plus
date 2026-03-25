@@ -32,7 +32,7 @@ When("I press {string} {int} times", (key: string, times: number) => {
 });
 
 Then("the {string} input should be focused", (label: string) => {
-  findFocusableElement(label).should("have.focus");
+  findInputElement(label).should("have.focus");
 });
 
 Then("the page should have at least one ARIA live region", () => {

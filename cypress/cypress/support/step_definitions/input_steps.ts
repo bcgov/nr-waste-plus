@@ -3,11 +3,11 @@ import { selectFromAutocomplete, selectFromFilterableDropdown, findInputByLabel 
 /* Input Steps */
 
 Then('I type {string} into the {string} input', (text: string, input: string) => {
-  findInputByLabel(input).type(text).blur();
+  findInputByLabel(input).type(text);
 });
 
 Then('I clear the {string} input', (input: string) => {
-  findInputByLabel(input).clear().blur();
+  findInputByLabel(input).clear();
 });
 
 Then('I type {string} into the {string} autocomplete', (text: string, input: string) => {

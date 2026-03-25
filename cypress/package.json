@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {    
-    "report:md": "node scripts/generate-github-summary.js",
+    "report:md": "node scripts/parse-report.js",
     "report:clean": "rm -rf reports/mochawesome/* reports/a11y/*",
     
     "precy:run": "npm run report:clean",
@@ -12,7 +12,7 @@
     "postcy:run": "npm run report:md",
     
     "precy:run:md": "npm run report:clean",
-    "cy:run:md": "cypress run --browser chrome --config \"baseUrl=https://nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca/\"",
+    "cy:run:md": "cypress run --browser chrome --config \"baseUrl=https://nr-waste-plus-2-frontend.apps.silver.devops.gov.bc.ca/\"",
     "postcy:run:md": "npm run report:md",
     
     "precy:run:local": "npm run report:clean",
@@ -24,7 +24,7 @@
     "postcy:run:md:local": "npm run report:md",
     
     "cy:open:local": "cypress open --config \"baseUrl=http://localhost:3000\"",
-    "cy:open:remote": "cypress open --config \"baseUrl=https://nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca/\""
+    "cy:open:remote": "cypress open --config \"baseUrl=https://nr-waste-plus-2-frontend.apps.silver.devops.gov.bc.ca/\""
   },
   "keywords": [],
   "author": "",
