@@ -33,10 +33,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
           CYPRESS_idir_password: ${{ secrets.IDIR_UAT_PASSWORD }}
           CYPRESS_idir_username: ${{ secrets.IDIR_UAT_USERNAME }}
-          CYPRESS_bceid_password: ${{ secrets.BCEID_UAT_PASSWORD2 }}
-          CYPRESS_bceid_username: ${{ secrets.BCEID_UAT_USERNAME2 }}
           MOCHAWESOME_REPORT: true
           CYPRESS_MOCHAWESOME_REPORT: true
+          CYPRESS_bceid_password: ${{ secrets.BCEID_UAT_PASSWORD }}
+          CYPRESS_bceid_username: ${{ secrets.BCEID_UAT_USERNAME }}
 
       - name: Generate Markdown Report
         working-directory: cypress
