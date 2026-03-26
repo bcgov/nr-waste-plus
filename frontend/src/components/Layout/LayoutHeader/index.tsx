@@ -3,6 +3,7 @@ import { type FC } from 'react';
 import { Link } from 'react-router-dom';
 
 import LayoutHeaderGlobalBar from './LayoutHeaderGlobalBar';
+import { getFormattedEnvName } from './utils';
 
 import { LayoutHeaderPanel } from '@/components/Layout/LayoutHeaderPanel';
 import { LayoutSideNav } from '@/components/Layout/LayoutSideNav';
@@ -21,6 +22,9 @@ export const LayoutHeader: FC = () => {
 
   const appName = env.VITE_APP_NAME;
 
+  const formattedEnvName = getFormattedEnvName(env.VITE_NODE_ENV);
+  const isProd = env.VITE_NODE_ENV.endsWith('prod');
+
   return (
     <Header aria-label={appName} className="bc-header" data-testid="bc-header__header">
       <SkipToContent />
@@ -30,7 +34,8 @@ export const LayoutHeader: FC = () => {
         onClick={toggleSideNav}
       />
       <HeaderName as={Link} to={'/dashboard'} prefix="">
-        {appName}
+        <span>{appName}</span>
+        {!isProd && <span>Env. {formattedEnvName}</span>}
       </HeaderName>
 
       <LayoutHeaderGlobalBar />
