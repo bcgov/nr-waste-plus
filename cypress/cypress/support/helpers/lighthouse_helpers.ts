@@ -1,7 +1,28 @@
-export function formatTiming(ms: number): string {
-  if (ms < 1000) return `${ms}ms`;
-  return `${(ms / 1000).toFixed(2)}s`;
-}
+export const formatTiming = (value: number | null | undefined): string => {
+  if (value == null) return "N/A";
+
+  if (value < 1) return `${Math.round(value * 1000)}ms`;
+  return `${(value / 1000).toFixed(2)}s`;
+};
+
+export const parseTiming = (raw: string | number): number => {
+  if (typeof raw === "number") return raw;
+
+  const value = raw.trim().toLowerCase();
+
+  if (value.endsWith("ms")) {
+    return parseFloat(value.replace("ms", "").trim());
+  }
+
+  if (value.endsWith("s")) {
+    return parseFloat(value.replace("s", "").trim()) * 1000;
+  }
+
+  // plain number → assume milliseconds
+  return parseFloat(value);
+};
+
+
 
 export function severityFromScore(score: number): "info" | "minor" | "major" {
   if (score >= 90) return "info";
@@ -36,13 +57,21 @@ export const normalizeMetricKey = (metric: string): string => {
   const normalized = metric.trim().toLowerCase();
 
   const aliases: Record<string, string> = {
-    bestpractices: "best-practices",
-    "best practices": "best-practices",
+    // Core Web Vitals
     ttfb: "server-response-time",
     lcp: "largest-contentful-paint",
+    fcp: "first-contentful-paint",
     cls: "cumulative-layout-shift",
     tbt: "total-blocking-time",
+
+    // Additional useful metrics
+    fid: "max-potential-fid",
     si: "speed-index",
+    interactive: "interactive",
+
+    "loading time": "server-response-time",
+    bestpractices: "best-practices",
+    "best practices": "best-practices",  
     "time to interactive": "interactive",
     "first input delay": "max-potential-fid",
   };

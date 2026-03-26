@@ -3,7 +3,10 @@ import { browserGuardAny } from "./browserHooks";
 import { 
   type DataTableLike,
   parseThresholdTable,
-  runReportTo
+  runReportTo,
+  normalizeMetricKey,
+  formatTiming,
+  parseTiming
 } from "../helpers";
 
 const defaultValues = {
@@ -97,6 +100,80 @@ Then("the lighthouse {string} should be at most {int}",
     expect(report.categories[metric]).to.be.lte(maximum);
   })
 ));
+
+Then(
+  "the Lighthouse metric {string} should be at most {string}",
+  browserGuardAny(["chrome", "chromium"], (metricAlias: string, rawMax: string) => {
+    runReportTo((report) => {
+      const metricId = normalizeMetricKey(metricAlias);
+      const value = report.metrics[metricId];
+      const max = parseTiming(rawMax);
+      
+      expect(
+        value,
+        `Lighthouse metric '${metricAlias}' (${metricId})`
+      ).to.be.lessThan(max);
+    });
+  })
+);
+
+Then(
+  "the Lighthouse metric {string} should be at least {string}",
+  browserGuardAny(["chrome", "chromium"], (metricAlias: string, rawMin: string) => {
+    runReportTo((report) => {
+      const metricId = normalizeMetricKey(metricAlias);
+      const value = report.metrics[metricId];
+      const min = parseTiming(rawMin);
+
+      expect(
+        value,
+        `Lighthouse metric '${metricAlias}' (${metricId})`
+      ).to.be.greaterThan(min);
+    });
+  })
+);
+
+Then(
+  "the Lighthouse metrics should be at most:",
+  browserGuardAny(["chrome", "chromium"], (table: DataTableLike) => {
+    const thresholds = parseThresholdTable(table);
+
+    runReportTo((report) => {
+      for (const [metricAlias, rawMax] of Object.entries(thresholds)) {
+        const metricId = normalizeMetricKey(metricAlias);
+        const value = report.metrics[metricId];
+        const max = parseTiming(rawMax);
+
+        expect(
+          value,
+          `Lighthouse metric '${metricAlias}' (${metricId}) was ${formatTiming(value)}`
+        ).to.be.lessThan(max);
+      }
+    });
+  })
+);
+
+Then(
+  "the Lighthouse metrics should be at least:",
+  browserGuardAny(["chrome", "chromium"], (table: DataTableLike) => {
+    const thresholds = parseThresholdTable(table);
+
+    runReportTo((report) => {
+      for (const [metricAlias, rawMin] of Object.entries(thresholds)) {
+        const metricId = normalizeMetricKey(metricAlias);
+        const value = report.metrics[metricId];
+        const min = parseTiming(rawMin);
+
+        expect(
+          value,
+          `Lighthouse metric '${metricAlias}' (${metricId}) was ${formatTiming(value)}`
+        ).to.be.greaterThan(min);
+      }
+    });
+  })
+);
+
+
 
 
 AfterAll(() => {
