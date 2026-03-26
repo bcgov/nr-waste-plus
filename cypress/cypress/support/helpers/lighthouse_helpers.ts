@@ -131,9 +131,10 @@ export const expectLighthouse = (report: LighthouseReport) => {
     value: number | null;
     threshold: number;
     comparison: "gte" | "lte";
+    type: "category" | "metric" | "lighthouse:record";
     url: string;
   }) => {
-    const { id, name, value, threshold, comparison, url } = assertion;
+    const { id, name, value, threshold, comparison, url, type } = assertion;
 
     const safeValue = value ?? 0; // Treat null/undefined as 0 for assertion purposes
 
@@ -143,14 +144,13 @@ export const expectLighthouse = (report: LighthouseReport) => {
         : safeValue <= threshold;
 
     const event: LighthouseAssertionEvent = {  
-      type: "lighthouse:record",
+      type,
       id,
       name,
       value,      
       threshold,
       comparison,
       passed,
-      category: id,
       severity: getLighthouseSeverity(id, value),
       taxonomy: getLighthouseTaxonomy(id),
       url,
@@ -171,6 +171,7 @@ export const expectLighthouse = (report: LighthouseReport) => {
           value,
           threshold,
           comparison: "gte",
+          type: 'category',
           url: report.url,
         })
         .then(() =>
@@ -193,6 +194,7 @@ export const expectLighthouse = (report: LighthouseReport) => {
             value,
             threshold,
             comparison: "lte",
+            type: 'metric',
             url: report.url,
           })
           .then(() =>

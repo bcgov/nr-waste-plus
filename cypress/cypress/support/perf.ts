@@ -1,5 +1,5 @@
 interface LighthouseRawEvent {
-  type: "lighthouse:record";
+  type: "category" | "metric" | "lighthouse:record";
   id: string;              // audit ID
   name: string;            // human-friendly name
   value: number | null;    // numericValue
