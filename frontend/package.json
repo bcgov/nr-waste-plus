@@ -92,6 +92,7 @@
     "node": ">=22.13.0"
   },
   "overrides": {
+    "picomatch": "^4.0.4",
     "dompurify@<3.3.2": "^3.3.2",
     "minimatch@<3.1.5": "^3.1.5",
     "fast-xml-parser": "^5.5.6",
