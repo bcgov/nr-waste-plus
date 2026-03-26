@@ -211,6 +211,7 @@ export const expectLighthouse = (report: LighthouseReport) => {
             value,
             threshold,
             comparison: "gte",
+            type: 'metric',
             url: report.url,
           })
           .then(() =>
