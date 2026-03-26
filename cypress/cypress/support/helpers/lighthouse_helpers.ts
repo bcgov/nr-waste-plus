@@ -1,3 +1,10 @@
+import { 
+  LighthouseReport,
+  LighthouseAssertionEvent,
+  getLighthouseSeverity,
+  getLighthouseTaxonomy,
+} from "../perf";
+
 export const formatTiming = (value: number | null | undefined): string => {
   if (value == null) return "N/A";
 
@@ -21,8 +28,6 @@ export const parseTiming = (raw: string | number): number => {
   // plain number → assume milliseconds
   return parseFloat(value);
 };
-
-
 
 export function severityFromScore(score: number): "info" | "minor" | "major" {
   if (score >= 90) return "info";
@@ -113,7 +118,104 @@ export const runReportTo = (fn: (report: any) => void) => {
     .then((currentUrl) => {
       return cy.runLighthouseAudit(currentUrl)
               .as("lhReport")
-              .then(fn);            
-    });
+              .then(fn);
+      });
 };
 
+export const expectLighthouse = (report: LighthouseReport) => {
+  const scenario = Cypress.currentTest.title;
+
+  const record = (assertion: {
+    id: string;
+    name: string;
+    value: number | null;
+    threshold: number;
+    comparison: "gte" | "lte";
+    url: string;
+  }) => {
+    const { id, name, value, threshold, comparison, url } = assertion;
+
+    const safeValue = value ?? 0; // Treat null/undefined as 0 for assertion purposes
+
+    const passed =
+      comparison === "gte"
+        ? safeValue >= threshold
+        : safeValue <= threshold;
+
+    const event: LighthouseAssertionEvent = {  
+      type: "lighthouse:record",
+      id,
+      name,
+      value,      
+      threshold,
+      comparison,
+      passed,
+      category: id,
+      severity: getLighthouseSeverity(id, value),
+      taxonomy: getLighthouseTaxonomy(id),
+      url,
+      scenario,
+      timestamp: new Date().toISOString(),
+    };
+
+    return cy.task("lighthouse:record", [event]);
+  };
+  
+  return {
+    category: (name: string) => ({
+      toBeAtLeast: (threshold: number) => {
+        const value = report.categories[name];
+        record({
+          id: name,
+          name,
+          value,
+          threshold,
+          comparison: "gte",
+          url: report.url,
+        })
+        .then(() =>
+          expect(value,`Lighthouse ${name} score is ${value}, expected at least ${threshold}`).to.be.gte(threshold)
+        );
+      },
+    }),
+
+    metric: (alias: string) => {
+      const id = normalizeMetricKey(alias);
+      const name = alias;
+
+      return {
+        toBeAtMost: (rawThreshold: string | number) => {
+          const threshold = parseTiming(rawThreshold);
+          const value = report.metrics[id];
+          record({
+            id,
+            name,
+            value,
+            threshold,
+            comparison: "lte",
+            url: report.url,
+          })
+          .then(() =>
+            expect(value, `Lighthouse metric '${name}' (${id}) is ${formatTiming(value)}, expected at most ${formatTiming(threshold)}`).to.be.lte(threshold)
+          );
+        },
+
+        toBeAtLeast: (rawThreshold: string | number) => {
+          const threshold = parseTiming(rawThreshold);
+          const value = report.metrics[id];
+          record({
+            id,
+            name,
+            value,
+            threshold,
+            comparison: "gte",
+            url: report.url,
+          })
+          .then(() =>
+            expect(value, `Lighthouse metric '${name}' (${id}) is ${formatTiming(value)}, expected at least ${formatTiming(threshold)}`).to.be.gte(threshold)
+          );
+        },
+      };
+    },
+  };
+};

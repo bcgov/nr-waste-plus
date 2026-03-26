@@ -1,12 +1,12 @@
-import { Then, AfterAll } from "@badeball/cypress-cucumber-preprocessor";
+import { Then } from "@badeball/cypress-cucumber-preprocessor";
 import { browserGuardAny } from "./browserHooks";
 import { 
   type DataTableLike,
   parseThresholdTable,
   runReportTo,
   normalizeMetricKey,
-  formatTiming,
-  parseTiming
+  parseTiming,
+  expectLighthouse
 } from "../helpers";
 
 const defaultValues = {
@@ -20,20 +20,23 @@ const defaultValues = {
 Then(
   "the lighthouse {string} score should be above {int}",
   browserGuardAny(["chrome", "chromium"],
-  (category: string, threshold: number) => runReportTo((report) => {    
-    expect(report.categories[category]).to.be.greaterThan(threshold);
-  })
+  (category: string, threshold: number) => runReportTo((report) => 
+    expectLighthouse(report)
+        .category(category)
+        .toBeAtLeast(threshold)
+  )
 ));
 
-Then("the Lighthouse score should be at least:",
+Then("the lighthouse score should be at least:",
   browserGuardAny(["chrome", "chromium"],
   (table: DataTableLike) => {
   const thresholds = parseThresholdTable(table);
 
     runReportTo((report) => {
       for (const [category, minValue] of Object.entries(thresholds)) {
-        const score = report.categories[category];
-        expect(score, `Lighthouse ${category} score`).to.be.greaterThan(minValue);
+        expectLighthouse(report)
+          .category(category)
+          .toBeAtLeast(minValue);
       }
     });
   })
@@ -43,10 +46,18 @@ Then(
   "the page should load quickly",
   browserGuardAny(["chrome", "chromium"], () => {
     runReportTo((report) => {
-      expect(report.categories.performance).to.be.gte(defaultValues.performance);
-      expect(report.metrics["server-response-time"]).to.be.lte(800);
-      expect(report.metrics["largest-contentful-paint"]).to.be.lte(2500);
-      expect(report.metrics["cumulative-layout-shift"]).to.be.lte(0.1);
+      expectLighthouse(report)
+        .category("performance")
+        .toBeAtLeast(defaultValues.performance);
+      expectLighthouse(report)
+        .metric("server-response-time")
+        .toBeAtMost(800);
+      expectLighthouse(report)
+        .metric("largest-contentful-paint")
+        .toBeAtMost(2500);
+      expectLighthouse(report)
+        .metric("cumulative-layout-shift")
+        .toBeAtMost(0.1);
     });
   })
 );
@@ -56,126 +67,137 @@ Then("the page should be mobile friendly",
     runReportTo((report) => {
       expect(report.categories.accessibility).to.be.gte(defaultValues.accessibility);
       expect(report.categories.seo).to.be.gte(defaultValues.seo);
-      expect(report.categories.performance).to.be.gte(defaultValues.performance);
-      expect(report.metrics["cumulative-layout-shift"]).to.be.lte(0.1);
+      expectLighthouse(report)
+        .category("performance")
+        .toBeAtLeast(defaultValues.performance);
+      expectLighthouse(report)
+        .metric("cumulative-layout-shift")
+        .toBeAtMost(0.1);
     });
 }));
 
 Then("the page should follow best practices",
   browserGuardAny(["chrome", "chromium"],() => {
   runReportTo((report) => {
-      expect(report.categories["best-practices"]).to.be.gte(defaultValues["best-practices"]);
+      expectLighthouse(report)
+        .category("best-practices")
+        .toBeAtLeast(defaultValues["best-practices"]);
     });
 }));
 
 Then("the page should be accessible to most users",
   browserGuardAny(["chrome", "chromium"],() => {
   runReportTo((report) => {
-      expect(report.categories.accessibility).to.be.gte(defaultValues.accessibility);
+      expectLighthouse(report)
+        .category("accessibility")
+        .toBeAtLeast(defaultValues.accessibility);
     });
 }));
 
 Then("the UX quality score should be acceptable",
   browserGuardAny(["chrome", "chromium"],() => {
     runReportTo((report) => {
-      expect(report.categories.accessibility).to.be.gte(defaultValues.accessibility);
-      expect(report.categories.seo).to.be.gte(defaultValues.seo);
-      expect(report.categories.performance).to.be.gte(defaultValues.performance);
-      expect(report.categories["best-practices"]).to.be.gte(defaultValues["best-practices"]);
+      expectLighthouse(report)
+        .category("accessibility")
+        .toBeAtLeast(defaultValues.accessibility);
+      expectLighthouse(report)
+        .category("seo")
+        .toBeAtLeast(defaultValues.seo);
+      expectLighthouse(report)
+        .category("performance")
+        .toBeAtLeast(defaultValues.performance);
+      expectLighthouse(report)
+        .category("best-practices")
+        .toBeAtLeast(defaultValues["best-practices"]);
 
-      expect(report.metrics["cumulative-layout-shift"]).to.be.lte(0.1);
-      expect(report.metrics["largest-contentful-paint"]).to.be.lte(2500);
-      expect(report.metrics["server-response-time"]).to.be.lte(800);
+      expectLighthouse(report)
+        .metric("cumulative-layout-shift")
+        .toBeAtMost(0.1);
+      expectLighthouse(report)
+        .metric("largest-contentful-paint")
+        .toBeAtMost(2500);
+      expectLighthouse(report)
+        .metric("server-response-time")
+        .toBeAtMost(800);
     });
 }));
 
 Then("the lighthouse {string} score should be at least {int}",
   browserGuardAny(["chrome", "chromium"],(metric: string, minimum: number) => runReportTo((report) => {    
-    expect(report.categories[metric]).to.be.gte(minimum);
+    expectLighthouse(report)
+      .metric(normalizeMetricKey(metric))
+      .toBeAtLeast(parseTiming(minimum));
   })
 ));
 
 Then("the lighthouse {string} should be at most {int}",
   browserGuardAny(["chrome", "chromium"],(metric: string, maximum: number)  => runReportTo((report) => {    
-    expect(report.categories[metric]).to.be.lte(maximum);
+    expectLighthouse(report)
+      .metric(normalizeMetricKey(metric))
+      .toBeAtMost(parseTiming(maximum));
   })
 ));
 
 Then(
-  "the Lighthouse metric {string} should be at most {string}",
+  "the lighthouse metric {string} should be at most {string}",
   browserGuardAny(["chrome", "chromium"], (metricAlias: string, rawMax: string) => {
     runReportTo((report) => {
       const metricId = normalizeMetricKey(metricAlias);
-      const value = report.metrics[metricId];
       const max = parseTiming(rawMax);
       
-      expect(
-        value,
-        `Lighthouse metric '${metricAlias}' (${metricId})`
-      ).to.be.lessThan(max);
+      expectLighthouse(report)
+        .metric(metricId)
+        .toBeAtMost(max);
     });
   })
 );
 
 Then(
-  "the Lighthouse metric {string} should be at least {string}",
+  "the lighthouse metric {string} should be at least {string}",
   browserGuardAny(["chrome", "chromium"], (metricAlias: string, rawMin: string) => {
     runReportTo((report) => {
       const metricId = normalizeMetricKey(metricAlias);
-      const value = report.metrics[metricId];
       const min = parseTiming(rawMin);
 
-      expect(
-        value,
-        `Lighthouse metric '${metricAlias}' (${metricId})`
-      ).to.be.greaterThan(min);
+      expectLighthouse(report)
+        .metric(metricId)
+        .toBeAtLeast(min);
     });
   })
 );
 
 Then(
-  "the Lighthouse metrics should be at most:",
+  "the lighthouse metrics should be at most:",
   browserGuardAny(["chrome", "chromium"], (table: DataTableLike) => {
     const thresholds = parseThresholdTable(table);
 
     runReportTo((report) => {
       for (const [metricAlias, rawMax] of Object.entries(thresholds)) {
         const metricId = normalizeMetricKey(metricAlias);
-        const value = report.metrics[metricId];
         const max = parseTiming(rawMax);
 
-        expect(
-          value,
-          `Lighthouse metric '${metricAlias}' (${metricId}) was ${formatTiming(value)}`
-        ).to.be.lessThan(max);
+        expectLighthouse(report)
+        .metric(metricId)
+        .toBeAtMost(max);
       }
     });
   })
 );
 
 Then(
-  "the Lighthouse metrics should be at least:",
+  "the lighthouse metrics should be at least:",
   browserGuardAny(["chrome", "chromium"], (table: DataTableLike) => {
     const thresholds = parseThresholdTable(table);
 
     runReportTo((report) => {
       for (const [metricAlias, rawMin] of Object.entries(thresholds)) {
         const metricId = normalizeMetricKey(metricAlias);
-        const value = report.metrics[metricId];
         const min = parseTiming(rawMin);
 
-        expect(
-          value,
-          `Lighthouse metric '${metricAlias}' (${metricId}) was ${formatTiming(value)}`
-        ).to.be.greaterThan(min);
+        expectLighthouse(report)
+        .metric(metricId)
+        .toBeAtLeast(min);
       }
     });
   })
 );
-
-
-
-
-AfterAll(() => {
-  cy.task("lighthouse:reset");
-});

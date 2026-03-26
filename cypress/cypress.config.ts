@@ -9,6 +9,7 @@ dotenv.config();
 
 const A11Y_REPORT_FILE = path.resolve(__dirname, "reports", "a11y", "a11y-results.json");
 const UIUX_REPORT_FILE = path.resolve(__dirname, "reports", "uiux", "uiux-results.json");
+const LIGHTHOUSE_REPORT_FILE = path.resolve(__dirname, "reports", "lighthouse", "lighthouse-results.json");
 
 let debugPort = 0;
 
@@ -35,6 +36,7 @@ async function setupNodeEvents(
   let a11yResults: Array<Record<string, unknown>> = [];
   let uiuxResults: Array<Record<string, unknown>> = [];
   let lighthouseResults: Array<Record<string, unknown>> = [];
+  let lighthouseReport : Array<Record<string, unknown>> = [];
 
 
   // This is required for the preprocessor to be able to generate JSON reports after each run, and more,
@@ -69,6 +71,10 @@ async function setupNodeEvents(
       a11yResults = [];
       return null;
     },
+    "lighthouse:record": (payload: Record<string, unknown>) => {
+      lighthouseResults.push(payload);
+      return null;
+    },
     "lighthouse:reset": () => {
       lighthouseResults = [];
       return null;
@@ -76,7 +82,7 @@ async function setupNodeEvents(
     async "lighthouse:run"({ url, options }) {
     const lighthouse = await import("lighthouse");
 
-    if(lighthouseResults[url]) return lighthouseResults[url];
+    if(lighthouseReport[url]) return lighthouseReport[url];
 
     // Run Lighthouse
     const result = await lighthouse.default(url, {
@@ -93,6 +99,7 @@ async function setupNodeEvents(
     const lhr = result.lhr;
 
     const report = {
+      url: url,
       categories: Object.fromEntries(
           Object.entries(lhr.categories)
             .filter(([, v]) => (v as any).score !== undefined)
@@ -103,9 +110,10 @@ async function setupNodeEvents(
           Object.entries(result.lhr.audits)
             .filter(([, v]) => (v as any).numericValue !== undefined)
             .map(([k, v]) => [k, (v as any).numericValue ?? null])
-        ),      
+        ),
+      raw: lhr,
     };
-    lighthouseResults[url] = report;
+    lighthouseReport[url] = report;
 
     return report;
   },
@@ -115,11 +123,13 @@ async function setupNodeEvents(
     a11yResults = [];
     cleanFile(A11Y_REPORT_FILE);
     cleanFile(UIUX_REPORT_FILE);
+    cleanFile(LIGHTHOUSE_REPORT_FILE);
   });
 
   on("after:run", () => {
     writeFile(A11Y_REPORT_FILE, a11yResults);
     writeFile(UIUX_REPORT_FILE, uiuxResults);
+    writeFile(LIGHTHOUSE_REPORT_FILE, lighthouseResults);
   });
 
   on(

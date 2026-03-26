@@ -2,6 +2,7 @@
 /// <reference types="cypress" />
 
 import { getCssVarValue, getTaxonomy, getSeverity } from './tokens';
+import { recordEvent, LighthouseReport } from './perf';
 
 Cypress.Commands.add('waitForPageLoad', (element: string, timeout?: number) => {
   cy.get(element, { timeout: timeout || 10000 }).should('be.visible');
