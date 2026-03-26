@@ -8,7 +8,6 @@
   .#{vars.$bcgov-prefix}--header__name {
     margin-left: 0.9375rem;
     color: colors.$white;
-    gap: 1.5rem;
 
     &:hover {
       color: colors.$white;
@@ -17,6 +16,11 @@
     @include breakpoint-down(lg) {
       margin-left: 0;
       padding: 0;
+    }
+
+    span {
+      display: flex;
+      gap: 1.5rem;
     }
   }
 
