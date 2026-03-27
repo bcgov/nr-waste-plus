@@ -23,7 +23,7 @@ Checks executed: ${data.checks.length} | Total violations: ${data.checks.filter(
       const checks = scenarioEvents.filter(e => e.event === "check");
       const violations = scenarioEvents.filter(e => e.event === "violation");
       
-      md += `\n\n### 🎯 Scenario: **${scenario}**\n\n`;
+      md += `\n\n#### 🎯 Scenario: **${scenario}**\n\n`;
       md += `| Status | Severity | Taxonomy | Property | Expected | Actual | Element |\n`;
       md += `| ------ | ---------- | ---------- | ---------- | ---------- | -------- | --------- |\n`;
   
