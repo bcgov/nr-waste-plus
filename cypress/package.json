@@ -10,11 +10,7 @@
     "precy:run": "npm run report:clean",
     "cy:run": "cypress run --browser chrome",
     "postcy:run": "npm run report:md",
-    
-    "precy:run:md": "npm run report:clean",
-    "cy:run:md": "cypress run --browser chrome --config \"baseUrl=https://nr-waste-plus-2-frontend.apps.silver.devops.gov.bc.ca/\"",
-    "postcy:run:md": "npm run report:md",
-    
+        
     "precy:run:local": "npm run report:clean",
     "cy:run:local": "cypress run  --browser chrome --config \"baseUrl=http://localhost:3000\"",
     "postcy:run:local": "npm run report:md",
@@ -23,8 +19,7 @@
     "cy:run:md:local": "cypress run  --browser chrome --config \"baseUrl=http://localhost:3000\"",
     "postcy:run:md:local": "npm run report:md",
     
-    "cy:open:local": "cypress open --config \"baseUrl=http://localhost:3000\"",
-    "cy:open:remote": "cypress open --config \"baseUrl=https://nr-waste-plus-2-frontend.apps.silver.devops.gov.bc.ca/\""
+    "cy:open:local": "cypress open --config \"baseUrl=http://localhost:3000\""
   },
   "keywords": [],
   "author": "",
