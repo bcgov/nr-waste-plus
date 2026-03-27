@@ -61,10 +61,6 @@ npm run report:md
 
 Generated artifacts:
 
-- `reports/mochawesome/**/*.json` (machine-readable test results)
-- `reports/a11y/a11y-results.json` (accessibility checks metadata)
-- `summary.md` (markdown report ready for GitHub Actions summary)
-
 In GitHub Actions, append it after your Cypress step:
 
 ```bash
@@ -72,10 +68,6 @@ cat cypress/summary.md >> "$GITHUB_STEP_SUMMARY"
 ```
 
 `summary.md` includes:
-
-- test totals and failed tests
-- failed test screenshots and videos (when available)
-- accessibility check totals and top violations
 
 ## Submitting a test without coding
 
