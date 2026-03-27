@@ -45,24 +45,23 @@ jobs:
         window.localStorage.setItem(\"VITE_FEATURES_OFFLINE\",'false');
 
 
-#  deploy-prod:
-#    name: Deploy (PROD)
-#    needs: [deploy-test]
-#    secrets: inherit
-#    uses: ./.github/workflows/.deploy.yml
-#    with:
-#      environment: prod
-#      target: prod
-#      url: forestclient.nrs.gov.bc.ca
-#      configmap-backend: |-
-#        features:
-#          staff:
-#            match: false
-#        info:
-#          app:
-#            component: backend
-#      configmap-frontend: |-
-#        window.localStorage.setItem(\"VITE_FEATURE_FLAGS\",'{}');
+  deploy-prod:
+    name: Deploy (PROD)
+    needs: [deploy-test]
+    secrets: inherit
+    uses: ./.github/workflows/.deploy.yml
+    with:
+      environment: prod
+      target: prod
+      zone: prod
+      url: wasteplus.nrs.gov.bc.ca
+      configmap-backend: |-
+        info:
+          app:
+            component: backend
+      configmap-frontend: |-
+        window.localStorage.setItem(\"VITE_FEATURE_FLAGS\",'{}');
+        window.localStorage.setItem(\"VITE_FEATURES_OFFLINE\",'false');
 
 #  images-prod:
 #    name: Promote images to PROD
