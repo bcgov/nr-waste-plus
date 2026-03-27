@@ -376,3 +376,6 @@ docker-compose.override.yml
 **/config/application-dev-*.yml
 **/config/application-dev-*.properties
 **/screenshots/**.png
+**/videos/**.mp4
+**/reports
+cypress/summary.md

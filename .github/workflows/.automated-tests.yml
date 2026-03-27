@@ -27,26 +27,30 @@ jobs:
         uses: cypress-io/github-action@v5
         with:
           working-directory: cypress
+          browser: chrome
         env:
           CYPRESS_baseUrl: https://${{ inputs.url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
           CYPRESS_idir_password: ${{ secrets.IDIR_UAT_PASSWORD }}
           CYPRESS_idir_username: ${{ secrets.IDIR_UAT_USERNAME }}
+          MOCHAWESOME_REPORT: true
+          CYPRESS_MOCHAWESOME_REPORT: true
           CYPRESS_bceid_password: ${{ secrets.BCEID_UAT_PASSWORD }}
-          CYPRESS_bceid_username: ${{ secrets.BCEID_UAT_USERNAME }}          
+          CYPRESS_bceid_username: ${{ secrets.BCEID_UAT_USERNAME }}
 
-      - name: Publish Cypress Results
-        uses: mikepenz/action-junit-report@49b2ca06f62aa7ef83ae6769a2179271e160d8e4 # v6
-        continue-on-error: true
+      - name: Generate Markdown Report
+        working-directory: cypress
         if: always()
-        with:
-          report_paths: cypress/result.xml
-          commit: ${{ github.event.pull_request.head.sha }}
-          summary: Cypress Test Results
-          detailed_summary: true
-          job_name: User Journeys
+        run: npm run report:md
+
+      - name: Add summary to GitHub Action
+        working-directory: cypress
+        if: always()
+        run: cat summary.md >> $GITHUB_STEP_SUMMARY
 
       - name: Check for Cypress Screenshots and Videos
+        continue-on-error: true
+        if: always()
         run: |
           if [ -d "cypress/cypress/screenshots" ] && [ "$(ls -A cypress/cypress/screenshots)" ]; then
             echo "Screenshots folder is not empty, uploading artifacts."            

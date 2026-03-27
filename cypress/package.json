@@ -3,10 +3,22 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "cy:open": "cypress open",
-    "cy:run": "cypress run --reporter junit --reporter-options mochaFile=result.xml,toConsole=true",
-    "cy:run:local": "cypress run --reporter junit --reporter-options mochaFile=result.xml,toConsole=true --config \"baseUrl=http://localhost:3000\"",
+  "scripts": {    
+    "report:md": "node scripts/parse-report.js",
+    "report:clean": "rm -rf reports/*",
+    
+    "precy:run": "npm run report:clean",
+    "cy:run": "cypress run --browser chrome",
+    "postcy:run": "npm run report:md",
+        
+    "precy:run:local": "npm run report:clean",
+    "cy:run:local": "cypress run  --browser chrome --config \"baseUrl=http://localhost:3000\"",
+    "postcy:run:local": "npm run report:md",
+    
+    "precy:run:md:local": "npm run report:clean",
+    "cy:run:md:local": "cypress run  --browser chrome --config \"baseUrl=http://localhost:3000\"",
+    "postcy:run:md:local": "npm run report:md",
+    
     "cy:open:local": "cypress open --config \"baseUrl=http://localhost:3000\""
   },
   "keywords": [],
@@ -18,8 +30,13 @@
     "@cypress/webpack-preprocessor": "^7.0.0",
     "@testing-library/cypress": "^10.1.0",
     "@types/node": "^25.5.0",
+    "axe-core": "^4.11.0",
     "cypress": "^15.0.0",
+    "cypress-axe": "^1.7.0",
+    "cypress-real-events": "^1.14.0",
     "dotenv": "^17.3.1",
+    "lighthouse": "^12.8.2",
+    "mochawesome": "^7.1.4",
     "ts-loader": "^9.4.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.0.4",
