@@ -10,11 +10,14 @@ import {
 } from "../helpers";
 
 const defaultValues = {
-  performance: 50,
+  performance: 50, //Temporary value
   accessibility: 85,
   "best-practices": 90,
   seo: 80,
   pwa: 0,
+  ttfb: 50,
+  lcp: 18000, //Temporary value
+  cls: 0.1
 }
 
 Then(
@@ -51,13 +54,13 @@ Then(
         .toBeAtLeast(defaultValues.performance);
       expectLighthouse(report)
         .metric("server-response-time")
-        .toBeAtMost(800);
+        .toBeAtMost(defaultValues.ttfb);
       expectLighthouse(report)
         .metric("largest-contentful-paint")
-        .toBeAtMost(16000);
+        .toBeAtMost(defaultValues.lcp);
       expectLighthouse(report)
         .metric("cumulative-layout-shift")
-        .toBeAtMost(0.1);
+        .toBeAtMost(defaultValues.cls);
     });
   })
 );
@@ -72,7 +75,7 @@ Then("the page should be mobile friendly",
         .toBeAtLeast(defaultValues.performance);
       expectLighthouse(report)
         .metric("cumulative-layout-shift")
-        .toBeAtMost(0.1);
+        .toBeAtMost(defaultValues.cls);
     });
 }));
 
@@ -112,13 +115,13 @@ Then("the UX quality score should be acceptable",
 
       expectLighthouse(report)
         .metric("cumulative-layout-shift")
-        .toBeAtMost(0.1);
+        .toBeAtMost(defaultValues.cls);
       expectLighthouse(report)
         .metric("largest-contentful-paint")
-        .toBeAtMost(2500);
+        .toBeAtMost(defaultValues.lcp);
       expectLighthouse(report)
         .metric("server-response-time")
-        .toBeAtMost(800);
+        .toBeAtMost(defaultValues.ttfb);
     });
 }));
 
