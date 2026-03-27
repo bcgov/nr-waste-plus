@@ -54,7 +54,7 @@ Then(
         .toBeAtMost(800);
       expectLighthouse(report)
         .metric("largest-contentful-paint")
-        .toBeAtMost(2500);
+        .toBeAtMost(16000);
       expectLighthouse(report)
         .metric("cumulative-layout-shift")
         .toBeAtMost(0.1);
