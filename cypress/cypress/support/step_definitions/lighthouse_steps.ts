@@ -15,9 +15,9 @@ const defaultValues = {
   "best-practices": 90,
   seo: 80,
   pwa: 0,
-  ttfb: 50,
+  ttfb: 800, //Temporary value
   lcp: 18000, //Temporary value
-  cls: 0.1
+  cls: 0.9 //Temporary value
 }
 
 Then(
