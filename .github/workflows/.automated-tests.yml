@@ -40,7 +40,7 @@ jobs:
 
       - name: Generate Markdown Report
         working-directory: cypress
-        if: failure()
+        if: always()
         run: npm run report:md
 
       - name: Add summary to GitHub Action
