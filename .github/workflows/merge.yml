@@ -63,51 +63,51 @@ jobs:
         window.localStorage.setItem(\"VITE_FEATURE_FLAGS\",'{}');
         window.localStorage.setItem(\"VITE_FEATURES_OFFLINE\",'false');
 
-#  images-prod:
-#    name: Promote images to PROD
-#    needs: [deploy-prod]
-#    permissions:
-#      packages: write
-#    runs-on: ubuntu-24.04
-#    strategy:
-#      matrix:
-#        component: [backend, frontend, legacy, database, processor]
-#    steps:
-#      - uses: shrink/actions-docker-registry-tag@f04afd0559f66b288586792eb150f45136a927fa # v4
-#        with:
-#          registry: ghcr.io
-#          repository: ${{ github.repository }}/${{ matrix.component }}
-#          target: test
-#          tags: prod
+  images-prod:
+    name: Promote images to PROD
+    needs: [deploy-prod]
+    permissions:
+      packages: write
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        component: [backend, frontend, legacy, database, processor]
+    steps:
+      - uses: shrink/actions-docker-registry-tag@f04afd0559f66b288586792eb150f45136a927fa # v4
+        with:
+          registry: ghcr.io
+          repository: ${{ github.repository }}/${{ matrix.component }}
+          target: test
+          tags: prod
 
-#  release:
-#    name: Release
-#    needs: [deploy-prod]
-#    permissions:
-#      contents: write
-#    runs-on: ubuntu-24.04
-#    steps:
-#      - uses: actions/checkout@v4
-#
-#      - name: Conventional Changelog Update
-#        uses: TriPSs/conventional-changelog-action@67139193614f5b9e8db87da1bd4240922b34d765 # v6
-#        id: changelog
-#        continue-on-error: true
-#        with:
-#          github-token: ${{ github.token }}
-#          output-file: "CHANGELOG.md"
-#          skip-version-file: "true"
-#          skip-commit: "true"
-#          git-push: "true"
-#
-#      - name: Create Release
-#        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2
-#        if: steps.changelog.outputs.tag != ''
-#        continue-on-error: true
-#        env:
-#          GITHUB_TOKEN: ${{ github.token }}
-#        with:
-#          token: ${{ github.token }}
-#          tag_name: ${{ steps.changelog.outputs.tag }}
-#          name: ${{ steps.changelog.outputs.tag }}
-#          body: ${{ steps.changelog.outputs.clean_changelog }}
+  release:
+    name: Release
+    needs: [deploy-prod]
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Conventional Changelog Update
+        uses: TriPSs/conventional-changelog-action@67139193614f5b9e8db87da1bd4240922b34d765 # v6
+        id: changelog
+        continue-on-error: true
+        with:
+          github-token: ${{ github.token }}
+          output-file: "CHANGELOG.md"
+          skip-version-file: "true"
+          skip-commit: "true"
+          git-push: "true"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2
+        if: steps.changelog.outputs.tag != ''
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          token: ${{ github.token }}
+          tag_name: ${{ steps.changelog.outputs.tag }}
+          name: ${{ steps.changelog.outputs.tag }}
+          body: ${{ steps.changelog.outputs.clean_changelog }}
