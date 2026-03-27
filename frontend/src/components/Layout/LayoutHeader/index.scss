@@ -17,6 +17,11 @@
       margin-left: 0;
       padding: 0;
     }
+
+    span {
+      display: flex;
+      gap: 1.5rem;
+    }
   }
 
   .#{vars.$bcgov-prefix}--header__menu-toggle {

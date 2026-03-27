@@ -16,7 +16,7 @@
             "matches": "(.*)"
           },
           "identity_provider": {
-            "equalTo": "MOCK-IDIR"
+            "matches": ".*-IDIR"
           },
           "scope": {
             "equalTo": "openid"
@@ -62,7 +62,7 @@
             "matches": "(.*)"
           },
           "identity_provider": {
-            "equalTo": "MOCK-BCEIDBUSINESS"
+            "matches": ".*-BCEIDBUSINESS"
           },
           "scope": {
             "equalTo": "openid"
