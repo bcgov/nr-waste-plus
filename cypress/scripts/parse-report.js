@@ -3,6 +3,7 @@ const { parseMochawesomeReports } = require('./parsers/mochawesomeParser.js');
 const { mochawesomeToMarkdown, testSummaryToMarkdown } = require('./modules/mochawesomeModule.js');
 const { accessibilityToMarkdown } = require('./modules/accessibilityModule.js');
 const { uiuxToMarkdown } = require('./modules/uiuxModule.js');
+const { lighthouseToMarkdown } = require('./modules/lighthouseModule.js');
 const { writeMarkdown } = require('./renderers/markdownWriter.js');
 
 function generateSummary() {
@@ -18,6 +19,12 @@ function generateSummary() {
   );
   const accessibilityMd = accessibilityToMarkdown(accessibilityData);
 
+  /* lighthouse report */
+  const lighthouseData = JSON.parse(
+    fs.readFileSync('./reports/lighthouse/lighthouse-results.json', 'utf8')
+  );
+  const lighthouseMd = lighthouseToMarkdown(lighthouseData);
+
   /* UI/UX report */
   const uiuxData = JSON.parse(
     fs.readFileSync('./reports/uiux/uiux-results.json', 'utf8')
@@ -30,6 +37,7 @@ function generateSummary() {
 **Generated At:** ${timestamp}
 ${summaryMd}
 ${accessibilityMd}
+${lighthouseMd}
 ${uiuxMd}
 ${mochawesomeMd}`;
 
