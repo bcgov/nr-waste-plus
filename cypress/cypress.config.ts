@@ -29,6 +29,35 @@ const cleanFile = (filePath: string) => {
   }
 };
 
+const normalizePath = (url: any): any => {
+  try {
+    const u = new URL(url);
+
+    // Remove hash and query
+    const hash = u.hash.replace(/^#/, ""); // remove leading #
+    const search = u.search; // we will ignore it
+
+    // Prefer hash-based routing if present
+    let path = hash || u.pathname;
+
+    // Normalize empty path
+    if (!path || path === "") path = "/";
+
+    // Ensure leading slash
+    if (!path.startsWith("/")) path = "/" + path;
+
+    // Remove trailing slash except for root
+    if (path !== "/" && path.endsWith("/")) {
+      path = path.slice(0, -1);
+    }
+
+    return path;
+  } catch {
+    return url; // fallback
+  }
+};
+
+
 async function setupNodeEvents(
   on: Cypress.PluginEvents,
   config: Cypress.PluginConfigOptions
@@ -81,8 +110,9 @@ async function setupNodeEvents(
     },
     async "lighthouse:run"({ url, options }) {
     const lighthouse = await import("lighthouse");
+    const normalizedURL = normalizePath(url);
 
-    if(lighthouseReport[url]) return lighthouseReport[url];
+    if(lighthouseReport[normalizedURL]) return lighthouseReport[normalizedURL];
 
     // Run Lighthouse
     const result = await lighthouse.default(url, {
@@ -99,7 +129,7 @@ async function setupNodeEvents(
     const lhr = result.lhr;
 
     const report = {
-      url: url,
+      url: normalizedURL,
       categories: Object.fromEntries(
           Object.entries(lhr.categories)
             .filter(([, v]) => (v as any).score !== undefined)
@@ -113,7 +143,7 @@ async function setupNodeEvents(
         ),
       raw: lhr,
     };
-    lighthouseReport[url] = report;
+    lighthouseReport[normalizedURL] = report;
 
     return report;
   },
