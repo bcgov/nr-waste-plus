@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock, beforeAll } from 'vitest';
 
 import { LayoutHeader } from '@/components/Layout/LayoutHeader';
 import { AuthProvider } from '@/context/auth/AuthProvider';
@@ -62,5 +62,55 @@ describe('LayoutHeader', () => {
 
     const title = await screen.findByText(/Waste Plus/i);
     expect(title).toBeDefined();
+  });
+
+  describe('when VITE_NODE_ENV starts with "openshift-"', () => {
+    describe('and VITE_NODE_ENV ends with "prod"', () => {
+      beforeAll(async () => {
+        const { env } = await import('@/env');
+        env.VITE_NODE_ENV = 'openshift-prod';
+      });
+
+      it("doesn't render the Env label", async () => {
+        await renderWithProviders();
+
+        expect(screen.queryByText(/Env/i)).toBeNull();
+      });
+    });
+
+    describe('and VITE_NODE_ENV doesn\'t end with "prod"', () => {
+      beforeAll(async () => {
+        const { env } = await import('@/env');
+        env.VITE_NODE_ENV = 'openshift-test';
+      });
+
+      it('renders the Env label', async () => {
+        await renderWithProviders();
+
+        expect(screen.queryByText(/Env/i)).toBeDefined();
+
+        const envLabel = await screen.findByText('Env. Test');
+        expect(envLabel).toBeDefined();
+      });
+    });
+  });
+
+  describe('when VITE_NODE_ENV doesn\'t start with "openshift-"', () => {
+    beforeAll(async () => {
+      const { env } = await import('@/env');
+      env.VITE_NODE_ENV = 'bogus-test';
+    });
+
+    it('renders the Env label but the name is empty', async () => {
+      await renderWithProviders();
+
+      expect(screen.queryByText(/Env/i)).toBeDefined();
+
+      const envLabel = await screen.findByText('Env.');
+      expect(envLabel).toBeDefined();
+
+      expect(screen.queryByText(/Bogus/i)).toBeNull();
+      expect(screen.queryByText(/Test/i)).toBeNull();
+    });
   });
 });
