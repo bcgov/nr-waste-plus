@@ -34,7 +34,7 @@ jobs:
     uses: ./.github/workflows/.deploy.yml
     with:
       environment: test
-      target: ${{ steps.vars.outputs.pr }}
+      target: ${{ needs.vars.outputs.pr }}
       zone: test
       url: nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca
       configmap-backend: |-
@@ -53,7 +53,7 @@ jobs:
     uses: ./.github/workflows/.deploy.yml
     with:
       environment: prod
-      target: ${{ steps.vars.outputs.pr }}
+      target: ${{ needs.vars.outputs.pr }}
       zone: prod
       url: wasteplus.nrs.gov.bc.ca
       configmap-backend: |-
@@ -78,7 +78,7 @@ jobs:
         with:
           registry: ghcr.io
           repository: ${{ github.repository }}/${{ matrix.component }}
-          target: ${{ steps.vars.outputs.pr }}
+          target: ${{ needs.vars.outputs.pr }}
           tags: prod
 
   release:
