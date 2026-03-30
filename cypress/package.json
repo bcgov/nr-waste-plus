@@ -3,22 +3,18 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {    
+  "scripts": {
     "report:md": "node scripts/parse-report.js",
     "report:clean": "rm -rf reports/*",
-    
     "precy:run": "npm run report:clean",
     "cy:run": "cypress run --browser chrome",
     "postcy:run": "npm run report:md",
-        
     "precy:run:local": "npm run report:clean",
     "cy:run:local": "cypress run  --browser chrome --config \"baseUrl=http://localhost:3000\"",
     "postcy:run:local": "npm run report:md",
-    
     "precy:run:md:local": "npm run report:clean",
     "cy:run:md:local": "cypress run  --browser chrome --config \"baseUrl=http://localhost:3000\"",
     "postcy:run:md:local": "npm run report:md",
-    
     "cy:open:local": "cypress open --config \"baseUrl=http://localhost:3000\""
   },
   "keywords": [],
@@ -48,7 +44,7 @@
   "overrides": {
     "picomatch@^4.0.0": "^4.0.4",
     "dompurify@<3.3.2": "^3.3.2",
-    "serialize-javascript": "^7.0.3",
+    "serialize-javascript": "^7.0.5",
     "lodash@^4.0.0": "^4.17.23",
     "qs": "6.15.0",
     "form-data": "4.0.5",
