@@ -29,12 +29,13 @@ jobs:
 
   deploy-test:
     name: Deploy (TEST)
+    needs: [vars]
     secrets: inherit
     uses: ./.github/workflows/.deploy.yml
     with:
       environment: test
+      target: ${{ steps.vars.outputs.pr }}
       zone: test
-      target: test
       url: nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca
       configmap-backend: |-
         info:
@@ -47,12 +48,12 @@ jobs:
 
   deploy-prod:
     name: Deploy (PROD)
-    needs: [deploy-test]
+    needs: [vars, deploy-test]
     secrets: inherit
     uses: ./.github/workflows/.deploy.yml
     with:
       environment: prod
-      target: prod
+      target: ${{ steps.vars.outputs.pr }}
       zone: prod
       url: wasteplus.nrs.gov.bc.ca
       configmap-backend: |-
@@ -65,7 +66,7 @@ jobs:
 
   images-prod:
     name: Promote images to PROD
-    needs: [deploy-prod]
+    needs: [vars, deploy-prod]
     permissions:
       packages: write
     runs-on: ubuntu-24.04
@@ -77,7 +78,7 @@ jobs:
         with:
           registry: ghcr.io
           repository: ${{ github.repository }}/${{ matrix.component }}
-          target: test
+          target: ${{ steps.vars.outputs.pr }}
           tags: prod
 
   release:
