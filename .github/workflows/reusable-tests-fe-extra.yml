@@ -53,7 +53,7 @@ jobs:
           VITE_FAM_DOMAIN: ${{ secrets.FAM_DOMAIN }}
 
       - name: Annotate PR with a11y results
-        uses: dorny/test-reporter@v2
+        uses: dorny/test-reporter@v3
         if: always()
         with:
           name: Accessibility Tests
