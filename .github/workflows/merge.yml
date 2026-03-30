@@ -29,12 +29,11 @@ jobs:
 
   deploy-test:
     name: Deploy (TEST)
-    needs: [vars]
     secrets: inherit
     uses: ./.github/workflows/.deploy.yml
     with:
       environment: test
-      target: ${{ needs.vars.outputs.pr }}
+      target: test
       zone: test
       url: nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca
       configmap-backend: |-
@@ -47,12 +46,12 @@ jobs:
 
   deploy-prod:
     name: Deploy (PROD)
-    needs: [vars, deploy-test]
+    needs: [deploy-test]
     secrets: inherit
     uses: ./.github/workflows/.deploy.yml
     with:
       environment: prod
-      target: ${{ needs.vars.outputs.pr }}
+      target: prod
       zone: prod
       url: nr-waste-plus-prod-frontend.apps.silver.devops.gov.bc.ca
       configmap-backend: |-
