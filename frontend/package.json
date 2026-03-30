@@ -98,7 +98,7 @@
     "minimatch@<3.1.5": "^3.1.5",
     "fast-xml-parser": "^5.5.9",
     "immutable": "^5.1.5",
-    "serialize-javascript": "^7.0.4",
+    "serialize-javascript": "^7.0.5",
     "workbox-build": {
       "glob": "^13.0.0"
     },
