@@ -48,7 +48,8 @@ jobs:
     secrets: inherit
     uses: ./.github/workflows/.deploy.yml
     with:
-      zone: test
+      zone: ${{ github.event.number }}
+      target: test
       oracledb-port: 1521
       oracledb-servicename: PR_${{ github.event.number }}
       oracledb-username: THE
