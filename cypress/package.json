@@ -39,7 +39,7 @@
     "mochawesome": "^7.1.4",
     "ts-loader": "^9.4.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.0.4",
+    "typescript": "^6.0.0",
     "webpack": "^5.81.0"
   },
   "cypress-cucumber-preprocessor": {
