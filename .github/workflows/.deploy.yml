@@ -75,7 +75,7 @@ jobs:
           oc_token: ${{ secrets.oc_token }}
           overwrite: true
           parameters:
-            -p ZONE=${{ inputs.target }}
+            -p ZONE=${{ inputs.zone }}
             -p ORACLEDB_USER=${{ inputs.oracledb-username || secrets.ORACLEDB_USERNAME }}
             -p ORACLEDB_PASSWORD=${{ secrets.ORACLEDB_PASSWORD }}
             -p ORACLEDB_DATABASE=${{ secrets.ORACLEDB_DATABASE }}
@@ -83,14 +83,14 @@ jobs:
             -p ORACLEDB_SERVICENAME=${{ inputs.oracledb-servicename || secrets.ORACLEDB_SERVICENAME }}
             -p ORACLEDB_SECRET=${{ secrets.ORACLEDB_SECRET }}            
             -p COGNITO_CLIENT_ID=${{ secrets.COGNITO_CLIENT_ID }}
-            -p COGNITO_ENVIRONMENT=${{ inputs.zone || 'dev' }}
+            -p COGNITO_ENVIRONMENT=${{ inputs.target || 'dev' }}
             -p COGNITO_USER_POOL=${{ secrets.COGNITO_USER_POOL }}
             -p VITE_NODE_ENV=openshift-${{ inputs.target }}
             -p URL_FRONTEND=${{ inputs.url }}
             -p LANDING_URL=${{ inputs.url }}
             -p DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             -p SPRING_PROFILES_ACTIVE=${{ secrets.OC_NAMESPACE }}
-            -p VITE_ZONE=${{ inputs.zone || 'dev' }}
+            -p VITE_ZONE=${{ inputs.target || 'dev' }}
             -p VITE_LEGACY_BASE_URL=${{ secrets.GREEN_DOMAIN }}
             -p CLIENT_BASE_URL=${{ secrets.CLIENT_API_URL }}
             -p CLIENT_BASE_KEY=${{ secrets.CLIENT_API_KEY }}
@@ -132,5 +132,5 @@ jobs:
           overwrite: ${{ matrix.overwrite }}
           parameters:
             -p TAG=${{ needs.vars.outputs.tag }}
-            -p ZONE=${{ inputs.target }}
+            -p ZONE=${{ inputs.zone }}
             ${{ matrix.parameters }}
