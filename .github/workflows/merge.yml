@@ -54,7 +54,7 @@ jobs:
       environment: prod
       target: ${{ needs.vars.outputs.pr }}
       zone: prod
-      url: wasteplus.nrs.gov.bc.ca
+      url: nr-waste-plus-prod-frontend.apps.silver.devops.gov.bc.ca
       configmap-backend: |-
         info:
           app:
