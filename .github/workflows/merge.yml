@@ -45,7 +45,6 @@ jobs:
         window.localStorage.setItem(\"VITE_FEATURE_FLAGS\",'{}');
         window.localStorage.setItem(\"VITE_FEATURES_OFFLINE\",'false');
 
-
   deploy-prod:
     name: Deploy (PROD)
     needs: [vars, deploy-test]
@@ -88,7 +87,7 @@ jobs:
       contents: write
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@cd7d8d697e10461458bc34a716e55a9b0abe4949 # v6
 
       - name: Conventional Changelog Update
         uses: TriPSs/conventional-changelog-action@67139193614f5b9e8db87da1bd4240922b34d765 # v6
