@@ -1,11 +1,13 @@
 @use 'sass:map';
 
+@use './mixins';
 @use '@bcgov-nr/nr-theme/design-tokens/type-family.scss' as types;
 @use '@carbon/type/scss/font-family.scss' with (
   $font-families: types.$type-family,
   $font-weights: types.$font-weights
 );
 
+@use '@carbon/styles/scss/colors' as carbon-colors;
 @use '@carbon/themes/scss/utilities';
 @use './variables' as variables;
 @use '@bcgov-nr/nr-theme/design-tokens/light-theme.scss' as light;
@@ -36,6 +38,205 @@
 @use '@carbon/react/scss/breakpoint' as *;
 
 @include grid.flex-grid();
+
+// Mapping of some of the tokens, to make it easy to emmit them
+
+/// Override Carbon color tokens with NR colors, using the same token names for easy mapping
+/// This is needed to work around some limitations in the theming system, such as not being
+/// able to use different color maps for different themes, and to avoid having to update all
+/// the component tokens with new color variable names.
+$colors-override: (
+  black: (
+    100: carbon-colors.$black,
+  ),
+  blue: (
+    10: colors.$blue-10,
+    20: colors.$blue-20,
+    30: colors.$blue-30,
+    40: colors.$blue-40,
+    50: colors.$blue-50,
+    60: colors.$blue-60,
+    70: colors.$blue-70,
+    80: colors.$blue-80,
+    90: colors.$blue-90,
+    100: colors.$blue-100,
+  ),
+  cool-gray: (
+    10: carbon-colors.$cool-gray-10,
+    20: carbon-colors.$cool-gray-20,
+    30: carbon-colors.$cool-gray-30,
+    40: carbon-colors.$cool-gray-40,
+    50: carbon-colors.$cool-gray-50,
+    60: carbon-colors.$cool-gray-60,
+    70: carbon-colors.$cool-gray-70,
+    80: carbon-colors.$cool-gray-80,
+    90: carbon-colors.$cool-gray-90,
+    100: carbon-colors.$cool-gray-100,
+  ),
+  cyan: (
+    10: colors.$cyan-10,
+    20: colors.$cyan-20,
+    30: colors.$cyan-30,
+    40: colors.$cyan-40,
+    50: colors.$cyan-50,
+    60: colors.$cyan-60,
+    70: colors.$cyan-70,
+    80: colors.$cyan-80,
+    90: colors.$cyan-90,
+    100: colors.$cyan-100,
+  ),
+  gray: (
+    10: colors.$gray-10,
+    20: colors.$gray-20,
+    30: colors.$gray-30,
+    40: colors.$gray-40,
+    50: colors.$gray-50,
+    60: colors.$gray-60,
+    70: colors.$gray-70,
+    80: colors.$gray-80,
+    90: colors.$gray-90,
+    100: colors.$gray-100,
+  ),
+  green: (
+    10: colors.$green-10,
+    20: colors.$green-20,
+    30: colors.$green-30,
+    40: colors.$green-40,
+    50: colors.$green-50,
+    60: colors.$green-60,
+    70: colors.$green-70,
+    80: colors.$green-80,
+    90: colors.$green-90,
+    100: colors.$green-100,
+  ),
+  magenta: (
+    10: carbon-colors.$magenta-10,
+    20: carbon-colors.$magenta-20,
+    30: carbon-colors.$magenta-30,
+    40: carbon-colors.$magenta-40,
+    50: carbon-colors.$magenta-50,
+    60: carbon-colors.$magenta-60,
+    70: carbon-colors.$magenta-70,
+    80: carbon-colors.$magenta-80,
+    90: carbon-colors.$magenta-90,
+    100: carbon-colors.$magenta-100,
+  ),
+  orange: (
+    10: colors.$orange-10,
+    20: colors.$orange-20,
+    30: colors.$orange-30,
+    40: colors.$orange-40,
+    50: colors.$orange-50,
+    60: colors.$orange-60,
+    70: colors.$orange-70,
+    80: colors.$orange-80,
+    90: colors.$orange-90,
+    100: colors.$orange-100,
+  ),
+  purple: (
+    10: carbon-colors.$purple-10,
+    20: carbon-colors.$purple-20,
+    30: carbon-colors.$purple-30,
+    40: carbon-colors.$purple-40,
+    50: carbon-colors.$purple-50,
+    60: carbon-colors.$purple-60,
+    70: carbon-colors.$purple-70,
+    80: carbon-colors.$purple-80,
+    90: carbon-colors.$purple-90,
+    100: carbon-colors.$purple-100,
+  ),
+  red: (
+    10: colors.$red-10,
+    20: colors.$red-20,
+    30: colors.$red-30,
+    40: colors.$red-40,
+    50: colors.$red-50,
+    60: colors.$red-60,
+    70: colors.$red-70,
+    80: colors.$red-80,
+    90: colors.$red-90,
+    100: colors.$red-100,
+  ),
+  teal: (
+    10: colors.$teal-10,
+    20: colors.$teal-20,
+    30: colors.$teal-30,
+    40: colors.$teal-40,
+    50: colors.$teal-50,
+    60: colors.$teal-60,
+    70: colors.$teal-70,
+    80: colors.$teal-80,
+    90: colors.$teal-90,
+    100: colors.$teal-100,
+  ),
+  warm-gray: (
+    10: carbon-colors.$warm-gray-10,
+    20: carbon-colors.$warm-gray-20,
+    30: carbon-colors.$warm-gray-30,
+    40: carbon-colors.$warm-gray-40,
+    50: carbon-colors.$warm-gray-50,
+    60: carbon-colors.$warm-gray-60,
+    70: carbon-colors.$warm-gray-70,
+    80: carbon-colors.$warm-gray-80,
+    90: carbon-colors.$warm-gray-90,
+    100: carbon-colors.$warm-gray-100,
+  ),
+  white: (
+    0: carbon-colors.$white,
+  ),
+  yellow: (
+    10: colors.$yellow-10,
+    20: colors.$yellow-20,
+    30: colors.$yellow-30,
+    40: colors.$yellow-40,
+    50: colors.$yellow-50,
+    60: colors.$yellow-60,
+    70: colors.$yellow-70,
+    80: colors.$yellow-80,
+    90: colors.$yellow-90,
+    100: colors.$yellow-100,
+  ),
+  lime: (
+    10: colors.$lime-10,
+    20: colors.$lime-20,
+    30: colors.$lime-30,
+    40: colors.$lime-40,
+    50: colors.$lime-50,
+    60: colors.$lime-60,
+    70: colors.$lime-70,
+    80: colors.$lime-80,
+    90: colors.$lime-90,
+    100: colors.$lime-100,
+  ),
+  violet: (
+    10: colors.$violet-10,
+    20: colors.$violet-20,
+    30: colors.$violet-30,
+    40: colors.$violet-40,
+    50: colors.$violet-50,
+    60: colors.$violet-60,
+    70: colors.$violet-70,
+    80: colors.$violet-80,
+    90: colors.$violet-90,
+    100: colors.$violet-100,
+  ),
+  pink: (
+    10: colors.$pink-10,
+    20: colors.$pink-20,
+    30: colors.$pink-30,
+    40: colors.$pink-40,
+    50: colors.$pink-50,
+    60: colors.$pink-60,
+    70: colors.$pink-70,
+    80: colors.$pink-80,
+    90: colors.$pink-90,
+    100: colors.$pink-100,
+  ),
+) !default;
+
+:root {
+  @include mixins.emit-tokens($colors-override, variables.$bcgov-prefix, 'colors');
+}
 
 :root[data-carbon-theme='g10'],
 .#{variables.$bcgov-prefix}--g10 {
@@ -455,3 +656,5 @@ div:has(.#{variables.$bcgov-prefix}--header) ~ .#{variables.$bcgov-prefix}--cont
 .#{variables.$bcgov-prefix}--inline-notification__title {
   font-weight: var(--cds-heading-compact-01-font-weight, 600);
 }
+
+
