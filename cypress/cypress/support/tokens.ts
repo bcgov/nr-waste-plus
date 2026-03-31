@@ -37,12 +37,34 @@ export function tokenToCssVar(tokenName: string): string {
   return `${TOKEN_PREFIX}${cleanName}`;
 }
 
-export function getTokenValue(tokenName: string, property: string): string | null {
-  const cssVar = tokenName.startsWith('$')
-    ? tokenToCssVar(tokenName).concat('-').concat(property)
-    : `${TOKEN_PREFIX}${tokenName}-${property}`;
-  const value = getComputedStyle(document.documentElement).getPropertyValue(cssVar);
-  return value?.trim() || null;
+export function getTokenDefinition(
+  tokenName: string,
+  property: string,
+  appWindow: Window
+): { value: string | null; found: boolean; source: 'property' | 'direct' } {
+  const baseVar = tokenToCssVar(tokenName);
+  const propertyVar = `${baseVar}-${property}`;
+  
+  let value = appWindow.getComputedStyle(appWindow.document.documentElement).getPropertyValue(propertyVar).trim();
+  if (value) {
+    return { value, found: true, source: 'property' };
+  }
+  
+  value = appWindow.getComputedStyle(appWindow.document.documentElement).getPropertyValue(baseVar).trim();
+  if (value) {
+    return { value, found: true, source: 'direct' };
+  }
+  
+  return { value: null, found: false, source: 'direct' };
+}
+
+export function getTokenValue(
+  tokenName: string,
+  property: string,
+  appWindow: Window
+): string | null {
+  const { value } = getTokenDefinition(tokenName, property, appWindow);
+  return value;
 }
 
 export function getRootTokenValue(tokenName: string): string | null {
@@ -81,10 +103,54 @@ export function valuesMatch(
 ): boolean {
   if (!tokenValue) return false;
 
+  if (isColorValue(tokenValue) && isColorValue(elementValue)) {
+    return colorsMatch(tokenValue, elementValue);
+  }
+
   const tokenPx = normalizeToPx(tokenValue, fontSize);
   const elementPx = normalizeToPx(elementValue, fontSize);
 
   return Math.abs(tokenPx - elementPx) < tolerance;
+}
+
+export function isColorValue(value: string): boolean {
+  if (!value) return false;
+  const trimmed = value.trim().toLowerCase();
+  return (
+    trimmed.startsWith('#') ||
+    trimmed.startsWith('rgb') ||
+    trimmed.startsWith('hsl') ||
+    isNamedColor(trimmed)
+  );
+}
+
+function isNamedColor(name: string): boolean {
+  const namedColors = [
+    'black', 'silver', 'gray', 'grey', 'white', 'maroon', 'red', 'purple',
+    'fuchsia', 'green', 'lime', 'olive', 'yellow', 'navy', 'blue', 'teal',
+    'aqua', 'orange', 'pink', 'brown', 'transparent', 'inherit', 'initial',
+    'currentcolor', 'none'
+  ];
+  return namedColors.includes(name);
+}
+
+export function colorsMatch(color1: string, color2: string, tolerance: number = 0): boolean {
+  const rgb1 = parseColor(color1);
+  const rgb2 = parseColor(color2);
+
+  if (!rgb1 || !rgb2) {
+    return color1.trim().toLowerCase() === color2.trim().toLowerCase();
+  }
+
+  if (tolerance === 0) {
+    return rgb1.r === rgb2.r && rgb1.g === rgb2.g && rgb1.b === rgb2.b;
+  }
+
+  return (
+    Math.abs(rgb1.r - rgb2.r) <= tolerance &&
+    Math.abs(rgb1.g - rgb2.g) <= tolerance &&
+    Math.abs(rgb1.b - rgb2.b) <= tolerance
+  );
 }
 
 export function parseSpacingValue(value: string): { top: number; right: number; bottom: number; left: number } {
@@ -221,9 +287,9 @@ export function isTransparent(color: string): boolean {
   if (!color) return true;
   if (color === 'transparent') return true;
 
-  const match = color.match(/rgba?\(\s*([\d.]+)[^,]*,\s*([\d.]+)[^,]*,\s*([\d.]+)[^,]*,\s*([\d.]+)\s*\)/);
+  const match = new RegExp(/rgba?\(\s*([\d.]+)[^,]*,\s*([\d.]+)[^,]*,\s*([\d.]+)[^,]*,\s*([\d.]+)\s*\)/).exec(color);
   if (match) {
-    const alpha = parseFloat(match[4]);
+    const alpha = Number.parseFloat(match[4]);
     return alpha === 0;
   }
 
@@ -246,6 +312,8 @@ export function getEffectiveBackgroundColor(el: Element): string {
   // No non-transparent ancestor → use page background (usually white)
   return 'rgb(255, 255, 255)';
 }
+
+
 export const CONTRAST_RANK = {
   fail: 0,
   A: 1,
