@@ -69,8 +69,16 @@ $type-map: (
   label-01: body-types.$label-01,
 );
 
+$fluid-spacing: (
+  fluid-spacing-01: $fluid-spacing-01,
+  fluid-spacing-02: $fluid-spacing-02,
+  fluid-spacing-03: $fluid-spacing-03,
+  fluid-spacing-04: $fluid-spacing-04,
+);
+
 :root {  
   @include mixins.emit-tokens($type-map, variables.$bcgov-prefix, null);
   @include mixins.emit-tokens(spacing.$spacing, variables.$bcgov-prefix, null);
   @include mixins.emit-tokens(spacing.$layout, variables.$bcgov-prefix, null);
+  @include mixins.emit-tokens($fluid-spacing, variables.$bcgov-prefix, null);
 }
