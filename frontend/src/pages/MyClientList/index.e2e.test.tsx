@@ -45,27 +45,21 @@ test.describe('My Client List Page', () => {
       !hasClientAccessRole(test.info().project.metadata.userType),
       'Only runs for users with Viewer/Submitter access',
     );
-    await expect(page.getByRole('link', { name: '90000001' }).first()).toBeVisible();
+    await expect(page.getByRole('cell', { name: '90000001' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'CANADIAN SAMPLE CO.' }).first()).toBeVisible();
   });
 
-  test('should navigate to client details page when a client is clicked', async ({
-    page,
-    context,
-  }) => {
+  test('should not render the client number as a link', async ({ page }) => {
     test.skip(
       !hasClientAccessRole(test.info().project.metadata.userType),
       'Only runs for users with Viewer/Submitter access',
     );
-    const clientLink = page.getByRole('link', { name: '90000001' }).first();
 
-    const [newPage] = await Promise.all([context.waitForEvent('page'), await clientLink.click()]);
+    // The client number is rendered on the table
+    await expect(page.getByRole('cell', { name: '90000001' })).toBeVisible();
 
-    await newPage.waitForLoadState();
-
-    await expect(
-      newPage.getByRole('heading', { name: 'Forests Client Management System' }),
-    ).toBeVisible();
+    // But it's not a link
+    await expect(page.getByRole('link', { name: '90000001' })).toHaveCount(0);
   });
 
   test('should allow column selection', async ({ page }) => {
@@ -91,7 +85,7 @@ test.describe('My Client List Page', () => {
       !hasClientAccessRole(test.info().project.metadata.userType),
       'Only runs for users with Viewer/Submitter access',
     );
-    await expect(page.getByRole('link', { name: '90000001' }).first()).toBeVisible();
+    await expect(page.getByRole('cell', { name: '90000001' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'CANADIAN SAMPLE CO.' }).first()).toBeVisible();
 
     const searchBox = page.getByTestId('main-search');
@@ -103,7 +97,7 @@ test.describe('My Client List Page', () => {
 
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByRole('link', { name: '90000003' }).first()).toBeVisible();
+    await expect(page.getByRole('cell', { name: '90000003' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'OAK HERITAGE LTD.' }).first()).toBeVisible();
 
     await expect(page.getByRole('cell', { name: 'CANADIAN SAMPLE CO.' })).not.toBeVisible();
@@ -114,7 +108,7 @@ test.describe('My Client List Page', () => {
       !hasClientAccessRole(test.info().project.metadata.userType),
       'Only runs for users with Viewer/Submitter access',
     );
-    await expect(page.getByRole('link', { name: '90000001' }).first()).toBeVisible();
+    await expect(page.getByRole('cell', { name: '90000001' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'CANADIAN SAMPLE CO.' }).first()).toBeVisible();
 
     const searchBox = page.getByTestId('main-search');
@@ -123,7 +117,7 @@ test.describe('My Client List Page', () => {
 
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByRole('link', { name: '90000003' }).first()).toBeVisible();
+    await expect(page.getByRole('cell', { name: '90000003' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'OAK HERITAGE LTD.' }).first()).toBeVisible();
 
     await expect(page.getByRole('cell', { name: 'CANADIAN SAMPLE CO.' })).not.toBeVisible();
@@ -169,5 +163,36 @@ test.describe('My Client List Page', () => {
 
     await expect(page).not.toHaveURL(/\/unauthorized/);
     await expect(page.getByRole('heading', { name: 'My clients' })).toBeVisible();
+  });
+
+  test('should render a link to the client details page on the Client application', async ({
+    page,
+    context,
+  }, testInfo) => {
+    test.skip(testInfo.project.metadata.userType !== 'idir', 'Only runs for IDIR project');
+    test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
+
+    await mockJwt(page, testInfo.project.metadata, {
+      'custom:idp_name': 'idir',
+      'cognito:groups': ['WASTE_PLUS_VIEWER_00010005'],
+    });
+
+    await page.goto('/clients');
+    await page.waitForLoadState('domcontentloaded');
+
+    const clientLink = page.getByRole('link', { name: '90000001' });
+
+    await expect(clientLink).toBeVisible();
+
+    const href = await clientLink.getAttribute('href');
+    expect(href).toContain('/clients/details/90000001');
+
+    const [newPage] = await Promise.all([context.waitForEvent('page'), clientLink.click()]);
+
+    await newPage.waitForLoadState();
+
+    await expect(
+      newPage.getByRole('heading', { name: 'Forests Client Management System' }),
+    ).toBeVisible();
   });
 });
