@@ -1,6 +1,14 @@
 // UX/UI step helpers for Cypress
 
-export function getSelectorOrContains(selector: string, text?: string, component?: string) {
+interface SelectorOptions {
+  selector?: string;
+  text?: string;
+  component?: string;
+}
+
+export function getSelectorOrContains(options: SelectorOptions) {
+  const { selector, text, component } = options;
+  
   if (selector) {
     return cy.get(selector);
   }

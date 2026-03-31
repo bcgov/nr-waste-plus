@@ -1,5 +1,5 @@
 import { Then } from "@badeball/cypress-cucumber-preprocessor";
-import { browserGuardAny } from "./browserHooks";
+import { browserGuardAny } from "../hooks/browser.hooks";
 import { 
   type DataTableLike,
   parseThresholdTable,
