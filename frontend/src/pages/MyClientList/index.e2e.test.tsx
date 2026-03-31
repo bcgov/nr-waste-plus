@@ -54,7 +54,11 @@ test.describe('My Client List Page', () => {
       !hasClientAccessRole(test.info().project.metadata.userType),
       'Only runs for users with Viewer/Submitter access',
     );
+
+    // The client number is rendered on the table
     await expect(page.getByRole('cell', { name: '90000001' })).toBeVisible();
+
+    // But it's not a link
     await expect(page.getByRole('link', { name: '90000001' })).toHaveCount(0);
   });
 
@@ -183,7 +187,7 @@ test.describe('My Client List Page', () => {
     const href = await clientLink.getAttribute('href');
     expect(href).toContain('/clients/details/90000001');
 
-    const [newPage] = await Promise.all([context.waitForEvent('page'), await clientLink.click()]);
+    const [newPage] = await Promise.all([context.waitForEvent('page'), clientLink.click()]);
 
     await newPage.waitForLoadState();
 
