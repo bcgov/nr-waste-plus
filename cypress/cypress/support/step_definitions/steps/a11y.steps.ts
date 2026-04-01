@@ -9,7 +9,7 @@ import {
   findLiveRegion,
   getFocusableAccessibleName,
   findInputElement
-} from "../helpers";
+} from "../../helpers";
 
 Then("the page should have no accessibility violations", () => {
   runA11yCheck(null, "page", "page");

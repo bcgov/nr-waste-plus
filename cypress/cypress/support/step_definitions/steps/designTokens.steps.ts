@@ -1,5 +1,5 @@
 import { Then } from '@badeball/cypress-cucumber-preprocessor';
-import { DataTableLike, resolveElementByTypeAndText } from '../helpers';
+import { DataTableLike, resolveElementByTypeAndText } from '../../helpers';
 
 Then(
   'the {string} {string} should have {string} {string}',

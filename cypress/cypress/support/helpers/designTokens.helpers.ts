@@ -126,6 +126,7 @@ export const validateTokenStyle = (subject: any, tokenName: string) => {
             `Element has ${mismatches.length} style mismatches for token '${tokenName}': ${details}`
           ).to.equal(0);
         }
+        return subject;
       });
     });
 };

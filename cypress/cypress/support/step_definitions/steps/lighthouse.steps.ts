@@ -1,5 +1,5 @@
 import { Then } from "@badeball/cypress-cucumber-preprocessor";
-import { browserGuardAny } from "../hooks/browser.hooks";
+import { browserGuardAny } from "../hooks/";
 import { 
   type DataTableLike,
   parseThresholdTable,
@@ -7,7 +7,7 @@ import {
   normalizeMetricKey,
   parseTiming,
   expectLighthouse
-} from "../helpers";
+} from "../../helpers";
 
 const defaultValues = {
   performance: 50, //Temporary value
