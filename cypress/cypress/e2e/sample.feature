@@ -49,7 +49,9 @@ Feature: Form screen loads correctly
     Then the "Log in with IDIR" button should use the "cds--btn-primary" style
 
   Scenario: Button uses correct height token value    
+    Given I visit "/"
     Then the "Log in with IDIR" "button" should have "$layout-04" "height"
 
   Scenario: Title meets contrast requirements
+    Given I visit "/"
     Then the "Waste Plus" "heading" should meet "AA" standard for contrast

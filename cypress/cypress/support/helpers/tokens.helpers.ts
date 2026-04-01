@@ -75,7 +75,7 @@ export function getAllTokenDefinitions(
 ) {
   const computedStyles = appWindow.getComputedStyle(appWindow.document.documentElement);
   const baseVar = tokenToCssVar(tokenName);
-  const currentBreakPoint = Object.values(computedStyles).find((prop) => prop === '--cds-breakpoint') || 'none';  
+  const currentBreakPoint = computedStyles.getPropertyValue('--cds-breakpoint').trim() || 'none';  
   
   const selectedStyles = Object
   .values(computedStyles)
