@@ -323,4 +323,4 @@ export const runLighthouseAudit = (url: string, options: unknown = {}) => {
     .task('lighthouse:run', { url, options })
     .as('lhReport')
     .then(report => report);
-  }
+};
