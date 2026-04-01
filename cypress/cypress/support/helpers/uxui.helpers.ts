@@ -1,5 +1,7 @@
 // UX/UI step helpers for Cypress
 
+import { createTaskRecord, getTaxonomy, valuesMatch } from "./tokens.helpers";
+
 export const shouldHaveStyle = (subject: JQuery<HTMLElement>, property: string, expected: string) => {
   return cy.window().then(appWindow => {
     const rootFontSize = Number.parseFloat(
@@ -15,10 +17,36 @@ export const shouldHaveStyle = (subject: JQuery<HTMLElement>, property: string, 
 
       //TODO: add the cy.task recording logic here as well, similar to the one in validateTokenStyle, to log style mismatches that are not related to tokens
 
-      expect(
-        actual,
-        `Element's ${property} is '${actual}', expected '${expected}'`
-      ).to.equal(expected);
+      const isMissing = !actual;
+      const isMismatch = !valuesMatch(expected, actual, rootFontSize);
+
+      const event = isMissing || isMismatch ? 'violation' : 'check';
+      const mismatchValue = isMismatch ? 'style-mismatch' : 'style-check';
+      const type = isMissing ? 'token-missing' : mismatchValue;
+
+      const taskRecord = createTaskRecord(
+                event,
+                type,
+                getTaxonomy(property),
+                actual,
+                el.tagName.toLowerCase(),
+                {
+                  token: property, // This is not a token, but we can use the property name as a reference in the logs
+                  property: property,
+                  expected: expected,
+                }
+              );
+
+      return cy.task('uiux:record', taskRecord).then(() => {
+        expect(isMissing, `Element is missing ${property} class`).to.be.false;
+          
+          expect(
+            actual,
+            `Element's ${property} is '${actual}', expected '${expected}'`
+          ).to.equal(expected);
+
+          return subject;
+        });
     });
   });
 };
