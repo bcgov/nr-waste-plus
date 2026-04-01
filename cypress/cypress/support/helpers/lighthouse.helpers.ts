@@ -113,15 +113,15 @@ export const parseTiming = (raw: string | number): number => {
   const value = raw.trim().toLowerCase();
 
   if (value.endsWith("ms")) {
-    return parseFloat(value.replace("ms", "").trim());
+    return Number.parseFloat(value.replace("ms", "").trim());
   }
 
   if (value.endsWith("s")) {
-    return parseFloat(value.replace("s", "").trim()) * 1000;
+    return Number.parseFloat(value.replace("s", "").trim()) * 1000;
   }
 
   // plain number → assume milliseconds
-  return parseFloat(value);
+  return Number.parseFloat(value);
 };
 
 export function severityFromScore(score: number): "info" | "minor" | "major" {

@@ -1,18 +1,25 @@
 declare namespace Cypress {
   interface Chainable<Subject> {
-    logout(): Chainable<void>;
-    checkAutoCompleteErrorMessage(field: string, message: string): Chainable<void>;
-    checkAccordionItemState(additionalSelector: string, open: boolean): Chainable<void>;
-    waitForPageLoad(element: string): Chainable<void>;
-    logAndScreenshot(message: string): Chainable<void>;
-    runLighthouseAudit(url: string, options?: unknown): Chainable<unknown>;
+    
+    /**
+     * Waits for a specific element to be visible on the page.
+     * @param element - The selector of the element to wait for (e.g., '#main-content', '.header', 'button')
+     * @param timeout - Optional timeout in milliseconds (default: 10000ms)
+     */
+    waitForPageLoad(element: string, timeout?: number): Chainable<void>;
 
     /**
-     * Validate that an element uses all properties from a Carbon token.
-     * @param tokenName - The token name (e.g., '$button-primary' or 'button-primary')
-     * @param property - Optional specific property to check (defaults to all TOKEN_STYLE_PROPERTIES)
+     * Logs a message to the Cypress command log and takes a screenshot.
+     * @param message - The message to log and display in the screenshot.
      */
-    validateTokenStyle(tokenName: string, property?: string): Chainable<Subject>;
+    logAndScreenshot(message: string): Chainable<void>;
+    
+    /**
+     * Runs a Lighthouse audit on the current page.
+     * @param url - The URL to audit (defaults to the current page)
+     * @param options - Optional Lighthouse options (e.g., { thresholds: { performance: 90 } })
+     */
+    runLighthouseAudit(url: string, options?: unknown): Chainable<unknown>;
 
     /**
      * Validate that an element has a specific CSS property matching a Carbon token.
@@ -22,25 +29,11 @@ declare namespace Cypress {
     validateStyle(tokenName: string, cssProperty: string): Chainable<Subject>;
 
     /**
-     * Validate that an element's padding matches a Carbon spacing token.
-     * @param tokenName - The spacing token (e.g., '$spacing-05')
-     * @param side - Optional specific side ('top', 'right', 'bottom', 'left', or 'all')
+     * Validate that an element uses all properties from a Carbon token.
+     * @param tokenName - The token name (e.g., '$button-primary' or 'button-primary')
+     * @param property - Optional specific property to check (defaults to all TOKEN_STYLE_PROPERTIES)
      */
-    validateSpacing(tokenName: string, side?: 'top' | 'right' | 'bottom' | 'left' | 'all'): Chainable<Subject>;
-
-    /**
-     * Validate that an element's margin matches a Carbon spacing token.
-     * @param tokenName - The spacing token (e.g., '$spacing-05')
-     * @param side - Optional specific side ('top', 'right', 'bottom', 'left', or 'all')
-     */
-    validateMargin(tokenName: string, side?: 'top' | 'right' | 'bottom' | 'left' | 'all'): Chainable<Subject>;
-
-    /**
-     * Validate that an element's color matches a Carbon color token.
-     * @param tokenName - The color token (e.g., '$text-primary')
-     * @param property - The color property to validate ('color', 'background-color', 'border-color')
-     */
-    validateColor(tokenName: string, property: 'color' | 'background-color' | 'border-color'): Chainable<Subject>;
+    validateTokenStyle(tokenName: string, property?: string): Chainable<Subject>;
 
     /**
      * Validate that an element's text meets minimum contrast ratio.
@@ -53,24 +46,6 @@ declare namespace Cypress {
      * @param tokenName - The typography token (e.g., '$heading-01')
      */
     validateTypography(tokenName: string): Chainable<Subject>;
-
-    /**
-     * Legacy command - Validate that an element uses a Carbon typography token.
-     * @deprecated Use validateTokenStyle instead
-     */
-    shouldUseTokenStyle(tokenName: string): Chainable<Subject>;
-
-    /**
-     * Legacy command - Validate that an element has a specific CSS property/value pair.
-     * @deprecated Use validateStyle instead
-     */
-    shouldHaveStyle(property: string, expected: string): Chainable<Subject>;
-
-    /**
-     * Legacy command - Validate that an element has all styles defined by a Carbon token.
-     * @deprecated Use validateTokenStyle instead
-     */
-    shouldHaveAllStylesFromToken(tokenName: string): Chainable<Subject>;
   }
 }
 
