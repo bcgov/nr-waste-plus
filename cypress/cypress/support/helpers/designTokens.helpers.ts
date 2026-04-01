@@ -109,6 +109,10 @@ export const validateTokenStyle = (subject: any, tokenName: string) => {
           };
         });
 
+        if(results.length === 0) {
+          expect(results.length, `No token definitions found for token '${tokenName}'`).to.be.greaterThan(0);
+        } 
+
         const firstMissing = results.find(r => r.isMissing);
         if (firstMissing) {
           expect(firstMissing.isMissing,
