@@ -83,7 +83,7 @@
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <oci.revision>${project.version}</oci.revision>
     <commons-lang3.version>3.20.0</commons-lang3.version>
-    <resilience4j.version>2.3.0</resilience4j.version>
+    <resilience4j.version>2.4.0</resilience4j.version>
     <wiremock.version>3.13.2</wiremock.version>
     <jackson-2-bom.version>2.21.1</jackson-2-bom.version>
     <jackson-bom.version>3.1.0</jackson-bom.version>
