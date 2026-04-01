@@ -4,6 +4,7 @@
 import { 
   logAndScreenshot,
   runLighthouseAudit,
+  shouldHaveStyle,
   validateContrast,
   validateStyle,
   validateTokenStyle,
@@ -20,3 +21,5 @@ Cypress.Commands.add('validateStyle',{ prevSubject: true }, validateStyle);
 Cypress.Commands.add('validateTokenStyle',{ prevSubject: true }, validateTokenStyle);
 Cypress.Commands.add('validateContrast',{ prevSubject: true }, validateContrast);
 Cypress.Commands.add('validateTypography', { prevSubject: true }, validateTypography);
+
+Cypress.Commands.add('shouldHaveStyle', { prevSubject: true }, shouldHaveStyle);

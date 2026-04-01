@@ -46,6 +46,11 @@ declare namespace Cypress {
      * @param tokenName - The typography token (e.g., '$heading-01')
      */
     validateTypography(tokenName: string): Chainable<Subject>;
+
+    /**
+     * Legacy command - Validate that an element has a specific CSS property/value pair.
+     */
+    shouldHaveStyle(property: string, expected: string): Chainable<Subject>;
   }
 }
 

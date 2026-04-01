@@ -42,11 +42,11 @@ Feature: Form screen loads correctly
 
   Scenario: Button uses the correct font size
     Given I visit "/"
-    Then the "Log in with IDIR" button should have "font-size" "14px"
+    Then the "Log in with IDIR" "button" should have "font-size" as "14px"
 
   Scenario: Button uses the correct style
     Given I visit "/"
-    Then the "Log in with IDIR" button should use the "cds--btn-primary" style
+    Then the "Log in with IDIR" "button" should use the "cds--btn--primary" class
 
   Scenario: Button uses correct height token value    
     Given I visit "/"
