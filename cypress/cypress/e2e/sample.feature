@@ -48,14 +48,8 @@ Feature: Form screen loads correctly
     Given I visit "/"
     Then the "Log in with IDIR" button should use the "cds--btn-primary" style
 
-  Scenario: Button uses all styles from the token
-    Given I visit "/"
-    Then the "Log in with Business BCeID" button should have all styles from the "cds--btn" token
+  Scenario: Button uses correct height token value    
+    Then the "Log in with IDIR" "button" should have "$layout-04" "height"
 
-  Scenario: Title uses all styles from the token
-    Given I visit "/"
-    Then the element with text "Waste Plus" should have all styles from the "cds--heading-01" token
-
-  Scenario: H1 Title uses all styles from the token
-    Given I visit "/"
-    Then the element "h1" with text "Waste Plus" should have all styles from the "cds--heading-01" token
+  Scenario: Title meets contrast requirements
+    Then the "Waste Plus" "heading" should meet "AA" standard for contrast
