@@ -236,6 +236,17 @@ $colors-override: (
 
 :root {
   @include mixins.emit-tokens($colors-override, variables.$bcgov-prefix, 'colors');
+  --#{variables.$bcgov-prefix}-breakpoint: 'sm';
+}
+
+@each $name, $settings in grid.$grid-breakpoints {
+  $width: map.get($settings, width);
+
+  @media (min-width: $width) {
+    :root {
+      --#{variables.$bcgov-prefix}-breakpoint: '#{$name}';
+    }
+  }
 }
 
 :root[data-carbon-theme='g10'],
