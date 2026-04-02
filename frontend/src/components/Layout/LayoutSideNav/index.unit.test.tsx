@@ -137,7 +137,7 @@ describe('LayoutSideNav', () => {
         user: { idpProvider: 'IDIR' },
       });
       await renderWithProviders('/dashboard');
-      const helpLink = screen.getByText('Need Help ?').closest('a');
+      const helpLink = screen.getByText('Need Help?').closest('a');
       expect(helpLink?.getAttribute('href')).toBe('https://test-idir-help.example.com');
     });
 
@@ -146,7 +146,7 @@ describe('LayoutSideNav', () => {
         user: { idpProvider: 'BCEIDBUSINESS' },
       });
       await renderWithProviders('/dashboard');
-      const helpLink = screen.getByText('Need Help ?').closest('a');
+      const helpLink = screen.getByText('Need Help?').closest('a');
       expect(helpLink?.getAttribute('href')).toBe('https://test-bceid-help.example.com');
     });
   });
