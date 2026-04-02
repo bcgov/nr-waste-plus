@@ -28,17 +28,14 @@ const defaultMenuEntries = [
   {
     id: 'Dashboard',
     path: '/dashboard',
-    isMenuItem: true,
   },
   {
     id: 'Settings',
     path: '/settings',
-    isMenuItem: true,
     children: [
       {
         id: 'Profile',
         path: 'profile',
-        isMenuItem: true,
       },
     ],
   },
@@ -90,19 +87,16 @@ describe('LayoutSideNav', () => {
       {
         id: 'Dashboard',
         path: '/dashboard',
-        isMenuItem: true,
         icon: MockIcon,
       },
       {
         id: 'Settings',
         path: '/settings',
-        isMenuItem: true,
         icon: MockIcon,
         children: [
           {
             id: 'Profile',
             path: 'profile',
-            isMenuItem: true,
             icon: MockIcon,
           },
         ],
@@ -117,12 +111,10 @@ describe('LayoutSideNav', () => {
       {
         id: 'Settings',
         path: '/settings',
-        isMenuItem: true,
         children: [
           {
             id: 'Overview',
             path: '',
-            isMenuItem: true,
           },
         ],
       },
