@@ -8,7 +8,7 @@ export const shouldHaveStyle = (subject: JQuery<HTMLElement>, property: string, 
       appWindow.getComputedStyle(appWindow.document.documentElement).fontSize
     ) || 16;
 
-    return cy.wrap(subject).should($el => {
+    return cy.wrap(subject).then($el => {
       const el = $el[0] as Element;
       const appStyles = appWindow.getComputedStyle(el);
       const actual = appStyles.getPropertyValue(property).trim();
