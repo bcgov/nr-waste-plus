@@ -1,6 +1,6 @@
-Feature: Form screen loads correctly
+Feature: Collection of sample tests
 
-  This is just a simple template file to show how to write and format your test
+  This is just a sample template file to show how to write and format your test.
 
   Scenario: Screen loads
     Given I visit "/"

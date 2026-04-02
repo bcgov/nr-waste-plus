@@ -145,10 +145,10 @@ export const validateContrast = (subject: any, expectedLevel: ContrastLevel = 'A
       const actualLevel = getContrastLevel(ratio || 0);
 
       const taskRecord = createTaskRecord(
-        actualLevel === expectedLevel ? 'check' : 'violation',
-        actualLevel === expectedLevel ? 'contrast-pass' : 'contrast-fail',
+        actualLevel >= expectedLevel ? 'check' : 'violation',
+        actualLevel >= expectedLevel ? 'contrast-pass' : 'contrast-fail',
         'contrast',
-        `Ratio: ${ratio?.toFixed(2) || 'N/A'}`,
+        `Ratio: ${ratio?.toFixed(2) || 'N/A'} ${actualLevel}`,
         el.tagName.toLowerCase(),
         {
           property: 'contrast',
@@ -157,18 +157,16 @@ export const validateContrast = (subject: any, expectedLevel: ContrastLevel = 'A
       );
 
       return cy.task('uiux:record', taskRecord).then(() => {
-        if (!ratio) {
-          throw new Error(
-            `Unable to calculate contrast ratio. Text color: ${textColor}, Background: ${backgroundColor}`
-          );
-        }
+        expect(ratio,
+          `Unable to calculate contrast ratio. Text color: ${textColor}, Background: ${backgroundColor}`
+        ).to.not.be.undefined;
 
         const actualRank = CONTRAST_RANK[actualLevel];
         const expectedRank = CONTRAST_RANK[expectedLevel];
 
         expect(
           actualRank,
-          `Contrast ratio ${ratio.toFixed(2)}:1 meets ${expectedLevel} standard (actual: ${actualLevel})`
+          `Contrast ratio ${(ratio || 0).toFixed(2)}:1 meets ${expectedLevel} standard (actual: ${actualLevel})`
         ).to.be.gte(expectedRank);
 
         return subject;
