@@ -23,7 +23,6 @@ export const validateStyle = (subject: any, tokenName: string, cssProperty: stri
         const appStyles = appWindow.getComputedStyle(el);
 
         const { value: tokenValue, found } = getTokenDefinition(tokenName, cssProperty, appWindow, true);
-        cy.log(`Token '${tokenName}' for property '${cssProperty}' has value: ${tokenValue}, found: ${found}`);
         const actual = appStyles.getPropertyValue(cssProperty).trim();
         const isMissing = !found;
         const isMismatch = !valuesMatch(tokenValue, actual, rootFontSize);
@@ -46,12 +45,10 @@ export const validateStyle = (subject: any, tokenName: string, cssProperty: stri
         );
 
         return cy.task('uiux:record', taskRecord).then(() => {
-          if (isMissing) {
-            throw new Error(
+          expect(isMissing,
               `Token '${tokenName}' is not defined. ` +
                 `Tried: --cds-${tokenName.replace('$', '')}-${cssProperty} and --cds-${tokenName.replace('$', '')}`
-            );
-          }
+            ).to.be.false;
 
           expect(isMismatch,
             `Element ${cssProperty} is '${actual}', expected '${tokenValue}' from token '${tokenName}'`
