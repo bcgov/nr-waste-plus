@@ -119,12 +119,6 @@ export default defineConfig(({ mode }) => {
             if (id.includes('node_modules/@carbon/charts')) {
               return 'carbon-charts';
             }
-            if (
-              id.includes('node_modules/@carbon/icons-react/') ||
-              id.includes('node_modules/@carbon/pictograms-react/')
-            ) {
-              return 'carbon-icons';
-            }
             if (id.includes('node_modules/@carbon/')) {
               return 'carbon';
             }
