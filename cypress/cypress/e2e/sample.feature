@@ -1,6 +1,6 @@
-Feature: Form screen loads correctly
+Feature: Collection of sample tests
 
-  This is just a simple template file to show how to write and format your test
+  This is just a sample template file to show how to write and format your test.
 
   Scenario: Screen loads
     Given I visit "/"
@@ -42,20 +42,16 @@ Feature: Form screen loads correctly
 
   Scenario: Button uses the correct font size
     Given I visit "/"
-    Then the "Log in with IDIR" button should have "font-size" "14px"
+    Then the "Log in with IDIR" "button" should have "font-size" as "14px"
 
   Scenario: Button uses the correct style
     Given I visit "/"
-    Then the "Log in with IDIR" button should use the "cds--btn-primary" style
+    Then the "Log in with IDIR" "button" should use the "cds--btn--primary" class
 
-  Scenario: Button uses all styles from the token
+  Scenario: Button uses correct height token value    
     Given I visit "/"
-    Then the "Log in with Business BCeID" button should have all styles from the "cds--btn" token
+    Then the "Log in with IDIR" "button" should have "$layout-04" "height"
 
-  Scenario: Title uses all styles from the token
+  Scenario: Title meets contrast requirements
     Given I visit "/"
-    Then the element with text "Waste Plus" should have all styles from the "cds--heading-01" token
-
-  Scenario: H1 Title uses all styles from the token
-    Given I visit "/"
-    Then the element "h1" with text "Waste Plus" should have all styles from the "cds--heading-01" token
+    Then the "Waste Plus" "heading" should meet "AA" standard for contrast

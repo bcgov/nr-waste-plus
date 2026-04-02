@@ -1,5 +1,5 @@
 import { Then } from "@badeball/cypress-cucumber-preprocessor";
-import { selectFromAutocomplete, selectFromFilterableDropdown, findInputByLabel } from "../helpers";
+import { selectFromAutocomplete, selectFromFilterableDropdown, findInputByLabel } from "../../helpers";
 /* Input Steps */
 
 Then('I type {string} into the {string} input', (text: string, input: string) => {

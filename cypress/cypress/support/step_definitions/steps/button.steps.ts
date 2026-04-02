@@ -1,5 +1,5 @@
 import { When, Step } from "@badeball/cypress-cucumber-preprocessor";
-import { findButton } from "../helpers";
+import { findButton } from "../../helpers";
 
 When('I click on the {string} button', (name: string) => {
   buttonClick(name);
