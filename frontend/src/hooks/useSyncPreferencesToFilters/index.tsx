@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash';
+import isEqual from 'lodash/isEqual';
 import { useEffect, useRef } from 'react';
 
 import type { UserPreference } from '@/context/preference/types';

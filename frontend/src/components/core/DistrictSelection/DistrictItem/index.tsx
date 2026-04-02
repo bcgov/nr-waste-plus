@@ -1,4 +1,4 @@
-import * as Icons from '@carbon/icons-react';
+import { CheckmarkFilled, Help } from '@carbon/icons-react';
 import { ButtonSkeleton } from '@carbon/react';
 import { type FC } from 'react';
 
@@ -28,20 +28,13 @@ const DistrictItem: FC<DistrictItemProps> = ({ client, isSelected, isLoading }) 
    * @returns The rendered icon element.
    */
   const renderIcon = () => {
-    const clientIcon = ClientTypeIconMap[client.kind ?? 'I'];
-    let Img = null;
-    if (isSelected) {
-      Img = Icons.CheckmarkFilled;
-      return <Img className="org-item-icon" data-testid="selected-icon" />;
-    }
-    if (clientIcon) {
-      Img = Icons[clientIcon];
-
-      return <Img className="org-item-icon" data-testid="client-icon" />;
-    }
-
-    Img = Icons.Help;
-    return <Img className="org-item-icon" data-testid="default-icon" />;
+    const Img = isSelected ? CheckmarkFilled : (ClientTypeIconMap[client.kind ?? 'I'] ?? Help);
+    const testId = isSelected
+      ? 'selected-icon'
+      : ClientTypeIconMap[client.kind ?? 'I']
+        ? 'client-icon'
+        : 'default-icon';
+    return <Img className="org-item-icon" data-testid={testId} />;
   };
 
   if (isLoading) {

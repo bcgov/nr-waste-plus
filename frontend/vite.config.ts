@@ -110,6 +110,44 @@ export default defineConfig(({ mode }) => {
     build: {
       chunkSizeWarningLimit: 1024,
       outDir: 'build',
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+              return 'react-vendor';
+            }
+            if (id.includes('node_modules/@carbon/charts')) {
+              return 'carbon-charts';
+            }
+            if (
+              id.includes('node_modules/@carbon/icons-react/') ||
+              id.includes('node_modules/@carbon/pictograms-react/')
+            ) {
+              return 'carbon-icons';
+            }
+            if (id.includes('node_modules/@carbon/')) {
+              return 'carbon';
+            }
+            if (id.includes('node_modules/aws-amplify/')) {
+              return 'aws';
+            }
+            if (id.includes('node_modules/@tanstack/')) {
+              return 'query';
+            }
+            if (id.includes('node_modules/react-router')) {
+              return 'router';
+            }
+            if (
+              id.includes('node_modules/axios/') ||
+              id.includes('node_modules/lodash/') ||
+              id.includes('node_modules/luxon/') ||
+              id.includes('node_modules/idb/')
+            ) {
+              return 'utils';
+            }
+          },
+        },
+      },
     },
     optimizeDeps: {
       include: [

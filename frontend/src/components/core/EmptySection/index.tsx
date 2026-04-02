@@ -1,15 +1,13 @@
-import * as Icons from '@carbon/icons-react';
-import * as Pictograms from '@carbon/pictograms-react';
-import { type FC } from 'react';
+import { type ComponentType, type FC } from 'react';
 
 import Subtitle from '@/components/core/Subtitle';
 import './index.scss';
 
 interface EmptySectionProps {
-  icon?: keyof typeof Icons;
+  icon?: ComponentType<{ 'className'?: string; 'data-testid'?: string }>;
   title: string;
   description: string | React.ReactNode;
-  pictogram?: keyof typeof Pictograms;
+  pictogram?: ComponentType<{ 'className'?: string; 'data-testid'?: string }>;
   className?: string;
   whiteLayer?: boolean;
 }
@@ -22,38 +20,32 @@ interface EmptySectionProps {
  * @component
  * @example
  * ```tsx
+ * import { WarningFilled } from '@carbon/icons-react';
+ *
  * <EmptySection
- *   icon="WarningFilled"
+ *   icon={WarningFilled}
  *   title="No Data Available"
  *   description="Please check back later."
  * />
  * ```
  *
- * @param {keyof typeof Icons} [icon] - Optional Carbon icon name.
+ * @param {ComponentType} [icon] - Optional Carbon icon component.
  * @param {string} title - Title text for the empty section.
  * @param {string | React.ReactNode} description - Supporting description text.
- * @param {keyof typeof Pictograms} [pictogram] - Optional Carbon pictogram name.
+ * @param {ComponentType} [pictogram] - Optional Carbon pictogram component.
  * @param {string} [className] - Optional custom class names.
  * @param {boolean} [whiteLayer] - Optional flag to apply white background layer.
  * @returns {JSX.Element} A styled empty state section.
  */
 const EmptySection: FC<EmptySectionProps> = ({
-  icon,
+  icon: Icon,
   title,
   description,
-  pictogram,
+  pictogram: Pictogram,
   whiteLayer,
   className,
 }) => {
-  let Img: React.ElementType | undefined;
-
-  if (icon && Icons[icon]) {
-    Img = Icons[icon] as React.ElementType;
-  }
-
-  if (pictogram && Pictograms[pictogram]) {
-    Img = Pictograms[pictogram] as React.ElementType;
-  }
+  const Img = Pictogram ?? Icon;
 
   return (
     <div

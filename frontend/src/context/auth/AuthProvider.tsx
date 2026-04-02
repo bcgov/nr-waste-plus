@@ -1,5 +1,5 @@
 import { fetchAuthSession, signInWithRedirect, signOut } from 'aws-amplify/auth';
-import { isEqual } from 'lodash';
+import isEqual from 'lodash/isEqual';
 import { useEffect, useMemo, useState, useCallback, type ReactNode } from 'react';
 
 import { AuthContext, type AuthContextType } from './AuthContext';

@@ -1,3 +1,4 @@
+import { Summit, UserSearch } from '@carbon/pictograms-react';
 import {
   DataTableSkeleton,
   Pagination,
@@ -231,7 +232,7 @@ const TableResource = <T,>({
       <EmptySection
         className="initial-empty-section"
         data-testid="empty-section"
-        pictogram="Summit"
+        pictogram={Summit}
         title={error ? 'Something went wrong!' : 'Nothing to show yet!'}
         description={
           error
@@ -245,7 +246,7 @@ const TableResource = <T,>({
     return (
       <EmptySection
         className="table-empty-section"
-        pictogram="UserSearch"
+        pictogram={UserSearch}
         title="No results"
         description="Consider adjusting your search term(s) and try again."
       />
