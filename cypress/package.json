@@ -1,7 +1,7 @@
 {
   "name": "cypress",
   "version": "1.0.0",
-  "description": "",
+  "description": "Cypress end-to-end user journey tests for nr-waste-plus, using Cucumber for BDD-style test scenarios executed during pull requests.",
   "main": "index.js",
   "scripts": {
     "report:md": "node scripts/parse-report.js",
@@ -20,9 +20,9 @@
   "engines": {
     "node": ">=22.19.0"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["cypress", "cucumber", "e2e", "user-journey", "bdd", "testing", "accessibility", "lighthouse"],
+  "author": "Team Alliance",
+  "license": "Apache-2.0",
   "type": "commonjs",
   "devDependencies": {
     "@badeball/cypress-cucumber-preprocessor": "^24.0.1",
