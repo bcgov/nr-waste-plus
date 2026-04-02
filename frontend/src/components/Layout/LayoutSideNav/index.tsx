@@ -81,7 +81,7 @@ export const LayoutSideNav: FC = () => {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Need Help ?
+          Need Help?
         </SideNavLink>
       </SideNavItems>
     </SideNav>
