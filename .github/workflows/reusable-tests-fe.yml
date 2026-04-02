@@ -30,6 +30,8 @@ jobs:
       VITE_COVERAGE: true
       VITE_PORT: 3000
       VITE_FAM_DOMAIN: ${{ secrets.FAM_DOMAIN }}
+      VITE_BCEID_HELP: ${{ secrets.VITE_BCEID_HELP }}
+      VITE_IDIR_HELP: ${{ secrets.VITE_IDIR_HELP }}
     steps:
       - name: Fix safe.directory for GitHub Actions
         run: git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
@@ -52,6 +54,8 @@ jobs:
           VITE_NODE_ENV: test
           VITE_COVERAGE: true
           VITE_PORT: 3000
+          VITE_BCEID_HELP: ${{ secrets.VITE_BCEID_HELP }}
+          VITE_IDIR_HELP: ${{ secrets.VITE_IDIR_HELP }}
         with:
           node_version: 24
           commands: |

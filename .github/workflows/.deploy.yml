@@ -96,6 +96,8 @@ jobs:
             -p CLIENT_BASE_KEY=${{ secrets.CLIENT_API_KEY }}
             -p VITE_CLIENT_BASE_URL=${{ secrets.CLIENT_APP_URL }}
             -p VITE_FAM_DOMAIN=${{ secrets.FAM_DOMAIN }}
+            -p VITE_BCEID_HELP=${{ secrets.VITE_BCEID_HELP }}
+            -p VITE_IDIR_HELP=${{ secrets.VITE_IDIR_HELP }}
 
   deploy:
     name: Deploy
