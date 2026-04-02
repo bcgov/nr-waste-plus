@@ -236,7 +236,7 @@ const TableResource = <T,>({
         title={error ? 'Something went wrong!' : 'Nothing to show yet!'}
         description={
           error
-            ? 'Error occured while searching for results.'
+            ? 'Error occurred while searching for results.'
             : 'Enter at least one criteria to start the search. The list will display here.'
         }
       />

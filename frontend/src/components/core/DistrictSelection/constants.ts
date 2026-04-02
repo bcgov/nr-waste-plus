@@ -16,10 +16,12 @@ import {
 import type { DistrictType } from './types';
 import type { ComponentType } from 'react';
 
+type IconProps = { 'className'?: string; 'data-testid'?: string };
+
 /**
  * Maps client and district kinds to Carbon icon components for the selection list.
  */
-export const ClientTypeIconMap: Record<string, ComponentType> = {
+export const ClientTypeIconMap: Record<string, ComponentType<IconProps>> = {
   // Association
   A: Partnership,
   // First Nation Band
