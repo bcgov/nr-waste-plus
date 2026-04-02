@@ -30,6 +30,8 @@ jobs:
       VITE_COVERAGE: true
       VITE_PORT: 3000
       VITE_FAM_DOMAIN: ${{ secrets.FAM_DOMAIN }}
+      VITE_BCEID_HELP: ${{ secrets.VITE_BCEID_HELP }}
+      VITE_IDIR_HELP: ${{ secrets.VITE_IDIR_HELP }}
     steps:
       - uses: actions/checkout@v6
 

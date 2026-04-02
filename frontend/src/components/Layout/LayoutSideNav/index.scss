@@ -12,3 +12,20 @@
     fill: var(--#{vars.$bcgov-prefix}-link-primary);
   }
 }
+
+.cds--side-nav--ux {
+  justify-content: space-between;
+
+  .cds--side-nav__items {
+    flex: none !important;
+
+    &:first-child {
+      flex-shrink: 0 !important;
+      flex-grow: 1 !important;
+    }
+
+    &:last-child {
+      flex-shrink: 1 !important;
+    }
+  }
+}

@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 
 import { useAuth } from '@/context/auth/useAuth';
 import { useLayout } from '@/context/layout/useLayout';
+import { env } from '@/env';
 import useOfflineMode from '@/hooks/useOfflineMode';
 import { getMenuEntries, type MenuItem } from '@/routes/routePaths';
 
@@ -71,6 +72,17 @@ export const LayoutSideNav: FC = () => {
         {getMenuEntries(isOnline, user?.roles || []).map((route) =>
           route.children ? renderMenuItem(route) : renderMenuLink(route),
         )}
+      </SideNavItems>
+      <SideNavItems>
+        <SideNavLink
+          data-testid="side-nav-link-help"
+          as={Link}
+          to={user?.idpProvider === 'IDIR' ? env.VITE_IDIR_HELP : env.VITE_BCEID_HELP}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Need Help?
+        </SideNavLink>
       </SideNavItems>
     </SideNav>
   );
