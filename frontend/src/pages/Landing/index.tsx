@@ -48,12 +48,7 @@ const LandingPage: FC = () => {
               {/* Logo */}
               <div>
                 <img
-                  src={theme === 'g100' ? '/img/bc-gov-logo-rev-160w.webp' : '/img/bc-gov-logo-160w.webp'}
-                  srcSet={
-                    theme === 'g100'
-                      ? '/img/bc-gov-logo-rev-160w.webp 1x, /img/bc-gov-logo-rev-320w.webp 2x, /img/bc-gov-logo-rev.webp 3x'
-                      : '/img/bc-gov-logo-160w.webp 1x, /img/bc-gov-logo-320w.webp 2x, /img/bc-gov-logo.webp 3x'
-                  }
+                  src={theme === 'g100' ? '/img/bc-gov-logo-rev.svg' : '/img/bc-gov-logo.svg'}
                   alt="BCGov Logo"
                   width={160}
                   height={62}
