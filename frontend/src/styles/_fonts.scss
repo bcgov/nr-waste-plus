@@ -1,0 +1,38 @@
+/// BCSans font-face overrides.
+///
+/// Overrides upstream @bcgov-nr/nr-theme @font-face declarations to:
+///   - Add font-display: swap (shows fallback text instead of invisible text while fonts load)
+///   - List woff2 as sole format (98%+ browser support, 30-40% smaller than woff)
+///   - Use deterministic /fonts/ paths for preload compatibility
+
+@font-face {
+  font-family: 'BC Sans';
+  font-display: swap;
+  src: url('/fonts/BCSans-Regular.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'BC Sans';
+  font-display: swap;
+  src: url('/fonts/BCSans-Bold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: 'BC Sans';
+  font-display: swap;
+  src: url('/fonts/BCSans-Italic.woff2') format('woff2');
+  font-style: italic;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'BC Sans';
+  font-display: swap;
+  src: url('/fonts/BCSans-BoldItalic.woff2') format('woff2');
+  font-style: italic;
+  font-weight: 700;
+}

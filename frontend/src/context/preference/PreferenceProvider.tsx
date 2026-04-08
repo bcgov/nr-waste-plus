@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { isEqual, mergeWith } from 'lodash';
+import isEqual from 'lodash/isEqual';
+import mergeWith from 'lodash/mergeWith';
 import { type FC, useCallback, useEffect, useMemo } from 'react';
 
 import { PreferenceContext, type PreferenceProviderProps } from './PreferenceContext';

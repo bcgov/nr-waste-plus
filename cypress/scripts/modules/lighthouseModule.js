@@ -17,6 +17,8 @@ function lighthouseToMarkdown(data) {
 const generateLighthouseMarkdownForUrl = (report) => {
   const {
     url,
+    lighthouseOptions,
+    lighthouseConfigSettings,
     categories,
     metrics,
     failuresByScenario,
@@ -25,6 +27,10 @@ const generateLighthouseMarkdownForUrl = (report) => {
   const md = [];
   
   md.push(`### Path ${url}`);
+  md.push(`- Profile: ${formatLighthouseProfile(lighthouseOptions)}`);
+  md.push(`- Form Factor: ${lighthouseOptions?.formFactor || "unknown"}`);
+  md.push(`- Screen Emulation: ${formatScreenEmulation(lighthouseOptions?.screenEmulation)}`);
+  md.push(`- Effective Config: ${formatConfigSettingsSummary(lighthouseConfigSettings)}`);
   md.push("");
   md.push(`| Category | Metric | Value | Threshold | Result | Severity | Taxonomy |`);
   md.push(`| -------- | ------ | --------- | ------- | -------- | -------- | -------- |`);
@@ -150,6 +156,8 @@ const buildLighthouseReportByUrl = (checks) => {
   const seen = new Map();
 
   for(const e of events) {
+    const optionsKey = serializeLighthouseOptions(e.lighthouseOptions);
+    const configSettingsKey = serializeConfigSettings(e.lighthouseConfigSettings);
     const key = [
       e.type,
       e.id,
@@ -157,6 +165,8 @@ const buildLighthouseReportByUrl = (checks) => {
       e.scenario,
       e.threshold ?? "none",
       e.comparison ?? "none",
+      optionsKey,
+      configSettingsKey,
     ].join("|");
 
     if(!seen.has(key)) {      
@@ -168,12 +178,18 @@ const buildLighthouseReportByUrl = (checks) => {
 
   const reports = {};
 
-  for (const [url, urlEvents] of Object.entries(grouped)) {
+  for (const [, urlEvents] of Object.entries(grouped)) {
     const categories = urlEvents.filter(e => e.type === "category");
     const metrics = urlEvents.filter(e => e.type === "metric");
+    const lighthouseOptions = pickLighthouseOptions(urlEvents);
+    const lighthouseConfigSettings = pickLighthouseConfigSettings(urlEvents);
+    const normalizedUrl = normalizeUrl(urlEvents[0]?.url);
+    const reportKey = `${normalizedUrl}::${serializeLighthouseOptions(lighthouseOptions)}::${serializeConfigSettings(lighthouseConfigSettings)}`;
 
-    reports[url] = {
-      url,      
+    reports[reportKey] = {
+      url: normalizedUrl,
+      lighthouseOptions,
+      lighthouseConfigSettings,
       categories: buildCategoryTable(categories),
       metrics: buildMetricTable(metrics),
       failuresByScenario: buildScenarioFailures(urlEvents),
@@ -191,12 +207,101 @@ const groupEventsByUrl = (events) => {
 
   for (const e of events) {
     const normalized = normalizeUrl(e.url);
+    const optionsKey = serializeLighthouseOptions(e.lighthouseOptions);
+    const configSettingsKey = serializeConfigSettings(e.lighthouseConfigSettings);
+    const groupKey = `${normalized}::${optionsKey}::${configSettingsKey}`;
 
-    if (!grouped[normalized]) grouped[normalized] = [];
-    grouped[normalized].push(e);
+    if (!grouped[groupKey]) grouped[groupKey] = [];
+    grouped[groupKey].push(e);
   }
 
   return grouped;
+};
+
+const pickLighthouseOptions = (events) => {
+  for (const event of events) {
+    if (event?.lighthouseOptions) {
+      return event.lighthouseOptions;
+    }
+  }
+
+  return null;
+};
+
+const serializeLighthouseOptions = (options) => {
+  if (!options) return "unknown";
+
+  const formFactor = options.formFactor || "unknown";
+  const screen = options.screenEmulation;
+
+  if (!screen) {
+    return `${formFactor}|no-screen-emulation`;
+  }
+
+  return [
+    formFactor,
+    `mobile:${String(screen.mobile)}`,
+    `width:${screen.width ?? "na"}`,
+    `height:${screen.height ?? "na"}`,
+    `dpr:${screen.deviceScaleFactor ?? "na"}`,
+    `disabled:${String(screen.disabled)}`,
+  ].join("|");
+};
+
+const pickLighthouseConfigSettings = (events) => {
+  for (const event of events) {
+    if (event?.lighthouseConfigSettings) {
+      return event.lighthouseConfigSettings;
+    }
+  }
+
+  return null;
+};
+
+const serializeConfigSettings = (settings) => {
+  if (!settings || typeof settings !== "object") return "unknown";
+
+  return JSON.stringify({
+    emulatedFormFactor: settings.emulatedFormFactor ?? "unknown",
+    throttlingMethod: settings.throttlingMethod ?? "unknown",
+    screenEmulation: settings.screenEmulation ?? null,
+  });
+};
+
+const formatConfigSettingsSummary = (settings) => {
+  if (!settings || typeof settings !== "object") return "unknown";
+
+  const emulatedFormFactor = settings.emulatedFormFactor ?? "unknown";
+  const throttlingMethod = settings.throttlingMethod ?? "unknown";
+  const screen = settings.screenEmulation;
+  const screenSummary = screen
+    ? `mobile=${String(screen.mobile)}, ${screen.width ?? "?"}x${screen.height ?? "?"}, dpr=${screen.deviceScaleFactor ?? "?"}`
+    : "not provided";
+
+  return `emulatedFormFactor=${emulatedFormFactor}; throttlingMethod=${throttlingMethod}; screenEmulation=${screenSummary}`;
+};
+
+const formatLighthouseProfile = (options) => {
+  if (!options) return "unknown";
+
+  const formFactor = options.formFactor || "unknown";
+  const screen = options.screenEmulation;
+
+  if (!screen) return `${formFactor} (screen emulation: not provided)`;
+
+  return `${formFactor} (${screen.width ?? "?"}x${screen.height ?? "?"}, dpr ${screen.deviceScaleFactor ?? "?"})`;
+};
+
+const formatScreenEmulation = (screen) => {
+  if (!screen) return "not provided";
+
+  return [
+    `mobile=${String(screen.mobile)}`,
+    `width=${screen.width ?? "?"}`,
+    `height=${screen.height ?? "?"}`,
+    `dpr=${screen.deviceScaleFactor ?? "?"}`,
+    `disabled=${String(screen.disabled)}`,
+  ].join(", ");
 };
 
 const formatTiming = (value) => {

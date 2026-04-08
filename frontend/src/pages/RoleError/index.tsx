@@ -1,3 +1,4 @@
+import { UnauthorizedUserAccess } from '@carbon/pictograms-react';
 import { Column } from '@carbon/react';
 import { type FC } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -22,7 +23,7 @@ const RoleErrorPage: FC = () => {
   return (
     <Column lg={16} md={8} sm={4} className="unauthorized-column__body">
       <EmptySection
-        pictogram="UnauthorizedUserAccess"
+        pictogram={UnauthorizedUserAccess}
         title="Unauthorized Access"
         description={description}
         className="unauthorized__section"

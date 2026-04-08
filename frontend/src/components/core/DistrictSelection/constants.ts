@@ -1,40 +1,54 @@
-import * as ICON from '@carbon/icons-react';
+import {
+  Blockchain,
+  Building,
+  Enterprise,
+  Events,
+  EventsAlt,
+  Finance,
+  Group,
+  GroupPresentation,
+  Location,
+  Partnership,
+  Tree,
+  UserAvatar,
+} from '@carbon/icons-react';
 
 import type { DistrictType } from './types';
+import type { ComponentType } from 'react';
 
-type ClientIconType = keyof typeof ICON;
+type IconProps = { 'className'?: string; 'data-testid'?: string };
 
 /**
- * Maps client and district kinds to Carbon icon names for the selection list.
+ * Maps client and district kinds to Carbon icon components for the selection list.
  */
-export const ClientTypeIconMap: Record<string, ClientIconType> = {
+export const ClientTypeIconMap: Record<string, ComponentType<IconProps>> = {
   // Association
-  A: 'Partnership',
+  A: Partnership,
   // First Nation Band
-  B: 'EventsAlt',
+  B: EventsAlt,
   // Corporation
-  C: 'Building',
+  C: Building,
   // Ministry of Forests and Range
-  F: 'Tree',
+  F: Tree,
   // Government
-  G: 'Finance',
+  G: Finance,
   // Individual
-  I: 'UserAvatar',
+  I: UserAvatar,
   // Limited Partnership
-  L: 'Group',
+  L: Group,
   // General Partnership
-  P: 'Events',
+  P: Events,
   // First Nation Group
-  R: 'EventsAlt',
+  R: EventsAlt,
   // Society
-  S: 'GroupPresentation',
+  S: GroupPresentation,
   // First Nation Tribal Council
-  T: 'GroupPresentation',
+  T: GroupPresentation,
   // Unregistered Company
-  U: 'Enterprise',
+  U: Enterprise,
   // Deselected / None
-  Z: 'Blockchain',
-  D: 'Location', // District
+  Z: Blockchain,
+  D: Location, // District
 };
 
 /**

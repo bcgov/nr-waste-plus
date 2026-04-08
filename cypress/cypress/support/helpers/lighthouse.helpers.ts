@@ -8,6 +8,17 @@ interface LighthouseRawEvent {
   severity: string;        // info/minor/major/critical
   url: string;
   timestamp: string;
+  lighthouseOptions?: {
+    formFactor?: "mobile" | "desktop";
+    screenEmulation?: {
+      mobile?: boolean;
+      width?: number;
+      height?: number;
+      deviceScaleFactor?: number;
+      disabled?: boolean;
+    } | null;
+  };
+  lighthouseConfigSettings?: Record<string, unknown>;
 };
 
 export interface LighthouseAssertionEvent extends LighthouseRawEvent{  
@@ -19,6 +30,17 @@ export interface LighthouseAssertionEvent extends LighthouseRawEvent{
 
 export interface LighthouseReport {
   url: string;
+  lighthouseOptions?: {
+    formFactor?: "mobile" | "desktop";
+    screenEmulation?: {
+      mobile?: boolean;
+      width?: number;
+      height?: number;
+      deviceScaleFactor?: number;
+      disabled?: boolean;
+    } | null;
+  };
+  lighthouseConfigSettings?: Record<string, unknown>;
   categories: Record<string, number | null>;
   metrics: Record<string, number | null>;
   raw: any;
@@ -73,6 +95,8 @@ export const recordEvent = (url: string, report: LighthouseReport) => {
       severity: getLighthouseSeverity(id, value),
       url,
       timestamp,
+      lighthouseOptions: report.lighthouseOptions,
+      lighthouseConfigSettings: report.lighthouseConfigSettings,
     });
   }
 
@@ -86,6 +110,8 @@ export const recordEvent = (url: string, report: LighthouseReport) => {
       severity: "info",
       url,
       timestamp,
+      lighthouseOptions: report.lighthouseOptions,
+      lighthouseConfigSettings: report.lighthouseConfigSettings,
     });
   }
 
@@ -142,7 +168,20 @@ export interface DataTableLike {
   rawTable: string[][];
 }
 
-export const mobileLighthouseOptions = {
+type LighthouseFormFactor = "mobile" | "desktop";
+
+interface LighthouseRunOptions {
+  formFactor: LighthouseFormFactor;
+  screenEmulation: {
+    mobile: boolean;
+    width: number;
+    height: number;
+    deviceScaleFactor: number;
+    disabled: boolean;
+  };
+}
+
+export const mobileLighthouseOptions: LighthouseRunOptions = {
   formFactor: "mobile",
   screenEmulation: {
     mobile: true,
@@ -151,6 +190,56 @@ export const mobileLighthouseOptions = {
     deviceScaleFactor: 2,
     disabled: false,
   },
+};
+
+export const desktopLighthouseOptions: LighthouseRunOptions = {
+  formFactor: "desktop",
+  screenEmulation: {
+    mobile: false,
+    width: 1920,
+    height: 1080,
+    deviceScaleFactor: 1,
+    disabled: false,
+  },
+};
+
+const toFormFactor = (value: unknown): LighthouseFormFactor | null => {
+  if (typeof value !== "string") return null;
+
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "mobile") return "mobile";
+  if (normalized === "desktop") return "desktop";
+
+  return null;
+};
+
+export const resolveLighthouseFormFactor = (): LighthouseFormFactor => {
+  const env = (Cypress.config("env") as Record<string, unknown>) ?? {};
+
+  const candidates = [
+    env.lighthouseFormFactor,
+    env.formFactor,
+    env.platform,
+    env.targetPlatform,
+    env.deviceType,
+  ];
+
+  for (const candidate of candidates) {
+    const resolved = toFormFactor(candidate);
+    if (resolved) return resolved;
+  }
+
+  const viewportWidth = Number(Cypress.config("viewportWidth"));
+  if (Number.isFinite(viewportWidth) && viewportWidth <= 768) {
+    return "mobile";
+  }
+
+  return "desktop";
+};
+
+export const resolveLighthouseRunOptions = (): LighthouseRunOptions => {
+  const formFactor = resolveLighthouseFormFactor();
+  return formFactor === "mobile" ? mobileLighthouseOptions : desktopLighthouseOptions;
 };
 
 export const normalizeMetricKey = (metric: string): string => {
@@ -208,12 +297,21 @@ export const parseThresholdTable = (table: DataTableLike): Record<string, number
 };
 
 export const runReportTo = (fn: (report: any) => void) => {
+  const options = resolveLighthouseRunOptions();
+
   cy
     .url()
     .then((currentUrl) => {
-      return cy.runLighthouseAudit(currentUrl)
+      return cy.runLighthouseAudit(currentUrl, options)
               .as("lhReport")
-              .then(fn);
+              .then((report) => {
+                const enrichedReport: LighthouseReport = {
+                  ...(report as LighthouseReport),
+                  lighthouseOptions: (report as LighthouseReport).lighthouseOptions ?? options,
+                };
+
+                return fn(enrichedReport);
+              });
       });
 };
 
@@ -251,6 +349,8 @@ export const expectLighthouse = (report: LighthouseReport) => {
       url,
       scenario,
       timestamp: new Date().toISOString(),
+      lighthouseOptions: report.lighthouseOptions,
+      lighthouseConfigSettings: report.lighthouseConfigSettings,
     };
 
     return cy.task("lighthouse:record", [event]);

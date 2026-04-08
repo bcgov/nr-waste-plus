@@ -1,3 +1,3 @@
-export * from './pagination.types';
-export * from './search.types';
+export type * from './pagination.types';
+export type * from './search.types';
 export * from './forestclient.types';
