@@ -59,7 +59,7 @@ public class CorsConfiguration implements WebMvcConfigurer {
         .map(LinkedHashSet::new) // preserve order and remove duplicates
         .orElse(new LinkedHashSet<>());
 
-    if(StringUtils.isNotBlank(frontendUrl)) {
+    if (StringUtils.isNotBlank(frontendUrl)) {
       if (frontendUrl.contains(",")) {
         allowedOrigins.addAll(Arrays.asList(frontendUrl.split(",")));
       } else {
