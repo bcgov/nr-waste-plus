@@ -13,6 +13,20 @@ const LIGHTHOUSE_REPORT_FILE = path.resolve(__dirname, "reports", "lighthouse", 
 
 let debugPort = 0;
 
+interface LighthouseScreenEmulation {
+  mobile?: boolean;
+  width?: number;
+  height?: number;
+  deviceScaleFactor?: number;
+  disabled?: boolean;
+}
+
+interface LighthouseTaskOptions {
+  formFactor?: "mobile" | "desktop";
+  screenEmulation?: LighthouseScreenEmulation;
+  [key: string]: unknown;
+}
+
 const writeFile = (filePath: string, data: Array<Record<string, unknown>>) => {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(
@@ -35,7 +49,6 @@ const normalizePath = (url: any): any => {
 
     // Remove hash and query
     const hash = u.hash.replace(/^#/, ""); // remove leading #
-    const search = u.search; // we will ignore it
 
     // Prefer hash-based routing if present
     let path = hash || u.pathname;
@@ -57,6 +70,25 @@ const normalizePath = (url: any): any => {
   }
 };
 
+const sortKeysDeep = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map(sortKeysDeep);
+  }
+
+  if (value && typeof value === "object") {
+    return Object.keys(value as Record<string, unknown>)
+      .sort((a, b) => a.localeCompare(b))
+      .reduce<Record<string, unknown>>((acc, key) => {
+        acc[key] = sortKeysDeep((value as Record<string, unknown>)[key]);
+        return acc;
+      }, {});
+  }
+
+  return value;
+};
+
+const stableSerialize = (value: unknown): string => JSON.stringify(sortKeysDeep(value));
+
 
 async function setupNodeEvents(
   on: Cypress.PluginEvents,
@@ -65,7 +97,7 @@ async function setupNodeEvents(
   let a11yResults: Array<Record<string, unknown>> = [];
   let uiuxResults: Array<Record<string, unknown>> = [];
   let lighthouseResults: Array<Record<string, unknown>> = [];
-  let lighthouseReport : Array<Record<string, unknown>> = [];
+  let lighthouseReport: Record<string, Record<string, unknown>> = {};
 
 
   // This is required for the preprocessor to be able to generate JSON reports after each run, and more,
@@ -111,8 +143,25 @@ async function setupNodeEvents(
     async "lighthouse:run"({ url, options }) {
     const lighthouse = await import("lighthouse");
     const normalizedURL = normalizePath(url);
+    const inputOptions = (options ?? {}) as LighthouseTaskOptions;
+    const effectiveOptions: LighthouseTaskOptions = {
+      formFactor: inputOptions.formFactor || "mobile",
+      screenEmulation: inputOptions.screenEmulation,
+      ...inputOptions,
+    };
+    const cacheKey = `${normalizedURL}|${stableSerialize(effectiveOptions)}`;
 
-    if(lighthouseReport[normalizedURL]) return lighthouseReport[normalizedURL];
+    if (lighthouseReport[cacheKey]) return lighthouseReport[cacheKey];
+
+    let lighthouseConfig: unknown;
+    if (effectiveOptions.formFactor === "desktop") {
+      try {
+        const desktopConfig = await import("lighthouse/core/config/desktop-config.js");
+        lighthouseConfig = desktopConfig.default;
+      } catch {
+        lighthouseConfig = undefined;
+      }
+    }
 
     // Run Lighthouse
     const result = await lighthouse.default(url, {
@@ -120,16 +169,19 @@ async function setupNodeEvents(
       hostname: "127.0.0.1",
       output: "json",
       logLevel: "error",
-      formFactor: (options.formFactor as "mobile" | "desktop") || "mobile",
-      screenEmulation: options.screenEmulation,
-      ...options,
-    }) ?? {} as { lhr: any };
+      ...effectiveOptions,
+    }, lighthouseConfig as any) ?? {} as { lhr: any };
 
     // Extract the useful parts
     const lhr = result.lhr;
 
     const report = {
       url: normalizedURL,
+      lighthouseOptions: {
+        formFactor: effectiveOptions.formFactor,
+        screenEmulation: effectiveOptions.screenEmulation ?? null,
+      },
+      lighthouseConfigSettings: result.lhr?.configSettings ?? {},
       categories: Object.fromEntries(
           Object.entries(lhr.categories)
             .filter(([, v]) => (v as any).score !== undefined)
@@ -143,7 +195,7 @@ async function setupNodeEvents(
         ),
       raw: lhr,
     };
-    lighthouseReport[normalizedURL] = report;
+    lighthouseReport[cacheKey] = report;
 
     return report;
   },
@@ -151,6 +203,7 @@ async function setupNodeEvents(
 
   on("before:run", () => {
     a11yResults = [];
+    lighthouseReport = {};
     cleanFile(A11Y_REPORT_FILE);
     cleanFile(UIUX_REPORT_FILE);
     cleanFile(LIGHTHOUSE_REPORT_FILE);

@@ -22,9 +22,9 @@ Feature: Collection of sample tests
   Scenario: Lighthouse category thresholds from table
     Given I visit "/search"
     Then the lighthouse score should be at least:
-      | performance     | 63 |
-      | accessibility   | 90 |
-      | best-practices  | 90 |
+      | performance     | 90 |
+      | accessibility   | 95 |
+      | best-practices  | 95 |
       | seo             | 80 |
 
   @loginAsBCeID
@@ -32,8 +32,8 @@ Feature: Collection of sample tests
     Given I visit "/search"
     Then the lighthouse metric "ttfb" should be at most "50"
     And the lighthouse metric "cls" should be at most "0.05"
-    And the lighthouse "performance" score should be above 63
-    And the lighthouse metric "lcp" should be at most "8000"
+    And the lighthouse "performance" score should be above 90
+    And the lighthouse metric "lcp" should be at most "2000"
 
   @chromeOnly
   Scenario: UX quality baseline

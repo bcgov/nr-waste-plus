@@ -8,6 +8,17 @@ interface LighthouseRawEvent {
   severity: string;        // info/minor/major/critical
   url: string;
   timestamp: string;
+  lighthouseOptions?: {
+    formFactor?: "mobile" | "desktop";
+    screenEmulation?: {
+      mobile?: boolean;
+      width?: number;
+      height?: number;
+      deviceScaleFactor?: number;
+      disabled?: boolean;
+    } | null;
+  };
+  lighthouseConfigSettings?: Record<string, unknown>;
 };
 
 export interface LighthouseAssertionEvent extends LighthouseRawEvent{  
@@ -19,6 +30,17 @@ export interface LighthouseAssertionEvent extends LighthouseRawEvent{
 
 export interface LighthouseReport {
   url: string;
+  lighthouseOptions?: {
+    formFactor?: "mobile" | "desktop";
+    screenEmulation?: {
+      mobile?: boolean;
+      width?: number;
+      height?: number;
+      deviceScaleFactor?: number;
+      disabled?: boolean;
+    } | null;
+  };
+  lighthouseConfigSettings?: Record<string, unknown>;
   categories: Record<string, number | null>;
   metrics: Record<string, number | null>;
   raw: any;
@@ -73,6 +95,8 @@ export const recordEvent = (url: string, report: LighthouseReport) => {
       severity: getLighthouseSeverity(id, value),
       url,
       timestamp,
+      lighthouseOptions: report.lighthouseOptions,
+      lighthouseConfigSettings: report.lighthouseConfigSettings,
     });
   }
 
@@ -86,6 +110,8 @@ export const recordEvent = (url: string, report: LighthouseReport) => {
       severity: "info",
       url,
       timestamp,
+      lighthouseOptions: report.lighthouseOptions,
+      lighthouseConfigSettings: report.lighthouseConfigSettings,
     });
   }
 
@@ -278,7 +304,14 @@ export const runReportTo = (fn: (report: any) => void) => {
     .then((currentUrl) => {
       return cy.runLighthouseAudit(currentUrl, options)
               .as("lhReport")
-              .then(fn);
+              .then((report) => {
+                const enrichedReport: LighthouseReport = {
+                  ...(report as LighthouseReport),
+                  lighthouseOptions: (report as LighthouseReport).lighthouseOptions ?? options,
+                };
+
+                return fn(enrichedReport);
+              });
       });
 };
 
@@ -316,6 +349,8 @@ export const expectLighthouse = (report: LighthouseReport) => {
       url,
       scenario,
       timestamp: new Date().toISOString(),
+      lighthouseOptions: report.lighthouseOptions,
+      lighthouseConfigSettings: report.lighthouseConfigSettings,
     };
 
     return cy.task("lighthouse:record", [event]);
