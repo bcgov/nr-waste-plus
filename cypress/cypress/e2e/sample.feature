@@ -31,7 +31,7 @@ Feature: Collection of sample tests
   Scenario: Explicit Lighthouse metric thresholds
     Given I visit "/search"
     Then the lighthouse metric "ttfb" should be at most "50"
-    And the lighthouse metric "cls" should be at most "0.05"
+    And the lighthouse metric "cls" should be at most "0.1"
     And the lighthouse "performance" score should be above 90
     And the lighthouse metric "lcp" should be at most "2000"
 

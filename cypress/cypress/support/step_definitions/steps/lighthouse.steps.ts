@@ -10,13 +10,13 @@ import {
 } from "../../helpers";
 
 const defaultValues = {
-  performance: 63, //Temporary value
-  accessibility: 90,
-  "best-practices": 90,
+  performance: 90, //Temporary value
+  accessibility: 95,
+  "best-practices": 95,
   seo: 80,
   pwa: 0,
   ttfb: 95, //Temporary value
-  lcp: 8000, //Temporary value
+  lcp: 2000, //Temporary value
   cls: 0.1 //Temporary value
 }
 
