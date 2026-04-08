@@ -51,11 +51,13 @@
 	@fonts path /fonts/*
 	header @fonts Cache-Control "public, max-age=31536000, immutable"
 
-	# Everything else (HTML, config, service worker) — never cache
+	# Everything else (HTML, config, service worker) — revalidate on every request
+	# Using no-cache instead of no-store to allow back/forward cache (bfcache)
 	@notassets {
 		not path /assets/*
+		not path /fonts/*
 	}
-	header @notassets Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate"
+	header @notassets Cache-Control "no-cache, must-revalidate, proxy-revalidate"
 
   handle /health {
 		respond `{"status":"UP"}`
