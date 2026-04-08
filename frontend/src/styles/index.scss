@@ -2,9 +2,11 @@
 @use 'sass:meta';
 
 @use './mixins';
+@use '@carbon/styles/scss/config' with ($css--font-face: false);
 @use '@carbon/styles/scss/spacing';
 @use '@bcgov-nr/nr-theme/design-tokens/body-types';
 @use './overrides';
+@use './fonts';
 @use '@carbon/type';
 @use './variables' as variables;
 @use '@carbon/react/scss/spacing' as *;
