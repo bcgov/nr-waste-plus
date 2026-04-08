@@ -58,6 +58,14 @@ jobs:
         info:
           app:
             component: backend
+        ca:
+          bc:
+            gov:
+              nrs:
+                frontend:
+                  cors:
+                    origins:
+                      - https://wasteplus.nrs.gov.bc.ca
       configmap-frontend: |-
         window.localStorage.setItem(\"VITE_FEATURE_FLAGS\",'{}');
         window.localStorage.setItem(\"VITE_FEATURES_OFFLINE\",'false');

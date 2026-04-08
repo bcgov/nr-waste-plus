@@ -123,6 +123,12 @@ public class HrsConfiguration {
      * The duration for which preflight responses may be cached by the client.
      */
     private Duration age;
+
+    /**
+     * List of extra allowed origins for CORS. This is derived from the {@code url} property in
+     * {@link FrontEndConfiguration} and is used to configure CORS mappings for API endpoints.
+     */
+    private List<String> origins;
   }
 
 }
