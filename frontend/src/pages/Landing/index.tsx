@@ -4,9 +4,9 @@ import { Button, Column, Grid } from '@carbon/react';
 import type { BreakpointType } from '@/hooks/useBreakpoint/types';
 import type { FC } from 'react';
 
-import logo_rev from '@/assets/img/bc-gov-logo-rev.png';
-import logo from '@/assets/img/bc-gov-logo.png';
-import LandingImg from '@/assets/img/landing.png';
+import logo_rev from '@/assets/img/bc-gov-logo-rev.webp';
+import logo from '@/assets/img/bc-gov-logo.webp';
+import LandingImg from '@/assets/img/landing.webp';
 import { useAuth } from '@/context/auth/useAuth';
 import { useTheme } from '@/context/theme/useTheme';
 import useBreakpoint from '@/hooks/useBreakpoint';
@@ -54,6 +54,7 @@ const LandingPage: FC = () => {
                   src={theme === 'g100' ? logo_rev : logo}
                   alt="BCGov Logo"
                   width={160}
+                  height={62}
                   className="logo"
                 />
               </div>
@@ -104,7 +105,7 @@ const LandingPage: FC = () => {
           as="aside"
           aria-label="Landing image"
         >
-          <img src={LandingImg} alt="Landing cover" className="landing-img" />
+          <img src={LandingImg} alt="Landing cover" className="landing-img" fetchPriority="high" />
         </Column>
       </Grid>
     </div>

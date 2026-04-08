@@ -93,14 +93,14 @@ describe('LandingPage', () => {
     mockTheme = 'g100';
     await renderWithProps();
     const logoImg = screen.getByAltText('BCGov Logo');
-    expect(logoImg.getAttribute('src')).toMatch(/bc-gov-logo-rev\.png$/);
+    expect(logoImg.getAttribute('src')).toMatch(/bc-gov-logo-rev\.webp$/);
   });
 
   it('renders logo when theme is not g100', async () => {
     mockTheme = 'g10';
     await renderWithProps();
     const logoImg = screen.getByAltText('BCGov Logo');
-    expect(logoImg.getAttribute('src')).toMatch(/bc-gov-logo\.png$/);
+    expect(logoImg.getAttribute('src')).toMatch(/bc-gov-logo\.webp$/);
   });
 
   it('renders the title and subtitle', async () => {
