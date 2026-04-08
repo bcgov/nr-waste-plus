@@ -50,9 +50,16 @@ export default MyComponent;
 
 ### Image Usage
 
-All images **must** be in WebP format. WebP provides 25-35% smaller files than PNG and is supported by all modern browsers.
+All images live in `public/img/` and are served as static assets with deterministic URLs (no content hash). This allows `<link rel="preload">` in `index.html` to discover them immediately — before any JS executes.
 
-#### Converting images
+#### Format guidelines
+
+| Format | Use for |
+|---|---|
+| **SVG** | Logos, icons, illustrations — infinitely scalable at any resolution |
+| **WebP** | Photos, hero images — 25-35% smaller than PNG/JPEG |
+
+#### Converting photos to WebP
 
 Use any tool that supports WebP output. On macOS with Python 3 + Pillow:
 
@@ -62,7 +69,7 @@ pip3 install Pillow
 python3 -c "
 from PIL import Image
 img = Image.open('source.png')
-img.save('output.webp', 'WebP', quality=80)
+img.save('output.webp', 'WebP', quality=50, method=6)
 "
 ```
 
@@ -72,23 +79,28 @@ Or use an online converter such as [squoosh.app](https://squoosh.app).
 
 | Requirement | Guideline |
 |---|---|
-| **Format** | WebP (`.webp`). Avoid PNG/JPEG unless a transparency edge-case requires PNG. |
-| **Dimensions** | Size the source image to **3× the displayed CSS size** for retina support and no larger. For example, a 160×62 CSS image needs a 480×186 source. |
-| **Quality** | Use `quality=80` for photos, `lossless=True` for logos/icons with sharp edges or text. |
-| **`width` and `height`** | Always set explicit `width` and `height` attributes on `<img>` elements to prevent layout shifts (CLS). |
-| **`fetchPriority`** | Add `fetchPriority="high"` to above-the-fold hero/LCP images so the browser prioritises them. |
-| **Location** | Place images in `src/assets/img/`. Vite hashes them into `build/assets/` automatically. |
+| **Format** | SVG for logos/icons, WebP for photos. Avoid PNG/JPEG. |
+| **Location** | Place images in `public/img/`. Reference via static paths (e.g., `/img/logo.svg`). |
+| **Preload** | Add `<link rel="preload">` in `index.html` for above-the-fold images. |
+| **`width` and `height`** | Always set explicit `width` and `height` on `<img>` to prevent layout shifts (CLS). |
+| **`fetchPriority`** | Add `fetchPriority="high"` to above-the-fold hero/LCP images. |
+| **Quality** | For WebP photos, use `quality=50, method=6` for best compression. |
 
 #### Example
 
 ```tsx
-import heroImg from '@/assets/img/hero.webp';
-
+{/* SVG logo — scales to any size */}
 <img
-  src={heroImg}
-  alt="Descriptive alt text"
-  width={600}
-  height={400}
+  src="/img/bc-gov-logo.svg"
+  alt="BCGov Logo"
+  width={160}
+  height={62}
+/>
+
+{/* WebP hero image — preloaded in index.html */}
+<img
+  src="/img/landing.webp"
+  alt="Landing cover"
   fetchPriority="high"
 />
 ```
