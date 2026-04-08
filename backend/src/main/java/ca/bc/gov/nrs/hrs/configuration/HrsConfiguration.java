@@ -125,8 +125,9 @@ public class HrsConfiguration {
     private Duration age;
 
     /**
-     * List of extra allowed origins for CORS. This is derived from the {@code url} property in
-     * {@link FrontEndConfiguration} and is used to configure CORS mappings for API endpoints.
+     * List of additional allowed origins for CORS, configured separately from the
+     * {@code url} property in {@link FrontEndConfiguration}. These origins are used in addition
+     * to the configured frontend URL(s) when setting up CORS mappings for API endpoints.
      */
     private List<String> origins;
   }
