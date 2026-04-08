@@ -144,13 +144,35 @@ export interface DataTableLike {
 
 type LighthouseFormFactor = "mobile" | "desktop";
 
-export const mobileLighthouseOptions = {
+interface LighthouseRunOptions {
+  formFactor: LighthouseFormFactor;
+  screenEmulation: {
+    mobile: boolean;
+    width: number;
+    height: number;
+    deviceScaleFactor: number;
+    disabled: boolean;
+  };
+}
+
+export const mobileLighthouseOptions: LighthouseRunOptions = {
   formFactor: "mobile",
   screenEmulation: {
     mobile: true,
     width: 390,
     height: 844,
     deviceScaleFactor: 2,
+    disabled: false,
+  },
+};
+
+export const desktopLighthouseOptions: LighthouseRunOptions = {
+  formFactor: "desktop",
+  screenEmulation: {
+    mobile: false,
+    width: 1920,
+    height: 1080,
+    deviceScaleFactor: 1,
     disabled: false,
   },
 };
@@ -187,6 +209,11 @@ export const resolveLighthouseFormFactor = (): LighthouseFormFactor => {
   }
 
   return "desktop";
+};
+
+export const resolveLighthouseRunOptions = (): LighthouseRunOptions => {
+  const formFactor = resolveLighthouseFormFactor();
+  return formFactor === "mobile" ? mobileLighthouseOptions : desktopLighthouseOptions;
 };
 
 export const normalizeMetricKey = (metric: string): string => {
@@ -244,12 +271,12 @@ export const parseThresholdTable = (table: DataTableLike): Record<string, number
 };
 
 export const runReportTo = (fn: (report: any) => void) => {
-  const formFactor = resolveLighthouseFormFactor();
+  const options = resolveLighthouseRunOptions();
 
   cy
     .url()
     .then((currentUrl) => {
-      return cy.runLighthouseAudit(currentUrl, { formFactor })
+      return cy.runLighthouseAudit(currentUrl, options)
               .as("lhReport")
               .then(fn);
       });
