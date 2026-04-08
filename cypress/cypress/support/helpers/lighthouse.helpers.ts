@@ -142,6 +142,8 @@ export interface DataTableLike {
   rawTable: string[][];
 }
 
+type LighthouseFormFactor = "mobile" | "desktop";
+
 export const mobileLighthouseOptions = {
   formFactor: "mobile",
   screenEmulation: {
@@ -151,6 +153,40 @@ export const mobileLighthouseOptions = {
     deviceScaleFactor: 2,
     disabled: false,
   },
+};
+
+const toFormFactor = (value: unknown): LighthouseFormFactor | null => {
+  if (typeof value !== "string") return null;
+
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "mobile") return "mobile";
+  if (normalized === "desktop") return "desktop";
+
+  return null;
+};
+
+export const resolveLighthouseFormFactor = (): LighthouseFormFactor => {
+  const env = (Cypress.config("env") as Record<string, unknown>) ?? {};
+
+  const candidates = [
+    env.lighthouseFormFactor,
+    env.formFactor,
+    env.platform,
+    env.targetPlatform,
+    env.deviceType,
+  ];
+
+  for (const candidate of candidates) {
+    const resolved = toFormFactor(candidate);
+    if (resolved) return resolved;
+  }
+
+  const viewportWidth = Number(Cypress.config("viewportWidth"));
+  if (Number.isFinite(viewportWidth) && viewportWidth <= 768) {
+    return "mobile";
+  }
+
+  return "desktop";
 };
 
 export const normalizeMetricKey = (metric: string): string => {
@@ -208,10 +244,12 @@ export const parseThresholdTable = (table: DataTableLike): Record<string, number
 };
 
 export const runReportTo = (fn: (report: any) => void) => {
+  const formFactor = resolveLighthouseFormFactor();
+
   cy
     .url()
     .then((currentUrl) => {
-      return cy.runLighthouseAudit(currentUrl)
+      return cy.runLighthouseAudit(currentUrl, { formFactor })
               .as("lhReport")
               .then(fn);
       });
