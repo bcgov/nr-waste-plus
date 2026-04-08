@@ -29,11 +29,17 @@ const DistrictItem: FC<DistrictItemProps> = ({ client, isSelected, isLoading }) 
    */
   const renderIcon = () => {
     const Img = isSelected ? CheckmarkFilled : (ClientTypeIconMap[client.kind ?? 'I'] ?? Help);
-    const testId = isSelected
-      ? 'selected-icon'
-      : ClientTypeIconMap[client.kind ?? 'I']
-        ? 'client-icon'
-        : 'default-icon';
+    const testId = (() => {
+      if (isSelected) {
+        return 'selected-icon';
+      }
+
+      if (ClientTypeIconMap[client.kind ?? 'I']) {
+        return 'client-icon';
+      }
+
+      return 'default-icon';
+    })();
     return <Img className="org-item-icon" data-testid={testId} />;
   };
 
