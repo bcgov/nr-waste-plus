@@ -4,9 +4,6 @@ import { Button, Column, Grid } from '@carbon/react';
 import type { BreakpointType } from '@/hooks/useBreakpoint/types';
 import type { FC } from 'react';
 
-import logo_rev from '@/assets/img/bc-gov-logo-rev.webp';
-import logo from '@/assets/img/bc-gov-logo.webp';
-import LandingImg from '@/assets/img/landing.webp';
 import { useAuth } from '@/context/auth/useAuth';
 import { useTheme } from '@/context/theme/useTheme';
 import useBreakpoint from '@/hooks/useBreakpoint';
@@ -51,7 +48,12 @@ const LandingPage: FC = () => {
               {/* Logo */}
               <div>
                 <img
-                  src={theme === 'g100' ? logo_rev : logo}
+                  src={theme === 'g100' ? '/img/bc-gov-logo-rev-160w.webp' : '/img/bc-gov-logo-160w.webp'}
+                  srcSet={
+                    theme === 'g100'
+                      ? '/img/bc-gov-logo-rev-160w.webp 1x, /img/bc-gov-logo-rev-320w.webp 2x, /img/bc-gov-logo-rev.webp 3x'
+                      : '/img/bc-gov-logo-160w.webp 1x, /img/bc-gov-logo-320w.webp 2x, /img/bc-gov-logo.webp 3x'
+                  }
                   alt="BCGov Logo"
                   width={160}
                   height={62}
@@ -105,7 +107,7 @@ const LandingPage: FC = () => {
           as="aside"
           aria-label="Landing image"
         >
-          <img src={LandingImg} alt="Landing cover" className="landing-img" fetchPriority="high" />
+          <img src="/img/landing.webp" alt="Landing cover" className="landing-img" fetchPriority="high" />
         </Column>
       </Grid>
     </div>

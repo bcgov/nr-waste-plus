@@ -30,12 +30,13 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           navigateFallback: '/index.html',
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
           sourcemap: true,
           maximumFileSizeToCacheInBytes: 6000000,
         },
         injectManifest: {
           maximumFileSizeToCacheInBytes: 6000000,
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
         },
         manifest: {
           id: '/',

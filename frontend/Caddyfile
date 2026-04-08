@@ -51,11 +51,16 @@
 	@fonts path /fonts/*
 	header @fonts Cache-Control "public, max-age=31536000, immutable"
 
+	# Image files — cache with revalidation (no hash in filename)
+	@images path /img/*
+	header @images Cache-Control "public, max-age=86400, must-revalidate"
+
 	# Everything else (HTML, config, service worker) — revalidate on every request
 	# Using no-cache instead of no-store to allow back/forward cache (bfcache)
 	@notassets {
 		not path /assets/*
 		not path /fonts/*
+		not path /img/*
 	}
 	header @notassets Cache-Control "no-cache, must-revalidate, proxy-revalidate"
 
