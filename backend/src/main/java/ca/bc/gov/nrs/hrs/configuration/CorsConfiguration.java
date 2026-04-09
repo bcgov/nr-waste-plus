@@ -1,8 +1,9 @@
 package ca.bc.gov.nrs.hrs.configuration;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -52,13 +53,18 @@ public class CorsConfiguration implements WebMvcConfigurer {
   public void addCorsMappings(CorsRegistry registry) {
     var frontendConfig = configuration.getFrontend();
     var cors = frontendConfig.getCors();
-    String origins = frontendConfig.getUrl();
-    List<String> allowedOrigins = new ArrayList<>();
+    String frontendUrl = frontendConfig.getUrl();
+    Set<String> allowedOrigins = Optional
+        .ofNullable(frontendConfig.getCors().getOrigins())
+        .map(LinkedHashSet::new) // preserve order and remove duplicates
+        .orElse(new LinkedHashSet<>());
 
-    if (StringUtils.isNotBlank(origins) && origins.contains(",")) {
-      allowedOrigins.addAll(Arrays.asList(origins.split(",")));
-    } else {
-      allowedOrigins.add(origins);
+    if (StringUtils.isNotBlank(frontendUrl)) {
+      if (frontendUrl.contains(",")) {
+        allowedOrigins.addAll(Arrays.asList(frontendUrl.split(",")));
+      } else {
+        allowedOrigins.add(frontendUrl);
+      }
     }
 
     log.info("Allowed origins: {} {}", allowedOrigins, allowedOrigins.toArray(new String[0]));

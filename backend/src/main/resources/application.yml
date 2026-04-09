@@ -198,6 +198,7 @@ ca:
               - PUT
               - DELETE
             age: 5m
+            origins: []
 
 info:
   app:
