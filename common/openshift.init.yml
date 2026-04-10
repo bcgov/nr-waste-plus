@@ -138,7 +138,9 @@ objects:
           VITE_FRONTEND_URL: 'https://${URL_FRONTEND}',
           VITE_NODE_ENV: '${VITE_NODE_ENV}',
           VITE_APP_NAME: 'Waste Plus',
-          VITE_FEATURES_OFFLINE: 'true',
+          VITE_FEATURE_FLAGS: {
+            OFFLINE: true
+          },
           VITE_ZONE: '${VITE_ZONE}',
           VITE_USER_POOLS_ID: '${COGNITO_USER_POOL}',
           VITE_LEGACY_BASE_URL: '${VITE_LEGACY_BASE_URL}',
