@@ -2,9 +2,7 @@ import type { TableHeaderType } from '@/components/Form/TableResource/types';
 import type { MyForestClientDto } from '@/services/types';
 
 import DateTag from '@/components/core/Tags/DateTag';
-import RoleBasedRedirectLinkTag from '@/components/waste/RoleBasedRedirectLinkTag';
-import { Role } from '@/context/auth/types';
-import { env } from '@/env';
+import RedirectLinkTag from '@/components/waste/RedirectLinkTag';
 
 export const headers: TableHeaderType<MyForestClientDto>[] = [
   {
@@ -13,11 +11,7 @@ export const headers: TableHeaderType<MyForestClientDto>[] = [
     sortable: true,
     selected: true,
     renderAs: (value) => (
-      <RoleBasedRedirectLinkTag
-        text={value as string}
-        url={`${env.VITE_CLIENT_BASE_URL}/clients/details/${value}`}
-        allowedRoles={[Role.IDIR]}
-      />
+      <RedirectLinkTag text={value as string} url={`/search?clientNumbers=${value}`} sameTab />
     ),
   },
   { key: 'client.description', header: 'Client name', sortable: true, selected: true },

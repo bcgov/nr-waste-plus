@@ -2,6 +2,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
 import MyClientListing from './index';
@@ -11,6 +12,7 @@ import type { MyForestClientDto } from '@/services/types';
 
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
+import { renderCell } from '@/components/Form/TableResource/types';
 
 vi.mock('@/services/APIs');
 vi.mock('@/hooks/useSendEvent', () => ({
@@ -36,6 +38,7 @@ vi.mock('@/components/Form/TableResource', () => ({
         <div>Nothing to show yet!</div>
       );
     }
+
     return (
       <div data-testid={id}>
         <table>
@@ -49,10 +52,9 @@ vi.mock('@/components/Form/TableResource', () => ({
           <tbody>
             {content.content.map((row: any) => (
               <tr key={row.id}>
-                <td>{row.client.code}</td>
-                <td>{row.client.description}</td>
-                <td>{row.submissionsCount}</td>
-                <td>{row.blocksCount}</td>
+                {headers.map((h: any) => (
+                  <td key={h.key}>{renderCell(row, h)}</td>
+                ))}
               </tr>
             ))}
           </tbody>
@@ -129,11 +131,13 @@ const renderWithProps = async () => {
   });
   await act(async () => {
     render(
-      <QueryClientProvider client={qc}>
-        <PreferenceProvider>
-          <MyClientListing />
-        </PreferenceProvider>
-      </QueryClientProvider>,
+      <MemoryRouter>
+        <QueryClientProvider client={qc}>
+          <PreferenceProvider>
+            <MyClientListing />
+          </PreferenceProvider>
+        </QueryClientProvider>
+      </MemoryRouter>,
     );
   });
 };
@@ -452,6 +456,29 @@ describe('MyClientListing', () => {
         // The component transforms data to add id from client.code
         expect(screen.getByText('00001001')).toBeDefined();
         expect(screen.getByText('00001002')).toBeDefined();
+      });
+    });
+
+    it('renders client code as a link to search page with client filter', async () => {
+      (APIs.forestclient.searchMyForestClients as Mock).mockResolvedValue(mockSearchResults);
+      await renderWithProps();
+
+      await waitFor(() => {
+        const link = screen.getByRole('link', { name: '00001001' });
+        expect(link).toBeDefined();
+        expect(link.getAttribute('href')).toBe('/search?clientNumbers=00001001');
+      });
+    });
+
+    it('renders all client codes as search links', async () => {
+      (APIs.forestclient.searchMyForestClients as Mock).mockResolvedValue(mockSearchResults);
+      await renderWithProps();
+
+      await waitFor(() => {
+        const link1 = screen.getByRole('link', { name: '00001001' });
+        const link2 = screen.getByRole('link', { name: '00001002' });
+        expect(link1.getAttribute('href')).toBe('/search?clientNumbers=00001001');
+        expect(link2.getAttribute('href')).toBe('/search?clientNumbers=00001002');
       });
     });
   });

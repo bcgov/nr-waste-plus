@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect } from 'vitest';
 
 import RedirectLinkTag from './index';
@@ -13,12 +14,56 @@ describe('RedirectLinkTag', () => {
     expect(screen.getByText('Go')).toBeDefined();
   });
 
-  it('renders link with text and opens in same tab if sameTab is true', () => {
-    render(<RedirectLinkTag text="Stay" url="/local" sameTab />);
+  it('renders a React Router link for internal URL in same tab', () => {
+    render(
+      <MemoryRouter>
+        <RedirectLinkTag text="Stay" url="/local" sameTab />
+      </MemoryRouter>,
+    );
     const link = screen.getByRole('link');
     expect(link.getAttribute('href')).toBe('/local');
-    expect(link.getAttribute('target')).toBe('_self');
+    expect(link.getAttribute('target')).toBe(null);
     expect(link.getAttribute('rel')).toBe(null);
     expect(screen.getByText('Stay')).toBeDefined();
+  });
+
+  it('renders external URL in same tab as anchor with _self target', () => {
+    render(<RedirectLinkTag text="External" url="https://example.com/path" sameTab />);
+    const link = screen.getByRole('link');
+    expect(link.getAttribute('href')).toBe('https://example.com/path');
+    expect(link.getAttribute('target')).toBe('_self');
+    expect(link.getAttribute('rel')).toBe(null);
+  });
+
+  it('treats absolute same-origin URLs as external (not path-only)', () => {
+    render(
+      <RedirectLinkTag
+        text="Absolute URL"
+        url="https://localhost:5173/details/1"
+        sameTab
+      />,
+    );
+    const link = screen.getByRole('link');
+    // Should render as anchor with _self, not as React Router Link
+    expect(link.getAttribute('href')).toBe('https://localhost:5173/details/1');
+    expect(link.getAttribute('target')).toBe('_self');
+    expect(link.getAttribute('rel')).toBe(null);
+  });
+
+  it('treats protocol-relative URLs as external', () => {
+    render(
+      <RedirectLinkTag text="Protocol-relative" url="//example.com/path" sameTab />,
+    );
+    const link = screen.getByRole('link');
+    expect(link.getAttribute('href')).toBe('//example.com/path');
+    expect(link.getAttribute('target')).toBe('_self');
+  });
+
+  it('renders internal path-only URL in new tab as anchor with _blank', () => {
+    render(<RedirectLinkTag text="Internal Default" url="/search?term=wood" />);
+    const link = screen.getByRole('link');
+    expect(link.getAttribute('href')).toBe('/search?term=wood');
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
   });
 });

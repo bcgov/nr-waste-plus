@@ -49,17 +49,20 @@ test.describe('My Client List Page', () => {
     await expect(page.getByRole('cell', { name: 'CANADIAN SAMPLE CO.' }).first()).toBeVisible();
   });
 
-  test('should not render the client number as a link', async ({ page }) => {
+  test('should render the client number as a link to search with client filter', async ({
+    page,
+  }) => {
     test.skip(
       !hasClientAccessRole(test.info().project.metadata.userType),
       'Only runs for users with Viewer/Submitter access',
     );
 
-    // The client number is rendered on the table
-    await expect(page.getByRole('cell', { name: '90000001' })).toBeVisible();
+    // The client number should be rendered as a link
+    const clientLink = page.getByRole('link', { name: '90000001' });
+    await expect(clientLink).toBeVisible();
 
-    // But it's not a link
-    await expect(page.getByRole('link', { name: '90000001' })).toHaveCount(0);
+    // The link should navigate to search page with client number filter
+    await expect(clientLink).toHaveAttribute('href', '/search?clientNumbers=90000001');
   });
 
   test('should allow column selection', async ({ page }) => {
@@ -165,9 +168,8 @@ test.describe('My Client List Page', () => {
     await expect(page.getByRole('heading', { name: 'My clients' })).toBeVisible();
   });
 
-  test('should render a link to the client details page on the Client application', async ({
+  test('should navigate to search page with selected client number in same tab', async ({
     page,
-    context,
   }, testInfo) => {
     test.skip(testInfo.project.metadata.userType !== 'idir', 'Only runs for IDIR project');
     test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
@@ -185,14 +187,10 @@ test.describe('My Client List Page', () => {
     await expect(clientLink).toBeVisible();
 
     const href = await clientLink.getAttribute('href');
-    expect(href).toContain('/clients/details/90000001');
+    expect(href).toContain('/search?clientNumbers=90000001');
 
-    const [newPage] = await Promise.all([context.waitForEvent('page'), clientLink.click()]);
+    await clientLink.click();
 
-    await newPage.waitForLoadState();
-
-    await expect(
-      newPage.getByRole('heading', { name: 'Forests Client Management System' }),
-    ).toBeVisible();
+    await expect(page).toHaveURL(/\/search\?clientNumbers=90000001/);
   });
 });
