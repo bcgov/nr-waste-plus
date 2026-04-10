@@ -252,11 +252,11 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           <EmptyValueTag value={data?.comments ?? ''} />
         </ReadonlyInput>
       </Column>
-      <Column lg={2} md={2} sm={4}>
-        <p>No. of blocks in RU: {data?.totalBlocks ?? 0}</p>
+      <Column lg={3} md={3} sm={4}>
+        <p>Blocks in the RU: {data?.totalBlocks ?? 0}</p>
       </Column>
-      <Column lg={14} md={6} sm={4}>
-        <p>No. of secondary marks in block: {data?.totalChildren ?? 0}</p>
+      <Column lg={13} md={5} sm={4}>
+        <p>Secondary marks in the block: {data?.totalChildren ?? 0}</p>
       </Column>
     </Grid>
   );

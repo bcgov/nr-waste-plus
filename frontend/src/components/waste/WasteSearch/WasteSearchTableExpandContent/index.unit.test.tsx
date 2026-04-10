@@ -172,7 +172,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('No. of blocks in RU: 5')).toBeDefined();
+        expect(screen.getByText('Blocks in the RU: 5')).toBeDefined();
       });
     });
 
@@ -331,35 +331,6 @@ describe('WasteSearchTableExpandContent', () => {
       });
     });
 
-    it('renders multi-mark as Yes when true', async () => {
-      const dataWithTrue: ReportingUnitSearchExpandedDto = {
-        ...mockExpandedData,
-        multiMark: true,
-      };
-      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithTrue);
-
-      const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
-
-      await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
-      });
-    });
-
-    it('renders multi-mark as No when false', async () => {
-      const dataWithFalse: ReportingUnitSearchExpandedDto = {
-        ...mockExpandedData,
-        multiMark: false,
-      };
-      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithFalse);
-
-      const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
-
-      await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
-      });
-    });
   });
 
   describe('attachment handling', () => {
@@ -450,7 +421,6 @@ describe('WasteSearchTableExpandContent', () => {
         expect(container.querySelector(`#${rowId}-cutting-permit`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-timber-mark`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-exempted`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-multi-mark`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-net-area`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-submitter`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-attachments-comments`)).toBeDefined();
@@ -537,7 +507,7 @@ describe('WasteSearchTableExpandContent', () => {
         expect(screen.getByText('LIC-12345')).toBeDefined();
         expect(screen.getByText('Cutting Permit')).toBeDefined();
         expect(screen.getByText('CP-001')).toBeDefined();
-        expect(screen.getByText('No. of blocks in RU: 5')).toBeDefined();
+        expect(screen.getByText('Blocks in the RU: 5')).toBeDefined();
       });
     });
 
@@ -567,7 +537,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('No. of blocks in RU: 0')).toBeDefined();
+        expect(screen.getByText('Blocks in the RU: 0')).toBeDefined();
       });
     });
 
@@ -623,7 +593,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('No. of secondary marks in block: 3')).toBeDefined();
+        expect(screen.getByText('Secondary marks in the block: 3')).toBeDefined();
       });
     });
 
