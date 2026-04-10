@@ -9,7 +9,7 @@ declare global {
 /**
  * Supported string runtime config keys that may be injected through public/data/config.js.
  */
-const envConfigSchema = z
+const allowedRuntimeEnvConfigSchema = z
   .object({
     VITE_APP_NAME: z.string(),
     VITE_BACKEND_URL: z.string(),
@@ -29,6 +29,25 @@ const envConfigSchema = z
   .strict();
 
 /**
+ * Final merged env contract consumed by the application.
+ */
+const appEnvSchema = z.looseObject({
+  VITE_APP_NAME: z.string(),
+  VITE_BACKEND_URL: z.string(),
+  VITE_BCEID_HELP: z.string(),
+  VITE_CLIENT_BASE_URL: z.string(),
+  VITE_FAM_DOMAIN: z.string(),
+  VITE_IDIR_HELP: z.string(),
+  VITE_LEGACY_BASE_URL: z.string(),
+  VITE_NODE_ENV: z.string(),
+  VITE_USER_POOLS_ID: z.string(),
+  VITE_USER_POOLS_WEB_CLIENT_ID: z.string(),
+  VITE_ZONE: z.string(),
+  VITE_FRONTEND_URL: z.string().optional(),
+  VITE_MOCK_AUTH: z.string().optional(),
+});
+
+/**
  * Typed feature flags supported by the application.
  * Add new flags here as they are introduced.
  */
@@ -39,11 +58,11 @@ const featureFlagsSchema = z
   .partial()
   .strict();
 
-const runtimeConfigSchema = envConfigSchema.extend({
+const runtimeConfigSchema = allowedRuntimeEnvConfigSchema.extend({
   VITE_FEATURE_FLAGS: featureFlagsSchema.optional(),
 });
 
-type AppEnv = Record<string, string> & z.infer<typeof envConfigSchema>;
+type AppEnv = Record<string, string> & z.infer<typeof appEnvSchema>;
 export type FeatureFlags = z.infer<typeof featureFlagsSchema>;
 type RuntimeConfig = z.infer<typeof runtimeConfigSchema>;
 
@@ -110,13 +129,26 @@ const { VITE_FEATURE_FLAGS: runtimeFeatureFlags, ...runtimeEnv } = getValidatedR
   globalThis.window?.config,
 );
 
+const getValidatedAppEnv = (config: Record<string, string>): AppEnv => {
+  const parsedConfig = appEnvSchema.safeParse(config);
+  if (!parsedConfig.success) {
+    const issues = parsedConfig.error.issues
+      .map(({ path, message }) => `${path.join('.') || '<root>'}: ${message}`)
+      .join('; ');
+
+    throw new TypeError(`Invalid application env: ${issues}`);
+  }
+
+  return parsedConfig.data as AppEnv;
+};
+
 /**
  * Runtime environment values merged from Vite and validated optional window-injected config.
  */
-export const env: AppEnv = {
+export const env: AppEnv = getValidatedAppEnv({
   ...viteEnv,
   ...runtimeEnv,
-};
+});
 
 /**
  * Typed feature flags merged from Vite env and optional runtime config.
