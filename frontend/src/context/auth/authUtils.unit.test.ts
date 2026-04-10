@@ -3,12 +3,17 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getCookie, getUserTokenFromCookie, parseToken } from './authUtils';
 
 // Mock env
-vi.mock('@/env', () => ({
-  env: {
-    VITE_USER_POOLS_WEB_CLIENT_ID: 'test-client-id',
-    NODE_ENV: 'test',
-  },
-}));
+vi.mock(import('@/env'), async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    env: {
+      ...actual.env,
+      VITE_USER_POOLS_WEB_CLIENT_ID: 'test-client-id',
+      NODE_ENV: 'test',
+    },
+  };
+});
 
 describe('authUtils', () => {
   describe('getCookie', () => {

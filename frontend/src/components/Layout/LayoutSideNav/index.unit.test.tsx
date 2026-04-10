@@ -9,12 +9,17 @@ import * as useAuthModule from '@/context/auth/useAuth';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import * as routePathsModule from '@/routes/routePaths';
 
-vi.mock('@/env', () => ({
-  env: {
-    VITE_IDIR_HELP: 'https://test-idir-help.example.com',
-    VITE_BCEID_HELP: 'https://test-bceid-help.example.com',
-  },
-}));
+vi.mock(import('@/env'), async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    env: {
+      ...actual.env,
+      VITE_IDIR_HELP: 'https://test-idir-help.example.com',
+      VITE_BCEID_HELP: 'https://test-bceid-help.example.com',
+    },
+  };
+});
 
 vi.mock('@/context/auth/useAuth', () => ({
   useAuth: vi.fn(),
