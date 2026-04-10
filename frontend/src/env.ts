@@ -66,6 +66,15 @@ type AppEnv = Record<string, string> & z.infer<typeof appEnvSchema>;
 export type FeatureFlags = z.infer<typeof featureFlagsSchema>;
 type RuntimeConfig = z.infer<typeof runtimeConfigSchema>;
 
+const isPlainObject = (value: unknown): value is Record<string, unknown> => {
+  if (typeof value !== 'object' || value == null || Array.isArray(value)) {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+};
+
 const getStringEnvEntries = (source: Record<string, unknown>): Record<string, string> => {
   return Object.fromEntries(
     Object.entries(source).filter(([, value]) => typeof value === 'string'),
@@ -103,9 +112,9 @@ const getValidatedRuntimeConfig = (config: unknown): RuntimeConfig => {
     return {};
   }
 
-  if (typeof config !== 'object' || Array.isArray(config)) {
+  if (!isPlainObject(config)) {
     throw new TypeError(
-      'Invalid window.config: expected a plain object with supported string runtime config values.',
+      'Invalid window.config: expected a plain object with an Object or null prototype and supported runtime config values.',
     );
   }
 

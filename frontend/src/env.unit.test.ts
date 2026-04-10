@@ -36,6 +36,13 @@ describe('env', () => {
     await expect(loadEnv()).rejects.toThrow(/UNEXPECTED_KEY/);
   });
 
+  it('rejects non-plain runtime config objects', async () => {
+    globalThis.window.config = new Date();
+
+    await expect(loadEnv()).rejects.toThrow(/Invalid window\.config/);
+    await expect(loadEnv()).rejects.toThrow(/plain object/i);
+  });
+
   it('rejects invalid feature flag values', async () => {
     globalThis.window.config = {
       VITE_FEATURE_FLAGS: {
