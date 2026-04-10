@@ -188,7 +188,7 @@ test.describe('My Client List Page', () => {
     await expect(clientLink).toBeVisible();
 
     const href = await clientLink.getAttribute('href');
-    expect(href).toContain('/clients/details/90000001');
+    expect(href).toContain('/search?clientNumbers=90000001');
 
     const [newPage] = await Promise.all([context.waitForEvent('page'), clientLink.click()]);
 
