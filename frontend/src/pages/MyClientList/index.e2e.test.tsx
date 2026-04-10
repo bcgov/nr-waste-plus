@@ -168,9 +168,8 @@ test.describe('My Client List Page', () => {
     await expect(page.getByRole('heading', { name: 'My clients' })).toBeVisible();
   });
 
-  test('should render a link to the client details page on the Client application', async ({
+  test('should navigate to search page with selected client number in same tab', async ({
     page,
-    context,
   }, testInfo) => {
     test.skip(testInfo.project.metadata.userType !== 'idir', 'Only runs for IDIR project');
     test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
@@ -190,12 +189,8 @@ test.describe('My Client List Page', () => {
     const href = await clientLink.getAttribute('href');
     expect(href).toContain('/search?clientNumbers=90000001');
 
-    const [newPage] = await Promise.all([context.waitForEvent('page'), clientLink.click()]);
+    await clientLink.click();
 
-    await newPage.waitForLoadState();
-
-    await expect(
-      newPage.getByRole('heading', { name: 'Forests Client Management System' }),
-    ).toBeVisible();
+    await expect(page).toHaveURL(/\/search\?clientNumbers=90000001/);
   });
 });
