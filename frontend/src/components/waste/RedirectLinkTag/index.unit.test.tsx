@@ -34,4 +34,36 @@ describe('RedirectLinkTag', () => {
     expect(link.getAttribute('target')).toBe('_self');
     expect(link.getAttribute('rel')).toBe(null);
   });
+
+  it('treats absolute same-origin URLs as external (not path-only)', () => {
+    render(
+      <RedirectLinkTag
+        text="Absolute URL"
+        url="https://localhost:5173/details/1"
+        sameTab
+      />,
+    );
+    const link = screen.getByRole('link');
+    // Should render as anchor with _self, not as React Router Link
+    expect(link.getAttribute('href')).toBe('https://localhost:5173/details/1');
+    expect(link.getAttribute('target')).toBe('_self');
+    expect(link.getAttribute('rel')).toBe(null);
+  });
+
+  it('treats protocol-relative URLs as external', () => {
+    render(
+      <RedirectLinkTag text="Protocol-relative" url="//example.com/path" sameTab />,
+    );
+    const link = screen.getByRole('link');
+    expect(link.getAttribute('href')).toBe('//example.com/path');
+    expect(link.getAttribute('target')).toBe('_self');
+  });
+
+  it('renders internal path-only URL in new tab as anchor with _blank', () => {
+    render(<RedirectLinkTag text="Internal Default" url="/search?term=wood" />);
+    const link = screen.getByRole('link');
+    expect(link.getAttribute('href')).toBe('/search?term=wood');
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+  });
 });

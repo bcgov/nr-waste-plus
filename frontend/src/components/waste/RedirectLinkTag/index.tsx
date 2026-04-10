@@ -23,12 +23,8 @@ type RedirectLinkTagProps = {
  * @returns `true` if the URL is internal (path‑only), otherwise `false`.
  */
 const isInternal = (url: string): boolean => {
-  try {
-    const parsed = new URL(url, globalThis.location.origin);
-    return parsed.origin === globalThis.location.origin;
-  } catch {
-    return false;
-  }
+  // Internal URLs are path-only: start with / but not // (protocol-relative)
+  return url.startsWith('/') && !url.startsWith('//');
 };
 
 /**
