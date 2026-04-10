@@ -12,6 +12,7 @@ import type { MyForestClientDto } from '@/services/types';
 
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
+import { renderCell } from '@/components/Form/TableResource/types';
 
 vi.mock('@/services/APIs');
 vi.mock('@/hooks/useSendEvent', () => ({
@@ -38,10 +39,6 @@ vi.mock('@/components/Form/TableResource', () => ({
       );
     }
 
-    const getCellValue = (row: any, key: string): any => {
-      return key.split('.').reduce((obj, k) => obj?.[k], row);
-    };
-
     return (
       <div data-testid={id}>
         <table>
@@ -55,10 +52,9 @@ vi.mock('@/components/Form/TableResource', () => ({
           <tbody>
             {content.content.map((row: any) => (
               <tr key={row.id}>
-                {headers.map((h: any) => {
-                  const value = getCellValue(row, h.key);
-                  return <td key={h.key}>{h.renderAs ? h.renderAs(value) : value}</td>;
-                })}
+                {headers.map((h: any) => (
+                  <td key={h.key}>{renderCell(row, h)}</td>
+                ))}
               </tr>
             ))}
           </tbody>
