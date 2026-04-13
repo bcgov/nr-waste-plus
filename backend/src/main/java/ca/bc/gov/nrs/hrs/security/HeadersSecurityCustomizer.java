@@ -20,17 +20,25 @@ import org.springframework.stereotype.Component;
  * Configuration for HTTP security headers applied to the application.
  *
  * <p>
- * This customizer builds a Content-Security-Policy and other security
- * headers. The CSP differs between local and non-local environments to
- * enable development conveniences when needed.
+ * This customizer builds a Content-Security-Policy and other security headers.
+ * The CSP differs between local and non-local environments to enable development
+ * conveniences when needed.
  * </p>
  */
 @RequiredArgsConstructor
 @Component
-public class HeadersSecurityCustomizer implements Customizer<HeadersConfigurer<HttpSecurity>> {
+public class HeadersSecurityCustomizer
+    implements Customizer<HeadersConfigurer<HttpSecurity>> {
 
   @Value("${ca.bc.gov.nrs.self-uri}")
   String selfUri;
+
+  /**
+   * The environment of the application, injected from application properties.
+   * Default value is "PROD".
+   */
+  @Value("${ca.bc.gov.nrs.environment:PROD}")
+  String environment;
 
   private static final List<String> PERMISSIONS = List.of(
       "geolocation",
@@ -43,64 +51,65 @@ public class HeadersSecurityCustomizer implements Customizer<HeadersConfigurer<H
       "interest-cohort"
   );
 
-  /**
-   * The environment of the application, which is injected from the
-   * application properties. The default value is "PROD".
-   */
-  @Value("${ca.bc.gov.nrs.environment:PROD}")
-  String environment;
-
   @Override
   public void customize(HeadersConfigurer<HttpSecurity> headerSpec) {
+
     String policyDirectives;
 
     if (SecurityEnvironmentUtil.isLocalEnvironment(environment)) {
       policyDirectives = String.join("; ",
-        "default-src 'self'",
-        "connect-src 'self' " + selfUri,
-        "script-src 'self' 'unsafe-inline'",
-        "style-src 'self' 'unsafe-inline'",
-        "img-src 'self' data:",
-        "object-src 'none'",
-        "base-uri 'none'",
-        "frame-ancestors 'none'",
-        "report-uri " + selfUri
+          "default-src 'self'",
+          "connect-src 'self' " + selfUri,
+          "script-src 'self' 'unsafe-inline'",
+          "style-src 'self' 'unsafe-inline'",
+          "img-src 'self' data:",
+          "object-src 'none'",
+          "base-uri 'none'",
+          "frame-ancestors 'none'",
+          "report-uri " + selfUri
       );
     } else {
       policyDirectives = String.join("; ",
-        "default-src 'none'",
-        "connect-src 'self' " + selfUri,
-        "script-src 'strict-dynamic' 'nonce-" + UUID.randomUUID() + "' https:",
-        "object-src 'none'",
-        "base-uri 'none'",
-        "frame-ancestors 'none'",
-        "require-trusted-types-for 'script'",
-        "report-uri " + selfUri
+          "default-src 'none'",
+          "connect-src 'self' " + selfUri,
+          "script-src 'strict-dynamic' 'nonce-" + UUID.randomUUID() + "' https:",
+          "object-src 'none'",
+          "base-uri 'none'",
+          "frame-ancestors 'none'",
+          "require-trusted-types-for 'script'",
+          "report-uri " + selfUri
       );
     }
 
-    // Customize the HTTP headers.
     headerSpec
-        .frameOptions(FrameOptionsConfig::deny) // Set the X-Frame-Options header to "DENY".
-        .contentSecurityPolicy(
-            contentSecurityPolicySpec -> contentSecurityPolicySpec.policyDirectives(
-                policyDirectives)) // Set the Content-Security-Policy header.
-        .httpStrictTransportSecurity(hstsSpec ->
-            hstsSpec.maxAgeInSeconds(Duration.ofDays(30).getSeconds())
-                .includeSubDomains(true)) // Set the Strict-Transport-Security header.
-        .xssProtection(XXssConfig::disable) // Disable the X-XSS-Protection header.
-        // Set the X-Content-Type-Options header to its default value.
+        .frameOptions(FrameOptionsConfig::deny)
+        .contentSecurityPolicy(csp ->
+            csp.policyDirectives(policyDirectives))
+        .httpStrictTransportSecurity(hsts ->
+            hsts.maxAgeInSeconds(Duration.ofDays(30).getSeconds())
+                .includeSubDomains(true))
+        .xssProtection(XXssConfig::disable)
         .contentTypeOptions(Customizer.withDefaults())
-
-        // Set the Referrer-Policy header.
-        .referrerPolicy(referrerPolicySpec -> referrerPolicySpec.policy(
-            ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-        // Set the Permissions-Policy header.
+        .referrerPolicy(referrer ->
+            referrer.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
         .addHeaderWriter(new StaticHeadersWriter(
             "Permissions-Policy",
             PERMISSIONS.stream()
-                .map(permission -> String.format("%s=()", permission))
+                .map(p -> String.format("%s=()", p))
                 .collect(Collectors.joining(", "))
+        ))
+        .addHeaderWriter(new StaticHeadersWriter(
+            "Cross-Origin-Opener-Policy",
+            "same-origin"
+        ))
+        .addHeaderWriter(new StaticHeadersWriter(
+            "Cross-Origin-Embedder-Policy",
+            "require-corp"
+        ))
+        .addHeaderWriter(new StaticHeadersWriter(
+            "Cross-Origin-Resource-Policy",
+            "same-origin"
         ));
   }
+  
 }
