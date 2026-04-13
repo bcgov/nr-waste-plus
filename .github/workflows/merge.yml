@@ -41,8 +41,12 @@ jobs:
           app:
             component: backend
       configmap-frontend: |-
-        window.localStorage.setItem(\"VITE_FEATURE_FLAGS\",'{}');
-        window.localStorage.setItem(\"VITE_FEATURES_OFFLINE\",'false');
+        window.config = {
+          ...(window.config ?? {}),
+          VITE_FEATURE_FLAGS: {
+            OFFLINE: false,
+          },
+        };
 
   deploy-prod:
     name: Deploy (PROD)
@@ -67,8 +71,12 @@ jobs:
                     origins:
                       - https://wasteplus.nrs.gov.bc.ca
       configmap-frontend: |-
-        window.localStorage.setItem(\"VITE_FEATURE_FLAGS\",'{}');
-        window.localStorage.setItem(\"VITE_FEATURES_OFFLINE\",'false');
+        window.config = {
+          ...(window.config ?? {}),
+          VITE_FEATURE_FLAGS: {
+            OFFLINE: false,
+          },
+        };
 
   images-prod:
     name: Promote images to PROD
