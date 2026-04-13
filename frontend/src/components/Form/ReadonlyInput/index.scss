@@ -13,7 +13,7 @@
   }
 
   .card-item-content {
-    @include type.type-style('body-compact-02');
+    @include type.type-style('body-compact-01');
     width: 100%;
     word-break: break-word;
 
@@ -25,6 +25,5 @@
   .card-item-content-number {
     @extend .card-item-content;
     @include type.type-style('code-02');
-    font-size: 1rem;
   }
 }

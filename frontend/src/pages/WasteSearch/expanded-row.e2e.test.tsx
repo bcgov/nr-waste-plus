@@ -50,7 +50,7 @@ test.describe('Waste Search - Expanded Row Content', () => {
       'Comment:This is a sample comment for the reporting unit.',
     ); // comments
     await expect(page.getByRole('link', { name: /Link/i })).toBeVisible(); // attachments and comments link
-    await expect(page.getByText('No. of blocks in RU: 15')).toBeVisible(); // totalBlocks
+    await expect(page.getByText('Blocks in the RU: 15')).toBeVisible(); // totalBlocks
   });
 
   test('handles missing attachment and comment correctly', async ({ page }) => {
@@ -89,7 +89,7 @@ test.describe('Waste Search - Expanded Row Content', () => {
       String.raw`BCEID\\BMO`,
     ); // submitter
     await expect(page.getByTestId('card-item-comment:')).toHaveText('Comment:-'); // comments
-    await expect(page.getByText('No. of blocks in RU: 2')).toBeVisible(); // totalBlocks
+    await expect(page.getByText('Blocks in the RU: 2')).toBeVisible(); // totalBlocks
 
     // Verify attachments and comments link is present
     const attachmentsCommentsLinks = page.getByRole('link', {
