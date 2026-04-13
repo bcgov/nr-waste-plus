@@ -109,6 +109,14 @@ public class HeadersSecurityCustomizer
         .addHeaderWriter(new StaticHeadersWriter(
             "Cross-Origin-Resource-Policy",
             "same-origin"
+        ))
+        .addHeaderWriter(new StaticHeadersWriter(
+            "Cache-Control", 
+            "no-store, no-cache, must-revalidate, max-age=0"
+        ))
+        .addHeaderWriter(new StaticHeadersWriter(
+            "Pragma", 
+            "no-cache"
         ));
   }
   
