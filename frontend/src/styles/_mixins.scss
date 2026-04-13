@@ -1,4 +1,4 @@
-@use 'sass:map';
+@use 'sass:list';
 @use 'sass:meta';
 
 /// Recursively emit CSS variables from a nested Sass map.
@@ -11,14 +11,18 @@
 /// @param {List}   $path        - Internal recursion path (do not pass manually)
 @mixin emit-tokens($token-map, $prefix: 'cds', $token-name: null, $path: ()) {
   // Build optional token-name segment
-  $token-segment: if($token-name == null, "", "-#{$token-name}");
+  $token-segment: '';
+
+  @if $token-name != null {
+    $token-segment: '-#{$token-name}';
+  }
 
   @each $key, $value in $token-map {
     // Force key to string to avoid Sass color warnings
     $key-str: "" + $key;
 
     // Build the new path
-    $new-path: append($path, $key-str, space);
+    $new-path: list.append($path, $key-str, $separator: space);
 
     @if meta.type-of($value) == 'map' {
       // Recurse into nested maps

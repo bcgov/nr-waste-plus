@@ -84,3 +84,7 @@ table.#{vars.$bcgov-prefix}--data-table--zebra {
     }
   }
 }
+
+.#{vars.$bcgov-prefix}--pagination--md.tb-resource-pg {
+  height: auto !important;
+}

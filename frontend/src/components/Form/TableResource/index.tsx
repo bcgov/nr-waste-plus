@@ -353,6 +353,7 @@ const TableResource = <T,>({
       </Table>
       {onPageChange && (
         <Pagination
+          className="tb-resource-pg"
           data-testid="pagination"
           page={content.page.number + 1}
           pageSize={content.page.size}
