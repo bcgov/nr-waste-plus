@@ -42,9 +42,17 @@ public class ApiAuthorizationCustomizer implements
   ) {
 
     authorize
-        // Allow actuator endpoints to be accessed without authentication
-        .requestMatchers(HttpMethod.GET, "/metrics", "/health")
+        // Public health endpoint
+        .requestMatchers(HttpMethod.GET, "/actuator/health")
         .permitAll()
+
+        // Prometheus endpoint should be protected
+        .requestMatchers("/actuator/metrics")
+        .authenticated()
+
+        // All other actuator endpoints secured
+        .requestMatchers("/actuator/**")
+        .authenticated()
 
         // Allow OPTIONS requests to be accessed with authentication
         .requestMatchers(HttpMethod.OPTIONS, "/**")
