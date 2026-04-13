@@ -1,6 +1,17 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, afterEach, vi, beforeAll, afterAll } from 'vitest';
 
+vi.mock(import('@/env'), async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    featureFlags: {
+      ...actual.featureFlags,
+      OFFLINE: true,
+    },
+  };
+});
+
 import useOfflineMode from './index';
 
 describe('useOfflineMode', () => {
