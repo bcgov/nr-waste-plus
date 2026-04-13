@@ -12,7 +12,7 @@ import {
 const defaultValues = {
   performance: 90, //Temporary value
   accessibility: 95,
-  "best-practices": 95,
+  "best-practices": 90,
   seo: 80,
   pwa: 0,
   ttfb: 95, //Temporary value

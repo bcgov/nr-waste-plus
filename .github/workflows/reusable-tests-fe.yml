@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       VITE_APP_NAME: Waste Plus
-      VITE_FEATURES_OFFLINE: true
+      VITE_FEATURE_FLAGS: '{"OFFLINE":true}'
       VITE_ZONE: TEST
       VITE_MOCK_AUTH: true
       VITE_USER_POOLS_ID: ${{ secrets.COGNITO_USER_POOL }}
@@ -43,7 +43,7 @@ jobs:
         id: tests
         env:
           VITE_APP_NAME: Waste Plus
-          VITE_FEATURES_OFFLINE: true
+          VITE_FEATURE_FLAGS: '{"OFFLINE":true}'
           VITE_ZONE: TEST
           VITE_MOCK_AUTH: true
           VITE_USER_POOLS_ID: ${{ secrets.COGNITO_USER_POOL }}
