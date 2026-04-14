@@ -23,8 +23,6 @@ public class ApiAuthorizationCustomizer implements
         AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry
         > {
 
-  private final JwtRoleAuthorizationManagerFactory roleCheck;
-
   /**
    * The environment of the application, which is injected from the application properties. The
    * default value is "PROD".
