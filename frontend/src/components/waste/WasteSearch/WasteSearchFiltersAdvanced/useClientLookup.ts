@@ -1,11 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
 import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
 
+import { useClientLookupQuery } from '@/config/react-query/hooks';
 import { useAuth } from '@/context/auth/useAuth';
-import APIs from '@/services/APIs';
-import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils';
 
 type OnChangeByKey = <K extends keyof ReportingUnitSearchParametersViewDto>(
   key: K,
@@ -49,15 +47,10 @@ export const useClientLookup = (
   );
 
   // Query to resolve the full client details from the API.
-  const { data: resolvedClient } = useQuery({
-    queryKey: ['clientLookup', clientNumberEntry?.code],
-    queryFn: async () =>
-      (await APIs.forestclient.searchForestClients(clientNumberEntry!.code, 0, 1)).map(
-        forestClientAutocompleteResult2CodeDescription,
-      ),
-    enabled: isModalOpen && hasClientCodeOnly && auth.user?.idpProvider === 'IDIR',
-    staleTime: Infinity,
-  });
+  const { data: resolvedClient } = useClientLookupQuery(
+    clientNumberEntry?.code,
+    isModalOpen && hasClientCodeOnly && auth.user?.idpProvider === 'IDIR',
+  );
 
   // Track the client code we have already promoted to avoid calling onChange
   // again when only the onChange reference changes across parent re-renders.

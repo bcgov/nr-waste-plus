@@ -1,10 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
 import { type FC } from 'react';
 
 import type { DistrictType } from '@/components/core/DistrictSelection/types';
 
 import DistrictSelection from '@/components/core/DistrictSelection';
-import APIs from '@/services/APIs';
+import { useDistrictOptionsQuery } from '@/config/react-query/hooks';
 
 /**
  * Loads district options and renders the default district preference selector.
@@ -26,11 +25,7 @@ const DistrictListing: FC = () => {
     );
   };
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['districtOptions'],
-    queryFn: async () => await APIs.codes.getDistricts(),
-    staleTime: Infinity,
-    enabled: true,
+  const { data, isLoading } = useDistrictOptionsQuery({
     select: (data) =>
       data.map((district) => ({
         id: district.code,
