@@ -3,13 +3,22 @@ server:
   port: ${SERVER_PORT:8080}
   shutdown: graceful
   max-http-request-header-size: 16KB
+  
+  servlet:
+    session:
+      cookie:
+        same-site: lax
+        secure: true
+        http-only: true
 
 spring:
   application:
     name: nr-waste-backend
   web:
     error:
-      include-message: always
+      include-message: never
+      include-binding-errors: never
+      include-stacktrace: never
   servlet:
     encoding:
       charset: UTF-8
@@ -69,19 +78,17 @@ spring:
 management:
   enable-native-support: true
   endpoint:
-    metrics:
-      enabled: false
     health:
-      show-details: always
+      show-details: when_authorized
     prometheus:
       enabled: true
   endpoints:
     web:
+      base-path: /actuator
       path-mapping:
         prometheus: metrics
-      base-path: /
       exposure:
-        include: health,info,metrics,otlp,tracing,httptrace,prometheus
+        include: health,prometheus
   httpexchanges:
     recording:
       include: principal,request-headers,response-headers,cookie-headers,time-taken,authorization-header,remote-address,session-id

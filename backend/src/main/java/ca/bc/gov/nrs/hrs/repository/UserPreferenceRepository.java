@@ -4,8 +4,8 @@ import ca.bc.gov.nrs.hrs.entity.users.UserPreferenceEntity;
 import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Repository for accessing user preference entities.

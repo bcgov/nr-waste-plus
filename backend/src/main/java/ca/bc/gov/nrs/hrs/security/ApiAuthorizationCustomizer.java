@@ -42,9 +42,13 @@ public class ApiAuthorizationCustomizer implements
   ) {
 
     authorize
-        // Allow actuator endpoints to be accessed without authentication
-        .requestMatchers(HttpMethod.GET, "/metrics", "/health")
+        // Public health endpoint
+        .requestMatchers(HttpMethod.GET, "/actuator/health")
         .permitAll()
+
+        // Metrics endpoint should be protected
+        .requestMatchers("/metrics")
+        .authenticated()
 
         // Allow OPTIONS requests to be accessed with authentication
         .requestMatchers(HttpMethod.OPTIONS, "/**")

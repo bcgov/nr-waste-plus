@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.hrs.extensions;
 
 import static ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory.createJwt;
-
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,6 +10,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
@@ -20,14 +20,12 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @ContextConfiguration
 public abstract class AbstractTestContainerIntegrationTest {
 
-  static final PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17")
-      .withDatabaseName("hrs")
-      .withUsername("hrs")
-      .withPassword(UUID.randomUUID().toString());
-
-  static {
-    postgres.start();
-  }
+  @Container
+  static final PostgreSQLContainer postgres =
+      new PostgreSQLContainer("postgres:17")
+          .withDatabaseName("hrs")
+          .withUsername("hrs")
+          .withPassword(UUID.randomUUID().toString());
 
   @DynamicPropertySource
   static void registerDynamicProperties(DynamicPropertyRegistry registry) {

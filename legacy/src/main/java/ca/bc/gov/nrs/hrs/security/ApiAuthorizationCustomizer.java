@@ -23,8 +23,6 @@ public class ApiAuthorizationCustomizer implements
         AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry
         > {
 
-  private final JwtRoleAuthorizationManagerFactory roleCheck;
-
   /**
    * The environment of the application, which is injected from the application properties. The
    * default value is "PROD".
@@ -37,11 +35,14 @@ public class ApiAuthorizationCustomizer implements
       AuthorizeHttpRequestsConfigurer<HttpSecurity>
           .AuthorizationManagerRequestMatcherRegistry authorize
   ) {
-
     authorize
-        // Allow actuator endpoints to be accessed without authentication
-        .requestMatchers(HttpMethod.GET, "/metrics", "/health")
+        // Public health endpoint
+        .requestMatchers(HttpMethod.GET, "/actuator/health")
         .permitAll()
+
+        // Metrics endpoint should be protected
+        .requestMatchers("/metrics")
+        .authenticated()
 
         // Allow OPTIONS requests to be accessed with authentication
         .requestMatchers(HttpMethod.OPTIONS, "/**")
