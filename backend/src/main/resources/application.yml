@@ -82,7 +82,7 @@ management:
       enabled: true
   endpoints:
     web:
-      base-path: /
+      base-path: /actuator
       path-mapping:
         prometheus: metrics
       exposure:
