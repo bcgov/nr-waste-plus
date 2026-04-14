@@ -20,7 +20,15 @@ public class CsrfSecurityCustomizer implements Customizer<CsrfConfigurer<HttpSec
 
   @Override
   public void customize(CsrfConfigurer<HttpSecurity> csrfSpec) {
-    csrfSpec
-        .csrfTokenRepository(new CookieCsrfTokenRepository());
+    CookieCsrfTokenRepository repo =
+        CookieCsrfTokenRepository.withHttpOnlyFalse();
+
+    repo.setCookieCustomizer(cookie -> {
+      cookie.sameSite("Lax");
+      cookie.secure(true);
+      cookie.path("/");
+    });
+
+    csrfSpec.csrfTokenRepository(repo);
   }
 }
