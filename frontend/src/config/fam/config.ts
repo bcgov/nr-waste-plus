@@ -25,8 +25,6 @@ const retUrl = `https://${returnUrlHost}loginproxy.gov.bc.ca/auth/realms/standar
 
 const redirectSignOut = `${logoutDomain}/clp-cgi/logoff.cgi?retnow=1&returl=${retUrl}?redirect_uri=${redirectUri}/`;
 
-export const signOutUrl = `${logoutDomain}/clp-cgi/logoff.cgi?retnow=1&returl=${retUrl}?redirect_uri=${encodeURI(redirectUri)}/`;
-
 const verificationMethods: 'code' | 'token' = 'code';
 
 const backendUrl = env.VITE_BACKEND_URL;

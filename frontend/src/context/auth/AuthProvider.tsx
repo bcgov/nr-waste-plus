@@ -6,7 +6,6 @@ import { AuthContext, type AuthContextType } from './AuthContext';
 import { parseToken, getUserTokenFromCookie } from './authUtils';
 import { type FamLoginUser, type IdpProviderType, type JWT } from './types';
 
-import { signOutUrl } from '@/config/fam/config';
 import { env } from '@/env';
 
 /**
@@ -89,7 +88,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     await signOut();
     setUser(undefined);
-    globalThis.location.href = signOutUrl;
   };
 
   // Memoized function to get the current user's idToken from localStorage (via getUserTokenFromCookie)
