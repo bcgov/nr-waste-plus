@@ -21,16 +21,15 @@ const logoutDomain = isProd ? 'https://logon7.gov.bc.ca' : 'https://logontest7.g
 
 const returnUrlHost = isProd ? '' : `${ZONE}.`;
 
-const siteminderReturnUrl = `https://${returnUrlHost}loginproxy.gov.bc.ca/auth/realms/standard/protocol/openid-connect/logout?logout_uri=${redirectUri}/&redirect_uri=${redirectUri}/`;
-const amplifySignOutUrl = `${logoutDomain}/clp-cgi/logoff.cgi?retnow=1&returl=`;
+const retUrl = `https://${returnUrlHost}loginproxy.gov.bc.ca/auth/realms/standard/protocol/openid-connect/logout`;
 
-const redirectSignOut = `${amplifySignOutUrl}${siteminderReturnUrl}`;
-
-export const redirectOnSignOut = `${amplifySignOutUrl}${encodeURIComponent(siteminderReturnUrl)}`;
+const redirectSignOut = `${logoutDomain}/clp-cgi/logoff.cgi?retnow=1&returl=${retUrl}?redirect_uri=${redirectUri}/`;
 
 const verificationMethods: 'code' | 'token' = 'code';
 
 const backendUrl = env.VITE_BACKEND_URL;
+
+export const redirectOnSignOut = `${logoutDomain}/clp-cgi/logoff.cgi?retnow=1&returl=${retUrl}?redirect_uri=${encodeURIComponent(redirectUri)}/`;
 
 /**
  * Amplify authentication configuration for the FAM identity flow.
