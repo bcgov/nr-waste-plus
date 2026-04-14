@@ -43,15 +43,11 @@ public class ApiAuthorizationCustomizer implements
 
     authorize
         // Public health endpoint
-        .requestMatchers(HttpMethod.GET, "/actuator/health")
+        .requestMatchers(HttpMethod.GET, "/health")
         .permitAll()
 
-        // Prometheus endpoint should be protected
-        .requestMatchers("/actuator/metrics")
-        .authenticated()
-
-        // All other actuator endpoints secured
-        .requestMatchers("/actuator/**")
+        // Metrics endpoint should be protected
+        .requestMatchers("/metrics")
         .authenticated()
 
         // Allow OPTIONS requests to be accessed with authentication
