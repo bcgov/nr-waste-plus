@@ -19,7 +19,7 @@ const isProd = ZONE === 'prod';
 
 const logoutDomain = isProd ? 'https://logon7.gov.bc.ca' : 'https://logontest7.gov.bc.ca';
 
-const returnUrlHost = isProd ? '' : `${ZONE}.`;
+const returnUrlHost = isProd ? '' : 'dev.';
 
 const retUrl = `https://${returnUrlHost}loginproxy.gov.bc.ca/auth/realms/standard/protocol/openid-connect/logout`;
 
