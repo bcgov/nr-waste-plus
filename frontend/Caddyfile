@@ -64,7 +64,12 @@
 	}
 	header @notassets Cache-Control "no-cache, must-revalidate, proxy-revalidate"
 
-  handle /health {
+
+	# Health check endpoints
+	handle /health {
+		respond `{"status":"UP"}`
+	}
+	handle /actuator/health {
 		respond `{"status":"UP"}`
 	}
 
@@ -77,6 +82,9 @@
 
 :3001 {
 	handle /health {
+		respond `{"status":"UP"}`
+	}
+	handle /actuator/health {
 		respond `{"status":"UP"}`
 	}
 }
