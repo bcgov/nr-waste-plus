@@ -36,13 +36,7 @@ describe('RedirectLinkTag', () => {
   });
 
   it('treats absolute same-origin URLs as external (not path-only)', () => {
-    render(
-      <RedirectLinkTag
-        text="Absolute URL"
-        url="https://localhost:5173/details/1"
-        sameTab
-      />,
-    );
+    render(<RedirectLinkTag text="Absolute URL" url="https://localhost:5173/details/1" sameTab />);
     const link = screen.getByRole('link');
     // Should render as anchor with _self, not as React Router Link
     expect(link.getAttribute('href')).toBe('https://localhost:5173/details/1');
@@ -51,9 +45,7 @@ describe('RedirectLinkTag', () => {
   });
 
   it('treats protocol-relative URLs as external', () => {
-    render(
-      <RedirectLinkTag text="Protocol-relative" url="//example.com/path" sameTab />,
-    );
+    render(<RedirectLinkTag text="Protocol-relative" url="//example.com/path" sameTab />);
     const link = screen.getByRole('link');
     expect(link.getAttribute('href')).toBe('//example.com/path');
     expect(link.getAttribute('target')).toBe('_self');

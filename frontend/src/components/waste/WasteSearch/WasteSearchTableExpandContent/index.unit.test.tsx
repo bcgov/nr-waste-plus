@@ -330,7 +330,6 @@ describe('WasteSearchTableExpandContent', () => {
         expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
       });
     });
-
   });
 
   describe('attachment handling', () => {
