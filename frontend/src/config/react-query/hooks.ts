@@ -1,15 +1,13 @@
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
 
-import { queryKeys } from './queryKeys';
+import { queryKeys, type ReportingUnitsQueryParams } from './queryKeys';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { CodeDescriptionDto, ReportingUnitSearchExpandedDto } from '@/services/search.types';
 import type {
   ForestClientDto,
   MyForestClientDto,
-  ReportingUnitSearchParametersDto,
   ReportingUnitSearchResultDto,
-  SortDirectionType,
 } from '@/services/types';
 
 import API from '@/services/APIs';
@@ -115,17 +113,10 @@ export const useMyForestClientsQuery = <TData = PageableResponse<MyForestClientD
   });
 };
 
-type ReportingUnitsQueryInput = {
-  page: number;
-  size: number;
-  filters: ReportingUnitSearchParametersDto;
-  sort: Record<string, SortDirectionType>;
-};
-
 export const useSearchReportingUnitsQuery = <
   TData = PageableResponse<ReportingUnitSearchResultDto>,
 >(
-  input: ReportingUnitsQueryInput,
+  input: ReportingUnitsQueryParams,
   options?: Omit<
     UseQueryOptions<
       PageableResponse<ReportingUnitSearchResultDto>,
