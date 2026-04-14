@@ -17,7 +17,7 @@ export const BackendApiConfig: APIConfig = {
   VERSION: '0',
   WITH_CREDENTIALS: true,
   CREDENTIALS: 'include',
-  TOKEN: getUserTokenFromCookie(),
+  TOKEN: undefined,
   USERNAME: undefined,
   PASSWORD: undefined,
   HEADERS: undefined,
