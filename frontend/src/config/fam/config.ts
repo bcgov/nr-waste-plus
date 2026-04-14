@@ -21,9 +21,12 @@ const logoutDomain = isProd ? 'https://logon7.gov.bc.ca' : 'https://logontest7.g
 
 const returnUrlHost = isProd ? '' : `${ZONE}.`;
 
-const retUrl = `https://${returnUrlHost}loginproxy.gov.bc.ca/auth/realms/standard/protocol/openid-connect/logout`;
+const siteminderReturnUrl = `https://${returnUrlHost}loginproxy.gov.bc.ca/auth/realms/standard/protocol/openid-connect/logout?logout_uri=${redirectUri}/&redirect_uri=${redirectUri}/`;
+const amplifySignOutUrl = `${logoutDomain}/clp-cgi/logoff.cgi?retnow=1&returl=`;
 
-const redirectSignOut = `${logoutDomain}/clp-cgi/logoff.cgi?retnow=1&returl=${retUrl}?redirect_uri=${redirectUri}/`;
+const redirectSignOut = `${amplifySignOutUrl}${siteminderReturnUrl}`;
+
+export const redirectOnSignOut = `${amplifySignOutUrl}${encodeURIComponent(siteminderReturnUrl)}`;
 
 const verificationMethods: 'code' | 'token' = 'code';
 
