@@ -39,7 +39,7 @@ public class ApiAuthorizationCustomizer implements
   ) {
     authorize
         // Public health endpoint
-        .requestMatchers(HttpMethod.GET, "/health")
+        .requestMatchers(HttpMethod.GET, "/actuator/health")
         .permitAll()
 
         // Metrics endpoint should be protected
