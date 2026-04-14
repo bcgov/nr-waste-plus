@@ -1,15 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-
 import type { CodeDescriptionDto } from '@/services/types';
 
-import APIs from '@/services/APIs';
-
-const REFERENCE_DATA_QUERY_CONFIG = {
-  staleTime: Infinity,
-  refetchOnWindowFocus: false,
-  refetchOnReconnect: true,
-  refetchOnMount: true,
-} as const;
+import { useCodesQuery } from '@/config/react-query/hooks';
 
 type WasteSearchFilterOptions = {
   samplingOptions: CodeDescriptionDto[];
@@ -24,23 +15,11 @@ type WasteSearchFilterOptions = {
  * @returns The available sampling, district, and status options.
  */
 export const useWasteSearchFilterOptions = (): WasteSearchFilterOptions => {
-  const { data: samplingOptions } = useQuery({
-    queryKey: ['samplingOptions'],
-    queryFn: () => APIs.codes.getSamplingOptions(),
-    ...REFERENCE_DATA_QUERY_CONFIG,
-  });
+  const { data: samplingOptions } = useCodesQuery('samplingOptions');
 
-  const { data: districtOptions } = useQuery({
-    queryKey: ['districtOptions'],
-    queryFn: () => APIs.codes.getDistricts(),
-    ...REFERENCE_DATA_QUERY_CONFIG,
-  });
+  const { data: districtOptions } = useCodesQuery('districtOptions');
 
-  const { data: statusOptions } = useQuery({
-    queryKey: ['statusOptions'],
-    queryFn: () => APIs.codes.getAssessAreaStatuses(),
-    ...REFERENCE_DATA_QUERY_CONFIG,
-  });
+  const { data: statusOptions } = useCodesQuery('statusOptions');
 
   return {
     samplingOptions: samplingOptions ?? [],

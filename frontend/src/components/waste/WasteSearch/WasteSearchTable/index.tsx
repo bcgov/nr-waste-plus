@@ -1,5 +1,4 @@
 import { Column } from '@carbon/react';
-import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState, useMemo, type FC, type ReactNode } from 'react';
 
 import { headers } from './constants';
@@ -15,10 +14,10 @@ import type { SortDirectionType } from '@/services/types';
 import TableResource from '@/components/Form/TableResource';
 import WasteSearchFilters from '@/components/waste/WasteSearch/WasteSearchFilters';
 import WasteSearchTableExpandContent from '@/components/waste/WasteSearch/WasteSearchTableExpandContent';
+import { useSearchReportingUnitsQuery } from '@/config/react-query/hooks';
 import useSendEvent from '@/hooks/useSendEvent';
-import API from '@/services/APIs';
 import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
-import { removeEmpty, generateSortArray } from '@/services/utils';
+import { removeEmpty } from '@/services/utils';
 
 import './index.scss';
 
@@ -37,18 +36,19 @@ const WasteSearchTable: FC = () => {
 
   const plainFilters = useMemo(() => reportingUnitSearchParametersView2Plain(filters), [filters]);
 
-  const { data, isLoading, isFetching, isError, refetch, error } = useQuery({
-    queryKey: ['search', 'ru', { page: currentPage, size: pageSize, ...plainFilters, ...sort }],
-    queryFn: () =>
-      API.search.searchReportingUnit(plainFilters, {
-        page: currentPage,
-        size: pageSize,
-        sort: generateSortArray<ReportingUnitSearchResultDto>(sort),
-      }),
-    enabled: false,
-    gcTime: 0,
-    staleTime: Infinity,
-  });
+  const { data, isLoading, isFetching, isError, refetch, error } = useSearchReportingUnitsQuery(
+    {
+      page: currentPage,
+      size: pageSize,
+      filters: plainFilters,
+      sort,
+    },
+    {
+      enabled: false,
+      gcTime: 0,
+      staleTime: Infinity,
+    },
+  );
 
   /**
    * Runs a search using the current filter, sort, and pagination state.

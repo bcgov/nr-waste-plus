@@ -1,5 +1,4 @@
 import { Column, DefinitionTooltip, Grid } from '@carbon/react';
-import { useQuery } from '@tanstack/react-query';
 import { type FC } from 'react';
 import './index.scss';
 
@@ -7,8 +6,8 @@ import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 import YesNoTag from '@/components/core/Tags/YesNoTag';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
 import RedirectLinkTag from '@/components/waste/RedirectLinkTag';
+import { useReportingUnitExpandQuery } from '@/config/react-query/hooks';
 import { env } from '@/env';
-import API from '@/services/APIs';
 
 type WasteSearchTableExpandContentProps = {
   rowId: string;
@@ -36,12 +35,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
   const ruId = extractNumericValue(1);
   const wasteAssessmentAreaId = extractNumericValue(3);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['search', 'ru', 'ex', rowId, ruId, wasteAssessmentAreaId],
-    queryFn: () => API.search.getReportingUnitSearchExpand(ruId!, wasteAssessmentAreaId!),
-    enabled: ruId !== null && wasteAssessmentAreaId !== null,
-    staleTime: Infinity,
-  });
+  const { data, isLoading } = useReportingUnitExpandQuery(rowId, ruId, wasteAssessmentAreaId);
 
   const secondaryMarks = data?.secondaryMarks;
   const hasSecondaryMarks = Boolean(secondaryMarks && secondaryMarks.length > 0);

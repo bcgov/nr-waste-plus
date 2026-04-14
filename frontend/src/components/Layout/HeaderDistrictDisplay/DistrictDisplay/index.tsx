@@ -1,9 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
 import { type FC } from 'react';
 
 import HeaderDistrictDisplay from '@/components/Layout/HeaderDistrictDisplay';
+import { useDistrictOptionsQuery } from '@/config/react-query/hooks';
 import { usePreference } from '@/context/preference/usePreference';
-import APIs from '@/services/APIs';
 
 type DistrictDisplayProps = {
   isActive: boolean;
@@ -11,10 +10,7 @@ type DistrictDisplayProps = {
 
 const DistrictDisplay: FC<DistrictDisplayProps> = ({ isActive }) => {
   const { userPreference } = usePreference();
-  const { data, isLoading } = useQuery({
-    queryKey: ['districtOptions'],
-    queryFn: async () => await APIs.codes.getDistricts(),
-    enabled: true,
+  const { data, isLoading } = useDistrictOptionsQuery({
     select: (data) =>
       data
         .map((district) => ({ id: district.code, name: district.description, kind: 'D' }))

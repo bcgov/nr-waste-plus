@@ -1,6 +1,5 @@
 import { Search } from '@carbon/icons-react';
 import { Button, Column, Grid } from '@carbon/react';
-import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState, type FC } from 'react';
 
 import { headers } from './constants';
@@ -11,8 +10,8 @@ import type { MyForestClientDto } from '@/services/types';
 
 import SearchInput from '@/components/Form/SearchInput';
 import TableResource from '@/components/Form/TableResource';
+import { useMyForestClientsQuery } from '@/config/react-query/hooks';
 import useSendEvent from '@/hooks/useSendEvent';
-import API from '@/services/APIs';
 
 import './index.scss';
 
@@ -28,21 +27,24 @@ const MyClientListing: FC = () => {
   const [searchTrigger, setSearchTrigger] = useState(0);
   const { sendEvent, clearEvents } = useSendEvent();
 
-  const { data, isLoading, isFetching, isError, refetch, error } = useQuery({
-    queryKey: ['search', 'my-forest-client', { page: currentPage, size: pageSize, value: filter }],
-    queryFn: () => API.forestclient.searchMyForestClients(filter, currentPage, pageSize),
-    enabled: false,
-    gcTime: 0,
-    staleTime: Infinity,
-    select: (data) =>
-      ({
-        ...data,
-        content: data.content.map((item) => ({
-          ...item,
-          id: item.client.code,
-        })),
-      }) as PageableResponse<MyForestClientDto>,
-  });
+  const { data, isLoading, isFetching, isError, refetch, error } = useMyForestClientsQuery(
+    filter,
+    currentPage,
+    pageSize,
+    {
+      enabled: false,
+      gcTime: 0,
+      staleTime: Infinity,
+      select: (data) =>
+        ({
+          ...data,
+          content: data.content.map((item) => ({
+            ...item,
+            id: item.client.code,
+          })),
+        }) as PageableResponse<MyForestClientDto>,
+    },
+  );
 
   /**
    * Runs the current client search and clears page-scoped events first.

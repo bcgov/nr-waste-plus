@@ -102,7 +102,12 @@ const LandingPage: FC = () => {
           as="aside"
           aria-label="Landing image"
         >
-          <img src="/img/landing.webp" alt="Landing cover" className="landing-img" fetchPriority="high" />
+          <img
+            src="/img/landing.webp"
+            alt="Landing cover"
+            className="landing-img"
+            fetchPriority="high"
+          />
         </Column>
       </Grid>
     </div>

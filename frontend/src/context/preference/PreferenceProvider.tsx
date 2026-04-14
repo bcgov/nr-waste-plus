@@ -7,9 +7,11 @@ import { PreferenceContext, type PreferenceProviderProps } from './PreferenceCon
 import { type UserPreference } from './types';
 import { initialValue, loadUserPreference, saveUserPreference } from './utils'; // initialValue used for fallback only
 
+import { queryKeys } from '@/config/react-query/queryKeys';
+
 export const PreferenceProvider: FC<PreferenceProviderProps> = ({ children }) => {
   const { isFetched, data, refetch } = useQuery({
-    queryKey: ['userPreference'],
+    queryKey: queryKeys.preference.userPreference(),
     queryFn: async () => await loadUserPreference(),
     enabled: false,
   });
