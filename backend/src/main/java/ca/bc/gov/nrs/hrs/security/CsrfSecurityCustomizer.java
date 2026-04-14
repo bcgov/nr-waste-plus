@@ -18,7 +18,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class CsrfSecurityCustomizer implements Customizer<CsrfConfigurer<HttpSecurity>> {
 
-  // NOSONAR - intentional: front-end needs CSRF cookie access
+  // Suppress SonarQube warning about HttpOnly=false for CSRF cookie.
+  // This is intentional: the front-end needs to read the CSRF token from the cookie.
+  @SuppressWarnings("java:S3330")
   @Override
   public void customize(CsrfConfigurer<HttpSecurity> csrfSpec) {
     CookieCsrfTokenRepository repo =
