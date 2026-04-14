@@ -58,7 +58,12 @@ jobs:
           app:
             component: backend
       configmap-frontend: |-
-        window.localStorage.setItem(\"VITE_FEATURE_FLAGS\",'{}');
+        window.config = {
+          ...(window.config ?? {}),
+          VITE_FEATURE_FLAGS: {
+            OFFLINE: false,
+          },
+        };
 
   tests:
     name: Tests
