@@ -6,7 +6,7 @@ import { AuthContext, type AuthContextType } from './AuthContext';
 import { parseToken, getUserTokenFromCookie } from './authUtils';
 import { type FamLoginUser, type IdpProviderType, type JWT } from './types';
 
-import { redirectOnSignOut } from '@/config/fam/config';
+//import { redirectOnSignOut } from '@/config/fam/config';
 import { env } from '@/env';
 
 /**
