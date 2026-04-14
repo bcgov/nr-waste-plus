@@ -5,7 +5,7 @@ import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Repository for accessing user preference entities.
