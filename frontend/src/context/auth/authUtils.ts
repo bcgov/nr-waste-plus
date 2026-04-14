@@ -18,10 +18,9 @@ import { env } from '@/env';
  * @returns {string} The cookie value, or an empty string if not found.
  */
 export const getCookie = (name: string): string => {
-  const cookie = document.cookie
-    .split(';')
-    .find((cookieValue) => cookieValue.trim().startsWith(name));
-  return cookie ? (cookie.split('=')[1] ?? '') : '';
+  const cookies = document.cookie.split('; ');
+  const match = cookies.find((cookie) => cookie.startsWith(`${name}=`));
+  return match ? (match.split('=')[1] ?? '') : '';
 };
 
 /**
