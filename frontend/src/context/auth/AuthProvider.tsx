@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     await signOut();
     setUser(undefined);
-    globalThis.location.href = redirectOnSignOut;
+    //globalThis.location.href = redirectOnSignOut;
   };
 
   // Memoized function to get the current user's idToken from localStorage (via getUserTokenFromCookie)
