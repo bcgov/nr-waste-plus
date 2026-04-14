@@ -294,7 +294,7 @@
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-webmvc</artifactId>
-				<version>6.2.17</version>
+				<version>7.0.6</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.tomcat.embed</groupId>
@@ -627,6 +627,12 @@
           <outputFormat>all</outputFormat>
           <outputName>bom</outputName>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.3.1</version>
       </plugin>
     </plugins>
   </build>
