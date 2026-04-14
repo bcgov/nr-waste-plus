@@ -1,12 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
 import { type FC } from 'react';
 
 import type { CodeDescriptionDto } from '@/services/search.types';
 
 import HeaderDistrictDisplay from '@/components/Layout/HeaderDistrictDisplay';
+import { useForestClientsByNumbersQuery } from '@/config/react-query/hooks';
 import { useAuth } from '@/context/auth/useAuth';
 import { usePreference } from '@/context/preference/usePreference';
-import APIs from '@/services/APIs';
 
 type ClientDisplayProps = {
   isActive: boolean;
@@ -16,10 +15,8 @@ const ClientDisplay: FC<ClientDisplayProps> = ({ isActive }) => {
   const { getClients } = useAuth();
   const { userPreference } = usePreference();
   const selectedClient = userPreference.selectedClient as CodeDescriptionDto | undefined;
-  const { data, isLoading } = useQuery({
-    queryKey: ['forest-clients', 'search', getClients()],
-    queryFn: () => APIs.forestclient.searchByClientNumbers(getClients(), 0, getClients().length),
-    enabled: !!getClients().length,
+  const clientNumbers = getClients();
+  const { data, isLoading } = useForestClientsByNumbersQuery(clientNumbers, {
     select: (data) =>
       data
         .map((client) => ({

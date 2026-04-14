@@ -1,0 +1,207 @@
+import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
+
+import { queryKeys } from './queryKeys';
+
+import type { PageableResponse } from '@/components/Form/TableResource/types';
+import type { CodeDescriptionDto, ReportingUnitSearchExpandedDto } from '@/services/search.types';
+import type {
+  ForestClientDto,
+  MyForestClientDto,
+  ReportingUnitSearchParametersDto,
+  ReportingUnitSearchResultDto,
+  SortDirectionType,
+} from '@/services/types';
+
+import API from '@/services/APIs';
+import {
+  forestClientAutocompleteResult2CodeDescription,
+  generateSortArray,
+} from '@/services/utils';
+
+const REFERENCE_DATA_QUERY_CONFIG = {
+  staleTime: Infinity,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: true,
+  refetchOnMount: true,
+} as const;
+
+type CodeResource = 'samplingOptions' | 'districtOptions' | 'statusOptions';
+
+export const useCodesQuery = <TData = CodeDescriptionDto[]>(
+  resource: CodeResource,
+  options?: Omit<
+    UseQueryOptions<CodeDescriptionDto[], Error, TData, readonly unknown[]>,
+    'queryKey' | 'queryFn'
+  >,
+) => {
+  const keyByResource = {
+    samplingOptions: queryKeys.codes.samplingOptions,
+    districtOptions: queryKeys.codes.districtOptions,
+    statusOptions: queryKeys.codes.statusOptions,
+  } as const;
+
+  const queryFnByResource = {
+    samplingOptions: () => API.codes.getSamplingOptions(),
+    districtOptions: () => API.codes.getDistricts(),
+    statusOptions: () => API.codes.getAssessAreaStatuses(),
+  } as const;
+
+  return useQuery({
+    queryKey: keyByResource[resource](),
+    queryFn: queryFnByResource[resource],
+    ...REFERENCE_DATA_QUERY_CONFIG,
+    ...options,
+  });
+};
+
+export const useDistrictOptionsQuery = <TData = CodeDescriptionDto[]>(
+  options?: Omit<
+    UseQueryOptions<
+      CodeDescriptionDto[],
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.codes.districtOptions>
+    >,
+    'queryKey' | 'queryFn'
+  >,
+) => {
+  return useQuery({
+    queryKey: queryKeys.codes.districtOptions(),
+    queryFn: () => API.codes.getDistricts(),
+    ...REFERENCE_DATA_QUERY_CONFIG,
+    ...options,
+  });
+};
+
+export const useForestClientsByNumbersQuery = <TData = ForestClientDto[]>(
+  clientNumbers: readonly string[],
+  options?: Omit<
+    UseQueryOptions<
+      ForestClientDto[],
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.forestClient.byClientNumbers>
+    >,
+    'queryKey' | 'queryFn'
+  >,
+) => {
+  return useQuery({
+    queryKey: queryKeys.forestClient.byClientNumbers(clientNumbers),
+    queryFn: () =>
+      API.forestclient.searchByClientNumbers([...clientNumbers], 0, clientNumbers.length),
+    enabled: clientNumbers.length > 0,
+    ...options,
+  });
+};
+
+export const useMyForestClientsQuery = <TData = PageableResponse<MyForestClientDto>>(
+  filter: string,
+  page: number,
+  size: number,
+  options?: Omit<
+    UseQueryOptions<
+      PageableResponse<MyForestClientDto>,
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.forestClient.myForestClients>
+    >,
+    'queryKey' | 'queryFn'
+  >,
+) => {
+  return useQuery({
+    queryKey: queryKeys.forestClient.myForestClients(filter, page, size),
+    queryFn: () => API.forestclient.searchMyForestClients(filter, page, size),
+    ...options,
+  });
+};
+
+type ReportingUnitsQueryInput = {
+  page: number;
+  size: number;
+  filters: ReportingUnitSearchParametersDto;
+  sort: Record<string, SortDirectionType>;
+};
+
+export const useSearchReportingUnitsQuery = <
+  TData = PageableResponse<ReportingUnitSearchResultDto>,
+>(
+  input: ReportingUnitsQueryInput,
+  options?: Omit<
+    UseQueryOptions<
+      PageableResponse<ReportingUnitSearchResultDto>,
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.search.reportingUnits>
+    >,
+    'queryKey' | 'queryFn'
+  >,
+) => {
+  return useQuery({
+    queryKey: queryKeys.search.reportingUnits(input),
+    queryFn: () =>
+      API.search.searchReportingUnit(input.filters, {
+        page: input.page,
+        size: input.size,
+        sort: generateSortArray<ReportingUnitSearchResultDto>(input.sort),
+      }),
+    ...options,
+  });
+};
+
+export const useReportingUnitExpandQuery = <TData = ReportingUnitSearchExpandedDto>(
+  rowId: string,
+  ruId: number | null,
+  wasteAssessmentAreaId: number | null,
+  options?: Omit<
+    UseQueryOptions<
+      ReportingUnitSearchExpandedDto,
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.search.reportingUnitExpand>
+    >,
+    'queryKey' | 'queryFn'
+  >,
+) => {
+  return useQuery({
+    queryKey: queryKeys.search.reportingUnitExpand(rowId, ruId, wasteAssessmentAreaId),
+    queryFn: () => {
+      if (ruId === null || wasteAssessmentAreaId === null) {
+        throw new Error('Reporting unit expand query requires both IDs.');
+      }
+      return API.search.getReportingUnitSearchExpand(ruId, wasteAssessmentAreaId);
+    },
+    enabled: ruId !== null && wasteAssessmentAreaId !== null,
+    staleTime: Infinity,
+    ...options,
+  });
+};
+
+export const useClientLookupQuery = <TData = CodeDescriptionDto[]>(
+  clientCode: string | undefined,
+  enabled: boolean,
+  options?: Omit<
+    UseQueryOptions<
+      CodeDescriptionDto[],
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.forestClient.lookupByClientCode>
+    >,
+    'queryKey' | 'queryFn'
+  >,
+) => {
+  return useQuery({
+    queryKey: queryKeys.forestClient.lookupByClientCode(clientCode ?? ''),
+    queryFn: async () => {
+      if (!clientCode) {
+        return [];
+      }
+
+      return (await API.forestclient.searchForestClients(clientCode, 0, 1)).map(
+        forestClientAutocompleteResult2CodeDescription,
+      );
+    },
+    enabled: enabled && Boolean(clientCode),
+    staleTime: Infinity,
+    ...options,
+  });
+};

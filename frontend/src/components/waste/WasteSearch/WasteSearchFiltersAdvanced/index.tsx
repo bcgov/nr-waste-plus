@@ -11,7 +11,6 @@ import {
   ModalHeader,
   TextInput,
 } from '@carbon/react';
-import { useQuery } from '@tanstack/react-query';
 import { type FC } from 'react';
 
 import AdvancedFilterClientInput from './AdvancedFilterClientInput';
@@ -25,6 +24,7 @@ import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import AutoCompleteInput from '@/components/Form/AutoCompleteInput';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
+import { useMyForestClientsQuery } from '@/config/react-query/hooks';
 import { useAuth } from '@/context/auth/useAuth';
 import APIs from '@/services/APIs';
 import { getCodeDescriptionArrayConverter } from '@/services/search.utils';
@@ -91,9 +91,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
   };
 
   // Query for BCeID user's own clients
-  const { data: myClients } = useQuery({
-    queryKey: ['search', 'my-forest-client', { page: 0, size: auth.getClients().length || 10 }],
-    queryFn: () => APIs.forestclient.searchMyForestClients('', 0, auth.getClients().length || 10),
+  const { data: myClients } = useMyForestClientsQuery('', 0, auth.getClients().length || 10, {
     enabled: auth.user?.idpProvider !== 'IDIR',
     gcTime: 0,
     staleTime: Infinity,

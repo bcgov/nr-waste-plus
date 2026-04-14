@@ -3,6 +3,7 @@ import { Loading } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
+import { queryKeys } from '@/config/react-query/queryKeys';
 import useDebounce from '@/hooks/useDebounce';
 
 type AutoCompleteProps<T> = {
@@ -68,7 +69,7 @@ const AutoCompleteInput = <T,>({
   const debounce = useDebounce<string>(typedValue, debounceTime);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['autocomplete', props.id, debounce],
+    queryKey: queryKeys.autocomplete.byFieldAndValue(props.id, debounce),
     queryFn: async () => await onAutoCompleteChange(debounce),
     staleTime: 30000,
     enabled: debounce.length >= 2,
