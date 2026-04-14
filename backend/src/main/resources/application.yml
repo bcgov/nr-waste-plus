@@ -16,7 +16,9 @@ spring:
     name: nr-waste-backend
   web:
     error:
-      include-message: always
+      include-message: never
+      include-binding-errors: never
+      include-stacktrace: never
   servlet:
     encoding:
       charset: UTF-8
