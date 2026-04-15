@@ -23,7 +23,7 @@ const isProductionZone = zone === 'prod';
 /**
  * Current browser origin used as the base for OAuth redirect URIs.
  */
-const appOrigin = window.location.origin;
+const appOrigin = globalThis.location.origin;
 
 /**
  * Backend URL used when mock authentication rewrites the OAuth domain locally.
