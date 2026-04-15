@@ -45,7 +45,7 @@ test.describe('Waste Search - Advanced Search', () => {
       const regex = new RegExp(clientNumber);
       await expect(clientInput).toHaveValue(regex);
 
-      closeAdvancedSearchButton = page.getByRole('button', { name: 'Close' });
+      closeAdvancedSearchButton = page.locator('button.cds--modal-close');
       await closeAdvancedSearchButton.click();
 
       // Verify tag appears
@@ -108,7 +108,7 @@ test.describe('Waste Search - Advanced Search', () => {
       selectedCountDisplay = page.locator('#as-client-multi-select .cds--tag__label');
       await expect(selectedCountDisplay).toHaveText('2');
 
-      closeAdvancedSearchButton = page.getByRole('button', { name: 'Close' }).first();
+      closeAdvancedSearchButton = page.locator('button.cds--modal-close');
       await closeAdvancedSearchButton.click();
 
       // Verify tags appear
@@ -175,7 +175,7 @@ test.describe('Waste Search - Advanced Search', () => {
 
       await expect(submitterInput).toHaveValue(userId);
 
-      closeAdvancedSearchButton = page.getByRole('button', { name: 'Close' });
+      closeAdvancedSearchButton = page.locator('button.cds--modal-close');
       await closeAdvancedSearchButton.click();
 
       // Verify tag appears

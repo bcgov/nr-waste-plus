@@ -43,7 +43,9 @@ const notifyProblemDetailsError = (error: Error, eventTarget: string) => {
   const problemDetails = getProblemDetails(error);
 
   sendEvent({
-    description: problemDetails?.detail || error.message || 'No additional details provided.',
+    description: problemDetails
+      ? problemDetails.detail || 'No additional details provided.'
+      : error.message || 'No additional details provided.',
     displayMode: 'inline',
     eventTarget,
     eventType: 'error',
