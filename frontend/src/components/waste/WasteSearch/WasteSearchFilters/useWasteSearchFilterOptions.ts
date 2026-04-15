@@ -15,11 +15,17 @@ type WasteSearchFilterOptions = {
  * @returns The available sampling, district, and status options.
  */
 export const useWasteSearchFilterOptions = (): WasteSearchFilterOptions => {
-  const { data: samplingOptions } = useCodesQuery('samplingOptions');
+  const { data: samplingOptions } = useCodesQuery('samplingOptions', {
+    notificationTarget: 'waste-search',
+  });
 
-  const { data: districtOptions } = useCodesQuery('districtOptions');
+  const { data: districtOptions } = useCodesQuery('districtOptions', {
+    notificationTarget: 'waste-search',
+  });
 
-  const { data: statusOptions } = useCodesQuery('statusOptions');
+  const { data: statusOptions } = useCodesQuery('statusOptions', {
+    notificationTarget: 'waste-search',
+  });
 
   return {
     samplingOptions: samplingOptions ?? [],

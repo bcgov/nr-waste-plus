@@ -20,39 +20,45 @@ export class CodesService extends HttpClient {
   /**
    * Loads available sampling options.
    *
+   * @param meta Optional metadata to pass through the request pipeline.
    * @returns The sampling code descriptions.
    */
-  getSamplingOptions(): CancelablePromise<CodeDescriptionDto[]> {
+  getSamplingOptions(meta?: Record<string, unknown>): CancelablePromise<CodeDescriptionDto[]> {
     return this.doRequest<CodeDescriptionDto[]>(this.config, {
       method: 'GET',
       url: '/api/codes/samplings',
       middleware: [problemDetailsMiddleware()],
+      meta,
     });
   }
 
   /**
    * Loads the district list used by the application.
    *
+   * @param meta Optional metadata to pass through the request pipeline.
    * @returns The district code descriptions.
    */
-  getDistricts(): CancelablePromise<CodeDescriptionDto[]> {
+  getDistricts(meta?: Record<string, unknown>): CancelablePromise<CodeDescriptionDto[]> {
     return this.doRequest<CodeDescriptionDto[]>(this.config, {
       method: 'GET',
       url: '/api/codes/districts',
       middleware: [problemDetailsMiddleware()],
+      meta,
     });
   }
 
   /**
    * Loads available assessment area status values.
    *
+   * @param meta Optional metadata to pass through the request pipeline.
    * @returns The assessment area status code descriptions.
    */
-  getAssessAreaStatuses(): CancelablePromise<CodeDescriptionDto[]> {
+  getAssessAreaStatuses(meta?: Record<string, unknown>): CancelablePromise<CodeDescriptionDto[]> {
     return this.doRequest<CodeDescriptionDto[]>(this.config, {
       method: 'GET',
       url: '/api/codes/assess-area-statuses',
       middleware: [problemDetailsMiddleware()],
+      meta,
     });
   }
 }

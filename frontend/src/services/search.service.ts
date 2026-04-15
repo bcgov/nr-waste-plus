@@ -35,12 +35,14 @@ export class SearchService extends HttpClient {
   searchReportingUnit(
     filters: ReportingUnitSearchParametersDto,
     pageable: PageableRequest<ReportingUnitSearchResultDto>,
+    meta?: Record<string, unknown>,
   ): CancelablePromise<PageableResponse<ReportingUnitSearchResultDto>> {
     return this.doRequest<PageableResponse<ReportingUnitSearchResultDto>>(this.config, {
       method: 'GET',
       url: '/api/search/reporting-units',
       query: { ...removeEmpty(filters), ...removeEmpty(pageable) },
       middleware: [problemDetailsMiddleware()],
+      meta,
     });
   }
 

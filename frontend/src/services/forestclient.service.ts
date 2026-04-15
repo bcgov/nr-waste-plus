@@ -96,6 +96,7 @@ export class ForestClientService extends HttpClient {
     value: string,
     page?: number,
     size: number = 10,
+    meta?: Record<string, unknown>,
   ): CancelablePromise<PageableResponse<MyForestClientDto>> {
     return this.doRequest<PageableResponse<MyForestClientDto>>(this.config, {
       method: 'GET',
@@ -106,6 +107,7 @@ export class ForestClientService extends HttpClient {
         value: value,
       },
       middleware: [problemDetailsMiddleware()],
+      meta,
     });
   }
 }

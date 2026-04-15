@@ -58,26 +58,39 @@ export const useCodesQuery = <TData = CodeDescriptionDto[]>(
   options?: Omit<
     UseQueryOptions<CodeDescriptionDto[], Error, TData, readonly unknown[]>,
     'queryKey' | 'queryFn'
-  >,
+  > &
+    QueryNotificationOptions,
 ) => {
+  const { notificationTarget, ...queryOptions } = options ?? {};
+
   const keyByResource = {
-    samplingOptions: queryKeys.codes.samplingOptions,
-    districtOptions: queryKeys.codes.districtOptions,
-    statusOptions: queryKeys.codes.statusOptions,
+    samplingOptions: () => queryKeys.codes.samplingOptions(notificationTarget),
+    districtOptions: () => queryKeys.codes.districtOptions(notificationTarget),
+    statusOptions: () => queryKeys.codes.statusOptions(notificationTarget),
   } as const;
 
   const queryFnByResource = {
-    samplingOptions: () => API.codes.getSamplingOptions(),
-    districtOptions: () => API.codes.getDistricts(),
-    statusOptions: () => API.codes.getAssessAreaStatuses(),
+    samplingOptions: () => API.codes.getSamplingOptions({ notificationTarget }),
+    districtOptions: () => API.codes.getDistricts({ notificationTarget }),
+    statusOptions: () => API.codes.getAssessAreaStatuses({ notificationTarget }),
   } as const;
 
-  return useQuery({
+  const query = useQuery({
     queryKey: keyByResource[resource](),
     queryFn: queryFnByResource[resource],
     ...REFERENCE_DATA_QUERY_CONFIG,
-    ...options,
+    ...queryOptions,
   });
+
+  useEffect(() => {
+    if (!notificationTarget || !query.isError || !query.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(query.error, notificationTarget);
+  }, [notificationTarget, query.error, query.isError]);
+
+  return query;
 };
 
 export const useDistrictOptionsQuery = <TData = CodeDescriptionDto[]>(
@@ -138,8 +151,11 @@ export const useMyForestClientsQuery = <TData = PageableResponse<MyForestClientD
   const { notificationTarget, ...queryOptions } = options ?? {};
 
   const query = useQuery({
-    queryKey: queryKeys.forestClient.myForestClients(filter, page, size),
-    queryFn: () => API.forestclient.searchMyForestClients(filter, page, size),
+    queryKey: queryKeys.forestClient.myForestClients(filter, page, size, notificationTarget),
+    queryFn: () =>
+      API.forestclient.searchMyForestClients(filter, page, size, {
+        notificationTarget,
+      }),
     ...queryOptions,
   });
 
@@ -172,13 +188,19 @@ export const useSearchReportingUnitsQuery = <
   const { notificationTarget, ...queryOptions } = options ?? {};
 
   const query = useQuery({
-    queryKey: queryKeys.search.reportingUnits(input),
+    queryKey: queryKeys.search.reportingUnits(input, notificationTarget),
     queryFn: () =>
-      API.search.searchReportingUnit(input.filters, {
-        page: input.page,
-        size: input.size,
-        sort: generateSortArray<ReportingUnitSearchResultDto>(input.sort),
-      }),
+      API.search.searchReportingUnit(
+        input.filters,
+        {
+          page: input.page,
+          size: input.size,
+          sort: generateSortArray<ReportingUnitSearchResultDto>(input.sort),
+        },
+        {
+          notificationTarget,
+        },
+      ),
     ...queryOptions,
   });
 

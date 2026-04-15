@@ -222,7 +222,7 @@ export const sendRequest = async <T>(
 ): Promise<AxiosResponse<T>> => {
   const source = axios.CancelToken.source();
 
-  const requestConfig: AxiosRequestConfig = {
+  const requestConfig: AxiosRequestConfig & { meta?: Record<string, unknown> } = {
     url,
     headers,
     data: body ?? formData,
@@ -230,12 +230,15 @@ export const sendRequest = async <T>(
     withCredentials: config.WITH_CREDENTIALS,
     withXSRFToken: config.CREDENTIALS === 'include' ? config.WITH_CREDENTIALS : false,
     cancelToken: source.token,
+    meta: options.meta,
   };
 
   onCancel(() => source.cancel('The user aborted a request.'));
 
   const interceptorIds: { req?: number; res?: number }[] = [];
-  options.middleware?.forEach((middleware) => {
+  const middlewares = [...(config.MIDDLEWARE ?? []), ...(options.middleware ?? [])];
+
+  middlewares.forEach((middleware) => {
     const ids: { req?: number; res?: number } = {};
     if (middleware.request) ids.req = axiosClient.interceptors.request.use(middleware.request);
     if (middleware.response || middleware.failure)
