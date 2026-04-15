@@ -51,13 +51,7 @@ const redirectSignInUrl = `${appOrigin}/dashboard`;
  * @returns The login-proxy logout URL with its `redirect_uri` query parameter applied.
  */
 const buildLoginProxyLogoutUrl = (): string => {
-  const loginProxyLogoutUrl = new URL(
-    `https://${loginProxySubdomain}loginproxy.gov.bc.ca/auth/realms/standard/protocol/openid-connect/logout`,
-  );
-
-  loginProxyLogoutUrl.searchParams.set('redirect_uri', `${appOrigin}/`);
-
-  return loginProxyLogoutUrl.toString();
+  return `https://${loginProxySubdomain}loginproxy.gov.bc.ca/auth/realms/standard/protocol/openid-connect/logout?redirect_uri=${`${appOrigin}/`}`;
 };
 
 /**
@@ -69,12 +63,7 @@ const buildLoginProxyLogoutUrl = (): string => {
  * @returns The final sign-out URL passed to Amplify and used by the auth provider.
  */
 const buildSignOutUrl = (): string => {
-  const cognitoLogoutUrl = new URL(`${logoutDomain}/clp-cgi/logoff.cgi`);
-
-  cognitoLogoutUrl.searchParams.set('retnow', '1');
-  cognitoLogoutUrl.searchParams.set('returl', buildLoginProxyLogoutUrl());
-
-  return cognitoLogoutUrl.toString();
+  return `${logoutDomain}/clp-cgi/logoff.cgi?retnow=1&returl=${buildLoginProxyLogoutUrl()}`;
 };
 
 /**
