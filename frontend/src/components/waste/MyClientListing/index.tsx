@@ -5,13 +5,12 @@ import { useEffect, useState, type FC } from 'react';
 import { headers } from './constants';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { ApiError, ProblemDetails } from '@/config/api/types';
 import type { MyForestClientDto } from '@/services/types';
 
 import SearchInput from '@/components/Form/SearchInput';
 import TableResource from '@/components/Form/TableResource';
 import { useMyForestClientsQuery } from '@/config/react-query/hooks';
-import useSendEvent from '@/hooks/useSendEvent';
+import useNotificationEvents from '@/hooks/useNotificationEvents';
 
 import './index.scss';
 
@@ -25,26 +24,24 @@ const MyClientListing: FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [filter, setFilter] = useState<string>('');
   const [searchTrigger, setSearchTrigger] = useState(0);
-  const { sendEvent, clearEvents } = useSendEvent();
+  const { clearEvents } = useNotificationEvents();
 
-  const { data, isLoading, isFetching, isError, refetch, error } = useMyForestClientsQuery(
-    filter,
-    currentPage,
-    pageSize,
-    {
-      enabled: false,
-      gcTime: 0,
-      staleTime: Infinity,
-      select: (data) =>
-        ({
-          ...data,
-          content: data.content.map((item) => ({
-            ...item,
-            id: item.client.code,
-          })),
-        }) as PageableResponse<MyForestClientDto>,
-    },
-  );
+  const forestClientsQuery = useMyForestClientsQuery(filter, currentPage, pageSize, {
+    enabled: false,
+    gcTime: 0,
+    notificationTarget: 'my-client-list',
+    staleTime: Infinity,
+    select: (data) =>
+      ({
+        ...data,
+        content: data.content.map((item) => ({
+          ...item,
+          id: item.client.code,
+        })),
+      }) as PageableResponse<MyForestClientDto>,
+  });
+
+  const { data, isLoading, isFetching, isError, refetch } = forestClientsQuery;
 
   /**
    * Runs the current client search and clears page-scoped events first.
@@ -77,18 +74,6 @@ const MyClientListing: FC = () => {
   useEffect(() => {
     refetch();
   }, [refetch]);
-
-  useEffect(() => {
-    if (isError && error) {
-      const problemDetails = (error as ApiError).body as ProblemDetails;
-      sendEvent({
-        title: problemDetails.title,
-        description: problemDetails.detail || 'No additional details provided.',
-        eventType: 'error',
-        eventTarget: 'my-client-list',
-      });
-    }
-  }, [isError, error, sendEvent]);
 
   return (
     <>

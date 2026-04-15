@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo, type FC, type ReactNode } from 'react';
 import { headers } from './constants';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { ApiError, ProblemDetails } from '@/config/api/types';
 import type {
   ReportingUnitSearchParametersViewDto,
   ReportingUnitSearchResultDto,
@@ -15,7 +14,7 @@ import TableResource from '@/components/Form/TableResource';
 import WasteSearchFilters from '@/components/waste/WasteSearch/WasteSearchFilters';
 import WasteSearchTableExpandContent from '@/components/waste/WasteSearch/WasteSearchTableExpandContent';
 import { useSearchReportingUnitsQuery } from '@/config/react-query/hooks';
-import useSendEvent from '@/hooks/useSendEvent';
+import useNotificationEvents from '@/hooks/useNotificationEvents';
 import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
 import { removeEmpty } from '@/services/utils';
 
@@ -32,11 +31,11 @@ const WasteSearchTable: FC = () => {
   const [filters, setFilters] = useState<ReportingUnitSearchParametersViewDto>({});
   const [sort, setSort] = useState<Record<string, SortDirectionType>>({});
   const [searchTrigger, setSearchTrigger] = useState(0);
-  const { sendEvent, clearEvents } = useSendEvent();
+  const { clearEvents } = useNotificationEvents();
 
   const plainFilters = useMemo(() => reportingUnitSearchParametersView2Plain(filters), [filters]);
 
-  const { data, isLoading, isFetching, isError, refetch, error } = useSearchReportingUnitsQuery(
+  const { data, isLoading, isFetching, isError, refetch } = useSearchReportingUnitsQuery(
     {
       page: currentPage,
       size: pageSize,
@@ -46,6 +45,7 @@ const WasteSearchTable: FC = () => {
     {
       enabled: false,
       gcTime: 0,
+      notificationTarget: 'waste-search',
       staleTime: Infinity,
     },
   );
@@ -111,18 +111,6 @@ const WasteSearchTable: FC = () => {
       refetch();
     }
   }, [searchTrigger, refetch]);
-
-  useEffect(() => {
-    if (isError && error) {
-      const problemDetails = (error as ApiError).body as ProblemDetails;
-      sendEvent({
-        title: problemDetails.title,
-        description: problemDetails.detail || 'No additional details provided.',
-        eventType: 'error',
-        eventTarget: 'waste-search',
-      });
-    }
-  }, [isError, error, sendEvent]);
 
   return (
     <>

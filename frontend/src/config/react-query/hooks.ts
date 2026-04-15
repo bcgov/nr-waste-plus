@@ -1,8 +1,10 @@
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 import { queryKeys, type ReportingUnitsQueryParams } from './queryKeys';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
+import type { ProblemDetails } from '@/config/api/types';
 import type { CodeDescriptionDto, ReportingUnitSearchExpandedDto } from '@/services/search.types';
 import type {
   ForestClientDto,
@@ -10,6 +12,7 @@ import type {
   ReportingUnitSearchResultDto,
 } from '@/services/types';
 
+import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 import API from '@/services/APIs';
 import {
   forestClientAutocompleteResult2CodeDescription,
@@ -24,6 +27,29 @@ const REFERENCE_DATA_QUERY_CONFIG = {
 } as const;
 
 type CodeResource = 'samplingOptions' | 'districtOptions' | 'statusOptions';
+type QueryNotificationOptions = {
+  notificationTarget?: string;
+};
+
+const getProblemDetails = (error: Error) => {
+  if (typeof error !== 'object' || error === null || !('body' in error)) {
+    return undefined;
+  }
+
+  return (error as { body?: ProblemDetails }).body;
+};
+
+const notifyProblemDetailsError = (error: Error, eventTarget: string) => {
+  const problemDetails = getProblemDetails(error);
+
+  sendEvent({
+    description: problemDetails?.detail || error.message || 'No additional details provided.',
+    displayMode: 'inline',
+    eventTarget,
+    eventType: 'error',
+    title: problemDetails?.title || 'Request failed',
+  });
+};
 
 export const useCodesQuery = <TData = CodeDescriptionDto[]>(
   resource: CodeResource,
@@ -104,13 +130,26 @@ export const useMyForestClientsQuery = <TData = PageableResponse<MyForestClientD
       ReturnType<typeof queryKeys.forestClient.myForestClients>
     >,
     'queryKey' | 'queryFn'
-  >,
+  > &
+    QueryNotificationOptions,
 ) => {
-  return useQuery({
+  const { notificationTarget, ...queryOptions } = options ?? {};
+
+  const query = useQuery({
     queryKey: queryKeys.forestClient.myForestClients(filter, page, size),
     queryFn: () => API.forestclient.searchMyForestClients(filter, page, size),
-    ...options,
+    ...queryOptions,
   });
+
+  useEffect(() => {
+    if (!notificationTarget || !query.isError || !query.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(query.error, notificationTarget);
+  }, [notificationTarget, query.error, query.isError]);
+
+  return query;
 };
 
 export const useSearchReportingUnitsQuery = <
@@ -125,9 +164,12 @@ export const useSearchReportingUnitsQuery = <
       ReturnType<typeof queryKeys.search.reportingUnits>
     >,
     'queryKey' | 'queryFn'
-  >,
+  > &
+    QueryNotificationOptions,
 ) => {
-  return useQuery({
+  const { notificationTarget, ...queryOptions } = options ?? {};
+
+  const query = useQuery({
     queryKey: queryKeys.search.reportingUnits(input),
     queryFn: () =>
       API.search.searchReportingUnit(input.filters, {
@@ -135,8 +177,18 @@ export const useSearchReportingUnitsQuery = <
         size: input.size,
         sort: generateSortArray<ReportingUnitSearchResultDto>(input.sort),
       }),
-    ...options,
+    ...queryOptions,
   });
+
+  useEffect(() => {
+    if (!notificationTarget || !query.isError || !query.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(query.error, notificationTarget);
+  }, [notificationTarget, query.error, query.isError]);
+
+  return query;
 };
 
 export const useReportingUnitExpandQuery = <TData = ReportingUnitSearchExpandedDto>(

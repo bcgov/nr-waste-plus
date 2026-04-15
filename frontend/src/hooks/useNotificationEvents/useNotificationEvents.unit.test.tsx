@@ -3,9 +3,15 @@ import { describe, it, expect, vi } from 'vitest';
 
 import { eventHandler } from './eventHandler';
 
-import useSendEvent from './index';
+import useNotificationEvents from './index';
 
 import type { GlobalEvent, EventType } from './types';
+
+import NotificationProvider from '@/context/notification/NotificationProvider';
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <NotificationProvider>{children}</NotificationProvider>
+);
 
 const makeEvent = (eventType: EventType, eventTarget?: string): GlobalEvent => ({
   title: 'Test',
@@ -14,18 +20,16 @@ const makeEvent = (eventType: EventType, eventTarget?: string): GlobalEvent => (
   eventTarget,
 });
 
-describe('useSendEvent', () => {
+describe('useNotificationEvents', () => {
   it('should allow subscribing and receiving events', () => {
-    const { result } = renderHook(() => useSendEvent());
+    const { result } = renderHook(() => useNotificationEvents(), { wrapper });
     const handler = vi.fn();
     const event = makeEvent('info');
 
-    // Subscribe
     act(() => {
       result.current.subscribe('info', handler);
     });
 
-    // Send event
     act(() => {
       result.current.sendEvent(event);
     });
@@ -34,20 +38,18 @@ describe('useSendEvent', () => {
   });
 
   it('should allow unsubscribing from events', () => {
-    const { result } = renderHook(() => useSendEvent());
+    const { result } = renderHook(() => useNotificationEvents(), { wrapper });
     const handler = vi.fn();
     const event = makeEvent('error');
 
-    // Subscribe and then unsubscribe
     let unsubscribe: () => void;
     act(() => {
       unsubscribe = result.current.subscribe('error', handler);
     });
     act(() => {
-      unsubscribe!();
+      unsubscribe();
     });
 
-    // Send event
     act(() => {
       result.current.sendEvent(event);
     });
@@ -56,7 +58,7 @@ describe('useSendEvent', () => {
   });
 
   it('should support multiple listeners for the same event type', () => {
-    const { result } = renderHook(() => useSendEvent());
+    const { result } = renderHook(() => useNotificationEvents(), { wrapper });
     const handler1 = vi.fn();
     const handler2 = vi.fn();
     const event = makeEvent('success');
@@ -75,7 +77,7 @@ describe('useSendEvent', () => {
   });
 
   it('should not call listeners for other event types', () => {
-    const { result } = renderHook(() => useSendEvent());
+    const { result } = renderHook(() => useNotificationEvents(), { wrapper });
     const handler = vi.fn();
     const event = makeEvent('warning');
 
@@ -91,7 +93,7 @@ describe('useSendEvent', () => {
   });
 
   it('should allow direct unsubscribe via hook', () => {
-    const { result } = renderHook(() => useSendEvent());
+    const { result } = renderHook(() => useNotificationEvents(), { wrapper });
     const handler = vi.fn();
     const event = makeEvent('info');
 
@@ -119,7 +121,7 @@ describe('useSendEvent', () => {
   });
 
   it('should include eventTarget in the event payload', () => {
-    const { result } = renderHook(() => useSendEvent());
+    const { result } = renderHook(() => useNotificationEvents(), { wrapper });
     const handler = vi.fn();
     const event = makeEvent('info', 'test-target');
 
@@ -139,7 +141,7 @@ describe('useSendEvent', () => {
   });
 
   it('should work with events that have no eventTarget', () => {
-    const { result } = renderHook(() => useSendEvent());
+    const { result } = renderHook(() => useNotificationEvents(), { wrapper });
     const handler = vi.fn();
     const event = makeEvent('warning');
 
@@ -165,9 +167,59 @@ describe('useSendEvent', () => {
     );
   });
 
+  it('should send toast events with displayMode set to toast', () => {
+    const { result } = renderHook(() => useNotificationEvents(), { wrapper });
+    const handler = vi.fn();
+
+    act(() => {
+      result.current.subscribe('info', handler);
+    });
+
+    act(() => {
+      result.current.sendToastEvent({
+        description: 'Toast payload',
+        eventType: 'info',
+        eventTarget: 'test-target',
+        title: 'Toast title',
+      });
+    });
+
+    expect(handler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        displayMode: 'toast',
+        title: 'Toast title',
+      }),
+    );
+  });
+
+  it('should send inline events with displayMode set to inline', () => {
+    const { result } = renderHook(() => useNotificationEvents(), { wrapper });
+    const handler = vi.fn();
+
+    act(() => {
+      result.current.subscribe('info', handler);
+    });
+
+    act(() => {
+      result.current.sendInlineEvent({
+        description: 'Inline payload',
+        eventType: 'info',
+        eventTarget: 'test-target',
+        title: 'Inline title',
+      });
+    });
+
+    expect(handler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        displayMode: 'inline',
+        title: 'Inline title',
+      }),
+    );
+  });
+
   describe('clearEvents', () => {
     it('should dispatch a clear-events info event with eventTarget', () => {
-      const { result } = renderHook(() => useSendEvent());
+      const { result } = renderHook(() => useNotificationEvents(), { wrapper });
       const handler = vi.fn();
 
       act(() => {
@@ -180,6 +232,7 @@ describe('useSendEvent', () => {
 
       expect(handler).toHaveBeenCalledWith(
         expect.objectContaining({
+          displayMode: 'inline',
           eventType: 'info',
           title: 'clear-events',
           description: 'test-target',
@@ -188,7 +241,7 @@ describe('useSendEvent', () => {
     });
 
     it('should dispatch a clear-events info event without eventTarget', () => {
-      const { result } = renderHook(() => useSendEvent());
+      const { result } = renderHook(() => useNotificationEvents(), { wrapper });
       const handler = vi.fn();
 
       act(() => {
@@ -201,6 +254,7 @@ describe('useSendEvent', () => {
 
       expect(handler).toHaveBeenCalledWith(
         expect.objectContaining({
+          displayMode: 'inline',
           eventType: 'info',
           title: 'clear-events',
           description: '',
@@ -209,7 +263,7 @@ describe('useSendEvent', () => {
     });
 
     it('should only trigger info listeners when clearing events', () => {
-      const { result } = renderHook(() => useSendEvent());
+      const { result } = renderHook(() => useNotificationEvents(), { wrapper });
       const infoHandler = vi.fn();
       const errorHandler = vi.fn();
       const successHandler = vi.fn();
@@ -230,7 +284,7 @@ describe('useSendEvent', () => {
     });
 
     it('should work alongside regular sendEvent calls', () => {
-      const { result } = renderHook(() => useSendEvent());
+      const { result } = renderHook(() => useNotificationEvents(), { wrapper });
       const handler = vi.fn();
 
       act(() => {

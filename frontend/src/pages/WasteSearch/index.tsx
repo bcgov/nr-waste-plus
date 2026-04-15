@@ -1,12 +1,10 @@
 import { Column, InlineNotification } from '@carbon/react';
-import { useEffect, useState, type FC } from 'react';
-
-import type { GlobalEvent } from '@/hooks/useSendEvent/types';
+import { type FC } from 'react';
 
 import PageTitle from '@/components/core/PageTitle';
 import WasteSearch from '@/components/waste/WasteSearch/WasteSearchTable';
-import useSendEvent from '@/hooks/useSendEvent';
-import { eventIconDescription } from '@/hooks/useSendEvent/eventHandler';
+import { eventIconDescription } from '@/hooks/useNotificationEvents/eventHandler';
+import useScopedNotification from '@/hooks/useNotificationEvents/useScopedNotification';
 
 import './index.scss';
 
@@ -16,31 +14,8 @@ import './index.scss';
  * @returns The waste search page.
  */
 const WasteSearchPage: FC = () => {
-  const [eventNotification, setEventNotification] = useState<GlobalEvent | undefined>(undefined);
-  const { subscribe } = useSendEvent();
+  const { clearNotification, eventNotification } = useScopedNotification('waste-search');
 
-  useEffect(() => {
-    const unsubscribeError = subscribe('error', (payload) => {
-      if (payload.eventTarget !== 'waste-search') return;
-      setEventNotification(payload);
-    });
-
-    const unsubscribeWarning = subscribe('warning', (payload) => {
-      if (payload.eventTarget !== 'waste-search') return;
-      setEventNotification(payload);
-    });
-
-    const unsubscribeInfo = subscribe('info', (payload) => {
-      if (payload.eventTarget !== 'waste-search') return;
-      setEventNotification(payload);
-    });
-
-    return () => {
-      unsubscribeError();
-      unsubscribeWarning();
-      unsubscribeInfo();
-    };
-  }, [subscribe]);
   return (
     <>
       <Column lg={16} md={8} sm={4} className="search-column__banner">
@@ -55,8 +30,8 @@ const WasteSearchPage: FC = () => {
             lowContrast
             aria-label={`Closes ${eventNotification.eventType} notification`}
             kind={eventNotification.eventType}
-            onClose={() => setEventNotification(undefined)}
-            onCloseButtonClick={() => setEventNotification(undefined)}
+            onClose={clearNotification}
+            onCloseButtonClick={clearNotification}
             role="alert"
             statusIconDescription={eventIconDescription(eventNotification)}
             subtitle={eventNotification.description}
