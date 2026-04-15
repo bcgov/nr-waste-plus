@@ -6,6 +6,7 @@ import { AuthContext } from './AuthContext';
 import { AuthProvider } from './AuthProvider';
 
 import { jwtfy } from '@/config/tests/auth.helper';
+import { navigateTo } from '@/utils/navigation';
 
 // Mocks
 vi.mock('aws-amplify/auth', () => ({
@@ -17,6 +18,10 @@ vi.mock('aws-amplify/auth', () => ({
 vi.mock('./authUtils', () => ({
   parseToken: vi.fn((token) => ({ id: 'user', name: 'Test User', token })),
   getUserTokenFromCookie: vi.fn(() => undefined),
+}));
+
+vi.mock('@/utils/navigation', () => ({
+  navigateTo: vi.fn(),
 }));
 
 describe('AuthProvider (extra coverage)', () => {
@@ -71,6 +76,7 @@ describe('AuthProvider (extra coverage)', () => {
 
     it('calls logout and sets user undefined', async () => {
       const { signOut } = await import('aws-amplify/auth');
+      const { signOutUrl } = await import('@/config/fam/config');
       let context: any;
       render(
         <AuthProvider>
@@ -87,6 +93,7 @@ describe('AuthProvider (extra coverage)', () => {
         context.logout();
       });
       expect(signOut).toHaveBeenCalled();
+      expect(navigateTo).toHaveBeenCalledWith(signOutUrl);
     });
 
     it('calls userToken and returns value', async () => {
