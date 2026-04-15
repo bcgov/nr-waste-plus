@@ -6,9 +6,10 @@ import { describe, it, expect, type Mock, beforeEach, vi } from 'vitest';
 import WasteSearchPage from './index';
 
 import { AuthProvider } from '@/context/auth/AuthProvider';
+import NotificationProvider from '@/context/notification/NotificationProvider';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import { sendEvent } from '@/hooks/useSendEvent/eventHandler';
+import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 import APIs from '@/services/APIs';
 
 vi.mock('@/services/APIs', () => {
@@ -38,9 +39,11 @@ const renderWithProps = async () => {
         <PreferenceProvider>
           <MemoryRouter>
             <AuthProvider>
-              <PageTitleProvider>
-                <WasteSearchPage />
-              </PageTitleProvider>
+              <NotificationProvider>
+                <PageTitleProvider>
+                  <WasteSearchPage />
+                </PageTitleProvider>
+              </NotificationProvider>
             </AuthProvider>
           </MemoryRouter>
         </PreferenceProvider>

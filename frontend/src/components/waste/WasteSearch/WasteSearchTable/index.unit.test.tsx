@@ -11,7 +11,8 @@ import type { ReportingUnitSearchResultDto } from '@/services/search.types';
 
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import * as useSendEvent from '@/hooks/useSendEvent';
+import * as useNotificationEvents from '@/hooks/useNotificationEvents';
+import * as eventHandler from '@/hooks/useNotificationEvents/eventHandler';
 import APIs from '@/services/APIs';
 
 // Mock WasteSearchFilters to avoid slow typing interactions
@@ -297,9 +298,11 @@ describe('WasteSearchTable', () => {
     vi.clearAllMocks();
     sendEventMock = vi.fn();
     clearEventsMock = vi.fn();
-    vi.spyOn(useSendEvent, 'default').mockReturnValue({
-      sendEvent: sendEventMock,
+    vi.spyOn(useNotificationEvents, 'default').mockReturnValue({
       clearEvents: clearEventsMock,
+      sendEvent: sendEventMock,
+      sendInlineEvent: vi.fn(),
+      sendToastEvent: vi.fn(),
       subscribe: vi.fn(),
       unsubscribe: vi.fn(),
     });
@@ -659,6 +662,8 @@ describe('WasteSearchTable', () => {
       };
       (APIs.search.searchReportingUnit as Mock).mockRejectedValue(errorResponse);
 
+      const sendEventSpy = vi.spyOn(eventHandler, 'sendEvent').mockImplementation(vi.fn());
+
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -668,10 +673,11 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(sendEventMock).toHaveBeenCalledWith(
+        expect(sendEventSpy).toHaveBeenCalledWith(
           expect.objectContaining({
             title: 'Search Failed',
             description: 'Unable to complete search request',
+            displayMode: 'inline',
             eventType: 'error',
             eventTarget: 'waste-search',
           }),
@@ -713,6 +719,8 @@ describe('WasteSearchTable', () => {
       };
       (APIs.search.searchReportingUnit as Mock).mockRejectedValue(errorResponse);
 
+      const sendEventSpy = vi.spyOn(eventHandler, 'sendEvent').mockImplementation(vi.fn());
+
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -722,10 +730,11 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(sendEventMock).toHaveBeenCalledWith(
+        expect(sendEventSpy).toHaveBeenCalledWith(
           expect.objectContaining({
             title: 'Error Occurred',
             description: 'No additional details provided.',
+            displayMode: 'inline',
             eventType: 'error',
             eventTarget: 'waste-search',
           }),
