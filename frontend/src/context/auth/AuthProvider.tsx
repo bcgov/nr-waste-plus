@@ -8,6 +8,7 @@ import { type FamLoginUser, type IdpProviderType, type JWT } from './types';
 
 import { signOutUrl } from '@/config/fam/config';
 import { env } from '@/env';
+import { navigateTo } from '@/utils/navigation';
 
 /**
  * Provides authenticated user state and auth actions to the application tree.
@@ -89,7 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     await signOut();
     setUser(undefined);
-    globalThis.location.href = signOutUrl;
+    navigateTo(signOutUrl);
   };
 
   // Memoized function to get the current user's idToken from localStorage (via getUserTokenFromCookie)
