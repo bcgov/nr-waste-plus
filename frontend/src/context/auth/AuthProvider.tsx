@@ -46,6 +46,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const idToken = await loadUserToken();
         const newUser = idToken ? parseToken(idToken) : undefined;
+        if (newUser) {
+          newUser.authToken = idToken?.toString() ?? '';
+        }
         setUser((prev) => (isEqual(prev, newUser) ? prev : newUser));
       } catch {
         setUser(undefined);
