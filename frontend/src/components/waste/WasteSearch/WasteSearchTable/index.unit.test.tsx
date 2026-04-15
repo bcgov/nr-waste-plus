@@ -299,8 +299,10 @@ describe('WasteSearchTable', () => {
     sendEventMock = vi.fn();
     clearEventsMock = vi.fn();
     vi.spyOn(useNotificationEvents, 'default').mockReturnValue({
-      sendEvent: sendEventMock,
       clearEvents: clearEventsMock,
+      sendEvent: sendEventMock,
+      sendInlineEvent: vi.fn(),
+      sendToastEvent: vi.fn(),
       subscribe: vi.fn(),
       unsubscribe: vi.fn(),
     });
