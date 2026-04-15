@@ -1,4 +1,4 @@
-import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
+import { useQuery, useQueries, type UseQueryOptions } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
 import { queryKeys, type ReportingUnitsQueryParams } from './queryKeys';
@@ -91,6 +91,50 @@ export const useCodesQuery = <TData = CodeDescriptionDto[]>(
   }, [notificationTarget, query.error, query.isError]);
 
   return query;
+};
+
+/**
+ * Batched hook that loads all three waste search filter option datasets simultaneously.
+ * Uses useQueries to combine the requests while maintaining separate cache entries and error handling.
+ *
+ * @param notificationTarget Optional target for inline error notifications
+ * @returns Array of three query results [samplingOptions, districtOptions, statusOptions]
+ */
+export const useWasteSearchFilterOptionsQueries = (notificationTarget?: string) => {
+  const queries = useQueries({
+    queries: [
+      {
+        queryKey: queryKeys.codes.samplingOptions(notificationTarget),
+        queryFn: () => API.codes.getSamplingOptions({ notificationTarget }),
+        ...REFERENCE_DATA_QUERY_CONFIG,
+      },
+      {
+        queryKey: queryKeys.codes.districtOptions(notificationTarget),
+        queryFn: () => API.codes.getDistricts({ notificationTarget }),
+        ...REFERENCE_DATA_QUERY_CONFIG,
+      },
+      {
+        queryKey: queryKeys.codes.statusOptions(notificationTarget),
+        queryFn: () => API.codes.getAssessAreaStatuses({ notificationTarget }),
+        ...REFERENCE_DATA_QUERY_CONFIG,
+      },
+    ],
+  });
+
+  // Handle inline error notifications for each query
+  useEffect(() => {
+    if (!notificationTarget) {
+      return;
+    }
+
+    queries.forEach((query) => {
+      if (query.isError && query.error) {
+        notifyProblemDetailsError(query.error, notificationTarget);
+      }
+    });
+  }, [notificationTarget, queries]);
+
+  return queries;
 };
 
 export const useDistrictOptionsQuery = <TData = CodeDescriptionDto[]>(
