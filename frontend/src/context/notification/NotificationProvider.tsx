@@ -127,9 +127,8 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const onClose = useCallback(() => {
-    setNotificationClass('slide-in');
+    setNotificationClass('slide-out');
     notificationContent?.onClose?.();
-    setNotificationQueue((currentQueue) => currentQueue.slice(1));
   }, [notificationContent]);
 
   useEffect(() => {
@@ -143,7 +142,18 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [notificationClass, notificationContent]);
 
-  useEffect(() => registerNotificationEventDispatcher(sendEvent), [sendEvent]);
+  useEffect(() => {
+    if (notificationContent && notificationClass === 'slide-out') {
+      const timer = setTimeout(() => {
+        setNotificationQueue((currentQueue) => currentQueue.slice(1));
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [notificationClass, notificationContent]);
+
+  useEffect(() => {
+    return registerNotificationEventDispatcher(sendEvent);
+  }, [sendEvent]);
 
   const contextValue = useMemo(
     () => ({ clearEvents, display, sendEvent, subscribe, unsubscribe }),

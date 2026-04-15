@@ -17,7 +17,7 @@ const updateSW = registerSW({
     sendToastEvent({
       eventType: 'error',
       title: 'Failed to register the app for offline use',
-      description: JSON.stringify(error), //Need to change
+      description: error instanceof Error ? error.message : String(error),
     });
   },
   onNeedRefresh() {
