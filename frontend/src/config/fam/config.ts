@@ -36,7 +36,7 @@ const backendUrl = env.VITE_BACKEND_URL;
 const logoutDomain = isProductionZone ? 'https://logon7.gov.bc.ca' : 'https://logontest7.gov.bc.ca';
 
 /**
- * Login proxy realm host prefix. Non-production environments use the `dev.` realm.
+ * Login proxy realm host prefix. Non-production environments use the `test.` subdomain.
  */
 const loginProxySubdomain = isProductionZone ? '' : 'test.';
 
