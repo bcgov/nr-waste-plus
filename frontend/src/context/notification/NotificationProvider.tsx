@@ -132,13 +132,16 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   }, [notificationContent]);
 
   useEffect(() => {
-    if (notificationContent && notificationContent.timeout > 0) {
-      if (notificationClass === 'slide-in') {
-        const timer = setTimeout(() => {
-          setNotificationClass('slide-out');
-        }, notificationContent.timeout - 300);
-        return () => clearTimeout(timer);
-      }
+    if (
+      notificationContent &&
+      notificationContent.timeout > 0 &&
+      notificationClass === 'slide-in'
+    ) {
+      const delay = Math.max(notificationContent.timeout - 300, 0);
+      const timer = setTimeout(() => {
+        setNotificationClass('slide-out');
+      }, delay);
+      return () => clearTimeout(timer);
     }
   }, [notificationClass, notificationContent]);
 
