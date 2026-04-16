@@ -10,11 +10,18 @@ vi.mock('@/hooks/useNotificationEvents/eventHandler', () => ({
   sendEvent: vi.fn(),
 }));
 
+const makeConfig = (
+  overrides: Partial<InternalAxiosRequestConfig<unknown>> = {},
+): InternalAxiosRequestConfig<unknown> => ({
+  headers: {},
+  method: 'get',
+  url: '/api/example',
+  ...overrides,
+}) as InternalAxiosRequestConfig<unknown>;
+
 const makeError = (overrides: Partial<AxiosError<unknown>> = {}): AxiosError<unknown> => {
   return {
-    config: {
-      url: '/api/example',
-    } as InternalAxiosRequestConfig,
+    config: makeConfig(),
     isAxiosError: true,
     toJSON: () => ({}),
     name: 'AxiosError',
@@ -59,9 +66,9 @@ describe('failureNotificationMiddleware', () => {
   it('does not notify when request is scoped with notificationTarget', async () => {
     const middleware = failureNotificationMiddleware();
     const error = makeError({
-      config: {
+      config: makeConfig({
         meta: { notificationTarget: 'waste-search' },
-      } as InternalAxiosRequestConfig,
+      }),
     });
 
     await expect(middleware.failure?.(error)).rejects.toBe(error);
@@ -72,9 +79,9 @@ describe('failureNotificationMiddleware', () => {
   it('does not notify when request is explicitly suppressed', async () => {
     const middleware = failureNotificationMiddleware();
     const error = makeError({
-      config: {
+      config: makeConfig({
         meta: { suppressFailureNotification: true },
-      } as InternalAxiosRequestConfig,
+      }),
     });
 
     await expect(middleware.failure?.(error)).rejects.toBe(error);
