@@ -61,7 +61,7 @@ jobs:
         window.config = {
           ...(window.config ?? {}),
           VITE_FEATURE_FLAGS: {
-            OFFLINE: false,
+            'offline-mode-enabled': false,
           },
         };
 

@@ -7,7 +7,7 @@ vi.mock(import('@/env'), async (importOriginal) => {
     ...actual,
     featureFlags: {
       ...actual.featureFlags,
-      OFFLINE: true,
+      'offline-mode-enabled': true,
     },
   };
 });
