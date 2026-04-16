@@ -10,6 +10,20 @@ import { signOutUrl } from '@/config/fam/config';
 import { env } from '@/env';
 import { navigateTo } from '@/utils/navigation';
 
+const preserveRolesReference = (
+  previousUser: FamLoginUser | undefined,
+  nextUser: FamLoginUser | undefined,
+): FamLoginUser | undefined => {
+  if (!previousUser || !nextUser) return nextUser;
+  if (!isEqual(previousUser.roles, nextUser.roles)) return nextUser;
+  if (previousUser.roles === nextUser.roles) return nextUser;
+
+  return {
+    ...nextUser,
+    roles: previousUser.roles,
+  };
+};
+
 /**
  * Provides authenticated user state and auth actions to the application tree.
  *
@@ -47,7 +61,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const idToken = await loadUserToken();
         const newUser = idToken ? parseToken(idToken) : undefined;
-        setUser((prev) => (isEqual(prev, newUser) ? prev : newUser));
+        setUser((prev) => {
+          if (isEqual(prev, newUser)) return prev;
+          return preserveRolesReference(prev, newUser);
+        });
       } catch {
         setUser(undefined);
         if (!silent) await signOut();

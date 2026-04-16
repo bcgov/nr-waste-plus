@@ -113,6 +113,7 @@ describe('AuthProvider (extra coverage)', () => {
       await waitFor(() => expect(context).toBeDefined());
       expect(context.userToken()).toBe('sometoken');
     });
+
   });
 
   describe('when VITE_MOCK_AUTH is true', () => {
