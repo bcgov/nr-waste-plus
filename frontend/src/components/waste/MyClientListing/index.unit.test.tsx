@@ -12,10 +12,11 @@ import type { MyForestClientDto } from '@/services/types';
 
 import { renderCell } from '@/components/Form/TableResource/types';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import * as eventHandler from '@/hooks/useNotificationEvents/eventHandler';
 import APIs from '@/services/APIs';
 
 vi.mock('@/services/APIs');
-vi.mock('@/hooks/useSendEvent', () => ({
+vi.mock('@/hooks/useNotificationEvents', () => ({
   default: vi.fn(() => ({
     sendEvent: vi.fn(),
     clearEvents: vi.fn(),
@@ -161,7 +162,9 @@ describe('MyClientListing', () => {
       await renderWithProps();
 
       await waitFor(() => {
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('', 0, 10);
+        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('', 0, 10, {
+          notificationTarget: 'my-client-list',
+        });
       });
     });
 
@@ -193,7 +196,9 @@ describe('MyClientListing', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('ABC', 0, 10);
+        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('ABC', 0, 10, {
+          notificationTarget: 'my-client-list',
+        });
       });
     });
 
@@ -269,7 +274,9 @@ describe('MyClientListing', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('', 0, 10);
+        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('', 0, 10, {
+          notificationTarget: 'my-client-list',
+        });
         expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledTimes(2);
       });
     });
@@ -289,7 +296,9 @@ describe('MyClientListing', () => {
       await userEvent.click(nextButton);
 
       await waitFor(() => {
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('', 1, 10);
+        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('', 1, 10, {
+          notificationTarget: 'my-client-list',
+        });
       });
     });
 
@@ -362,15 +371,7 @@ describe('MyClientListing', () => {
     });
 
     it('sends event when error occurs', async () => {
-      const useSendEvent = await import('@/hooks/useSendEvent');
-      const mockSendEvent = vi.fn();
-      const mockClearEvents = vi.fn();
-      vi.mocked(useSendEvent.default).mockReturnValue({
-        sendEvent: mockSendEvent,
-        clearEvents: mockClearEvents,
-        subscribe: vi.fn(),
-        unsubscribe: vi.fn(),
-      });
+      const sendEventSpy = vi.spyOn(eventHandler, 'sendEvent').mockImplementation(vi.fn());
 
       const errorResponse = {
         body: {
@@ -385,9 +386,10 @@ describe('MyClientListing', () => {
       await renderWithProps();
 
       await waitFor(() => {
-        expect(mockSendEvent).toHaveBeenCalledWith({
+        expect(sendEventSpy).toHaveBeenCalledWith({
           title: 'Search Failed',
           description: 'Unable to retrieve client data',
+          displayMode: 'inline',
           eventType: 'error',
           eventTarget: 'my-client-list',
         });
@@ -395,15 +397,7 @@ describe('MyClientListing', () => {
     });
 
     it('sends event with default detail when error has no detail', async () => {
-      const useSendEvent = await import('@/hooks/useSendEvent');
-      const mockSendEvent = vi.fn();
-      const mockClearEvents = vi.fn();
-      vi.mocked(useSendEvent.default).mockReturnValue({
-        sendEvent: mockSendEvent,
-        clearEvents: mockClearEvents,
-        subscribe: vi.fn(),
-        unsubscribe: vi.fn(),
-      });
+      const sendEventSpy = vi.spyOn(eventHandler, 'sendEvent').mockImplementation(vi.fn());
 
       const errorResponse = {
         body: {
@@ -417,9 +411,10 @@ describe('MyClientListing', () => {
       await renderWithProps();
 
       await waitFor(() => {
-        expect(mockSendEvent).toHaveBeenCalledWith({
+        expect(sendEventSpy).toHaveBeenCalledWith({
           title: 'Unknown Error',
           description: 'No additional details provided.',
+          displayMode: 'inline',
           eventType: 'error',
           eventTarget: 'my-client-list',
         });

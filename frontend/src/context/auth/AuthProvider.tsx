@@ -9,6 +9,28 @@ import { type FamLoginUser, type IdpProviderType, type JWT } from './types';
 import { env } from '@/env';
 
 /**
+ * Preserves the existing roles array reference when the next auth user has the
+ * same effective role assignments, avoiding unnecessary downstream recomputation.
+ *
+ * @param previousUser The previously cached authenticated user.
+ * @param nextUser The next authenticated user produced from token refresh.
+ * @returns The next user, reusing the previous roles reference when safe.
+ */
+export const preserveRolesReference = (
+  previousUser: FamLoginUser | undefined,
+  nextUser: FamLoginUser | undefined,
+): FamLoginUser | undefined => {
+  if (!previousUser || !nextUser) return nextUser;
+  if (previousUser.roles === nextUser.roles) return nextUser;
+  if (!isEqual(previousUser.roles, nextUser.roles)) return nextUser;
+
+  return {
+    ...nextUser,
+    roles: previousUser.roles,
+  };
+};
+
+/**
  * Provides authenticated user state and auth actions to the application tree.
  *
  * @param props The provider props.
@@ -45,7 +67,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const idToken = await loadUserToken();
         const newUser = idToken ? parseToken(idToken) : undefined;
-        setUser((prev) => (isEqual(prev, newUser) ? prev : newUser));
+        setUser((prev) => {
+          if (isEqual(prev, newUser)) return prev;
+          return preserveRolesReference(prev, newUser);
+        });
       } catch {
         setUser(undefined);
         if (!silent) await signOut();

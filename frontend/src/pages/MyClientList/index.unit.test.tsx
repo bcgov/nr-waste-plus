@@ -5,9 +5,10 @@ import { describe, it, expect, vi } from 'vitest';
 
 import MyClientListPage from './index';
 
+import NotificationProvider from '@/context/notification/NotificationProvider';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import { sendEvent } from '@/hooks/useSendEvent/eventHandler';
+import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 
 vi.mock('@/services/APIs', () => {
   return {
@@ -27,9 +28,11 @@ const renderWithProps = async () => {
       <QueryClientProvider client={qc}>
         <PreferenceProvider>
           <MemoryRouter>
-            <PageTitleProvider>
-              <MyClientListPage />
-            </PageTitleProvider>
+            <NotificationProvider>
+              <PageTitleProvider>
+                <MyClientListPage />
+              </PageTitleProvider>
+            </NotificationProvider>
           </MemoryRouter>
         </PreferenceProvider>
       </QueryClientProvider>,

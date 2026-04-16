@@ -3,6 +3,8 @@ import { getB3Headers } from './utils';
 
 import type { APIConfig } from '@/config/api/types';
 
+import { failureNotificationMiddleware } from '@/config/api/failureNotificationMiddleware';
+import { problemDetailsMiddleware } from '@/config/api/problemDetailsMiddleware';
 import { getUserTokenFromCookie } from '@/context/auth/authUtils';
 import { env } from '@/env';
 import { SearchService } from '@/services//search.service';
@@ -22,6 +24,7 @@ export const BackendApiConfig: APIConfig = {
   PASSWORD: undefined,
   HEADERS: undefined,
   ENCODE_PATH: undefined,
+  MIDDLEWARE: [problemDetailsMiddleware(), failureNotificationMiddleware()],
 };
 
 BackendApiConfig.TOKEN = async () => {

@@ -1,12 +1,10 @@
 import { Column, InlineNotification } from '@carbon/react';
-import { useEffect, useState, type FC } from 'react';
-
-import type { GlobalEvent } from '@/hooks/useSendEvent/types';
+import { type FC } from 'react';
 
 import PageTitle from '@/components/core/PageTitle';
 import MyClientListing from '@/components/waste/MyClientListing';
-import useSendEvent from '@/hooks/useSendEvent';
-import { eventIconDescription } from '@/hooks/useSendEvent/eventHandler';
+import { eventIconDescription } from '@/hooks/useNotificationEvents/eventHandler';
+import useScopedNotification from '@/hooks/useNotificationEvents/useScopedNotification';
 
 import './index.scss';
 
@@ -16,31 +14,7 @@ import './index.scss';
  * @returns The my clients page.
  */
 const MyClientListPage: FC = () => {
-  const [eventNotification, setEventNotification] = useState<GlobalEvent | undefined>(undefined);
-  const { subscribe } = useSendEvent();
-
-  useEffect(() => {
-    const unsubscribeError = subscribe('error', (payload) => {
-      if (payload.eventTarget !== 'my-client-list') return;
-      setEventNotification(payload);
-    });
-
-    const unsubscribeWarning = subscribe('warning', (payload) => {
-      if (payload.eventTarget !== 'my-client-list') return;
-      setEventNotification(payload);
-    });
-
-    const unsubscribeInfo = subscribe('info', (payload) => {
-      if (payload.eventTarget !== 'my-client-list') return;
-      setEventNotification(payload);
-    });
-
-    return () => {
-      unsubscribeError();
-      unsubscribeWarning();
-      unsubscribeInfo();
-    };
-  }, [subscribe]);
+  const { clearNotification, eventNotification } = useScopedNotification('my-client-list');
 
   return (
     <>
@@ -53,8 +27,8 @@ const MyClientListPage: FC = () => {
             lowContrast
             aria-label={`Closes ${eventNotification.eventType} notification`}
             kind={eventNotification.eventType}
-            onClose={() => setEventNotification(undefined)}
-            onCloseButtonClick={() => setEventNotification(undefined)}
+            onClose={clearNotification}
+            onCloseButtonClick={clearNotification}
             role="alert"
             statusIconDescription={eventIconDescription(eventNotification)}
             subtitle={eventNotification.description}

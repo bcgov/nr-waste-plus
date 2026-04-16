@@ -6,23 +6,50 @@ import { useNotification } from './useNotification';
 
 // Helper component to trigger notification
 const TestComponent = () => {
-  const { display } = useNotification();
+  const { display, sendEvent } = useNotification();
   return (
-    <button
-      onClick={() =>
-        display({
-          title: 'Test Title',
-          subtitle: 'Test Subtitle',
-          caption: 'Test Caption',
-          kind: 'success',
-          timeout: 5000,
-          onClose: vi.fn(),
-          onCloseButtonClick: vi.fn(),
-        })
-      }
-    >
-      Show Notification
-    </button>
+    <>
+      <button
+        onClick={() =>
+          display({
+            title: 'Test Title',
+            subtitle: 'Test Subtitle',
+            caption: 'Test Caption',
+            kind: 'success',
+            timeout: 5000,
+            onClose: vi.fn(),
+            onCloseButtonClick: vi.fn(),
+          })
+        }
+      >
+        Show Notification
+      </button>
+      <button
+        onClick={() =>
+          sendEvent({
+            title: 'Toast Targeted Event',
+            description: 'Shows as toast despite scope',
+            eventType: 'info',
+            eventTarget: 'page-scope',
+            displayMode: 'toast',
+          })
+        }
+      >
+        Show Targeted Toast Event
+      </button>
+      <button
+        onClick={() =>
+          sendEvent({
+            title: 'Inline Global Event',
+            description: 'Should not render as toast',
+            eventType: 'info',
+            displayMode: 'inline',
+          })
+        }
+      >
+        Show Global Inline Event
+      </button>
+    </>
   );
 };
 
@@ -72,5 +99,74 @@ describe('NotificationProvider', () => {
     expect(() => render(<TestComponent />)).toThrow(
       'useNotification must be used within a NotificationProvider',
     );
+  });
+
+  it('dedupes repeated notifications while one is active', () => {
+    const DedupeTestComponent = () => {
+      const { display } = useNotification();
+
+      return (
+        <button
+          onClick={() => {
+            display({
+              title: 'Duplicate',
+              subtitle: 'Only once',
+              kind: 'info',
+              timeout: 5000,
+            });
+            display({
+              title: 'Duplicate',
+              subtitle: 'Only once',
+              kind: 'info',
+              timeout: 5000,
+            });
+          }}
+        >
+          Show Duplicate Notification
+        </button>
+      );
+    };
+
+    render(
+      <NotificationProvider>
+        <DedupeTestComponent />
+      </NotificationProvider>,
+    );
+
+    act(() => {
+      screen.getByText('Show Duplicate Notification').click();
+    });
+
+    expect(screen.getAllByText('Duplicate')).toHaveLength(1);
+  });
+
+  it('renders a toast when event displayMode is toast', () => {
+    render(
+      <NotificationProvider>
+        <TestComponent />
+      </NotificationProvider>,
+    );
+
+    act(() => {
+      screen.getByText('Show Targeted Toast Event').click();
+    });
+
+    expect(screen.getByText('Toast Targeted Event')).toBeDefined();
+    expect(screen.getByText('Shows as toast despite scope')).toBeDefined();
+  });
+
+  it('does not render a toast when event displayMode is inline', () => {
+    render(
+      <NotificationProvider>
+        <TestComponent />
+      </NotificationProvider>,
+    );
+
+    act(() => {
+      screen.getByText('Show Global Inline Event').click();
+    });
+
+    expect(screen.queryByText('Inline Global Event')).toBeNull();
+    expect(screen.queryByText('Should not render as toast')).toBeNull();
   });
 });

@@ -9,16 +9,16 @@ export type ReportingUnitsQueryParams = {
 
 export const queryKeys = {
   codes: {
-    samplingOptions: () => ['codes', 'sampling-options'] as const,
-    districtOptions: () => ['codes', 'district-options'] as const,
-    statusOptions: () => ['codes', 'status-options'] as const,
+    samplingOptions: (notificationTarget?: string) => ['codes', 'sampling-options', notificationTarget] as const,
+    districtOptions: (notificationTarget?: string) => ['codes', 'district-options', notificationTarget] as const,
+    statusOptions: (notificationTarget?: string) => ['codes', 'status-options', notificationTarget] as const,
   },
   preference: {
     userPreference: () => ['preference', 'user'] as const,
   },
   search: {
-    reportingUnits: (params: ReportingUnitsQueryParams) =>
-      ['search', 'reporting-units', params] as const,
+    reportingUnits: (params: ReportingUnitsQueryParams, notificationTarget?: string) =>
+      ['search', 'reporting-units', params, notificationTarget] as const,
     reportingUnitExpand: (
       rowId: string,
       ruId: number | null,
@@ -29,8 +29,8 @@ export const queryKeys = {
   forestClient: {
     byClientNumbers: (clientNumbers: readonly string[]) =>
       ['forest-client', 'by-client-numbers', [...clientNumbers]] as const,
-    myForestClients: (filter: string, page: number, size: number) =>
-      ['forest-client', 'my-forest-clients', { filter, page, size }] as const,
+    myForestClients: (filter: string, page: number, size: number, notificationTarget?: string) =>
+      ['forest-client', 'my-forest-clients', { filter, page, size }, notificationTarget] as const,
     lookupByClientCode: (clientCode: string) =>
       ['forest-client', 'lookup-by-client-code', clientCode] as const,
   },
