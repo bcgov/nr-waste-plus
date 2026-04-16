@@ -10,7 +10,7 @@ import { signOutUrl } from '@/config/fam/config';
 import { env } from '@/env';
 import { navigateTo } from '@/utils/navigation';
 
-const preserveRolesReference = (
+export const preserveRolesReference = (
   previousUser: FamLoginUser | undefined,
   nextUser: FamLoginUser | undefined,
 ): FamLoginUser | undefined => {
