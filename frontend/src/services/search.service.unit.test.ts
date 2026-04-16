@@ -56,7 +56,6 @@ describe('SearchService', () => {
         method: 'GET',
         url: '/api/search/reporting-units',
         query: { mainSearchTerm: 'Unit1', status: ['ACTIVE'], page: 1, size: 10 },
-        middleware: [expect.objectContaining({ failure: expect.any(Function) })],
       });
       expect(result).toEqual(mockData);
       expect(result.content).toHaveLength(1);
@@ -115,7 +114,6 @@ describe('SearchService', () => {
         method: 'GET',
         url: '/api/search/reporting-units',
         query: { page: 1, size: 50 },
-        middleware: [expect.objectContaining({ failure: expect.any(Function) })],
       });
       expect(result.content).toEqual([]);
     });
@@ -137,7 +135,6 @@ describe('SearchService', () => {
         method: 'GET',
         url: '/api/search/reporting-units',
         query: { page: 5, size: 25 },
-        middleware: [expect.objectContaining({ failure: expect.any(Function) })],
       });
       expect(result.page.number).toBe(5);
       expect(result.page.totalPages).toBe(6);
@@ -175,7 +172,6 @@ describe('SearchService', () => {
       expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
         method: 'GET',
         url: '/api/search/reporting-units/ex/123/456',
-        middleware: [expect.objectContaining({ failure: expect.any(Function) })],
       });
       expect(result).toEqual(mockData);
       expect(result.id).toBe(123);
@@ -212,7 +208,6 @@ describe('SearchService', () => {
       expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
         method: 'GET',
         url: '/api/search/reporting-units/ex/999/888',
-        middleware: [expect.objectContaining({ failure: expect.any(Function) })],
       });
     });
 
@@ -261,7 +256,6 @@ describe('SearchService', () => {
         method: 'GET',
         url: '/api/search/reporting-units-users',
         query: { userId },
-        middleware: [expect.objectContaining({ failure: expect.any(Function) })],
       });
       expect(result).toEqual(mockData);
       expect(result).toHaveLength(2);
@@ -279,7 +273,6 @@ describe('SearchService', () => {
         method: 'GET',
         url: '/api/search/reporting-units-users',
         query: { userId },
-        middleware: [expect.objectContaining({ failure: expect.any(Function) })],
       });
       expect(result).toEqual([]);
     });
@@ -295,7 +288,6 @@ describe('SearchService', () => {
         method: 'GET',
         url: '/api/search/reporting-units-users',
         query: { userId: 'IDIR\\ADMINUSER' },
-        middleware: [expect.objectContaining({ failure: expect.any(Function) })],
       });
       expect(result[0]).toBe('IDIR\\ADMINUSER');
     });
@@ -317,18 +309,17 @@ describe('SearchService', () => {
       expect(service.config).toEqual(mockConfig);
     });
 
-    it('should use problem details middleware for all requests', async () => {
+    it('should include meta only when provided', async () => {
       const filters = {};
       const pageable = { page: 0, size: 10 };
+      const meta = { notificationTarget: 'waste-search' };
 
       (service as any).doRequest = vi.fn().mockResolvedValue({ content: [], page: {} });
-      await service.searchReportingUnit(filters, pageable);
+      await service.searchReportingUnit(filters, pageable, meta);
 
       const callArgs = (service as any).doRequest.mock.calls[0][1];
-      expect(callArgs.middleware).toBeDefined();
-      expect(callArgs.middleware[0]).toEqual(
-        expect.objectContaining({ failure: expect.any(Function) }),
-      );
+      expect(callArgs.meta).toEqual(meta);
+      expect(callArgs.middleware).toBeUndefined();
     });
   });
 });

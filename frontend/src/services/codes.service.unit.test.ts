@@ -18,7 +18,6 @@ describe('CodesService', () => {
     expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
       method: 'GET',
       url: '/api/codes/samplings',
-      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toEqual(mockData);
   });
@@ -30,7 +29,6 @@ describe('CodesService', () => {
     expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
       method: 'GET',
       url: '/api/codes/districts',
-      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toEqual(mockData);
   });
@@ -42,8 +40,20 @@ describe('CodesService', () => {
     expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
       method: 'GET',
       url: '/api/codes/assess-area-statuses',
-      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toEqual(mockData);
+  });
+
+  it('includes meta only when provided', async () => {
+    const meta = { notificationTarget: 'waste-search' };
+    (service as any).doRequest = vi.fn().mockResolvedValue([]);
+
+    await service.getDistricts(meta);
+
+    expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+      method: 'GET',
+      url: '/api/codes/districts',
+      meta,
+    });
   });
 });

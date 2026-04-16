@@ -1,7 +1,6 @@
 import type { CodeDescriptionDto } from './types';
 import type { CancelablePromise } from '@/config/api/CancelablePromise';
 
-import { problemDetailsMiddleware } from '@/config/api/problemDetailsMiddleware';
 import { HttpClient, type APIConfig } from '@/config/api/types';
 
 /**
@@ -27,8 +26,7 @@ export class CodesService extends HttpClient {
     return this.doRequest<CodeDescriptionDto[]>(this.config, {
       method: 'GET',
       url: '/api/codes/samplings',
-      middleware: [problemDetailsMiddleware()],
-      meta,
+      ...(meta !== undefined ? { meta } : {}),
     });
   }
 
@@ -42,8 +40,7 @@ export class CodesService extends HttpClient {
     return this.doRequest<CodeDescriptionDto[]>(this.config, {
       method: 'GET',
       url: '/api/codes/districts',
-      middleware: [problemDetailsMiddleware()],
-      meta,
+      ...(meta !== undefined ? { meta } : {}),
     });
   }
 
@@ -57,8 +54,7 @@ export class CodesService extends HttpClient {
     return this.doRequest<CodeDescriptionDto[]>(this.config, {
       method: 'GET',
       url: '/api/codes/assess-area-statuses',
-      middleware: [problemDetailsMiddleware()],
-      meta,
+      ...(meta !== undefined ? { meta } : {}),
     });
   }
 }

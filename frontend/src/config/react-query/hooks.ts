@@ -1,5 +1,5 @@
 import { useQuery, useQueries, type UseQueryOptions } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { queryKeys, type ReportingUnitsQueryParams } from './queryKeys';
 
@@ -88,7 +88,11 @@ export const useCodesQuery = <TData = CodeDescriptionDto[]>(
     }
 
     notifyProblemDetailsError(query.error, notificationTarget);
-  }, [notificationTarget, query.error, query.isError]);
+  // query.errorUpdatedAt is a stable timestamp that only advances when a new error arrives.
+  // Using it (instead of query.error object reference) prevents repeat notifications while
+  // the same error persists across renders.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notificationTarget, query.errorUpdatedAt]);
 
   return query;
 };
@@ -122,17 +126,37 @@ export const useWasteSearchFilterOptionsQueries = (notificationTarget?: string) 
   });
 
   // Handle inline error notifications for each query
+  // notifiedRef tracks "index:errorUpdatedAt" keys so each unique error is sent exactly once,
+  // even if useQueries hands back a new array reference on unrelated state updates.
+  const notifiedRef = useRef<Set<string>>(new Set());
+
+  // Stable string derived from each query's error identity; only changes when a new error arrives.
+  const errorKeys = queries
+    .map((q, i) => (q.isError && q.errorUpdatedAt > 0 ? `${i}:${q.errorUpdatedAt}` : null))
+    .join(',');
+
   useEffect(() => {
     if (!notificationTarget) {
       return;
     }
 
-    queries.forEach((query) => {
-      if (query.isError && query.error) {
-        notifyProblemDetailsError(query.error, notificationTarget);
+    queries.forEach((query, i) => {
+      if (!query.isError || !query.error || query.errorUpdatedAt === 0) {
+        return;
       }
+
+      const key = `${i}:${query.errorUpdatedAt}`;
+      if (notifiedRef.current.has(key)) {
+        return;
+      }
+
+      notifiedRef.current.add(key);
+      notifyProblemDetailsError(query.error, notificationTarget);
     });
-  }, [notificationTarget, queries]);
+  // errorKeys is a stable primitive derived from errorUpdatedAt; the queries array reference
+  // is intentionally excluded — it changes on every render from useQueries.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notificationTarget, errorKeys]);
 
   return queries;
 };

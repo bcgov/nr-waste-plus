@@ -5,8 +5,8 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
 import { useWasteSearchFilterOptions } from './useWasteSearchFilterOptions';
 
-import APIs from '@/services/APIs';
 import * as eventHandler from '@/hooks/useNotificationEvents/eventHandler';
+import APIs from '@/services/APIs';
 
 vi.mock('@/services/APIs', () => ({
   default: {
