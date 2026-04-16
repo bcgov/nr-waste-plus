@@ -19,7 +19,6 @@ describe('ForestClientService', () => {
       method: 'GET',
       url: '/api/forest-clients/{clientNumber}',
       path: { clientNumber: '123' },
-      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toEqual(mockData);
   });
@@ -32,7 +31,6 @@ describe('ForestClientService', () => {
       method: 'GET',
       url: '/api/forest-clients/byNameAcronymNumber',
       query: { page: 2, size: 5, value: 'search' },
-      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toEqual(mockData);
   });
@@ -45,7 +43,6 @@ describe('ForestClientService', () => {
       method: 'GET',
       url: '/api/forest-clients/searchByNumbers',
       query: { page: 0, size: 10, values: ['789'] },
-      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toEqual(mockData);
   });
@@ -65,8 +62,21 @@ describe('ForestClientService', () => {
       method: 'GET',
       url: '/api/forest-clients/clients',
       query: { page: 1, size: 5, value: 'client' },
-      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toEqual(mockData);
+  });
+
+  it('search by my clients includes meta only when provided', async () => {
+    const meta = { notificationTarget: 'my-client-list' };
+    (service as any).doRequest = vi.fn().mockResolvedValue([]);
+
+    await service.searchMyForestClients('client', 1, 5, meta);
+
+    expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+      method: 'GET',
+      url: '/api/forest-clients/clients',
+      query: { page: 1, size: 5, value: 'client' },
+      meta,
+    });
   });
 });

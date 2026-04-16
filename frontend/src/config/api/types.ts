@@ -100,6 +100,7 @@ export type APIConfig = {
   PASSWORD?: string | Resolver<string> | undefined;
   HEADERS?: Headers | Resolver<Headers> | undefined;
   ENCODE_PATH?: ((path: string) => string) | undefined;
+  MIDDLEWARE?: Array<ApiMiddleware>;
   TIMEOUT?: number;
   ADAPTER?: AxiosRequestConfig['adapter'];
 };

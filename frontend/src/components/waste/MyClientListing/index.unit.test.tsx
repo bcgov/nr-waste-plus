@@ -162,7 +162,9 @@ describe('MyClientListing', () => {
       await renderWithProps();
 
       await waitFor(() => {
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('', 0, 10);
+        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('', 0, 10, {
+          notificationTarget: 'my-client-list',
+        });
       });
     });
 
@@ -194,7 +196,9 @@ describe('MyClientListing', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('ABC', 0, 10);
+        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('ABC', 0, 10, {
+          notificationTarget: 'my-client-list',
+        });
       });
     });
 
@@ -270,7 +274,9 @@ describe('MyClientListing', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('', 0, 10);
+        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('', 0, 10, {
+          notificationTarget: 'my-client-list',
+        });
         expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledTimes(2);
       });
     });
@@ -290,7 +296,9 @@ describe('MyClientListing', () => {
       await userEvent.click(nextButton);
 
       await waitFor(() => {
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('', 1, 10);
+        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('', 1, 10, {
+          notificationTarget: 'my-client-list',
+        });
       });
     });
 

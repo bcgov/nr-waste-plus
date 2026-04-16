@@ -1,7 +1,6 @@
 import type { CodeDescriptionDto } from './types';
 import type { CancelablePromise } from '@/config/api/CancelablePromise';
 
-import { problemDetailsMiddleware } from '@/config/api/problemDetailsMiddleware';
 import { HttpClient, type APIConfig } from '@/config/api/types';
 
 /**
@@ -20,39 +19,42 @@ export class CodesService extends HttpClient {
   /**
    * Loads available sampling options.
    *
+   * @param meta Optional metadata to pass through the request pipeline.
    * @returns The sampling code descriptions.
    */
-  getSamplingOptions(): CancelablePromise<CodeDescriptionDto[]> {
+  getSamplingOptions(meta?: Record<string, unknown>): CancelablePromise<CodeDescriptionDto[]> {
     return this.doRequest<CodeDescriptionDto[]>(this.config, {
       method: 'GET',
       url: '/api/codes/samplings',
-      middleware: [problemDetailsMiddleware()],
+      ...(meta !== undefined ? { meta } : {}),
     });
   }
 
   /**
    * Loads the district list used by the application.
    *
+   * @param meta Optional metadata to pass through the request pipeline.
    * @returns The district code descriptions.
    */
-  getDistricts(): CancelablePromise<CodeDescriptionDto[]> {
+  getDistricts(meta?: Record<string, unknown>): CancelablePromise<CodeDescriptionDto[]> {
     return this.doRequest<CodeDescriptionDto[]>(this.config, {
       method: 'GET',
       url: '/api/codes/districts',
-      middleware: [problemDetailsMiddleware()],
+      ...(meta !== undefined ? { meta } : {}),
     });
   }
 
   /**
    * Loads available assessment area status values.
    *
+   * @param meta Optional metadata to pass through the request pipeline.
    * @returns The assessment area status code descriptions.
    */
-  getAssessAreaStatuses(): CancelablePromise<CodeDescriptionDto[]> {
+  getAssessAreaStatuses(meta?: Record<string, unknown>): CancelablePromise<CodeDescriptionDto[]> {
     return this.doRequest<CodeDescriptionDto[]>(this.config, {
       method: 'GET',
       url: '/api/codes/assess-area-statuses',
-      middleware: [problemDetailsMiddleware()],
+      ...(meta !== undefined ? { meta } : {}),
     });
   }
 }

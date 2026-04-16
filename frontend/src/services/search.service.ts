@@ -9,7 +9,6 @@ import type {
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { CancelablePromise } from '@/config/api/CancelablePromise';
 
-import { problemDetailsMiddleware } from '@/config/api/problemDetailsMiddleware';
 import { HttpClient, type APIConfig } from '@/config/api/types';
 
 /**
@@ -35,12 +34,13 @@ export class SearchService extends HttpClient {
   searchReportingUnit(
     filters: ReportingUnitSearchParametersDto,
     pageable: PageableRequest<ReportingUnitSearchResultDto>,
+    meta?: Record<string, unknown>,
   ): CancelablePromise<PageableResponse<ReportingUnitSearchResultDto>> {
     return this.doRequest<PageableResponse<ReportingUnitSearchResultDto>>(this.config, {
       method: 'GET',
       url: '/api/search/reporting-units',
       query: { ...removeEmpty(filters), ...removeEmpty(pageable) },
-      middleware: [problemDetailsMiddleware()],
+      ...(meta !== undefined ? { meta } : {}),
     });
   }
 
@@ -58,7 +58,6 @@ export class SearchService extends HttpClient {
     return this.doRequest<ReportingUnitSearchExpandedDto>(this.config, {
       method: 'GET',
       url: `/api/search/reporting-units/ex/${ruId}/${wasteAssessmentAreaId}`,
-      middleware: [problemDetailsMiddleware()],
     });
   }
 
@@ -73,7 +72,6 @@ export class SearchService extends HttpClient {
       method: 'GET',
       url: '/api/search/reporting-units-users',
       query: { userId },
-      middleware: [problemDetailsMiddleware()],
     });
   }
 }
