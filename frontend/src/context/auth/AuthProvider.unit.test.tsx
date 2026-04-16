@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeAll } from 'vitest';
 
 import { AuthContext } from './AuthContext';
 import { AuthProvider, preserveRolesReference } from './AuthProvider';
+import { Role, type FamLoginUser, type FamRole } from './types';
 
 import { jwtfy } from '@/config/tests/auth.helper';
 import { navigateTo } from '@/utils/navigation';
@@ -168,9 +169,9 @@ describe('AuthProvider (extra coverage)', () => {
 });
 
 describe('preserveRolesReference', () => {
-  const mockRoles = [{ role: 'VIEWER', clients: ['100'] }];
-  const mockRoles2 = [{ role: 'ADMIN', clients: ['200'] }];
-  const mockUser = {
+  const mockRoles: FamRole[] = [{ role: Role.VIEWER, clients: ['100'] }];
+  const mockRoles2: FamRole[] = [{ role: Role.ADMIN, clients: ['200'] }];
+  const mockUser: FamLoginUser = {
     userName: 'testuser',
     displayName: 'Test User',
     email: 'test@example.com',
@@ -203,8 +204,8 @@ describe('preserveRolesReference', () => {
   });
 
   it('preserves previous roles reference when role content is equal but reference differs', () => {
-    const previousRoles = [{ role: 'VIEWER', clients: ['100'] }];
-    const nextRoles = [{ role: 'VIEWER', clients: ['100'] }];
+    const previousRoles: FamRole[] = [{ role: Role.VIEWER, clients: ['100'] }];
+    const nextRoles: FamRole[] = [{ role: Role.VIEWER, clients: ['100'] }];
     const previousUser = { ...mockUser, roles: previousRoles };
     const nextUser = { ...mockUser, roles: nextRoles };
 
@@ -227,7 +228,7 @@ describe('preserveRolesReference', () => {
   });
 
   it('preserves roles while updating other user fields', () => {
-    const sharedRoles = [{ role: 'SUBMITTER', clients: ['300'] }];
+    const sharedRoles: FamRole[] = [{ role: Role.SUBMITTER, clients: ['300'] }];
     const previousUser = {
       ...mockUser,
       roles: sharedRoles,
