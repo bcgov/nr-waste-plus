@@ -364,6 +364,7 @@ describe('WasteSearchTable', () => {
         expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
           expect.objectContaining({ mainSearchTerm: '411B' }),
           expect.objectContaining({ page: 0, size: 10, sort: [] }),
+          expect.objectContaining({ notificationTarget: 'waste-search' }),
         );
       });
     });
@@ -460,6 +461,7 @@ describe('WasteSearchTable', () => {
         expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
           expect.objectContaining({ mainSearchTerm: 'BLOCK' }),
           expect.objectContaining({ page: 1, size: 10 }),
+          expect.objectContaining({ notificationTarget: 'waste-search' }),
         );
       });
     });
@@ -496,6 +498,7 @@ describe('WasteSearchTable', () => {
         expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
           expect.objectContaining({ mainSearchTerm: 'BLOCK' }),
           expect.objectContaining({ page: 0, size: 20 }),
+          expect.objectContaining({ notificationTarget: 'waste-search' }),
         );
       });
     });
@@ -524,6 +527,7 @@ describe('WasteSearchTable', () => {
         expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
           expect.anything(),
           expect.objectContaining({ page: 0 }),
+          expect.objectContaining({ notificationTarget: 'waste-search' }),
         );
       });
     });
@@ -571,6 +575,7 @@ describe('WasteSearchTable', () => {
         expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
           expect.objectContaining({ mainSearchTerm: 'BLOCK' }),
           expect.objectContaining({ page: 1, size: 10 }),
+          expect.objectContaining({ notificationTarget: 'waste-search' }),
         );
       });
 
@@ -591,6 +596,7 @@ describe('WasteSearchTable', () => {
         expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
           expect.objectContaining({ mainSearchTerm: 'LESS' }),
           expect.objectContaining({ page: 0 }),
+          expect.objectContaining({ notificationTarget: 'waste-search' }),
         );
       });
 
@@ -758,6 +764,7 @@ describe('WasteSearchTable', () => {
         expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
           expect.objectContaining({ mainSearchTerm: 'test' }),
           expect.anything(),
+          expect.objectContaining({ notificationTarget: 'waste-search' }),
         );
       });
     });
@@ -781,6 +788,7 @@ describe('WasteSearchTable', () => {
         expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
           expect.objectContaining({ mainSearchTerm: 'BLOCK' }),
           expect.objectContaining({ page: 0, size: 10 }),
+          expect.objectContaining({ notificationTarget: 'waste-search' }),
         );
       });
     });
