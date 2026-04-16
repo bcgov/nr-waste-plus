@@ -50,7 +50,7 @@ describe('useWasteSearchFilterOptions', () => {
     (APIs.codes.getSamplingOptions as Mock).mockResolvedValue(samplingData);
     (APIs.codes.getDistricts as Mock).mockResolvedValue(districtData);
     (APIs.codes.getAssessAreaStatuses as Mock).mockResolvedValue(statusData);
-  });;
+  });
 
   it('returns empty arrays before data is loaded', () => {
     (APIs.codes.getSamplingOptions as Mock).mockReturnValue(new Promise(() => {}));
