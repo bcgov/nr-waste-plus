@@ -10,8 +10,12 @@ vi.mock('@/hooks/useNotificationEvents/eventHandler', () => ({
   sendEvent: vi.fn(),
 }));
 
+type MockRequestConfig = Partial<InternalAxiosRequestConfig<unknown>> & {
+  meta?: Record<string, unknown>;
+};
+
 const makeConfig = (
-  overrides: Partial<InternalAxiosRequestConfig<unknown>> = {},
+  overrides: MockRequestConfig = {},
 ): InternalAxiosRequestConfig<unknown> => ({
   headers: {},
   method: 'get',
