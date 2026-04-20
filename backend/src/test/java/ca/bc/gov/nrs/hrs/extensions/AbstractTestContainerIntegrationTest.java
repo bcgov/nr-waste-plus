@@ -10,7 +10,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
@@ -20,12 +19,15 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @ContextConfiguration
 public abstract class AbstractTestContainerIntegrationTest {
 
-  @Container
   static final PostgreSQLContainer postgres =
       new PostgreSQLContainer("postgres:17")
           .withDatabaseName("hrs")
           .withUsername("hrs")
           .withPassword(UUID.randomUUID().toString());
+
+  static {
+    postgres.start();
+  }
 
   @DynamicPropertySource
   static void registerDynamicProperties(DynamicPropertyRegistry registry) {

@@ -24,6 +24,12 @@ management:
     sampling:
       probability: 1.0
 
+# Feature flags for testing
+features:
+  flags:
+    enabled-flag: true
+    disabled-flag: false
+
 logging:
   level:
     #root: DEBUG

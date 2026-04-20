@@ -12,7 +12,7 @@ type Listener = (online: boolean) => void;
  * If the flag is false, the application will always be considered online.
  */
 class OnlineStatusStore {
-  private isOnline = featureFlags.OFFLINE ? navigator.onLine : true;
+  private isOnline = featureFlags['offline-mode-enabled'] ? navigator.onLine : true;
   private listeners: Listener[] = [];
 
   constructor() {
@@ -24,7 +24,7 @@ class OnlineStatusStore {
   private readonly setOnlineFalse = () => this.setOnline(false);
 
   private setOnline(value: boolean) {
-    if (!featureFlags.OFFLINE) return;
+    if (!featureFlags['offline-mode-enabled']) return;
     this.isOnline = value;
     for (const listener of this.listeners) {
       listener(this.isOnline);

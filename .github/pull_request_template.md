@@ -46,6 +46,21 @@ Fixes # (issue)
 - [x] New and existing unit tests pass locally with my changes
 - [x] Any dependent changes have already been accepted and merged
 
+## Feature-Flag Controlled Changes (Required if applicable)
+
+If this PR adds, changes, or removes behavior behind a feature flag, this section is required.
+Use the architecture checklist in the Feature Flags page as the source of truth.
+
+- [ ] Not applicable: no feature-flag-controlled behavior changed in this PR
+- [ ] Canonical key follows `<domain>-<capability>-enabled`
+- [ ] Frontend and backend use the same canonical key
+- [ ] Default state is documented per environment
+- [ ] Owner, rollout plan, and removal criteria are documented
+- [ ] Tests cover enabled, disabled, and undefined behavior
+- [ ] A removal target date is assigned for short-lived flags
+
+If any required checkbox above is unchecked, stop and resolve before requesting review.
+
 
 ## Further comments
 
