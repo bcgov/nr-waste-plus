@@ -30,10 +30,10 @@ import org.springframework.stereotype.Component;
  *     staff-match: false
  * }</pre>
  *
- * <p>Usage: inject {@code FeatureFlags} and call {@link #isEnabled(String)}:
+ * <p>Usage: inject {@code FeatureFlagsConfiguration} and call {@link #isEnabled(String)}:
  *
  * <pre>{@code
- * if (featureFlags.isEnabled("multi-address")) { … }
+ * if (featureFlagsConfiguration.isEnabled("multi-address")) { … }
  * }</pre>
  *
  * Flags that are not defined default to {@code false} (disabled).
