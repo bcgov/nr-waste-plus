@@ -1,3 +1,6 @@
+-- Ensure schema exists for multi-schema deployments
+create schema if not exists hrs;
+
 create table if not exists hrs.user_identity (
     sub              varchar(128)    not null,
     email            varchar(255),
@@ -27,4 +30,12 @@ comment on column hrs.user_identity.idp_display_name is 'Display name from the i
 comment on column hrs.user_identity.idp_business_id is 'BCeID business identifier from custom:idp_business_id; null for IDIR users';
 comment on column hrs.user_identity.raw_attributes is 'Full raw attribute map returned by Cognito userInfo, stored for future use';
 comment on column hrs.user_identity.last_synced_at is 'Timestamp of the last successful sync with Cognito; used for staleness checks';
+
+-- Performance indexes on frequently queried columns
+create index if not exists idx_user_identity_email on hrs.user_identity (email);
+create index if not exists idx_user_identity_idp_name on hrs.user_identity (idp_name);
+
+-- GIN index for JSONB queries on raw_attributes
+create index if not exists idx_user_identity_raw_attributes_gin on hrs.user_identity using gin (raw_attributes);
+
 
