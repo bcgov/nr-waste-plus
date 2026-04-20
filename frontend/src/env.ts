@@ -94,9 +94,9 @@ export type FeatureFlags = z.infer<typeof featureFlagsSchema>;
 type RuntimeConfig = z.infer<typeof runtimeConfigSchema>;
 
 /**
- * True only inside the Vitest environment. Enables strict (throw) behaviour for
- * feature-flag validation so that misconfigured flags fail fast in CI while the
- * production runtime degrades gracefully.
+ * True when running with Vite mode set to `test`. Enables strict (throw)
+ * behaviour for feature-flag validation so that misconfigured flags fail fast
+ * in CI while the production runtime degrades gracefully.
  */
 const isStrictFlagValidation = import.meta.env.MODE === 'test';
 
