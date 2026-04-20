@@ -22,10 +22,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity} for configured paths.
  *
  * <p>Runs after JWT validation. For matching paths it extracts the Cognito
- * {@code sub} and access token, delegates to {@link UserIdentityService} (DB first,
- * Cognito fallback) and replaces the principal with a
- * {@link UserIdentityAuthentication}. If lookup fails the original principal
- * is preserved so the request proceeds normally.</p>
+ * {@code sub} and access token, delegates to {@link UserIdentityService} to
+ * retrieve or refresh the identity from Cognito (optionally persisting it),
+ * and replaces the principal with a {@link UserIdentityAuthentication}. If
+ * lookup fails the original principal is preserved so the request proceeds
+ * normally.</p>
  *
  * <p>Hydrated paths are configurable via
  * {@code ca.bc.gov.nrs.hydration.paths} in {@code application.yml}.</p>
