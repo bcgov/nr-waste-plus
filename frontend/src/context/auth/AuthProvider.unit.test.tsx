@@ -18,7 +18,8 @@ vi.mock('aws-amplify/auth', () => ({
 
 vi.mock('./authUtils', () => ({
   parseToken: vi.fn((token) => ({ id: 'user', name: 'Test User', token })),
-  getUserTokenFromCookie: vi.fn(() => undefined),
+  getUserAccessTokenFromCookie: vi.fn(() => undefined),
+  getUserIdTokenFromCookie: vi.fn(() => undefined),
 }));
 
 vi.mock('@/utils/navigation', () => ({
@@ -98,8 +99,8 @@ describe('AuthProvider (extra coverage)', () => {
     });
 
     it('calls userToken and returns value', async () => {
-      const { getUserTokenFromCookie } = await import('./authUtils');
-      (getUserTokenFromCookie as any).mockReturnValue('sometoken');
+      const { getUserAccessTokenFromCookie } = await import('./authUtils');
+      (getUserAccessTokenFromCookie as any).mockReturnValue('sometoken');
       let context: any;
       render(
         <AuthProvider>
@@ -140,8 +141,8 @@ describe('AuthProvider (extra coverage)', () => {
       expect(fetchAuthSession).not.toHaveBeenCalled();
     });
 
-    it("calls getUserTokenFromCookie and sets the user token payload to the cookie's decoded value", async () => {
-      const { getUserTokenFromCookie } = await import('./authUtils');
+    it("calls getUserIdTokenFromCookie and sets the user token payload to the cookie's decoded value", async () => {
+      const { getUserIdTokenFromCookie } = await import('./authUtils');
 
       const payload = {
         testKey: 'testValue',
@@ -149,7 +150,7 @@ describe('AuthProvider (extra coverage)', () => {
 
       const jwt = jwtfy(payload);
 
-      (getUserTokenFromCookie as any).mockReturnValue(jwt);
+      (getUserIdTokenFromCookie as any).mockReturnValue(jwt);
       let context: any;
       render(
         <AuthProvider>
@@ -162,7 +163,7 @@ describe('AuthProvider (extra coverage)', () => {
         </AuthProvider>,
       );
       await waitFor(() => expect(context).toBeDefined());
-      expect(getUserTokenFromCookie).toHaveBeenCalled();
+      expect(getUserIdTokenFromCookie).toHaveBeenCalled();
       expect(context.user.token.payload).toEqual(payload);
     });
   });

@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { getCookie, getUserTokenFromCookie, parseToken } from './authUtils';
+import {
+  getCookie,
+  getUserAccessTokenFromCookie,
+  getUserIdTokenFromCookie,
+  getUserTokenFromCookie,
+  parseToken,
+} from './authUtils';
 
 // Mock env
 vi.mock(import('@/env'), async (importOriginal) => {
@@ -24,7 +30,7 @@ describe('authUtils', () => {
         writable: true,
         configurable: true,
         value:
-          'foo=bar; CognitoIdentityServiceProvider.test-client-id.LastAuthUser=theuser; CognitoIdentityServiceProvider.test-client-id.theuser.idToken=thetoken',
+          'foo=bar; CognitoIdentityServiceProvider.test-client-id.LastAuthUser=theuser; CognitoIdentityServiceProvider.test-client-id.theuser.idToken=idtoken; CognitoIdentityServiceProvider.test-client-id.theuser.accessToken=accesstoken',
       });
     });
     afterEach(() => {
@@ -45,27 +51,35 @@ describe('authUtils', () => {
     });
   });
 
-  describe('getUserTokenFromCookie', () => {
+  describe('token getters', () => {
     beforeEach(() => {
       Object.defineProperty(document, 'cookie', {
         writable: true,
         configurable: true,
         value:
-          'CognitoIdentityServiceProvider.test-client-id.LastAuthUser=theuser; CognitoIdentityServiceProvider.test-client-id.theuser.idToken=thetoken',
+          'CognitoIdentityServiceProvider.test-client-id.LastAuthUser=theuser; CognitoIdentityServiceProvider.test-client-id.theuser.idToken=idtoken; CognitoIdentityServiceProvider.test-client-id.theuser.accessToken=accesstoken',
       });
     });
     afterEach(() => {
       vi.clearAllMocks();
     });
-    it('returns the idToken from cookies', () => {
-      expect(getUserTokenFromCookie()).toBe('thetoken');
+    it('returns the accessToken from cookies', () => {
+      expect(getUserAccessTokenFromCookie()).toBe('accesstoken');
+      expect(getUserTokenFromCookie()).toBe('accesstoken');
     });
+
+    it('returns the idToken from cookies', () => {
+      expect(getUserIdTokenFromCookie()).toBe('idtoken');
+    });
+
     it('returns undefined if no userId', () => {
       Object.defineProperty(document, 'cookie', {
         writable: true,
         configurable: true,
         value: '',
       });
+      expect(getUserAccessTokenFromCookie()).toBeUndefined();
+      expect(getUserIdTokenFromCookie()).toBeUndefined();
       expect(getUserTokenFromCookie()).toBeUndefined();
     });
   });
