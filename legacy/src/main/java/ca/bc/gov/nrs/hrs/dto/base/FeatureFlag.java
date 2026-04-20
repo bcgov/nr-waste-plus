@@ -1,13 +1,11 @@
 package ca.bc.gov.nrs.hrs.dto.base;
 
-import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
-
 /**
  * Known feature flag keys for compile-time discoverability.
  *
  * <p>Use constants from this enum with
- * {@link FeatureFlagsConfiguration#isEnabled(FeatureFlag)} to avoid free-form
- * string access and reduce the risk of silent typos in flag names.
+ * {@link ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration#isEnabled(FeatureFlag)}
+ * to avoid free-form string access and reduce the risk of silent typos in flag names.
  *
  * <p>Naming convention: enum constant names use {@code SCREAMING_SNAKE_CASE}; the
  * corresponding YAML key uses the canonical {@code <domain>-<capability>-enabled}
