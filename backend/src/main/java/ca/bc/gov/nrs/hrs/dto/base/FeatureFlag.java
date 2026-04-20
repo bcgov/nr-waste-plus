@@ -31,7 +31,16 @@ package ca.bc.gov.nrs.hrs.dto.base;
  */
 public enum FeatureFlag {
 
-  OFFLINE_MODE_ENABLED("offline-mode-enabled");
+  OFFLINE_MODE_ENABLED("offline-mode-enabled"),
+
+  /**
+   * Controls whether hydrated user identity attributes are persisted locally.
+   *
+   * <p>When disabled, the application still calls Cognito {@code /oauth2/userInfo}
+   * for request-time hydration but does not write/read identity data from the database.
+   * This allows privacy-first rollout while keeping the hydration pipeline active.</p>
+   */
+  USER_IDENTITY_PERSISTENCE_ENABLED("user-identity-persistence-enabled");
 
   private final String key;
 

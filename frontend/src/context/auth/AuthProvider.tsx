@@ -3,7 +3,7 @@ import isEqual from 'lodash/isEqual';
 import { useEffect, useMemo, useState, useCallback, type ReactNode } from 'react';
 
 import { AuthContext, type AuthContextType } from './AuthContext';
-import { parseToken, getUserTokenFromCookie } from './authUtils';
+import { parseToken, getUserAccessTokenFromCookie, getUserIdTokenFromCookie } from './authUtils';
 import { type FamLoginUser, type IdpProviderType, type JWT } from './types';
 
 import { signOutUrl } from '@/config/fam/config';
@@ -46,10 +46,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const appEnv = Number.isNaN(Number(env.VITE_ZONE)) ? (env.VITE_ZONE ?? 'TEST') : 'TEST';
   const isMock = env.VITE_MOCK_AUTH === 'true';
 
-  const loadUserToken = useCallback(async (): Promise<JWT | undefined> => {
+  const loadUserIdToken = useCallback(async (): Promise<JWT | undefined> => {
     if (isMock) {
       // This is for test only
-      const idToken = getUserTokenFromCookie();
+      const idToken = getUserIdTokenFromCookie();
       const payload = idToken ? JSON.parse(atob(idToken.split('.')[1])) : null;
       return payload ? { payload } : undefined;
     }
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     async (silent = false) => {
       if (!silent) setIsLoading(true);
       try {
-        const idToken = await loadUserToken();
+        const idToken = await loadUserIdToken();
         const newUser = idToken ? parseToken(idToken) : undefined;
         setUser((prev) => {
           if (isEqual(prev, newUser)) return prev;
@@ -80,7 +80,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (!silent) setIsLoading(false);
       }
     },
-    [loadUserToken],
+    [loadUserIdToken],
   );
 
   useEffect(() => {
@@ -118,9 +118,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     navigateTo(signOutUrl);
   };
 
-  // Memoized function to get the current user's idToken from localStorage (via getUserTokenFromCookie)
+  // Memoized function to get the current user's access token from cookies.
   const userToken = useCallback(() => {
-    return getUserTokenFromCookie();
+    return getUserAccessTokenFromCookie();
   }, []);
 
   const contextValue: AuthContextType = useMemo(

@@ -247,10 +247,24 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
         </ReadonlyInput>
       </Column>
       <Column lg={3} md={3} sm={4}>
-        <p>Blocks in the RU: {data?.totalBlocks ?? 0}</p>
+        <ReadonlyInput
+          label=""
+          id={`${rowId}-block-count`}
+          isNumber={false}
+          showSkeleton={isLoading}
+        >
+          Blocks in the RU: {data?.totalBlocks ?? 0}
+        </ReadonlyInput>
       </Column>
       <Column lg={13} md={5} sm={4}>
-        <p>Secondary marks in the block: {data?.totalChildren ?? 0}</p>
+        <ReadonlyInput
+          label=""
+          id={`${rowId}-secondary-marks-count`}
+          isNumber={false}
+          showSkeleton={isLoading}
+        >
+          Secondary marks in the block: {data?.totalChildren ?? 0}
+        </ReadonlyInput>
       </Column>
     </Grid>
   );

@@ -24,10 +24,24 @@ export const getCookie = (name: string): string => {
 };
 
 /**
+ * Retrieves the Cognito accessToken for the current user from cookies.
+ * @returns {string | undefined} The accessToken string, or undefined if not found.
+ */
+export const getUserAccessTokenFromCookie = (): string | undefined => {
+  const baseCookieName = `CognitoIdentityServiceProvider.${env.VITE_USER_POOLS_WEB_CLIENT_ID}`;
+  const userId = encodeURIComponent(getCookie(`${baseCookieName}.LastAuthUser`));
+  if (userId) {
+    return getCookie(`${baseCookieName}.${userId}.accessToken`);
+  } else {
+    return undefined;
+  }
+};
+
+/**
  * Retrieves the Cognito idToken for the current user from cookies.
  * @returns {string | undefined} The idToken string, or undefined if not found.
  */
-export const getUserTokenFromCookie = (): string | undefined => {
+export const getUserIdTokenFromCookie = (): string | undefined => {
   const baseCookieName = `CognitoIdentityServiceProvider.${env.VITE_USER_POOLS_WEB_CLIENT_ID}`;
   const userId = encodeURIComponent(getCookie(`${baseCookieName}.LastAuthUser`));
   if (userId) {
@@ -36,6 +50,12 @@ export const getUserTokenFromCookie = (): string | undefined => {
     return undefined;
   }
 };
+
+/**
+ * Backward-compatible alias for existing call sites.
+ * Uses the access token because API authorization depends on it.
+ */
+export const getUserTokenFromCookie = getUserAccessTokenFromCookie;
 
 /**
  * Parses a JWT token and returns a FamLoginUser object if valid.

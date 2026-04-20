@@ -424,6 +424,8 @@ describe('WasteSearchTableExpandContent', () => {
         expect(container.querySelector(`#${rowId}-submitter`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-attachments-comments`)).toBeDefined();
         expect(container.querySelector(`#${rowId}-comment`)).toBeDefined();
+        expect(container.querySelector(`#${rowId}-block-count`)).toBeDefined();
+        expect(container.querySelector(`#${rowId}-secondary-marks-count`)).toBeDefined();
       });
     });
   });

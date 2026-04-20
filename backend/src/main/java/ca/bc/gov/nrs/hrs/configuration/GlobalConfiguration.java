@@ -7,6 +7,7 @@ import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientLocationDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity;
 import ca.bc.gov.nrs.hrs.entity.users.UserPreferenceEntity;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
@@ -48,6 +49,7 @@ import tools.jackson.databind.json.JsonMapper.Builder;
     CodeDescriptionDto.class,
     CodeNameDto.class,
     UserPreferenceEntity.class,
+    UserIdentityEntity.class,
     ForestClientNotFoundException.class,
     NotFoundGenericException.class,
     RequestException.class,
@@ -61,6 +63,31 @@ import tools.jackson.databind.json.JsonMapper.Builder;
 })
 @EnableJpaAuditing(auditorAwareRef = "databaseAuditor")
 public class GlobalConfiguration {
+
+  /**
+   * Builds a {@link RestClient} configured to call the Cognito userInfo endpoint.
+   *
+   * <p>The base URL is set to the configured Cognito userInfo URI from
+   * {@link HrsConfiguration}. B3 trace headers are forwarded to Cognito via
+   * the supplied {@link B3HeaderForwarder}. No default Authorization header is
+   * set here — each call supplies its own Bearer token.
+   * </p>
+   *
+   * @param configuration application configuration providing the Cognito userInfo URI
+   * @param b3Header      request initializer that forwards B3 trace headers
+   * @return a configured {@link RestClient} for the Cognito userInfo endpoint
+   */
+  @Bean
+  public RestClient cognitoApi(
+      HrsConfiguration configuration,
+      B3HeaderForwarder b3Header
+  ) {
+    return RestClient
+        .builder()
+        .baseUrl(configuration.getCognito().getUserinfoUri())
+        .requestInitializer(b3Header)
+        .build();
+  }
 
   /**
    * Builds a {@link RestClient} configured to call the Forest Client API.

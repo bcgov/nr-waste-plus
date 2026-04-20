@@ -8,6 +8,7 @@ import type { Page } from '@playwright/test';
 interface CookieData {
   lastAuthUser: string;
   idToken: string;
+  accessToken: string;
 }
 
 const defaultGroups = {
@@ -59,6 +60,9 @@ const setupCustomClaims = (
     idToken: jwtfy(
       userType === 'idir' ? { ...idir, ...claimOverrides } : { ...bceid, ...claimOverrides },
     ),
+    accessToken: jwtfy(
+      userType === 'idir' ? { ...idir, ...claimOverrides } : { ...bceid, ...claimOverrides },
+    ),
   };
 };
 
@@ -69,7 +73,7 @@ export async function mockJwt(
 ) {
   const cookieData = setupCustomClaims(metadata.userType.toLowerCase(), claimOverrides);
 
-  const { lastAuthUser, idToken } = cookieData;
+  const { lastAuthUser, idToken, accessToken } = cookieData;
 
   const clientId = metadata.userPoolsClientId ?? process.env.VITE_USER_POOLS_WEB_CLIENT_ID;
   if (!clientId) {
@@ -81,6 +85,9 @@ export async function mockJwt(
   await page
     .context()
     .clearCookies({ name: `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.idToken` });
+  await page
+    .context()
+    .clearCookies({ name: `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.accessToken` });
   await page.context().addCookies([
     {
       name: `CognitoIdentityServiceProvider.${clientId}.LastAuthUser`,
@@ -93,6 +100,14 @@ export async function mockJwt(
     {
       name: `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.idToken`,
       value: idToken,
+      sameSite: 'Lax',
+      expires: 2908989880,
+      path: '/',
+      domain: 'localhost',
+    },
+    {
+      name: `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.accessToken`,
+      value: accessToken,
       sameSite: 'Lax',
       expires: 2908989880,
       path: '/',
