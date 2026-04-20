@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @DisplayName("Integrated Test | FeatureFlagsConfiguration")
-class FeatureFlagsConfigurationConfigurationIntegrationTest extends AbstractTestContainerIntegrationTest {
+class FeatureFlagsConfigurationIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @Autowired
   private FeatureFlagsConfiguration featureFlagsConfiguration;
