@@ -30,8 +30,8 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
  * ID token are absent from the access token and can only be retrieved via the Cognito
  * {@code /oauth2/userInfo} endpoint (persisted in
  * {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity}). Methods that read such
- * claims are marked {@link Deprecated} and will return an empty string when called
- * against an access token. They should be replaced with reads from
+ * claims are marked {@link Deprecated}; when called against an access token, they may
+ * return an empty string. They should be replaced with reads from
  * {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity} via
  * {@link ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()}.
  * </p>
