@@ -13,7 +13,6 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service responsible for hydrating user identity data from Cognito's
@@ -32,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserIdentityService {
 
   private final UserIdentityRepository repository;
+  private final UserIdentityPersistenceService userIdentityPersistenceService;
   private final CognitoUserInfoClient cognitoClient;
   private final FeatureFlagsConfiguration featureFlagsConfiguration;
 
@@ -47,7 +47,6 @@ public class UserIdentityService {
    * @return hydrated identity if Cognito call succeeds; otherwise empty
    */
   @NewSpan
-  @Transactional
   public Optional<UserIdentityEntity> getOrRefreshBySub(String sub, String accessToken) {
     return cognitoClient.fetchUserInfo(accessToken)
         .map(info -> maybePersist(toEntity(sub, info)));
@@ -74,7 +73,7 @@ public class UserIdentityService {
   private UserIdentityEntity maybePersist(UserIdentityEntity hydratedIdentity) {
     if (isPersistenceEnabled()) {
       log.debug("Persisting hydrated identity for sub={}", hydratedIdentity.getSub());
-      return repository.save(hydratedIdentity);
+      return userIdentityPersistenceService.saveHydratedIdentity(hydratedIdentity);
     }
     return hydratedIdentity;
   }

@@ -28,6 +28,9 @@ class UserIdentityServiceTest {
   private UserIdentityRepository repository;
 
   @Mock
+  private UserIdentityPersistenceService userIdentityPersistenceService;
+
+  @Mock
   private CognitoUserInfoClient cognitoClient;
 
   @Mock
@@ -60,14 +63,16 @@ class UserIdentityServiceTest {
         .thenReturn(true);
     when(cognitoClient.fetchUserInfo("token"))
         .thenReturn(Optional.of(sampleResponse("sub-from-user-info")));
-    when(repository.save(org.mockito.ArgumentMatchers.any(UserIdentityEntity.class)))
+    when(userIdentityPersistenceService.saveHydratedIdentity(
+        org.mockito.ArgumentMatchers.any(UserIdentityEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     Optional<UserIdentityEntity> result = service.getOrRefreshBySub("sub-from-jwt", "token");
 
     assertThat(result).isPresent();
     verify(cognitoClient).fetchUserInfo("token");
-    verify(repository).save(org.mockito.ArgumentMatchers.any(UserIdentityEntity.class));
+    verify(userIdentityPersistenceService)
+        .saveHydratedIdentity(org.mockito.ArgumentMatchers.any(UserIdentityEntity.class));
     verify(repository, never()).findById(org.mockito.ArgumentMatchers.anyString());
   }
 
