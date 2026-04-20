@@ -31,7 +31,7 @@ public class DatabaseAuditor implements AuditorAware<String> {
    */
   @Override
   public Optional<String> getCurrentAuditor() {
-    return Optional.ofNullable(SecurityContextHolder.getContext())
+    return Optional.of(SecurityContextHolder.getContext())
         .map(SecurityContext::getAuthentication)
         .filter(Authentication::isAuthenticated)
         .map(Authentication::getPrincipal)

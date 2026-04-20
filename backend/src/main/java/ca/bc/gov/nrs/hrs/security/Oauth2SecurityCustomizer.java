@@ -53,7 +53,7 @@ public class Oauth2SecurityCustomizer implements
     return jwt -> {
       Collection<GrantedAuthority> authorities = authConverter.convert(jwt);
 
-      if (authorities == null || authorities.isEmpty()) {
+      if (authorities.isEmpty()) {
         authorities = fetchAuthoritiesFromUserInfo(jwt.getTokenValue());
       }
 
