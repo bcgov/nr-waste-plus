@@ -13,7 +13,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.core.env.Environment;
 
 @DisplayName("Unit Test | FeatureFlagsConfiguration")
-class FeatureFlagsConfigurationConfigurationTest {
+class FeatureFlagsConfigurationTest {
 
   private static final String FEATURE_NAME = "my-feature";
 
