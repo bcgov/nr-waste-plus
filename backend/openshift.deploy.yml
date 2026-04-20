@@ -34,6 +34,9 @@ parameters:
   - name: COGNITO_REGION
     description: Cognito region to be used
     value: 'ca-central-1'
+  - name: COGNITO_DOMAIN
+    description: Cognito domain to be used
+    value: 'lza-prod-fam-user-pool-domain'
   - name: FRONTEND_URL
     description: Frontend URL
     required: true
@@ -111,6 +114,8 @@ objects:
                       key: cognito-user-pool
                 - name: COGNITO_REGION
                   value: ${COGNITO_REGION}
+                - name: COGNITO_DOMAIN
+                  value: ${COGNITO_DOMAIN}
                 - name: TZ
                   value: America/Vancouver
                 - name: APP_ZONE

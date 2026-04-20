@@ -47,6 +47,18 @@ public class HrsConfiguration {
   private FrontEndConfiguration frontend;
 
   /**
+   * Cognito-specific configuration (userInfo URI and identity TTL).
+   */
+  @NestedConfigurationProperty
+  private CognitoConfiguration cognito;
+
+  /**
+   * Identity hydration configuration (which paths trigger hydration).
+   */
+  @NestedConfigurationProperty
+  private HydrationConfiguration hydration;
+
+  /**
    * External API address configuration.
    *
    * <p>Holds the remote service base URL and an optional API key used to
@@ -130,6 +142,52 @@ public class HrsConfiguration {
      * to the configured frontend URL(s) when setting up CORS mappings for API endpoints.
      */
     private List<String> origins;
+  }
+
+  /**
+   * Cognito configuration.
+   *
+   * <p>Holds the Cognito userInfo endpoint URI and the TTL after which a
+   * persisted identity record is considered stale and must be refreshed.</p>
+   */
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class CognitoConfiguration {
+
+    /**
+     * Full URL of the Cognito {@code /oauth2/userInfo} endpoint.
+     * Defaults to the standard Cognito path derived from region and pool env vars.
+     */
+    private String userinfoUri;
+
+    /**
+     * How long a locally persisted identity is considered fresh before
+     * a Cognito refresh is triggered. Defaults to 24 hours.
+     */
+    @Builder.Default
+    private Duration identityTtl = Duration.ofHours(24);
+  }
+
+  /**
+   * Identity hydration configuration.
+   *
+   * <p>Defines the list of request paths that will trigger user identity
+   * hydration via the {@code UserIdentityHydrationFilter}.</p>
+   */
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class HydrationConfiguration {
+
+    /**
+     * List of path prefixes for which identity hydration is performed.
+     * Any request whose URI starts with one of these values will be hydrated.
+     */
+    @Builder.Default
+    private List<String> paths = List.of("/api/users/preferences");
   }
 
 }

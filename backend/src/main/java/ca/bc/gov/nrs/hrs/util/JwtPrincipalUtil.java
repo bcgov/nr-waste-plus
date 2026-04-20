@@ -24,6 +24,17 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
  *    and {@link Jwt} instances. Methods include retrieval of provider, user id, business
  *    identifiers, names, groups and role/client mappings. The class is non-instantiable.
  * </p>
+ *
+ * <p><strong>Access-token migration note:</strong> The application now validates Cognito
+ * <em>access tokens</em> instead of ID tokens. Several claims that were present in the
+ * ID token are absent from the access token and can only be retrieved via the Cognito
+ * {@code /oauth2/userInfo} endpoint (persisted in
+ * {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity}). Methods that read such
+ * claims are marked {@link Deprecated} and will return an empty string when called
+ * against an access token. They should be replaced with reads from
+ * {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity} via
+ * {@link ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()}.
+ * </p>
  */
 @NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public class JwtPrincipalUtil {
@@ -98,7 +109,11 @@ public class JwtPrincipalUtil {
    *
    * @param principal JwtAuthenticationToken object from which the business ID is to be extracted.
    * @return The business ID, or an empty string if the business ID is blank.
+   * @deprecated {@code custom:idp_business_id} is not present in Cognito access tokens.
+   *     Use {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity#getBusinessId()} obtained
+   *     from {@link ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()} instead.
    */
+  @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getBusinessId(JwtAuthenticationToken principal) {
     return getBusinessIdValue(principal.getTokenAttributes());
   }
@@ -110,7 +125,11 @@ public class JwtPrincipalUtil {
    *
    * @param principal Jwt object from which the business ID is to be extracted.
    * @return The business ID, or an empty string if the business ID is blank.
+   * @deprecated {@code custom:idp_business_id} is not present in Cognito access tokens.
+   *     Use {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity#getBusinessId()} obtained
+   *     from {@link ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()} instead.
    */
+  @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getBusinessId(Jwt principal) {
     return getBusinessIdValue(principal.getClaims());
   }
@@ -123,7 +142,11 @@ public class JwtPrincipalUtil {
    * @param principal JwtAuthenticationToken object from which the business name is to be
    *        extracted.
    * @return The business name, or an empty string if the business name is blank.
+   * @deprecated {@code custom:idp_business_name} is not present in Cognito access tokens or in
+   *     the Cognito {@code /oauth2/userInfo} response. This method will always return an empty
+   *     string when called against an access token. Schedule for removal after callers are audited.
    */
+  @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getBusinessName(JwtAuthenticationToken principal) {
     return getBusinessNameValue(principal.getTokenAttributes());
   }
@@ -135,161 +158,157 @@ public class JwtPrincipalUtil {
    *
    * @param principal Jwt object from which the business name is to be extracted.
    * @return The business name, or an empty string if the business name is blank.
+   * @deprecated {@code custom:idp_business_name} is not present in Cognito access tokens or in
+   *     the Cognito {@code /oauth2/userInfo} response. This method will always return an empty
+   *     string when called against an access token. Schedule for removal after callers are audited.
    */
+  @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getBusinessName(Jwt principal) {
     return getBusinessNameValue(principal.getClaims());
   }
 
   /**
-   * Retrieves the business name from the given JwtAuthenticationToken principal. The business name
-   * is extracted from the token attributes under the key "custom:idp_business_name". If the
-   * business name is blank, an empty string is returned.
+   * Retrieves the email address from the given JwtAuthenticationToken principal.
    *
-   * @param principal JwtAuthenticationToken object from which the business name is to be
-   *        extracted.
-   * @return The business name, or an empty string if the business name is blank.
+   * @param principal JwtAuthenticationToken object from which the email is to be extracted.
+   * @return The email, or an empty string if the claim is blank.
+   * @deprecated {@code email} is not present in Cognito access tokens.
+   *     Use {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity#getEmail()} obtained
+   *     from {@link ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()} instead.
    */
+  @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getEmail(JwtAuthenticationToken principal) {
     return getEmailValue(principal.getTokenAttributes());
   }
 
   /**
-   * Retrieves the business name from the given Jwt principal. The business name is extracted from
-   * the token attributes under the key "custom:idp_business_name". If the business name is blank,
-   * an empty string is returned.
+   * Retrieves the email address from the given Jwt principal.
    *
-   * @param principal Jwt object from which the business name is to be extracted.
-   * @return The business name, or an empty string if the business name is blank.
+   * @param principal Jwt object from which the email is to be extracted.
+   * @return The email, or an empty string if the claim is blank.
+   * @deprecated {@code email} is not present in Cognito access tokens.
+   *     Use {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity#getEmail()} obtained
+   *     from {@link ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()} instead.
    */
+  @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getEmail(Jwt principal) {
     return getEmailValue(principal.getClaims());
   }
 
   /**
-   * Retrieves the display name from the given JwtAuthenticationToken principal. The display name is
-   * extracted from the token attributes under the key "custom:idp_display_name". If the display
-   * name is blank, the first and last names are extracted and concatenated. If both the first and
-   * last names are blank, an empty string is returned.
+   * Retrieves the display name from the given JwtAuthenticationToken principal.
    *
    * @param principal JwtAuthenticationToken object from which the display name is to be extracted.
-   * @return The display name, or the concatenated first and last names, or an empty string if both
-   *        the display name and the first and last names are blank.
+   * @return The display name, or concatenated first/last names, or an empty string.
+   * @deprecated {@code custom:idp_display_name}, {@code given_name} and {@code family_name} are
+   *     not present in Cognito access tokens — this method will always return an empty string.
+   *     Use {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity#getIdpDisplayName()} obtained
+   *     from {@link ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()} instead.
    */
+  @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getName(JwtAuthenticationToken principal) {
     return getNameValue(principal.getTokenAttributes());
   }
 
   /**
-   * Retrieves the display name from the given Jwt principal. The display name is extracted from the
-   * token attributes under the key "custom:idp_display_name". If the display name is blank, the
-   * first and last names are extracted and concatenated. If both the first and last names are
-   * blank, an empty string is returned.
+   * Retrieves the display name from the given Jwt principal.
    *
    * @param principal Jwt object from which the display name is to be extracted.
-   * @return The display name, or the concatenated first and last names, or an empty string if both
-   *        the display name and the first and last names are blank.
+   * @return The display name, or concatenated first/last names, or an empty string.
+   * @deprecated {@code custom:idp_display_name}, {@code given_name} and {@code family_name} are
+   *     not present in Cognito access tokens — this method will always return an empty string.
+   *     Use {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity#getIdpDisplayName()} obtained
+   *     from {@link ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()} instead.
    */
+  @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getName(Jwt principal) {
     return getNameValue(principal.getClaims());
   }
 
   /**
-   * Retrieves the first name from the given JwtAuthenticationToken principal. The first name is
-   * extracted from the token attributes under the key "given_name". If the first name is blank, an
-   * empty string is returned.
+   * Retrieves the first name from the given JwtAuthenticationToken principal.
    *
    * @param principal JwtAuthenticationToken object from which the first name is to be extracted.
    * @return The first name or an empty string if the first name is blank.
+   * @deprecated {@code given_name} is not present in Cognito access tokens or in the
+   *     {@code /oauth2/userInfo} response for any known identity provider. This method will
+   *     always return an empty string. Schedule for removal after callers are audited.
    */
+  @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getFirstName(JwtAuthenticationToken principal) {
     return getFirstNameValue(principal.getTokenAttributes());
   }
 
   /**
-   * Retrieves the first name from the given Jwt principal. The first name is extracted from the
-   * token attributes under the key "given_name". If the first name is blank, an empty string is
-   * returned.
+   * Retrieves the first name from the given Jwt principal.
    *
    * @param principal Jwt object from which the first name is to be extracted.
    * @return The first name or an empty string if the first name is blank.
+   * @deprecated {@code given_name} is not present in Cognito access tokens or in the
+   *     {@code /oauth2/userInfo} response for any known identity provider. This method will
+   *     always return an empty string. Schedule for removal after callers are audited.
    */
+  @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getFirstName(Jwt principal) {
     return getFirstNameValue(principal.getClaims());
   }
 
   /**
-   * Retrieves the last name from the given JwtAuthenticationToken principal. The last name is
-   * extracted from the token attributes under the key "family_name". If the last name is blank, an
-   * empty string is returned.
+   * Retrieves the last name from the given JwtAuthenticationToken principal.
    *
    * @param principal JwtAuthenticationToken object from which the last name is to be extracted.
    * @return The last name or an empty string if the last name is blank.
+   * @deprecated {@code family_name} is not present in Cognito access tokens or in the
+   *     {@code /oauth2/userInfo} response for any known identity provider. This method will
+   *     always return an empty string. Schedule for removal after callers are audited.
    */
+  @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getLastName(JwtAuthenticationToken principal) {
     return getLastNameValue(principal.getTokenAttributes());
   }
 
   /**
-   * Retrieves the last name from the given Jwt principal. The last name is extracted from the token
-   * attributes under the key "family_name". If the last name is blank, an empty string is
-   * returned.
+   * Retrieves the last name from the given Jwt principal.
    *
    * @param principal Jwt object from which the last name is to be extracted.
    * @return The last name or an empty string if the last name is blank.
+   * @deprecated {@code family_name} is not present in Cognito access tokens or in the
+   *     {@code /oauth2/userInfo} response for any known identity provider. This method will
+   *     always return an empty string. Schedule for removal after callers are audited.
    */
+  @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getLastName(Jwt principal) {
     return getLastNameValue(principal.getClaims());
   }
 
   /**
-   * Retrieves the display name from the given JwtAuthenticationToken principal. The display name is
-   * extracted from the token attributes under the key "custom:idp_display_name". If the display
-   * name is blank, an empty string is returned.
+   * Retrieves the display name from the given JwtAuthenticationToken principal.
    *
    * @param principal JwtAuthenticationToken object from which the display name is to be extracted.
    * @return The display name or an empty string if the display name is blank.
+   * @deprecated {@code custom:idp_display_name} is not present in Cognito access tokens.
+   *     Use {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity#getIdpDisplayName()} obtained
+   *     from {@link ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()} instead.
    */
+  @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getDisplayName(JwtAuthenticationToken principal) {
     return getDisplayNameValue(principal.getTokenAttributes());
   }
 
   /**
-   * Retrieves the display name from the given Jwt principal. The display name is extracted from the
-   * token attributes under the key "custom:idp_display_name". If the display name is blank, an
-   * empty string is returned.
+   * Retrieves the display name from the given Jwt principal.
    *
    * @param principal Jwt object from which the display name is to be extracted.
    * @return The display name or an empty string if the display name is blank.
+   * @deprecated {@code custom:idp_display_name} is not present in Cognito access tokens.
+   *     Use {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity#getIdpDisplayName()} obtained
+   *     from {@link ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()} instead.
    */
+  @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getDisplayName(Jwt principal) {
     return getDisplayNameValue(principal.getClaims());
   }
 
-  /**
-   * Retrieves the IDP username from the given JwtAuthenticationToken principal. The IDP username is
-   * extracted from the token attributes under the key "custom:idp_username". If the IDP username is
-   * blank, the value under the key "custom:idp_user_id" is used. If both values are blank, an empty
-   * string is returned.
-   *
-   * @param principal JwtAuthenticationToken object from which the IDP username is to be extracted.
-   * @return The IDP username or an empty string if both values are blank.
-   */
-  public static String getIdpUsername(JwtAuthenticationToken principal) {
-    return getIdpUsernameValue(principal.getTokenAttributes());
-  }
-
-  /**
-   * Retrieves the IDP username from the given Jwt principal. The IDP username is extracted from the
-   * token attributes under the key "custom:idp_username". If the IDP username is blank, the value
-   * under the key "custom:idp_user_id" is used. If both values are blank, an empty string is
-   * returned.
-   *
-   * @param principal Jwt object from which the IDP username is to be extracted.
-   * @return The IDP username or an empty string if both values are blank.
-   */
-  public static String getIdpUsername(Jwt principal) {
-    return getIdpUsernameValue(principal.getClaims());
-  }
 
   /**
    * Retrieves a list of groups from the given JwtPrincipal. This method extracts the token
@@ -576,6 +595,32 @@ public class JwtPrincipalUtil {
         .map(userId -> getProviderValue(claims) + "\\" + userId)
         .findFirst()
         .orElse(StringUtils.EMPTY);
+  }
+
+  /**
+   * Retrieves the IDP username from the given JwtAuthenticationToken principal.
+   *
+   * <p>The IDP username is extracted from {@code custom:idp_username}. If absent,
+   * {@code custom:idp_user_id} is used as a fallback.</p>
+   *
+   * @param principal JwtAuthenticationToken object from which the IDP username is extracted
+   * @return the IDP username or an empty string when both claims are absent
+   */
+  public static String getIdpUsername(JwtAuthenticationToken principal) {
+    return getIdpUsernameValue(principal.getTokenAttributes());
+  }
+
+  /**
+   * Retrieves the IDP username from the given Jwt principal.
+   *
+   * <p>The IDP username is extracted from {@code custom:idp_username}. If absent,
+   * {@code custom:idp_user_id} is used as a fallback.</p>
+   *
+   * @param principal Jwt object from which the IDP username is extracted
+   * @return the IDP username or an empty string when both claims are absent
+   */
+  public static String getIdpUsername(Jwt principal) {
+    return getIdpUsernameValue(principal.getClaims());
   }
 
   private static String getIdpUsernameValue(Map<String, Object> claims) {

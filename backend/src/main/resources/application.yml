@@ -167,6 +167,12 @@ ca:
           key: ${FORESTCLIENTAPI_KEY:placeholder-api-key}
         legacy-api:
           address: ${LEGACY_URL:http://127.0.0.1:9090}
+        cognito:
+          userinfo-uri: https://${COGNITO_DOMAIN:pool-domain}.auth.${COGNITO_REGION:region}.amazoncognito.com/oauth2/userInfo
+          identity-ttl: ${COGNITO_IDENTITY_TTL:24h}
+        hydration:
+          paths:
+            - /api/users/preferences
         frontend:
           url: ${FRONTEND_URL:http://localhost:3000}
           cors:
