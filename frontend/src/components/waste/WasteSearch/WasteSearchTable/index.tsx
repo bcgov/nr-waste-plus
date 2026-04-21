@@ -15,6 +15,7 @@ import TableResource from '@/components/Form/TableResource';
 import WasteSearchFilters from '@/components/waste/WasteSearch/WasteSearchFilters';
 import WasteSearchTableExpandContent from '@/components/waste/WasteSearch/WasteSearchTableExpandContent';
 import { useSearchReportingUnitsQuery } from '@/config/react-query/hooks';
+import { featureFlags } from '@/env';
 import useNotificationEvents from '@/hooks/useNotificationEvents';
 import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
 import { removeEmpty } from '@/services/utils';
@@ -137,7 +138,7 @@ const WasteSearchTable: FC = () => {
           displayToolbar
           onSortChange={handleSort}
           onRowExpanded={onRowExpanded}
-          getRowActions={getRowActions}
+          getRowActions={featureFlags['bookmark-ru-enabled'] ? getRowActions : undefined}
         />
       </Column>
     </>
