@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 /**
  * Service responsible for reading and persisting user preference data.
@@ -120,8 +121,13 @@ public class UserService {
   }
 
   @NewSpan
-  public List<Long> getUserBookmarks(String userId) {
-    return bookmarkRepository.findByUserId(userId)
+  public List<Long> getUserBookmarksInList(String userId, List<Long> reportingUnitIds) {
+    List<UserBookmarkEntity> bookmarkEntities =
+      (CollectionUtils.isEmpty(reportingUnitIds))
+          ? bookmarkRepository.findByUserId(userId)
+          : bookmarkRepository.findByUserIdAndReportingUnitIdIn(userId, reportingUnitIds);
+
+    return bookmarkEntities
         .stream()
         .map(UserBookmarkEntity::getReportingUnitId)
         .toList();

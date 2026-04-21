@@ -37,6 +37,7 @@ public record ReportingUnitSearchResultDto(
     CodeDescriptionDto sampling,
     CodeDescriptionDto district,
     CodeDescriptionDto status,
-    LocalDateTime lastUpdated
+    LocalDateTime lastUpdated,
+    boolean bookmarked
 ) {
 }

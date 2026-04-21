@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.hrs.controller;
 import ca.bc.gov.nrs.hrs.service.UserService;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
-import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -113,20 +112,5 @@ public class UserController {
     log.info("Removing bookmark for user: {} and reporting unit: {}",
         JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
     userService.deleteUserBookmark(JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
-  }
-
-  /**
-   * Retrieve all bookmarked reporting unit IDs for the authenticated user.
-   *
-   * <p>Delegates to {@link UserService#getUserBookmarks(String)} and returns the list of
-   * reporting unit IDs the user has bookmarked.</p>
-   *
-   * @param jwt the authenticated user's JWT principal (injected by Spring)
-   * @return list of bookmarked reporting unit IDs
-   */
-  @GetMapping("/bookmarks")
-  public List<Long> getBookmarkedReportingUnitIds(@AuthenticationPrincipal Jwt jwt) {
-    log.info("Retrieving bookmarks for user: {}", JwtPrincipalUtil.getUserId(jwt));
-    return userService.getUserBookmarks(JwtPrincipalUtil.getUserId(jwt));
   }
 }
