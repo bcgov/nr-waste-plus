@@ -2,7 +2,9 @@ package ca.bc.gov.nrs.hrs.service;
 
 import static java.util.stream.Collectors.toMap;
 
+import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
@@ -41,6 +43,7 @@ public class SearchService {
   private final LegacyApiProvider legacyApiProvider;
   private final ForestClientService forestClientService;
   private final UserService userService;
+  private final FeatureFlagsConfiguration featureFlagsConfiguration;
 
   /**
    * Search reporting units using the supplied filters and pageable settings.
@@ -61,7 +64,8 @@ public class SearchService {
       Pageable pageable
   ) {
 
-    if (filters != null && filters.isBookmarked()) {
+    if (filters != null && filters.isBookmarked() && featureFlagsConfiguration.isEnabled(
+        FeatureFlag.BOOKMARK_REPORTING_UNIT_ENABLED)) {
       filters.setReportingUnitIds(userService.getUserBookmarksInList(userId, List.of()));
     }
 
@@ -87,7 +91,10 @@ public class SearchService {
         .map(ReportingUnitSearchResultDto::ruNumber)
         .toList();
 
-    var bookmarkedEntries = userService.getUserBookmarksInList(userId, reportingUnitsInPage);
+    var bookmarkedEntries =
+        featureFlagsConfiguration.isEnabled(FeatureFlag.BOOKMARK_REPORTING_UNIT_ENABLED)
+            ? userService.getUserBookmarksInList(userId, reportingUnitsInPage)
+            : List.of();
 
     //Enrich the results with client and location details
     return result

@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.hrs.dto.base;
 
+import lombok.Getter;
+
 /**
  * Known feature flag keys for compile-time discoverability.
  *
@@ -29,6 +31,7 @@ package ca.bc.gov.nrs.hrs.dto.base;
  *
  * @since 1.0.0
  */
+@Getter
 public enum FeatureFlag {
 
   OFFLINE_MODE_ENABLED("offline-mode-enabled"),
@@ -40,24 +43,18 @@ public enum FeatureFlag {
    * for request-time hydration but does not write/read identity data from the database.
    * This allows privacy-first rollout while keeping the hydration pipeline active.</p>
    */
-  USER_IDENTITY_PERSISTENCE_ENABLED("user-identity-persistence-enabled");
+  USER_IDENTITY_PERSISTENCE_ENABLED("user-identity-persistence-enabled"),
+
+  /**
+   * Controls whether the reporting unit bookmark feature is enabled.
+   * <p>When enabled, users can bookmark a reporting unit, and see their bookmarked values as
+   * part of the search result</p>
+   */
+  BOOKMARK_REPORTING_UNIT_ENABLED("bookmark-ru-enabled");
 
   private final String key;
 
   FeatureFlag(String key) {
     this.key = key;
-  }
-
-  /**
-   * Returns the YAML configuration key for this flag.
-   *
-   * <p>This is the string used as the key under {@code features.flags} in
-   * {@code application.yml}, and must match the canonical cross-stack key
-   * format {@code <domain>-<capability>-enabled}.
-   *
-   * @return the configuration key string
-   */
-  public String getKey() {
-    return key;
   }
 }

@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.hrs.controller;
 
+import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
+import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.service.UserService;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * REST endpoints for user-specific operations such as reading and updating user preferences.
@@ -34,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
   private final UserService userService;
+  private final FeatureFlagsConfiguration featureFlagsConfiguration;
 
   /**
    * Retrieve the preferences for the authenticated user.
@@ -89,9 +93,15 @@ public class UserController {
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable Long reportingUnitId
   ) {
-    log.info("Adding bookmark for user: {} and reporting unit: {}",
-        JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
-    userService.addUserBookmark(JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
+
+    if (featureFlagsConfiguration.isEnabled(FeatureFlag.BOOKMARK_REPORTING_UNIT_ENABLED)) {
+      log.info("Adding bookmark for user: {} and reporting unit: {}",
+          JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
+      userService.addUserBookmark(JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
+    } else {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+          "The requested resource is not available");
+    }
   }
 
   /**
@@ -109,8 +119,13 @@ public class UserController {
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable Long reportingUnitId
   ) {
-    log.info("Removing bookmark for user: {} and reporting unit: {}",
-        JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
-    userService.deleteUserBookmark(JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
+    if (featureFlagsConfiguration.isEnabled(FeatureFlag.BOOKMARK_REPORTING_UNIT_ENABLED)) {
+      log.info("Removing bookmark for user: {} and reporting unit: {}",
+          JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
+      userService.deleteUserBookmark(JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
+    } else {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+          "The requested resource is not available");
+    }
   }
 }

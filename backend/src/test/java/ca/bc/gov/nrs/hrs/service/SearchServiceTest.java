@@ -8,7 +8,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
@@ -16,6 +18,7 @@ import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +42,9 @@ class SearchServiceTest {
 
   @Mock
   private UserService userService;
+
+  @Mock
+  private FeatureFlagsConfiguration featureFlagsConfiguration;
 
   @InjectMocks
   private SearchService searchService;
@@ -64,6 +70,12 @@ class SearchServiceTest {
         LocalDateTime.of(2025, 8, 24, 9, 10, 28),
         false
     );
+  }
+
+  @BeforeEach
+  void setUp(){
+    when(featureFlagsConfiguration.isEnabled(FeatureFlag.BOOKMARK_REPORTING_UNIT_ENABLED))
+        .thenReturn(true);
   }
 
   @Test

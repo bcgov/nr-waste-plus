@@ -32,6 +32,7 @@ features:
   flags:
     enabled-flag: true
     disabled-flag: false
+    bookmark-ru-enabled: true
 
 logging:
   level:
