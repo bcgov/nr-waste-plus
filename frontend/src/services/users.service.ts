@@ -59,7 +59,6 @@ export class UserService extends HttpClient {
     return this.doRequest<void>(this.config, {
       method: 'PUT',
       url: `/api/users/bookmarks/${ruId}`,
-      middleware: [problemDetailsMiddleware()],
     });
   }
 
@@ -79,7 +78,6 @@ export class UserService extends HttpClient {
     return this.doRequest<void>(this.config, {
       method: 'DELETE',
       url: `/api/users/bookmarks/${ruId}`,
-      middleware: [problemDetailsMiddleware()],
     });
   }
 }
