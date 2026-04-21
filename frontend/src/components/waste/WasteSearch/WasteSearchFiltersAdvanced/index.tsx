@@ -278,6 +278,13 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 checked={filters.multiMark || false}
                 onChange={onCheckBoxChange('multiMark')}
               />
+              <Checkbox
+                id="as-bookmarked-checkbox"
+                data-testid="bookmarked-checkbox"
+                labelText="Bookmarked RUs only"
+                checked={filters.bookmarked || false}
+                onChange={onCheckBoxChange('bookmarked')}
+              />
             </CheckboxGroup>
           </Column>
         </Grid>
