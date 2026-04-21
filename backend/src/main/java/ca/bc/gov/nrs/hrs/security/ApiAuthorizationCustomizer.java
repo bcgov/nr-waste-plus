@@ -54,8 +54,8 @@ public class ApiAuthorizationCustomizer implements
         .requestMatchers(HttpMethod.OPTIONS, "/**")
         .authenticated()
 
-        // User Preferences can be accessed by authenticated users
-        .requestMatchers("/api/users/preferences")
+        // User endpoints (preferences and bookmarks) can be accessed by authenticated users
+        .requestMatchers("/api/users/**")
         .authenticated()
 
         // Codes can be accessed by authenticated users
