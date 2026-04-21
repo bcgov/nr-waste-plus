@@ -10,6 +10,7 @@ describe('mapDisplayFilter', () => {
     expect(mapDisplayFilter('status')).toBe('Status');
     expect(mapDisplayFilter('requestByMe')).toBe('Created By Me');
     expect(mapDisplayFilter('multiMark')).toBe('Multi-mark blocks');
+    expect(mapDisplayFilter('bookmarked')).toBe('Bookmarked RUs');
     expect(mapDisplayFilter('requestUserId')).toBe('Submitter');
     expect(mapDisplayFilter('updateDateStart')).toBe('Update Date Start');
     expect(mapDisplayFilter('updateDateEnd')).toBe('Update Date End');
