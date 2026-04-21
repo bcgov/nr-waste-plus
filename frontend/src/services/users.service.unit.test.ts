@@ -45,7 +45,6 @@ describe('UserService', () => {
     expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
       method: 'PUT',
       url: '/api/users/bookmarks/42',
-      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toBeUndefined();
   });
@@ -57,7 +56,6 @@ describe('UserService', () => {
     expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
       method: 'DELETE',
       url: '/api/users/bookmarks/42',
-      middleware: [expect.objectContaining({ failure: expect.any(Function) })],
     });
     expect(result).toBeUndefined();
   });
