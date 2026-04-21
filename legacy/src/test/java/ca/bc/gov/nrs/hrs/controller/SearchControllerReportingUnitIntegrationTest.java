@@ -363,4 +363,74 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
         .andReturn();
   }
 
+  @Test
+  @DisplayName("Should include bookmarked field as false in search results")
+  void shouldIncludeBookmarkedFieldAsFalse() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .param("page", "0")
+                .param("size", "10")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.content[0].bookmarked").value(false))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Should filter reporting units by reportingUnitIds")
+  void shouldFilterByReportingUnitIds() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .param("page", "0")
+                .param("size", "10")
+                .param("reportingUnitIds", "879")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.content[0].ruNumber").value(879))
+        .andExpect(jsonPath("$.page.totalElements")
+            .value(org.hamcrest.Matchers.greaterThan(0)))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Should filter reporting units by multiple reportingUnitIds")
+  void shouldFilterByMultipleReportingUnitIds() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .param("page", "0")
+                .param("size", "10")
+                .param("reportingUnitIds", "879", "916")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.page.totalElements")
+            .value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Should return no results for non-existent reportingUnitIds")
+  void shouldReturnNoResultsForNonExistentReportingUnitIds() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .param("page", "0")
+                .param("size", "10")
+                .param("reportingUnitIds", "999999999")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.page.totalElements").value(0))
+        .andReturn();
+  }
+
 }

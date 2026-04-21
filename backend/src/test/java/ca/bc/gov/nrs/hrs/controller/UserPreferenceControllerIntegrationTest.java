@@ -26,10 +26,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 @AutoConfigureMockMvc(print = SYSTEM_OUT)
-@WithMockJwt(
-    value = "jakethedog"
-)
-@DisplayName("Integrated Test | User Controller")
+@WithMockJwt
+@DisplayName("Integrated Test | User Preference Controller")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestExecutionListeners(
     value = TransactionalTestExecutionListener.class,
@@ -37,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 )
 @Transactional
 @Rollback(value = false)
-class UserControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
+class UserPreferenceControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @Autowired
   private MockMvc mockMvc;

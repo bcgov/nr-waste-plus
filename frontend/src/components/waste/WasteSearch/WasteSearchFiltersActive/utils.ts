@@ -18,6 +18,8 @@ export const mapDisplayFilter = (key: keyof ReportingUnitSearchParametersDto): s
       return 'Created By Me';
     case 'multiMark':
       return 'Multi-mark blocks';
+    case 'bookmarked':
+      return 'Bookmarked RUs';
     case 'requestUserId':
       return 'Submitter';
     case 'updateDateStart':

@@ -25,7 +25,8 @@
         "description": "Submitted"
       },
       "lastUpdated": "2025-08-25T10:35:06",
-      "wasteAssessmentAreaId": 102
+      "wasteAssessmentAreaId": 102,
+      "bookmarked": false
     },
     {
       "id": "RU-34906-Block-105-16777836",
@@ -52,7 +53,8 @@
         "description": "Submitted"
       },
       "lastUpdated": "2025-08-25T10:35:06",
-      "wasteAssessmentAreaId": 105
+      "wasteAssessmentAreaId": 105,
+      "bookmarked": false
     },
     {
       "id": "RU-34906-Block-571-21130094",
@@ -79,7 +81,8 @@
         "description": "Submitted"
       },
       "lastUpdated": "2025-08-25T10:35:06",
-      "wasteAssessmentAreaId": 571
+      "wasteAssessmentAreaId": 571,
+      "bookmarked": false
     },
     {
       "id": "RU-34906-Block-569-54499236",
@@ -106,7 +109,8 @@
         "description": "Submitted"
       },
       "lastUpdated": "2025-08-25T10:35:06",
-      "wasteAssessmentAreaId": 569
+      "wasteAssessmentAreaId": 569,
+      "bookmarked": false
     },
     {
       "id": "RU-34906-Block-341-94613061",
@@ -133,7 +137,8 @@
         "description": "Submitted"
       },
       "lastUpdated": "2025-08-25T10:35:06",
-      "wasteAssessmentAreaId": 341
+      "wasteAssessmentAreaId": 341,
+      "bookmarked": false
     },
     {
       "id": "RU-34906-Block-336-32570121",
@@ -160,7 +165,8 @@
         "description": "Submitted"
       },
       "lastUpdated": "2025-08-25T10:35:06",
-      "wasteAssessmentAreaId": 336
+      "wasteAssessmentAreaId": 336,
+      "bookmarked": false
     },
     {
       "id": "RU-34906-Block-274-40929234",
@@ -187,7 +193,8 @@
         "description": "Submitted"
       },
       "lastUpdated": "2025-08-25T10:35:06",
-      "wasteAssessmentAreaId": 274
+      "wasteAssessmentAreaId": 274,
+      "bookmarked": false
     },
     {
       "id": "RU-34906-Block-218-29188714",
@@ -214,7 +221,8 @@
         "description": "Submitted"
       },
       "lastUpdated": "2025-08-25T10:35:06",
-      "wasteAssessmentAreaId": 218
+      "wasteAssessmentAreaId": 218,
+      "bookmarked": false
     },
     {
       "id": "RU-36834-Block-26-84360965",
@@ -242,7 +250,8 @@
         "description": "Draft"
       },
       "lastUpdated": "2025-08-24T09:10:28",
-      "wasteAssessmentAreaId": 26
+      "wasteAssessmentAreaId": 26,
+      "bookmarked": false
     },
     {
       "id": "RU-10501-Block-2-33684183",
@@ -270,7 +279,8 @@
         "description": "Approved"
       },
       "lastUpdated": "2012-01-27T10:34:58",
-      "wasteAssessmentAreaId": 2
+      "wasteAssessmentAreaId": 2,
+      "bookmarked": false
     }
   ],
   "page": {

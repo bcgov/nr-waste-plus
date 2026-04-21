@@ -99,7 +99,8 @@ public class ForestClientApiProviderTestConstants {
                        "code": "DFT",
                        "description": "Draft"
                    },
-                   "lastUpdated": "2025-08-24T09:10:28"
+                   "lastUpdated": "2025-08-24T09:10:28",
+                   "bookmarked": false
                }
            ],
            "page": {

@@ -19,6 +19,7 @@ export type ReportingUnitSearchResultDto = {
   district: CodeDescriptionDto;
   status: CodeDescriptionDto;
   lastUpdated: string;
+  bookmarked: boolean;
 };
 
 export type ReportingUnitSearchParametersDto = {
@@ -28,6 +29,7 @@ export type ReportingUnitSearchParametersDto = {
   status?: string[];
   requestByMe?: boolean;
   multiMark?: boolean;
+  bookmarked?: boolean;
   requestUserId?: string;
   updateDateStart?: string;
   updateDateEnd?: string;

@@ -26,6 +26,7 @@ import AutoCompleteInput from '@/components/Form/AutoCompleteInput';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import { useMyForestClientsQuery } from '@/config/react-query/hooks';
 import { useAuth } from '@/context/auth/useAuth';
+import { featureFlags } from '@/env';
 import APIs from '@/services/APIs';
 import { getCodeDescriptionArrayConverter } from '@/services/search.utils';
 
@@ -278,6 +279,15 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 checked={filters.multiMark || false}
                 onChange={onCheckBoxChange('multiMark')}
               />
+              {featureFlags['bookmark-ru-enabled'] && (
+                <Checkbox
+                  id="as-bookmarked-checkbox"
+                  data-testid="bookmarked-checkbox"
+                  labelText="Bookmarked RUs only"
+                  checked={filters.bookmarked || false}
+                  onChange={onCheckBoxChange('bookmarked')}
+                />
+              )}
             </CheckboxGroup>
           </Column>
         </Grid>

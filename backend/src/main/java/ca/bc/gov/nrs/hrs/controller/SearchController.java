@@ -89,7 +89,7 @@ public class SearchController {
     }
 
     log.info("Searching waste entries with filters: {}, pageable: {}", filters, pageable);
-    return service.search(filters, pageable);
+    return service.search(JwtPrincipalUtil.getUserId(jwt), filters, pageable);
 
   }
 

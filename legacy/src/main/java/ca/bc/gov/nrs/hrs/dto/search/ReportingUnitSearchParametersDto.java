@@ -40,6 +40,7 @@ public class ReportingUnitSearchParametersDto {
   private String timberMark;
   private String clientLocationCode;
   private List<String> clientNumbers;
+  private List<Long> reportingUnitIds;
 
   /**
    * Returns the district filter values.
@@ -121,5 +122,12 @@ public class ReportingUnitSearchParametersDto {
   public String getDateEnd() {
     return updateDateEnd != null ? updateDateEnd.format(DateTimeFormatter.ISO_DATE)
         : LegacyConstants.NOVALUE;
+  }
+
+  public List<Long> getReportingUnitIds() {
+    if (reportingUnitIds == null || reportingUnitIds.isEmpty()) {
+      return List.of(-1L);
+    }
+    return reportingUnitIds;
   }
 }

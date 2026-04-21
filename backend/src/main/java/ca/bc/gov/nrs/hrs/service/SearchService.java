@@ -2,7 +2,9 @@ package ca.bc.gov.nrs.hrs.service;
 
 import static java.util.stream.Collectors.toMap;
 
+import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
@@ -40,6 +42,8 @@ public class SearchService {
 
   private final LegacyApiProvider legacyApiProvider;
   private final ForestClientService forestClientService;
+  private final UserService userService;
+  private final FeatureFlagsConfiguration featureFlagsConfiguration;
 
   /**
    * Search reporting units using the supplied filters and pageable settings.
@@ -48,15 +52,22 @@ public class SearchService {
    * calling the Forest Client service.
    * </p>
    *
+   * @param userId the current user
    * @param filters  search filters
    * @param pageable paging parameters
    * @return a page of {@link ReportingUnitSearchResultDto} enriched with client info
    */
   @NewSpan
   public Page<ReportingUnitSearchResultDto> search(
+      String userId,
       ReportingUnitSearchParametersDto filters,
       Pageable pageable
   ) {
+
+    if (filters != null && filters.isBookmarked() && featureFlagsConfiguration.isEnabled(
+        FeatureFlag.BOOKMARK_REPORTING_UNIT_ENABLED)) {
+      filters.setReportingUnitIds(userService.getUserBookmarksInList(userId, List.of()));
+    }
 
     //Search the legacy API for reporting units
     var result = legacyApiProvider.searchReportingUnit(filters, pageable);
@@ -67,13 +78,23 @@ public class SearchService {
             .stream()
             .map(ReportingUnitSearchResultDto::client)
             .distinct()
-            .map(client -> 
+            .map(client ->
                 forestClientService
                     .getClientByNumber(client.code())
                     .map(forestClientDto -> client.withDescription(forestClientDto.name()))
                     .orElse(client)
             )
             .collect(toMap(CodeDescriptionDto::code, client -> client));
+
+    var reportingUnitsInPage = result
+        .stream()
+        .map(ReportingUnitSearchResultDto::ruNumber)
+        .toList();
+
+    var bookmarkedEntries =
+        featureFlagsConfiguration.isEnabled(FeatureFlag.BOOKMARK_REPORTING_UNIT_ENABLED)
+            ? userService.getUserBookmarksInList(userId, reportingUnitsInPage)
+            : List.of();
 
     //Enrich the results with client and location details
     return result
@@ -86,13 +107,14 @@ public class SearchService {
                 )
             )
         )
-        .map(entry -> entry.withClient(clients.get(entry.client().code())));
+        .map(entry -> entry.withClient(clients.get(entry.client().code())))
+        .map(entry -> entry.withBookmarked(bookmarkedEntries.contains(entry.ruNumber())));
   }
 
   /**
    * Get expanded search details for a specific reporting unit and block.
    *
-   * @param ruId the reporting unit id
+   * @param ruId                  the reporting unit id
    * @param wasteAssessmentAreaId the waste assessment area ID
    * @return the expanded reporting unit search details
    */
@@ -101,7 +123,7 @@ public class SearchService {
       Long ruId, Long wasteAssessmentAreaId
   ) {
     log.info(
-        "Loading expanded search for ruId: {}, wasteAssessmentAreaId: {}", 
+        "Loading expanded search for ruId: {}, wasteAssessmentAreaId: {}",
         ruId,
         wasteAssessmentAreaId);
     return legacyApiProvider.getSearchExpanded(ruId, wasteAssessmentAreaId);

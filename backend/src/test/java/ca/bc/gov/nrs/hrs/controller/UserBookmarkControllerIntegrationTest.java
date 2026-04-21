@@ -1,8 +1,10 @@
 package ca.bc.gov.nrs.hrs.controller;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.context.TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -27,9 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 @AutoConfigureMockMvc(print = SYSTEM_OUT)
 @WithMockJwt(
-    value = "jakethedog"
+    value = "markbook"
 )
-@DisplayName("Integrated Test | User Controller")
+@DisplayName("Integrated Test | User Bookmark Controller")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestExecutionListeners(
     value = TransactionalTestExecutionListener.class,
@@ -37,42 +39,31 @@ import org.springframework.transaction.annotation.Transactional;
 )
 @Transactional
 @Rollback(value = false)
-class UserControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
+class UserBookmarkControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
+
+  private static final long REPORTING_UNIT_A = 90001L;
+  private static final long REPORTING_UNIT_B = 90002L;
 
   @Autowired
   private MockMvc mockMvc;
 
   @Test
-  @DisplayName("Get user preferences when none exist should return empty map")
+  @DisplayName("Add same bookmark twice should keep one record")
   @Order(1)
-  void getUserPreferences_whenNoneExist_shouldReturnEmptyMap() throws Exception {
+  void addSameBookmarkTwice_shouldKeepOneRecord() throws Exception {
     mockMvc
         .perform(
-            get("/api/users/preferences")
+            put("/api/users/bookmarks/{reportingUnitId}", REPORTING_UNIT_A)
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType("application/json;charset=UTF-8"))
-        .andExpect(jsonPath("$.length()").value(0))
+                .accept(MediaType.APPLICATION_JSON)
+                .with(csrf()))
+        .andExpect(status().isAccepted())
         .andReturn();
-  }
-
-  @Test
-  @DisplayName("User set the preferences with some data")
-  @Order(2)
-  void userSetThePreferencesWithSomeData() throws Exception {
-    String preferencesJson = """
-        {
-          "theme": "dark",
-          "notifications": true,
-          "itemsPerPage": 20
-        }""";
 
     mockMvc
         .perform(
-            put("/api/users/preferences")
+            put("/api/users/bookmarks/{reportingUnitId}", REPORTING_UNIT_A)
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .content(preferencesJson)
                 .accept(MediaType.APPLICATION_JSON)
                 .with(csrf()))
         .andExpect(status().isAccepted())
@@ -80,20 +71,41 @@ class UserControllerIntegrationTest extends AbstractTestContainerIntegrationTest
   }
 
   @Test
-  @DisplayName("Get user preferences after setting them should return the set preferences")
-  @Order(3)
-  void getUserPreferences_afterSettingThem_shouldReturnTheSetPreferences() throws Exception {
+  @DisplayName("Add second bookmark should return both bookmark ids")
+  @Order(2)
+  void addSecondBookmark_shouldReturnBothBookmarkIds() throws Exception {
     mockMvc
         .perform(
-            get("/api/users/preferences")
+            put("/api/users/bookmarks/{reportingUnitId}", REPORTING_UNIT_B)
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType("application/json;charset=UTF-8"))
-        .andExpect(jsonPath("$.theme").value("dark"))
-        .andExpect(jsonPath("$.notifications").value(true))
-        .andExpect(jsonPath("$.itemsPerPage").value(20))
+                .accept(MediaType.APPLICATION_JSON)
+                .with(csrf()))
+        .andExpect(status().isAccepted())
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Delete same bookmark twice should be idempotent")
+  @Order(3)
+  void deleteSameBookmarkTwice_shouldBeIdempotent() throws Exception {
+    mockMvc
+        .perform(
+            delete("/api/users/bookmarks/{reportingUnitId}", REPORTING_UNIT_A)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON)
+                .with(csrf()))
+        .andExpect(status().isNoContent())
+        .andReturn();
+
+    mockMvc
+        .perform(
+            delete("/api/users/bookmarks/{reportingUnitId}", REPORTING_UNIT_A)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON)
+                .with(csrf()))
+        .andExpect(status().isNoContent())
         .andReturn();
   }
 
 }
+

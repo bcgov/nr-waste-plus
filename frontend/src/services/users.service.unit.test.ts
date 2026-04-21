@@ -37,4 +37,26 @@ describe('UserService', () => {
     });
     expect(result).toBeUndefined();
   });
+
+  it('setUserBookmarkedRu should PUT a bookmark for the given reporting unit', async () => {
+    (service as any).doRequest = vi.fn().mockResolvedValue(undefined);
+    const ruId = 42;
+    const result = await service.setUserBookmarkedRu(ruId);
+    expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+      method: 'PUT',
+      url: '/api/users/bookmarks/42',
+    });
+    expect(result).toBeUndefined();
+  });
+
+  it('deleteUserBookmarkedRu should DELETE a bookmark for the given reporting unit', async () => {
+    (service as any).doRequest = vi.fn().mockResolvedValue(undefined);
+    const ruId = 42;
+    const result = await service.deleteUserBookmarkedRu(ruId);
+    expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+      method: 'DELETE',
+      url: '/api/users/bookmarks/42',
+    });
+    expect(result).toBeUndefined();
+  });
 });

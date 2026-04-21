@@ -64,6 +64,7 @@ const appEnvSchema = z.looseObject({
 const featureFlagsSchema = z
   .object({
     'offline-mode-enabled': z.boolean(),
+    'bookmark-ru-enabled': z.boolean(),
   })
   .partial()
   .strict();

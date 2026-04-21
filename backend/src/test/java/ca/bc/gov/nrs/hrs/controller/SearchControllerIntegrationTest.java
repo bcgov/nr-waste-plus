@@ -7,7 +7,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.unauthorized;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -17,6 +19,7 @@ import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants;
+import ca.bc.gov.nrs.hrs.repository.UserBookmarkRepository;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
@@ -76,6 +79,8 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
   private CircuitBreakerRegistry circuitBreakerRegistry;
   @Autowired
   private RetryRegistry retryRegistry;
+  @Autowired
+  private UserBookmarkRepository bookmarkRepository;
 
   @BeforeEach
   public void setUp() {
@@ -87,6 +92,8 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
     RetryConfig retry = retryRegistry.retry("apiRetry").getRetryConfig();
     retryRegistry.remove("apiRetry");
     retryRegistry.retry("apiRetry", retry);
+
+    bookmarkRepository.deleteAll();
   }
 
   @ParameterizedTest
@@ -131,7 +138,8 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
       Object expectedValue
   ) throws Exception {
     legacyApiStub.stubFor(
-        WireMock.get(urlPathEqualTo("/api/search/reporting-units/ex/" + ruId + "/" + wasteAssessmentAreaId))
+        WireMock.get(
+                urlPathEqualTo("/api/search/reporting-units/ex/" + ruId + "/" + wasteAssessmentAreaId))
             .willReturn(stubResponse)
     );
 
@@ -317,7 +325,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             0L
         ),
         Arguments.argumentSet(
-            "Search with results and no filter",
+            "Search with results and 36834 as filter ",
             ReportingUnitSearchParametersDto.builder().mainSearchTerm("36834").build(),
             PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE),
@@ -352,6 +360,131 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             0L
         )
     );
+  }
+
+  @Test
+  @DisplayName("Search bookmarked reporting units with bookmarks should return bookmarked results")
+  void searchBookmarkedReportingUnits_withBookmarks_shouldReturnResults() throws Exception {
+    // First, add a bookmark for reporting unit 36834 (the one in the stub response)
+    mockMvc
+        .perform(
+            put("/api/users/bookmarks/{reportingUnitId}", 36834L)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON)
+                .with(csrf()))
+        .andExpect(status().isAccepted());
+
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE))
+    );
+
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/clients/findByClientNumber/00010002"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002))
+    );
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .queryParam("bookmarked", "true")
+                .queryParam("page", "0")
+                .queryParam("size", "10")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andExpect(jsonPath("$.content[0].ruNumber").value(36834))
+        .andExpect(jsonPath("$.content[0].bookmarked").value(true))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Search bookmarked reporting units with no bookmarks should return empty")
+  void searchBookmarkedReportingUnits_withNoBookmarks_shouldReturnEmpty() throws Exception {
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE))
+    );
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .queryParam("bookmarked", "true")
+                .queryParam("page", "0")
+                .queryParam("size", "10")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.content.length()").value(0))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Search results should show bookmarked=false when no bookmarks exist")
+  void searchReportingUnits_withoutBookmarks_shouldShowBookmarkedFalse() throws Exception {
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE))
+    );
+
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/clients/findByClientNumber/00010002"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002))
+    );
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .queryParam("mainSearchTerm", "36834")
+                .queryParam("page", "0")
+                .queryParam("size", "10")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andExpect(jsonPath("$.content[0].bookmarked").value(false))
+        .andReturn();
+  }
+
+  @Test
+  @DisplayName("Search results should show bookmarked=true when result is bookmarked")
+  void searchReportingUnits_withBookmark_shouldShowBookmarkedTrue() throws Exception {
+    // Add a bookmark for reporting unit 36834
+    mockMvc
+        .perform(
+            put("/api/users/bookmarks/{reportingUnitId}", 36834L)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON)
+                .with(csrf()))
+        .andExpect(status().isAccepted());
+
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE))
+    );
+
+    clientApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/clients/findByClientNumber/00010002"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002))
+    );
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .queryParam("mainSearchTerm", "36834")
+                .queryParam("page", "0")
+                .queryParam("size", "10")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andExpect(jsonPath("$.content[0].bookmarked").value(true))
+        .andReturn();
   }
 
 }

@@ -40,6 +40,7 @@ public class ReportingUnitSearchParametersDto {
   private List<String> status;
   private boolean requestByMe;
   private boolean multiMark;
+  private boolean bookmarked;
   private String requestUserId;
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private LocalDate updateDateStart;
@@ -49,6 +50,7 @@ public class ReportingUnitSearchParametersDto {
   private String cuttingPermitId;
   private String timberMark;
   private List<String> clientNumbers;
+  private List<Long> reportingUnitIds;
 
   /**
    * Convert the populated search parameters into a {@link MultiValueMap} of query parameters
@@ -109,6 +111,10 @@ public class ReportingUnitSearchParametersDto {
       multiValueMap.add("updateDateEnd", updateDateEnd.format(DateTimeFormatter.ISO_LOCAL_DATE));
     }
 
+    if (!CollectionUtils.isEmpty(reportingUnitIds)) {
+      reportingUnitIds.forEach(value -> multiValueMap.add("reportingUnitIds", value.toString()));
+    }
+
     multiValueMap.addAll(UriUtils.buildPageableQueryParam(page));
 
     return multiValueMap;
@@ -136,6 +142,7 @@ public class ReportingUnitSearchParametersDto {
            && CollectionUtils.isEmpty(status)
            && !requestByMe
            && !multiMark
+           && !bookmarked
            && StringUtils.isBlank(requestUserId)
            && updateDateStart == null
            && updateDateEnd == null

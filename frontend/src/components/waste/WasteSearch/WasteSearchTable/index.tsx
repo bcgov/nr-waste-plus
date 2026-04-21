@@ -2,6 +2,7 @@ import { Column } from '@carbon/react';
 import { useEffect, useState, useMemo, type FC, type ReactNode } from 'react';
 
 import { headers } from './constants';
+import { useWasteSearchRowActions } from './rowActions.tsx';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type {
@@ -14,6 +15,7 @@ import TableResource from '@/components/Form/TableResource';
 import WasteSearchFilters from '@/components/waste/WasteSearch/WasteSearchFilters';
 import WasteSearchTableExpandContent from '@/components/waste/WasteSearch/WasteSearchTableExpandContent';
 import { useSearchReportingUnitsQuery } from '@/config/react-query/hooks';
+import { featureFlags } from '@/env';
 import useNotificationEvents from '@/hooks/useNotificationEvents';
 import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
 import { removeEmpty } from '@/services/utils';
@@ -33,6 +35,7 @@ const WasteSearchTable: FC = () => {
   const [searchTrigger, setSearchTrigger] = useState(0);
   const { clearEvents } = useNotificationEvents();
 
+  const { sendInlineEvent } = useNotificationEvents();
   const plainFilters = useMemo(() => reportingUnitSearchParametersView2Plain(filters), [filters]);
 
   const { data, isLoading, isFetching, isError, refetch } = useSearchReportingUnitsQuery(
@@ -68,6 +71,11 @@ const WasteSearchTable: FC = () => {
       setSearchTrigger((n) => n + 1);
     }
   };
+
+  const getRowActions = useWasteSearchRowActions({
+    sendInlineEvent,
+    onToggleRefresh: () => refetch(),
+  });
 
   /**
    * Starts a new search from the first page.
@@ -130,6 +138,7 @@ const WasteSearchTable: FC = () => {
           displayToolbar
           onSortChange={handleSort}
           onRowExpanded={onRowExpanded}
+          getRowActions={featureFlags['bookmark-ru-enabled'] ? getRowActions : undefined}
         />
       </Column>
     </>
