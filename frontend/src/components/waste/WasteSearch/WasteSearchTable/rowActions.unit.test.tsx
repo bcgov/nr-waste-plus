@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import type { ReactNode } from 'react';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
 import { useWasteSearchRowActions } from './rowActions';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { ReportingUnitSearchResultDto } from '@/services/search.types';
+import type { ReactNode } from 'react';
 
 import APIs from '@/services/APIs';
 
@@ -71,7 +71,7 @@ describe('useWasteSearchRowActions', () => {
     renderHook(
       () =>
         useWasteSearchRowActions({
-          sendEvent: sendEventMock,
+          sendInlineEvent: sendEventMock,
           onToggleRefresh: onToggleRefresh ?? onToggleRefreshMock,
         }),
       { wrapper: createWrapper() },
@@ -277,7 +277,7 @@ describe('useWasteSearchRowActions', () => {
       const { result: resultNoRefresh } = renderHook(
         () =>
           useWasteSearchRowActions({
-            sendEvent: sendEventMock,
+            sendInlineEvent: sendEventMock,
           }),
         { wrapper: createWrapper() },
       );
