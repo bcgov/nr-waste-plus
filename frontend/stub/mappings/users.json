@@ -31,6 +31,26 @@
         "status": 200,
         "bodyFileName": "users/preferences-GET-bceid-1.json"
       }
+    },
+    {
+      "name": "Bookmark a reporting unit",
+      "request": {
+        "urlPathPattern": "/api/users/bookmarks/[0-9]+",
+        "method": "PUT"
+      },
+      "response": {
+        "status": 202
+      }
+    },
+    {
+      "name": "Remove a bookmarked reporting unit",
+      "request": {
+        "urlPathPattern": "/api/users/bookmarks/[0-9]+",
+        "method": "DELETE"
+      },
+      "response": {
+        "status": 204
+      }
     }
   ]
 }

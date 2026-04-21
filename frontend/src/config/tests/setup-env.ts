@@ -14,6 +14,8 @@ vi.mock('@/services/APIs', () => ({
     user: {
       getUserPreferences: vi.fn().mockResolvedValue({}),
       updateUserPreferences: vi.fn().mockResolvedValue({}),
+      setUserBookmarkedRu: vi.fn().mockResolvedValue(undefined),
+      deleteUserBookmarkedRu: vi.fn().mockResolvedValue(undefined),
     },
     forestclient: {
       searchByClientNumbers: vi.fn().mockResolvedValue([]),
