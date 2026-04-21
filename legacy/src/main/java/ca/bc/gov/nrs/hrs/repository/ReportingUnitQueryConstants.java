@@ -129,6 +129,10 @@ public final class ReportingUnitQueryConstants {
           NVL(:#{#filter.multiMark}, 0) = 0
           OR (NVL(:#{#filter.multiMark}, 0) = 1 AND waa.MULTI_MARK_IND = 'Y')
         )
+        AND (
+          -1 in (:#{#filter.reportingUnitIds})
+          OR wru.REPORTING_UNIT_ID IN (:#{#filter.reportingUnitIds})
+        )
       """;
 
   public static final String SEARCH_REPORTING_UNIT_QUERY =

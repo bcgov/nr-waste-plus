@@ -49,6 +49,10 @@ public interface ReportingUnitSearchMapper extends
       target = "secondaryEntry",
       expression = "java(Integer.valueOf(1).equals(projection.getSecondaryEntry()))"
   )
+  @Mapping(
+      target = "bookmarked",
+      expression = "java(false)"
+  )
   ReportingUnitSearchResultDto fromProjection(ReportingUnitSearchProjection projection);
 
 }
