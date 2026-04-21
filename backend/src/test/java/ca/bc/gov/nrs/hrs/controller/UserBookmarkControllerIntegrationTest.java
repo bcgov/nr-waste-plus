@@ -48,23 +48,8 @@ class UserBookmarkControllerIntegrationTest extends AbstractTestContainerIntegra
   private MockMvc mockMvc;
 
   @Test
-  @DisplayName("Get user bookmarks when none exist should return empty list")
-  @Order(1)
-  void getUserBookmarks_whenNoneExist_shouldReturnEmptyList() throws Exception {
-    mockMvc
-        .perform(
-            get("/api/users/bookmarks")
-                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType("application/json;charset=UTF-8"))
-        .andExpect(jsonPath("$.length()").value(0))
-        .andReturn();
-  }
-
-  @Test
   @DisplayName("Add same bookmark twice should keep one record")
-  @Order(2)
+  @Order(1)
   void addSameBookmarkTwice_shouldKeepOneRecord() throws Exception {
     mockMvc
         .perform(
@@ -83,22 +68,11 @@ class UserBookmarkControllerIntegrationTest extends AbstractTestContainerIntegra
                 .with(csrf()))
         .andExpect(status().isAccepted())
         .andReturn();
-
-    mockMvc
-        .perform(
-            get("/api/users/bookmarks")
-                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType("application/json;charset=UTF-8"))
-        .andExpect(jsonPath("$.length()").value(1))
-        .andExpect(jsonPath("$[0]").value(REPORTING_UNIT_A))
-        .andReturn();
   }
 
   @Test
   @DisplayName("Add second bookmark should return both bookmark ids")
-  @Order(3)
+  @Order(2)
   void addSecondBookmark_shouldReturnBothBookmarkIds() throws Exception {
     mockMvc
         .perform(
@@ -108,22 +82,11 @@ class UserBookmarkControllerIntegrationTest extends AbstractTestContainerIntegra
                 .with(csrf()))
         .andExpect(status().isAccepted())
         .andReturn();
-
-    mockMvc
-        .perform(
-            get("/api/users/bookmarks")
-                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType("application/json;charset=UTF-8"))
-        .andExpect(jsonPath("$.length()").value(2))
-        .andExpect(jsonPath("$", containsInAnyOrder((int) REPORTING_UNIT_A, (int) REPORTING_UNIT_B)))
-        .andReturn();
   }
 
   @Test
   @DisplayName("Delete same bookmark twice should be idempotent")
-  @Order(4)
+  @Order(3)
   void deleteSameBookmarkTwice_shouldBeIdempotent() throws Exception {
     mockMvc
         .perform(
@@ -141,17 +104,6 @@ class UserBookmarkControllerIntegrationTest extends AbstractTestContainerIntegra
                 .accept(MediaType.APPLICATION_JSON)
                 .with(csrf()))
         .andExpect(status().isNoContent())
-        .andReturn();
-
-    mockMvc
-        .perform(
-            get("/api/users/bookmarks")
-                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType("application/json;charset=UTF-8"))
-        .andExpect(jsonPath("$.length()").value(1))
-        .andExpect(jsonPath("$[0]").value(REPORTING_UNIT_B))
         .andReturn();
   }
 

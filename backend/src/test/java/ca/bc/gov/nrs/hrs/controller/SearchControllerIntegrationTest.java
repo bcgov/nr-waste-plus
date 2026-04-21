@@ -131,7 +131,8 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
       Object expectedValue
   ) throws Exception {
     legacyApiStub.stubFor(
-        WireMock.get(urlPathEqualTo("/api/search/reporting-units/ex/" + ruId + "/" + wasteAssessmentAreaId))
+        WireMock.get(
+                urlPathEqualTo("/api/search/reporting-units/ex/" + ruId + "/" + wasteAssessmentAreaId))
             .willReturn(stubResponse)
     );
 
@@ -317,7 +318,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             0L
         ),
         Arguments.argumentSet(
-            "Search with results and no filter",
+            "Search with results and 36834 as filter ",
             ReportingUnitSearchParametersDto.builder().mainSearchTerm("36834").build(),
             PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE),
