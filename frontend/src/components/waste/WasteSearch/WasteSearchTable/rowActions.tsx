@@ -19,12 +19,12 @@ type WasteSearchEvent = {
 type WasteSearchEventSender = (event: WasteSearchEvent) => void;
 
 type UseWasteSearchRowActionsOptions = {
-  sendEvent: WasteSearchEventSender;
+  sendInlineEvent: WasteSearchEventSender;
   onToggleRefresh?: () => void | Promise<unknown>;
 };
 
 export const useWasteSearchRowActions = ({
-  sendEvent,
+  sendInlineEvent,
   onToggleRefresh,
 }: UseWasteSearchRowActionsOptions) => {
   const [pendingToggleRows, setPendingToggleRows] = useState<Set<number>>(new Set());
@@ -48,7 +48,7 @@ export const useWasteSearchRowActions = ({
       });
     },
     onSuccess: (row) => {
-      sendEvent({
+      sendInlineEvent({
         title: row.bookmarked ? 'Removed from bookmarks' : 'Added to bookmarks',
         description: `Reporting unit ${row.ruNumber} was ${row.bookmarked ? 'removed from' : 'added to'} bookmarks successfully`,
         eventType: 'info',
@@ -57,7 +57,7 @@ export const useWasteSearchRowActions = ({
       onToggleRefresh?.();
     },
     onError: (_error, row) => {
-      sendEvent({
+      sendInlineEvent({
         title: 'Failed to toggle bookmark',
         description: `Failed to toggle bookmark for Reporting Unit ${row.ruNumber}`,
         eventType: 'error',

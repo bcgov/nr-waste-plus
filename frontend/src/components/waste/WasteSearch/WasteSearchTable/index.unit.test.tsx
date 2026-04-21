@@ -107,6 +107,8 @@ vi.mock('@/services/APIs', () => {
       user: {
         getUserPreferences: vi.fn(),
         updateUserPreferences: vi.fn(),
+        setUserBookmarkedRu: vi.fn(),
+        deleteUserBookmarkedRu: vi.fn(),
       },
       codes: {
         getSamplingOptions: vi.fn(),
@@ -137,6 +139,7 @@ const mockSearchResults: PageableResponse<ReportingUnitSearchResultDto> = {
       district: { code: 'DCC', description: 'Cariboo-Chilcotin' },
       status: { code: 'BIS', description: 'Billing Issued' },
       lastUpdated: '2006-09-08T08:24:17',
+      bookmarked: false,
     },
     {
       id: 'RU-4070-Block-412B-224813682',
@@ -153,6 +156,7 @@ const mockSearchResults: PageableResponse<ReportingUnitSearchResultDto> = {
       district: { code: 'D2', description: 'District Two' },
       status: { code: 'SUB', description: 'Submitted' },
       lastUpdated: '2025-01-16T10:00:00',
+      bookmarked: false,
     },
   ],
   page: {
@@ -180,6 +184,7 @@ const altMockSearchResults1: PageableResponse<ReportingUnitSearchResultDto> = {
       district: { code: 'DCC', description: 'Cariboo-Chilcotin' },
       status: { code: 'BIS', description: 'Billing Issued' },
       lastUpdated: '2006-09-08T08:24:17',
+      bookmarked: false,
     },
     {
       id: 'RU-4070-Block-522B-224813684',
@@ -196,6 +201,7 @@ const altMockSearchResults1: PageableResponse<ReportingUnitSearchResultDto> = {
       district: { code: 'D2', description: 'District Two' },
       status: { code: 'SUB', description: 'Submitted' },
       lastUpdated: '2025-01-16T10:00:00',
+      bookmarked: false,
     },
   ],
   page: {
@@ -223,6 +229,7 @@ const altMockSearchResults2: PageableResponse<ReportingUnitSearchResultDto> = {
       district: { code: 'DCC', description: 'Cariboo-Chilcotin' },
       status: { code: 'BIS', description: 'Billing Issued' },
       lastUpdated: '2006-09-08T08:24:17',
+      bookmarked: false,
     },
     {
       id: 'RU-4070-Block-632B-224813682',
@@ -239,6 +246,7 @@ const altMockSearchResults2: PageableResponse<ReportingUnitSearchResultDto> = {
       district: { code: 'D2', description: 'District Two' },
       status: { code: 'SUB', description: 'Submitted' },
       lastUpdated: '2025-01-16T10:00:00',
+      bookmarked: false,
     },
   ],
   page: {
