@@ -181,3 +181,4 @@ test-reports/
 **/__screenshots__/
 **/user.*.json
 **/screenshots/**.png
+**/*.code-workspace

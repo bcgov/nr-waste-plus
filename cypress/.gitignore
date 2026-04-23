@@ -173,3 +173,4 @@ dist
 
 reports/
 summary.md
+**/*.code-workspace
