@@ -379,3 +379,4 @@ docker-compose.override.yml
 **/videos/**.mp4
 **/reports
 cypress/summary.md
+**/*.code-workspace

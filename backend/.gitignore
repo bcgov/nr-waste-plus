@@ -139,3 +139,4 @@ buildNumber.properties
 config/
 *.iml
 **/screenshots/**.png
+**/*.code-workspace

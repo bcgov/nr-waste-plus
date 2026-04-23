@@ -401,3 +401,4 @@ temp/
 config/*.jks
 *.iml
 **/screenshots/**.png
+**/*.code-workspace
