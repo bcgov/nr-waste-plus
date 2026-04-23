@@ -23,8 +23,7 @@ const updateSW = featureFlags['offline-mode-enabled']
         sendToastEvent({
           eventType: 'info',
           title: 'New content available',
-          description:
-            'A new version of the app is available. Please refresh the app by pressing F5.',
+          description: 'A new version of the app is available. Please refresh the app.',
         });
       },
       onOfflineReady() {
