@@ -103,6 +103,7 @@
     "serialize-javascript": "^7.0.5",
     "follow-redirects@<=1.15.11": "1.16.0",
     "uuid@<14.0.0": "14.0.0",
+    "postcss@<8.5.8": "^8.5.14",
     "workbox-build": {
       "glob": "^13.0.0"
     },
