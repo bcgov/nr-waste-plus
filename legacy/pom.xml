@@ -7,7 +7,7 @@
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
     <version>3.5.14</version>
-    <relativePath/> <!-- lookup parent from repository -->
+    <relativePath /> <!-- lookup parent from repository -->
   </parent>
   <groupId>ca.bc.gov.nrs</groupId>
   <artifactId>nr-waste-plus-legacy</artifactId>
@@ -94,7 +94,7 @@
     <testcontainers.version>1.21.3</testcontainers.version>
     <jackson.version>2.21.1</jackson.version>
     <jackson-bom.version>2.21.1</jackson-bom.version>
-    <spring-security.version>6.5.9</spring-security.version>
+    <spring-security.version>6.5.10</spring-security.version>
   </properties>
 
   <profiles>
@@ -162,7 +162,8 @@
             </executions>
             <configuration>
               <buildArgs>
-                <buildArg>-H:ServiceLoaderFeatureExcludeServices=org.springframework.security.core.context.ReactiveSecurityContextHolderThreadLocalAccessor</buildArg>
+                <buildArg>
+                  -H:ServiceLoaderFeatureExcludeServices=org.springframework.security.core.context.ReactiveSecurityContextHolderThreadLocalAccessor</buildArg>
               </buildArgs>
             </configuration>
           </plugin>
@@ -202,6 +203,7 @@
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-oauth2-jose</artifactId>
+      <version>${spring-security.version}</version>
     </dependency>
 
     <dependency>
@@ -289,26 +291,27 @@
     </dependency>
   </dependencies>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-webmvc</artifactId>
-				<version>6.2.18</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.tomcat.embed</groupId>
-				<artifactId>tomcat-embed-core</artifactId>
-				<version>11.0.21</version>
-			</dependency>
-			<dependency>
-				<groupId>com.nimbusds</groupId>
-				<artifactId>nimbus-jose-jwt</artifactId>
-				<version>10.9</version>
-			</dependency>
-			<!-- Jackson BOM import was removed to avoid resolution errors; rely on Spring Boot's dependency management or add a BOM later with a valid version -->
-		</dependencies>
-	</dependencyManagement>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-webmvc</artifactId>
+        <version>6.2.18</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-core</artifactId>
+        <version>11.0.21</version>
+      </dependency>
+      <dependency>
+        <groupId>com.nimbusds</groupId>
+        <artifactId>nimbus-jose-jwt</artifactId>
+        <version>10.9</version>
+      </dependency>
+      <!-- Jackson BOM import was removed to avoid resolution errors; rely on Spring Boot's
+      dependency management or add a BOM later with a valid version -->
+    </dependencies>
+  </dependencyManagement>
 
   <build>
     <finalName>nr-waste-plus-legacy</finalName>
@@ -545,7 +548,7 @@
             </goals>
             <configuration>
               <rules>
-                <dependencyConvergence/>
+                <dependencyConvergence />
                 <requireMavenVersion>
                   <version>[3.2,)</version>
                   <message>Invalid Maven version. It should be at least 3.2</message>
@@ -566,7 +569,7 @@
                   <message>No Snapshots Allowed in releases!</message>
                   <onlyWhenRelease>true</onlyWhenRelease>
                 </requireReleaseDeps>
-                <banDuplicatePomDependencyVersions/>
+                <banDuplicatePomDependencyVersions />
               </rules>
             </configuration>
           </execution>
