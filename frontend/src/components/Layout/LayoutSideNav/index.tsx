@@ -10,12 +10,30 @@ import { getMenuEntries, type MenuItem } from '@/routes/routePaths';
 
 import './index.scss';
 
+/**
+ * Collapsible side navigation shell for the application.
+ *
+ * Reads the current pathname from the TanStack Router state and the user's
+ * authentication context to render the entries returned by {@link getMenuEntries}.
+ * Top-level entries without children are rendered as flat {@link SideNavLink}
+ * elements; entries with children are rendered as collapsible {@link SideNavMenu}
+ * groups. A "Need Help?" footer link is always rendered and points to the
+ * IDIR or BCeID help URL depending on the authenticated user's identity provider.
+ *
+ * Expansion state is controlled externally via {@link useLayout}.
+ */
 export const LayoutSideNav: FC = () => {
   const { isSideNavExpanded } = useLayout();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { isOnline } = useOfflineMode();
   const { user } = useAuth();
 
+  /**
+   * Renders the icon + text label for a menu item used inside a {@link SideNavMenu}.
+   *
+   * @param route - The menu entry whose icon and id are rendered.
+   * @returns A `<div>` containing the optional icon SVG and the route label.
+   */
   const renderIcon = (route: MenuItem) => {
     const Icon = route.icon;
     return (
@@ -26,6 +44,12 @@ export const LayoutSideNav: FC = () => {
     );
   };
 
+  /**
+   * Renders a flat {@link SideNavLink} for a top-level route with no children.
+   *
+   * @param route - The menu entry to render as a navigation link.
+   * @returns A `SideNavLink` element navigating to `route.path`.
+   */
   const renderMenuLink = (route: MenuItem) => (
     <SideNavLink
       data-testid={`side-nav-link-${route.id}`}
@@ -39,6 +63,15 @@ export const LayoutSideNav: FC = () => {
     </SideNavLink>
   );
 
+  /**
+   * Renders a collapsible {@link SideNavMenu} group for a route that has children.
+   *
+   * Child paths are composed as `{parentPath}/{childPath}`. If a child has no
+   * `path`, only the parent path is used (index-route behaviour).
+   *
+   * @param route - The parent menu entry containing nested child entries.
+   * @returns A `SideNavMenu` element whose items navigate to the composed child paths.
+   */
   const renderMenuItem = (route: MenuItem) => {
     const childPath = (parentPath: string, route: MenuItem) =>
       `${parentPath}${route.path ? `/${route.path}` : ''}`;

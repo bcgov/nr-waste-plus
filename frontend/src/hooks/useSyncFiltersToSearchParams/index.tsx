@@ -1,11 +1,24 @@
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { useEffect, useRef, useMemo, useCallback } from 'react';
 
+/**
+ * Defines optional serialization and deserialization functions for a single filter value.
+ *
+ * @template TValue - The in-memory type of the filter value.
+ */
 type FilterSearchParamTransform<TValue> = {
+  /** Converts the in-memory value to a URL-safe representation (e.g. code array → string). */
   toSearchParam?: (value: TValue) => unknown;
+  /** Converts a raw URL param value back to the in-memory type. */
   fromSearchParam?: (value: unknown, currentValue?: TValue) => TValue;
 };
 
+/**
+ * A per-key map of {@link FilterSearchParamTransform} entries.
+ * Only the filter keys that need custom serialization need to be specified.
+ *
+ * @template T - The filter state object type.
+ */
 type FilterSearchParamTransformMap<T extends Record<string, unknown>> = Partial<{
   [K in keyof T]: FilterSearchParamTransform<T[K]>;
 }>;

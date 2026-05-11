@@ -10,8 +10,21 @@ import { persistRedirectUrl } from '@/routes/redirectStorage';
 
 /**
  * HOC guard: enforces authentication and optional role requirements.
- * Shows a loading indicator while auth resolves, then either renders the
- * wrapped component or redirects to the appropriate access page.
+ *
+ * While the auth context is resolving (`isLoading`), renders a Carbon
+ * {@link Loading} overlay. Once resolved:
+ *
+ * - Unauthenticated users are redirected to `/login`; the attempted URL is
+ *   persisted via {@link persistRedirectUrl} so it can be restored after login.
+ * - Users with `'no-role'` status are redirected to {@link getUserAccessStatus}
+ *   `redirectTo`.
+ * - Users failing the optional `roles` check are redirected to `/unauthorized`
+ *   with a `reason` search param.
+ *
+ * @param Component - The route component to protect.
+ * @param roles - Optional array of {@link FamRole} values; at least one must match
+ *   a role in `user.roles` for access to be granted.
+ * @returns A HOC that renders the component only when access is authorised.
  */
 export function withProtected<P extends object>(
   Component: ComponentType<P>,

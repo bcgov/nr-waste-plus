@@ -11,28 +11,41 @@ import { usePageTitle } from '@/context/pageTitle/usePageTitle';
 import './index.scss';
 
 /**
- * Props for the PageTitle component.
- *
- * @property {string} title - The main title text for the page.
- * @property {string} [subtitle] - Optional subtitle text for the page.
- * @property {boolean} [experimental] - If true, displays an "Under construction" tag.
- * @property {React.ReactNode} [children] - Optional elements to render next to the title.
- * @property {BreadCrumbType[]} [breadCrumbs] - Optional array of breadcrumb objects for navigation.
+ * Props for the {@link PageTitle} component.
  */
 interface PageTitleProps {
+  /** Main page title rendered as an `<h1>`. */
   title: string;
+  /** Optional subtitle rendered below the heading. */
   subtitle?: string;
+  /** When `true`, displays an "Under Construction" tag next to the title. */
   experimental?: boolean;
+  /** Optional slot for action elements (e.g. buttons) rendered beside the heading. */
   children?: React.ReactNode;
+  /** Ordered breadcrumb trail. Each item is a clickable link except the last. */
   breadCrumbs?: BreadCrumbType[];
 }
 
 /**
- * PageTitle provides a standardized header for pages, including a title, optional subtitle, breadcrumbs, and an experimental tag.
- * It helps maintain consistent page layouts and navigation.
+ * Standardised page header component.
  *
- * @param {PageTitleProps} props - The props for the component.
- * @returns {JSX.Element} The rendered PageTitle component.
+ * Renders a Carbon {@link Column} containing:
+ * - An optional {@link Breadcrumb} trail built from `breadCrumbs`; each crumb is a
+ *   TanStack Router-aware link. The last crumb is rendered as plain text.
+ * - An `<h1>` heading and an optional {@link Subtitle}.
+ * - An "Under Construction" {@link UnderConstructionTag} when `experimental` is `true`.
+ * - An optional child slot for additional actions.
+ *
+ * On mount and whenever `title` or `breadCrumbs` change, the page title is
+ * propagated to the nearest {@link PageTitleProvider} via {@link usePageTitle}.
+ *
+ * @param props - Component props.
+ * @param props.title - Main heading text.
+ * @param props.subtitle - Optional subtitle rendered beneath the heading.
+ * @param props.experimental - Shows the "Under Construction" tag when `true`.
+ * @param props.children - Optional action elements rendered beside the heading.
+ * @param props.breadCrumbs - Ordered breadcrumb entries; each entry is a `{ name, path }` pair.
+ * @returns The rendered page title column.
  */
 const PageTitle: FC<PageTitleProps> = ({
   title,

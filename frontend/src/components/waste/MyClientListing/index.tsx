@@ -15,9 +15,22 @@ import useNotificationEvents from '@/hooks/useNotificationEvents';
 import './index.scss';
 
 /**
- * Displays the authenticated user's client list with search and pagination controls.
+ * Client listing page for the authenticated user's forest clients.
  *
- * @returns The my-client listing view.
+ * Combines a {@link SearchInput} with a paginated {@link TableResource} to let
+ * users search and browse the clients they are associated with. Key behaviours:
+ *
+ * - The query is configured with `enabled: false` and `gcTime: 0` so results
+ *   are never served from cache; every search fetches fresh data.
+ * - Searches are triggered by an explicit `searchTrigger` counter incremented by
+ *   {@link executeSearch} rather than by implicit state changes, providing
+ *   predictable fetch timing after React's synchronous state flush.
+ * - Inline error notifications are dispatched via {@link useNotificationEvents}
+ *   to the `my-client-list` notification target before each new search.
+ * - Client codes in the results table are rendered as TanStack Router links to
+ *   `/search?clientNumbers={code}`.
+ *
+ * @returns The client listing view column.
  */
 const MyClientListing: FC = () => {
   const [currentPage, setCurrentPage] = useState(0);

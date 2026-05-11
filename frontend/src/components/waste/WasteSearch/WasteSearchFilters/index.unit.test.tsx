@@ -70,7 +70,7 @@ const renderWithProps = async (props: Partial<ComponentProps<typeof WasteSearchF
 };
 
 describe('WasteSearchFilters', () => {
-  it('renders main search input and filter columns', async () => {
+  it('shouldRenderSearchInputAndFilterColumns_whenRendered', async () => {
     await renderWithProps({});
     expect(screen.getAllByPlaceholderText('Search by RU No. or Block ID')[0]).toBeDefined();
     expect(screen.getByPlaceholderText(/Sampling/i)).toBeDefined();
@@ -78,13 +78,13 @@ describe('WasteSearchFilters', () => {
     expect(screen.getByPlaceholderText(/Status/i)).toBeDefined();
   });
 
-  it('renders advanced search and search buttons (desktop)', async () => {
+  it('shouldRenderAdvancedSearchAndSearchButtons_whenDesktop', async () => {
     await renderWithProps({});
     expect(screen.getAllByText('Advanced Search').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Search').length).toBeGreaterThan(0);
   });
 
-  it('calls onSearch when search button is clicked', async () => {
+  it('shouldCallOnSearch_whenSearchButtonIsClicked', async () => {
     const onSearch = vi.fn();
     await renderWithProps({ onSearch });
     const searchButton = screen.getByTestId('search-button-most');
@@ -93,7 +93,7 @@ describe('WasteSearchFilters', () => {
     expect(onSearch).toHaveBeenCalled();
   });
 
-  it('shows and closes advanced search modal', async () => {
+  it('shouldShowAndCloseAdvancedSearchModal_whenAdvancedSearchButtonClicked', async () => {
     await renderWithProps({});
     //Open modal
     userEvent.click(screen.getByTestId('advanced-search-button-most'));
@@ -110,24 +110,21 @@ describe('WasteSearchFilters', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 
-  it('renders filter tags when filters are set', async () => {
+  it('shouldRenderFilterTagsAndShowOptions_whenFiltersDropdownsOpened', async () => {
     await renderWithProps({});
     expect(APIs.codes.getAssessAreaStatuses).toHaveBeenCalled();
 
     const samplingBox = screen.getByPlaceholderText(/Sampling/i);
     const samplingButton = samplingBox.parentElement?.querySelector('button');
-    expect(samplingBox).toBeDefined();
-    expect(samplingButton).toBeDefined();
+    expect(samplingButton).not.toBeNull();
 
     const districtBox = screen.getByPlaceholderText(/District/i);
     const districtButton = districtBox.parentElement?.querySelector('button');
-    expect(districtBox).toBeDefined();
-    expect(districtButton).toBeDefined();
+    expect(districtButton).not.toBeNull();
 
     const statusBox = screen.getByPlaceholderText(/Status/i);
     const statusButton = statusBox.parentElement?.querySelector('button');
-    expect(statusBox).toBeDefined();
-    expect(statusButton).toBeDefined();
+    expect(statusButton).not.toBeNull();
 
     expect(samplingButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(samplingButton as HTMLButtonElement);
@@ -142,7 +139,7 @@ describe('WasteSearchFilters', () => {
     expect(screen.getByText('A - Assess area status: A')).toBeDefined();
   });
 
-  it('renders the filter tags area', async () => {
+  it('shouldRenderActiveFilterTagsArea_whenFiltersHaveValue', async () => {
     await renderWithProps({
       value: {
         sampling: ['A'],
@@ -153,7 +150,7 @@ describe('WasteSearchFilters', () => {
     expect(screen.getByTestId('dt-sampling-A')).toBeDefined();
   });
 
-  it('calls onChange when search has new value', async () => {
+  it('shouldCallOnChange_whenSearchInputChanges', async () => {
     const onChange = vi.fn();
     await renderWithProps({ onChange });
 
@@ -164,7 +161,7 @@ describe('WasteSearchFilters', () => {
     await waitFor(() => expect(onChange).toHaveBeenCalled());
   });
 
-  it('calls onChange when dropdown selected a new value', async () => {
+  it('shouldCallOnChange_whenDropdownSelectionChanges', async () => {
     const onChange = vi.fn();
     await renderWithProps({ onChange });
 

@@ -19,7 +19,7 @@ const renderPage = (error?: unknown) =>
   );
 
 describe('GlobalErrorPage', () => {
-  it('renders default fallback message when no error is provided', async () => {
+  it('shouldRenderFallbackMessage_whenNoErrorProvided', async () => {
     renderPage();
     await waitFor(() => {
       expect(
@@ -28,7 +28,7 @@ describe('GlobalErrorPage', () => {
     });
   });
 
-  it('renders error message from Error object', async () => {
+  it('shouldRenderErrorMessage_whenErrorIsErrorInstance', async () => {
     renderPage(new Error('Boom goes the dynamite'));
     await waitFor(() => {
       expect(screen.getByText('Global Error')).toBeDefined();
@@ -36,7 +36,7 @@ describe('GlobalErrorPage', () => {
     });
   });
 
-  it('renders error message from string', async () => {
+  it('shouldRenderErrorMessage_whenErrorIsString', async () => {
     renderPage('String error');
     await waitFor(() => {
       expect(screen.getByText('Global Error')).toBeDefined();
@@ -44,7 +44,7 @@ describe('GlobalErrorPage', () => {
     });
   });
 
-  it('renders error message from object with statusText', async () => {
+  it('shouldRenderStatusText_whenErrorObjectHasStatusText', async () => {
     renderPage({ message: 'Another error', statusText: 'This is not a drill' });
     await waitFor(() => {
       expect(screen.getByText('Global Error')).toBeDefined();
@@ -52,7 +52,7 @@ describe('GlobalErrorPage', () => {
     });
   });
 
-  it('renders error message from object with empty statusText', async () => {
+  it('shouldFallBackToMessage_whenStatusTextIsEmpty', async () => {
     renderPage({ message: 'That Error', statusText: '' });
     await waitFor(() => {
       expect(screen.getByText('Global Error')).toBeDefined();

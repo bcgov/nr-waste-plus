@@ -129,9 +129,6 @@ export default defineConfig(({ mode }) => {
             if (id.includes('node_modules/@tanstack/')) {
               return 'query';
             }
-            if (id.includes('node_modules/react-router')) {
-              return 'router';
-            }
             if (
               id.includes('node_modules/axios/') ||
               id.includes('node_modules/lodash/') ||

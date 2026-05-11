@@ -25,7 +25,7 @@ describe('useWasteSearchFilters', () => {
     vi.clearAllMocks();
   });
 
-  it('returns initial filter state from the value prop', () => {
+  it('shouldReturnInitialFilterState_whenValuePropProvided', () => {
     const value: ReportingUnitSearchParametersViewDto = {
       mainSearchTerm: 'initial',
       sampling: ['A'],
@@ -37,13 +37,13 @@ describe('useWasteSearchFilters', () => {
     expect(result.current.filters).toEqual(value);
   });
 
-  it('returns isAdvancedSearchOpen as false initially', () => {
+  it('shouldReturnFalseForIsAdvancedSearchOpen_whenInitialized', () => {
     const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
 
     expect(result.current.isAdvancedSearchOpen).toBe(false);
   });
 
-  it('setIsAdvancedSearchOpen toggles the modal state', () => {
+  it('shouldToggleModalState_whenSetIsAdvancedSearchOpenCalled', () => {
     const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
 
     act(() => {
@@ -59,7 +59,7 @@ describe('useWasteSearchFilters', () => {
     expect(result.current.isAdvancedSearchOpen).toBe(false);
   });
 
-  it('handleStringChange updates the specified filter key', () => {
+  it('shouldUpdateFilterKey_whenHandleStringChangeCalled', () => {
     const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
 
     act(() => {
@@ -69,7 +69,7 @@ describe('useWasteSearchFilters', () => {
     expect(result.current.filters.mainSearchTerm).toBe('search text');
   });
 
-  it('handleStringChange does not affect other keys', () => {
+  it('shouldNotAffectOtherKeys_whenHandleStringChangeCalled', () => {
     const value: ReportingUnitSearchParametersViewDto = {
       ...defaultValue,
       sampling: ['S1'],
@@ -83,7 +83,7 @@ describe('useWasteSearchFilters', () => {
     expect(result.current.filters.sampling).toEqual(['S1']);
   });
 
-  it('handleActiveMultiSelectChange maps selectedItems to codes', () => {
+  it('shouldMapSelectedItemsToCodes_whenHandleActiveMultiSelectChangeCalled', () => {
     const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
 
     act(() => {
@@ -98,7 +98,7 @@ describe('useWasteSearchFilters', () => {
     expect(result.current.filters.sampling).toEqual(['A', 'B']);
   });
 
-  it('handleActiveMultiSelectChange handles empty selection (clear all)', () => {
+  it('shouldClearArrayKey_whenHandleActiveMultiSelectChangeWithEmptySelection', () => {
     const value: ReportingUnitSearchParametersViewDto = {
       ...defaultValue,
       sampling: ['A', 'B'],
@@ -112,7 +112,7 @@ describe('useWasteSearchFilters', () => {
     expect(result.current.filters.sampling).toEqual([]);
   });
 
-  it('handleChange updates the specified key with the given value', () => {
+  it('shouldUpdateSpecifiedKey_whenHandleChangeCalled', () => {
     const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
 
     act(() => {
@@ -122,7 +122,7 @@ describe('useWasteSearchFilters', () => {
     expect(result.current.filters.district).toEqual(['D1', 'D2']);
   });
 
-  it('handleChange does not affect other keys', () => {
+  it('shouldNotAffectOtherKeys_whenHandleChangeCalled', () => {
     const value: ReportingUnitSearchParametersViewDto = {
       ...defaultValue,
       mainSearchTerm: 'keep me',
@@ -136,7 +136,7 @@ describe('useWasteSearchFilters', () => {
     expect(result.current.filters.mainSearchTerm).toBe('keep me');
   });
 
-  it('onRemoveFilter without value removes the key from filters', () => {
+  it('shouldRemoveKey_whenOnRemoveFilterCalledWithoutValue', () => {
     const value: ReportingUnitSearchParametersViewDto = {
       ...defaultValue,
       mainSearchTerm: 'remove me',
@@ -150,7 +150,7 @@ describe('useWasteSearchFilters', () => {
     expect(result.current.filters.mainSearchTerm).toBeUndefined();
   });
 
-  it('onRemoveFilter with value removes only that item from an array key', () => {
+  it('shouldRemoveOnlySpecifiedItem_whenOnRemoveFilterCalledWithValue', () => {
     const value: ReportingUnitSearchParametersViewDto = {
       ...defaultValue,
       sampling: ['A', 'B', 'C'],
@@ -164,7 +164,7 @@ describe('useWasteSearchFilters', () => {
     expect(result.current.filters.sampling).toEqual(['A', 'C']);
   });
 
-  it('onRemoveFilter with value keeps other array keys untouched', () => {
+  it('shouldKeepOtherKeys_whenOnRemoveFilterCalled', () => {
     const value: ReportingUnitSearchParametersViewDto = {
       ...defaultValue,
       sampling: ['A', 'B'],
@@ -179,7 +179,7 @@ describe('useWasteSearchFilters', () => {
     expect(result.current.filters.district).toEqual(['D1']);
   });
 
-  it('calls onChange via useEffect when filters change', async () => {
+  it('shouldCallOnChange_whenFiltersChange', async () => {
     const onChange = vi.fn();
     const { result } = renderHook(() => useWasteSearchFilters(defaultValue, onChange));
 
@@ -199,7 +199,7 @@ describe('useWasteSearchFilters', () => {
     });
   });
 
-  it('passes removeEmpty output to onChange (omits empty arrays)', async () => {
+  it('shouldOmitEmptyArraysInOnChangeOutput_whenFiltersContainEmptyArrays', async () => {
     const onChange = vi.fn();
     renderHook(
       () =>
@@ -221,7 +221,7 @@ describe('useWasteSearchFilters', () => {
     expect(lastCall.mainSearchTerm).toBe('test');
   });
 
-  it('returns all required handler functions', () => {
+  it('shouldReturnAllHandlerFunctions_whenInitialized', () => {
     const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
 
     expect(typeof result.current.handleStringChange).toBe('function');

@@ -13,14 +13,24 @@ import { withPublicOnly } from '@/routes/guards/withPublicOnly';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-/** A HOC that wraps a route component with additional behaviour. */
+/** A HOC that wraps a route component with additional behaviour (e.g. auth, connectivity). */
 export type RouteGuard = <P extends object>(Component: ComponentType<P>) => ComponentType<P>;
 
+/**
+ * Describes a single application route and all of its access/navigation metadata.
+ *
+ * Used by {@link applyGuards} in `routeTree.tsx` to wrap the `component` with
+ * the appropriate HOC guards, and by {@link getMenuEntries} to build the left-
+ * panel navigation.
+ */
 export type RouteDescription = {
   path: string;
+  /** Unique display label and side-nav identifier for the route. */
   id: string;
   component: ComponentType;
+  /** Carbon icon component rendered next to the nav label when `isSideMenu` is true. */
   icon?: ComponentType;
+  /** When `true`, the route appears in the left-panel side navigation. */
   isSideMenu: boolean;
   /** Wraps component with withProtected (+ optional role check). */
   protected?: boolean;
@@ -39,8 +49,13 @@ export type MenuItem = Pick<RouteDescription, 'id' | 'path' | 'icon'> & {
   children?: MenuItem[];
 };
 
-// ─── Feature routes — drive the left-panel navigation ────────────────────────
-
+/**
+ * Feature routes that drive the left-panel navigation.
+ *
+ * Each entry is registered as a TanStack Router route in `routeTree.tsx` and
+ * wrapped with its declared HOC guards (e.g. {@link withProtected}).
+ * Only entries where `isSideMenu: true` appear in the side-nav.
+ */
 export const ROUTES: RouteDescription[] = [
   {
     path: '/clients',
@@ -72,8 +87,12 @@ export const ROUTES: RouteDescription[] = [
   },
 ];
 
-// ─── System routes — infrastructure pages not visible in the nav menu ─────────
-
+/**
+ * Infrastructure routes not visible in the navigation menu.
+ *
+ * Includes the landing / login entry point, the post-OAuth `/dashboard` redirect
+ * handler, and error pages such as `/no-role` and `/unauthorized`.
+ */
 export const SYSTEM_ROUTES: RouteDescription[] = [
   {
     path: '/',
@@ -103,7 +122,18 @@ export const SYSTEM_ROUTES: RouteDescription[] = [
   },
 ];
 
-/** Returns side-nav entries visible to the current user and connectivity state. */
+/**
+ * Returns the side-nav {@link MenuItem} entries visible to the current user.
+ *
+ * Filters {@link ROUTES} by:
+ * 1. `isSideMenu: true` — only navigation-visible routes
+ * 2. `offlineOnly` flag — excludes offline-only routes when the user is online
+ * 3. Role match — excludes routes whose `roles` list does not intersect `roles`
+ *
+ * @param isOnline - Whether the browser currently has network connectivity.
+ * @param roles - The authenticated user's FAM role assignments.
+ * @returns Filtered and projected array of `{ id, path, icon }` menu items.
+ */
 export const getMenuEntries = (isOnline: boolean, roles: FamRole[]): MenuItem[] =>
   ROUTES.filter((r) => r.isSideMenu)
     .filter((r) => !r.offlineOnly || !isOnline)

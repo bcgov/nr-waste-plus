@@ -48,8 +48,8 @@ vi.mock('@/services/APIs', () => {
 // Dummy child component for testing
 const DummyChild = () => <div data-testid="dummy-child">Hello Child</div>;
 
-describe('Layout (browser)', () => {
-  it('renders header, grid, and children', async () => {
+describe('Layout', () => {
+  it('shouldRenderHeaderGridAndChildren_whenRendered', async () => {
     (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
 
     const qc = new QueryClient();
@@ -76,12 +76,12 @@ describe('Layout (browser)', () => {
     );
 
     // Header
-    expect(document.querySelector('.cds--header')).toBeDefined();
+    expect(document.querySelector('.cds--header')).not.toBeNull();
     // Content body
-    expect(document.querySelector('.cds--content')).toBeDefined();
+    expect(document.querySelector('.cds--content')).not.toBeNull();
     // Grid
-    expect(document.querySelector('.layout-grid')).toBeDefined();
+    expect(document.querySelector('.layout-grid')).not.toBeNull();
     // Children
-    expect(screen.getByTestId('dummy-child').textContent).toBe('Hello Child');
+    expect(screen.getByText('Hello Child')).toBeDefined();
   });
 });

@@ -8,26 +8,38 @@ import useSyncFiltersToSearchParams from '@/hooks/useSyncFiltersToSearchParams';
 import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
 import { removeEmpty } from '@/services/utils';
 
+/** Shape of the object returned by {@link useWasteSearchFilters}. */
 type UseWasteSearchFiltersReturn = {
+  /** Current filter state, kept in sync with the parent's `value` prop. */
   filters: ReportingUnitSearchParametersViewDto;
+  /** Whether the Advanced Search modal is currently open. */
   isAdvancedSearchOpen: boolean;
+  /** Opens or closes the Advanced Search modal. */
   setIsAdvancedSearchOpen: (open: boolean) => void;
+  /** Returns a change handler for a single string filter key. */
   handleStringChange: (key: keyof ReportingUnitSearchParametersViewDto) => (value: string) => void;
+  /** Returns a change handler for a multi-select filter key; maps `selectedItems` to code arrays. */
   handleActiveMultiSelectChange: (
     key: keyof ReportingUnitSearchParametersViewDto,
   ) => (changes: { selectedItems: CodeDescriptionDto[] }) => void;
+  /** Returns a generic change handler that sets any filter key to an arbitrary value. */
   handleChange: <K extends keyof ReportingUnitSearchParametersViewDto>(
     key: K,
   ) => (value: ReportingUnitSearchParametersViewDto[K]) => void;
+  /** Removes a single filter value or clears a filter key entirely. */
   onRemoveFilter: ComponentProps<typeof WasteSearchFiltersActive>['onRemoveFilter'];
 };
 
 /**
  * Manages waste-search filter state, URL sync, preference sync, and all update handlers.
  *
- * @param value The initial filter state from the parent.
- * @param onChange Callback fired with the cleaned filter state whenever filters change.
- * @returns Filter state, modal visibility flag, and all change handlers.
+ * URL search params are kept in sync via {@link useSyncFiltersToSearchParams};
+ * user preferences are applied on mount via {@link useSyncPreferencesToFilters}.
+ * Empty array values are stripped before calling `onChange` via {@link removeEmpty}.
+ *
+ * @param value - The initial filter state provided by the parent.
+ * @param onChange - Called with the cleaned filter state whenever any filter changes.
+ * @returns An object containing the current filter state, modal flag, and change handlers.
  */
 export const useWasteSearchFilters = (
   value: ReportingUnitSearchParametersViewDto,

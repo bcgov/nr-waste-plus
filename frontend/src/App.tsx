@@ -6,9 +6,17 @@ import AppRouter from '@/routes/AppRouter';
 import { router } from '@/routes/routeTree';
 
 /**
- * Renders the application route tree and development tooling.
+ * Root application component.
  *
- * @returns The root application component.
+ * Mounts the TanStack Router provider via {@link AppRouter} and attaches two sets
+ * of development devtools panels:
+ * - {@link ReactQueryDevtools} anchored to the bottom-left corner
+ * - {@link TanStackRouterDevtools} anchored to the bottom-right corner, bound to
+ *   the {@link router} singleton so it reflects the live route state
+ *
+ * Both devtools panels start collapsed (`initialIsOpen: false`).
+ *
+ * @returns The root JSX element containing the router and devtools panels.
  */
 const App: FC = () => {
   return (

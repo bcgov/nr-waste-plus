@@ -8,7 +8,7 @@ import { createTestRouter } from '@/config/tests/routerTestHelper';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 
 describe('NotFoundPage', () => {
-  it('renders not found message', async () => {
+  it('shouldRenderNotFoundMessage_whenRendered', async () => {
     render(
       <RouterProvider
         router={createTestRouter(() => (

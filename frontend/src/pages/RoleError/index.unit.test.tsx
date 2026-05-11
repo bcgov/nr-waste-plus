@@ -7,7 +7,7 @@ import RoleErrorPage from './index';
 import { createTestRouter } from '@/config/tests/routerTestHelper';
 
 describe('RoleErrorPage', () => {
-  it('renders unauthorized access message', async () => {
+  it('shouldRenderFallbackMessage_whenNoReasonParamPresent', async () => {
     render(<RouterProvider router={createTestRouter(() => <RoleErrorPage />, '/unauthorized')} />);
     await waitFor(() => {
       expect(screen.getByText('Unauthorized Access')).toBeDefined();
@@ -17,7 +17,7 @@ describe('RoleErrorPage', () => {
     });
   });
 
-  it('renders the violation-specific message when a reason is present', async () => {
+  it('shouldRenderViolationMessage_whenReasonParamPresent', async () => {
     render(
       <RouterProvider
         router={createTestRouter(

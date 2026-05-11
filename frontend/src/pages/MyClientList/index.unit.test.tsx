@@ -44,14 +44,14 @@ const renderWithProps = async () => {
 };
 
 describe('MyClientListPage', () => {
-  it('renders My clients', async () => {
+  it('shouldRenderMyClients_whenRendered', async () => {
     await renderWithProps();
     await waitFor(() => {
       expect(screen.getByText('My clients')).toBeDefined();
     });
   });
 
-  it('displays error notification when error event is sent', async () => {
+  it('shouldDisplayErrorNotification_whenErrorEventSent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -67,7 +67,7 @@ describe('MyClientListPage', () => {
     expect(screen.getAllByText('This is a test error message')).toHaveLength(1);
   });
 
-  it('displays warning notification when warning event is sent', async () => {
+  it('shouldDisplayWarningNotification_whenWarningEventSent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -83,7 +83,7 @@ describe('MyClientListPage', () => {
     expect(screen.getAllByText('This is a test warning message')).toHaveLength(1);
   });
 
-  it('displays info notification when info event is sent', async () => {
+  it('shouldDisplayInfoNotification_whenInfoEventSent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -99,7 +99,7 @@ describe('MyClientListPage', () => {
     expect(screen.getAllByText('This is a test info message')).toHaveLength(1);
   });
 
-  it('does not display notification when event target does not match', async () => {
+  it('shouldNotDisplayNotification_whenEventTargetDoesNotMatch', async () => {
     await renderWithProps();
 
     act(() => {

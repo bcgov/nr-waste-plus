@@ -3,9 +3,17 @@ import { type FC } from 'react';
 
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 
+/** Props for the {@link RedirectLinkTag} component. */
 type RedirectLinkTagProps = {
+  /** Visible link text passed through to {@link EmptyValueTag}. */
   text: string;
+  /** Target URL. Path-only strings (e.g. `/search?q=x`) are treated as internal. */
   url: string;
+  /**
+   * When `true`, the link opens in the current tab (`_self`).
+   * Internal paths use a TanStack Router `<Link>`; external URLs use a plain `<a>`.
+   * Defaults to `false` (new tab, `_blank`).
+   */
   sameTab?: boolean;
 };
 

@@ -70,10 +70,10 @@ const renderWithProviders = async (pathname = '/dashboard') => {
 describe('LayoutSideNav', () => {
   beforeEach(() => {
     vi.mocked(routePathsModule.getMenuEntries).mockReturnValue(defaultMenuEntries);
-    (useAuthModule.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ user: undefined });
+    vi.mocked(useAuthModule.useAuth).mockReturnValue({ user: undefined });
   });
 
-  it('renders menu links and menu items', async () => {
+  it('shouldRenderMenuLinksAndMenuItems_whenDefaultEntries', async () => {
     await renderWithProviders('/dashboard');
     expect(screen.getByText('Dashboard')).toBeDefined();
     expect(screen.getByText('Settings')).toBeDefined();
@@ -82,13 +82,13 @@ describe('LayoutSideNav', () => {
     expect(screen.queryByText('Hidden')).toBeNull();
   });
 
-  it('marks the correct link as active', async () => {
+  it('shouldMarkCorrectLinkAsActive_whenPathMatches', async () => {
     await renderWithProviders('/settings/profile');
     const profileLink = screen.getByText('Profile').closest('a');
     expect(profileLink?.className).toContain('cds--side-nav__link--current');
   });
 
-  it('renders icons when a route provides an icon component', async () => {
+  it('shouldRenderIcons_whenRouteHasIconComponent', async () => {
     const MockIcon = () => <svg data-testid="mock-icon" />;
     vi.mocked(routePathsModule.getMenuEntries).mockReturnValue([
       {
@@ -113,7 +113,7 @@ describe('LayoutSideNav', () => {
     expect(screen.getAllByTestId('mock-icon').length).toBeGreaterThan(0);
   });
 
-  it('handles child routes with no path (index routes)', async () => {
+  it('shouldRenderChildRoute_whenChildHasNoPath', async () => {
     vi.mocked(routePathsModule.getMenuEntries).mockReturnValue([
       {
         id: 'Settings',
@@ -131,22 +131,22 @@ describe('LayoutSideNav', () => {
   });
 
   describe('help link', () => {
-    it('uses the IDIR help URL when the user is an IDIR provider', async () => {
-      (useAuthModule.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
+    it('shouldUseIdirHelpUrl_whenUserIsIdirProvider', async () => {
+      vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: { idpProvider: 'IDIR' },
       });
       await renderWithProviders('/dashboard');
-      const helpLink = screen.getByTestId('side-nav-link-help');
-      expect(helpLink?.getAttribute('href')).toBe('https://test-idir-help.example.com');
+      const helpLink = screen.getByRole('link', { name: 'Need Help?' });
+      expect(helpLink.getAttribute('href')).toBe('https://test-idir-help.example.com');
     });
 
-    it('uses the BCeID help URL when the user is a BCeID provider', async () => {
-      (useAuthModule.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
+    it('shouldUseBceidHelpUrl_whenUserIsBceidProvider', async () => {
+      vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: { idpProvider: 'BCEIDBUSINESS' },
       });
       await renderWithProviders('/dashboard');
-      const helpLink = screen.getByTestId('side-nav-link-help');
-      expect(helpLink?.getAttribute('href')).toBe('https://test-bceid-help.example.com');
+      const helpLink = screen.getByRole('link', { name: 'Need Help?' });
+      expect(helpLink.getAttribute('href')).toBe('https://test-bceid-help.example.com');
     });
   });
 });

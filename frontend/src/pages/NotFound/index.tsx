@@ -4,9 +4,13 @@ import { type FC } from 'react';
 import PageTitle from '@/components/core/PageTitle';
 
 /**
- * Displays the fallback page for unknown routes.
+ * 404 Not Found fallback page.
  *
- * @returns The not found page content.
+ * Rendered by TanStack Router's `defaultNotFoundComponent` when no route
+ * matches the current URL. Displays a {@link PageTitle} with a static
+ * "Content Not Found" heading and a descriptive subtitle.
+ *
+ * @returns The not-found content column.
  */
 const NotFoundPage: FC = () => {
   return (

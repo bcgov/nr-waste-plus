@@ -3,11 +3,30 @@ import { useEffect, useRef, type ComponentType } from 'react';
 
 import { clearPersistedRedirect, readPersistedRedirect } from '@/routes/redirectStorage';
 
+/**
+ * Returns `true` when the URL search string contains both OAuth `code` and `state`
+ * parameters, indicating the browser has just returned from the Cognito auth flow.
+ *
+ * @param searchStr - The raw URL search string (e.g. `?code=abc&state=xyz`).
+ * @returns `true` if the params look like an OAuth callback.
+ */
 const isOAuthCallback = (searchStr: string): boolean => {
   const params = new URLSearchParams(searchStr);
   return params.has('code') && params.has('state');
 };
 
+/**
+ * Validates and sanitises a persisted redirect target before navigating to it.
+ *
+ * Returns `null` (do not redirect) when the value is:
+ * - empty / falsy
+ * - not a path-only URL (must start with `/` but not `//`)
+ * - an absolute URL whose origin differs from the current origin (open-redirect protection)
+ * - the `/dashboard` path (prevents an infinite loop — the guard is mounted on `/dashboard`)
+ *
+ * @param value - The raw persisted redirect URL string (may be `null`).
+ * @returns The safe, sanitised path string, or `null` if the redirect should be suppressed.
+ */
 const getSafeRedirectTarget = (value: string | null): string | null => {
   if (!value || !value.startsWith('/') || value.startsWith('//')) return null;
   try {
@@ -21,13 +40,19 @@ const getSafeRedirectTarget = (value: string | null): string | null => {
 };
 
 /**
- * HOC guard: reads the pre-login redirect target from session storage and sends
- * the user to the correct destination after the OAuth flow completes.
+ * HOC guard: resolves the post-login redirect destination for the `/dashboard` entry point.
  *
- * Priority order:
- *   1. Persisted pre-login URL  →  navigate there directly
- *   2. OAuth callback params detected  →  strip params, go to /search
- *   3. Fallback  →  /search, preserving any non-OAuth query params
+ * On mount (guarded by a `useRef` so it runs exactly once per lifecycle), reads
+ * the persisted pre-login URL from {@link readPersistedRedirect}, clears it via
+ * {@link clearPersistedRedirect}, and navigates:
+ *
+ * 1. To the persisted URL (safe-checked by {@link getSafeRedirectTarget}) if one exists.
+ * 2. To `/search` if the current URL looks like an OAuth callback
+ *    ({@link isOAuthCallback}).
+ * 3. To `/search` (preserving non-OAuth query params) as a fallback.
+ *
+ * @param Component - The route component to wrap (rendered as the `/dashboard` page body).
+ * @returns A HOC that performs the post-login redirect before the first render.
  */
 export function withPersistentRedirect<P extends object>(
   Component: ComponentType<P>,

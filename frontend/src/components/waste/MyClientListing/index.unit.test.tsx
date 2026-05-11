@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import MyClientListing from './index';
 
@@ -147,13 +147,15 @@ const renderWithProps = async () => {
 };
 
 describe('MyClientListing', () => {
+  const mockSearchClients = vi.mocked(APIs.forestclient.searchMyForestClients);
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe('initial rendering', () => {
     it('renders search input and table components', async () => {
-      (APIs.forestclient.searchMyForestClients as Mock).mockResolvedValue(mockSearchResults);
+      mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       expect(screen.getByPlaceholderText('Search by name')).toBeDefined();
@@ -161,7 +163,7 @@ describe('MyClientListing', () => {
     });
 
     it('automatically fetches data on mount', async () => {
-      (APIs.forestclient.searchMyForestClients as Mock).mockResolvedValue(mockSearchResults);
+      mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       await waitFor(() => {
@@ -172,7 +174,7 @@ describe('MyClientListing', () => {
     });
 
     it('displays client data after initial load', async () => {
-      (APIs.forestclient.searchMyForestClients as Mock).mockResolvedValue(mockSearchResults);
+      mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       await waitFor(() => {
@@ -184,7 +186,7 @@ describe('MyClientListing', () => {
 
   describe('search functionality', () => {
     it('executes search when search button is clicked', async () => {
-      (APIs.forestclient.searchMyForestClients as Mock).mockResolvedValue(mockSearchResults);
+      mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       // Wait for initial load
@@ -219,7 +221,7 @@ describe('MyClientListing', () => {
         page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
       };
 
-      (APIs.forestclient.searchMyForestClients as Mock)
+      mockSearchClients
         .mockResolvedValueOnce(mockSearchResults)
         .mockResolvedValueOnce(filteredResults);
 
@@ -243,7 +245,7 @@ describe('MyClientListing', () => {
     });
 
     it('displays no results message when search returns empty', async () => {
-      (APIs.forestclient.searchMyForestClients as Mock)
+      mockSearchClients
         .mockResolvedValueOnce(mockSearchResults)
         .mockResolvedValueOnce(mockEmptyResults);
 
@@ -266,7 +268,7 @@ describe('MyClientListing', () => {
     });
 
     it('can search with empty filter', async () => {
-      (APIs.forestclient.searchMyForestClients as Mock).mockResolvedValue(mockSearchResults);
+      mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       await waitFor(() => {
@@ -287,7 +289,7 @@ describe('MyClientListing', () => {
 
   describe('pagination', () => {
     it('handles page change correctly', async () => {
-      (APIs.forestclient.searchMyForestClients as Mock).mockResolvedValue(mockLargeDataset);
+      mockSearchClients.mockResolvedValue(mockLargeDataset);
       await renderWithProps();
 
       await waitFor(() => {
@@ -306,14 +308,14 @@ describe('MyClientListing', () => {
     });
 
     it('calls API when page size changes', async () => {
-      (APIs.forestclient.searchMyForestClients as Mock).mockResolvedValue(mockLargeDataset);
+      mockSearchClients.mockResolvedValue(mockLargeDataset);
       await renderWithProps();
 
       await waitFor(() => {
         expect(screen.getByText('Client 1')).toBeDefined();
       });
 
-      const initialCallCount = (APIs.forestclient.searchMyForestClients as Mock).mock.calls.length;
+      const initialCallCount = mockSearchClients.mock.calls.length;
 
       // Verify that pagination controls exist
       const pageSizeSelect = screen.getByLabelText('Items per page:');
@@ -329,7 +331,7 @@ describe('MyClientListing', () => {
         page: { number: 2, size: 10, totalElements: 25, totalPages: 3 },
       };
 
-      (APIs.forestclient.searchMyForestClients as Mock)
+      mockSearchClients
         .mockResolvedValueOnce(mockLargeDataset)
         .mockResolvedValueOnce(page2Data)
         .mockResolvedValueOnce(mockEmptyResults);
@@ -346,7 +348,7 @@ describe('MyClientListing', () => {
       await userEvent.click(nextButton);
 
       await waitFor(() => {
-        const calls = (APIs.forestclient.searchMyForestClients as Mock).mock.calls;
+        const calls = mockSearchClients.mock.calls;
         // Verify it doesn't go beyond valid page range
         expect(calls.at(-1)?.[1]).toBeLessThan(3);
       });
@@ -364,7 +366,7 @@ describe('MyClientListing', () => {
         },
       };
 
-      (APIs.forestclient.searchMyForestClients as Mock).mockRejectedValue(errorResponse);
+      mockSearchClients.mockRejectedValue(errorResponse);
       await renderWithProps();
 
       await waitFor(() => {
@@ -385,7 +387,7 @@ describe('MyClientListing', () => {
         },
       };
 
-      (APIs.forestclient.searchMyForestClients as Mock).mockRejectedValue(errorResponse);
+      mockSearchClients.mockRejectedValue(errorResponse);
       await renderWithProps();
 
       await waitFor(() => {
@@ -410,7 +412,7 @@ describe('MyClientListing', () => {
         },
       };
 
-      (APIs.forestclient.searchMyForestClients as Mock).mockRejectedValue(errorResponse);
+      mockSearchClients.mockRejectedValue(errorResponse);
       await renderWithProps();
 
       await waitFor(() => {
@@ -427,7 +429,7 @@ describe('MyClientListing', () => {
 
   describe('data display', () => {
     it('displays all client information columns', async () => {
-      (APIs.forestclient.searchMyForestClients as Mock).mockResolvedValue(mockSearchResults);
+      mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       await waitFor(() => {
@@ -447,7 +449,7 @@ describe('MyClientListing', () => {
     });
 
     it('adds id property to each client for table rendering', async () => {
-      (APIs.forestclient.searchMyForestClients as Mock).mockResolvedValue(mockSearchResults);
+      mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       await waitFor(() => {
@@ -458,7 +460,7 @@ describe('MyClientListing', () => {
     });
 
     it('renders client code as a link to search page with client filter', async () => {
-      (APIs.forestclient.searchMyForestClients as Mock).mockResolvedValue(mockSearchResults);
+      mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       await waitFor(() => {
@@ -469,7 +471,7 @@ describe('MyClientListing', () => {
     });
 
     it('renders all client codes as search links', async () => {
-      (APIs.forestclient.searchMyForestClients as Mock).mockResolvedValue(mockSearchResults);
+      mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       await waitFor(() => {
@@ -483,7 +485,7 @@ describe('MyClientListing', () => {
 
   describe('loading states', () => {
     it('hides loading state after data is fetched', async () => {
-      (APIs.forestclient.searchMyForestClients as Mock).mockResolvedValue(mockSearchResults);
+      mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       await waitFor(() => {
@@ -495,7 +497,7 @@ describe('MyClientListing', () => {
 
   describe('query configuration', () => {
     it('disables query by default (enabled: false)', async () => {
-      (APIs.forestclient.searchMyForestClients as Mock).mockResolvedValue(mockSearchResults);
+      mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       // Despite enabled: false, useEffect triggers refetch on mount
@@ -505,7 +507,7 @@ describe('MyClientListing', () => {
     });
 
     it('clears cache on each search (gcTime: 0)', async () => {
-      (APIs.forestclient.searchMyForestClients as Mock).mockResolvedValue(mockSearchResults);
+      mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       await waitFor(() => {

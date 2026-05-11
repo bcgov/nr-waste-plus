@@ -9,9 +9,15 @@ import useScopedNotification from '@/hooks/useNotificationEvents/useScopedNotifi
 import './index.scss';
 
 /**
- * Hosts the waste search page banner, event notifications, and search results table.
+ * Waste Search page — hosts the search banner, page-scoped notifications, and results table.
  *
- * @returns The waste search page.
+ * Subscribes to the `'waste-search'` notification target via
+ * {@link useScopedNotification} so that errors, warnings, and info events raised
+ * by the search table ({@link WasteSearch}) are displayed as a Carbon
+ * {@link InlineNotification} directly on this page. The notification is cleared
+ * before each new search by the table component.
+ *
+ * @returns The Waste Search page columns (title, optional notification, and search table).
  */
 const WasteSearchPage: FC = () => {
   const { clearNotification, eventNotification } = useScopedNotification('waste-search');
