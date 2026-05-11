@@ -89,6 +89,7 @@
     <jackson-bom.version>3.1.1</jackson-bom.version>
     <spring-security.version>7.0.4</spring-security.version>
     <tomcat.version>11.0.21</tomcat.version>
+    <postgresql.version>42.7.11</postgresql.version>
   </properties>
 
   <dependencies>
@@ -112,6 +113,7 @@
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
+      <version>${postgresql.version}</version>
       <scope>runtime</scope>
     </dependency>
 
