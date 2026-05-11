@@ -112,6 +112,7 @@
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
+      <version>${postgresql.version}</version>
       <scope>runtime</scope>
     </dependency>
 
@@ -288,7 +289,8 @@
             </executions>
             <configuration>
               <buildArgs>
-                <buildArg>-H:ServiceLoaderFeatureExcludeServices=org.springframework.security.core.context.ReactiveSecurityContextHolderThreadLocalAccessor</buildArg>
+                <buildArg>
+                  -H:ServiceLoaderFeatureExcludeServices=org.springframework.security.core.context.ReactiveSecurityContextHolderThreadLocalAccessor</buildArg>
               </buildArgs>
             </configuration>
           </plugin>
