@@ -63,7 +63,7 @@ describe('NoRolePage', () => {
     mockUser = null;
     mockNavigate.mockClear();
     vi.mocked(APIs.user.getUserPreferences).mockResolvedValue({ theme: 'g10' });
-    vi.mocked(APIs.user.updateUserPreferences).mockResolvedValue({});
+    vi.mocked(APIs.user.updateUserPreferences).mockResolvedValue(undefined);
   });
 
   it('shouldNavigateToHome_whenUserIsNotLoggedIn', async () => {

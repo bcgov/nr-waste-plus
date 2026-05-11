@@ -70,7 +70,15 @@ const renderWithProviders = async (pathname = '/dashboard') => {
 describe('LayoutSideNav', () => {
   beforeEach(() => {
     vi.mocked(routePathsModule.getMenuEntries).mockReturnValue(defaultMenuEntries);
-    vi.mocked(useAuthModule.useAuth).mockReturnValue({ user: undefined });
+    vi.mocked(useAuthModule.useAuth).mockReturnValue({
+      user: undefined,
+      isLoggedIn: false,
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      userToken: vi.fn(),
+      getClients: vi.fn(),
+    });
   });
 
   it('shouldRenderMenuLinksAndMenuItems_whenDefaultEntries', async () => {
@@ -133,7 +141,13 @@ describe('LayoutSideNav', () => {
   describe('help link', () => {
     it('shouldUseIdirHelpUrl_whenUserIsIdirProvider', async () => {
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
-        user: { idpProvider: 'IDIR' },
+        user: { idpProvider: 'IDIR', privileges: {} },
+        isLoggedIn: true,
+        isLoading: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+        userToken: vi.fn(),
+        getClients: vi.fn(),
       });
       await renderWithProviders('/dashboard');
       const helpLink = screen.getByRole('link', { name: 'Need Help?' });
@@ -142,7 +156,13 @@ describe('LayoutSideNav', () => {
 
     it('shouldUseBceidHelpUrl_whenUserIsBceidProvider', async () => {
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
-        user: { idpProvider: 'BCEIDBUSINESS' },
+        user: { idpProvider: 'BCEIDBUSINESS', privileges: {} },
+        isLoggedIn: true,
+        isLoading: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+        userToken: vi.fn(),
+        getClients: vi.fn(),
       });
       await renderWithProviders('/dashboard');
       const helpLink = screen.getByRole('link', { name: 'Need Help?' });

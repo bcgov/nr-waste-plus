@@ -58,7 +58,7 @@ const renderWithProps = async () => {
 describe('WasteSearchPage', () => {
   beforeEach(() => {
     vi.mocked(APIs.user.getUserPreferences).mockResolvedValue({ theme: 'g10' });
-    vi.mocked(APIs.user.updateUserPreferences).mockResolvedValue({});
+    vi.mocked(APIs.user.updateUserPreferences).mockResolvedValue(undefined);
     vi.mocked(APIs.codes.getSamplingOptions).mockResolvedValue([]);
     vi.mocked(APIs.codes.getDistricts).mockResolvedValue([]);
     vi.mocked(APIs.codes.getAssessAreaStatuses).mockResolvedValue([]);
