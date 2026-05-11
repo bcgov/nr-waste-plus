@@ -1,6 +1,4 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { type ReactNode } from 'react';
-import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { useWasteSearchFilters } from './useWasteSearchFilters';
@@ -14,8 +12,6 @@ vi.mock('@/hooks/useSyncFiltersToSearchParams', () => ({
 vi.mock('@/hooks/useSyncPreferencesToFilters', () => ({
   default: vi.fn(),
 }));
-
-const wrapper = ({ children }: { children: ReactNode }) => <MemoryRouter>{children}</MemoryRouter>;
 
 const defaultValue: ReportingUnitSearchParametersViewDto = {
   mainSearchTerm: '',
@@ -36,19 +32,19 @@ describe('useWasteSearchFilters', () => {
       district: [],
       status: [],
     };
-    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()), { wrapper });
+    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()));
 
     expect(result.current.filters).toEqual(value);
   });
 
   it('returns isAdvancedSearchOpen as false initially', () => {
-    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()), { wrapper });
+    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
 
     expect(result.current.isAdvancedSearchOpen).toBe(false);
   });
 
   it('setIsAdvancedSearchOpen toggles the modal state', () => {
-    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()), { wrapper });
+    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
 
     act(() => {
       result.current.setIsAdvancedSearchOpen(true);
@@ -64,7 +60,7 @@ describe('useWasteSearchFilters', () => {
   });
 
   it('handleStringChange updates the specified filter key', () => {
-    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()), { wrapper });
+    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
 
     act(() => {
       result.current.handleStringChange('mainSearchTerm')('search text');
@@ -78,7 +74,7 @@ describe('useWasteSearchFilters', () => {
       ...defaultValue,
       sampling: ['S1'],
     };
-    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()), { wrapper });
+    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()));
 
     act(() => {
       result.current.handleStringChange('mainSearchTerm')('new search');
@@ -88,7 +84,7 @@ describe('useWasteSearchFilters', () => {
   });
 
   it('handleActiveMultiSelectChange maps selectedItems to codes', () => {
-    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()), { wrapper });
+    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
 
     act(() => {
       result.current.handleActiveMultiSelectChange('sampling')({
@@ -107,7 +103,7 @@ describe('useWasteSearchFilters', () => {
       ...defaultValue,
       sampling: ['A', 'B'],
     };
-    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()), { wrapper });
+    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()));
 
     act(() => {
       result.current.handleActiveMultiSelectChange('sampling')({ selectedItems: [] });
@@ -117,7 +113,7 @@ describe('useWasteSearchFilters', () => {
   });
 
   it('handleChange updates the specified key with the given value', () => {
-    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()), { wrapper });
+    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
 
     act(() => {
       result.current.handleChange('district')(['D1', 'D2']);
@@ -131,7 +127,7 @@ describe('useWasteSearchFilters', () => {
       ...defaultValue,
       mainSearchTerm: 'keep me',
     };
-    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()), { wrapper });
+    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()));
 
     act(() => {
       result.current.handleChange('district')(['D1']);
@@ -145,7 +141,7 @@ describe('useWasteSearchFilters', () => {
       ...defaultValue,
       mainSearchTerm: 'remove me',
     };
-    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()), { wrapper });
+    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()));
 
     act(() => {
       result.current.onRemoveFilter('mainSearchTerm', undefined);
@@ -159,7 +155,7 @@ describe('useWasteSearchFilters', () => {
       ...defaultValue,
       sampling: ['A', 'B', 'C'],
     };
-    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()), { wrapper });
+    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()));
 
     act(() => {
       result.current.onRemoveFilter('sampling', 'B');
@@ -174,7 +170,7 @@ describe('useWasteSearchFilters', () => {
       sampling: ['A', 'B'],
       district: ['D1'],
     };
-    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()), { wrapper });
+    const { result } = renderHook(() => useWasteSearchFilters(value, vi.fn()));
 
     act(() => {
       result.current.onRemoveFilter('sampling', 'A');
@@ -185,9 +181,7 @@ describe('useWasteSearchFilters', () => {
 
   it('calls onChange via useEffect when filters change', async () => {
     const onChange = vi.fn();
-    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, onChange), {
-      wrapper,
-    });
+    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, onChange));
 
     // onChange is called once on mount with the initial (empty) state
     await waitFor(() => {
@@ -213,7 +207,6 @@ describe('useWasteSearchFilters', () => {
           { mainSearchTerm: 'test', sampling: [], district: [], status: [] },
           onChange,
         ),
-      { wrapper },
     );
 
     await waitFor(() => {
@@ -229,7 +222,7 @@ describe('useWasteSearchFilters', () => {
   });
 
   it('returns all required handler functions', () => {
-    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()), { wrapper });
+    const { result } = renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
 
     expect(typeof result.current.handleStringChange).toBe('function');
     expect(typeof result.current.handleActiveMultiSelectChange).toBe('function');

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
+import { useEffect, useRef, useMemo, useCallback } from 'react';
 
 type FilterSearchParamTransform<TValue> = {
   toSearchParam?: (value: TValue) => unknown;
@@ -84,7 +84,20 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
     transforms?: FilterSearchParamTransformMap<T>;
   },
 ): void => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const searchStr = useRouterState({ select: (s) => s.location.searchStr });
+  const navigate = useNavigate();
+  const searchParams = useMemo(() => new URLSearchParams(searchStr), [searchStr]);
+  const setSearchParams = useCallback(
+    (params: URLSearchParams, options?: { replace?: boolean }) => {
+      void navigate({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        search: () => Object.fromEntries(params) as any,
+        replace: options?.replace ?? false,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+    },
+    [navigate],
+  );
   const excludeSet = useMemo(() => new Set(options?.exclude ?? []), [options?.exclude]);
   const includeEmpty = options?.includeEmpty ?? false;
   const transforms = options?.transforms;

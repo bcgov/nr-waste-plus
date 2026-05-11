@@ -1,6 +1,6 @@
 import { Breadcrumb, BreadcrumbItem, Column } from '@carbon/react';
+import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo, type FC } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { type BreadCrumbType } from './types';
 
@@ -58,7 +58,11 @@ const PageTitle: FC<PageTitleProps> = ({
       {breadCrumbs?.length ? (
         <Breadcrumb className="page-title-breadcrumb">
           {breadCrumbs.map((crumb) => (
-            <BreadcrumbItem key={crumb.name} onClick={() => navigate(crumb.path)}>
+            <BreadcrumbItem
+              key={crumb.name}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              onClick={() => void navigate({ to: crumb.path as any })}
+            >
               {crumb.name}
             </BreadcrumbItem>
           ))}

@@ -1,6 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
 import NoRolePage from './index';
@@ -35,14 +34,11 @@ vi.mock('@/services/APIs', () => {
   };
 });
 
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
+vi.mock('@tanstack/react-router', async () => {
+  const actual = await vi.importActual('@tanstack/react-router');
   return {
     ...actual,
-    Navigate: ({ to }: { to: string }) => {
-      mockNavigate(to);
-      return null;
-    },
+    useNavigate: () => mockNavigate,
   };
 });
 
@@ -52,11 +48,9 @@ const renderWithProps = async () => {
     render(
       <QueryClientProvider client={qc}>
         <PreferenceProvider>
-          <MemoryRouter initialEntries={['/no-role']}>
-            <PageTitleProvider>
-              <NoRolePage />
-            </PageTitleProvider>
-          </MemoryRouter>
+          <PageTitleProvider>
+            <NoRolePage />
+          </PageTitleProvider>
         </PreferenceProvider>
       </QueryClientProvider>,
     ),
@@ -76,7 +70,7 @@ describe('NoRolePage', () => {
     mockIsLoggedIn = false;
     mockUser = null;
     await renderWithProps();
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    expect(mockNavigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/' }));
     expect(screen.queryByText('Unauthorized Access')).toBeNull();
   });
 
@@ -84,7 +78,7 @@ describe('NoRolePage', () => {
     mockIsLoggedIn = true;
     mockUser = null;
     await renderWithProps();
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    expect(mockNavigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/' }));
     expect(screen.queryByText('Unauthorized Access')).toBeNull();
   });
 
@@ -99,7 +93,7 @@ describe('NoRolePage', () => {
 
     await renderWithProps();
 
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    expect(mockNavigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/' }));
     expect(screen.queryByText('Unauthorized Access')).toBeNull();
   });
 
@@ -112,7 +106,7 @@ describe('NoRolePage', () => {
       privileges: {},
     };
     await renderWithProps();
-    expect(mockNavigate).not.toHaveBeenCalledWith('/');
+    expect(mockNavigate).not.toHaveBeenCalledWith(expect.objectContaining({ to: '/' }));
     expect(screen.getByText('Unauthorized Access')).toBeDefined();
     expect(
       screen.getByText("You don't have FAM authorization to access this system"),
@@ -128,7 +122,7 @@ describe('NoRolePage', () => {
       privileges: {},
     };
     await renderWithProps();
-    expect(mockNavigate).not.toHaveBeenCalledWith('/');
+    expect(mockNavigate).not.toHaveBeenCalledWith(expect.objectContaining({ to: '/' }));
     expect(screen.getByText('Unauthorized Access')).toBeDefined();
     expect(
       screen.getByText("You don't have FAM authorization to access this system"),

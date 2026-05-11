@@ -1,7 +1,7 @@
 import { UnauthorizedUserAccess } from '@carbon/pictograms-react';
 import { Column } from '@carbon/react';
+import { useRouterState } from '@tanstack/react-router';
 import { type FC } from 'react';
-import { useLocation } from 'react-router-dom';
 
 import EmptySection from '@/components/core/EmptySection';
 import { getAccessViolationMessage } from '@/context/auth/userAccessValidation';
@@ -14,8 +14,8 @@ import './index.scss';
  * @returns The unauthorized page content.
  */
 const RoleErrorPage: FC = () => {
-  const { search } = useLocation();
-  const violationReason = new URLSearchParams(search).get('reason');
+  const searchStr = useRouterState({ select: (s) => s.location.searchStr });
+  const violationReason = new URLSearchParams(searchStr).get('reason');
   const description =
     getAccessViolationMessage(violationReason) ??
     'You do not have the necessary permissions to view this page.';

@@ -1,18 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Column } from '@carbon/react';
 import { type FC } from 'react';
-import { useRouteError } from 'react-router-dom';
 
 import PageTitle from '@/components/core/PageTitle';
+
+type GlobalErrorPageProps = {
+  error?: unknown;
+};
 
 /**
  * Renders a route-level error boundary fallback for unhandled navigation errors.
  *
  * @returns The global error page.
  */
-const GlobalErrorPage: FC = () => {
-  const error = useRouteError();
-
+const GlobalErrorPage: FC<GlobalErrorPageProps> = ({ error }) => {
   let message = 'An unexpected error has occurred. Please try again later.';
   if (error instanceof Error) {
     message = error.message;

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { RouterProvider } from '@tanstack/react-router';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
 import MyClientListing from './index';
@@ -11,6 +11,7 @@ import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { MyForestClientDto } from '@/services/types';
 
 import { renderCell } from '@/components/Form/TableResource/types';
+import { createTestRouter } from '@/config/tests/routerTestHelper';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import * as eventHandler from '@/hooks/useNotificationEvents/eventHandler';
 import APIs from '@/services/APIs';
@@ -132,13 +133,15 @@ const renderWithProps = async () => {
   });
   await act(async () => {
     render(
-      <MemoryRouter>
-        <QueryClientProvider client={qc}>
-          <PreferenceProvider>
-            <MyClientListing />
-          </PreferenceProvider>
-        </QueryClientProvider>
-      </MemoryRouter>,
+      <RouterProvider
+        router={createTestRouter(() => (
+          <QueryClientProvider client={qc}>
+            <PreferenceProvider>
+              <MyClientListing />
+            </PreferenceProvider>
+          </QueryClientProvider>
+        ))}
+      />,
     );
   });
 };

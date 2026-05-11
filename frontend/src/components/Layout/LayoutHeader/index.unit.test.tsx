@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { RouterProvider } from '@tanstack/react-router';
 import { render, screen, act } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, type Mock, beforeAll } from 'vitest';
 
 import { LayoutHeader } from '@/components/Layout/LayoutHeader';
 import { AuthProvider } from '@/context/auth/AuthProvider';
+import { createTestRouter } from '@/config/tests/routerTestHelper';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import ThemeProvider from '@/context/theme/ThemeProvider';
@@ -30,19 +31,21 @@ const renderWithProviders = async () => {
   const qc = new QueryClient();
   await act(async () =>
     render(
-      <AuthProvider>
-        <QueryClientProvider client={qc}>
-          <MemoryRouter>
-            <PreferenceProvider>
-              <ThemeProvider>
-                <LayoutProvider>
-                  <LayoutHeader />
-                </LayoutProvider>
-              </ThemeProvider>
-            </PreferenceProvider>
-          </MemoryRouter>
-        </QueryClientProvider>
-      </AuthProvider>,
+      <RouterProvider
+        router={createTestRouter(() => (
+          <AuthProvider>
+            <QueryClientProvider client={qc}>
+              <PreferenceProvider>
+                <ThemeProvider>
+                  <LayoutProvider>
+                    <LayoutHeader />
+                  </LayoutProvider>
+                </ThemeProvider>
+              </PreferenceProvider>
+            </QueryClientProvider>
+          </AuthProvider>
+        ))}
+      />,
     ),
   );
 };

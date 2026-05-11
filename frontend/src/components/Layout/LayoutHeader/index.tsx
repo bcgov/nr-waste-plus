@@ -1,6 +1,6 @@
 import { Header, HeaderMenuButton, HeaderName, SkipToContent } from '@carbon/react';
+import { Link } from '@tanstack/react-router';
 import { type FC } from 'react';
-import { Link } from 'react-router-dom';
 
 import LayoutHeaderGlobalBar from './LayoutHeaderGlobalBar';
 import { getFormattedEnvName } from './utils';

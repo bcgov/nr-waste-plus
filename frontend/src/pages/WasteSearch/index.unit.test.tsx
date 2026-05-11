@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { RouterProvider } from '@tanstack/react-router';
 import { act, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, type Mock, beforeEach, vi } from 'vitest';
 
 import WasteSearchPage from './index';
 
 import { AuthProvider } from '@/context/auth/AuthProvider';
+import { createTestRouter } from '@/config/tests/routerTestHelper';
 import NotificationProvider from '@/context/notification/NotificationProvider';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
@@ -37,15 +38,17 @@ const renderWithProps = async () => {
     render(
       <QueryClientProvider client={qc}>
         <PreferenceProvider>
-          <MemoryRouter>
-            <AuthProvider>
-              <NotificationProvider>
-                <PageTitleProvider>
-                  <WasteSearchPage />
-                </PageTitleProvider>
-              </NotificationProvider>
-            </AuthProvider>
-          </MemoryRouter>
+          <RouterProvider
+            router={createTestRouter(() => (
+              <AuthProvider>
+                <NotificationProvider>
+                  <PageTitleProvider>
+                    <WasteSearchPage />
+                  </PageTitleProvider>
+                </NotificationProvider>
+              </AuthProvider>
+            ))}
+          />
         </PreferenceProvider>
       </QueryClientProvider>,
     ),

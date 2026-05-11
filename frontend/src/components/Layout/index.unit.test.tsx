@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { RouterProvider } from '@tanstack/react-router';
 import { act, render, screen } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
 import { describe, it, expect, vi, type Mock } from 'vitest';
 
 import Layout from './index';
 
 import { AuthProvider } from '@/context/auth/AuthProvider';
+import { createTestRouter } from '@/config/tests/routerTestHelper';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import ThemeProvider from '@/context/theme/ThemeProvider';
@@ -54,21 +55,23 @@ describe('Layout (browser)', () => {
     const qc = new QueryClient();
     await act(async () =>
       render(
-        <AuthProvider>
-          <BrowserRouter>
-            <QueryClientProvider client={qc}>
-              <PreferenceProvider>
-                <ThemeProvider>
-                  <LayoutProvider>
-                    <Layout>
-                      <DummyChild />
-                    </Layout>
-                  </LayoutProvider>
-                </ThemeProvider>
-              </PreferenceProvider>
-            </QueryClientProvider>
-          </BrowserRouter>
-        </AuthProvider>,
+        <RouterProvider
+          router={createTestRouter(() => (
+            <AuthProvider>
+              <QueryClientProvider client={qc}>
+                <PreferenceProvider>
+                  <ThemeProvider>
+                    <LayoutProvider>
+                      <Layout>
+                        <DummyChild />
+                      </Layout>
+                    </LayoutProvider>
+                  </ThemeProvider>
+                </PreferenceProvider>
+              </QueryClientProvider>
+            </AuthProvider>
+          ))}
+        />,
       ),
     );
 

@@ -1,7 +1,9 @@
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { type FC } from 'react';
 
-import AppRoutes from '@/routes/AppRoutes';
+import AppRouter from '@/routes/AppRouter';
+import { router } from '@/routes/routeTree';
 
 /**
  * Renders the application route tree and development tooling.
@@ -11,8 +13,9 @@ import AppRoutes from '@/routes/AppRoutes';
 const App: FC = () => {
   return (
     <>
-      <AppRoutes />
+      <AppRouter />
       <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+      <TanStackRouterDevtools initialIsOpen={false} router={router} position="bottom-right" />
     </>
   );
 };

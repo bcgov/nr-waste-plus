@@ -1,5 +1,5 @@
+import { Link } from '@tanstack/react-router';
 import { type FC } from 'react';
-import { Link } from 'react-router-dom';
 
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 

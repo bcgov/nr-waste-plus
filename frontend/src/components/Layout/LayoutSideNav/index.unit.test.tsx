@@ -1,10 +1,11 @@
 import { act, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { RouterProvider } from '@tanstack/react-router';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { LayoutSideNav } from './index';
 
 import { AuthProvider } from '@/context/auth/AuthProvider';
+import { createTestRouter } from '@/config/tests/routerTestHelper';
 import * as useAuthModule from '@/context/auth/useAuth';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import * as routePathsModule from '@/routes/routePaths';
@@ -51,16 +52,17 @@ vi.mock('@/routes/routePaths', () => ({
 }));
 
 const renderWithProviders = async (pathname = '/dashboard') => {
-  window.history.pushState({}, '', pathname);
   await act(async () =>
     render(
-      <AuthProvider>
-        <MemoryRouter initialEntries={[pathname]}>
-          <LayoutProvider>
-            <LayoutSideNav />
-          </LayoutProvider>
-        </MemoryRouter>
-      </AuthProvider>,
+      <RouterProvider
+        router={createTestRouter(() => (
+          <AuthProvider>
+            <LayoutProvider>
+              <LayoutSideNav />
+            </LayoutProvider>
+          </AuthProvider>
+        ), pathname)}
+      />,
     ),
   );
 };

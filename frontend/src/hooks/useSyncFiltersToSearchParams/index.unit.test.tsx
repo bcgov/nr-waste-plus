@@ -1,15 +1,28 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { renderHook, act } from '@testing-library/react';
 import { useState } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import useSyncFiltersToSearchParams from './index';
 
-let mockSearchParams = new URLSearchParams();
-const mockSetSearchParams = vi.fn();
+let mockSearchStr = '';
+const mockNavigate = vi.fn();
 
-vi.mock('react-router-dom', () => ({
-  useSearchParams: () => [mockSearchParams, mockSetSearchParams],
-}));
+vi.mock('@tanstack/react-router', async () => {
+  const actual = await vi.importActual('@tanstack/react-router');
+  return {
+    ...actual,
+    useRouterState: ({ select }: { select: (s: { location: { searchStr: string } }) => unknown }) =>
+      select({ location: { searchStr: mockSearchStr } }),
+    useNavigate: () => mockNavigate,
+  };
+});
+
+/** Extract the URLSearchParams from the last navigate call made by the hook. */
+const getLastNavParams = (): URLSearchParams => {
+  const call = mockNavigate.mock.calls.at(-1)?.[0] as { search?: () => Record<string, string> };
+  return new URLSearchParams(Object.entries(call?.search?.() ?? {}));
+};
 
 type Filters = {
   search?: string;
@@ -29,14 +42,14 @@ type UserOption = {
 
 describe('useSyncFiltersToSearchParams', () => {
   beforeEach(() => {
-    mockSearchParams = new URLSearchParams();
-    mockSetSearchParams.mockClear();
+    mockSearchStr = '';
+    mockNavigate.mockClear();
   });
 
   // --- Hydration from URL ---
 
   it('hydrates string filter from URL on mount', () => {
-    mockSearchParams = new URLSearchParams({ search: 'hello' });
+    mockSearchStr = new URLSearchParams({ search: 'hello' }).toString();
 
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({ search: '' });
@@ -48,7 +61,7 @@ describe('useSyncFiltersToSearchParams', () => {
   });
 
   it('hydrates values from URL when initial filters are empty object', () => {
-    mockSearchParams = new URLSearchParams({ search: 'hello' });
+    mockSearchStr = new URLSearchParams({ search: 'hello' }).toString();
 
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({});
@@ -60,7 +73,7 @@ describe('useSyncFiltersToSearchParams', () => {
   });
 
   it('hydrates comma-separated values as arrays from URL on mount', () => {
-    mockSearchParams = new URLSearchParams({ status: 'open,closed' });
+    mockSearchStr = new URLSearchParams({ status: 'open,closed' }).toString();
 
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({ status: [] });
@@ -72,7 +85,7 @@ describe('useSyncFiltersToSearchParams', () => {
   });
 
   it('hydrates boolean true from URL on mount', () => {
-    mockSearchParams = new URLSearchParams({ active: 'true' });
+    mockSearchStr = new URLSearchParams({ active: 'true' }).toString();
 
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({ active: false });
@@ -84,7 +97,7 @@ describe('useSyncFiltersToSearchParams', () => {
   });
 
   it('hydrates boolean false from URL on mount', () => {
-    mockSearchParams = new URLSearchParams({ active: 'false' });
+    mockSearchStr = new URLSearchParams({ active: 'false' }).toString();
 
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({ active: true });
@@ -96,7 +109,7 @@ describe('useSyncFiltersToSearchParams', () => {
   });
 
   it('hydrates JSON array from URL on mount', () => {
-    mockSearchParams = new URLSearchParams({ district: '["d1","d2"]' });
+    mockSearchStr = new URLSearchParams({ district: '["d1","d2"]' }).toString();
 
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({ district: [] });
@@ -108,7 +121,7 @@ describe('useSyncFiltersToSearchParams', () => {
   });
 
   it('hydrates JSON object from URL on mount', () => {
-    mockSearchParams = new URLSearchParams({ config: '{"key":"value"}' });
+    mockSearchStr = new URLSearchParams({ config: '{"key":"value"}' }).toString();
 
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({ config: {} });
@@ -120,7 +133,7 @@ describe('useSyncFiltersToSearchParams', () => {
   });
 
   it('hydrates transformed array values from URL on mount', () => {
-    mockSearchParams = new URLSearchParams({ users: 'alpha,beta' });
+    mockSearchStr = new URLSearchParams({ users: 'alpha,beta' }).toString();
 
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({ users: [] });
@@ -147,7 +160,7 @@ describe('useSyncFiltersToSearchParams', () => {
   });
 
   it('hydrates numeric string as number when default type is number', () => {
-    mockSearchParams = new URLSearchParams({ count: '42' });
+    mockSearchStr = new URLSearchParams({ count: '42' }).toString();
 
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({ count: 0 });
@@ -160,7 +173,7 @@ describe('useSyncFiltersToSearchParams', () => {
   });
 
   it('keeps numeric-looking value as string when default type is string', () => {
-    mockSearchParams = new URLSearchParams({ search: '42' });
+    mockSearchStr = new URLSearchParams({ search: '42' }).toString();
 
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({ search: '' });
@@ -173,7 +186,7 @@ describe('useSyncFiltersToSearchParams', () => {
   });
 
   it('does not call setFilters when URL has no search params', () => {
-    mockSearchParams = new URLSearchParams();
+    mockSearchStr = '';
     const setFiltersSpy = vi.fn();
 
     renderHook(() => {
@@ -190,7 +203,7 @@ describe('useSyncFiltersToSearchParams', () => {
   });
 
   it('falls back to string when JSON parsing fails for bracket-starting value', () => {
-    mockSearchParams = new URLSearchParams({ config: '{invalid-json' });
+    mockSearchStr = new URLSearchParams({ config: '{invalid-json' }).toString();
 
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({ config: {} });
@@ -215,9 +228,8 @@ describe('useSyncFiltersToSearchParams', () => {
     );
 
     // After initial render, setSearchParams should be called
-    expect(mockSetSearchParams).toHaveBeenCalled();
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    const params = lastCall?.[0] as URLSearchParams;
+    expect(mockNavigate).toHaveBeenCalled();
+    const params = getLastNavParams();
     expect(params.get('search')).toBe('test');
   });
 
@@ -228,9 +240,8 @@ describe('useSyncFiltersToSearchParams', () => {
       return filters;
     });
 
-    expect(mockSetSearchParams).toHaveBeenCalled();
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    const params = lastCall?.[0] as URLSearchParams;
+    expect(mockNavigate).toHaveBeenCalled();
+    const params = getLastNavParams();
     expect(params.get('status')).toBe('open,closed');
   });
 
@@ -241,9 +252,8 @@ describe('useSyncFiltersToSearchParams', () => {
       return filters;
     });
 
-    expect(mockSetSearchParams).toHaveBeenCalled();
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    const params = lastCall?.[0] as URLSearchParams;
+    expect(mockNavigate).toHaveBeenCalled();
+    const params = getLastNavParams();
     expect(params.get('config')).toBe('{"key":"value"}');
   });
 
@@ -265,9 +275,8 @@ describe('useSyncFiltersToSearchParams', () => {
       return filters;
     });
 
-    expect(mockSetSearchParams).toHaveBeenCalled();
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    const params = lastCall?.[0] as URLSearchParams;
+    expect(mockNavigate).toHaveBeenCalled();
+    const params = getLastNavParams();
     expect(params.get('users')).toBe('alpha,beta');
   });
 
@@ -278,9 +287,8 @@ describe('useSyncFiltersToSearchParams', () => {
       return filters;
     });
 
-    expect(mockSetSearchParams).toHaveBeenCalled();
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    const params = lastCall?.[0] as URLSearchParams;
+    expect(mockNavigate).toHaveBeenCalled();
+    const params = getLastNavParams();
     expect(params.get('active')).toBe('true');
   });
 
@@ -291,14 +299,13 @@ describe('useSyncFiltersToSearchParams', () => {
       return filters;
     });
 
-    expect(mockSetSearchParams).toHaveBeenCalled();
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    const params = lastCall?.[0] as URLSearchParams;
+    expect(mockNavigate).toHaveBeenCalled();
+    const params = getLastNavParams();
     expect(params.get('count')).toBe('42');
   });
 
   it('preserves unrelated existing query params when syncing filters', () => {
-    mockSearchParams = new URLSearchParams({ tab: 'details' });
+    mockSearchStr = new URLSearchParams({ tab: 'details' }).toString();
 
     renderHook(() => {
       const [filters, setFilters] = useState<Filters>({ search: 'test' });
@@ -306,14 +313,13 @@ describe('useSyncFiltersToSearchParams', () => {
       return filters;
     });
 
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    const params = lastCall?.[0] as URLSearchParams;
+    const params = getLastNavParams();
     expect(params.get('tab')).toBe('details');
     expect(params.get('search')).toBe('test');
   });
 
   it('does not call setSearchParams when computed params are unchanged', () => {
-    mockSearchParams = new URLSearchParams({ search: 'same' });
+    mockSearchStr = new URLSearchParams({ search: 'same' }).toString();
 
     renderHook(() => {
       const [filters, setFilters] = useState<Filters>({ search: 'same' });
@@ -321,7 +327,7 @@ describe('useSyncFiltersToSearchParams', () => {
       return filters;
     });
 
-    expect(mockSetSearchParams).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it('uses replace: true when setting search params', () => {
@@ -331,8 +337,7 @@ describe('useSyncFiltersToSearchParams', () => {
       return filters;
     });
 
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    expect(lastCall?.[1]).toEqual({ replace: true });
+    expect(mockNavigate.mock.calls.at(-1)?.[0]).toMatchObject({ replace: true });
   });
 
   // --- Empty values ---
@@ -344,8 +349,7 @@ describe('useSyncFiltersToSearchParams', () => {
       return filters;
     });
 
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    const params = lastCall?.[0] as URLSearchParams;
+    const params = getLastNavParams();
     expect(params.has('search')).toBe(false);
     expect(params.get('active')).toBe('true');
   });
@@ -357,8 +361,7 @@ describe('useSyncFiltersToSearchParams', () => {
       return filters;
     });
 
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    const params = lastCall?.[0] as URLSearchParams;
+    const params = getLastNavParams();
     expect(params.has('status')).toBe(false);
     expect(params.get('search')).toBe('hello');
   });
@@ -370,8 +373,7 @@ describe('useSyncFiltersToSearchParams', () => {
       return filters;
     });
 
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    const params = lastCall?.[0] as URLSearchParams;
+    const params = getLastNavParams();
     expect(params.has('active')).toBe(false);
   });
 
@@ -386,8 +388,7 @@ describe('useSyncFiltersToSearchParams', () => {
       return filters;
     });
 
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    const params = lastCall?.[0] as URLSearchParams;
+    const params = getLastNavParams();
     expect(params.has('search')).toBe(false);
     expect(params.has('config')).toBe(false);
     expect(params.get('active')).toBe('true');
@@ -400,8 +401,7 @@ describe('useSyncFiltersToSearchParams', () => {
       return filters;
     });
 
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    const params = lastCall?.[0] as URLSearchParams;
+    const params = getLastNavParams();
     expect(params.get('search')).toBe('');
     expect(params.get('active')).toBe('false');
     expect(params.get('status')).toBe('');
@@ -416,14 +416,13 @@ describe('useSyncFiltersToSearchParams', () => {
       return filters;
     });
 
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    const params = lastCall?.[0] as URLSearchParams;
+    const params = getLastNavParams();
     expect(params.get('search')).toBe('hello');
     expect(params.has('temp')).toBe(false);
   });
 
   it('excludes specified keys from hydration', () => {
-    mockSearchParams = new URLSearchParams({ search: 'hello', temp: 'from-url' });
+    mockSearchStr = new URLSearchParams({ search: 'hello', temp: 'from-url' }).toString();
 
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({ search: '', temp: 'default' });
@@ -438,7 +437,7 @@ describe('useSyncFiltersToSearchParams', () => {
   // --- Hydration happens only once ---
 
   it('hydrates from URL only on initial mount', () => {
-    mockSearchParams = new URLSearchParams({ search: 'initial' });
+    mockSearchStr = new URLSearchParams({ search: 'initial' }).toString();
     const setFiltersSpy = vi.fn();
 
     const { rerender } = renderHook(() => {
@@ -469,20 +468,19 @@ describe('useSyncFiltersToSearchParams', () => {
       return { filters, setFilters };
     });
 
-    mockSetSearchParams.mockClear();
+    mockNavigate.mockClear();
 
     act(() => {
       result.current.setFilters({ search: 'second' });
     });
 
-    expect(mockSetSearchParams).toHaveBeenCalled();
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    const params = lastCall?.[0] as URLSearchParams;
+    expect(mockNavigate).toHaveBeenCalled();
+    const params = getLastNavParams();
     expect(params.get('search')).toBe('second');
   });
 
   it('removes URL param when filter key is removed from state', () => {
-    mockSearchParams = new URLSearchParams({ search: 'first', tab: 'details' });
+    mockSearchStr = new URLSearchParams({ search: 'first', tab: 'details' }).toString();
 
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({ search: 'first' });
@@ -490,15 +488,14 @@ describe('useSyncFiltersToSearchParams', () => {
       return { filters, setFilters };
     });
 
-    mockSetSearchParams.mockClear();
+    mockNavigate.mockClear();
 
     act(() => {
       result.current.setFilters({});
     });
 
-    expect(mockSetSearchParams).toHaveBeenCalled();
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    const params = lastCall?.[0] as URLSearchParams;
+    expect(mockNavigate).toHaveBeenCalled();
+    const params = getLastNavParams();
     expect(params.has('search')).toBe(false);
     expect(params.get('tab')).toBe('details');
   });
@@ -517,8 +514,7 @@ describe('useSyncFiltersToSearchParams', () => {
       return filters;
     });
 
-    const lastCall = mockSetSearchParams.mock.calls.at(-1);
-    const params = lastCall?.[0] as URLSearchParams;
+    const params = getLastNavParams();
     expect(params.get('search')).toBe('query');
     expect(params.get('status')).toBe('open');
     expect(params.get('active')).toBe('true');
@@ -526,11 +522,11 @@ describe('useSyncFiltersToSearchParams', () => {
   });
 
   it('hydrates multiple filters from URL simultaneously', () => {
-    mockSearchParams = new URLSearchParams({
+    mockSearchStr = new URLSearchParams({
       search: 'query',
       status: 'open,closed',
       active: 'true',
-    });
+    }).toString();
 
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({
@@ -550,7 +546,7 @@ describe('useSyncFiltersToSearchParams', () => {
   // --- Merging behavior ---
 
   it('merges hydrated values with existing filter defaults', () => {
-    mockSearchParams = new URLSearchParams({ search: 'from-url' });
+    mockSearchStr = new URLSearchParams({ search: 'from-url' }).toString();
 
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({
@@ -572,7 +568,7 @@ describe('useSyncFiltersToSearchParams', () => {
   // --- Deserialization edge case: comma in value with dot ---
 
   it('does not split comma-separated values containing dots', () => {
-    mockSearchParams = new URLSearchParams({ search: '1,234.56' });
+    mockSearchStr = new URLSearchParams({ search: '1,234.56' }).toString();
 
     const { result } = renderHook(() => {
       const [filters, setFilters] = useState<Filters>({ search: '' });

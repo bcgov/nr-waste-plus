@@ -1,6 +1,6 @@
 import { SideNav, SideNavItems, SideNavLink, SideNavMenu, SideNavMenuItem } from '@carbon/react';
+import { Link, useRouterState } from '@tanstack/react-router';
 import { type FC } from 'react';
-import { Link, useLocation } from 'react-router-dom';
 
 import { useAuth } from '@/context/auth/useAuth';
 import { useLayout } from '@/context/layout/useLayout';
@@ -12,7 +12,7 @@ import './index.scss';
 
 export const LayoutSideNav: FC = () => {
   const { isSideNavExpanded } = useLayout();
-  const location = useLocation();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { isOnline } = useOfflineMode();
   const { user } = useAuth();
 
@@ -32,7 +32,7 @@ export const LayoutSideNav: FC = () => {
       key={route.id}
       as={Link}
       to={route.path}
-      isActive={route.path === location.pathname}
+      isActive={route.path === pathname}
       renderIcon={route.icon}
     >
       {route.id}
@@ -47,8 +47,8 @@ export const LayoutSideNav: FC = () => {
         data-testid={`side-nav-menu-${route.id}`}
         key={route.id}
         title={route.id}
-        isActive={location.pathname.startsWith(route.path)}
-        defaultExpanded={location.pathname.startsWith(route.path)}
+        isActive={pathname.startsWith(route.path)}
+        defaultExpanded={pathname.startsWith(route.path)}
         renderIcon={route.icon}
       >
         {route.children?.map((childRoute) => (
@@ -57,7 +57,7 @@ export const LayoutSideNav: FC = () => {
             key={childRoute.id}
             as={Link}
             to={childPath(route.path, childRoute)}
-            isActive={childPath(route.path, childRoute) === location.pathname}
+            isActive={childPath(route.path, childRoute) === pathname}
           >
             {renderIcon(childRoute)}
           </SideNavMenuItem>
