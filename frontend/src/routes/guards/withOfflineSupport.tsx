@@ -1,4 +1,7 @@
-import type { ComponentType } from 'react';
+import { useNavigate } from '@tanstack/react-router';
+import { useLayoutEffect, type ComponentType } from 'react';
+
+import useOfflineMode from '@/hooks/useOfflineMode';
 
 /** Configuration options for the {@link withOfflineSupport} guard. */
 interface OfflineOptions {
@@ -9,24 +12,37 @@ interface OfflineOptions {
 }
 
 /**
- * HOC guard scaffold: restricts or allows route access based on network connectivity.
+ * HOC guard: restricts or allows route access based on network connectivity.
  *
- * This is a no-op scaffold — the offline restriction logic is not yet implemented.
- * Future implementation should check `navigator.onLine`, subscribe to `'online'`/`'offline'`
- * events, and redirect users based on `offlineOnly` and `offlineReady` flags.
+ * Uses {@link useOfflineMode} (backed by `onlineStatusStore`) to reactively
+ * track connectivity via `navigator.onLine` and browser `online`/`offline` events.
+ *
+ * Behaviour by option:
+ * - `offlineReady: true` — no restriction; component always renders.
+ * - `offlineOnly: true` — renders only when the device is **offline**;
+ *   online users are immediately redirected to `/search`.
  *
  * @param Component - The route component to wrap.
- * @param _options - Offline connectivity options (unused until feature is implemented).
- * @returns The wrapped component unchanged (no-op until feature is implemented).
- *
- * @todo Implement `navigator.onLine` / network-event detection and redirect logic.
+ * @param options - Offline connectivity options.
+ * @returns A HOC that enforces the connectivity restriction before the first paint.
  */
 export function withOfflineSupport<P extends object>(
   Component: ComponentType<P>,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _options?: OfflineOptions,
+  options?: OfflineOptions,
 ): ComponentType<P> {
   function OfflineSupport(props: P) {
+    const { isOnline } = useOfflineMode();
+    const navigate = useNavigate();
+
+    useLayoutEffect(() => {
+      if (options?.offlineOnly && isOnline) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        void navigate({ to: '/search' as any, replace: true });
+      }
+    }, [isOnline, navigate]);
+
+    if (options?.offlineOnly && isOnline) return null;
+
     return <Component {...props} />;
   }
 
