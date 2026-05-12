@@ -7,7 +7,9 @@ import { Role } from '@/context/auth/types';
 
 // ── Mocks for route component rendering ───────────────────────────────────────
 vi.mock('@/components/Layout', () => ({
-  default: ({ children }: { children: React.ReactNode }) => <div data-testid="layout">{children}</div>,
+  default: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="layout">{children}</div>
+  ),
 }));
 
 vi.mock('@/pages/MyClientList', () => ({
@@ -60,8 +62,12 @@ describe('routePaths', () => {
     });
 
     it('shouldIncludeAllSideMenuRoutes_whenOnline', () => {
-      const onlineEntries = routePaths.getMenuEntries(true, [{ role: Role.VIEWER, clients: ['100'] }]);
-      const offlineEntries = routePaths.getMenuEntries(false, [{ role: Role.VIEWER, clients: ['100'] }]);
+      const onlineEntries = routePaths.getMenuEntries(true, [
+        { role: Role.VIEWER, clients: ['100'] },
+      ]);
+      const offlineEntries = routePaths.getMenuEntries(false, [
+        { role: Role.VIEWER, clients: ['100'] },
+      ]);
       expect(onlineEntries.length).toBeGreaterThan(offlineEntries.length);
     });
 
@@ -117,7 +123,8 @@ describe('routePaths', () => {
 
     it('shouldRenderDashboardRouteComponent_returnNull', () => {
       const dashRoute = routePaths.SYSTEM_ROUTES.find((r) => r.path === '/dashboard')!;
-      const result = dashRoute.component({});
+      const DashComp = dashRoute.component as () => null;
+      const result = DashComp();
       expect(result).toBeNull();
     });
 
