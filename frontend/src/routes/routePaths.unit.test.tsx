@@ -93,13 +93,15 @@ describe('routePaths', () => {
 
     it('shouldRenderClientsRouteComponent_withoutThrowing', () => {
       const clientsRoute = routePaths.ROUTES.find((r) => r.path === '/clients')!;
-      const { container } = render(<clientsRoute.component />);
+      const Comp = clientsRoute.component;
+      const { container } = render(<Comp />);
       expect(container).toBeDefined();
     });
 
     it('shouldRenderSearchRouteComponent_withoutThrowing', () => {
       const searchRoute = routePaths.ROUTES.find((r) => r.path === '/search')!;
-      const { container } = render(<searchRoute.component />);
+      const Comp = searchRoute.component;
+      const { container } = render(<Comp />);
       expect(container).toBeDefined();
     });
   });

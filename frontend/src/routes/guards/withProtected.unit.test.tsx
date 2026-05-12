@@ -50,6 +50,7 @@ const makeUser = (overrides: Partial<FamLoginUser> = {}): FamLoginUser => ({
   displayName: 'Test User',
   idpProvider: 'BCEIDBUSINESS',
   roles: [{ role: Role.VIEWER, clients: ['100'] }],
+  privileges: {},
   ...overrides,
 });
 
