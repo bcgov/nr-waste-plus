@@ -6,6 +6,7 @@ import type { FamRole } from '@/context/auth/types';
 
 import { useAuth } from '@/context/auth/useAuth';
 import { getUserAccessStatus, UNAUTHORIZED_PATH } from '@/context/auth/userAccessValidation';
+import { navigateInTree, type InTreePath } from '@/routes/inTreePaths';
 import { persistRedirectUrl } from '@/routes/redirectStorage';
 
 /**
@@ -50,14 +51,13 @@ export function withProtected<P extends object>(
       if (isLoading) return;
       if (!user) {
         persistRedirectUrl(`${pathname}${searchStr}`);
-        // /login is handled by the external Cognito auth provider, not an in-tree route.
+        // /login is an external Cognito URL, not an in-tree route — cast is intentional.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         void navigate({ to: '/login' as any, replace: true });
         return;
       }
       if (redirectTo) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        void navigate({ to: redirectTo as any, replace: true });
+        navigateInTree(navigate, redirectTo as InTreePath, { replace: true });
       }
     }, [isLoading, user, pathname, searchStr, navigate, redirectTo]);
 

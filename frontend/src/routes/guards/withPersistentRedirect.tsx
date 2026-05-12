@@ -1,6 +1,7 @@
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { useEffect, useRef, type ComponentType } from 'react';
 
+import { navigateInTree, type InTreePath } from '@/routes/inTreePaths';
 import { clearPersistedRedirect, readPersistedRedirect } from '@/routes/redirectStorage';
 
 /**
@@ -70,20 +71,17 @@ export function withPersistentRedirect<P extends object>(
       clearPersistedRedirect();
 
       if (target) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        void navigate({ to: target as any, replace: true });
+        navigateInTree(navigate, target as InTreePath, { replace: true });
         return;
       }
 
       if (isOAuthCallback(searchStr)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        void navigate({ to: '/search' as any, replace: true });
+        navigateInTree(navigate, '/search', { replace: true });
         return;
       }
 
       const passthrough = Object.fromEntries(new URLSearchParams(searchStr));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      void navigate({ to: '/search' as any, search: passthrough as any, replace: true });
+      navigateInTree(navigate, '/search', { replace: true, search: passthrough });
     }, [navigate, searchStr]);
 
     return <Component {...props} />;

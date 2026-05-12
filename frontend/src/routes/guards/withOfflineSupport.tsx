@@ -2,6 +2,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useLayoutEffect, type ComponentType } from 'react';
 
 import useOfflineMode from '@/hooks/useOfflineMode';
+import { navigateInTree } from '@/routes/inTreePaths';
 
 /** Configuration options for the {@link withOfflineSupport} guard. */
 interface OfflineOptions {
@@ -36,8 +37,7 @@ export function withOfflineSupport<P extends object>(
 
     useLayoutEffect(() => {
       if (options?.offlineOnly && isOnline) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        void navigate({ to: '/search' as any, replace: true });
+        navigateInTree(navigate, '/search', { replace: true });
       }
     }, [isOnline, navigate]);
 
