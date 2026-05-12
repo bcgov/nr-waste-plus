@@ -2,12 +2,38 @@ import { Loading } from '@carbon/react';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { useLayoutEffect, type ComponentType } from 'react';
 
-import type { FamRole } from '@/context/auth/types';
+import type { FamRole, FamLoginUser } from '@/context/auth/types';
 
 import { useAuth } from '@/context/auth/useAuth';
 import { getUserAccessStatus, UNAUTHORIZED_PATH } from '@/context/auth/userAccessValidation';
 import { navigateInTree, type InTreePath } from '@/routes/inTreePaths';
 import { persistRedirectUrl } from '@/routes/redirectStorage';
+
+/**
+ * Decide where to redirect a user based on auth state and optional role requirements.
+ * Extracted to top-level to avoid deep function nesting inside `withProtected`.
+ */
+function computeRedirectTo(
+  user: FamLoginUser | undefined,
+  isLoading: boolean,
+  pathname: string,
+  roles?: readonly FamRole[],
+): string | null {
+  if (isLoading || !user) return null;
+
+  const status = getUserAccessStatus(user);
+  if (status.kind === 'no-role') return status.redirectTo;
+  if (status.kind === 'role-error' && pathname !== UNAUTHORIZED_PATH) return status.redirectTo;
+
+  if (roles?.length) {
+    const userRoleSet = new Set((user.roles ?? []).map((u) => u.role));
+    const requiredRoles = roles.map((r) => r.role);
+    const hasMatch = requiredRoles.some((r) => userRoleSet.has(r));
+    if (!hasMatch) return '/unauthorized';
+  }
+
+  return null;
+}
 
 /**
  * HOC guard: enforces authentication and optional role requirements.
@@ -36,16 +62,7 @@ export function withProtected<P extends object>(
     const navigate = useNavigate();
     const { pathname, searchStr } = useRouterState({ select: (s) => s.location });
 
-    const redirectTo = (() => {
-      if (isLoading || !user) return null;
-      const status = getUserAccessStatus(user);
-      if (status.kind === 'no-role') return status.redirectTo;
-      if (status.kind === 'role-error' && pathname !== UNAUTHORIZED_PATH) return status.redirectTo;
-      if (roles?.length && !roles.some((r) => user.roles?.map((u) => u.role).includes(r.role))) {
-        return '/unauthorized';
-      }
-      return null;
-    })();
+    const redirectTo = computeRedirectTo(user, isLoading, pathname, roles);
 
     useLayoutEffect(() => {
       if (isLoading) return;
