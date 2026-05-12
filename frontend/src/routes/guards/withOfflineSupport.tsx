@@ -31,17 +31,19 @@ export function withOfflineSupport<P extends object>(
   Component: ComponentType<P>,
   options?: OfflineOptions,
 ): ComponentType<P> {
+  const { offlineOnly = false } = options ?? {};
+
   function OfflineSupport(props: P) {
     const { isOnline } = useOfflineMode();
     const navigate = useNavigate();
 
     useLayoutEffect(() => {
-      if (options?.offlineOnly && isOnline) {
+      if (offlineOnly && isOnline) {
         navigateInTree(navigate, '/search', { replace: true });
       }
     }, [isOnline, navigate]);
 
-    if (options?.offlineOnly && isOnline) return null;
+    if (offlineOnly && isOnline) return null;
 
     return <Component {...props} />;
   }
