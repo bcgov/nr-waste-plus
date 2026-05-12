@@ -1,6 +1,6 @@
 import { SideNav, SideNavItems, SideNavLink, SideNavMenu, SideNavMenuItem } from '@carbon/react';
 import { Link, useRouterState } from '@tanstack/react-router';
-import { type FC } from 'react';
+import { type FC, type ReactElement } from 'react';
 
 import { useAuth } from '@/context/auth/useAuth';
 import { useLayout } from '@/context/layout/useLayout';
@@ -20,7 +20,10 @@ import './index.scss';
  * groups. A "Need Help?" footer link is always rendered and points to the
  * IDIR or BCeID help URL depending on the authenticated user's identity provider.
  *
- * Expansion state is controlled externally via {@link useLayout}.
+ * Expansion state is controlled externally via {@link useLayout}, while online
+ * status from {@link useOfflineMode} determines which route entries are shown.
+ *
+ * @returns The rendered application side navigation.
  */
 export const LayoutSideNav: FC = () => {
   const { isSideNavExpanded } = useLayout();
@@ -32,9 +35,9 @@ export const LayoutSideNav: FC = () => {
    * Renders the icon + text label for a menu item used inside a {@link SideNavMenu}.
    *
    * @param route - The menu entry whose icon and id are rendered.
-   * @returns A `<div>` containing the optional icon SVG and the route label.
+   * @returns The menu label content used for nested navigation items.
    */
-  const renderIcon = (route: MenuItem) => {
+  const renderIcon = (route: MenuItem): ReactElement => {
     const Icon = route.icon;
     return (
       <div className="cds--side-nav__icon">
@@ -48,9 +51,9 @@ export const LayoutSideNav: FC = () => {
    * Renders a flat {@link SideNavLink} for a top-level route with no children.
    *
    * @param route - The menu entry to render as a navigation link.
-   * @returns A `SideNavLink` element navigating to `route.path`.
+   * @returns A side-nav link element navigating to `route.path`.
    */
-  const renderMenuLink = (route: MenuItem) => (
+  const renderMenuLink = (route: MenuItem): ReactElement => (
     <SideNavLink
       data-testid={`side-nav-link-${route.id}`}
       key={route.id}
@@ -70,10 +73,10 @@ export const LayoutSideNav: FC = () => {
    * `path`, only the parent path is used (index-route behaviour).
    *
    * @param route - The parent menu entry containing nested child entries.
-   * @returns A `SideNavMenu` element whose items navigate to the composed child paths.
+   * @returns A side-nav group whose children navigate to composed child paths.
    */
-  const renderMenuItem = (route: MenuItem) => {
-    const childPath = (parentPath: string, route: MenuItem) =>
+  const renderMenuItem = (route: MenuItem): ReactElement => {
+    const childPath = (parentPath: string, route: MenuItem): string =>
       `${parentPath}${route.path ? `/${route.path}` : ''}`;
     return (
       <SideNavMenu

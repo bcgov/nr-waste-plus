@@ -25,7 +25,9 @@ import './index.scss';
  * - The slide-out header panel ({@link LayoutHeaderPanel})
  * - The collapsible side navigation ({@link LayoutSideNav})
  *
- * The environment name label is hidden when `VITE_NODE_ENV` ends with `"prod"`.
+ * The environment name label is derived from {@link env.VITE_NODE_ENV} via
+ * {@link getFormattedEnvName} and is hidden when the environment suffix ends
+ * with `"prod"`.
  *
  * @returns The rendered Carbon header element.
  */

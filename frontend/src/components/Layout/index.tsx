@@ -7,10 +7,17 @@ import type { FC, ReactNode } from 'react';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 
 /**
+ * Props for the {@link Layout} component.
+ */
+interface LayoutProps {
+  /** Page content rendered inside the shell's main grid area. */
+  readonly children: ReactNode;
+}
+
+/**
  * Application shell layout component.
  *
- * Wraps a page in the full Carbon shell — header, side navigation, and a
- * full-width content grid — by composing:
+ * Wraps routed page content in the shared Carbon application shell by composing:
  * - {@link LayoutProvider}: supplies side-nav expansion state to all descendants
  * - {@link HeaderContainer}: manages Carbon's header/side-nav interaction lifecycle
  *   and renders {@link LayoutHeader}
@@ -21,7 +28,7 @@ import { LayoutProvider } from '@/context/layout/LayoutProvider';
  * @param props.children - The page content rendered inside the grid.
  * @returns The full application shell wrapping the supplied children.
  */
-const Layout: FC<{ children: ReactNode }> = ({ children }) => {
+const Layout: FC<LayoutProps> = ({ children }: LayoutProps) => {
   return (
     <>
       <LayoutProvider>

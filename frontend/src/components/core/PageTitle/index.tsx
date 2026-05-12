@@ -15,29 +15,27 @@ import './index.scss';
  */
 interface PageTitleProps {
   /** Main page title rendered as an `<h1>`. */
-  title: string;
+  readonly title: string;
   /** Optional subtitle rendered below the heading. */
-  subtitle?: string;
+  readonly subtitle?: string;
   /** When `true`, displays an "Under Construction" tag next to the title. */
-  experimental?: boolean;
+  readonly experimental?: boolean;
   /** Optional slot for action elements (e.g. buttons) rendered beside the heading. */
-  children?: React.ReactNode;
+  readonly children?: React.ReactNode;
   /** Ordered breadcrumb trail. Each item is a clickable link except the last. */
-  breadCrumbs?: BreadCrumbType[];
+  readonly breadCrumbs?: BreadCrumbType[];
 }
 
 /**
- * Standardised page header component.
+ * Renders the standard page heading block used across routed screens.
  *
- * Renders a Carbon {@link Column} containing:
- * - An optional {@link Breadcrumb} trail built from `breadCrumbs`; each crumb is a
- *   TanStack Router-aware link. The last crumb is rendered as plain text.
- * - An `<h1>` heading and an optional {@link Subtitle}.
- * - An "Under Construction" {@link UnderConstructionTag} when `experimental` is `true`.
- * - An optional child slot for additional actions.
+ * The component combines an optional breadcrumb trail, the page `<h1>`, an
+ * optional {@link Subtitle}, an optional {@link UnderConstructionTag}, and an
+ * action slot rendered beside the title.
  *
- * On mount and whenever `title` or `breadCrumbs` change, the page title is
- * propagated to the nearest {@link PageTitleProvider} via {@link usePageTitle}.
+ * On mount and whenever the derived breadcrumb title changes, the visible title
+ * is also pushed into the page title context via {@link usePageTitle} so shell-
+ * level consumers stay in sync.
  *
  * @param props - Component props.
  * @param props.title - Main heading text.
