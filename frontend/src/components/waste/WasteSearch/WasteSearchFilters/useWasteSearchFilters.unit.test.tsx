@@ -1,6 +1,8 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
+
 import { useWasteSearchFilters } from './useWasteSearchFilters';
 
 import type { ReportingUnitSearchParametersViewDto } from '@/services/types';
@@ -229,5 +231,37 @@ describe('useWasteSearchFilters', () => {
     expect(typeof result.current.handleChange).toBe('function');
     expect(typeof result.current.onRemoveFilter).toBe('function');
     expect(typeof result.current.setIsAdvancedSearchOpen).toBe('function');
+  });
+
+  describe('useSyncPreferencesToFilters callback', () => {
+    it('shouldReturnValueAsArray_whenKeyIsSelectedClient', () => {
+      renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
+      // Extract the transform callback passed to useSyncPreferencesToFilters
+      const calls = vi.mocked(useSyncPreferencesToFilters).mock.calls;
+      expect(calls.length).toBeGreaterThan(0);
+      const transformFn = calls[0][2]!;
+      expect(transformFn('selectedClient', '100')).toEqual(['100']);
+    });
+
+    it('shouldReturnEmptyArray_whenKeyIsSelectedClientAndValueIsFalsy', () => {
+      renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
+      const calls = vi.mocked(useSyncPreferencesToFilters).mock.calls;
+      const transformFn = calls[0][2]!;
+      expect(transformFn('selectedClient', '')).toEqual([]);
+    });
+
+    it('shouldReturnValueAsArray_whenKeyIsSelectedDistrict', () => {
+      renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
+      const calls = vi.mocked(useSyncPreferencesToFilters).mock.calls;
+      const transformFn = calls[0][2]!;
+      expect(transformFn('selectedDistrict', 'DT01')).toEqual(['DT01']);
+    });
+
+    it('shouldReturnValuePassthrough_whenKeyIsUnknown', () => {
+      renderHook(() => useWasteSearchFilters(defaultValue, vi.fn()));
+      const calls = vi.mocked(useSyncPreferencesToFilters).mock.calls;
+      const transformFn = calls[0][2]!;
+      expect(transformFn('someOtherKey' as never, 'raw-value')).toBe('raw-value');
+    });
   });
 });
