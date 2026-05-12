@@ -13,19 +13,31 @@ import { withProtected } from './guards/withProtected';
 import { ROUTES, SYSTEM_ROUTES, type RouteDescription } from './routePaths';
 
 import Layout from '@/components/Layout';
+import { useAuth } from '@/context/auth/useAuth';
 import GlobalErrorPage from '@/pages/GlobalError';
 import NotFoundPage from '@/pages/NotFound';
 
 /**
- * Internal component that immediately redirects any unmatched URL back to `/`.
+ * Auth-aware not-found handler registered as `notFoundComponent` on the root route.
  *
- * Registered as `notFoundComponent` on the root route so that deep-linked URLs
- * that are not present in the route tree do not render a blank page.
+ * - **Unauthenticated**: redirects to `/` (shows the landing page) so the user
+ *   can sign in rather than seeing a dead-end 404.
+ * - **Authenticated**: renders {@link NotFoundPage} so the user sees a clear
+ *   "Content Not Found" message for URLs that simply don't exist.
  */
 function NotFoundRedirect() {
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
-  useEffect(() => void navigate({ to: '/', replace: true }), [navigate]);
-  return null;
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      void navigate({ to: '/', replace: true });
+    }
+  }, [user, isLoading, navigate]);
+
+  if (isLoading) return <Loading data-testid="loading" withOverlay />;
+  if (!user) return null; // redirect pending
+  return <NotFoundPage />;
 }
 
 const rootRoute = createRootRoute({
@@ -105,7 +117,6 @@ export const router = createRouter({
       <GlobalErrorPage error={error} />
     </Layout>
   ),
-  defaultNotFoundComponent: NotFoundPage,
 });
 
 // Module augmentation: registers the router type with TanStack Router so that

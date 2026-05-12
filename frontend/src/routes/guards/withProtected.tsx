@@ -50,7 +50,13 @@ export function withProtected<P extends object>(
     useLayoutEffect(() => {
       if (isLoading) return;
       if (!user) {
-        persistRedirectUrl(`${pathname}${searchStr}`);
+        // Guard against persisting '/login' itself: after navigate('/login') fires, TanStack
+        // Router updates its state to pathname='/login' before this component unmounts, which
+        // re-triggers this effect. Skip the persist on that second pass so we don't overwrite
+        // the real intended URL that was already saved on the first pass.
+        if (pathname !== '/login') {
+          persistRedirectUrl(`${pathname}${searchStr}`);
+        }
         // /login is an external Cognito URL, not an in-tree route — cast is intentional.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         void navigate({ to: '/login' as any, replace: true });
