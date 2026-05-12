@@ -6,9 +6,12 @@ import PageTitle from '@/components/core/PageTitle';
 /**
  * 404 Not Found fallback page.
  *
- * Rendered by TanStack Router's `defaultNotFoundComponent` when no route
- * matches the current URL. Displays a {@link PageTitle} with a static
- * "Content Not Found" heading and a descriptive subtitle.
+ * Registered as `defaultNotFoundComponent` on the router in `routeTree.tsx`, so it is
+ * rendered for any URL that does not match a registered route. Root-level unmatched URLs
+ * are additionally handled by `NotFoundRedirect` (which redirects to `/`) on the root
+ * route's `notFoundComponent`.
+ *
+ * Displays a {@link PageTitle} with a static "Content Not Found" heading and subtitle.
  *
  * @returns The not-found content column.
  */

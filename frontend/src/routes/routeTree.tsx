@@ -14,6 +14,7 @@ import { ROUTES, SYSTEM_ROUTES, type RouteDescription } from './routePaths';
 
 import Layout from '@/components/Layout';
 import GlobalErrorPage from '@/pages/GlobalError';
+import NotFoundPage from '@/pages/NotFound';
 
 /**
  * Internal component that immediately redirects any unmatched URL back to `/`.
@@ -104,6 +105,7 @@ export const router = createRouter({
       <GlobalErrorPage error={error} />
     </Layout>
   ),
+  defaultNotFoundComponent: NotFoundPage,
 });
 
 // Module augmentation: registers the router type with TanStack Router so that

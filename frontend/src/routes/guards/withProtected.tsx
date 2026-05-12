@@ -20,7 +20,7 @@ import { persistRedirectUrl } from '@/routes/redirectStorage';
  * - Users with `'no-role'` status are redirected to {@link getUserAccessStatus}
  *   `redirectTo`.
  * - Users failing the optional `roles` check are redirected to `/unauthorized`
- *   with a `reason` search param.
+ *   (no `reason` param; {@link RoleErrorPage} displays the generic permissions message).
  *
  * @param Component - The route component to protect.
  * @param roles - Optional array of {@link FamRole} values; at least one must match
