@@ -1,21 +1,26 @@
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { RouterProvider } from '@tanstack/react-router';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 
 import NotFoundPage from './index';
 
+import { createTestRouter } from '@/config/tests/routerTestHelper';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 
 describe('NotFoundPage', () => {
-  it('renders not found message', () => {
+  it('shouldRenderNotFoundMessage_whenRendered', async () => {
     render(
-      <PageTitleProvider>
-        <MemoryRouter initialEntries={['/dashboard']}>
-          <NotFoundPage />
-        </MemoryRouter>
-      </PageTitleProvider>,
+      <RouterProvider
+        router={createTestRouter(() => (
+          <PageTitleProvider>
+            <NotFoundPage />
+          </PageTitleProvider>
+        ))}
+      />,
     );
-    expect(screen.getByText('Content Not Found')).toBeDefined();
-    expect(screen.getByText('The page you are looking for does not exist.')).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText('Content Not Found')).toBeDefined();
+      expect(screen.getByText('The page you are looking for does not exist.')).toBeDefined();
+    });
   });
 });

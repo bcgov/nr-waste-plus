@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { RouterProvider } from '@tanstack/react-router';
 import { render, screen, act } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, type Mock, beforeAll } from 'vitest';
 
 import { LayoutHeader } from '@/components/Layout/LayoutHeader';
 import { AuthProvider } from '@/context/auth/AuthProvider';
+import { createTestRouter } from '@/config/tests/routerTestHelper';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import ThemeProvider from '@/context/theme/ThemeProvider';
@@ -30,19 +31,21 @@ const renderWithProviders = async () => {
   const qc = new QueryClient();
   await act(async () =>
     render(
-      <AuthProvider>
-        <QueryClientProvider client={qc}>
-          <MemoryRouter>
-            <PreferenceProvider>
-              <ThemeProvider>
-                <LayoutProvider>
-                  <LayoutHeader />
-                </LayoutProvider>
-              </ThemeProvider>
-            </PreferenceProvider>
-          </MemoryRouter>
-        </QueryClientProvider>
-      </AuthProvider>,
+      <RouterProvider
+        router={createTestRouter(() => (
+          <AuthProvider>
+            <QueryClientProvider client={qc}>
+              <PreferenceProvider>
+                <ThemeProvider>
+                  <LayoutProvider>
+                    <LayoutHeader />
+                  </LayoutProvider>
+                </ThemeProvider>
+              </PreferenceProvider>
+            </QueryClientProvider>
+          </AuthProvider>
+        ))}
+      />,
     ),
   );
 };
@@ -53,11 +56,11 @@ describe('LayoutHeader', () => {
     (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
   });
 
-  it('renders header with title Waste Plus', async () => {
+  it('shouldRenderHeaderAndTitle_whenBreakpointIsLg', async () => {
     mockBreakpoint = 'lg';
 
     await renderWithProviders();
-    const header = await screen.findByTestId('bc-header__header');
+    const header = await screen.findByRole('banner');
     expect(header).toBeDefined();
 
     const title = await screen.findByText(/Waste Plus/i);
@@ -71,7 +74,7 @@ describe('LayoutHeader', () => {
         env.VITE_NODE_ENV = 'openshift-prod';
       });
 
-      it("doesn't render the Env label", async () => {
+      it('shouldHideEnvLabel_whenNodeEnvIsOpenshiftProd', async () => {
         await renderWithProviders();
 
         expect(screen.queryByText(/Env/i)).toBeNull();
@@ -84,10 +87,10 @@ describe('LayoutHeader', () => {
         env.VITE_NODE_ENV = 'openshift-test';
       });
 
-      it('renders the Env label', async () => {
+      it('shouldRenderEnvLabel_whenNodeEnvIsOpenshiftTest', async () => {
         await renderWithProviders();
 
-        expect(screen.queryByText(/Env/i)).toBeDefined();
+        expect(screen.queryByText(/Env/i)).not.toBeNull();
 
         const envLabel = await screen.findByText('Env. Test');
         expect(envLabel).toBeDefined();
@@ -101,10 +104,10 @@ describe('LayoutHeader', () => {
       env.VITE_NODE_ENV = 'bogus-test';
     });
 
-    it('renders the Env label but the name is empty', async () => {
+    it('shouldRenderEnvLabelWithoutName_whenNodeEnvDoesNotStartWithOpenshift', async () => {
       await renderWithProviders();
 
-      expect(screen.queryByText(/Env/i)).toBeDefined();
+      expect(screen.queryByText(/Env/i)).not.toBeNull();
 
       const envLabel = await screen.findByText('Env.');
       expect(envLabel).toBeDefined();

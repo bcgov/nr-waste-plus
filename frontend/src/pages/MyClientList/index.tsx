@@ -9,9 +9,15 @@ import useScopedNotification from '@/hooks/useNotificationEvents/useScopedNotifi
 import './index.scss';
 
 /**
- * Hosts the saved client list page and its page-scoped notifications.
+ * My Clients page — hosts the saved client listing and page-scoped notifications.
  *
- * @returns The my clients page.
+ * Subscribes to the `'my-client-list'` notification target via
+ * {@link useScopedNotification} so that errors and warnings raised by
+ * {@link MyClientListing} are surfaced as a Carbon {@link InlineNotification}
+ * directly on this page. The notification is dismissed by the close button or
+ * cleared programmatically by the listing component before each new search.
+ *
+ * @returns The My Clients page columns (title, optional notification, and listing).
  */
 const MyClientListPage: FC = () => {
   const { clearNotification, eventNotification } = useScopedNotification('my-client-list');

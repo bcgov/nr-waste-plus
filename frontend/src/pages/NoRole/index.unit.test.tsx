@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import NoRolePage from './index';
 
@@ -35,14 +34,11 @@ vi.mock('@/services/APIs', () => {
   };
 });
 
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
+vi.mock('@tanstack/react-router', async () => {
+  const actual = await vi.importActual('@tanstack/react-router');
   return {
     ...actual,
-    Navigate: ({ to }: { to: string }) => {
-      mockNavigate(to);
-      return null;
-    },
+    useNavigate: () => mockNavigate,
   };
 });
 
@@ -52,11 +48,9 @@ const renderWithProps = async () => {
     render(
       <QueryClientProvider client={qc}>
         <PreferenceProvider>
-          <MemoryRouter initialEntries={['/no-role']}>
-            <PageTitleProvider>
-              <NoRolePage />
-            </PageTitleProvider>
-          </MemoryRouter>
+          <PageTitleProvider>
+            <NoRolePage />
+          </PageTitleProvider>
         </PreferenceProvider>
       </QueryClientProvider>,
     ),
@@ -68,27 +62,27 @@ describe('NoRolePage', () => {
     mockIsLoggedIn = false;
     mockUser = null;
     mockNavigate.mockClear();
-    (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
-    (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
+    vi.mocked(APIs.user.getUserPreferences).mockResolvedValue({ theme: 'g10' });
+    vi.mocked(APIs.user.updateUserPreferences).mockResolvedValue(undefined);
   });
 
-  it('navigates to home when user is not logged in', async () => {
+  it('shouldNavigateToHome_whenUserIsNotLoggedIn', async () => {
     mockIsLoggedIn = false;
     mockUser = null;
     await renderWithProps();
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    expect(mockNavigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/' }));
     expect(screen.queryByText('Unauthorized Access')).toBeNull();
   });
 
-  it('navigates to home when logged in but user is not loaded', async () => {
+  it('shouldNavigateToHome_whenLoggedInButUserNotLoaded', async () => {
     mockIsLoggedIn = true;
     mockUser = null;
     await renderWithProps();
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    expect(mockNavigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/' }));
     expect(screen.queryByText('Unauthorized Access')).toBeNull();
   });
 
-  it('navigates to home when logged in user has roles', async () => {
+  it('shouldNavigateToHome_whenLoggedInUserHasRoles', async () => {
     mockIsLoggedIn = true;
     mockUser = {
       userName: 'testuser',
@@ -99,11 +93,11 @@ describe('NoRolePage', () => {
 
     await renderWithProps();
 
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    expect(mockNavigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/' }));
     expect(screen.queryByText('Unauthorized Access')).toBeNull();
   });
 
-  it('renders unauthorized access message when logged in user has no roles', async () => {
+  it('shouldRenderUnauthorizedMessage_whenUserHasNoRoles', async () => {
     mockIsLoggedIn = true;
     mockUser = {
       userName: 'testuser',
@@ -112,14 +106,14 @@ describe('NoRolePage', () => {
       privileges: {},
     };
     await renderWithProps();
-    expect(mockNavigate).not.toHaveBeenCalledWith('/');
+    expect(mockNavigate).not.toHaveBeenCalledWith(expect.objectContaining({ to: '/' }));
     expect(screen.getByText('Unauthorized Access')).toBeDefined();
     expect(
       screen.getByText("You don't have FAM authorization to access this system"),
     ).toBeDefined();
   });
 
-  it('renders unauthorized access message when logged in user has undefined roles', async () => {
+  it('shouldRenderUnauthorizedMessage_whenUserHasUndefinedRoles', async () => {
     mockIsLoggedIn = true;
     mockUser = {
       userName: 'testuser',
@@ -128,14 +122,14 @@ describe('NoRolePage', () => {
       privileges: {},
     };
     await renderWithProps();
-    expect(mockNavigate).not.toHaveBeenCalledWith('/');
+    expect(mockNavigate).not.toHaveBeenCalledWith(expect.objectContaining({ to: '/' }));
     expect(screen.getByText('Unauthorized Access')).toBeDefined();
     expect(
       screen.getByText("You don't have FAM authorization to access this system"),
     ).toBeDefined();
   });
 
-  it('renders unauthorized access message when the user only has a provider marker role', async () => {
+  it('shouldRenderUnauthorizedMessage_whenUserOnlyHasProviderMarkerRole', async () => {
     mockIsLoggedIn = true;
     mockUser = {
       userName: 'testuser',

@@ -14,20 +14,32 @@ import WasteSearchFiltersAdvanced from '@/components/waste/WasteSearch/WasteSear
 
 import './index.scss';
 
+/** Props for the {@link WasteSearchFilters} component. */
 type WasteSearchFiltersProps = {
+  /** Current filter state that drives all filter controls. */
   value: ReportingUnitSearchParametersViewDto;
+  /** Called whenever any filter field changes; receives the full updated filter object. */
   onChange: (filters: ReportingUnitSearchParametersViewDto) => void;
+  /** Called when the user explicitly triggers a search (search button or Enter key). */
   onSearch: () => void;
 };
 
 /**
- * Renders the primary waste-search filter bar and keeps filter state synchronized.
+ * Primary filter bar for the waste-search page.
  *
- * @param props The filter-bar props.
- * @param props.value The current filter state.
- * @param props.onChange Callback fired when filter state changes.
- * @param props.onSearch Callback fired when the user triggers a search.
- * @returns The waste search filter controls and advanced search modal.
+ * Renders a search input, three multi-select dropdowns (sampling, district, status),
+ * and active-filter tags. Also exposes an "Advanced Search" button that opens a
+ * modal ({@link WasteSearchFiltersAdvanced}) for additional criteria.
+ *
+ * Filter state is managed internally by {@link useWasteSearchFilters} and kept in
+ * sync with the URL search params via {@link useSyncFiltersToSearchParams}.
+ * Dropdown option lists are fetched via {@link useWasteSearchFilterOptions}.
+ *
+ * @param props - Component props.
+ * @param props.value - Current filter state that drives all filter controls.
+ * @param props.onChange - Called whenever any filter field changes.
+ * @param props.onSearch - Called when the user triggers a search.
+ * @returns The filter bar column and advanced-search modal.
  */
 const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSearch }) => {
   const { samplingOptions, districtOptions, statusOptions } = useWasteSearchFilterOptions();

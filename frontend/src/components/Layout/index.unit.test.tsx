@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { RouterProvider } from '@tanstack/react-router';
 import { act, render, screen } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
 import { describe, it, expect, vi, type Mock } from 'vitest';
 
 import Layout from './index';
 
 import { AuthProvider } from '@/context/auth/AuthProvider';
+import { createTestRouter } from '@/config/tests/routerTestHelper';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import ThemeProvider from '@/context/theme/ThemeProvider';
@@ -47,38 +48,40 @@ vi.mock('@/services/APIs', () => {
 // Dummy child component for testing
 const DummyChild = () => <div data-testid="dummy-child">Hello Child</div>;
 
-describe('Layout (browser)', () => {
-  it('renders header, grid, and children', async () => {
+describe('Layout', () => {
+  it('shouldRenderHeaderGridAndChildren_whenRendered', async () => {
     (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
 
     const qc = new QueryClient();
     await act(async () =>
       render(
-        <AuthProvider>
-          <BrowserRouter>
-            <QueryClientProvider client={qc}>
-              <PreferenceProvider>
-                <ThemeProvider>
-                  <LayoutProvider>
-                    <Layout>
-                      <DummyChild />
-                    </Layout>
-                  </LayoutProvider>
-                </ThemeProvider>
-              </PreferenceProvider>
-            </QueryClientProvider>
-          </BrowserRouter>
-        </AuthProvider>,
+        <RouterProvider
+          router={createTestRouter(() => (
+            <AuthProvider>
+              <QueryClientProvider client={qc}>
+                <PreferenceProvider>
+                  <ThemeProvider>
+                    <LayoutProvider>
+                      <Layout>
+                        <DummyChild />
+                      </Layout>
+                    </LayoutProvider>
+                  </ThemeProvider>
+                </PreferenceProvider>
+              </QueryClientProvider>
+            </AuthProvider>
+          ))}
+        />,
       ),
     );
 
     // Header
-    expect(document.querySelector('.cds--header')).toBeDefined();
+    expect(document.querySelector('.cds--header')).not.toBeNull();
     // Content body
-    expect(document.querySelector('.cds--content')).toBeDefined();
+    expect(document.querySelector('.cds--content')).not.toBeNull();
     // Grid
-    expect(document.querySelector('.layout-grid')).toBeDefined();
+    expect(document.querySelector('.layout-grid')).not.toBeNull();
     // Children
-    expect(screen.getByTestId('dummy-child').textContent).toBe('Hello Child');
+    expect(screen.getByText('Hello Child')).toBeDefined();
   });
 });

@@ -1,6 +1,6 @@
 import { Header, HeaderMenuButton, HeaderName, SkipToContent } from '@carbon/react';
+import { Link } from '@tanstack/react-router';
 import { type FC } from 'react';
-import { Link } from 'react-router-dom';
 
 import LayoutHeaderGlobalBar from './LayoutHeaderGlobalBar';
 import { getFormattedEnvName } from './utils';
@@ -13,9 +13,23 @@ import { env } from '@/env';
 import './index.scss';
 
 /**
- * Renders the global application header, menu toggle, and shell actions.
+ * Global application header bar.
  *
- * @returns The layout header component.
+ * Composes the Carbon {@link Header} shell with:
+ * - A hamburger {@link HeaderMenuButton} that toggles the side navigation via
+ *   {@link useLayout}
+ * - A {@link HeaderName} rendered as a TanStack {@link Link} pointing to `/dashboard`;
+ *   shows the application name and, in non-production environments, a formatted
+ *   environment label derived from {@link getFormattedEnvName}
+ * - The global action bar ({@link LayoutHeaderGlobalBar})
+ * - The slide-out header panel ({@link LayoutHeaderPanel})
+ * - The collapsible side navigation ({@link LayoutSideNav})
+ *
+ * The environment name label is derived from {@link env.VITE_NODE_ENV} via
+ * {@link getFormattedEnvName} and is hidden when the environment suffix ends
+ * with `"prod"`.
+ *
+ * @returns The rendered Carbon header element.
  */
 export const LayoutHeader: FC = () => {
   const { isSideNavExpanded, toggleSideNav } = useLayout();

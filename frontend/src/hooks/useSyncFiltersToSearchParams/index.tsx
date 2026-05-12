@@ -1,11 +1,24 @@
-import { useEffect, useRef, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
+import { useEffect, useRef, useMemo, useCallback } from 'react';
 
+/**
+ * Defines optional serialization and deserialization functions for a single filter value.
+ *
+ * @template TValue - The in-memory type of the filter value.
+ */
 type FilterSearchParamTransform<TValue> = {
+  /** Converts the in-memory value to a URL-safe representation (e.g. code array → string). */
   toSearchParam?: (value: TValue) => unknown;
+  /** Converts a raw URL param value back to the in-memory type. */
   fromSearchParam?: (value: unknown, currentValue?: TValue) => TValue;
 };
 
+/**
+ * A per-key map of {@link FilterSearchParamTransform} entries.
+ * Only the filter keys that need custom serialization need to be specified.
+ *
+ * @template T - The filter state object type.
+ */
 type FilterSearchParamTransformMap<T extends Record<string, unknown>> = Partial<{
   [K in keyof T]: FilterSearchParamTransform<T[K]>;
 }>;
@@ -84,7 +97,20 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
     transforms?: FilterSearchParamTransformMap<T>;
   },
 ): void => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const searchStr = useRouterState({ select: (s) => s.location.searchStr });
+  const navigate = useNavigate();
+  const searchParams = useMemo(() => new URLSearchParams(searchStr), [searchStr]);
+  const setSearchParams = useCallback(
+    (params: URLSearchParams, options?: { replace?: boolean }) => {
+      void navigate({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        search: () => Object.fromEntries(params) as any,
+        replace: options?.replace ?? false,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+    },
+    [navigate],
+  );
   const excludeSet = useMemo(() => new Set(options?.exclude ?? []), [options?.exclude]);
   const includeEmpty = options?.includeEmpty ?? false;
   const transforms = options?.transforms;

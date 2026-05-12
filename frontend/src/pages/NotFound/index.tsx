@@ -4,9 +4,16 @@ import { type FC } from 'react';
 import PageTitle from '@/components/core/PageTitle';
 
 /**
- * Displays the fallback page for unknown routes.
+ * 404 Not Found fallback page.
  *
- * @returns The not found page content.
+ * Registered as `defaultNotFoundComponent` on the router in `routeTree.tsx`, so it is
+ * rendered for any URL that does not match a registered route. Root-level unmatched URLs
+ * are additionally handled by `NotFoundRedirect` (which redirects to `/`) on the root
+ * route's `notFoundComponent`.
+ *
+ * Displays a {@link PageTitle} with a static "Content Not Found" heading and subtitle.
+ *
+ * @returns The not-found content column.
  */
 const NotFoundPage: FC = () => {
   return (

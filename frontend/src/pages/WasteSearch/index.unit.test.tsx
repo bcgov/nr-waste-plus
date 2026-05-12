@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { RouterProvider } from '@tanstack/react-router';
 import { act, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { describe, it, expect, type Mock, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import WasteSearchPage from './index';
 
 import { AuthProvider } from '@/context/auth/AuthProvider';
+import { createTestRouter } from '@/config/tests/routerTestHelper';
 import NotificationProvider from '@/context/notification/NotificationProvider';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
@@ -37,15 +38,17 @@ const renderWithProps = async () => {
     render(
       <QueryClientProvider client={qc}>
         <PreferenceProvider>
-          <MemoryRouter>
-            <AuthProvider>
-              <NotificationProvider>
-                <PageTitleProvider>
-                  <WasteSearchPage />
-                </PageTitleProvider>
-              </NotificationProvider>
-            </AuthProvider>
-          </MemoryRouter>
+          <RouterProvider
+            router={createTestRouter(() => (
+              <AuthProvider>
+                <NotificationProvider>
+                  <PageTitleProvider>
+                    <WasteSearchPage />
+                  </PageTitleProvider>
+                </NotificationProvider>
+              </AuthProvider>
+            ))}
+          />
         </PreferenceProvider>
       </QueryClientProvider>,
     ),
@@ -54,12 +57,12 @@ const renderWithProps = async () => {
 
 describe('WasteSearchPage', () => {
   beforeEach(() => {
-    (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
-    (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
-    (APIs.codes.getSamplingOptions as Mock).mockResolvedValue([]);
-    (APIs.codes.getDistricts as Mock).mockResolvedValue([]);
-    (APIs.codes.getAssessAreaStatuses as Mock).mockResolvedValue([]);
-    (APIs.search.searchReportingUnit as Mock).mockResolvedValue({
+    vi.mocked(APIs.user.getUserPreferences).mockResolvedValue({ theme: 'g10' });
+    vi.mocked(APIs.user.updateUserPreferences).mockResolvedValue(undefined);
+    vi.mocked(APIs.codes.getSamplingOptions).mockResolvedValue([]);
+    vi.mocked(APIs.codes.getDistricts).mockResolvedValue([]);
+    vi.mocked(APIs.codes.getAssessAreaStatuses).mockResolvedValue([]);
+    vi.mocked(APIs.search.searchReportingUnit).mockResolvedValue({
       content: [],
       page: {
         number: 0,
@@ -70,18 +73,18 @@ describe('WasteSearchPage', () => {
     });
   });
 
-  it('renders the page title and subtitle', async () => {
+  it('shouldRenderPageTitleAndSubtitle_whenRendered', async () => {
     await renderWithProps();
     expect(screen.getByText('Waste search')).toBeDefined();
     expect(screen.getByText('Search for reporting units, licensees, or blocks')).toBeDefined();
   });
 
-  it('renders the WasteSearch columns', async () => {
+  it('shouldRenderWasteSearchColumns_whenRendered', async () => {
     await renderWithProps();
     expect(screen.getByText('Nothing to show yet!')).toBeDefined();
   });
 
-  it('displays error notification when error event is sent', async () => {
+  it('shouldDisplayErrorNotification_whenErrorEventSent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -97,7 +100,7 @@ describe('WasteSearchPage', () => {
     expect(screen.getAllByText('This is a test error message')).toHaveLength(1);
   });
 
-  it('displays warning notification when warning event is sent', async () => {
+  it('shouldDisplayWarningNotification_whenWarningEventSent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -113,7 +116,7 @@ describe('WasteSearchPage', () => {
     expect(screen.getAllByText('This is a test warning message')).toHaveLength(1);
   });
 
-  it('displays info notification when info event is sent', async () => {
+  it('shouldDisplayInfoNotification_whenInfoEventSent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -129,7 +132,7 @@ describe('WasteSearchPage', () => {
     expect(screen.getAllByText('This is a test info message')).toHaveLength(1);
   });
 
-  it('does not display notification when event target does not match', async () => {
+  it('shouldNotDisplayNotification_whenEventTargetDoesNotMatch', async () => {
     await renderWithProps();
 
     act(() => {

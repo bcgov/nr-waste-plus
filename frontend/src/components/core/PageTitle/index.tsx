@@ -1,6 +1,6 @@
 import { Breadcrumb, BreadcrumbItem, Column } from '@carbon/react';
+import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo, type FC } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { type BreadCrumbType } from './types';
 
@@ -11,28 +11,39 @@ import { usePageTitle } from '@/context/pageTitle/usePageTitle';
 import './index.scss';
 
 /**
- * Props for the PageTitle component.
- *
- * @property {string} title - The main title text for the page.
- * @property {string} [subtitle] - Optional subtitle text for the page.
- * @property {boolean} [experimental] - If true, displays an "Under construction" tag.
- * @property {React.ReactNode} [children] - Optional elements to render next to the title.
- * @property {BreadCrumbType[]} [breadCrumbs] - Optional array of breadcrumb objects for navigation.
+ * Props for the {@link PageTitle} component.
  */
 interface PageTitleProps {
-  title: string;
-  subtitle?: string;
-  experimental?: boolean;
-  children?: React.ReactNode;
-  breadCrumbs?: BreadCrumbType[];
+  /** Main page title rendered as an `<h1>`. */
+  readonly title: string;
+  /** Optional subtitle rendered below the heading. */
+  readonly subtitle?: string;
+  /** When `true`, displays an "Under Construction" tag next to the title. */
+  readonly experimental?: boolean;
+  /** Optional slot for action elements (e.g. buttons) rendered beside the heading. */
+  readonly children?: React.ReactNode;
+  /** Ordered breadcrumb trail. Each item is a clickable link except the last. */
+  readonly breadCrumbs?: BreadCrumbType[];
 }
 
 /**
- * PageTitle provides a standardized header for pages, including a title, optional subtitle, breadcrumbs, and an experimental tag.
- * It helps maintain consistent page layouts and navigation.
+ * Renders the standard page heading block used across routed screens.
  *
- * @param {PageTitleProps} props - The props for the component.
- * @returns {JSX.Element} The rendered PageTitle component.
+ * The component combines an optional breadcrumb trail, the page `<h1>`, an
+ * optional {@link Subtitle}, an optional {@link UnderConstructionTag}, and an
+ * action slot rendered beside the title.
+ *
+ * On mount and whenever the derived breadcrumb title changes, the visible title
+ * is also pushed into the page title context via {@link usePageTitle} so shell-
+ * level consumers stay in sync.
+ *
+ * @param props - Component props.
+ * @param props.title - Main heading text.
+ * @param props.subtitle - Optional subtitle rendered beneath the heading.
+ * @param props.experimental - Shows the "Under Construction" tag when `true`.
+ * @param props.children - Optional action elements rendered beside the heading.
+ * @param props.breadCrumbs - Ordered breadcrumb entries; each entry is a `{ name, path }` pair.
+ * @returns The rendered page title column.
  */
 const PageTitle: FC<PageTitleProps> = ({
   title,
@@ -58,7 +69,11 @@ const PageTitle: FC<PageTitleProps> = ({
       {breadCrumbs?.length ? (
         <Breadcrumb className="page-title-breadcrumb">
           {breadCrumbs.map((crumb) => (
-            <BreadcrumbItem key={crumb.name} onClick={() => navigate(crumb.path)}>
+            <BreadcrumbItem
+              key={crumb.name}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              onClick={() => void navigate({ to: crumb.path as any })}
+            >
               {crumb.name}
             </BreadcrumbItem>
           ))}

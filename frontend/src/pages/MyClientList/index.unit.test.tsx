@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { RouterProvider } from '@tanstack/react-router';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
 import MyClientListPage from './index';
 
+import { createTestRouter } from '@/config/tests/routerTestHelper';
 import NotificationProvider from '@/context/notification/NotificationProvider';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
@@ -27,13 +28,15 @@ const renderWithProps = async () => {
     render(
       <QueryClientProvider client={qc}>
         <PreferenceProvider>
-          <MemoryRouter>
-            <NotificationProvider>
-              <PageTitleProvider>
-                <MyClientListPage />
-              </PageTitleProvider>
-            </NotificationProvider>
-          </MemoryRouter>
+          <RouterProvider
+            router={createTestRouter(() => (
+              <NotificationProvider>
+                <PageTitleProvider>
+                  <MyClientListPage />
+                </PageTitleProvider>
+              </NotificationProvider>
+            ))}
+          />
         </PreferenceProvider>
       </QueryClientProvider>,
     ),
@@ -41,12 +44,14 @@ const renderWithProps = async () => {
 };
 
 describe('MyClientListPage', () => {
-  it('renders My clients', () => {
-    renderWithProps();
-    expect(screen.getByText('My clients')).toBeDefined();
+  it('shouldRenderMyClients_whenRendered', async () => {
+    await renderWithProps();
+    await waitFor(() => {
+      expect(screen.getByText('My clients')).toBeDefined();
+    });
   });
 
-  it('displays error notification when error event is sent', async () => {
+  it('shouldDisplayErrorNotification_whenErrorEventSent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -62,7 +67,7 @@ describe('MyClientListPage', () => {
     expect(screen.getAllByText('This is a test error message')).toHaveLength(1);
   });
 
-  it('displays warning notification when warning event is sent', async () => {
+  it('shouldDisplayWarningNotification_whenWarningEventSent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -78,7 +83,7 @@ describe('MyClientListPage', () => {
     expect(screen.getAllByText('This is a test warning message')).toHaveLength(1);
   });
 
-  it('displays info notification when info event is sent', async () => {
+  it('shouldDisplayInfoNotification_whenInfoEventSent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -94,7 +99,7 @@ describe('MyClientListPage', () => {
     expect(screen.getAllByText('This is a test info message')).toHaveLength(1);
   });
 
-  it('does not display notification when event target does not match', async () => {
+  it('shouldNotDisplayNotification_whenEventTargetDoesNotMatch', async () => {
     await renderWithProps();
 
     act(() => {
