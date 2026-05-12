@@ -1,6 +1,8 @@
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { useEffect, useRef, type ComponentType } from 'react';
 
+import { useAuth } from '@/context/auth/useAuth';
+
 import { navigateInTree, type InTreePath } from '@/routes/inTreePaths';
 import { clearPersistedRedirect, readPersistedRedirect } from '@/routes/redirectStorage';
 
@@ -60,10 +62,16 @@ export function withPersistentRedirect<P extends object>(
 ): ComponentType<P> {
   function PersistentRedirect(props: P) {
     const navigate = useNavigate();
+    const { isLoading } = useAuth();
     const { searchStr } = useRouterState({ select: (s) => s.location });
     const hasNavigated = useRef(false);
 
     useEffect(() => {
+      // Wait for auth to resolve before redirecting. This mirrors the timing
+      // delay that existed in the old AppRoutes approach (router was recreated
+      // only after isLoggedIn changed), and gives SiteMinder time to commit
+      // its Set-Cookie headers before we navigate away from /dashboard.
+      if (isLoading) return;
       if (hasNavigated.current) return;
       hasNavigated.current = true;
 
@@ -82,7 +90,7 @@ export function withPersistentRedirect<P extends object>(
 
       const passthrough = Object.fromEntries(new URLSearchParams(searchStr));
       navigateInTree(navigate, '/search', { replace: true, search: passthrough });
-    }, [navigate, searchStr]);
+    }, [navigate, searchStr, isLoading]);
 
     return <Component {...props} />;
   }

@@ -6,8 +6,13 @@ import { withPersistentRedirect } from './withPersistentRedirect';
 // ── Mutable state ─────────────────────────────────────────────────────────────
 const mockNavigate = vi.fn();
 let mockSearchStr = '';
+let mockIsLoading = false;
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
+vi.mock('@/context/auth/useAuth', () => ({
+  useAuth: () => ({ isLoading: mockIsLoading }),
+}));
+
 vi.mock('@tanstack/react-router', async () => {
   const actual = await vi.importActual('@tanstack/react-router');
   return {
@@ -36,6 +41,7 @@ function DummyPage() {
 describe('withPersistentRedirect', () => {
   beforeEach(() => {
     mockSearchStr = '';
+    mockIsLoading = false;
     mockNavigate.mockClear();
     vi.clearAllMocks();
   });
@@ -120,6 +126,16 @@ describe('withPersistentRedirect', () => {
       '/search',
       expect.objectContaining({ replace: true }),
     );
+  });
+
+  it('shouldNotNavigate_whenAuthIsLoading', async () => {
+    const { readPersistedRedirect } = await import('@/routes/redirectStorage');
+    const { navigateInTree } = await import('@/routes/inTreePaths');
+    vi.mocked(readPersistedRedirect).mockReturnValue('/search');
+    mockIsLoading = true;
+    const Wrapped = withPersistentRedirect(DummyPage);
+    await act(async () => render(<Wrapped />));
+    expect(vi.mocked(navigateInTree)).not.toHaveBeenCalled();
   });
 
   it('shouldNavigateOnlyOnce_whenRerenderedMultipleTimes', async () => {

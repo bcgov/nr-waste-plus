@@ -5,6 +5,7 @@ import {
   createRouter,
   Outlet,
   useNavigate,
+  useRouterState,
 } from '@tanstack/react-router';
 import { useEffect, type ComponentType } from 'react';
 
@@ -14,6 +15,7 @@ import { ROUTES, SYSTEM_ROUTES, type RouteDescription } from './routePaths';
 
 import Layout from '@/components/Layout';
 import { useAuth } from '@/context/auth/useAuth';
+import { usePageTitle } from '@/context/pageTitle/usePageTitle';
 import GlobalErrorPage from '@/pages/GlobalError';
 import NotFoundPage from '@/pages/NotFound';
 
@@ -40,8 +42,31 @@ function NotFoundRedirect() {
   return <NotFoundPage />;
 }
 
+/**
+ * Root layout component that renders the route outlet and keeps the browser
+ * tab title in sync with the active route.
+ *
+ * Mirrors the `setPageTitle` call that lived in the old `AppRoutes.tsx`
+ * `useEffect`. On every pathname change it looks up the matching route in
+ * `ROUTES` and `SYSTEM_ROUTES` and calls `setPageTitle` with the route `id`.
+ */
+function RootLayout() {
+  const { setPageTitle } = usePageTitle();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useEffect(() => {
+    const all = [...SYSTEM_ROUTES, ...ROUTES];
+    const match = all.find((r) => r.path === pathname);
+    if (match) {
+      setPageTitle(match.id, 1);
+    }
+  }, [pathname, setPageTitle]);
+
+  return <Outlet />;
+}
+
 const rootRoute = createRootRoute({
-  component: Outlet,
+  component: RootLayout,
   notFoundComponent: NotFoundRedirect,
 });
 

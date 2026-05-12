@@ -8,10 +8,16 @@ import { router } from '@/routes/routeTree';
 let mockUser: { userName: string } | undefined = undefined;
 let mockIsLoading = false;
 const mockNavigate = vi.fn();
+const mockSetPageTitle = vi.fn();
+let mockPathname = '/';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 vi.mock('@/context/auth/useAuth', () => ({
   useAuth: () => ({ user: mockUser, isLoading: mockIsLoading }),
+}));
+
+vi.mock('@/context/pageTitle/usePageTitle', () => ({
+  usePageTitle: () => ({ setPageTitle: mockSetPageTitle }),
 }));
 
 vi.mock('@tanstack/react-router', async () => {
@@ -19,6 +25,9 @@ vi.mock('@tanstack/react-router', async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
+    useRouterState: ({ select }: { select: (s: { location: { pathname: string } }) => unknown }) =>
+      select({ location: { pathname: mockPathname } }),
+    Outlet: () => <div data-testid="outlet" />,
   };
 });
 
@@ -29,6 +38,10 @@ vi.mock('@/pages/NotFound', () => ({
 // ── Helpers ───────────────────────────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const anyRouter = router as any;
+
+function getRootLayoutComponent(): React.ComponentType {
+  return anyRouter.routeTree?.options?.component ?? anyRouter.options?.component;
+}
 
 function getNotFoundComponent(): React.ComponentType {
   return anyRouter.routeTree?.options?.notFoundComponent ?? anyRouter.options?.notFoundComponent;
@@ -49,7 +62,9 @@ describe('routeTree module', () => {
   beforeEach(() => {
     mockUser = undefined;
     mockIsLoading = false;
+    mockPathname = '/';
     mockNavigate.mockClear();
+    mockSetPageTitle.mockClear();
   });
 
   it('shouldExportRouterInstance', () => {
@@ -120,6 +135,40 @@ describe('routeTree module', () => {
       if (!NotFoundRedirect) return;
       await act(async () => render(<NotFoundRedirect />));
       expect(mockNavigate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('RootLayout', () => {
+    it('shouldCallSetPageTitle_whenPathnameMatchesKnownRoute', async () => {
+      mockPathname = '/search';
+      const RootLayout = getRootLayoutComponent();
+      if (!RootLayout) return;
+      await act(async () => render(<RootLayout />));
+      expect(mockSetPageTitle).toHaveBeenCalledWith('Waste search', 1);
+    });
+
+    it('shouldCallSetPageTitle_withLandingId_forRootPath', async () => {
+      mockPathname = '/';
+      const RootLayout = getRootLayoutComponent();
+      if (!RootLayout) return;
+      await act(async () => render(<RootLayout />));
+      expect(mockSetPageTitle).toHaveBeenCalledWith('Landing', 1);
+    });
+
+    it('shouldNotCallSetPageTitle_whenPathnameDoesNotMatchAnyRoute', async () => {
+      mockPathname = '/nonexistent-route';
+      const RootLayout = getRootLayoutComponent();
+      if (!RootLayout) return;
+      await act(async () => render(<RootLayout />));
+      expect(mockSetPageTitle).not.toHaveBeenCalled();
+    });
+
+    it('shouldRenderOutlet', async () => {
+      mockPathname = '/';
+      const RootLayout = getRootLayoutComponent();
+      if (!RootLayout) return;
+      const { getByTestId } = await act(async () => render(<RootLayout />));
+      expect(getByTestId('outlet')).toBeTruthy();
     });
   });
 
