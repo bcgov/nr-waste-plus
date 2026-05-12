@@ -127,7 +127,8 @@ export const SYSTEM_ROUTES: RouteDescription[] = [
  *
  * Filters {@link ROUTES} by:
  * 1. `isSideMenu: true` — only navigation-visible routes
- * 2. `offlineOnly` flag — excludes offline-only routes when the user is online
+ * 2. Connectivity — when **online**, excludes `offlineOnly` routes; when **offline**,
+ *    excludes routes that are neither `offlineReady` nor `offlineOnly` (online-only routes)
  * 3. Role match — excludes routes whose `roles` list does not intersect `roles`
  *
  * @param isOnline - Whether the browser currently has network connectivity.
@@ -136,7 +137,7 @@ export const SYSTEM_ROUTES: RouteDescription[] = [
  */
 export const getMenuEntries = (isOnline: boolean, roles: FamRole[]): MenuItem[] =>
   ROUTES.filter((r) => r.isSideMenu)
-    .filter((r) => !r.offlineOnly || !isOnline)
+    .filter((r) => (isOnline ? !r.offlineOnly : !!(r.offlineReady || r.offlineOnly)))
     .filter(
       (r) =>
         !r.roles?.length || r.roles.some((role) => roles.map((u) => u.role).includes(role.role)),

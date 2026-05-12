@@ -26,4 +26,18 @@ describe('routePaths', () => {
     }
   });
 
+  it('shouldExcludeOnlineOnlyRoutes_whenOffline', () => {
+    // All current ROUTES have neither offlineReady nor offlineOnly → should be hidden when offline
+    const entries = routePaths.getMenuEntries(false, [
+      { role: Role.VIEWER, clients: ['100'] },
+    ]);
+    expect(entries).toHaveLength(0);
+  });
+
+  it('shouldIncludeAllSideMenuRoutes_whenOnline', () => {
+    const onlineEntries = routePaths.getMenuEntries(true, [{ role: Role.VIEWER, clients: ['100'] }]);
+    const offlineEntries = routePaths.getMenuEntries(false, [{ role: Role.VIEWER, clients: ['100'] }]);
+    expect(onlineEntries.length).toBeGreaterThan(offlineEntries.length);
+  });
+
 });
