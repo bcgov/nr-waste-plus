@@ -28,6 +28,7 @@ jobs:
         with:
           working-directory: cypress
           browser: chrome
+          install-command: npm ci
         env:
           CYPRESS_baseUrl: https://${{ inputs.url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
@@ -53,7 +54,7 @@ jobs:
         if: always()
         run: |
           if [ -d "cypress/cypress/screenshots" ] && [ "$(ls -A cypress/cypress/screenshots)" ]; then
-            echo "Screenshots folder is not empty, uploading artifacts."            
+            echo "Screenshots folder is not empty, uploading artifacts."
             echo "screenshots=true" >> $GITHUB_OUTPUT
 
           else
@@ -62,7 +63,7 @@ jobs:
           fi
 
           if [ -d "cypress/cypress/videos" ] && [ "$(ls -A cypress/cypress/videos)" ]; then
-            echo "Videos folder is not empty, uploading artifacts."            
+            echo "Videos folder is not empty, uploading artifacts."
             echo "videos=true" >> $GITHUB_OUTPUT
 
           else

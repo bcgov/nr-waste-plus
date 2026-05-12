@@ -44,7 +44,7 @@ jobs:
           node-version: "24"
 
       - name: Install Dependencies
-        run: npm i
+        run: npm ci
         working-directory: frontend
 
       - name: Frontend Tests
