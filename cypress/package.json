@@ -1,5 +1,5 @@
 {
-  "name": "cypress",
+  "name": "nr-waste-plus-cypress",
   "version": "1.0.0",
   "description": "Cypress end-to-end user journey tests for nr-waste-plus, using Cucumber for BDD-style test scenarios executed during pull requests.",
   "main": "index.js",
@@ -20,26 +20,35 @@
   "engines": {
     "node": ">=22.19.0"
   },
-  "keywords": ["cypress", "cucumber", "e2e", "user-journey", "bdd", "testing", "accessibility", "lighthouse"],
+  "keywords": [
+    "cypress",
+    "cucumber",
+    "e2e",
+    "user-journey",
+    "bdd",
+    "testing",
+    "accessibility",
+    "lighthouse"
+  ],
   "author": "Team Alliance",
   "license": "Apache-2.0",
   "type": "commonjs",
   "devDependencies": {
     "@badeball/cypress-cucumber-preprocessor": "^24.0.1",
-    "@cypress/webpack-preprocessor": "^7.0.0",
-    "@testing-library/cypress": "^10.1.0",
-    "@types/node": "^25.5.0",
-    "axe-core": "^4.11.0",
-    "cypress": "^15.0.0",
+    "@cypress/webpack-preprocessor": "^7.1.0",
+    "@testing-library/cypress": "^10.1.3",
+    "@types/node": "^25.7.0",
+    "axe-core": "^4.11.4",
+    "cypress": "^15.15.0",
     "cypress-axe": "^1.7.0",
     "cypress-real-events": "^1.14.0",
-    "dotenv": "^17.3.1",
-    "lighthouse": "^13.0.0",
+    "dotenv": "^17.4.2",
+    "lighthouse": "^13.3.0",
     "mochawesome": "^7.1.4",
-    "ts-loader": "^9.4.2",
+    "ts-loader": "^9.5.7",
     "ts-node": "^10.9.2",
-    "typescript": "^5.0.4",
-    "webpack": "^5.81.0"
+    "typescript": "^6.0.3",
+    "webpack": "^5.106.2"
   },
   "cypress-cucumber-preprocessor": {
     "nonGlobalStepDefinitions": true
@@ -53,7 +62,7 @@
     "serialize-javascript": "^7.0.5",
     "lodash@^4.0.0": "^4.18.1",
     "lodash-es@^4.0.0": "^4.18.1",
-    "basic-ftp@^5.0.0":"5.2.2",
+    "basic-ftp@^5.0.0": "5.2.2",
     "ip-address@<=10.1.0": "10.1.1",
     "qs": "6.15.1",
     "form-data": "4.0.5",
