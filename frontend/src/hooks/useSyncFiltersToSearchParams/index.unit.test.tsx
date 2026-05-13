@@ -20,8 +20,9 @@ vi.mock('@tanstack/react-router', async () => {
 
 /** Extract the URLSearchParams from the last navigate call made by the hook. */
 const getLastNavParams = (): URLSearchParams => {
-  const call = mockNavigate.mock.calls.at(-1)?.[0] as { search?: () => Record<string, string> };
-  return new URLSearchParams(Object.entries(call?.search?.() ?? {}));
+  const call = mockNavigate.mock.calls.at(-1)?.[0] as { search?: any };
+  const searchValues = typeof call?.search === 'function' ? call.search() : call?.search;
+  return new URLSearchParams(Object.entries(searchValues ?? {}));
 };
 
 type Filters = {

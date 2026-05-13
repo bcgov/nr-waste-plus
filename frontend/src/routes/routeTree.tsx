@@ -52,15 +52,22 @@ function NotFoundRedirect() {
  */
 function RootLayout() {
   const { setPageTitle } = usePageTitle();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const matches = useRouterState({ select: (s) => s.matches });
 
   useEffect(() => {
-    const all = [...SYSTEM_ROUTES, ...ROUTES];
-    const match = all.find((r) => r.path === pathname);
-    if (match) {
-      setPageTitle(match.id, 1);
+    const lastMatch = matches.at(-1);
+    const routeId = lastMatch?.routeId;
+
+    if (routeId) {
+      // routeId in TanStack Router includes the parent path (e.g. '/reporting-units/$ruId')
+      // we need to find the RouteDescription that matches this registered route path
+      const all = [...SYSTEM_ROUTES, ...ROUTES];
+      const match = all.find((r) => r.path === routeId);
+      if (match) {
+        setPageTitle(match.id, 1);
+      }
     }
-  }, [pathname, setPageTitle]);
+  }, [matches, setPageTitle]);
 
   return <Outlet />;
 }
