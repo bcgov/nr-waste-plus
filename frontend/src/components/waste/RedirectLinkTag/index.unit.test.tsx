@@ -61,4 +61,20 @@ describe('RedirectLinkTag', () => {
     expect(link.getAttribute('target')).toBe('_blank');
     expect(link.getAttribute('rel')).toBe('noopener noreferrer');
   });
+
+  it('shouldPassEmptySearchToRouterLink_whenClearSearchIsTrue', async () => {
+    // We check that the router handles the navigation with search clearing
+    // TanStack Link with search={} results in no search params in the href
+    render(
+      <RouterProvider
+        router={createTestRouter(() => (
+          <RedirectLinkTag text="Clear" url="/target" sameTab clearSearch />
+        ))}
+      />,
+    );
+    await waitFor(() => {
+      const link = screen.getByRole('link');
+      expect(link.getAttribute('href')).toBe('/target');
+    });
+  });
 });
