@@ -5,6 +5,7 @@ import { queryKeys, type ReportingUnitsQueryParams } from './queryKeys';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { ProblemDetails } from '@/config/api/types';
+import type { ReportingUnitDto } from '@/services/reportingunit.service';
 import type { CodeDescriptionDto, ReportingUnitSearchExpandedDto } from '@/services/search.types';
 import type {
   ForestClientDto,
@@ -88,10 +89,10 @@ export const useCodesQuery = <TData = CodeDescriptionDto[]>(
     }
 
     notifyProblemDetailsError(query.error, notificationTarget);
-  // query.errorUpdatedAt is a stable timestamp that only advances when a new error arrives.
-  // Using it (instead of query.error object reference) prevents repeat notifications while
-  // the same error persists across renders.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // query.errorUpdatedAt is a stable timestamp that only advances when a new error arrives.
+    // Using it (instead of query.error object reference) prevents repeat notifications while
+    // the same error persists across renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notificationTarget, query.errorUpdatedAt]);
 
   return query;
@@ -153,9 +154,9 @@ export const useWasteSearchFilterOptionsQueries = (notificationTarget?: string) 
       notifiedRef.current.add(key);
       notifyProblemDetailsError(query.error, notificationTarget);
     });
-  // errorKeys is a stable primitive derived from errorUpdatedAt; the queries array reference
-  // is intentionally excluded — it changes on every render from useQueries.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // errorKeys is a stable primitive derived from errorUpdatedAt; the queries array reference
+    // is intentionally excluded — it changes on every render from useQueries.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notificationTarget, errorKeys]);
 
   return queries;
@@ -269,6 +270,38 @@ export const useSearchReportingUnitsQuery = <
           notificationTarget,
         },
       ),
+    ...queryOptions,
+  });
+
+  useEffect(() => {
+    if (!notificationTarget || !query.isError || !query.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(query.error, notificationTarget);
+  }, [notificationTarget, query.error, query.isError]);
+
+  return query;
+};
+
+export const useReportingUnitDetailsQuery = <TData = ReportingUnitDto>(
+  ruId: number,
+  options?: Omit<
+    UseQueryOptions<
+      ReportingUnitDto,
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.reportingUnit.details>
+    >,
+    'queryKey' | 'queryFn'
+  > &
+    QueryNotificationOptions,
+) => {
+  const { notificationTarget, ...queryOptions } = options ?? {};
+
+  const query = useQuery({
+    queryKey: queryKeys.reportingUnit.details(ruId),
+    queryFn: () => API.reportingUnit.getReportingUnit(ruId),
     ...queryOptions,
   });
 

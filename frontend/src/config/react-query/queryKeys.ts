@@ -37,6 +37,9 @@ export const queryKeys = {
   autocomplete: {
     byFieldAndValue: (id: string, value: string) => ['autocomplete', id, value] as const,
   },
+  reportingUnit: {
+    details: (ruId: number) => ['reporting-unit', 'details', ruId] as const,
+  },
   table: {
     sorting: (sort: Record<string, SortDirectionType>) => ['table', 'sorting', sort] as const,
   },
