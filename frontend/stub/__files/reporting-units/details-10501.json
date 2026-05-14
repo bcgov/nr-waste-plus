@@ -1,0 +1,24 @@
+{
+  "id": 10501,
+  "client": {
+    "code": "92345678",
+    "description": "PACIFIC LOGGING LTD"
+  },
+  "clientStatus": {
+    "code": "ACT",
+    "description": "Active"
+  },
+  "grade": {
+    "code": null,
+    "description": null
+  },
+  "sampling": {
+    "code": "BLK",
+    "description": "Cutblock"
+  },
+  "district": {
+    "code": "DCS",
+    "description": "Cascades"
+  }
+}
+
