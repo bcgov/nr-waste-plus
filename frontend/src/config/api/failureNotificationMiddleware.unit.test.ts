@@ -63,6 +63,16 @@ describe('failureNotificationMiddleware', () => {
         displayMode: 'toast',
         title: 'Internal Server Error',
         description: 'Backend exploded',
+        meta: expect.objectContaining({
+          status: 500,
+          url: '/api/example',
+          method: 'GET',
+          problemDetails: expect.objectContaining({
+            title: 'Internal Server Error',
+            status: 500,
+            detail: 'Backend exploded',
+          }),
+        }),
       }),
     );
   });
