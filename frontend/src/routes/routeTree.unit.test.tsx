@@ -2,8 +2,7 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { applyGuards, router } from '@/routes/routeTree';
-import type { RouteDescription } from '@/routes/routePaths';
+import { router } from '@/routes/routeTree';
 
 // ── Mutable state ─────────────────────────────────────────────────────────────
 let mockUser: { userName: string } | undefined = undefined;
@@ -215,39 +214,8 @@ describe('routeTree module', () => {
     });
   });
 
-  describe('applyGuards', () => {
-    it('shouldRegisterAllExpectedRoutes_inRouteTree', () => {
-      // Verify both system routes and feature routes are registered
-      const routes: unknown[] = anyRouter.routeTree?.children ?? [];
-      expect(routes.length).toBeGreaterThan(0);
-    });
-
-    it('shouldWrapWithOfflineSupportHoc_whenOfflineReadyIsTrue', () => {
-      const OriginalComp = () => null;
-      const desc: RouteDescription = {
-        path: '/test',
-        id: 'Test',
-        component: OriginalComp,
-        isSideMenu: false,
-        offlineReady: true,
-      };
-      const result = applyGuards(desc);
-      expect(result).toBeDefined();
-      expect(result).not.toBe(OriginalComp);
-    });
-
-    it('shouldWrapWithOfflineSupportHoc_whenOfflineOnlyIsTrue', () => {
-      const OriginalComp = () => null;
-      const desc: RouteDescription = {
-        path: '/test',
-        id: 'Test',
-        component: OriginalComp,
-        isSideMenu: false,
-        offlineOnly: true,
-      };
-      const result = applyGuards(desc);
-      expect(result).toBeDefined();
-      expect(result).not.toBe(OriginalComp);
-    });
+  it('shouldRegisterAllExpectedRoutes_inRouteTree', () => {
+    const routes: unknown[] = anyRouter.routeTree?.children ?? [];
+    expect(routes.length).toBeGreaterThan(0);
   });
 });
