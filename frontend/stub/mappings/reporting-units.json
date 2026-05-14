@@ -78,7 +78,7 @@
           "type": "about:blank",
           "title": "Not Found",
           "status": 404,
-          "detail": "Forest Client record(s) with id 00000000 not found!",
+          "detail": "Reporting unit with id 0 not found!",
           "instance": "/api/reporting-units/0"
         }
       }
