@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const codeDescriptionSchema = z.looseObject({
-  code: z.string(),
-  description: z.string(),
+  code: z.nullable(z.string()),
+  description: z.nullable(z.string()),
 });
 
 export const reportingUnitSchema = z.looseObject({

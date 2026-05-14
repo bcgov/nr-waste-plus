@@ -54,6 +54,21 @@ describe('codeDescriptionSchema', () => {
   it('throws ZodError when code is not a string', () => {
     expect(() => codeDescriptionSchema.parse({ code: 42, description: 'Bad' })).toThrow(ZodError);
   });
+
+  it('accepts null code', () => {
+    const result = codeDescriptionSchema.parse({ code: null, description: 'No code' });
+    expect(result).toEqual({ code: null, description: 'No code' });
+  });
+
+  it('accepts null description', () => {
+    const result = codeDescriptionSchema.parse({ code: 'X', description: null });
+    expect(result).toEqual({ code: 'X', description: null });
+  });
+
+  it('accepts both code and description as null', () => {
+    const result = codeDescriptionSchema.parse({ code: null, description: null });
+    expect(result).toEqual({ code: null, description: null });
+  });
 });
 
 describe('reportingUnitSchema', () => {
@@ -90,6 +105,17 @@ describe('reportingUnitSchema', () => {
 
   it('throws ZodError when grade is null', () => {
     expect(() => reportingUnitSchema.parse({ ...validReportingUnit, grade: null })).toThrow(ZodError);
+  });
+
+  it('parses a reporting unit with null nested code/description values', () => {
+    const withNulls = {
+      ...validReportingUnit,
+      grade: { code: null, description: null },
+      sampling: { code: null, description: 'Unknown' },
+    };
+    const result = reportingUnitSchema.parse(withNulls);
+    expect(result.grade).toEqual({ code: null, description: null });
+    expect(result.sampling).toEqual({ code: null, description: 'Unknown' });
   });
 });
 
