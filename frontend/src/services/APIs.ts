@@ -6,8 +6,9 @@ import { failureNotificationMiddleware } from '@/config/api/failureNotificationM
 import { problemDetailsMiddleware } from '@/config/api/problemDetailsMiddleware';
 import { getUserAccessTokenFromCookie } from '@/context/auth/authUtils';
 import { env } from '@/env';
-import { SearchService } from '@/services//search.service';
 import { ForestClientService } from '@/services/forestclient.service';
+import { ReportingUnitService } from '@/services/reportingunit.service';
+import { SearchService } from '@/services/search.service';
 import { UserService } from '@/services/users.service';
 import { getB3Headers } from '@/services/utils';
 
@@ -43,6 +44,7 @@ const serviceConstructors = {
   search: new SearchService(BackendApiConfig),
   codes: new CodesService(BackendApiConfig),
   forestclient: new ForestClientService(BackendApiConfig),
+  reportingUnit: new ReportingUnitService(BackendApiConfig),
 } as const;
 
 type ExternalApiType = {

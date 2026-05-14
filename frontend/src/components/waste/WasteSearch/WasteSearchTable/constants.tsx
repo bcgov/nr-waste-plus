@@ -73,8 +73,10 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     renderAs: (value) => (
       <TooltipRedirectLinkTag
         text={value as string}
-        url={`${env.VITE_LEGACY_BASE_URL}/waste101ReportUnitDetailsAction.do?dataBean.p_reporting_unit_id=${value}`}
+        url={`/reporting-units/${value}`}
         tooltip={'Go to RU details'}
+        sameTab
+        clearSearch
       />
     ),
   },

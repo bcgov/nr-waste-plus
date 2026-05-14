@@ -7,6 +7,8 @@ import { Role, type FamRole } from '@/context/auth/types';
 import LandingPage from '@/pages/Landing';
 import MyClientListPage from '@/pages/MyClientList';
 import NoRolePage from '@/pages/NoRole';
+import ReportingUnitDetailsPage from '@/pages/ReportingUnitDetails';
+import { reportingUnitLoader } from '@/pages/ReportingUnitDetails/loader';
 import RoleErrorPage from '@/pages/RoleError';
 import WasteSearchPage from '@/pages/WasteSearch';
 import { withPersistentRedirect } from '@/routes/guards/withPersistentRedirect';
@@ -29,6 +31,9 @@ export type RouteDescription = {
   /** Unique display label and side-nav identifier for the route. */
   id: string;
   component: ComponentType;
+  /** Optional data loader function invoked by the router before navigation. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  loader?: (args: any) => Promise<any>;
   /** Carbon icon component rendered next to the nav label when `isSideMenu` is true. */
   icon?: ComponentType;
   /** When `true`, the route appears in the left-panel side navigation. */
@@ -92,6 +97,18 @@ export const ROUTES: RouteDescription[] = [
     isSideMenu: true,
     protected: true,
   },
+  {
+    path: '/reporting-units/$ruId',
+    id: 'Reporting Unit Details',
+    loader: reportingUnitLoader,
+    component: () => (
+      <Layout>
+        <ReportingUnitDetailsPage />
+      </Layout>
+    ),
+    isSideMenu: false,
+    protected: true,
+  },
 ];
 
 /**
@@ -150,4 +167,3 @@ export const getMenuEntries = (isOnline: boolean, roles: FamRole[]): MenuItem[] 
         !r.roles?.length || r.roles.some((role) => roles.map((u) => u.role).includes(role.role)),
     )
     .map(({ id, path, icon }) => ({ id, path, icon }));
-
