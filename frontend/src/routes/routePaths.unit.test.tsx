@@ -32,6 +32,14 @@ vi.mock('@/pages/RoleError', () => ({
   default: () => <div data-testid="role-error-page" />,
 }));
 
+vi.mock('@/pages/ReportingUnitDetails', () => ({
+  default: () => <div data-testid="reporting-unit-details-page" />,
+}));
+
+vi.mock('@/pages/ReportingUnitDetails/loader', () => ({
+  reportingUnitLoader: vi.fn(),
+}));
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 describe('routePaths', () => {
   describe('getMenuEntries', () => {
@@ -109,6 +117,20 @@ describe('routePaths', () => {
       const Comp = searchRoute.component;
       const { container } = render(<Comp />);
       expect(container).toBeDefined();
+    });
+
+    it('shouldRenderReportingUnitDetailsRouteComponent_withoutThrowing', () => {
+      const ruRoute = routePaths.ROUTES.find((r) => r.path === '/reporting-units/$ruId')!;
+      const Comp = ruRoute.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldHaveReportingUnitDetailsRoute_notInSideMenu', () => {
+      const ruRoute = routePaths.ROUTES.find((r) => r.path === '/reporting-units/$ruId')!;
+      expect(ruRoute.isSideMenu).toBe(false);
+      expect(ruRoute.protected).toBe(true);
+      expect(ruRoute.loader).toBeDefined();
     });
   });
 

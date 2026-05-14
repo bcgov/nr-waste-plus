@@ -111,4 +111,58 @@ describe('failureNotificationMiddleware', () => {
 
     expect(sendEvent).not.toHaveBeenCalled();
   });
+
+  it('uses Request failed fallback title and error.message_whenResponseDataIsNotProblemDetails', async () => {
+    const middleware = failureNotificationMiddleware();
+    const error = makeError({
+      message: 'timeout of 5000ms exceeded',
+      response: {
+        status: 503,
+        statusText: 'Service Unavailable',
+        data: { foo: 'bar' }, // valid object but not ProblemDetails (no title/status)
+        headers: {},
+        config: {} as InternalAxiosRequestConfig,
+      },
+    });
+
+    await expect(middleware.failure?.(error)).rejects.toBe(error);
+
+    expect(sendEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: 'error',
+        displayMode: 'toast',
+        title: 'Request failed',
+        description: 'timeout of 5000ms exceeded',
+        meta: expect.objectContaining({ status: 503 }),
+      }),
+    );
+  });
+
+  it('uses Request failed title and error.message_whenNoResponse', async () => {
+    const middleware = failureNotificationMiddleware();
+    const error = makeError({ message: 'Network Error', response: undefined });
+
+    await expect(middleware.failure?.(error)).rejects.toBe(error);
+
+    expect(sendEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Request failed',
+        description: 'Network Error',
+      }),
+    );
+  });
+
+  it('uses No additional details fallback_whenNoResponseAndNoMessage', async () => {
+    const middleware = failureNotificationMiddleware();
+    const error = makeError({ message: '', response: undefined });
+
+    await expect(middleware.failure?.(error)).rejects.toBe(error);
+
+    expect(sendEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Request failed',
+        description: 'No additional details were provided.',
+      }),
+    );
+  });
 });
