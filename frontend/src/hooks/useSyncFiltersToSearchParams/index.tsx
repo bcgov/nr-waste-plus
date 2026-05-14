@@ -106,34 +106,58 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
   const transforms = options?.transforms;
   const hasHydratedRef = useRef(false);
   const managedKeysRef = useRef<Set<string>>(new Set());
+
+  const tryParseJson = (value: string): unknown => {
+    if (!value.startsWith('[') && !value.startsWith('{')) {
+      return undefined;
+    }
+
+    try {
+      return JSON.parse(value);
+    } catch {
+      return undefined;
+    }
+  };
+
+  const deserializeBoolean = (value: string, expectedValue: boolean): boolean => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return expectedValue;
+  };
+
+  const deserializeNumber = (value: string): number | string => {
+    const parsed = Number(value);
+    return !Number.isNaN(parsed) && value.trim() !== '' ? parsed : value;
+  };
+
+  const deserializeArray = (value: string): string[] => {
+    return value === '' ? [] : value.split(',');
+  };
+
+  const deserializeDefault = (value: string): string | string[] => {
+    return value.includes(',') && !value.includes('.') ? value.split(',') : value;
+  };
+
   /**
    * Deserialize URL parameter values to appropriate types
    */
   const deserializeValue = (value: string, expectedValue?: unknown): unknown => {
-    // Try JSON parsing first
-    if (value.startsWith('[') || value.startsWith('{')) {
-      try {
-        return JSON.parse(value);
-      } catch {
-        // Fall through if JSON parsing fails
-      }
-    }
+    const parsedJson = tryParseJson(value);
+    if (parsedJson !== undefined) return parsedJson;
 
-    if (typeof expectedValue === 'boolean' || value === 'true' || value === 'false') {
-      return value === 'true';
+    if (typeof expectedValue === 'boolean') {
+      return deserializeBoolean(value, expectedValue);
     }
 
     if (typeof expectedValue === 'number') {
-      const parsed = Number(value);
-      return !Number.isNaN(parsed) && value.trim() !== '' ? parsed : value;
+      return deserializeNumber(value);
     }
 
     if (Array.isArray(expectedValue)) {
-      return value === '' ? [] : value.split(',');
+      return deserializeArray(value);
     }
 
-    // Default: handle comma-separated strings that aren't decimals
-    return value.includes(',') && !value.includes('.') ? value.split(',') : value;
+    return deserializeDefault(value);
   };
 
   /**
@@ -177,7 +201,7 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
     let hasHydrationParams = false;
 
     searchParams.forEach((_value, key) => {
-      const isKnownFilterKey = Object.prototype.hasOwnProperty.call(filters, key);
+      const isKnownFilterKey = Object.hasOwn(filters, key);
       const castKey = key as keyof T;
       if (!excludeSet.has(castKey) && (isKnownFilterKey || allowUnknownKeysOnHydration)) {
         hasHydrationParams = true;
@@ -193,7 +217,7 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
       searchParams.forEach((value, key) => {
         const castKey = key as keyof T;
         if (excludeSet.has(castKey)) return;
-        if (!allowUnknownKeysOnHydration && !Object.prototype.hasOwnProperty.call(prev, key)) {
+        if (!allowUnknownKeysOnHydration && !Object.hasOwn(prev, key)) {
           return;
         }
 
@@ -263,12 +287,26 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
       return;
     }
 
+    const booleanKeys = new Set<string>();
+
+    (Object.keys(filters) as (keyof T)[]).forEach((key) => {
+      if (excludeSet.has(key)) return;
+
+      const transformedValue = transforms?.[key]?.toSearchParam
+        ? transforms[key].toSearchParam(filters[key])
+        : filters[key];
+
+      if (typeof transformedValue === 'boolean') {
+        booleanKeys.add(String(key));
+      }
+    });
+
     // Convert URLSearchParams back to a plain object for TanStack's navigate
     const search: Record<string, unknown> = Object.fromEntries(params);
 
-    // Patch booleans back to primitives so the router serializes them as `name=true`
-    // instead of `name=%22true%22`.
-    Object.keys(search).forEach((key) => {
+    // Patch only known boolean keys back to primitives so string filters with the
+    // literal values 'true' and 'false' are preserved as strings.
+    booleanKeys.forEach((key) => {
       if (search[key] === 'true') search[key] = true;
       if (search[key] === 'false') search[key] = false;
     });

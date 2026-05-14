@@ -25,6 +25,11 @@ const getLastNavParams = (): URLSearchParams => {
   return new URLSearchParams(Object.entries(searchValues ?? {}));
 };
 
+const getLastNavigateSearch = (): Record<string, unknown> | undefined => {
+  const call = mockNavigate.mock.calls.at(-1)?.[0] as { search?: any };
+  return typeof call?.search === 'function' ? call.search() : call?.search;
+};
+
 type Filters = {
   search?: string;
   status?: string[];
@@ -186,6 +191,19 @@ describe('useSyncFiltersToSearchParams', () => {
     expect(typeof result.current.search).toBe('string');
   });
 
+  it('shouldKeepBooleanLikeStringsAsStrings_whenDefaultTypeIsString', () => {
+    mockSearchStr = new URLSearchParams({ search: 'false' }).toString();
+
+    const { result } = renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ search: '' });
+      useSyncFiltersToSearchParams(filters, setFilters);
+      return filters;
+    });
+
+    expect(result.current.search).toBe('false');
+    expect(typeof result.current.search).toBe('string');
+  });
+
   it('shouldNotCallSetFilters_whenUrlHasNoSearchParams', () => {
     mockSearchStr = '';
     const setFiltersSpy = vi.fn();
@@ -291,6 +309,17 @@ describe('useSyncFiltersToSearchParams', () => {
     expect(mockNavigate).toHaveBeenCalled();
     const params = getLastNavParams();
     expect(params.get('active')).toBe('true');
+  });
+
+  it('shouldKeepBooleanLikeStringFilterAsString_whenSyncing', () => {
+    renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ search: 'true' });
+      useSyncFiltersToSearchParams(filters, setFilters);
+      return filters;
+    });
+
+    expect(getLastNavigateSearch()).toMatchObject({ search: 'true' });
+    expect(typeof getLastNavigateSearch()?.search).toBe('string');
   });
 
   it('shouldSyncNumberFilter_whenFilterChanges', () => {
@@ -627,9 +656,7 @@ describe('useSyncFiltersToSearchParams', () => {
 
   // --- Deserialization: boolean default with non-boolean string ---
 
-  it('shouldReturnFalse_whenBooleanDefaultAndUrlValueIsNonBooleanString', () => {
-    // typeof expectedValue === 'boolean' triggers the boolean branch
-    // return value === 'true' — 'yes' !== 'true' → false
+  it('shouldKeepDefaultBoolean_whenBooleanDefaultAndUrlValueIsNonBooleanString', () => {
     mockSearchStr = new URLSearchParams({ active: 'yes' }).toString();
 
     const { result } = renderHook(() => {
@@ -638,7 +665,7 @@ describe('useSyncFiltersToSearchParams', () => {
       return filters;
     });
 
-    expect(result.current.active).toBe(false);
+    expect(result.current.active).toBe(true);
   });
 
   // --- Hydration: unknown URL key skipped inside setFilters callback ---
