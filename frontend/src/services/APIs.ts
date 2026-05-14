@@ -1,5 +1,4 @@
 import { CodesService } from './codes.service';
-import { getB3Headers } from './utils';
 
 import type { APIConfig } from '@/config/api/types';
 
@@ -10,6 +9,7 @@ import { env } from '@/env';
 import { SearchService } from '@/services//search.service';
 import { ForestClientService } from '@/services/forestclient.service';
 import { UserService } from '@/services/users.service';
+import { getB3Headers } from '@/services/utils';
 
 /**
  * Base configuration shared by all generated backend service clients.

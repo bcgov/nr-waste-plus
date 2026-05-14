@@ -2,14 +2,15 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { router } from '@/routes/routeTree';
+import { applyGuards, router } from '@/routes/routeTree';
+import type { RouteDescription } from '@/routes/routePaths';
 
 // ── Mutable state ─────────────────────────────────────────────────────────────
 let mockUser: { userName: string } | undefined = undefined;
 let mockIsLoading = false;
 const mockNavigate = vi.fn();
 const mockSetPageTitle = vi.fn();
-let mockPathname = '/';
+let mockMatches: Array<{ routeId?: string }> = [];
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 vi.mock('@/context/auth/useAuth', () => ({
@@ -25,14 +26,20 @@ vi.mock('@tanstack/react-router', async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
-    useRouterState: ({ select }: { select: (s: { location: { pathname: string } }) => unknown }) =>
-      select({ location: { pathname: mockPathname } }),
+    useRouterState: ({ select }: { select: (s: { location: { pathname: string }; matches: Array<{ routeId?: string }> }) => unknown }) =>
+      select({ location: { pathname: '/' }, matches: mockMatches }),
     Outlet: () => <div data-testid="outlet" />,
   };
 });
 
 vi.mock('@/pages/NotFound', () => ({
   default: () => <div data-testid="not-found-page">Not Found</div>,
+}));
+
+vi.mock('@/components/Layout', () => ({
+  default: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="layout">{children}</div>
+  ),
 }));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -62,7 +69,7 @@ describe('routeTree module', () => {
   beforeEach(() => {
     mockUser = undefined;
     mockIsLoading = false;
-    mockPathname = '/';
+    mockMatches = [];
     mockNavigate.mockClear();
     mockSetPageTitle.mockClear();
   });
@@ -136,11 +143,31 @@ describe('routeTree module', () => {
       await act(async () => render(<NotFoundRedirect />));
       expect(mockNavigate).not.toHaveBeenCalled();
     });
+
+    it('shouldRenderNotFoundPage_insideLayout_whenUserIsAuthenticated', async () => {
+      mockIsLoading = false;
+      mockUser = { userName: 'testuser' };
+      const NotFoundRedirect = getNotFoundComponent();
+      if (!NotFoundRedirect) return;
+      await act(async () => render(<NotFoundRedirect />));
+      expect(screen.getByTestId('layout')).toBeDefined();
+      expect(screen.getByTestId('not-found-page')).toBeDefined();
+    });
+
+    it('shouldNotRenderLayout_whenUserIsUnauthenticated', async () => {
+      mockIsLoading = false;
+      mockUser = undefined;
+      const NotFoundRedirect = getNotFoundComponent();
+      if (!NotFoundRedirect) return;
+      await act(async () => render(<NotFoundRedirect />));
+      expect(screen.queryByTestId('layout')).toBeNull();
+      expect(screen.queryByTestId('not-found-page')).toBeNull();
+    });
   });
 
   describe('RootLayout', () => {
     it('shouldCallSetPageTitle_whenPathnameMatchesKnownRoute', async () => {
-      mockPathname = '/search';
+      mockMatches = [{ routeId: '/search' }];
       const RootLayout = getRootLayoutComponent();
       if (!RootLayout) return;
       await act(async () => render(<RootLayout />));
@@ -148,7 +175,7 @@ describe('routeTree module', () => {
     });
 
     it('shouldCallSetPageTitle_withLandingId_forRootPath', async () => {
-      mockPathname = '/';
+      mockMatches = [{ routeId: '/' }];
       const RootLayout = getRootLayoutComponent();
       if (!RootLayout) return;
       await act(async () => render(<RootLayout />));
@@ -156,7 +183,7 @@ describe('routeTree module', () => {
     });
 
     it('shouldNotCallSetPageTitle_whenPathnameDoesNotMatchAnyRoute', async () => {
-      mockPathname = '/nonexistent-route';
+      mockMatches = [{ routeId: '/nonexistent-route' }];
       const RootLayout = getRootLayoutComponent();
       if (!RootLayout) return;
       await act(async () => render(<RootLayout />));
@@ -164,11 +191,27 @@ describe('routeTree module', () => {
     });
 
     it('shouldRenderOutlet', async () => {
-      mockPathname = '/';
+      mockMatches = [];
       const RootLayout = getRootLayoutComponent();
       if (!RootLayout) return;
       const { getByTestId } = await act(async () => render(<RootLayout />));
       expect(getByTestId('outlet')).toBeTruthy();
+    });
+
+    it('shouldNotCallSetPageTitle_whenMatchesIsEmpty', async () => {
+      mockMatches = [];
+      const RootLayout = getRootLayoutComponent();
+      if (!RootLayout) return;
+      await act(async () => render(<RootLayout />));
+      expect(mockSetPageTitle).not.toHaveBeenCalled();
+    });
+
+    it('shouldNotCallSetPageTitle_whenLastMatchHasNoRouteId', async () => {
+      mockMatches = [{}];
+      const RootLayout = getRootLayoutComponent();
+      if (!RootLayout) return;
+      await act(async () => render(<RootLayout />));
+      expect(mockSetPageTitle).not.toHaveBeenCalled();
     });
   });
 
@@ -177,6 +220,34 @@ describe('routeTree module', () => {
       // Verify both system routes and feature routes are registered
       const routes: unknown[] = anyRouter.routeTree?.children ?? [];
       expect(routes.length).toBeGreaterThan(0);
+    });
+
+    it('shouldWrapWithOfflineSupportHoc_whenOfflineReadyIsTrue', () => {
+      const OriginalComp = () => null;
+      const desc: RouteDescription = {
+        path: '/test',
+        id: 'Test',
+        component: OriginalComp,
+        isSideMenu: false,
+        offlineReady: true,
+      };
+      const result = applyGuards(desc);
+      expect(result).toBeDefined();
+      expect(result).not.toBe(OriginalComp);
+    });
+
+    it('shouldWrapWithOfflineSupportHoc_whenOfflineOnlyIsTrue', () => {
+      const OriginalComp = () => null;
+      const desc: RouteDescription = {
+        path: '/test',
+        id: 'Test',
+        component: OriginalComp,
+        isSideMenu: false,
+        offlineOnly: true,
+      };
+      const result = applyGuards(desc);
+      expect(result).toBeDefined();
+      expect(result).not.toBe(OriginalComp);
     });
   });
 });

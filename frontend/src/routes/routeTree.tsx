@@ -24,8 +24,9 @@ import NotFoundPage from '@/pages/NotFound';
  *
  * - **Unauthenticated**: redirects to `/` (shows the landing page) so the user
  *   can sign in rather than seeing a dead-end 404.
- * - **Authenticated**: renders {@link NotFoundPage} so the user sees a clear
- *   "Content Not Found" message for URLs that simply don't exist.
+ * - **Authenticated**: renders {@link NotFoundPage} inside the application
+ *   {@link Layout} so the user sees a consistent shell with a clear
+ *   "Content Not Found" message.
  */
 function NotFoundRedirect() {
   const { user, isLoading } = useAuth();
@@ -39,28 +40,40 @@ function NotFoundRedirect() {
 
   if (isLoading) return <Loading data-testid="loading" withOverlay />;
   if (!user) return null; // redirect pending
-  return <NotFoundPage />;
+  return (
+    <Layout>
+      <NotFoundPage />
+    </Layout>
+  );
 }
 
 /**
  * Root layout component that renders the route outlet and keeps the browser
  * tab title in sync with the active route.
  *
- * Mirrors the `setPageTitle` call that lived in the old `AppRoutes.tsx`
- * `useEffect`. On every pathname change it looks up the matching route in
- * `ROUTES` and `SYSTEM_ROUTES` and calls `setPageTitle` with the route `id`.
+ * On every navigation, reads `useRouterState().matches` and takes the last
+ * matched segment's `routeId`. It then looks up that `routeId` against the
+ * combined `ROUTES` and `SYSTEM_ROUTES` arrays (matching on `r.path`) and
+ * calls `setPageTitle` with the corresponding route `id`.
  */
 function RootLayout() {
   const { setPageTitle } = usePageTitle();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const matches = useRouterState({ select: (s) => s.matches });
 
   useEffect(() => {
-    const all = [...SYSTEM_ROUTES, ...ROUTES];
-    const match = all.find((r) => r.path === pathname);
-    if (match) {
-      setPageTitle(match.id, 1);
+    const lastMatch = matches.at(-1);
+    const routeId = lastMatch?.routeId;
+
+    if (routeId) {
+      // routeId in TanStack Router includes the parent path (e.g. '/reporting-units/$ruId')
+      // we need to find the RouteDescription that matches this registered route path
+      const all = [...SYSTEM_ROUTES, ...ROUTES];
+      const match = all.find((r) => r.path === routeId);
+      if (match) {
+        setPageTitle(match.id, 1);
+      }
     }
-  }, [pathname, setPageTitle]);
+  }, [matches, setPageTitle]);
 
   return <Outlet />;
 }
@@ -84,7 +97,7 @@ const rootRoute = createRootRoute({
  * @param desc - The route description containing component and guard configuration.
  * @returns The component wrapped with all applicable HOC guards.
  */
-function applyGuards(desc: RouteDescription): ComponentType {
+export function applyGuards(desc: RouteDescription): ComponentType {
   let Component: ComponentType = desc.component;
 
   if (desc.offlineOnly || desc.offlineReady) {
@@ -116,6 +129,7 @@ function toRoute(desc: RouteDescription) {
   return createRoute({
     getParentRoute: () => rootRoute,
     path: desc.path,
+    loader: desc.loader,
     // HOC guards return ComponentType which may include ComponentClass; cast to satisfy RouteComponent.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     component: applyGuards(desc) as any,
