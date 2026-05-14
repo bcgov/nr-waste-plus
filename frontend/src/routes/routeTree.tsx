@@ -24,8 +24,9 @@ import NotFoundPage from '@/pages/NotFound';
  *
  * - **Unauthenticated**: redirects to `/` (shows the landing page) so the user
  *   can sign in rather than seeing a dead-end 404.
- * - **Authenticated**: renders {@link NotFoundPage} so the user sees a clear
- *   "Content Not Found" message for URLs that simply don't exist.
+ * - **Authenticated**: renders {@link NotFoundPage} inside the application
+ *   {@link Layout} so the user sees a consistent shell with a clear
+ *   "Content Not Found" message.
  */
 function NotFoundRedirect() {
   const { user, isLoading } = useAuth();
@@ -39,7 +40,11 @@ function NotFoundRedirect() {
 
   if (isLoading) return <Loading data-testid="loading" withOverlay />;
   if (!user) return null; // redirect pending
-  return <NotFoundPage />;
+  return (
+    <Layout>
+      <NotFoundPage />
+    </Layout>
+  );
 }
 
 /**
@@ -91,7 +96,7 @@ const rootRoute = createRootRoute({
  * @param desc - The route description containing component and guard configuration.
  * @returns The component wrapped with all applicable HOC guards.
  */
-function applyGuards(desc: RouteDescription): ComponentType {
+export function applyGuards(desc: RouteDescription): ComponentType {
   let Component: ComponentType = desc.component;
 
   if (desc.offlineOnly || desc.offlineReady) {
