@@ -51,9 +51,10 @@ function NotFoundRedirect() {
  * Root layout component that renders the route outlet and keeps the browser
  * tab title in sync with the active route.
  *
- * Mirrors the `setPageTitle` call that lived in the old `AppRoutes.tsx`
- * `useEffect`. On every pathname change it looks up the matching route in
- * `ROUTES` and `SYSTEM_ROUTES` and calls `setPageTitle` with the route `id`.
+ * On every navigation, reads `useRouterState().matches` and takes the last
+ * matched segment's `routeId`. It then looks up that `routeId` against the
+ * combined `ROUTES` and `SYSTEM_ROUTES` arrays (matching on `r.path`) and
+ * calls `setPageTitle` with the corresponding route `id`.
  */
 function RootLayout() {
   const { setPageTitle } = usePageTitle();

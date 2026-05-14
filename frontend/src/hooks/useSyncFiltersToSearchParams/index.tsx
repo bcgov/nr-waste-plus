@@ -271,8 +271,10 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
         ? transforms[key].toSearchParam(value)
         : value;
 
-      // If the value is a boolean, we want to pass it as a literal boolean to TanStack Router
-      // to avoid it being stringified in the search object (preventing name="true" quirk).
+      // Booleans must go into URLSearchParams as the literal strings 'true'/'false'
+      // (URLSearchParams only stores strings). They are patched back to boolean
+      // primitives in the search object before the navigate() call below, so that
+      // TanStack Router serializes them as `name=true` rather than `name=%22true%22`.
       if (typeof transformedValue === 'boolean') {
         params.set(String(key), transformedValue ? 'true' : 'false');
       } else {
