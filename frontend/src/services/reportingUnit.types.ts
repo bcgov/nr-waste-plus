@@ -1,10 +1,17 @@
-import type { CodeDescriptionDto } from './types';
+import { z } from 'zod';
 
-export type ReportingUnitDto = {
-  id: number;
-  client: CodeDescriptionDto;
-  clientStatus: CodeDescriptionDto;
-  grade: CodeDescriptionDto;
-  sampling: CodeDescriptionDto;
-  district: CodeDescriptionDto;
-};
+export const codeDescriptionSchema = z.looseObject({
+  code: z.string(),
+  description: z.string(),
+});
+
+export const reportingUnitSchema = z.looseObject({
+  id: z.number(),
+  client: codeDescriptionSchema,
+  clientStatus: codeDescriptionSchema,
+  grade: codeDescriptionSchema,
+  sampling: codeDescriptionSchema,
+  district: codeDescriptionSchema,
+});
+
+export type ReportingUnitDto = z.infer<typeof reportingUnitSchema>;
