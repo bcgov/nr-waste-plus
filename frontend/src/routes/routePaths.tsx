@@ -1,5 +1,6 @@
 import { Group, SearchLocate } from '@carbon/icons-react';
 import { type ComponentType } from 'react';
+import { type RouteLoaderFn } from '@tanstack/react-router';
 
 import Layout from '@/components/Layout';
 import { Role, type FamRole } from '@/context/auth/types';
@@ -43,6 +44,12 @@ export type RouteDescription = {
    * Stack order in array: [outermost, ..., innermost before protected].
    */
   guards?: RouteGuard[];
+  /**
+   * Optional TanStack Router loader function executed before the route component renders.
+   * Resolved data is available via `useLoaderData()` inside the component.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  loader?: RouteLoaderFn<any>;
 };
 
 export type MenuItem = Pick<RouteDescription, 'id' | 'path' | 'icon'> & {

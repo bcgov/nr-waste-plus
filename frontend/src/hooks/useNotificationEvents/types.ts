@@ -18,6 +18,7 @@ export interface GlobalEvent {
   timeout?: number;
   eventTarget?: string;
   displayMode?: NotificationDisplayMode;
+  meta?: Record<string, unknown>;
 }
 
 /**

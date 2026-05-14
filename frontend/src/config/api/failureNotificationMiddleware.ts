@@ -58,6 +58,12 @@ export const failureNotificationMiddleware = (): ApiMiddleware => ({
       title: problemDetails?.title || 'Request failed',
       description:
         problemDetails?.detail || error.message || 'No additional details were provided.',
+      meta: {
+        status: error.response?.status,
+        url: error.config?.url,
+        method: error.config?.method?.toUpperCase(),
+        problemDetails,
+      },
     });
 
     throw error;

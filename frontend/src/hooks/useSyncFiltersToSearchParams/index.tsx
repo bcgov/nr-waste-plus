@@ -1,5 +1,5 @@
 import { useNavigate, useRouterState } from '@tanstack/react-router';
-import { useEffect, useRef, useMemo, useCallback } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 
 /**
  * Defines optional serialization and deserialization functions for a single filter value.
@@ -100,74 +100,72 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
   const searchStr = useRouterState({ select: (s) => s.location.searchStr });
   const navigate = useNavigate();
   const searchParams = useMemo(() => new URLSearchParams(searchStr), [searchStr]);
-  const setSearchParams = useCallback(
-    (params: URLSearchParams, options?: { replace?: boolean }) => {
-      void navigate({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        search: () => Object.fromEntries(params) as any,
-        replace: options?.replace ?? false,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
-    },
-    [navigate],
-  );
+
   const excludeSet = useMemo(() => new Set(options?.exclude ?? []), [options?.exclude]);
   const includeEmpty = options?.includeEmpty ?? false;
   const transforms = options?.transforms;
   const hasHydratedRef = useRef(false);
   const managedKeysRef = useRef<Set<string>>(new Set());
+
+  const tryParseJson = (value: string): unknown => {
+    if (!value.startsWith('[') && !value.startsWith('{')) {
+      return undefined;
+    }
+
+    try {
+      return JSON.parse(value);
+    } catch {
+      return undefined;
+    }
+  };
+
+  const deserializeBoolean = (value: string, expectedValue: boolean): boolean => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return expectedValue;
+  };
+
+  const deserializeNumber = (value: string): number | string => {
+    const parsed = Number(value);
+    return !Number.isNaN(parsed) && value.trim() !== '' ? parsed : value;
+  };
+
+  const deserializeArray = (value: string): string[] => {
+    return value === '' ? [] : value.split(',');
+  };
+
+  const deserializeDefault = (value: string): string | string[] => {
+    return value.includes(',') && !value.includes('.') ? value.split(',') : value;
+  };
+
   /**
    * Deserialize URL parameter values to appropriate types
    */
   const deserializeValue = (value: string, expectedValue?: unknown): unknown => {
-    // Try JSON parsing first
-    if (value.startsWith('[') || value.startsWith('{')) {
-      try {
-        return JSON.parse(value);
-      } catch {
-        // Fall through if JSON parsing fails
-      }
-    }
+    const parsedJson = tryParseJson(value);
+    if (parsedJson !== undefined) return parsedJson;
 
-    // If we know the expected type, prefer that over generic heuristics.
     if (typeof expectedValue === 'boolean') {
-      if (value === 'true') return true;
-      if (value === 'false') return false;
-      return value;
+      return deserializeBoolean(value, expectedValue);
     }
 
     if (typeof expectedValue === 'number') {
-      const parsed = Number(value);
-      if (!Number.isNaN(parsed) && value.trim() !== '') {
-        return parsed;
-      }
-      return value;
+      return deserializeNumber(value);
     }
 
     if (Array.isArray(expectedValue)) {
-      if (value === '') return [];
-      if (!value.includes(',')) return [value];
-      return value.split(',');
+      return deserializeArray(value);
     }
 
-    // Boolean strings
-    if (value === 'true') return true;
-    if (value === 'false') return false;
-
-    // Comma-separated arrays (but not strings that happen to contain commas)
-    if (value.includes(',') && !value.includes('.')) {
-      // Simple heuristic: comma-separated arrays, but avoid splitting decimals
-      return value.split(',');
-    }
-
-    // Default: return as string
-    return value;
+    return deserializeDefault(value);
   };
 
   /**
    * Serialize filter values to URL string format
    */
   const serializeValue = (value: unknown): string => {
+    if (value === true) return 'true';
+    if (value === false) return 'false';
     if (Array.isArray(value)) {
       return value.join(',');
     }
@@ -203,8 +201,9 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
     let hasHydrationParams = false;
 
     searchParams.forEach((_value, key) => {
-      const isKnownFilterKey = Object.prototype.hasOwnProperty.call(filters, key);
-      if (!excludeSet.has(key as keyof T) && (isKnownFilterKey || allowUnknownKeysOnHydration)) {
+      const isKnownFilterKey = Object.hasOwn(filters, key);
+      const castKey = key as keyof T;
+      if (!excludeSet.has(castKey) && (isKnownFilterKey || allowUnknownKeysOnHydration)) {
         hasHydrationParams = true;
       }
     });
@@ -216,13 +215,13 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
       const hydratedFilters: Partial<T> = {};
 
       searchParams.forEach((value, key) => {
-        if (excludeSet.has(key as keyof T)) return;
-        if (!allowUnknownKeysOnHydration && !Object.prototype.hasOwnProperty.call(prev, key)) {
+        const castKey = key as keyof T;
+        if (excludeSet.has(castKey)) return;
+        if (!allowUnknownKeysOnHydration && !Object.hasOwn(prev, key)) {
           return;
         }
 
-        const filterKey = key as keyof T;
-        hydratedFilters[filterKey] = getHydratedFilterValue(filterKey, value, prev[filterKey]);
+        hydratedFilters[castKey] = getHydratedFilterValue(castKey, value, prev[castKey]);
       });
 
       return { ...prev, ...hydratedFilters };
@@ -271,8 +270,17 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
       const transformedValue = transforms?.[key]?.toSearchParam
         ? transforms[key].toSearchParam(value)
         : value;
-      const serialized = serializeValue(transformedValue);
-      params.set(String(key), serialized);
+
+      // Booleans must go into URLSearchParams as the literal strings 'true'/'false'
+      // (URLSearchParams only stores strings). They are patched back to boolean
+      // primitives in the search object before the navigate() call below, so that
+      // TanStack Router serializes them as `name=true` rather than `name=%22true%22`.
+      if (typeof transformedValue === 'boolean') {
+        params.set(String(key), transformedValue ? 'true' : 'false');
+      } else {
+        const serialized = serializeValue(transformedValue);
+        params.set(String(key), serialized);
+      }
     });
 
     managedKeysRef.current = managedKeys;
@@ -281,8 +289,35 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
       return;
     }
 
-    setSearchParams(params, { replace: true });
-  }, [filters, excludeSet, includeEmpty, searchParams, setSearchParams, transforms]);
+    const booleanKeys = new Set<string>();
+
+    (Object.keys(filters) as (keyof T)[]).forEach((key) => {
+      if (excludeSet.has(key)) return;
+
+      const transformedValue = transforms?.[key]?.toSearchParam
+        ? transforms[key].toSearchParam(filters[key])
+        : filters[key];
+
+      if (typeof transformedValue === 'boolean') {
+        booleanKeys.add(String(key));
+      }
+    });
+
+    // Convert URLSearchParams back to a plain object for TanStack's navigate
+    const search: Record<string, unknown> = Object.fromEntries(params);
+
+    // Patch only known boolean keys back to primitives so string filters with the
+    // literal values 'true' and 'false' are preserved as strings.
+    booleanKeys.forEach((key) => {
+      if (search[key] === 'true') search[key] = true;
+      if (search[key] === 'false') search[key] = false;
+    });
+
+    void navigate({
+      search: search,
+      replace: true,
+    } as never);
+  }, [filters, excludeSet, includeEmpty, searchParams, navigate, transforms]);
 };
 
 export default useSyncFiltersToSearchParams;
