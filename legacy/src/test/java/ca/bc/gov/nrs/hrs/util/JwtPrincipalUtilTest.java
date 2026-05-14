@@ -589,4 +589,72 @@ class JwtPrincipalUtilTest {
 
         );
   }
+
+  // -----------------------------------------------------------------------
+  // getClientListFromJwt
+  // -----------------------------------------------------------------------
+
+  @Test
+  @DisplayName("getClientListFromJwt should return empty list for IDIR users")
+  void shouldReturnEmptyList_forIdirUser() {
+    // Arrange — IDIR user with a client group
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("custom:idp_name", "idir");
+    claims.put("custom:idp_username", "idir_user");
+    claims.put("cognito:groups", List.of("WASTE_PLUS_Submitter_00001271"));
+
+    // Act
+    List<String> result = JwtPrincipalUtil.getClientListFromJwt(createJwt(claims));
+
+    // Assert — IDIR users always get unrestricted (empty) list
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  @DisplayName("getClientListFromJwt should return client list for BCeID users with roles")
+  void shouldReturnClientList_forBceidUserWithRoles() {
+    // Arrange
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("custom:idp_name", "bceidbusiness");
+    claims.put("custom:idp_username", "bceid_user");
+    claims.put("cognito:groups", List.of("WASTE_PLUS_Submitter_00001271", "WASTE_PLUS_Viewer_00002222"));
+
+    // Act
+    List<String> result = JwtPrincipalUtil.getClientListFromJwt(createJwt(claims));
+
+    // Assert
+    assertThat(result).containsExactlyInAnyOrder("00001271", "00002222");
+  }
+
+  @Test
+  @DisplayName("getClientListFromJwt should return NOCLIENT sentinel for BCeID users with no roles")
+  void shouldReturnNoClientSentinel_forBceidUserWithNoRoles() {
+    // Arrange
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("custom:idp_name", "bceidbusiness");
+    claims.put("custom:idp_username", "bceid_user");
+    claims.put("cognito:groups", List.of());
+
+    // Act
+    List<String> result = JwtPrincipalUtil.getClientListFromJwt(createJwt(claims));
+
+    // Assert — non-IDIR user with no clients → NOCLIENT sentinel
+    assertThat(result).containsExactly("NOCLIENT");
+  }
+
+  @Test
+  @DisplayName("getClientListFromJwt should return NOCLIENT sentinel for BCeID user with no cognito groups claim")
+  void shouldReturnNoClientSentinel_forBceidUserWithNoCognitoGroups() {
+    // Arrange
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("custom:idp_name", "bceidbusiness");
+    claims.put("custom:idp_username", "bceid_user");
+    // no cognito:groups claim present
+
+    // Act
+    List<String> result = JwtPrincipalUtil.getClientListFromJwt(createJwt(claims));
+
+    // Assert
+    assertThat(result).containsExactly("NOCLIENT");
+  }
 }

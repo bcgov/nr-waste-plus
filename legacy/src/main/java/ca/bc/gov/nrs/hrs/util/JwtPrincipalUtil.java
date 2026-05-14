@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.util;
 
+import ca.bc.gov.nrs.hrs.LegacyConstants;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import java.util.Collections;
@@ -735,5 +736,17 @@ public class JwtPrincipalUtil {
     }
 
     return Triple.of(displayName, firstName, lastName);
+  }
+
+  public static List<String> getClientListFromJwt(Jwt jwt) {
+    List<String> clientsFromRoles = getClientFromRoles(jwt);
+    List<String> processedClientsFromClient = clientsFromRoles.isEmpty()
+        ? List.of(LegacyConstants.NOCLIENT)
+        : clientsFromRoles;
+
+    // #129 IDIR users should search unrestricted. Abstract with no roles should not search
+    return getIdentityProvider(jwt).equals(IdentityProvider.IDIR)
+        ? List.of()
+        : processedClientsFromClient;
   }
 }

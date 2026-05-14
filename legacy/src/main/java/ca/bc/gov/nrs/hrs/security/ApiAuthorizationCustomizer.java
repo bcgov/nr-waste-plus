@@ -49,7 +49,7 @@ public class ApiAuthorizationCustomizer implements
         .authenticated()
 
         // Allow unrestricted access to authenticated users
-        .requestMatchers("/api/codes/**", "/api/search/**")
+        .requestMatchers("/api/**")
         .authenticated();
 
   }

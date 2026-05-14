@@ -1,0 +1,141 @@
+package ca.bc.gov.nrs.hrs.service.reportingunit;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import ca.bc.gov.nrs.hrs.LegacyConstants;
+import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
+import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitDetailsProjection;
+import ca.bc.gov.nrs.hrs.exception.WasteReportingUnitNotFound;
+import ca.bc.gov.nrs.hrs.mappers.reportingunit.ReportingUnitDetailsMapper;
+import ca.bc.gov.nrs.hrs.repository.ReportingUnitRepository;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@DisplayName("Unit Test | ReportingUnitService")
+@ExtendWith(MockitoExtension.class)
+class ReportingUnitServiceTest {
+
+  @Mock
+  private ReportingUnitRepository ruRepository;
+
+  @Mock
+  private ReportingUnitDetailsMapper ruDetailsMapper;
+
+  @InjectMocks
+  private ReportingUnitService service;
+
+  private static final Long RU_ID = 879L;
+  private static final List<String> CLIENTS = List.of("00001271", "00001272");
+
+  private ReportingUnitDetailsDto buildDetailsDto() {
+    return new ReportingUnitDetailsDto(
+        "00001271",
+        "00",
+        new CodeDescriptionDto("AGR", "Aggregate"),
+        new CodeDescriptionDto("DSS", "Skeena Stikine")
+    );
+  }
+
+  @Nested
+  @DisplayName("getReportingUnitDetails")
+  class GetReportingUnitDetails {
+
+    @Test
+    @DisplayName("should return DTO when reporting unit is found for given clients")
+    void shouldReturnDto_whenReportingUnitFound() {
+      // Arrange
+      ReportingUnitDetailsProjection projection = mock(ReportingUnitDetailsProjection.class);
+      ReportingUnitDetailsDto expectedDto = buildDetailsDto();
+      when(ruRepository.getReportingUnitDetails(RU_ID, CLIENTS))
+          .thenReturn(Optional.of(projection));
+      when(ruDetailsMapper.fromProjection(projection)).thenReturn(expectedDto);
+
+      // Act
+      ReportingUnitDetailsDto result = service.getReportingUnitDetails(RU_ID, CLIENTS);
+
+      // Assert
+      assertThat(result).isNotNull();
+      assertThat(result.clientNumber()).isEqualTo("00001271");
+      assertThat(result.clientLocnCode()).isEqualTo("00");
+      assertThat(result.sampling().code()).isEqualTo("AGR");
+      assertThat(result.district().code()).isEqualTo("DSS");
+    }
+
+    @Test
+    @DisplayName("should throw WasteReportingUnitNotFound when reporting unit does not exist")
+    void shouldThrowException_whenReportingUnitNotFound() {
+      // Arrange
+      when(ruRepository.getReportingUnitDetails(RU_ID, CLIENTS))
+          .thenReturn(Optional.empty());
+
+      // Act & Assert
+      assertThatThrownBy(() -> service.getReportingUnitDetails(RU_ID, CLIENTS))
+          .isInstanceOf(WasteReportingUnitNotFound.class);
+      verify(ruDetailsMapper, never()).fromProjection(any());
+    }
+
+    @Test
+    @DisplayName("should use NOVALUE sentinel when clients list is empty")
+    void shouldUseNoValueSentinel_whenClientsEmpty() {
+      // Arrange
+      List<String> noValueList = List.of(LegacyConstants.NOVALUE);
+      when(ruRepository.getReportingUnitDetails(RU_ID, noValueList))
+          .thenReturn(Optional.empty());
+
+      // Act & Assert
+      assertThatThrownBy(() -> service.getReportingUnitDetails(RU_ID, List.of()))
+          .isInstanceOf(WasteReportingUnitNotFound.class);
+      verify(ruRepository).getReportingUnitDetails(RU_ID, noValueList);
+    }
+
+    @Test
+    @DisplayName("should use NOVALUE sentinel when clients list is null")
+    void shouldUseNoValueSentinel_whenClientsNull() {
+      // Arrange
+      List<String> noValueList = List.of(LegacyConstants.NOVALUE);
+      when(ruRepository.getReportingUnitDetails(RU_ID, noValueList))
+          .thenReturn(Optional.empty());
+
+      // Act & Assert
+      assertThatThrownBy(() -> service.getReportingUnitDetails(RU_ID, null))
+          .isInstanceOf(WasteReportingUnitNotFound.class);
+      verify(ruRepository).getReportingUnitDetails(RU_ID, noValueList);
+    }
+
+    @Test
+    @DisplayName("should not replace provided clients when list is non-empty")
+    void shouldNotReplaceClients_whenListNonEmpty() {
+      // Arrange
+      ReportingUnitDetailsProjection projection = mock(ReportingUnitDetailsProjection.class);
+      when(ruRepository.getReportingUnitDetails(eq(RU_ID), eq(CLIENTS)))
+          .thenReturn(Optional.of(projection));
+      when(ruDetailsMapper.fromProjection(projection)).thenReturn(buildDetailsDto());
+
+      // Act
+      service.getReportingUnitDetails(RU_ID, CLIENTS);
+
+      // Assert
+      verify(ruRepository).getReportingUnitDetails(RU_ID, CLIENTS);
+    }
+  }
+
+  // Helper for never-called verify when mapper should not be invoked
+  private <T> T any() {
+    return org.mockito.ArgumentMatchers.any();
+  }
+}
+
