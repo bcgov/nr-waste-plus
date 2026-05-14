@@ -157,6 +157,16 @@ export default defineConfig(({ mode }) => {
       hmr: {
         overlay: false,
       },
+      watch: {
+        ignored: [
+          '**/coverage/**',
+          '**/build/**',
+          '**/dev-dist/**',
+          '**/test-reports/**',
+          '**/test-results/**',
+          '**/node_modules/**',
+        ],
+      },
     },
     preview: {
       port: 3000,
