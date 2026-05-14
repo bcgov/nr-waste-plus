@@ -19,7 +19,9 @@ describe('RedirectLinkTag', () => {
   it('shouldRenderRouterLinkForInternalUrl_whenSameTabIsTrue', async () => {
     render(
       <RouterProvider
-        router={createTestRouter(() => <RedirectLinkTag text="Stay" url="/local" sameTab />)}
+        router={createTestRouter(() => (
+          <RedirectLinkTag text="Stay" url="/local" sameTab />
+        ))}
       />,
     );
     await waitFor(() => {
@@ -75,6 +77,65 @@ describe('RedirectLinkTag', () => {
     await waitFor(() => {
       const link = screen.getByRole('link');
       expect(link.getAttribute('href')).toBe('/target');
+    });
+  });
+
+  it('shouldNotPassSearch_whenClearSearchIsExplicitlyFalse', async () => {
+    render(
+      <RouterProvider
+        router={createTestRouter(() => (
+          <RedirectLinkTag text="No Clear" url="/target" sameTab clearSearch={false} />
+        ))}
+      />,
+    );
+    await waitFor(() => {
+      const link = screen.getByRole('link');
+      expect(link.getAttribute('href')).toBe('/target');
+    });
+  });
+
+  it('shouldRenderAnchorTag_whenInternalUrlAndSameTabIsExplicitlyFalse', () => {
+    render(<RedirectLinkTag text="False Tab" url="/internal/path" sameTab={false} />);
+    const link = screen.getByRole('link');
+    expect(link.tagName.toLowerCase()).toBe('a');
+    expect(link.getAttribute('href')).toBe('/internal/path');
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+  });
+
+  it('shouldRenderRouterLink_whenInternalUrlContainsQueryParams', async () => {
+    render(
+      <RouterProvider
+        router={createTestRouter(() => (
+          <RedirectLinkTag text="Search" url="/results?q=wood&page=2" sameTab />
+        ))}
+      />,
+    );
+    await waitFor(() => {
+      screen.getByRole('link');
+      expect(screen.getByText('Search')).toBeDefined();
+    });
+  });
+
+  it('shouldRenderDash_whenTextIsEmptyAndExternalLink', () => {
+    render(<RedirectLinkTag text="" url="https://example.com" />);
+    const link = screen.getByRole('link');
+    expect(link.getAttribute('href')).toBe('https://example.com');
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.textContent).toBe('-');
+  });
+
+  it('shouldRenderDash_whenTextIsEmptyAndInternalLinkWithSameTab', async () => {
+    render(
+      <RouterProvider
+        router={createTestRouter(() => (
+          <RedirectLinkTag text="" url="/details/1" sameTab />
+        ))}
+      />,
+    );
+    await waitFor(() => {
+      const link = screen.getByRole('link');
+      expect(link.textContent).toBe('-');
     });
   });
 });

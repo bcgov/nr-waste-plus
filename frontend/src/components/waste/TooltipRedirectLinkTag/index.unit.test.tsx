@@ -4,8 +4,23 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import TooltipRedirectLinkTag from './index';
 
 vi.mock('@/components/waste/RedirectLinkTag', () => ({
-  default: ({ text, url, sameTab }: { text: string; url: string; sameTab?: boolean }) => (
-    <a href={url} target={sameTab ? '_self' : '_blank'} data-testid="redirect-link-tag">
+  default: ({
+    text,
+    url,
+    sameTab,
+    clearSearch,
+  }: {
+    text: string;
+    url: string;
+    sameTab?: boolean;
+    clearSearch?: boolean;
+  }) => (
+    <a
+      href={url}
+      target={sameTab ? '_self' : '_blank'}
+      data-testid="redirect-link-tag"
+      data-clear-search={clearSearch}
+    >
       {text}
     </a>
   ),
@@ -100,5 +115,33 @@ describe('TooltipRedirectLinkTag', () => {
     // DefinitionTooltip from Carbon should be in the component tree
     const tooltipWrapper = container.firstChild;
     expect(tooltipWrapper).toBeTruthy();
+  });
+
+  it('shouldForwardClearSearchTrue_whenClearSearchPropIsTrue', () => {
+    render(
+      <TooltipRedirectLinkTag tooltip="Help" text="Link" url="/path" sameTab clearSearch />,
+    );
+    const link = screen.getByTestId('redirect-link-tag');
+    expect((link as HTMLAnchorElement).dataset['clearSearch']).toBe('true');
+  });
+
+  it('shouldForwardClearSearchFalse_whenClearSearchPropIsFalse', () => {
+    render(
+      <TooltipRedirectLinkTag
+        tooltip="Help"
+        text="Link"
+        url="/path"
+        sameTab
+        clearSearch={false}
+      />,
+    );
+    const link = screen.getByTestId('redirect-link-tag');
+    expect((link as HTMLAnchorElement).dataset['clearSearch']).toBe('false');
+  });
+
+  it('shouldNotSetClearSearchAttribute_whenClearSearchIsNotProvided', () => {
+    render(<TooltipRedirectLinkTag tooltip="Help" text="Link" url="/path" />);
+    const link = screen.getByTestId('redirect-link-tag');
+    expect((link as HTMLAnchorElement).dataset['clearSearch']).toBeUndefined();
   });
 });
