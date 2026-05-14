@@ -5,11 +5,11 @@ import { queryKeys, type ReportingUnitsQueryParams } from './queryKeys';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { ProblemDetails } from '@/config/api/types';
-import type { ReportingUnitDto } from '@/services/reportingunit.service';
 import type { CodeDescriptionDto, ReportingUnitSearchExpandedDto } from '@/services/search.types';
 import type {
   ForestClientDto,
   MyForestClientDto,
+  ReportingUnitDto,
   ReportingUnitSearchResultDto,
 } from '@/services/types';
 

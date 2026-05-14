@@ -297,4 +297,18 @@ describe('ReportingUnitDetailsPage', () => {
       });
     });
   });
+
+  describe('tombstone integration', () => {
+    it('passes loader data to the tombstone component', async () => {
+      renderPage({
+        ...defaultData,
+        client: { code: '00009999', description: 'Integration Corp.' },
+        district: { code: 'DTI', description: 'Test District' },
+      });
+      await waitFor(() => {
+        expect(screen.getByText('Integration Corp.')).toBeDefined();
+        expect(screen.getByText('DTI - Test District')).toBeDefined();
+      });
+    });
+  });
 });
