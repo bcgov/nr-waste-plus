@@ -123,6 +123,7 @@ function toRoute(desc: RouteDescription) {
   return createRoute({
     getParentRoute: () => rootRoute,
     path: desc.path,
+    loader: desc.loader,
     // HOC guards return ComponentType which may include ComponentClass; cast to satisfy RouteComponent.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     component: applyGuards(desc) as any,
