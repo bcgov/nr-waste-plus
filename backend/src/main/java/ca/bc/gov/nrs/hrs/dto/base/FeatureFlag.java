@@ -50,7 +50,16 @@ public enum FeatureFlag {
    * <p>When enabled, users can bookmark a reporting unit, and see their bookmarked values as
    * part of the search result</p>
    */
-  BOOKMARK_REPORTING_UNIT_ENABLED("bookmark-ru-enabled");
+  BOOKMARK_REPORTING_UNIT_ENABLED("bookmark-ru-enabled"),
+
+  /**
+   * Controls whether the Reporting Unit details endpoint is available.
+   *
+   * <p>When enabled, {@code GET /api/reporting-units/{id}} is accessible and returns the
+   * full details of a reporting unit aggregated from the legacy API and Forest Client API.
+   * When disabled, the endpoint returns HTTP 404 so the feature is invisible to callers.</p>
+   */
+  REPORTING_UNIT_DETAILS_ENABLED("reporting-unit-details-enabled");
 
   private final String key;
 

@@ -7,11 +7,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.mockito.Mockito.doReturn;
 import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
+import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
@@ -25,6 +28,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -66,6 +70,9 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
   @Autowired
   private RetryRegistry retryRegistry;
+
+  @MockitoSpyBean
+  private FeatureFlagsConfiguration featureFlagsConfiguration;
 
   @BeforeEach
   void resetStubsAndBreakers() {
@@ -119,6 +126,23 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     clientApiStub.stubFor(
         get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
             .willReturn(notFound()));
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders
+                .get("/api/reporting-units/{id}", 12345L)
+                .accept(MediaType.APPLICATION_JSON)
+        )
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @WithMockJwt
+  @DisplayName("shouldReturn404_whenReportingUnitDetailsFeatureFlagIsDisabled")
+  void shouldReturn404_whenReportingUnitDetailsFeatureFlagIsDisabled() throws Exception {
+    doReturn(false)
+        .when(featureFlagsConfiguration)
+        .isEnabled(FeatureFlag.REPORTING_UNIT_DETAILS_ENABLED);
 
     mockMvc
         .perform(
