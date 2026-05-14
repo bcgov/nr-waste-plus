@@ -35,6 +35,27 @@ public class ApiAuthorizationCustomizer implements
   @Value("${ca.bc.gov.nrs.environment:PROD}")
   String environment;
 
+  /**
+   * Configures HTTP authorization rules for the application.
+   *
+   * <p>Registers route-level authorization rules in the following priority order:
+   * <ul>
+   *   <li>Public health endpoint ({@code GET /actuator/health}) — permitted to all</li>
+   *   <li>Metrics endpoint — requires authentication</li>
+   *   <li>OPTIONS requests — requires authentication</li>
+   *   <li>User endpoints ({@code /api/users/**}) — requires authentication</li>
+   *   <li>Codes endpoints ({@code /api/codes/**}) — requires authentication</li>
+   *   <li>Forest client list ({@code /api/forest-clients/clients}) — requires Viewer or
+   *   Submitter role</li>
+   *   <li>All other forest client endpoints — requires authentication</li>
+   *   <li>Search endpoints ({@code /api/search/**}) — requires authentication</li>
+   *   <li>Reporting unit endpoints ({@code /api/reporting-units/**}) — requires
+   *   authentication</li>
+   * </ul>
+   * </p>
+   *
+   * @param authorize the authorization manager request matcher registry to configure
+   */
   @Override
   public void customize(
       AuthorizeHttpRequestsConfigurer<HttpSecurity>
@@ -75,6 +96,9 @@ public class ApiAuthorizationCustomizer implements
         // Search reporting units can be accessed by authenticated users
         // This is added as a repeat of the above rule to allow future customization
         .requestMatchers("/api/search/**")
+        .authenticated()
+
+        .requestMatchers("/api/reporting-units/**")
         .authenticated();
 
   }

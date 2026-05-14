@@ -1,6 +1,8 @@
 package ca.bc.gov.nrs.hrs.provider.legacy;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
@@ -138,4 +140,18 @@ public class LegacyApiProvider {
     return myForestClientClient.searchMyClients(values, pageable);
   }
 
+  /**
+   * Retrieve detailed information for a specific reporting unit from the legacy API.
+   *
+   * <p>Delegates to {@link LegacyReportingUnitClient} to fetch the reporting unit's
+   * client number, client location code, sampling method, and district information.
+   * </p>
+   *
+   * @param reportingUnitId the unique identifier of the reporting unit to retrieve
+   * @return a {@link ReportingUnitLegacyDetailsDto} containing the reporting unit's
+   *         legacy details; never null
+   */
+  public ReportingUnitLegacyDetailsDto getReportingUnitDetails(Long reportingUnitId) {
+    return reportingUnitClient.getReportingUnitDetails(reportingUnitId);
+  }
 }

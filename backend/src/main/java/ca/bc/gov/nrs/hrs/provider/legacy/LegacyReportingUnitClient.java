@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.hrs.provider.legacy;
 
+import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
@@ -201,6 +203,41 @@ public class LegacyReportingUnitClient {
   }
 
   /**
+   * Retrieve legacy details for a specific reporting unit from the legacy API.
+   *
+   * <p>Makes a {@code GET} request to {@code /api/reporting-units/{reportingUnitId}}
+   * and deserializes the response into a {@link ReportingUnitLegacyDetailsDto}.
+   * </p>
+   *
+   * <p>This method is protected by a circuit breaker; if the call fails, the caller
+   * will receive the circuit breaker's default behaviour (open/half-open state propagation).
+   * Unlike other methods in this client, no explicit fallback method is registered —
+   * failures will propagate to the caller.
+   * </p>
+   *
+   * @param reportingUnitId the unique identifier of the reporting unit to retrieve;
+   *                        must not be null
+   * @return a {@link ReportingUnitLegacyDetailsDto} containing the reporting unit's
+   *         client number, location code, sampling method, and district; never null
+   * @throws org.springframework.web.client.RestClientException if there is an
+   *         unrecoverable HTTP error or the response cannot be deserialized
+   */
+  @CircuitBreaker(name = "breaker")
+  @NewSpan
+  public ReportingUnitLegacyDetailsDto getReportingUnitDetails(Long reportingUnitId) {
+    log.info("Retrieving reporting unit details for RU {}", reportingUnitId);
+    return restClient
+        .get()
+        .uri(uriBuilder ->
+            uriBuilder
+                .path("/api/reporting-units/{reportingUnitId}")
+                .build(Map.of("reportingUnitId", reportingUnitId))
+        )
+        .retrieve()
+        .body(ReportingUnitLegacyDetailsDto.class);
+  }
+
+  /**
    * Fallback method invoked when expanded search retrieval fails.
    *
    * <p>Returns a default empty {@link ReportingUnitSearchExpandedDto} to ensure
@@ -288,6 +325,7 @@ public class LegacyReportingUnitClient {
   private void logFallbackError(Throwable throwable) {
     log.error(FALLBACK_ERROR, PROVIDER, throwable == null ? "unknown" : throwable.getMessage());
   }
+
 }
 
 
