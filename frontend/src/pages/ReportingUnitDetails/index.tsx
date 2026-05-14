@@ -50,7 +50,7 @@ const ReportingUnitDetailsPage: FC = () => {
             </ReadonlyInput>
           </Column>
           <Column max={2} xlg={4} lg={4} md={4} sm={4}>
-            <ReadonlyInput label="Client ID">
+            <ReadonlyInput label="Client number">
               <TooltipRoleBasedRedirectLinkTag
                 tooltip="View client details"
                 text={data.client.code}
