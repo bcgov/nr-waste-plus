@@ -6,9 +6,7 @@ import { AuthContext, type AuthContextType } from './AuthContext';
 import { parseToken, getUserAccessTokenFromCookie, getUserIdTokenFromCookie } from './authUtils';
 import { type FamLoginUser, type IdpProviderType, type JWT } from './types';
 
-import { signOutUrl } from '@/config/fam/config';
 import { env } from '@/env';
-import { navigateTo } from '@/utils/navigation';
 
 /**
  * Preserves the existing roles array reference when the next auth user has the
@@ -115,7 +113,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     await signOut();
     setUser(undefined);
-    navigateTo(signOutUrl);
   };
 
   // Memoized function to get the current user's access token from cookies.
