@@ -72,7 +72,7 @@ describe('applyGuards', () => {
   });
 
   it('shouldPassRolesToProtected_whenRolesProvided', () => {
-    const roles = [{ role: 'ROLE_USER' }] as RouteDescription['roles'];
+    const roles = [{ role: 'ROLE_USER', clients: [] }] as unknown as RouteDescription['roles'];
     const result = applyGuards(makeDesc({ protected: true, roles }));
     expect(mockProtectedWrapper).toHaveBeenCalledWith(BaseComponent, roles);
     expect(result).toBe(ProtectedWrapped);

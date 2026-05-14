@@ -81,9 +81,12 @@ describe('ReportingUnitDetailsPage', () => {
         roles: [{ role: Role.IDIR, clients: [] }],
         privileges: {},
       },
+      isLoggedIn: true,
       isLoading: false,
-      signIn: vi.fn(),
-      signOut: vi.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      userToken: vi.fn(),
+      getClients: vi.fn(),
     });
   });
 
@@ -244,9 +247,12 @@ describe('ReportingUnitDetailsPage', () => {
           roles: [],
           privileges: {},
         },
+        isLoggedIn: true,
         isLoading: false,
-        signIn: vi.fn(),
-        signOut: vi.fn(),
+        login: vi.fn(),
+        logout: vi.fn(),
+        userToken: vi.fn(),
+        getClients: vi.fn(),
       });
       renderPage();
       await waitFor(() => {
@@ -257,9 +263,12 @@ describe('ReportingUnitDetailsPage', () => {
     it('renders page content when user is undefined', async () => {
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: undefined,
+        isLoggedIn: false,
         isLoading: false,
-        signIn: vi.fn(),
-        signOut: vi.fn(),
+        login: vi.fn(),
+        logout: vi.fn(),
+        userToken: vi.fn(),
+        getClients: vi.fn(),
       });
       renderPage();
       await waitFor(() => {

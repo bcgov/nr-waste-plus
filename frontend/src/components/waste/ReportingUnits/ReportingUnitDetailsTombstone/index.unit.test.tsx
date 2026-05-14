@@ -51,9 +51,12 @@ function mockIdirUser() {
       roles: [{ role: Role.IDIR, clients: [] }],
       privileges: {},
     },
+    isLoggedIn: true,
     isLoading: false,
-    signIn: vi.fn(),
-    signOut: vi.fn(),
+    login: vi.fn(),
+    logout: vi.fn(),
+    userToken: vi.fn(),
+    getClients: vi.fn(),
   });
 }
 
@@ -66,9 +69,12 @@ function mockNonIdirUser() {
       roles: [],
       privileges: {},
     },
+    isLoggedIn: true,
     isLoading: false,
-    signIn: vi.fn(),
-    signOut: vi.fn(),
+    login: vi.fn(),
+    logout: vi.fn(),
+    userToken: vi.fn(),
+    getClients: vi.fn(),
   });
 }
 

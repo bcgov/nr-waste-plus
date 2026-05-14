@@ -116,7 +116,8 @@ describe('reportingUnitLoader', () => {
       mockGetReportingUnit.mockResolvedValue(mockData);
 
       // Let ensureQueryData actually call the queryFn
-      mockEnsureQueryData.mockImplementation(({ queryFn }) => queryFn());
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      mockEnsureQueryData.mockImplementation(({ queryFn }) => (queryFn as any)());
 
       const result = await reportingUnitLoader({ params: { ruId: '7' } });
 

@@ -1,6 +1,6 @@
 import { Group, SearchLocate } from '@carbon/icons-react';
-import { type ComponentType } from 'react';
 import { type RouteLoaderFn } from '@tanstack/react-router';
+import { type ComponentType } from 'react';
 
 import Layout from '@/components/Layout';
 import { Role, type FamRole } from '@/context/auth/types';
@@ -31,9 +31,12 @@ export type RouteDescription = {
   /** Unique display label and side-nav identifier for the route. */
   id: string;
   component: ComponentType;
-  /** Optional data loader function invoked by the router before navigation. */
+  /**
+   * Optional TanStack Router loader function executed before the route component renders.
+   * Resolved data is available via `useLoaderData()` inside the component.
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  loader?: (args: any) => Promise<any>;
+  loader?: RouteLoaderFn<any>;
   /** Carbon icon component rendered next to the nav label when `isSideMenu` is true. */
   icon?: ComponentType;
   /** When `true`, the route appears in the left-panel side navigation. */
@@ -49,12 +52,6 @@ export type RouteDescription = {
    * Stack order in array: [outermost, ..., innermost before protected].
    */
   guards?: RouteGuard[];
-  /**
-   * Optional TanStack Router loader function executed before the route component renders.
-   * Resolved data is available via `useLoaderData()` inside the component.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  loader?: RouteLoaderFn<any>;
 };
 
 export type MenuItem = Pick<RouteDescription, 'id' | 'path' | 'icon'> & {
