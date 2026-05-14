@@ -9,6 +9,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import ca.bc.gov.nrs.hrs.TestConstants;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
@@ -16,6 +17,7 @@ import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants;
@@ -166,18 +168,17 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
   }
 
   @Test
-  @DisplayName("shouldReturnNull_whenReportingUnitDetailsNotFound")
-  void shouldReturnNull_whenReportingUnitDetailsNotFound() {
+  @DisplayName("shouldThrowNotFoundGenericException_whenReportingUnitDetailsNotFound")
+  void shouldThrowNotFoundGenericException_whenReportingUnitDetailsNotFound() {
     clientApiStub.stubFor(
         get(urlPathEqualTo("/api/reporting-units/99999"))
             .willReturn(notFound()));
 
-    // Circuit breaker propagates, caller receives null or exception depending on Resilience4j state
-    try {
-      legacyReportingUnitClient.getReportingUnitDetails(99999L);
-    } catch (Exception e) {
-      assertNotNull(e);
-    }
+    NotFoundGenericException ex = assertThrows(
+        NotFoundGenericException.class,
+        () -> legacyReportingUnitClient.getReportingUnitDetails(99999L)
+    );
+    assertEquals(404, ex.getStatusCode().value());
   }
 
   private static Stream<Arguments> expandedDetailsArguments() {

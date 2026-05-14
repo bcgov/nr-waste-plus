@@ -1,10 +1,10 @@
 package ca.bc.gov.nrs.hrs.provider.legacy;
 
-import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
@@ -22,12 +22,12 @@ import tools.jackson.databind.JsonNode;
 
 /**
  * Client responsible for legacy reporting-unit search endpoints.
- * 
+ *
  * <p>This component handles all communication with legacy API reporting unit search endpoints,
  * including paginated searches, expanded search details, and user lookups. It implements resilience
  * patterns via circuit breaker to gracefully handle failures.
  * </p>
- * 
+ *
  * <p>All search operations are protected by circuit breakers with fallback methods that return
  * empty or default results, ensuring the application continues functioning even when the
  * legacy API is unavailable.
@@ -209,20 +209,26 @@ public class LegacyReportingUnitClient {
    * and deserializes the response into a {@link ReportingUnitLegacyDetailsDto}.
    * </p>
    *
-   * <p>This method is protected by a circuit breaker; if the call fails, the caller
-   * will receive the circuit breaker's default behaviour (open/half-open state propagation).
-   * Unlike other methods in this client, no explicit fallback method is registered —
-   * failures will propagate to the caller.
+   * <p>A 404 response from the legacy service — which indicates either that the reporting unit
+   * does not exist or that the BCeID user is scoped out — is translated into a
+   * {@link NotFoundGenericException} before {@code body(...)} is reached, so that callers
+   * receive an HTTP 404 rather than a 500.
+   * </p>
+   *
+   * <p>This method intentionally has no circuit breaker: expected client-side outcomes such as
+   * 404s must not count as breaker failures and must not open the shared breaker used by other
+   * legacy calls.
    * </p>
    *
    * @param reportingUnitId the unique identifier of the reporting unit to retrieve;
    *                        must not be null
    * @return a {@link ReportingUnitLegacyDetailsDto} containing the reporting unit's
    *         client number, location code, sampling method, and district; never null
+   * @throws NotFoundGenericException if the legacy service returns 404 (reporting unit not found
+   *         or BCeID user scoped out)
    * @throws org.springframework.web.client.RestClientException if there is an
    *         unrecoverable HTTP error or the response cannot be deserialized
    */
-  @CircuitBreaker(name = "breaker")
   @NewSpan
   public ReportingUnitLegacyDetailsDto getReportingUnitDetails(Long reportingUnitId) {
     log.info("Retrieving reporting unit details for RU {}", reportingUnitId);
@@ -234,6 +240,14 @@ public class LegacyReportingUnitClient {
                 .build(Map.of("reportingUnitId", reportingUnitId))
         )
         .retrieve()
+        .onStatus(
+            status -> status.value() == 404,
+            (req, res) -> {
+              log.warn("Reporting unit {} not found in legacy API (status 404)", reportingUnitId);
+              throw new NotFoundGenericException(
+                  "Reporting unit", String.valueOf(reportingUnitId));
+            }
+        )
         .body(ReportingUnitLegacyDetailsDto.class);
   }
 
@@ -327,5 +341,3 @@ public class LegacyReportingUnitClient {
   }
 
 }
-
-

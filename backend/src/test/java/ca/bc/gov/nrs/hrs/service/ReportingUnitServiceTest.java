@@ -77,9 +77,9 @@ class ReportingUnitServiceTest {
         .isEqualTo(ForestClientStatusEnum.ACTIVE.getDescription());
     assertThat(result.sampling()).isEqualTo(legacyDetails.sampling());
     assertThat(result.district()).isEqualTo(legacyDetails.district());
-    // Grade is currently a placeholder — code and description may be null until the
-    // grade configuration task is implemented
-    assertThat(result.grade()).isNotNull();
+    // TODO(grade-configuration): Assert result.grade() here once the grade-configuration
+    // feature branch populates the field from a real data source and reinstates it in
+    // ReportingUnitDetailsDto.
   }
 
   @Test

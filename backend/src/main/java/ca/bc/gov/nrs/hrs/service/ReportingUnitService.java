@@ -32,9 +32,14 @@ public class ReportingUnitService {
    *
    * <p>Fetches the reporting unit's legacy data (client number, sampling, district)
    * from the legacy API and then enriches it with client name and status from the
-   * Forest Client API. The grade field is currently a placeholder with {@code null} values
-   * pending the grade configuration task implementation.
+   * Forest Client API.
    * </p>
+   *
+   * <!-- TODO(grade-configuration): The {@code grade} field has been intentionally omitted
+   *      from {@link ReportingUnitDetailsDto} until the grade-configuration feature branch
+   *      adds a data source for it.  When that work lands, restore the grade parameter here
+   *      (see the matching TODO in ReportingUnitDetailsDto).
+   * -->
    *
    * @param reportingUnitId the unique identifier of the reporting unit to retrieve
    * @return a fully populated {@link ReportingUnitDetailsDto} combining legacy and
@@ -57,11 +62,6 @@ public class ReportingUnitService {
         new CodeDescriptionDto(
             clientInformation.clientStatusCode().getCode(),
             clientInformation.clientStatusCode().getDescription()
-        ),
-        //This will come later as part of the configuration task
-        new CodeDescriptionDto(
-            null,
-            null
         ),
         legacyClient.sampling(),
         legacyClient.district()
