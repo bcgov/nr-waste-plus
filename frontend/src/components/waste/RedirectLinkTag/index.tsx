@@ -12,6 +12,11 @@ interface RedirectLinkTagProps {
   /** Target URL. Path-only strings (e.g. `/search?q=x`) are treated as internal. */
   readonly url: string;
   /**
+   * When `true`, any existing search parameters in the current URL are dropped.
+   * Only applicable to internal routes when `sameTab` is true.
+   */
+  readonly clearSearch?: boolean;
+  /**
    * When `true`, the link opens in the current tab (`_self`).
    * Internal paths use a TanStack Router `<Link>`; external URLs use a plain `<a>`.
    * Defaults to `false` (new tab, `_blank`).
@@ -53,14 +58,15 @@ const isInternal = (url: string): boolean => {
  * @param props.text - The text to display inside the link.
  * @param props.url - The target URL.
  * @param props.sameTab - When `true`, opens the link in the current tab.
+ * @param props.clearSearch - When `true`, resets the search parameters for internal navigation.
  * @returns The rendered link element.
  */
-const RedirectLinkTag: FC<RedirectLinkTagProps> = ({ text, url, sameTab }) => {
+const RedirectLinkTag: FC<RedirectLinkTagProps> = ({ text, url, sameTab, clearSearch }) => {
   const internal = isInternal(url);
 
   if (internal && sameTab) {
     return (
-      <Link to={url}>
+      <Link to={url} search={clearSearch ? {} : undefined}>
         <EmptyValueTag value={text} />
       </Link>
     );

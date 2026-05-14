@@ -20,8 +20,14 @@ vi.mock('@tanstack/react-router', async () => {
 
 /** Extract the URLSearchParams from the last navigate call made by the hook. */
 const getLastNavParams = (): URLSearchParams => {
-  const call = mockNavigate.mock.calls.at(-1)?.[0] as { search?: () => Record<string, string> };
-  return new URLSearchParams(Object.entries(call?.search?.() ?? {}));
+  const call = mockNavigate.mock.calls.at(-1)?.[0] as { search?: any };
+  const searchValues = typeof call?.search === 'function' ? call.search() : call?.search;
+  return new URLSearchParams(Object.entries(searchValues ?? {}));
+};
+
+const getLastNavigateSearch = (): Record<string, unknown> | undefined => {
+  const call = mockNavigate.mock.calls.at(-1)?.[0] as { search?: any };
+  return typeof call?.search === 'function' ? call.search() : call?.search;
 };
 
 type Filters = {
@@ -185,6 +191,19 @@ describe('useSyncFiltersToSearchParams', () => {
     expect(typeof result.current.search).toBe('string');
   });
 
+  it('shouldKeepBooleanLikeStringsAsStrings_whenDefaultTypeIsString', () => {
+    mockSearchStr = new URLSearchParams({ search: 'false' }).toString();
+
+    const { result } = renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ search: '' });
+      useSyncFiltersToSearchParams(filters, setFilters);
+      return filters;
+    });
+
+    expect(result.current.search).toBe('false');
+    expect(typeof result.current.search).toBe('string');
+  });
+
   it('shouldNotCallSetFilters_whenUrlHasNoSearchParams', () => {
     mockSearchStr = '';
     const setFiltersSpy = vi.fn();
@@ -290,6 +309,17 @@ describe('useSyncFiltersToSearchParams', () => {
     expect(mockNavigate).toHaveBeenCalled();
     const params = getLastNavParams();
     expect(params.get('active')).toBe('true');
+  });
+
+  it('shouldKeepBooleanLikeStringFilterAsString_whenSyncing', () => {
+    renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ search: 'true' });
+      useSyncFiltersToSearchParams(filters, setFilters);
+      return filters;
+    });
+
+    expect(getLastNavigateSearch()).toMatchObject({ search: 'true' });
+    expect(typeof getLastNavigateSearch()?.search).toBe('string');
   });
 
   it('shouldSyncNumberFilter_whenFilterChanges', () => {
@@ -578,5 +608,120 @@ describe('useSyncFiltersToSearchParams', () => {
 
     // Contains a dot, so the heuristic should keep it as a string
     expect(result.current.search).toBe('1,234.56');
+  });
+
+  // --- Deserialization: default comma-split path (non-array default) ---
+
+  it('shouldSplitCommaString_whenDefaultTypeIsStringAndValueContainsCommaWithoutDot', () => {
+    // expectedValue is '' (string) — not boolean/number/array — falls to default heuristic
+    mockSearchStr = new URLSearchParams({ search: 'a,b,c' }).toString();
+
+    const { result } = renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ search: '' });
+      useSyncFiltersToSearchParams(filters, setFilters);
+      return filters;
+    });
+
+    expect(result.current.search).toEqual(['a', 'b', 'c']);
+  });
+
+  // --- Deserialization: array default with empty string value ---
+
+  it('shouldReturnEmptyArray_whenArrayDefaultAndUrlValueIsEmptyString', () => {
+    mockSearchStr = new URLSearchParams({ status: '' }).toString();
+
+    const { result } = renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ status: [] });
+      useSyncFiltersToSearchParams(filters, setFilters);
+      return filters;
+    });
+
+    expect(result.current.status).toEqual([]);
+  });
+
+  // --- Deserialization: number default with non-numeric string ---
+
+  it('shouldReturnOriginalString_whenNumberDefaultAndValueIsNonNumeric', () => {
+    mockSearchStr = new URLSearchParams({ count: 'not-a-number' }).toString();
+
+    const { result } = renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ count: 0 });
+      useSyncFiltersToSearchParams(filters, setFilters);
+      return filters;
+    });
+
+    // Number('not-a-number') === NaN → !isNaN is false → returns original string
+    expect(result.current.count).toBe('not-a-number');
+  });
+
+  // --- Deserialization: boolean default with non-boolean string ---
+
+  it('shouldKeepDefaultBoolean_whenBooleanDefaultAndUrlValueIsNonBooleanString', () => {
+    mockSearchStr = new URLSearchParams({ active: 'yes' }).toString();
+
+    const { result } = renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ active: true });
+      useSyncFiltersToSearchParams(filters, setFilters);
+      return filters;
+    });
+
+    expect(result.current.active).toBe(true);
+  });
+
+  // --- Hydration: unknown URL key skipped inside setFilters callback ---
+
+  it('shouldSkipUnknownUrlKey_whenHydratingAndKnownKeyIsAlsoPresent', () => {
+    // 'search' triggers hasHydrationParams=true; 'unknownKey' not in filters → skipped
+    mockSearchStr = new URLSearchParams({ search: 'hello', unknownKey: 'ignored' }).toString();
+
+    const { result } = renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ search: '' });
+      useSyncFiltersToSearchParams(filters, setFilters);
+      return filters;
+    });
+
+    expect(result.current.search).toBe('hello');
+    expect((result.current as any).unknownKey).toBeUndefined();
+  });
+
+  // --- Hydration: all URL params excluded → hasHydrationParams stays false ---
+
+  it('shouldNotHydrate_whenAllUrlParamsAreExcluded', () => {
+    mockSearchStr = new URLSearchParams({ temp: 'should-be-ignored' }).toString();
+    const setFiltersSpy = vi.fn();
+
+    renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ temp: 'default' });
+      const wrapped = (update: React.SetStateAction<Filters>) => {
+        setFiltersSpy(update);
+        setFilters(update);
+      };
+      useSyncFiltersToSearchParams(filters, wrapped, { exclude: ['temp'] });
+      return filters;
+    });
+
+    expect(setFiltersSpy).not.toHaveBeenCalled();
+  });
+
+  // --- Transform without fromSearchParam → falls back to deserializeValue result ---
+
+  it('shouldUseDeserializedValue_whenTransformHasToSearchParamButNoFromSearchParam', () => {
+    mockSearchStr = new URLSearchParams({ users: 'alpha,beta' }).toString();
+
+    const { result } = renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ users: [] });
+      useSyncFiltersToSearchParams(filters, setFilters, {
+        transforms: {
+          users: {
+            toSearchParam: (value) => value?.map((u) => u.code) ?? [],
+            // no fromSearchParam — hook falls back to deserializeValue
+          },
+        },
+      });
+      return filters;
+    });
+
+    // Array default + comma string → split by default deserialization
+    expect(result.current.users).toEqual(['alpha', 'beta']);
   });
 });
