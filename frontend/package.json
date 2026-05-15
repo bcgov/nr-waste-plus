@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
-    "@eslint/js": "^9.39.2",
+    "@eslint/js": "^10.0.0",
     "@playwright/test": "^1.57.0",
     "@tanstack/eslint-plugin-query": "^5.91.2",
     "@tanstack/react-query-devtools": "^5.91.2",
@@ -67,7 +67,7 @@
     "axe-playwright": "^2.2.2",
     "cross-env": "^10.1.0",
     "dotenv-cli": "^11.0.0",
-    "eslint": "^9.39.2",
+    "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-alias": "^1.1.2",
     "eslint-plugin-import": "^2.32.0",
