@@ -30,27 +30,36 @@ public class ReportingUnitService {
   private final ReportingUnitDetailsMapper ruDetailsMapper;
 
   /**
-   * Retrieves the detail view for the given Reporting Unit, scoped to the provided client numbers.
+   * Retrieves the detail view for the given Reporting Unit, scoped to the
+   * provided client numbers.
    *
-   * <p>When {@code clients} is empty or {@code null}, the query is executed without client
-   * restriction by substituting {@link LegacyConstants#NOVALUE}. If no record is found for the
-   * supplied {@code reportingUnitId}, a {@link WasteReportingUnitNotFound} exception is thrown.</p>
+   * <p>When {@code clients} is empty or {@code null}, the query is executed
+   * without client restriction by substituting
+   * {@link LegacyConstants#NOVALUE}.
+   *
+   * <p>If no record is found for the supplied {@code reportingUnitId}, a
+   * {@link WasteReportingUnitNotFound} exception is thrown.
    *
    * @param reportingUnitId the identifier of the reporting unit to retrieve
-   * @param clients         the list of client numbers used to scope the query; may be empty or null
-   * @return the {@link ReportingUnitDetailsDto} for the requested reporting unit
-   * @throws WasteReportingUnitNotFound if no reporting unit is found for the given ID and clients
+   * @param clients the list of client numbers used to scope the query; may be
+   *        empty or {@code null}
+   * @return the {@link ReportingUnitDetailsDto} for the requested reporting
+   *         unit
+   * @throws WasteReportingUnitNotFound if no reporting unit is found for the
+   *         given ID and clients
    */
   public ReportingUnitDetailsDto getReportingUnitDetails(
       Long reportingUnitId,
       List<String> clients
   ) {
-    List<String> searchClients = CollectionUtils.isEmpty(clients) ? List.of(LegacyConstants.NOVALUE) : clients;
+    List<String> searchClients = CollectionUtils.isEmpty(clients)
+        ? List.of(LegacyConstants.NOVALUE)
+        : clients;
+
     return ruRepository
         .getReportingUnitDetails(reportingUnitId, searchClients)
         .map(ruDetailsMapper::fromProjection)
         .orElseThrow(() -> new WasteReportingUnitNotFound(reportingUnitId));
   }
-
 
 }
