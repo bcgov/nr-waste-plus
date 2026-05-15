@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.hrs.service.search;
+package ca.bc.gov.nrs.hrs.service.reportingunit;
 
 import ca.bc.gov.nrs.hrs.LegacyConstants;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
@@ -7,6 +7,7 @@ import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.mappers.search.ReportingUnitSearchExpandedMapper;
 import ca.bc.gov.nrs.hrs.mappers.search.ReportingUnitSearchMapper;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.service.search.ServiceConstants;
 import ca.bc.gov.nrs.hrs.util.PaginationUtil;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;

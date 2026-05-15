@@ -33,7 +33,7 @@ public final class ServiceConstants {
    * columns. Supports sorting by reporting unit number, block ID, client information, sampling
    * code, district code, status code, and last updated timestamp.</p>
    */
-  static final Map<String, String> SORT_FIELDS =
+  public static final Map<String, String> SORT_FIELDS =
       Map.ofEntries(
           Map.entry("ruNumber", "ru_number"),
           Map.entry("wasteAssessmentAreaId", "waste_assessment_area_id"),

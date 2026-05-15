@@ -1,0 +1,99 @@
+{
+  "mappings": [
+    {
+      "name": "Reporting unit details - RU 34906 (Northern Timber Co)",
+      "request": {
+        "url": "/api/reporting-units/34906",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "reporting-units/details-34906.json"
+      }
+    },
+    {
+      "name": "Reporting unit details - RU 36834 (Pacific Logging Ltd)",
+      "request": {
+        "url": "/api/reporting-units/36834",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "reporting-units/details-36834.json"
+      }
+    },
+    {
+      "name": "Reporting unit details - RU 10501 (Pacific Logging Ltd - Cascades)",
+      "request": {
+        "url": "/api/reporting-units/10501",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "reporting-units/details-10501.json"
+      }
+    },
+    {
+      "name": "Reporting unit details - RU 2131 (Mountain Forestry Inc)",
+      "request": {
+        "url": "/api/reporting-units/2131",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "reporting-units/details-2131.json"
+      }
+    },
+    {
+      "name": "Reporting unit details - RU 123 (Canadian Sample Co - bookmarked)",
+      "request": {
+        "url": "/api/reporting-units/123",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "reporting-units/details-123.json"
+      }
+    },
+    {
+      "name": "Reporting unit details - RU 321 (John Wick Logging - bookmarked)",
+      "request": {
+        "url": "/api/reporting-units/321",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "reporting-units/details-321.json"
+      }
+    },
+    {
+      "name": "Reporting unit details - not found",
+      "request": {
+        "url": "/api/reporting-units/0",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "jsonBody": {
+          "type": "about:blank",
+          "title": "Not Found",
+          "status": 404,
+          "detail": "Reporting unit with id 0 not found!",
+          "instance": "/api/reporting-units/0"
+        }
+      }
+    },
+    {
+      "name": "Reporting unit details - catch-all success",
+      "request": {
+        "urlPattern": "/api/reporting-units/[0-9]+",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "reporting-units/details-default.json"
+      }
+    }
+  ]
+}
+

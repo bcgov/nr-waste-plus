@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.repository;
 
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
+import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitDetailsProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.search.ClientDistrictSearchProjection;
 import ca.bc.gov.nrs.hrs.entity.search.ReportingUnitSearchExpandedProjection;
@@ -89,6 +90,15 @@ public interface ReportingUnitRepository extends JpaRepository<ReportingUnitEnti
   Page<ClientDistrictSearchProjection> searchMyClients(
       List<String> clientNumbers,
       Pageable page
+  );
+
+  @Query(
+      nativeQuery = true,
+      value = ReportingUnitQueryConstants.GET_RU_DETAILS
+  )
+  Optional<ReportingUnitDetailsProjection> getReportingUnitDetails(
+      Long ruNumber,
+      List<String> clientNumbers
   );
 
 }

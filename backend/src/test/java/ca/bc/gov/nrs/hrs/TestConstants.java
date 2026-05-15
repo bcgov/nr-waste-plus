@@ -43,4 +43,19 @@ public final class TestConstants {
         "netArea": 0.0,
         "totalBlocks": 0
       }""";
+
+  /** JSON response from the legacy API for {@code GET /api/reporting-units/{id}}. */
+  public static final String LEGACY_RU_DETAILS = """
+      {
+        "clientNumber": "00012797",
+        "clientLocnCode": "00",
+        "sampling": {
+          "code": "S01",
+          "description": "Sample Method One"
+        },
+        "district": {
+          "code": "DND",
+          "description": "Nadina Natural Resource District"
+        }
+      }""";
 }

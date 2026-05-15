@@ -1,14 +1,13 @@
 package ca.bc.gov.nrs.hrs.controller;
 
-import ca.bc.gov.nrs.hrs.LegacyConstants;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.search.ClientDistrictSearchResultDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.exception.WasteAssessmentAreaNotFound;
+import ca.bc.gov.nrs.hrs.service.reportingunit.ReportingUnitSearchService;
 import ca.bc.gov.nrs.hrs.service.search.AdvancedSearchService;
-import ca.bc.gov.nrs.hrs.service.search.ReportingUnitSearchService;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
 import java.util.List;
@@ -129,17 +128,10 @@ public class SearchController {
         userId, JwtPrincipalUtil.getUserId(jwt)
     );
 
-    List<String> clientsFromRoles = JwtPrincipalUtil.getClientFromRoles(jwt);
-    List<String> processedClientsFromClient = clientsFromRoles.isEmpty()
-        ? List.of(LegacyConstants.NOCLIENT)
-        : clientsFromRoles;
-
-    // #129 IDIR users should search unrestricted. Abstract with no roles should not search
-    List<String> clients = JwtPrincipalUtil.getIdentityProvider(jwt).equals(IdentityProvider.IDIR)
-        ? List.of()
-        : processedClientsFromClient;
-
-    return advancedSearchService.searchReportingUnitUsers(userId, clients);
+    return advancedSearchService.searchReportingUnitUsers(
+        userId,
+        JwtPrincipalUtil.getClientListFromJwt(jwt)
+    );
   }
 
   /**

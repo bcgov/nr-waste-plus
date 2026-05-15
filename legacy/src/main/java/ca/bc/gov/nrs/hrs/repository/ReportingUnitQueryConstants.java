@@ -273,4 +273,23 @@ public final class ReportingUnitQueryConstants {
       + "AttachmentContent AS (" + GET_BLOCK_ATTACHMENT_LATEST + "), "
       + "ChildValues AS (" + GET_BLOCK_SECONDARY_MARK + ") "
       + GET_SEARCH_BLOCK_EXPANDED;
+
+  public static final String GET_RU_DETAILS = """
+      SELECT
+          wru.CLIENT_NUMBER,
+          wru.CLIENT_LOCN_CODE,
+          wru.WASTE_SAMPLING_OPTION_CODE AS SAMPLING_CODE,
+          wsoc.DESCRIPTION AS SAMPLING_NAME,
+          ou.ORG_UNIT_CODE AS DISTRICT_CODE,
+          ou.ORG_UNIT_NAME AS DISTRICT_NAME
+      FROM WASTE_REPORTING_UNIT wru
+      LEFT JOIN WASTE_SAMPLING_OPTION_CODE wsoc
+        ON wsoc.WASTE_SAMPLING_OPTION_CODE = wru.WASTE_SAMPLING_OPTION_CODE
+      LEFT JOIN ORG_UNIT ou ON ou.ORG_UNIT_NO = wru.ORG_UNIT_NO
+      WHERE
+          wru.REPORTING_UNIT_ID = :ruNumber
+          AND (
+           'NOVALUE' in (:clientNumbers)
+           OR wru.CLIENT_NUMBER IN (:clientNumbers)
+        )""";
 }

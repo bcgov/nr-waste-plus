@@ -218,6 +218,12 @@ info:
     name: ${spring.application.name}
     zone: ${APP_ZONE:local}
     version: ${APP_VERSION:0.0.1-SNAPSHOT}
+
+# Feature flags — disabled by default; override per environment in profile-specific YAML files
+features:
+  flags:
+    reporting-unit-details-enabled: false
+
 # Logging
 logging:
   level:
