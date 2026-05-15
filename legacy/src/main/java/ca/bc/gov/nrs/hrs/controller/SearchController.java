@@ -160,6 +160,7 @@ public class SearchController {
         values.isEmpty()
             ? JwtPrincipalUtil.getClientFromRoles(jwt)
             : values,
+        JwtPrincipalUtil.getUserId(jwt),
         pageable
     );
   }

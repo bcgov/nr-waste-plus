@@ -69,17 +69,20 @@ public class AdvancedSearchService {
    *
    * @param clients optional list of clients to include; when empty, caller's clients should be
    *                used
+   * @param userId  the logged-in user id (e.g. {@code IDIR\AARSENAU}) used to scope results to
+   *                submissions entered by the current user
    * @param page    paging and sorting information
    * @return a page of {@link ClientDistrictSearchResultDto} representing aggregated client stats
    */
   public Page<ClientDistrictSearchResultDto> searchMyClients(
-      List<String> clients, Pageable page
+      List<String> clients, String userId, Pageable page
   ) {
-    log.info("Loading my clients with filters: {}, pageable: {}", clients, page);
+    log.info("Loading my clients with filters: {}, user: {}, pageable: {}", clients, userId, page);
     return
         ruRepository
             .searchMyClients(
                 clients,
+                userId,
                 PageRequest.of(
                     page.getPageNumber(),
                     page.getPageSize(),

@@ -79,6 +79,9 @@ public interface ReportingUnitRepository extends JpaRepository<ReportingUnitEnti
    * returns a paged projection {@link ClientDistrictSearchProjection}.</p>
    *
    * @param clientNumbers the clients to include in the aggregation
+   * @param userId        the logged-in user id (e.g. {@code BCEID\JDOE}) used to scope
+   *                      submissions to those entered by the current user; matched as a suffix
+   *                      against {@code ENTRY_USERID}
    * @param page          paging information
    * @return a page of {@link ClientDistrictSearchProjection} with aggregated client stats
    */
@@ -89,6 +92,7 @@ public interface ReportingUnitRepository extends JpaRepository<ReportingUnitEnti
   )
   Page<ClientDistrictSearchProjection> searchMyClients(
       List<String> clientNumbers,
+      String userId,
       Pageable page
   );
 
