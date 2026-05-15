@@ -437,7 +437,7 @@ describe('MyClientListing', () => {
         expect(screen.getByText('Client No.')).toBeDefined();
         expect(screen.getByText('Client name')).toBeDefined();
         expect(screen.getByText('RUs created by me')).toBeDefined();
-        expect(screen.getByText('Blocks in draft created by me')).toBeDefined();
+        expect(screen.getByText('Draft blocks in my RUs')).toBeDefined();
         expect(screen.getByText('Last Update')).toBeDefined();
 
         // Check data

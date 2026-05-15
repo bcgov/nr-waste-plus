@@ -16,7 +16,7 @@ export const headers: TableHeaderType<MyForestClientDto>[] = [
   },
   { key: 'client.description', header: 'Client name', sortable: true, selected: true },
   { key: 'submissionsCount', header: 'RUs created by me', sortable: false, selected: true },
-  { key: 'blocksCount', header: 'Blocks in draft created by me', sortable: false, selected: true },
+  { key: 'blocksCount', header: 'Draft blocks in my RUs', sortable: false, selected: true },
   {
     key: 'lastUpdate',
     header: 'Last Update',
