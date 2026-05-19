@@ -90,7 +90,6 @@ describe('reportingUnitSchema', () => {
   });
 
   it('throws ZodError when id is missing', () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id: _id, ...withoutId } = validReportingUnit;
     expect(() => reportingUnitSchema.parse(withoutId)).toThrow(ZodError);
   });
@@ -102,7 +101,6 @@ describe('reportingUnitSchema', () => {
   });
 
   it('throws ZodError when client is missing', () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { client: _client, ...withoutClient } = validReportingUnit;
     expect(() => reportingUnitSchema.parse(withoutClient)).toThrow(ZodError);
   });

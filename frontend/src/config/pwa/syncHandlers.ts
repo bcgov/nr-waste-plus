@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Placeholder handler for replaying queued offline mutations during background sync.
  *
