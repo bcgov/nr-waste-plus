@@ -6,6 +6,7 @@ import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProvider;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import io.micrometer.observation.annotation.Observed;
+import io.micrometer.tracing.annotation.NewSpan;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,11 +36,6 @@ public class ReportingUnitService {
    * Forest Client API.
    * </p>
    *
-   * <!-- TODO(grade-configuration): The {@code grade} field has been intentionally omitted
-   *      from {@link ReportingUnitDetailsDto} until the grade-configuration feature branch
-   *      adds a data source for it.  When that work lands, restore the grade parameter here
-   *      (see the matching TODO in ReportingUnitDetailsDto).
-   * -->
    *
    * @param reportingUnitId the unique identifier of the reporting unit to retrieve
    * @return a fully populated {@link ReportingUnitDetailsDto} combining legacy and
@@ -47,6 +43,7 @@ public class ReportingUnitService {
    * @throws ForestClientNotFoundException if no Forest Client record can be found for
    *         the client number returned by the legacy API
    */
+  @NewSpan
   public ReportingUnitDetailsDto getReportingUnitDetails(Long reportingUnitId) {
     log.info("Fetching reporting unit details for RU {}", reportingUnitId);
     var legacyClient = legacyApiProvider.getReportingUnitDetails(reportingUnitId);
@@ -64,7 +61,10 @@ public class ReportingUnitService {
             clientInformation.clientStatusCode().getDescription()
         ),
         legacyClient.sampling(),
-        legacyClient.district()
+        legacyClient.district(),
+        new CodeDescriptionDto(
+            null,null
+        )
     );
   }
 

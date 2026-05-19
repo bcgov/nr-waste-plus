@@ -32,6 +32,7 @@ public record ReportingUnitDetailsDto(
     CodeDescriptionDto client,
     CodeDescriptionDto clientStatus,
     CodeDescriptionDto sampling,
-    CodeDescriptionDto district
+    CodeDescriptionDto district,
+    CodeDescriptionDto grade
 ) {
 }
