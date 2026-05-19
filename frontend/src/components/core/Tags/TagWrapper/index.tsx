@@ -3,9 +3,14 @@ import { type FC, type ReactElement } from 'react';
 import './index.scss';
 
 type TagWrapperProps = {
+  /** The content to wrap. */
   readonly children: ReactElement;
+  /** The tag element to display alongside the children. */
   readonly tag: ReactElement;
+  /** Position of the tag relative to the children. Defaults to `'right'`. */
   readonly position?: 'left' | 'right';
+  /** When `false`, the tag is hidden entirely. Defaults to `true`. */
+  readonly enabled?: boolean;
 };
 
 /**
@@ -15,23 +20,18 @@ type TagWrapperProps = {
  * while preserving layout flexibility. The tag to render is passed explicitly
  * via the `tag` prop, making this component reusable across any tag type.
  *
- * @param {TagWrapperProps} props - The component props
- * @param {ReactElement} props.children - The content to wrap
- * @param {ReactElement} props.tag - The tag element to display alongside the children
- * @param {'left' | 'right'} [props.position='right'] - Position of the tag relative to the children
- *
- * @returns {JSX.Element} A wrapped element with the provided tag
+ * @returns The wrapped element with the tag positioned according to `position`.
  */
-const TagWrapper: FC<TagWrapperProps> = ({ children, tag, position = 'right' }) => (
+const TagWrapper: FC<TagWrapperProps> = ({ children, tag, position = 'right', enabled = true }) => (
   <div className="tag-wrapper">
     {position === 'right' ? (
       <>
         {children}
-        {tag}
+        {enabled && tag}
       </>
     ) : (
       <>
-        {tag}
+        {enabled && tag}
         {children}
       </>
     )}

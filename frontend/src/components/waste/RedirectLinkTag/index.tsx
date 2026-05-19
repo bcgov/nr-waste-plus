@@ -60,11 +60,6 @@ const isInternal = (url: string): boolean => {
  * - `sameTab` controls whether the link opens in the current tab (`_self`)
  *   or a new tab (`_blank`), regardless of internal/external.
  *
- * @param props - The redirect link props.
- * @param props.text - The text to display inside the link.
- * @param props.url - The target URL.
- * @param props.sameTab - When `true`, opens the link in the current tab.
- * @param props.clearSearch - When `true`, resets the search parameters for internal navigation.
  * @returns The rendered link element.
  */
 const RedirectLinkTag: FC<RedirectLinkTagProps> = ({ text, url, sameTab, clearSearch }) => {

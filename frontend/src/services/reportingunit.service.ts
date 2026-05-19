@@ -8,8 +8,15 @@ import { HttpClient, type APIConfig } from '@/config/api/types';
 
 /**
  * Backend client for Reporting Unit data.
+ *
+ * Extends {@link HttpClient} to provide typed, schema-validated access to the
+ * `/api/reporting-units` backend resource. Validates all responses at runtime
+ * using Zod to surface unexpected API shape changes early.
  */
 export class ReportingUnitService extends HttpClient {
+  /**
+   * @param config - API configuration for the reporting-unit backend resource.
+   */
   constructor(readonly config: APIConfig) {
     super(config);
   }

@@ -27,9 +27,11 @@ export type RouteGuard = <P extends object>(Component: ComponentType<P>) => Comp
  * panel navigation.
  */
 export type RouteDescription = {
+  /** URL path registered in the TanStack Router route tree (e.g. `'/search'`, `'/reporting-units/$ruId'`). */
   path: string;
   /** Unique display label and side-nav identifier for the route. */
   id: string;
+  /** The React component rendered when the route is active. Typically wrapped in `<Layout>`. */
   component: ComponentType;
   /**
    * Optional TanStack Router loader function executed before the route component renders.
@@ -43,9 +45,11 @@ export type RouteDescription = {
   isSideMenu: boolean;
   /** Wraps component with withProtected (+ optional role check). */
   protected?: boolean;
+  /** FAM role assignments required to access this route. Empty or absent means any authenticated user can access it. */
   roles?: readonly FamRole[];
   /** Wraps component with withOfflineSupport. */
   offlineReady?: boolean;
+  /** When `true`, this route is exclusively shown in offline mode; hidden when online. */
   offlineOnly?: boolean;
   /**
    * Additional HOC guards applied outermost — run before protected/offline checks.
@@ -54,6 +58,7 @@ export type RouteDescription = {
   guards?: RouteGuard[];
 };
 
+/** A leaf navigation item derived from a {@link RouteDescription} for rendering in the side-nav. */
 export type MenuItem = Pick<RouteDescription, 'id' | 'path' | 'icon'> & {
   children?: MenuItem[];
 };

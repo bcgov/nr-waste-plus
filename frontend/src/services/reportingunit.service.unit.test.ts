@@ -4,11 +4,17 @@ import { ZodError } from 'zod';
 
 import { ReportingUnitService } from './reportingunit.service';
 import { reportingUnitSchema, codeDescriptionSchema } from './reportingUnit.types';
+
 import type { ReportingUnitDto } from './reportingUnit.types';
 
 vi.mock('axios');
 
-const mockConfig = { BASE: 'http://localhost', VERSION: '1', WITH_CREDENTIALS: false, CREDENTIALS: 'include' as const };
+const mockConfig = {
+  BASE: 'http://localhost',
+  VERSION: '1',
+  WITH_CREDENTIALS: false,
+  CREDENTIALS: 'include' as const,
+};
 
 const validCodeDescription = { code: 'A', description: 'Alpha' };
 
@@ -84,15 +90,19 @@ describe('reportingUnitSchema', () => {
   });
 
   it('throws ZodError when id is missing', () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id: _id, ...withoutId } = validReportingUnit;
     expect(() => reportingUnitSchema.parse(withoutId)).toThrow(ZodError);
   });
 
   it('throws ZodError when id is not a number', () => {
-    expect(() => reportingUnitSchema.parse({ ...validReportingUnit, id: 'not-a-number' })).toThrow(ZodError);
+    expect(() => reportingUnitSchema.parse({ ...validReportingUnit, id: 'not-a-number' })).toThrow(
+      ZodError,
+    );
   });
 
   it('throws ZodError when client is missing', () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { client: _client, ...withoutClient } = validReportingUnit;
     expect(() => reportingUnitSchema.parse(withoutClient)).toThrow(ZodError);
   });
@@ -104,7 +114,9 @@ describe('reportingUnitSchema', () => {
   });
 
   it('throws ZodError when grade is null', () => {
-    expect(() => reportingUnitSchema.parse({ ...validReportingUnit, grade: null })).toThrow(ZodError);
+    expect(() => reportingUnitSchema.parse({ ...validReportingUnit, grade: null })).toThrow(
+      ZodError,
+    );
   });
 
   it('parses a reporting unit with null nested code/description values', () => {

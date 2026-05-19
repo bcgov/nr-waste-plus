@@ -530,6 +530,40 @@ describe('useSyncFiltersToSearchParams', () => {
     expect(params.get('tab')).toBe('details');
   });
 
+  // --- Cross-route navigation safety ---
+
+  it('shouldNotSyncFiltersToUrl_whenSearchParamsChangeExternallyWithoutFilterChange', () => {
+    // Regression test for the cross-route search-param leak.
+    //
+    // When the user navigated from /search?multiMark=true to /reporting-units/123,
+    // TanStack Router updated location.searchStr to '' (the destination has no params).
+    // The sync effect had `searchParams` as a reactive dep, so it re-fired, built
+    // { multiMark: true } from the in-memory filter state, and called
+    // navigate({ search: { multiMark: true }, replace: true }) without a `to`.
+    // TanStack Router resolved the "current route" (already /reporting-units/123)
+    // and produced /reporting-units/123?multiMark=true.
+    //
+    // The fix: use a ref for searchParams so the sync effect only re-runs when
+    // filters change, not when the URL changes externally due to navigation.
+    mockSearchStr = new URLSearchParams({ active: 'true' }).toString();
+
+    const { rerender } = renderHook(() => {
+      const [filters, setFilters] = useState<Filters>({ active: true });
+      useSyncFiltersToSearchParams(filters, setFilters);
+      return filters;
+    });
+
+    // URL and filters are in sync — no navigate call expected at this point.
+    mockNavigate.mockClear();
+
+    // Simulate the router navigating to another route: searchStr becomes empty.
+    mockSearchStr = '';
+    rerender();
+
+    // The sync effect must NOT fire solely because the URL changed externally.
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
   // --- Multiple filters ---
 
   it('shouldSyncMultipleFilters_whenMultipleFiltersChange', () => {

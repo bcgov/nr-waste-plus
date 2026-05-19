@@ -28,10 +28,15 @@ export const BackendApiConfig: APIConfig = {
   MIDDLEWARE: [problemDetailsMiddleware(), failureNotificationMiddleware()],
 };
 
+/**
+ * Dynamically resolves the bearer token from the Cognito session cookie for each request.
+ * Falls back to an empty string when no session is present (unauthenticated requests).
+ */
 BackendApiConfig.TOKEN = async () => {
   return getUserAccessTokenFromCookie() ?? '';
 };
 
+/** Injects OpenTelemetry B3 trace headers into every outgoing backend request. */
 BackendApiConfig.HEADERS = async () => {
   return getB3Headers();
 };
@@ -47,6 +52,7 @@ const serviceConstructors = {
   reportingUnit: new ReportingUnitService(BackendApiConfig),
 } as const;
 
+/** Maps each service namespace key to its concrete service class instance. */
 type ExternalApiType = {
   [K in keyof typeof serviceConstructors]: (typeof serviceConstructors)[K];
 };

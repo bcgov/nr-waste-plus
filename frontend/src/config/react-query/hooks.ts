@@ -20,6 +20,13 @@ import {
   generateSortArray,
 } from '@/services/utils';
 
+/**
+ * Shared TanStack Query options for reference-data requests.
+ *
+ * Reference data (codes, districts, statuses) rarely changes mid-session.
+ * Using `staleTime: Infinity` prevents background refetches; the data is
+ * still refreshed on mount and on network reconnect.
+ */
 const REFERENCE_DATA_QUERY_CONFIG = {
   staleTime: Infinity,
   refetchOnWindowFocus: false,
@@ -27,11 +34,28 @@ const REFERENCE_DATA_QUERY_CONFIG = {
   refetchOnMount: true,
 } as const;
 
+/** One of the three waste-search filter code-list resources available via {@link useCodesQuery}. */
 type CodeResource = 'samplingOptions' | 'districtOptions' | 'statusOptions';
+
+/**
+ * Options shared by hooks that support inline error notifications.
+ * When `notificationTarget` is supplied, the hook fires a notification event
+ * on query failure instead of (or in addition to) propagating the error state.
+ */
 type QueryNotificationOptions = {
   notificationTarget?: string;
 };
 
+/**
+ * Extracts a {@link ProblemDetails} payload from a thrown error object when one is present.
+ *
+ * TanStack Query wraps HTTP errors as plain `Error` instances; the underlying
+ * `body` property carries the structured RFC 7807 problem details when the
+ * backend returns one.
+ *
+ * @param error - The error thrown by a query function.
+ * @returns The `ProblemDetails` body if present, otherwise `undefined`.
+ */
 const getProblemDetails = (error: Error) => {
   if (typeof error !== 'object' || error === null || !('body' in error)) {
     return undefined;
@@ -40,6 +64,15 @@ const getProblemDetails = (error: Error) => {
   return (error as { body?: ProblemDetails }).body;
 };
 
+/**
+ * Dispatches an inline error notification event for a failed query.
+ *
+ * Uses {@link getProblemDetails} to prefer structured RFC 7807 detail text;
+ * falls back to `error.message` when no structured body is available.
+ *
+ * @param error - The error thrown by a query function.
+ * @param eventTarget - Identifier for the notification target element.
+ */
 const notifyProblemDetailsError = (error: Error, eventTarget: string) => {
   const problemDetails = getProblemDetails(error);
 
@@ -54,6 +87,18 @@ const notifyProblemDetailsError = (error: Error, eventTarget: string) => {
   });
 };
 
+/**
+ * Generic hook for fetching one of the three waste-search filter code lists.
+ *
+ * Uses reference-data cache settings (`staleTime: Infinity`) so the data is
+ * fetched once per session and re-fetched only on mount or network reconnect.
+ * Optionally surfaces API errors as inline notifications via `notificationTarget`.
+ *
+ * @param resource - The code list to fetch (`'samplingOptions'`, `'districtOptions'`, or `'statusOptions'`).
+ * @param options - TanStack Query options merged on top of reference-data defaults,
+ *   plus an optional `notificationTarget` for inline error notifications.
+ * @returns The TanStack Query result object for the requested code list.
+ */
 export const useCodesQuery = <TData = CodeDescriptionDto[]>(
   resource: CodeResource,
   options?: Omit<
@@ -162,6 +207,16 @@ export const useWasteSearchFilterOptionsQueries = (notificationTarget?: string) 
   return queries;
 };
 
+/**
+ * Convenience hook that fetches district options using reference-data cache settings.
+ *
+ * Equivalent to `useCodesQuery('districtOptions')` but with a fixed return type
+ * and no notification-target support, suitable for contexts that handle errors
+ * through their own mechanism.
+ *
+ * @param options - Optional TanStack Query overrides.
+ * @returns The TanStack Query result for the district code list.
+ */
 export const useDistrictOptionsQuery = <TData = CodeDescriptionDto[]>(
   options?: Omit<
     UseQueryOptions<
@@ -181,6 +236,16 @@ export const useDistrictOptionsQuery = <TData = CodeDescriptionDto[]>(
   });
 };
 
+/**
+ * Fetches full forest client records for a given list of client numbers.
+ *
+ * The query is disabled automatically when `clientNumbers` is empty, preventing
+ * unnecessary network requests during form initialisation.
+ *
+ * @param clientNumbers - Ordered list of client number strings to look up.
+ * @param options - Optional TanStack Query overrides.
+ * @returns The TanStack Query result containing the matching {@link ForestClientDto} records.
+ */
 export const useForestClientsByNumbersQuery = <TData = ForestClientDto[]>(
   clientNumbers: readonly string[],
   options?: Omit<
@@ -202,6 +267,15 @@ export const useForestClientsByNumbersQuery = <TData = ForestClientDto[]>(
   });
 };
 
+/**
+ * Fetches the authenticated user's accessible forest clients with pagination and text filtering.
+ *
+ * @param filter - Free-text filter applied server-side against client name / number.
+ * @param page - Zero-based page index.
+ * @param size - Number of items per page.
+ * @param options - Optional TanStack Query overrides plus an optional `notificationTarget`.
+ * @returns The TanStack Query result for the paginated {@link MyForestClientDto} list.
+ */
 export const useMyForestClientsQuery = <TData = PageableResponse<MyForestClientDto>>(
   filter: string,
   page: number,
@@ -239,6 +313,16 @@ export const useMyForestClientsQuery = <TData = PageableResponse<MyForestClientD
   return query;
 };
 
+/**
+ * Searches reporting units with the provided filter/sort/pagination parameters.
+ *
+ * On error, dispatches an inline notification to `notificationTarget` (when supplied)
+ * using the RFC 7807 problem-details payload from the backend when available.
+ *
+ * @param input - Filter criteria, sort configuration, and pagination settings.
+ * @param options - Optional TanStack Query overrides plus an optional `notificationTarget`.
+ * @returns The TanStack Query result for the paginated {@link ReportingUnitSearchResultDto} list.
+ */
 export const useSearchReportingUnitsQuery = <
   TData = PageableResponse<ReportingUnitSearchResultDto>,
 >(
@@ -284,6 +368,15 @@ export const useSearchReportingUnitsQuery = <
   return query;
 };
 
+/**
+ * Fetches the full details for a single reporting unit by its numeric ID.
+ *
+ * On error, dispatches an inline notification to `notificationTarget` (when supplied).
+ *
+ * @param ruId - The numeric reporting unit ID.
+ * @param options - Optional TanStack Query overrides plus an optional `notificationTarget`.
+ * @returns The TanStack Query result containing the {@link ReportingUnitDto}.
+ */
 export const useReportingUnitDetailsQuery = <TData = ReportingUnitDto>(
   ruId: number,
   options?: Omit<
@@ -316,6 +409,19 @@ export const useReportingUnitDetailsQuery = <TData = ReportingUnitDto>(
   return query;
 };
 
+/**
+ * Fetches the expanded search result for a specific row in the waste search table.
+ *
+ * The query is disabled until both `ruId` and `wasteAssessmentAreaId` are non-null,
+ * preventing premature fetches during row initialisation. Results are cached indefinitely
+ * (`staleTime: Infinity`) since expanded data is unlikely to change within a session.
+ *
+ * @param rowId - Stable row identifier used as part of the query cache key.
+ * @param ruId - Reporting unit ID; query is disabled when `null`.
+ * @param wasteAssessmentAreaId - Waste assessment area ID; query is disabled when `null`.
+ * @param options - Optional TanStack Query overrides.
+ * @returns The TanStack Query result containing the {@link ReportingUnitSearchExpandedDto}.
+ */
 export const useReportingUnitExpandQuery = <TData = ReportingUnitSearchExpandedDto>(
   rowId: string,
   ruId: number | null,
@@ -344,6 +450,19 @@ export const useReportingUnitExpandQuery = <TData = ReportingUnitSearchExpandedD
   });
 };
 
+/**
+ * Looks up forest clients by a single client code, transforming results into
+ * `CodeDescriptionDto` entries suitable for autocomplete inputs.
+ *
+ * The query is disabled when `clientCode` is falsy or when `enabled` is `false`,
+ * allowing the caller to suppress the fetch during user typing debounce periods.
+ * Results are cached indefinitely (`staleTime: Infinity`).
+ *
+ * @param clientCode - The client code to search for; query is skipped when `undefined`.
+ * @param enabled - Whether the query is allowed to run.
+ * @param options - Optional TanStack Query overrides.
+ * @returns The TanStack Query result containing the matched {@link CodeDescriptionDto} entries.
+ */
 export const useClientLookupQuery = <TData = CodeDescriptionDto[]>(
   clientCode: string | undefined,
   enabled: boolean,

@@ -5,8 +5,8 @@ import { describe, it, expect, vi, type Mock } from 'vitest';
 
 import Layout from './index';
 
-import { AuthProvider } from '@/context/auth/AuthProvider';
 import { createTestRouter } from '@/config/tests/routerTestHelper';
+import { AuthProvider } from '@/context/auth/AuthProvider';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import ThemeProvider from '@/context/theme/ThemeProvider';

@@ -6,7 +6,9 @@ import './index.scss';
 import { env } from '@/env';
 
 export type LegacyDataTagProps = {
+  /** The relative path to the source record in the legacy system. Appended to `VITE_LEGACY_BASE_URL`. */
   readonly url: string;
+  /** Override the default tag label. Defaults to `'Legacy data'`. */
   readonly label?: string;
 };
 
@@ -16,11 +18,7 @@ export type LegacyDataTagProps = {
  * Displays a tooltip with a message about the legacy data source and
  * renders as a clickable link to the source record in the legacy system.
  *
- * @param {LegacyDataTagProps} props - Component props
- * @param {string} props.url - The URL to the source record in the legacy system
- * @param {string} [props.label='Legacy data'] - Override the default tag label
- *
- * @returns {JSX.Element} A styled, linkable tag wrapped in a tooltip
+ * @returns A styled, linkable tag wrapped in a tooltip.
  */
 const LegacyDataTag: FC<LegacyDataTagProps> = ({ url, label = 'Legacy data' }) => {
   const finalUrl = `${env.VITE_LEGACY_BASE_URL}${url}`;

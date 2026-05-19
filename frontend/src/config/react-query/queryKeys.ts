@@ -1,17 +1,48 @@
 import type { ReportingUnitSearchParametersDto, SortDirectionType } from '@/services/types';
 
+/**
+ * Parameters used to build the reporting-units search query key and query function.
+ *
+ * Bundled as a single object so TanStack Query can treat all search variables
+ * as one dependency unit; changing any field invalidates the cached query.
+ */
 export type ReportingUnitsQueryParams = {
+  /** Zero-based page index. */
   page: number;
+  /** Number of items per page. */
   size: number;
+  /** Active filter criteria passed to the search API. */
   filters: ReportingUnitSearchParametersDto;
+  /** Column sort configuration (`{ key: direction }`). */
   sort: Record<string, SortDirectionType>;
 };
 
+/**
+ * Centralised query-key factory for all TanStack Query caches in the application.
+ *
+ * Each key is a `const` tuple so that TypeScript can narrow the exact key type
+ * used when calling `queryClient.invalidateQueries` or `queryClient.getQueryData`.
+ *
+ * Namespaces:
+ * - `codes` — Reference-data code lists (sampling options, districts, statuses).
+ * - `preference` — Authenticated user preferences.
+ * - `search` — Reporting-unit search and expand queries.
+ * - `forestClient` — Forest-client lookup and listing.
+ * - `autocomplete` — Generic field autocomplete suggestions.
+ * - `reportingUnit` — Individual reporting-unit detail queries.
+ * - `table` — Persisted table sorting state.
+ *
+ * `notificationTarget` params (where present) are included in the key so that
+ * different notification targets produce isolated cache entries.
+ */
 export const queryKeys = {
   codes: {
-    samplingOptions: (notificationTarget?: string) => ['codes', 'sampling-options', notificationTarget] as const,
-    districtOptions: (notificationTarget?: string) => ['codes', 'district-options', notificationTarget] as const,
-    statusOptions: (notificationTarget?: string) => ['codes', 'status-options', notificationTarget] as const,
+    samplingOptions: (notificationTarget?: string) =>
+      ['codes', 'sampling-options', notificationTarget] as const,
+    districtOptions: (notificationTarget?: string) =>
+      ['codes', 'district-options', notificationTarget] as const,
+    statusOptions: (notificationTarget?: string) =>
+      ['codes', 'status-options', notificationTarget] as const,
   },
   preference: {
     userPreference: () => ['preference', 'user'] as const,

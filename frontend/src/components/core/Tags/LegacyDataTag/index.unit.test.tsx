@@ -67,18 +67,14 @@ describe('LegacyDataTag', () => {
 
     it('applies the legacy-data-tag__link CSS class to the anchor', () => {
       render(<LegacyDataTag url="/record/1" />);
-      expect(
-        screen.getByRole('link').classList.contains('legacy-data-tag__link'),
-      ).toBe(true);
+      expect(screen.getByRole('link').classList.contains('legacy-data-tag__link')).toBe(true);
     });
   });
 
   describe('tooltip', () => {
     it('renders the tooltip describing the legacy system source', () => {
       render(<LegacyDataTag url="/record/1" />);
-      expect(
-        screen.getByText(/this data originates from a legacy system/i),
-      ).toBeDefined();
+      expect(screen.getByText(/this data originates from a legacy system/i)).toBeDefined();
     });
 
     it('includes a prompt to view the source record in the tooltip', () => {

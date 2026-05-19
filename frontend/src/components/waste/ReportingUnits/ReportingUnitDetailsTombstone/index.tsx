@@ -12,6 +12,7 @@ import { env } from '@/env';
 import './index.scss';
 
 type ReportingUnitDetailsTombstoneProps = {
+  /** The reporting unit data to display. */
   data: ReportingUnitDto;
 };
 
@@ -21,8 +22,6 @@ type ReportingUnitDetailsTombstoneProps = {
  * Renders client name, client number (with an IDIR-gated link to client details),
  * client status, district, grade, and sampling option inside a bordered grid layout.
  *
- * @param props Component props.
- * @param props.data The reporting unit data to display.
  * @returns A read-only tombstone panel for the reporting unit.
  */
 const ReportingUnitDetailsTombstone: FC<ReportingUnitDetailsTombstoneProps> = ({ data }) => (

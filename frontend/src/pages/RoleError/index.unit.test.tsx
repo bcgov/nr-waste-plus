@@ -8,7 +8,16 @@ import { createTestRouter } from '@/config/tests/routerTestHelper';
 
 describe('RoleErrorPage', () => {
   it('shouldRenderFallbackMessage_whenNoReasonParamPresent', async () => {
-    render(<RouterProvider router={createTestRouter(() => <RoleErrorPage />, '/unauthorized')} />);
+    render(
+      <RouterProvider
+        router={createTestRouter(
+          () => (
+            <RoleErrorPage />
+          ),
+          '/unauthorized',
+        )}
+      />,
+    );
     await waitFor(() => {
       expect(screen.getByText('Unauthorized Access')).toBeDefined();
       expect(
@@ -21,7 +30,9 @@ describe('RoleErrorPage', () => {
     render(
       <RouterProvider
         router={createTestRouter(
-          () => <RoleErrorPage />,
+          () => (
+            <RoleErrorPage />
+          ),
           '/unauthorized?reason=CONFLICTING_CLIENT_ACCESS_ROLES',
         )}
       />,

@@ -13,6 +13,16 @@ import ReportingUnitDetailsTombstone from '@/components/waste/ReportingUnits/Rep
 
 import './index.scss';
 
+/**
+ * Page component that renders the Reporting Unit Details view.
+ *
+ * Reads the pre-fetched {@link ReportingUnitDto} from the TanStack Router loader
+ * context and renders the tombstone panel, page title, and inline notifications.
+ * Shows a legacy-data tag when the unit has no grade code, and always renders
+ * an under-construction tag while the page is in development.
+ *
+ * @returns The Reporting Unit Details page layout.
+ */
 const ReportingUnitDetailsPage: FC = () => {
   const data = useLoaderData({ strict: false }) as ReportingUnitDto;
 
@@ -21,6 +31,7 @@ const ReportingUnitDetailsPage: FC = () => {
       <Column lg={16} md={8} sm={4} className="rudetail-column__banner">
         <TagWrapper
           position="right"
+          enabled={!!data.grade?.code === false}
           tag={
             <LegacyDataTag
               url={`/waste101ReportUnitDetailsAction.do?dataBean.p_reporting_unit_id=${data.id}`}

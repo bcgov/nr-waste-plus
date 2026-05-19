@@ -5,6 +5,7 @@ import type { ReportingUnitDto } from '@/services/types';
 import { ApiError } from '@/config/api/types';
 import { queryClient } from '@/config/react-query/config';
 import { queryKeys } from '@/config/react-query/queryKeys';
+import { featureFlags } from '@/env';
 import service from '@/services/APIs';
 
 /**
@@ -22,6 +23,10 @@ export const reportingUnitLoader = async ({
   params: { ruId: string };
 }): Promise<ReportingUnitDto> => {
   const ruIdNum = Number(params.ruId);
+
+  if (!featureFlags['reporting-unit-details-enabled']) {
+    throw notFound();
+  }
 
   if (Number.isNaN(ruIdNum)) {
     throw notFound();

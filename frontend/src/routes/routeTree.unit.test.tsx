@@ -25,8 +25,14 @@ vi.mock('@tanstack/react-router', async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
-    useRouterState: ({ select }: { select: (s: { location: { pathname: string }; matches: Array<{ routeId?: string }> }) => unknown }) =>
-      select({ location: { pathname: '/' }, matches: mockMatches }),
+    useRouterState: ({
+      select,
+    }: {
+      select: (s: {
+        location: { pathname: string };
+        matches: Array<{ routeId?: string }>;
+      }) => unknown;
+    }) => select({ location: { pathname: '/' }, matches: mockMatches }),
     Outlet: () => <div data-testid="outlet" />,
   };
 });

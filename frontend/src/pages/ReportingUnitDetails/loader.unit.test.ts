@@ -56,8 +56,15 @@ describe('reportingUnitLoader', () => {
       expect(mockEnsureQueryData).not.toHaveBeenCalled();
     });
 
-      it('accepts zero as a valid numeric ruId and calls ensureQueryData', async () => {
-      const mockData = { id: 0, client: { code: 'A', description: 'A' }, clientStatus: { code: 'A', description: 'A' }, grade: { code: 'A', description: 'A' }, sampling: { code: 'A', description: 'A' }, district: { code: 'A', description: 'A' } };
+    it('accepts zero as a valid numeric ruId and calls ensureQueryData', async () => {
+      const mockData = {
+        id: 0,
+        client: { code: 'A', description: 'A' },
+        clientStatus: { code: 'A', description: 'A' },
+        grade: { code: 'A', description: 'A' },
+        sampling: { code: 'A', description: 'A' },
+        district: { code: 'A', description: 'A' },
+      };
       mockEnsureQueryData.mockResolvedValue(mockData);
       const result = await reportingUnitLoader({ params: { ruId: '0' } });
       expect(result).toEqual(mockData);
@@ -192,9 +199,7 @@ describe('reportingUnitLoader', () => {
       const unauthorizedError = makeApiError(401, 'Unauthorized');
       mockEnsureQueryData.mockRejectedValue(unauthorizedError);
 
-      await expect(reportingUnitLoader({ params: { ruId: '99' } })).rejects.toThrow(
-        'Unauthorized',
-      );
+      await expect(reportingUnitLoader({ params: { ruId: '99' } })).rejects.toThrow('Unauthorized');
     });
 
     it('re-throws non-ApiError network errors unchanged', async () => {

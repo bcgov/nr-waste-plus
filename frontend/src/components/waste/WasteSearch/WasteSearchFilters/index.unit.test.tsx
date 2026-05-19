@@ -8,8 +8,8 @@ import WasteSearchFilters from './index';
 
 import type { ComponentProps } from 'react';
 
-import { AuthProvider } from '@/context/auth/AuthProvider';
 import { createTestRouter } from '@/config/tests/routerTestHelper';
+import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
 

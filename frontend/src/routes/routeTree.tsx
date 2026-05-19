@@ -77,6 +77,7 @@ function RootLayout() {
   return <Outlet />;
 }
 
+/** The application root route. Hosts {@link RootLayout} and {@link NotFoundRedirect}. */
 const rootRoute = createRootRoute({
   component: RootLayout,
   notFoundComponent: NotFoundRedirect,
@@ -100,6 +101,7 @@ function toRoute(desc: RouteDescription) {
   });
 }
 
+/** Combined TanStack Router route tree: system routes followed by feature routes. */
 const routeTree = rootRoute.addChildren([...SYSTEM_ROUTES.map(toRoute), ...ROUTES.map(toRoute)]);
 
 /**

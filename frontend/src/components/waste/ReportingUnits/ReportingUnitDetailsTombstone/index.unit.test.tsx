@@ -5,8 +5,8 @@ import ReportingUnitDetailsTombstone from './index';
 
 import type { ReportingUnitDto } from '@/services/reportingUnit.types';
 
-import * as useAuthModule from '@/context/auth/useAuth';
 import { Role } from '@/context/auth/types';
+import * as useAuthModule from '@/context/auth/useAuth';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
@@ -100,9 +100,7 @@ describe('ReportingUnitDetailsTombstone', () => {
       renderTombstone();
       const link = screen.getByRole('link', { name: '00001001' });
       expect(link).toBeDefined();
-      expect((link as HTMLAnchorElement).href).toContain(
-        '/clients/details/00001001',
-      );
+      expect((link as HTMLAnchorElement).href).toContain('/clients/details/00001001');
     });
 
     it('does not render a link for non-IDIR users', () => {

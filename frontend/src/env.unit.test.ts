@@ -43,6 +43,22 @@ describe('env', () => {
     await expect(loadEnv()).rejects.toThrow(/plain object/i);
   });
 
+  it('rejects array runtime config as non-plain object', async () => {
+    globalThis.window.config = [];
+
+    await expect(loadEnv()).rejects.toThrow(/Invalid window\.config/);
+    await expect(loadEnv()).rejects.toThrow(/plain object/i);
+  });
+
+  it('accepts null-prototype objects as valid runtime config', async () => {
+    const nullProtoConfig = Object.create(null) as Record<string, unknown>;
+    nullProtoConfig['VITE_APP_NAME'] = 'Null Proto App';
+    globalThis.window.config = nullProtoConfig;
+
+    const { env } = await loadEnv();
+    expect(env.VITE_APP_NAME).toBe('Null Proto App');
+  });
+
   it('rejects invalid feature flag values in strict mode', async () => {
     globalThis.window.config = {
       VITE_FEATURE_FLAGS: {
@@ -130,5 +146,17 @@ describe('env', () => {
 
     expect(featureFlags['offline-mode-enabled']).toBeUndefined();
     vi.unstubAllEnvs();
+  });
+
+  it('throws when required app env vars are absent', async () => {
+    const originalAppName = import.meta.env.VITE_APP_NAME;
+    // @ts-expect-error – intentionally set to non-string to exercise getValidatedAppEnv error path
+    import.meta.env.VITE_APP_NAME = null;
+
+    try {
+      await expect(loadEnv()).rejects.toThrow(/Invalid application env/);
+    } finally {
+      import.meta.env.VITE_APP_NAME = originalAppName;
+    }
   });
 });

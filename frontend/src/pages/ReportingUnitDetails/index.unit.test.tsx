@@ -7,10 +7,10 @@ import ReportingUnitDetailsPage from './index';
 import type { ReportingUnitDto } from '@/services/types';
 
 import { createTestRouter } from '@/config/tests/routerTestHelper';
+import { Role } from '@/context/auth/types';
+import * as useAuthModule from '@/context/auth/useAuth';
 import NotificationProvider from '@/context/notification/NotificationProvider';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
-import * as useAuthModule from '@/context/auth/useAuth';
-import { Role } from '@/context/auth/types';
 
 // ── Mutable state ─────────────────────────────────────────────────────────────
 
