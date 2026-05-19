@@ -1,0 +1,24 @@
+{
+  "id": 123,
+  "client": {
+    "code": "90000001",
+    "description": "CANADIAN SAMPLE CO."
+  },
+  "clientStatus": {
+    "code": "ACT",
+    "description": "Active"
+  },
+  "grade": {
+    "code": null,
+    "description": null
+  },
+  "sampling": {
+    "code": "OCU",
+    "description": "Ocular"
+  },
+  "district": {
+    "code": "DCC",
+    "description": "Cariboo-Chilcotin"
+  }
+}
+

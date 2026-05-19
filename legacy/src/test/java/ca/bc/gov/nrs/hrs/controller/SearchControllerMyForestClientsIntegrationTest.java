@@ -97,4 +97,26 @@ class SearchControllerMyForestClientsIntegrationTest extends
         .andReturn();
   }
 
+  @Test
+  @DisplayName("Should not count submissions entered by other users (user-scoping)")
+  @WithMockJwt(
+      value = "stranger",
+      cognitoGroups = {"Submitter_00010004"}
+  )
+  void shouldNotCountSubmissionsEnteredByOtherUsers() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/my-forest-clients")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
+        .andExpect(jsonPath("$.content[0].submissionsCount").value(0))
+        .andExpect(jsonPath("$.content[0].blocksCount").value(0))
+        .andExpect(jsonPath("$.page.totalElements").value(1))
+        .andReturn();
+  }
+
 }

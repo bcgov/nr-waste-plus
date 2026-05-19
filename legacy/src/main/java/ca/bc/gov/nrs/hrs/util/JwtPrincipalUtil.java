@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.util;
 
+import ca.bc.gov.nrs.hrs.LegacyConstants;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import java.util.Collections;
@@ -736,4 +737,38 @@ public class JwtPrincipalUtil {
 
     return Triple.of(displayName, firstName, lastName);
   }
+
+  /**
+   * Determines the client identifiers to use for searches based on the information
+   * contained in the provided JWT.
+   *
+   * <p>Behavior:
+   *
+   * <ul>
+   *   <li>If the token contains concrete or abstract roles that map to client
+   *       identifiers, the distinct non-blank client identifiers are returned.
+   *   <li>If no client identifiers are present in the token roles, a single-element
+   *       list containing {@link LegacyConstants#NOCLIENT} is returned to indicate
+   *       a search scoped to "no client".
+   *   <li>If the identity provider is IDIR, an empty list is returned to indicate
+   *       an unrestricted search.
+   * </ul>
+   *
+   * @param jwt the JWT from which role and client information is extracted; may be
+   *        {@code null} if tolerated by downstream helpers
+   * @return a non-null list of client identifiers to use for searches; may be empty
+   *         for IDIR users
+   */
+  public static List<String> getClientListFromJwt(Jwt jwt) {
+    List<String> clientsFromRoles = getClientFromRoles(jwt);
+    List<String> processedClientsFromClient = clientsFromRoles.isEmpty()
+        ? List.of(LegacyConstants.NOCLIENT)
+        : clientsFromRoles;
+
+    // #129 IDIR users should search unrestricted. Abstract with no roles should not search
+    return getIdentityProvider(jwt).equals(IdentityProvider.IDIR)
+        ? List.of()
+        : processedClientsFromClient;
+  }
+  
 }

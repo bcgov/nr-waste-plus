@@ -1,0 +1,24 @@
+{
+  "id": 321,
+  "client": {
+    "code": "90000002",
+    "description": "JOHN WICK LOGGING LTD."
+  },
+  "clientStatus": {
+    "code": "ACT",
+    "description": "Active"
+  },
+  "grade": {
+    "code": null,
+    "description": null
+  },
+  "sampling": {
+    "code": "OCU",
+    "description": "Ocular"
+  },
+  "district": {
+    "code": "DCC",
+    "description": "Cariboo-Chilcotin"
+  }
+}
+

@@ -9,12 +9,15 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import ca.bc.gov.nrs.hrs.TestConstants;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants;
@@ -29,6 +32,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -142,6 +146,39 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
     assertEquals(expectedDto.attachment(), value.attachment());
     assertEquals(expectedDto.comments(), value.comments());
     assertEquals(expectedDto.totalBlocks(), value.totalBlocks());
+  }
+
+  @Test
+  @DisplayName("shouldReturnLegacyDetails_whenReportingUnitExists")
+  void shouldReturnLegacyDetails_whenReportingUnitExists() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/reporting-units/12345"))
+            .willReturn(okJson(TestConstants.LEGACY_RU_DETAILS)));
+
+    ReportingUnitLegacyDetailsDto result =
+        legacyReportingUnitClient.getReportingUnitDetails(12345L);
+
+    assertNotNull(result);
+    assertEquals("00012797", result.clientNumber());
+    assertEquals("00", result.clientLocnCode());
+    assertNotNull(result.sampling());
+    assertEquals("S01", result.sampling().code());
+    assertNotNull(result.district());
+    assertEquals("DND", result.district().code());
+  }
+
+  @Test
+  @DisplayName("shouldThrowNotFoundGenericException_whenReportingUnitDetailsNotFound")
+  void shouldThrowNotFoundGenericException_whenReportingUnitDetailsNotFound() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/reporting-units/99999"))
+            .willReturn(notFound()));
+
+    NotFoundGenericException ex = assertThrows(
+        NotFoundGenericException.class,
+        () -> legacyReportingUnitClient.getReportingUnitDetails(99999L)
+    );
+    assertEquals(404, ex.getStatusCode().value());
   }
 
   private static Stream<Arguments> expandedDetailsArguments() {

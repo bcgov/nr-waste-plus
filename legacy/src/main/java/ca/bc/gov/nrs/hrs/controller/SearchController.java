@@ -1,14 +1,13 @@
 package ca.bc.gov.nrs.hrs.controller;
 
-import ca.bc.gov.nrs.hrs.LegacyConstants;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.search.ClientDistrictSearchResultDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.exception.WasteAssessmentAreaNotFound;
+import ca.bc.gov.nrs.hrs.service.reportingunit.ReportingUnitSearchService;
 import ca.bc.gov.nrs.hrs.service.search.AdvancedSearchService;
-import ca.bc.gov.nrs.hrs.service.search.ReportingUnitSearchService;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
 import java.util.List;
@@ -129,45 +128,52 @@ public class SearchController {
         userId, JwtPrincipalUtil.getUserId(jwt)
     );
 
-    List<String> clientsFromRoles = JwtPrincipalUtil.getClientFromRoles(jwt);
-    List<String> processedClientsFromClient = clientsFromRoles.isEmpty()
-        ? List.of(LegacyConstants.NOCLIENT)
-        : clientsFromRoles;
-
-    // #129 IDIR users should search unrestricted. Abstract with no roles should not search
-    List<String> clients = JwtPrincipalUtil.getIdentityProvider(jwt).equals(IdentityProvider.IDIR)
-        ? List.of()
-        : processedClientsFromClient;
-
-    return advancedSearchService.searchReportingUnitUsers(userId, clients);
+    return advancedSearchService.searchReportingUnitUsers(
+        userId,
+        JwtPrincipalUtil.getClientListFromJwt(jwt)
+    );
   }
 
   /**
    * Search client districts for the authenticated user's forest ("my forest clients").
    *
-   * <p>If the optional {@code values} list is empty, clients are derived from the authenticated
-   * user's roles. Otherwise, the provided values are used as filters.</p>
+   * <p>If the optional {@code values} list is empty, clients are derived from the
+   * authenticated user's roles. Otherwise, the provided values are used as
+   * filters.</p>
    *
-   * @param values   optional list of client filter values
+   * @param values optional list of client filter values
    * @param pageable paging information
-   * @param jwt      the authenticated JWT principal
-   * @return a page of {@link ClientDistrictSearchResultDto} representing client districts
+   * @param jwt the authenticated JWT principal
+   * @return a page of {@link ClientDistrictSearchResultDto} representing client
+   *         districts
    */
   @GetMapping("/my-forest-clients")
   public Page<ClientDistrictSearchResultDto> searchMyClients(
-      @RequestParam(required = false, defaultValue = StringUtils.EMPTY) List<String> values,
-      @PageableDefault(sort = "lastUpdate", direction = Direction.DESC)
+      @RequestParam(
+          required = false,
+          defaultValue = StringUtils.EMPTY
+      )
+      List<String> values,
+      @PageableDefault(
+          sort = "lastUpdate",
+          direction = Direction.DESC
+      )
       Pageable pageable,
       @AuthenticationPrincipal Jwt jwt
   ) {
 
-    log.info("Searching client districts with filters: {}, pageable: {} for {}",
-        values, pageable, JwtPrincipalUtil.getUserId(jwt)
+    log.info(
+        "Searching client districts with filters: {}, pageable: {} for {}",
+        values,
+        pageable,
+        JwtPrincipalUtil.getUserId(jwt)
     );
+
     return advancedSearchService.searchMyClients(
         values.isEmpty()
             ? JwtPrincipalUtil.getClientFromRoles(jwt)
             : values,
+        JwtPrincipalUtil.getUserId(jwt),
         pageable
     );
   }

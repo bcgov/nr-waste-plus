@@ -42,7 +42,7 @@ public final class QueryConstants {
         COUNT(*) AS VALID_BLOCK_COUNT,
         MAX(UPDATE_TIMESTAMP) AS WAA_UPDATE
       FROM THE.WASTE_ASSESSMENT_AREA
-      WHERE DRAFT_CUT_BLOCK_ID IS NOT NULL
+      WHERE WASTE_ASSESS_AREA_STS_CODE = 'DFT'
       GROUP BY REPORTING_UNIT_ID""";
 
   private static final String MY_DISTRICTS_WRU = """
@@ -56,6 +56,7 @@ public final class QueryConstants {
          LEFT JOIN ValidBlockCounts VBC
            ON WRU.REPORTING_UNIT_ID = VBC.REPORTING_UNIT_ID
          WHERE WRU.CLIENT_NUMBER IN (:clientNumbers)
+         AND UPPER(WRU.ENTRY_USERID) LIKE UPPER('%' || :userId)
          GROUP BY WRU.CLIENT_NUMBER""";
 
   private static final String MY_DISTRICTS_MYCLIENTS = """

@@ -1,0 +1,24 @@
+{
+  "id": 2131,
+  "client": {
+    "code": "93456789",
+    "description": "MOUNTAIN FORESTRY INC"
+  },
+  "clientStatus": {
+    "code": "ACT",
+    "description": "Active"
+  },
+  "grade": {
+    "code": null,
+    "description": null
+  },
+  "sampling": {
+    "code": "BLK",
+    "description": "Cutblock"
+  },
+  "district": {
+    "code": "DSS",
+    "description": "Skeena Stikine"
+  }
+}
+

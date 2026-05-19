@@ -1,0 +1,24 @@
+{
+  "id": 34906,
+  "client": {
+    "code": "91234567",
+    "description": "NORTHERN TIMBER CO"
+  },
+  "clientStatus": {
+    "code": "ACT",
+    "description": "Active"
+  },
+  "grade": {
+    "code": null,
+    "description": null
+  },
+  "sampling": {
+    "code": "AGR",
+    "description": "Aggregate"
+  },
+  "district": {
+    "code": "DKA",
+    "description": "Thompson Rivers"
+  }
+}
+

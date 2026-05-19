@@ -33,6 +33,7 @@ features:
     enabled-flag: true
     disabled-flag: false
     bookmark-ru-enabled: true
+    reporting-unit-details-enabled: true
 
 logging:
   level:
