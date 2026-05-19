@@ -137,29 +137,43 @@ public class SearchController {
   /**
    * Search client districts for the authenticated user's forest ("my forest clients").
    *
-   * <p>If the optional {@code values} list is empty, clients are derived from the authenticated
-   * user's roles. Otherwise, the provided values are used as filters.</p>
+   * <p>If the optional {@code values} list is empty, clients are derived from the
+   * authenticated user's roles. Otherwise, the provided values are used as
+   * filters.</p>
    *
-   * @param values   optional list of client filter values
+   * @param values optional list of client filter values
    * @param pageable paging information
-   * @param jwt      the authenticated JWT principal
-   * @return a page of {@link ClientDistrictSearchResultDto} representing client districts
+   * @param jwt the authenticated JWT principal
+   * @return a page of {@link ClientDistrictSearchResultDto} representing client
+   *         districts
    */
   @GetMapping("/my-forest-clients")
   public Page<ClientDistrictSearchResultDto> searchMyClients(
-      @RequestParam(required = false, defaultValue = StringUtils.EMPTY) List<String> values,
-      @PageableDefault(sort = "lastUpdate", direction = Direction.DESC)
+      @RequestParam(
+          required = false,
+          defaultValue = StringUtils.EMPTY
+      )
+      List<String> values,
+      @PageableDefault(
+          sort = "lastUpdate",
+          direction = Direction.DESC
+      )
       Pageable pageable,
       @AuthenticationPrincipal Jwt jwt
   ) {
 
-    log.info("Searching client districts with filters: {}, pageable: {} for {}",
-        values, pageable, JwtPrincipalUtil.getUserId(jwt)
+    log.info(
+        "Searching client districts with filters: {}, pageable: {} for {}",
+        values,
+        pageable,
+        JwtPrincipalUtil.getUserId(jwt)
     );
+
     return advancedSearchService.searchMyClients(
         values.isEmpty()
             ? JwtPrincipalUtil.getClientFromRoles(jwt)
             : values,
+        JwtPrincipalUtil.getUserId(jwt),
         pageable
     );
   }

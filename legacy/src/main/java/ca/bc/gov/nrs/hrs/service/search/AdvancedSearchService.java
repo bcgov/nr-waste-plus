@@ -61,36 +61,49 @@ public class AdvancedSearchService {
   }
 
   /**
-   * Search client districts aggregated for the authenticated user's forest ("my forest clients").
+   * Search client districts aggregated for the authenticated user's forest
+   * ("my forest clients").
    *
-   * <p>The method executes an aggregation query via the repository which computes submission and
-   * block counts per client and returns a paged projection mapped to
-   * {@link ClientDistrictSearchResultDto}.</p>
+   * <p>The method executes an aggregation query via the repository which computes
+   * submission and block counts per client and returns a paged projection mapped
+   * to {@link ClientDistrictSearchResultDto}.</p>
    *
-   * @param clients optional list of clients to include; when empty, caller's clients should be
-   *                used
-   * @param page    paging and sorting information
-   * @return a page of {@link ClientDistrictSearchResultDto} representing aggregated client stats
+   * @param clients optional list of clients to include; when empty, caller's
+   *        clients should be used
+   * @param userId the logged-in user id (e.g. {@code IDIR\AARSENAU}) used to
+   *        scope results to submissions entered by the current user
+   * @param page paging and sorting information
+   * @return a page of {@link ClientDistrictSearchResultDto} representing
+   *         aggregated client stats
    */
   public Page<ClientDistrictSearchResultDto> searchMyClients(
-      List<String> clients, Pageable page
+      List<String> clients,
+      String userId,
+      Pageable page
   ) {
-    log.info("Loading my clients with filters: {}, pageable: {}", clients, page);
-    return
-        ruRepository
-            .searchMyClients(
-                clients,
-                PageRequest.of(
-                    page.getPageNumber(),
-                    page.getPageSize(),
-                    PaginationUtil.resolveSort(
-                        page.getSort(),
-                        "last_update",
-                        SORT_DISTRICT_FIELDS
-                    )
+
+    log.info(
+        "Loading my clients with filters: {}, user: {}, pageable: {}",
+        clients,
+        userId,
+        page
+    );
+
+    return ruRepository
+        .searchMyClients(
+            clients,
+            userId,
+            PageRequest.of(
+                page.getPageNumber(),
+                page.getPageSize(),
+                PaginationUtil.resolveSort(
+                    page.getSort(),
+                    "last_update",
+                    SORT_DISTRICT_FIELDS
                 )
             )
-            .map(clientDistrictSearchMapper::fromProjection);
+        )
+        .map(clientDistrictSearchMapper::fromProjection);
   }
 
 }

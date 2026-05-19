@@ -436,8 +436,8 @@ describe('MyClientListing', () => {
         // Check headers
         expect(screen.getByText('Client No.')).toBeDefined();
         expect(screen.getByText('Client name')).toBeDefined();
-        expect(screen.getByText('Submission Count')).toBeDefined();
-        expect(screen.getByText('Draft Block Count')).toBeDefined();
+        expect(screen.getByText('RUs created by me')).toBeDefined();
+        expect(screen.getByText('Draft blocks in my RUs')).toBeDefined();
         expect(screen.getByText('Last Update')).toBeDefined();
 
         // Check data
