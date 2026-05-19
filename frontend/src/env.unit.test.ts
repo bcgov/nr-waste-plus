@@ -150,7 +150,6 @@ describe('env', () => {
 
   it('throws when required app env vars are absent', async () => {
     const originalAppName = import.meta.env.VITE_APP_NAME;
-    // @ts-expect-error – intentionally set to non-string to exercise getValidatedAppEnv error path
     import.meta.env.VITE_APP_NAME = null;
 
     try {
