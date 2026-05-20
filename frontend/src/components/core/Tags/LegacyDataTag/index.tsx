@@ -29,7 +29,10 @@ const LegacyDataTag: FC<LegacyDataTagProps> = ({ url, label = 'Legacy data' }) =
       return new URL(path, base).toString();
     } catch {
       // Fallback: ensure there's exactly one slash between base and path.
-      const baseTrimmed = base.replace(/\/+$/, '');
+      // Trim trailing slashes with a simple index scan — no regex backtracking risk.
+      let slashEnd = base.length;
+      while (slashEnd > 0 && base[slashEnd - 1] === '/') slashEnd--;
+      const baseTrimmed = base.slice(0, slashEnd);
       const pathWithLeading = path.startsWith('/') ? path : `/${path}`;
       return `${baseTrimmed}${pathWithLeading}`;
     }

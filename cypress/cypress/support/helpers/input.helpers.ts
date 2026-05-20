@@ -129,10 +129,10 @@ export const findButton = (
   selector: string = 'body'
 ): Cypress.Chainable<JQuery<HTMLElement>> => {
   const selectors = [
+    `[data-testid="${name}"]`,
     `button[aria-label="${name}"]`,
     `button:contains("${name}")`,
     `input[type="submit"][value="${name}"]`,
-    `[data-testid="${name}"]`,
     `a:contains("${name}")`,
     `a[aria-label="${name}"]`,
   ];
