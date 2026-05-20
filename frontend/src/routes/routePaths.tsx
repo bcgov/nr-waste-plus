@@ -1,4 +1,4 @@
-import { Group, SearchLocate } from '@carbon/icons-react';
+import { DocumentAdd, Group, SearchLocate } from '@carbon/icons-react';
 import { type RouteLoaderFn } from '@tanstack/react-router';
 import { type ComponentType } from 'react';
 
@@ -7,6 +7,7 @@ import { Role, type FamRole } from '@/context/auth/types';
 import LandingPage from '@/pages/Landing';
 import MyClientListPage from '@/pages/MyClientList';
 import NoRolePage from '@/pages/NoRole';
+import ReportingUnitCreatePage from '@/pages/ReportingUnitCreate';
 import ReportingUnitDetailsPage from '@/pages/ReportingUnitDetails';
 import { reportingUnitLoader } from '@/pages/ReportingUnitDetails/loader';
 import RoleErrorPage from '@/pages/RoleError';
@@ -109,6 +110,18 @@ export const ROUTES: RouteDescription[] = [
       </Layout>
     ),
     isSideMenu: false,
+    protected: true,
+  },
+  {
+    path: '/reporting-units/create',
+    id: 'Create reporting unit',
+    icon: DocumentAdd,
+    component: () => (
+      <Layout>
+        <ReportingUnitCreatePage />
+      </Layout>
+    ),
+    isSideMenu: true,
     protected: true,
   },
 ];
