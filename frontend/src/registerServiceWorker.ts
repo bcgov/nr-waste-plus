@@ -34,12 +34,14 @@ const updateSW = featureFlags['offline-mode-enabled']
         });
       },
     })
-  : (_reloadPage?: boolean) => {
+  : (_?: boolean) => {
       // No-op when offline mode is disabled. Keep the signature compatible with
       // the registerSW return value so callers don't need to change.
       // The argument is intentionally ignored in this mode.
       // eslint-disable-next-line no-console
-      console.debug('[pwa] offline-mode-disabled: skipping service worker registration (call ignored)');
+      console.debug(
+        '[pwa] offline-mode-disabled: skipping service worker registration (call ignored)',
+      );
     };
 
 export default updateSW;

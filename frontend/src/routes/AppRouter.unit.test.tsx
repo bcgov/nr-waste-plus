@@ -25,7 +25,7 @@ vi.mock('@tanstack/react-router', async () => {
   return {
     ...actual,
     RouterProvider: ({ router }: { router: unknown }) => (
-      <div data-testid="router-provider" data-router={!!router ? 'present' : 'missing'} />
+      <div data-testid="router-provider" data-router={router ? 'present' : 'missing'} />
     ),
   };
 });

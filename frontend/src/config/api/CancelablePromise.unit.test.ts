@@ -77,7 +77,7 @@ describe('CancelError', () => {
 describe('CancelablePromise advanced coverage', () => {
   it('should not resolve/reject/cancel twice', async () => {
     let extResolve: any, extReject: any;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const promise = new CancelablePromise((resolve, reject, _onCancel) => {
       extResolve = resolve;
       extReject = reject;

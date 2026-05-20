@@ -6,8 +6,9 @@ import { failureNotificationMiddleware } from '@/config/api/failureNotificationM
 import { problemDetailsMiddleware } from '@/config/api/problemDetailsMiddleware';
 import { getUserAccessTokenFromCookie } from '@/context/auth/authUtils';
 import { env } from '@/env';
-import { SearchService } from '@/services//search.service';
 import { ForestClientService } from '@/services/forestclient.service';
+import { ReportingUnitService } from '@/services/reportingunit.service';
+import { SearchService } from '@/services/search.service';
 import { UserService } from '@/services/users.service';
 import { getB3Headers } from '@/services/utils';
 
@@ -27,10 +28,15 @@ export const BackendApiConfig: APIConfig = {
   MIDDLEWARE: [problemDetailsMiddleware(), failureNotificationMiddleware()],
 };
 
+/**
+ * Dynamically resolves the bearer token from the Cognito session cookie for each request.
+ * Falls back to an empty string when no session is present (unauthenticated requests).
+ */
 BackendApiConfig.TOKEN = async () => {
   return getUserAccessTokenFromCookie() ?? '';
 };
 
+/** Injects OpenTelemetry B3 trace headers into every outgoing backend request. */
 BackendApiConfig.HEADERS = async () => {
   return getB3Headers();
 };
@@ -43,8 +49,10 @@ const serviceConstructors = {
   search: new SearchService(BackendApiConfig),
   codes: new CodesService(BackendApiConfig),
   forestclient: new ForestClientService(BackendApiConfig),
+  reportingUnit: new ReportingUnitService(BackendApiConfig),
 } as const;
 
+/** Maps each service namespace key to its concrete service class instance. */
 type ExternalApiType = {
   [K in keyof typeof serviceConstructors]: (typeof serviceConstructors)[K];
 };

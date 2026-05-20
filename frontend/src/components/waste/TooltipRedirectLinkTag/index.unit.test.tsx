@@ -118,22 +118,14 @@ describe('TooltipRedirectLinkTag', () => {
   });
 
   it('shouldForwardClearSearchTrue_whenClearSearchPropIsTrue', () => {
-    render(
-      <TooltipRedirectLinkTag tooltip="Help" text="Link" url="/path" sameTab clearSearch />,
-    );
+    render(<TooltipRedirectLinkTag tooltip="Help" text="Link" url="/path" sameTab clearSearch />);
     const link = screen.getByTestId('redirect-link-tag');
     expect((link as HTMLAnchorElement).dataset['clearSearch']).toBe('true');
   });
 
   it('shouldForwardClearSearchFalse_whenClearSearchPropIsFalse', () => {
     render(
-      <TooltipRedirectLinkTag
-        tooltip="Help"
-        text="Link"
-        url="/path"
-        sameTab
-        clearSearch={false}
-      />,
+      <TooltipRedirectLinkTag tooltip="Help" text="Link" url="/path" sameTab clearSearch={false} />,
     );
     const link = screen.getByTestId('redirect-link-tag');
     expect((link as HTMLAnchorElement).dataset['clearSearch']).toBe('false');

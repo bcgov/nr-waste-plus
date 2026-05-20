@@ -12,7 +12,9 @@ describe('BackendApiConfig', () => {
       vi.doMock('@/services/utils', () => ({ getB3Headers }));
 
       const { BackendApiConfig } = await vi.importActual<typeof import('./APIs')>('./APIs');
-      const headersResolver = BackendApiConfig.HEADERS as (() => Promise<Record<string, string>>) | undefined;
+      const headersResolver = BackendApiConfig.HEADERS as
+        | (() => Promise<Record<string, string>>)
+        | undefined;
 
       expect(headersResolver).toBeTypeOf('function');
       await expect(headersResolver?.()).resolves.toEqual(mockHeaders);

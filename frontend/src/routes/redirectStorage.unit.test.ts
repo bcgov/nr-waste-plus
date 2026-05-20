@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { clearPersistedRedirect, persistRedirectUrl, readPersistedRedirect } from './redirectStorage';
+import {
+  clearPersistedRedirect,
+  persistRedirectUrl,
+  readPersistedRedirect,
+} from './redirectStorage';
 
 describe('redirectStorage', () => {
   beforeEach(() => {

@@ -1,0 +1,13 @@
+.legacy-data-tag {
+  height: fit-content;
+}
+
+.legacy-data-tag__link {
+  text-decoration: none;
+  display: inline-flex;  
+
+  &:hover .legacy-data-tag {
+    opacity: 0.85;
+    cursor: pointer;
+  }
+}

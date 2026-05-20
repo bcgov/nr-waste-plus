@@ -14,14 +14,13 @@ type MockRequestConfig = Partial<InternalAxiosRequestConfig<unknown>> & {
   meta?: Record<string, unknown>;
 };
 
-const makeConfig = (
-  overrides: MockRequestConfig = {},
-): InternalAxiosRequestConfig<unknown> => ({
-  headers: {},
-  method: 'get',
-  url: '/api/example',
-  ...overrides,
-}) as InternalAxiosRequestConfig<unknown>;
+const makeConfig = (overrides: MockRequestConfig = {}): InternalAxiosRequestConfig<unknown> =>
+  ({
+    headers: {},
+    method: 'get',
+    url: '/api/example',
+    ...overrides,
+  }) as InternalAxiosRequestConfig<unknown>;
 
 const makeError = (overrides: Partial<AxiosError<unknown>> = {}): AxiosError<unknown> => {
   return {

@@ -151,11 +151,13 @@ describe('useWasteSearchFilterOptions', () => {
   describe('CORS and network failure handling', () => {
     it('sends inline notification when district API fails with CORS error', async () => {
       const corsError = new Error('CORS error');
-      (corsError as any).body = {
-        title: 'Unauthorized Access',
-        detail: 'Cross-Origin Request Blocked',
-        status: 0,
-      };
+      Object.assign(corsError, {
+        body: {
+          title: 'Unauthorized Access',
+          detail: 'Cross-Origin Request Blocked',
+          status: 0,
+        },
+      });
 
       (APIs.codes.getDistricts as Mock).mockRejectedValue(corsError);
 
@@ -176,11 +178,13 @@ describe('useWasteSearchFilterOptions', () => {
 
     it('sends inline notification when sampling options API fails', async () => {
       const networkError = new Error('Network request failed');
-      (networkError as any).body = {
-        title: 'Network Error',
-        detail: 'Unable to reach the server',
-        status: 0,
-      };
+      Object.assign(networkError, {
+        body: {
+          title: 'Network Error',
+          detail: 'Unable to reach the server',
+          status: 0,
+        },
+      });
 
       (APIs.codes.getSamplingOptions as Mock).mockRejectedValue(networkError);
 
@@ -201,11 +205,13 @@ describe('useWasteSearchFilterOptions', () => {
 
     it('sends inline notification when status options API fails', async () => {
       const serverError = new Error('Internal Server Error');
-      (serverError as any).body = {
-        title: 'Server Error',
-        detail: 'An error occurred while fetching statuses',
-        status: 500,
-      };
+      Object.assign(serverError, {
+        body: {
+          title: 'Server Error',
+          detail: 'An error occurred while fetching statuses',
+          status: 500,
+        },
+      });
 
       (APIs.codes.getAssessAreaStatuses as Mock).mockRejectedValue(serverError);
 
@@ -246,10 +252,10 @@ describe('useWasteSearchFilterOptions', () => {
 
     it('handles multiple simultaneous API failures with separate notifications', async () => {
       const error1 = new Error('Districts failed');
-      (error1 as any).body = { title: 'Error 1', detail: 'Districts unavailable' };
+      Object.assign(error1, { body: { title: 'Error 1', detail: 'Districts unavailable' } });
 
       const error2 = new Error('Statuses failed');
-      (error2 as any).body = { title: 'Error 2', detail: 'Statuses unavailable' };
+      Object.assign(error2, { body: { title: 'Error 2', detail: 'Statuses unavailable' } });
 
       (APIs.codes.getDistricts as Mock).mockRejectedValue(error1);
       (APIs.codes.getAssessAreaStatuses as Mock).mockRejectedValue(error2);

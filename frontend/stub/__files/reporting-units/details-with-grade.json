@@ -1,0 +1,23 @@
+{
+  "id": 456,
+  "client": {
+    "code": "90000003",
+    "description": "OAK HERITAGE LTD."
+  },
+  "clientStatus": {
+    "code": "ACT",
+    "description": "Active"
+  },
+  "grade": {
+    "code": "G1",
+    "description": "Grade 1"
+  },
+  "sampling": {
+    "code": "OCU",
+    "description": "Ocular"
+  },
+  "district": {
+    "code": "DCS",
+    "description": "Cascades"
+  }
+}

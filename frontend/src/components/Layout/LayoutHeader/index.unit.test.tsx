@@ -4,8 +4,8 @@ import { render, screen, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, type Mock, beforeAll } from 'vitest';
 
 import { LayoutHeader } from '@/components/Layout/LayoutHeader';
-import { AuthProvider } from '@/context/auth/AuthProvider';
 import { createTestRouter } from '@/config/tests/routerTestHelper';
+import { AuthProvider } from '@/context/auth/AuthProvider';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import ThemeProvider from '@/context/theme/ThemeProvider';

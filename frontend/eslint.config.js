@@ -45,6 +45,16 @@ export default defineConfig([
           'alphabetize': { order: 'asc', caseInsensitive: true },
         },
       ],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          varsIgnorePattern: '^_',
+          argsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
       'no-console': 'warn',
       'no-debugger': 'warn',
       'prettier/prettier': 'warn',

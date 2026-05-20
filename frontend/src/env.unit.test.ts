@@ -43,6 +43,22 @@ describe('env', () => {
     await expect(loadEnv()).rejects.toThrow(/plain object/i);
   });
 
+  it('rejects array runtime config as non-plain object', async () => {
+    globalThis.window.config = [];
+
+    await expect(loadEnv()).rejects.toThrow(/Invalid window\.config/);
+    await expect(loadEnv()).rejects.toThrow(/plain object/i);
+  });
+
+  it('accepts null-prototype objects as valid runtime config', async () => {
+    const nullProtoConfig = Object.create(null) as Record<string, unknown>;
+    nullProtoConfig['VITE_APP_NAME'] = 'Null Proto App';
+    globalThis.window.config = nullProtoConfig;
+
+    const { env } = await loadEnv();
+    expect(env.VITE_APP_NAME).toBe('Null Proto App');
+  });
+
   it('rejects invalid feature flag values in strict mode', async () => {
     globalThis.window.config = {
       VITE_FEATURE_FLAGS: {
@@ -130,5 +146,21 @@ describe('env', () => {
 
     expect(featureFlags['offline-mode-enabled']).toBeUndefined();
     vi.unstubAllEnvs();
+  });
+
+  it('throws when required app env vars are absent', async () => {
+    // Stub the runtime env variable so the test is deterministic even when the
+    // developer's shell has VITE_APP_NAME set. Use Vitest's env stubbing helper
+    // to temporarily override `process.env` during the module import.
+    // Use `undefined` so the variable is removed from the environment during
+    // the module import. The `as unknown as string` cast keeps TypeScript
+    // happy while allowing Vitest to clear the env key.
+    vi.stubEnv('VITE_APP_NAME', undefined as unknown as string);
+
+    try {
+      await expect(loadEnv()).rejects.toThrow(/Invalid application env/);
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 });

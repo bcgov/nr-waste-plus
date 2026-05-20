@@ -8,7 +8,14 @@
  *
  * `/login` is intentionally absent — it is an external Cognito URL, not an in-tree route.
  */
-export type InTreePath = '/' | '/dashboard' | '/search' | '/clients' | '/no-role' | '/unauthorized';
+export type InTreePath =
+  | '/'
+  | '/dashboard'
+  | '/search'
+  | '/clients'
+  | '/no-role'
+  | '/unauthorized'
+  | `/reporting-units/${number}`;
 
 /**
  * Typed navigate helper for in-tree route paths.

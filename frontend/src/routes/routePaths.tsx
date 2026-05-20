@@ -1,12 +1,14 @@
 import { Group, SearchLocate } from '@carbon/icons-react';
-import { type ComponentType } from 'react';
 import { type RouteLoaderFn } from '@tanstack/react-router';
+import { type ComponentType } from 'react';
 
 import Layout from '@/components/Layout';
 import { Role, type FamRole } from '@/context/auth/types';
 import LandingPage from '@/pages/Landing';
 import MyClientListPage from '@/pages/MyClientList';
 import NoRolePage from '@/pages/NoRole';
+import ReportingUnitDetailsPage from '@/pages/ReportingUnitDetails';
+import { reportingUnitLoader } from '@/pages/ReportingUnitDetails/loader';
 import RoleErrorPage from '@/pages/RoleError';
 import WasteSearchPage from '@/pages/WasteSearch';
 import { withPersistentRedirect } from '@/routes/guards/withPersistentRedirect';
@@ -25,33 +27,38 @@ export type RouteGuard = <P extends object>(Component: ComponentType<P>) => Comp
  * panel navigation.
  */
 export type RouteDescription = {
+  /** URL path registered in the TanStack Router route tree (e.g. `'/search'`, `'/reporting-units/$ruId'`). */
   path: string;
   /** Unique display label and side-nav identifier for the route. */
   id: string;
+  /** The React component rendered when the route is active. Typically wrapped in `<Layout>`. */
   component: ComponentType;
-  /** Carbon icon component rendered next to the nav label when `isSideMenu` is true. */
-  icon?: ComponentType;
-  /** When `true`, the route appears in the left-panel side navigation. */
-  isSideMenu: boolean;
-  /** Wraps component with withProtected (+ optional role check). */
-  protected?: boolean;
-  roles?: readonly FamRole[];
-  /** Wraps component with withOfflineSupport. */
-  offlineReady?: boolean;
-  offlineOnly?: boolean;
-  /**
-   * Additional HOC guards applied outermost — run before protected/offline checks.
-   * Stack order in array: [outermost, ..., innermost before protected].
-   */
-  guards?: RouteGuard[];
   /**
    * Optional TanStack Router loader function executed before the route component renders.
    * Resolved data is available via `useLoaderData()` inside the component.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   loader?: RouteLoaderFn<any>;
+  /** Carbon icon component rendered next to the nav label when `isSideMenu` is true. */
+  icon?: ComponentType;
+  /** When `true`, the route appears in the left-panel side navigation. */
+  isSideMenu: boolean;
+  /** Wraps component with withProtected (+ optional role check). */
+  protected?: boolean;
+  /** FAM role assignments required to access this route. Empty or absent means any authenticated user can access it. */
+  roles?: readonly FamRole[];
+  /** Wraps component with withOfflineSupport. */
+  offlineReady?: boolean;
+  /** When `true`, this route is exclusively shown in offline mode; hidden when online. */
+  offlineOnly?: boolean;
+  /**
+   * Additional HOC guards applied outermost — run before protected/offline checks.
+   * Stack order in array: [outermost, ..., innermost before protected].
+   */
+  guards?: RouteGuard[];
 };
 
+/** A leaf navigation item derived from a {@link RouteDescription} for rendering in the side-nav. */
 export type MenuItem = Pick<RouteDescription, 'id' | 'path' | 'icon'> & {
   children?: MenuItem[];
 };
@@ -90,6 +97,18 @@ export const ROUTES: RouteDescription[] = [
       </Layout>
     ),
     isSideMenu: true,
+    protected: true,
+  },
+  {
+    path: '/reporting-units/$ruId',
+    id: 'Reporting Unit Details',
+    loader: reportingUnitLoader,
+    component: () => (
+      <Layout>
+        <ReportingUnitDetailsPage />
+      </Layout>
+    ),
+    isSideMenu: false,
     protected: true,
   },
 ];
@@ -150,4 +169,3 @@ export const getMenuEntries = (isOnline: boolean, roles: FamRole[]): MenuItem[] 
         !r.roles?.length || r.roles.some((role) => roles.map((u) => u.role).includes(role.role)),
     )
     .map(({ id, path, icon }) => ({ id, path, icon }));
-

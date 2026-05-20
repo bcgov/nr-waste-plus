@@ -5,8 +5,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import WasteSearchPage from './index';
 
-import { AuthProvider } from '@/context/auth/AuthProvider';
 import { createTestRouter } from '@/config/tests/routerTestHelper';
+import { AuthProvider } from '@/context/auth/AuthProvider';
 import NotificationProvider from '@/context/notification/NotificationProvider';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';

@@ -64,23 +64,23 @@ describe('RedirectLinkTag', () => {
     expect(link.getAttribute('rel')).toBe('noopener noreferrer');
   });
 
-  it('shouldPassEmptySearchToRouterLink_whenClearSearchIsTrue', async () => {
-    // We check that the router handles the navigation with search clearing
-    // TanStack Link with search={} results in no search params in the href
+  it('shouldProduceCleanHref_whenClearSearchIsTrue_andRouterHasActiveSearchParams', async () => {
     render(
       <RouterProvider
-        router={createTestRouter(() => (
-          <RedirectLinkTag text="Clear" url="/target" sameTab clearSearch />
-        ))}
+        router={createTestRouter(
+          () => (
+            <RedirectLinkTag text="RU" url="/reporting-units/123" sameTab clearSearch />
+          ),
+          '/search?mainSearchTerm=TIMBER&district=DCR',
+        )}
       />,
     );
     await waitFor(() => {
-      const link = screen.getByRole('link');
-      expect(link.getAttribute('href')).toBe('/target');
+      expect(screen.getByRole('link').getAttribute('href')).toBe('/reporting-units/123');
     });
   });
 
-  it('shouldNotPassSearch_whenClearSearchIsExplicitlyFalse', async () => {
+  it('shouldNotPassSearch_whenClearSearchIsExplicitlyFalse_andNoActiveParams', async () => {
     render(
       <RouterProvider
         router={createTestRouter(() => (
@@ -89,8 +89,27 @@ describe('RedirectLinkTag', () => {
       />,
     );
     await waitFor(() => {
-      const link = screen.getByRole('link');
-      expect(link.getAttribute('href')).toBe('/target');
+      expect(screen.getByRole('link').getAttribute('href')).toBe('/target');
+    });
+  });
+
+  it('shouldNotAddInheritedSearchParams_whenClearSearchIsFalse_andDestinationHasNoBareParams', async () => {
+    // clearSearch=false passes search=undefined to TanStack Router.
+    // For a bare path (no embedded query), TanStack Router uses the destination
+    // route's default search — which for routes with no schema means no params.
+    // Cross-route search inheritance does NOT occur in the in-memory test router.
+    render(
+      <RouterProvider
+        router={createTestRouter(
+          () => (
+            <RedirectLinkTag text="RU" url="/reporting-units/123" sameTab clearSearch={false} />
+          ),
+          '/search?mainSearchTerm=TIMBER',
+        )}
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('link').getAttribute('href')).toBe('/reporting-units/123');
     });
   });
 
@@ -104,6 +123,10 @@ describe('RedirectLinkTag', () => {
   });
 
   it('shouldRenderRouterLink_whenInternalUrlContainsQueryParams', async () => {
+    // The full URL is passed as `to` so TanStack Router parses the query string
+    // directly from the URL string — avoiding the JSON re-encoding of
+    // numeric-looking string values that would occur if we extracted params into
+    // a JS object and forwarded them via the `search` prop.
     render(
       <RouterProvider
         router={createTestRouter(() => (
@@ -112,8 +135,50 @@ describe('RedirectLinkTag', () => {
       />,
     );
     await waitFor(() => {
-      screen.getByRole('link');
+      const href = screen.getByRole('link').getAttribute('href') ?? '';
+      // TanStack Router parses '2' from the URL string as a number, so it
+      // re-serialises cleanly as page=2 (no JSON-encoding artefacts).
+      expect(href).toContain('/results');
+      expect(href).toContain('q=wood');
+      expect(href).toContain('page=');
       expect(screen.getByText('Search')).toBeDefined();
+    });
+  });
+
+  it('shouldForwardEmbeddedUrlParams_whenNavigatingFromUrlWithOtherSearchParams', async () => {
+    render(
+      <RouterProvider
+        router={createTestRouter(
+          () => (
+            <RedirectLinkTag text="Client" url="/search?clientNumbers=00001001" sameTab />
+          ),
+          '/clients?tab=recent',
+        )}
+      />,
+    );
+    await waitFor(() => {
+      const href = screen.getByRole('link').getAttribute('href') ?? '';
+      expect(href).toContain('clientNumbers=00001001');
+      // Must NOT inherit `tab=recent` from the source page.
+      expect(href).not.toContain('tab=recent');
+    });
+  });
+
+  it('shouldProduceCleanHref_byDefault_whenNavigatingCrossRoute_withActiveSearchParams', async () => {
+    // When clearSearch is omitted (the default), inherited search params must
+    // NOT be carried over to a different route.
+    render(
+      <RouterProvider
+        router={createTestRouter(
+          () => (
+            <RedirectLinkTag text="RU" url="/reporting-units/456" sameTab />
+          ),
+          '/search?mainSearchTerm=WOOD&district=DCR&status=ACT',
+        )}
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('link').getAttribute('href')).toBe('/reporting-units/456');
     });
   });
 

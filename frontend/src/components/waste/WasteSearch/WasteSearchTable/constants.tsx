@@ -9,8 +9,14 @@ import CodeDescriptionTag from '@/components/waste/CodeDescriptionTag';
 import TooltipRedirectLinkTag from '@/components/waste/TooltipRedirectLinkTag';
 import TooltipRoleBasedRedirectLinkTag from '@/components/waste/TooltipRoleBasedRedirectLinkTag';
 import { Role } from '@/context/auth/types';
-import { env } from '@/env';
+import { env, featureFlags } from '@/env';
 
+/**
+ * Maps reporting-unit status codes to their corresponding Carbon Design System tag colours.
+ *
+ * Used by the `status` column's `renderAs` function to colour-code each status at a glance.
+ * Any code not present in this map will render without a colour override.
+ */
 const statusColorMap: Record<string, CarbonColors> = {
   ERR: 'red',
   FREJ: 'red',
@@ -34,8 +40,29 @@ const statusColorMap: Record<string, CarbonColors> = {
   EXP: 'cyan',
 };
 
+/**
+ * Renders an {@link EmptyValueTag} for a raw cell value.
+ *
+ * Used as the shared `renderAs` function for simple string columns that need
+ * a consistent fallback when the value is empty or null.
+ *
+ * @param value - Raw cell value from the data row.
+ * @returns An `EmptyValueTag` element.
+ */
 const renderEmptyValueTag = (value: unknown) => <EmptyValueTag value={value as string} />;
 
+/**
+ * Column definitions for the Waste Search results table.
+ *
+ * Each entry describes a data column with its header label, sort behaviour,
+ * default visibility (`selected`), and an optional `renderAs` function that
+ * controls how cell values are displayed (e.g. tag components, date formatting,
+ * role-gated links).
+ *
+ * The `ruNumber` column conditionally links to the new React-router RU details
+ * page when the `reporting-unit-details-enabled` feature flag is active;
+ * otherwise it links to the legacy system URL.
+ */
 export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
   {
     key: 'cutBlockId',
@@ -70,13 +97,22 @@ export const headers: TableHeaderType<ReportingUnitSearchResultDto>[] = [
     header: 'RU No.',
     sortable: true,
     selected: true,
-    renderAs: (value) => (
-      <TooltipRedirectLinkTag
-        text={value as string}
-        url={`${env.VITE_LEGACY_BASE_URL}/waste101ReportUnitDetailsAction.do?dataBean.p_reporting_unit_id=${value}`}
-        tooltip={'Go to RU details'}
-      />
-    ),
+    renderAs: (value) =>
+      featureFlags['reporting-unit-details-enabled'] ? (
+        <TooltipRedirectLinkTag
+          text={value as string}
+          url={`/reporting-units/${value}`}
+          tooltip={'Go to RU details'}
+          sameTab
+          clearSearch
+        />
+      ) : (
+        <TooltipRedirectLinkTag
+          text={value as string}
+          url={`${env.VITE_LEGACY_BASE_URL}/waste101ReportUnitDetailsAction.do?dataBean.p_reporting_unit_id=${value}`}
+          tooltip={'Go to RU details'}
+        />
+      ),
   },
   {
     key: 'client.code',
