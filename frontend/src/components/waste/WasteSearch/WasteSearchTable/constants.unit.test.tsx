@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
 import { headers } from './constants';
@@ -172,33 +172,36 @@ describe('WasteSearchTable Constants', () => {
       });
     });
 
-    it('should render ruNumber as legacy link when feature flag is disabled', () => {
+    it('should render ruNumber as legacy link when feature flag is disabled', async () => {
       const ruHeader = headers.find((h) => h.key === 'ruNumber');
       expect(ruHeader?.renderAs).toBeDefined();
       if (ruHeader?.renderAs) {
         const result = ruHeader.renderAs('RU-001');
         const { container } = render(result, { wrapper: createRouterWrapper('/') });
+        await act(async () => {});
         expect(container.firstChild).toBeDefined();
       }
     });
 
-    it('should render client.code as role-based redirect link for IDIR user', () => {
+    it('should render client.code as role-based redirect link for IDIR user', async () => {
       mockIdirUser();
       const clientHeader = headers.find((h) => h.key === 'client.code');
       expect(clientHeader?.renderAs).toBeDefined();
       if (clientHeader?.renderAs) {
         const result = clientHeader.renderAs('00001001');
         const { container } = render(result, { wrapper: createRouterWrapper('/') });
+        await act(async () => {});
         expect(container.firstChild).toBeDefined();
       }
     });
 
-    it('should render client.code without link for BCeID user', () => {
+    it('should render client.code without link for BCeID user', async () => {
       mockBceidUser();
       const clientHeader = headers.find((h) => h.key === 'client.code');
       if (clientHeader?.renderAs) {
         const result = clientHeader.renderAs('00001002');
         const { container } = render(result, { wrapper: createRouterWrapper('/') });
+        await act(async () => {});
         expect(container.firstChild).toBeDefined();
       }
     });
@@ -287,12 +290,13 @@ describe('WasteSearchTable Constants', () => {
           false;
       });
 
-      it('should render ruNumber as an internal router link when feature flag is enabled', () => {
+      it('should render ruNumber as an internal router link when feature flag is enabled', async () => {
         const ruHeader = headers.find((h) => h.key === 'ruNumber');
         expect(ruHeader?.renderAs).toBeDefined();
         if (ruHeader?.renderAs) {
           const result = ruHeader.renderAs('123');
           const { container } = render(result, { wrapper: createRouterWrapper('/') });
+          await act(async () => {});
           expect(container.firstChild).toBeDefined();
           // The internal-route path should not render a legacy external href.
           const allAnchors = container.querySelectorAll('a');
