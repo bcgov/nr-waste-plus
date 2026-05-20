@@ -1,7 +1,7 @@
 import { Column, Grid } from '@carbon/react';
 import { type FC } from 'react';
 
-import type { ReportingUnitDto } from '@/services/reportingUnit.types';
+import type { ReportingUnitDto } from '@/services/types';
 
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
