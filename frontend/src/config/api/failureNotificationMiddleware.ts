@@ -46,6 +46,18 @@ export const failureNotificationMiddleware = (): ApiMiddleware => ({
       throw error;
     }
 
+    // Suppress 401 errors that fired without an auth token — this is the expected outcome
+    // during initial app load and right after the OAuth redirect, when the session cookie is
+    // not yet available. Showing a toast here would confuse users who are actively logging in.
+    // Requests that did carry a token but still got a 401 (expired/invalid token) are NOT
+    // suppressed so the user is still informed of a real auth problem.
+    const hasAuthHeader =
+      typeof error.config?.headers?.['Authorization'] === 'string' &&
+      error.config.headers['Authorization'].length > 0;
+    if (!hasAuthHeader && error.response?.status === 401) {
+      throw error;
+    }
+
     if (suppressFailureNotification || notificationTarget) {
       throw error;
     }

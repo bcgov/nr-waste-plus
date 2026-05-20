@@ -111,6 +111,54 @@ describe('failureNotificationMiddleware', () => {
     expect(sendEvent).not.toHaveBeenCalled();
   });
 
+  it('does not notify for 401 when no Authorization header was sent', async () => {
+    // Simulates unauthenticated requests during initial app load or the login page,
+    // where no session cookie exists yet. A toast here would confuse users mid-login.
+    const middleware = failureNotificationMiddleware();
+    const error = makeError({
+      config: makeConfig({ headers: {} }),
+      response: {
+        status: 401,
+        statusText: 'Unauthorized',
+        data: { title: 'Unauthorized', status: 401, detail: 'No token provided' },
+        headers: {},
+        config: {} as InternalAxiosRequestConfig,
+      },
+    });
+
+    await expect(middleware.failure?.(error)).rejects.toBe(error);
+
+    expect(sendEvent).not.toHaveBeenCalled();
+  });
+
+  it('still notifies for 401 when Authorization header was present', async () => {
+    // An expired or invalid token was sent — the server explicitly rejected it.
+    // The user should be informed rather than silently failing.
+    const middleware = failureNotificationMiddleware();
+    const error = makeError({
+      config: makeConfig({ headers: { Authorization: 'Bearer expired-token' } }),
+      response: {
+        status: 401,
+        statusText: 'Unauthorized',
+        data: { title: 'Unauthorized', status: 401, detail: 'Token expired' },
+        headers: {},
+        config: {} as InternalAxiosRequestConfig,
+      },
+    });
+
+    await expect(middleware.failure?.(error)).rejects.toBe(error);
+
+    expect(sendEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: 'error',
+        displayMode: 'toast',
+        title: 'Unauthorized',
+        description: 'Token expired',
+        meta: expect.objectContaining({ status: 401 }),
+      }),
+    );
+  });
+
   it('uses Request failed fallback title and error.message_whenResponseDataIsNotProblemDetails', async () => {
     const middleware = failureNotificationMiddleware();
     const error = makeError({
