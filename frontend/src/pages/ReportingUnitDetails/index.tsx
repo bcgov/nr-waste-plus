@@ -31,7 +31,7 @@ const ReportingUnitDetailsPage: FC = () => {
       <Column lg={16} md={8} sm={4} className="rudetail-column__banner">
         <TagWrapper
           position="right"
-          enabled={!!data.grade?.code === false}
+          enabled={!data.grade?.code}
           tag={
             <LegacyDataTag
               url={`/waste101ReportUnitDetailsAction.do?dataBean.p_reporting_unit_id=${data.id}`}

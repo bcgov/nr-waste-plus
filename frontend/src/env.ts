@@ -11,19 +11,19 @@ declare global {
  */
 const allowedRuntimeEnvConfigSchema = z
   .object({
-    VITE_APP_NAME: z.string(),
-    VITE_BACKEND_URL: z.string(),
-    VITE_BCEID_HELP: z.string(),
-    VITE_CLIENT_BASE_URL: z.string(),
-    VITE_FAM_DOMAIN: z.string(),
-    VITE_FRONTEND_URL: z.string(),
-    VITE_IDIR_HELP: z.string(),
-    VITE_LEGACY_BASE_URL: z.string(),
-    VITE_MOCK_AUTH: z.string(),
-    VITE_NODE_ENV: z.string(),
-    VITE_USER_POOLS_ID: z.string(),
-    VITE_USER_POOLS_WEB_CLIENT_ID: z.string(),
-    VITE_ZONE: z.string(),
+    VITE_APP_NAME: z.string().min(1),
+    VITE_BACKEND_URL: z.string().min(1),
+    VITE_BCEID_HELP: z.string().min(1),
+    VITE_CLIENT_BASE_URL: z.string().min(1),
+    VITE_FAM_DOMAIN: z.string().min(1),
+    VITE_FRONTEND_URL: z.string().min(1),
+    VITE_IDIR_HELP: z.string().min(1),
+    VITE_LEGACY_BASE_URL: z.string().min(1),
+    VITE_MOCK_AUTH: z.string().min(1),
+    VITE_NODE_ENV: z.string().min(1),
+    VITE_USER_POOLS_ID: z.string().min(1),
+    VITE_USER_POOLS_WEB_CLIENT_ID: z.string().min(1),
+    VITE_ZONE: z.string().min(1),
   })
   .partial()
   .strict();
@@ -32,19 +32,19 @@ const allowedRuntimeEnvConfigSchema = z
  * Final merged env contract consumed by the application.
  */
 const appEnvSchema = z.looseObject({
-  VITE_APP_NAME: z.string(),
-  VITE_BACKEND_URL: z.string(),
-  VITE_BCEID_HELP: z.string(),
-  VITE_CLIENT_BASE_URL: z.string(),
-  VITE_FAM_DOMAIN: z.string(),
-  VITE_IDIR_HELP: z.string(),
-  VITE_LEGACY_BASE_URL: z.string(),
-  VITE_NODE_ENV: z.string(),
-  VITE_USER_POOLS_ID: z.string(),
-  VITE_USER_POOLS_WEB_CLIENT_ID: z.string(),
-  VITE_ZONE: z.string(),
-  VITE_FRONTEND_URL: z.string().optional(),
-  VITE_MOCK_AUTH: z.string().optional(),
+  VITE_APP_NAME: z.string().min(1),
+  VITE_BACKEND_URL: z.string().min(1),
+  VITE_BCEID_HELP: z.string().min(1),
+  VITE_CLIENT_BASE_URL: z.string().min(1),
+  VITE_FAM_DOMAIN: z.string().min(1),
+  VITE_IDIR_HELP: z.string().min(1),
+  VITE_LEGACY_BASE_URL: z.string().min(1),
+  VITE_NODE_ENV: z.string().min(1),
+  VITE_USER_POOLS_ID: z.string().min(1),
+  VITE_USER_POOLS_WEB_CLIENT_ID: z.string().min(1),
+  VITE_ZONE: z.string().min(1),
+  VITE_FRONTEND_URL: z.string().min(1).optional(),
+  VITE_MOCK_AUTH: z.string().min(1).optional(),
 });
 
 /**
