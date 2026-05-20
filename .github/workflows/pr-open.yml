@@ -57,11 +57,17 @@ jobs:
         info:
           app:
             component: backend
+        features:
+          flags:
+            bookmark-ru-enabled: true
+            reporting-unit-details-enabled: true
       configmap-frontend: |-
         window.config = {
           ...(window.config ?? {}),
           VITE_FEATURE_FLAGS: {
             'offline-mode-enabled': false,
+            'bookmark-ru-enabled': true,
+            'reporting-unit-details-enabled': true,
           },
         };
 
