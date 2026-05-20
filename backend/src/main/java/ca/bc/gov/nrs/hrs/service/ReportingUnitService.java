@@ -74,5 +74,4 @@ public class ReportingUnitService {
         new CodeDescriptionDto(null, null)
     );
   }
-  
 }
