@@ -24,7 +24,27 @@ import './index.scss';
  * @returns The Reporting Unit Details page layout.
  */
 const ReportingUnitDetailsPage: FC = () => {
-  const data = useLoaderData({ strict: false }) as ReportingUnitDto;
+  const data = useLoaderData({ strict: false }) as ReportingUnitDto | undefined;
+
+  // Defensive guard: TanStack Router with `strict: false` can return `unknown`/`undefined`
+  // if the loader was changed or the component is mounted outside the expected
+  // route. Avoid dereferencing `data` below when it's missing and show a clear
+  // fallback UI so the error is visible instead of throwing at runtime.
+  if (!data) {
+    return (
+      <>
+        <Column lg={16} md={8} sm={4} className="rudetail-column__banner">
+          <PageTitle
+            title="Reporting Unit not found"
+            subtitle="Required data is missing or the route loader failed."
+          />
+        </Column>
+        <Column lg={16} md={8} sm={4} className="notification-column">
+          <PageNotification eventTarget="ru-details" />
+        </Column>
+      </>
+    );
+  }
 
   return (
     <>
