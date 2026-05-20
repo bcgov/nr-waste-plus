@@ -5,6 +5,8 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeNameDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientAutocompleteResultDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientLocationDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity;
@@ -59,7 +61,9 @@ import tools.jackson.databind.json.JsonMapper.Builder;
     UserNotFoundException.class,
     ReportingUnitSearchResultDto.class,
     ReportingUnitSearchParametersDto.class,
-    HttpSecurity.class
+    HttpSecurity.class,
+    ReportingUnitDetailsDto.class,
+    ReportingUnitLegacyDetailsDto.class
 })
 @EnableJpaAuditing(auditorAwareRef = "databaseAuditor")
 public class GlobalConfiguration {
