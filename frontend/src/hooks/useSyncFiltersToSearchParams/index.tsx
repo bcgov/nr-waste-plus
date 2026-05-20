@@ -107,6 +107,17 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
   const hasHydratedRef = useRef(false);
   const managedKeysRef = useRef<Set<string>>(new Set());
 
+  // Ref updated on every render so the sync effect can read the current URL params
+  // without listing searchParams as a reactive dependency — which would cause the
+  // effect to fire whenever the user navigates *away* from this route and the URL
+  // search string changes to the destination's (empty) params.
+  const searchParamsRef = useRef(searchParams);
+  searchParamsRef.current = searchParams;
+
+  /**
+   * Attempts to parse a string as JSON when it begins with `[` or `{`.
+   * Returns `undefined` if parsing fails or the value is not JSON-like.
+   */
   const tryParseJson = (value: string): unknown => {
     if (!value.startsWith('[') && !value.startsWith('{')) {
       return undefined;
@@ -119,21 +130,28 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
     }
   };
 
+  /** Converts `'true'`/`'false'` string literals to booleans; returns `expectedValue` for any other string. */
   const deserializeBoolean = (value: string, expectedValue: boolean): boolean => {
     if (value === 'true') return true;
     if (value === 'false') return false;
     return expectedValue;
   };
 
+  /** Converts a numeric string to a `number`; returns the original string when `NaN` or blank. */
   const deserializeNumber = (value: string): number | string => {
     const parsed = Number(value);
     return !Number.isNaN(parsed) && value.trim() !== '' ? parsed : value;
   };
 
+  /** Splits a comma-separated string into a string array; returns `[]` for an empty string. */
   const deserializeArray = (value: string): string[] => {
     return value === '' ? [] : value.split(',');
   };
 
+  /**
+   * Fallback deserialization: splits comma-separated (non-decimal) values into arrays;
+   * returns the raw string otherwise.
+   */
   const deserializeDefault = (value: string): string | string[] => {
     return value.includes(',') && !value.includes('.') ? value.split(',') : value;
   };
@@ -175,6 +193,10 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
     return String(value);
   };
 
+  /**
+   * Resolves the hydrated value for a single filter key by deserializing
+   * the raw URL parameter and optionally applying a custom `fromSearchParam` transform.
+   */
   const getHydratedFilterValue = <K extends keyof T>(
     key: K,
     rawValue: string,
@@ -235,7 +257,9 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
   useEffect(() => {
     if (!hasHydratedRef.current) return;
 
-    const params = new URLSearchParams(searchParams);
+    // Read via ref so URL changes caused by cross-route navigation don't re-trigger
+    // this effect and inject filter params into the destination route's URL.
+    const params = new URLSearchParams(searchParamsRef.current);
     const previousParamsString = params.toString();
 
     // Keep track of keys this hook has managed so removed filters are also cleaned from URL.
@@ -317,7 +341,7 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
       search: search,
       replace: true,
     } as never);
-  }, [filters, excludeSet, includeEmpty, searchParams, navigate, transforms]);
+  }, [filters, excludeSet, includeEmpty, navigate, transforms]); // searchParams intentionally omitted — read via ref
 };
 
 export default useSyncFiltersToSearchParams;

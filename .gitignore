@@ -380,3 +380,6 @@ docker-compose.override.yml
 **/reports
 cypress/summary.md
 **/*.code-workspace
+graphify-out
+copilot-instructions.md
+.graphifyignore

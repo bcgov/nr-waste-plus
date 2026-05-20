@@ -54,7 +54,9 @@ test.describe('Waste Search - Expanded Row Content', () => {
     await expect(page.getByText('Secondary marks in the block: 0')).toBeVisible(); // totalChildren (defaults to 0)
 
     // The last two values are rendered via ReadonlyInput card items.
-    await expect(page.locator('dl.card-item').filter({ hasText: 'Blocks in the RU: 15' })).toHaveCount(1);
+    await expect(
+      page.locator('dl.card-item').filter({ hasText: 'Blocks in the RU: 15' }),
+    ).toHaveCount(1);
     await expect(
       page.locator('dl.card-item').filter({ hasText: 'Secondary marks in the block: 0' }),
     ).toHaveCount(1);

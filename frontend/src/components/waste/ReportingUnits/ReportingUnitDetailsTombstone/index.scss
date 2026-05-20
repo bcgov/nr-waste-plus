@@ -1,0 +1,13 @@
+@use '../../../../styles/variables' as vars;
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+
+.rudetail-column__body {
+  border: solid 1px var(--cds-border-subtle-selected-03, #c6c6c8);
+  padding: $spacing-05;
+  border-radius: $spacing-04;
+
+  @include breakpoint-down(md) {
+    margin: $spacing-04;
+  }
+}

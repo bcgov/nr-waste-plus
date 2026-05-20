@@ -2,7 +2,6 @@ import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { useEffect, useRef, type ComponentType } from 'react';
 
 import { useAuth } from '@/context/auth/useAuth';
-
 import { navigateInTree, type InTreePath } from '@/routes/inTreePaths';
 import { clearPersistedRedirect, readPersistedRedirect } from '@/routes/redirectStorage';
 

@@ -85,9 +85,9 @@ export async function mockJwt(
   await page
     .context()
     .clearCookies({ name: `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.idToken` });
-  await page
-    .context()
-    .clearCookies({ name: `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.accessToken` });
+  await page.context().clearCookies({
+    name: `CognitoIdentityServiceProvider.${clientId}.${lastAuthUser}.accessToken`,
+  });
   await page.context().addCookies([
     {
       name: `CognitoIdentityServiceProvider.${clientId}.LastAuthUser`,

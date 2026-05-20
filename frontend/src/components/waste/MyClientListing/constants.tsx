@@ -4,6 +4,15 @@ import type { MyForestClientDto } from '@/services/types';
 import DateTag from '@/components/core/Tags/DateTag';
 import RedirectLinkTag from '@/components/waste/RedirectLinkTag';
 
+/**
+ * Column definitions for the My Client List results table.
+ *
+ * Each entry describes a data column with its header label, sort behaviour,
+ * default visibility (`selected`), and an optional `renderAs` function that
+ * controls how cell values are displayed (e.g. redirect links, date formatting).
+ *
+ * The `client.code` column links to the waste search page filtered to that client number.
+ */
 export const headers: TableHeaderType<MyForestClientDto>[] = [
   {
     key: 'client.code',

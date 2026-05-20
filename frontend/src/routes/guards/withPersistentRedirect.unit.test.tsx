@@ -60,7 +60,8 @@ describe('withPersistentRedirect', () => {
   });
 
   it('shouldNavigateToPersistedTarget_whenValidPathExists', async () => {
-    const { readPersistedRedirect, clearPersistedRedirect } = await import('@/routes/redirectStorage');
+    const { readPersistedRedirect, clearPersistedRedirect } =
+      await import('@/routes/redirectStorage');
     const { navigateInTree } = await import('@/routes/inTreePaths');
     vi.mocked(readPersistedRedirect).mockReturnValue('/search?q=abc');
     const Wrapped = withPersistentRedirect(DummyPage);
@@ -74,14 +75,19 @@ describe('withPersistentRedirect', () => {
   });
 
   it('shouldClearRedirectAndNavigateToSearch_whenOAuthCallback', async () => {
-    const { readPersistedRedirect, clearPersistedRedirect } = await import('@/routes/redirectStorage');
+    const { readPersistedRedirect, clearPersistedRedirect } =
+      await import('@/routes/redirectStorage');
     const { navigateInTree } = await import('@/routes/inTreePaths');
     vi.mocked(readPersistedRedirect).mockReturnValue(null);
     mockSearchStr = '?code=authcode123&state=statevalue';
     const Wrapped = withPersistentRedirect(DummyPage);
     await act(async () => render(<Wrapped />));
     expect(vi.mocked(clearPersistedRedirect)).toHaveBeenCalled();
-    expect(vi.mocked(navigateInTree)).toHaveBeenCalledWith(mockNavigate, '/search', expect.objectContaining({ replace: true }));
+    expect(vi.mocked(navigateInTree)).toHaveBeenCalledWith(
+      mockNavigate,
+      '/search',
+      expect.objectContaining({ replace: true }),
+    );
   });
 
   it('shouldNavigateToSearch_withPassthroughParams_whenNoPersistedAndNoOAuth', async () => {

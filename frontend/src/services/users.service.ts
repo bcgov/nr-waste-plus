@@ -1,7 +1,6 @@
 import type { CancelablePromise } from '@/config/api/CancelablePromise';
 import type { UserPreference } from '@/context/preference/types';
 
-
 import { HttpClient, type APIConfig } from '@/config/api/types';
 
 /**

@@ -1,11 +1,11 @@
-import { act, render, screen } from '@testing-library/react';
 import { RouterProvider } from '@tanstack/react-router';
+import { act, render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { LayoutSideNav } from './index';
 
-import { AuthProvider } from '@/context/auth/AuthProvider';
 import { createTestRouter } from '@/config/tests/routerTestHelper';
+import { AuthProvider } from '@/context/auth/AuthProvider';
 import * as useAuthModule from '@/context/auth/useAuth';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import * as routePathsModule from '@/routes/routePaths';
@@ -55,13 +55,16 @@ const renderWithProviders = async (pathname = '/dashboard') => {
   await act(async () =>
     render(
       <RouterProvider
-        router={createTestRouter(() => (
-          <AuthProvider>
-            <LayoutProvider>
-              <LayoutSideNav />
-            </LayoutProvider>
-          </AuthProvider>
-        ), pathname)}
+        router={createTestRouter(
+          () => (
+            <AuthProvider>
+              <LayoutProvider>
+                <LayoutSideNav />
+              </LayoutProvider>
+            </AuthProvider>
+          ),
+          pathname,
+        )}
       />,
     ),
   );

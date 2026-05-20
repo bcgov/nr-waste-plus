@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.configuration;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.entity.codes.OrgUnitEntity;
@@ -28,7 +29,8 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
     OrgUnitEntity.class,
     ReportingUnitSearchParametersDto.class,
     ReportingUnitSearchResultDto.class,
-    ReportingUnitEntity.class
+    ReportingUnitEntity.class,
+    ReportingUnitDetailsDto.class
 })
 public class GlobalConfiguration {
 
