@@ -75,7 +75,11 @@ const RedirectLinkTag: FC<RedirectLinkTagProps> = ({ text, url, sameTab, clearSe
     // `clearSearch === false` opts in to inheriting the current route's search.
     const hasEmbeddedQuery = url.includes('?');
     return (
-      <Link to={url} search={!hasEmbeddedQuery && clearSearch !== false ? {} : undefined}>
+      <Link
+        to={url}
+        search={!hasEmbeddedQuery && clearSearch !== false ? {} : undefined}
+        data-testid={text}
+      >
         <EmptyValueTag value={text} />
       </Link>
     );
@@ -86,6 +90,7 @@ const RedirectLinkTag: FC<RedirectLinkTagProps> = ({ text, url, sameTab, clearSe
       href={url}
       target={sameTab ? '_self' : '_blank'}
       rel={sameTab ? undefined : 'noopener noreferrer'}
+      data-testid={text}
     >
       <EmptyValueTag value={text} />
     </a>

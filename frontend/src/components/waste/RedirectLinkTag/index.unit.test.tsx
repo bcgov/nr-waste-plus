@@ -13,6 +13,7 @@ describe('RedirectLinkTag', () => {
     expect(link.getAttribute('href')).toBe('https://example.com');
     expect(link.getAttribute('target')).toBe('_blank');
     expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(link.dataset.testid).toBe('Go');
     expect(screen.getByText('Go')).toBeDefined();
   });
 
@@ -29,6 +30,7 @@ describe('RedirectLinkTag', () => {
       expect(link.getAttribute('href')).toBe('/local');
       expect(link.getAttribute('target')).toBe(null);
       expect(link.getAttribute('rel')).toBe(null);
+      expect(link.dataset.testid).toBe('Stay');
       expect(screen.getByText('Stay')).toBeDefined();
     });
   });
