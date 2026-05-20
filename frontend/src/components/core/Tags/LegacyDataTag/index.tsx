@@ -45,7 +45,7 @@ const LegacyDataTag: FC<LegacyDataTagProps> = ({ url, label = 'Legacy data' }) =
 
   return (
     <Tooltip
-      label="This data originates from a legacy system. Click to view the source record."
+      description="This data originates from a legacy system. Click to view the source record."
       align="bottom"
     >
       <a

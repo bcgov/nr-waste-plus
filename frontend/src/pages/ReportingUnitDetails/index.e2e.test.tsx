@@ -95,7 +95,7 @@ test.describe('ReportingUnitDetails Page', () => {
     });
 
     test('renders "District" label', async ({ page }) => {
-      await expect(page.getByText('District')).toBeVisible();
+      await expect(page.getByText('District', { exact: true })).toBeVisible();
     });
 
     test('renders "Grades" label', async ({ page }) => {
