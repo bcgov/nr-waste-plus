@@ -116,7 +116,7 @@ describe('failureNotificationMiddleware', () => {
     // where no session cookie exists yet. A toast here would confuse users mid-login.
     const middleware = failureNotificationMiddleware();
     const error = makeError({
-      config: makeConfig({ headers: {} }),
+      config: makeConfig({ headers: {} as unknown as InternalAxiosRequestConfig['headers'] }),
       response: {
         status: 401,
         statusText: 'Unauthorized',
@@ -136,7 +136,7 @@ describe('failureNotificationMiddleware', () => {
     // The user should be informed rather than silently failing.
     const middleware = failureNotificationMiddleware();
     const error = makeError({
-      config: makeConfig({ headers: { Authorization: 'Bearer expired-token' } }),
+      config: makeConfig({ headers: { Authorization: 'Bearer expired-token' } as unknown as InternalAxiosRequestConfig['headers'] }),
       response: {
         status: 401,
         statusText: 'Unauthorized',
