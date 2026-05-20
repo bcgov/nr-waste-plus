@@ -149,13 +149,18 @@ describe('env', () => {
   });
 
   it('throws when required app env vars are absent', async () => {
-    const originalAppName = import.meta.env.VITE_APP_NAME;
-    import.meta.env.VITE_APP_NAME = null;
+    // Stub the runtime env variable so the test is deterministic even when the
+    // developer's shell has VITE_APP_NAME set. Use Vitest's env stubbing helper
+    // to temporarily override `process.env` during the module import.
+    // Use `undefined` so the variable is removed from the environment during
+    // the module import. The `as unknown as string` cast keeps TypeScript
+    // happy while allowing Vitest to clear the env key.
+    vi.stubEnv('VITE_APP_NAME', undefined as unknown as string);
 
     try {
       await expect(loadEnv()).rejects.toThrow(/Invalid application env/);
     } finally {
-      import.meta.env.VITE_APP_NAME = originalAppName;
+      vi.unstubAllEnvs();
     }
   });
 });

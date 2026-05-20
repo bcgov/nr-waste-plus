@@ -21,7 +21,21 @@ export type LegacyDataTagProps = {
  * @returns A styled, linkable tag wrapped in a tooltip.
  */
 const LegacyDataTag: FC<LegacyDataTagProps> = ({ url, label = 'Legacy data' }) => {
-  const finalUrl = `${env.VITE_LEGACY_BASE_URL}${url}`;
+  const buildFinalUrl = (base: string, path: string) => {
+    try {
+      // Use the URL constructor for robust joining. It handles leading/trailing
+      // slashes and absolute `path` values correctly (if `path` is already a
+      // fully-qualified URL it will be returned as-is).
+      return new URL(path, base).toString();
+    } catch {
+      // Fallback: ensure there's exactly one slash between base and path.
+      const baseTrimmed = base.replace(/\/+$/, '');
+      const pathWithLeading = path.startsWith('/') ? path : `/${path}`;
+      return `${baseTrimmed}${pathWithLeading}`;
+    }
+  };
+
+  const finalUrl = buildFinalUrl(env.VITE_LEGACY_BASE_URL, url);
 
   const tag = (
     <Tag className="legacy-data-tag" type="purple" size="md" renderIcon={Box}>

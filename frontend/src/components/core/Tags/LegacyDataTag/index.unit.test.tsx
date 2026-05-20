@@ -40,10 +40,10 @@ describe('LegacyDataTag', () => {
       );
     });
 
-    it('concatenates base URL and url verbatim with no separator added', () => {
+    it('normalizes base URL and path when path lacks leading slash', () => {
       render(<LegacyDataTag url="record/99" />);
       expect(screen.getByRole('link').getAttribute('href')).toBe(
-        'https://legacy.example.comrecord/99',
+        'https://legacy.example.com/record/99',
       );
     });
 
