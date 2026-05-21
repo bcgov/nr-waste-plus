@@ -3,6 +3,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { failureNotificationMiddleware } from './failureNotificationMiddleware';
 
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { AxiosHeaders } from 'axios';
 
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 
@@ -105,6 +106,133 @@ describe('failureNotificationMiddleware', () => {
   it('does not notify on cancelled requests', async () => {
     const middleware = failureNotificationMiddleware();
     const error = makeError({ code: 'ERR_CANCELED' });
+
+    await expect(middleware.failure?.(error)).rejects.toBe(error);
+
+    expect(sendEvent).not.toHaveBeenCalled();
+  });
+
+  it('does not notify for 401 when no Authorization header was sent', async () => {
+    // Simulates unauthenticated requests during initial app load or the login page,
+    // where no session cookie exists yet. A toast here would confuse users mid-login.
+    const middleware = failureNotificationMiddleware();
+    const error = makeError({
+      config: makeConfig({ headers: {} as unknown as InternalAxiosRequestConfig['headers'] }),
+      response: {
+        status: 401,
+        statusText: 'Unauthorized',
+        data: { title: 'Unauthorized', status: 401, detail: 'No token provided' },
+        headers: {},
+        config: {} as InternalAxiosRequestConfig,
+      },
+    });
+
+    await expect(middleware.failure?.(error)).rejects.toBe(error);
+
+    expect(sendEvent).not.toHaveBeenCalled();
+  });
+
+  it('still notifies for 401 when Authorization header was present', async () => {
+    // An expired or invalid token was sent — the server explicitly rejected it.
+    // The user should be informed rather than silently failing.
+    const middleware = failureNotificationMiddleware();
+    const error = makeError({
+      config: makeConfig({ headers: { Authorization: 'Bearer expired-token' } as unknown as InternalAxiosRequestConfig['headers'] }),
+      response: {
+        status: 401,
+        statusText: 'Unauthorized',
+        data: { title: 'Unauthorized', status: 401, detail: 'Token expired' },
+        headers: {},
+        config: {} as InternalAxiosRequestConfig,
+      },
+    });
+
+    await expect(middleware.failure?.(error)).rejects.toBe(error);
+
+    expect(sendEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: 'error',
+        displayMode: 'toast',
+        title: 'Unauthorized',
+        description: 'Token expired',
+        meta: expect.objectContaining({ status: 401 }),
+      }),
+    );
+  });
+
+  it('still notifies for 401 when authorization header uses lowercase key (plain object)', async () => {
+    // Axios may normalise header names to lowercase on some request paths.
+    // Treating a lowercase key as absent would incorrectly suppress the toast.
+    const middleware = failureNotificationMiddleware();
+    const error = makeError({
+      config: makeConfig({ headers: { authorization: 'Bearer expired-token' } as unknown as InternalAxiosRequestConfig['headers'] }),
+      response: {
+        status: 401,
+        statusText: 'Unauthorized',
+        data: { title: 'Unauthorized', status: 401, detail: 'Token expired' },
+        headers: {},
+        config: {} as InternalAxiosRequestConfig,
+      },
+    });
+
+    await expect(middleware.failure?.(error)).rejects.toBe(error);
+
+    expect(sendEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: 'error',
+        displayMode: 'toast',
+        title: 'Unauthorized',
+        description: 'Token expired',
+        meta: expect.objectContaining({ status: 401 }),
+      }),
+    );
+  });
+
+  it('still notifies for 401 when Authorization is set on an AxiosHeaders instance', async () => {
+    // At runtime error.config.headers is commonly an AxiosHeaders class instance.
+    // The case-insensitive .get() method must be used to detect the token.
+    const headers = new AxiosHeaders();
+    headers.set('Authorization', 'Bearer expired-token');
+
+    const middleware = failureNotificationMiddleware();
+    const error = makeError({
+      config: makeConfig({ headers: headers as unknown as InternalAxiosRequestConfig['headers'] }),
+      response: {
+        status: 401,
+        statusText: 'Unauthorized',
+        data: { title: 'Unauthorized', status: 401, detail: 'Token expired' },
+        headers: {},
+        config: {} as InternalAxiosRequestConfig,
+      },
+    });
+
+    await expect(middleware.failure?.(error)).rejects.toBe(error);
+
+    expect(sendEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: 'error',
+        displayMode: 'toast',
+        title: 'Unauthorized',
+        description: 'Token expired',
+        meta: expect.objectContaining({ status: 401 }),
+      }),
+    );
+  });
+
+  it('does not notify for 401 when AxiosHeaders instance carries no Authorization header', async () => {
+    // An empty AxiosHeaders instance represents a request sent without a session token.
+    // The suppression logic must work with the class instance, not just plain objects.
+    const middleware = failureNotificationMiddleware();
+    const error = makeError({
+      config: makeConfig({ headers: new AxiosHeaders() as unknown as InternalAxiosRequestConfig['headers'] }),
+      response: {
+        status: 401,
+        statusText: 'Unauthorized',
+        data: { title: 'Unauthorized', status: 401, detail: 'No token provided' },
+        headers: {},
+        config: {} as InternalAxiosRequestConfig,
+      },
+    });
 
     await expect(middleware.failure?.(error)).rejects.toBe(error);
 
