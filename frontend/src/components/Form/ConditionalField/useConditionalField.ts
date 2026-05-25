@@ -3,6 +3,26 @@ import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'r
 import type { Condition, UseConditionalFieldOptions } from './types';
 
 /**
+ * Reads a value from a plain object by a dot-separated path string.
+ *
+ * Supports both top-level keys (`'status'`) and nested paths (`'address.city'`).
+ * Returns `undefined` when any segment along the path is missing, `null`, or not
+ * an object, rather than throwing.
+ *
+ * @param obj - The root object to traverse.
+ * @param path - A dot-separated key path (e.g. `'address.city'`).
+ * @returns The value at the path, or `undefined` if unreachable.
+ */
+export function getIn(obj: Record<string, unknown>, path: string): unknown {
+  return path.split('.').reduce<unknown>((acc, key) => {
+    if (acc !== null && acc !== undefined && typeof acc === 'object') {
+      return (acc as Record<string, unknown>)[key];
+    }
+    return undefined;
+  }, obj);
+}
+
+/**
  * Evaluates a single {@link Condition} against a watched field value.
  *
  * This is a pure function — it has no side-effects and depends only on its
@@ -59,7 +79,10 @@ export function evaluateCondition(condition: Condition, watchedValue: unknown): 
  * Evaluates an array of {@link Condition|Conditions} against a map of watched
  * field values, combining the results with the specified boolean logic.
  *
- * @param conditions - Non-empty array of conditions to evaluate.
+ * An empty `conditions` array always returns `false` regardless of `logic` —
+ * a group with no rules is treated as permanently hidden.
+ *
+ * @param conditions - Array of conditions to evaluate. Empty array returns `false`.
  * @param logic - `'AND'` requires every condition to pass; `'OR'` requires at
  *   least one condition to pass.
  * @param watchedValues - Map of field name → current value, keyed by
@@ -71,6 +94,7 @@ export function evaluateAll(
   logic: 'AND' | 'OR',
   watchedValues: Record<string, unknown>,
 ): boolean {
+  if (conditions.length === 0) return false;
   if (logic === 'OR') {
     return conditions.some((c) => evaluateCondition(c, watchedValues[c.field]));
   }
@@ -86,9 +110,9 @@ export function evaluateAll(
  * `true`.
  *
  * @remarks
- * The hook uses `useStore` with a JSON-serialised selector so that only
- * re-renders triggered by changes to the *watched* fields are propagated.
- * Unrelated form mutations do not cause this hook to recompute.
+ * The hook uses `useSyncExternalStore` with a JSON-serialised snapshot selector
+ * so that only re-renders triggered by changes to the *watched* fields are
+ * propagated. Unrelated form mutations do not cause this hook to recompute.
  *
  * `undefined` field values are normalised to `null` during serialisation so
  * that fields that have never been set behave the same as explicitly null ones.
@@ -141,7 +165,7 @@ export function useConditionalField<TFormData extends Record<string, unknown>>({
     const values = form.store.get().values as Record<string, unknown>;
     const relevant: Record<string, unknown> = {};
     for (const name of uniqueFieldNames) {
-      relevant[name] = values[name] ?? null;
+      relevant[name] = getIn(values, name) ?? null;
     }
     return JSON.stringify(relevant);
   }, [form.store, uniqueFieldNames]);

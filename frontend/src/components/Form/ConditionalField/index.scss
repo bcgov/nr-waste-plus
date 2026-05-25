@@ -1,16 +1,38 @@
+// Styles for ConditionalField — the wrapper element that shows, hides, and
+// optionally animates a group of form fields based on a condition.
 .conditional-field {
-  // Animation variant: height collapses and opacity fades
+  // Animation variant: uses CSS grid-template-rows (0fr ↔ 1fr) instead of
+  // max-height, because max-height cannot animate to/from `auto`. Both the
+  // collapsed and expanded states define explicit, animatable values.
   &--animate {
+    display: grid;
+    grid-template-rows: 1fr;
+    opacity: 1;
+    overflow: hidden;
     transition:
-      max-height 200ms ease,
+      grid-template-rows 200ms ease,
       opacity 200ms ease;
+
+    // Direct children must opt out of min-height so the grid row can
+    // collapse them fully.
+    > * {
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    // Combined with --hidden: animated collapse to zero height.
+    // Higher specificity overrides the plain --hidden height: 0 which
+    // conflicts with display: grid.
+    &.conditional-field--hidden {
+      grid-template-rows: 0fr;
+      height: auto;
+    }
   }
 
   // keepMounted hidden state — visually removed, still in DOM
   &--hidden {
     visibility: hidden;
     height: 0;
-    max-height: 0;
     overflow: hidden;
     opacity: 0;
     pointer-events: none;

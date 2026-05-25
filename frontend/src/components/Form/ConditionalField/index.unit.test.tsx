@@ -3,7 +3,7 @@ import { act, render, screen } from '@testing-library/react';
 import { useEffect, type FC } from 'react';
 import { describe, expect, it, type MockInstance, vi } from 'vitest';
 
-import { evaluateAll, evaluateCondition } from './useConditionalField';
+import { evaluateAll, evaluateCondition, getIn } from './useConditionalField';
 
 import ConditionalField from './index';
 
@@ -163,6 +163,11 @@ describe('evaluateAll', () => {
   const cA: Condition = { field: 'a', operator: 'truthy' };
   const cB: Condition = { field: 'b', operator: 'truthy' };
 
+  it('empty array — always returns false regardless of logic', () => {
+    expect(evaluateAll([], 'AND', {})).toBe(false);
+    expect(evaluateAll([], 'OR', {})).toBe(false);
+  });
+
   it('AND — true only when every condition passes', () => {
     expect(evaluateAll([cA, cB], 'AND', { a: 'yes', b: 'yes' })).toBe(true);
     expect(evaluateAll([cA, cB], 'AND', { a: 'yes', b: '' })).toBe(false);
@@ -171,6 +176,32 @@ describe('evaluateAll', () => {
   it('OR — true when any condition passes', () => {
     expect(evaluateAll([cA, cB], 'OR', { a: 'yes', b: '' })).toBe(true);
     expect(evaluateAll([cA, cB], 'OR', { a: '', b: '' })).toBe(false);
+  });
+});
+
+describe('getIn', () => {
+  it('resolves a top-level key', () => {
+    expect(getIn({ status: 'active' }, 'status')).toBe('active');
+  });
+
+  it('resolves a dot-separated nested path', () => {
+    expect(getIn({ address: { city: 'Vancouver' } }, 'address.city')).toBe('Vancouver');
+  });
+
+  it('resolves deeply nested paths', () => {
+    expect(getIn({ a: { b: { c: 42 } } }, 'a.b.c')).toBe(42);
+  });
+
+  it('returns undefined for a missing key', () => {
+    expect(getIn({ a: { b: 1 } }, 'a.c')).toBeUndefined();
+  });
+
+  it('returns undefined when an intermediate segment is null', () => {
+    expect(getIn({ a: null }, 'a.b')).toBeUndefined();
+  });
+
+  it('returns undefined when an intermediate segment is a primitive', () => {
+    expect(getIn({ a: 42 }, 'a.b')).toBeUndefined();
   });
 });
 

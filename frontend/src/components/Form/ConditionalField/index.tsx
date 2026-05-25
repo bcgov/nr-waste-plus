@@ -6,6 +6,7 @@ import type { ConditionalFieldProps } from './types';
 
 import './index.scss';
 
+/** Internal implementation. Wrapped with `memo` and re-exported as {@link ConditionalField}. */
 const ConditionalFieldInner = <TFormData extends Record<string, unknown>>({
   form,
   conditions,

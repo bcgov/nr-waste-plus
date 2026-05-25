@@ -77,7 +77,12 @@ export type ConditionOperator =
  * {@link ConditionalFieldProps.logic}.
  */
 export interface Condition {
-  /** Name of the form field to observe. Must match a key in `TFormData`. */
+  /**
+   * Name of the form field to watch. Accepts a top-level key (`'status'`) or a
+   * dot-separated path for nested fields (`'address.city'`). No compile-time
+   * validation is performed — invalid paths produce `undefined` at runtime and
+   * the condition will not pass.
+   */
   readonly field: string;
   /** The comparison operator to apply. */
   readonly operator: ConditionOperator;
@@ -101,6 +106,7 @@ export interface ConditionalFieldProps<TFormData extends Record<string, unknown>
    * @default 'AND'
    */
   readonly logic?: 'AND' | 'OR';
+  /** The content to show or hide based on the evaluated conditions. */
   readonly children: ReactNode;
   /**
    * When `true`, children stay mounted but are visually hidden.
