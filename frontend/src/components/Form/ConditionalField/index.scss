@@ -1,0 +1,18 @@
+.conditional-field {
+  // Animation variant: height collapses and opacity fades
+  &--animate {
+    transition:
+      max-height 200ms ease,
+      opacity 200ms ease;
+  }
+
+  // keepMounted hidden state — visually removed, still in DOM
+  &--hidden {
+    visibility: hidden;
+    height: 0;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+}
