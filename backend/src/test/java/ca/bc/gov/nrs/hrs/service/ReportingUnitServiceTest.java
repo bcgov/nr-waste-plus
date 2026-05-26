@@ -167,8 +167,8 @@ class ReportingUnitServiceTest {
   }
 
   @Test
-  @DisplayName("shouldThrowIllegalArgumentException_whenGradeMissingForDKM")
-  void shouldThrowIllegalArgumentException_whenGradeMissingForDKM() {
+  @DisplayName("shouldThrowBadRequest_whenGradeMissingForDKM")
+  void shouldThrowBadRequest_whenGradeMissingForDKM() {
     // Arrange — ensure no duplicate exists
     var request = new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
         CLIENT_NUMBER, "DKM", "S01", null);
@@ -178,8 +178,8 @@ class ReportingUnitServiceTest {
 
     // Act & Assert — grade validation happens before forest client lookup
     assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("gradeCode is required when districtCode is DKM");
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST));
   }
 
   @Test

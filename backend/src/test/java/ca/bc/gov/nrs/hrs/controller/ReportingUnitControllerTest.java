@@ -9,6 +9,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -78,6 +79,7 @@ class ReportingUnitControllerTest extends AbstractTestContainerIntegrationTest {
         .perform(
             MockMvcRequestBuilders
                 .post("/api/reporting-units")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         )
@@ -102,6 +104,7 @@ class ReportingUnitControllerTest extends AbstractTestContainerIntegrationTest {
         .perform(
             MockMvcRequestBuilders
                 .post("/api/reporting-units")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         )
@@ -125,6 +128,7 @@ class ReportingUnitControllerTest extends AbstractTestContainerIntegrationTest {
         .perform(
             MockMvcRequestBuilders
                 .post("/api/reporting-units")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         )

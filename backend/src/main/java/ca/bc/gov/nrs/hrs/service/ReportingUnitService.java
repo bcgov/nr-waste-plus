@@ -109,7 +109,8 @@ public class ReportingUnitService {
     // Validate that gradeCode is provided when districtCode is "DKM"
     if ("DKM".equals(request.districtCode())
         && StringUtils.isBlank(request.gradeCode())) {
-      throw new IllegalArgumentException(
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
           "gradeCode is required when districtCode is DKM"
       );
     }
