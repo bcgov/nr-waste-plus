@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.provider.legacy;
 
+import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
@@ -234,10 +235,9 @@ public class LegacyReportingUnitClient {
     log.info("Retrieving reporting unit details for RU {}", reportingUnitId);
     return restClient
         .get()
-        .uri(uriBuilder ->
-            uriBuilder
-                .path("/api/reporting-units/{reportingUnitId}")
-                .build(Map.of("reportingUnitId", reportingUnitId))
+        .uri(uriBuilder -> uriBuilder
+            .path("/api/reporting-units/{reportingUnitId}")
+            .build(Map.of("reportingUnitId", reportingUnitId))
         )
         .retrieve()
         .onStatus(
@@ -249,6 +249,26 @@ public class LegacyReportingUnitClient {
             }
         )
         .body(ReportingUnitLegacyDetailsDto.class);
+  }
+
+  /**
+   * Create a reporting unit in the legacy API.
+   *
+   * Posts the supplied create request to {@code POST /api/reporting-units} and expects
+   * the legacy API to return the created resource id as a numeric value.
+   *
+   * @param request the create request dto
+   * @return the id of the newly created reporting unit
+   */
+  @NewSpan
+  public Long createReportingUnit(CreateReportingUnitRequestDto request) {
+    log.info("Posting create reporting unit request to legacy API for client {}", request.clientNumber());
+    return restClient
+        .post()
+        .uri("/api/reporting-units")
+        .body(request)
+        .retrieve()
+        .body(Long.class);
   }
 
   /**

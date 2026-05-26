@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.provider.legacy;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
@@ -152,5 +153,15 @@ public class LegacyApiProvider {
    */
   public ReportingUnitLegacyDetailsDto getReportingUnitDetails(Long reportingUnitId) {
     return reportingUnitClient.getReportingUnitDetails(reportingUnitId);
+  }
+
+  /**
+   * Create a new reporting unit in the legacy API.
+   *
+   * @param request the create request dto
+   * @return the created reporting unit id
+   */
+  public Long createReportingUnit(CreateReportingUnitRequestDto request) {
+    return reportingUnitClient.createReportingUnit(request);
   }
 }

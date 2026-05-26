@@ -2,16 +2,23 @@ package ca.bc.gov.nrs.hrs.controller;
 
 import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitResponseDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.service.ReportingUnitService;
 import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 /**
  * REST controller exposing Reporting Unit detail endpoints.
@@ -60,6 +67,15 @@ public class ReportingUnitController {
     log.info("Fetching reporting unit details for RU {}", reportingUnitId);
 
     return reportingUnitService.getReportingUnitDetails(reportingUnitId);
+  }
+  
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  @Observed
+  public CreateReportingUnitResponseDto createReportingUnit(
+      @Valid @RequestBody CreateReportingUnitRequestDto request
+  ) {
+      return reportingUnitService.createReportingUnit(request);
   }
 
 }

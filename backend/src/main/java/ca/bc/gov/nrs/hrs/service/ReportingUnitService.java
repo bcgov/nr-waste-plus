@@ -1,6 +1,8 @@
 package ca.bc.gov.nrs.hrs.service;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitResponseDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProvider;
@@ -9,7 +11,9 @@ import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import jakarta.validation.Valid;
 
 /**
  * Service responsible for retrieving and enriching Reporting Unit details.
@@ -73,5 +77,32 @@ public class ReportingUnitService {
         legacyClient.district(),
         new CodeDescriptionDto(null, null)
     );
+  }
+
+  @NewSpan
+  public CreateReportingUnitResponseDto createReportingUnit(
+      @Valid CreateReportingUnitRequestDto request) {
+
+    log.info("Creating reporting unit for client {}", request.clientNumber());
+
+    // Validate that gradeCode is provided when districtCode is "DKM"
+    if ("DKM".equals(request.districtCode())
+        && StringUtils.isBlank(request.gradeCode())) {
+      throw new IllegalArgumentException(
+          "gradeCode is required when districtCode is DKM"
+      );
+    }
+
+    // Validate client exists via Forest Client API
+    forestClientApiProvider
+        .fetchClientByNumber(request.clientNumber())
+        .orElseThrow(() ->
+            new ForestClientNotFoundException(request.clientNumber())
+        );
+
+    // Create reporting unit via legacy API
+    Long createdId = legacyApiProvider.createReportingUnit(request);
+
+    return new CreateReportingUnitResponseDto(createdId);
   }
 }
