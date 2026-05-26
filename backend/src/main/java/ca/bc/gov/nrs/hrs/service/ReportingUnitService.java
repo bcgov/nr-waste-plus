@@ -84,6 +84,29 @@ public class ReportingUnitService {
     );
   }
 
+  /**
+   * Creates a new reporting unit.
+   *
+   * <p>Performs the following checks and actions:
+   * <ul>
+   *   <li>Checks for an existing reporting unit with the same client number and district
+   *       and throws a 409 Conflict if one exists.</li>
+   *   <li>Validates that {@code gradeCode} is present when {@code districtCode} is
+   *       "DKM" and throws a 400 Bad Request if missing.</li>
+   *   <li>Verifies the client exists via the Forest Client API and throws
+   *       {@link ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException} if not found.</li>
+   *   <li>Delegates creation to the legacy API and returns the generated id.</li>
+   * </ul>
+   *
+   * @param request the validated create request containing client, district, sampling and optional
+   *        grade information
+   * @return a {@link CreateReportingUnitResponseDto} containing the id of the newly created
+   *         reporting unit
+   * @throws org.springframework.web.server.ResponseStatusException when a duplicate reporting
+   *         unit exists (409) or when validation fails (400)
+   * @throws ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException when the referenced client
+   *         cannot be found in the Forest Client API
+   */
   @NewSpan
   public CreateReportingUnitResponseDto createReportingUnit(
       @Valid CreateReportingUnitRequestDto request) {

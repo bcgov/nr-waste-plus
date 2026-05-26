@@ -254,15 +254,19 @@ public class LegacyReportingUnitClient {
   /**
    * Create a reporting unit in the legacy API.
    *
-   * Posts the supplied create request to {@code POST /api/reporting-units} and expects
-   * the legacy API to return the created resource id as a numeric value.
+   * Posts the supplied create request to {@code POST /api/reporting-units} and expects the
+   * legacy API to return the created resource id as a numeric value.
    *
-   * @param request the create request dto
+   * @param  request the create request dto
    * @return the id of the newly created reporting unit
    */
   @NewSpan
   public Long createReportingUnit(CreateReportingUnitRequestDto request) {
-    log.info("Posting create reporting unit request to legacy API for client {}", request.clientNumber());
+    log.info(
+        "Posting create reporting unit request to legacy API for client {}",
+        request.clientNumber()
+    );
+
     return restClient
         .post()
         .uri("/api/reporting-units")
