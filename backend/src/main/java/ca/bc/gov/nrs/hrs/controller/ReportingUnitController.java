@@ -8,16 +8,17 @@ import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.service.ReportingUnitService;
 import io.micrometer.observation.annotation.Observed;
+import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import jakarta.validation.Valid;
 
 /**
@@ -31,6 +32,10 @@ import jakarta.validation.Valid;
  * <p>All endpoints in this controller are gated behind
  * {@link FeatureFlag#REPORTING_UNIT_DETAILS_ENABLED}. When the flag is disabled the
  * controller responds with HTTP 404 so the feature remains invisible to callers.</p>
+ *
+ * <p>POST /api/reporting-units creates a new Reporting Unit in the legacy system.
+ * On success it returns HTTP 201 (Created) with a Location header pointing to the
+ * created resource. Per API contract this endpoint does not return a response body.</p>
  */
 @RestController
 @RequestMapping("/api/reporting-units")
@@ -69,13 +74,30 @@ public class ReportingUnitController {
     return reportingUnitService.getReportingUnitDetails(reportingUnitId);
   }
   
+  /**
+   * Create a new Reporting Unit.
+   *
+   * <p>Creates a reporting unit in the legacy system and returns HTTP 201 (Created)
+   * with a Location header pointing to the new resource (/api/reporting-units/{id}).
+   * Per API contract this endpoint does not return a response body.</p>
+   *
+   * @param request the create reporting unit request
+   * @return ResponseEntity with 201 Created and Location header; no body
+   */
   @PostMapping
-  @ResponseStatus(HttpStatus.CREATED)
   @Observed
-  public CreateReportingUnitResponseDto createReportingUnit(
+  public ResponseEntity<Void> createReportingUnit(
       @Valid @RequestBody CreateReportingUnitRequestDto request
   ) {
-      return reportingUnitService.createReportingUnit(request);
+    CreateReportingUnitResponseDto response = reportingUnitService.createReportingUnit(request);
+
+    URI location = ServletUriComponentsBuilder
+        .fromCurrentRequest()
+        .path("/{id}")
+        .buildAndExpand(response.id())
+        .toUri();
+
+    return ResponseEntity.created(location).build();
   }
 
 }

@@ -83,8 +83,7 @@ class ReportingUnitControllerTest extends AbstractTestContainerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         )
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.id").value(333));
+        .andExpect(status().isCreated());
   }
 
   @Test
