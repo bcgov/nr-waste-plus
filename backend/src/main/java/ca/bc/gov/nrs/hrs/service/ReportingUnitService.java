@@ -5,6 +5,11 @@ import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitResponseDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
+import org.springframework.data.domain.PageRequest;
+import java.util.List;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProvider;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import io.micrometer.observation.annotation.Observed;
@@ -84,6 +89,22 @@ public class ReportingUnitService {
       @Valid CreateReportingUnitRequestDto request) {
 
     log.info("Creating reporting unit for client {}", request.clientNumber());
+
+    // Check for existing reporting unit with the same client number and district
+    var searchFilters = ReportingUnitSearchParametersDto
+        .builder()
+        .clientNumbers(List.of(request.clientNumber()))
+        .district(List.of(request.districtCode()))
+        .build();
+
+    var existing = legacyApiProvider.searchReportingUnit(searchFilters, PageRequest.of(0, 1));
+    if (existing != null && existing.getTotalElements() > 0) {
+      throw new ResponseStatusException(
+          HttpStatus.CONFLICT,
+          String.format("Reporting unit for client %s and district %s already exists!",
+              request.clientNumber(), request.districtCode())
+      );
+    }
 
     // Validate that gradeCode is provided when districtCode is "DKM"
     if ("DKM".equals(request.districtCode())
