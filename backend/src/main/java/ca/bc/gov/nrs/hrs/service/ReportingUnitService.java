@@ -4,21 +4,21 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitResponseDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
-import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
-import org.springframework.data.domain.PageRequest;
-import java.util.List;
+import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProvider;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
+import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import jakarta.validation.Valid;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Service responsible for retrieving and enriching Reporting Unit details.

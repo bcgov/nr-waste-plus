@@ -2,37 +2,40 @@ package ca.bc.gov.nrs.hrs.controller;
 
 import static ca.bc.gov.nrs.hrs.TestConstants.LEGACY_RU_DETAILS;
 import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE;
+import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE;
+import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.retry.RetryRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.retry.RetryRegistry;
 
 @AutoConfigureMockMvc(print = SYSTEM_OUT)
 @DisplayName("Integrated Test | Reporting Unit Controller")
@@ -84,6 +87,88 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     RetryConfig retry = retryRegistry.retry("apiRetry").getRetryConfig();
     retryRegistry.remove("apiRetry");
     retryRegistry.retry("apiRetry", retry);
+  }
+
+  @Test
+  @WithMockJwt
+  @DisplayName("shouldReturn201_whenCreateSucceeds")
+  void shouldReturn201_whenCreateSucceeds() throws Exception {
+    // Legacy search: no existing reporting units
+    legacyApiStub.stubFor(
+        get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(okJson(REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
+
+    // Forest client exists
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
+            .willReturn(okJson(CLIENTNUMBER_RESPONSE)));
+
+    // Legacy create returns new id as numeric JSON
+    legacyApiStub.stubFor(
+        post(urlPathEqualTo("/api/reporting-units"))
+            .willReturn(okJson("333")));
+
+    var requestJson = """
+        {"clientNumber":"00012797","districtCode":"DND","samplingCode":"S01","gradeCode":null}
+        """;
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders
+                .post("/api/reporting-units")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson)
+        )
+        .andExpect(status().isCreated());
+  }
+
+  @Test
+  @WithMockJwt
+  @DisplayName("shouldReturn400_whenGradeMissingForDKM")
+  void shouldReturn400_whenGradeMissingForDKM() throws Exception {
+    // Legacy search: no existing reporting units
+    legacyApiStub.stubFor(
+        get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(okJson(REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
+
+    var requestJson = """
+        {"clientNumber":"00012797","districtCode":"DKM","samplingCode":"S01"}
+        """;
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders
+                .post("/api/reporting-units")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson)
+        )
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @WithMockJwt
+  @DisplayName("shouldReturn409_whenReportingUnitDuplicate")
+  void shouldReturn409_whenReportingUnitDuplicate() throws Exception {
+    // Legacy search: returns an existing RU (totalElements > 0)
+    legacyApiStub.stubFor(
+        get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(okJson(REPORTING_UNITS_SEARCH_RESPONSE)));
+
+    var requestJson = """
+        {"clientNumber":"00012797","districtCode":"DND","samplingCode":"S01","gradeCode":null}
+        """;
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders
+                .post("/api/reporting-units")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson)
+        )
+        .andExpect(status().isConflict());
   }
 
   @Test
