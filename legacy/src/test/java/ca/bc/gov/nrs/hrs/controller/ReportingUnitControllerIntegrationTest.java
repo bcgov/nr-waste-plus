@@ -140,12 +140,28 @@ class ReportingUnitControllerMovedUnitTests {
   }
 
   private static Jwt createJwt(Map<String, Object> claims) {
-    return new Jwt(
-        "token",
-        LocalDateTime.now().minusMinutes(10).toInstant(ZoneOffset.UTC),
-        LocalDateTime.now().plusMinutes(90).toInstant(ZoneOffset.UTC),
-        Map.of("alg", "none"),
-        claims
+    java.util.List<String> groups = claims != null && claims.containsKey("cognito:groups")
+        ? (java.util.List<String>) claims.get("cognito:groups")
+        : java.util.List.of();
+
+    String idp = claims != null && claims.containsKey("custom:idp_name")
+        ? String.valueOf(claims.get("custom:idp_name"))
+        : "idir";
+
+    String subject = claims != null && claims.containsKey("custom:idp_username")
+        ? String.valueOf(claims.get("custom:idp_username"))
+        : "test";
+
+    return ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory.createJwt(
+        subject,
+        groups,
+        idp,
+        claims != null && claims.containsKey("custom:idp_display_name")
+            ? String.valueOf(claims.get("custom:idp_display_name"))
+            : "Test, Automated WLRS:EX",
+        claims != null && claims.containsKey("email")
+            ? String.valueOf(claims.get("email"))
+            : "test@test.ca"
     );
   }
 
