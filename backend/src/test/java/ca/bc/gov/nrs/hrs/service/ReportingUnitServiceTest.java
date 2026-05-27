@@ -163,7 +163,7 @@ class ReportingUnitServiceTest {
 
     // Assert
     assertThat(response).isNotNull();
-    assertThat(response.id()).isEqualTo(333L);
+    assertThat(response).isEqualTo(333L);
   }
 
   @Test

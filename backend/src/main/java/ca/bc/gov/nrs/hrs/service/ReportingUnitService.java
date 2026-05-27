@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.hrs.service;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
-import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitResponseDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
@@ -87,28 +86,24 @@ public class ReportingUnitService {
   /**
    * Creates a new reporting unit.
    *
-   * <p>Performs the following checks and actions:
+   * Performs the following validations and actions:
    * <ul>
-   *   <li>Checks for an existing reporting unit with the same client number and district
-   *       and throws a 409 Conflict if one exists.</li>
-   *   <li>Validates that {@code gradeCode} is present when {@code districtCode} is
-   *       "DKM" and throws a 400 Bad Request if missing.</li>
-   *   <li>Verifies the client exists via the Forest Client API and throws
-   *       {@link ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException} if not found.</li>
-   *   <li>Delegates creation to the legacy API and returns the generated id.</li>
+   *   <li>Ensures no existing reporting unit exists for the same client number and district.</li>
+   *   <li>Requires {@code gradeCode} when {@code districtCode} is "DKM".</li>
+   *   <li>Verifies that the client exists via the Forest Client API.</li>
+   *   <li>Creates the reporting unit in the legacy system and returns the generated id.</li>
    * </ul>
    *
-   * @param request the validated create request containing client, district, sampling and optional
-   *        grade information
-   * @return a {@link CreateReportingUnitResponseDto} containing the id of the newly created
-   *         reporting unit
-   * @throws org.springframework.web.server.ResponseStatusException when a duplicate reporting
-   *         unit exists (409) or when validation fails (400)
-   * @throws ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException when the referenced client
-   *         cannot be found in the Forest Client API
+   * @param  request the validated create request containing client, district, sampling, and optional
+   *         grade information
+   * @return the id of the newly created reporting unit
+   * @throws ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException if the client does not exist
+   *         in the Forest Client API
+   * @throws org.springframework.web.server.ResponseStatusException if a duplicate reporting unit
+   *         exists or required validation fails
    */
   @NewSpan
-  public CreateReportingUnitResponseDto createReportingUnit(
+  public Long createReportingUnit(
       @Valid CreateReportingUnitRequestDto request) {
 
     log.info("Creating reporting unit for client {}", request.clientNumber());
@@ -148,6 +143,6 @@ public class ReportingUnitService {
     // Create reporting unit via legacy API
     Long createdId = legacyApiProvider.createReportingUnit(request);
 
-    return new CreateReportingUnitResponseDto(createdId);
+    return createdId;
   }
 }

@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.hrs.controller;
 import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
-import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitResponseDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.service.ReportingUnitService;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 /**
  * REST controller exposing Reporting Unit detail endpoints.
@@ -77,25 +75,21 @@ public class ReportingUnitController {
   /**
    * Create a new Reporting Unit.
    *
-   * <p>Creates a reporting unit in the legacy system and returns HTTP 201 (Created)
-   * with a Location header pointing to the new resource (/api/reporting-units/{id}).
-   * Per API contract this endpoint does not return a response body.</p>
+   * Creates a reporting unit in the legacy system and returns HTTP 201 (Created)
+   * with a Location header pointing to the frontend resource (/reporting-units/{id}).
+   * Per API contract, this endpoint does not return a response body.
    *
    * @param request the create reporting unit request
-   * @return ResponseEntity with 201 Created and Location header; no body
+   * @return ResponseEntity with HTTP 201 (Created) and Location header; response body is empty
    */
   @PostMapping
   @Observed
   public ResponseEntity<Void> createReportingUnit(
       @Valid @RequestBody CreateReportingUnitRequestDto request
   ) {
-    CreateReportingUnitResponseDto response = reportingUnitService.createReportingUnit(request);
+    Long createdId = reportingUnitService.createReportingUnit(request);
 
-    URI location = ServletUriComponentsBuilder
-        .fromCurrentRequest()
-        .path("/{id}")
-        .buildAndExpand(response.id())
-        .toUri();
+    URI location = URI.create("/reporting-units/" + createdId);
 
     return ResponseEntity.created(location).build();
   }
