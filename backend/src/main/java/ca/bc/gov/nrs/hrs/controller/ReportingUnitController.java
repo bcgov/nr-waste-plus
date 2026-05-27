@@ -2,14 +2,20 @@ package ca.bc.gov.nrs.hrs.controller;
 
 import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.service.ReportingUnitService;
 import io.micrometer.observation.annotation.Observed;
+import jakarta.validation.Valid;
+import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,6 +30,10 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>All endpoints in this controller are gated behind
  * {@link FeatureFlag#REPORTING_UNIT_DETAILS_ENABLED}. When the flag is disabled the
  * controller responds with HTTP 404 so the feature remains invisible to callers.</p>
+ *
+ * <p>POST /api/reporting-units creates a new Reporting Unit in the legacy system.
+ * On success it returns HTTP 201 (Created) with a Location header pointing to the
+ * created resource. Per API contract this endpoint does not return a response body.</p>
  */
 @RestController
 @RequestMapping("/api/reporting-units")
@@ -60,6 +70,28 @@ public class ReportingUnitController {
     log.info("Fetching reporting unit details for RU {}", reportingUnitId);
 
     return reportingUnitService.getReportingUnitDetails(reportingUnitId);
+  }
+  
+  /**
+   * Create a new Reporting Unit.
+   *
+   * Creates a reporting unit in the legacy system and returns HTTP 201 (Created)
+   * with a Location header pointing to the frontend resource (/reporting-units/{id}).
+   * Per API contract, this endpoint does not return a response body.
+   *
+   * @param request the create reporting unit request
+   * @return ResponseEntity with HTTP 201 (Created) and Location header; response body is empty
+   */
+  @PostMapping
+  @Observed
+  public ResponseEntity<Void> createReportingUnit(
+      @Valid @RequestBody CreateReportingUnitRequestDto request
+  ) {
+    Long createdId = reportingUnitService.createReportingUnit(request);
+
+    URI location = URI.create("/reporting-units/" + createdId);
+
+    return ResponseEntity.created(location).build();
   }
 
 }

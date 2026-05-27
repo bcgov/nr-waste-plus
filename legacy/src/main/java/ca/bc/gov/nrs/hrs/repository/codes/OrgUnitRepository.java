@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.hrs.repository.codes;
 
 import ca.bc.gov.nrs.hrs.entity.codes.OrgUnitEntity;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -22,4 +23,16 @@ public interface OrgUnitRepository extends JpaRepository<OrgUnitEntity, Long> {
    * @return a list of matching {@link OrgUnitEntity} ordered by orgUnitCode ascending
    */
   List<OrgUnitEntity> findAllByOrgUnitCodeInOrderByOrgUnitCodeAsc(List<String> orgUnitCodes);
+
+  /**
+   * Find a single organization unit by its code.
+   *
+   * <p>Returns the {@link OrgUnitEntity} wrapped in an {@link Optional} that has the supplied
+   * {@code orgUnitCode}. The {@link Optional} will be empty if no matching record exists.</p>
+   *
+   * @param districtCode the organization unit code to look up (e.g. "DKM")
+   * @return an {@link Optional} containing the matching {@link OrgUnitEntity}, or empty if none found
+   */
+  Optional<OrgUnitEntity> findByOrgUnitCode(String districtCode);
+  
 }

@@ -13,6 +13,11 @@ import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProvider;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import java.util.Optional;
+import java.util.List;
+import java.time.LocalDateTime;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.web.server.ResponseStatusException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -136,6 +141,70 @@ class ReportingUnitServiceTest {
     // Assert — sampling and district must come from legacy response unchanged
     assertThat(result.sampling()).isEqualTo(customSampling);
     assertThat(result.district()).isEqualTo(customDistrict);
+  }
+
+  @Test
+  @DisplayName("shouldCreateReportingUnit_whenRequestIsValid")
+  void shouldCreateReportingUnit_whenRequestIsValid() {
+    // Arrange
+    var request = new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+        CLIENT_NUMBER, "DND", "S01", null);
+
+    when(legacyApiProvider.searchReportingUnit(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+        .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
+
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
+
+    when(legacyApiProvider.createReportingUnit(request)).thenReturn(333L);
+
+    // Act
+    var response = reportingUnitService.createReportingUnit(request);
+
+    // Assert
+    assertThat(response).isNotNull();
+    assertThat(response).isEqualTo(333L);
+  }
+
+  @Test
+  @DisplayName("shouldThrowBadRequest_whenGradeMissingForDKM")
+  void shouldThrowBadRequest_whenGradeMissingForDKM() {
+    // Arrange — ensure no duplicate exists
+    var request = new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+        CLIENT_NUMBER, "DKM", "S01", null);
+
+    when(legacyApiProvider.searchReportingUnit(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+        .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
+
+    // Act & Assert — grade validation happens before forest client lookup
+    assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST));
+  }
+
+  @Test
+  @DisplayName("shouldThrowConflict_whenReportingUnitAlreadyExists")
+  void shouldThrowConflict_whenReportingUnitAlreadyExists() {
+    // Arrange
+    var request = new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+        CLIENT_NUMBER, "DND", "S01", null);
+
+    var existingResult = new ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto(
+        "1", 26L, "", 36834L,
+        new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(CLIENT_NUMBER, null),
+        null, null, null, false, false,
+        new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("S01", "Sample"),
+        new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DND", "Nadina"),
+        new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DFT", "Draft"),
+        LocalDateTime.now(), false);
+
+    when(legacyApiProvider.searchReportingUnit(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+        .thenReturn(new PageImpl<>(List.of(existingResult), PageRequest.of(0, 1), 1));
+
+    // Act & Assert
+    assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.CONFLICT));
   }
 }
 

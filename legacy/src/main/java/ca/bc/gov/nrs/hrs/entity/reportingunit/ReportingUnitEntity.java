@@ -2,7 +2,10 @@ package ca.bc.gov.nrs.hrs.entity.reportingunit;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
@@ -24,7 +27,7 @@ import lombok.With;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(schema = "THE", name = "ORG_UNIT")
+@Table(schema = "THE", name = "WASTE_REPORTING_UNIT")
 public class ReportingUnitEntity {
 
   /**
@@ -32,12 +35,14 @@ public class ReportingUnitEntity {
    */
   @Id
   @Column(name = "REPORTING_UNIT_ID")
+  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq_gen")
+  @SequenceGenerator(name = "user_seq_gen", sequenceName = "THE.WASTE_REPORTING_UNIT_SEQ", allocationSize = 1)
   private Long id;
 
   /**
    * Organization unit number owning the reporting unit.
    */
-  @Column(name = "ORG_UNIT_NO", nullable = false)
+  @Column(name = "ORG_UNIT_NO", length = 10, nullable = false)
   private Long orgUnitNo;
 
   /**
@@ -61,25 +66,25 @@ public class ReportingUnitEntity {
   /**
    * Dispersed CV code.
    */
-  @Column(name = "WASTE_DISPERSED_CV_CODE", length = 3, nullable = false)
+  @Column(name = "WASTE_DISPERSED_CV_CODE", length = 3)
   private String wasteDispersedCvCode;
 
   /**
    * Accumulated CV code.
    */
-  @Column(name = "WASTE_ACCUMULATED_CV_CODE", length = 3, nullable = false)
+  @Column(name = "WASTE_ACCUMULATED_CV_CODE", length = 3)
   private String wasteAccumulatedCvCode;
 
   /**
    * Appraisal method code.
    */
-  @Column(name = "APPRAISAL_METHOD_CODE", length = 1, nullable = false)
+  @Column(name = "APPRAISAL_METHOD_CODE", length = 1)
   private Character appraisalMethodCode;
 
   /**
    * Revision counter for optimistic locking / versioning semantics in the app.
    */
-  @Column(name = "REVISION_COUNT", nullable = false)
+  @Column(name = "REVISION_COUNT", length = 5, nullable = false)
   private Long revision;
 
   /**
@@ -105,6 +110,5 @@ public class ReportingUnitEntity {
    */
   @Column(name = "UPDATE_TIMESTAMP", nullable = false)
   private LocalDate updatedAt;
-
-
+  
 }

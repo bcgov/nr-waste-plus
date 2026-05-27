@@ -1,15 +1,23 @@
 package ca.bc.gov.nrs.hrs.service;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProvider;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
+import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Service responsible for retrieving and enriching Reporting Unit details.
@@ -73,5 +81,68 @@ public class ReportingUnitService {
         legacyClient.district(),
         new CodeDescriptionDto(null, null)
     );
+  }
+
+  /**
+   * Creates a new reporting unit.
+   *
+   * Performs the following validations and actions:
+   * <ul>
+   *   <li>Ensures no existing reporting unit exists for the same client number and district.</li>
+   *   <li>Requires {@code gradeCode} when {@code districtCode} is "DKM".</li>
+   *   <li>Verifies that the client exists via the Forest Client API.</li>
+   *   <li>Creates the reporting unit in the legacy system and returns the generated id.</li>
+   * </ul>
+   *
+   * @param  request the validated create request containing client, district, sampling, and optional
+   *         grade information
+   * @return the id of the newly created reporting unit
+   * @throws ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException if the client does not exist
+   *         in the Forest Client API
+   * @throws org.springframework.web.server.ResponseStatusException if a duplicate reporting unit
+   *         exists or required validation fails
+   */
+  @NewSpan
+  public Long createReportingUnit(
+      @Valid CreateReportingUnitRequestDto request) {
+
+    log.info("Creating reporting unit for client {}", request.clientNumber());
+
+    // Check for existing reporting unit with the same client number and district
+    var searchFilters = ReportingUnitSearchParametersDto
+        .builder()
+        .clientNumbers(List.of(request.clientNumber()))
+        .district(List.of(request.districtCode()))
+        .build();
+
+    var existing = legacyApiProvider.searchReportingUnit(searchFilters, PageRequest.of(0, 1));
+    if (existing != null && existing.getTotalElements() > 0) {
+      throw new ResponseStatusException(
+          HttpStatus.CONFLICT,
+          String.format("Reporting unit for client %s and district %s already exists!",
+              request.clientNumber(), request.districtCode())
+      );
+    }
+
+    // Validate that gradeCode is provided when districtCode is "DKM"
+    if ("DKM".equals(request.districtCode())
+        && StringUtils.isBlank(request.gradeCode())) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "gradeCode is required when districtCode is DKM"
+      );
+    }
+
+    // Validate client exists via Forest Client API
+    forestClientApiProvider
+        .fetchClientByNumber(request.clientNumber())
+        .orElseThrow(() ->
+            new ForestClientNotFoundException(request.clientNumber())
+        );
+
+    // Create reporting unit via legacy API
+    Long createdId = legacyApiProvider.createReportingUnit(request);
+
+    return createdId;
   }
 }
