@@ -1,15 +1,20 @@
 package ca.bc.gov.nrs.hrs.service.reportingunit;
 
 import ca.bc.gov.nrs.hrs.LegacyConstants;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
+import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.WasteReportingUnitNotFound;
 import ca.bc.gov.nrs.hrs.mappers.reportingunit.ReportingUnitDetailsMapper;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.repository.codes.OrgUnitRepository;
 import io.micrometer.observation.annotation.Observed;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 /**
@@ -28,6 +33,9 @@ public class ReportingUnitService {
 
   private final ReportingUnitRepository ruRepository;
   private final ReportingUnitDetailsMapper ruDetailsMapper;
+  private final OrgUnitRepository orgUnitRepository;
+  
+  private static final String DEFAULT_LOCATION_CODE = "00";
 
   /**
    * Retrieves the detail view for the given Reporting Unit, scoped to the
@@ -60,6 +68,57 @@ public class ReportingUnitService {
         .getReportingUnitDetails(reportingUnitId, searchClients)
         .map(ruDetailsMapper::fromProjection)
         .orElseThrow(() -> new WasteReportingUnitNotFound(reportingUnitId));
+  }
+
+  
+
+  /**
+   * Creates a new Reporting Unit by delegating to the {@code WASTE_501_REPORTING_UNIT} Oracle
+   * package, which generates the ID and performs the INSERT internally.
+   *
+   * <p>Resolves the {@code districtCode} to its corresponding org-unit number by looking up
+   * the {@link ca.bc.gov.nrs.hrs.entity.codes.OrgUnitEntity} with the matching code.</p>
+   *
+   * @param request the DTO carrying the fields for the new reporting unit
+   * @param userId  the identifier of the authenticated user performing the creation
+   * @return the ID of the newly created reporting unit
+   * @throws IllegalArgumentException if no org unit is found for the supplied district code
+   */
+  @Transactional
+  public Long createReportingUnit(CreateReportingUnitRequestDto request, String userId) {
+
+    Long orgUnitNo = orgUnitRepository.findByOrgUnitCode(request.districtCode())
+        .orElseThrow(() ->
+            new IllegalArgumentException("No district found for code: " + request.districtCode())
+        )
+        .getOrgUnitNo();
+
+    LocalDate now = LocalDate.now();
+
+    ReportingUnitEntity entity = ReportingUnitEntity.builder()
+        .orgUnitNo(orgUnitNo)
+        .clientNumber(request.clientNumber())
+        .clientLocationCode(DEFAULT_LOCATION_CODE)
+        .wasteSamplingOptionCode(request.samplingCode())
+        .wasteDispersedCvCode(null)
+        .wasteAccumulatedCvCode(null)
+        .appraisalMethodCode(null)
+        .createdBy(userId)
+        .createdAt(now)
+        .updatedBy(userId)
+        .updatedAt(now)
+        .revision(1L)
+        .build();
+
+    ReportingUnitEntity savedEntity = ruRepository.save(entity);
+
+    log.info(
+        "Successfully created new reporting unit with id {} for client {}",
+        savedEntity.getId(),
+        request.clientNumber()
+    );
+
+    return savedEntity.getId();
   }
 
 }
