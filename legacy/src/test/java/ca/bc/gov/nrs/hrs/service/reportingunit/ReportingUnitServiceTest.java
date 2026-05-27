@@ -15,6 +15,12 @@ import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitDetailsProjection;
 import ca.bc.gov.nrs.hrs.exception.WasteReportingUnitNotFound;
 import ca.bc.gov.nrs.hrs.mappers.reportingunit.ReportingUnitDetailsMapper;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.repository.codes.OrgUnitRepository;
+import ca.bc.gov.nrs.hrs.entity.codes.OrgUnitEntity;
+import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +30,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.ArgumentMatchers;
 
 @DisplayName("Unit Test | ReportingUnitService")
 @ExtendWith(MockitoExtension.class)
@@ -35,11 +42,17 @@ class ReportingUnitServiceTest {
   @Mock
   private ReportingUnitDetailsMapper ruDetailsMapper;
 
+  @Mock
+  private OrgUnitRepository orgUnitRepository;
+
   @InjectMocks
   private ReportingUnitService service;
 
   private static final Long RU_ID = 879L;
   private static final List<String> CLIENTS = List.of("00001271", "00001272");
+
+  @Captor
+  private ArgumentCaptor<ReportingUnitEntity> ruEntityCaptor;
 
   private ReportingUnitDetailsDto buildDetailsDto() {
     return new ReportingUnitDetailsDto(
@@ -135,7 +148,81 @@ class ReportingUnitServiceTest {
 
   // Helper for never-called verify when mapper should not be invoked
   private <T> T any() {
-    return org.mockito.ArgumentMatchers.any();
+    return ArgumentMatchers.any();
+  }
+
+  @Nested
+  @DisplayName("createReportingUnit")
+  class CreateReportingUnit {
+
+    @Test
+    @DisplayName("should create reporting unit when district code resolves to an org unit")
+    void shouldCreateReportingUnit_whenOrgUnitFound() {
+      // Arrange
+      String district = "DKM";
+      OrgUnitEntity orgUnit = OrgUnitEntity.builder().orgUnitNo(123L).orgUnitCode(district).build();
+      when(orgUnitRepository.findByOrgUnitCode(district)).thenReturn(java.util.Optional.of(orgUnit));
+
+      CreateReportingUnitRequestDto request = new CreateReportingUnitRequestDto(
+          "00001271",
+          district,
+          "AGR",
+          null
+      );
+
+      ReportingUnitEntity saved = ReportingUnitEntity.builder()
+          .id(555L)
+          .orgUnitNo(123L)
+          .clientNumber(request.clientNumber())
+          .clientLocationCode("00")
+          .wasteSamplingOptionCode(request.samplingCode())
+          .createdBy("IDIR\\user")
+          .updatedBy("IDIR\\user")
+          .revision(1L)
+          .build();
+
+      when(ruRepository.save(ArgumentMatchers.any(ReportingUnitEntity.class)))
+          .thenReturn(saved);
+
+      // Act
+      Long result = service.createReportingUnit(request, "IDIR\\user");
+
+      // Assert
+      assertThat(result).isEqualTo(555L);
+      verify(ruRepository).save(ruEntityCaptor.capture());
+      ReportingUnitEntity captured = ruEntityCaptor.getValue();
+      assertThat(captured.getOrgUnitNo()).isEqualTo(123L);
+      assertThat(captured.getClientNumber()).isEqualTo("00001271");
+      assertThat(captured.getClientLocationCode()).isEqualTo("00");
+      assertThat(captured.getWasteSamplingOptionCode()).isEqualTo("AGR");
+      assertThat(captured.getCreatedBy()).isEqualTo("IDIR\\user");
+      assertThat(captured.getUpdatedBy()).isEqualTo("IDIR\\user");
+      assertThat(captured.getRevision()).isEqualTo(1L);
+      assertThat(captured.getCreatedAt()).isNotNull();
+      assertThat(captured.getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("should throw IllegalArgumentException when district code does not resolve")
+    void shouldThrow_whenDistrictNotFound() {
+      // Arrange
+      String district = "UNKNOWN";
+      when(orgUnitRepository.findByOrgUnitCode(district)).thenReturn(java.util.Optional.empty());
+
+      CreateReportingUnitRequestDto request = new CreateReportingUnitRequestDto(
+          "00001271",
+          district,
+          "AGR",
+          null
+      );
+
+      // Act & Assert
+      assertThatThrownBy(() -> service.createReportingUnit(request, "user"))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining(district);
+      verify(ruRepository, never()).save(ArgumentMatchers.any());
+    }
+    
   }
 }
 
