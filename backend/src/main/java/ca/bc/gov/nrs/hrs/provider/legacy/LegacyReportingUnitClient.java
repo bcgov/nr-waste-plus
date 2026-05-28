@@ -285,26 +285,7 @@ public class LegacyReportingUnitClient {
                   "Legacy API returned status {} for create reporting unit",
                   res.getStatusCode()
               );
-
-              try {
-                // Parse ProblemDetail body returned by legacy API
-                ObjectMapper mapper = new ObjectMapper();
-                ProblemDetail legacyError =
-                    mapper.readValue(res.getBody(), ProblemDetail.class);
-
-                // Forward meaningful error message upstream
-                throw new ResponseStatusException(
-                    res.getStatusCode(),
-                    legacyError.getDetail()
-                );
-
-              } catch (Exception e) {
-                // Fallback when response cannot be parsed
-                throw new UnretriableException(
-                    res.getStatusCode(),
-                    request.clientNumber()
-                );
-              }
+              throw new UnretriableException(res.getStatusCode(), request.clientNumber());
             }
         )
         .body(Long.class);
