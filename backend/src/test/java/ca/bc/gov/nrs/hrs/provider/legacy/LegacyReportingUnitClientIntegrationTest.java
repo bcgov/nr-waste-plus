@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.provider.legacy;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.serviceUnavailable;
@@ -17,6 +18,7 @@ import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
@@ -77,6 +79,38 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
     RetryConfig retry = retryRegistry.retry("apiRetry").getRetryConfig();
     retryRegistry.remove("apiRetry");
     retryRegistry.retry("apiRetry", retry);
+  }
+
+  @Test
+  @DisplayName("shouldCreateReportingUnit_whenLegacyReturnsId")
+  void shouldCreateReportingUnit_whenLegacyReturnsId() {
+    CreateReportingUnitRequestDto request = new CreateReportingUnitRequestDto( "00012797", "DND", "S01", null);
+
+    // Legacy returns a numeric id in the body
+    clientApiStub.stubFor(
+        post(urlPathEqualTo("/api/reporting-units"))
+            .willReturn(okJson("333"))
+    );
+
+    Long id = legacyReportingUnitClient.createReportingUnit(request);
+    assertNotNull(id);
+    assertEquals(333L, id.longValue());
+  }
+
+  @Test
+  @DisplayName("shouldThrowUnretriableException_whenLegacyReturnsError")
+  void shouldThrowUnretriableException_whenLegacyReturnsError() {
+    CreateReportingUnitRequestDto request = new CreateReportingUnitRequestDto( "00012797", "DND", "S01", null);
+
+    clientApiStub.stubFor(
+        post(urlPathEqualTo("/api/reporting-units"))
+            .willReturn(serviceUnavailable())
+    );
+
+    var ex = assertThrows(ca.bc.gov.nrs.hrs.exception.UnretriableException.class,
+        () -> legacyReportingUnitClient.createReportingUnit(request));
+
+    assertEquals(503, ex.getStatusCode().value());
   }
 
   @ParameterizedTest
