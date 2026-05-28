@@ -1,4 +1,10 @@
-import { useQuery, useQueries, type UseQueryOptions } from '@tanstack/react-query';
+import {
+  useQuery,
+  useQueries,
+  type UseQueryOptions,
+  useMutation,
+  type UseMutationOptions,
+} from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
 import { queryKeys, type ReportingUnitsQueryParams } from './queryKeys';
@@ -9,6 +15,7 @@ import type { CodeDescriptionDto, ReportingUnitSearchExpandedDto } from '@/servi
 import type {
   ForestClientDto,
   MyForestClientDto,
+  ReportingUnitCreateDto,
   ReportingUnitDto,
   ReportingUnitSearchResultDto,
 } from '@/services/types';
@@ -366,6 +373,53 @@ export const useSearchReportingUnitsQuery = <
   }, [notificationTarget, query.error, query.isError]);
 
   return query;
+};
+
+/**
+ * Creates a new reporting unit and returns the created resource ID.
+ *
+ * The backend returns HTTP 201 (Created) with a Location header pointing to the
+ * created resource. The service layer extracts and parses this header to return
+ * the numeric ID, which is passed to optional `onSuccess` callback.
+ *
+ * On error, dispatches an inline notification to `notificationTarget` (when supplied)
+ * using the RFC 7807 problem-details payload from the backend when available.
+ *
+ * @param options - Optional TanStack Query mutation overrides plus:
+ *   - `notificationTarget`: Optional target for inline error notifications.
+ *   - `onSuccess`: Optional callback invoked with the created reporting unit ID (allows caller to navigate).
+ * @returns The TanStack Query mutation result for creating a reporting unit (returns the ID as number).
+ */
+export const useReportingUnitCreateMutation = (
+  options?: Omit<
+    UseMutationOptions<number, Error, ReportingUnitCreateDto>,
+    'mutationKey' | 'mutationFn' | 'onSuccess'
+  > &
+    QueryNotificationOptions & {
+      /** Called with the created reporting unit ID on success. */
+      onSuccess?: (id: number) => void;
+    },
+) => {
+  const { notificationTarget, onSuccess, ...mutationOptions } = options ?? {};
+
+  const mutation = useMutation({
+    mutationKey: queryKeys.reportingUnit.create(),
+    mutationFn: (body) => API.reportingUnit.createReportingUnit(body),
+    onSuccess: (data) => {
+      onSuccess?.(data);
+    },
+    ...mutationOptions,
+  });
+
+  useEffect(() => {
+    if (!notificationTarget || !mutation.isError || !mutation.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(mutation.error, notificationTarget);
+  }, [notificationTarget, mutation.error, mutation.isError]);
+
+  return mutation;
 };
 
 /**

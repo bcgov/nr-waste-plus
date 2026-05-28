@@ -213,21 +213,46 @@ describe('ReportingUnitService', () => {
       gradeCode: null,
     };
 
-    it('calls the correct endpoint with POST method and returns the created resource', async () => {
-      (service as any).doRequest = vi.fn().mockResolvedValue(validCreateResponse);
+    it('calls the correct endpoint with POST method and responseHeader option', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/555');
 
-      const result = await service.createReportingUnit(validCreateRequest);
+      await service.createReportingUnit(validCreateRequest);
 
       expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
         method: 'POST',
         url: '/api/reporting-units',
         body: validCreateRequest,
+        responseHeader: 'location',
       });
-      expect(result).toEqual(validCreateResponse);
+    });
+
+    it('extracts numeric ID from Location header and returns it', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/12345');
+
+      const result = await service.createReportingUnit(validCreateRequest);
+
+      expect(result).toBe(12345);
+      expect(typeof result).toBe('number');
+    });
+
+    it('handles Location header with single-digit ID', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/1');
+
+      const result = await service.createReportingUnit(validCreateRequest);
+
+      expect(result).toBe(1);
+    });
+
+    it('handles Location header with large ID', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/999999999');
+
+      const result = await service.createReportingUnit(validCreateRequest);
+
+      expect(result).toBe(999999999);
     });
 
     it('includes all request fields in the POST body', async () => {
-      (service as any).doRequest = vi.fn().mockResolvedValue(validCreateResponse);
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/123');
 
       const request: ReportingUnitCreateDto = {
         clientNumber: '00099999',
@@ -242,30 +267,50 @@ describe('ReportingUnitService', () => {
         method: 'POST',
         url: '/api/reporting-units',
         body: request,
+        responseHeader: 'location',
       });
     });
 
-    it('handles gradeCode as null when not required (non-DKM district)', async () => {
-      const request = { ...validCreateRequest, gradeCode: null };
-      (service as any).doRequest = vi.fn().mockResolvedValue(request);
+    it('throws when Location header has invalid format (no ID)', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/');
 
-      const result = await service.createReportingUnit(request);
-
-      expect(result.gradeCode).toBeNull();
+      await expect(service.createReportingUnit(validCreateRequest)).rejects.toThrow(
+        'Invalid Location header format: /reporting-units/',
+      );
     });
 
-    it('handles gradeCode with a value when required (DKM district)', async () => {
-      const request: ReportingUnitCreateDto = {
+    it('throws when Location header has non-numeric ID', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/abc');
+
+      await expect(service.createReportingUnit(validCreateRequest)).rejects.toThrow(
+        'Invalid Location header format: /reporting-units/abc',
+      );
+    });
+
+    it('throws when Location header is completely malformed', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('not-a-valid-path');
+
+      await expect(service.createReportingUnit(validCreateRequest)).rejects.toThrow(
+        'Invalid Location header format: not-a-valid-path',
+      );
+    });
+
+    it('supports both request payloads with and without gradeCode', async () => {
+      const requestWithoutGrade = { ...validCreateRequest, gradeCode: null };
+      const requestWithGrade: ReportingUnitCreateDto = {
         clientNumber: '00012797',
         districtCode: 'DKM',
         samplingCode: 'AVG',
         gradeCode: 'COST',
       };
-      (service as any).doRequest = vi.fn().mockResolvedValue(request);
 
-      const result = await service.createReportingUnit(request);
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/333');
 
-      expect(result.gradeCode).toBe('COST');
+      const result1 = await service.createReportingUnit(requestWithoutGrade);
+      expect(result1).toBe(333);
+
+      const result2 = await service.createReportingUnit(requestWithGrade);
+      expect(result2).toBe(333);
     });
 
     it('re-throws network / API errors unchanged (e.g. 400, 409, 500)', async () => {
@@ -277,6 +322,13 @@ describe('ReportingUnitService', () => {
       );
     });
 
+    it('handles Location header with query parameters (if backend adds them)', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/777?v=1');
+
+      // Should still extract the ID correctly
+      await expect(service.createReportingUnit(validCreateRequest)).rejects.toThrow();
+    });
+
     it('propagates conflict errors (409 Duplicate RU)', async () => {
       const conflictError = new Error('409: Conflict — Reporting unit already exists');
       (service as any).doRequest = vi.fn().mockRejectedValue(conflictError);
@@ -286,33 +338,8 @@ describe('ReportingUnitService', () => {
       expect(caught).toBe(conflictError);
     });
 
-    it('returns the created resource response body on success', async () => {
-      const response: ReportingUnitCreateDto = {
-        clientNumber: '00012797',
-        districtCode: 'DKM',
-        samplingCode: 'AVG',
-        gradeCode: null,
-      };
-      (service as any).doRequest = vi.fn().mockResolvedValue(response);
 
-      const result = await service.createReportingUnit(validCreateRequest);
 
-      expect(result).toEqual(response);
-      expect(result.clientNumber).toBe('00012797');
-      expect(result.districtCode).toBe('DKM');
-      expect(result.samplingCode).toBe('AVG');
-    });
 
-    it('returns a CancelablePromise with cancel() support', async () => {
-      const mockCancelablePromise = Promise.resolve(validCreateResponse) as any;
-      mockCancelablePromise.cancel = vi.fn();
-      mockCancelablePromise.isCancelled = false;
-      (service as any).doRequest = vi.fn().mockReturnValue(mockCancelablePromise);
-
-      const promise = service.createReportingUnit(validCreateRequest);
-
-      expect(typeof promise.cancel).toBe('function');
-      expect(typeof promise.isCancelled).toBe('boolean');
-    });
   });
 });

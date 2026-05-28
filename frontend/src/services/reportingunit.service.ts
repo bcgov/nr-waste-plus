@@ -1,6 +1,6 @@
 import type { ReportingUnitCreateDto, ReportingUnitDto } from './types';
-import type { CancelablePromise } from '@/config/api/CancelablePromise';
 
+import { CancelablePromise } from '@/config/api/CancelablePromise';
 import { HttpClient, type APIConfig } from '@/config/api/types';
 
 /**
@@ -36,11 +36,38 @@ export class ReportingUnitService extends HttpClient {
     });
   }
 
-  createReportingUnit(body: ReportingUnitCreateDto): CancelablePromise<ReportingUnitCreateDto> {
-    return this.doRequest<ReportingUnitCreateDto>(this.config, {
-      method: 'POST',
-      url: '/api/reporting-units',
-      body,
+  /**
+   * Creates a new reporting unit and extracts the ID from the Location header.
+   *
+   * The backend returns HTTP 201 (Created) with a Location header pointing to
+   * `/reporting-units/{id}`. This method extracts the ID from that header and
+   * returns it as a number for immediate navigation.
+   *
+   * @param body - The create request payload.
+   * @returns A promise that resolves to the numeric ID of the created reporting unit.
+   * @throws {ApiError} When the HTTP request fails (400, 409, 500, etc.).
+   */
+  createReportingUnit(body: ReportingUnitCreateDto): CancelablePromise<number> {
+    return new CancelablePromise<number>((resolve, reject, onCancel) => {
+      const request = this.doRequest<string>(this.config, {
+        method: 'POST',
+        url: '/api/reporting-units',
+        body,
+        responseHeader: 'location',
+      });
+
+      // Forward cancellation to the underlying HTTP request.
+      onCancel(() => request.cancel());
+
+      request.then((locationHeader) => {
+        // Extract ID from Location header (format: `/reporting-units/{id}`)
+        const match = new RegExp(/\/(\d+)$/).exec(locationHeader);
+        if (!match?.[1]) {
+          reject(new Error(`Invalid Location header format: ${locationHeader}`));
+          return;
+        }
+        resolve(Number.parseInt(match[1], 10));
+      }, reject);
     });
   }
 }
