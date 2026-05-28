@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.net.URI;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -195,21 +196,34 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * Attempts to extract the most useful message from a
+   * Extracts a user-friendly constraint violation message from a
    * {@link DataIntegrityViolationException}.
    *
-   * @param ex the data integrity violation exception
-   * @return the most specific available constraint violation message, or a
-   *         fallback message when none is available
+   * <p>The extraction follows this hierarchy:</p>
+   *
+   * <ol>
+   *   <li>
+   *     The message from the most specific cause
+   *     (e.g., the underlying SQL exception).
+   *   </li>
+   *   <li>
+   *     The primary message of the
+   *     {@link DataIntegrityViolationException} itself.
+   *   </li>
+   *   <li>
+   *     A generic fallback message if no specific details are found.
+   *   </li>
+   * </ol>
+   *
+   * @param ex the {@link DataIntegrityViolationException} to process.
+   * @return a {@link String} containing the most specific available error detail.
    */
-  private String extractConstraintMessage(DataIntegrityViolationException ex) {
-    Throwable mostSpecific = ex.getMostSpecificCause();
-    if (mostSpecific != null && mostSpecific.getMessage() != null) {
-      return mostSpecific.getMessage();
-    }
-    if (ex.getMessage() != null) {
-      return ex.getMessage();
-    }
-    return "A database constraint was violated.";
+  private String extractConstraintMessage(
+      DataIntegrityViolationException ex
+  ) {
+    return Optional.ofNullable(ex.getMostSpecificCause())
+        .map(Throwable::getMessage)
+        .or(() -> Optional.ofNullable(ex.getMessage()))
+        .orElse("A database constraint was violated.");
   }
 }
