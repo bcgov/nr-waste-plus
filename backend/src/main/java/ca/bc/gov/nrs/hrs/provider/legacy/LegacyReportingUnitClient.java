@@ -6,7 +6,8 @@ import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import ca.bc.gov.nrs.hrs.exception.UnretriableException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import java.util.List;
@@ -17,8 +18,11 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.server.ResponseStatusException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import tools.jackson.databind.JsonNode;
 
 /**
@@ -252,12 +256,13 @@ public class LegacyReportingUnitClient {
   }
 
   /**
-   * Create a reporting unit in the legacy API.
+   * Creates a reporting unit in the legacy API.
    *
-   * Posts the supplied create request to {@code POST /api/reporting-units} and expects the
-   * legacy API to return the created resource id as a numeric value.
+   * Sends a POST request to {@code /api/reporting-units} with the provided
+   * {@link CreateReportingUnitRequestDto}. The legacy API is expected to return
+   * the identifier of the newly created reporting unit as a numeric value.
    *
-   * @param  request the create request dto
+   * @param request the create request DTO
    * @return the id of the newly created reporting unit
    */
   @NewSpan
@@ -272,6 +277,35 @@ public class LegacyReportingUnitClient {
         .uri("/api/reporting-units")
         .body(request)
         .retrieve()
+        .onStatus(
+            status -> status.isError(),
+            (req, res) -> {
+              log.error(
+                  "Legacy API returned status {} for create reporting unit",
+                  res.getStatusCode()
+              );
+
+              try {
+                // Parse ProblemDetail body returned by legacy API
+                ObjectMapper mapper = new ObjectMapper();
+                ProblemDetail legacyError =
+                    mapper.readValue(res.getBody(), ProblemDetail.class);
+
+                // Forward meaningful error message upstream
+                throw new ResponseStatusException(
+                    res.getStatusCode(),
+                    legacyError.getDetail()
+                );
+
+              } catch (Exception e) {
+                // Fallback when response cannot be parsed
+                throw new UnretriableException(
+                    res.getStatusCode(),
+                    request.clientNumber()
+                );
+              }
+            }
+        )
         .body(Long.class);
   }
 
