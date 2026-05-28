@@ -55,7 +55,19 @@ public class GlobalExceptionHandler {
         .body(problem);
   }
 
-  @ExceptionHandler(MethodArgumentNotValidException.class)
+  /**
+   * Handles {@link MethodArgumentNotValidException} exceptions thrown when
+   * request validation fails.
+   *
+   * <p>Collects all field validation error messages from the binding result
+   * and returns them as a single {@link ProblemDetail} response with
+   * HTTP 400 (Bad Request) status.</p>
+   *
+   * @param ex the validation exception containing binding and field errors
+   * @param request the current HTTP servlet request
+   * @return a {@link ResponseEntity} containing the validation error details
+   */
+  @ExceptionHandler
   public ResponseEntity<ProblemDetail> handleMethodArgumentNotValid(
       MethodArgumentNotValidException ex, HttpServletRequest request) {
     log.warn("Validation failed: {}", ex.getMessage());
