@@ -24,6 +24,22 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 public class GlobalExceptionHandler {
 
+  /**
+   * Handle database constraint violations and convert them to an RFC 7807
+   * ProblemDetail response.
+   *
+   * <p>This method maps {@link DataIntegrityViolationException} to an HTTP
+   * 409 CONFLICT response. The response body is an {@link ProblemDetail}
+   * (content type application/problem+json) with a title of
+   * "Database Constraint Violation" and a detail message extracted from the
+   * most specific cause of the exception when available.</p>
+   *
+   * @param ex the caught {@link DataIntegrityViolationException}
+   * @param request the current {@link HttpServletRequest} (used to set the
+   *        ProblemDetail instance URI)
+   * @return a {@link ResponseEntity} containing a {@link ProblemDetail} with
+   *         status {@link org.springframework.http.HttpStatus#CONFLICT}
+   */
   @ExceptionHandler(DataIntegrityViolationException.class)
   public ResponseEntity<ProblemDetail> handleDataIntegrityViolation(
       DataIntegrityViolationException ex, HttpServletRequest request) {
@@ -58,6 +74,22 @@ public class GlobalExceptionHandler {
         .body(problem);
   }
 
+  /**
+   * Handle {@link MethodArgumentNotValidException} thrown when {@code @Valid}
+   * annotated controller method arguments fail validation.
+   *
+   * <p>Extracts field validation error messages and returns an HTTP 400 Bad
+   * Request with an {@link ProblemDetail} body (application/problem+json).
+   * The ProblemDetail.title is set to "Validation Failed" and the detail
+   * contains a semicolon-delimited list of field error messages (or a
+   * generic message when none are present).</p>
+   *
+   * @param ex the validation exception containing binding errors
+   * @param request the current {@link HttpServletRequest} used to populate the
+   *        ProblemDetail instance URI
+   * @return a 400 {@link ResponseEntity} containing a {@link ProblemDetail}
+   */
+
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<ProblemDetail> handleConstraintViolation(
       ConstraintViolationException ex, HttpServletRequest request) {
@@ -76,6 +108,22 @@ public class GlobalExceptionHandler {
         .contentType(MediaType.APPLICATION_PROBLEM_JSON)
         .body(problem);
   }
+
+  /**
+   * Handle {@link ConstraintViolationException} typically raised by
+   * validation on constructor or method parameters (for example when using
+   * {@code @Validated} on beans).
+   *
+   * <p>Builds a semicolon-delimited string of constraint violations where
+   * each entry contains the property path and the violation message. Returns
+   * HTTP 400 Bad Request with an {@link ProblemDetail} (application/problem+json)
+   * containing the combined detail.</p>
+   *
+   * @param ex the constraint violation exception
+   * @param request the current {@link HttpServletRequest} used to set the
+   *        ProblemDetail instance URI
+   * @return a 400 {@link ResponseEntity} containing a {@link ProblemDetail}
+   */
 
   @ExceptionHandler(ResponseStatusException.class)
   public ResponseEntity<ProblemDetail> handleResponseStatusException(
@@ -103,6 +151,22 @@ public class GlobalExceptionHandler {
         .body(problem);
   }
 
+  /**
+   * Handle {@link ResponseStatusException} which carries an HTTP status and
+   * optional reason.
+   *
+   * <p>This handler resolves the appropriate title from the HTTP status
+   * reason phrase (falling back to the status token) and sets the ProblemDetail
+   * status to the exception's status. The ProblemDetail.detail is populated
+   * from {@link ResponseStatusException#getReason()} when available or the
+   * exception message otherwise.</p>
+   *
+   * @param ex the ResponseStatusException thrown by controllers or services
+   * @param request the current {@link HttpServletRequest} used to populate the
+   *        ProblemDetail instance URI
+   * @return a {@link ResponseEntity} whose status matches the exception status
+   */
+
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ProblemDetail> handleGenericException(
       Exception ex, HttpServletRequest request) {
@@ -117,6 +181,19 @@ public class GlobalExceptionHandler {
         .contentType(MediaType.APPLICATION_PROBLEM_JSON)
         .body(problem);
   }
+
+  /**
+   * Handle uncaught exceptions as an internal server error.
+   *
+   * <p>Any unhandled {@link Exception} will be logged and translated to a
+   * 500 Internal Server Error response with a generic {@link ProblemDetail}
+   * to avoid leaking implementation details to clients.</p>
+   *
+   * @param ex the uncaught exception
+   * @param request the current {@link HttpServletRequest} used to populate the
+   *        ProblemDetail instance URI
+   * @return a 500 {@link ResponseEntity} containing a generic {@link ProblemDetail}
+   */
 
   /**
    * Attempts to extract the most useful message from a DataIntegrityViolationException.
