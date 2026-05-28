@@ -7,7 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -97,7 +97,7 @@ public class ReportingUnitEntity {
    * Creation timestamp.
    */
   @Column(name = "ENTRY_TIMESTAMP", nullable = false)
-  private LocalDate createdAt;
+  private LocalDateTime createdAt;
 
   /**
    * User who last updated the entry.
@@ -109,6 +109,6 @@ public class ReportingUnitEntity {
    * Last update timestamp.
    */
   @Column(name = "UPDATE_TIMESTAMP", nullable = false)
-  private LocalDate updatedAt;
+  private LocalDateTime updatedAt;
   
 }

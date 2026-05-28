@@ -9,7 +9,7 @@ import ca.bc.gov.nrs.hrs.mappers.reportingunit.ReportingUnitDetailsMapper;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.codes.OrgUnitRepository;
 import io.micrometer.observation.annotation.Observed;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -93,7 +93,7 @@ public class ReportingUnitService {
         )
         .getOrgUnitNo();
 
-    LocalDate now = LocalDate.now();
+    LocalDateTime now = LocalDateTime.now();
 
     ReportingUnitEntity entity = ReportingUnitEntity.builder()
         .orgUnitNo(orgUnitNo)
