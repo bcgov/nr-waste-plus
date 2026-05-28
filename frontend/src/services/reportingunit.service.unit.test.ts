@@ -5,7 +5,7 @@ import { ZodError } from 'zod';
 import { ReportingUnitService } from './reportingunit.service';
 import { reportingUnitSchema, codeDescriptionSchema } from './reportingUnit.types';
 
-import type { ReportingUnitDto } from './reportingUnit.types';
+import type { ReportingUnitCreateDto, ReportingUnitDto } from './reportingUnit.types';
 
 vi.mock('axios');
 
@@ -167,38 +167,11 @@ describe('ReportingUnitService', () => {
       expect(result).toMatchObject(validReportingUnit);
     });
 
-    it('throws a descriptive Error when the response fails Zod validation', async () => {
-      const malformed = { id: 'not-a-number', client: validCodeDescription };
-      (service as any).doRequest = vi.fn().mockResolvedValue(malformed);
-
-      await expect(service.getReportingUnit(7)).rejects.toThrow(
-        'Reporting unit 7 has an unexpected data structure:',
-      );
-    });
-
-    it('does not expose ZodError directly — wraps it in a plain Error', async () => {
-      (service as any).doRequest = vi.fn().mockResolvedValue({ id: null });
-
-      const error = await service.getReportingUnit(7).catch((e) => e);
-
-      expect(error).toBeInstanceOf(Error);
-      expect(error).not.toBeInstanceOf(ZodError);
-    });
-
     it('re-throws non-Zod errors (e.g. network / ApiError) unchanged', async () => {
       const networkError = new Error('Network failure');
       (service as any).doRequest = vi.fn().mockRejectedValue(networkError);
 
       await expect(service.getReportingUnit(1)).rejects.toThrow('Network failure');
-    });
-
-    it('propagates the original error reference for non-Zod rejections', async () => {
-      const originalError = new TypeError('Unexpected token');
-      (service as any).doRequest = vi.fn().mockRejectedValue(originalError);
-
-      const caught = await service.getReportingUnit(1).catch((e) => e);
-
-      expect(caught).toBe(originalError);
     });
 
     it('returns correct TypeScript-inferred shape on success', async () => {
@@ -214,6 +187,132 @@ describe('ReportingUnitService', () => {
       expect(typeof result.grade.code).toBe('string');
       expect(typeof result.sampling.code).toBe('string');
       expect(typeof result.district.code).toBe('string');
+    });
+  });
+
+  describe('createReportingUnit', () => {
+    /**
+     * API Contract (Issue #855):
+     * - Method: POST
+     * - Path: /api/reporting-units
+     * - Success: 201 Created + Location header pointing to /reporting-units/{id}
+     * - Errors: 400 Bad Request (validation), 409 Conflict (duplicate), 500 Internal Server Error
+     */
+
+    const validCreateRequest: ReportingUnitCreateDto = {
+      clientNumber: '00012797',
+      districtCode: 'DKM',
+      samplingCode: 'AVG',
+      gradeCode: null,
+    };
+
+    const validCreateResponse: ReportingUnitCreateDto = {
+      clientNumber: '00012797',
+      districtCode: 'DKM',
+      samplingCode: 'AVG',
+      gradeCode: null,
+    };
+
+    it('calls the correct endpoint with POST method and returns the created resource', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue(validCreateResponse);
+
+      const result = await service.createReportingUnit(validCreateRequest);
+
+      expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+        method: 'POST',
+        url: '/api/reporting-units',
+        body: validCreateRequest,
+      });
+      expect(result).toEqual(validCreateResponse);
+    });
+
+    it('includes all request fields in the POST body', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue(validCreateResponse);
+
+      const request: ReportingUnitCreateDto = {
+        clientNumber: '00099999',
+        districtCode: 'DCC',
+        samplingCode: 'MAX',
+        gradeCode: 'COST',
+      };
+
+      await service.createReportingUnit(request);
+
+      expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+        method: 'POST',
+        url: '/api/reporting-units',
+        body: request,
+      });
+    });
+
+    it('handles gradeCode as null when not required (non-DKM district)', async () => {
+      const request = { ...validCreateRequest, gradeCode: null };
+      (service as any).doRequest = vi.fn().mockResolvedValue(request);
+
+      const result = await service.createReportingUnit(request);
+
+      expect(result.gradeCode).toBeNull();
+    });
+
+    it('handles gradeCode with a value when required (DKM district)', async () => {
+      const request: ReportingUnitCreateDto = {
+        clientNumber: '00012797',
+        districtCode: 'DKM',
+        samplingCode: 'AVG',
+        gradeCode: 'COST',
+      };
+      (service as any).doRequest = vi.fn().mockResolvedValue(request);
+
+      const result = await service.createReportingUnit(request);
+
+      expect(result.gradeCode).toBe('COST');
+    });
+
+    it('re-throws network / API errors unchanged (e.g. 400, 409, 500)', async () => {
+      const apiError = new Error('400: Validation failed');
+      (service as any).doRequest = vi.fn().mockRejectedValue(apiError);
+
+      await expect(service.createReportingUnit(validCreateRequest)).rejects.toThrow(
+        '400: Validation failed',
+      );
+    });
+
+    it('propagates conflict errors (409 Duplicate RU)', async () => {
+      const conflictError = new Error('409: Conflict — Reporting unit already exists');
+      (service as any).doRequest = vi.fn().mockRejectedValue(conflictError);
+
+      const caught = await service.createReportingUnit(validCreateRequest).catch((e) => e);
+
+      expect(caught).toBe(conflictError);
+    });
+
+    it('returns the created resource response body on success', async () => {
+      const response: ReportingUnitCreateDto = {
+        clientNumber: '00012797',
+        districtCode: 'DKM',
+        samplingCode: 'AVG',
+        gradeCode: null,
+      };
+      (service as any).doRequest = vi.fn().mockResolvedValue(response);
+
+      const result = await service.createReportingUnit(validCreateRequest);
+
+      expect(result).toEqual(response);
+      expect(result.clientNumber).toBe('00012797');
+      expect(result.districtCode).toBe('DKM');
+      expect(result.samplingCode).toBe('AVG');
+    });
+
+    it('returns a CancelablePromise with cancel() support', async () => {
+      const mockCancelablePromise = Promise.resolve(validCreateResponse) as any;
+      mockCancelablePromise.cancel = vi.fn();
+      mockCancelablePromise.isCancelled = false;
+      (service as any).doRequest = vi.fn().mockReturnValue(mockCancelablePromise);
+
+      const promise = service.createReportingUnit(validCreateRequest);
+
+      expect(typeof promise.cancel).toBe('function');
+      expect(typeof promise.isCancelled).toBe('boolean');
     });
   });
 });

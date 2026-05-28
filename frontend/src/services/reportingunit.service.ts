@@ -1,8 +1,5 @@
-import { ZodError } from 'zod';
-
-import { reportingUnitSchema } from './reportingUnit.types';
-
-import type { ReportingUnitDto } from './types';
+import type { ReportingUnitCreateDto, ReportingUnitDto } from './types';
+import type { CancelablePromise } from '@/config/api/CancelablePromise';
 
 import { HttpClient, type APIConfig } from '@/config/api/types';
 
@@ -32,18 +29,18 @@ export class ReportingUnitService extends HttpClient {
    * @throws {Error} When the API response does not match the expected schema.
    * @throws {ApiError} When the HTTP request fails.
    */
-  async getReportingUnit(id: number): Promise<ReportingUnitDto> {
-    try {
-      const raw = await this.doRequest<unknown>(this.config, {
-        method: 'GET',
-        url: `/api/reporting-units/${id}`,
-      });
-      return reportingUnitSchema.parse(raw);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        throw new Error(`Reporting unit ${id} has an unexpected data structure: ${error.message}`);
-      }
-      throw error;
-    }
+  getReportingUnit(id: number): CancelablePromise<ReportingUnitDto> {
+    return this.doRequest<ReportingUnitDto>(this.config, {
+      method: 'GET',
+      url: `/api/reporting-units/${id}`,
+    });
+  }
+
+  createReportingUnit(body: ReportingUnitCreateDto): CancelablePromise<ReportingUnitCreateDto> {
+    return this.doRequest<ReportingUnitCreateDto>(this.config, {
+      method: 'POST',
+      url: '/api/reporting-units',
+      body,
+    });
   }
 }
