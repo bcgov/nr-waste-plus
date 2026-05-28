@@ -19,6 +19,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -278,7 +279,7 @@ public class LegacyReportingUnitClient {
         .body(request)
         .retrieve()
         .onStatus(
-            status -> status.isError(),
+            HttpStatusCode::isError,
             (req, res) -> {
               log.error(
                   "Legacy API returned status {} for create reporting unit",
