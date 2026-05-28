@@ -14,7 +14,7 @@ export const required =
 export const noSpecialChars =
   (message = 'Invalid characters'): Validator<string> =>
   (value) => {
-    if (!/^[a-zA-Z0-9 ]+$/.test(value)) {
+    if (!/^[a-zA-Z0-9 ]*$/.test(value)) {
       return message;
     }
 
