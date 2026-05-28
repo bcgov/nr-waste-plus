@@ -183,20 +183,12 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * Handle uncaught exceptions as an internal server error.
+   * Attempts to extract the most useful message from a
+   * {@link DataIntegrityViolationException}.
    *
-   * <p>Any unhandled {@link Exception} will be logged and translated to a
-   * 500 Internal Server Error response with a generic {@link ProblemDetail}
-   * to avoid leaking implementation details to clients.</p>
-   *
-   * @param ex the uncaught exception
-   * @param request the current {@link HttpServletRequest} used to populate the
-   *        ProblemDetail instance URI
-   * @return a 500 {@link ResponseEntity} containing a generic {@link ProblemDetail}
-   */
-
-  /**
-   * Attempts to extract the most useful message from a DataIntegrityViolationException.
+   * @param ex the data integrity violation exception
+   * @return the most specific available constraint violation message, or a
+   *         fallback message when none is available
    */
   private String extractConstraintMessage(DataIntegrityViolationException ex) {
     Throwable mostSpecific = ex.getMostSpecificCause();
