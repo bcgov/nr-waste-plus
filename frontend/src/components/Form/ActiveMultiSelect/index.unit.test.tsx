@@ -38,7 +38,7 @@ const ControlledMultiSelect = ({
   onChangeSpy,
   placeholder = 'Select...',
   testItems = items,
-  testItemToString = itemToString as (item: CodeItem | null) => string,
+  testItemToString = itemToString,
   id = 'test-multiselect',
 }: {
   initialSelected?: CodeItem[];
@@ -216,6 +216,122 @@ describe('ActiveMultiSelect', () => {
     // The skeleton should be rendered, not the multiselect
     expect(container.querySelector('.cds--skeleton')).toBeDefined();
     expect(container.querySelector('.cds--multi-select')).toBeNull();
+  });
+
+  describe('onBlur behavior', () => {
+    it('calls onBlur when the input element loses focus via fireEvent', async () => {
+      const onBlur = vi.fn<(event: FocusEvent) => void>();
+      render(
+        <ActiveMultiSelect
+          placeholder="Select..."
+          id="test-multiselect"
+          items={items}
+          itemToString={itemToString}
+          onChange={vi.fn()}
+          onBlur={onBlur}
+          selectedItems={[]}
+        />,
+      );
+
+      const input = getPlaceholderInput();
+      await act(async () => {
+        input.focus();
+      });
+
+      await act(async () => {
+        fireEvent.blur(input);
+      });
+
+      await waitFor(() => {
+        expect(onBlur).toHaveBeenCalled();
+      });
+    });
+
+    it('calls onBlur with FocusEvent when blur occurs', async () => {
+      const onBlur = vi.fn<(event: FocusEvent) => void>();
+      render(
+        <ActiveMultiSelect
+          placeholder="Select..."
+          id="test-multiselect"
+          items={items}
+          itemToString={itemToString}
+          onChange={vi.fn()}
+          onBlur={onBlur}
+          selectedItems={[]}
+        />,
+      );
+
+      const input = getPlaceholderInput();
+      await act(async () => {
+        input.focus();
+        fireEvent.blur(input);
+      });
+
+      await waitFor(() => {
+        expect(onBlur).toHaveBeenCalledTimes(1);
+      });
+
+      const callArgs = onBlur.mock.calls[0];
+      expect(callArgs[0]).toBeDefined();
+      expect(callArgs[0].type).toBe('blur');
+    });
+
+    it('renders without errors when onBlur prop is not provided', async () => {
+      const { container } = render(
+        <ActiveMultiSelect
+          placeholder="Select..."
+          id="test-multiselect"
+          items={items}
+          itemToString={itemToString}
+          onChange={vi.fn()}
+          selectedItems={[]}
+        />,
+      );
+
+      const input = getPlaceholderInput();
+      expect(input).toBeDefined();
+
+      await act(async () => {
+        fireEvent.blur(input);
+      });
+
+      // Test should pass without errors; no onBlur callback to check
+      expect(container.querySelector('.cds--multi-select')).toBeDefined();
+    });
+
+    it('onBlur is passed through to the underlying FilterableMultiSelect component', async () => {
+      const onBlur = vi.fn<(event: FocusEvent) => void>();
+      render(
+        <ActiveMultiSelect
+          placeholder="Select..."
+          id="test-multiselect"
+          items={items}
+          itemToString={itemToString}
+          onChange={vi.fn()}
+          onBlur={onBlur}
+          selectedItems={[]}
+        />,
+      );
+
+      const input = getPlaceholderInput() as HTMLInputElement;
+      expect(input).toBeDefined();
+
+      // Verify the input is properly rendered
+      await act(async () => {
+        input.focus();
+      });
+
+      expect(input).toBe(document.activeElement);
+
+      await act(async () => {
+        fireEvent.blur(input);
+      });
+
+      // onBlur should be called after blur event
+      await waitFor(() => {
+        expect(onBlur.mock.calls.length).toBeGreaterThanOrEqual(1);
+      });
+    });
   });
 
   describe('external selectedItems changes', () => {

@@ -53,14 +53,15 @@ const AXIOS_ERROR_MESSAGES: Record<string, { title: string; detail: string }> = 
  * }
  * ```
  */
-export const isProblemDetails = (data: unknown): data is ProblemDetails => {
-  if (!data || typeof data !== 'object') {
-    return false;
-  }
+export const isProblemDetails = (data: unknown, contentType?: string): data is ProblemDetails => {
+  if (contentType?.includes('application/problem+json')) return true;
+  if (!data || typeof data !== 'object') return false;
   const obj = data as Record<string, unknown>;
-
-  // RFC 7807 requires at minimum: title, and status
-  return typeof obj.title === 'string' && typeof obj.status === 'number';
+  return (
+    typeof obj.title === 'string' &&
+    typeof obj.status === 'number' &&
+    (obj.type === undefined || typeof obj.type === 'string')
+  );
 };
 
 /**
@@ -127,7 +128,10 @@ export const problemDetailsMiddleware = (): ApiMiddleware => ({
     // Case 1: Error WITH response (4xx, 5xx from backend)
     if (error.response) {
       // Check if already in Problem Details format (idempotent behavior)
-      if (isProblemDetails(error.response.data)) {
+      // Pass the header to the type guard (using optional chaining for safety)
+      const contentType = error.response.headers?.['content-type'] as string | undefined;
+
+      if (isProblemDetails(error.response.data, contentType)) {
         // Already in correct format - pass through unchanged
         throw error;
       }

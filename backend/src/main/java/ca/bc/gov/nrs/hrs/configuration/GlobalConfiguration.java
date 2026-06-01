@@ -12,6 +12,7 @@ import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity;
 import ca.bc.gov.nrs.hrs.entity.users.UserPreferenceEntity;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.GlobalExceptionHandler;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.exception.RequestException;
 import ca.bc.gov.nrs.hrs.exception.RetriableException;
@@ -21,6 +22,7 @@ import ca.bc.gov.nrs.hrs.exception.UserNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.forwarders.B3HeaderForwarder;
 import ca.bc.gov.nrs.hrs.provider.forwarders.JwtForwarderRequestInitializer;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
@@ -35,11 +37,10 @@ import tools.jackson.databind.json.JsonMapper.Builder;
 /**
  * Global Spring configuration for the application.
  *
- * <p>This configuration class registers several shared beans used across the
- * application, including REST clients for external services and a Jackson ObjectMapper. It also
- * registers reflection hints required for native image builds via
- * {@code @RegisterReflectionForBinding} and enables JPA auditing.
- * </p>
+ * <p>This configuration class registers several shared beans used across the application,
+ * including REST clients for external services and a Jackson ObjectMapper. It also registers
+ * reflection hints required for native image builds via {@code @RegisterReflectionForBinding}
+ * and enables JPA auditing.</p>
  *
  * @since 1.0.0
  */
@@ -74,8 +75,7 @@ public class GlobalConfiguration {
    * <p>The base URL is set to the configured Cognito userInfo URI from
    * {@link HrsConfiguration}. B3 trace headers are forwarded to Cognito via
    * the supplied {@link B3HeaderForwarder}. No default Authorization header is
-   * set here — each call supplies its own Bearer token.
-   * </p>
+   * set here — each call supplies its own Bearer token.</p>
    *
    * @param configuration application configuration providing the Cognito userInfo URI
    * @param b3Header      request initializer that forwards B3 trace headers
@@ -86,8 +86,7 @@ public class GlobalConfiguration {
       HrsConfiguration configuration,
       B3HeaderForwarder b3Header
   ) {
-    return RestClient
-        .builder()
+    return RestClient.builder()
         .baseUrl(configuration.getCognito().getUserinfoUri())
         .requestInitializer(b3Header)
         .build();
@@ -98,14 +97,12 @@ public class GlobalConfiguration {
    *
    * <p>The returned client is configured with the base URL and API key taken
    * from the supplied {@link HrsConfiguration}. It sets the Content-Type to
-   * {@code application/json} and applies the provided {@link B3HeaderForwarder} as a request
-   * initializer so tracing headers are forwarded to the backend.
-   * </p>
+   * {@code application/json} and applies the provided {@link B3HeaderForwarder}
+   * as a request initializer so tracing headers are forwarded to the backend.</p>
    *
-   * @param configuration application configuration that provides the target service address and API
-   *                      key
-   * @param b3Header      a request initializer that forwards B3 trace headers to downstream
-   *                      services
+   * @param configuration application configuration that provides the target service
+   *                      address and API key
+   * @param b3Header      request initializer that forwards B3 trace headers
    * @return a configured {@link RestClient} for the Forest Client API
    */
   @Bean
@@ -113,11 +110,12 @@ public class GlobalConfiguration {
       HrsConfiguration configuration,
       B3HeaderForwarder b3Header
   ) {
-    return RestClient
-        .builder()
+    return RestClient.builder()
         .baseUrl(configuration.getForestClientApi().getAddress())
-        .defaultHeader("X-API-KEY", configuration.getForestClientApi().getKey())
-        .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .defaultHeader("X-API-KEY",
+            configuration.getForestClientApi().getKey())
+        .defaultHeader(HttpHeaders.CONTENT_TYPE,
+            MediaType.APPLICATION_JSON_VALUE)
         .requestInitializer(b3Header)
         .build();
   }
@@ -127,13 +125,13 @@ public class GlobalConfiguration {
    *
    * <p>This client uses the legacy API base address from {@link HrsConfiguration}
    * and sets the content type to {@code application/json}. It applies both the
-   * {@link JwtForwarderRequestInitializer} and the {@link B3HeaderForwarder} as request
-   * initializers so that JWT forwarding and tracing headers are propagated to legacy services.</p>
+   * {@link JwtForwarderRequestInitializer} and the {@link B3HeaderForwarder} as
+   * request initializers so that JWT forwarding and tracing headers are propagated
+   * to legacy services.</p>
    *
    * @param configuration application configuration that provides the legacy API address
-   * @param jwtForwarder  a request initializer which forwards JWT credentials to the legacy
-   *                      backend
-   * @param b3Header      a request initializer that forwards B3 trace headers
+   * @param jwtForwarder  request initializer which forwards JWT credentials
+   * @param b3Header      request initializer that forwards B3 trace headers
    * @return a configured {@link RestClient} for legacy APIs
    */
   @Bean
@@ -142,10 +140,10 @@ public class GlobalConfiguration {
       JwtForwarderRequestInitializer jwtForwarder,
       B3HeaderForwarder b3Header
   ) {
-    return RestClient
-        .builder()
+    return RestClient.builder()
         .baseUrl(configuration.getLegacyApi().getAddress())
-        .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .defaultHeader(HttpHeaders.CONTENT_TYPE,
+            MediaType.APPLICATION_JSON_VALUE)
         .requestInitializer(jwtForwarder)
         .requestInitializer(b3Header)
         .build();
@@ -154,12 +152,11 @@ public class GlobalConfiguration {
   /**
    * Provides the application's Jackson {@link JsonMapper} instance.
    *
-   * <p>The {@link JsonMapper.Builder} is used to construct and
-   * configure the {@code JsonMapper} according to any customizations applied to the builder
-   * elsewhere in the application context.</p>
+   * <p>The {@link JsonMapper.Builder} is used to construct and configure the mapper
+   * according to any customizations applied elsewhere in the application context.</p>
    *
-   * @param builder the Jackson builder used to create the mapper
-   * @return a configured {@link JsonMapper}
+   * @param builder Jackson builder used to create the mapper
+   * @return configured {@link JsonMapper}
    */
   @Bean
   public JsonMapper objectMapper(Builder builder) {
@@ -168,4 +165,13 @@ public class GlobalConfiguration {
         .build();
   }
 
+  /**
+   * Explicitly register the global exception handler so it's available even when
+   * component scanning is altered (for example in tests or native-image contexts).
+   */
+  @Bean
+  @ConditionalOnMissingBean(GlobalExceptionHandler.class)
+  public GlobalExceptionHandler globalExceptionHandler() {
+    return new GlobalExceptionHandler();
+  }
 }
