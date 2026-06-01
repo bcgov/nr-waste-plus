@@ -16,6 +16,8 @@ type AdvancedFilterClientInputProps = {
   myClients?: CodeDescriptionDto[];
   /** Callback handler for client selection changes. */
   onClientChange: (changes: { selectedItems: CodeDescriptionDto[] }) => void;
+  /** Callback handler for blur events. */
+  onBlur?: () => void;
 };
 
 /**
@@ -34,6 +36,7 @@ const AdvancedFilterClientInput: FC<AdvancedFilterClientInputProps> = ({
   selectedClients,
   myClients,
   onClientChange,
+  onBlur,
 }) => {
   const auth = useAuth();
 
@@ -56,6 +59,7 @@ const AdvancedFilterClientInput: FC<AdvancedFilterClientInputProps> = ({
           if (!item) return '';
           return item.description;
         }}
+        onBlur={onBlur}
         onSelect={(rawData) => {
           const data = rawData ? [rawData as CodeDescriptionDto] : [];
           onClientChange({ selectedItems: data });
@@ -77,6 +81,7 @@ const AdvancedFilterClientInput: FC<AdvancedFilterClientInputProps> = ({
         selectedItems={(myClients ?? []).filter((option) =>
           (selectedClients || []).some((item) => item.code === option.code),
         )}
+        onBlur={onBlur}
       />
     );
   }
