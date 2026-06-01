@@ -129,7 +129,7 @@ public class ReportingUnitService {
         && StringUtils.isBlank(request.gradeCode())) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
-          "gradeCode is required when districtCode is DKM"
+          "Grade code is required for district DKM"
       );
     }
 
