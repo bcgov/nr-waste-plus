@@ -125,7 +125,7 @@
       "request": {
         "urlPath": "/api/reporting-units",
         "method": "POST",
-        "bodyPatterns": [{ "matchesJsonPath": "$.clientNumber", "equalTo": "CONFLICT_TEST" }]
+        "bodyPatterns": [{ "matchesJsonPath": "$[?(@.clientNumber == 'CONFLICT_TEST')]" }]
       },
       "response": {
         "status": 409,
@@ -140,7 +140,7 @@
         "urlPath": "/api/reporting-units",
         "method": "POST",
         "bodyPatterns": [
-          { "matchesJsonPath": "$.districtCode", "equalTo": "DKM" },
+          { "matchesJsonPath": "$[?(@.districtCode == 'DKM')]" },
           {
             "matchesJsonPath": "$[?(@.gradeCode == '' || @.gradeCode == null || !@.gradeCode)]"
           }
