@@ -93,7 +93,65 @@
         "status": 200,
         "bodyFileName": "reporting-units/details-default.json"
       }
+    },
+    {
+      "name": "Create reporting unit — success",
+      "request": {
+        "urlPath": "/api/reporting-units",
+        "method": "POST"
+      },
+      "response": {
+        "status": 201,
+        "headers": { "Location": "/reporting-units/99901" }
+      },
+      "priority": 4
+    },
+    {
+      "name": "Create reporting unit — system failure",
+      "request": {
+        "urlPath": "/api/reporting-units",
+        "method": "POST",
+        "bodyPatterns": [{ "matchesJsonPath": "$[?(@.clientNumber == 'ERROR_TEST')]" }]
+      },
+      "response": {
+        "status": 500,
+        "headers": { "Content-Type": "application/json" },
+        "body": "{\"message\": \"Forest Client record(s) with id ERROR_TEST not found!\"}"
+      },
+      "priority": 3
+    },
+    {
+      "name": "Create reporting unit — duplicate conflict",
+      "request": {
+        "urlPath": "/api/reporting-units",
+        "method": "POST",
+        "bodyPatterns": [{ "matchesJsonPath": "$[?(@.clientNumber == 'CONFLICT_TEST')]" }]
+      },
+      "response": {
+        "status": 409,
+        "headers": { "Content-Type": "application/json" },
+        "body": "{\"message\": \"A reporting unit for client CONFLICT_TEST and district ABC already exists!\"}"
+      },
+      "priority": 2
+    },
+    {
+      "name": "Create reporting unit — DKM missing grade code",
+      "request": {
+        "urlPath": "/api/reporting-units",
+        "method": "POST",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$[?(@.districtCode == 'DKM')]" },
+          {
+            "matchesJsonPath": "$[?(@.gradeCode == '' || @.gradeCode == null || !@.gradeCode)]"
+          }
+        ]
+      },
+      "response": {
+        "status": 400,
+        "headers": { "Content-Type": "application/json" },
+        "body": "{\"message\": \"Grade code is required for district DKM\"}"
+      },
+      "priority": 1
     }
   ]
 }
-
