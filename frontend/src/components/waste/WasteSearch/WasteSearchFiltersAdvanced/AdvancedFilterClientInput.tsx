@@ -16,8 +16,8 @@ type AdvancedFilterClientInputProps = {
   myClients?: CodeDescriptionDto[];
   /** Callback handler for client selection changes. */
   onClientChange: (changes: { selectedItems: CodeDescriptionDto[] }) => void;
-  /** Callback handler for blur events. */
-  onBlur?: () => void;
+  /** Callback handler for blur events. Receives the native FocusEvent from either input type. */
+  onBlur?: (event: FocusEvent) => void;
 };
 
 /**
@@ -59,7 +59,7 @@ const AdvancedFilterClientInput: FC<AdvancedFilterClientInputProps> = ({
           if (!item) return '';
           return item.description;
         }}
-        onBlur={onBlur}
+        onBlur={onBlur ? (e: React.FocusEvent) => onBlur(e.nativeEvent) : undefined}
         onSelect={(rawData) => {
           const data = rawData ? [rawData as CodeDescriptionDto] : [];
           onClientChange({ selectedItems: data });
