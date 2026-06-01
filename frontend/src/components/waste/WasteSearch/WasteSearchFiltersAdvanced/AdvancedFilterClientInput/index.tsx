@@ -1,3 +1,4 @@
+import { type FilterableMultiSelectProps } from '@carbon/react';
 import { type FC } from 'react';
 
 import type { CodeDescriptionDto } from '@/services/types';
@@ -9,7 +10,16 @@ import { useAuth } from '@/context/auth/useAuth';
 import APIs from '@/services/APIs';
 import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils';
 
-type AdvancedFilterClientInputProps = {
+/**
+ * Shared Carbon field props supported by both ComboBox and FilterableMultiSelect.
+ * Derived directly from Carbon's types so they stay in sync automatically.
+ */
+type CarbonSharedFieldProps = Pick<
+  FilterableMultiSelectProps<CodeDescriptionDto>,
+  'invalid' | 'invalidText' | 'warn' | 'warnText'
+>;
+
+type AdvancedFilterClientInputProps = CarbonSharedFieldProps & {
   /** The current list of selected clients from filters. */
   selectedClients?: CodeDescriptionDto[];
   /** The list of available clients for BCeID users. */
@@ -26,10 +36,15 @@ type AdvancedFilterClientInputProps = {
  * - **IDIR users**: Autocomplete input that searches all forest clients across the system
  * - **BCeID users**: Multiselect dropdown limited to their own assigned clients
  *
+ * Carbon field props (`invalid`, `invalidText`, `warn`, `warnText`) are accepted and forwarded
+ * transparently to the underlying Carbon component, matching the same consumer-driven pattern
+ * used by `ActiveMultiSelect` and `AutoCompleteInput`.
+ *
  * @param props Component props.
  * @param props.selectedClients Currently selected client(s) from filter state.
  * @param props.myClients Client list for BCeID users (typically from query).
  * @param props.onClientChange Callback when selection changes.
+ * @param props.onBlur Callback when input loses focus.
  * @returns The appropriate client input component based on provider, or null.
  */
 const AdvancedFilterClientInput: FC<AdvancedFilterClientInputProps> = ({
@@ -37,6 +52,7 @@ const AdvancedFilterClientInput: FC<AdvancedFilterClientInputProps> = ({
   myClients,
   onClientChange,
   onBlur,
+  ...carbonProps
 }) => {
   const auth = useAuth();
 
@@ -55,15 +71,13 @@ const AdvancedFilterClientInput: FC<AdvancedFilterClientInputProps> = ({
             forestClientAutocompleteResult2CodeDescription,
           )
         }
-        itemToString={(item) => {
-          if (!item) return '';
-          return item.description;
-        }}
+        itemToString={(item) => item!.description}
         onBlur={onBlur ? (e: React.FocusEvent) => onBlur(e.nativeEvent) : undefined}
         onSelect={(rawData) => {
           const data = rawData ? [rawData as CodeDescriptionDto] : [];
           onClientChange({ selectedItems: data });
         }}
+        {...carbonProps}
       />
     );
   }
@@ -82,6 +96,7 @@ const AdvancedFilterClientInput: FC<AdvancedFilterClientInputProps> = ({
           (selectedClients || []).some((item) => item.code === option.code),
         )}
         onBlur={onBlur}
+        {...carbonProps}
       />
     );
   }
