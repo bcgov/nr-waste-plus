@@ -36,6 +36,7 @@ interface ActiveMultiSelectProps<
   ItemType extends HasCodeOrValue,
 > extends FilterableMultiSelectProps<ItemType> {
   showSkeleton?: boolean;
+  onBlur?: (event: FocusEvent) => void;
 }
 
 /**
@@ -57,6 +58,7 @@ const RenderSkeleton = (): React.ReactElement => {
 const RenderMultiSelect = <ItemType extends HasCodeOrValue>({
   selectionFeedback = 'top-after-reopen',
   onChange,
+  onBlur,
   placeholder,
   itemToString,
   selectedItems,
@@ -85,6 +87,24 @@ const RenderMultiSelect = <ItemType extends HasCodeOrValue>({
     },
     [onChange],
   );
+
+  // Attach onBlur handler to the input element manually since Carbon might not forward it
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper || !onBlur) return;
+
+    const input = wrapper.querySelector(`.${CARBON_CLASS_PREFIX}--text-input`) as HTMLInputElement;
+
+    if (input) {
+      const handleBlur = (event: Event) => {
+        onBlur(event as FocusEvent);
+      };
+      input.addEventListener('blur', handleBlur);
+      return () => {
+        input.removeEventListener('blur', handleBlur);
+      };
+    }
+  }, [onBlur]);
 
   // This is to handle the case where the user clicks outside the multi-select
   // and we want to force the component to lose focus and close the menu.
