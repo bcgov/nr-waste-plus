@@ -1,0 +1,31 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/theme' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+@use '@carbon/react/scss/colors' as *;
+
+.create-ru {
+
+  &-column__content {
+    form {
+      display: flex;
+      flex-direction: column;
+      margin-top: $spacing-08;
+      gap: $spacing-08;
+
+      @include breakpoint-down(md) {      
+        margin-top: $spacing-01;
+        padding: $spacing-05 $spacing-07;
+        flex-shrink: 0;      
+      }
+    }
+  }
+
+  &-submit-button {
+    align-self: flex-start;
+  }
+
+  &-submitting-text {
+    margin-left: $spacing-02;
+  }
+
+}
