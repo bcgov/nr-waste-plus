@@ -141,10 +141,11 @@
         "urlPath": "/api/reporting-units",
         "method": "POST",
         "bodyPatterns": [
-          { "matchesJsonPath": "$.districtCode", "equalTo": "DKM" },
+          { "matchesJsonPath": "$[?(@.districtCode == 'DKM')]" },
           {
             "matchesJsonPath": "$[?(@.gradeCode == '' || @.gradeCode == null || !@.gradeCode)]"
           }
+        ]
         ]
       },
       "response": {
