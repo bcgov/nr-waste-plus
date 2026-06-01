@@ -123,11 +123,10 @@
     {
       "name": "Create reporting unit — duplicate conflict",
       "request": {
-      "request": {
         "urlPath": "/api/reporting-units",
         "method": "POST",
-        "bodyPatterns": [{ "matchesJsonPath": "$[?(@.clientNumber == 'CONFLICT_TEST')]" }]
-      }
+        "bodyPatterns": [{ "matchesJsonPath": "$.clientNumber", "equalTo": "CONFLICT_TEST" }]
+      },
       "response": {
         "status": 409,
         "headers": { "Content-Type": "application/json" },
@@ -141,11 +140,10 @@
         "urlPath": "/api/reporting-units",
         "method": "POST",
         "bodyPatterns": [
-          { "matchesJsonPath": "$[?(@.districtCode == 'DKM')]" },
+          { "matchesJsonPath": "$.districtCode", "equalTo": "DKM" },
           {
             "matchesJsonPath": "$[?(@.gradeCode == '' || @.gradeCode == null || !@.gradeCode)]"
           }
-        ]
         ]
       },
       "response": {
