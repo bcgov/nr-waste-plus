@@ -247,9 +247,12 @@ describe('react-query hooks', () => {
 
     it('should invoke onSuccess callback with the created ID', async () => {
       const onSuccessMock = vi.fn();
-      const { result } = renderHook(() => useReportingUnitCreateMutation({ onSuccess: onSuccessMock }), {
-        wrapper: createWrapper(),
-      });
+      const { result } = renderHook(
+        () => useReportingUnitCreateMutation({ onSuccess: onSuccessMock }),
+        {
+          wrapper: createWrapper(),
+        },
+      );
 
       await act(async () => {
         await result.current.mutateAsync(validCreateRequest);
@@ -270,7 +273,7 @@ describe('react-query hooks', () => {
       await act(async () => {
         try {
           await result.current.mutateAsync(validCreateRequest);
-        } catch (e) {
+        } catch (_e) {
           // Error is expected and caught
         }
       });
@@ -312,12 +315,18 @@ describe('react-query hooks', () => {
   describe('error notification behavior', () => {
     it('useCodesQuery should dispatch error notification when notificationTarget is provided', async () => {
       const mockError = new Error('API Error');
-      (mockError as any).body = { detail: 'Code not found', title: 'Not Found' };
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Code not found',
+        title: 'Not Found',
+      };
       vi.mocked(API.codes.getSamplingOptions).mockRejectedValueOnce(mockError);
 
-      const { result } = renderHook(() => useCodesQuery('samplingOptions', { notificationTarget: 'test-panel' }), {
-        wrapper: createWrapper(),
-      });
+      const { result } = renderHook(
+        () => useCodesQuery('samplingOptions', { notificationTarget: 'test-panel' }),
+        {
+          wrapper: createWrapper(),
+        },
+      );
 
       await waitFor(() => expect(result.current.isError).toBe(true));
 
@@ -348,7 +357,10 @@ describe('react-query hooks', () => {
 
     it('useWasteSearchFilterOptionsQueries should send error notifications for each failing query', async () => {
       const mockError = new Error('Mock API Error');
-      (mockError as any).body = { detail: 'Error detail', title: 'Error Title' };
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Error detail',
+        title: 'Error Title',
+      };
       vi.mocked(API.codes.getSamplingOptions).mockRejectedValueOnce(mockError);
 
       renderHook(() => useWasteSearchFilterOptionsQueries('filter-panel'), {
@@ -366,7 +378,10 @@ describe('react-query hooks', () => {
 
     it('useMyForestClientsQuery should dispatch error notification when notificationTarget is provided', async () => {
       const mockError = new Error('Unauthorized');
-      (mockError as any).body = { detail: 'Access denied', title: 'Forbidden' };
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Access denied',
+        title: 'Forbidden',
+      };
       vi.mocked(API.forestclient.searchMyForestClients).mockRejectedValueOnce(mockError);
 
       const { result } = renderHook(
@@ -386,7 +401,10 @@ describe('react-query hooks', () => {
 
     it('useSearchReportingUnitsQuery should dispatch error notification on failure', async () => {
       const mockError = new Error('Search failed');
-      (mockError as any).body = { detail: 'Invalid filter', title: 'Bad Request' };
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Invalid filter',
+        title: 'Bad Request',
+      };
       vi.mocked(API.search.searchReportingUnit).mockRejectedValueOnce(mockError);
 
       const { result } = renderHook(
@@ -409,12 +427,18 @@ describe('react-query hooks', () => {
 
     it('useReportingUnitDetailsQuery should dispatch error notification when notificationTarget is provided', async () => {
       const mockError = new Error('Not found');
-      (mockError as any).body = { detail: 'Reporting unit not found', title: 'Not Found' };
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Reporting unit not found',
+        title: 'Not Found',
+      };
       vi.mocked(API.reportingUnit.getReportingUnit).mockRejectedValueOnce(mockError);
 
-      const { result } = renderHook(() => useReportingUnitDetailsQuery(999, { notificationTarget: 'details' }), {
-        wrapper: createWrapper(),
-      });
+      const { result } = renderHook(
+        () => useReportingUnitDetailsQuery(999, { notificationTarget: 'details' }),
+        {
+          wrapper: createWrapper(),
+        },
+      );
 
       await waitFor(() => expect(result.current.isError).toBe(true));
       expect(sendEvent).toHaveBeenCalledWith(
@@ -428,7 +452,10 @@ describe('react-query hooks', () => {
 
     it('useReportingUnitCreateMutation should dispatch error notification when notificationTarget is provided', async () => {
       const mockError = new Error('Create failed');
-      (mockError as any).body = { detail: 'Duplicate entry', title: 'Conflict' };
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Duplicate entry',
+        title: 'Conflict',
+      };
       vi.mocked(API.reportingUnit.createReportingUnit).mockRejectedValueOnce(mockError);
 
       const { result } = renderHook(
@@ -446,7 +473,7 @@ describe('react-query hooks', () => {
       await act(async () => {
         try {
           await result.current.mutateAsync(validRequest);
-        } catch (e) {
+        } catch (_e) {
           // expected
         }
       });
@@ -464,10 +491,9 @@ describe('react-query hooks', () => {
 
   describe('query option overrides', () => {
     it('useCodesQuery should accept and apply custom query options', async () => {
-      const { result } = renderHook(
-        () => useCodesQuery('samplingOptions', { staleTime: 60000 }),
-        { wrapper: createWrapper() },
-      );
+      const { result } = renderHook(() => useCodesQuery('samplingOptions', { staleTime: 60000 }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
       expect(result.current.data).toBeDefined();
@@ -553,7 +579,10 @@ describe('react-query hooks', () => {
   describe('notification deduplification', () => {
     it('useWasteSearchFilterOptionsQueries should not send duplicate notifications for the same error', async () => {
       const mockError = new Error('Mock Error');
-      (mockError as any).body = { detail: 'Error detail', title: 'Title' };
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Error detail',
+        title: 'Title',
+      };
       vi.mocked(API.codes.getSamplingOptions).mockRejectedValueOnce(mockError);
 
       const { rerender } = renderHook(() => useWasteSearchFilterOptionsQueries('panel'), {

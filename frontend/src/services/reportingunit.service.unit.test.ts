@@ -206,7 +206,7 @@ describe('ReportingUnitService', () => {
       gradeCode: null,
     };
 
-    const validCreateResponse: ReportingUnitCreateDto = {
+    const _validCreateResponse: ReportingUnitCreateDto = {
       clientNumber: '00012797',
       districtCode: 'DKM',
       samplingCode: 'AVG',
@@ -337,9 +337,5 @@ describe('ReportingUnitService', () => {
 
       expect(caught).toBe(conflictError);
     });
-
-
-
-
   });
 });

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { required, noSpecialChars, type ValidatorResult, type Validator } from './validators';
 
 describe('validators', () => {
@@ -320,7 +321,7 @@ describe('validators', () => {
     });
 
     it('should export Validator type', () => {
-      const validator: Validator<string> = (value) => undefined;
+      const validator: Validator<string> = (_value) => undefined;
       expect(typeof validator).toBe('function');
     });
   });

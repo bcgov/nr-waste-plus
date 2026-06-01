@@ -19,12 +19,12 @@ describe('navigateTo', () => {
       // delete first so we can redefine on some runtimes
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      delete (globalThis as any).location;
+      delete (globalThis as Record<string, unknown>).location;
     } catch {
       // ignore if delete is not allowed
     }
 
-    const assign = vi.fn();
+    const assign = vi.fn<[string], void>();
     Object.defineProperty(globalThis, 'location', {
       value: { assign },
       configurable: true,
