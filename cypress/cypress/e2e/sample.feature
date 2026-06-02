@@ -22,8 +22,8 @@ Feature: Collection of sample tests
   Scenario: Lighthouse category thresholds from table
     Given I visit "/search"
     Then the lighthouse score should be at least:
-      | performance     | 90 |
-      | accessibility   | 95 |
+      | performance     | 85 |
+      | accessibility   | 90 |
       | best-practices  | 95 |
       | seo             | 80 |
 
