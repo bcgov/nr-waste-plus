@@ -1,9 +1,11 @@
 import { DocumentAdd, Group, SearchLocate } from '@carbon/icons-react';
 import { type RouteLoaderFn } from '@tanstack/react-router';
+import { notFound } from '@tanstack/react-router';
 import { type ComponentType } from 'react';
 
 import Layout from '@/components/Layout';
 import { Role, type FamRole } from '@/context/auth/types';
+import { featureFlags } from '@/env';
 import LandingPage from '@/pages/Landing';
 import MyClientListPage from '@/pages/MyClientList';
 import NoRolePage from '@/pages/NoRole';
@@ -116,12 +118,17 @@ export const ROUTES: RouteDescription[] = [
     path: '/reporting-units/create',
     id: 'Create reporting unit',
     icon: DocumentAdd,
+    loader: async () => {
+      if (!featureFlags['reporting-unit-create-enabled']) {
+        throw notFound();
+      }
+    },
     component: () => (
       <Layout>
         <ReportingUnitCreatePage />
       </Layout>
     ),
-    isSideMenu: true,
+    isSideMenu: !!featureFlags['reporting-unit-create-enabled'],
     protected: true,
   },
 ];
@@ -169,6 +176,7 @@ export const SYSTEM_ROUTES: RouteDescription[] = [
  * 2. Connectivity — when **online**, excludes `offlineOnly` routes; when **offline**,
  *    excludes routes that are neither `offlineReady` nor `offlineOnly` (online-only routes)
  * 3. Role match — excludes routes whose `roles` list does not intersect `roles`
+ * 4. Feature flags — excludes routes that depend on disabled feature flags
  *
  * @param isOnline - Whether the browser currently has network connectivity.
  * @param roles - The authenticated user's FAM role assignments.
@@ -181,4 +189,11 @@ export const getMenuEntries = (isOnline: boolean, roles: FamRole[]): MenuItem[] 
       (r) =>
         !r.roles?.length || r.roles.some((role) => roles.map((u) => u.role).includes(role.role)),
     )
+    .filter((r) => {
+      // Conditionally exclude routes based on feature flags
+      if (r.id === 'Create reporting unit' && !featureFlags['reporting-unit-create-enabled']) {
+        return false;
+      }
+      return true;
+    })
     .map(({ id, path, icon }) => ({ id, path, icon }));
