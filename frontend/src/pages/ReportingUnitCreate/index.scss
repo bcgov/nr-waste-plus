@@ -12,17 +12,17 @@
     }
   }
 
-  &-column__content form {
-    display: flex;
-    flex-direction: column;
+  &-column__notification:not(:empty) {
     margin-top: $spacing-08;
-    gap: $spacing-08;
-
-    @include breakpoint-down(md) {      
-      margin-top: $spacing-01;
+    @include breakpoint-down(md) {
       padding: $spacing-05 $spacing-07;
-      flex-shrink: 0;      
+      flex-shrink: 0;
     }
   }
 
+  &-column__spacer {
+    // Spacer column for desktop layout alignment
+  }
+
 }
+
