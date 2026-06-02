@@ -62,7 +62,13 @@ export const mockCreateRuSuccess = async (page: Page): Promise<void> => {
     if (route.request().method() === 'POST') {
       await route.fulfill({
         status: 201,
-        headers: { Location: '/reporting-units/99901' },
+        // The app calls http://localhost:8080 (cross-origin from localhost:3000).
+        // Browsers only expose CORS-safelisted headers to XHR by default.
+        // Location is not safelisted, so it must be explicitly exposed.
+        headers: {
+          'Location': '/reporting-units/99901',
+          'Access-Control-Expose-Headers': 'location',
+        },
       });
     } else {
       await route.continue();

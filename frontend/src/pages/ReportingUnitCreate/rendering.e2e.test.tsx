@@ -20,7 +20,7 @@ test.describe('Create Reporting Unit - Rendering', () => {
 
     test('renders the page subtitle', async ({ page }) => {
       await expect(
-        page.getByText('Start a new waste submission by creating a reporting unit.'),
+        page.getByText('Start a new waste submission by creating a reporting unit'),
       ).toBeVisible();
     });
   });
@@ -58,6 +58,7 @@ test.describe('Create Reporting Unit - Rendering', () => {
 
       // Verify options from codes/samplings.json are available
       await expect(page.getByRole('option', { name: 'Aggregate' })).toBeVisible();
+      await expect(page.getByRole('option', { name: 'District Average' })).toBeVisible();
       await expect(page.getByRole('option', { name: 'Cutblock' })).toBeVisible();
       await expect(page.getByRole('option', { name: 'Ocular' })).toBeVisible();
     });

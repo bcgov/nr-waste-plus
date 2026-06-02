@@ -1,57 +1,9 @@
 import { expect } from '@playwright/test';
 
 import { mockCreateRuSuccess, setupCreateRuMocks } from './e2e.setup';
+import { selectClient, selectComboBoxOption } from './e2e.utils';
 
 import { test } from '@/config/tests/coverage.setup';
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Selects an option from a Carbon ComboBox.
- */
-async function selectComboBoxOption(
-  page: import('@playwright/test').Page,
-  comboBoxId: string,
-  optionName: string
-) {
-  const comboBox = page.locator(`#${comboBoxId}`);
-  
-  // Clear any existing value first
-  await comboBox.fill('');
-  await page.waitForTimeout(150);
-  
-  // Type slowly to avoid issues
-  for (const char of optionName) {
-    await comboBox.type(char, { delay: 20 });
-  }
-  await page.waitForTimeout(400);
-  
-  // Navigate and select
-  await comboBox.press('ArrowDown');
-  await page.waitForTimeout(150);
-  await comboBox.press('Enter');
-  await page.waitForTimeout(400);
-}
-
-/**
- * Selects a client from the client input based on the user type.
- * - BCeID users: opens the ActiveMultiSelect and clicks an option.
- * - IDIR users: fills the autocomplete and waits for options to appear.
- */
-async function selectClient(page: import('@playwright/test').Page, userType: string) {
-  if (userType === 'bceid') {
-    const clientInput = page.getByRole('combobox', { name: 'Client' });
-    await clientInput.click();
-    await page.getByRole('option', { name: '90000001', exact: false }).click();
-  } else {
-    // IDIR: autocomplete input
-    const clientInput = page.locator('#as-forestclient-client-ac');
-    await clientInput.fill('ZORO');
-    await page.getByRole('option', { name: 'RORONOA ZORO SAWMILLS', exact: false }).click();
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -69,20 +21,22 @@ test.describe('Create Reporting Unit - Form Submission', () => {
     test('submits the form and navigates to the created reporting unit', async ({
       page,
     }, testInfo) => {
+      // Select district (non-DKM)
+      await selectComboBoxOption(page, 'District', 'Cariboo-Chilcotin');
+
+      // Sampling is pre-filled with AVG (District Average); select a different option to verify selection works
+      await selectComboBoxOption(page, 'Sampling option', 'Ocular');
+
       // Select client
       await selectClient(page, testInfo.project.metadata.userType);
 
-      // Select district (non-DKM) using keyboard navigation
-      await selectComboBoxOption(page, 'create-ru-district', 'Cariboo-Chilcotin');
-
-      // Select sampling option using keyboard navigation
-      await selectComboBoxOption(page, 'as-sampling-multi-select', 'Ocular');
-
-      // Wait a bit for form to settle
-      await page.waitForTimeout(500);
-
-      // Submit the form
-      const submitButton = page.locator('.create-ru-submit-button');
+      // Pre-focus the submit button to flush any blur-triggered async validators.
+      // Clicking fires blur on the focused field BEFORE the click event, which sets
+      // isValidating=true via setTimeout(0) and makes canSubmit=false in TanStack Form.
+      // Focusing first migrates focus (and validators) before the toBeEnabled check.
+      const submitButton = page.getByRole('button', { name: 'Create' });
+      await submitButton.focus();
+      await expect(submitButton).toBeEnabled({ timeout: 5000 });
       await submitButton.click();
 
       // Wait for navigation to the new reporting unit's details page
@@ -98,8 +52,8 @@ test.describe('Create Reporting Unit - Form Submission', () => {
       // Select client
       await selectClient(page, testInfo.project.metadata.userType);
 
-      // Select DKM district (Coast Mountains) using keyboard navigation
-      await selectComboBoxOption(page, 'create-ru-district', 'Coast Mountains');
+      // Select DKM district (Coast Mountains)
+      await selectComboBoxOption(page, 'District', 'Coast Mountains');
 
       // Grade radio group should now be visible
       const gradeGroup = page.locator('#create-ru-grade');
@@ -109,14 +63,13 @@ test.describe('Create Reporting Unit - Form Submission', () => {
       await page.getByRole('radio', { name: 'Coastal grades' }).click({ force: true });
       await expect(page.getByRole('radio', { name: 'Coastal grades' })).toBeChecked();
 
-      // Select sampling option using keyboard navigation
-      await selectComboBoxOption(page, 'as-sampling-multi-select', 'Aggregate');
+      // Select sampling option
+      await selectComboBoxOption(page, 'Sampling option', 'Aggregate');
 
-      // Wait a bit for form to settle
-      await page.waitForTimeout(500);
-
-      // Submit the form
-      const submitButton = page.locator('.create-ru-submit-button');
+      // Pre-focus the submit button to flush blur-triggered async validators first.
+      const submitButton = page.getByRole('button', { name: 'Create' });
+      await submitButton.focus();
+      await expect(submitButton).toBeEnabled({ timeout: 5000 });
       await submitButton.click();
 
       // Wait for navigation to the new reporting unit's details page
@@ -129,22 +82,21 @@ test.describe('Create Reporting Unit - Form Submission', () => {
     }, testInfo) => {
       await selectClient(page, testInfo.project.metadata.userType);
 
-      // Select DKM district (Coast Mountains) using keyboard navigation
-      await selectComboBoxOption(page, 'create-ru-district', 'Coast Mountains');
+      // Select DKM district (Coast Mountains)
+      await selectComboBoxOption(page, 'District', 'Coast Mountains');
 
       // Select "Interior grades" with force: true
       await page.getByRole('radio', { name: 'Interior grades' }).click({ force: true });
       await expect(page.getByRole('radio', { name: 'Interior grades' })).toBeChecked();
       await expect(page.getByRole('radio', { name: 'Coastal grades' })).not.toBeChecked();
 
-      // Select sampling option using keyboard navigation
-      await selectComboBoxOption(page, 'as-sampling-multi-select', 'Cutblock');
+      // Select sampling option
+      await selectComboBoxOption(page, 'Sampling option', 'Cutblock');
 
-      // Wait a bit for form to settle
-      await page.waitForTimeout(500);
-
-      // Submit the form
-      const submitButton = page.locator('.create-ru-submit-button');
+      // Pre-focus the submit button to flush blur-triggered async validators first.
+      const submitButton = page.getByRole('button', { name: 'Create' });
+      await submitButton.focus();
+      await expect(submitButton).toBeEnabled({ timeout: 5000 });
       await submitButton.click();
 
       await page.waitForURL('**/reporting-units/99901');
