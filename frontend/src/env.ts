@@ -66,6 +66,7 @@ const featureFlagsSchema = z
     'offline-mode-enabled': z.boolean(),
     'bookmark-ru-enabled': z.boolean(),
     'reporting-unit-details-enabled': z.boolean(),
+    'reporting-unit-create-enabled': z.boolean(),
   })
   .partial()
   .strict();

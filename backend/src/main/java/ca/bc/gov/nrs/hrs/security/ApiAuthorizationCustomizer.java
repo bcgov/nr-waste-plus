@@ -98,8 +98,14 @@ public class ApiAuthorizationCustomizer implements
         .requestMatchers("/api/search/**")
         .authenticated()
 
-        .requestMatchers("/api/reporting-units/**")
-        .authenticated();
+        .requestMatchers(HttpMethod.GET, "/api/reporting-units/**")
+        .authenticated()
+
+        .requestMatchers(HttpMethod.OPTIONS, "/api/reporting-units/**")
+        .authenticated()
+
+        .requestMatchers(HttpMethod.POST, "/api/reporting-units/**")
+        .access(roleCheck.gotRoleMatching(Role.SUBMITTER, Role.AREA, Role.DISTRICT, Role.ADMIN));
 
   }
 }

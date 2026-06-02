@@ -4,6 +4,10 @@
     "description": "Aggregate"
   },
   {
+    "code": "AVG",
+    "description": "District Average"
+  },
+  {
     "code": "BLK",
     "description": "Cutblock"
   },

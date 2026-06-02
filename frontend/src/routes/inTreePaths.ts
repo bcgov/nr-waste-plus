@@ -15,7 +15,8 @@ export type InTreePath =
   | '/clients'
   | '/no-role'
   | '/unauthorized'
-  | `/reporting-units/${number}`;
+  | `/reporting-units/${number}`
+  | '/reporting-units/create';
 
 /**
  * Typed navigate helper for in-tree route paths.

@@ -24,10 +24,9 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "types": ["@tanstack/react-query", "axios", "axe-playwright"],
-    "baseUrl": ".",
+    "types": ["@tanstack/react-query", "axios", "axe-playwright", "node"],
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"],

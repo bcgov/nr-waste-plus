@@ -1,3 +1,5 @@
+import { TanStackDevtools } from '@tanstack/react-devtools';
+import { FormDevtoolsPanel } from '@tanstack/react-form-devtools';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { type FC } from 'react';
@@ -22,8 +24,25 @@ const App: FC = () => {
   return (
     <>
       <AppRouter />
-      <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
-      <TanStackRouterDevtools initialIsOpen={false} router={router} position="bottom-right" />
+      <TanStackDevtools
+        plugins={[
+          {
+            name: 'TanStack Form',
+            render: <FormDevtoolsPanel initialIsOpen={false} />,
+            defaultOpen: false,
+          },
+          {
+            name: 'TanStack Query',
+            render: <ReactQueryDevtools initialIsOpen={false} />,
+            defaultOpen: false,
+          },
+          {
+            name: 'TanStack Router',
+            render: <TanStackRouterDevtools initialIsOpen={false} router={router} />,
+            defaultOpen: false,
+          },
+        ]}
+      />
     </>
   );
 };

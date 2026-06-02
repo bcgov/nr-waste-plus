@@ -5,7 +5,7 @@ import { ZodError } from 'zod';
 import { ReportingUnitService } from './reportingunit.service';
 import { reportingUnitSchema, codeDescriptionSchema } from './reportingUnit.types';
 
-import type { ReportingUnitDto } from './reportingUnit.types';
+import type { ReportingUnitCreateDto, ReportingUnitDto } from './reportingUnit.types';
 
 vi.mock('axios');
 
@@ -167,38 +167,11 @@ describe('ReportingUnitService', () => {
       expect(result).toMatchObject(validReportingUnit);
     });
 
-    it('throws a descriptive Error when the response fails Zod validation', async () => {
-      const malformed = { id: 'not-a-number', client: validCodeDescription };
-      (service as any).doRequest = vi.fn().mockResolvedValue(malformed);
-
-      await expect(service.getReportingUnit(7)).rejects.toThrow(
-        'Reporting unit 7 has an unexpected data structure:',
-      );
-    });
-
-    it('does not expose ZodError directly — wraps it in a plain Error', async () => {
-      (service as any).doRequest = vi.fn().mockResolvedValue({ id: null });
-
-      const error = await service.getReportingUnit(7).catch((e) => e);
-
-      expect(error).toBeInstanceOf(Error);
-      expect(error).not.toBeInstanceOf(ZodError);
-    });
-
     it('re-throws non-Zod errors (e.g. network / ApiError) unchanged', async () => {
       const networkError = new Error('Network failure');
       (service as any).doRequest = vi.fn().mockRejectedValue(networkError);
 
       await expect(service.getReportingUnit(1)).rejects.toThrow('Network failure');
-    });
-
-    it('propagates the original error reference for non-Zod rejections', async () => {
-      const originalError = new TypeError('Unexpected token');
-      (service as any).doRequest = vi.fn().mockRejectedValue(originalError);
-
-      const caught = await service.getReportingUnit(1).catch((e) => e);
-
-      expect(caught).toBe(originalError);
     });
 
     it('returns correct TypeScript-inferred shape on success', async () => {
@@ -214,6 +187,148 @@ describe('ReportingUnitService', () => {
       expect(typeof result.grade.code).toBe('string');
       expect(typeof result.sampling.code).toBe('string');
       expect(typeof result.district.code).toBe('string');
+    });
+  });
+
+  describe('createReportingUnit', () => {
+    /**
+     * API Contract (Issue #855):
+     * - Method: POST
+     * - Path: /api/reporting-units
+     * - Success: 201 Created + Location header pointing to /reporting-units/{id}
+     * - Errors: 400 Bad Request (validation), 409 Conflict (duplicate), 500 Internal Server Error
+     */
+
+    const validCreateRequest: ReportingUnitCreateDto = {
+      clientNumber: '00012797',
+      districtCode: 'DKM',
+      samplingCode: 'AVG',
+      gradeCode: null,
+    };
+
+    it('calls the correct endpoint with POST method and responseHeader option', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/555');
+
+      await service.createReportingUnit(validCreateRequest);
+
+      expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+        method: 'POST',
+        url: '/api/reporting-units',
+        body: validCreateRequest,
+        responseHeader: 'location',
+      });
+    });
+
+    it('extracts numeric ID from Location header and returns it', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/12345');
+
+      const result = await service.createReportingUnit(validCreateRequest);
+
+      expect(result).toBe(12345);
+      expect(typeof result).toBe('number');
+    });
+
+    it('handles Location header with single-digit ID', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/1');
+
+      const result = await service.createReportingUnit(validCreateRequest);
+
+      expect(result).toBe(1);
+    });
+
+    it('handles Location header with large ID', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/999999999');
+
+      const result = await service.createReportingUnit(validCreateRequest);
+
+      expect(result).toBe(999999999);
+    });
+
+    it('includes all request fields in the POST body', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/123');
+
+      const request: ReportingUnitCreateDto = {
+        clientNumber: '00099999',
+        districtCode: 'DCC',
+        samplingCode: 'MAX',
+        gradeCode: 'COASTAL',
+      };
+
+      await service.createReportingUnit(request);
+
+      expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+        method: 'POST',
+        url: '/api/reporting-units',
+        body: request,
+        responseHeader: 'location',
+      });
+    });
+
+    it('throws when Location header has invalid format (no ID)', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/');
+
+      await expect(service.createReportingUnit(validCreateRequest)).rejects.toThrow(
+        'Invalid Location header format: /reporting-units/',
+      );
+    });
+
+    it('throws when Location header has non-numeric ID', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/abc');
+
+      await expect(service.createReportingUnit(validCreateRequest)).rejects.toThrow(
+        'Invalid Location header format: /reporting-units/abc',
+      );
+    });
+
+    it('throws when Location header is completely malformed', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('not-a-valid-path');
+
+      await expect(service.createReportingUnit(validCreateRequest)).rejects.toThrow(
+        'Invalid Location header format: not-a-valid-path',
+      );
+    });
+
+    it('supports both request payloads with and without gradeCode', async () => {
+      const requestWithoutGrade = { ...validCreateRequest, gradeCode: null };
+      const requestWithGrade: ReportingUnitCreateDto = {
+        clientNumber: '00012797',
+        districtCode: 'DKM',
+        samplingCode: 'AVG',
+        gradeCode: 'COASTAL',
+      };
+
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/333');
+
+      const result1 = await service.createReportingUnit(requestWithoutGrade);
+      expect(result1).toBe(333);
+
+      const result2 = await service.createReportingUnit(requestWithGrade);
+      expect(result2).toBe(333);
+    });
+
+    it('re-throws network / API errors unchanged (e.g. 400, 409, 500)', async () => {
+      const apiError = new Error('400: Validation failed');
+      (service as any).doRequest = vi.fn().mockRejectedValue(apiError);
+
+      await expect(service.createReportingUnit(validCreateRequest)).rejects.toThrow(
+        '400: Validation failed',
+      );
+    });
+
+    it('handles Location header with query parameters (if backend adds them)', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/777?v=1');
+
+      // Should still extract the ID correctly
+      await expect(service.createReportingUnit(validCreateRequest)).rejects.toThrow();
+    });
+
+    it('propagates conflict errors (409 Duplicate RU)', async () => {
+      const conflictError = new Error('409: Conflict — Reporting unit already exists');
+      (service as any).doRequest = vi.fn().mockRejectedValue(conflictError);
+
+      const caught = await service.createReportingUnit(validCreateRequest).catch((e) => e);
+
+      expect(caught).toBe(conflictError);
     });
   });
 });

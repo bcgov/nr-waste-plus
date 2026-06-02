@@ -1,9 +1,9 @@
+import { AxiosHeaders } from 'axios';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import { failureNotificationMiddleware } from './failureNotificationMiddleware';
 
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { AxiosHeaders } from 'axios';
 
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 
@@ -137,7 +137,11 @@ describe('failureNotificationMiddleware', () => {
     // The user should be informed rather than silently failing.
     const middleware = failureNotificationMiddleware();
     const error = makeError({
-      config: makeConfig({ headers: { Authorization: 'Bearer expired-token' } as unknown as InternalAxiosRequestConfig['headers'] }),
+      config: makeConfig({
+        headers: {
+          Authorization: 'Bearer expired-token',
+        } as unknown as InternalAxiosRequestConfig['headers'],
+      }),
       response: {
         status: 401,
         statusText: 'Unauthorized',
@@ -165,7 +169,11 @@ describe('failureNotificationMiddleware', () => {
     // Treating a lowercase key as absent would incorrectly suppress the toast.
     const middleware = failureNotificationMiddleware();
     const error = makeError({
-      config: makeConfig({ headers: { authorization: 'Bearer expired-token' } as unknown as InternalAxiosRequestConfig['headers'] }),
+      config: makeConfig({
+        headers: {
+          authorization: 'Bearer expired-token',
+        } as unknown as InternalAxiosRequestConfig['headers'],
+      }),
       response: {
         status: 401,
         statusText: 'Unauthorized',
@@ -224,7 +232,9 @@ describe('failureNotificationMiddleware', () => {
     // The suppression logic must work with the class instance, not just plain objects.
     const middleware = failureNotificationMiddleware();
     const error = makeError({
-      config: makeConfig({ headers: new AxiosHeaders() as unknown as InternalAxiosRequestConfig['headers'] }),
+      config: makeConfig({
+        headers: new AxiosHeaders() as unknown as InternalAxiosRequestConfig['headers'],
+      }),
       response: {
         status: 401,
         statusText: 'Unauthorized',

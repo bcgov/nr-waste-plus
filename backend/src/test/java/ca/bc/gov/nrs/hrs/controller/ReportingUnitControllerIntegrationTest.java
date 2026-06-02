@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
+import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
@@ -90,7 +91,9 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @Test
-  @WithMockJwt
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_ADMIN"}
+  )
   @DisplayName("shouldReturn201_whenCreateSucceeds")
   void shouldReturn201_whenCreateSucceeds() throws Exception {
     // Legacy search: no existing reporting units
@@ -124,7 +127,9 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @Test
-  @WithMockJwt
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_ADMIN"}
+  )
   @DisplayName("shouldReturn400_whenGradeMissingForDKM")
   void shouldReturn400_whenGradeMissingForDKM() throws Exception {
     // Legacy search: no existing reporting units
@@ -148,7 +153,9 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   @Test
-  @WithMockJwt
+  @WithMockJwt(
+      cognitoGroups = {"WASTE_PLUS_ADMIN"}
+  )
   @DisplayName("shouldReturn409_whenReportingUnitDuplicate")
   void shouldReturn409_whenReportingUnitDuplicate() throws Exception {
     // Legacy search: returns an existing RU (totalElements > 0)

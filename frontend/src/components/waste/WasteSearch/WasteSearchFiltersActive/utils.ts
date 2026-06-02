@@ -45,7 +45,10 @@ export const mapDisplayFilter = (key: keyof ReportingUnitSearchParametersDto): s
  * Formats a code-description option for ActiveMultiSelect display.
  *
  * @param item The selected option.
+ * @param defaultValue The string to display when no option is selected (defaults to 'No selection').
  * @returns A human-readable item label.
  */
-export const activeMSItemToString = (item: CodeDescriptionDto | null): string =>
-  item ? `${item.code} - ${item.description}` : 'No selection';
+export const activeMSItemToString = (
+  item: CodeDescriptionDto | null,
+  defaultValue: string = 'No selection',
+): string => (item ? `${item.code} - ${item.description}` : defaultValue);

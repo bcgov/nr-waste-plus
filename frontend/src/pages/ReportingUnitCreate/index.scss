@@ -1,0 +1,28 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/theme' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+@use '@carbon/react/scss/colors' as *;
+
+.create-ru {
+
+  &-column__banner {
+    @include breakpoint-down(md) {
+      padding: $spacing-05 $spacing-07;
+      flex-shrink: 0;
+    }
+  }
+
+  &-column__notification:not(:empty) {
+    margin-top: $spacing-08;
+    @include breakpoint-down(md) {
+      padding: $spacing-05 $spacing-07;
+      flex-shrink: 0;
+    }
+  }
+
+  &-column__spacer {
+    // Spacer column for desktop layout alignment
+  }
+
+}
+

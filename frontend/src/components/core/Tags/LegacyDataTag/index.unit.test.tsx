@@ -57,17 +57,25 @@ describe('LegacyDataTag', () => {
   describe('anchor attributes', () => {
     it('always opens the link in a new tab (target="_blank")', () => {
       render(<LegacyDataTag url="/record/1" />);
-      expect(screen.getByRole('link', { name: 'Legacy data' }).getAttribute('target')).toBe('_blank');
+      expect(screen.getByRole('link', { name: 'Legacy data' }).getAttribute('target')).toBe(
+        '_blank',
+      );
     });
 
     it('always sets rel="noopener noreferrer" for security', () => {
       render(<LegacyDataTag url="/record/1" />);
-      expect(screen.getByRole('link', { name: 'Legacy data' }).getAttribute('rel')).toBe('noopener noreferrer');
+      expect(screen.getByRole('link', { name: 'Legacy data' }).getAttribute('rel')).toBe(
+        'noopener noreferrer',
+      );
     });
 
     it('applies the legacy-data-tag__link CSS class to the anchor', () => {
       render(<LegacyDataTag url="/record/1" />);
-      expect(screen.getByRole('link', { name: 'Legacy data' }).classList.contains('legacy-data-tag__link')).toBe(true);
+      expect(
+        screen
+          .getByRole('link', { name: 'Legacy data' })
+          .classList.contains('legacy-data-tag__link'),
+      ).toBe(true);
     });
   });
 

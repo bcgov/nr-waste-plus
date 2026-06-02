@@ -70,6 +70,7 @@ export const queryKeys = {
   },
   reportingUnit: {
     details: (ruId: number) => ['reporting-unit', 'details', ruId] as const,
+    create: () => ['reporting-unit', 'create'] as const,
   },
   table: {
     sorting: (sort: Record<string, SortDirectionType>) => ['table', 'sorting', sort] as const,

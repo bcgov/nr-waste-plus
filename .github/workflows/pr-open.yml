@@ -61,6 +61,7 @@ jobs:
           flags:
             bookmark-ru-enabled: true
             reporting-unit-details-enabled: true
+            reporting-unit-create-enabled: true
       configmap-frontend: |-
         window.config = {
           ...(window.config ?? {}),
@@ -68,6 +69,7 @@ jobs:
             'offline-mode-enabled': false,
             'bookmark-ru-enabled': true,
             'reporting-unit-details-enabled': true,
+            'reporting-unit-create-enabled': true,
           },
         };
 
