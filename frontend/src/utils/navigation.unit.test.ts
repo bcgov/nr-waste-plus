@@ -24,7 +24,7 @@ describe('navigateTo', () => {
       // ignore if delete is not allowed
     }
 
-    const assign = vi.fn<[string], void>();
+    const assign = vi.fn<(s: string) => void>();
     Object.defineProperty(globalThis, 'location', {
       value: { assign },
       configurable: true,

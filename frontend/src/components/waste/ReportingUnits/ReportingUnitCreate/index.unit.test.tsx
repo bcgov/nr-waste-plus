@@ -1,18 +1,20 @@
 import { QueryClient, QueryClientProvider, type UseMutationResult } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
-import { render, screen, waitFor, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import ReportingUnitCreate from './index';
 
+import type { FamLoginUser } from '@/context/auth/types';
 import type { CodeDescriptionDto, ReportingUnitCreateDto } from '@/services/types';
-import type { AuthUser } from '@/context/auth/types';
 
 import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
-import { useReportingUnitCreateMutation, useMyForestClientsQuery } from '@/config/react-query/hooks';
-import { useAuth } from '@/context/auth/useAuth';
+import {
+  useReportingUnitCreateMutation,
+  useMyForestClientsQuery,
+} from '@/config/react-query/hooks';
 import { createTestRouter } from '@/config/tests/routerTestHelper';
+import { useAuth } from '@/context/auth/useAuth';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
@@ -46,7 +48,7 @@ vi.mock(
       onClientChange,
       invalid,
       invalidText,
-      onBlur,
+      onBlur: _onBlur,
     }: MockClientInputProps) => (
       <div data-testid="client-input">
         <button
@@ -73,11 +75,6 @@ const mockDistrictOptions: CodeDescriptionDto[] = [
   { code: 'DPG', description: 'Prince George' },
 ];
 
-const mockGradeOptions: CodeDescriptionDto[] = [
-  { code: 'COAST', description: 'Coastal grades' },
-  { code: 'INTERIOR', description: 'Interior grades' },
-];
-
 const mockSamplingOptions: CodeDescriptionDto[] = [
   { code: 'SAM1', description: 'Ground Sampling' },
   { code: 'SAM2', description: 'Crown Sampling' },
@@ -88,22 +85,23 @@ const mockClients: CodeDescriptionDto[] = [
   { code: '00001002', description: 'Test Client 2' },
 ];
 
-const mockAuthUser: AuthUser = {
-  idpProvider: 'BCEID',
+const mockAuthUser: FamLoginUser = {
+  idpProvider: 'BCEIDBUSINESS',
   displayName: 'Test User',
-  sub: 'test-sub',
   email: 'test@example.com',
-  emailVerified: true,
+  privileges: {},
 };
 
-const mockAuthUserIdir: AuthUser = {
+const mockAuthUserIdir: FamLoginUser = {
   ...mockAuthUser,
   idpProvider: 'IDIR',
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function createMockMutation(overrides?: Partial<UseMutationResult<number, Error, ReportingUnitCreateDto>>) {
+function createMockMutation(
+  overrides?: Partial<UseMutationResult<number, Error, ReportingUnitCreateDto>>,
+) {
   return {
     mutateAsync: vi.fn().mockResolvedValue(12345),
     isPending: false,
@@ -114,7 +112,6 @@ function createMockMutation(overrides?: Partial<UseMutationResult<number, Error,
     failureCount: 0,
     failureReason: null,
     isIdle: true,
-    isLoading: false,
     isSuccess: false,
     isPaused: false,
     mutate: vi.fn(),
@@ -126,7 +123,7 @@ function createMockMutation(overrides?: Partial<UseMutationResult<number, Error,
   } as UseMutationResult<number, Error, ReportingUnitCreateDto>;
 }
 
-function renderComponent(routerOptions = {}) {
+function renderComponent(_routerOptions = {}) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -148,7 +145,9 @@ describe('ReportingUnitCreate', () => {
   beforeEach(() => {
     vi.mocked(useAuth).mockReturnValue({
       user: mockAuthUser,
+      isLoggedIn: true,
       isLoading: false,
+      userToken: vi.fn(),
       getClients: vi.fn().mockReturnValue([
         { code: '00001001', description: 'Client 1' },
         { code: '00001002', description: 'Client 2' },
@@ -160,11 +159,10 @@ describe('ReportingUnitCreate', () => {
     vi.mocked(useWasteSearchFilterOptions).mockReturnValue({
       samplingOptions: mockSamplingOptions,
       districtOptions: mockDistrictOptions,
+      statusOptions: [],
     });
 
-    vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
-      createMockMutation(),
-    );
+    vi.mocked(useReportingUnitCreateMutation).mockReturnValue(createMockMutation());
 
     vi.mocked(useMyForestClientsQuery).mockReturnValue({
       data: {
@@ -177,7 +175,7 @@ describe('ReportingUnitCreate', () => {
       isError: false,
       error: null,
       status: 'success',
-    } as any);
+    } as unknown as ReturnType<typeof useMyForestClientsQuery>);
   });
 
   afterEach(() => {
@@ -218,7 +216,6 @@ describe('ReportingUnitCreate', () => {
     });
 
     it('renders grade field when district is DKM and shows radio options', async () => {
-      const user = userEvent.setup();
       renderComponent();
 
       // Select district DKM
@@ -278,7 +275,6 @@ describe('ReportingUnitCreate', () => {
 
   describe('form validation', () => {
     it('client field is present for validation', async () => {
-      const user = userEvent.setup();
       renderComponent();
 
       // The component has client field ready for validation
@@ -374,7 +370,6 @@ describe('ReportingUnitCreate', () => {
     });
 
     it('allows selection of coastal grade', async () => {
-      const user = userEvent.setup();
       renderComponent();
       const districtComboBox = document.querySelector('#create-ru-district');
 
@@ -388,15 +383,12 @@ describe('ReportingUnitCreate', () => {
       });
 
       await waitFor(() => {
-        const coastalRadio = document.querySelector(
-          '#create-ru-grade-coastal',
-        ) as HTMLInputElement;
+        const coastalRadio = document.querySelector('#create-ru-grade-coastal') as HTMLInputElement;
         expect(coastalRadio).toBeDefined();
       });
     });
 
     it('allows selection of interior grade', async () => {
-      const user = userEvent.setup();
       renderComponent();
       const districtComboBox = document.querySelector('#create-ru-district');
 
@@ -518,13 +510,11 @@ describe('ReportingUnitCreate', () => {
 
     it('shows "Submitting..." text during submission', async () => {
       vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
-        createMockMutation({ isPending: true, isLoading: true }),
+        createMockMutation({ isPending: true }),
       );
 
       renderComponent();
 
-      const submittingText = screen.queryByText(/Submitting/i);
-      // Check if it's rendered or at least the component doesn't error
       expect(document.querySelector('.create-ru-submit-button')).toBeDefined();
     });
 
@@ -551,10 +541,10 @@ describe('ReportingUnitCreate', () => {
     it('component renders when user is BCEID', () => {
       vi.mocked(useAuth).mockReturnValue({
         user: mockAuthUser,
+        isLoggedIn: true,
         isLoading: false,
-        getClients: vi.fn().mockReturnValue([
-          { code: 'C1', description: 'Client 1' },
-        ]),
+        userToken: vi.fn(),
+        getClients: vi.fn().mockReturnValue([{ code: 'C1', description: 'Client 1' }]),
         logout: vi.fn(),
         login: vi.fn(),
       });
@@ -567,7 +557,9 @@ describe('ReportingUnitCreate', () => {
     it('component renders when user is IDIR', () => {
       vi.mocked(useAuth).mockReturnValue({
         user: mockAuthUserIdir,
+        isLoggedIn: true,
         isLoading: false,
+        userToken: vi.fn(),
         getClients: vi.fn().mockReturnValue([]),
         logout: vi.fn(),
         login: vi.fn(),
@@ -643,7 +635,6 @@ describe('ReportingUnitCreate', () => {
 
   describe('form submission flow', () => {
     it('form element is present and functional', async () => {
-      const user = userEvent.setup();
       renderComponent();
 
       const form = document.querySelector('form');
@@ -651,7 +642,6 @@ describe('ReportingUnitCreate', () => {
     });
 
     it('form and fields are ready for submission', async () => {
-      const user = userEvent.setup();
       renderComponent();
 
       const form = document.querySelector('form');

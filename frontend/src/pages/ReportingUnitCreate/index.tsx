@@ -19,7 +19,7 @@ const ReportingUnitCreatePage: FC = () => {
       <Column lg={16} md={8} sm={4} className="create-ru-column__banner">
         <PageTitle
           title="Create reporting unit"
-          subtitle="Start a new waste submission by creating a reporting unit."
+          subtitle="Start a new waste submission by creating a reporting unit"
         />
       </Column>
 

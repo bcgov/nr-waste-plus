@@ -14,20 +14,20 @@ import { test } from '@/config/tests/coverage.setup';
 async function selectComboBoxOption(
   page: import('@playwright/test').Page,
   comboBoxId: string,
-  optionName: string
+  optionName: string,
 ) {
   const comboBox = page.locator(`#${comboBoxId}`);
-  
+
   // Clear any existing value first
   await comboBox.fill('');
   await page.waitForTimeout(150);
-  
+
   // Type slowly to avoid issues
   for (const char of optionName) {
     await comboBox.type(char, { delay: 20 });
   }
   await page.waitForTimeout(400);
-  
+
   // Navigate and select
   await comboBox.press('ArrowDown');
   await page.waitForTimeout(150);
@@ -89,9 +89,7 @@ test.describe('Create Reporting Unit - API Errors', () => {
       await expect(notification).toBeVisible();
     });
 
-    test('does NOT navigate away from the form after a 500 error', async ({
-      page,
-    }, testInfo) => {
+    test('does NOT navigate away from the form after a 500 error', async ({ page }, testInfo) => {
       await fillFormAndSubmit(page, testInfo.project.metadata.userType);
       await page.waitForLoadState('networkidle');
 

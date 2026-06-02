@@ -206,13 +206,6 @@ describe('ReportingUnitService', () => {
       gradeCode: null,
     };
 
-    const _validCreateResponse: ReportingUnitCreateDto = {
-      clientNumber: '00012797',
-      districtCode: 'DKM',
-      samplingCode: 'AVG',
-      gradeCode: null,
-    };
-
     it('calls the correct endpoint with POST method and responseHeader option', async () => {
       (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/555');
 
@@ -258,7 +251,7 @@ describe('ReportingUnitService', () => {
         clientNumber: '00099999',
         districtCode: 'DCC',
         samplingCode: 'MAX',
-        gradeCode: 'COST',
+        gradeCode: 'COASTAL',
       };
 
       await service.createReportingUnit(request);
@@ -301,7 +294,7 @@ describe('ReportingUnitService', () => {
         clientNumber: '00012797',
         districtCode: 'DKM',
         samplingCode: 'AVG',
-        gradeCode: 'COST',
+        gradeCode: 'COASTAL',
       };
 
       (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/333');

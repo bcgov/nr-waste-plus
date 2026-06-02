@@ -12,6 +12,7 @@ import {
   useMyForestClientsQuery,
   useReportingUnitCreateMutation,
 } from '@/config/react-query/hooks';
+import { useAuth } from '@/context/auth/useAuth';
 import {
   type CodeDescriptionDto,
   type ReportingUnitCreateDto,
@@ -21,7 +22,6 @@ import { runValidators } from '@/utils/runValidators';
 import { required } from '@/utils/validators';
 
 import './index.scss';
-import { useAuth } from '@/context/auth/useAuth';
 
 /**
  * Form component for creating a new waste reporting unit.
@@ -59,7 +59,7 @@ const ReportingUnitCreate: FC = () => {
     defaultValues: {
       clientNumber: null as string | null,
       districtCode: null as string | null,
-      samplingCode: null as string | null,
+      samplingCode: 'AVG' as string | null,
       gradeCode: null as string | null,
     },
     onSubmit: async ({ value }) => {
@@ -188,7 +188,6 @@ const ReportingUnitCreate: FC = () => {
             {(field) => (
               <RadioButtonGroup
                 defaultSelected=""
-                helperText="Helper text"
                 invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
                 invalidText={field.state.meta.errors[0]}
                 value={field.state.value ?? ''}
@@ -207,7 +206,7 @@ const ReportingUnitCreate: FC = () => {
                 <RadioButton
                   id="create-ru-grade-coastal"
                   labelText="Coastal grades"
-                  value="COAST"
+                  value="COASTAL"
                 />
                 <RadioButton
                   id="create-ru-grade-interior"

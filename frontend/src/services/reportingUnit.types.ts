@@ -33,7 +33,7 @@ export const reportingUnitCreateRequestSchema = z.object({
   clientNumber: z.string().regex(/^\d{8}$/, 'Client number must be exactly 8 numeric digits'),
   districtCode: z.string().regex(/^[A-Z]{3}$/, 'District code must be exactly 3 uppercase letters'),
   samplingCode: z.string().regex(/^[A-Z]{3}$/, 'Sampling code must be exactly 3 uppercase letters'),
-  gradeCode: z.nullable(z.enum(['COST', 'INTERIOR'])),
+  gradeCode: z.nullable(z.enum(['COASTAL', 'INTERIOR'])),
 });
 
 export type ReportingUnitCreateDto = z.infer<typeof reportingUnitCreateRequestSchema>;
