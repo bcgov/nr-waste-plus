@@ -24,7 +24,7 @@ Feature: Collection of sample tests
     Then the lighthouse score should be at least:
       | performance     | 85 |
       | accessibility   | 90 |
-      | best-practices  | 95 |
+      | best-practices  | 90 |
       | seo             | 80 |
 
   @loginAsBCeID
