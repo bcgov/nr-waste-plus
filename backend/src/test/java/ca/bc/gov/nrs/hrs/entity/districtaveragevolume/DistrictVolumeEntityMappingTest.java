@@ -49,7 +49,7 @@ public class DistrictVolumeEntityMappingTest
 
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setArea(Area.INTERIOR);
-    entity.setStartDate(LocalDate.now().plusDays(1));
+    entity.setStartDate(LocalDate.of(2026, 1, 1));
     entity.setTableData(tableData);
     entity.setTableLevelFactor(new BigDecimal("1.234").setScale(3));
     entity.setHeliMultiplier(null);
