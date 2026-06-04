@@ -1,10 +1,16 @@
 package ca.bc.gov.nrs.hrs.extensions;
 
 import static ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory.createJwt;
+
+import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -45,5 +51,16 @@ public abstract class AbstractTestContainerIntegrationTest {
       "Test, Automated WLRS:EX",
       "test@test.ca"
   );
+
+  @TestConfiguration
+  static class TestAuditingConfiguration {
+
+    @Bean
+    public DateTimeProvider dateTimeProvider() {
+      // Ensure auditing provides an OffsetDateTime so @CreatedDate/@LastModifiedDate
+      // properties of type OffsetDateTime can be set without conversion errors in tests.
+      return () -> Optional.of(OffsetDateTime.now());
+    }
+  }
 
 }
