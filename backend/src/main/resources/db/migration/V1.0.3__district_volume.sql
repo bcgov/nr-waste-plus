@@ -12,9 +12,9 @@ CREATE TABLE IF NOT EXISTS hrs.district_volume
     table_level_factor NUMERIC(10,3) NOT NULL,
     heli_multiplier    NUMERIC(10,3),                         -- nullable; COASTAL only
     created_at         TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
-    created_by         VARCHAR(32)   NOT NULL,
+    created_by         VARCHAR(128)  NOT NULL,
     updated_at         TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
-    updated_by         VARCHAR(32)   NOT NULL,
+    updated_by         VARCHAR(128)  NOT NULL,
     version            INT           NOT NULL DEFAULT 0,
 
     CONSTRAINT chk_area CHECK (area IN ('INTERIOR', 'COASTAL'))
