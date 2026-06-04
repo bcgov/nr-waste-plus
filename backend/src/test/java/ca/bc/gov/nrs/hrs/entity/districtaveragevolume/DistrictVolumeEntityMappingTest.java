@@ -3,19 +3,18 @@ package ca.bc.gov.nrs.hrs.entity.districtaveragevolume;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
+import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  * Integration test that verifies Hibernate/JPA mapping for DistrictVolumeEntity.
  */
+@WithMockJwt
 public class DistrictVolumeEntityMappingTest
     extends AbstractTestContainerIntegrationTest {
 
@@ -24,13 +23,6 @@ public class DistrictVolumeEntityMappingTest
 
   @Test
   void persistAndRead_backMappedFields() {
-
-    // Ensure auditing picks up a principal
-    JwtAuthenticationToken token = new JwtAuthenticationToken(
-        this.jwt,
-        AuthorityUtils.createAuthorityList()
-    );
-    SecurityContextHolder.getContext().setAuthentication(token);
 
     DistrictRow row = new DistrictRow(
         "DCC",
