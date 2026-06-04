@@ -1,6 +1,3 @@
--- Ensure schema exists for multi-schema deployments
-create schema if not exists hrs;
-
 CREATE TABLE IF NOT EXISTS hrs.district_volume
 (
     id                 BIGSERIAL     PRIMARY KEY,
