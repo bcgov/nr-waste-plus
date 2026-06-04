@@ -63,7 +63,7 @@ public class DistrictVolumeEntity {
   private OffsetDateTime createdAt;
 
   @CreatedBy
-  @Column(name = "created_by", nullable = false, updatable = false, length = 32)
+  @Column(name = "created_by", nullable = false, updatable = false, length = 128)
   private String createdBy;
 
   @LastModifiedDate
@@ -71,7 +71,7 @@ public class DistrictVolumeEntity {
   private OffsetDateTime updatedAt;
 
   @LastModifiedBy
-  @Column(name = "updated_by", nullable = false, length = 32)
+  @Column(name = "updated_by", nullable = false, length = 128)
   private String updatedBy;
 
   @Version
