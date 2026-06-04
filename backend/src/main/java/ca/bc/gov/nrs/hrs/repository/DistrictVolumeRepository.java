@@ -5,7 +5,7 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface DistrictVolumeRepository 
+public interface DistrictVolumeRepository
     extends JpaRepository<DistrictVolumeEntity, Long> {
 
   // Used to derive end_date when a new entry for the same area is saved.
