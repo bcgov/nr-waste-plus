@@ -39,10 +39,68 @@ export type ProcessorResult<T> = ProcessorSuccess<T> | ProcessorFailure;
  *
  * @template T - The domain object type produced by this processor.
  *
- * @example
- * class CustomerCsvProcessor implements FileProcessor<Customer> {
- *   async load(file: File): Promise<ProcessorResult<Customer>> { ... }
+ * @example <caption>Complete processor: extension check, header validation, Zod row parsing</caption>
+ * import { z } from 'zod';
+ * import { type FileProcessor, type ProcessorResult } from '@/components/Form/FileUploadInput/fileProcessor';
+ *
+ * const customerRowSchema = z.object({
+ *   id:    z.string().min(1, 'id is required'),
+ *   name:  z.string().min(1, 'name is required'),
+ *   email: z.email({ message: 'email must be a valid email address' }),
+ * });
+ * export type Customer = z.infer<typeof customerRowSchema>;
+ *
+ * export class CustomerCsvProcessor implements FileProcessor<Customer> {
+ *   async load(file: File): Promise<ProcessorResult<Customer>> {
+ *     // 1. Extension guard — fail fast before reading any bytes.
+ *     if (!file.name.toLowerCase().endsWith('.csv')) {
+ *       return { success: false, errors: [`"${file.name}" must be a .csv file.`] };
+ *     }
+ *
+ *     const lines = (await file.text()).trim().split(/\r?\n/);
+ *     if (lines.length < 2) {
+ *       return { success: false, errors: [`"${file.name}" contains no data rows.`] };
+ *     }
+ *
+ *     // 2. Header validation — normalise to lowercase, trim whitespace.
+ *     const [headerLine, ...dataLines] = lines;
+ *     const headers = headerLine.split(',').map(h => h.trim().toLowerCase());
+ *     const required = ['id', 'name', 'email'] as const;
+ *     const missing  = required.filter(col => !headers.includes(col));
+ *     if (missing.length > 0) {
+ *       return { success: false, errors: [`Missing required columns: ${missing.join(', ')}.`] };
+ *     }
+ *
+ *     // 3. Row-by-row Zod validation — collect ALL errors before returning.
+ *     const customers: Customer[] = [];
+ *     const rowErrors: string[] = [];
+ *
+ *     for (let i = 0; i < dataLines.length; i++) {
+ *       const line = dataLines[i].trim();
+ *       if (!line) continue; // skip blank lines
+ *       const values = line.split(',').map(v => v.trim());
+ *       const raw    = Object.fromEntries(headers.map((h, j) => [h, values[j] ?? '']));
+ *       const result = customerRowSchema.safeParse(raw);
+ *       if (result.success) {
+ *         customers.push(result.data);
+ *       } else {
+ *         rowErrors.push(`Row ${i + 2}: ${result.error.issues.map(e => e.message).join('; ')}`);
+ *       }
+ *     }
+ *
+ *     if (rowErrors.length > 0) return { success: false, errors: rowErrors };
+ *     if (customers.length === 0) return { success: false, errors: [`"${file.name}" contains no data rows.`] };
+ *     return { success: true, data: customers };
+ *   }
  * }
+ *
+ * @example <caption>Edge case: row-level errors are collected and returned all at once</caption>
+ * // Upload: id,name,email / 1,Alice,not-an-email / 2,,bob@example.com
+ * // Result: { success: false, errors: [
+ * //   'Row 2: email must be a valid email address',
+ * //   'Row 3: name is required',
+ * // ]}
+ * // The component surfaces every error on the file row — never throws.
  */
 export interface FileProcessor<T> {
   load(file: File): Promise<ProcessorResult<T>>;

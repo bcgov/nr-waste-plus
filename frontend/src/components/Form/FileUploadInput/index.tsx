@@ -56,11 +56,56 @@ interface TrackedFile {
  *
  * @template T - The domain object type produced by the processor.
  *
- * @example
+ * @example <caption>Basic: single CSV upload (happy path)</caption>
+ * // Instantiate the processor outside the component so the reference is stable.
+ * const processor = new CustomerCsvProcessor();
+ *
  * <FileUploadInput
  *   accept=".csv"
- *   processor={new CustomerCsvProcessor()}
- *   onProcessed={(customers) => form.setFieldValue('customers', customers)}
+ *   processor={processor}
+ *   onProcessed={(customers) => setState(customers)}
+ * />
+ *
+ * @example <caption>TanStack Form integration with submit-time validation errors</caption>
+ * const processor = new CustomerCsvProcessor();
+ *
+ * <form.Field
+ *   name="customers"
+ *   validators={{
+ *     onSubmit: ({ value }) =>
+ *       value.length === 0 ? 'Upload at least one customer file.' : undefined,
+ *   }}
+ * >
+ *   {(field) => (
+ *     <FileUploadInput<Customer>
+ *       accept=".csv"
+ *       processor={processor}
+ *       onProcessed={(customers) => field.handleChange(customers)}
+ *       externalErrors={
+ *         field.state.meta.errors.length > 0
+ *           ? field.state.meta.errors.map(String)
+ *           : undefined
+ *       }
+ *     />
+ *   )}
+ * </form.Field>
+ *
+ * @example <caption>Edge case: enforce a strict size cap</caption>
+ * // Files larger than 100 KB are rejected before the processor runs.
+ * <FileUploadInput
+ *   processor={processor}
+ *   onProcessed={setItems}
+ *   maxFileSizeBytes={100 * 1024}
+ * />
+ *
+ * @example <caption>Edge case: multi-file batch with slot overflow warning</caption>
+ * // Uploading 4 files when maxFiles={2} shows:
+ * // "2 files were not added — maximum of 2 files allowed."
+ * <FileUploadInput
+ *   accept=".csv"
+ *   maxFiles={2}
+ *   processor={processor}
+ *   onProcessed={setItems}
  * />
  */
 function FileUploadInput<T>({
