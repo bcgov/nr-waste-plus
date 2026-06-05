@@ -1,6 +1,6 @@
 import { FileUploaderDropContainer, FileUploaderItem, FormItem } from '@carbon/react';
 import prettyBytes from 'pretty-bytes';
-import { useState, useId } from 'react';
+import { type SyntheticEvent, useState, useId } from 'react';
 
 import { type FileProcessor } from './fileProcessor';
 
@@ -136,7 +136,7 @@ function FileUploadInput<T>({
   };
 
   const handleAddFiles = async (
-    _evt: React.SyntheticEvent<HTMLElement>,
+    _evt: SyntheticEvent<HTMLElement>,
     { addedFiles }: { addedFiles: File[] },
   ): Promise<void> => {
     const slots = maxFiles - trackedFiles.length;
@@ -186,43 +186,60 @@ function FileUploadInput<T>({
           };
         }
 
-        const result = await processor.load(entry.file);
-        if (result.success) {
-          return { uuid: entry.uuid, errors: [], data: result.data };
+        try {
+          const result = await processor.load(entry.file);
+          if (result.success) {
+            return { uuid: entry.uuid, errors: [], data: result.data };
+          }
+          return { uuid: entry.uuid, errors: result.errors, data: null };
+        } catch {
+          return {
+            uuid: entry.uuid,
+            errors: [`"${entry.file.name}" could not be processed. Please try again.`],
+            data: null,
+          };
         }
-        return { uuid: entry.uuid, errors: result.errors, data: null };
       }),
     );
 
-    // Commit results: update errors, processedData, and clear processing flags.
-    const nextFileErrors = new Map(fileErrors);
-    const nextProcessedData = new Map(processedData);
-
-    for (const { uuid, errors, data } of entryResults) {
-      if (errors.length) {
-        nextFileErrors.set(uuid, errors);
+    // Commit results using functional setState so concurrent add operations
+    // compose correctly — each updater always receives the latest state.
+    setFileErrors((prev) => {
+      const next = new Map(prev);
+      for (const { uuid, errors } of entryResults) {
+        if (errors.length) next.set(uuid, errors);
       }
-      if (data !== null) {
-        nextProcessedData.set(uuid, data);
-      }
-    }
+      return next;
+    });
 
-    setFileErrors(nextFileErrors);
-    setProcessedData(nextProcessedData);
+    setProcessedData((prev) => {
+      const next = new Map(prev);
+      for (const { uuid, data } of entryResults) {
+        if (data !== null) next.set(uuid, data);
+      }
+      return next;
+    });
+
     setProcessingUuids((prev) => {
       const next = new Set(prev);
       for (const { uuid } of entryResults) next.delete(uuid);
       return next;
     });
 
-    // Only emit results if at least one file in this batch was successfully processed
+    // Emit by merging this batch into the captured snapshot. Each concurrent
+    // batch emits its own slice; state itself is kept consistent by the
+    // functional updaters above.
     const hasNewData = entryResults.some(({ data }) => data !== null);
     if (hasNewData) {
-      emitResults(nextProcessedData);
+      const mergedForEmit = new Map(processedData);
+      for (const { uuid, data } of entryResults) {
+        if (data !== null) mergedForEmit.set(uuid, data);
+      }
+      onProcessed(Array.from(mergedForEmit.values()).flat());
     }
   };
 
-  const handleDelete = (_evt: React.SyntheticEvent, { uuid }: { uuid: string }) => {
+  const handleDelete = (_evt: SyntheticEvent, { uuid }: { uuid: string }) => {
     setTrackedFiles((prev) => prev.filter((t) => t.uuid !== uuid));
 
     const nextFileErrors = new Map(fileErrors);

@@ -504,10 +504,25 @@ describe('FileUploadInput (error handling and deletion)', () => {
     const input = container.querySelector('input[type="file"]') as HTMLInputElement;
     const user = userEvent.setup();
 
-    // Upload file
+    // Upload file and wait for it to be processed
     await user.upload(input, file);
-    await waitFor(() => expect(mockLoad).toHaveBeenCalled());
-    expect(onProcessed).toHaveBeenCalledWith([{ id: '1', name: 'A', email: 'a@a.com' }]);
+    await waitFor(() =>
+      expect(onProcessed).toHaveBeenCalledWith([{ id: '1', name: 'A', email: 'a@a.com' }]),
+    );
+
+    // Carbon FileUploaderItem (status="edit") renders a close button with
+    // aria-label="<iconDescription> - <filename>"
+    const deleteButton = screen.getByRole('button', { name: /- test\.csv$/i });
+    await user.click(deleteButton);
+
+    // File row should be removed from the DOM
+    expect(container.querySelectorAll('.file-upload-item')).toHaveLength(0);
+
+    // onProcessed should be called again with an empty array
+    await waitFor(() => {
+      const calls = onProcessed.mock.calls;
+      expect(calls.at(-1)?.[0]).toEqual([]);
+    });
   });
 
   it('rejects all files when capacity is zero', async () => {

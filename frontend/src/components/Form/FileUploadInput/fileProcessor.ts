@@ -46,7 +46,7 @@ export type ProcessorResult<T> = ProcessorSuccess<T> | ProcessorFailure;
  * const customerRowSchema = z.object({
  *   id:    z.string().min(1, 'id is required'),
  *   name:  z.string().min(1, 'name is required'),
- *   email: z.email({ message: 'email must be a valid email address' }),
+ *   email: z.string().email('email must be a valid email address'),
  * });
  * export type Customer = z.infer<typeof customerRowSchema>;
  *
