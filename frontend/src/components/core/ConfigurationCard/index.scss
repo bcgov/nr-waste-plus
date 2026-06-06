@@ -18,7 +18,7 @@
     @include type-style('label-01');
   }
 
-  button {
+  .#{vars.$bcgov-prefix}--btn {
     max-width: min(100%, 12.75rem);
     max-inline-size: min(100%, 12.75rem);
     padding-inline: calc(var(--cds-layout-density-padding-inline-local) - 0.0625rem) calc(var(--cds-layout-density-padding-inline-local) * 3 + 1rem - 3.0625rem);
