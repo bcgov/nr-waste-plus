@@ -20,6 +20,18 @@ describe('ConfigurationCard', () => {
     expect(screen.getByText('Some body text')).toBeDefined();
   });
 
+  it('renders ReactNode description as-is without wrapping paragraph', () => {
+    render(
+      <ConfigurationCard
+        title="Title"
+        description={<span data-testid="rich-desc">Rich content</span>}
+      />,
+    );
+    const node = screen.getByTestId('rich-desc');
+    expect(node).toBeDefined();
+    expect(node.tagName.toLowerCase()).toBe('span');
+  });
+
   it('renders children instead of description when both provided', () => {
     render(
       <ConfigurationCard

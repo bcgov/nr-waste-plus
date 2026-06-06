@@ -10,7 +10,11 @@ export interface ConfigurationCardProps {
   /** Card heading — required. */
   readonly title: string;
 
-  /** Card body text or rich content. Rendered inside a `<p>` tag when provided. */
+  /**
+   * Card body text or rich content.
+   * When a `string` is provided it is wrapped in a `<p>` tag.
+   * When any other `ReactNode` is provided it is rendered as-is (no wrapping element).
+   */
   readonly description?: string | ReactNode;
 
   /**
@@ -79,7 +83,11 @@ export const ConfigurationCard: FC<ConfigurationCardProps> = ({
   <Tile className="configuration-card">
     <h4>{title}</h4>
 
-    {children ?? (description ? <p>{description}</p> : null)}
+    {children ?? (description != null
+      ? typeof description === 'string'
+        ? <p>{description}</p>
+        : description
+      : null)}
 
     {buttonLabel && onButtonClick && (
       <Button kind={kind} onClick={onButtonClick} disabled={disabled}>
