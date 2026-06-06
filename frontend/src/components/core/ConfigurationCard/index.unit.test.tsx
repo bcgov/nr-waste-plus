@@ -82,6 +82,19 @@ describe('ConfigurationCard', () => {
     expect(screen.queryByRole('button')).toBeNull();
   });
 
+  it('renders button with default ghost kind when kind is not provided', () => {
+    const onButtonClick = vi.fn();
+    render(
+      <ConfigurationCard
+        title="Title"
+        buttonLabel="Default kind"
+        onButtonClick={onButtonClick}
+      />,
+    );
+    const button = screen.getByRole('button', { name: 'Default kind' });
+    expect(button.classList.contains('cds--btn--ghost')).toBe(true);
+  });
+
   it('renders button with custom kind', () => {
     const onButtonClick = vi.fn();
     render(

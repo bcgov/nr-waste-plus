@@ -33,7 +33,7 @@ export interface ConfigurationCardProps {
    */
   readonly onButtonClick?: () => void;
 
-  /** Carbon Button kind. Defaults to `'tertiary'`. */
+  /** Carbon Button kind. Defaults to `'ghost'` per Issue #906 / Figma spec. */
   readonly kind?:
     | 'primary'
     | 'secondary'
@@ -77,7 +77,7 @@ export const ConfigurationCard: FC<ConfigurationCardProps> = ({
   children,
   buttonLabel,
   onButtonClick,
-  kind = 'tertiary',
+  kind = 'ghost',
   disabled = false,
 }) => (
   <Tile className="configuration-card">
