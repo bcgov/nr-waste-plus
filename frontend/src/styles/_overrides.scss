@@ -327,7 +327,7 @@ $colors-override: (
   @include theme.add-component-tokens($tag-tokens);
   @include theme.add-component-tokens($notification-tokens);
   @include theme.theme(dark.$dark-theme);
-  --cds-button-tertiary: #{map-get(map-get($colors-override, blue), 60)};
+  --cds-button-tertiary: #{map.get(map.get($colors-override, blue), 60)};
   --cds-button-tertiary-hover: #{carbon-colors.$blue-60-hover};
 
   .#{variables.$bcgov-prefix}--btn--tertiary:hover {
