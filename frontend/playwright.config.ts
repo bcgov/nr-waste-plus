@@ -10,7 +10,10 @@ const baseURL = process.env.BASE_URL ?? 'http://localhost:3000';
 const commonSettings = {
   headless: true,
   baseURL,
-  viewport: { width: 1920, height: 1080 },
+  // 1600×900: common 16:9 desktop resolution within the Carbon `max` breakpoint
+  // (≥1584px). Smaller than 1920×1080 so Carbon renders the same layout but
+  // with ~17% fewer pixels — faster frame production, same coverage.
+  viewport: { width: 1600, height: 900 },
   ignoreHTTPSErrors: true,
   video: 'on-first-retry',
   trace: 'on-first-retry',
