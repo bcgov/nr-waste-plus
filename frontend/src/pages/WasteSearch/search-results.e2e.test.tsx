@@ -1,26 +1,23 @@
-import { expect, type Locator } from '@playwright/test';
+import { expect } from '@playwright/test';
 
 import { setupWasteSearchMocks } from './e2e.setup';
 
 import { test } from '@/config/tests/coverage.setup';
 
 test.describe('Waste Search - Search Results', () => {
-  let searchBox: Locator;
-  let searchButton: Locator;
-
   test.beforeEach(async ({ page }, testInfo) => {
     await setupWasteSearchMocks(page, testInfo.project.metadata.userType, {
       includeSearchRoutes: true,
     });
     await page.goto('/search');
-    searchBox = page.getByRole('searchbox');
-    searchButton = page.getByTestId('search-button-most');
   });
 
   test('should display search results in table', async ({ page }) => {
+    const searchBox = page.getByRole('searchbox');
     await searchBox.fill('12345');
     await searchBox.blur();
 
+    const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
     // Verify mocked data appears
@@ -29,9 +26,11 @@ test.describe('Waste Search - Search Results', () => {
   });
 
   test('should allow pagination of results', async ({ page }, testInfo) => {
+    const searchBox = page.getByRole('searchbox');
     await searchBox.fill('67890');
     await searchBox.blur();
 
+    const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
     // Verify mocked data appears
@@ -52,7 +51,9 @@ test.describe('Waste Search - Search Results', () => {
 
     const nextPageButton = pagination.getByRole('button', { name: 'Next page' });
     await expect(nextPageButton).toBeVisible();
-    await nextPageButton.click();
+    // force: true bypasses the TanStack Devtools fixed overlay that intercepts
+    // pointer events over the pagination bar at smaller viewport sizes.
+    await nextPageButton.click({ force: true });
 
     if (testInfo.project.metadata.userType === 'bceid') {
       await expect(page.getByRole('cell', { name: '92345678' }).first()).toBeVisible();
@@ -63,18 +64,22 @@ test.describe('Waste Search - Search Results', () => {
   });
 
   test('should display no results message', async ({ page }) => {
+    const searchBox = page.getByRole('searchbox');
     await searchBox.fill('NONEXISTENT');
     await searchBox.blur();
 
+    const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
     await expect(page.getByText('No results')).toBeVisible();
   });
 
   test('primary and secondary are here', async ({ page }) => {
+    const searchBox = page.getByRole('searchbox');
     await searchBox.fill('67890');
     await searchBox.blur();
 
+    const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
     // Verify mocked data appears
@@ -89,9 +94,11 @@ test.describe('Waste Search - Search Results', () => {
   });
 
   test('enable timestamp column', async ({ page }) => {
+    const searchBox = page.getByRole('searchbox');
     await searchBox.fill('67890');
     await searchBox.blur();
 
+    const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
     await page.getByRole('button', { name: 'Edit columns' }).click();
