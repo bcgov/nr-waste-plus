@@ -5,6 +5,7 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
 import { useWasteSearchFilterOptions } from './useWasteSearchFilterOptions';
 
+import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import * as eventHandler from '@/hooks/useNotificationEvents/eventHandler';
 import APIs from '@/services/APIs';
 
@@ -36,9 +37,7 @@ const statusData = [
 ];
 
 const createWrapper = () => {
-  const qc = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
-  });
+  const qc = makeTestQueryClient();
   return ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );

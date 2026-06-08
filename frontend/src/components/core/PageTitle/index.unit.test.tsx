@@ -1,25 +1,20 @@
-import { RouterProvider } from '@tanstack/react-router';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect } from 'vitest';
 
 import PageTitle from './index';
 
-import { createTestRouter } from '@/config/tests/routerTestHelper';
+import { renderWithApp } from '@/config/tests/renderWithApp';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 
 // Helper function to render PageTitle with props
 const renderPageTitle = (
   props: React.ComponentProps<typeof PageTitle> & { children?: React.ReactNode },
 ) => {
-  render(
-    <RouterProvider
-      router={createTestRouter(() => (
-        <PageTitleProvider>
-          <PageTitle {...props}>{props.children}</PageTitle>
-        </PageTitleProvider>
-      ))}
-    />,
+  renderWithApp(
+    <PageTitleProvider>
+      <PageTitle {...props}>{props.children}</PageTitle>
+    </PageTitleProvider>,
   );
 };
 

@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import WasteSearchTableExpandContent from './index';
 
 import type { ReportingUnitSearchExpandedDto } from '@/services/search.types';
 
+import { renderWithAppAsync, makeTestQueryClient } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
 
 vi.mock('@/services/APIs', () => {
@@ -41,15 +42,7 @@ const mockExpandedData: ReportingUnitSearchExpandedDto = {
 };
 
 const renderWithProps = async (rowId: string) => {
-  const qc = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-        staleTime: 0,
-      },
-    },
-  });
+  const qc = makeTestQueryClient();
   await act(async () =>
     render(
       <QueryClientProvider client={qc}>
@@ -195,11 +188,7 @@ describe('WasteSearchTableExpandContent', () => {
       (APIs.search.getReportingUnitSearchExpand as Mock).mockReturnValue(searchPromise);
 
       const rowId = 'RU-4069-Block-411-224813681';
-      const qc = new QueryClient({
-        defaultOptions: {
-          queries: { retry: false, gcTime: 0, staleTime: 0 },
-        },
-      });
+      const qc = makeTestQueryClient();
       let container: HTMLElement = document.createElement('div');
       await act(async () => {
         const result = render(
@@ -349,9 +338,7 @@ describe('WasteSearchTableExpandContent', () => {
 
     it('renders empty value when wasteAssessmentAreaId is not finite (no redirect link)', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
-      const qc = new QueryClient({
-        defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
-      });
+      const qc = makeTestQueryClient();
 
       const { container } = await act(async () =>
         render(

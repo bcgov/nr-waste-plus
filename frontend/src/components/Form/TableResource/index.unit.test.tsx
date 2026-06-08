@@ -1,13 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CheckmarkFilled, CloseFilled, Edit } from '@carbon/icons-react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 import TableResource from './index';
 
 import type { PageableResponse, TableHeaderType } from './types';
+
+import { renderWithAppAsync, makeTestQueryClient } from '@/config/tests/renderWithApp';
 
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
@@ -47,7 +49,7 @@ describe('TableResource', () => {
   };
 
   const renderWithProps = async (props: any) => {
-    const qc = new QueryClient();
+    const qc = makeTestQueryClient();
     await act(async () =>
       render(
         <QueryClientProvider client={qc}>

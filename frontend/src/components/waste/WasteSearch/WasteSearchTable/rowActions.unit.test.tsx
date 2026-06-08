@@ -9,6 +9,7 @@ import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { ReportingUnitSearchResultDto } from '@/services/search.types';
 import type { ReactNode } from 'react';
 
+import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
 
 vi.mock('@/services/APIs', () => ({
@@ -44,12 +45,7 @@ const makeRow = (overrides: Partial<WasteSearchRow> = {}): WasteSearchRow => ({
 });
 
 const createWrapper = () => {
-  const qc = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
-    },
-  });
+  const qc = makeTestQueryClient();
   return ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );
