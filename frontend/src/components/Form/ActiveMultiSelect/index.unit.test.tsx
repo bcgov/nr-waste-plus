@@ -213,7 +213,7 @@ describe('ActiveMultiSelect', () => {
   });
 
   it('shows skeleton when showSkeleton is true', () => {
-    const { container } = render(
+    render(
       <ActiveMultiSelect
         showSkeleton
         placeholder="Select..."
@@ -284,7 +284,7 @@ describe('ActiveMultiSelect', () => {
 
     it('renders without errors when onBlur prop is not provided', async () => {
       const user = await userEvent.setup();
-      const { container } = render(
+      render(
         <ActiveMultiSelect
           placeholder="Select..."
           id="test-multiselect"

@@ -55,7 +55,7 @@ describe('TooltipRoleBasedRedirectLinkTag', () => {
 
     const allowedRoles: Role[] = [Role.ADMIN];
 
-    const { container } = render(
+    render(
       <TooltipRoleBasedRedirectLinkTag
         tooltip="This is a helpful tooltip"
         text="Restricted Link"

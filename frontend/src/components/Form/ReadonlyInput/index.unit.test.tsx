@@ -54,17 +54,18 @@ describe('ReadonlyInput', () => {
 
   it('applies card-item class to dl element', () => {
     render(<ReadonlyInput label="Test">Content</ReadonlyInput>);
-    const dl = screen.getByTestId('card-item-test');
+    screen.getByTestId('card-item-test');
   });
 
   it('applies card-item-label class to dt element', () => {
     render(<ReadonlyInput label="Test">Content</ReadonlyInput>);
     const dt = screen.getByRole('term');
+    expect(dt.className).toContain('card-item-label');
   });
 
   it('applies card-item-content class to dd by default', () => {
     render(<ReadonlyInput label="Test">Content</ReadonlyInput>);
-    const dd = screen.getByRole('definition');
+    screen.getByRole('definition');
   });
 
   it('applies card-item-content-number class when isNumber is true', () => {
@@ -89,12 +90,12 @@ describe('ReadonlyInput', () => {
 
   it('generates correct testid for card-item based on label', () => {
     render(<ReadonlyInput label="My Test Label">Content</ReadonlyInput>);
-    const dl = screen.getByTestId('card-item-my-test-label');
+    screen.getByTestId('card-item-my-test-label');
   });
 
   it('generates correct testid for card-item-content based on label', () => {
     render(<ReadonlyInput label="My Test Label">Content</ReadonlyInput>);
-    const dd = screen.getByTestId('card-item-content-my-test-label');
+    screen.getByTestId('card-item-content-my-test-label');
   });
 
   it('renders tooltip when tooltipText is provided', () => {
@@ -184,12 +185,12 @@ describe('ReadonlyInput', () => {
 
   it('converts multi-word labels to kebab-case in testid', () => {
     render(<ReadonlyInput label="This Is A Test">Content</ReadonlyInput>);
-    const dl = screen.getByTestId('card-item-this-is-a-test');
+    screen.getByTestId('card-item-this-is-a-test');
   });
 
   it('handles labels with extra spaces in kebab-case conversion', () => {
     render(<ReadonlyInput label="  Field  Name  ">Content</ReadonlyInput>);
-    const dl = screen.getByTestId('card-item-field-name');
+    screen.getByTestId('card-item-field-name');
   });
 
   it('renders with all props together', () => {
@@ -225,7 +226,7 @@ describe('ReadonlyInput', () => {
           Content
         </ReadonlyInput>,
       );
-      const dt = screen.getByRole('term', { name: 'Hidden Label' });
+      screen.getByRole('term', { name: 'Hidden Label' });
     });
 
     it('still renders dt element when displayLabel is false', () => {
@@ -252,7 +253,7 @@ describe('ReadonlyInput', () => {
     });
 
     it('works with tooltip when displayLabel is false', () => {
-      const { container } = render(
+      render(
         <ReadonlyInput label="Hidden Label" displayLabel={false} tooltipText="Info">
           Content
         </ReadonlyInput>,
@@ -294,7 +295,7 @@ describe('ReadonlyInput', () => {
 
   describe('labelClassName prop', () => {
     it('applies the supplied css classname along with the default one to the dt element that holds the label', () => {
-      const { container } = render(
+      render(
         <ReadonlyInput label="Thing" labelClassName="please">
           Content
         </ReadonlyInput>,
