@@ -1,40 +1,17 @@
 import { test, expect } from '@playwright/test';
 
 import { mockJwt } from '@/config/tests/auth.helper';
+import { setupAppShellMocks } from '@/config/tests/app.setup';
 import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 const hasClientAccessRole = (userType: string): boolean => userType === 'bceid';
 const entityTypeForUser = (userType: string): 'client' | 'organization' =>
-  hasClientAccessRole(userType) ? 'client' : 'organization';
+  userType === 'bceid' ? 'client' : 'organization';
 const canOverrideClaims = (): boolean => process.env.VITE_MOCK_AUTH?.toLowerCase() === 'true';
 
 test.describe('Profile menu', () => {
   test.beforeEach(async ({ page }, testInfo) => {
-    await mockApiResponsesWithStub(page, 'users/preferences', `users/preferences-GET.json`);
-
-    if (hasClientAccessRole(testInfo.project.metadata.userType)) {
-      await mockApiResponsesWithStub(
-        page,
-        'forest-clients/searchByNumbers**',
-        'forest-clients/searchByNumbers-pg0.json',
-      );
-      await mockApiResponsesWithStub(
-        page,
-        'forest-clients/clients**',
-        'forest-clients/clients-pg0.json',
-      );
-    }
-
-    await mockApiResponsesWithStub(page, 'codes/districts', 'codes/districts.json');
-
-    await mockApiResponsesWithStub(page, 'codes/samplings', 'codes/samplings.json');
-
-    await mockApiResponsesWithStub(
-      page,
-      'codes/assess-area-statuses',
-      'codes/assess-area-statuses.json',
-    );
-
+    await setupAppShellMocks(page, testInfo.project.metadata.userType);
     await page.goto('/search');
   });
 
