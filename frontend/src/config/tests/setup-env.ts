@@ -20,13 +20,17 @@ vi.mock('@/services/APIs', () => ({
     forestclient: {
       searchByClientNumbers: vi.fn().mockResolvedValue([]),
       searchClients: vi.fn().mockResolvedValue([]),
+      searchMyForestClients: vi.fn().mockResolvedValue([]),
     },
     codes: {
       getDistricts: vi.fn().mockResolvedValue([]),
       getWasteCodes: vi.fn().mockResolvedValue([]),
+      getSamplingOptions: vi.fn().mockResolvedValue([]),
+      getAssessAreaStatuses: vi.fn().mockResolvedValue([]),
     },
     search: {
       search: vi.fn().mockResolvedValue({ items: [] }),
+      searchReportingUnit: vi.fn().mockResolvedValue({ content: [], page: { number: 0, size: 10, totalElements: 0, totalPages: 0 } }),
     },
   },
 }));
