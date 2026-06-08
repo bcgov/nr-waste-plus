@@ -36,22 +36,33 @@ export const test = base.extend<{
     }
 
     for (const entry of jsCoverage) {
-      if (!entry.url.startsWith(`${testInfo.project.use.baseURL}/src`)) continue;
+      const baseURL = testInfo.project.use.baseURL ?? '';
+      // Dev server: /src/ URLs (untransformed); Production build: /assets/ chunks (inline sourcemap)
+      const isDevSource = entry.url.startsWith(`${baseURL}/src`);
+      const isProdChunk = entry.url.includes('/assets/') && entry.url.endsWith('.js');
+      if (!isDevSource && !isProdChunk) continue;
 
-      const absPath = entry.url.replace(testInfo.project.use.baseURL ?? '', process.cwd());
-      if (!fs.existsSync(absPath)) {
-        // Skipping, file not found
-        continue;
+      let scriptPath: string;
+      let sourceCode: string;
+
+      if (isDevSource) {
+        scriptPath = entry.url.replace(baseURL, process.cwd());
+        if (!fs.existsSync(scriptPath)) continue;
+        sourceCode = fs.readFileSync(scriptPath, 'utf-8');
+      } else {
+        // Production chunk: entry.source contains bundle text with embedded inline sourcemap
+        if (!entry.source) continue;
+        scriptPath = entry.url;
+        sourceCode = entry.source;
       }
 
-      const sourceCode = fs.readFileSync(absPath, 'utf-8');
-      const converter = v8toIstanbul(absPath, 0, { source: sourceCode });
+      const converter = v8toIstanbul(scriptPath, 0, { source: sourceCode });
       await converter.load();
       converter.applyCoverage(entry.functions);
 
       const istanbulCoverage = converter.toIstanbul();
       const safeTestId = testInfo.testId.replace(/\W+/g, '_');
-      const fileName = `coverage-${path.basename(absPath).replace(/\W+/g, '_')}-${safeTestId}.json`;
+      const fileName = `coverage-${path.basename(scriptPath).replace(/\W+/g, '_')}-${safeTestId}.json`;
       const outPath = path.join(COVERAGE_DIR, fileName);
       fs.writeFileSync(outPath, JSON.stringify(istanbulCoverage, null, 2));
     }
