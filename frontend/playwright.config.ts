@@ -339,7 +339,6 @@ export default defineConfig({
   timeout: THIRTY_SECONDS,
   retries: process.env.CI ? 2 : 0,
   testDir: './src',
-  globalSetup: './src/config/tests/browser.setup.ts',
   globalTeardown: './src/config/tests/browser.teardown.ts',
   projects,
   webServer: {
