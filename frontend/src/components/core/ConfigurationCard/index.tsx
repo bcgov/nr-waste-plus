@@ -79,22 +79,27 @@ export const ConfigurationCard: FC<ConfigurationCardProps> = ({
   onButtonClick,
   kind = 'ghost',
   disabled = false,
-}) => (
-  <Tile className="configuration-card">
-    <h4>{title}</h4>
+}) => {
+  const descriptionContent =
+    description == null ? null : typeof description === 'string' ? (
+      <p>{description}</p>
+    ) : (
+      description
+    );
 
-    {children ?? (description != null
-      ? typeof description === 'string'
-        ? <p>{description}</p>
-        : description
-      : null)}
+  return (
+    <Tile className="configuration-card">
+      <h4>{title}</h4>
 
-    {buttonLabel && onButtonClick && (
-      <Button kind={kind} onClick={onButtonClick} disabled={disabled}>
-        {buttonLabel}
-      </Button>
-    )}
-  </Tile>
-);
+      {children ?? descriptionContent}
+
+      {buttonLabel && onButtonClick && (
+        <Button kind={kind} onClick={onButtonClick} disabled={disabled}>
+          {buttonLabel}
+        </Button>
+      )}
+    </Tile>
+  );
+};
 
 export default ConfigurationCard;
