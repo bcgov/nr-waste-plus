@@ -99,7 +99,7 @@ describe('ReportingUnitDetailsTombstone', () => {
     it('renders a link to client details for IDIR users', () => {
       renderTombstone();
       const link = screen.getByRole('link', { name: '00001001' });
-      expect(link).toBeDefined();
+      // link is defined; getBy* throws if not found
       expect((link as HTMLAnchorElement).href).toContain('/clients/details/00001001');
     });
 
