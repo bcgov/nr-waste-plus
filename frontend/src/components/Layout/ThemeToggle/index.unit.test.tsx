@@ -1,4 +1,5 @@
-import { screen, fireEvent } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect } from 'vitest';
 
 import ThemeToggle from './index';
@@ -41,23 +42,30 @@ describe('ThemeToggle', () => {
   });
 
   it('calls toggleTheme on click', async () => {
+    const user = await userEvent.setup();
     const spy = vi.spyOn(mockCtxLight, 'toggleTheme');
     await renderWithProviders();
-    fireEvent.click(screen.getByRole('button'));
+    await user.click(screen.getByRole('button'));
     expect(spy).toHaveBeenCalled();
   });
 
   it('calls toggleTheme on Enter key', async () => {
+    const user = await userEvent.setup();
     const spy = vi.spyOn(mockCtxLight, 'toggleTheme');
     await renderWithProviders();
-    fireEvent.keyDown(screen.getByRole('button'), { key: 'Enter' });
+    const button = screen.getByRole('button');
+    await user.click(button);
+    await user.keyboard('{Enter}');
     expect(spy).toHaveBeenCalled();
   });
 
   it('calls toggleTheme on Space key', async () => {
+    const user = await userEvent.setup();
     const spy = vi.spyOn(mockCtxLight, 'toggleTheme');
     await renderWithProviders();
-    fireEvent.keyDown(screen.getByRole('button'), { key: ' ' });
+    const button = screen.getByRole('button');
+    await user.click(button);
+    await user.keyboard(' ');
     expect(spy).toHaveBeenCalled();
   });
 });
