@@ -1,6 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RouterProvider } from '@tanstack/react-router';
-import { render, screen, fireEvent, within, waitFor, act } from '@testing-library/react';
+import { screen, fireEvent, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
@@ -8,9 +6,7 @@ import WasteSearchFilters from './index';
 
 import type { ComponentProps } from 'react';
 
-import { createTestRouter } from '@/config/tests/routerTestHelper';
-import { AuthProvider } from '@/context/auth/AuthProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
 
 vi.mock('@/hooks/useSyncFiltersToSearchParams', () => ({
@@ -45,29 +41,15 @@ const defaultFilters = {
   status: [],
 };
 
-const renderWithProps = async (props: Partial<ComponentProps<typeof WasteSearchFilters>>) => {
-  const qc = new QueryClient();
-  await act(async () =>
-    render(
-      <RouterProvider
-        router={createTestRouter(() => (
-          <QueryClientProvider client={qc}>
-            <AuthProvider>
-              <PreferenceProvider>
-                <WasteSearchFilters
-                  value={defaultFilters}
-                  onChange={props.onChange || vi.fn()}
-                  onSearch={props.onSearch || vi.fn()}
-                  {...props}
-                />
-              </PreferenceProvider>
-            </AuthProvider>
-          </QueryClientProvider>
-        ))}
-      />,
-    ),
+const renderWithProps = (props: Partial<ComponentProps<typeof WasteSearchFilters>>) =>
+  renderWithAppAsync(
+    <WasteSearchFilters
+      value={defaultFilters}
+      onChange={props.onChange || vi.fn()}
+      onSearch={props.onSearch || vi.fn()}
+      {...props}
+    />,
   );
-};
 
 describe('WasteSearchFilters', () => {
   it('shouldRenderSearchInputAndFilterColumns_whenRendered', async () => {

@@ -1,30 +1,12 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach, beforeEach, type Mock } from 'vitest';
 
 import LandingPage from './index';
 
-import { AuthProvider } from '@/context/auth/AuthProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import { ThemeProvider } from '@/context/theme/ThemeProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
 
-const renderWithProps = async () => {
-  const qc = new QueryClient();
-  await act(async () =>
-    render(
-      <QueryClientProvider client={qc}>
-        <AuthProvider>
-          <PreferenceProvider>
-            <ThemeProvider>
-              <LandingPage />
-            </ThemeProvider>
-          </PreferenceProvider>
-        </AuthProvider>
-      </QueryClientProvider>,
-    ),
-  );
-};
+const renderWithProps = () => renderWithAppAsync(<LandingPage />);
 
 const loginMock: ReturnType<typeof vi.fn> = vi.fn();
 let mockBreakpoint = 'md';

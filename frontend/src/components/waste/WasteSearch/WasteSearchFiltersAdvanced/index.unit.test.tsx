@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -9,8 +8,7 @@ import WasteSearchFiltersAdvanced from './index';
 import type { FamLoginUser } from '@/context/auth/types';
 import type { ReportingUnitSearchParametersViewDto } from '@/services/search.types';
 
-import { AuthProvider } from '@/context/auth/AuthProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
 
 const mockUser = {
@@ -45,30 +43,20 @@ const defaultFilters = {
   status: [],
 };
 
-const renderWithProps = async (props: any) => {
-  const qc = new QueryClient();
-  await act(async () =>
-    render(
-      <QueryClientProvider client={qc}>
-        <AuthProvider>
-          <PreferenceProvider>
-            <WasteSearchFiltersAdvanced
-              filters={defaultFilters}
-              isModalOpen={props.isModalOpen ?? true}
-              samplingOptions={props.samplingOptions || []}
-              districtOptions={props.districtOptions || []}
-              statusOptions={props.statusOptions || []}
-              onClose={props.onClose || vi.fn()}
-              onChange={props.onChange || vi.fn()}
-              onSearch={props.onSearch || vi.fn()}
-              {...props}
-            />
-          </PreferenceProvider>
-        </AuthProvider>
-      </QueryClientProvider>,
-    ),
+const renderWithProps = (props: any) =>
+  renderWithAppAsync(
+    <WasteSearchFiltersAdvanced
+      filters={defaultFilters}
+      isModalOpen={props.isModalOpen ?? true}
+      samplingOptions={props.samplingOptions || []}
+      districtOptions={props.districtOptions || []}
+      statusOptions={props.statusOptions || []}
+      onClose={props.onClose || vi.fn()}
+      onChange={props.onChange || vi.fn()}
+      onSearch={props.onSearch || vi.fn()}
+      {...props}
+    />,
   );
-};
 
 describe('WasteSearchFiltersActive', () => {
   beforeEach(() => {
