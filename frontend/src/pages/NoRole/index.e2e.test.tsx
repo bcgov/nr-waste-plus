@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-import { mockJwt } from '@/config/tests/auth.helper';
 import { setupAppShellMocks } from '@/config/tests/app.setup';
+import { mockJwt } from '@/config/tests/auth.helper';
 
 test.describe('No Role Page', () => {
   test.beforeEach(async ({ page }, testInfo) => {

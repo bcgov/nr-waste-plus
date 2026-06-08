@@ -56,6 +56,8 @@ test.describe('Global Error Page', () => {
     await expect(page.getByText('Global Error')).toBeVisible();
     // Target the PageTitle subtitle specifically to avoid strict-mode violations
     // with the stack trace <pre> and toast notification that also contain this text.
-    await expect(page.locator('.subtitle-section', { hasText: 'Internal Server Error' })).toBeVisible();
+    await expect(
+      page.locator('.subtitle-section', { hasText: 'Internal Server Error' }),
+    ).toBeVisible();
   });
 });

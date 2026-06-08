@@ -5,8 +5,8 @@ import NoRolePage from './index';
 
 import type { FamLoginUser } from '@/context/auth/types';
 
-import { Role } from '@/context/auth/types';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
+import { Role } from '@/context/auth/types';
 import APIs from '@/services/APIs';
 
 let mockIsLoggedIn = false;

@@ -1,15 +1,15 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { QueryClientProvider } from '@tanstack/react-query';
 
 import AdvancedFilterClientInput from './index';
 
 import type { FamLoginUser } from '@/context/auth/types';
 
 import { renderWithAppAsync, makeTestQueryClient } from '@/config/tests/renderWithApp';
-import { useAuth } from '@/context/auth/useAuth';
 import { AuthProvider } from '@/context/auth/AuthProvider';
+import { useAuth } from '@/context/auth/useAuth';
 import APIs from '@/services/APIs';
 
 const mockUser = {
@@ -465,7 +465,11 @@ describe('AdvancedFilterClientInput', () => {
       );
 
       // Covers lines 80-81: onSelect fires when a dropdown item is clicked
-      const option = await screen.findByRole('option', { name: /00000 Test Client/ }, { timeout: 2000 });
+      const option = await screen.findByRole(
+        'option',
+        { name: /00000 Test Client/ },
+        { timeout: 2000 },
+      );
       await user.click(option);
 
       await waitFor(() => {

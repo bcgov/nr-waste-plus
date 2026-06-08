@@ -141,13 +141,9 @@ async function initializeAndCheck(page: Page): Promise<boolean> {
 export async function authenticate(page: Page, metadata: Record<string, any>): Promise<void> {
   const userType = metadata.userType.toLowerCase() as 'idir' | 'bceid';
   const user =
-    userType === 'idir'
-      ? (process.env.IDIR_USERNAME ?? '')
-      : (process.env.BCEID_USERNAME ?? '');
+    userType === 'idir' ? (process.env.IDIR_USERNAME ?? '') : (process.env.BCEID_USERNAME ?? '');
   const password =
-    userType === 'idir'
-      ? (process.env.IDIR_PASSWORD ?? '')
-      : (process.env.BCEID_PASSWORD ?? '');
+    userType === 'idir' ? (process.env.IDIR_PASSWORD ?? '') : (process.env.BCEID_PASSWORD ?? '');
   // Credentials are read lazily from process.env — never stored in project metadata
   console.log(`Setup - Auth: ${user} via ${userType}`);
 

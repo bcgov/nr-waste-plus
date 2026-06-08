@@ -164,7 +164,6 @@ test.describe('My Client List - Inline Notifications', () => {
     await searchBox.fill('');
     await page.getByTestId('search-button-other').click();
 
-
     await expect(page.locator('[role="alert"]')).not.toBeVisible();
   });
 });

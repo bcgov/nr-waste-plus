@@ -4,8 +4,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { LayoutSideNav } from './index';
 
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import * as useAuthModule from '@/context/auth/useAuth';
+import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import * as routePathsModule from '@/routes/routePaths';
 
 vi.mock(import('@/env'), async (importOriginal) => {
