@@ -1,16 +1,13 @@
-import { RouterProvider } from '@tanstack/react-router';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import ReportingUnitDetailsPage from './index';
 
 import type { ReportingUnitDto } from '@/services/types';
 
-import { createTestRouter } from '@/config/tests/routerTestHelper';
+import { renderWithApp } from '@/config/tests/renderWithApp';
 import { Role } from '@/context/auth/types';
 import * as useAuthModule from '@/context/auth/useAuth';
-import NotificationProvider from '@/context/notification/NotificationProvider';
-import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 
 // ── Mutable state ─────────────────────────────────────────────────────────────
 
@@ -55,17 +52,7 @@ const defaultData: ReportingUnitDto = {
 
 function renderPage(data: ReportingUnitDto = defaultData) {
   mockLoaderData = data;
-  return render(
-    <RouterProvider
-      router={createTestRouter(() => (
-        <NotificationProvider>
-          <PageTitleProvider>
-            <ReportingUnitDetailsPage />
-          </PageTitleProvider>
-        </NotificationProvider>
-      ))}
-    />,
-  );
+  return renderWithApp(<ReportingUnitDetailsPage />);
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────

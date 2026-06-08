@@ -1,13 +1,11 @@
-import { RouterProvider } from '@tanstack/react-router';
-import { act, render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { LayoutSideNav } from './index';
 
-import { createTestRouter } from '@/config/tests/routerTestHelper';
-import { AuthProvider } from '@/context/auth/AuthProvider';
-import * as useAuthModule from '@/context/auth/useAuth';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
+import * as useAuthModule from '@/context/auth/useAuth';
 import * as routePathsModule from '@/routes/routePaths';
 
 vi.mock(import('@/env'), async (importOriginal) => {
@@ -51,24 +49,13 @@ vi.mock('@/routes/routePaths', () => ({
   getMenuEntries: vi.fn(),
 }));
 
-const renderWithProviders = async (pathname = '/dashboard') => {
-  await act(async () =>
-    render(
-      <RouterProvider
-        router={createTestRouter(
-          () => (
-            <AuthProvider>
-              <LayoutProvider>
-                <LayoutSideNav />
-              </LayoutProvider>
-            </AuthProvider>
-          ),
-          pathname,
-        )}
-      />,
-    ),
+const renderWithProviders = (pathname = '/dashboard') =>
+  renderWithAppAsync(
+    <LayoutProvider>
+      <LayoutSideNav />
+    </LayoutProvider>,
+    { route: pathname },
   );
-};
 
 describe('LayoutSideNav', () => {
   beforeEach(() => {

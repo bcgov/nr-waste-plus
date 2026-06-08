@@ -1,13 +1,10 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import HeaderPanelProfile from './index';
 
-import { AuthProvider } from '@/context/auth/AuthProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { Role, type FamLoginUser } from '@/context/auth/types';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import ThemeProvider from '@/context/theme/ThemeProvider';
 import APIs from '@/services/APIs';
 
 vi.mock('@/components/Layout/AvatarImage', () => ({
@@ -48,22 +45,7 @@ vi.mock('@/services/APIs', () => {
   };
 });
 
-const renderWithProviders = async () => {
-  const qc = new QueryClient();
-  await act(async () => {
-    render(
-      <AuthProvider>
-        <QueryClientProvider client={qc}>
-          <PreferenceProvider>
-            <ThemeProvider>
-              <HeaderPanelProfile />
-            </ThemeProvider>
-          </PreferenceProvider>
-        </QueryClientProvider>
-      </AuthProvider>,
-    );
-  });
-};
+const renderWithProviders = () => renderWithAppAsync(<HeaderPanelProfile />);
 
 describe('HeaderPanelProfile', () => {
   beforeEach(() => {

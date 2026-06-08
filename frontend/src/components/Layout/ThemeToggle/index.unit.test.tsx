@@ -1,12 +1,11 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
 
 import ThemeToggle from './index';
 
 import type { CarbonTheme } from '@/context/preference/types';
 
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { ThemeContext, type ThemeContextData } from '@/context/theme/ThemeContext';
 
 const mockCtxLight: ThemeContextData = {
@@ -21,20 +20,12 @@ const mockCtxDark: ThemeContextData = {
   toggleTheme: vi.fn(),
 };
 
-const renderWithProviders = async (ctx: ThemeContextData = mockCtxLight) => {
-  const qc = new QueryClient();
-  await act(async () =>
-    render(
-      <QueryClientProvider client={qc}>
-        <PreferenceProvider>
-          <ThemeContext.Provider value={ctx}>
-            <ThemeToggle />
-          </ThemeContext.Provider>
-        </PreferenceProvider>
-      </QueryClientProvider>,
-    ),
+const renderWithProviders = (ctx: ThemeContextData = mockCtxLight) =>
+  renderWithAppAsync(
+    <ThemeContext.Provider value={ctx}>
+      <ThemeToggle />
+    </ThemeContext.Provider>,
   );
-};
 
 describe('ThemeToggle', () => {
   it('renders with light icon when theme is white', async () => {

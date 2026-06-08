@@ -1,9 +1,10 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import DistrictDisplay from '.';
 
+import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
@@ -56,7 +57,7 @@ vi.mock('@/context/preference/usePreference', () => ({
 }));
 
 const renderWithProviders = async (active: boolean) => {
-  const qc = new QueryClient();
+  const qc = makeTestQueryClient();
   await act(async () =>
     render(
       <AuthProvider>

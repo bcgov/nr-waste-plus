@@ -1,23 +1,13 @@
-import { RouterProvider } from '@tanstack/react-router';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 
 import RoleErrorPage from './index';
 
-import { createTestRouter } from '@/config/tests/routerTestHelper';
+import { renderWithApp } from '@/config/tests/renderWithApp';
 
 describe('RoleErrorPage', () => {
   it('shouldRenderFallbackMessage_whenNoReasonParamPresent', async () => {
-    render(
-      <RouterProvider
-        router={createTestRouter(
-          () => (
-            <RoleErrorPage />
-          ),
-          '/unauthorized',
-        )}
-      />,
-    );
+    renderWithApp(<RoleErrorPage />, { route: '/unauthorized' });
     await waitFor(() => {
       screen.getByText('Unauthorized Access');
       expect(
@@ -27,16 +17,7 @@ describe('RoleErrorPage', () => {
   });
 
   it('shouldRenderViolationMessage_whenReasonParamPresent', async () => {
-    render(
-      <RouterProvider
-        router={createTestRouter(
-          () => (
-            <RoleErrorPage />
-          ),
-          '/unauthorized?reason=CONFLICTING_CLIENT_ACCESS_ROLES',
-        )}
-      />,
-    );
+    renderWithApp(<RoleErrorPage />, { route: '/unauthorized?reason=CONFLICTING_CLIENT_ACCESS_ROLES' });
 
     await waitFor(() => {
       screen.getByText('This account has conflicting client access roles');
