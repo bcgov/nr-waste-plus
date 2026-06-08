@@ -7,7 +7,7 @@ import AdvancedFilterClientInput from './index';
 
 import type { FamLoginUser } from '@/context/auth/types';
 
-import { renderWithAppAsync, makeTestQueryClient } from '@/config/tests/renderWithApp';
+import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { useAuth } from '@/context/auth/useAuth';
 import APIs from '@/services/APIs';
