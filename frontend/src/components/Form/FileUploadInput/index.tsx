@@ -161,10 +161,8 @@ function FileUploadInput<T>({
       file,
     }));
 
-    const allTracked = [...trackedFiles, ...newEntries];
-
     // Show all new files immediately; mark them as processing.
-    setTrackedFiles(allTracked);
+    setTrackedFiles((prev) => [...prev, ...newEntries]);
     setProcessingUuids((prev) => new Set([...prev, ...newEntries.map((e) => e.uuid)]));
 
     const componentMessages: string[] = [];
