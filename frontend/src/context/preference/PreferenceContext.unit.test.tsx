@@ -6,6 +6,8 @@ import { PreferenceProvider } from './PreferenceProvider';
 import { usePreference } from './usePreference';
 import { loadUserPreference, saveUserPreference } from './utils';
 
+import { makeTestQueryClient } from '@/config/tests/renderWithApp';
+
 const mockStorage = (() => {
   let store: Record<string, string> = {};
 
@@ -45,7 +47,7 @@ const TestComponent = () => {
 };
 
 const renderWithProviders = async () => {
-  const qc = new QueryClient();
+  const qc = makeTestQueryClient();
   await act(async () =>
     render(
       <QueryClientProvider client={qc}>
