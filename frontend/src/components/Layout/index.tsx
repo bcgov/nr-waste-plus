@@ -34,7 +34,7 @@ const Layout: FC<LayoutProps> = ({ children }: LayoutProps) => {
       <LayoutProvider>
         <HeaderContainer render={LayoutHeader} />
         <Content>
-          <Grid className="layout-grid cds--grid--no-gutter">{children}</Grid>
+          <Grid className="layout-grid cds--grid--no-gutter" data-testid="layout-grid">{children}</Grid>
         </Content>
       </LayoutProvider>
     </>

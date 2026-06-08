@@ -214,8 +214,8 @@ describe('ActiveMultiSelect', () => {
       />,
     );
     // The skeleton should be rendered, not the multiselect
-    expect(container.querySelector('.cds--skeleton')).toBeDefined();
-    expect(container.querySelector('.cds--multi-select')).toBeNull();
+    screen.getByTestId('active-multiselect-skeleton');
+    expect(screen.queryByRole('combobox')).toBeNull();
   });
 
   describe('onBlur behavior', () => {
@@ -296,7 +296,7 @@ describe('ActiveMultiSelect', () => {
       });
 
       // Test should pass without errors; no onBlur callback to check
-      expect(container.querySelector('.cds--multi-select')).toBeDefined();
+      screen.getByRole('combobox');
     });
 
     it('onBlur is passed through to the underlying FilterableMultiSelect component', async () => {

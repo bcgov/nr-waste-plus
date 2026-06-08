@@ -82,7 +82,7 @@ describe('RoleBasedRedirectLinkTag', () => {
 
     expect(screen.queryByTestId('redirect-link-tag')).toBeFalsy();
     expect(screen.getByText('Restricted Link')).toBeTruthy();
-    expect(container.querySelector('a')).toBeFalsy();
+    expect(screen.queryByRole('link')).toBeFalsy();
   });
 
   it('renders plain text when user has no roles', () => {
