@@ -5,8 +5,7 @@ import { CancelablePromise } from '@/config/api/CancelablePromise';
 export class MockPromise<T> extends CancelablePromise<T> {
   constructor(content: T) {
     super((resolve, _reject, _onCancel) => {
-      // Always resolve immediately with the provided content
-      setTimeout(() => resolve(content), 200);
+      resolve(content);
     });
   }
 }
