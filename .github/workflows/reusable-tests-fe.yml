@@ -107,3 +107,76 @@ jobs:
         with:
           name: e2e-reports
           path: frontend/test-reports/report/
+
+  e2e:
+    name: E2E Tests (${{ matrix.project }})
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    environment: test
+    container:
+      image: mcr.microsoft.com/playwright:v1.60.0-noble
+    permissions:
+      contents: write
+      checks: write
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: bceid
+            chromium: bceid-chromium
+            setup: bceid-setup
+          - project: idir
+            chromium: idir-chromium
+            setup: idir-setup
+    env:
+      VITE_APP_NAME: Waste Plus
+      VITE_FEATURE_FLAGS: '{"offline-mode-enabled":false,"bookmark-ru-enabled":true,"reporting-unit-details-enabled":true,"reporting-unit-create-enabled":true}'
+      VITE_ZONE: TEST
+      VITE_MOCK_AUTH: true
+      VITE_USER_POOLS_ID: ${{ secrets.COGNITO_USER_POOL }}
+      VITE_USER_POOLS_WEB_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
+      VITE_LEGACY_BASE_URL: https://apps.nrs.gov.bc.ca/ext/waste-for
+      VITE_CLIENT_BASE_URL: https://forestclient.nrs.gov.bc.ca
+      VITE_BACKEND_URL: http://localhost:8080
+      VITE_NODE_ENV: test
+      VITE_PORT: 3000
+      VITE_FAM_DOMAIN: ${{ secrets.FAM_DOMAIN }}
+      VITE_BCEID_HELP: ${{ secrets.VITE_BCEID_HELP }}
+      VITE_IDIR_HELP: ${{ secrets.VITE_IDIR_HELP }}
+    steps:
+      - name: Fix safe.directory for GitHub Actions
+        run: git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
+      - name: Install unzip
+        run: |
+          apt-get update
+          apt-get install -y unzip
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: Install Playwright browsers
+        run: npm run pw:install
+        working-directory: frontend
+      - name: Run ${{ matrix.project }} e2e tests
+        run: npm run test:e2e:${{ matrix.project }}
+        working-directory: frontend
+      - name: Annotate PR with ${{ matrix.project }} e2e results
+        uses: dorny/test-reporter@v3
+        if: always()
+        with:
+          name: E2E Tests (${{ matrix.project }})
+          path: frontend/test-reports/junit/report.xml
+          reporter: java-junit
+          only-summary: false
+          fail-on-error: true
+      - name: Upload ${{ matrix.project }} test results
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: e2e-results-${{ matrix.project }}
+          path: frontend/test-results/
