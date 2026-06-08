@@ -327,6 +327,12 @@ $colors-override: (
   @include theme.add-component-tokens($tag-tokens);
   @include theme.add-component-tokens($notification-tokens);
   @include theme.theme(dark.$dark-theme);
+  --cds-button-tertiary: #{map.get(map.get($colors-override, blue), 60)};
+  --cds-button-tertiary-hover: #{carbon-colors.$blue-60-hover};
+
+  .#{variables.$bcgov-prefix}--btn--tertiary:hover {
+    color: #ffffff;
+  }
 }
 
 /* --------------------- Buttons --------------------- 
@@ -456,6 +462,15 @@ $types: 'error', 'info', 'success', 'warning';
 .#{variables.$bcgov-prefix}--toast-notification--low-contrast {
   border-width: 0.063rem 0.063rem 0.063rem 0;
   border-style: solid;
+
+  // Carbon emits `color: $text-inverse` on __subtitle in the base mixin which
+  // comes after the low-contrast override in cascade order and wins.  Explicitly
+  // restore $text-primary so the WCAG AA contrast requirement is met on the
+  // light background colors used by low-contrast variants.
+  .#{variables.$bcgov-prefix}--toast-notification__title,
+  .#{variables.$bcgov-prefix}--toast-notification__subtitle {
+    color: var(--#{variables.$bcgov-prefix}-text-primary);
+  }
 }
 @each $notificationType in $types {
   div.#{variables.$bcgov-prefix}--toast-notification--#{$notificationType} {
