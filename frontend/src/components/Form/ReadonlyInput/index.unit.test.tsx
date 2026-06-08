@@ -18,13 +18,12 @@ describe('ReadonlyInput', () => {
   });
 
   it('displays skeleton when showSkeleton is true', () => {
-    const { container } = render(
+    render(
       <ReadonlyInput label="Loading Field" showSkeleton={true}>
         Content
       </ReadonlyInput>,
     );
-    // TextInputSkeleton uses the carbon-react class
-    expect(container.querySelector('.bx--skeleton')).toBeDefined();
+    screen.getByTestId('readonly-input-skeleton');
   });
 
   it('does not show content when showSkeleton is true', () => {
@@ -37,94 +36,89 @@ describe('ReadonlyInput', () => {
   });
 
   it('sets the id attribute on the dl element', () => {
-    const { container } = render(
+    render(
       <ReadonlyInput label="Test" id="custom-id">
         Content
       </ReadonlyInput>,
     );
-    const dl = container.querySelector('dl[id="custom-id"]');
-    expect(dl).toBeDefined();
+    const dl = document.getElementById('custom-id');
+    expect(dl).not.toBeNull();
   });
 
   it('renders with semantic HTML structure (dl, dt, dd)', () => {
-    const { container } = render(<ReadonlyInput label="Field">Value</ReadonlyInput>);
-    expect(container.querySelector('dl')).toBeDefined();
-    expect(container.querySelector('dt')).toBeDefined();
-    expect(container.querySelector('dd')).toBeDefined();
+    render(<ReadonlyInput label="Field">Value</ReadonlyInput>);
+    screen.getByTestId('card-item-field');
+    screen.getByRole('term');
+    screen.getByRole('definition');
   });
 
   it('applies card-item class to dl element', () => {
-    const { container } = render(<ReadonlyInput label="Test">Content</ReadonlyInput>);
-    const dl = container.querySelector('dl.card-item');
-    expect(dl).toBeDefined();
+    render(<ReadonlyInput label="Test">Content</ReadonlyInput>);
+    const dl = screen.getByTestId('card-item-test');
   });
 
   it('applies card-item-label class to dt element', () => {
-    const { container } = render(<ReadonlyInput label="Test">Content</ReadonlyInput>);
-    const dt = container.querySelector('dt.card-item-label');
-    expect(dt).toBeDefined();
+    render(<ReadonlyInput label="Test">Content</ReadonlyInput>);
+    const dt = screen.getByRole('term');
   });
 
   it('applies card-item-content class to dd by default', () => {
-    const { container } = render(<ReadonlyInput label="Test">Content</ReadonlyInput>);
-    const dd = container.querySelector('dd.card-item-content');
-    expect(dd).toBeDefined();
+    render(<ReadonlyInput label="Test">Content</ReadonlyInput>);
+    const dd = screen.getByRole('definition');
   });
 
   it('applies card-item-content-number class when isNumber is true', () => {
-    const { container } = render(
+    render(
       <ReadonlyInput label="Number Field" isNumber={true}>
         12345
       </ReadonlyInput>,
     );
-    const dd = container.querySelector('dd.card-item-content-number');
-    expect(dd).toBeDefined();
+    const dd = screen.getByRole('definition');
+    expect(dd.className).toContain('card-item-content-number');
   });
 
   it('does not apply card-item-content-number class when isNumber is false', () => {
-    const { container } = render(
+    render(
       <ReadonlyInput label="Text Field" isNumber={false}>
         Text
       </ReadonlyInput>,
     );
-    const dd = container.querySelector('dd.card-item-content-number');
-    expect(dd).toBeNull();
+    const dd = screen.getByRole('definition');
+    expect(dd.className).not.toContain('card-item-content-number');
   });
 
   it('generates correct testid for card-item based on label', () => {
-    const { container } = render(<ReadonlyInput label="My Test Label">Content</ReadonlyInput>);
-    const dl = container.querySelector('[data-testid="card-item-my-test-label"]');
-    expect(dl).toBeDefined();
+    render(<ReadonlyInput label="My Test Label">Content</ReadonlyInput>);
+    const dl = screen.getByTestId('card-item-my-test-label');
   });
 
   it('generates correct testid for card-item-content based on label', () => {
-    const { container } = render(<ReadonlyInput label="My Test Label">Content</ReadonlyInput>);
-    const dd = container.querySelector('[data-testid="card-item-content-my-test-label"]');
-    expect(dd).toBeDefined();
+    render(<ReadonlyInput label="My Test Label">Content</ReadonlyInput>);
+    const dd = screen.getByTestId('card-item-content-my-test-label');
   });
 
   it('renders tooltip when tooltipText is provided', () => {
-    const { container } = render(
+    render(
       <ReadonlyInput label="Field" tooltipText="Helpful tooltip">
         Content
       </ReadonlyInput>,
     );
-    // DefinitionTooltip renders a tooltip container
-    expect(container.querySelector('[data-tooltip-trigger]')).toBeDefined();
+    // DefinitionTooltip renders a button trigger
+    screen.getByRole('button');
   });
 
   it('does not render tooltip when tooltipText is not provided', () => {
-    const { container } = render(<ReadonlyInput label="Field">Content</ReadonlyInput>);
-    expect(container.querySelector('[data-tooltip-trigger]')).toBeNull();
+    render(<ReadonlyInput label="Field">Content</ReadonlyInput>);
+    expect(screen.queryByRole('button')).toBeNull();
   });
 
   it('does not render tooltip when showSkeleton is true even if tooltipText is provided', () => {
-    const { container } = render(
+    render(
       <ReadonlyInput label="Field" showSkeleton={true} tooltipText="Tooltip">
         Content
       </ReadonlyInput>,
     );
-    expect(container.querySelector('[data-tooltip-trigger]')).toBeNull();
+    expect(screen.queryByRole('button')).toBeNull();
   });
 
   it('wraps string content in span when tooltipText is provided', () => {
@@ -148,29 +142,28 @@ describe('ReadonlyInput', () => {
   });
 
   it('sets title attribute on dd element when content is string and not skeleton', () => {
-    const { container } = render(<ReadonlyInput label="Field">Test Content</ReadonlyInput>);
-    const dd = container.querySelector('dd');
-    expect(dd?.getAttribute('title')).toBe('Test Content');
+    render(<ReadonlyInput label="Field">Test Content</ReadonlyInput>);
+    const dd = screen.getByRole('definition');
+    expect(dd.getAttribute('title')).toBe('Test Content');
   });
 
   it('does not set title attribute when content is React element', () => {
-    const { container } = render(
+    render(
       <ReadonlyInput label="Field">
         <div>Content</div>
       </ReadonlyInput>,
     );
-    const dd = container.querySelector('dd');
-    expect(dd?.getAttribute('title')).toBeNull();
+    const dd = screen.getByRole('definition');
+    expect(dd.getAttribute('title')).toBeNull();
   });
 
   it('does not set title attribute when showSkeleton is true', () => {
-    const { container } = render(
+    render(
       <ReadonlyInput label="Field" showSkeleton={true}>
         Content
       </ReadonlyInput>,
     );
-    const dd = container.querySelector('dd');
-    expect(dd?.getAttribute('title')).not.toBe('Content');
+    expect(screen.queryByRole('definition')).toBeNull();
   });
 
   it('handles empty string content', () => {
@@ -184,25 +177,23 @@ describe('ReadonlyInput', () => {
   });
 
   it('handles boolean content', () => {
-    const { container } = render(<ReadonlyInput label="Boolean">{true}</ReadonlyInput>);
+    render(<ReadonlyInput label="Boolean">{true}</ReadonlyInput>);
     // React does not render boolean values
-    expect(container.querySelector('dd')).toBeDefined();
+    screen.getByRole('definition');
   });
 
   it('converts multi-word labels to kebab-case in testid', () => {
-    const { container } = render(<ReadonlyInput label="This Is A Test">Content</ReadonlyInput>);
-    const dl = container.querySelector('[data-testid="card-item-this-is-a-test"]');
-    expect(dl).toBeDefined();
+    render(<ReadonlyInput label="This Is A Test">Content</ReadonlyInput>);
+    const dl = screen.getByTestId('card-item-this-is-a-test');
   });
 
   it('handles labels with extra spaces in kebab-case conversion', () => {
-    const { container } = render(<ReadonlyInput label="  Field  Name  ">Content</ReadonlyInput>);
-    const dl = container.querySelector('[data-testid="card-item-field-name"]');
-    expect(dl).toBeDefined();
+    render(<ReadonlyInput label="  Field  Name  ">Content</ReadonlyInput>);
+    const dl = screen.getByTestId('card-item-field-name');
   });
 
   it('renders with all props together', () => {
-    const { container } = render(
+    render(
       <ReadonlyInput
         label="Complete Field"
         id="field-id"
@@ -212,9 +203,9 @@ describe('ReadonlyInput', () => {
         12345
       </ReadonlyInput>,
     );
-    expect(container.querySelector('#field-id')).toBeDefined();
-    expect(container.querySelector('dd.card-item-content-number')).toBeDefined();
-    expect(container.querySelector('[data-testid="card-item-complete-field"]')).toBeDefined();
+    expect(document.getElementById('field-id')).not.toBeNull();
+    screen.getByRole('definition');
+    screen.getByTestId('card-item-complete-field');
     screen.getByText('12345');
   });
 
@@ -229,22 +220,21 @@ describe('ReadonlyInput', () => {
     });
 
     it('keeps aria-label when displayLabel is false', () => {
-      const { container } = render(
+      render(
         <ReadonlyInput label="Hidden Label" displayLabel={false}>
           Content
         </ReadonlyInput>,
       );
-      const dt = container.querySelector('dt[aria-label="Hidden Label"]');
-      expect(dt).toBeDefined();
+      const dt = screen.getByRole('term', { name: 'Hidden Label' });
     });
 
     it('still renders dt element when displayLabel is false', () => {
-      const { container } = render(
+      render(
         <ReadonlyInput label="Hidden Label" displayLabel={false}>
           Content
         </ReadonlyInput>,
       );
-      expect(container.querySelector('dt')).toBeDefined();
+      screen.getByRole('term');
     });
 
     it('displays content normally when displayLabel is false', () => {
@@ -267,11 +257,11 @@ describe('ReadonlyInput', () => {
           Content
         </ReadonlyInput>,
       );
-      expect(container.querySelector('[data-tooltip-trigger]')).toBeDefined();
+      screen.getByRole('button');
     });
 
     it('works with all props when displayLabel is false', () => {
-      const { container } = render(
+      render(
         <ReadonlyInput
           label="Hidden Field"
           displayLabel={false}
@@ -281,8 +271,8 @@ describe('ReadonlyInput', () => {
           12345
         </ReadonlyInput>,
       );
-      expect(container.querySelector('#hidden-field-id')).toBeDefined();
-      expect(container.querySelector('dd.card-item-content-number')).toBeDefined();
+      expect(document.getElementById('hidden-field-id')).not.toBeNull();
+      screen.getByRole('definition');
       screen.getByText('12345');
       expect(screen.queryByText('Hidden Field')).toBeNull();
     });
@@ -311,10 +301,10 @@ describe('ReadonlyInput', () => {
       );
 
       // default classname
-      expect(container.querySelector('dt')?.className).toContain('card-item-label');
+      expect(screen.getByRole('term').className).toContain('card-item-label');
 
       // additional classname
-      expect(container.querySelector('dt')?.className).toContain('please');
+      expect(screen.getByRole('term').className).toContain('please');
     });
   });
 });

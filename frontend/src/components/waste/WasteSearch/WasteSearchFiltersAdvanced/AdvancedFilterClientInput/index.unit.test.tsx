@@ -97,7 +97,6 @@ describe('AdvancedFilterClientInput', () => {
     });
 
     expect(screen.queryByTestId('forestclient-client-ac')).toBeNull();
-    expect(document.querySelector('#as-client-multi-select')).toBeDefined();
     screen.getByPlaceholderText('Client');
   });
 

@@ -39,16 +39,8 @@ describe('ColorTag', () => {
 
   it('shows tooltip with code and description', async () => {
     render(<ColorTag value={{ code: 'C', description: 'Charlie Coast' }} colorMap={colorMap} />);
-    // Find tooltip content by class
     const tooltipText = 'C - Charlie Coast';
-    // If not found, try to find by class
-    const tooltipContent = document.querySelector('.cds--popover-content.cds--tooltip-content');
-    if (tooltipContent) {
-      expect(tooltipContent.textContent).toContain(tooltipText);
-    } else {
-      // fallback: check if tooltip text is in the document
-      expect(screen.queryByText(tooltipText)).not.toBeNull();
-    }
+    screen.getByText(tooltipText);
   });
 
   it('shows tooltip by default when code and description exist', () => {

@@ -278,6 +278,7 @@ function FileUploadInput<T>({
         return (
           <FileUploaderItem
             className={`file-upload-item ${isInvalid ? 'file-upload-item--invalid' : ''}`}
+            data-testid="file-upload-item"
             key={uuid}
             uuid={uuid}
             name={file.name}

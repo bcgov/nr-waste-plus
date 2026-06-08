@@ -76,11 +76,11 @@ describe('Layout', () => {
     );
 
     // Header
-    expect(document.querySelector('.cds--header')).not.toBeNull();
+    screen.getByRole('banner');
     // Content body
-    expect(document.querySelector('.cds--content')).not.toBeNull();
+    screen.getByRole('main');
     // Grid
-    expect(document.querySelector('.layout-grid')).not.toBeNull();
+    screen.getByTestId('layout-grid');
     // Children
     screen.getByText('Hello Child');
   });

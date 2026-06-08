@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
 import WasteSearchTableExpandContent from './index';
@@ -338,11 +338,11 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        const agreementsCommentsEl = document.querySelector(`#${rowId}-attachments-comments`);
-        expect(agreementsCommentsEl).toBeDefined();
+        const agreementsCommentsEl = document.getElementById(`${rowId}-attachments-comments`);
+        expect(agreementsCommentsEl).not.toBeNull();
 
         // When wasteAssessmentAreaId is finite, the component should render the link
-        const linkInside = agreementsCommentsEl?.querySelector('a');
+        const linkInside = within(agreementsCommentsEl!).queryByRole('link');
         expect(linkInside).toBeTruthy();
       });
     });
@@ -362,12 +362,12 @@ describe('WasteSearchTableExpandContent', () => {
       );
 
       await waitFor(() => {
-        const agreementsCommentsEl = container.querySelector(`#${rowId}-attachments-comments`);
-        expect(agreementsCommentsEl).toBeDefined();
+        const agreementsCommentsEl = document.getElementById(`${rowId}-attachments-comments`);
+        expect(agreementsCommentsEl).not.toBeNull();
 
         // When wasteAssessmentAreaId is not a finite number (e.g. '411B'), the component should render EmptyValueTag
-        const linkInside = agreementsCommentsEl?.querySelector('a');
-        const emptyValue = agreementsCommentsEl?.querySelector('[data-testid="empty-value"]');
+        const linkInside = within(agreementsCommentsEl!).queryByRole('link');
+        const emptyValue = within(agreementsCommentsEl!).queryByTestId('empty-value');
 
         expect(linkInside).toBeFalsy();
         expect(emptyValue).toBeTruthy();
@@ -416,16 +416,16 @@ describe('WasteSearchTableExpandContent', () => {
       );
 
       await waitFor(() => {
-        expect(container.querySelector(`#${rowId}-license-number`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-cutting-permit`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-timber-mark`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-exempted`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-net-area`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-submitter`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-attachments-comments`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-comment`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-block-count`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-secondary-marks-count`)).toBeDefined();
+        expect(document.getElementById(`${rowId}-license-number`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-cutting-permit`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-timber-mark`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-exempted`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-net-area`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-submitter`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-attachments-comments`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-comment`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-block-count`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-secondary-marks-count`)).not.toBeNull();
       });
     });
   });

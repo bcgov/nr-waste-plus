@@ -76,7 +76,7 @@ const ReadonlyInput = ({
   labelClassName = '',
 }: ReadonlyInputProps): React.ReactElement => {
   if (showSkeleton) {
-    return <TextInputSkeleton />;
+    return <TextInputSkeleton data-testid="readonly-input-skeleton" />;
   }
 
   const rawContent = children ?? PLACE_HOLDER;

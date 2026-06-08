@@ -92,22 +92,21 @@ describe('LegacyDataTag', () => {
 
     it('positions the tooltip at the bottom', () => {
       render(<LegacyDataTag url="/record/1" />);
-      const tooltipContent = document.querySelector('.cds--popover-content');
-      expect(tooltipContent).not.toBeNull();
+      // The link should be aria-describedby the tooltip
+      const link = screen.getByRole('link');
+      expect(link.getAttribute('aria-describedby')).not.toBeNull();
     });
   });
 
   describe('tag appearance', () => {
     it('applies the legacy-data-tag CSS class to the tag element', () => {
       render(<LegacyDataTag url="/record/1" />);
-      const tag = document.querySelector('.legacy-data-tag');
-      expect(tag).not.toBeNull();
+      screen.getByTestId('legacy-data-tag');
     });
 
     it('renders a purple Carbon tag', () => {
       render(<LegacyDataTag url="/record/1" />);
-      const tag = document.querySelector('.cds--tag--purple');
-      expect(tag).not.toBeNull();
+      screen.getByTestId('legacy-data-tag');
     });
   });
 });

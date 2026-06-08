@@ -45,7 +45,7 @@ interface ActiveMultiSelectProps<
  * @returns {React.ReactElement} The skeleton loader component.
  */
 const RenderSkeleton = (): React.ReactElement => {
-  return <TextInputSkeleton hideLabel />;
+  return <TextInputSkeleton hideLabel data-testid="active-multiselect-skeleton" />;
 };
 
 /**

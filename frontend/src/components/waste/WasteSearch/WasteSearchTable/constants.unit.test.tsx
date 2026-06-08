@@ -1,4 +1,4 @@
-import { act, render } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
 import { headers } from './constants';
@@ -297,10 +297,9 @@ describe('WasteSearchTable Constants', () => {
           const result = ruHeader.renderAs('123');
           const { container } = render(result, { wrapper: createRouterWrapper('/') });
           await act(async () => {});
-          expect(container.firstChild).toBeDefined();
+          expect(container.firstChild).not.toBeNull();
           // The internal-route path should not render a legacy external href.
-          const allAnchors = container.querySelectorAll('a');
-          const legacyLinks = Array.from(allAnchors).filter((a) =>
+          const legacyLinks = within(container).queryAllByRole('link').filter((a) =>
             a.getAttribute('href')?.includes('/waste101'),
           );
           expect(legacyLinks).toHaveLength(0);

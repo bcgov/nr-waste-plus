@@ -89,7 +89,7 @@ const ReportingUnitCreate: FC = () => {
     };
 
   return (
-    <Column max={6} xlg={6} lg={6} md={4} sm={4} className="create-ru-column__content">
+    <Column max={6} xlg={6} lg={6} md={4} sm={4} className="create-ru-column__content" data-testid="create-ru-column-content">
       <form
         onSubmit={(e) => {
           e.preventDefault();

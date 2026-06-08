@@ -69,8 +69,7 @@ describe('TooltipRoleBasedRedirectLinkTag', () => {
     expect(restrictedSpan).toBeFalsy();
 
     // Should NOT have tooltip wrapper (DefinitionTooltip)
-    const tooltipWrapper = container.querySelector('[role="tooltip"]');
-    expect(tooltipWrapper).toBeFalsy();
+    expect(screen.queryByRole('tooltip')).toBeFalsy();
   });
 
   it('displays restricted text without tooltip when user lacks permission', () => {
