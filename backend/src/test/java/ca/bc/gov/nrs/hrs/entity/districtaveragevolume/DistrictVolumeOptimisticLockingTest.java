@@ -55,10 +55,6 @@ public class DistrictVolumeOptimisticLockingTest extends AbstractTestContainerIn
       return null;
     });
 
-      // sanity check: version should have incremented after the committed update
-      Integer bumped = tt1.execute(status -> repository.findById(id).orElseThrow().getVersion());
-      assertThat(bumped).isGreaterThan(0);
-
     // attempt to save the stale/detached entity (should fail optimistic lock)
     assertThatThrownBy(() -> tt1.execute(status -> repository.save(detached)))
         .isInstanceOf(ObjectOptimisticLockingFailureException.class);

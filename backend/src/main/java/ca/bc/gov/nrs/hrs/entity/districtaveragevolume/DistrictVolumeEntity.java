@@ -80,8 +80,4 @@ public class DistrictVolumeEntity {
   @LastModifiedBy
   @Column(name = "updated_by", nullable = false, length = 128)
   private String updatedBy;
-
-  @Version
-  @Column(nullable = false)
-  private Integer version;
 }
