@@ -36,7 +36,6 @@ test.describe('Profile menu', () => {
     );
 
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
   });
 
   test('profile menu can be open with basic info', async ({ page }, projectInfo) => {
@@ -158,7 +157,6 @@ test.describe('Profile menu', () => {
 
       await oakClient.click();
 
-      await page.waitForLoadState('networkidle');
 
       await expect(profileButton.getByText('OAK HERITAGE LTD.')).toBeVisible();
 
@@ -206,7 +204,6 @@ test.describe('Profile menu', () => {
 
       await oakClient.click();
 
-      await page.waitForLoadState('networkidle');
 
       await expect(profileButton.getByText('OAK HERITAGE LTD.')).toBeVisible();
 
@@ -531,7 +528,6 @@ test.describe('Profile menu', () => {
     });
 
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
 
     const profileButton = page.getByRole('button', { name: 'Profile settings' });
     await profileButton.click();
@@ -569,7 +565,6 @@ test.describe('Profile menu', () => {
     });
 
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
 
     const profileButton = page.getByRole('button', { name: 'Profile settings' });
     await profileButton.click();

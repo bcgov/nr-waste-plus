@@ -10,7 +10,6 @@ test.describe('Waste Search - Initial State', () => {
       includeSearchRoutes: true,
     });
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
   });
 
   test('should display page title and subtitle', async ({ page }) => {

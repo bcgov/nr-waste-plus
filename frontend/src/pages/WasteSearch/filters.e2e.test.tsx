@@ -10,7 +10,6 @@ test.describe('Waste Search - Filters', () => {
       includeSearchRoutes: true,
     });
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
   });
 
   test('should be able to see and select one district', async ({ page }) => {

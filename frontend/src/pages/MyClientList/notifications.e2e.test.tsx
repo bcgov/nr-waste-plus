@@ -48,7 +48,6 @@ test.describe('My Client List - Inline Notifications', () => {
     });
 
     await page.goto('/clients');
-    await page.waitForLoadState('networkidle');
 
     const notification = page.locator('[role="alert"]');
     await expect(notification).toBeVisible();
@@ -72,7 +71,6 @@ test.describe('My Client List - Inline Notifications', () => {
     });
 
     await page.goto('/clients');
-    await page.waitForLoadState('networkidle');
 
     const notification = page.locator('[role="alert"]');
     await expect(notification).toBeVisible();
@@ -100,7 +98,6 @@ test.describe('My Client List - Inline Notifications', () => {
     });
 
     await page.goto('/clients');
-    await page.waitForLoadState('networkidle');
 
     const notification = page.locator('[role="alert"]');
     await expect(notification).toBeVisible();
@@ -126,7 +123,6 @@ test.describe('My Client List - Inline Notifications', () => {
     });
 
     await page.goto('/clients');
-    await page.waitForLoadState('networkidle');
 
     const notification = page.locator('[role="alert"]');
     await expect(notification).toBeVisible();
@@ -154,7 +150,6 @@ test.describe('My Client List - Inline Notifications', () => {
     });
 
     await page.goto('/clients');
-    await page.waitForLoadState('networkidle');
 
     await expect(page.locator('[role="alert"]')).toBeVisible();
 
@@ -169,7 +164,6 @@ test.describe('My Client List - Inline Notifications', () => {
     await searchBox.fill('');
     await page.getByTestId('search-button-other').click();
 
-    await page.waitForLoadState('networkidle');
 
     await expect(page.locator('[role="alert"]')).not.toBeVisible();
   });

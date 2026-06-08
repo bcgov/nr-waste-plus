@@ -42,7 +42,6 @@ test.describe('No Role Page', () => {
     });
 
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
 
     await expect(page).toHaveURL(/\/no-role$/);
     await expect(page.getByText('Unauthorized Access')).toBeVisible();
@@ -65,7 +64,6 @@ test.describe('No Role Page', () => {
     });
 
     await page.goto('/no-role');
-    await page.waitForLoadState('networkidle');
 
     await expect(page).not.toHaveURL(/\/no-role$/);
     await expect(page.getByRole('heading', { name: 'Unauthorized Access' })).toHaveCount(0);

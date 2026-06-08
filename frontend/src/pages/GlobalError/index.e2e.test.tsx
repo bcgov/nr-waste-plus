@@ -50,7 +50,6 @@ test.describe('Global Error Page', () => {
     });
 
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
 
     await expect(page.getByText('Global Error')).toBeVisible();
     await expect(page.getByText('E2E forced route render failure', { exact: true })).toBeVisible();

@@ -14,7 +14,6 @@ test.describe('Create Reporting Unit - Form Submission', () => {
     await setupCreateRuMocks(page, testInfo.project.metadata.userType);
     await mockCreateRuSuccess(page);
     await page.goto('/reporting-units/create');
-    await page.waitForLoadState('networkidle');
   });
 
   test.describe('successful submission - non-DKM district', () => {
