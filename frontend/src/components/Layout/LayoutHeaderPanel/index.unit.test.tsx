@@ -1,12 +1,9 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { LayoutHeaderPanel } from './index';
 
-import { AuthProvider } from '@/context/auth/AuthProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import ThemeProvider from '@/context/theme/ThemeProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 
 vi.mock('@/context/layout/useLayout', () => ({
   useLayout: () => ({
@@ -23,26 +20,7 @@ vi.mock('@/components/core/DistrictSelection/ClientListing', () => ({
   default: () => <div data-testid="client-listing">Client Listing</div>,
 }));
 
-const renderWithProviders = async () => {
-  const qc = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-    },
-  });
-  await act(async () =>
-    render(
-      <QueryClientProvider client={qc}>
-        <AuthProvider>
-          <PreferenceProvider>
-            <ThemeProvider>
-              <LayoutHeaderPanel />
-            </ThemeProvider>
-          </PreferenceProvider>
-        </AuthProvider>
-      </QueryClientProvider>,
-    ),
-  );
-};
+const renderWithProviders = () => renderWithAppAsync(<LayoutHeaderPanel />);
 
 describe('LayoutHeaderPanel', () => {
   beforeEach(() => {

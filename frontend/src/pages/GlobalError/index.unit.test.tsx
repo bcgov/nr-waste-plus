@@ -1,22 +1,12 @@
-import { RouterProvider } from '@tanstack/react-router';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 
 import GlobalErrorPage from './index';
 
-import { createTestRouter } from '@/config/tests/routerTestHelper';
-import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
+import { renderWithApp } from '@/config/tests/renderWithApp';
 
 const renderPage = (error?: unknown) =>
-  render(
-    <RouterProvider
-      router={createTestRouter(() => (
-        <PageTitleProvider>
-          <GlobalErrorPage error={error} />
-        </PageTitleProvider>
-      ))}
-    />,
-  );
+  renderWithApp(<GlobalErrorPage error={error} />);
 
 describe('GlobalErrorPage', () => {
   it('shouldRenderFallbackMessage_whenNoErrorProvided', async () => {

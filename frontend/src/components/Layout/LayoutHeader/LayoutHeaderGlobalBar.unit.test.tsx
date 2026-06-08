@@ -1,12 +1,9 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
 import LayoutHeaderGlobalBar from './LayoutHeaderGlobalBar';
 
-import { AuthProvider } from '@/context/auth/AuthProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import ThemeProvider from '@/context/theme/ThemeProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 
 vi.mock('@/components/Layout/ThemeToggle', () => ({
   __esModule: true,
@@ -22,22 +19,7 @@ vi.mock('@/context/layout/useLayout', () => ({
   }),
 }));
 
-const renderWithProviders = async () => {
-  const qc = new QueryClient();
-  await act(async () => {
-    render(
-      <AuthProvider>
-        <QueryClientProvider client={qc}>
-          <PreferenceProvider>
-            <ThemeProvider>
-              <LayoutHeaderGlobalBar />
-            </ThemeProvider>
-          </PreferenceProvider>
-        </QueryClientProvider>
-      </AuthProvider>,
-    );
-  });
-};
+const renderWithProviders = () => renderWithAppAsync(<LayoutHeaderGlobalBar />);
 
 describe('LayoutHeaderGlobalBar', () => {
   it('renders ThemeToggle and user avatar', async () => {
