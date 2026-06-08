@@ -119,7 +119,7 @@ The auth strategy (`storageState` JSON + `mockJwt`) is sound in principle but is
 #### M6. Common per-page `beforeEach` mock setup is half-extracted (complete)
 - `setupWasteSearchMocks` and `setupCreateRuMocks` are good. The remaining ~10 test files duplicate similar boilerplate inline. Extract one shared helper per page route.
 
-#### M7. Viewport is `1920×1080` for every desktop test
+#### M7. Viewport is `1920×1080` for every desktop test (complete)
 - Larger viewports = more pixels to render = slower frame production, especially with Carbon's heavy CSS. `1366×768` or `1440×900` is plenty for testing and faster.
 
 ---
