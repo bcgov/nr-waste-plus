@@ -1,4 +1,5 @@
-import { act, render, screen, fireEvent } from '@testing-library/react';
+import { render, act, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from 'vitest';
 
 import { LayoutProvider } from './LayoutProvider';
@@ -43,25 +44,27 @@ describe('LayoutContext', () => {
   });
 
   it('toggleSideNav toggles the side nav state', async () => {
+    const user = await userEvent.setup();
     await renderWithProvider();
     const btn = screen.getByText('Toggle SideNav');
     const value = screen.getByTestId('side-nav');
     expect(value.textContent).toBe('collapsed');
-    act(() => fireEvent.click(btn));
+    await user.click(btn);
     expect(value.textContent).toBe('expanded');
-    act(() => fireEvent.click(btn));
+    await user.click(btn);
     expect(value.textContent).toBe('collapsed');
   });
 
   it('toggleHeaderPanel and closeHeaderPanel work as expected', async () => {
+    const user = await userEvent.setup();
     await renderWithProvider();
     const toggleBtn = screen.getByText('Toggle HeaderPanel');
     const closeBtn = screen.getByText('Close HeaderPanel');
     const value = screen.getByTestId('header-panel');
     expect(value.textContent).toBe('closed');
-    act(() => toggleBtn.click());
+    await user.click(toggleBtn);
     expect(value.textContent).toBe('open');
-    act(() => closeBtn.click());
+    await user.click(closeBtn);
     expect(value.textContent).toBe('closed');
   });
 

@@ -1,4 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import PageNotification from './index';
@@ -135,10 +136,11 @@ describe('PageNotification', () => {
   });
 
   describe('close interaction', () => {
-    it('shouldCallClearNotification_whenCloseButtonClicked', () => {
+    it('shouldCallClearNotification_whenCloseButtonClicked', async () => {
+      const user = await userEvent.setup();
       setupHook(makeEvent());
       render(<PageNotification eventTarget="scope" />);
-      fireEvent.click(screen.getByRole('button'));
+      await user.click(screen.getByRole('button'));
       expect(mockClearNotification).toHaveBeenCalled();
     });
   });

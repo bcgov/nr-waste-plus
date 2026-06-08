@@ -1,4 +1,5 @@
-import { screen, fireEvent } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
 import LayoutHeaderGlobalBar from './LayoutHeaderGlobalBar';
@@ -30,8 +31,9 @@ describe('LayoutHeaderGlobalBar', () => {
   });
 
   it('calls toggleHeaderPanel when profile settings is clicked', async () => {
+    const user = await userEvent.setup();
     await renderWithProviders();
-    fireEvent.click(screen.getByLabelText('Profile settings'));
+    await user.click(screen.getByLabelText('Profile settings'));
     expect(mockToggleHeaderPanel).toHaveBeenCalled();
   });
 });

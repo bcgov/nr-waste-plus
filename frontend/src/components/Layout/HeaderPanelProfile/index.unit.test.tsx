@@ -1,4 +1,5 @@
-import { screen, fireEvent } from '@testing-library/react';
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import HeaderPanelProfile from './index';
@@ -71,8 +72,9 @@ describe('HeaderPanelProfile', () => {
   });
 
   it('calls logout when Log out is clicked', async () => {
+    const user = await userEvent.setup();
     await renderWithProviders();
-    fireEvent.click(screen.getByText('Log out'));
+    await user.click(screen.getByText('Log out'));
     expect(mockLogout).toHaveBeenCalled();
   });
 

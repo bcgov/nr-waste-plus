@@ -1,4 +1,5 @@
-import { screen, fireEvent, act } from '@testing-library/react';
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, afterEach, beforeEach, type Mock } from 'vitest';
 
 import LandingPage from './index';
@@ -100,14 +101,16 @@ describe('LandingPage', () => {
   });
 
   it('calls login with correct provider when IDIR button is clicked', async () => {
+    const user = await userEvent.setup();
     await renderWithProps();
-    await act(async () => fireEvent.click(screen.getByTestId('landing-button__idir')));
+    await user.click(screen.getByTestId('landing-button__idir'));
     expect(loginMock).toHaveBeenCalledWith('IDIR');
   });
 
   it('calls login with correct provider when BCeID button is clicked', async () => {
+    const user = await userEvent.setup();
     await renderWithProps();
-    await act(async () => fireEvent.click(screen.getByTestId('landing-button__bceid')));
+    await user.click(screen.getByTestId('landing-button__bceid'));
     expect(loginMock).toHaveBeenCalledWith('BCEIDBUSINESS');
   });
 
