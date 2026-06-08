@@ -1,15 +1,18 @@
-import { expect } from '@playwright/test';
+import { expect, type Locator } from '@playwright/test';
 
 import { setupWasteSearchMocks } from './e2e.setup';
 
 import { test } from '@/config/tests/coverage.setup';
 
 test.describe('Waste Search - Initial State', () => {
+  let searchButton: Locator;
+
   test.beforeEach(async ({ page }, testInfo) => {
     await setupWasteSearchMocks(page, testInfo.project.metadata.userType, {
       includeSearchRoutes: true,
     });
     await page.goto('/search');
+    searchButton = page.getByTestId('search-button-most');
   });
 
   test('should display page title and subtitle', async ({ page }) => {
@@ -53,13 +56,11 @@ test.describe('Waste Search - Initial State', () => {
     await expect(statusMultiSelect).toBeVisible();
 
     // Verify search button exists
-    const searchButton = page.getByTestId('search-button-most');
     await expect(searchButton).toBeVisible();
   });
 
   test('should display validation message when searching without criteria', async ({ page }) => {
     // Click search without filling any criteria
-    const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
     // Verify empty state remains

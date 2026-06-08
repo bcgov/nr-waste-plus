@@ -1,23 +1,26 @@
-import { expect } from '@playwright/test';
+import { expect, type Locator } from '@playwright/test';
 
 import { setupWasteSearchMocks } from './e2e.setup';
 
 import { test } from '@/config/tests/coverage.setup';
 
 test.describe('Waste Search - Search Results', () => {
+  let searchBox: Locator;
+  let searchButton: Locator;
+
   test.beforeEach(async ({ page }, testInfo) => {
     await setupWasteSearchMocks(page, testInfo.project.metadata.userType, {
       includeSearchRoutes: true,
     });
     await page.goto('/search');
+    searchBox = page.getByRole('searchbox');
+    searchButton = page.getByTestId('search-button-most');
   });
 
   test('should display search results in table', async ({ page }) => {
-    const searchBox = page.getByRole('searchbox');
     await searchBox.fill('12345');
     await searchBox.blur();
 
-    const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
     // Verify mocked data appears
@@ -26,11 +29,9 @@ test.describe('Waste Search - Search Results', () => {
   });
 
   test('should allow pagination of results', async ({ page }, testInfo) => {
-    const searchBox = page.getByRole('searchbox');
     await searchBox.fill('67890');
     await searchBox.blur();
 
-    const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
     // Verify mocked data appears
@@ -62,22 +63,18 @@ test.describe('Waste Search - Search Results', () => {
   });
 
   test('should display no results message', async ({ page }) => {
-    const searchBox = page.getByRole('searchbox');
     await searchBox.fill('NONEXISTENT');
     await searchBox.blur();
 
-    const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
     await expect(page.getByText('No results')).toBeVisible();
   });
 
   test('primary and secondary are here', async ({ page }) => {
-    const searchBox = page.getByRole('searchbox');
     await searchBox.fill('67890');
     await searchBox.blur();
 
-    const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
     // Verify mocked data appears
@@ -92,11 +89,9 @@ test.describe('Waste Search - Search Results', () => {
   });
 
   test('enable timestamp column', async ({ page }) => {
-    const searchBox = page.getByRole('searchbox');
     await searchBox.fill('67890');
     await searchBox.blur();
 
-    const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
     await page.getByRole('button', { name: 'Edit columns' }).click();

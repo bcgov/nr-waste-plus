@@ -113,10 +113,10 @@ The auth strategy (`storageState` JSON + `mockJwt`) is sound in principle but is
 #### M4. `MockPromise` adds 200 ms artificial delay (complete)
 - [frontend/src/config/tests/MockPromise.ts](frontend/src/config/tests/MockPromise.ts#L8) `setTimeout(() => resolve(content), 200)`. If any test code path actually awaits this, every awaited resolution costs 200ms. Verify whether this delay is required to reproduce real-world race conditions or can be reduced to 0 in tests.
 
-#### M5. Repeated locator construction in test bodies
+#### M5. Repeated locator construction in test bodies (complete)
 - Many tests do `page.getByRole('searchbox')`, `page.getByTestId('search-button-most')`, etc. repeatedly per test. Hoist to constants or a Page Object to avoid re-evaluation and improve readability.
 
-#### M6. Common per-page `beforeEach` mock setup is half-extracted
+#### M6. Common per-page `beforeEach` mock setup is half-extracted (complete)
 - `setupWasteSearchMocks` and `setupCreateRuMocks` are good. The remaining ~10 test files duplicate similar boilerplate inline. Extract one shared helper per page route.
 
 #### M7. Viewport is `1920×1080` for every desktop test

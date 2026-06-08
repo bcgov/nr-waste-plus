@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 
+import { setupAppShellMocks } from '@/config/tests/app.setup';
 import { mockApi, mockApiResponses, mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 /**
@@ -14,28 +15,7 @@ export const setupWasteSearchMocks = async (
 ) => {
   const { includeSearchRoutes = false } = options;
 
-  await mockApiResponsesWithStub(page, 'users/preferences', 'users/preferences-GET.json');
-
-  if (userType === 'bceid') {
-    await mockApiResponsesWithStub(
-      page,
-      'forest-clients/searchByNumbers**',
-      'forest-clients/searchByNumbers-pg0.json',
-    );
-    await mockApiResponsesWithStub(
-      page,
-      'forest-clients/clients**',
-      'forest-clients/clients-pg0.json',
-    );
-  }
-
-  await mockApiResponsesWithStub(page, 'codes/districts', 'codes/districts.json');
-  await mockApiResponsesWithStub(page, 'codes/samplings', 'codes/samplings.json');
-  await mockApiResponsesWithStub(
-    page,
-    'codes/assess-area-statuses',
-    'codes/assess-area-statuses.json',
-  );
+  await setupAppShellMocks(page, userType);
 
   if (includeSearchRoutes) {
     // Successful searches
