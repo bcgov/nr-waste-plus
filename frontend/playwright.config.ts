@@ -344,9 +344,10 @@ export default defineConfig({
   globalTeardown: './src/config/tests/browser.teardown.ts',
   projects,
   webServer: {
-    command: 'npm run dev',
+    command: 'npm run build && npm run serve:e2e',
     url: baseURL,
-    reuseExistingServer: true,
+    reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
   },
   reporter: [
     ['list'],
