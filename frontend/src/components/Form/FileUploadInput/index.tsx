@@ -1,6 +1,6 @@
 import { FileUploaderDropContainer, FileUploaderItem, FormItem } from '@carbon/react';
 import prettyBytes from 'pretty-bytes';
-import { type SyntheticEvent, useState, useId } from 'react';
+import { type SyntheticEvent, useEffect, useId, useState } from 'react';
 
 import { type FileProcessor } from './fileProcessor';
 
@@ -130,10 +130,15 @@ function FileUploadInput<T>({
 
   const fmt = (bytes: number) => prettyBytes(bytes, { maximumFractionDigits: 1 });
 
-  /** Flat list of all parsed results from currently accepted files. */
-  const emitResults = (dataMap: Map<string, T[]>) => {
-    onProcessed(Array.from(dataMap.values()).flat());
-  };
+  // Emit whenever processedData changes. Decoupled from the async handler to
+  // avoid stale-closure race conditions when batches are added concurrently.
+  // The size===0 guard prevents a spurious empty emission on the initial render.
+  // NOTE: onProcessed must be stable (useCallback) in the parent, otherwise
+  // this effect fires on every render.
+  useEffect(() => {
+    if (processedData.size === 0) return;
+    onProcessed(Array.from(processedData.values()).flat());
+  }, [processedData, onProcessed]);
 
   const handleAddFiles = async (
     _evt: SyntheticEvent<HTMLElement>,
@@ -225,18 +230,7 @@ function FileUploadInput<T>({
       for (const { uuid } of entryResults) next.delete(uuid);
       return next;
     });
-
-    // Emit by merging this batch into the captured snapshot. Each concurrent
-    // batch emits its own slice; state itself is kept consistent by the
-    // functional updaters above.
-    const hasNewData = entryResults.some(({ data }) => data !== null);
-    if (hasNewData) {
-      const mergedForEmit = new Map(processedData);
-      for (const { uuid, data } of entryResults) {
-        if (data !== null) mergedForEmit.set(uuid, data);
-      }
-      onProcessed(Array.from(mergedForEmit.values()).flat());
-    }
+    // Emission handled by the useEffect above.
   };
 
   const handleDelete = (_evt: SyntheticEvent, { uuid }: { uuid: string }) => {
@@ -246,12 +240,19 @@ function FileUploadInput<T>({
     nextFileErrors.delete(uuid);
     setFileErrors(nextFileErrors);
 
-    const nextProcessedData = new Map(processedData);
-    nextProcessedData.delete(uuid);
-    setProcessedData(nextProcessedData);
+    setProcessedData((prev) => {
+      const next = new Map(prev);
+      next.delete(uuid);
+      return next;
+    });
 
     setComponentErrors([]);
-    emitResults(nextProcessedData);
+    // Delete is a synchronous, non-concurrent operation; emit directly so an
+    // empty result is reported even when processedData reaches size 0 (the
+    // useEffect guard skips size===0 to avoid a spurious initial-render emit).
+    const nextData = new Map(processedData);
+    nextData.delete(uuid);
+    onProcessed(Array.from(nextData.values()).flat());
   };
 
   const allComponentErrors = [...componentErrors, ...externalErrors];

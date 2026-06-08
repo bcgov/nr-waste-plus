@@ -383,6 +383,59 @@ describe('FileUploadInput (async processor lifecycle)', () => {
 
     await waitFor(() => expect(onProcessed).toHaveBeenCalled());
   });
+
+  // --------------------------------------------------------------------------
+  // Race condition: concurrent batch uploads
+  // --------------------------------------------------------------------------
+  it('emits complete accumulated data when two batches are added concurrently', async () => {
+    // Two deferred processors: batch A and batch B start before either resolves.
+    const dA = deferred<ProcessorResult<TestCustomer>>();
+    const dB = deferred<ProcessorResult<TestCustomer>>();
+
+    let callCount = 0;
+    const mockLoad = vi
+      .fn<(file: File) => Promise<ProcessorResult<TestCustomer>>>()
+      .mockImplementation(() => {
+        callCount++;
+        return callCount === 1 ? dA.promise : dB.promise;
+      });
+
+    const processor = createMockProcessor();
+    processor.load = mockLoad;
+    const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
+
+    const { container } = render(
+      <FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={2} />,
+    );
+
+    const fA = new File(['a'], 'a.csv', { type: 'text/csv' });
+    const fB = new File(['b'], 'b.csv', { type: 'text/csv' });
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const user = userEvent.setup();
+
+    // Upload both files in the same batch so both processors run concurrently.
+    const uploadPromise = user.upload(input, [fA, fB]);
+    await waitFor(() => expect(mockLoad).toHaveBeenCalledTimes(2));
+
+    // Neither has resolved yet — no emission expected.
+    expect(onProcessed).not.toHaveBeenCalled();
+
+    // Resolve B first (simulates B finishing before A).
+    dB.resolve({ success: true, data: [{ id: 'B', name: 'B-user', email: 'b@b.com' }] });
+    // A still pending — no emission yet (Promise.all waits for both).
+    await new Promise((res) => setTimeout(res, 10));
+    expect(onProcessed).not.toHaveBeenCalled();
+
+    // Resolve A.
+    dA.resolve({ success: true, data: [{ id: 'A', name: 'A-user', email: 'a@a.com' }] });
+    await uploadPromise;
+
+    // The useEffect-based emission must include BOTH batches — not just B's data.
+    await waitFor(() => expect(onProcessed).toHaveBeenCalled());
+    const lastEmit = onProcessed.mock.calls.at(-1)?.[0] ?? [];
+    expect(lastEmit).toHaveLength(2);
+    expect(lastEmit.map((c) => c.id).sort()).toEqual(['A', 'B']);
+  });
 });
 
 // ============================================================================
