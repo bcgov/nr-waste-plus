@@ -26,7 +26,6 @@ test.describe('Waste Search - Advanced Search', () => {
     let clientInput: Locator;
 
     test.beforeEach(async ({ page }) => {
-
       await mockApiResponsesWithStub(
         page,
         'forest-clients/byNameAcronymNumber**',

@@ -57,7 +57,9 @@ describe('FileUploadInput (processor pipeline)', () => {
     const file = new File(['id,name,email\n1,Alice,alice@example.com'], 'customers.csv', {
       type: 'text/csv',
     });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
     await user.upload(input, file);
 
@@ -86,7 +88,9 @@ describe('FileUploadInput (processor pipeline)', () => {
     );
 
     const file = new File(['id,name\n1,Alice'], 'customers.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
     await user.upload(input, file);
 
@@ -111,7 +115,9 @@ describe('FileUploadInput (processor pipeline)', () => {
     );
 
     const bigFile = new File(['x'.repeat(20)], 'big.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     await user.upload(input, bigFile);
@@ -139,7 +145,9 @@ describe('FileUploadInput (processor pipeline)', () => {
     );
 
     const bigFile = new File(['x'.repeat(20)], 'big.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     // Upload oversized file
@@ -174,7 +182,9 @@ describe('FileUploadInput (capacity management)', () => {
 
     const f1 = new File(['1'], 'a.csv', { type: 'text/csv' });
     const f2 = new File(['2'], 'b.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     // Upload first file (accepted)
@@ -209,7 +219,9 @@ describe('FileUploadInput (capacity management)', () => {
     const f2 = new File(['2'], 'b.csv', { type: 'text/csv' });
     const f3 = new File(['3'], 'c.csv', { type: 'text/csv' });
     const f4 = new File(['4'], 'd.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     // Upload 4 files but max is 2
@@ -244,7 +256,9 @@ describe('FileUploadInput (capacity management)', () => {
 
     const f1 = new File(['a'], 'a.csv', { type: 'text/csv' });
     const f2 = new File(['b'], 'b.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     await user.upload(input, f1);
@@ -280,7 +294,9 @@ describe('FileUploadInput (async processor lifecycle)', () => {
     );
 
     const f = new File(['x'], 'pending.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     const uploadPromise = user.upload(input, f);
@@ -322,7 +338,9 @@ describe('FileUploadInput (async processor lifecycle)', () => {
 
     const f1 = new File(['a'], 'a.csv', { type: 'text/csv' });
     const f2 = new File(['b'], 'b.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     const uploadPromise = user.upload(input, [f1, f2]);
@@ -367,7 +385,9 @@ describe('FileUploadInput (async processor lifecycle)', () => {
 
     const f1 = new File(['a'], 'a.csv', { type: 'text/csv' });
     const f2 = new File(['b'], 'b.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     const uploadPromise = user.upload(input, [f1, f2]);
@@ -410,7 +430,9 @@ describe('FileUploadInput (async processor lifecycle)', () => {
 
     const fA = new File(['a'], 'a.csv', { type: 'text/csv' });
     const fB = new File(['b'], 'b.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     // Upload both files in the same batch so both processors run concurrently.
@@ -459,7 +481,9 @@ describe('FileUploadInput (error handling and deletion)', () => {
     );
 
     const file = new File(['invalid'], 'bad.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     await user.upload(input, file);
@@ -490,7 +514,9 @@ describe('FileUploadInput (error handling and deletion)', () => {
 
     const f1 = new File(['a'], 'a.csv', { type: 'text/csv' });
     const f2 = new File(['b'], 'b.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     // Upload 2 files at once
@@ -527,7 +553,9 @@ describe('FileUploadInput (error handling and deletion)', () => {
     // Try uploading 2 files when maxFiles is 1
     const f1 = new File(['a'], 'a.csv', { type: 'text/csv' });
     const f2 = new File(['b'], 'b.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     await user.upload(input, [f1, f2]);
@@ -553,7 +581,9 @@ describe('FileUploadInput (error handling and deletion)', () => {
     );
 
     const file = new File(['content'], 'test.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     // Upload file and wait for it to be processed
@@ -594,7 +624,9 @@ describe('FileUploadInput (error handling and deletion)', () => {
     );
 
     const file = new File(['content'], 'test.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     // Try uploading a file when maxFiles is 0
@@ -623,7 +655,9 @@ describe('FileUploadInput (error handling and deletion)', () => {
     );
 
     const file = new File(['content'], 'test.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     // Upload file
@@ -690,7 +724,9 @@ describe('FileUploadInput (external errors and UI)', () => {
     );
 
     const file = new File(['x'], 'test.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     await user.upload(input, file);
@@ -714,7 +750,9 @@ describe('FileUploadInput (external errors and UI)', () => {
       <FileUploadInput processor={processor} onProcessed={onProcessed} accept=".csv,.txt" />,
     );
 
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     expect(input.getAttribute('accept')).toContain('.csv');
     expect(input.getAttribute('accept')).toContain('.txt');
   });
@@ -735,14 +773,18 @@ describe('FileUploadInput (external errors and UI)', () => {
       <FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={1} />,
     );
 
-    const input1 = screen.getAllByLabelText('Drag and drop files here or click to upload')[0] as HTMLInputElement;
+    const input1 = screen.getAllByLabelText(
+      'Drag and drop files here or click to upload',
+    )[0] as HTMLInputElement;
     expect(input1.hasAttribute('multiple')).toBe(false);
 
     const { container: container2 } = render(
       <FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={3} />,
     );
 
-    const input2 = screen.getAllByLabelText('Drag and drop files here or click to upload')[1] as HTMLInputElement;
+    const input2 = screen.getAllByLabelText(
+      'Drag and drop files here or click to upload',
+    )[1] as HTMLInputElement;
     expect(input2.hasAttribute('multiple')).toBe(true);
   });
 
@@ -762,7 +804,9 @@ describe('FileUploadInput (external errors and UI)', () => {
       <FileUploadInput processor={processor} onProcessed={onProcessed} disabled={true} />,
     );
 
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     expect(input.disabled).toBe(true);
   });
 
@@ -783,7 +827,9 @@ describe('FileUploadInput (external errors and UI)', () => {
     );
 
     const file = new File(['invalid'], 'bad.csv', { type: 'text/csv' });
-    const input = screen.getByLabelText('Drag and drop files here or click to upload') as HTMLInputElement;
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
     const user = userEvent.setup();
 
     // Upload file that will fail processing

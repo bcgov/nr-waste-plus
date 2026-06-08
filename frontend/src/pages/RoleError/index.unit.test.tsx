@@ -17,7 +17,9 @@ describe('RoleErrorPage', () => {
   });
 
   it('shouldRenderViolationMessage_whenReasonParamPresent', async () => {
-    renderWithApp(<RoleErrorPage />, { route: '/unauthorized?reason=CONFLICTING_CLIENT_ACCESS_ROLES' });
+    renderWithApp(<RoleErrorPage />, {
+      route: '/unauthorized?reason=CONFLICTING_CLIENT_ACCESS_ROLES',
+    });
 
     await waitFor(() => {
       screen.getByText('This account has conflicting client access roles');

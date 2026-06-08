@@ -11,12 +11,7 @@ describe('ConfigurationCard', () => {
   });
 
   it('renders description as string', () => {
-    render(
-      <ConfigurationCard
-        title="Title"
-        description="Some body text"
-      />,
-    );
+    render(<ConfigurationCard title="Title" description="Some body text" />);
     screen.getByText('Some body text');
   });
 
@@ -34,10 +29,7 @@ describe('ConfigurationCard', () => {
 
   it('renders children instead of description when both provided', () => {
     render(
-      <ConfigurationCard
-        title="Title"
-        description="Should not appear"
-      >
+      <ConfigurationCard title="Title" description="Should not appear">
         <span>Custom children</span>
       </ConfigurationCard>,
     );
@@ -85,11 +77,7 @@ describe('ConfigurationCard', () => {
   it('renders button with default ghost kind when kind is not provided', () => {
     const onButtonClick = vi.fn();
     render(
-      <ConfigurationCard
-        title="Title"
-        buttonLabel="Default kind"
-        onButtonClick={onButtonClick}
-      />,
+      <ConfigurationCard title="Title" buttonLabel="Default kind" onButtonClick={onButtonClick} />,
     );
     const button = screen.getByRole('button', { name: 'Default kind' });
     expect(button.classList.contains('cds--btn--ghost')).toBe(true);

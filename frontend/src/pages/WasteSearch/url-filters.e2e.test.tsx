@@ -40,7 +40,6 @@ test.describe('Waste Search - URL-Populated Filters', () => {
   });
 
   test('fills Client in advanced search from URL clientNumbers @idir-only', async ({ page }) => {
-
     await mockApiResponsesWithStub(
       page,
       'forest-clients/byNameAcronymNumber**',

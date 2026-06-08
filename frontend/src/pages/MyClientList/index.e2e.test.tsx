@@ -42,7 +42,6 @@ test.describe('My Client List Page', () => {
   test('should render the client number as a link to search with client filter @bceid-only', async ({
     page,
   }) => {
-
     // The client number should be rendered as a link
     const clientLink = page.getByRole('link', { name: '90000001' });
     await expect(clientLink).toBeVisible();
@@ -76,7 +75,6 @@ test.describe('My Client List Page', () => {
     const searchButton = page.getByTestId('search-button-other');
     await searchButton.click();
 
-
     await expect(page.getByRole('cell', { name: '90000003' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'OAK HERITAGE LTD.' }).first()).toBeVisible();
 
@@ -91,20 +89,22 @@ test.describe('My Client List Page', () => {
     await searchBox.fill('OAK');
     await searchBox.press('Enter');
 
-
     await expect(page.getByRole('cell', { name: '90000003' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'OAK HERITAGE LTD.' }).first()).toBeVisible();
 
     await expect(page.getByRole('cell', { name: 'CANADIAN SAMPLE CO.' })).not.toBeVisible();
   });
 
-  test('should block My clients page for District/Area/Admin users @idir-only', async ({ page }) => {
-
+  test('should block My clients page for District/Area/Admin users @idir-only', async ({
+    page,
+  }) => {
     await expect(page).toHaveURL(/\/unauthorized/);
     await expect(page.getByText('Unauthorized Access')).toBeVisible();
   });
 
-  test('IDIR user with Viewer role can access My clients page @idir-only', async ({ page }, testInfo) => {
+  test('IDIR user with Viewer role can access My clients page @idir-only', async ({
+    page,
+  }, testInfo) => {
     test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
 
     await mockJwt(page, testInfo.project.metadata, {
@@ -119,7 +119,9 @@ test.describe('My Client List Page', () => {
     await expect(page.getByRole('heading', { name: 'My clients' })).toBeVisible();
   });
 
-  test('IDIR user with Submitter role can access My clients page @idir-only', async ({ page }, testInfo) => {
+  test('IDIR user with Submitter role can access My clients page @idir-only', async ({
+    page,
+  }, testInfo) => {
     test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
 
     await mockJwt(page, testInfo.project.metadata, {

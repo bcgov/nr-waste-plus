@@ -299,9 +299,9 @@ describe('WasteSearchTable Constants', () => {
           await act(async () => {});
           expect(container.firstChild).not.toBeNull();
           // The internal-route path should not render a legacy external href.
-          const legacyLinks = within(container).queryAllByRole('link').filter((a) =>
-            a.getAttribute('href')?.includes('/waste101'),
-          );
+          const legacyLinks = within(container)
+            .queryAllByRole('link')
+            .filter((a) => a.getAttribute('href')?.includes('/waste101'));
           expect(legacyLinks).toHaveLength(0);
         }
       });

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 import { setupAppShellMocks } from '@/config/tests/app.setup';
+import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 test.describe('Not Found Page', () => {
   test.beforeEach(async ({ page }, testInfo) => {

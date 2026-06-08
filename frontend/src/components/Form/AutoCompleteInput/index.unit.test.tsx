@@ -23,7 +23,7 @@ const renderWithProps = async (props: any) => {
       onSelect={props.onSelect || vi.fn()}
       placeholder="Type to search..."
       {...props}
-    />
+    />,
   );
 };
 

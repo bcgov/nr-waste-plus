@@ -5,8 +5,7 @@ import GlobalErrorPage from './index';
 
 import { renderWithApp } from '@/config/tests/renderWithApp';
 
-const renderPage = (error?: unknown) =>
-  renderWithApp(<GlobalErrorPage error={error} />);
+const renderPage = (error?: unknown) => renderWithApp(<GlobalErrorPage error={error} />);
 
 describe('GlobalErrorPage', () => {
   it('shouldRenderFallbackMessage_whenNoErrorProvided', async () => {

@@ -30,7 +30,10 @@ vi.mock('@/services/APIs', () => ({
     },
     search: {
       search: vi.fn().mockResolvedValue({ items: [] }),
-      searchReportingUnit: vi.fn().mockResolvedValue({ content: [], page: { number: 0, size: 10, totalElements: 0, totalPages: 0 } }),
+      searchReportingUnit: vi.fn().mockResolvedValue({
+        content: [],
+        page: { number: 0, size: 10, totalElements: 0, totalPages: 0 },
+      }),
     },
   },
 }));

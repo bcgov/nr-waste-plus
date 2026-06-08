@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-import { mockJwt } from '@/config/tests/auth.helper';
 import { setupAppShellMocks } from '@/config/tests/app.setup';
+import { mockJwt } from '@/config/tests/auth.helper';
 import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 const hasClientAccessRole = (userType: string): boolean => userType === 'bceid';
@@ -134,7 +134,6 @@ test.describe('Profile menu', () => {
 
       await oakClient.click();
 
-
       await expect(profileButton.getByText('OAK HERITAGE LTD.')).toBeVisible();
 
       const filterTag = page.getByTestId('dt-clientNumbers-90000003');
@@ -180,7 +179,6 @@ test.describe('Profile menu', () => {
       );
 
       await oakClient.click();
-
 
       await expect(profileButton.getByText('OAK HERITAGE LTD.')).toBeVisible();
 
