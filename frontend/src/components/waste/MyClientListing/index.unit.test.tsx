@@ -158,8 +158,8 @@ describe('MyClientListing', () => {
       mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
-      expect(screen.getByPlaceholderText('Search by name')).toBeDefined();
-      expect(screen.getByTestId('search-button-other')).toBeDefined();
+      screen.getByPlaceholderText('Search by name');
+      screen.getByTestId('search-button-other');
     });
 
     it('automatically fetches data on mount', async () => {
@@ -178,8 +178,8 @@ describe('MyClientListing', () => {
       await renderWithProps();
 
       await waitFor(() => {
-        expect(screen.getByText('ABC Logging Ltd')).toBeDefined();
-        expect(screen.getByText('XYZ Forestry Inc')).toBeDefined();
+        screen.getByText('ABC Logging Ltd');
+        screen.getByText('XYZ Forestry Inc');
       });
     });
   });
@@ -228,7 +228,7 @@ describe('MyClientListing', () => {
       await renderWithProps();
 
       await waitFor(() => {
-        expect(screen.getByText('ABC Logging Ltd')).toBeDefined();
+        screen.getByText('ABC Logging Ltd');
       });
 
       const searchInput = screen.getByPlaceholderText('Search by name');
@@ -239,7 +239,7 @@ describe('MyClientListing', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('ABC Logging Ltd')).toBeDefined();
+        screen.getByText('ABC Logging Ltd');
         expect(screen.queryByText('XYZ Forestry Inc')).toBeNull();
       });
     });
@@ -252,7 +252,7 @@ describe('MyClientListing', () => {
       await renderWithProps();
 
       await waitFor(() => {
-        expect(screen.getByText('ABC Logging Ltd')).toBeDefined();
+        screen.getByText('ABC Logging Ltd');
       });
 
       const searchInput = screen.getByPlaceholderText('Search by name');
@@ -263,7 +263,7 @@ describe('MyClientListing', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('No results')).toBeDefined();
+        screen.getByText('No results');
       });
     });
 
@@ -293,7 +293,7 @@ describe('MyClientListing', () => {
       await renderWithProps();
 
       await waitFor(() => {
-        expect(screen.getByText('Client 1')).toBeDefined();
+        screen.getByText('Client 1');
       });
 
       // Find and click next page button
@@ -312,7 +312,7 @@ describe('MyClientListing', () => {
       await renderWithProps();
 
       await waitFor(() => {
-        expect(screen.getByText('Client 1')).toBeDefined();
+        screen.getByText('Client 1');
       });
 
       const initialCallCount = mockSearchClients.mock.calls.length;
@@ -339,7 +339,7 @@ describe('MyClientListing', () => {
       await renderWithProps();
 
       await waitFor(() => {
-        expect(screen.getByText('Client 1')).toBeDefined();
+        screen.getByText('Client 1');
       });
 
       // Try to navigate to page 3 (beyond total pages)
@@ -371,7 +371,7 @@ describe('MyClientListing', () => {
 
       await waitFor(() => {
         // Component displays empty results state with error flag
-        expect(screen.getByText('No results')).toBeDefined();
+        screen.getByText('No results');
       });
     });
 
@@ -434,17 +434,17 @@ describe('MyClientListing', () => {
 
       await waitFor(() => {
         // Check headers
-        expect(screen.getByText('Client No.')).toBeDefined();
-        expect(screen.getByText('Client name')).toBeDefined();
-        expect(screen.getByText('RUs created by me')).toBeDefined();
-        expect(screen.getByText('Draft blocks in my RUs')).toBeDefined();
-        expect(screen.getByText('Last Update')).toBeDefined();
+        screen.getByText('Client No.');
+        screen.getByText('Client name');
+        screen.getByText('RUs created by me');
+        screen.getByText('Draft blocks in my RUs');
+        screen.getByText('Last Update');
 
         // Check data
-        expect(screen.getByText('00001001')).toBeDefined();
-        expect(screen.getByText('ABC Logging Ltd')).toBeDefined();
-        expect(screen.getByText('15')).toBeDefined();
-        expect(screen.getByText('8')).toBeDefined();
+        screen.getByText('00001001');
+        screen.getByText('ABC Logging Ltd');
+        screen.getByText('15');
+        screen.getByText('8');
       });
     });
 
@@ -454,8 +454,8 @@ describe('MyClientListing', () => {
 
       await waitFor(() => {
         // The component transforms data to add id from client.code
-        expect(screen.getByText('00001001')).toBeDefined();
-        expect(screen.getByText('00001002')).toBeDefined();
+        screen.getByText('00001001');
+        screen.getByText('00001002');
       });
     });
 
@@ -490,7 +490,7 @@ describe('MyClientListing', () => {
 
       await waitFor(() => {
         expect(screen.queryByRole('progressbar')).toBeNull();
-        expect(screen.getByText('ABC Logging Ltd')).toBeDefined();
+        screen.getByText('ABC Logging Ltd');
       });
     });
   });

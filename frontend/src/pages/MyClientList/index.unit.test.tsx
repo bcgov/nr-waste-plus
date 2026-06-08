@@ -47,7 +47,7 @@ describe('MyClientListPage', () => {
   it('shouldRenderMyClients_whenRendered', async () => {
     await renderWithProps();
     await waitFor(() => {
-      expect(screen.getByText('My clients')).toBeDefined();
+      screen.getByText('My clients');
     });
   });
 
@@ -63,7 +63,7 @@ describe('MyClientListPage', () => {
       });
     });
 
-    expect(screen.getByText('Test Error')).toBeDefined();
+    screen.getByText('Test Error');
     expect(screen.getAllByText('This is a test error message')).toHaveLength(1);
   });
 
@@ -79,7 +79,7 @@ describe('MyClientListPage', () => {
       });
     });
 
-    expect(screen.getByText('Test Warning')).toBeDefined();
+    screen.getByText('Test Warning');
     expect(screen.getAllByText('This is a test warning message')).toHaveLength(1);
   });
 
@@ -95,7 +95,7 @@ describe('MyClientListPage', () => {
       });
     });
 
-    expect(screen.getByText('Test Info')).toBeDefined();
+    screen.getByText('Test Info');
     expect(screen.getAllByText('This is a test info message')).toHaveLength(1);
   });
 

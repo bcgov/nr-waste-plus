@@ -42,9 +42,9 @@ const renderWithProviders = async () => {
 describe('LayoutHeaderGlobalBar', () => {
   it('renders ThemeToggle and user avatar', async () => {
     await renderWithProviders();
-    expect(screen.getByTestId('theme-toggle')).toBeDefined();
-    expect(screen.getByLabelText('Profile settings')).toBeDefined();
-    expect(screen.getByLabelText('Switch to dark mode')).toBeDefined();
+    screen.getByTestId('theme-toggle');
+    screen.getByLabelText('Profile settings');
+    screen.getByLabelText('Switch to dark mode');
   });
 
   it('calls toggleHeaderPanel when profile settings is clicked', async () => {

@@ -51,6 +51,6 @@ describe('LayoutHeaderPanel', () => {
 
   it('renders when open', async () => {
     await renderWithProviders();
-    expect(screen.getByTestId('header-panel')).toBeDefined();
+    screen.getByTestId('header-panel');
   });
 });

@@ -11,17 +11,17 @@ const renderTag = (props = {}) => {
 describe('UnderConstructionTag (browser)', () => {
   it('renders the default under construction tag', () => {
     renderTag();
-    expect(screen.getByText(/under construction/i)).toBeDefined();
+    screen.getByText(/under construction/i);
   });
 
   it('shows correct tooltip label for page type', () => {
     renderTag({ type: 'page' });
     // Tooltip label is rendered in the DOM, but may be hidden; check for its presence
-    expect(screen.getByText(/this page is under development/i)).toBeDefined();
+    screen.getByText(/this page is under development/i);
   });
 
   it('shows correct tooltip label for feature type', () => {
     renderTag({ type: 'feature' });
-    expect(screen.getByText(/this feature is under development/i)).toBeDefined();
+    screen.getByText(/this feature is under development/i);
   });
 });

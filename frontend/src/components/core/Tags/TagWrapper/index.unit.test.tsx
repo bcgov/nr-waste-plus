@@ -10,7 +10,7 @@ describe('TagWrapper', () => {
         <span>Content</span>
       </TagWrapper>,
     );
-    expect(screen.getByText('Content')).toBeDefined();
+    screen.getByText('Content');
   });
 
   it('shouldRenderTag', () => {
@@ -19,7 +19,7 @@ describe('TagWrapper', () => {
         <span>Content</span>
       </TagWrapper>,
     );
-    expect(screen.getByTestId('the-tag')).toBeDefined();
+    screen.getByTestId('the-tag');
   });
 
   it('shouldApplyTagWrapperClass', () => {

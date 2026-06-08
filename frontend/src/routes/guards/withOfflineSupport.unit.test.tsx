@@ -47,14 +47,14 @@ describe('withOfflineSupport', () => {
       mockIsOnline = true;
       const Wrapped = withOfflineSupport(TargetPage);
       await act(async () => render(<Wrapped />));
-      expect(screen.getByTestId('target-page')).toBeDefined();
+      screen.getByTestId('target-page');
     });
 
     it('shouldRenderComponent_whenOffline', async () => {
       mockIsOnline = false;
       const Wrapped = withOfflineSupport(TargetPage);
       await act(async () => render(<Wrapped />));
-      expect(screen.getByTestId('target-page')).toBeDefined();
+      screen.getByTestId('target-page');
     });
 
     it('shouldNotNavigate_whenOnline', async () => {
@@ -71,14 +71,14 @@ describe('withOfflineSupport', () => {
       mockIsOnline = true;
       const Wrapped = withOfflineSupport(TargetPage, { offlineReady: true });
       await act(async () => render(<Wrapped />));
-      expect(screen.getByTestId('target-page')).toBeDefined();
+      screen.getByTestId('target-page');
     });
 
     it('shouldRenderComponent_whenOffline', async () => {
       mockIsOnline = false;
       const Wrapped = withOfflineSupport(TargetPage, { offlineReady: true });
       await act(async () => render(<Wrapped />));
-      expect(screen.getByTestId('target-page')).toBeDefined();
+      screen.getByTestId('target-page');
     });
   });
 
@@ -95,7 +95,7 @@ describe('withOfflineSupport', () => {
       mockIsOnline = false;
       const Wrapped = withOfflineSupport(TargetPage, { offlineOnly: true });
       await act(async () => render(<Wrapped />));
-      expect(screen.getByTestId('target-page')).toBeDefined();
+      screen.getByTestId('target-page');
     });
 
     it('shouldNavigateToSearch_whenOnline', async () => {

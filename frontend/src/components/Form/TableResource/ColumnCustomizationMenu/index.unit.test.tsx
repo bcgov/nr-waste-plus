@@ -58,7 +58,7 @@ describe('ColumnCustomizationMenu', () => {
     }).not.toThrow();
 
     // Button should exist showing the component rendered successfully
-    expect(screen.getByTitle('Edit columns')).toBeDefined();
+    screen.getByTitle('Edit columns');
   });
 
   it('works with empty headers array', () => {
@@ -69,7 +69,7 @@ describe('ColumnCustomizationMenu', () => {
       render(<ColumnCustomizationMenu headers={emptyHeaders} onToggleHeader={onToggleHeader} />);
     }).not.toThrow();
 
-    expect(screen.getByTitle('Edit columns')).toBeDefined();
+    screen.getByTitle('Edit columns');
   });
 
   it('renders with various header configurations', () => {
@@ -85,7 +85,7 @@ describe('ColumnCustomizationMenu', () => {
     }).not.toThrow();
 
     // Button should render successfully with mixed header types
-    expect(screen.getByTitle('Edit columns')).toBeDefined();
+    screen.getByTitle('Edit columns');
   });
 
   /**

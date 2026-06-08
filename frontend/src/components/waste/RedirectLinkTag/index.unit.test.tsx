@@ -14,7 +14,7 @@ describe('RedirectLinkTag', () => {
     expect(link.getAttribute('target')).toBe('_blank');
     expect(link.getAttribute('rel')).toBe('noopener noreferrer');
     expect(link.dataset.testid).toBe('Go');
-    expect(screen.getByText('Go')).toBeDefined();
+    screen.getByText('Go');
   });
 
   it('shouldRenderRouterLinkForInternalUrl_whenSameTabIsTrue', async () => {
@@ -31,7 +31,7 @@ describe('RedirectLinkTag', () => {
       expect(link.getAttribute('target')).toBe(null);
       expect(link.getAttribute('rel')).toBe(null);
       expect(link.dataset.testid).toBe('Stay');
-      expect(screen.getByText('Stay')).toBeDefined();
+      screen.getByText('Stay');
     });
   });
 
@@ -143,7 +143,7 @@ describe('RedirectLinkTag', () => {
       expect(href).toContain('/results');
       expect(href).toContain('q=wood');
       expect(href).toContain('page=');
-      expect(screen.getByText('Search')).toBeDefined();
+      screen.getByText('Search');
     });
   });
 

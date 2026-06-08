@@ -170,7 +170,7 @@ describe('WasteSearchFiltersActive', () => {
 
     await userEvent.click(samplingButton as HTMLButtonElement);
 
-    expect(screen.getByText('A - Sampling option: A')).toBeDefined();
+    screen.getByText('A - Sampling option: A');
 
     await userEvent.click(screen.getByText('A - Sampling option: A'));
 

@@ -86,9 +86,9 @@ describe('LayoutSideNav', () => {
 
   it('shouldRenderMenuLinksAndMenuItems_whenDefaultEntries', async () => {
     await renderWithProviders('/dashboard');
-    expect(screen.getByText('Dashboard')).toBeDefined();
-    expect(screen.getByText('Settings')).toBeDefined();
-    expect(screen.getByText('Profile')).toBeDefined();
+    screen.getByText('Dashboard');
+    screen.getByText('Settings');
+    screen.getByText('Profile');
     expect(screen.queryByText('Admin')).toBeNull();
     expect(screen.queryByText('Hidden')).toBeNull();
   });
@@ -138,7 +138,7 @@ describe('LayoutSideNav', () => {
       },
     ]);
     await renderWithProviders('/settings');
-    expect(screen.getByText('Overview')).toBeDefined();
+    screen.getByText('Overview');
   });
 
   describe('help link', () => {

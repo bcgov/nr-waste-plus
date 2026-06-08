@@ -75,7 +75,7 @@ describe('withProtected', () => {
     mockUser = undefined;
     const Protected = withProtected(DummyPage);
     await act(async () => render(<Protected />));
-    expect(screen.getByTestId('loading')).toBeDefined();
+    screen.getByTestId('loading');
     expect(screen.queryByTestId('dummy-page')).toBeNull();
   });
 
@@ -84,7 +84,7 @@ describe('withProtected', () => {
     mockUser = undefined;
     const Protected = withProtected(DummyPage);
     await act(async () => render(<Protected />));
-    expect(screen.getByTestId('loading')).toBeDefined();
+    screen.getByTestId('loading');
   });
 
   it('shouldPersistRedirectAndNavigateToLogin_whenUserIsUndefined', async () => {
@@ -118,7 +118,7 @@ describe('withProtected', () => {
     mockUser = makeUser();
     const Protected = withProtected(DummyPage);
     await act(async () => render(<Protected />));
-    expect(screen.getByTestId('dummy-page')).toBeDefined();
+    screen.getByTestId('dummy-page');
   });
 
   it('shouldRedirectToNoRole_whenUserHasNoRoles', async () => {
@@ -152,7 +152,7 @@ describe('withProtected', () => {
     mockUser = makeUser({ roles: [{ role: Role.VIEWER, clients: ['100'] }] });
     const Protected = withProtected(DummyPage, [{ role: Role.VIEWER, clients: [] }]);
     await act(async () => render(<Protected />));
-    expect(screen.getByTestId('dummy-page')).toBeDefined();
+    screen.getByTestId('dummy-page');
   });
 
   it('shouldRenderComponent_whenRolesArrayIsEmpty', async () => {
@@ -160,7 +160,7 @@ describe('withProtected', () => {
     mockUser = makeUser({ roles: [{ role: Role.VIEWER, clients: ['100'] }] });
     const Protected = withProtected(DummyPage, []);
     await act(async () => render(<Protected />));
-    expect(screen.getByTestId('dummy-page')).toBeDefined();
+    screen.getByTestId('dummy-page');
   });
 
   it('shouldUseComponentName_forDisplayName_whenDisplayNameIsMissing', () => {

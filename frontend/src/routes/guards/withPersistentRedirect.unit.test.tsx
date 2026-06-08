@@ -56,7 +56,7 @@ describe('withPersistentRedirect', () => {
     vi.mocked(readPersistedRedirect).mockReturnValue(null);
     const Wrapped = withPersistentRedirect(DummyPage);
     await act(async () => render(<Wrapped />));
-    expect(screen.getByTestId('dummy-page')).toBeDefined();
+    screen.getByTestId('dummy-page');
   });
 
   it('shouldNavigateToPersistedTarget_whenValidPathExists', async () => {

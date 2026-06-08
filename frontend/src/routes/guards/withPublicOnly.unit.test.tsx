@@ -49,7 +49,7 @@ describe('withPublicOnly', () => {
     mockIsLoading = false;
     const Wrapped = withPublicOnly(PublicPage);
     await act(async () => render(<Wrapped />));
-    expect(screen.getByTestId('public-page')).toBeDefined();
+    screen.getByTestId('public-page');
   });
 
   it('shouldRenderNull_whenAuthIsLoading', async () => {

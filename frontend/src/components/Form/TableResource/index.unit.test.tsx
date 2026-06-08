@@ -72,7 +72,7 @@ describe('TableResource', () => {
       loading: true,
       error: false,
     });
-    expect(screen.getByTestId('loading-skeleton')).toBeDefined();
+    screen.getByTestId('loading-skeleton');
   });
 
   it('renders initial empty section if no content', async () => {
@@ -113,11 +113,11 @@ describe('TableResource', () => {
       error: false,
     });
 
-    expect(screen.getByRole('table')).toBeDefined();
-    expect(screen.getByText('Alice')).toBeDefined();
-    expect(screen.getByText('Bob')).toBeDefined();
-    expect(screen.getByText('Custom: A')).toBeDefined();
-    expect(screen.getByText('Custom: B')).toBeDefined();
+    screen.getByRole('table');
+    screen.getByText('Alice');
+    screen.getByText('Bob');
+    screen.getByText('Custom: A');
+    screen.getByText('Custom: B');
     // Hidden column should not be rendered
     expect(screen.queryByText('x')).toBeNull();
     expect(screen.queryByText('y')).toBeNull();
@@ -133,8 +133,8 @@ describe('TableResource', () => {
       onPageChange,
       displayRange: true,
     });
-    expect(screen.getByTestId('pagination')).toBeDefined();
-    expect(screen.getByText('1-2 of 2 items')).toBeDefined();
+    screen.getByTestId('pagination');
+    screen.getByText('1-2 of 2 items');
   });
 
   it('check no item range', async () => {
@@ -146,7 +146,7 @@ describe('TableResource', () => {
       error: false,
       onPageChange,
     });
-    expect(screen.getByTestId('pagination')).toBeDefined();
+    screen.getByTestId('pagination');
     expect(screen.queryByText('1-2 of 2 items')).toBeNull();
   });
 
@@ -172,8 +172,8 @@ describe('TableResource', () => {
       onPageChange,
       displayRange: true,
     });
-    expect(screen.getByTestId('pagination')).toBeDefined();
-    expect(screen.getByText('1-10 of 15 items')).toBeDefined();
+    screen.getByTestId('pagination');
+    screen.getByText('1-10 of 15 items');
     const button = screen.getByRole('button', { name: 'Next page' });
     await userEvent.click(button);
     expect(onPageChange).toHaveBeenCalledWith({ page: 1, pageSize: 10 });
@@ -193,7 +193,7 @@ describe('TableResource', () => {
       onPageChange,
       displayToolbar: true,
     });
-    expect(screen.getByTitle('Edit columns')).toBeDefined();
+    screen.getByTitle('Edit columns');
   });
 
   it('renders custom toolbar entries when provided', async () => {
@@ -213,8 +213,8 @@ describe('TableResource', () => {
       ],
     });
 
-    expect(screen.getByRole('button', { name: 'Export' })).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Refresh' })).toBeDefined();
+    screen.getByRole('button', { name: 'Export' });
+    screen.getByRole('button', { name: 'Refresh' });
   });
 
   it('does not render custom toolbar entries when not provided', async () => {
@@ -288,7 +288,7 @@ describe('TableResource', () => {
       ],
     });
 
-    expect(screen.getByText('Actions')).toBeDefined();
+    screen.getByText('Actions');
   });
 
   it('calls inline row action callback with current row', async () => {
@@ -410,7 +410,7 @@ describe('TableResource', () => {
     expect(onRowExpanded).toHaveBeenCalledWith(1);
 
     // Wait for expanded content to render
-    expect(await screen.findByText('Expanded content')).toBeDefined();
+    await screen.findByText('Expanded content');
 
     // Collapse the row
     await userEvent.click(expandButtons[0]);
@@ -435,6 +435,6 @@ describe('TableResource', () => {
       ],
     });
 
-    expect(screen.getByTestId('loading-skeleton')).toBeDefined();
+    screen.getByTestId('loading-skeleton');
   });
 });

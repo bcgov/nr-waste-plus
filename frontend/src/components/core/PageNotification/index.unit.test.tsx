@@ -70,19 +70,19 @@ describe('PageNotification', () => {
     it('shouldRenderAlertRole_whenTitleIsPresent', () => {
       setupHook(makeEvent());
       render(<PageNotification eventTarget="scope" />);
-      expect(screen.getByRole('alert')).toBeDefined();
+      screen.getByRole('alert');
     });
 
     it('shouldRenderTitle_fromEventNotification', () => {
       setupHook(makeEvent({ title: 'Something failed' }));
       render(<PageNotification eventTarget="scope" />);
-      expect(screen.getByText('Something failed')).toBeDefined();
+      screen.getByText('Something failed');
     });
 
     it('shouldRenderSubtitle_fromEventNotificationDescription', () => {
       setupHook(makeEvent({ description: 'Check your input and try again' }));
       render(<PageNotification eventTarget="scope" />);
-      expect(screen.getByText('Check your input and try again')).toBeDefined();
+      screen.getByText('Check your input and try again');
     });
 
     it('shouldApplyClassName_whenProvided', () => {

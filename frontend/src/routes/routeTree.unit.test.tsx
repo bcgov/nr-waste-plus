@@ -115,7 +115,7 @@ describe('routeTree module', () => {
       const NotFoundRedirect = getNotFoundComponent();
       if (!NotFoundRedirect) return;
       await act(async () => render(<NotFoundRedirect />));
-      expect(screen.getByTestId('loading')).toBeDefined();
+      screen.getByTestId('loading');
     });
 
     it('shouldRenderNull_whenUnauthenticatedUserAndRedirectPending', async () => {
@@ -155,8 +155,8 @@ describe('routeTree module', () => {
       const NotFoundRedirect = getNotFoundComponent();
       if (!NotFoundRedirect) return;
       await act(async () => render(<NotFoundRedirect />));
-      expect(screen.getByTestId('layout')).toBeDefined();
-      expect(screen.getByTestId('not-found-page')).toBeDefined();
+      screen.getByTestId('layout');
+      screen.getByTestId('not-found-page');
     });
 
     it('shouldNotRenderLayout_whenUserIsUnauthenticated', async () => {
