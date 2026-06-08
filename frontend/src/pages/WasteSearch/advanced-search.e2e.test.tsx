@@ -21,12 +21,11 @@ test.describe('Waste Search - Advanced Search', () => {
     await advancedSearchButton.click();
   });
 
-  test.describe('Client single-select input (IDIR)', () => {
+  test.describe('Client single-select input (IDIR) @idir-only', () => {
     const clientNumber = '00049597';
     let clientInput: Locator;
 
-    test.beforeEach(async ({ page }, testInfo) => {
-      test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
+    test.beforeEach(async ({ page }) => {
 
       await mockApiResponsesWithStub(
         page,
@@ -85,7 +84,7 @@ test.describe('Waste Search - Advanced Search', () => {
     });
   });
 
-  test.describe('Client multi-select input (BCeID)', () => {
+  test.describe('Client multi-select input (BCeID) @bceid-only', () => {
     const clientNumber1 = '90000001';
     const clientNumber2 = '90000003';
     let clientInput: Locator;
@@ -93,9 +92,7 @@ test.describe('Waste Search - Advanced Search', () => {
     let filterTag2: Locator;
     let selectedCountDisplay: Locator;
 
-    test.beforeEach(async ({ page }, testInfo) => {
-      test.skip(testInfo.project.metadata.userType === 'idir', 'Only runs for BCeID users');
-
+    test.beforeEach(async ({ page }) => {
       // Open up the Client combobox
       clientInput = page.getByRole('combobox', { name: 'Client' });
       await clientInput.click();

@@ -70,6 +70,7 @@ const chromiumBrowserProjects = [
       storageState: 'src/config/tests/user.bceid.json',
     },
     testMatch: '**/*.e2e.test.{ts,tsx}',
+    grepInvert: /@idir-only/,
     metadata: {
       userType: 'bceid',
       category: 'desktop',
@@ -87,6 +88,7 @@ const chromiumBrowserProjects = [
       storageState: 'src/config/tests/user.idir.json',
     },
     testMatch: '**/*.e2e.test.{ts,tsx}',
+    grepInvert: /@bceid-only/,
     metadata: {
       userType: 'idir',
       category: 'desktop',
