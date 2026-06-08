@@ -51,9 +51,7 @@ test.describe('Waste Search - Search Results', () => {
 
     const nextPageButton = pagination.getByRole('button', { name: 'Next page' });
     await expect(nextPageButton).toBeVisible();
-    // force: true bypasses the TanStack Devtools fixed overlay that intercepts
-    // pointer events over the pagination bar at smaller viewport sizes.
-    await nextPageButton.click({ force: true });
+    await nextPageButton.click();
 
     if (testInfo.project.metadata.userType === 'bceid') {
       await expect(page.getByRole('cell', { name: '92345678' }).first()).toBeVisible();
