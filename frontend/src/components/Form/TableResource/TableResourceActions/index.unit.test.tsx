@@ -59,8 +59,8 @@ describe('TableResourceActions', () => {
       },
     ]);
 
-    expect(screen.getByRole('button', { name: 'Deactivate' })).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeDefined();
+    screen.getByRole('button', { name: 'Deactivate' });
+    screen.getByRole('button', { name: 'Edit' });
   });
 
   it('moves remaining actions into the overflow menu', async () => {

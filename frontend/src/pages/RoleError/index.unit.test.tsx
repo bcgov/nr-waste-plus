@@ -19,7 +19,7 @@ describe('RoleErrorPage', () => {
       />,
     );
     await waitFor(() => {
-      expect(screen.getByText('Unauthorized Access')).toBeDefined();
+      screen.getByText('Unauthorized Access');
       expect(
         screen.getByText('You do not have the necessary permissions to view this page.'),
       ).toBeDefined();
@@ -39,7 +39,7 @@ describe('RoleErrorPage', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('This account has conflicting client access roles')).toBeDefined();
+      screen.getByText('This account has conflicting client access roles');
     });
   });
 });

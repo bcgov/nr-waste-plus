@@ -107,7 +107,7 @@ describe('NoRolePage', () => {
     };
     await renderWithProps();
     expect(mockNavigate).not.toHaveBeenCalledWith(expect.objectContaining({ to: '/' }));
-    expect(screen.getByText('Unauthorized Access')).toBeDefined();
+    screen.getByText('Unauthorized Access');
     expect(
       screen.getByText("You don't have FAM authorization to access this system"),
     ).toBeDefined();
@@ -123,7 +123,7 @@ describe('NoRolePage', () => {
     };
     await renderWithProps();
     expect(mockNavigate).not.toHaveBeenCalledWith(expect.objectContaining({ to: '/' }));
-    expect(screen.getByText('Unauthorized Access')).toBeDefined();
+    screen.getByText('Unauthorized Access');
     expect(
       screen.getByText("You don't have FAM authorization to access this system"),
     ).toBeDefined();
@@ -142,7 +142,7 @@ describe('NoRolePage', () => {
     await renderWithProps();
 
     expect(mockNavigate).not.toHaveBeenCalledWith('/');
-    expect(screen.getByText('Unauthorized Access')).toBeDefined();
+    screen.getByText('Unauthorized Access');
     expect(
       screen.getByText("You don't have FAM authorization to access this system"),
     ).toBeDefined();

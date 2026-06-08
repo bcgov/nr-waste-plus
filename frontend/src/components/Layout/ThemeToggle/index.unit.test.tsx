@@ -39,7 +39,7 @@ const renderWithProviders = async (ctx: ThemeContextData = mockCtxLight) => {
 describe('ThemeToggle', () => {
   it('renders with light icon when theme is white', async () => {
     await renderWithProviders();
-    expect(screen.getByRole('button')).toBeDefined();
+    screen.getByRole('button');
     const icon = document.querySelector('.icon');
     expect(icon).toBeDefined();
     expect(icon?.ariaLabel).toContain('light');
@@ -47,7 +47,7 @@ describe('ThemeToggle', () => {
 
   it('renders with asleep icon when theme is not white', async () => {
     await renderWithProviders(mockCtxDark);
-    expect(screen.getByRole('button')).toBeDefined();
+    screen.getByRole('button');
     const icon = document.querySelector('.icon');
     expect(icon).toBeDefined();
     expect(icon?.ariaLabel).toContain('dark');

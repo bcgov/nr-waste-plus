@@ -8,13 +8,13 @@ import ReadonlyInput from './index';
 describe('ReadonlyInput', () => {
   it('renders label and content', () => {
     render(<ReadonlyInput label="Test Label">Test Content</ReadonlyInput>);
-    expect(screen.getByText('Test Label')).toBeDefined();
-    expect(screen.getByText('Test Content')).toBeDefined();
+    screen.getByText('Test Label');
+    screen.getByText('Test Content');
   });
 
   it('renders placeholder when children is not provided', () => {
     render(<ReadonlyInput label="Empty Field" />);
-    expect(screen.getByText(PLACE_HOLDER)).toBeDefined();
+    screen.getByText(PLACE_HOLDER);
   });
 
   it('displays skeleton when showSkeleton is true', () => {
@@ -144,7 +144,7 @@ describe('ReadonlyInput', () => {
         <div>React Element</div>
       </ReadonlyInput>,
     );
-    expect(screen.getByText('React Element')).toBeDefined();
+    screen.getByText('React Element');
   });
 
   it('sets title attribute on dd element when content is string and not skeleton', () => {
@@ -175,12 +175,12 @@ describe('ReadonlyInput', () => {
 
   it('handles empty string content', () => {
     render(<ReadonlyInput label="Empty">''</ReadonlyInput>);
-    expect(screen.getByText("''")).toBeDefined();
+    screen.getByText("''");
   });
 
   it('handles numeric content', () => {
     render(<ReadonlyInput label="Number">42</ReadonlyInput>);
-    expect(screen.getByText('42')).toBeDefined();
+    screen.getByText('42');
   });
 
   it('handles boolean content', () => {
@@ -215,7 +215,7 @@ describe('ReadonlyInput', () => {
     expect(container.querySelector('#field-id')).toBeDefined();
     expect(container.querySelector('dd.card-item-content-number')).toBeDefined();
     expect(container.querySelector('[data-testid="card-item-complete-field"]')).toBeDefined();
-    expect(screen.getByText('12345')).toBeDefined();
+    screen.getByText('12345');
   });
 
   describe('displayLabel prop', () => {
@@ -253,12 +253,12 @@ describe('ReadonlyInput', () => {
           Test Content
         </ReadonlyInput>,
       );
-      expect(screen.getByText('Test Content')).toBeDefined();
+      screen.getByText('Test Content');
     });
 
     it('works with placeholder when displayLabel is false', () => {
       render(<ReadonlyInput label="Hidden Label" displayLabel={false} />);
-      expect(screen.getByText(PLACE_HOLDER)).toBeDefined();
+      screen.getByText(PLACE_HOLDER);
     });
 
     it('works with tooltip when displayLabel is false', () => {
@@ -283,7 +283,7 @@ describe('ReadonlyInput', () => {
       );
       expect(container.querySelector('#hidden-field-id')).toBeDefined();
       expect(container.querySelector('dd.card-item-content-number')).toBeDefined();
-      expect(screen.getByText('12345')).toBeDefined();
+      screen.getByText('12345');
       expect(screen.queryByText('Hidden Field')).toBeNull();
     });
 
@@ -293,12 +293,12 @@ describe('ReadonlyInput', () => {
           Content
         </ReadonlyInput>,
       );
-      expect(screen.getByText('Visible Label')).toBeDefined();
+      screen.getByText('Visible Label');
     });
 
     it('displays label text when displayLabel is not specified', () => {
       render(<ReadonlyInput label="Default Label">Content</ReadonlyInput>);
-      expect(screen.getByText('Default Label')).toBeDefined();
+      screen.getByText('Default Label');
     });
   });
 

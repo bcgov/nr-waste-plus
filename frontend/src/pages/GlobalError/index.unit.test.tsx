@@ -31,32 +31,32 @@ describe('GlobalErrorPage', () => {
   it('shouldRenderErrorMessage_whenErrorIsErrorInstance', async () => {
     renderPage(new Error('Boom goes the dynamite'));
     await waitFor(() => {
-      expect(screen.getByText('Global Error')).toBeDefined();
-      expect(screen.getByText('Boom goes the dynamite')).toBeDefined();
+      screen.getByText('Global Error');
+      screen.getByText('Boom goes the dynamite');
     });
   });
 
   it('shouldRenderErrorMessage_whenErrorIsString', async () => {
     renderPage('String error');
     await waitFor(() => {
-      expect(screen.getByText('Global Error')).toBeDefined();
-      expect(screen.getByText('String error')).toBeDefined();
+      screen.getByText('Global Error');
+      screen.getByText('String error');
     });
   });
 
   it('shouldRenderStatusText_whenErrorObjectHasStatusText', async () => {
     renderPage({ message: 'Another error', statusText: 'This is not a drill' });
     await waitFor(() => {
-      expect(screen.getByText('Global Error')).toBeDefined();
-      expect(screen.getByText('This is not a drill')).toBeDefined();
+      screen.getByText('Global Error');
+      screen.getByText('This is not a drill');
     });
   });
 
   it('shouldFallBackToMessage_whenStatusTextIsEmpty', async () => {
     renderPage({ message: 'That Error', statusText: '' });
     await waitFor(() => {
-      expect(screen.getByText('Global Error')).toBeDefined();
-      expect(screen.getByText('That Error')).toBeDefined();
+      screen.getByText('Global Error');
+      screen.getByText('That Error');
     });
   });
 });

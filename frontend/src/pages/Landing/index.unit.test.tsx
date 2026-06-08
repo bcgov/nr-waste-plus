@@ -113,8 +113,8 @@ describe('LandingPage', () => {
 
   it('renders both login buttons', async () => {
     await renderWithProps();
-    expect(screen.getByTestId('landing-button__idir')).toBeDefined();
-    expect(screen.getByTestId('landing-button__bceid')).toBeDefined();
+    screen.getByTestId('landing-button__idir');
+    screen.getByTestId('landing-button__bceid');
   });
 
   it('calls login with correct provider when IDIR button is clicked', async () => {
@@ -131,7 +131,7 @@ describe('LandingPage', () => {
 
   it('renders the landing image', async () => {
     await renderWithProps();
-    expect(screen.getByAltText('Landing cover')).toBeDefined();
+    screen.getByAltText('Landing cover');
   });
 
   afterEach(() => {

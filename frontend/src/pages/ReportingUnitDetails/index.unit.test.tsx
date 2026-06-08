@@ -94,7 +94,7 @@ describe('ReportingUnitDetailsPage', () => {
     it('renders the reporting unit ID in the page title', async () => {
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText('Reporting Unit no.: 12345')).toBeDefined();
+        screen.getByText('Reporting Unit no.: 12345');
       });
     });
 
@@ -110,7 +110,7 @@ describe('ReportingUnitDetailsPage', () => {
     it('renders with a different reporting unit ID', async () => {
       renderPage({ ...defaultData, id: 99999 });
       await waitFor(() => {
-        expect(screen.getByText('Reporting Unit no.: 99999')).toBeDefined();
+        screen.getByText('Reporting Unit no.: 99999');
       });
     });
   });
@@ -119,21 +119,21 @@ describe('ReportingUnitDetailsPage', () => {
     it('renders the client name', async () => {
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText('Forest Client Ltd.')).toBeDefined();
+        screen.getByText('Forest Client Ltd.');
       });
     });
 
     it('renders the client number', async () => {
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText('00001001')).toBeDefined();
+        screen.getByText('00001001');
       });
     });
 
     it('renders the client status description', async () => {
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText('Active')).toBeDefined();
+        screen.getByText('Active');
       });
     });
   });
@@ -142,7 +142,7 @@ describe('ReportingUnitDetailsPage', () => {
     it('renders district code and description together', async () => {
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText('DCR - Campbell River')).toBeDefined();
+        screen.getByText('DCR - Campbell River');
       });
     });
 
@@ -152,7 +152,7 @@ describe('ReportingUnitDetailsPage', () => {
         district: { code: 'DKA', description: 'Kalum' },
       });
       await waitFor(() => {
-        expect(screen.getByText('DKA - Kalum')).toBeDefined();
+        screen.getByText('DKA - Kalum');
       });
     });
   });
@@ -161,7 +161,7 @@ describe('ReportingUnitDetailsPage', () => {
     it('renders the grade description', async () => {
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText('Grade 1')).toBeDefined();
+        screen.getByText('Grade 1');
       });
     });
 
@@ -178,7 +178,7 @@ describe('ReportingUnitDetailsPage', () => {
     it('renders sampling code and description together', async () => {
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText('S2 - Ground Sampling')).toBeDefined();
+        screen.getByText('S2 - Ground Sampling');
       });
     });
 
@@ -188,7 +188,7 @@ describe('ReportingUnitDetailsPage', () => {
         sampling: { code: 'S3', description: 'Cruise' },
       });
       await waitFor(() => {
-        expect(screen.getByText('S3 - Cruise')).toBeDefined();
+        screen.getByText('S3 - Cruise');
       });
     });
   });
@@ -197,42 +197,42 @@ describe('ReportingUnitDetailsPage', () => {
     it('renders the "Client name" label', async () => {
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText('Client name')).toBeDefined();
+        screen.getByText('Client name');
       });
     });
 
     it('renders the "Client number" label', async () => {
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText('Client number')).toBeDefined();
+        screen.getByText('Client number');
       });
     });
 
     it('renders the "Client status" label', async () => {
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText('Client status')).toBeDefined();
+        screen.getByText('Client status');
       });
     });
 
     it('renders the "District" label', async () => {
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText('District')).toBeDefined();
+        screen.getByText('District');
       });
     });
 
     it('renders the "Grades" label', async () => {
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText('Grades')).toBeDefined();
+        screen.getByText('Grades');
       });
     });
 
     it('renders the "Sampling option" label', async () => {
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText('Sampling option')).toBeDefined();
+        screen.getByText('Sampling option');
       });
     });
   });
@@ -256,7 +256,7 @@ describe('ReportingUnitDetailsPage', () => {
       });
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText('Reporting Unit no.: 12345')).toBeDefined();
+        screen.getByText('Reporting Unit no.: 12345');
       });
     });
 
@@ -272,7 +272,7 @@ describe('ReportingUnitDetailsPage', () => {
       });
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText('Reporting Unit no.: 12345')).toBeDefined();
+        screen.getByText('Reporting Unit no.: 12345');
       });
     });
   });
@@ -288,21 +288,21 @@ describe('ReportingUnitDetailsPage', () => {
         district: { code: 'DND', description: 'North' },
       });
       await waitFor(() => {
-        expect(screen.getByText('Reporting Unit no.: 1')).toBeDefined();
-        expect(screen.getByText('A Client')).toBeDefined();
-        expect(screen.getByText('Inactive')).toBeDefined();
+        screen.getByText('Reporting Unit no.: 1');
+        screen.getByText('A Client');
+        screen.getByText('Inactive');
       });
     });
 
     it('renders all six field values in a single pass', async () => {
       renderPage();
       await waitFor(() => {
-        expect(screen.getByText('Forest Client Ltd.')).toBeDefined();
-        expect(screen.getByText('00001001')).toBeDefined();
-        expect(screen.getByText('Active')).toBeDefined();
-        expect(screen.getByText('DCR - Campbell River')).toBeDefined();
-        expect(screen.getByText('Grade 1')).toBeDefined();
-        expect(screen.getByText('S2 - Ground Sampling')).toBeDefined();
+        screen.getByText('Forest Client Ltd.');
+        screen.getByText('00001001');
+        screen.getByText('Active');
+        screen.getByText('DCR - Campbell River');
+        screen.getByText('Grade 1');
+        screen.getByText('S2 - Ground Sampling');
       });
     });
   });
@@ -315,8 +315,8 @@ describe('ReportingUnitDetailsPage', () => {
         district: { code: 'DTI', description: 'Test District' },
       });
       await waitFor(() => {
-        expect(screen.getByText('Integration Corp.')).toBeDefined();
-        expect(screen.getByText('DTI - Test District')).toBeDefined();
+        screen.getByText('Integration Corp.');
+        screen.getByText('DTI - Test District');
       });
     });
   });

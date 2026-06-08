@@ -12,17 +12,17 @@ describe('ColorTag', () => {
 
   it('renders the tag with correct description (single word kept as-is)', () => {
     render(<ColorTag value={{ code: 'A', description: 'Alpha' }} colorMap={colorMap} />);
-    expect(screen.getByText('Alpha')).toBeDefined();
+    screen.getByText('Alpha');
   });
 
   it('applies sentence case to multi-word descriptions', () => {
     render(<ColorTag value={{ code: 'A', description: 'Billing Ready' }} colorMap={colorMap} />);
-    expect(screen.getByText('Billing ready')).toBeDefined();
+    screen.getByText('Billing ready');
   });
 
   it('keeps single word descriptions as-is regardless of case', () => {
     render(<ColorTag value={{ code: 'A', description: 'UPPERCASE' }} colorMap={colorMap} />);
-    expect(screen.getByText('UPPERCASE')).toBeDefined();
+    screen.getByText('UPPERCASE');
   });
 
   it('applies the correct color from colorMap', () => {
@@ -47,7 +47,7 @@ describe('ColorTag', () => {
       expect(tooltipContent.textContent).toContain(tooltipText);
     } else {
       // fallback: check if tooltip text is in the document
-      expect(screen.queryByText(tooltipText)).toBeDefined();
+      expect(screen.queryByText(tooltipText)).not.toBeNull();
     }
   });
 
@@ -120,12 +120,12 @@ describe('ColorTag', () => {
         colorMap={colorMap}
       />,
     );
-    expect(screen.getByText('-')).toBeDefined();
+    screen.getByText('-');
   });
 
   it('displays dash when description is empty string', () => {
     render(<ColorTag value={{ code: 'A', description: '' }} colorMap={colorMap} />);
-    expect(screen.getByText('-')).toBeDefined();
+    screen.getByText('-');
   });
 
   it('displays dash when description is undefined', () => {
@@ -135,7 +135,7 @@ describe('ColorTag', () => {
         colorMap={colorMap}
       />,
     );
-    expect(screen.getByText('-')).toBeDefined();
+    screen.getByText('-');
   });
 
   it('does not render tooltip when code is null but description exists', () => {
@@ -145,7 +145,7 @@ describe('ColorTag', () => {
         colorMap={colorMap}
       />,
     );
-    expect(screen.getByText('Test description')).toBeDefined();
+    screen.getByText('Test description');
     const tag = screen.getByText('Test description');
     // Tooltip should not be present when code is missing
     const tooltip = tag.closest('.cds--tooltip');
@@ -154,7 +154,7 @@ describe('ColorTag', () => {
 
   it('does not render tooltip when code is empty string but description exists', () => {
     render(<ColorTag value={{ code: '', description: 'Test Data' }} colorMap={colorMap} />);
-    expect(screen.getByText('Test data')).toBeDefined();
+    screen.getByText('Test data');
     const tag = screen.getByText('Test data');
     // Tooltip should not be present when code is empty
     const tooltip = tag.closest('.cds--tooltip');
@@ -168,7 +168,7 @@ describe('ColorTag', () => {
         colorMap={colorMap}
       />,
     );
-    expect(screen.getByText('Test value')).toBeDefined();
+    screen.getByText('Test value');
     const tag = screen.getByText('Test value');
     // Tooltip should not be present when code is undefined
     const tooltip = tag.closest('.cds--tooltip');
@@ -182,12 +182,12 @@ describe('ColorTag', () => {
         colorMap={colorMap}
       />,
     );
-    expect(screen.getByText('Not applicable')).toBeDefined();
+    screen.getByText('Not applicable');
   });
 
   it('handles null value by defaulting to N/A', () => {
     render(<ColorTag value={null} colorMap={colorMap} />);
-    expect(screen.getByText('Not applicable')).toBeDefined();
+    screen.getByText('Not applicable');
   });
 
   it('renders tooltip with N/A when value is null', () => {
@@ -213,6 +213,6 @@ describe('ColorTag', () => {
 
   it('handles both code and description being empty strings by defaulting to N/A', () => {
     render(<ColorTag value={{ code: '', description: '' }} colorMap={colorMap} />);
-    expect(screen.getByText('Not applicable')).toBeDefined();
+    screen.getByText('Not applicable');
   });
 });

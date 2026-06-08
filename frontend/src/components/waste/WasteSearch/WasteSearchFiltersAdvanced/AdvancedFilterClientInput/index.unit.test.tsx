@@ -98,7 +98,7 @@ describe('AdvancedFilterClientInput', () => {
 
     expect(screen.queryByTestId('forestclient-client-ac')).toBeNull();
     expect(document.querySelector('#as-client-multi-select')).toBeDefined();
-    expect(screen.getByPlaceholderText('Client')).toBeDefined();
+    screen.getByPlaceholderText('Client');
   });
 
   it('passes selected clients to autocomplete', async () => {

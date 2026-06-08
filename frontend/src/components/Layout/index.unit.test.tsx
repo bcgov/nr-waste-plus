@@ -82,6 +82,6 @@ describe('Layout', () => {
     // Grid
     expect(document.querySelector('.layout-grid')).not.toBeNull();
     // Children
-    expect(screen.getByText('Hello Child')).toBeDefined();
+    screen.getByText('Hello Child');
   });
 });

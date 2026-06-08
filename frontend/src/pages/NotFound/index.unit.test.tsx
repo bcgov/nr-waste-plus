@@ -19,8 +19,8 @@ describe('NotFoundPage', () => {
       />,
     );
     await waitFor(() => {
-      expect(screen.getByText('Content Not Found')).toBeDefined();
-      expect(screen.getByText('The page you are looking for does not exist.')).toBeDefined();
+      screen.getByText('Content Not Found');
+      screen.getByText('The page you are looking for does not exist.');
     });
   });
 });

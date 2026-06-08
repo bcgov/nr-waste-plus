@@ -60,7 +60,7 @@ describe('NotificationProvider', () => {
         <div>Child</div>
       </NotificationProvider>,
     );
-    expect(screen.getByText('Child')).toBeDefined();
+    screen.getByText('Child');
   });
 
   it('displays a notification when display is called', () => {
@@ -72,9 +72,9 @@ describe('NotificationProvider', () => {
     act(() => {
       screen.getByText('Show Notification').click();
     });
-    expect(screen.getByText('Test Title')).toBeDefined();
-    expect(screen.getByText('Test Subtitle')).toBeDefined();
-    expect(screen.getByText('Test Caption')).toBeDefined();
+    screen.getByText('Test Title');
+    screen.getByText('Test Subtitle');
+    screen.getByText('Test Caption');
   });
 
   it('removes the notification when onClose is triggered', () => {
@@ -151,8 +151,8 @@ describe('NotificationProvider', () => {
       screen.getByText('Show Targeted Toast Event').click();
     });
 
-    expect(screen.getByText('Toast Targeted Event')).toBeDefined();
-    expect(screen.getByText('Shows as toast despite scope')).toBeDefined();
+    screen.getByText('Toast Targeted Event');
+    screen.getByText('Shows as toast despite scope');
   });
 
   it('does not render a toast when event displayMode is inline', () => {

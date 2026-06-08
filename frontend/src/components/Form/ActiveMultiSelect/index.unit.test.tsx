@@ -78,9 +78,9 @@ describe('ActiveMultiSelect', () => {
     );
     await openDropdown();
     expect(getPlaceholderInput()).toHaveProperty('placeholder', 'Select...');
-    expect(screen.getByText('A - Alpha')).toBeDefined();
-    expect(screen.getByText('B - Beta')).toBeDefined();
-    expect(screen.getByText('C - Gamma')).toBeDefined();
+    screen.getByText('A - Alpha');
+    screen.getByText('B - Beta');
+    screen.getByText('C - Gamma');
   });
 
   it('calls onChange when an item is selected', async () => {
@@ -112,7 +112,7 @@ describe('ActiveMultiSelect', () => {
       />,
     );
     await openDropdown();
-    expect(screen.getByText('B - Beta')).toBeDefined();
+    screen.getByText('B - Beta');
   });
 
   it('updates placeholder to show selected code values', async () => {

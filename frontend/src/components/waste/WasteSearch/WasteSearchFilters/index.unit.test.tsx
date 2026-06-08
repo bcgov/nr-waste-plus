@@ -72,10 +72,10 @@ const renderWithProps = async (props: Partial<ComponentProps<typeof WasteSearchF
 describe('WasteSearchFilters', () => {
   it('shouldRenderSearchInputAndFilterColumns_whenRendered', async () => {
     await renderWithProps({});
-    expect(screen.getAllByPlaceholderText('Search by RU No. or Block ID')[0]).toBeDefined();
-    expect(screen.getByPlaceholderText(/Sampling/i)).toBeDefined();
-    expect(screen.getByPlaceholderText(/District/i)).toBeDefined();
-    expect(screen.getByPlaceholderText(/Status/i)).toBeDefined();
+    screen.getAllByPlaceholderText('Search by RU No. or Block ID');
+    screen.getByPlaceholderText(/Sampling/i);
+    screen.getByPlaceholderText(/District/i);
+    screen.getByPlaceholderText(/Status/i);
   });
 
   it('shouldRenderAdvancedSearchAndSearchButtons_whenDesktop', async () => {
@@ -128,15 +128,15 @@ describe('WasteSearchFilters', () => {
 
     expect(samplingButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(samplingButton as HTMLButtonElement);
-    expect(screen.getByText('A - Sampling option: A')).toBeDefined();
+    screen.getByText('A - Sampling option: A');
 
     expect(districtButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(districtButton as HTMLButtonElement);
-    expect(screen.getByText('B - District: B')).toBeDefined();
+    screen.getByText('B - District: B');
 
     expect(statusButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(statusButton as HTMLButtonElement);
-    expect(screen.getByText('A - Assess area status: A')).toBeDefined();
+    screen.getByText('A - Assess area status: A');
   });
 
   it('shouldRenderActiveFilterTagsArea_whenFiltersHaveValue', async () => {
@@ -145,9 +145,9 @@ describe('WasteSearchFilters', () => {
         sampling: ['A'],
       },
     });
-    expect(screen.getByTestId('active-filters')).toBeDefined();
+    screen.getByTestId('active-filters');
 
-    expect(screen.getByTestId('dt-sampling-A')).toBeDefined();
+    screen.getByTestId('dt-sampling-A');
   });
 
   it('shouldCallOnChange_whenSearchInputChanges', async () => {

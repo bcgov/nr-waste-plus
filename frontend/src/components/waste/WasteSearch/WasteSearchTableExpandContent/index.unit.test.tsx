@@ -111,14 +111,14 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('Licence number')).toBeDefined();
-        expect(screen.getByText('Cutting Permit')).toBeDefined();
-        expect(screen.findAllByText('Timber Mark')).toBeDefined();
-        expect(screen.getByText('Exempted (Yes/No)')).toBeDefined();
-        expect(screen.getByText('Net area')).toBeDefined();
-        expect(screen.getByText('Submitter')).toBeDefined();
-        expect(screen.getByText('Attachments and comments')).toBeDefined();
-        expect(screen.getByText('Comment:')).toBeDefined();
+        screen.getByText('Licence number');
+        screen.getByText('Cutting Permit');
+        screen.getAllByText('Timber Mark');
+        screen.getByText('Exempted (Yes/No)');
+        screen.getByText('Net area');
+        screen.getByText('Submitter');
+        screen.getByText('Attachments and comments');
+        screen.getByText('Comment:');
       });
     });
 
@@ -127,7 +127,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('LIC-12345')).toBeDefined();
+        screen.getByText('LIC-12345');
       });
     });
 
@@ -136,7 +136,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('CP-001')).toBeDefined();
+        screen.getByText('CP-001');
       });
     });
 
@@ -145,7 +145,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getAllByText('TM-001')).toBeDefined();
+        screen.getAllByText('TM-001');
       });
     });
 
@@ -154,7 +154,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('IDIR\\TESTUSER')).toBeDefined();
+        screen.getByText('IDIR\\TESTUSER');
       });
     });
 
@@ -163,7 +163,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('1500.5 ha')).toBeDefined();
+        screen.getByText('1500.5 ha');
       });
     });
 
@@ -172,7 +172,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('Blocks in the RU: 5')).toBeDefined();
+        screen.getByText('Blocks in the RU: 5');
       });
     });
 
@@ -181,7 +181,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('Test comments for this reporting unit')).toBeDefined();
+        screen.getByText('Test comments for this reporting unit');
       });
     });
   });
@@ -221,7 +221,7 @@ describe('WasteSearchTableExpandContent', () => {
 
       // Wait for data to be displayed
       await waitFor(() => {
-        expect(screen.getByText('LIC-12345')).toBeDefined();
+        screen.getByText('LIC-12345');
       });
     });
 
@@ -230,11 +230,11 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('LIC-12345')).toBeDefined();
+        screen.getByText('LIC-12345');
       });
 
       // Verify data is displayed (not in skeleton state)
-      expect(screen.getByText('CP-001')).toBeDefined();
+      screen.getByText('CP-001');
     });
   });
 
@@ -504,11 +504,11 @@ describe('WasteSearchTableExpandContent', () => {
 
       await waitFor(() => {
         // Verify multiple fields are displayed
-        expect(screen.getByText('Licence number')).toBeDefined();
-        expect(screen.getByText('LIC-12345')).toBeDefined();
-        expect(screen.getByText('Cutting Permit')).toBeDefined();
-        expect(screen.getByText('CP-001')).toBeDefined();
-        expect(screen.getByText('Blocks in the RU: 5')).toBeDefined();
+        screen.getByText('Licence number');
+        screen.getByText('LIC-12345');
+        screen.getByText('Cutting Permit');
+        screen.getByText('CP-001');
+        screen.getByText('Blocks in the RU: 5');
       });
     });
 
@@ -523,7 +523,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('2500.75 ha')).toBeDefined();
+        screen.getByText('2500.75 ha');
       });
     });
 
@@ -538,7 +538,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('Blocks in the RU: 0')).toBeDefined();
+        screen.getByText('Blocks in the RU: 0');
       });
     });
 
@@ -581,11 +581,11 @@ describe('WasteSearchTableExpandContent', () => {
 
       await waitFor(() => {
         // Check secondary marks appear
-        expect(screen.getAllByText('SM-001')).toBeDefined();
-        expect(screen.getAllByText('SM-002')).toBeDefined();
+        screen.getAllByText('SM-001');
+        screen.getAllByText('SM-002');
         // Check areas appear
-        expect(screen.getAllByText('500 ha')).toBeDefined();
-        expect(screen.getAllByText('300 ha')).toBeDefined();
+        screen.getAllByText('500 ha');
+        screen.getAllByText('300 ha');
       });
     });
 
@@ -594,7 +594,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('Secondary marks in the block: 3')).toBeDefined();
+        screen.getByText('Secondary marks in the block: 3');
       });
     });
 

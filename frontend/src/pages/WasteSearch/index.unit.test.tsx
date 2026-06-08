@@ -75,13 +75,13 @@ describe('WasteSearchPage', () => {
 
   it('shouldRenderPageTitleAndSubtitle_whenRendered', async () => {
     await renderWithProps();
-    expect(screen.getByText('Waste search')).toBeDefined();
-    expect(screen.getByText('Search for reporting units, licensees, or blocks')).toBeDefined();
+    screen.getByText('Waste search');
+    screen.getByText('Search for reporting units, licensees, or blocks');
   });
 
   it('shouldRenderWasteSearchColumns_whenRendered', async () => {
     await renderWithProps();
-    expect(screen.getByText('Nothing to show yet!')).toBeDefined();
+    screen.getByText('Nothing to show yet!');
   });
 
   it('shouldDisplayErrorNotification_whenErrorEventSent', async () => {
@@ -96,7 +96,7 @@ describe('WasteSearchPage', () => {
       });
     });
 
-    expect(screen.getByText('Test Error')).toBeDefined();
+    screen.getByText('Test Error');
     expect(screen.getAllByText('This is a test error message')).toHaveLength(1);
   });
 
@@ -112,7 +112,7 @@ describe('WasteSearchPage', () => {
       });
     });
 
-    expect(screen.getByText('Test Warning')).toBeDefined();
+    screen.getByText('Test Warning');
     expect(screen.getAllByText('This is a test warning message')).toHaveLength(1);
   });
 
@@ -128,7 +128,7 @@ describe('WasteSearchPage', () => {
       });
     });
 
-    await waitFor(() => expect(screen.getByText('Test Info')).toBeDefined());
+    await screen.findByText('Test Info');
     expect(screen.getAllByText('This is a test info message')).toHaveLength(1);
   });
 

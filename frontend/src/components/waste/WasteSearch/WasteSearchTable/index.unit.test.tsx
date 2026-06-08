@@ -338,17 +338,17 @@ describe('WasteSearchTable', () => {
   describe('initial rendering', () => {
     it('renders WasteSearchFilters component', async () => {
       await renderWithProps();
-      expect(screen.getByPlaceholderText('Search by RU No. or Block ID')).toBeDefined();
+      screen.getByPlaceholderText('Search by RU No. or Block ID');
     });
 
     it('renders TableResource component', async () => {
       await renderWithProps();
-      expect(screen.getByText('Nothing to show yet!')).toBeDefined();
+      screen.getByText('Nothing to show yet!');
     });
 
     it('renders with empty data initially', async () => {
       await renderWithProps();
-      expect(screen.getByText('Nothing to show yet!')).toBeDefined();
+      screen.getByText('Nothing to show yet!');
     });
 
     it('does not trigger search on initial load', async () => {
@@ -388,8 +388,8 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('411B')).toBeDefined();
-        expect(screen.getByText('412B')).toBeDefined();
+        screen.getByText('411B');
+        screen.getByText('412B');
       });
     });
 
@@ -404,7 +404,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('No results')).toBeDefined();
+        screen.getByText('No results');
       });
     });
 
@@ -458,7 +458,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('411B')).toBeDefined();
+        screen.getByText('411B');
       });
 
       // Find and click the next page button
@@ -495,7 +495,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('411B')).toBeDefined();
+        screen.getByText('411B');
       });
 
       // Find and change page size
@@ -561,7 +561,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('411B')).toBeDefined();
+        screen.getByText('411B');
       });
 
       const secondPageResults: PageableResponse<ReportingUnitSearchResultDto> = {
@@ -588,7 +588,7 @@ describe('WasteSearchTable', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('521B')).toBeDefined();
+        screen.getByText('521B');
       });
 
       const fewResults: PageableResponse<ReportingUnitSearchResultDto> = {
@@ -613,7 +613,7 @@ describe('WasteSearchTable', () => {
         Current page was properly reset to 0.
         Otherwise the results from the new search (like '631B') would not be rendered on the screen.
         */
-        expect(screen.getByText('631B')).toBeDefined();
+        screen.getByText('631B');
       });
     });
   });
@@ -630,7 +630,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('411B')).toBeDefined();
+        screen.getByText('411B');
       });
 
       // Click on sortable column header (Block ID) - verifies sorting is available
@@ -652,7 +652,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('411B')).toBeDefined();
+        screen.getByText('411B');
       });
 
       // Verify sorting capability is available on sortable columns
@@ -719,7 +719,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Something went wrong!')).toBeDefined();
+        screen.getByText('Something went wrong!');
       });
     });
 
@@ -819,7 +819,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByTestId('loading-skeleton')).toBeDefined();
+        screen.getByTestId('loading-skeleton');
       });
 
       // Resolve the promise
@@ -839,7 +839,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('411B')).toBeDefined();
+        screen.getByText('411B');
       });
 
       expect(screen.queryByTestId('loading-skeleton')).toBeNull();

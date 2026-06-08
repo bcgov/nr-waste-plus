@@ -7,7 +7,7 @@ import { ConfigurationCard } from './index';
 describe('ConfigurationCard', () => {
   it('renders title', () => {
     render(<ConfigurationCard title="District average waste volumes" />);
-    expect(screen.getByText('District average waste volumes')).toBeDefined();
+    screen.getByText('District average waste volumes');
   });
 
   it('renders description as string', () => {
@@ -17,7 +17,7 @@ describe('ConfigurationCard', () => {
         description="Some body text"
       />,
     );
-    expect(screen.getByText('Some body text')).toBeDefined();
+    screen.getByText('Some body text');
   });
 
   it('renders ReactNode description as-is without wrapping paragraph', () => {
@@ -41,7 +41,7 @@ describe('ConfigurationCard', () => {
         <span>Custom children</span>
       </ConfigurationCard>,
     );
-    expect(screen.getByText('Custom children')).toBeDefined();
+    screen.getByText('Custom children');
     expect(screen.queryByText('Should not appear')).toBeNull();
   });
 
@@ -54,7 +54,7 @@ describe('ConfigurationCard', () => {
         onButtonClick={onButtonClick}
       />,
     );
-    expect(screen.getByRole('button', { name: 'View or update tables →' })).toBeDefined();
+    screen.getByRole('button', { name: 'View or update tables →' });
   });
 
   it('calls onButtonClick when button is clicked', async () => {
