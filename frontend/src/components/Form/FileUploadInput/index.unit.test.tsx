@@ -50,9 +50,7 @@ describe('FileUploadInput (processor pipeline)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} />);
 
     const file = new File(['id,name,email\n1,Alice,alice@example.com'], 'customers.csv', {
       type: 'text/csv',
@@ -83,9 +81,7 @@ describe('FileUploadInput (processor pipeline)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} />);
 
     const file = new File(['id,name\n1,Alice'], 'customers.csv', { type: 'text/csv' });
     const input = screen.getByLabelText(
@@ -110,7 +106,7 @@ describe('FileUploadInput (processor pipeline)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
+    render(
       <FileUploadInput processor={processor} onProcessed={onProcessed} maxFileSizeBytes={10} />,
     );
 
@@ -140,7 +136,7 @@ describe('FileUploadInput (processor pipeline)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
+    render(
       <FileUploadInput processor={processor} onProcessed={onProcessed} maxFileSizeBytes={5} />,
     );
 
@@ -176,9 +172,7 @@ describe('FileUploadInput (capacity management)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={1} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={1} />);
 
     const f1 = new File(['1'], 'a.csv', { type: 'text/csv' });
     const f2 = new File(['2'], 'b.csv', { type: 'text/csv' });
@@ -211,9 +205,7 @@ describe('FileUploadInput (capacity management)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={2} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={2} />);
 
     const f1 = new File(['1'], 'a.csv', { type: 'text/csv' });
     const f2 = new File(['2'], 'b.csv', { type: 'text/csv' });
@@ -250,9 +242,7 @@ describe('FileUploadInput (capacity management)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={3} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={3} />);
 
     const f1 = new File(['a'], 'a.csv', { type: 'text/csv' });
     const f2 = new File(['b'], 'b.csv', { type: 'text/csv' });
@@ -289,9 +279,7 @@ describe('FileUploadInput (async processor lifecycle)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} />);
 
     const f = new File(['x'], 'pending.csv', { type: 'text/csv' });
     const input = screen.getByLabelText(
@@ -332,9 +320,7 @@ describe('FileUploadInput (async processor lifecycle)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={2} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={2} />);
 
     const f1 = new File(['a'], 'a.csv', { type: 'text/csv' });
     const f2 = new File(['b'], 'b.csv', { type: 'text/csv' });
@@ -379,9 +365,7 @@ describe('FileUploadInput (async processor lifecycle)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={2} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={2} />);
 
     const f1 = new File(['a'], 'a.csv', { type: 'text/csv' });
     const f2 = new File(['b'], 'b.csv', { type: 'text/csv' });
@@ -424,9 +408,7 @@ describe('FileUploadInput (async processor lifecycle)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={2} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={2} />);
 
     const fA = new File(['a'], 'a.csv', { type: 'text/csv' });
     const fB = new File(['b'], 'b.csv', { type: 'text/csv' });
@@ -476,9 +458,7 @@ describe('FileUploadInput (error handling and deletion)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} />);
 
     const file = new File(['invalid'], 'bad.csv', { type: 'text/csv' });
     const input = screen.getByLabelText(
@@ -508,9 +488,7 @@ describe('FileUploadInput (error handling and deletion)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={2} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={2} />);
 
     const f1 = new File(['a'], 'a.csv', { type: 'text/csv' });
     const f2 = new File(['b'], 'b.csv', { type: 'text/csv' });
@@ -546,9 +524,7 @@ describe('FileUploadInput (error handling and deletion)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={1} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={1} />);
 
     // Try uploading 2 files when maxFiles is 1
     const f1 = new File(['a'], 'a.csv', { type: 'text/csv' });
@@ -576,9 +552,7 @@ describe('FileUploadInput (error handling and deletion)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} />);
 
     const file = new File(['content'], 'test.csv', { type: 'text/csv' });
     const input = screen.getByLabelText(
@@ -619,9 +593,7 @@ describe('FileUploadInput (error handling and deletion)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={0} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={0} />);
 
     const file = new File(['content'], 'test.csv', { type: 'text/csv' });
     const input = screen.getByLabelText(
@@ -650,9 +622,7 @@ describe('FileUploadInput (error handling and deletion)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} />);
 
     const file = new File(['content'], 'test.csv', { type: 'text/csv' });
     const input = screen.getByLabelText(
@@ -714,7 +684,7 @@ describe('FileUploadInput (external errors and UI)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
+    render(
       <FileUploadInput
         processor={processor}
         onProcessed={onProcessed}
@@ -746,9 +716,7 @@ describe('FileUploadInput (external errors and UI)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} accept=".csv,.txt" />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} accept=".csv,.txt" />);
 
     const input = screen.getByLabelText(
       'Drag and drop files here or click to upload',
@@ -769,18 +737,14 @@ describe('FileUploadInput (external errors and UI)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container: container1 } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={1} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={1} />);
 
     const input1 = screen.getAllByLabelText(
       'Drag and drop files here or click to upload',
     )[0] as HTMLInputElement;
     expect(input1.hasAttribute('multiple')).toBe(false);
 
-    const { container: container2 } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={3} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={3} />);
 
     const input2 = screen.getAllByLabelText(
       'Drag and drop files here or click to upload',
@@ -800,9 +764,7 @@ describe('FileUploadInput (external errors and UI)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} disabled={true} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} disabled={true} />);
 
     const input = screen.getByLabelText(
       'Drag and drop files here or click to upload',
@@ -822,9 +784,7 @@ describe('FileUploadInput (external errors and UI)', () => {
     processor.load = mockLoad;
     const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
 
-    const { container } = render(
-      <FileUploadInput processor={processor} onProcessed={onProcessed} />,
-    );
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} />);
 
     const file = new File(['invalid'], 'bad.csv', { type: 'text/csv' });
     const input = screen.getByLabelText(

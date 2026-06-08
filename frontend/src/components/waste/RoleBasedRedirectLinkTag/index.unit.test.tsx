@@ -72,7 +72,7 @@ describe('RoleBasedRedirectLinkTag', () => {
 
     const allowedRoles: Role[] = [Role.ADMIN, Role.DISTRICT];
 
-    const { container } = render(
+    render(
       <RoleBasedRedirectLinkTag
         text="Restricted Link"
         url="https://example.com"
