@@ -10,23 +10,24 @@ export const test = base.extend<{
   context: BrowserContext;
   page: Page;
 }>({
-  context: async ({ browser }, provide) => {
-    const context = await browser.newContext();
+  context: async ({ browser, storageState }, provide, testInfo) => {
+    const context = await browser.newContext({ ...testInfo.project.use, storageState });
     await provide(context);
     await context.close(); // clean up
   },
 
   page: async ({ context }, provide, testInfo) => {
     const isChromium = testInfo.project.metadata.browserName === 'chromium';
+    const coverageEnabled = isChromium && process.env.VITE_COVERAGE === 'true';
     const page = await context.newPage();
 
-    if (isChromium) {
+    if (coverageEnabled) {
       await page.coverage.startJSCoverage({ reportAnonymousScripts: true });
     }
 
     await provide(page);
 
-    if (!isChromium) return;
+    if (!coverageEnabled) return;
 
     const jsCoverage = await page.coverage.stopJSCoverage();
 

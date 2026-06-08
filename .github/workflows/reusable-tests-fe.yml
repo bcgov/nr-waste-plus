@@ -94,12 +94,12 @@ jobs:
           only-summary: false
           fail-on-error: true
 
-      - name: Upload test videos
+      - name: Upload test results (videos + traces)
         uses: actions/upload-artifact@v7
         if: steps.tests.outputs.triggered == 'true'
         with:
-          name: e2e-videos
-          path: frontend/test-results/videos/
+          name: e2e-results
+          path: frontend/test-results/
 
       - name: Upload test results
         uses: actions/upload-artifact@v7
