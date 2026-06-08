@@ -126,19 +126,19 @@ The auth strategy (`storageState` JSON + `mockJwt`) is sound in principle but is
 
 ### Low
 
-#### L1. Reporters are full triple stack locally and in CI
+#### L1. Reporters are full triple stack locally and in CI (complete)
 - `list + html + junit`. The HTML reporter writes hundreds of artifacts per run. Consider `reporter: process.env.CI ? [...] : 'list'`.
 
-#### L2. `dotenv.config()` runs at config evaluation
+#### L2. `dotenv.config()` runs at config evaluation (complete)
 - [frontend/playwright.config.ts](frontend/playwright.config.ts#L1-L6) calls `dotenv.config()` at module load. Fine, but the project metadata snapshots `process.env.BCEID_PASSWORD` etc. into a plain object at config build time, making secrets visible in any debug dump of project metadata. Switch to lazy `process.env` reads inside `auth.setup`.
 
 #### L3. `pree2e` overwrites storage state files to `{}` before every run
 - [frontend/package.json](frontend/package.json#L13) wipes `user.bceid.json` and `user.idir.json` to `{}` before `test:e2e`. Combined with `globalTeardown` clearing them, the suite never benefits from cached auth between local runs. For local dev, a `--keep-auth` mode would help.
 
-#### L4. No README section on running the e2e suite
+#### L4. No README section on running the e2e suite (complete)
 - [frontend/README.md](frontend/README.md) lacks "Running E2E tests locally" guidance (workers, env vars, what `VITE_MOCK_AUTH` does).
 
-#### L5. `axe-playwright` is injected in `globalSetup` but lost
+#### L5. `axe-playwright` is injected in `globalSetup` but lost (complete — resolved by C3)
 - Axe injection on a throwaway page is discarded when the browser closes. The actual a11y tests inject it again at point of use, so the globalSetup injection is dead code.
 
 ---

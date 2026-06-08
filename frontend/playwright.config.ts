@@ -15,13 +15,9 @@ const commonSettings = {
   // with ~17% fewer pixels — faster frame production, same coverage.
   viewport: { width: 1600, height: 900 },
   ignoreHTTPSErrors: true,
-  video: 'on-first-retry',
-  trace: 'on-first-retry',
+  video: 'on-first-retry' as const,
+  trace: 'on-first-retry' as const,
 };
-
-const shouldMockAuthentication = process.env.VITE_MOCK_AUTH?.toLowerCase() === 'true';
-
-const userPoolsClientId = process.env.VITE_USER_POOLS_WEB_CLIENT_ID;
 
 const setupProjects = [
   {
@@ -37,10 +33,6 @@ const setupProjects = [
       category: 'desktop',
       browserName: 'chromium',
       stateFile: 'user.bceid.json',
-      shouldMockAuthentication,
-      userPoolsClientId,
-      user: process.env.BCEID_USERNAME ?? '',
-      password: process.env.BCEID_PASSWORD ?? '',
     },
   },
   {
@@ -56,10 +48,6 @@ const setupProjects = [
       category: 'desktop',
       browserName: 'chromium',
       stateFile: 'user.idir.json',
-      shouldMockAuthentication,
-      userPoolsClientId,
-      user: process.env.IDIR_USERNAME ?? '',
-      password: process.env.IDIR_PASSWORD ?? '',
     },
   },
 ];
@@ -79,7 +67,6 @@ const chromiumBrowserProjects = [
       category: 'desktop',
       browserName: 'chromium',
       stateFile: 'user.bceid.json',
-      userPoolsClientId,
     },
     dependencies: ['bceid-setup'],
   },
@@ -97,7 +84,6 @@ const chromiumBrowserProjects = [
       category: 'desktop',
       browserName: 'chromium',
       stateFile: 'user.idir.json',
-      userPoolsClientId,
     },
     dependencies: ['idir-setup'],
   },
@@ -137,9 +123,11 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
-  reporter: [
-    ['list'],
-    ['html', { outputFolder: 'test-reports/report', open: 'never' }],
-    ['junit', { outputFile: 'test-reports/junit/report.xml' }],
-  ],
+  reporter: process.env.CI
+    ? [
+        ['list'],
+        ['html', { outputFolder: 'test-reports/report', open: 'never' }],
+        ['junit', { outputFile: 'test-reports/junit/report.xml' }],
+      ]
+    : 'list',
 });
