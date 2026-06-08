@@ -1,0 +1,16 @@
+@use '@carbon/styles/scss/components/file-uploader';
+@use '@carbon/type';
+@use '@carbon/react/scss/spacing' as *;
+@use '../../../styles/variables' as vars;
+
+.file-upload {
+
+  &-dropzone, &-item {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  &-dropzone{
+    margin-bottom: $spacing-05;
+  }
+}
