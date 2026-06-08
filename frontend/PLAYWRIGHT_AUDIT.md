@@ -107,10 +107,10 @@ The auth strategy (`storageState` JSON + `mockJwt`) is sound in principle but is
 - Tests like the role-override variants in [frontend/src/components/Layout/HeaderPanelProfile/index.e2e.test.tsx](frontend/src/components/Layout/HeaderPanelProfile/index.e2e.test.tsx#L511-L516) run all of `beforeEach` (open page, mock APIs, navigate, networkidle) and then call `test.skip(...)`. Use project-level `grep` / `grepInvert` or test tags (`@idir-only`) to exclude at scheduling time.
 - **Gain:** Saves wasted setup time for ~30% of tests in 50% of projects. **Risk:** Low (annotations only).
 
-#### M3. `HeaderPanelProfile` BCeID-only branches still execute IDIR mocks
+#### M3. `HeaderPanelProfile` BCeID-only branches still execute IDIR mocks (complete — resolved by M2)
 - [frontend/src/components/Layout/HeaderPanelProfile/index.e2e.test.tsx](frontend/src/components/Layout/HeaderPanelProfile/index.e2e.test.tsx#L13-L39) conditionally mocks `forest-clients/*` only for BCeID, then navigates and waits for networkidle for all users. Combined with M2 and C4 this is the slowest single file in the suite.
 
-#### M4. `MockPromise` adds 200 ms artificial delay
+#### M4. `MockPromise` adds 200 ms artificial delay (complete)
 - [frontend/src/config/tests/MockPromise.ts](frontend/src/config/tests/MockPromise.ts#L8) `setTimeout(() => resolve(content), 200)`. If any test code path actually awaits this, every awaited resolution costs 200ms. Verify whether this delay is required to reproduce real-world race conditions or can be reduced to 0 in tests.
 
 #### M5. Repeated locator construction in test bodies
