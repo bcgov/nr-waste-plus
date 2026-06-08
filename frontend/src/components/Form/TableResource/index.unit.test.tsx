@@ -9,7 +9,7 @@ import TableResource from './index';
 
 import type { PageableResponse, TableHeaderType } from './types';
 
-import { renderWithAppAsync, makeTestQueryClient } from '@/config/tests/renderWithApp';
+import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
 

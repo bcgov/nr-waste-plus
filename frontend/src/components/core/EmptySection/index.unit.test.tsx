@@ -1,7 +1,7 @@
 import { ErrorFilled } from '@carbon/icons-react';
 import { Airplane } from '@carbon/pictograms-react';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, it } from 'vitest';
 
 import EmptySection from './index';
 
