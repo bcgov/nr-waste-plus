@@ -64,12 +64,12 @@ jobs:
           only-summary: false
           fail-on-error: true
 
-      - name: Upload test videos
+      - name: Upload test results (videos + traces)
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: a11y-videos
-          path: frontend/test-results/videos/
+          name: a11y-results
+          path: frontend/test-results/
 
       - name: Upload test results
         uses: actions/upload-artifact@v7

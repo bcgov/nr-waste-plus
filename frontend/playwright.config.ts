@@ -1,4 +1,4 @@
-import { defineConfig, devices, type VideoMode } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 import * as dotenv from 'dotenv';
 
 import { THIRTY_SECONDS } from './src/config/react-query/TimeUnits';
@@ -12,12 +12,8 @@ const commonSettings = {
   baseURL,
   viewport: { width: 1920, height: 1080 },
   ignoreHTTPSErrors: true,
-  video: { mode: 'retain-on-failure' as VideoMode },
-  contextOptions: {
-    recordVideo: {
-      dir: './test-results/videos',
-    },
-  },
+  video: 'on-first-retry',
+  trace: 'on-first-retry',
 };
 
 const shouldMockAuthentication = process.env.VITE_MOCK_AUTH?.toLowerCase() === 'true';
