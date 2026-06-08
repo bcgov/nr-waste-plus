@@ -1,7 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
+import WasteSearchTableExpandContent from './index';
+
+import type { ReportingUnitSearchExpandedDto } from '@/services/search.types';
+
+import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
 
 vi.mock('@/services/APIs', () => {
