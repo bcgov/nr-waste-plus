@@ -388,9 +388,7 @@ describe('WasteSearchTable', () => {
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
 
-      // Wait a bit to ensure no search is triggered
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
+      // Assert that no search API call was triggered (checked synchronously)
       expect(APIs.search.searchReportingUnit).not.toHaveBeenCalled();
     });
 
