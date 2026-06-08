@@ -111,6 +111,7 @@ export default defineConfig(({ mode }) => {
     build: {
       chunkSizeWarningLimit: 1024,
       outDir: 'build',
+      sourcemap: process.env.VITE_COVERAGE === 'true' ? 'inline' : false,
       rollupOptions: {
         output: {
           manualChunks(id) {
