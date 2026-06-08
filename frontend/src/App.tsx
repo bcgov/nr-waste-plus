@@ -1,48 +1,24 @@
-import { TanStackDevtools } from '@tanstack/react-devtools';
-import { FormDevtoolsPanel } from '@tanstack/react-form-devtools';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import { type FC } from 'react';
+import { lazy, type FC } from 'react';
 
 import AppRouter from '@/routes/AppRouter';
-import { router } from '@/routes/routeTree';
+
+const DevTools = import.meta.env.DEV ? lazy(() => import('./DevTools')) : () => null;
 
 /**
  * Root application component.
  *
- * Mounts the TanStack Router provider via {@link AppRouter} and attaches two sets
- * of development devtools panels:
- * - {@link ReactQueryDevtools} anchored to the bottom-left corner
- * - {@link TanStackRouterDevtools} anchored to the bottom-right corner, bound to
- *   the {@link router} singleton so it reflects the live route state
+ * Mounts the TanStack Router provider via {@link AppRouter} and, in development
+ * mode only, lazy-loads the {@link DevTools} panel. The lazy import is guarded by
+ * `import.meta.env.DEV` so Vite statically eliminates the entire devtools bundle
+ * from production builds — the widget never appears in staging or deployed builds.
  *
- * Both devtools panels start collapsed (`initialIsOpen: false`).
- *
- * @returns The root JSX element containing the router and devtools panels.
+ * @returns The root JSX element containing the router and, in dev, devtools panels.
  */
 const App: FC = () => {
   return (
     <>
       <AppRouter />
-      <TanStackDevtools
-        plugins={[
-          {
-            name: 'TanStack Form',
-            render: <FormDevtoolsPanel initialIsOpen={false} />,
-            defaultOpen: false,
-          },
-          {
-            name: 'TanStack Query',
-            render: <ReactQueryDevtools initialIsOpen={false} />,
-            defaultOpen: false,
-          },
-          {
-            name: 'TanStack Router',
-            render: <TanStackRouterDevtools initialIsOpen={false} router={router} />,
-            defaultOpen: false,
-          },
-        ]}
-      />
+      <DevTools />
     </>
   );
 };
