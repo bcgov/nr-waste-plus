@@ -39,8 +39,7 @@ test.describe('Waste Search - URL-Populated Filters', () => {
     await expect(districtInput).toHaveAttribute('placeholder', /^(DFN, DCK|DCK, DFN)$/);
   });
 
-  test('fills Client in advanced search from URL clientNumbers', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
+  test('fills Client in advanced search from URL clientNumbers @idir-only', async ({ page }) => {
 
     await mockApiResponsesWithStub(
       page,

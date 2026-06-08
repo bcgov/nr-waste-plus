@@ -505,10 +505,9 @@ test.describe('Profile menu', () => {
     await expect(tooltipContent).toBeVisible();
   });
 
-  test('IDIR user with Viewer role sees client selector in profile panel', async ({
+  test('IDIR user with Viewer role sees client selector in profile panel @idir-only', async ({
     page,
   }, testInfo) => {
-    test.skip(testInfo.project.metadata.userType !== 'idir', 'Only runs for IDIR project');
     test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
 
     await mockApiResponsesWithStub(
@@ -542,10 +541,9 @@ test.describe('Profile menu', () => {
     ).toHaveCount(0);
   });
 
-  test('IDIR user with Submitter role sees client selector in profile panel', async ({
+  test('IDIR user with Submitter role sees client selector in profile panel @idir-only', async ({
     page,
   }, testInfo) => {
-    test.skip(testInfo.project.metadata.userType !== 'idir', 'Only runs for IDIR project');
     test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
 
     await mockApiResponsesWithStub(
