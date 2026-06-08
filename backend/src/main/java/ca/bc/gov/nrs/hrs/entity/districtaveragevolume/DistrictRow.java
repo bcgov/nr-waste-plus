@@ -1,11 +1,12 @@
 package ca.bc.gov.nrs.hrs.entity.districtaveragevolume;
 
+import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigDecimal;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record DistrictRow(
-    String     code,
+    CodeDescriptionDto district,
     BigDecimal avoidableSawlog,
 
     // Interior-only

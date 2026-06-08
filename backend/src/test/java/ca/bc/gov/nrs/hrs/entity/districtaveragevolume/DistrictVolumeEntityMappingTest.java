@@ -1,7 +1,7 @@
 package ca.bc.gov.nrs.hrs.entity.districtaveragevolume;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
+import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import java.math.BigDecimal;
@@ -25,7 +25,7 @@ public class DistrictVolumeEntityMappingTest
   void persistAndRead_backMappedFields() {
 
     DistrictRow row = new DistrictRow(
-        "DCC",
+        new CodeDescriptionDto("DCC", "Cariboo-Chilcotin Natural Resource District"),
         new BigDecimal("2.040").setScale(3),
         new BigDecimal("7.050").setScale(3),
         new BigDecimal("0.080").setScale(3),
@@ -68,7 +68,7 @@ public class DistrictVolumeEntityMappingTest
     assertThat(foundZone.districts()).hasSize(1);
 
     DistrictRow foundRow = foundZone.districts().get(0);
-    assertThat(foundRow.code()).isEqualTo("DCC");
+    assertThat(foundRow.district().code()).isEqualTo("DCC");
     assertThat(foundRow.total())
         .isEqualByComparingTo(new BigDecimal("9.170"));
 
