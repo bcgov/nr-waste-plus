@@ -80,12 +80,10 @@ export const ConfigurationCard: FC<ConfigurationCardProps> = ({
   kind = 'ghost',
   disabled = false,
 }) => {
-  const descriptionContent =
-    description == null ? null : typeof description === 'string' ? (
-      <p>{description}</p>
-    ) : (
-      description
-    );
+  let descriptionContent: ReactNode = null;
+  if (description != null) {
+    descriptionContent = typeof description === 'string' ? <p>{description}</p> : description;
+  }
 
   return (
     <Tile className="configuration-card">
