@@ -14,7 +14,12 @@ export const test = base.extend<{
     // Extract only valid BrowserContextOptions from testInfo.project.use
     // (avoid spreading test-runner-only options like video, trace, headless, device, baseURL)
     const { viewport, ignoreHTTPSErrors, baseURL } = testInfo.project.use;
-    const context = await browser.newContext({ viewport, ignoreHTTPSErrors, baseURL, storageState });
+    const context = await browser.newContext({
+      viewport,
+      ignoreHTTPSErrors,
+      baseURL,
+      storageState,
+    });
     await provide(context);
     await context.close(); // clean up
   },
