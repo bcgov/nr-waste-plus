@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-import { mockJwt } from '@/config/tests/auth.helper';
-import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
+import { mockApiResponses, mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 test.describe('Global Error Page', () => {
   test.beforeEach(async ({ page }, testInfo) => {
@@ -29,7 +28,7 @@ test.describe('Global Error Page', () => {
     );
   });
 
-  test('shows the global error boundary when a protected route crashes during render', async ({
+  test('shows the global error boundary when a route loader throws an unexpected error', async ({
     page,
   }, testInfo) => {
     test.skip(
@@ -37,21 +36,26 @@ test.describe('Global Error Page', () => {
       'This scenario is validated on IDIR to avoid BCeID role-rule redirects.',
     );
 
-    await page.route('**/src/pages/WasteSearch/index.tsx*', async (route) => {
+    // Inject the feature flag at runtime so the RU details route is enabled.
+    // params.js loads with `defer` before the main bundle, so window.config is
+    // set before env.ts evaluates featureFlags on page load.
+    await page.route('**/data/params.js', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/javascript',
-        body: `export default function WasteSearchPage() { throw new Error('E2E forced route render failure'); }`,
+        body: `window.config = { VITE_FEATURE_FLAGS: '{"reporting-unit-details-enabled":true}' };`,
       });
     });
 
-    await mockJwt(page, testInfo.project.metadata, {
-      'cognito:groups': ['WASTE_PLUS_ADMIN'],
-    });
+    // Return a 500 for a specific RU. The loader re-throws any non-404/403 ApiError,
+    // which bubbles up to TanStack Router's defaultErrorComponent (GlobalErrorPage).
+    await mockApiResponses(page, 'reporting-units/99999', 500);
 
-    await page.goto('/search');
+    await page.goto('/reporting-units/99999');
 
     await expect(page.getByText('Global Error')).toBeVisible();
-    await expect(page.getByText('E2E forced route render failure', { exact: true })).toBeVisible();
+    // Target the PageTitle subtitle specifically to avoid strict-mode violations
+    // with the stack trace <pre> and toast notification that also contain this text.
+    await expect(page.locator('.subtitle-section', { hasText: 'Internal Server Error' })).toBeVisible();
   });
 });
