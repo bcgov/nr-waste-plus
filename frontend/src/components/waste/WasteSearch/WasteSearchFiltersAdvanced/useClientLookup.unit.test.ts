@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -8,6 +8,7 @@ import { useClientLookup } from './useClientLookup';
 
 import type { FamLoginUser } from '@/context/auth/types';
 
+import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
 
 const mockUser = {
@@ -34,7 +35,7 @@ vi.mock('@/services/APIs', () => {
 });
 
 const wrapper = ({ children }: { children: React.ReactNode }) => {
-  const qc = new QueryClient();
+  const qc = makeTestQueryClient();
   return React.createElement(QueryClientProvider, { client: qc }, children);
 };
 
