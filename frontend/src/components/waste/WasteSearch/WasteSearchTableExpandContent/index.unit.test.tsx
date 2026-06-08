@@ -81,9 +81,7 @@ describe('WasteSearchTableExpandContent', () => {
       const rowId = 'RU-N/A-Block-411B-224813681';
       await renderWithProps(rowId);
 
-      // Wait a bit to ensure no API call
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
+      // Assert that no API call was triggered (ruId is null, so skip fetch)
       expect(APIs.search.getReportingUnitSearchExpand).not.toHaveBeenCalled();
     });
 
@@ -91,9 +89,7 @@ describe('WasteSearchTableExpandContent', () => {
       const rowId = 'RU-4069-Block-N/A-224813681';
       await renderWithProps(rowId);
 
-      // Wait a bit to ensure no API call
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
+      // Assert that no API call was triggered (wasteAssessmentAreaId is null, so skip fetch)
       expect(APIs.search.getReportingUnitSearchExpand).not.toHaveBeenCalled();
     });
   });

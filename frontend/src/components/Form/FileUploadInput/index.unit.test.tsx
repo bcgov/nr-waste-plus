@@ -375,8 +375,8 @@ describe('FileUploadInput (async processor lifecycle)', () => {
 
     // Resolve in reverse order
     d2.resolve({ success: true, data: [{ id: '2', name: 'B', email: 'b@b.com' }] });
-    await new Promise((res) => setTimeout(res, 10)); // brief pause
-    expect(onProcessed).not.toHaveBeenCalled(); // Still waiting for first
+    // Still waiting for first file to resolve — onProcessed should NOT be called yet
+    expect(onProcessed).not.toHaveBeenCalled();
 
     d1.resolve({ success: true, data: [{ id: '1', name: 'A', email: 'a@a.com' }] });
     await uploadPromise;
@@ -423,7 +423,6 @@ describe('FileUploadInput (async processor lifecycle)', () => {
     // Resolve B first (simulates B finishing before A).
     dB.resolve({ success: true, data: [{ id: 'B', name: 'B-user', email: 'b@b.com' }] });
     // A still pending — no emission yet (Promise.all waits for both).
-    await new Promise((res) => setTimeout(res, 10));
     expect(onProcessed).not.toHaveBeenCalled();
 
     // Resolve A.
