@@ -1,5 +1,5 @@
 import { cleanup } from '@testing-library/react';
-import { afterEach, beforeAll, vi } from 'vitest';
+import { afterEach, afterAll, beforeAll, vi } from 'vitest';
 
 // Mock AWS Amplify Auth globally for all tests
 vi.mock('aws-amplify/auth', () => ({
@@ -39,8 +39,9 @@ beforeAll(() => {
 });
 
 // Suppress flatpickr locale errors in test output
+let originalStderrWrite: typeof process.stderr.write;
 beforeAll(() => {
-  const originalStderrWrite = process.stderr.write.bind(process.stderr);
+  originalStderrWrite = process.stderr.write.bind(process.stderr);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   process.stderr.write = ((...args: any[]): boolean => {
     const chunk = args[0];
@@ -61,6 +62,10 @@ beforeAll(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return originalStderrWrite(...(args as [any, any?, any?]));
   }) as typeof process.stderr.write;
+});
+
+afterAll(() => {
+  process.stderr.write = originalStderrWrite;
 });
 
 class MockResizeObserver {
