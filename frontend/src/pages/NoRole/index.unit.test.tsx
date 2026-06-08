@@ -1,5 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import NoRolePage from './index';
@@ -7,8 +6,7 @@ import NoRolePage from './index';
 import type { FamLoginUser } from '@/context/auth/types';
 
 import { Role } from '@/context/auth/types';
-import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
 
 let mockIsLoggedIn = false;
@@ -42,20 +40,7 @@ vi.mock('@tanstack/react-router', async () => {
   };
 });
 
-const renderWithProps = async () => {
-  const qc = new QueryClient();
-  await act(async () =>
-    render(
-      <QueryClientProvider client={qc}>
-        <PreferenceProvider>
-          <PageTitleProvider>
-            <NoRolePage />
-          </PageTitleProvider>
-        </PreferenceProvider>
-      </QueryClientProvider>,
-    ),
-  );
-};
+const renderWithProps = () => renderWithAppAsync(<NoRolePage />);
 
 describe('NoRolePage', () => {
   beforeEach(() => {

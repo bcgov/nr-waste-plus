@@ -1,15 +1,9 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RouterProvider } from '@tanstack/react-router';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import WasteSearchPage from './index';
 
-import { createTestRouter } from '@/config/tests/routerTestHelper';
-import { AuthProvider } from '@/context/auth/AuthProvider';
-import NotificationProvider from '@/context/notification/NotificationProvider';
-import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 import APIs from '@/services/APIs';
 
@@ -32,28 +26,7 @@ vi.mock('@/services/APIs', () => {
   };
 });
 
-const renderWithProps = async () => {
-  const qc = new QueryClient();
-  await act(async () =>
-    render(
-      <QueryClientProvider client={qc}>
-        <PreferenceProvider>
-          <RouterProvider
-            router={createTestRouter(() => (
-              <AuthProvider>
-                <NotificationProvider>
-                  <PageTitleProvider>
-                    <WasteSearchPage />
-                  </PageTitleProvider>
-                </NotificationProvider>
-              </AuthProvider>
-            ))}
-          />
-        </PreferenceProvider>
-      </QueryClientProvider>,
-    ),
-  );
-};
+const renderWithProps = () => renderWithAppAsync(<WasteSearchPage />);
 
 describe('WasteSearchPage', () => {
   beforeEach(() => {

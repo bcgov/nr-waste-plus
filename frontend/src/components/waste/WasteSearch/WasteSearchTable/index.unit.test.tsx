@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
@@ -9,8 +8,7 @@ import WasteSearchTable from './index';
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { ReportingUnitSearchResultDto } from '@/services/search.types';
 
-import { AuthProvider } from '@/context/auth/AuthProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as useNotificationEvents from '@/hooks/useNotificationEvents';
 import * as eventHandler from '@/hooks/useNotificationEvents/eventHandler';
 import APIs from '@/services/APIs';
@@ -272,31 +270,7 @@ const setInputValue = (input: HTMLElement, value: string) => {
   fireEvent.change(input, { target: { value } });
 };
 
-const renderWithProps = async () => {
-  const qc = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-        staleTime: 0,
-      },
-      mutations: {
-        retry: false,
-      },
-    },
-  });
-  await act(async () =>
-    render(
-      <QueryClientProvider client={qc}>
-        <PreferenceProvider>
-          <AuthProvider>
-            <WasteSearchTable />
-          </AuthProvider>
-        </PreferenceProvider>
-      </QueryClientProvider>,
-    ),
-  );
-};
+const renderWithProps = () => renderWithAppAsync(<WasteSearchTable />);
 
 describe('WasteSearchTable', () => {
   let sendEventMock: Mock;

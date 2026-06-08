@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RouterProvider } from '@tanstack/react-router';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -11,8 +9,7 @@ import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { MyForestClientDto } from '@/services/types';
 
 import { renderCell } from '@/components/Form/TableResource/types';
-import { createTestRouter } from '@/config/tests/routerTestHelper';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as eventHandler from '@/hooks/useNotificationEvents/eventHandler';
 import APIs from '@/services/APIs';
 
@@ -124,27 +121,7 @@ const mockLargeDataset: PageableResponse<MyForestClientDto> = {
   page: { number: 0, size: 10, totalElements: 25, totalPages: 3 },
 };
 
-const renderWithProps = async () => {
-  const qc = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false, gcTime: 0, staleTime: 0 },
-      mutations: { retry: false },
-    },
-  });
-  await act(async () => {
-    render(
-      <RouterProvider
-        router={createTestRouter(() => (
-          <QueryClientProvider client={qc}>
-            <PreferenceProvider>
-              <MyClientListing />
-            </PreferenceProvider>
-          </QueryClientProvider>
-        ))}
-      />,
-    );
-  });
-};
+const renderWithProps = () => renderWithAppAsync(<MyClientListing />);
 
 describe('MyClientListing', () => {
   const mockSearchClients = vi.mocked(APIs.forestclient.searchMyForestClients);
