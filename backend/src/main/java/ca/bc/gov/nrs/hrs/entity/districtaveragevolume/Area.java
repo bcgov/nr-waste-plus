@@ -20,6 +20,7 @@ public enum Area {
   /**
    * The string identifier used for database persistence or API serialization.
    * -- GETTER --
+   * 
    * @return the string key representing the geographic area.
    */
   private final String key;
