@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { act, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import AutoCompleteInput from './index';
+
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 
 const items = [
   { name: 'Alpha', id: 1 },
@@ -13,20 +14,15 @@ const items = [
 ];
 
 const renderWithProps = async (props: any) => {
-  const qc = new QueryClient();
-  await act(async () =>
-    render(
-      <QueryClientProvider client={qc}>
-        <AutoCompleteInput
-          id="test-autocomplete"
-          extractItems={props.extractItems || ((raw: any) => raw)}
-          onAutoCompleteChange={props.onAutoCompleteChange || vi.fn()}
-          onSelect={props.onSelect || vi.fn()}
-          placeholder="Type to search..."
-          {...props}
-        />
-      </QueryClientProvider>,
-    ),
+  await renderWithAppAsync(
+    <AutoCompleteInput
+      id="test-autocomplete"
+      extractItems={props.extractItems || ((raw: any) => raw)}
+      onAutoCompleteChange={props.onAutoCompleteChange || vi.fn()}
+      onSelect={props.onSelect || vi.fn()}
+      placeholder="Type to search..."
+      {...props}
+    />
   );
 };
 

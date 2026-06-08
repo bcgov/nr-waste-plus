@@ -1,6 +1,6 @@
-import { RouterProvider } from '@tanstack/react-router';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
+import { RouterProvider } from '@tanstack/react-router';
 
 import RedirectLinkTag from './index';
 
@@ -20,9 +20,12 @@ describe('RedirectLinkTag', () => {
   it('shouldRenderRouterLinkForInternalUrl_whenSameTabIsTrue', async () => {
     render(
       <RouterProvider
-        router={createTestRouter(() => (
-          <RedirectLinkTag text="Stay" url="/local" sameTab />
-        ))}
+        router={createTestRouter(
+          () => (
+            <RedirectLinkTag text="Stay" url="/local" sameTab />
+          ),
+          '/',
+        )}
       />,
     );
     await waitFor(() => {

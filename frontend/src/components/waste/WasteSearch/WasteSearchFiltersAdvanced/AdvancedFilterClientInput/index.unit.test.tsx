@@ -1,14 +1,15 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 import AdvancedFilterClientInput from './index';
 
 import type { FamLoginUser } from '@/context/auth/types';
 
-import { AuthProvider } from '@/context/auth/AuthProvider';
+import { renderWithAppAsync, makeTestQueryClient } from '@/config/tests/renderWithApp';
 import { useAuth } from '@/context/auth/useAuth';
+import { AuthProvider } from '@/context/auth/AuthProvider';
 import APIs from '@/services/APIs';
 
 const mockUser = {
@@ -28,7 +29,7 @@ vi.mock('@/services/APIs', () => ({
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => {
-  const qc = new QueryClient();
+  const qc = makeTestQueryClient();
   return (
     <QueryClientProvider client={qc}>
       <AuthProvider>{children}</AuthProvider>
