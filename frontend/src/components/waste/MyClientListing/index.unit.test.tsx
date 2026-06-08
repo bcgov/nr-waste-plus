@@ -296,7 +296,7 @@ describe('MyClientListing', () => {
 
       // Verify that pagination controls exist
       const pageSizeSelect = screen.getByLabelText('Items per page:');
-      expect(pageSizeSelect).toBeDefined();
+      // pageSizeSelect is defined; getBy* throws if not found
 
       // Verify component can handle page size changes by checking initial state
       expect(initialCallCount).toBeGreaterThan(0);
@@ -442,7 +442,7 @@ describe('MyClientListing', () => {
 
       await waitFor(() => {
         const link = screen.getByRole('link', { name: '00001001' });
-        expect(link).toBeDefined();
+        // link is defined; getBy* throws if not found
         expect(link.getAttribute('href')).toBe('/search?clientNumbers=00001001');
       });
     });

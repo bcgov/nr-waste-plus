@@ -66,7 +66,7 @@ describe('WasteSearchFiltersActive', () => {
 
     screen.getByTestId('dt-district-A');
     const removeButton = screen.getByRole('button', { name: 'Dismiss' });
-    expect(removeButton).toBeDefined();
+    // removeButton is defined; getBy* throws if not found
     await userEvent.click(removeButton);
     expect(onRemoveFilter).toHaveBeenCalled();
   });
