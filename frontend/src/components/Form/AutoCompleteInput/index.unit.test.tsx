@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { act, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import AutoCompleteInput from './index';
@@ -28,30 +29,34 @@ const renderWithProps = async (props: any) => {
 
 describe('AutoCompleteInput', () => {
   it('renders and fetches suggestions on input', async () => {
+    const user = await userEvent.setup();
     const onAutoCompleteChange = vi.fn(async (val) =>
       items.filter((i) => i.name.toLowerCase().includes(val.toLowerCase())),
     );
     const extractItems = (raw: any) => raw;
     await renderWithProps({ onAutoCompleteChange, extractItems });
     const input = screen.getByRole('combobox');
-    fireEvent.change(input, { target: { value: 'Al' } });
+    await user.type(input, 'Al');
     await waitFor(() => expect(onAutoCompleteChange).toHaveBeenCalledWith('Al'));
   });
 
   it('calls onSelect when an item is selected', async () => {
+    const user = await userEvent.setup();
     const onAutoCompleteChange = vi.fn(async () => items);
     const extractItems = (raw: any) => raw;
     const onSelect = vi.fn();
     await renderWithProps({ onAutoCompleteChange, extractItems, onSelect });
     const input = screen.getByRole('combobox');
-    fireEvent.change(input, { target: { value: 'Al' } });
+    await user.type(input, 'Al');
     await waitFor(() => expect(onAutoCompleteChange).toHaveBeenCalled());
     // Simulate selection
-    fireEvent.change(input, { target: { value: 'Alpha' } });
-    fireEvent.blur(input);
+    await user.clear(input);
+    await user.type(input, 'Alpha');
+    await user.tab();
   });
 
   it('uses custom itemToString if provided', async () => {
+    const user = await userEvent.setup();
     const onAutoCompleteChange = vi.fn(async () => items);
     const extractItems = (raw: any) => raw;
     await renderWithProps({
@@ -60,20 +65,22 @@ describe('AutoCompleteInput', () => {
       itemToString: (item: { name: any }) => (item ? `Custom: ${item.name}` : ''),
     });
     const input = screen.getByRole('combobox');
-    fireEvent.change(input, { target: { value: 'Al' } });
+    await user.type(input, 'Al');
     await waitFor(() => expect(onAutoCompleteChange).toHaveBeenCalled());
   });
 
   it('shows no suggestions when none match', async () => {
+    const user = await userEvent.setup();
     const onAutoCompleteChange = vi.fn(async () => []);
     const extractItems = (raw: any) => raw;
     await renderWithProps({ onAutoCompleteChange, extractItems });
     const input = screen.getByRole('combobox');
-    fireEvent.change(input, { target: { value: 'Zzz' } });
+    await user.type(input, 'Zzz');
     await waitFor(() => expect(onAutoCompleteChange).toHaveBeenCalledWith('Zzz'));
   });
 
   it('handles loading state', async () => {
+    const user = await userEvent.setup();
     let resolve: (v: any) => void = () => {};
     const onAutoCompleteChange = vi
       .fn()
@@ -81,43 +88,46 @@ describe('AutoCompleteInput', () => {
     const extractItems = (raw: any) => raw;
     await renderWithProps({ onAutoCompleteChange, extractItems });
     const input = screen.getByRole('combobox');
-    fireEvent.change(input, { target: { value: 'Al' } });
+    await user.type(input, 'Al');
     // Optionally check for loading indicator if present
     resolve && resolve(items);
   });
 
   it('handles blur and focus events', async () => {
+    const user = await userEvent.setup();
     const onAutoCompleteChange = vi.fn(async () => items);
     const extractItems = (raw: any) => raw;
     await renderWithProps({ onAutoCompleteChange, extractItems });
     const input = screen.getByRole('combobox');
-    fireEvent.focus(input);
-    fireEvent.blur(input);
+    await user.click(input);
+    await user.tab();
   });
 
   it('calls onSelect with correct item when suggestion is clicked', async () => {
+    const user = await userEvent.setup();
     const onAutoCompleteChange = vi.fn(async () => items);
     const extractItems = (raw: any) => raw;
     const onSelect = vi.fn();
     await renderWithProps({ onAutoCompleteChange, extractItems, onSelect });
     const input = screen.getByRole('combobox');
-    fireEvent.change(input, { target: { value: 'Alpha' } });
+    await user.type(input, 'Alpha');
     await waitFor(() => expect(onAutoCompleteChange).toHaveBeenCalled());
     // Simulate clicking a suggestion if suggestions are rendered as buttons or list items
-    // Example: fireEvent.click(screen.getByText('Alpha'));
+    // Example: await user.click(screen.getByText('Alpha'));
   });
 
   it('handles keyboard navigation (arrow down/up, enter, escape)', async () => {
+    const user = await userEvent.setup();
     const onAutoCompleteChange = vi.fn(async () => items);
     const extractItems = (raw: any) => raw;
     await renderWithProps({ onAutoCompleteChange, extractItems });
     const input = screen.getByRole('combobox');
-    fireEvent.change(input, { target: { value: 'Alpha' } });
+    await user.type(input, 'Alpha');
     await waitFor(() => expect(onAutoCompleteChange).toHaveBeenCalled());
-    fireEvent.keyDown(input, { key: 'ArrowDown' });
-    fireEvent.keyDown(input, { key: 'ArrowUp' });
-    fireEvent.keyDown(input, { key: 'Enter' });
-    fireEvent.keyDown(input, { key: 'Escape' });
+    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowUp}');
+    await user.keyboard('{Enter}');
+    await user.keyboard('{Escape}');
   });
 
   describe('when item is preselected', () => {
@@ -133,27 +143,23 @@ describe('AutoCompleteInput', () => {
       await renderWithProps({ onAutoCompleteChange, initialSelectedItem, onSelect });
     });
 
-    it('calls onSelect with null when the text input gets cleared', () => {
+    it('calls onSelect with null when the text input gets cleared', async () => {
+      const user = await userEvent.setup();
       const input = screen.getByRole('combobox');
 
       // input text gets completely cleared
-      fireEvent.change(input, { target: { value: '' } });
-
-      act(() => {
-        input.blur();
-      });
+      await user.clear(input);
+      await user.tab();
       expect(onSelect).toHaveBeenCalledWith(null);
     });
 
-    it("restores the input text when it's been only partially changed", () => {
+    it("restores the input text when it's been only partially changed", async () => {
+      const user = await userEvent.setup();
       const input = screen.getByRole<HTMLInputElement>('combobox');
 
       // input text gets changed but not cleared
-      fireEvent.change(input, { target: { value: 'B' } });
-
-      act(() => {
-        input.blur();
-      });
+      await user.type(input, 'B');
+      await user.tab();
 
       // restores the input text
       expect(input.value).toBe('Beta');

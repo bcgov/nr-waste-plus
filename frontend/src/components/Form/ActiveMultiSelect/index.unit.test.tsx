@@ -1,4 +1,5 @@
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 
@@ -24,9 +25,13 @@ const valueItemToString = (item: ValueItem | null) => (item ? `${item.value} - $
 
 const getPlaceholderInput = () => screen.getByRole('combobox');
 
-const openDropdown = async () => {
+const openDropdown = async (user?: ReturnType<typeof userEvent.setup>) => {
   const button = (await screen.findAllByTitle('Open'))[0] as HTMLButtonElement;
-  await act(async () => button.click());
+  if (user) {
+    await user.click(button);
+  } else {
+    button.click();
+  }
 };
 
 /**
@@ -84,6 +89,7 @@ describe('ActiveMultiSelect', () => {
   });
 
   it('calls onChange when an item is selected', async () => {
+    const user = await userEvent.setup();
     const onChange = vi.fn();
     render(
       <ActiveMultiSelect
@@ -95,8 +101,8 @@ describe('ActiveMultiSelect', () => {
         selectedItems={[]}
       />,
     );
-    await openDropdown();
-    await act(async () => fireEvent.click(screen.getByText('A - Alpha')));
+    await openDropdown(user);
+    await user.click(screen.getByText('A - Alpha'));
     expect(onChange).toHaveBeenCalled();
   });
 
@@ -116,24 +122,26 @@ describe('ActiveMultiSelect', () => {
   });
 
   it('updates placeholder to show selected code values', async () => {
+    const user = await userEvent.setup();
     render(<ControlledMultiSelect placeholder="Select..." />);
-    await openDropdown();
-    await act(async () => fireEvent.click(screen.getByText('A - Alpha')));
+    await openDropdown(user);
+    await user.click(screen.getByText('A - Alpha'));
 
     expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
   });
 
   it('updates placeholder with multiple selected codes joined by comma', async () => {
+    const user = await userEvent.setup();
     render(<ControlledMultiSelect placeholder="Select..." />);
-    await openDropdown();
+    await openDropdown(user);
 
-    await act(async () => fireEvent.click(screen.getByText('A - Alpha')));
+    await user.click(screen.getByText('A - Alpha'));
     // Wait for placeholder to update to 'A' before selecting next item
     await waitFor(() => {
       expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
     });
 
-    await act(async () => fireEvent.click(screen.getByText('B - Beta')));
+    await user.click(screen.getByText('B - Beta'));
 
     await waitFor(() => {
       expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A, B');
@@ -141,17 +149,18 @@ describe('ActiveMultiSelect', () => {
   });
 
   it('restores original placeholder when all items are deselected', async () => {
+    const user = await userEvent.setup();
     render(<ControlledMultiSelect placeholder="My Placeholder" />);
-    await openDropdown();
+    await openDropdown(user);
 
     // Select
-    await act(async () => fireEvent.click(screen.getByText('A - Alpha')));
+    await user.click(screen.getByText('A - Alpha'));
     await waitFor(() => {
       expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
     });
 
     // Deselect by clicking the same item again
-    await act(async () => fireEvent.click(screen.getByText('A - Alpha')));
+    await user.click(screen.getByText('A - Alpha'));
 
     await waitFor(() => {
       expect(getPlaceholderInput()).toHaveProperty('placeholder', 'My Placeholder');
@@ -159,18 +168,19 @@ describe('ActiveMultiSelect', () => {
   });
 
   it('restores placeholder when selection is cleared via clear button', async () => {
+    const user = await userEvent.setup();
     render(<ControlledMultiSelect placeholder="Original" />);
-    await openDropdown();
+    await openDropdown(user);
 
     // Select an item
-    await act(async () => fireEvent.click(screen.getByText('A - Alpha')));
+    await user.click(screen.getByText('A - Alpha'));
     await waitFor(() => {
       expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
     });
 
     // Click the clear selection button rendered by Carbon
     const clearButton = await screen.findByTitle('Clear all selected items');
-    await act(async () => fireEvent.click(clearButton));
+    await user.click(clearButton);
 
     await waitFor(() => {
       expect(getPlaceholderInput()).toHaveProperty('placeholder', 'Original');
@@ -178,6 +188,7 @@ describe('ActiveMultiSelect', () => {
   });
 
   it('uses value property when code is not present', async () => {
+    const user = await userEvent.setup();
     const ControlledValueMultiSelect = () => {
       const [selected, setSelected] = useState<ValueItem[]>([]);
       return (
@@ -193,8 +204,8 @@ describe('ActiveMultiSelect', () => {
     };
 
     render(<ControlledValueMultiSelect />);
-    await openDropdown();
-    await act(async () => fireEvent.click(screen.getByText('X - X-ray')));
+    await openDropdown(user);
+    await user.click(screen.getByText('X - X-ray'));
 
     await waitFor(() => {
       expect(getPlaceholderInput()).toHaveProperty('placeholder', 'X');
@@ -219,7 +230,8 @@ describe('ActiveMultiSelect', () => {
   });
 
   describe('onBlur behavior', () => {
-    it('calls onBlur when the input element loses focus via fireEvent', async () => {
+    it('calls onBlur when the input element loses focus via userEvent', async () => {
+      const user = await userEvent.setup();
       const onBlur = vi.fn<(event: FocusEvent) => void>();
       render(
         <ActiveMultiSelect
@@ -234,13 +246,8 @@ describe('ActiveMultiSelect', () => {
       );
 
       const input = getPlaceholderInput();
-      await act(async () => {
-        input.focus();
-      });
-
-      await act(async () => {
-        fireEvent.blur(input);
-      });
+      await user.click(input);
+      await user.tab();
 
       await waitFor(() => {
         expect(onBlur).toHaveBeenCalled();
@@ -248,6 +255,7 @@ describe('ActiveMultiSelect', () => {
     });
 
     it('calls onBlur with FocusEvent when blur occurs', async () => {
+      const user = await userEvent.setup();
       const onBlur = vi.fn<(event: FocusEvent) => void>();
       render(
         <ActiveMultiSelect
@@ -262,10 +270,8 @@ describe('ActiveMultiSelect', () => {
       );
 
       const input = getPlaceholderInput();
-      await act(async () => {
-        input.focus();
-        fireEvent.blur(input);
-      });
+      await user.click(input);
+      await user.tab();
 
       await waitFor(() => {
         expect(onBlur).toHaveBeenCalledTimes(1);
@@ -277,6 +283,7 @@ describe('ActiveMultiSelect', () => {
     });
 
     it('renders without errors when onBlur prop is not provided', async () => {
+      const user = await userEvent.setup();
       const { container } = render(
         <ActiveMultiSelect
           placeholder="Select..."
@@ -291,15 +298,15 @@ describe('ActiveMultiSelect', () => {
       const input = getPlaceholderInput();
       expect(input).toBeDefined();
 
-      await act(async () => {
-        fireEvent.blur(input);
-      });
+      await user.click(input);
+      await user.tab();
 
       // Test should pass without errors; no onBlur callback to check
       screen.getByRole('combobox');
     });
 
     it('onBlur is passed through to the underlying FilterableMultiSelect component', async () => {
+      const user = await userEvent.setup();
       const onBlur = vi.fn<(event: FocusEvent) => void>();
       render(
         <ActiveMultiSelect
@@ -317,15 +324,10 @@ describe('ActiveMultiSelect', () => {
       expect(input).toBeDefined();
 
       // Verify the input is properly rendered
-      await act(async () => {
-        input.focus();
-      });
-
+      await user.click(input);
       expect(input).toBe(document.activeElement);
 
-      await act(async () => {
-        fireEvent.blur(input);
-      });
+      await user.tab();
 
       // onBlur should be called after blur event
       await waitFor(() => {
@@ -365,22 +367,23 @@ describe('ActiveMultiSelect', () => {
     };
 
     it('restores placeholder when parent sets selectedItems to empty array', async () => {
+      const user = await userEvent.setup();
       render(
         <ExternalControlMultiSelect
           placeholder="Pick something"
           onClear={(setSelected) => setSelected([])}
         />,
       );
-      await openDropdown();
+      await openDropdown(user);
 
       // Select an item
-      await act(async () => fireEvent.click(screen.getByText('A - Alpha')));
+      await user.click(screen.getByText('A - Alpha'));
       await waitFor(() => {
         expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
       });
 
       // Externally set selectedItems to []
-      await act(async () => fireEvent.click(screen.getByTestId('external-clear')));
+      await user.click(screen.getByTestId('external-clear'));
 
       await waitFor(() => {
         expect(getPlaceholderInput()).toHaveProperty('placeholder', 'Pick something');
@@ -388,6 +391,7 @@ describe('ActiveMultiSelect', () => {
     });
 
     it('restores placeholder when parent splices the selectedItems array (delete)', async () => {
+      const user = await userEvent.setup();
       render(
         <ExternalControlMultiSelect
           placeholder="Pick something"
@@ -401,15 +405,15 @@ describe('ActiveMultiSelect', () => {
           }
         />,
       );
-      await openDropdown();
+      await openDropdown(user);
 
-      await act(async () => fireEvent.click(screen.getByText('B - Beta')));
+      await user.click(screen.getByText('B - Beta'));
       await waitFor(() => {
         expect(getPlaceholderInput()).toHaveProperty('placeholder', 'B');
       });
 
       // Externally splice/delete all entries
-      await act(async () => fireEvent.click(screen.getByTestId('external-clear')));
+      await user.click(screen.getByTestId('external-clear'));
 
       await waitFor(() => {
         expect(getPlaceholderInput()).toHaveProperty('placeholder', 'Pick something');
@@ -417,21 +421,22 @@ describe('ActiveMultiSelect', () => {
     });
 
     it('restores placeholder when parent sets selectedItems to undefined', async () => {
+      const user = await userEvent.setup();
       render(
         <ExternalControlMultiSelect
           placeholder="Pick something"
           onClear={(setSelected) => setSelected(undefined as unknown as CodeItem[])}
         />,
       );
-      await openDropdown();
+      await openDropdown(user);
 
-      await act(async () => fireEvent.click(screen.getByText('C - Gamma')));
+      await user.click(screen.getByText('C - Gamma'));
       await waitFor(() => {
         expect(getPlaceholderInput()).toHaveProperty('placeholder', 'C');
       });
 
       // Externally set selectedItems to undefined
-      await act(async () => fireEvent.click(screen.getByTestId('external-clear')));
+      await user.click(screen.getByTestId('external-clear'));
 
       await waitFor(() => {
         expect(getPlaceholderInput()).toHaveProperty('placeholder', 'Pick something');
@@ -439,21 +444,22 @@ describe('ActiveMultiSelect', () => {
     });
 
     it('restores placeholder when parent sets selectedItems to null', async () => {
+      const user = await userEvent.setup();
       render(
         <ExternalControlMultiSelect
           placeholder="Pick something"
           onClear={(setSelected) => setSelected(null as unknown as CodeItem[])}
         />,
       );
-      await openDropdown();
+      await openDropdown(user);
 
-      await act(async () => fireEvent.click(screen.getByText('A - Alpha')));
+      await user.click(screen.getByText('A - Alpha'));
       await waitFor(() => {
         expect(getPlaceholderInput()).toHaveProperty('placeholder', 'A');
       });
 
       // Externally set selectedItems to null
-      await act(async () => fireEvent.click(screen.getByTestId('external-clear')));
+      await user.click(screen.getByTestId('external-clear'));
 
       await waitFor(() => {
         expect(getPlaceholderInput()).toHaveProperty('placeholder', 'Pick something');
