@@ -100,6 +100,24 @@ const chromiumBrowserProjects = [
 
 const projects = [...setupProjects, ...chromiumBrowserProjects];
 
+if (process.env.RUN_A11Y_TESTS === 'true') {
+  projects.push({
+    name: 'a11y-chromium',
+    use: {
+      ...commonSettings,
+      device: devices['Desktop Chrome'],
+      storageState: 'src/config/tests/user.bceid.json',
+    },
+    testMatch: '**/*.a11y.test.{ts,tsx}',
+    metadata: {
+      userType: 'bceid',
+      category: 'desktop',
+      browserName: 'chromium',
+      stateFile: 'user.bceid.json',
+    },
+  });
+}
+
 export default defineConfig({
   timeout: THIRTY_SECONDS,
   retries: process.env.CI ? 2 : 0,
