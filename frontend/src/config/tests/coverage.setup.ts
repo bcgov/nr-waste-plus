@@ -50,7 +50,8 @@ export const test = base.extend<{
       converter.applyCoverage(entry.functions);
 
       const istanbulCoverage = converter.toIstanbul();
-      const fileName = `coverage-${path.basename(absPath).replace(/\W+/g, '_')}-${Date.now()}.json`;
+      const safeTestId = testInfo.testId.replace(/\W+/g, '_');
+      const fileName = `coverage-${path.basename(absPath).replace(/\W+/g, '_')}-${safeTestId}.json`;
       const outPath = path.join(COVERAGE_DIR, fileName);
       fs.writeFileSync(outPath, JSON.stringify(istanbulCoverage, null, 2));
     }

@@ -338,6 +338,8 @@ if (process.env.RUN_A11Y_TESTS === 'true') {
 export default defineConfig({
   timeout: THIRTY_SECONDS,
   retries: process.env.CI ? 2 : 0,
+  fullyParallel: true,
+  workers: process.env.CI ? 2 : undefined,
   testDir: './src',
   globalTeardown: './src/config/tests/browser.teardown.ts',
   projects,
