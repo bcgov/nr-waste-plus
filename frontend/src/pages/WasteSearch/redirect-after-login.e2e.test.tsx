@@ -26,7 +26,6 @@ test.describe('Waste Search - Redirect After Login', () => {
       page,
     }) => {
       await page.goto('/search?district=DFN');
-      await page.waitForLoadState('networkidle');
 
       // User must be shown the landing / login page, not the search page.
       await expect(page.getByTestId('landing-title')).toBeVisible();
@@ -38,7 +37,6 @@ test.describe('Waste Search - Redirect After Login', () => {
 
     test('preserves the full querystring including multiple params', async ({ page }) => {
       await page.goto('/search?mainSearchTerm=TIMBER&district=DFN');
-      await page.waitForLoadState('networkidle');
 
       await expect(page.getByTestId('landing-title')).toBeVisible();
 
@@ -48,7 +46,6 @@ test.describe('Waste Search - Redirect After Login', () => {
 
     test('does NOT save the root path to sessionStorage', async ({ page }) => {
       await page.goto('/');
-      await page.waitForLoadState('networkidle');
 
       await expect(page.getByTestId('landing-title')).toBeVisible();
 
@@ -80,7 +77,6 @@ test.describe('Waste Search - Redirect After Login', () => {
 
       // Land on root (the typical OAuth callback destination).
       await page.goto('/');
-      await page.waitForLoadState('networkidle');
 
       // The app should have redirected to the saved deep-link URL.
       await expect(page).toHaveURL(/district=DFN/);
@@ -98,7 +94,6 @@ test.describe('Waste Search - Redirect After Login', () => {
       }, targetUrl);
 
       await page.goto('/');
-      await page.waitForLoadState('networkidle');
 
       await expect(page).toHaveURL(/mainSearchTerm=TIMBER/);
       await expect(page).toHaveURL(/district=DFN/);

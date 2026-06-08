@@ -8,7 +8,6 @@ test.describe('Create Reporting Unit - Rendering', () => {
   test.beforeEach(async ({ page }, testInfo) => {
     await setupCreateRuMocks(page, testInfo.project.metadata.userType);
     await page.goto('/reporting-units/create');
-    await page.waitForLoadState('networkidle');
   });
 
   test.describe('page structure', () => {

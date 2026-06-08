@@ -29,7 +29,6 @@ test.describe('Waste Search Bookmarks', () => {
     );
 
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
   });
 
   test('should bookmark a reporting unit and then filter by bookmarked only', async ({ page }) => {
@@ -46,7 +45,6 @@ test.describe('Waste Search Bookmarks', () => {
 
     const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
-    await page.waitForLoadState('networkidle');
 
     // Verify both rows are shown and none are bookmarked
     await expect(page.getByText('CANADIAN SAMPLE CO.')).toBeVisible();
@@ -105,7 +103,6 @@ test.describe('Waste Search Bookmarks', () => {
 
     // Execute search with the bookmarked filter
     await searchButton.click();
-    await page.waitForLoadState('networkidle');
 
     // Only the bookmarked row should appear
     await expect(page.getByText('CANADIAN SAMPLE CO.')).toBeVisible();
@@ -129,7 +126,6 @@ test.describe('Waste Search Bookmarks', () => {
 
     const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
-    await page.waitForLoadState('networkidle');
 
     // First row should show "Remove from bookmarked"
     const removeButton = page.getByRole('button', { name: 'Remove from bookmarked' });
@@ -175,7 +171,6 @@ test.describe('Waste Search Bookmarks', () => {
 
     const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
-    await page.waitForLoadState('networkidle');
 
     // Mock the PUT endpoint to return 500
     await mockApiResponses(page, 'users/bookmarks/123', 500, 'application/problem+json', {

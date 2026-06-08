@@ -15,7 +15,6 @@ test.describe('Waste Search - Advanced Search', () => {
       includeSearchRoutes: true,
     });
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
 
     // Open the advanced search
     advancedSearchButton = page.getByTestId('advanced-search-button-most');

@@ -10,7 +10,6 @@ test.describe('Waste Search - Search Results', () => {
       includeSearchRoutes: true,
     });
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
   });
 
   test('should display search results in table', async ({ page }) => {
@@ -20,8 +19,6 @@ test.describe('Waste Search - Search Results', () => {
 
     const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
-
-    await page.waitForLoadState('networkidle');
 
     // Verify mocked data appears
     await expect(page.getByText('90000001')).toBeVisible();
@@ -35,8 +32,6 @@ test.describe('Waste Search - Search Results', () => {
 
     const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
-
-    await page.waitForLoadState('networkidle');
 
     // Verify mocked data appears
 
@@ -58,7 +53,6 @@ test.describe('Waste Search - Search Results', () => {
     await expect(nextPageButton).toBeVisible();
     await nextPageButton.click();
 
-    await page.waitForLoadState('networkidle');
     if (testInfo.project.metadata.userType === 'bceid') {
       await expect(page.getByRole('cell', { name: '92345678' }).first()).toBeVisible();
     } else {
@@ -75,8 +69,6 @@ test.describe('Waste Search - Search Results', () => {
     const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
-    await page.waitForLoadState('networkidle');
-
     await expect(page.getByText('No results')).toBeVisible();
   });
 
@@ -87,8 +79,6 @@ test.describe('Waste Search - Search Results', () => {
 
     const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
-
-    await page.waitForLoadState('networkidle');
 
     // Verify mocked data appears
     await expect(page.getByRole('columnheader', { name: 'Multi-mark (Y/N)' })).toBeVisible();
@@ -108,8 +98,6 @@ test.describe('Waste Search - Search Results', () => {
 
     const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
-
-    await page.waitForLoadState('networkidle');
 
     await page.getByRole('button', { name: 'Edit columns' }).click();
 

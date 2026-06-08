@@ -29,7 +29,6 @@ test.describe('My Client List Page', () => {
     );
 
     await page.goto('/clients');
-    await page.waitForLoadState('networkidle');
   });
 
   test('should display the My Client List page', async ({ page }) => {
@@ -98,7 +97,6 @@ test.describe('My Client List Page', () => {
     const searchButton = page.getByTestId('search-button-other');
     await searchButton.click();
 
-    await page.waitForLoadState('networkidle');
 
     await expect(page.getByRole('cell', { name: '90000003' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'OAK HERITAGE LTD.' }).first()).toBeVisible();
@@ -118,7 +116,6 @@ test.describe('My Client List Page', () => {
     await searchBox.fill('OAK');
     await searchBox.press('Enter');
 
-    await page.waitForLoadState('networkidle');
 
     await expect(page.getByRole('cell', { name: '90000003' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'OAK HERITAGE LTD.' }).first()).toBeVisible();
