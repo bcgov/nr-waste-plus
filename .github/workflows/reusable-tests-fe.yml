@@ -116,6 +116,24 @@ jobs:
             npm run test:e2e:${{ matrix.target }}
           dir: frontend
 
+      - name: Debug artifact upload
+        run: |
+          echo "PWD=$(pwd)"
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+
+          ls -la
+          ls -la frontend
+          ls -la frontend/.nyc_output
+
+          find frontend/.nyc_output -type f
+
+      - name: Upload e2e coverage artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-e2e-${{ matrix.target }}
+          path: ${{ github.workspace }}/frontend/.nyc_output/
+          if-no-files-found: error
+
       - name: Annotate PR with e2e results
         uses: dorny/test-reporter@v3
         with:
@@ -124,13 +142,6 @@ jobs:
           reporter: java-junit
           only-summary: false
           fail-on-error: true
-
-      - name: Upload e2e coverage artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage-e2e-${{ matrix.target }}
-          path: ${{ github.workspace }}/frontend/.nyc_output/
-          if-no-files-found: error
 
       - name: Upload e2e test results (videos + traces)
         uses: actions/upload-artifact@v7
