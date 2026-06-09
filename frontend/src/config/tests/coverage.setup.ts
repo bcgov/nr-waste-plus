@@ -45,22 +45,23 @@ export const test = base.extend<{
 
     for (const entry of jsCoverage) {
       const baseURL = testInfo.project.use.baseURL ?? '';
+      const cleanUrl = entry.url.split('?')[0];
       // Dev server: /src/ URLs (untransformed); Production build: /assets/ chunks (inline sourcemap)
-      const isDevSource = entry.url.startsWith(`${baseURL}/src`);
-      const isProdChunk = entry.url.includes('/assets/') && entry.url.endsWith('.js');
+      const isDevSource = cleanUrl.startsWith(`${baseURL}/src`);
+      const isProdChunk = cleanUrl.includes('/assets/') && cleanUrl.endsWith('.js');
       if (!isDevSource && !isProdChunk) continue;
 
       let scriptPath: string;
       let sourceCode: string;
 
       if (isDevSource) {
-        scriptPath = entry.url.replace(baseURL, process.cwd());
+        scriptPath = cleanUrl.replace(baseURL, process.cwd());
         if (!fs.existsSync(scriptPath)) continue;
         sourceCode = fs.readFileSync(scriptPath, 'utf-8');
       } else {
         // Production chunk: entry.source contains bundle text with embedded inline sourcemap
         if (!entry.source) continue;
-        scriptPath = entry.url;
+        scriptPath = cleanUrl;
         sourceCode = entry.source;
       }
 
