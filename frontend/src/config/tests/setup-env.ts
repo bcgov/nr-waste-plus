@@ -39,11 +39,13 @@ vi.mock('@/services/APIs', () => ({
 }));
 
 // Mock global fetch to prevent real HTTP requests in jsdom tests
-beforeAll(() => {
-  globalThis.fetch = vi.fn(() =>
+// Uses vi.stubGlobal for automatic cleanup via restoreMocks: true in vite.config.ts
+vi.stubGlobal(
+  'fetch',
+  vi.fn(() =>
     Promise.reject(new Error('Unexpected fetch call during test - please mock the API endpoint')),
-  ) as unknown as typeof fetch;
-});
+  ),
+);
 
 // Suppress flatpickr locale errors in test output
 let originalStderrWrite: typeof process.stderr.write;
