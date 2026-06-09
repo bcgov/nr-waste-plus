@@ -74,16 +74,16 @@ describe('withProtected', () => {
     mockIsLoading = true;
     mockUser = undefined;
     const Protected = withProtected(DummyPage);
-    await act(async () => render(<Protected />));
+    render(<Protected />);
     screen.getByTestId('loading');
     expect(screen.queryByTestId('dummy-page')).toBeNull();
   });
 
-  it('should render loading overlay when user is undefined', async () => {
+  it('should render loading overlay when user is undefined', () => {
     mockIsLoading = false;
     mockUser = undefined;
     const Protected = withProtected(DummyPage);
-    await act(async () => render(<Protected />));
+    render(<Protected />);
     screen.getByTestId('loading');
   });
 
@@ -94,7 +94,7 @@ describe('withProtected', () => {
     mockPathname = '/search';
     mockSearchStr = '?q=test';
     const Protected = withProtected(DummyPage);
-    await act(async () => render(<Protected />));
+    render(<Protected />);
     expect(vi.mocked(persistRedirectUrl)).toHaveBeenCalledWith('/search?q=test');
     expect(mockNavigate).toHaveBeenCalledWith(
       expect.objectContaining({ to: '/login', replace: true }),
@@ -108,16 +108,16 @@ describe('withProtected', () => {
     mockPathname = '/login';
     mockSearchStr = '';
     const Protected = withProtected(DummyPage);
-    await act(async () => render(<Protected />));
+    render(<Protected />);
     expect(vi.mocked(persistRedirectUrl)).not.toHaveBeenCalled();
     expect(mockNavigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/login' }));
   });
 
-  it('should render component when user is authenticated', async () => {
+  it('should render component when user is authenticated', () => {
     mockIsLoading = false;
     mockUser = makeUser();
     const Protected = withProtected(DummyPage);
-    await act(async () => render(<Protected />));
+    render(<Protected />);
     screen.getByTestId('dummy-page');
   });
 
@@ -126,7 +126,7 @@ describe('withProtected', () => {
     mockIsLoading = false;
     mockUser = makeUser({ roles: [] });
     const Protected = withProtected(DummyPage);
-    await act(async () => render(<Protected />));
+    render(<Protected />);
     expect(vi.mocked(navigateInTree)).toHaveBeenCalledWith(
       mockNavigate,
       '/no-role',
@@ -139,7 +139,7 @@ describe('withProtected', () => {
     mockIsLoading = false;
     mockUser = makeUser({ roles: [{ role: Role.VIEWER, clients: ['100'] }] });
     const Protected = withProtected(DummyPage, [{ role: Role.ADMIN, clients: [] }]);
-    await act(async () => render(<Protected />));
+    render(<Protected />);
     expect(vi.mocked(navigateInTree)).toHaveBeenCalledWith(
       mockNavigate,
       '/unauthorized',
@@ -147,19 +147,19 @@ describe('withProtected', () => {
     );
   });
 
-  it('should render component when user has matching role', async () => {
+  it('should render component when user has matching role', () => {
     mockIsLoading = false;
     mockUser = makeUser({ roles: [{ role: Role.VIEWER, clients: ['100'] }] });
     const Protected = withProtected(DummyPage, [{ role: Role.VIEWER, clients: [] }]);
-    await act(async () => render(<Protected />));
+    render(<Protected />);
     screen.getByTestId('dummy-page');
   });
 
-  it('should render component when roles array is empty', async () => {
+  it('should render component when roles array is empty', () => {
     mockIsLoading = false;
     mockUser = makeUser({ roles: [{ role: Role.VIEWER, clients: ['100'] }] });
     const Protected = withProtected(DummyPage, []);
-    await act(async () => render(<Protected />));
+    render(<Protected />);
     screen.getByTestId('dummy-page');
   });
 
@@ -190,7 +190,7 @@ describe('withProtected', () => {
     });
     mockPathname = '/search';
     const Protected = withProtected(DummyPage);
-    await act(async () => render(<Protected />));
+    render(<Protected />);
     expect(vi.mocked(navigateInTree)).toHaveBeenCalled();
   });
 });

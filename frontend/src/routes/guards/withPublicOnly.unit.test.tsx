@@ -48,7 +48,7 @@ describe('withPublicOnly', () => {
     mockIsLoggedIn = false;
     mockIsLoading = false;
     const Wrapped = withPublicOnly(PublicPage);
-    await act(async () => render(<Wrapped />));
+    render(<Wrapped />);
     screen.getByTestId('public-page');
   });
 
@@ -56,7 +56,7 @@ describe('withPublicOnly', () => {
     mockIsLoggedIn = false;
     mockIsLoading = true;
     const Wrapped = withPublicOnly(PublicPage);
-    const { container } = await act(async () => render(<Wrapped />));
+    const { container } = render(<Wrapped />);
     expect(screen.queryByTestId('public-page')).toBeNull();
     expect(container.firstChild).toBeNull();
   });
@@ -65,7 +65,7 @@ describe('withPublicOnly', () => {
     mockIsLoggedIn = true;
     mockIsLoading = false;
     const Wrapped = withPublicOnly(PublicPage);
-    const { container } = await act(async () => render(<Wrapped />));
+    const { container } = render(<Wrapped />);
     expect(screen.queryByTestId('public-page')).toBeNull();
     expect(container.firstChild).toBeNull();
   });
@@ -75,7 +75,7 @@ describe('withPublicOnly', () => {
     mockIsLoggedIn = true;
     mockIsLoading = false;
     const Wrapped = withPublicOnly(PublicPage);
-    await act(async () => render(<Wrapped />));
+    render(<Wrapped />);
     expect(vi.mocked(navigateInTree)).toHaveBeenCalledWith(
       mockNavigate,
       '/dashboard',
@@ -88,7 +88,7 @@ describe('withPublicOnly', () => {
     mockIsLoggedIn = false;
     mockIsLoading = true;
     const Wrapped = withPublicOnly(PublicPage);
-    await act(async () => render(<Wrapped />));
+    render(<Wrapped />);
     expect(vi.mocked(navigateInTree)).not.toHaveBeenCalled();
   });
 
@@ -97,7 +97,7 @@ describe('withPublicOnly', () => {
     mockIsLoggedIn = false;
     mockIsLoading = false;
     const Wrapped = withPublicOnly(PublicPage);
-    await act(async () => render(<Wrapped />));
+    render(<Wrapped />);
     expect(vi.mocked(navigateInTree)).not.toHaveBeenCalled();
   });
 });
