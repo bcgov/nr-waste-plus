@@ -10,6 +10,7 @@ import ca.bc.gov.nrs.hrs.util.PaginationUtil;
 import io.micrometer.observation.annotation.Observed;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -96,14 +97,13 @@ public class AdvancedSearchService {
             PageRequest.of(
                 page.getPageNumber(),
                 page.getPageSize(),
-                PaginationUtil.resolveSort(
+                Objects.requireNonNull(PaginationUtil.resolveSort(
                     page.getSort(),
                     "last_update",
                     SORT_DISTRICT_FIELDS
-                )
+                ))
             )
         )
         .map(clientDistrictSearchMapper::fromProjection);
   }
-
 }
