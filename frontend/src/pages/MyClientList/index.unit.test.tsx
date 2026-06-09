@@ -20,14 +20,14 @@ vi.mock('@/services/APIs', () => {
 const renderWithProps = () => renderWithAppAsync(<MyClientListPage />);
 
 describe('MyClientListPage', () => {
-  it('shouldRenderMyClients_whenRendered', async () => {
+  it('should render my clients when rendered', async () => {
     await renderWithProps();
     await waitFor(() => {
       screen.getByText('My clients');
     });
   });
 
-  it('shouldDisplayErrorNotification_whenErrorEventSent', async () => {
+  it('should display error notification when error event sent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -43,7 +43,7 @@ describe('MyClientListPage', () => {
     expect(screen.getAllByText('This is a test error message')).toHaveLength(1);
   });
 
-  it('shouldDisplayWarningNotification_whenWarningEventSent', async () => {
+  it('should display warning notification when warning event sent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -59,7 +59,7 @@ describe('MyClientListPage', () => {
     expect(screen.getAllByText('This is a test warning message')).toHaveLength(1);
   });
 
-  it('shouldDisplayInfoNotification_whenInfoEventSent', async () => {
+  it('should display info notification when info event sent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -75,7 +75,7 @@ describe('MyClientListPage', () => {
     expect(screen.getAllByText('This is a test info message')).toHaveLength(1);
   });
 
-  it('shouldNotDisplayNotification_whenEventTargetDoesNotMatch', async () => {
+  it('should not display notification when event target does not match', async () => {
     await renderWithProps();
 
     act(() => {

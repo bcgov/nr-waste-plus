@@ -46,18 +46,18 @@ describe('WasteSearchPage', () => {
     });
   });
 
-  it('shouldRenderPageTitleAndSubtitle_whenRendered', async () => {
+  it('should render page title and subtitle when rendered', async () => {
     await renderWithProps();
     screen.getByText('Waste search');
     screen.getByText('Search for reporting units, licensees, or blocks');
   });
 
-  it('shouldRenderWasteSearchColumns_whenRendered', async () => {
+  it('should render waste search columns when rendered', async () => {
     await renderWithProps();
     screen.getByText('Nothing to show yet!');
   });
 
-  it('shouldDisplayErrorNotification_whenErrorEventSent', async () => {
+  it('should display error notification when error event sent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -73,7 +73,7 @@ describe('WasteSearchPage', () => {
     expect(screen.getAllByText('This is a test error message')).toHaveLength(1);
   });
 
-  it('shouldDisplayWarningNotification_whenWarningEventSent', async () => {
+  it('should display warning notification when warning event sent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -89,7 +89,7 @@ describe('WasteSearchPage', () => {
     expect(screen.getAllByText('This is a test warning message')).toHaveLength(1);
   });
 
-  it('shouldDisplayInfoNotification_whenInfoEventSent', async () => {
+  it('should display info notification when info event sent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -105,7 +105,7 @@ describe('WasteSearchPage', () => {
     expect(screen.getAllByText('This is a test info message')).toHaveLength(1);
   });
 
-  it('shouldNotDisplayNotification_whenEventTargetDoesNotMatch', async () => {
+  it('should not display notification when event target does not match', async () => {
     await renderWithProps();
 
     act(() => {
