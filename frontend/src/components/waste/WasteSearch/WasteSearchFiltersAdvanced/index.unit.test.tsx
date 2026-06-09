@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -150,7 +150,7 @@ describe('WasteSearchFiltersActive', () => {
     await renderWithProps({ samplingOptions, onChange });
 
     const samplingBox = screen.getByRole('combobox', { name: /Sampling/i });
-    const samplingButton = samplingBox.parentElement?.querySelector('button');
+    const samplingButton = within(samplingBox.parentElement!).getByRole('button');
 
     expect(samplingBox).toBeDefined();
     expect(samplingButton).toBeDefined();
