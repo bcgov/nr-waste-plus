@@ -205,7 +205,6 @@ export default defineConfig(({ mode }) => {
           '**/types/**',
           '**/constants/**',
           '**/config/fam/*',
-          '**/config/react-query/*',
           '**/config/tests/*',
           '**/*.env.ts',
           '**/*.scss',
