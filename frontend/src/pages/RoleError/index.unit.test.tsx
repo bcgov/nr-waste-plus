@@ -6,7 +6,7 @@ import RoleErrorPage from './index';
 import { renderWithApp } from '@/config/tests/renderWithApp';
 
 describe('RoleErrorPage', () => {
-  it('shouldRenderFallbackMessage_whenNoReasonParamPresent', async () => {
+  it('should render fallback message when no reason param present', async () => {
     renderWithApp(<RoleErrorPage />, { route: '/unauthorized' });
     await waitFor(() => {
       screen.getByText('Unauthorized Access');
@@ -16,7 +16,7 @@ describe('RoleErrorPage', () => {
     });
   });
 
-  it('shouldRenderViolationMessage_whenReasonParamPresent', async () => {
+  it('should render violation message when reason param present', async () => {
     renderWithApp(<RoleErrorPage />, {
       route: '/unauthorized?reason=CONFLICTING_CLIENT_ACCESS_ROLES',
     });

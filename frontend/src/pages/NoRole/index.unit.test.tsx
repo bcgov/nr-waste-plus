@@ -51,7 +51,7 @@ describe('NoRolePage', () => {
     vi.mocked(APIs.user.updateUserPreferences).mockResolvedValue(undefined);
   });
 
-  it('shouldNavigateToHome_whenUserIsNotLoggedIn', async () => {
+  it('should navigate to home when user is not logged in', async () => {
     mockIsLoggedIn = false;
     mockUser = null;
     await renderWithProps();
@@ -59,7 +59,7 @@ describe('NoRolePage', () => {
     expect(screen.queryByText('Unauthorized Access')).toBeNull();
   });
 
-  it('shouldNavigateToHome_whenLoggedInButUserNotLoaded', async () => {
+  it('should navigate to home when logged in but user not loaded', async () => {
     mockIsLoggedIn = true;
     mockUser = null;
     await renderWithProps();
@@ -67,7 +67,7 @@ describe('NoRolePage', () => {
     expect(screen.queryByText('Unauthorized Access')).toBeNull();
   });
 
-  it('shouldNavigateToHome_whenLoggedInUserHasRoles', async () => {
+  it('should navigate to home when logged in user has roles', async () => {
     mockIsLoggedIn = true;
     mockUser = {
       userName: 'testuser',
@@ -82,7 +82,7 @@ describe('NoRolePage', () => {
     expect(screen.queryByText('Unauthorized Access')).toBeNull();
   });
 
-  it('shouldRenderUnauthorizedMessage_whenUserHasNoRoles', async () => {
+  it('should render unauthorized message when user has no roles', async () => {
     mockIsLoggedIn = true;
     mockUser = {
       userName: 'testuser',
@@ -98,7 +98,7 @@ describe('NoRolePage', () => {
     ).toBeDefined();
   });
 
-  it('shouldRenderUnauthorizedMessage_whenUserHasUndefinedRoles', async () => {
+  it('should render unauthorized message when user has undefined roles', async () => {
     mockIsLoggedIn = true;
     mockUser = {
       userName: 'testuser',
@@ -114,7 +114,7 @@ describe('NoRolePage', () => {
     ).toBeDefined();
   });
 
-  it('shouldRenderUnauthorizedMessage_whenUserOnlyHasProviderMarkerRole', async () => {
+  it('should render unauthorized message when user only has provider marker role', async () => {
     mockIsLoggedIn = true;
     mockUser = {
       userName: 'testuser',

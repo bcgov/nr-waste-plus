@@ -8,7 +8,7 @@ import { renderWithApp } from '@/config/tests/renderWithApp';
 const renderPage = (error?: unknown) => renderWithApp(<GlobalErrorPage error={error} />);
 
 describe('GlobalErrorPage', () => {
-  it('shouldRenderFallbackMessage_whenNoErrorProvided', async () => {
+  it('should render fallback message when no error provided', async () => {
     renderPage();
     await waitFor(() => {
       expect(
@@ -17,7 +17,7 @@ describe('GlobalErrorPage', () => {
     });
   });
 
-  it('shouldRenderErrorMessage_whenErrorIsErrorInstance', async () => {
+  it('should render error message when error is error instance', async () => {
     renderPage(new Error('Boom goes the dynamite'));
     await waitFor(() => {
       screen.getByText('Global Error');
@@ -25,7 +25,7 @@ describe('GlobalErrorPage', () => {
     });
   });
 
-  it('shouldRenderErrorMessage_whenErrorIsString', async () => {
+  it('should render error message when error is string', async () => {
     renderPage('String error');
     await waitFor(() => {
       screen.getByText('Global Error');
@@ -33,7 +33,7 @@ describe('GlobalErrorPage', () => {
     });
   });
 
-  it('shouldRenderStatusText_whenErrorObjectHasStatusText', async () => {
+  it('should render status text when error object has status text', async () => {
     renderPage({ message: 'Another error', statusText: 'This is not a drill' });
     await waitFor(() => {
       screen.getByText('Global Error');
@@ -41,7 +41,7 @@ describe('GlobalErrorPage', () => {
     });
   });
 
-  it('shouldFallBackToMessage_whenStatusTextIsEmpty', async () => {
+  it('should fall back to message when status text is empty', async () => {
     renderPage({ message: 'That Error', statusText: '' });
     await waitFor(() => {
       screen.getByText('Global Error');

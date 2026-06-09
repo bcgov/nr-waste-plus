@@ -65,12 +65,12 @@ describe('withProtected', () => {
     vi.clearAllMocks();
   });
 
-  it('shouldSetDisplayName_whenWrapping', () => {
+  it('should set display name when wrapping', () => {
     const Protected = withProtected(DummyPage);
     expect(Protected.displayName).toBe('withProtected(DummyPage)');
   });
 
-  it('shouldRenderLoadingOverlay_whenAuthIsLoading', async () => {
+  it('should render loading overlay when auth is loading', async () => {
     mockIsLoading = true;
     mockUser = undefined;
     const Protected = withProtected(DummyPage);
@@ -79,7 +79,7 @@ describe('withProtected', () => {
     expect(screen.queryByTestId('dummy-page')).toBeNull();
   });
 
-  it('shouldRenderLoadingOverlay_whenUserIsUndefined', async () => {
+  it('should render loading overlay when user is undefined', async () => {
     mockIsLoading = false;
     mockUser = undefined;
     const Protected = withProtected(DummyPage);
@@ -87,7 +87,7 @@ describe('withProtected', () => {
     screen.getByTestId('loading');
   });
 
-  it('shouldPersistRedirectAndNavigateToLogin_whenUserIsUndefined', async () => {
+  it('should persist redirect and navigate to login when user is undefined', async () => {
     const { persistRedirectUrl } = await import('@/routes/redirectStorage');
     mockIsLoading = false;
     mockUser = undefined;
@@ -101,7 +101,7 @@ describe('withProtected', () => {
     );
   });
 
-  it('shouldNotPersistRedirect_whenPathnameIsLogin', async () => {
+  it('should not persist redirect when pathname is login', async () => {
     const { persistRedirectUrl } = await import('@/routes/redirectStorage');
     mockIsLoading = false;
     mockUser = undefined;
@@ -113,7 +113,7 @@ describe('withProtected', () => {
     expect(mockNavigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/login' }));
   });
 
-  it('shouldRenderComponent_whenUserIsAuthenticated', async () => {
+  it('should render component when user is authenticated', async () => {
     mockIsLoading = false;
     mockUser = makeUser();
     const Protected = withProtected(DummyPage);
@@ -121,7 +121,7 @@ describe('withProtected', () => {
     screen.getByTestId('dummy-page');
   });
 
-  it('shouldRedirectToNoRole_whenUserHasNoRoles', async () => {
+  it('should redirect to no-role when user has no roles', async () => {
     const { navigateInTree } = await import('@/routes/inTreePaths');
     mockIsLoading = false;
     mockUser = makeUser({ roles: [] });
@@ -134,7 +134,7 @@ describe('withProtected', () => {
     );
   });
 
-  it('shouldRedirectToUnauthorized_whenUserLacksRequiredRole', async () => {
+  it('should redirect to unauthorized when user lacks required role', async () => {
     const { navigateInTree } = await import('@/routes/inTreePaths');
     mockIsLoading = false;
     mockUser = makeUser({ roles: [{ role: Role.VIEWER, clients: ['100'] }] });
@@ -147,7 +147,7 @@ describe('withProtected', () => {
     );
   });
 
-  it('shouldRenderComponent_whenUserHasMatchingRole', async () => {
+  it('should render component when user has matching role', async () => {
     mockIsLoading = false;
     mockUser = makeUser({ roles: [{ role: Role.VIEWER, clients: ['100'] }] });
     const Protected = withProtected(DummyPage, [{ role: Role.VIEWER, clients: [] }]);
@@ -155,7 +155,7 @@ describe('withProtected', () => {
     screen.getByTestId('dummy-page');
   });
 
-  it('shouldRenderComponent_whenRolesArrayIsEmpty', async () => {
+  it('should render component when roles array is empty', async () => {
     mockIsLoading = false;
     mockUser = makeUser({ roles: [{ role: Role.VIEWER, clients: ['100'] }] });
     const Protected = withProtected(DummyPage, []);
@@ -163,7 +163,7 @@ describe('withProtected', () => {
     screen.getByTestId('dummy-page');
   });
 
-  it('shouldUseComponentName_forDisplayName_whenDisplayNameIsMissing', () => {
+  it('should use component name for display name when display name is missing', () => {
     function NamedComp() {
       return null;
     }
@@ -171,13 +171,13 @@ describe('withProtected', () => {
     expect(Protected.displayName).toBe('withProtected(NamedComp)');
   });
 
-  it('shouldUseFallbackName_forDisplayName_whenBothMissing', () => {
+  it('should use fallback name for display name when both missing', () => {
     const anon = (() => null) as React.ComponentType;
     const Protected = withProtected(anon);
     expect(Protected.displayName).toContain('withProtected(');
   });
 
-  it('shouldRedirectToRoleError_whenUserHasRoleErrorStatus', async () => {
+  it('should redirect to role error when user has role error status', async () => {
     const { navigateInTree } = await import('@/routes/inTreePaths');
     mockIsLoading = false;
     // IDIR user with multiple roles triggers role-error

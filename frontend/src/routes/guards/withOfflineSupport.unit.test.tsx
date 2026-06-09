@@ -37,27 +37,27 @@ describe('withOfflineSupport', () => {
     vi.clearAllMocks();
   });
 
-  it('shouldSetDisplayName_whenWrapping', () => {
+  it('should set display name when wrapping', () => {
     const Wrapped = withOfflineSupport(TargetPage);
     expect(Wrapped.displayName).toBe('withOfflineSupport(TargetPage)');
   });
 
   describe('no options (offlineReady default)', () => {
-    it('shouldRenderComponent_whenOnline', async () => {
+    it('should render component when online', async () => {
       mockIsOnline = true;
       const Wrapped = withOfflineSupport(TargetPage);
       await act(async () => render(<Wrapped />));
       screen.getByTestId('target-page');
     });
 
-    it('shouldRenderComponent_whenOffline', async () => {
+    it('should render component when offline', async () => {
       mockIsOnline = false;
       const Wrapped = withOfflineSupport(TargetPage);
       await act(async () => render(<Wrapped />));
       screen.getByTestId('target-page');
     });
 
-    it('shouldNotNavigate_whenOnline', async () => {
+    it('should not navigate when online', async () => {
       const { navigateInTree } = await import('@/routes/inTreePaths');
       mockIsOnline = true;
       const Wrapped = withOfflineSupport(TargetPage);
@@ -67,14 +67,14 @@ describe('withOfflineSupport', () => {
   });
 
   describe('offlineReady: true', () => {
-    it('shouldRenderComponent_whenOnline', async () => {
+    it('should render component when online', async () => {
       mockIsOnline = true;
       const Wrapped = withOfflineSupport(TargetPage, { offlineReady: true });
       await act(async () => render(<Wrapped />));
       screen.getByTestId('target-page');
     });
 
-    it('shouldRenderComponent_whenOffline', async () => {
+    it('should render component when offline', async () => {
       mockIsOnline = false;
       const Wrapped = withOfflineSupport(TargetPage, { offlineReady: true });
       await act(async () => render(<Wrapped />));
@@ -83,7 +83,7 @@ describe('withOfflineSupport', () => {
   });
 
   describe('offlineOnly: true', () => {
-    it('shouldRenderNull_whenOnline', async () => {
+    it('should render null when online', async () => {
       mockIsOnline = true;
       const Wrapped = withOfflineSupport(TargetPage, { offlineOnly: true });
       const { container } = await act(async () => render(<Wrapped />));
@@ -91,14 +91,14 @@ describe('withOfflineSupport', () => {
       expect(container.firstChild).toBeNull();
     });
 
-    it('shouldRenderComponent_whenOffline', async () => {
+    it('should render component when offline', async () => {
       mockIsOnline = false;
       const Wrapped = withOfflineSupport(TargetPage, { offlineOnly: true });
       await act(async () => render(<Wrapped />));
       screen.getByTestId('target-page');
     });
 
-    it('shouldNavigateToSearch_whenOnline', async () => {
+    it('should navigate to search when online', async () => {
       const { navigateInTree } = await import('@/routes/inTreePaths');
       mockIsOnline = true;
       const Wrapped = withOfflineSupport(TargetPage, { offlineOnly: true });
@@ -110,7 +110,7 @@ describe('withOfflineSupport', () => {
       );
     });
 
-    it('shouldNotNavigate_whenOffline', async () => {
+    it('should not navigate when offline', async () => {
       const { navigateInTree } = await import('@/routes/inTreePaths');
       mockIsOnline = false;
       const Wrapped = withOfflineSupport(TargetPage, { offlineOnly: true });

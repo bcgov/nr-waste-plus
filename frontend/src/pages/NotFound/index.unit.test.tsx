@@ -6,7 +6,7 @@ import NotFoundPage from './index';
 import { renderWithApp } from '@/config/tests/renderWithApp';
 
 describe('NotFoundPage', () => {
-  it('shouldRenderNotFoundMessage_whenRendered', async () => {
+  it('should render not found message when rendered', async () => {
     renderWithApp(<NotFoundPage />);
     await waitFor(() => {
       screen.getByText('Content Not Found');
