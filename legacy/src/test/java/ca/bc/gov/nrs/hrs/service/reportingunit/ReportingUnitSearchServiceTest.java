@@ -25,7 +25,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
@@ -54,26 +53,23 @@ class ReportingUnitSearchServiceTest {
   @DisplayName("search")
   class Search {
 
+    @Mock
+    private Page<ReportingUnitSearchProjection> projPage;
+    
     @Test
     @DisplayName("should call repository and return mapped page")
     void shouldCallRepository_andReturnMappedPage() {
       // Arrange
-      ReportingUnitSearchParametersDto filters =
-          new ReportingUnitSearchParametersDto();
+      ReportingUnitSearchParametersDto filters = new ReportingUnitSearchParametersDto();
       PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
-      ReportingUnitSearchProjection projection =
-          mock(ReportingUnitSearchProjection.class);
-      ReportingUnitSearchResultDto dto =
-          mock(ReportingUnitSearchResultDto.class);
-      List<ReportingUnitSearchProjection> projections = List.of();
-      projections.add(projection);
-      Page<ReportingUnitSearchProjection> projPage =
-          new PageImpl<>(projections);
+      
+      ReportingUnitSearchProjection projection = mock(ReportingUnitSearchProjection.class);
+      ReportingUnitSearchResultDto dto = mock(ReportingUnitSearchResultDto.class);
 
-      when(ruRepository.searchReportingUnits(any(), any()))
-          .thenReturn(projPage);
-      when(ruSearchMapper.fromProjection(projection))
-          .thenReturn(dto);
+      when(projPage.getContent()).thenReturn(List.of(projection));
+
+      when(ruRepository.searchReportingUnits(any(), any())).thenReturn(projPage);
+      when(ruSearchMapper.fromProjection(projection)).thenReturn(dto);
 
       // Act
       Page<ReportingUnitSearchResultDto> result =
