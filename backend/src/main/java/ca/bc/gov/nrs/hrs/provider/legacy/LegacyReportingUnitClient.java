@@ -327,6 +327,25 @@ public class LegacyReportingUnitClient {
         0L);
   }
 
+  @SuppressWarnings("unused")
+  private List<String> fallbackEmptyUsersList(
+      String userId,
+      Throwable throwable) {
+
+    logFallbackError(throwable);
+    return LegacyApiConstants.EMPTY_STRING_LIST;
+  }
+
+  @SuppressWarnings("unused")
+  private Page<ReportingUnitSearchResultDto> fallbackEmptySearchReportingUnit(
+      ReportingUnitSearchParametersDto filters,
+      Pageable pageable,
+      Throwable throwable) {
+
+    logFallbackError(throwable);
+    return new PageImpl<>(LegacyApiConstants.RU_SEARCH_LIST, pageable, 0);
+  }
+
   private void logFallbackError(Throwable throwable) {
     log.error(
         FALLBACK_ERROR,
