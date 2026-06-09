@@ -114,6 +114,7 @@ jobs:
             npx playwright install-deps
             npx playwright install
             npm run test:e2e:${{ matrix.target }}
+            ls -lha .
           dir: frontend
 
       - name: Annotate PR with e2e results
