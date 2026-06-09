@@ -112,22 +112,30 @@ describe('AutoCompleteInput', () => {
     const input = screen.getByRole('combobox');
     await user.type(input, 'Alpha');
     await waitFor(() => expect(onAutoCompleteChange).toHaveBeenCalled());
-    // Simulate clicking a suggestion if suggestions are rendered as buttons or list items
-    // Example: await user.click(screen.getByText('Alpha'));
+    // ComboBox renders suggestions; click the first one
+    const suggestion = await screen.findByRole('option', { name: 'Alpha' });
+    await user.click(suggestion);
+    expect(onSelect).toHaveBeenCalledWith(items[0]); // { name: 'Alpha', id: 1 }
   });
 
   it('handles keyboard navigation (arrow down/up, enter, escape)', async () => {
     const user = await userEvent.setup();
     const onAutoCompleteChange = vi.fn(async () => items);
+    const onSelect = vi.fn();
     const extractItems = (raw: any) => raw;
-    await renderWithProps({ onAutoCompleteChange, extractItems });
+    await renderWithProps({ onAutoCompleteChange, extractItems, onSelect });
     const input = screen.getByRole('combobox');
-    await user.type(input, 'Alpha');
-    await waitFor(() => expect(onAutoCompleteChange).toHaveBeenCalled());
+    // Type at least 2 characters to trigger the query (debounce.length >= 2)
+    await user.type(input, 'Al');
+    await waitFor(() => expect(onAutoCompleteChange).toHaveBeenCalledWith('Al'));
+    // Verify suggestions appear
+    await screen.findByRole('option', { name: 'Alpha' });
+    // Navigate down to first suggestion
     await user.keyboard('{ArrowDown}');
-    await user.keyboard('{ArrowUp}');
+    // Press Enter to select
     await user.keyboard('{Enter}');
-    await user.keyboard('{Escape}');
+    // Verify selection occurred
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ name: 'Alpha' }));
   });
 
   describe('when item is preselected', () => {
