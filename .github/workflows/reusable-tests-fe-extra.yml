@@ -52,6 +52,8 @@ jobs:
         working-directory: frontend
         env:
           RUN_A11Y_TESTS: true
+          VITE_MOCK_AUTH: true
+          VITE_COVERAGE: true
           VITE_FAM_DOMAIN: ${{ secrets.FAM_DOMAIN }}
 
       - name: Annotate PR with a11y results

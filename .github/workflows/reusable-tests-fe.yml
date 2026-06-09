@@ -53,6 +53,9 @@ jobs:
 
       - name: Run frontend unit tests without sonar
         uses: bcgov/action-test-and-analyse@8f699e3fd3fadd9a6adf6f4b1f2638ef7ecfefb9 # v2.0.0
+        env:
+          VITE_MOCK_AUTH: true
+          VITE_COVERAGE: true
         with:
           node_version: 24
           dep_scan: off
@@ -99,6 +102,9 @@ jobs:
 
       - name: Run e2e tests without sonar
         uses: bcgov/action-test-and-analyse@8f699e3fd3fadd9a6adf6f4b1f2638ef7ecfefb9 # v2.0.0
+        env:
+          VITE_MOCK_AUTH: true
+          VITE_COVERAGE: true
         with:
           node_version: 24
           dep_scan: off
