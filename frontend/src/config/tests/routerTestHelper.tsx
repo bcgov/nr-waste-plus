@@ -54,3 +54,4 @@ export function createRouterWrapper(initialPath = '/') {
     return <RouterProvider router={router} />;
   };
 }
+
