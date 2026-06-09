@@ -83,7 +83,7 @@ describe('TableResource', () => {
       loading: false,
       error: false,
     });
-    expect(screen.getByTestId('empty-section-title').textContent).to.equal('Nothing to show yet!');
+    expect(screen.getByTestId('empty-section-title').textContent).toBe('Nothing to show yet!');
   });
 
   it('renders error empty section if error and no content', async () => {
@@ -93,7 +93,7 @@ describe('TableResource', () => {
       loading: false,
       error: true,
     });
-    expect(screen.getByTestId('empty-section-title').textContent).to.equal('Something went wrong!');
+    expect(screen.getByTestId('empty-section-title').textContent).toBe('Something went wrong!');
   });
 
   it('renders no results empty section if totalElements is 0', async () => {
@@ -103,7 +103,7 @@ describe('TableResource', () => {
       loading: false,
       error: false,
     });
-    expect(screen.getByTestId('empty-section-title').textContent).to.equal('No results');
+    expect(screen.getByTestId('empty-section-title').textContent).toBe('No results');
   });
 
   it('renders table with data and custom renderers', async () => {
@@ -246,7 +246,7 @@ describe('TableResource', () => {
     });
 
     const headerWithTooltip = screen.getByText('ID');
-    expect(headerWithTooltip.className).to.contain('table-header-tooltip-trigger');
+    expect(headerWithTooltip.className).toContain('table-header-tooltip-trigger');
   });
 
   it('does not render tooltip when sort is disabled', async () => {
@@ -262,7 +262,7 @@ describe('TableResource', () => {
     });
 
     const headerWithoutTooltip = screen.getByText('ID');
-    expect(headerWithoutTooltip.className).to.not.contain('table-header-tooltip-trigger');
+    expect(headerWithoutTooltip.className).not.toContain('table-header-tooltip-trigger');
   });
 
   it('renders actions column only when getRowActions is provided', async () => {

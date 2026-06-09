@@ -10,7 +10,6 @@ import type { MyForestClientDto } from '@/services/types';
 
 import { renderCell } from '@/components/Form/TableResource/types';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import * as eventHandler from '@/hooks/useNotificationEvents/eventHandler';
 import APIs from '@/services/APIs';
 
 vi.mock('@/services/APIs');

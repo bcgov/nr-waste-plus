@@ -2,6 +2,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 
 import { registerBackgroundSync, registerPeriodicSync } from './utils';
+
 import { mockPwaWorker, restorePwaGlobals } from '@/config/tests/pwaTestHelper';
 
 afterEach(() => {
