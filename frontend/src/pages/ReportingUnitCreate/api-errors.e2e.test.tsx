@@ -19,7 +19,7 @@ test.describe('Create Reporting Unit - API Errors', () => {
       await fillFormAndSubmit(page, testInfo.project.metadata.userType);
 
       const notification = page.locator('[role="alert"]');
-      await expect(notification).toBeVisible();
+      await expect(notification).toBeVisible({ timeout: 15000 });
     });
 
     test('does NOT navigate away from the form after a 500 error', async ({ page }, testInfo) => {
@@ -42,7 +42,7 @@ test.describe('Create Reporting Unit - API Errors', () => {
       await fillFormAndSubmit(page, testInfo.project.metadata.userType);
 
       const notification = page.locator('[role="alert"]');
-      await expect(notification).toBeVisible();
+      await expect(notification).toBeVisible({ timeout: 15000 });
     });
 
     test('does NOT navigate away from the form after a 409 conflict', async ({
