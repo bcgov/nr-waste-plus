@@ -97,15 +97,15 @@ describe('WasteSearchFilters', () => {
     expect(APIs.codes.getAssessAreaStatuses).toHaveBeenCalled();
 
     const samplingBox = screen.getByPlaceholderText(/Sampling/i);
-    const samplingButton = samplingBox.parentElement?.querySelector('button');
+    const samplingButton = within(samplingBox.parentElement!).getByRole('button');
     expect(samplingButton).not.toBeNull();
 
     const districtBox = screen.getByPlaceholderText(/District/i);
-    const districtButton = districtBox.parentElement?.querySelector('button');
+    const districtButton = within(districtBox.parentElement!).getByRole('button');
     expect(districtButton).not.toBeNull();
 
     const statusBox = screen.getByPlaceholderText(/Status/i);
-    const statusButton = statusBox.parentElement?.querySelector('button');
+    const statusButton = within(statusBox.parentElement!).getByRole('button');
     expect(statusButton).not.toBeNull();
 
     expect(samplingButton).toBeInstanceOf(HTMLButtonElement);
@@ -148,7 +148,7 @@ describe('WasteSearchFilters', () => {
     await renderWithProps({ onChange });
 
     const samplingBox = screen.getByPlaceholderText(/Sampling/i);
-    const samplingButton = samplingBox.parentElement?.querySelector('button');
+    const samplingButton = within(samplingBox.parentElement!).getByRole('button');
     expect(samplingBox).toBeDefined();
     expect(samplingButton).toBeDefined();
     expect(samplingButton).toBeInstanceOf(HTMLButtonElement);
