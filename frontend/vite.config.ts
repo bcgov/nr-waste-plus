@@ -4,6 +4,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { configDefaults } from 'vitest/config';
 
+// Shared alias definition to ensure consistency across resolve, test, and tsconfig
+const ALIAS_SRC = new URL('./src/', import.meta.url).pathname;
+
 export default defineConfig(({ mode }) => {
   const define = {
     global: {},
@@ -12,7 +15,7 @@ export default defineConfig(({ mode }) => {
     define,
     resolve: {
       alias: {
-        '@/': new URL('./src/', import.meta.url).pathname,
+        '@/': ALIAS_SRC,
       },
     },
     plugins: [
@@ -174,7 +177,7 @@ export default defineConfig(({ mode }) => {
     },
     test: {
       alias: {
-        '@/': new URL('./src/', import.meta.url).pathname,
+        '@/': ALIAS_SRC,
       },
       testTimeout: 15000,
       clearMocks: true,
