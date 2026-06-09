@@ -4,8 +4,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
+import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import java.util.List;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,29 +15,41 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
-import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 
 @AutoConfigureMockMvc
 @DisplayName("Integrated Test | Search Endpoint : Reporting Unit")
 @WithMockJwt
-class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainerIntegrationTest {
+class SearchControllerReportingUnitIntegrationTest
+    extends AbstractTestContainerIntegrationTest {
 
   @Autowired
   private MockMvc mockMvc;
+
+  private static final String CONTENT_TYPE_JSON =
+      MediaType.APPLICATION_JSON_VALUE;
+
+  private static final String CONTENT_TYPE_PROBLEM_JSON =
+      MediaType.APPLICATION_PROBLEM_JSON_VALUE;
+
+  private static final String SEARCH_URL =
+      "/api/search/reporting-units";
+
+  private static final String EXPANDED_URL =
+      "/api/search/reporting-units/ex/{ruId}/{waaId}";
 
   @Test
   @DisplayName("Should search reporting units")
   void shouldSearchReportingUnits() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .param("page", "0")
                 .param("size", "10")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(CONTENT_TYPE_JSON)
+        )
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
         .andExpect(jsonPath("$.content[0].ruNumber").value(879))
         .andExpect(jsonPath("$.content[0].client.code").value("00001271"))
         .andExpect(jsonPath("$.page.size").value(10))
@@ -48,14 +62,15 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldSearchReportingUnitsWithClientNumber() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .param("page", "0")
                 .param("size", "10")
                 .param("clientNumber", "00010004")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(CONTENT_TYPE_JSON)
+        )
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
         .andExpect(jsonPath("$.content[0].ruNumber").value(879))
         .andExpect(jsonPath("$.content[0].client.code").value("00001271"))
         .andExpect(jsonPath("$.page.size").value(10))
@@ -67,19 +82,23 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   @DisplayName("Search reporting units with client number not being idir and fail")
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {"Submitter_00070002", "Viewer_00010004"}
+      cognitoGroups = {
+          "Submitter_00070002",
+          "Viewer_00010004"
+      }
   )
   void shouldSearchReportingUnitsWithClientNumberNotIdir() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .param("page", "0")
                 .param("size", "10")
                 .param("clientNumber", "00010004")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(CONTENT_TYPE_JSON)
+        )
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
         .andExpect(jsonPath("$.page.size").value(10))
         .andExpect(jsonPath("$.page.totalElements").value(35))
         .andReturn();
@@ -89,19 +108,25 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   @DisplayName("Search reporting units with client number not being idir and get it")
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {"Submitter_00010004", "Viewer_00010004"}
+      cognitoGroups = {
+          "Submitter_00010004",
+          "Viewer_00010004"
+      }
   )
-  void shouldSearchReportingUnitsWithClientNumberNotIdirSuccess() throws Exception {
+  void shouldSearchReportingUnitsWithClientNumberNotIdirSuccess()
+      throws Exception {
+
     mockMvc
         .perform(
-            get("/api/search/reporting-units")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .param("page", "0")
                 .param("size", "10")
                 .param("clientNumber", "00010004")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(CONTENT_TYPE_JSON)
+        )
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
         .andExpect(jsonPath("$.content[0].ruNumber").value(34906))
         .andExpect(jsonPath("$.content[0].client.code").value("00010004"))
         .andExpect(jsonPath("$.page.size").value(10))
@@ -113,18 +138,22 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   @DisplayName("Should search reporting units with paging")
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {"Submitter_00010004", "Viewer_00010004"}
+      cognitoGroups = {
+          "Submitter_00010004",
+          "Viewer_00010004"
+      }
   )
   void shouldSearchReportingUnitsWithPageAndSize() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .param("page", "10")
                 .param("size", "10")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(CONTENT_TYPE_JSON)
+        )
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
         .andExpect(jsonPath("$.content.length()").value(0))
         .andExpect(jsonPath("$.page.size").value(10))
         .andExpect(jsonPath("$.page.totalElements").value(35))
@@ -136,19 +165,25 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldSearchReportingUnitsWithWrongSorting() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .param("page", "0")
                 .param("size", "10")
                 .param("sort", "invalidField,desc")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(CONTENT_TYPE_JSON)
+        )
         .andExpect(status().is(428))
-        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(content().contentType(CONTENT_TYPE_PROBLEM_JSON))
         .andExpect(jsonPath("$.title").value("Precondition Required"))
         .andExpect(jsonPath("$.status").value(428))
-        .andExpect(jsonPath("$.detail").value(
-            "Field invalidField is not a valid sorting field. Please check the documentation for valid sorting fields."))
-        .andExpect(jsonPath("$.instance").value("/api/search/reporting-units"))
+        .andExpect(
+            jsonPath("$.detail")
+                .value(
+                    "Field invalidField is not a valid sorting field. "
+                        + "Please check the documentation for valid sorting fields."
+                )
+        )
+        .andExpect(jsonPath("$.instance").value(SEARCH_URL))
         .andReturn();
   }
 
@@ -157,12 +192,11 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldGetExpandedDetails() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}", 34004, 161966)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-        )
+            get(EXPANDED_URL, 34004, 161966)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
+                .accept(CONTENT_TYPE_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
         .andExpect(jsonPath("$.id").value(161966))
         .andExpect(jsonPath("$.licenseNo").value("A91320"))
         .andReturn();
@@ -173,13 +207,19 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldFailGetExpandedDetails() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}", 1, 2)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
+            get(EXPANDED_URL, 1, 2)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
+                .accept(CONTENT_TYPE_JSON)
         )
         .andExpect(status().isNotFound())
-        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
-        .andExpect(jsonPath("$.detail").value("Waste assessment area with ID 2 not found for Reporting Unit with ID 1."))
+        .andExpect(content().contentType(CONTENT_TYPE_PROBLEM_JSON))
+        .andExpect(
+            jsonPath("$.detail")
+                .value(
+                    "Waste assessment area with ID 2 not found "
+                        + "for Reporting Unit with ID 1."
+                )
+        )
         .andExpect(jsonPath("$.status").value(404))
         .andReturn();
   }
@@ -189,17 +229,16 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldFilterReportingUnitsWithinDateRange() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .param("page", "0")
                 .param("size", "10")
                 .param("dateStart", "2000-01-01")
                 .param("dateEnd", "2100-01-01")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(CONTENT_TYPE_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.content.length()")
-            .value(org.hamcrest.Matchers.greaterThan(0)))
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
+        .andExpect(jsonPath("$.content.length()").value(Matchers.greaterThan(0)))
         .andReturn();
   }
 
@@ -208,17 +247,16 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldHandleNarrowDateRangeWithoutError() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .param("page", "0")
                 .param("size", "10")
                 .param("dateStart", "1900-01-01")
                 .param("dateEnd", "1900-01-02")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(CONTENT_TYPE_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.content.length()")
-            .value(org.hamcrest.Matchers.greaterThanOrEqualTo(0)))
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
+        .andExpect(jsonPath("$.content.length()").value(Matchers.greaterThanOrEqualTo(0)))
         .andReturn();
   }
 
@@ -232,12 +270,12 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldSearchEntriesCreatedByMe() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .param("requestByMe", "true")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(CONTENT_TYPE_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
         .andExpect(jsonPath("$.content.length()").value(8))
         .andExpect(jsonPath("$.page.size").value(10))
         .andExpect(jsonPath("$.page.totalElements").value(8))
@@ -249,17 +287,15 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldSearchForMultiMark() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .param("page", "0")
                 .param("size", "10")
                 .param("multiMark", "true")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(CONTENT_TYPE_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.page.totalElements")
-            .value(org.hamcrest.Matchers.equalTo(57))
-        )
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
+        .andExpect(jsonPath("$.page.totalElements").value(Matchers.equalTo(57)))
         .andReturn();
   }
 
@@ -268,16 +304,15 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldSearchForSecondary() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .param("page", "0")
                 .param("size", "10")
                 .param("timberMark", "EM30R1")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(CONTENT_TYPE_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.content.length()")
-            .value(org.hamcrest.Matchers.equalTo(1)))
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
+        .andExpect(jsonPath("$.content.length()").value(Matchers.equalTo(1)))
         .andReturn();
   }
 
@@ -286,28 +321,15 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldGetExtendedWithSecondaryMark() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}", 879, 1906)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-        )
+            get(EXPANDED_URL, 879, 1906)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
+                .accept(CONTENT_TYPE_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(
-            jsonPath("$.timberMark")
-                .value(org.hamcrest.Matchers.equalTo("JY1009"))
-        )
-        .andExpect(
-            jsonPath("$.secondaryMarks[0].mark")
-                .value(org.hamcrest.Matchers.equalTo("EM30R1"))
-        )
-        .andExpect(
-            jsonPath("$.totalBlocks")
-                .value(org.hamcrest.Matchers.equalTo(2))
-        )
-        .andExpect(
-            jsonPath("$.totalChildren")
-                .value(org.hamcrest.Matchers.equalTo(2))
-        )
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
+        .andExpect(jsonPath("$.timberMark").value(Matchers.equalTo("JY1009")))
+        .andExpect(jsonPath("$.secondaryMarks[0].mark").value(Matchers.equalTo("EM30R1")))
+        .andExpect(jsonPath("$.totalBlocks").value(Matchers.equalTo(2)))
+        .andExpect(jsonPath("$.totalChildren").value(Matchers.equalTo(2)))
         .andReturn();
   }
 
@@ -316,28 +338,15 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldGetExtendedWithChildBlock() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}", 916, 1976)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-        )
+            get(EXPANDED_URL, 916, 1976)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
+                .accept(CONTENT_TYPE_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(
-            jsonPath("$.timberMark")
-                .value(org.hamcrest.Matchers.equalTo("JW1001"))
-        )
-        .andExpect(
-            jsonPath("$.secondaryMarks.length()")
-                .value(org.hamcrest.Matchers.equalTo(0))
-        )
-        .andExpect(
-            jsonPath("$.totalBlocks")
-                .value(org.hamcrest.Matchers.equalTo(4))
-        )
-        .andExpect(
-            jsonPath("$.totalChildren")
-                .value(org.hamcrest.Matchers.equalTo(0))
-        )
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
+        .andExpect(jsonPath("$.timberMark").value(Matchers.equalTo("JW1001")))
+        .andExpect(jsonPath("$.secondaryMarks.length()").value(Matchers.equalTo(0)))
+        .andExpect(jsonPath("$.totalBlocks").value(Matchers.equalTo(4)))
+        .andExpect(jsonPath("$.totalChildren").value(Matchers.equalTo(0)))
         .andReturn();
   }
 
@@ -346,20 +355,13 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldGetExtendedWithPrimaryMark() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}", 879, 1907)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-        )
+            get(EXPANDED_URL, 879, 1907)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
+                .accept(CONTENT_TYPE_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(
-            jsonPath("$.timberMark")
-                .value(org.hamcrest.Matchers.equalTo("EM30R1"))
-        )
-        .andExpect(
-            jsonPath("$.secondaryMarks")
-                .value(org.hamcrest.Matchers.equalTo(List.of()))
-        )
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
+        .andExpect(jsonPath("$.timberMark").value(Matchers.equalTo("EM30R1")))
+        .andExpect(jsonPath("$.secondaryMarks").value(Matchers.equalTo(List.of())))
         .andReturn();
   }
 
@@ -368,13 +370,13 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldIncludeBookmarkedFieldAsFalse() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .param("page", "0")
                 .param("size", "10")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(CONTENT_TYPE_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
         .andExpect(jsonPath("$.content[0].bookmarked").value(false))
         .andReturn();
   }
@@ -384,17 +386,16 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldFilterByReportingUnitIds() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .param("page", "0")
                 .param("size", "10")
                 .param("reportingUnitIds", "879")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(CONTENT_TYPE_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
         .andExpect(jsonPath("$.content[0].ruNumber").value(879))
-        .andExpect(jsonPath("$.page.totalElements")
-            .value(org.hamcrest.Matchers.greaterThan(0)))
+        .andExpect(jsonPath("$.page.totalElements").value(Matchers.greaterThan(0)))
         .andReturn();
   }
 
@@ -403,16 +404,15 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldFilterByMultipleReportingUnitIds() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .param("page", "0")
                 .param("size", "10")
                 .param("reportingUnitIds", "879", "916")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(CONTENT_TYPE_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.page.totalElements")
-            .value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)))
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
+        .andExpect(jsonPath("$.page.totalElements").value(Matchers.greaterThanOrEqualTo(2)))
         .andReturn();
   }
 
@@ -421,14 +421,14 @@ class SearchControllerReportingUnitIntegrationTest extends AbstractTestContainer
   void shouldReturnNoResultsForNonExistentReportingUnitIds() throws Exception {
     mockMvc
         .perform(
-            get("/api/search/reporting-units")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            get(SEARCH_URL)
+                .header(HttpHeaders.CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .param("page", "0")
                 .param("size", "10")
                 .param("reportingUnitIds", "999999999")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(CONTENT_TYPE_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentType(CONTENT_TYPE_JSON))
         .andExpect(jsonPath("$.page.totalElements").value(0))
         .andReturn();
   }
