@@ -61,6 +61,7 @@ describe('ThemeContext', () => {
   });
 
   it('setTheme changes the theme', async () => {
+    const user = await userEvent.setup();
     (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'g10' });
     await renderWithProviders();
     act(() => screen.getByText('Set g100').click());
@@ -69,6 +70,7 @@ describe('ThemeContext', () => {
   });
 
   it('toggleTheme toggles between g10 and g100', async () => {
+    const user = await userEvent.setup();
     (APIs.user.getUserPreferences as Mock)
       .mockResolvedValueOnce({ theme: 'g10' })
       .mockResolvedValueOnce({ theme: 'g100' })
@@ -77,7 +79,7 @@ describe('ThemeContext', () => {
     await renderWithProviders();
 
     // Default is g10, toggle should set to g100
-    await userEvent.click(screen.getByText('Toggle'));
+    await user.click(screen.getByText('Toggle'));
     await waitFor(() => {
       expect(screen.getByTestId('theme-value').textContent).toBe('g100');
     });

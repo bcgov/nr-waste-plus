@@ -26,17 +26,19 @@ describe('PageTitleProvider', () => {
   });
 
   it('updates the page title when setPageTitle is called', async () => {
+    const user = await userEvent.setup();
     render(
       <PageTitleProvider>
         <TestComponent />
       </PageTitleProvider>,
     );
     //expect(screen.getByTestId('page-title').textContent).toBe('Waste Plus -');
-    await userEvent.click(screen.getByText('Set Title'));
+    await user.click(screen.getByText('Set Title'));
     expect(screen.getByTestId('page-title').textContent).toBe('Waste Plus - New Title');
   });
 
   it('shares the page title across multiple consumers', async () => {
+    const user = await userEvent.setup();
     function AnotherComponent() {
       const { pageTitle } = usePageTitle();
       return <span data-testid="another-title">{pageTitle}</span>;
@@ -48,7 +50,7 @@ describe('PageTitleProvider', () => {
       </PageTitleProvider>,
     );
     //expect(screen.getByTestId('page-title').textContent).toBe('Waste Plus -');
-    await userEvent.click(screen.getByText('Set Title'));
+    await user.click(screen.getByText('Set Title'));
     expect(screen.getByTestId('another-title').textContent).toBe('Waste Plus - New Title');
   });
 
