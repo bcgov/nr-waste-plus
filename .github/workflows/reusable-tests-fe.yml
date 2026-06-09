@@ -114,7 +114,6 @@ jobs:
             npx playwright install-deps
             npx playwright install
             npm run test:e2e:${{ matrix.target }}
-            ls -lha .
           dir: frontend
 
       - name: Annotate PR with e2e results
@@ -130,7 +129,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: coverage-e2e-${{ matrix.target }}
-          path: frontend/.nyc_output/
+          path: ${{ github.workspace }}/frontend/.nyc_output/
           if-no-files-found: error
 
       - name: Upload e2e test results (videos + traces)
