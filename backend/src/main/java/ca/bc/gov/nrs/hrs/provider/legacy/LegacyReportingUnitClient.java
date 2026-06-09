@@ -333,6 +333,9 @@ public class LegacyReportingUnitClient {
       Throwable throwable) {
 
     logFallbackError(throwable);
+    log.error(
+        "Returning empty users list for userId: {}",
+        userId);
     return LegacyApiConstants.EMPTY_STRING_LIST;
   }
 
