@@ -212,6 +212,33 @@ public class LegacyReportingUnitClient {
         .body(new ParameterizedTypeReference<>() {});
   }
 
+  /**
+   * Retrieve legacy details for a specific reporting unit from the legacy API.
+   *
+   * <p>Makes a {@code GET} request to {@code /api/reporting-units/{reportingUnitId}}
+   * and deserializes the response into a {@link ReportingUnitLegacyDetailsDto}.
+   * </p>
+   *
+   * <p>A 404 response from the legacy service — which indicates either that the reporting unit
+   * does not exist or that the BCeID user is scoped out — is translated into a
+   * {@link NotFoundGenericException} before {@code body(...)} is reached, so that callers
+   * receive an HTTP 404 rather than a 500.
+   * </p>
+   *
+   * <p>This method intentionally has no circuit breaker: expected client-side outcomes such as
+   * 404s must not count as breaker failures and must not open the shared breaker used by other
+   * legacy calls.
+   * </p>
+   *
+   * @param reportingUnitId the unique identifier of the reporting unit to retrieve;
+   *                        must not be null
+   * @return a {@link ReportingUnitLegacyDetailsDto} containing the reporting unit's
+   *         client number, location code, sampling method, and district; never null
+   * @throws NotFoundGenericException if the legacy service returns 404 (reporting unit not found
+   *         or BCeID user scoped out)
+   * @throws org.springframework.web.client.RestClientException if there is an
+   *         unrecoverable HTTP error or the response cannot be deserialized
+   */
   @NewSpan
   public ReportingUnitLegacyDetailsDto getReportingUnitDetails(
       Long reportingUnitId) {
