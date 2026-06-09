@@ -124,7 +124,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: coverage-e2e-${{ matrix.target }}
-          path: frontend/.nyc_output/**
+          path: coverage-${{ matrix.target }}.tar.gz
           if-no-files-found: error
 
       - name: Annotate PR with e2e results
