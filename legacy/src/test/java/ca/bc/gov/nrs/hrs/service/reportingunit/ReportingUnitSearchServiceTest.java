@@ -58,14 +58,22 @@ class ReportingUnitSearchServiceTest {
     @DisplayName("should call repository and return mapped page")
     void shouldCallRepository_andReturnMappedPage() {
       // Arrange
-      ReportingUnitSearchParametersDto filters = new ReportingUnitSearchParametersDto();
+      ReportingUnitSearchParametersDto filters =
+          new ReportingUnitSearchParametersDto();
       PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
-      ReportingUnitSearchProjection projection = mock(ReportingUnitSearchProjection.class);
-      ReportingUnitSearchResultDto dto = mock(ReportingUnitSearchResultDto.class);
-      Page<ReportingUnitSearchProjection> projPage = new PageImpl<>(List.of(projection));
+      ReportingUnitSearchProjection projection =
+          mock(ReportingUnitSearchProjection.class);
+      ReportingUnitSearchResultDto dto =
+          mock(ReportingUnitSearchResultDto.class);
+      List<ReportingUnitSearchProjection> projections = List.of();
+      projections.add(projection);
+      Page<ReportingUnitSearchProjection> projPage =
+          new PageImpl<>(projections);
 
-      when(ruRepository.searchReportingUnits(any(), any())).thenReturn(projPage);
-      when(ruSearchMapper.fromProjection(projection)).thenReturn(dto);
+      when(ruRepository.searchReportingUnits(any(), any()))
+          .thenReturn(projPage);
+      when(ruSearchMapper.fromProjection(projection))
+          .thenReturn(dto);
 
       // Act
       Page<ReportingUnitSearchResultDto> result =
@@ -78,15 +86,18 @@ class ReportingUnitSearchServiceTest {
     }
 
     @Test
-    @DisplayName("should replace filter client numbers with user client numbers when filter has NOVALUE")
+    @DisplayName("should replace filter client numbers with user client numbers " +
+        "when filter has NOVALUE")
     void shouldReplaceClientNumbers_whenFilterHasNoValue() {
       // Arrange
-      ReportingUnitSearchParametersDto filters = new ReportingUnitSearchParametersDto();
+      ReportingUnitSearchParametersDto filters =
+          new ReportingUnitSearchParametersDto();
       filters.setClientNumbers(List.of(LegacyConstants.NOVALUE));
       PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
       Page<ReportingUnitSearchProjection> emptyPage = Page.empty();
 
-      when(ruRepository.searchReportingUnits(any(), any())).thenReturn(emptyPage);
+      when(ruRepository.searchReportingUnits(any(), any()))
+          .thenReturn(emptyPage);
 
       // Act
       service.search(filters, pageable, CLIENT_NUMBERS, "user1");
@@ -99,12 +110,14 @@ class ReportingUnitSearchServiceTest {
     @DisplayName("should replace filter client numbers when filter client numbers list is empty")
     void shouldReplaceClientNumbers_whenFilterClientNumbersEmpty() {
       // Arrange
-      ReportingUnitSearchParametersDto filters = new ReportingUnitSearchParametersDto();
+      ReportingUnitSearchParametersDto filters =
+          new ReportingUnitSearchParametersDto();
       filters.setClientNumbers(List.of());
       PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
       Page<ReportingUnitSearchProjection> emptyPage = Page.empty();
 
-      when(ruRepository.searchReportingUnits(any(), any())).thenReturn(emptyPage);
+      when(ruRepository.searchReportingUnits(any(), any()))
+          .thenReturn(emptyPage);
 
       // Act
       service.search(filters, pageable, CLIENT_NUMBERS, "user1");
@@ -118,12 +131,14 @@ class ReportingUnitSearchServiceTest {
     void shouldKeepFilterClientNumbers_whenExplicitlySet() {
       // Arrange
       List<String> explicitClients = List.of("00099999");
-      ReportingUnitSearchParametersDto filters = new ReportingUnitSearchParametersDto();
+      ReportingUnitSearchParametersDto filters =
+          new ReportingUnitSearchParametersDto();
       filters.setClientNumbers(explicitClients);
       PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
       Page<ReportingUnitSearchProjection> emptyPage = Page.empty();
 
-      when(ruRepository.searchReportingUnits(any(), any())).thenReturn(emptyPage);
+      when(ruRepository.searchReportingUnits(any(), any()))
+          .thenReturn(emptyPage);
 
       // Act
       service.search(filters, pageable, CLIENT_NUMBERS, "user1");
@@ -136,13 +151,15 @@ class ReportingUnitSearchServiceTest {
     @DisplayName("should set requestUserId on filters when requestByMe is true")
     void shouldSetRequestUserId_whenRequestByMeIsTrue() {
       // Arrange
-      ReportingUnitSearchParametersDto filters = new ReportingUnitSearchParametersDto();
+      ReportingUnitSearchParametersDto filters =
+          new ReportingUnitSearchParametersDto();
       filters.setRequestByMe(true);
       filters.setClientNumbers(List.of("00001271"));
       PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
       Page<ReportingUnitSearchProjection> emptyPage = Page.empty();
 
-      when(ruRepository.searchReportingUnits(any(), any())).thenReturn(emptyPage);
+      when(ruRepository.searchReportingUnits(any(), any()))
+          .thenReturn(emptyPage);
 
       // Act
       service.search(filters, pageable, CLIENT_NUMBERS, "IDIR\\TESTUSER");
@@ -155,13 +172,15 @@ class ReportingUnitSearchServiceTest {
     @DisplayName("should not set requestUserId on filters when requestByMe is false")
     void shouldNotSetRequestUserId_whenRequestByMeIsFalse() {
       // Arrange
-      ReportingUnitSearchParametersDto filters = new ReportingUnitSearchParametersDto();
+      ReportingUnitSearchParametersDto filters =
+          new ReportingUnitSearchParametersDto();
       filters.setRequestByMe(false);
       filters.setClientNumbers(List.of("00001271"));
       PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
       Page<ReportingUnitSearchProjection> emptyPage = Page.empty();
 
-      when(ruRepository.searchReportingUnits(any(), any())).thenReturn(emptyPage);
+      when(ruRepository.searchReportingUnits(any(), any()))
+          .thenReturn(emptyPage);
 
       // Act
       service.search(filters, pageable, CLIENT_NUMBERS, "IDIR\\TESTUSER");
@@ -182,7 +201,8 @@ class ReportingUnitSearchServiceTest {
     @DisplayName("should return empty optional when repository returns nothing")
     void shouldReturnEmpty_whenRepositoryReturnsEmpty() {
       // Arrange
-      when(ruRepository.getSearchExpandedContent(879L, 1906L)).thenReturn(Optional.empty());
+      when(ruRepository.getSearchExpandedContent(879L, 1906L))
+          .thenReturn(Optional.empty());
 
       // Act
       Optional<ReportingUnitSearchExpandedDto> result =
@@ -198,10 +218,13 @@ class ReportingUnitSearchServiceTest {
       // Arrange
       ReportingUnitSearchExpandedProjection projection =
           mock(ReportingUnitSearchExpandedProjection.class);
-      ReportingUnitSearchExpandedDto dto = mock(ReportingUnitSearchExpandedDto.class);
+      ReportingUnitSearchExpandedDto dto =
+          mock(ReportingUnitSearchExpandedDto.class);
+
       when(ruRepository.getSearchExpandedContent(34004L, 161966L))
           .thenReturn(Optional.of(projection));
-      when(expandedMapper.fromProjection(projection)).thenReturn(dto);
+      when(expandedMapper.fromProjection(projection))
+          .thenReturn(dto);
 
       // Act
       Optional<ReportingUnitSearchExpandedDto> result =
@@ -213,4 +236,3 @@ class ReportingUnitSearchServiceTest {
     }
   }
 }
-
