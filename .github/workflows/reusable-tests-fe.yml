@@ -115,7 +115,8 @@ jobs:
             npx playwright install
             npm run test:e2e:${{ matrix.target }}
           dir: frontend
-      - name: Package coverage
+
+      - name: Package e2e:${{ matrix.target }} coverage
         run: |
           tar -czf coverage-${{ matrix.target }}.tar.gz \
             -C frontend .nyc_output
