@@ -218,6 +218,8 @@ export default defineConfig(({ mode }) => {
           '**/main.tsx',
           '**/App.tsx',
           '**/e2e.setup.ts',
+          '**/DevTools.tsx',
+          '**/vite.config.ts',
         ],
         include: ['src/**/*.ts', 'src/**/*.tsx'],
         lines: 80,
