@@ -69,9 +69,7 @@ public class ReportingUnitService {
         .map(ruDetailsMapper::fromProjection)
         .orElseThrow(() -> new WasteReportingUnitNotFound(reportingUnitId));
   }
-
   
-
   /**
    * Creates a new Reporting Unit by delegating to the {@code WASTE_501_REPORTING_UNIT} Oracle
    * package, which generates the ID and performs the INSERT internally.
