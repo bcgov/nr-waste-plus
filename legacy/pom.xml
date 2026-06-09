@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.5.14</version>
+    <version>4.0.6</version>
     <relativePath /> <!-- lookup parent from repository -->
   </parent>
   <groupId>ca.bc.gov.nrs</groupId>
@@ -94,7 +94,7 @@
     <testcontainers.version>1.21.3</testcontainers.version>
     <jackson.version>2.21.1</jackson.version>
     <jackson-bom.version>2.21.1</jackson-bom.version>
-    <spring-security.version>6.5.10</spring-security.version>
+    <spring-security.version>7.0.5</spring-security.version>
   </properties>
 
   <profiles>
@@ -295,7 +295,7 @@
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-webmvc</artifactId>
-        <version>6.2.18</version>
+        <version>7.0.7</version>
       </dependency>
       <dependency>
         <groupId>org.apache.tomcat.embed</groupId>
