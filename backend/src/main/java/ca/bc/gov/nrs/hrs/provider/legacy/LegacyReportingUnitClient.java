@@ -268,6 +268,16 @@ public class LegacyReportingUnitClient {
         .body(ReportingUnitLegacyDetailsDto.class);
   }
 
+  /**
+   * Creates a reporting unit in the legacy API.
+   *
+   * Sends a POST request to {@code /api/reporting-units} with the provided
+   * {@link CreateReportingUnitRequestDto}. The legacy API is expected to return
+   * the identifier of the newly created reporting unit as a numeric value.
+   *
+   * @param request the create request DTO
+   * @return the id of the newly created reporting unit
+   */
   @NewSpan
   public Long createReportingUnit(
       CreateReportingUnitRequestDto request) {
