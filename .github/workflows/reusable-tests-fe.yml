@@ -5,77 +5,64 @@ on:
 
 permissions: {}
 
+env:
+  VITE_APP_NAME: Waste Plus
+  VITE_FEATURE_FLAGS: '{"offline-mode-enabled":false,"bookmark-ru-enabled":true, "reporting-unit-details-enabled": true, "reporting-unit-create-enabled": true}'
+  VITE_ZONE: TEST
+  VITE_MOCK_AUTH: true
+  VITE_USER_POOLS_ID: ${{ secrets.COGNITO_USER_POOL }}
+  VITE_USER_POOLS_WEB_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
+  VITE_LEGACY_BASE_URL: https://apps.nrs.gov.bc.ca/ext/waste-for
+  VITE_CLIENT_BASE_URL: https://forestclient.nrs.gov.bc.ca
+  VITE_BACKEND_URL: http://localhost:8080
+  VITE_NODE_ENV: test
+  VITE_COVERAGE: true
+  VITE_PORT: 3000
+  VITE_FAM_DOMAIN: ${{ secrets.FAM_DOMAIN }}
+  VITE_BCEID_HELP: ${{ secrets.VITE_BCEID_HELP }}
+  VITE_IDIR_HELP: ${{ secrets.VITE_IDIR_HELP }}
+
 jobs:
-  tests-frontend:
+  detect-changes:
+    name: Detect Frontend Changes
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-24.04
+    outputs:
+      triggered: ${{ steps.diff.outputs.triggered }}
+    steps:
+      - name: Detect changed files for frontend triggers
+        id: diff
+        uses: bcgov/action-diff-triggers@a80e4b3cf77b7e05f84e74030e3bfa08b717a574 # v1.2.1
+        with:
+          triggers: ('frontend/')
+
+  unit:
     environment: test
     name: Frontend Unit Tests
-    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    if: needs.detect-changes.outputs.triggered == 'true'
+    needs: [detect-changes]
     container:
       image: mcr.microsoft.com/playwright:v1.60.0-noble
     permissions:
       contents: write
       checks: write
     runs-on: ubuntu-24.04
-    env:
-      VITE_APP_NAME: Waste Plus
-      VITE_FEATURE_FLAGS: '{"offline-mode-enabled":false,"bookmark-ru-enabled":true, "reporting-unit-details-enabled": true, "reporting-unit-create-enabled": true}'
-      VITE_ZONE: TEST
-      VITE_MOCK_AUTH: true
-      VITE_USER_POOLS_ID: ${{ secrets.COGNITO_USER_POOL }}
-      VITE_USER_POOLS_WEB_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
-      VITE_LEGACY_BASE_URL: https://apps.nrs.gov.bc.ca/ext/waste-for
-      VITE_CLIENT_BASE_URL: https://forestclient.nrs.gov.bc.ca
-      VITE_BACKEND_URL: http://localhost:8080
-      VITE_NODE_ENV: test
-      VITE_COVERAGE: true
-      VITE_PORT: 3000
-      VITE_FAM_DOMAIN: ${{ secrets.FAM_DOMAIN }}
-      VITE_BCEID_HELP: ${{ secrets.VITE_BCEID_HELP }}
-      VITE_IDIR_HELP: ${{ secrets.VITE_IDIR_HELP }}
     steps:
       - name: Fix safe.directory for GitHub Actions
         run: git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
-      - name: Install unzip
-        run: |
-          apt-get update
-          apt-get install -y unzip
-      - uses: bcgov/action-test-and-analyse@8f699e3fd3fadd9a6adf6f4b1f2638ef7ecfefb9 # v2.0.0
-        id: tests
-        env:
-          VITE_APP_NAME: Waste Plus
-          VITE_FEATURE_FLAGS: '{"offline-mode-enabled":false,"bookmark-ru-enabled":true, "reporting-unit-details-enabled": true, "reporting-unit-create-enabled": true}'
-          VITE_ZONE: TEST
-          VITE_MOCK_AUTH: true
-          VITE_USER_POOLS_ID: ${{ secrets.COGNITO_USER_POOL }}
-          VITE_USER_POOLS_WEB_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
-          VITE_LEGACY_BASE_URL: https://apps.nrs.gov.bc.ca/ext/waste-for
-          VITE_CLIENT_BASE_URL: https://forestclient.nrs.gov.bc.ca
-          VITE_BACKEND_URL: http://localhost:8080
-          VITE_NODE_ENV: test
-          VITE_COVERAGE: true
-          VITE_PORT: 3000
-          VITE_BCEID_HELP: ${{ secrets.VITE_BCEID_HELP }}
-          VITE_IDIR_HELP: ${{ secrets.VITE_IDIR_HELP }}
+
+      - name: Run frontend unit tests without sonar
+        uses: bcgov/action-test-and-analyse@8f699e3fd3fadd9a6adf6f4b1f2638ef7ecfefb9 # v2.0.0
         with:
           node_version: 24
+          dep_scan: off
           commands: |
             git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
             npm ci
-            npx playwright install-deps
-            npx playwright install
-            npm run test:coverage
+            npm run test:unit
           dir: frontend
-          sonar_args: >
-            -Dsonar.exclusions=**/*.test.ts,**/*.test.tsx,**/coverage/**,**/test-results/**,**/test-reports/**,**/node_modules/**,**/stub/**,**/reports/**,**/tests/**,**/vite-env.d.ts,**/types/**,**/*types.{ts,tsx},**/constants.{ts,tsx},**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx,**/playwright.config.ts,**/e2e.setup.ts,**/DevTools.tsx,**/vite.config.ts
-            -Dsonar.coverage.exclusions=**/*.test.ts,**/*.test.tsx,**/coverage/**,**/test-results/**,**/test-reports/**,**/node_modules/**,**/stub/**,**/reports/**,**/tests/**,**/vite-env.d.ts,**/types/**,**/*types.{ts,tsx},**/constants.{ts,tsx},**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx,**/playwright.config.ts,**/DevTools.tsx,**/vite.config.ts
-            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.organization=bcgov-sonarcloud
-            -Dsonar.projectKey=nr-waste-plus-frontend
-          sonar_token: ${{ secrets.SONAR_TOKEN_FRONTEND }}
-          triggers: ('frontend/')
 
-      - name: Annotate PR with frontend test results
-        if: steps.tests.outputs.triggered == 'true'
+      - name: Annotate PR with frontend unit test results
         uses: dorny/test-reporter@v3
         with:
           name: Frontend Unit Tests
@@ -84,27 +71,121 @@ jobs:
           only-summary: false
           fail-on-error: true
 
+      - name: Upload unit coverage artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-unit
+          path: frontend/coverage/coverage-final.json
+          if-no-files-found: error
+
+  e2e:
+    environment: test
+    name: Frontend E2E Tests (${{ matrix.target }})
+    if: needs.detect-changes.outputs.triggered == 'true'
+    needs: [detect-changes]
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [idir, bceid]
+    container:
+      image: mcr.microsoft.com/playwright:v1.60.0-noble
+    permissions:
+      contents: write
+      checks: write
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Fix safe.directory for GitHub Actions
+        run: git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
+
+      - name: Run e2e tests without sonar
+        uses: bcgov/action-test-and-analyse@8f699e3fd3fadd9a6adf6f4b1f2638ef7ecfefb9 # v2.0.0
+        with:
+          node_version: 24
+          dep_scan: off
+          commands: |
+            git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
+            npm ci
+            npx playwright install-deps
+            npx playwright install
+            npm run test:e2e:${{ matrix.target }}
+          dir: frontend
+
       - name: Annotate PR with e2e results
         uses: dorny/test-reporter@v3
-        if: steps.tests.outputs.triggered == 'true'
         with:
-          name: End-to-End Tests
+          name: End-to-End Tests (${{ matrix.target }})
           path: frontend/test-reports/junit/report.xml
           reporter: java-junit
           only-summary: false
           fail-on-error: true
 
-      - name: Upload test results (videos + traces)
+      - name: Upload e2e coverage artifact
         uses: actions/upload-artifact@v7
-        if: steps.tests.outputs.triggered == 'true'
         with:
-          name: e2e-results
+          name: coverage-e2e-${{ matrix.target }}
+          path: frontend/.nyc_output/
+          if-no-files-found: error
+
+      - name: Upload e2e test results (videos + traces)
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-results-${{ matrix.target }}
           path: frontend/test-results/
 
-      - name: Upload test results
+      - name: Upload e2e html report
         uses: actions/upload-artifact@v7
-        if: steps.tests.outputs.triggered == 'true'
         with:
-          name: e2e-reports
+          name: e2e-reports-${{ matrix.target }}
           path: frontend/test-reports/report/
+
+  merge-sonar:
+    environment: test
+    name: Frontend Coverage Merge and Sonar
+    if: needs.detect-changes.outputs.triggered == 'true'
+    needs: [detect-changes, unit, e2e]
+    permissions:
+      contents: write
+      checks: write
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Download unit coverage artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: coverage-unit
+          path: frontend/coverage/
+
+      - name: Download e2e coverage artifacts
+        uses: actions/download-artifact@v5
+        with:
+          pattern: coverage-e2e-*
+          path: frontend/.nyc_output/
+          merge-multiple: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Merge coverage
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run coverage:merge
+
+      - name: Sonar scan
+        uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e # v8
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
+        with:
+          projectBaseDir: frontend
+          args: >
+            -Dsonar.exclusions=**/*.test.ts,**/*.test.tsx,**/coverage/**,**/test-results/**,**/test-reports/**,**/node_modules/**,**/stub/**,**/reports/**,**/tests/**,**/vite-env.d.ts,**/types/**,**/*types.{ts,tsx},**/constants.{ts,tsx},**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx,**/playwright.config.ts,**/e2e.setup.ts,**/DevTools.tsx,**/vite.config.ts
+            -Dsonar.coverage.exclusions=**/*.test.ts,**/*.test.tsx,**/coverage/**,**/test-results/**,**/test-reports/**,**/node_modules/**,**/stub/**,**/reports/**,**/tests/**,**/vite-env.d.ts,**/types/**,**/*types.{ts,tsx},**/constants.{ts,tsx},**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx,**/playwright.config.ts,**/DevTools.tsx,**/vite.config.ts
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.organization=bcgov-sonarcloud
+            -Dsonar.projectKey=nr-waste-plus-frontend
 
