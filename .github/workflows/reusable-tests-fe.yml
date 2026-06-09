@@ -115,6 +115,10 @@ jobs:
             npx playwright install
             npm run test:e2e:${{ matrix.target }}
           dir: frontend
+      - name: Package coverage
+        run: |
+          tar -czf coverage-${{ matrix.target }}.tar.gz \
+            -C frontend .nyc_output
 
       - name: Upload e2e coverage artifact
         uses: actions/upload-artifact@v7
