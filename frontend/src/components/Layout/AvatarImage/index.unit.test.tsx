@@ -19,7 +19,7 @@ describe('AvatarImage', () => {
   it('renders empty initials for empty name', () => {
     render(<AvatarImage userName="" size="small" />);
     const initialsElement = screen.queryByTestId('avatar-initials');
-    expect(initialsElement!.textContent).to.equal('');
+    expect(initialsElement!.textContent).toBe('');
   });
 
   it('renders only first two initials for names with more than two parts', () => {

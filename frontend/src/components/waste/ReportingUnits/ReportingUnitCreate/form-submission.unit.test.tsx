@@ -1,12 +1,12 @@
 import { QueryClient, QueryClientProvider, type UseMutationResult } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
-import { render, waitFor, act } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import ReportingUnitCreate from './index';
 
-import type { CodeDescriptionDto, ReportingUnitCreateDto } from '@/services/types';
 import type { FamLoginUser } from '@/context/auth/types';
+import type { CodeDescriptionDto, ReportingUnitCreateDto } from '@/services/types';
 
 import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
 import {

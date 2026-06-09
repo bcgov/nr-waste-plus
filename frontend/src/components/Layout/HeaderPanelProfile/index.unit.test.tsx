@@ -67,8 +67,8 @@ describe('HeaderPanelProfile', () => {
     screen.getByText('Jane Doe');
     screen.getByText('IDIR\\jdoe');
     screen.getByText('Email: jane@example.com');
-    expect(screen.getByTestId('avatar-initials').textContent).to.equal('Jane Doe-large');
-    expect(screen.getByTestId('user-fullname').textContent).to.equal('Jane Doe');
+    expect(screen.getByTestId('avatar-initials').textContent).toBe('Jane Doe-large');
+    expect(screen.getByTestId('user-fullname').textContent).toBe('Jane Doe');
   });
 
   it('calls logout when Log out is clicked', async () => {

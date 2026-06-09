@@ -61,7 +61,6 @@ describe('ThemeContext', () => {
   });
 
   it('setTheme changes the theme', async () => {
-    const user = await userEvent.setup();
     (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'g10' });
     await renderWithProviders();
     act(() => screen.getByText('Set g100').click());
