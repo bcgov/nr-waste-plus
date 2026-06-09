@@ -154,10 +154,8 @@ describe('MyClientListing', () => {
       mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
-      await waitFor(() => {
-        screen.getByText('ABC Logging Ltd');
-        screen.getByText('XYZ Forestry Inc');
-      });
+      await screen.findByText('ABC Logging Ltd');
+      await screen.findByText('XYZ Forestry Inc');
     });
   });
 
@@ -166,9 +164,7 @@ describe('MyClientListing', () => {
       mockSearchClients.mockResolvedValue(mockLargeDataset);
       await renderWithProps();
 
-      await waitFor(() => {
-        screen.getByText('Client 1');
-      });
+      await screen.findByText('Client 1');
 
       // Find and click next page button
       const nextButton = screen.getByLabelText('Next page');
@@ -185,9 +181,7 @@ describe('MyClientListing', () => {
       mockSearchClients.mockResolvedValue(mockLargeDataset);
       await renderWithProps();
 
-      await waitFor(() => {
-        screen.getByText('Client 1');
-      });
+      await screen.findByText('Client 1');
 
       const initialCallCount = mockSearchClients.mock.calls.length;
 
@@ -212,9 +206,7 @@ describe('MyClientListing', () => {
 
       await renderWithProps();
 
-      await waitFor(() => {
-        screen.getByText('Client 1');
-      });
+      await screen.findByText('Client 1');
 
       // Try to navigate to page 3 (beyond total pages)
       const nextButton = screen.getByLabelText('Next page');
@@ -243,10 +235,8 @@ describe('MyClientListing', () => {
       mockSearchClients.mockRejectedValue(errorResponse);
       await renderWithProps();
 
-      await waitFor(() => {
-        // Component displays empty results state with error flag
-        screen.getByText('No results');
-      });
+      // Component displays empty results state with error flag
+      await screen.findByText('No results');
     });
 
     it('sends event when error occurs', async () => {
@@ -306,54 +296,45 @@ describe('MyClientListing', () => {
       mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
-      await waitFor(() => {
-        // Check headers
-        screen.getByText('Client No.');
-        screen.getByText('Client name');
-        screen.getByText('RUs created by me');
-        screen.getByText('Draft blocks in my RUs');
-        screen.getByText('Last Update');
+      // Check headers
+      await screen.findByText('Client No.');
+      screen.getByText('Client name');
+      screen.getByText('RUs created by me');
+      screen.getByText('Draft blocks in my RUs');
+      screen.getByText('Last Update');
 
-        // Check data
-        screen.getByText('00001001');
-        screen.getByText('ABC Logging Ltd');
-        screen.getByText('15');
-        screen.getByText('8');
-      });
+      // Check data
+      screen.getByText('00001001');
+      screen.getByText('ABC Logging Ltd');
+      screen.getByText('15');
+      screen.getByText('8');
     });
 
     it('adds id property to each client for table rendering', async () => {
       mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
-      await waitFor(() => {
-        // The component transforms data to add id from client.code
-        screen.getByText('00001001');
-        screen.getByText('00001002');
-      });
+      // The component transforms data to add id from client.code
+      await screen.findByText('00001001');
+      screen.getByText('00001002');
     });
 
     it('renders client code as a link to search page with client filter', async () => {
       mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
-      await waitFor(() => {
-        const link = screen.getByRole('link', { name: '00001001' });
-        // link is defined; getBy* throws if not found
-        expect(link.getAttribute('href')).toBe('/search?clientNumbers=00001001');
-      });
+      const link = await screen.findByRole('link', { name: '00001001' });
+      expect(link.getAttribute('href')).toBe('/search?clientNumbers=00001001');
     });
 
     it('renders all client codes as search links', async () => {
       mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
-      await waitFor(() => {
-        const link1 = screen.getByRole('link', { name: '00001001' });
-        const link2 = screen.getByRole('link', { name: '00001002' });
-        expect(link1.getAttribute('href')).toBe('/search?clientNumbers=00001001');
-        expect(link2.getAttribute('href')).toBe('/search?clientNumbers=00001002');
-      });
+      const link1 = await screen.findByRole('link', { name: '00001001' });
+      const link2 = screen.getByRole('link', { name: '00001002' });
+      expect(link1.getAttribute('href')).toBe('/search?clientNumbers=00001001');
+      expect(link2.getAttribute('href')).toBe('/search?clientNumbers=00001002');
     });
   });
 
@@ -362,10 +343,8 @@ describe('MyClientListing', () => {
       mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
-      await waitFor(() => {
-        expect(screen.queryByRole('progressbar')).toBeNull();
-        screen.getByText('ABC Logging Ltd');
-      });
+      expect(screen.queryByRole('progressbar')).toBeNull();
+      await screen.findByText('ABC Logging Ltd');
     });
   });
 
