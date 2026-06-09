@@ -177,7 +177,7 @@ describe('WasteSearchTable Constants', () => {
       expect(ruHeader?.renderAs).toBeDefined();
       if (ruHeader?.renderAs) {
         const result = ruHeader.renderAs('RU-001');
-        const { container } = render(result, { wrapper: createRouterWrapper('/') });
+        const { container } = render(result);
         await act(async () => {});
         expect(container.firstChild).toBeDefined();
       }
@@ -189,7 +189,7 @@ describe('WasteSearchTable Constants', () => {
       expect(clientHeader?.renderAs).toBeDefined();
       if (clientHeader?.renderAs) {
         const result = clientHeader.renderAs('00001001');
-        const { container } = render(result, { wrapper: createRouterWrapper('/') });
+        const { container } = render(result);
         await act(async () => {});
         expect(container.firstChild).toBeDefined();
       }
@@ -200,7 +200,7 @@ describe('WasteSearchTable Constants', () => {
       const clientHeader = headers.find((h) => h.key === 'client.code');
       if (clientHeader?.renderAs) {
         const result = clientHeader.renderAs('00001002');
-        const { container } = render(result, { wrapper: createRouterWrapper('/') });
+        const { container } = render(result);
         await act(async () => {});
         expect(container.firstChild).toBeDefined();
       }
