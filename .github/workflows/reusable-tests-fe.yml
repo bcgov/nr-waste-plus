@@ -173,8 +173,14 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           pattern: coverage-e2e-*
-          path: frontend/.nyc_output/
+          path: frontend/coverage-artifacts/
           merge-multiple: true
+
+      - name: Extract e2e coverage tarballs
+        run: |
+          for f in frontend/coverage-artifacts/*.tar.gz; do
+            tar -xzf "$f" -C frontend
+          done
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
