@@ -126,9 +126,9 @@ class FeatureFlagsConfigurationTest {
   }
 
   @Test
-  @DisplayName("should not treat 'production' as a match for 'prod'")
-  void shouldNotMatchPartialProfileName() {
-    assertProductionDetectedWith(new String[]{"production"}, false);
+  @DisplayName("should treat 'production' as a valid production profile")
+  void shouldMatchProductionProfileName() {
+    assertProductionDetectedWith(new String[]{"production"}, true);
   }
 
   /**
