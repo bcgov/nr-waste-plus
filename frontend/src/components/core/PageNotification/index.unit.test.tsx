@@ -103,8 +103,7 @@ describe('PageNotification', () => {
     it('shouldSetAriaLabel_containingEventType_onCloseButton', () => {
       setupHook(makeEvent({ eventType: 'warning' }));
       render(<PageNotification eventTarget="scope" />);
-      const closeButton = screen.getByRole('button');
-      expect(closeButton.getAttribute('aria-label')).toContain('warning');
+      screen.getByRole('button', { name: /warning/i });
     });
 
     it('shouldApplyKindClass_forError', () => {
