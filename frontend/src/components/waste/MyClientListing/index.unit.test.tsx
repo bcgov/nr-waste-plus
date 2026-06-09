@@ -186,8 +186,7 @@ describe('MyClientListing', () => {
       const initialCallCount = mockSearchClients.mock.calls.length;
 
       // Verify that pagination controls exist
-      const pageSizeSelect = screen.getByLabelText('Items per page:');
-      // pageSizeSelect is defined; getBy* throws if not found
+      screen.getByLabelText('Items per page:');
 
       // Verify component can handle page size changes by checking initial state
       expect(initialCallCount).toBeGreaterThan(0);
