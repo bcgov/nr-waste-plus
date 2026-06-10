@@ -1,4 +1,4 @@
-import { InteriorDistrictRow, InteriorZone, InteriorData } from '../../districtVolumes.types';
+import type { InteriorDistrictRow, InteriorZone, InteriorData } from '../../districtVolumes.types';
 
 export function mapInteriorSpreadsheet(rows: Record<string, unknown>[]): InteriorData {
   const zoneMap = new Map<string, InteriorDistrictRow[]>();

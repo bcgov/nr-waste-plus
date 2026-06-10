@@ -1,4 +1,4 @@
-import { CoastDistrictRow, CoastSection, CoastData } from '../../districtVolumes.types';
+import type { CoastDistrictRow, CoastSection, CoastData } from '../../districtVolumes.types';
 
 export function mapCoastSpreadsheet(rows: Record<string, unknown>[]): CoastData {
   const sectionMap = new Map<string, CoastDistrictRow[]>();

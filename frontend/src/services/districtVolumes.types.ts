@@ -19,7 +19,7 @@ export type InteriorZone = z.infer<typeof interiorZoneSchema>;
 export const interiorDataSchema = z.object({
   type: z.literal('INTERIOR'),
   zones: z.array(interiorZoneSchema),
-  formulas: z.record(z.unknown()).default({}), // Reserved; serializes as {}
+  formulas: z.record(z.string(), z.unknown()).default({}),
 });
 export type InteriorData = z.infer<typeof interiorDataSchema>;
 
@@ -43,7 +43,7 @@ export type CoastSection = z.infer<typeof coastSectionSchema>;
 export const coastDataSchema = z.object({
   type: z.literal('COASTAL'),
   sections: z.array(coastSectionSchema),
-  formulas: z.record(z.unknown()).default({}), // Reserved; serializes as {}
+  formulas: z.record(z.string(), z.unknown()).default({}),
 });
 export type CoastData = z.infer<typeof coastDataSchema>;
 
