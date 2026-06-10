@@ -1,15 +1,10 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RouterProvider } from '@tanstack/react-router';
-import { act, render, screen } from '@testing-library/react';
-import { describe, it, expect, vi, type Mock } from 'vitest';
+import { screen } from '@testing-library/react';
+import { describe, it, vi, type Mock } from 'vitest';
 
 import Layout from './index';
 
-import { createTestRouter } from '@/config/tests/routerTestHelper';
-import { AuthProvider } from '@/context/auth/AuthProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import ThemeProvider from '@/context/theme/ThemeProvider';
 import APIs from '@/services/APIs';
 
 vi.mock('@/routes/routePaths', () => ({
@@ -52,36 +47,21 @@ describe('Layout', () => {
   it('shouldRenderHeaderGridAndChildren_whenRendered', async () => {
     (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
 
-    const qc = new QueryClient();
-    await act(async () =>
-      render(
-        <RouterProvider
-          router={createTestRouter(() => (
-            <AuthProvider>
-              <QueryClientProvider client={qc}>
-                <PreferenceProvider>
-                  <ThemeProvider>
-                    <LayoutProvider>
-                      <Layout>
-                        <DummyChild />
-                      </Layout>
-                    </LayoutProvider>
-                  </ThemeProvider>
-                </PreferenceProvider>
-              </QueryClientProvider>
-            </AuthProvider>
-          ))}
-        />,
-      ),
+    await renderWithAppAsync(
+      <LayoutProvider>
+        <Layout>
+          <DummyChild />
+        </Layout>
+      </LayoutProvider>,
     );
 
     // Header
-    expect(document.querySelector('.cds--header')).not.toBeNull();
+    screen.getByRole('banner');
     // Content body
-    expect(document.querySelector('.cds--content')).not.toBeNull();
+    screen.getByRole('main');
     // Grid
-    expect(document.querySelector('.layout-grid')).not.toBeNull();
+    screen.getByTestId('layout-grid');
     // Children
-    expect(screen.getByText('Hello Child')).toBeDefined();
+    screen.getByText('Hello Child');
   });
 });

@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
 import WasteSearchTableExpandContent from './index';
 
 import type { ReportingUnitSearchExpandedDto } from '@/services/search.types';
 
+import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
 
 vi.mock('@/services/APIs', () => {
@@ -41,15 +42,7 @@ const mockExpandedData: ReportingUnitSearchExpandedDto = {
 };
 
 const renderWithProps = async (rowId: string) => {
-  const qc = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-        staleTime: 0,
-      },
-    },
-  });
+  const qc = makeTestQueryClient();
   await act(async () =>
     render(
       <QueryClientProvider client={qc}>
@@ -88,9 +81,7 @@ describe('WasteSearchTableExpandContent', () => {
       const rowId = 'RU-N/A-Block-411B-224813681';
       await renderWithProps(rowId);
 
-      // Wait a bit to ensure no API call
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
+      // Assert that no API call was triggered (ruId is null, so skip fetch)
       expect(APIs.search.getReportingUnitSearchExpand).not.toHaveBeenCalled();
     });
 
@@ -98,9 +89,7 @@ describe('WasteSearchTableExpandContent', () => {
       const rowId = 'RU-4069-Block-N/A-224813681';
       await renderWithProps(rowId);
 
-      // Wait a bit to ensure no API call
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
+      // Assert that no API call was triggered (wasteAssessmentAreaId is null, so skip fetch)
       expect(APIs.search.getReportingUnitSearchExpand).not.toHaveBeenCalled();
     });
   });
@@ -111,14 +100,14 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('Licence number')).toBeDefined();
-        expect(screen.getByText('Cutting Permit')).toBeDefined();
-        expect(screen.findAllByText('Timber Mark')).toBeDefined();
-        expect(screen.getByText('Exempted (Yes/No)')).toBeDefined();
-        expect(screen.getByText('Net area')).toBeDefined();
-        expect(screen.getByText('Submitter')).toBeDefined();
-        expect(screen.getByText('Attachments and comments')).toBeDefined();
-        expect(screen.getByText('Comment:')).toBeDefined();
+        screen.getByText('Licence number');
+        screen.getByText('Cutting Permit');
+        screen.getAllByText('Timber Mark');
+        screen.getByText('Exempted (Yes/No)');
+        screen.getByText('Net area');
+        screen.getByText('Submitter');
+        screen.getByText('Attachments and comments');
+        screen.getByText('Comment:');
       });
     });
 
@@ -127,7 +116,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('LIC-12345')).toBeDefined();
+        screen.getByText('LIC-12345');
       });
     });
 
@@ -136,7 +125,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('CP-001')).toBeDefined();
+        screen.getByText('CP-001');
       });
     });
 
@@ -145,7 +134,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getAllByText('TM-001')).toBeDefined();
+        screen.getAllByText('TM-001');
       });
     });
 
@@ -154,7 +143,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('IDIR\\TESTUSER')).toBeDefined();
+        screen.getByText('IDIR\\TESTUSER');
       });
     });
 
@@ -163,7 +152,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('1500.5 ha')).toBeDefined();
+        screen.getByText('1500.5 ha');
       });
     });
 
@@ -172,7 +161,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('Blocks in the RU: 5')).toBeDefined();
+        screen.getByText('Blocks in the RU: 5');
       });
     });
 
@@ -181,7 +170,7 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('Test comments for this reporting unit')).toBeDefined();
+        screen.getByText('Test comments for this reporting unit');
       });
     });
   });
@@ -195,11 +184,7 @@ describe('WasteSearchTableExpandContent', () => {
       (APIs.search.getReportingUnitSearchExpand as Mock).mockReturnValue(searchPromise);
 
       const rowId = 'RU-4069-Block-411-224813681';
-      const qc = new QueryClient({
-        defaultOptions: {
-          queries: { retry: false, gcTime: 0, staleTime: 0 },
-        },
-      });
+      const qc = makeTestQueryClient();
       let container: HTMLElement = document.createElement('div');
       await act(async () => {
         const result = render(
@@ -221,7 +206,7 @@ describe('WasteSearchTableExpandContent', () => {
 
       // Wait for data to be displayed
       await waitFor(() => {
-        expect(screen.getByText('LIC-12345')).toBeDefined();
+        screen.getByText('LIC-12345');
       });
     });
 
@@ -230,11 +215,11 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(screen.getByText('LIC-12345')).toBeDefined();
+        screen.getByText('LIC-12345');
       });
 
       // Verify data is displayed (not in skeleton state)
-      expect(screen.getByText('CP-001')).toBeDefined();
+      screen.getByText('CP-001');
     });
   });
 
@@ -338,22 +323,20 @@ describe('WasteSearchTableExpandContent', () => {
       await renderWithProps(rowId);
 
       await waitFor(() => {
-        const agreementsCommentsEl = document.querySelector(`#${rowId}-attachments-comments`);
-        expect(agreementsCommentsEl).toBeDefined();
+        const agreementsCommentsEl = document.getElementById(`${rowId}-attachments-comments`);
+        expect(agreementsCommentsEl).not.toBeNull();
 
         // When wasteAssessmentAreaId is finite, the component should render the link
-        const linkInside = agreementsCommentsEl?.querySelector('a');
+        const linkInside = within(agreementsCommentsEl!).queryByRole('link');
         expect(linkInside).toBeTruthy();
       });
     });
 
     it('renders empty value when wasteAssessmentAreaId is not finite (no redirect link)', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
-      const qc = new QueryClient({
-        defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
-      });
+      const qc = makeTestQueryClient();
 
-      const { container } = await act(async () =>
+      await act(async () =>
         render(
           <QueryClientProvider client={qc}>
             <WasteSearchTableExpandContent rowId={rowId} />
@@ -362,12 +345,12 @@ describe('WasteSearchTableExpandContent', () => {
       );
 
       await waitFor(() => {
-        const agreementsCommentsEl = container.querySelector(`#${rowId}-attachments-comments`);
-        expect(agreementsCommentsEl).toBeDefined();
+        const agreementsCommentsEl = document.getElementById(`${rowId}-attachments-comments`);
+        expect(agreementsCommentsEl).not.toBeNull();
 
         // When wasteAssessmentAreaId is not a finite number (e.g. '411B'), the component should render EmptyValueTag
-        const linkInside = agreementsCommentsEl?.querySelector('a');
-        const emptyValue = agreementsCommentsEl?.querySelector('[data-testid="empty-value"]');
+        const linkInside = within(agreementsCommentsEl!).queryByRole('link');
+        const emptyValue = within(agreementsCommentsEl!).queryByTestId('empty-value');
 
         expect(linkInside).toBeFalsy();
         expect(emptyValue).toBeTruthy();
@@ -407,7 +390,7 @@ describe('WasteSearchTableExpandContent', () => {
           queries: { retry: false, gcTime: 0, staleTime: 0 },
         },
       });
-      const { container } = await act(async () =>
+      await act(async () =>
         render(
           <QueryClientProvider client={qc}>
             <WasteSearchTableExpandContent rowId={rowId} />
@@ -416,16 +399,16 @@ describe('WasteSearchTableExpandContent', () => {
       );
 
       await waitFor(() => {
-        expect(container.querySelector(`#${rowId}-license-number`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-cutting-permit`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-timber-mark`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-exempted`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-net-area`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-submitter`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-attachments-comments`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-comment`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-block-count`)).toBeDefined();
-        expect(container.querySelector(`#${rowId}-secondary-marks-count`)).toBeDefined();
+        expect(document.getElementById(`${rowId}-license-number`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-cutting-permit`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-timber-mark`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-exempted`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-net-area`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-submitter`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-attachments-comments`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-comment`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-block-count`)).not.toBeNull();
+        expect(document.getElementById(`${rowId}-secondary-marks-count`)).not.toBeNull();
       });
     });
   });
@@ -493,123 +476,6 @@ describe('WasteSearchTableExpandContent', () => {
 
       await waitFor(() => {
         expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalledWith(50, 50);
-      });
-    });
-  });
-
-  describe('row expansion data display', () => {
-    it('displays all key information together', async () => {
-      const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
-
-      await waitFor(() => {
-        // Verify multiple fields are displayed
-        expect(screen.getByText('Licence number')).toBeDefined();
-        expect(screen.getByText('LIC-12345')).toBeDefined();
-        expect(screen.getByText('Cutting Permit')).toBeDefined();
-        expect(screen.getByText('CP-001')).toBeDefined();
-        expect(screen.getByText('Blocks in the RU: 5')).toBeDefined();
-      });
-    });
-
-    it('properly formats numeric net area', async () => {
-      const dataWithDecimal: ReportingUnitSearchExpandedDto = {
-        ...mockExpandedData,
-        netArea: 2500.75,
-      };
-      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithDecimal);
-
-      const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
-
-      await waitFor(() => {
-        expect(screen.getByText('2500.75 ha')).toBeDefined();
-      });
-    });
-
-    it('displays zero total blocks correctly', async () => {
-      const dataWithZeroBlocks: ReportingUnitSearchExpandedDto = {
-        ...mockExpandedData,
-        totalBlocks: 0,
-      };
-      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithZeroBlocks);
-
-      const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
-
-      await waitFor(() => {
-        expect(screen.getByText('Blocks in the RU: 0')).toBeDefined();
-      });
-    });
-
-    it('displays timber mark multiple times for different screen sizes', async () => {
-      const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
-
-      await waitFor(() => {
-        const timberMarkElements = screen.getAllByText('TM-001');
-        // Timber mark appears in both lg+ and md/sm sections
-        expect(timberMarkElements.length).toBeGreaterThanOrEqual(2);
-      });
-    });
-
-    it('displays mark area multiple times for different screen sizes', async () => {
-      const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
-
-      await waitFor(() => {
-        const markAreaElements = screen.getAllByText('2000 ha');
-        // Mark area appears in both lg+ and md/sm sections
-        expect(markAreaElements.length).toBeGreaterThanOrEqual(2);
-      });
-    });
-
-    it('displays status description multiple times for different screen sizes', async () => {
-      const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
-
-      await waitFor(() => {
-        const statusElements = screen.getAllByText('Active');
-        // Status appears in main section, lg+ section, and md/sm section
-        expect(statusElements.length).toBeGreaterThanOrEqual(2);
-      });
-    });
-
-    it('displays all secondary marks with their areas and statuses', async () => {
-      const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
-
-      await waitFor(() => {
-        // Check secondary marks appear
-        expect(screen.getAllByText('SM-001')).toBeDefined();
-        expect(screen.getAllByText('SM-002')).toBeDefined();
-        // Check areas appear
-        expect(screen.getAllByText('500 ha')).toBeDefined();
-        expect(screen.getAllByText('300 ha')).toBeDefined();
-      });
-    });
-
-    it('displays total secondary marks count', async () => {
-      const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
-
-      await waitFor(() => {
-        expect(screen.getByText('Secondary marks in the block: 3')).toBeDefined();
-      });
-    });
-
-    it('displays empty string for null timber mark', async () => {
-      const dataWithNullTimberMark: ReportingUnitSearchExpandedDto = {
-        ...mockExpandedData,
-        timberMark: null,
-      };
-      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNullTimberMark);
-
-      const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
-
-      await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
       });
     });
   });

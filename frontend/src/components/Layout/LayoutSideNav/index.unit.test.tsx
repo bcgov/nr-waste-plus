@@ -1,11 +1,9 @@
-import { RouterProvider } from '@tanstack/react-router';
-import { act, render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { LayoutSideNav } from './index';
 
-import { createTestRouter } from '@/config/tests/routerTestHelper';
-import { AuthProvider } from '@/context/auth/AuthProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as useAuthModule from '@/context/auth/useAuth';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import * as routePathsModule from '@/routes/routePaths';
@@ -51,24 +49,13 @@ vi.mock('@/routes/routePaths', () => ({
   getMenuEntries: vi.fn(),
 }));
 
-const renderWithProviders = async (pathname = '/dashboard') => {
-  await act(async () =>
-    render(
-      <RouterProvider
-        router={createTestRouter(
-          () => (
-            <AuthProvider>
-              <LayoutProvider>
-                <LayoutSideNav />
-              </LayoutProvider>
-            </AuthProvider>
-          ),
-          pathname,
-        )}
-      />,
-    ),
+const renderWithProviders = (pathname = '/dashboard') =>
+  renderWithAppAsync(
+    <LayoutProvider>
+      <LayoutSideNav />
+    </LayoutProvider>,
+    { route: pathname },
   );
-};
 
 describe('LayoutSideNav', () => {
   beforeEach(() => {
@@ -86,9 +73,9 @@ describe('LayoutSideNav', () => {
 
   it('shouldRenderMenuLinksAndMenuItems_whenDefaultEntries', async () => {
     await renderWithProviders('/dashboard');
-    expect(screen.getByText('Dashboard')).toBeDefined();
-    expect(screen.getByText('Settings')).toBeDefined();
-    expect(screen.getByText('Profile')).toBeDefined();
+    screen.getByText('Dashboard');
+    screen.getByText('Settings');
+    screen.getByText('Profile');
     expect(screen.queryByText('Admin')).toBeNull();
     expect(screen.queryByText('Hidden')).toBeNull();
   });
@@ -138,7 +125,7 @@ describe('LayoutSideNav', () => {
       },
     ]);
     await renderWithProviders('/settings');
-    expect(screen.getByText('Overview')).toBeDefined();
+    screen.getByText('Overview');
   });
 
   describe('help link', () => {

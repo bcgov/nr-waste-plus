@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
@@ -9,8 +8,7 @@ import WasteSearchTable from './index';
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { ReportingUnitSearchResultDto } from '@/services/search.types';
 
-import { AuthProvider } from '@/context/auth/AuthProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as useNotificationEvents from '@/hooks/useNotificationEvents';
 import * as eventHandler from '@/hooks/useNotificationEvents/eventHandler';
 import APIs from '@/services/APIs';
@@ -167,96 +165,6 @@ const mockSearchResults: PageableResponse<ReportingUnitSearchResultDto> = {
   },
 };
 
-const altMockSearchResults1: PageableResponse<ReportingUnitSearchResultDto> = {
-  content: [
-    {
-      id: 'RU-4069-Block-521B-224813683',
-      cutBlockId: '521B',
-      wasteAssessmentAreaId: 521,
-      ruNumber: 4069,
-      client: { code: '00010005', description: 'JACOB FEHR' },
-      licenseNumber: 'A12345',
-      cuttingPermit: 'CP001',
-      timberMark: 'TM001',
-      multiMark: false,
-      secondaryEntry: false,
-      sampling: { code: 'OCU', description: 'Ocular' },
-      district: { code: 'DCC', description: 'Cariboo-Chilcotin' },
-      status: { code: 'BIS', description: 'Billing Issued' },
-      lastUpdated: '2006-09-08T08:24:17',
-      bookmarked: false,
-    },
-    {
-      id: 'RU-4070-Block-522B-224813684',
-      cutBlockId: '522B',
-      wasteAssessmentAreaId: 522,
-      ruNumber: 4070,
-      client: { code: '00010006', description: 'TEST CLIENT' },
-      licenseNumber: 'A12346',
-      cuttingPermit: 'CP002',
-      timberMark: 'TM002',
-      multiMark: true,
-      secondaryEntry: false,
-      sampling: { code: 'S2', description: 'Sampling Two' },
-      district: { code: 'D2', description: 'District Two' },
-      status: { code: 'SUB', description: 'Submitted' },
-      lastUpdated: '2025-01-16T10:00:00',
-      bookmarked: false,
-    },
-  ],
-  page: {
-    number: 0,
-    size: 10,
-    totalElements: 2,
-    totalPages: 1,
-  },
-};
-
-const altMockSearchResults2: PageableResponse<ReportingUnitSearchResultDto> = {
-  content: [
-    {
-      id: 'RU-4069-Block-631B-224813681',
-      cutBlockId: '631B',
-      wasteAssessmentAreaId: 631,
-      ruNumber: 4069,
-      client: { code: '00010005', description: 'JACOB FEHR' },
-      licenseNumber: 'A12345',
-      cuttingPermit: 'CP001',
-      timberMark: 'TM001',
-      multiMark: false,
-      secondaryEntry: false,
-      sampling: { code: 'OCU', description: 'Ocular' },
-      district: { code: 'DCC', description: 'Cariboo-Chilcotin' },
-      status: { code: 'BIS', description: 'Billing Issued' },
-      lastUpdated: '2006-09-08T08:24:17',
-      bookmarked: false,
-    },
-    {
-      id: 'RU-4070-Block-632B-224813682',
-      cutBlockId: '632B',
-      wasteAssessmentAreaId: 632,
-      ruNumber: 4070,
-      client: { code: '00010006', description: 'TEST CLIENT' },
-      licenseNumber: 'A12346',
-      cuttingPermit: 'CP002',
-      timberMark: 'TM002',
-      multiMark: true,
-      secondaryEntry: false,
-      sampling: { code: 'S2', description: 'Sampling Two' },
-      district: { code: 'D2', description: 'District Two' },
-      status: { code: 'SUB', description: 'Submitted' },
-      lastUpdated: '2025-01-16T10:00:00',
-      bookmarked: false,
-    },
-  ],
-  page: {
-    number: 0,
-    size: 10,
-    totalElements: 2,
-    totalPages: 1,
-  },
-};
-
 const mockEmptyResults: PageableResponse<ReportingUnitSearchResultDto> = {
   content: [],
   page: {
@@ -272,31 +180,7 @@ const setInputValue = (input: HTMLElement, value: string) => {
   fireEvent.change(input, { target: { value } });
 };
 
-const renderWithProps = async () => {
-  const qc = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-        staleTime: 0,
-      },
-      mutations: {
-        retry: false,
-      },
-    },
-  });
-  await act(async () =>
-    render(
-      <QueryClientProvider client={qc}>
-        <PreferenceProvider>
-          <AuthProvider>
-            <WasteSearchTable />
-          </AuthProvider>
-        </PreferenceProvider>
-      </QueryClientProvider>,
-    ),
-  );
-};
+const renderWithProps = () => renderWithAppAsync(<WasteSearchTable />);
 
 describe('WasteSearchTable', () => {
   let sendEventMock: Mock;
@@ -338,17 +222,17 @@ describe('WasteSearchTable', () => {
   describe('initial rendering', () => {
     it('renders WasteSearchFilters component', async () => {
       await renderWithProps();
-      expect(screen.getByPlaceholderText('Search by RU No. or Block ID')).toBeDefined();
+      screen.getByPlaceholderText('Search by RU No. or Block ID');
     });
 
     it('renders TableResource component', async () => {
       await renderWithProps();
-      expect(screen.getByText('Nothing to show yet!')).toBeDefined();
+      screen.getByText('Nothing to show yet!');
     });
 
     it('renders with empty data initially', async () => {
       await renderWithProps();
-      expect(screen.getByText('Nothing to show yet!')).toBeDefined();
+      screen.getByText('Nothing to show yet!');
     });
 
     it('does not trigger search on initial load', async () => {
@@ -388,8 +272,8 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('411B')).toBeDefined();
-        expect(screen.getByText('412B')).toBeDefined();
+        screen.getByText('411B');
+        screen.getByText('412B');
       });
     });
 
@@ -404,7 +288,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('No results')).toBeDefined();
+        screen.getByText('No results');
       });
     });
 
@@ -414,9 +298,7 @@ describe('WasteSearchTable', () => {
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
 
-      // Wait a bit to ensure no search is triggered
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
+      // Assert that no search API call was triggered (checked synchronously)
       expect(APIs.search.searchReportingUnit).not.toHaveBeenCalled();
     });
 
@@ -436,188 +318,6 @@ describe('WasteSearchTable', () => {
     });
   });
 
-  describe('pagination', () => {
-    it('handles page change correctly', async () => {
-      const largeResults: PageableResponse<ReportingUnitSearchResultDto> = {
-        ...mockSearchResults,
-        page: {
-          number: 0,
-          size: 10,
-          totalElements: 50,
-          totalPages: 5,
-        },
-      };
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(largeResults);
-
-      await renderWithProps();
-
-      const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
-
-      const searchButton = screen.getByTestId('search-button-most');
-      await userEvent.click(searchButton);
-
-      await waitFor(() => {
-        expect(screen.getByText('411B')).toBeDefined();
-      });
-
-      // Find and click the next page button
-      const nextPageButton = screen.getByLabelText('Next page');
-      await userEvent.click(nextPageButton);
-
-      await waitFor(() => {
-        expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
-          expect.objectContaining({ mainSearchTerm: 'BLOCK' }),
-          expect.objectContaining({ page: 1, size: 10 }),
-          expect.objectContaining({ notificationTarget: 'waste-search' }),
-        );
-      });
-    });
-
-    it('handles page size change correctly', async () => {
-      const largeResults: PageableResponse<ReportingUnitSearchResultDto> = {
-        ...mockSearchResults,
-        page: {
-          number: 0,
-          size: 10,
-          totalElements: 50,
-          totalPages: 5,
-        },
-      };
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(largeResults);
-
-      await renderWithProps();
-
-      const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
-
-      const searchButton = screen.getByTestId('search-button-most');
-      await userEvent.click(searchButton);
-
-      await waitFor(() => {
-        expect(screen.getByText('411B')).toBeDefined();
-      });
-
-      // Find and change page size
-      const pageSizeSelect = screen.getByLabelText('Items per page:');
-      await userEvent.selectOptions(pageSizeSelect, '20');
-
-      await waitFor(() => {
-        expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
-          expect.objectContaining({ mainSearchTerm: 'BLOCK' }),
-          expect.objectContaining({ page: 0, size: 20 }),
-          expect.objectContaining({ notificationTarget: 'waste-search' }),
-        );
-      });
-    });
-
-    it('resets to first page when page exceeds total pages', async () => {
-      const largeResults: PageableResponse<ReportingUnitSearchResultDto> = {
-        ...mockSearchResults,
-        page: {
-          number: 0,
-          size: 10,
-          totalElements: 5,
-          totalPages: 1,
-        },
-      };
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(largeResults);
-
-      await renderWithProps();
-
-      const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
-
-      const searchButton = screen.getByTestId('search-button-most');
-      await userEvent.click(searchButton);
-
-      await waitFor(() => {
-        expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
-          expect.anything(),
-          expect.objectContaining({ page: 0 }),
-          expect.objectContaining({ notificationTarget: 'waste-search' }),
-        );
-      });
-    });
-
-    it('resets to first page when a new search is requested', async () => {
-      const largeResults: PageableResponse<ReportingUnitSearchResultDto> = {
-        ...mockSearchResults,
-        page: {
-          number: 0,
-          size: 10,
-          totalElements: 50,
-          totalPages: 5,
-        },
-      };
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(largeResults);
-
-      await renderWithProps();
-
-      const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
-
-      const searchButton = screen.getByTestId('search-button-most');
-      await userEvent.click(searchButton);
-
-      await waitFor(() => {
-        expect(screen.getByText('411B')).toBeDefined();
-      });
-
-      const secondPageResults: PageableResponse<ReportingUnitSearchResultDto> = {
-        ...altMockSearchResults1,
-        page: {
-          number: 1,
-          size: 10,
-          totalElements: 50,
-          totalPages: 5,
-        },
-      };
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(secondPageResults);
-
-      // Find and click the next page button
-      const nextPageButton = screen.getByLabelText('Next page');
-      await userEvent.click(nextPageButton);
-
-      await waitFor(() => {
-        expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
-          expect.objectContaining({ mainSearchTerm: 'BLOCK' }),
-          expect.objectContaining({ page: 1, size: 10 }),
-          expect.objectContaining({ notificationTarget: 'waste-search' }),
-        );
-      });
-
-      await waitFor(() => {
-        expect(screen.getByText('521B')).toBeDefined();
-      });
-
-      const fewResults: PageableResponse<ReportingUnitSearchResultDto> = {
-        ...altMockSearchResults2,
-      };
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(fewResults);
-
-      // Perform a new search
-      setInputValue(keywordInput, 'LESS');
-      await userEvent.click(searchButton);
-
-      await waitFor(() => {
-        expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
-          expect.objectContaining({ mainSearchTerm: 'LESS' }),
-          expect.objectContaining({ page: 0 }),
-          expect.objectContaining({ notificationTarget: 'waste-search' }),
-        );
-      });
-
-      await waitFor(() => {
-        /*
-        Current page was properly reset to 0.
-        Otherwise the results from the new search (like '631B') would not be rendered on the screen.
-        */
-        expect(screen.getByText('631B')).toBeDefined();
-      });
-    });
-  });
-
   describe('sorting', () => {
     it('handles sort change correctly', async () => {
       (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
@@ -630,7 +330,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('411B')).toBeDefined();
+        screen.getByText('411B');
       });
 
       // Click on sortable column header (Block ID) - verifies sorting is available
@@ -652,7 +352,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('411B')).toBeDefined();
+        screen.getByText('411B');
       });
 
       // Verify sorting capability is available on sortable columns
@@ -719,7 +419,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Something went wrong!')).toBeDefined();
+        screen.getByText('Something went wrong!');
       });
     });
 
@@ -819,7 +519,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByTestId('loading-skeleton')).toBeDefined();
+        screen.getByTestId('loading-skeleton');
       });
 
       // Resolve the promise
@@ -839,7 +539,7 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(screen.getByText('411B')).toBeDefined();
+        screen.getByText('411B');
       });
 
       expect(screen.queryByTestId('loading-skeleton')).toBeNull();

@@ -29,7 +29,6 @@ test.describe('ReportingUnitDetails Page', () => {
     test.beforeEach(async ({ page }) => {
       await setupMocks(page, 123, 'details-123.json');
       await page.goto('/reporting-units/123');
-      await page.waitForLoadState('networkidle');
     });
 
     test('renders the page title with the reporting unit ID', async ({ page }) => {
@@ -51,7 +50,6 @@ test.describe('ReportingUnitDetails Page', () => {
     test.beforeEach(async ({ page }) => {
       await setupMocks(page, 123, 'details-123.json');
       await page.goto('/reporting-units/123');
-      await page.waitForLoadState('networkidle');
     });
 
     test('renders the client name', async ({ page }) => {
@@ -79,7 +77,6 @@ test.describe('ReportingUnitDetails Page', () => {
     test.beforeEach(async ({ page }) => {
       await setupMocks(page, 123, 'details-123.json');
       await page.goto('/reporting-units/123');
-      await page.waitForLoadState('networkidle');
     });
 
     test('renders "Client name" label', async ({ page }) => {
@@ -112,7 +109,6 @@ test.describe('ReportingUnitDetails Page', () => {
       // details-123.json has grade.code = null
       await setupMocks(page, 123, 'details-123.json');
       await page.goto('/reporting-units/123');
-      await page.waitForLoadState('networkidle');
 
       await expect(page.getByText('Legacy data')).toBeVisible();
     });
@@ -121,7 +117,6 @@ test.describe('ReportingUnitDetails Page', () => {
       // details-with-grade.json has grade.code = 'G1'
       await setupMocks(page, 456, 'details-with-grade.json');
       await page.goto('/reporting-units/456');
-      await page.waitForLoadState('networkidle');
 
       await expect(page.getByText('Legacy data')).not.toBeVisible();
     });
@@ -131,7 +126,6 @@ test.describe('ReportingUnitDetails Page', () => {
     }) => {
       await setupMocks(page, 123, 'details-123.json');
       await page.goto('/reporting-units/123');
-      await page.waitForLoadState('networkidle');
 
       const legacyLink = page.getByRole('link', { name: 'Legacy data' });
       await expect(legacyLink).toBeVisible();
@@ -151,7 +145,6 @@ test.describe('ReportingUnitDetails Page', () => {
 
       await setupMocks(page, 123, 'details-123.json');
       await page.goto('/reporting-units/123');
-      await page.waitForLoadState('networkidle');
 
       const clientLink = page.getByRole('link', { name: '90000001' });
       await expect(clientLink).toBeVisible();
@@ -166,7 +159,6 @@ test.describe('ReportingUnitDetails Page', () => {
 
       await setupMocks(page, 123, 'details-123.json');
       await page.goto('/reporting-units/123');
-      await page.waitForLoadState('networkidle');
 
       // Client number text is still visible, but not wrapped in a link
       await expect(page.getByText('90000001')).toBeVisible();
@@ -178,7 +170,6 @@ test.describe('ReportingUnitDetails Page', () => {
     test('renders correctly for a different reporting unit', async ({ page }) => {
       await setupMocks(page, 321, 'details-321.json');
       await page.goto('/reporting-units/321');
-      await page.waitForLoadState('networkidle');
 
       await expect(page.getByRole('heading', { name: /Reporting Unit no\.: 321/i })).toBeVisible();
       await expect(page.getByText('JOHN WICK LOGGING LTD.')).toBeVisible();
@@ -190,7 +181,6 @@ test.describe('ReportingUnitDetails Page', () => {
     test('renders grade description when grade code is present', async ({ page }) => {
       await setupMocks(page, 456, 'details-with-grade.json');
       await page.goto('/reporting-units/456');
-      await page.waitForLoadState('networkidle');
 
       await expect(page.getByText('Grade 1')).toBeVisible();
     });
@@ -207,7 +197,6 @@ test.describe('ReportingUnitDetails Page', () => {
       });
 
       await page.goto('/reporting-units/9999');
-      await page.waitForLoadState('networkidle');
 
       // TanStack Router renders a Not Found component on 404 throws from the loader
       await expect(page.getByText('Content Not Found')).toBeVisible();

@@ -1,32 +1,11 @@
 import { test, expect } from '@playwright/test';
 
+import { setupAppShellMocks } from '@/config/tests/app.setup';
 import { mockJwt } from '@/config/tests/auth.helper';
-import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 test.describe('Role Error Page', () => {
   test.beforeEach(async ({ page }, testInfo) => {
-    await mockApiResponsesWithStub(page, 'users/preferences', 'users/preferences-GET.json');
-
-    if (testInfo.project.metadata.userType === 'bceid') {
-      await mockApiResponsesWithStub(
-        page,
-        'forest-clients/searchByNumbers**',
-        'forest-clients/searchByNumbers-pg0.json',
-      );
-      await mockApiResponsesWithStub(
-        page,
-        'forest-clients/clients**',
-        'forest-clients/clients-pg0.json',
-      );
-    }
-
-    await mockApiResponsesWithStub(page, 'codes/districts', 'codes/districts.json');
-    await mockApiResponsesWithStub(page, 'codes/samplings', 'codes/samplings.json');
-    await mockApiResponsesWithStub(
-      page,
-      'codes/assess-area-statuses',
-      'codes/assess-area-statuses.json',
-    );
+    await setupAppShellMocks(page, testInfo.project.metadata.userType);
   });
 
   test('renders reason-specific text for known reason codes', async ({ page }) => {
@@ -36,7 +15,6 @@ test.describe('Role Error Page', () => {
     );
 
     await page.goto('/unauthorized?reason=IDIR_MULTIPLE_ROLES');
-    await page.waitForLoadState('networkidle');
 
     await expect(page.getByText('Unauthorized Access')).toBeVisible();
     await expect(
@@ -48,7 +26,6 @@ test.describe('Role Error Page', () => {
     page,
   }) => {
     await page.goto('/unauthorized?reason=toString');
-    await page.waitForLoadState('networkidle');
 
     await expect(
       page.getByText('You do not have the necessary permissions to view this page.'),
@@ -69,7 +46,6 @@ test.describe('Role Error Page', () => {
     });
 
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
 
     await expect(page).toHaveURL(/reason=IDIR_MULTIPLE_ROLES/);
     await expect(
@@ -91,7 +67,6 @@ test.describe('Role Error Page', () => {
     });
 
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
 
     await expect(page).toHaveURL(/reason=BCEID_ASSIGNED_ROLES/);
     await expect(
@@ -111,7 +86,6 @@ test.describe('Role Error Page', () => {
     });
 
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
 
     await expect(page).toHaveURL(/reason=CONFLICTING_CLIENT_ACCESS_ROLES/);
     await expect(page.getByText('This account has conflicting client access roles')).toBeVisible();
@@ -131,7 +105,6 @@ test.describe('Role Error Page', () => {
     });
 
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
 
     await expect(page).toHaveURL(/reason=CLIENT_ACCESS_REQUIRES_CLIENT/);
     await expect(page.getByText('This account requires at least one client')).toBeVisible();

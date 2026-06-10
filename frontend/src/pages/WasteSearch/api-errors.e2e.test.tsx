@@ -10,7 +10,6 @@ test.describe('Waste Search - API Errors', () => {
       includeSearchRoutes: true,
     });
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
   });
 
   test('API is unavailable', async ({ page }) => {
@@ -20,8 +19,6 @@ test.describe('Waste Search - API Errors', () => {
 
     const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
-
-    await page.waitForLoadState('networkidle');
 
     const errorNotification = page.locator('[role="alert"]');
     await expect(errorNotification).toBeVisible();
@@ -40,8 +37,6 @@ test.describe('Waste Search - API Errors', () => {
     const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
-    await page.waitForLoadState('networkidle');
-
     const errorNotification = page.locator('[role="alert"]');
     await expect(errorNotification).toBeVisible();
   });
@@ -52,7 +47,6 @@ test.describe('Waste Search - API Errors', () => {
     await searchBox.blur();
 
     await page.getByTestId('search-button-most').click();
-    await page.waitForLoadState('networkidle');
 
     const notification = page.locator('[role="alert"]');
     await expect(notification).toBeVisible();
@@ -74,7 +68,6 @@ test.describe('Waste Search - API Errors', () => {
     await searchBox.blur();
 
     await page.getByTestId('search-button-most').click();
-    await page.waitForLoadState('networkidle');
 
     const notification = page.locator('[role="alert"]');
     await expect(notification).toBeVisible();
@@ -92,7 +85,6 @@ test.describe('Waste Search - API Errors', () => {
     await searchBox.blur();
 
     await page.getByTestId('search-button-most').click();
-    await page.waitForLoadState('networkidle');
 
     await expect(page.locator('[role="alert"]')).toBeVisible();
 
@@ -101,7 +93,6 @@ test.describe('Waste Search - API Errors', () => {
     await searchBox.blur();
 
     await page.getByTestId('search-button-most').click();
-    await page.waitForLoadState('networkidle');
 
     await expect(page.locator('[role="alert"]')).not.toBeVisible();
   });

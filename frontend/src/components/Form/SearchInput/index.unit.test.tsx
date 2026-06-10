@@ -39,11 +39,11 @@ describe('SearchInput (browser)', () => {
   it('renders with accessible label and placeholder', () => {
     setup();
     // Root wrapper rendered
-    expect(screen.getByTestId('search-input')).toBeDefined();
+    screen.getByTestId('search-input');
     // Input is labeled for accessibility
-    expect(screen.getByRole('searchbox', { name: 'Search...' })).toBeDefined();
+    screen.getByRole('searchbox', { name: 'Search...' });
     // Clear button (from Carbon) should be present by its accessible name
-    expect(screen.getByLabelText('Clear search input')).toBeDefined();
+    screen.getByLabelText('Clear search input');
   });
 
   it('calls onChange with typed value when Enter blurs the input', async () => {

@@ -1,4 +1,4 @@
-import { act, render } from '@testing-library/react';
+import { act, render, within } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
 import { headers } from './constants';
@@ -177,7 +177,7 @@ describe('WasteSearchTable Constants', () => {
       expect(ruHeader?.renderAs).toBeDefined();
       if (ruHeader?.renderAs) {
         const result = ruHeader.renderAs('RU-001');
-        const { container } = render(result, { wrapper: createRouterWrapper('/') });
+        const { container } = render(result);
         await act(async () => {});
         expect(container.firstChild).toBeDefined();
       }
@@ -189,7 +189,7 @@ describe('WasteSearchTable Constants', () => {
       expect(clientHeader?.renderAs).toBeDefined();
       if (clientHeader?.renderAs) {
         const result = clientHeader.renderAs('00001001');
-        const { container } = render(result, { wrapper: createRouterWrapper('/') });
+        const { container } = render(result);
         await act(async () => {});
         expect(container.firstChild).toBeDefined();
       }
@@ -200,7 +200,7 @@ describe('WasteSearchTable Constants', () => {
       const clientHeader = headers.find((h) => h.key === 'client.code');
       if (clientHeader?.renderAs) {
         const result = clientHeader.renderAs('00001002');
-        const { container } = render(result, { wrapper: createRouterWrapper('/') });
+        const { container } = render(result);
         await act(async () => {});
         expect(container.firstChild).toBeDefined();
       }
@@ -297,12 +297,11 @@ describe('WasteSearchTable Constants', () => {
           const result = ruHeader.renderAs('123');
           const { container } = render(result, { wrapper: createRouterWrapper('/') });
           await act(async () => {});
-          expect(container.firstChild).toBeDefined();
+          expect(container.firstChild).not.toBeNull();
           // The internal-route path should not render a legacy external href.
-          const allAnchors = container.querySelectorAll('a');
-          const legacyLinks = Array.from(allAnchors).filter((a) =>
-            a.getAttribute('href')?.includes('/waste101'),
-          );
+          const legacyLinks = within(container)
+            .queryAllByRole('link')
+            .filter((a) => a.getAttribute('href')?.includes('/waste101'));
           expect(legacyLinks).toHaveLength(0);
         }
       });

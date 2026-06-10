@@ -1,25 +1,14 @@
-import { RouterProvider } from '@tanstack/react-router';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 
 import GlobalErrorPage from './index';
 
-import { createTestRouter } from '@/config/tests/routerTestHelper';
-import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
+import { renderWithApp } from '@/config/tests/renderWithApp';
 
-const renderPage = (error?: unknown) =>
-  render(
-    <RouterProvider
-      router={createTestRouter(() => (
-        <PageTitleProvider>
-          <GlobalErrorPage error={error} />
-        </PageTitleProvider>
-      ))}
-    />,
-  );
+const renderPage = (error?: unknown) => renderWithApp(<GlobalErrorPage error={error} />);
 
 describe('GlobalErrorPage', () => {
-  it('shouldRenderFallbackMessage_whenNoErrorProvided', async () => {
+  it('should render fallback message when no error provided', async () => {
     renderPage();
     await waitFor(() => {
       expect(
@@ -28,35 +17,35 @@ describe('GlobalErrorPage', () => {
     });
   });
 
-  it('shouldRenderErrorMessage_whenErrorIsErrorInstance', async () => {
+  it('should render error message when error is error instance', async () => {
     renderPage(new Error('Boom goes the dynamite'));
     await waitFor(() => {
-      expect(screen.getByText('Global Error')).toBeDefined();
-      expect(screen.getByText('Boom goes the dynamite')).toBeDefined();
+      screen.getByText('Global Error');
+      screen.getByText('Boom goes the dynamite');
     });
   });
 
-  it('shouldRenderErrorMessage_whenErrorIsString', async () => {
+  it('should render error message when error is string', async () => {
     renderPage('String error');
     await waitFor(() => {
-      expect(screen.getByText('Global Error')).toBeDefined();
-      expect(screen.getByText('String error')).toBeDefined();
+      screen.getByText('Global Error');
+      screen.getByText('String error');
     });
   });
 
-  it('shouldRenderStatusText_whenErrorObjectHasStatusText', async () => {
+  it('should render status text when error object has status text', async () => {
     renderPage({ message: 'Another error', statusText: 'This is not a drill' });
     await waitFor(() => {
-      expect(screen.getByText('Global Error')).toBeDefined();
-      expect(screen.getByText('This is not a drill')).toBeDefined();
+      screen.getByText('Global Error');
+      screen.getByText('This is not a drill');
     });
   });
 
-  it('shouldFallBackToMessage_whenStatusTextIsEmpty', async () => {
+  it('should fall back to message when status text is empty', async () => {
     renderPage({ message: 'That Error', statusText: '' });
     await waitFor(() => {
-      expect(screen.getByText('Global Error')).toBeDefined();
-      expect(screen.getByText('That Error')).toBeDefined();
+      screen.getByText('Global Error');
+      screen.getByText('That Error');
     });
   });
 });

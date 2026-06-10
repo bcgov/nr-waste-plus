@@ -35,9 +35,9 @@ describe('WasteSearchFiltersActive', () => {
       timberMark: 'mark',
     };
     renderWithProps({ filters });
-    expect(screen.getByTestId('dt-district-A')).toBeDefined();
-    expect(screen.getByTestId('dt-timberMark-mark')).toBeDefined();
-    expect(screen.getByTestId('dt-requestByMe-true')).toBeDefined();
+    screen.getByTestId('dt-district-A');
+    screen.getByTestId('dt-timberMark-mark');
+    screen.getByTestId('dt-requestByMe-true');
   });
 
   it('renders search filters active with no filters when passing invisible or invalid values', async () => {
@@ -64,9 +64,9 @@ describe('WasteSearchFiltersActive', () => {
     const onRemoveFilter = vi.fn();
     renderWithProps({ filters, onRemoveFilter });
 
-    expect(screen.getByTestId('dt-district-A')).toBeDefined();
+    screen.getByTestId('dt-district-A');
     const removeButton = screen.getByRole('button', { name: 'Dismiss' });
-    expect(removeButton).toBeDefined();
+    // removeButton is defined; getBy* throws if not found
     await userEvent.click(removeButton);
     expect(onRemoveFilter).toHaveBeenCalled();
   });

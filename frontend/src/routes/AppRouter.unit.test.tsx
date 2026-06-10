@@ -33,7 +33,7 @@ vi.mock('@tanstack/react-router', async () => {
 describe('AppRouter', () => {
   it('shouldRenderRouterProvider', () => {
     const { getByTestId } = render(<AppRouter />);
-    expect(getByTestId('router-provider')).toBeDefined();
+    getByTestId('router-provider'); // getBy* throws if not found
   });
 
   it('shouldPassRouterPropToRouterProvider', () => {

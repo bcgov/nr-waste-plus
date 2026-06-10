@@ -1,13 +1,11 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import HeaderPanelProfile from './index';
 
-import { AuthProvider } from '@/context/auth/AuthProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { Role, type FamLoginUser } from '@/context/auth/types';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import ThemeProvider from '@/context/theme/ThemeProvider';
 import APIs from '@/services/APIs';
 
 vi.mock('@/components/Layout/AvatarImage', () => ({
@@ -48,22 +46,7 @@ vi.mock('@/services/APIs', () => {
   };
 });
 
-const renderWithProviders = async () => {
-  const qc = new QueryClient();
-  await act(async () => {
-    render(
-      <AuthProvider>
-        <QueryClientProvider client={qc}>
-          <PreferenceProvider>
-            <ThemeProvider>
-              <HeaderPanelProfile />
-            </ThemeProvider>
-          </PreferenceProvider>
-        </QueryClientProvider>
-      </AuthProvider>,
-    );
-  });
-};
+const renderWithProviders = () => renderWithAppAsync(<HeaderPanelProfile />);
 
 describe('HeaderPanelProfile', () => {
   beforeEach(() => {
@@ -81,16 +64,17 @@ describe('HeaderPanelProfile', () => {
 
   it('renders user info and avatar', async () => {
     await renderWithProviders();
-    expect(screen.getByText('Jane Doe')).toBeDefined();
-    expect(screen.getByText('IDIR\\jdoe')).toBeDefined();
-    expect(screen.getByText('Email: jane@example.com')).toBeDefined();
-    expect(screen.getByTestId('avatar-initials').textContent).to.equal('Jane Doe-large');
-    expect(screen.getByTestId('user-fullname').textContent).to.equal('Jane Doe');
+    screen.getByText('Jane Doe');
+    screen.getByText('IDIR\\jdoe');
+    screen.getByText('Email: jane@example.com');
+    expect(screen.getByTestId('avatar-initials').textContent).toBe('Jane Doe-large');
+    expect(screen.getByTestId('user-fullname').textContent).toBe('Jane Doe');
   });
 
   it('calls logout when Log out is clicked', async () => {
+    const user = await userEvent.setup();
     await renderWithProviders();
-    fireEvent.click(screen.getByText('Log out'));
+    await user.click(screen.getByText('Log out'));
     expect(mockLogout).toHaveBeenCalled();
   });
 
@@ -98,30 +82,30 @@ describe('HeaderPanelProfile', () => {
     await renderWithProviders();
     const tooltipLabel =
       'Optional: Select a default organization. This can help you do your searches faster if you work with one organization much more than others. You can change or remove this at any time.';
-    expect(screen.getByText('Select organization')).toBeDefined();
-    expect(screen.getByLabelText('Help: About selecting a default organization')).toBeDefined();
-    expect(screen.getByText(tooltipLabel)).toBeDefined();
+    screen.getByText('Select organization');
+    screen.getByLabelText('Help: About selecting a default organization');
+    screen.getByText(tooltipLabel);
   });
 
   it('renders DistrictListing for user with District/Area/Admin role', async () => {
     await renderWithProviders();
-    expect(screen.getByText('Select organization')).toBeDefined();
+    screen.getByText('Select organization');
   });
 
   it('renders correct entity type text based on user role', async () => {
     await renderWithProviders();
-    expect(screen.getByText('Select organization')).toBeDefined();
+    screen.getByText('Select organization');
   });
 
   it('renders navigation structure and SideNavDivider', async () => {
     await renderWithProviders();
-    expect(screen.getByRole('navigation')).toBeDefined();
+    screen.getByRole('navigation');
     expect(screen.getAllByRole('separator').length).toBeGreaterThan(0);
   });
 
   it('SideNavLink Log out has correct accessibility', async () => {
     await renderWithProviders();
-    expect(screen.getByText('Log out')).toBeDefined();
+    screen.getByText('Log out');
   });
 
   it('renders ClientListing and client entity text for user with Viewer role', async () => {
@@ -134,8 +118,8 @@ describe('HeaderPanelProfile', () => {
       roles: [{ role: Role.VIEWER, clients: ['client1'] }],
     } as FamLoginUser;
     await renderWithProviders();
-    expect(screen.getByText('Select client')).toBeDefined();
-    expect(screen.getByLabelText('Help: About selecting a default client')).toBeDefined();
+    screen.getByText('Select client');
+    screen.getByLabelText('Help: About selecting a default client');
   });
 
   it('renders ClientListing and client entity text for user with Submitter role', async () => {
@@ -150,7 +134,7 @@ describe('HeaderPanelProfile', () => {
     await renderWithProviders();
     const tooltipLabel =
       'Optional: Select a default client. This can help you do your searches faster if you work with one client much more than others. You can change or remove this at any time.';
-    expect(screen.getByText('Select client')).toBeDefined();
-    expect(screen.getByText(tooltipLabel)).toBeDefined();
+    screen.getByText('Select client');
+    screen.getByText(tooltipLabel);
   });
 });

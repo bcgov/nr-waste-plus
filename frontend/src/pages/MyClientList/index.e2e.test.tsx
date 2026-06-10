@@ -3,7 +3,6 @@ import { test, expect } from '@playwright/test';
 import { mockJwt } from '@/config/tests/auth.helper';
 import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
-const hasClientAccessRole = (userType: string): boolean => userType === 'bceid';
 const canOverrideClaims = (): boolean => process.env.VITE_MOCK_AUTH?.toLowerCase() === 'true';
 
 test.describe('My Client List Page', () => {
@@ -29,34 +28,20 @@ test.describe('My Client List Page', () => {
     );
 
     await page.goto('/clients');
-    await page.waitForLoadState('networkidle');
   });
 
-  test('should display the My Client List page', async ({ page }) => {
-    test.skip(
-      !hasClientAccessRole(test.info().project.metadata.userType),
-      'Only runs for users with Viewer/Submitter access',
-    );
+  test('should display the My Client List page @bceid-only', async ({ page }) => {
     await expect(page.getByRole('heading', { name: 'My clients' })).toBeVisible();
   });
 
-  test('should display clients in the list', async ({ page }) => {
-    test.skip(
-      !hasClientAccessRole(test.info().project.metadata.userType),
-      'Only runs for users with Viewer/Submitter access',
-    );
+  test('should display clients in the list @bceid-only', async ({ page }) => {
     await expect(page.getByRole('cell', { name: '90000001' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'CANADIAN SAMPLE CO.' }).first()).toBeVisible();
   });
 
-  test('should render the client number as a link to search with client filter', async ({
+  test('should render the client number as a link to search with client filter @bceid-only', async ({
     page,
   }) => {
-    test.skip(
-      !hasClientAccessRole(test.info().project.metadata.userType),
-      'Only runs for users with Viewer/Submitter access',
-    );
-
     // The client number should be rendered as a link
     const clientLink = page.getByRole('link', { name: '90000001' });
     await expect(clientLink).toBeVisible();
@@ -65,11 +50,7 @@ test.describe('My Client List Page', () => {
     await expect(clientLink).toHaveAttribute('href', '/search?clientNumbers=90000001');
   });
 
-  test('should allow column selection', async ({ page }) => {
-    test.skip(
-      !hasClientAccessRole(test.info().project.metadata.userType),
-      'Only runs for users with Viewer/Submitter access',
-    );
+  test('should allow column selection @bceid-only', async ({ page }) => {
     // This column is visible / exists in the default columns
     await expect(page.getByRole('columnheader', { name: 'Client name' })).toBeVisible();
 
@@ -83,11 +64,7 @@ test.describe('My Client List Page', () => {
     await expect(page.getByRole('columnheader', { name: 'Client name' })).not.toBeVisible();
   });
 
-  test('filter OAK HERITAGE LTD.', async ({ page }) => {
-    test.skip(
-      !hasClientAccessRole(test.info().project.metadata.userType),
-      'Only runs for users with Viewer/Submitter access',
-    );
+  test('filter OAK HERITAGE LTD. @bceid-only', async ({ page }) => {
     await expect(page.getByRole('cell', { name: '90000001' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'CANADIAN SAMPLE CO.' }).first()).toBeVisible();
 
@@ -98,19 +75,13 @@ test.describe('My Client List Page', () => {
     const searchButton = page.getByTestId('search-button-other');
     await searchButton.click();
 
-    await page.waitForLoadState('networkidle');
-
     await expect(page.getByRole('cell', { name: '90000003' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'OAK HERITAGE LTD.' }).first()).toBeVisible();
 
     await expect(page.getByRole('cell', { name: 'CANADIAN SAMPLE CO.' })).not.toBeVisible();
   });
 
-  test('filter OAK HERITAGE LTD. with enter', async ({ page }) => {
-    test.skip(
-      !hasClientAccessRole(test.info().project.metadata.userType),
-      'Only runs for users with Viewer/Submitter access',
-    );
+  test('filter OAK HERITAGE LTD. with enter @bceid-only', async ({ page }) => {
     await expect(page.getByRole('cell', { name: '90000001' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'CANADIAN SAMPLE CO.' }).first()).toBeVisible();
 
@@ -118,26 +89,22 @@ test.describe('My Client List Page', () => {
     await searchBox.fill('OAK');
     await searchBox.press('Enter');
 
-    await page.waitForLoadState('networkidle');
-
     await expect(page.getByRole('cell', { name: '90000003' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'OAK HERITAGE LTD.' }).first()).toBeVisible();
 
     await expect(page.getByRole('cell', { name: 'CANADIAN SAMPLE CO.' })).not.toBeVisible();
   });
 
-  test('should block My clients page for District/Area/Admin users', async ({ page }) => {
-    test.skip(
-      hasClientAccessRole(test.info().project.metadata.userType),
-      'Only runs for users without Viewer/Submitter access',
-    );
-
+  test('should block My clients page for District/Area/Admin users @idir-only', async ({
+    page,
+  }) => {
     await expect(page).toHaveURL(/\/unauthorized/);
     await expect(page.getByText('Unauthorized Access')).toBeVisible();
   });
 
-  test('IDIR user with Viewer role can access My clients page', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.metadata.userType !== 'idir', 'Only runs for IDIR project');
+  test('IDIR user with Viewer role can access My clients page @idir-only', async ({
+    page,
+  }, testInfo) => {
     test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
 
     await mockJwt(page, testInfo.project.metadata, {
@@ -152,8 +119,9 @@ test.describe('My Client List Page', () => {
     await expect(page.getByRole('heading', { name: 'My clients' })).toBeVisible();
   });
 
-  test('IDIR user with Submitter role can access My clients page', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.metadata.userType !== 'idir', 'Only runs for IDIR project');
+  test('IDIR user with Submitter role can access My clients page @idir-only', async ({
+    page,
+  }, testInfo) => {
     test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
 
     await mockJwt(page, testInfo.project.metadata, {
@@ -168,10 +136,9 @@ test.describe('My Client List Page', () => {
     await expect(page.getByRole('heading', { name: 'My clients' })).toBeVisible();
   });
 
-  test('should navigate to search page with selected client number in same tab', async ({
+  test('should navigate to search page with selected client number in same tab @idir-only', async ({
     page,
   }, testInfo) => {
-    test.skip(testInfo.project.metadata.userType !== 'idir', 'Only runs for IDIR project');
     test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
 
     await mockJwt(page, testInfo.project.metadata, {

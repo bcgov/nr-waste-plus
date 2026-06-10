@@ -11,7 +11,6 @@ test.describe('Waste Search - Expanded Row Content', () => {
       includeSearchRoutes: true,
     });
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
   });
 
   test('displays all fields when expanding row with full data', async ({ page }) => {
@@ -28,8 +27,6 @@ test.describe('Waste Search - Expanded Row Content', () => {
 
     const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
-
-    await page.waitForLoadState('networkidle');
 
     // Click the expand button for the first row
     const expandButton = page.locator('button[aria-label*="Expand"]').first();
@@ -77,14 +74,10 @@ test.describe('Waste Search - Expanded Row Content', () => {
     const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
-    await page.waitForLoadState('networkidle');
-
     // Click the expand button for the second row
     const expandButtons = page.locator('button[aria-label*="Expand"]');
     const secondExpandButton = expandButtons.nth(1);
     await secondExpandButton.click();
-
-    await page.waitForLoadState('networkidle');
 
     // Verify all fields are displayed
     await expect(page.getByTestId('card-item-content-licence-number')).toHaveText('W1940'); // licenceNo
@@ -125,16 +118,12 @@ test.describe('Waste Search - Expanded Row Content', () => {
     const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
-    await page.waitForLoadState('networkidle');
-
     // Verify row is displayed
     await expect(page.getByText('NORTHERN TIMBER CO')).toBeVisible();
 
     // Click the expand button for the row with null wasteAssessmentAreaId
     const expandButton = page.locator('button[aria-label*="Expand"]').first();
     await expandButton.click();
-
-    await page.waitForLoadState('networkidle');
 
     // Verify loading skeleton is shown (since no API data will be returned)
     const skeletons = page.locator('.cds--skeleton');
@@ -166,8 +155,6 @@ test.describe('Waste Search - Expanded Row Content', () => {
     const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
-    await page.waitForLoadState('networkidle');
-
     // Click the expand button for the first row
     const row1 = page
       .getByRole('row', {
@@ -181,10 +168,8 @@ test.describe('Waste Search - Expanded Row Content', () => {
       .getByLabel('Expand row for more details');
 
     await row1.click();
-    await page.waitForLoadState('networkidle');
 
     await row2.click();
-    await page.waitForLoadState('networkidle');
 
     const expandedRows = page.locator('tr.cds--parent-row.cds--expandable-row');
     await expect(expandedRows).toHaveCount(2);
@@ -210,14 +195,11 @@ test.describe('Waste Search - Expanded Row Content', () => {
     const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
-    await page.waitForLoadState('networkidle');
-
     // Click the expand button for the first row
     const secondary = page.locator(
       'tr:nth-child(17) > .cds--table-expand > .cds--table-expand__button',
     );
     await secondary.click();
-    await page.waitForLoadState('networkidle');
 
     await expect(
       page.getByTestId('card-item-timber-mark').first().getByRole('definition'),
@@ -227,7 +209,6 @@ test.describe('Waste Search - Expanded Row Content', () => {
       'tr:nth-child(19) > .cds--table-expand > .cds--table-expand__button',
     );
     await primary.click();
-    await page.waitForLoadState('networkidle');
 
     const expandedRows = page.locator('tr.cds--parent-row.cds--expandable-row');
     await expect(expandedRows).toHaveCount(2);

@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -114,8 +114,8 @@ describe('routeTree module', () => {
       mockUser = undefined;
       const NotFoundRedirect = getNotFoundComponent();
       if (!NotFoundRedirect) return;
-      await act(async () => render(<NotFoundRedirect />));
-      expect(screen.getByTestId('loading')).toBeDefined();
+      render(<NotFoundRedirect />);
+      screen.getByTestId('loading');
     });
 
     it('shouldRenderNull_whenUnauthenticatedUserAndRedirectPending', async () => {
@@ -123,7 +123,7 @@ describe('routeTree module', () => {
       mockUser = undefined;
       const NotFoundRedirect = getNotFoundComponent();
       if (!NotFoundRedirect) return;
-      const { container } = await act(async () => render(<NotFoundRedirect />));
+      const { container } = render(<NotFoundRedirect />);
       expect(container.firstChild).toBeNull();
     });
 
@@ -132,7 +132,7 @@ describe('routeTree module', () => {
       mockUser = undefined;
       const NotFoundRedirect = getNotFoundComponent();
       if (!NotFoundRedirect) return;
-      await act(async () => render(<NotFoundRedirect />));
+      render(<NotFoundRedirect />);
       await waitFor(() =>
         expect(mockNavigate).toHaveBeenCalledWith(
           expect.objectContaining({ to: '/', replace: true }),
@@ -145,7 +145,7 @@ describe('routeTree module', () => {
       mockUser = { userName: 'testuser' };
       const NotFoundRedirect = getNotFoundComponent();
       if (!NotFoundRedirect) return;
-      await act(async () => render(<NotFoundRedirect />));
+      render(<NotFoundRedirect />);
       expect(mockNavigate).not.toHaveBeenCalled();
     });
 
@@ -154,9 +154,9 @@ describe('routeTree module', () => {
       mockUser = { userName: 'testuser' };
       const NotFoundRedirect = getNotFoundComponent();
       if (!NotFoundRedirect) return;
-      await act(async () => render(<NotFoundRedirect />));
-      expect(screen.getByTestId('layout')).toBeDefined();
-      expect(screen.getByTestId('not-found-page')).toBeDefined();
+      render(<NotFoundRedirect />);
+      screen.getByTestId('layout');
+      screen.getByTestId('not-found-page');
     });
 
     it('shouldNotRenderLayout_whenUserIsUnauthenticated', async () => {
@@ -164,7 +164,7 @@ describe('routeTree module', () => {
       mockUser = undefined;
       const NotFoundRedirect = getNotFoundComponent();
       if (!NotFoundRedirect) return;
-      await act(async () => render(<NotFoundRedirect />));
+      render(<NotFoundRedirect />);
       expect(screen.queryByTestId('layout')).toBeNull();
       expect(screen.queryByTestId('not-found-page')).toBeNull();
     });
@@ -175,7 +175,7 @@ describe('routeTree module', () => {
       mockMatches = [{ routeId: '/search' }];
       const RootLayout = getRootLayoutComponent();
       if (!RootLayout) return;
-      await act(async () => render(<RootLayout />));
+      render(<RootLayout />);
       expect(mockSetPageTitle).toHaveBeenCalledWith('Waste search', 1);
     });
 
@@ -183,7 +183,7 @@ describe('routeTree module', () => {
       mockMatches = [{ routeId: '/' }];
       const RootLayout = getRootLayoutComponent();
       if (!RootLayout) return;
-      await act(async () => render(<RootLayout />));
+      render(<RootLayout />);
       expect(mockSetPageTitle).toHaveBeenCalledWith('Landing', 1);
     });
 
@@ -191,7 +191,7 @@ describe('routeTree module', () => {
       mockMatches = [{ routeId: '/nonexistent-route' }];
       const RootLayout = getRootLayoutComponent();
       if (!RootLayout) return;
-      await act(async () => render(<RootLayout />));
+      render(<RootLayout />);
       expect(mockSetPageTitle).not.toHaveBeenCalled();
     });
 
@@ -199,7 +199,7 @@ describe('routeTree module', () => {
       mockMatches = [];
       const RootLayout = getRootLayoutComponent();
       if (!RootLayout) return;
-      const { getByTestId } = await act(async () => render(<RootLayout />));
+      const { getByTestId } = render(<RootLayout />);
       expect(getByTestId('outlet')).toBeTruthy();
     });
 
@@ -207,7 +207,7 @@ describe('routeTree module', () => {
       mockMatches = [];
       const RootLayout = getRootLayoutComponent();
       if (!RootLayout) return;
-      await act(async () => render(<RootLayout />));
+      render(<RootLayout />);
       expect(mockSetPageTitle).not.toHaveBeenCalled();
     });
 
@@ -215,7 +215,7 @@ describe('routeTree module', () => {
       mockMatches = [{}];
       const RootLayout = getRootLayoutComponent();
       if (!RootLayout) return;
-      await act(async () => render(<RootLayout />));
+      render(<RootLayout />);
       expect(mockSetPageTitle).not.toHaveBeenCalled();
     });
   });

@@ -1,6 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RouterProvider } from '@tanstack/react-router';
-import { render, screen, fireEvent, within, waitFor, act } from '@testing-library/react';
+import { screen, fireEvent, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
@@ -8,9 +6,7 @@ import WasteSearchFilters from './index';
 
 import type { ComponentProps } from 'react';
 
-import { createTestRouter } from '@/config/tests/routerTestHelper';
-import { AuthProvider } from '@/context/auth/AuthProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
 
 vi.mock('@/hooks/useSyncFiltersToSearchParams', () => ({
@@ -45,37 +41,23 @@ const defaultFilters = {
   status: [],
 };
 
-const renderWithProps = async (props: Partial<ComponentProps<typeof WasteSearchFilters>>) => {
-  const qc = new QueryClient();
-  await act(async () =>
-    render(
-      <RouterProvider
-        router={createTestRouter(() => (
-          <QueryClientProvider client={qc}>
-            <AuthProvider>
-              <PreferenceProvider>
-                <WasteSearchFilters
-                  value={defaultFilters}
-                  onChange={props.onChange || vi.fn()}
-                  onSearch={props.onSearch || vi.fn()}
-                  {...props}
-                />
-              </PreferenceProvider>
-            </AuthProvider>
-          </QueryClientProvider>
-        ))}
-      />,
-    ),
+const renderWithProps = (props: Partial<ComponentProps<typeof WasteSearchFilters>>) =>
+  renderWithAppAsync(
+    <WasteSearchFilters
+      value={defaultFilters}
+      onChange={props.onChange || vi.fn()}
+      onSearch={props.onSearch || vi.fn()}
+      {...props}
+    />,
   );
-};
 
 describe('WasteSearchFilters', () => {
   it('shouldRenderSearchInputAndFilterColumns_whenRendered', async () => {
     await renderWithProps({});
-    expect(screen.getAllByPlaceholderText('Search by RU No. or Block ID')[0]).toBeDefined();
-    expect(screen.getByPlaceholderText(/Sampling/i)).toBeDefined();
-    expect(screen.getByPlaceholderText(/District/i)).toBeDefined();
-    expect(screen.getByPlaceholderText(/Status/i)).toBeDefined();
+    screen.getAllByPlaceholderText('Search by RU No. or Block ID');
+    screen.getByPlaceholderText(/Sampling/i);
+    screen.getByPlaceholderText(/District/i);
+    screen.getByPlaceholderText(/Status/i);
   });
 
   it('shouldRenderAdvancedSearchAndSearchButtons_whenDesktop', async () => {
@@ -115,28 +97,28 @@ describe('WasteSearchFilters', () => {
     expect(APIs.codes.getAssessAreaStatuses).toHaveBeenCalled();
 
     const samplingBox = screen.getByPlaceholderText(/Sampling/i);
-    const samplingButton = samplingBox.parentElement?.querySelector('button');
+    const samplingButton = within(samplingBox.parentElement!).getByRole('button');
     expect(samplingButton).not.toBeNull();
 
     const districtBox = screen.getByPlaceholderText(/District/i);
-    const districtButton = districtBox.parentElement?.querySelector('button');
+    const districtButton = within(districtBox.parentElement!).getByRole('button');
     expect(districtButton).not.toBeNull();
 
     const statusBox = screen.getByPlaceholderText(/Status/i);
-    const statusButton = statusBox.parentElement?.querySelector('button');
+    const statusButton = within(statusBox.parentElement!).getByRole('button');
     expect(statusButton).not.toBeNull();
 
     expect(samplingButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(samplingButton as HTMLButtonElement);
-    expect(screen.getByText('A - Sampling option: A')).toBeDefined();
+    screen.getByText('A - Sampling option: A');
 
     expect(districtButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(districtButton as HTMLButtonElement);
-    expect(screen.getByText('B - District: B')).toBeDefined();
+    screen.getByText('B - District: B');
 
     expect(statusButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(statusButton as HTMLButtonElement);
-    expect(screen.getByText('A - Assess area status: A')).toBeDefined();
+    screen.getByText('A - Assess area status: A');
   });
 
   it('shouldRenderActiveFilterTagsArea_whenFiltersHaveValue', async () => {
@@ -145,9 +127,9 @@ describe('WasteSearchFilters', () => {
         sampling: ['A'],
       },
     });
-    expect(screen.getByTestId('active-filters')).toBeDefined();
+    screen.getByTestId('active-filters');
 
-    expect(screen.getByTestId('dt-sampling-A')).toBeDefined();
+    screen.getByTestId('dt-sampling-A');
   });
 
   it('shouldCallOnChange_whenSearchInputChanges', async () => {
@@ -166,7 +148,7 @@ describe('WasteSearchFilters', () => {
     await renderWithProps({ onChange });
 
     const samplingBox = screen.getByPlaceholderText(/Sampling/i);
-    const samplingButton = samplingBox.parentElement?.querySelector('button');
+    const samplingButton = within(samplingBox.parentElement!).getByRole('button');
     expect(samplingBox).toBeDefined();
     expect(samplingButton).toBeDefined();
     expect(samplingButton).toBeInstanceOf(HTMLButtonElement);

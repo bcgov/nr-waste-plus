@@ -1,12 +1,10 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
 import LayoutHeaderGlobalBar from './LayoutHeaderGlobalBar';
 
-import { AuthProvider } from '@/context/auth/AuthProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import ThemeProvider from '@/context/theme/ThemeProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 
 vi.mock('@/components/Layout/ThemeToggle', () => ({
   __esModule: true,
@@ -22,34 +20,20 @@ vi.mock('@/context/layout/useLayout', () => ({
   }),
 }));
 
-const renderWithProviders = async () => {
-  const qc = new QueryClient();
-  await act(async () => {
-    render(
-      <AuthProvider>
-        <QueryClientProvider client={qc}>
-          <PreferenceProvider>
-            <ThemeProvider>
-              <LayoutHeaderGlobalBar />
-            </ThemeProvider>
-          </PreferenceProvider>
-        </QueryClientProvider>
-      </AuthProvider>,
-    );
-  });
-};
+const renderWithProviders = () => renderWithAppAsync(<LayoutHeaderGlobalBar />);
 
 describe('LayoutHeaderGlobalBar', () => {
   it('renders ThemeToggle and user avatar', async () => {
     await renderWithProviders();
-    expect(screen.getByTestId('theme-toggle')).toBeDefined();
-    expect(screen.getByLabelText('Profile settings')).toBeDefined();
-    expect(screen.getByLabelText('Switch to dark mode')).toBeDefined();
+    screen.getByTestId('theme-toggle');
+    screen.getByLabelText('Profile settings');
+    screen.getByLabelText('Switch to dark mode');
   });
 
   it('calls toggleHeaderPanel when profile settings is clicked', async () => {
+    const user = await userEvent.setup();
     await renderWithProviders();
-    fireEvent.click(screen.getByLabelText('Profile settings'));
+    await user.click(screen.getByLabelText('Profile settings'));
     expect(mockToggleHeaderPanel).toHaveBeenCalled();
   });
 });

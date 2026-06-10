@@ -4,6 +4,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { configDefaults } from 'vitest/config';
 
+// Shared alias definition to ensure consistency across resolve, test, and tsconfig
+const ALIAS_SRC = new URL('./src/', import.meta.url).pathname;
+
 export default defineConfig(({ mode }) => {
   const define = {
     global: {},
@@ -12,7 +15,7 @@ export default defineConfig(({ mode }) => {
     define,
     resolve: {
       alias: {
-        '@/': new URL('./src/', import.meta.url).pathname,
+        '@/': ALIAS_SRC,
       },
     },
     plugins: [
@@ -35,7 +38,7 @@ export default defineConfig(({ mode }) => {
           maximumFileSizeToCacheInBytes: 6000000,
         },
         injectManifest: {
-          maximumFileSizeToCacheInBytes: 6000000,
+          maximumFileSizeToCacheInBytes: 7500000,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
         },
         manifest: {
@@ -111,6 +114,7 @@ export default defineConfig(({ mode }) => {
     build: {
       chunkSizeWarningLimit: 1024,
       outDir: 'build',
+      sourcemap: process.env.VITE_COVERAGE === 'true' ? 'inline' : false,
       rollupOptions: {
         output: {
           manualChunks(id) {
@@ -173,10 +177,13 @@ export default defineConfig(({ mode }) => {
     },
     test: {
       alias: {
-        '@/': new URL('./src/', import.meta.url).pathname,
+        '@/': ALIAS_SRC,
       },
       testTimeout: 15000,
       clearMocks: true,
+      restoreMocks: true,
+      unstubGlobals: true,
+      unstubEnvs: true,
       env: loadEnv(mode, process.cwd(), ''),
       exclude: [...configDefaults.exclude, 'dist/**', 'build/**'],
       globals: true,
@@ -201,7 +208,6 @@ export default defineConfig(({ mode }) => {
           '**/types/**',
           '**/constants/**',
           '**/config/fam/*',
-          '**/config/react-query/*',
           '**/config/tests/*',
           '**/*.env.ts',
           '**/*.scss',
@@ -212,6 +218,8 @@ export default defineConfig(({ mode }) => {
           '**/main.tsx',
           '**/App.tsx',
           '**/e2e.setup.ts',
+          '**/DevTools.tsx',
+          '**/vite.config.ts',
         ],
         include: ['src/**/*.ts', 'src/**/*.tsx'],
         lines: 80,

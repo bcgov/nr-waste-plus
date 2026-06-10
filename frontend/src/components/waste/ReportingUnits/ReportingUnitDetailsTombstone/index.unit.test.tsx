@@ -88,18 +88,18 @@ describe('ReportingUnitDetailsTombstone', () => {
   describe('client fields', () => {
     it('renders the client name', () => {
       renderTombstone();
-      expect(screen.getByText('Forest Client Ltd.')).toBeDefined();
+      screen.getByText('Forest Client Ltd.');
     });
 
     it('renders the client number', () => {
       renderTombstone();
-      expect(screen.getByText('00001001')).toBeDefined();
+      screen.getByText('00001001');
     });
 
     it('renders a link to client details for IDIR users', () => {
       renderTombstone();
       const link = screen.getByRole('link', { name: '00001001' });
-      expect(link).toBeDefined();
+      // link is defined; getBy* throws if not found
       expect((link as HTMLAnchorElement).href).toContain('/clients/details/00001001');
     });
 
@@ -111,7 +111,7 @@ describe('ReportingUnitDetailsTombstone', () => {
 
     it('renders the client status description', () => {
       renderTombstone();
-      expect(screen.getByText('Active')).toBeDefined();
+      screen.getByText('Active');
     });
 
     it('renders different client data correctly', () => {
@@ -120,16 +120,16 @@ describe('ReportingUnitDetailsTombstone', () => {
         client: { code: '00002002', description: 'Another Corp.' },
         clientStatus: { code: 'INA', description: 'Inactive' },
       });
-      expect(screen.getByText('Another Corp.')).toBeDefined();
-      expect(screen.getByText('00002002')).toBeDefined();
-      expect(screen.getByText('Inactive')).toBeDefined();
+      screen.getByText('Another Corp.');
+      screen.getByText('00002002');
+      screen.getByText('Inactive');
     });
   });
 
   describe('district field', () => {
     it('renders district code and description together', () => {
       renderTombstone();
-      expect(screen.getByText('DCR - Campbell River')).toBeDefined();
+      screen.getByText('DCR - Campbell River');
     });
 
     it('renders a different district correctly', () => {
@@ -137,14 +137,14 @@ describe('ReportingUnitDetailsTombstone', () => {
         ...defaultData,
         district: { code: 'DKA', description: 'Kalum' },
       });
-      expect(screen.getByText('DKA - Kalum')).toBeDefined();
+      screen.getByText('DKA - Kalum');
     });
   });
 
   describe('grade field', () => {
     it('renders the grade description', () => {
       renderTombstone();
-      expect(screen.getByText('Grade 1')).toBeDefined();
+      screen.getByText('Grade 1');
     });
 
     it('renders an empty value tag when grade description is empty', () => {
@@ -156,7 +156,7 @@ describe('ReportingUnitDetailsTombstone', () => {
   describe('sampling field', () => {
     it('renders sampling code and description together', () => {
       renderTombstone();
-      expect(screen.getByText('S2 - Ground Sampling')).toBeDefined();
+      screen.getByText('S2 - Ground Sampling');
     });
 
     it('renders a different sampling option correctly', () => {
@@ -164,39 +164,39 @@ describe('ReportingUnitDetailsTombstone', () => {
         ...defaultData,
         sampling: { code: 'S3', description: 'Cruise' },
       });
-      expect(screen.getByText('S3 - Cruise')).toBeDefined();
+      screen.getByText('S3 - Cruise');
     });
   });
 
   describe('field labels', () => {
     it('renders the "Client name" label', () => {
       renderTombstone();
-      expect(screen.getByText('Client name')).toBeDefined();
+      screen.getByText('Client name');
     });
 
     it('renders the "Client number" label', () => {
       renderTombstone();
-      expect(screen.getByText('Client number')).toBeDefined();
+      screen.getByText('Client number');
     });
 
     it('renders the "Client status" label', () => {
       renderTombstone();
-      expect(screen.getByText('Client status')).toBeDefined();
+      screen.getByText('Client status');
     });
 
     it('renders the "District" label', () => {
       renderTombstone();
-      expect(screen.getByText('District')).toBeDefined();
+      screen.getByText('District');
     });
 
     it('renders the "Grades" label', () => {
       renderTombstone();
-      expect(screen.getByText('Grades')).toBeDefined();
+      screen.getByText('Grades');
     });
 
     it('renders the "Sampling option" label', () => {
       renderTombstone();
-      expect(screen.getByText('Sampling option')).toBeDefined();
+      screen.getByText('Sampling option');
     });
   });
 
@@ -208,7 +208,7 @@ describe('ReportingUnitDetailsTombstone', () => {
         district: { code: null, description: 'Unknown District' },
         sampling: { code: null, description: 'No Sampling' },
       });
-      expect(screen.getByText('Null Code Corp.')).toBeDefined();
+      screen.getByText('Null Code Corp.');
     });
 
     it('renders without crashing when description fields are null', () => {
@@ -218,7 +218,7 @@ describe('ReportingUnitDetailsTombstone', () => {
         clientStatus: { code: 'ACT', description: null },
       });
       // Should not throw; null renders as empty string in React
-      expect(screen.getByText('Client name')).toBeDefined();
+      screen.getByText('Client name');
     });
   });
 });

@@ -14,7 +14,6 @@ test.describe('Create Reporting Unit - Form Submission', () => {
     await setupCreateRuMocks(page, testInfo.project.metadata.userType);
     await mockCreateRuSuccess(page);
     await page.goto('/reporting-units/create');
-    await page.waitForLoadState('networkidle');
   });
 
   test.describe('successful submission - non-DKM district', () => {
@@ -80,6 +79,7 @@ test.describe('Create Reporting Unit - Form Submission', () => {
     test('shows grade field when DKM selected and allows Interior grades selection', async ({
       page,
     }, testInfo) => {
+      test.slow(); // more steps than other tests — triple timeout for CI
       await selectClient(page, testInfo.project.metadata.userType);
 
       // Select DKM district (Coast Mountains)

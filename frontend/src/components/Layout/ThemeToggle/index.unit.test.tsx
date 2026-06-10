@@ -1,12 +1,12 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect } from 'vitest';
 
 import ThemeToggle from './index';
 
 import type { CarbonTheme } from '@/context/preference/types';
 
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { ThemeContext, type ThemeContextData } from '@/context/theme/ThemeContext';
 
 const mockCtxLight: ThemeContextData = {
@@ -21,56 +21,51 @@ const mockCtxDark: ThemeContextData = {
   toggleTheme: vi.fn(),
 };
 
-const renderWithProviders = async (ctx: ThemeContextData = mockCtxLight) => {
-  const qc = new QueryClient();
-  await act(async () =>
-    render(
-      <QueryClientProvider client={qc}>
-        <PreferenceProvider>
-          <ThemeContext.Provider value={ctx}>
-            <ThemeToggle />
-          </ThemeContext.Provider>
-        </PreferenceProvider>
-      </QueryClientProvider>,
-    ),
+const renderWithProviders = (ctx: ThemeContextData = mockCtxLight) =>
+  renderWithAppAsync(
+    <ThemeContext.Provider value={ctx}>
+      <ThemeToggle />
+    </ThemeContext.Provider>,
   );
-};
 
 describe('ThemeToggle', () => {
   it('renders with light icon when theme is white', async () => {
     await renderWithProviders();
-    expect(screen.getByRole('button')).toBeDefined();
-    const icon = document.querySelector('.icon');
-    expect(icon).toBeDefined();
-    expect(icon?.ariaLabel).toContain('light');
+    screen.getByRole('button');
+    screen.getByRole('img', { name: /light/i });
   });
 
   it('renders with asleep icon when theme is not white', async () => {
     await renderWithProviders(mockCtxDark);
-    expect(screen.getByRole('button')).toBeDefined();
-    const icon = document.querySelector('.icon');
-    expect(icon).toBeDefined();
-    expect(icon?.ariaLabel).toContain('dark');
+    screen.getByRole('button');
+    screen.getByRole('img', { name: /dark/i });
   });
 
   it('calls toggleTheme on click', async () => {
+    const user = await userEvent.setup();
     const spy = vi.spyOn(mockCtxLight, 'toggleTheme');
     await renderWithProviders();
-    fireEvent.click(screen.getByRole('button'));
+    await user.click(screen.getByRole('button'));
     expect(spy).toHaveBeenCalled();
   });
 
   it('calls toggleTheme on Enter key', async () => {
+    const user = await userEvent.setup();
     const spy = vi.spyOn(mockCtxLight, 'toggleTheme');
     await renderWithProviders();
-    fireEvent.keyDown(screen.getByRole('button'), { key: 'Enter' });
+    const button = screen.getByRole('button');
+    await user.click(button);
+    await user.keyboard('{Enter}');
     expect(spy).toHaveBeenCalled();
   });
 
   it('calls toggleTheme on Space key', async () => {
+    const user = await userEvent.setup();
     const spy = vi.spyOn(mockCtxLight, 'toggleTheme');
     await renderWithProviders();
-    fireEvent.keyDown(screen.getByRole('button'), { key: ' ' });
+    const button = screen.getByRole('button');
+    await user.click(button);
+    await user.keyboard(' ');
     expect(spy).toHaveBeenCalled();
   });
 });

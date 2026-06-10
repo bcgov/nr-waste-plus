@@ -1,25 +1,20 @@
-import { RouterProvider } from '@tanstack/react-router';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect } from 'vitest';
 
 import PageTitle from './index';
 
-import { createTestRouter } from '@/config/tests/routerTestHelper';
+import { renderWithApp } from '@/config/tests/renderWithApp';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 
 // Helper function to render PageTitle with props
 const renderPageTitle = (
   props: React.ComponentProps<typeof PageTitle> & { children?: React.ReactNode },
 ) => {
-  render(
-    <RouterProvider
-      router={createTestRouter(() => (
-        <PageTitleProvider>
-          <PageTitle {...props}>{props.children}</PageTitle>
-        </PageTitleProvider>
-      ))}
-    />,
+  renderWithApp(
+    <PageTitleProvider>
+      <PageTitle {...props}>{props.children}</PageTitle>
+    </PageTitleProvider>,
   );
 };
 
@@ -29,7 +24,7 @@ describe('PageTitle', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Test Title');
-      expect(screen.getByText('Test Subtitle')).toBeDefined();
+      screen.getByText('Test Subtitle');
     });
   });
 
@@ -44,7 +39,7 @@ describe('PageTitle', () => {
     renderPageTitle({ title: 'With Breadcrumbs', breadCrumbs });
 
     await waitFor(() => {
-      expect(screen.getByText('Dashboard')).toBeDefined();
+      screen.getByText('Dashboard');
     });
 
     // We're not mocking navigation here — just verifying it doesn't crash
@@ -55,7 +50,7 @@ describe('PageTitle', () => {
   it('shouldRenderExperimentalTag_whenExperimentalIsTrue', async () => {
     renderPageTitle({ title: 'Experimental Page', experimental: true });
     await waitFor(() => {
-      expect(screen.getByText(/under construction/i)).toBeDefined();
+      screen.getByText(/under construction/i);
     });
   });
 
@@ -65,7 +60,7 @@ describe('PageTitle', () => {
       children: <span>Child Content</span>,
     });
     await waitFor(() => {
-      expect(screen.getByText('Child Content')).toBeDefined();
+      screen.getByText('Child Content');
     });
   });
 });

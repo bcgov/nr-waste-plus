@@ -30,7 +30,6 @@ test.describe('Theme toggle', () => {
     );
 
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
   });
 
   test('defaults to light theme and toggles to dark theme', async ({ page }, testInfo) => {

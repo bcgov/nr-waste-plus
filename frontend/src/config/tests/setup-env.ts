@@ -1,5 +1,5 @@
 import { cleanup } from '@testing-library/react';
-import { afterEach, beforeAll, vi } from 'vitest';
+import { afterEach, afterAll, beforeAll, vi } from 'vitest';
 
 // Mock AWS Amplify Auth globally for all tests
 vi.mock('aws-amplify/auth', () => ({
@@ -20,27 +20,37 @@ vi.mock('@/services/APIs', () => ({
     forestclient: {
       searchByClientNumbers: vi.fn().mockResolvedValue([]),
       searchClients: vi.fn().mockResolvedValue([]),
+      searchMyForestClients: vi.fn().mockResolvedValue([]),
     },
     codes: {
       getDistricts: vi.fn().mockResolvedValue([]),
       getWasteCodes: vi.fn().mockResolvedValue([]),
+      getSamplingOptions: vi.fn().mockResolvedValue([]),
+      getAssessAreaStatuses: vi.fn().mockResolvedValue([]),
     },
     search: {
       search: vi.fn().mockResolvedValue({ items: [] }),
+      searchReportingUnit: vi.fn().mockResolvedValue({
+        content: [],
+        page: { number: 0, size: 10, totalElements: 0, totalPages: 0 },
+      }),
     },
   },
 }));
 
 // Mock global fetch to prevent real HTTP requests in jsdom tests
-beforeAll(() => {
-  globalThis.fetch = vi.fn(() =>
+// Uses vi.stubGlobal for automatic cleanup via restoreMocks: true in vite.config.ts
+vi.stubGlobal(
+  'fetch',
+  vi.fn(() =>
     Promise.reject(new Error('Unexpected fetch call during test - please mock the API endpoint')),
-  ) as unknown as typeof fetch;
-});
+  ),
+);
 
 // Suppress flatpickr locale errors in test output
+let originalStderrWrite: typeof process.stderr.write;
 beforeAll(() => {
-  const originalStderrWrite = process.stderr.write.bind(process.stderr);
+  originalStderrWrite = process.stderr.write.bind(process.stderr);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   process.stderr.write = ((...args: any[]): boolean => {
     const chunk = args[0];
@@ -63,27 +73,34 @@ beforeAll(() => {
   }) as typeof process.stderr.write;
 });
 
+afterAll(() => {
+  process.stderr.write = originalStderrWrite;
+});
+
 class MockResizeObserver {
   private readonly _cb: ResizeObserverCallback;
   constructor(cb: ResizeObserverCallback) {
     this._cb = cb;
   }
   observe = vi.fn((_el: Element) => {
-    // Provide a minimal ResizeObserverEntry with contentRect to avoid undefined errors
-    const entry: Partial<ResizeObserverEntry> = {
-      target: _el,
-      contentRect: {
-        x: 0,
-        y: 0,
-        top: 0,
-        left: 0,
-        bottom: 0,
-        right: 0,
-        width: (_el as HTMLElement)?.offsetWidth || 0,
-        height: (_el as HTMLElement)?.offsetHeight || 0,
-      } as DOMRectReadOnly,
-    };
-    this._cb([entry as ResizeObserverEntry], this as unknown as ResizeObserver);
+    // Schedule callback asynchronously (mimics real ResizeObserver async scheduling)
+    setTimeout(() => {
+      // Provide a minimal ResizeObserverEntry with contentRect to avoid undefined errors
+      const entry: Partial<ResizeObserverEntry> = {
+        target: _el,
+        contentRect: {
+          x: 0,
+          y: 0,
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+          width: (_el as HTMLElement)?.offsetWidth || 0,
+          height: (_el as HTMLElement)?.offsetHeight || 0,
+        } as DOMRectReadOnly,
+      };
+      this._cb([entry as ResizeObserverEntry], this as unknown as ResizeObserver);
+    }, 0);
   });
   unobserve = vi.fn(() => {});
   disconnect = vi.fn(() => {});

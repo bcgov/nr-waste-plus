@@ -1,15 +1,9 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RouterProvider } from '@tanstack/react-router';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import WasteSearchPage from './index';
 
-import { createTestRouter } from '@/config/tests/routerTestHelper';
-import { AuthProvider } from '@/context/auth/AuthProvider';
-import NotificationProvider from '@/context/notification/NotificationProvider';
-import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 import APIs from '@/services/APIs';
 
@@ -32,28 +26,7 @@ vi.mock('@/services/APIs', () => {
   };
 });
 
-const renderWithProps = async () => {
-  const qc = new QueryClient();
-  await act(async () =>
-    render(
-      <QueryClientProvider client={qc}>
-        <PreferenceProvider>
-          <RouterProvider
-            router={createTestRouter(() => (
-              <AuthProvider>
-                <NotificationProvider>
-                  <PageTitleProvider>
-                    <WasteSearchPage />
-                  </PageTitleProvider>
-                </NotificationProvider>
-              </AuthProvider>
-            ))}
-          />
-        </PreferenceProvider>
-      </QueryClientProvider>,
-    ),
-  );
-};
+const renderWithProps = () => renderWithAppAsync(<WasteSearchPage />);
 
 describe('WasteSearchPage', () => {
   beforeEach(() => {
@@ -73,18 +46,18 @@ describe('WasteSearchPage', () => {
     });
   });
 
-  it('shouldRenderPageTitleAndSubtitle_whenRendered', async () => {
+  it('should render page title and subtitle when rendered', async () => {
     await renderWithProps();
-    expect(screen.getByText('Waste search')).toBeDefined();
-    expect(screen.getByText('Search for reporting units, licensees, or blocks')).toBeDefined();
+    screen.getByText('Waste search');
+    screen.getByText('Search for reporting units, licensees, or blocks');
   });
 
-  it('shouldRenderWasteSearchColumns_whenRendered', async () => {
+  it('should render waste search columns when rendered', async () => {
     await renderWithProps();
-    expect(screen.getByText('Nothing to show yet!')).toBeDefined();
+    screen.getByText('Nothing to show yet!');
   });
 
-  it('shouldDisplayErrorNotification_whenErrorEventSent', async () => {
+  it('should display error notification when error event sent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -96,11 +69,11 @@ describe('WasteSearchPage', () => {
       });
     });
 
-    expect(screen.getByText('Test Error')).toBeDefined();
+    screen.getByText('Test Error');
     expect(screen.getAllByText('This is a test error message')).toHaveLength(1);
   });
 
-  it('shouldDisplayWarningNotification_whenWarningEventSent', async () => {
+  it('should display warning notification when warning event sent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -112,11 +85,11 @@ describe('WasteSearchPage', () => {
       });
     });
 
-    expect(screen.getByText('Test Warning')).toBeDefined();
+    screen.getByText('Test Warning');
     expect(screen.getAllByText('This is a test warning message')).toHaveLength(1);
   });
 
-  it('shouldDisplayInfoNotification_whenInfoEventSent', async () => {
+  it('should display info notification when info event sent', async () => {
     await renderWithProps();
 
     act(() => {
@@ -128,11 +101,11 @@ describe('WasteSearchPage', () => {
       });
     });
 
-    await waitFor(() => expect(screen.getByText('Test Info')).toBeDefined());
+    await screen.findByText('Test Info');
     expect(screen.getAllByText('This is a test info message')).toHaveLength(1);
   });
 
-  it('shouldNotDisplayNotification_whenEventTargetDoesNotMatch', async () => {
+  it('should not display notification when event target does not match', async () => {
     await renderWithProps();
 
     act(() => {

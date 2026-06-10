@@ -72,7 +72,7 @@ describe('RoleBasedRedirectLinkTag', () => {
 
     const allowedRoles: Role[] = [Role.ADMIN, Role.DISTRICT];
 
-    const { container } = render(
+    render(
       <RoleBasedRedirectLinkTag
         text="Restricted Link"
         url="https://example.com"
@@ -82,7 +82,7 @@ describe('RoleBasedRedirectLinkTag', () => {
 
     expect(screen.queryByTestId('redirect-link-tag')).toBeFalsy();
     expect(screen.getByText('Restricted Link')).toBeTruthy();
-    expect(container.querySelector('a')).toBeFalsy();
+    expect(screen.queryByRole('link')).toBeFalsy();
   });
 
   it('renders plain text when user has no roles', () => {

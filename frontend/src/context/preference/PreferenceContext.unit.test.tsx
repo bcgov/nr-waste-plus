@@ -1,10 +1,13 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, act, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, type Mock, beforeEach, afterEach } from 'vitest';
 
 import { PreferenceProvider } from './PreferenceProvider';
 import { usePreference } from './usePreference';
 import { loadUserPreference, saveUserPreference } from './utils';
+
+import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 
 const mockStorage = (() => {
   let store: Record<string, string> = {};
@@ -45,7 +48,7 @@ const TestComponent = () => {
 };
 
 const renderWithProviders = async () => {
-  const qc = new QueryClient();
+  const qc = makeTestQueryClient();
   await act(async () =>
     render(
       <QueryClientProvider client={qc}>
@@ -77,6 +80,7 @@ describe('PreferenceContext', () => {
   });
 
   it('updatePreferences changes the testData', async () => {
+    const user = await userEvent.setup();
     (loadUserPreference as Mock)
       .mockReturnValueOnce({ theme: 'g10', testData: 'default' })
       .mockReturnValueOnce({ theme: 'g10', testData: 'g100' })
@@ -87,7 +91,7 @@ describe('PreferenceContext', () => {
     await waitFor(() => expect(screen.getByTestId('loaded').textContent).toBe('true'));
 
     expect(screen.getByTestId('test-value').textContent).toBe('default');
-    await act(async () => fireEvent.click(screen.getByText('Set g100')));
+    await user.click(screen.getByText('Set g100'));
     expect(saveUserPreference).toHaveBeenCalled();
     expect(loadUserPreference).toHaveBeenCalled();
 

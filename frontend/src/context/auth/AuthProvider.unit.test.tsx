@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, waitFor, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 
 import { AuthContext } from './AuthContext';
 import { AuthProvider, preserveRolesReference } from './AuthProvider';
@@ -28,9 +28,19 @@ vi.mock('@/utils/navigation', () => ({
 
 describe('AuthProvider (extra coverage)', () => {
   describe('when VITE_MOCK_AUTH is false', () => {
+    let originalMockAuth: string | undefined;
     beforeAll(async () => {
-      const { env } = await import('@/env');
-      env.VITE_MOCK_AUTH = 'false';
+      const module = await import('@/env');
+      originalMockAuth = module.env.VITE_MOCK_AUTH;
+      module.env.VITE_MOCK_AUTH = 'false';
+    });
+
+    afterAll(async () => {
+      // Restore the original value
+      if (originalMockAuth !== undefined) {
+        const module = await import('@/env');
+        module.env.VITE_MOCK_AUTH = originalMockAuth;
+      }
     });
 
     it('calls fetchAuthSession', async () => {
@@ -118,9 +128,19 @@ describe('AuthProvider (extra coverage)', () => {
   });
 
   describe('when VITE_MOCK_AUTH is true', () => {
+    let originalMockAuth: string | undefined;
     beforeAll(async () => {
-      const { env } = await import('@/env');
-      env.VITE_MOCK_AUTH = 'true';
+      const module = await import('@/env');
+      originalMockAuth = module.env.VITE_MOCK_AUTH;
+      module.env.VITE_MOCK_AUTH = 'true';
+    });
+
+    afterAll(async () => {
+      // Restore the original value
+      if (originalMockAuth !== undefined) {
+        const module = await import('@/env');
+        module.env.VITE_MOCK_AUTH = originalMockAuth;
+      }
     });
 
     it("doesn't call fetchAuthSession", async () => {

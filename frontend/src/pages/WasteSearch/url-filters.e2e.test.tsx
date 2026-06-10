@@ -11,14 +11,12 @@ test.describe('Waste Search - URL-Populated Filters', () => {
       includeSearchRoutes: true,
     });
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
   });
 
   test('fills main search term from URL', async ({ page }) => {
     const term = 'RANDOM-TERM-123';
 
     await page.goto(`/search?mainSearchTerm=${encodeURIComponent(term)}`);
-    await page.waitForLoadState('networkidle');
 
     const searchBox = page.getByRole('searchbox');
     await expect(searchBox).toHaveValue(term);
@@ -26,7 +24,6 @@ test.describe('Waste Search - URL-Populated Filters', () => {
 
   test('fills district with one value from URL', async ({ page }) => {
     await page.goto('/search?district=DFN');
-    await page.waitForLoadState('networkidle');
 
     const districtInput = page.locator('#district-multi-select-input');
     await expect(page.getByTestId('dt-district-DFN')).toBeVisible();
@@ -35,7 +32,6 @@ test.describe('Waste Search - URL-Populated Filters', () => {
 
   test('fills district with multiple values from URL', async ({ page }) => {
     await page.goto('/search?district=DFN,DCK');
-    await page.waitForLoadState('networkidle');
 
     const districtInput = page.locator('#district-multi-select-input');
     await expect(page.getByTestId('dt-district-DFN')).toBeVisible();
@@ -43,9 +39,7 @@ test.describe('Waste Search - URL-Populated Filters', () => {
     await expect(districtInput).toHaveAttribute('placeholder', /^(DFN, DCK|DCK, DFN)$/);
   });
 
-  test('fills Client in advanced search from URL clientNumbers', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.metadata.userType === 'bceid', 'Only runs for IDIR users');
-
+  test('fills Client in advanced search from URL clientNumbers @idir-only', async ({ page }) => {
     await mockApiResponsesWithStub(
       page,
       'forest-clients/byNameAcronymNumber**',
@@ -53,7 +47,6 @@ test.describe('Waste Search - URL-Populated Filters', () => {
     );
 
     await page.goto('/search?clientNumbers=00049597');
-    await page.waitForLoadState('networkidle');
 
     await page.getByTestId('advanced-search-button-most').click();
 

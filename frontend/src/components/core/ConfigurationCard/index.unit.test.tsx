@@ -7,17 +7,12 @@ import { ConfigurationCard } from './index';
 describe('ConfigurationCard', () => {
   it('renders title', () => {
     render(<ConfigurationCard title="District average waste volumes" />);
-    expect(screen.getByText('District average waste volumes')).toBeDefined();
+    screen.getByText('District average waste volumes');
   });
 
   it('renders description as string', () => {
-    render(
-      <ConfigurationCard
-        title="Title"
-        description="Some body text"
-      />,
-    );
-    expect(screen.getByText('Some body text')).toBeDefined();
+    render(<ConfigurationCard title="Title" description="Some body text" />);
+    screen.getByText('Some body text');
   });
 
   it('renders ReactNode description as-is without wrapping paragraph', () => {
@@ -34,14 +29,11 @@ describe('ConfigurationCard', () => {
 
   it('renders children instead of description when both provided', () => {
     render(
-      <ConfigurationCard
-        title="Title"
-        description="Should not appear"
-      >
+      <ConfigurationCard title="Title" description="Should not appear">
         <span>Custom children</span>
       </ConfigurationCard>,
     );
-    expect(screen.getByText('Custom children')).toBeDefined();
+    screen.getByText('Custom children');
     expect(screen.queryByText('Should not appear')).toBeNull();
   });
 
@@ -54,7 +46,7 @@ describe('ConfigurationCard', () => {
         onButtonClick={onButtonClick}
       />,
     );
-    expect(screen.getByRole('button', { name: 'View or update tables →' })).toBeDefined();
+    screen.getByRole('button', { name: 'View or update tables →' });
   });
 
   it('calls onButtonClick when button is clicked', async () => {
@@ -85,11 +77,7 @@ describe('ConfigurationCard', () => {
   it('renders button with default ghost kind when kind is not provided', () => {
     const onButtonClick = vi.fn();
     render(
-      <ConfigurationCard
-        title="Title"
-        buttonLabel="Default kind"
-        onButtonClick={onButtonClick}
-      />,
+      <ConfigurationCard title="Title" buttonLabel="Default kind" onButtonClick={onButtonClick} />,
     );
     const button = screen.getByRole('button', { name: 'Default kind' });
     expect(button.classList.contains('cds--btn--ghost')).toBe(true);

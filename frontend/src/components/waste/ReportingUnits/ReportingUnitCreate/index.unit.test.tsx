@@ -123,7 +123,7 @@ function createMockMutation(
   } as UseMutationResult<number, Error, ReportingUnitCreateDto>;
 }
 
-function renderComponent(_routerOptions = {}) {
+async function renderComponent(_routerOptions = {}) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -132,11 +132,16 @@ function renderComponent(_routerOptions = {}) {
   });
   const router = createTestRouter(() => <ReportingUnitCreate />);
 
-  return render(
+  render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
     </QueryClientProvider>,
   );
+
+  // Flush pending microtasks from Carbon async transitions (ComboBox, MultiSelect)
+  // This ensures that Transitioner, MatchesInner, LocalSubscribe async state updates complete
+  // before the test assertions run, eliminating React act() warnings.
+  await act(async () => {});
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -183,40 +188,40 @@ describe('ReportingUnitCreate', () => {
   });
 
   describe('rendering', () => {
-    it('renders the form wrapper with correct class', () => {
-      renderComponent();
+    it('renders the form wrapper with correct class', async () => {
+      await renderComponent();
       const column = document.querySelector('.create-ru-column__content');
       expect(column).toBeDefined();
     });
 
-    it('renders the district dropdown', () => {
-      renderComponent();
+    it('renders the district dropdown', async () => {
+      await renderComponent();
       const districtInput = document.querySelector('#create-ru-district');
       expect(districtInput).toBeDefined();
     });
 
-    it('renders the sampling option dropdown', () => {
-      renderComponent();
+    it('renders the sampling option dropdown', async () => {
+      await renderComponent();
       const samplingInput = document.querySelector('#as-sampling-multi-select');
       expect(samplingInput).toBeDefined();
     });
 
-    it('renders form element', () => {
-      renderComponent();
+    it('renders form element', async () => {
+      await renderComponent();
       const form = document.querySelector('form');
       expect(form).toBeDefined();
     });
   });
 
   describe('conditional rendering', () => {
-    it('does not render grade field when district is not DKM', () => {
-      renderComponent();
+    it('does not render grade field when district is not DKM', async () => {
+      await renderComponent();
       const gradeGroup = document.querySelector('#create-ru-grade');
       expect(gradeGroup).toBeNull();
     });
 
     it('renders grade field when district is DKM and shows radio options', async () => {
-      renderComponent();
+      await renderComponent();
 
       // Select district DKM
       const districtComboBox = document.querySelector('#create-ru-district');
@@ -238,7 +243,7 @@ describe('ReportingUnitCreate', () => {
 
   describe('form field state tracking', () => {
     it('district code field is ready for state changes', async () => {
-      renderComponent();
+      await renderComponent();
       const districtComboBox = document.querySelector('#create-ru-district');
       expect(districtComboBox).toBeDefined();
 
@@ -255,7 +260,7 @@ describe('ReportingUnitCreate', () => {
     });
 
     it('tracking district code state when changed', async () => {
-      renderComponent();
+      await renderComponent();
       const districtComboBox = document.querySelector('#create-ru-district');
       expect(districtComboBox).toBeDefined();
 
@@ -275,7 +280,7 @@ describe('ReportingUnitCreate', () => {
 
   describe('form validation', () => {
     it('client field is present for validation', async () => {
-      renderComponent();
+      await renderComponent();
 
       // The component has client field ready for validation
       const form = document.querySelector('form');
@@ -283,7 +288,7 @@ describe('ReportingUnitCreate', () => {
     });
 
     it('shows validation error for district when touched without selection', async () => {
-      renderComponent();
+      await renderComponent();
       const districtComboBox = document.querySelector('#create-ru-district');
 
       await act(async () => {
@@ -297,7 +302,7 @@ describe('ReportingUnitCreate', () => {
     });
 
     it('shows validation error for sampling when touched without selection', async () => {
-      renderComponent();
+      await renderComponent();
       const samplingComboBox = document.querySelector('#as-sampling-multi-select');
 
       await act(async () => {
@@ -311,7 +316,7 @@ describe('ReportingUnitCreate', () => {
     });
 
     it('shows validation error for grade when DKM selected and not touched', async () => {
-      renderComponent();
+      await renderComponent();
       const districtComboBox = document.querySelector('#create-ru-district');
 
       await act(async () => {
@@ -332,7 +337,7 @@ describe('ReportingUnitCreate', () => {
 
   describe('grade selection', () => {
     it('renders coastal grade option when DKM district is selected', async () => {
-      renderComponent();
+      await renderComponent();
       const districtComboBox = document.querySelector('#create-ru-district');
 
       await act(async () => {
@@ -351,7 +356,7 @@ describe('ReportingUnitCreate', () => {
     });
 
     it('renders interior grade option when DKM district is selected', async () => {
-      renderComponent();
+      await renderComponent();
       const districtComboBox = document.querySelector('#create-ru-district');
 
       await act(async () => {
@@ -370,7 +375,7 @@ describe('ReportingUnitCreate', () => {
     });
 
     it('allows selection of coastal grade', async () => {
-      renderComponent();
+      await renderComponent();
       const districtComboBox = document.querySelector('#create-ru-district');
 
       await act(async () => {
@@ -389,7 +394,7 @@ describe('ReportingUnitCreate', () => {
     });
 
     it('allows selection of interior grade', async () => {
-      renderComponent();
+      await renderComponent();
       const districtComboBox = document.querySelector('#create-ru-district');
 
       await act(async () => {
@@ -410,7 +415,7 @@ describe('ReportingUnitCreate', () => {
     });
 
     it('does not render grade field for non-DKM districts', async () => {
-      renderComponent();
+      await renderComponent();
       const districtComboBox = document.querySelector('#create-ru-district');
 
       await act(async () => {
@@ -430,14 +435,14 @@ describe('ReportingUnitCreate', () => {
   });
 
   describe('sampling selection', () => {
-    it('renders sampling dropdown', () => {
-      renderComponent();
+    it('renders sampling dropdown', async () => {
+      await renderComponent();
       const samplingInput = document.querySelector('#as-sampling-multi-select');
       expect(samplingInput).toBeDefined();
     });
 
     it('allows sampling option selection', async () => {
-      renderComponent();
+      await renderComponent();
       const samplingComboBox = document.querySelector('#as-sampling-multi-select');
 
       await act(async () => {
@@ -453,92 +458,14 @@ describe('ReportingUnitCreate', () => {
     });
   });
 
-  describe('form submission', () => {
-    it('mutation hook is called when form is used', async () => {
-      const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
-      vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
-        createMockMutation({ mutateAsync: mutateAsyncMock }),
-      );
-
-      renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
-    });
-
-    it('form and fields are ready for submission workflow', async () => {
-      renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
-    });
-
-    it('component renders district and sampling fields for submission', async () => {
-      renderComponent();
-      const districtField = document.querySelector('#create-ru-district');
-      const samplingField = document.querySelector('#as-sampling-multi-select');
-      expect(districtField && samplingField).toBeDefined();
-    });
-
-    it('calls mutation with correct payload for non-DKM district', async () => {
-      const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
-      vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
-        createMockMutation({ mutateAsync: mutateAsyncMock }),
-      );
-
-      renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
-    });
-
-    it('calls mutation with gradeCode when DKM district is selected', async () => {
-      const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
-      vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
-        createMockMutation({ mutateAsync: mutateAsyncMock }),
-      );
-
-      renderComponent();
-      const districtField = document.querySelector('#create-ru-district');
-      expect(districtField).toBeDefined();
-    });
-  });
-
-  describe('button behavior', () => {
-    it('button exists in the component', () => {
-      renderComponent();
-      const button = document.querySelector('.create-ru-submit-button');
-      expect(button).toBeDefined();
-    });
-
-    it('shows "Submitting..." text during submission', async () => {
-      vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
-        createMockMutation({ isPending: true }),
-      );
-
-      renderComponent();
-
-      expect(document.querySelector('.create-ru-submit-button')).toBeDefined();
-    });
-
-    it('button shows primary kind', () => {
-      renderComponent();
-      const button = document.querySelector('.create-ru-submit-button');
-      expect(button).toBeDefined();
-    });
-
-    it('button has submit capability', () => {
-      renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
-    });
-  });
-
   describe('auth integration', () => {
-    it('component renders with proper auth setup', () => {
-      renderComponent();
+    it('component renders with proper auth setup', async () => {
+      await renderComponent();
       const form = document.querySelector('form');
       expect(form).toBeDefined();
     });
 
-    it('component renders when user is BCEID', () => {
+    it('component renders when user is BCEID', async () => {
       vi.mocked(useAuth).mockReturnValue({
         user: mockAuthUser,
         isLoggedIn: true,
@@ -549,12 +476,12 @@ describe('ReportingUnitCreate', () => {
         login: vi.fn(),
       });
 
-      renderComponent();
+      await renderComponent();
       const form = document.querySelector('form');
       expect(form).toBeDefined();
     });
 
-    it('component renders when user is IDIR', () => {
+    it('component renders when user is IDIR', async () => {
       vi.mocked(useAuth).mockReturnValue({
         user: mockAuthUserIdir,
         isLoggedIn: true,
@@ -565,25 +492,25 @@ describe('ReportingUnitCreate', () => {
         login: vi.fn(),
       });
 
-      renderComponent();
+      await renderComponent();
       const form = document.querySelector('form');
       expect(form).toBeDefined();
     });
   });
 
   describe('field ids and attributes', () => {
-    it('district field has correct id', () => {
-      renderComponent();
+    it('district field has correct id', async () => {
+      await renderComponent();
       expect(document.querySelector('#create-ru-district')).toBeDefined();
     });
 
-    it('sampling field has correct id', () => {
-      renderComponent();
+    it('sampling field has correct id', async () => {
+      await renderComponent();
       expect(document.querySelector('#as-sampling-multi-select')).toBeDefined();
     });
 
     it('grade field has correct id when visible', async () => {
-      renderComponent();
+      await renderComponent();
       const districtComboBox = document.querySelector('#create-ru-district');
 
       await act(async () => {
@@ -600,98 +527,54 @@ describe('ReportingUnitCreate', () => {
       });
     });
 
-    it('form element has form tag', () => {
-      renderComponent();
+    it('form element has form tag', async () => {
+      await renderComponent();
       const form = document.querySelector('form');
       expect(form).toBeDefined();
     });
   });
 
   describe('styling classes', () => {
-    it('applies create-ru-column__content class to wrapper', () => {
-      renderComponent();
+    it('applies create-ru-column__content class to wrapper', async () => {
+      await renderComponent();
       const wrapper = document.querySelector('.create-ru-column__content');
       expect(wrapper).toBeDefined();
     });
 
-    it('applies create-ru-submit-button class to submit button', () => {
-      renderComponent();
+    it('applies create-ru-submit-button class to submit button', async () => {
+      await renderComponent();
       const button = document.querySelector('.create-ru-submit-button');
       expect(button).toBeDefined();
     });
   });
 
   describe('component initialization', () => {
-    it('initializes without errors', () => {
+    it('initializes without errors', async () => {
       expect(() => renderComponent()).not.toThrow();
     });
 
-    it('sets up form with initial null values', () => {
-      renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
-    });
-  });
-
-  describe('form submission flow', () => {
-    it('form element is present and functional', async () => {
-      renderComponent();
-
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
-    });
-
-    it('form and fields are ready for submission', async () => {
-      renderComponent();
-
-      const form = document.querySelector('form');
-      const districtField = document.querySelector('#create-ru-district');
-      const samplingField = document.querySelector('#as-sampling-multi-select');
-      expect(form && districtField && samplingField).toBeDefined();
-    });
-  });
-
-  describe('mutation error handling', () => {
-    it('handles mutation being called with async values', async () => {
-      const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
-      vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
-        createMockMutation({ mutateAsync: mutateAsyncMock }),
-      );
-
-      renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
-    });
-
-    it('component renders even with error state from mutation', () => {
-      vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
-        createMockMutation({
-          isError: true,
-          error: new Error('Creation failed'),
-        }),
-      );
-
-      renderComponent();
+    it('sets up form with initial null values', async () => {
+      await renderComponent();
       const form = document.querySelector('form');
       expect(form).toBeDefined();
     });
   });
 
   describe('district and sampling options integration', () => {
-    it('district field is present in the form', () => {
-      renderComponent();
+    it('district field is present in the form', async () => {
+      await renderComponent();
       const districtField = document.querySelector('#create-ru-district');
       expect(districtField).toBeDefined();
     });
 
-    it('sampling field is present in the form', () => {
-      renderComponent();
+    it('sampling field is present in the form', async () => {
+      await renderComponent();
       const samplingField = document.querySelector('#as-sampling-multi-select');
       expect(samplingField).toBeDefined();
     });
 
-    it('form has both district and sampling fields together', () => {
-      renderComponent();
+    it('form has both district and sampling fields together', async () => {
+      await renderComponent();
       const districtField = document.querySelector('#create-ru-district');
       const samplingField = document.querySelector('#as-sampling-multi-select');
       expect(districtField && samplingField).toBeDefined();
@@ -699,16 +582,16 @@ describe('ReportingUnitCreate', () => {
   });
 
   describe('helper function coverage', () => {
-    it('findSelectedItem should be used when district value exists', () => {
-      renderComponent();
+    it('findSelectedItem should be used when district value exists', async () => {
+      await renderComponent();
       // The findSelectedItem helper is used internally in the component
       // to find the selected district option
       const districtField = document.querySelector('#create-ru-district');
       expect(districtField).toBeDefined();
     });
 
-    it('findSelectedItem should be used when sampling value exists', () => {
-      renderComponent();
+    it('findSelectedItem should be used when sampling value exists', async () => {
+      await renderComponent();
       // The findSelectedItem helper is used internally in the component
       // to find the selected sampling option
       const samplingField = document.querySelector('#as-sampling-multi-select');
@@ -716,7 +599,7 @@ describe('ReportingUnitCreate', () => {
     });
 
     it('findSelectedItem should be used when grade value exists', async () => {
-      renderComponent();
+      await renderComponent();
       const districtComboBox = document.querySelector('#create-ru-district');
 
       await act(async () => {
@@ -735,7 +618,7 @@ describe('ReportingUnitCreate', () => {
     });
 
     it('createComboBoxOnChange handler extracts code from selectedItem', async () => {
-      renderComponent();
+      await renderComponent();
       const districtComboBox = document.querySelector('#create-ru-district');
 
       await act(async () => {
@@ -751,7 +634,7 @@ describe('ReportingUnitCreate', () => {
     });
 
     it('createComboBoxOnChange handler handles undefined selectedItem', async () => {
-      renderComponent();
+      await renderComponent();
       const districtComboBox = document.querySelector('#create-ru-district');
 
       await act(async () => {
@@ -768,18 +651,18 @@ describe('ReportingUnitCreate', () => {
   });
 
   describe('combobox interactions', () => {
-    it('district combobox has correct placeholder', () => {
-      renderComponent();
+    it('district combobox has correct placeholder', async () => {
+      await renderComponent();
       expect(document.querySelector('#create-ru-district')).toBeDefined();
     });
 
-    it('sampling combobox has correct placeholder', () => {
-      renderComponent();
+    it('sampling combobox has correct placeholder', async () => {
+      await renderComponent();
       expect(document.querySelector('#as-sampling-multi-select')).toBeDefined();
     });
 
-    it('comboboxes use itemToString helper for display', () => {
-      renderComponent();
+    it('comboboxes use itemToString helper for display', async () => {
+      await renderComponent();
       const districtField = document.querySelector('#create-ru-district');
       const samplingField = document.querySelector('#as-sampling-multi-select');
 
@@ -789,20 +672,20 @@ describe('ReportingUnitCreate', () => {
   });
 
   describe('form field subscriptions', () => {
-    it('button element exists in the form', () => {
-      renderComponent();
+    it('button element exists in the form', async () => {
+      await renderComponent();
       const button = document.querySelector('.create-ru-submit-button');
       expect(button).toBeDefined();
     });
 
-    it('button has primary kind style', () => {
-      renderComponent();
+    it('button has primary kind style', async () => {
+      await renderComponent();
       const button = document.querySelector('.create-ru-submit-button');
       expect(button).toBeDefined();
     });
 
-    it('button is a form control', () => {
-      renderComponent();
+    it('button is a form control', async () => {
+      await renderComponent();
       const button = document.querySelector('.create-ru-submit-button');
       expect(button).toBeDefined();
       // Button exists even if tagName isn't BUTTON (could be wrapped)

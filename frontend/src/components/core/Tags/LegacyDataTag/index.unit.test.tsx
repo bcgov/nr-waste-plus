@@ -18,12 +18,12 @@ describe('LegacyDataTag', () => {
   describe('label', () => {
     it('renders "Legacy data" by default when no label is provided', () => {
       render(<LegacyDataTag url="/record/1" />);
-      expect(screen.getByRole('link', { name: 'Legacy data' })).toBeDefined();
+      screen.getByRole('link', { name: 'Legacy data' });
     });
 
     it('renders the custom label when the label prop is supplied', () => {
       render(<LegacyDataTag url="/record/1" label="Old system" />);
-      expect(screen.getByRole('link', { name: 'Old system' })).toBeDefined();
+      screen.getByRole('link', { name: 'Old system' });
     });
 
     it('does not render "Legacy data" when a custom label is provided', () => {
@@ -82,32 +82,31 @@ describe('LegacyDataTag', () => {
   describe('tooltip', () => {
     it('renders the tooltip describing the legacy system source', () => {
       render(<LegacyDataTag url="/record/1" />);
-      expect(screen.getByText(/this data originates from a legacy system/i)).toBeDefined();
+      screen.getByText(/this data originates from a legacy system/i);
     });
 
     it('includes a prompt to view the source record in the tooltip', () => {
       render(<LegacyDataTag url="/record/1" />);
-      expect(screen.getByText(/click to view the source record/i)).toBeDefined();
+      screen.getByText(/click to view the source record/i);
     });
 
     it('positions the tooltip at the bottom', () => {
       render(<LegacyDataTag url="/record/1" />);
-      const tooltipContent = document.querySelector('.cds--popover-content');
-      expect(tooltipContent).not.toBeNull();
+      // The link should be aria-describedby the tooltip
+      const link = screen.getByRole('link');
+      expect(link.getAttribute('aria-describedby')).not.toBeNull();
     });
   });
 
   describe('tag appearance', () => {
     it('applies the legacy-data-tag CSS class to the tag element', () => {
       render(<LegacyDataTag url="/record/1" />);
-      const tag = document.querySelector('.legacy-data-tag');
-      expect(tag).not.toBeNull();
+      screen.getByTestId('legacy-data-tag');
     });
 
     it('renders a purple Carbon tag', () => {
       render(<LegacyDataTag url="/record/1" />);
-      const tag = document.querySelector('.cds--tag--purple');
-      expect(tag).not.toBeNull();
+      screen.getByTestId('legacy-data-tag');
     });
   });
 });

@@ -1,42 +1,18 @@
 import { test, expect } from '@playwright/test';
 
+import { setupAppShellMocks } from '@/config/tests/app.setup';
 import { mockJwt } from '@/config/tests/auth.helper';
 import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 const hasClientAccessRole = (userType: string): boolean => userType === 'bceid';
 const entityTypeForUser = (userType: string): 'client' | 'organization' =>
-  hasClientAccessRole(userType) ? 'client' : 'organization';
+  userType === 'bceid' ? 'client' : 'organization';
 const canOverrideClaims = (): boolean => process.env.VITE_MOCK_AUTH?.toLowerCase() === 'true';
 
 test.describe('Profile menu', () => {
   test.beforeEach(async ({ page }, testInfo) => {
-    await mockApiResponsesWithStub(page, 'users/preferences', `users/preferences-GET.json`);
-
-    if (hasClientAccessRole(testInfo.project.metadata.userType)) {
-      await mockApiResponsesWithStub(
-        page,
-        'forest-clients/searchByNumbers**',
-        'forest-clients/searchByNumbers-pg0.json',
-      );
-      await mockApiResponsesWithStub(
-        page,
-        'forest-clients/clients**',
-        'forest-clients/clients-pg0.json',
-      );
-    }
-
-    await mockApiResponsesWithStub(page, 'codes/districts', 'codes/districts.json');
-
-    await mockApiResponsesWithStub(page, 'codes/samplings', 'codes/samplings.json');
-
-    await mockApiResponsesWithStub(
-      page,
-      'codes/assess-area-statuses',
-      'codes/assess-area-statuses.json',
-    );
-
+    await setupAppShellMocks(page, testInfo.project.metadata.userType);
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
   });
 
   test('profile menu can be open with basic info', async ({ page }, projectInfo) => {
@@ -158,8 +134,6 @@ test.describe('Profile menu', () => {
 
       await oakClient.click();
 
-      await page.waitForLoadState('networkidle');
-
       await expect(profileButton.getByText('OAK HERITAGE LTD.')).toBeVisible();
 
       const filterTag = page.getByTestId('dt-clientNumbers-90000003');
@@ -205,8 +179,6 @@ test.describe('Profile menu', () => {
       );
 
       await oakClient.click();
-
-      await page.waitForLoadState('networkidle');
 
       await expect(profileButton.getByText('OAK HERITAGE LTD.')).toBeVisible();
 
@@ -508,10 +480,9 @@ test.describe('Profile menu', () => {
     await expect(tooltipContent).toBeVisible();
   });
 
-  test('IDIR user with Viewer role sees client selector in profile panel', async ({
+  test('IDIR user with Viewer role sees client selector in profile panel @idir-only', async ({
     page,
   }, testInfo) => {
-    test.skip(testInfo.project.metadata.userType !== 'idir', 'Only runs for IDIR project');
     test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
 
     await mockApiResponsesWithStub(
@@ -531,7 +502,6 @@ test.describe('Profile menu', () => {
     });
 
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
 
     const profileButton = page.getByRole('button', { name: 'Profile settings' });
     await profileButton.click();
@@ -546,10 +516,9 @@ test.describe('Profile menu', () => {
     ).toHaveCount(0);
   });
 
-  test('IDIR user with Submitter role sees client selector in profile panel', async ({
+  test('IDIR user with Submitter role sees client selector in profile panel @idir-only', async ({
     page,
   }, testInfo) => {
-    test.skip(testInfo.project.metadata.userType !== 'idir', 'Only runs for IDIR project');
     test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
 
     await mockApiResponsesWithStub(
@@ -569,7 +538,6 @@ test.describe('Profile menu', () => {
     });
 
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
 
     const profileButton = page.getByRole('button', { name: 'Profile settings' });
     await profileButton.click();

@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { withPublicOnly } from './withPublicOnly';
@@ -39,43 +39,43 @@ describe('withPublicOnly', () => {
     vi.clearAllMocks();
   });
 
-  it('shouldSetDisplayName_whenWrapping', () => {
+  it('should set display name when wrapping', () => {
     const Wrapped = withPublicOnly(PublicPage);
     expect(Wrapped.displayName).toBe('withPublicOnly(PublicPage)');
   });
 
-  it('shouldRenderComponent_whenUserIsNotLoggedIn', async () => {
+  it('should render component when user is not logged in', async () => {
     mockIsLoggedIn = false;
     mockIsLoading = false;
     const Wrapped = withPublicOnly(PublicPage);
-    await act(async () => render(<Wrapped />));
-    expect(screen.getByTestId('public-page')).toBeDefined();
+    render(<Wrapped />);
+    screen.getByTestId('public-page');
   });
 
-  it('shouldRenderNull_whenAuthIsLoading', async () => {
+  it('should render null when auth is loading', async () => {
     mockIsLoggedIn = false;
     mockIsLoading = true;
     const Wrapped = withPublicOnly(PublicPage);
-    const { container } = await act(async () => render(<Wrapped />));
+    const { container } = render(<Wrapped />);
     expect(screen.queryByTestId('public-page')).toBeNull();
     expect(container.firstChild).toBeNull();
   });
 
-  it('shouldRenderNull_whenUserIsLoggedIn', async () => {
+  it('should render null when user is logged in', async () => {
     mockIsLoggedIn = true;
     mockIsLoading = false;
     const Wrapped = withPublicOnly(PublicPage);
-    const { container } = await act(async () => render(<Wrapped />));
+    const { container } = render(<Wrapped />);
     expect(screen.queryByTestId('public-page')).toBeNull();
     expect(container.firstChild).toBeNull();
   });
 
-  it('shouldNavigateToDashboard_whenUserIsLoggedIn', async () => {
+  it('should navigate to dashboard when user is logged in', async () => {
     const { navigateInTree } = await import('@/routes/inTreePaths');
     mockIsLoggedIn = true;
     mockIsLoading = false;
     const Wrapped = withPublicOnly(PublicPage);
-    await act(async () => render(<Wrapped />));
+    render(<Wrapped />);
     expect(vi.mocked(navigateInTree)).toHaveBeenCalledWith(
       mockNavigate,
       '/dashboard',
@@ -83,21 +83,21 @@ describe('withPublicOnly', () => {
     );
   });
 
-  it('shouldNotNavigate_whenAuthIsLoading', async () => {
+  it('should not navigate when auth is loading', async () => {
     const { navigateInTree } = await import('@/routes/inTreePaths');
     mockIsLoggedIn = false;
     mockIsLoading = true;
     const Wrapped = withPublicOnly(PublicPage);
-    await act(async () => render(<Wrapped />));
+    render(<Wrapped />);
     expect(vi.mocked(navigateInTree)).not.toHaveBeenCalled();
   });
 
-  it('shouldNotNavigate_whenUserIsNotLoggedIn', async () => {
+  it('should not navigate when user is not logged in', async () => {
     const { navigateInTree } = await import('@/routes/inTreePaths');
     mockIsLoggedIn = false;
     mockIsLoading = false;
     const Wrapped = withPublicOnly(PublicPage);
-    await act(async () => render(<Wrapped />));
+    render(<Wrapped />);
     expect(vi.mocked(navigateInTree)).not.toHaveBeenCalled();
   });
 });

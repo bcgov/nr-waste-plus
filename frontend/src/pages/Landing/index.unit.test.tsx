@@ -1,30 +1,13 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, afterEach, beforeEach, type Mock } from 'vitest';
 
 import LandingPage from './index';
 
-import { AuthProvider } from '@/context/auth/AuthProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import { ThemeProvider } from '@/context/theme/ThemeProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
 
-const renderWithProps = async () => {
-  const qc = new QueryClient();
-  await act(async () =>
-    render(
-      <QueryClientProvider client={qc}>
-        <AuthProvider>
-          <PreferenceProvider>
-            <ThemeProvider>
-              <LandingPage />
-            </ThemeProvider>
-          </PreferenceProvider>
-        </AuthProvider>
-      </QueryClientProvider>,
-    ),
-  );
-};
+const renderWithProps = () => renderWithAppAsync(<LandingPage />);
 
 const loginMock: ReturnType<typeof vi.fn> = vi.fn();
 let mockBreakpoint = 'md';
@@ -113,25 +96,27 @@ describe('LandingPage', () => {
 
   it('renders both login buttons', async () => {
     await renderWithProps();
-    expect(screen.getByTestId('landing-button__idir')).toBeDefined();
-    expect(screen.getByTestId('landing-button__bceid')).toBeDefined();
+    screen.getByTestId('landing-button__idir');
+    screen.getByTestId('landing-button__bceid');
   });
 
   it('calls login with correct provider when IDIR button is clicked', async () => {
+    const user = await userEvent.setup();
     await renderWithProps();
-    await act(async () => fireEvent.click(screen.getByTestId('landing-button__idir')));
+    await user.click(screen.getByTestId('landing-button__idir'));
     expect(loginMock).toHaveBeenCalledWith('IDIR');
   });
 
   it('calls login with correct provider when BCeID button is clicked', async () => {
+    const user = await userEvent.setup();
     await renderWithProps();
-    await act(async () => fireEvent.click(screen.getByTestId('landing-button__bceid')));
+    await user.click(screen.getByTestId('landing-button__bceid'));
     expect(loginMock).toHaveBeenCalledWith('BCEIDBUSINESS');
   });
 
   it('renders the landing image', async () => {
     await renderWithProps();
-    expect(screen.getByAltText('Landing cover')).toBeDefined();
+    screen.getByAltText('Landing cover');
   });
 
   afterEach(() => {

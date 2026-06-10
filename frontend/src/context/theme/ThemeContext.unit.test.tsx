@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { waitFor } from '@testing-library/dom';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -7,6 +7,7 @@ import { describe, it, expect, vi, type Mock, beforeEach } from 'vitest';
 import { ThemeProvider } from './ThemeProvider';
 import { useTheme } from './useTheme';
 
+import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import { CARBON_THEMES } from '@/context/preference/types';
 import APIs from '@/services/APIs';
@@ -34,7 +35,7 @@ const TestComponent = () => {
 };
 
 const renderWithProviders = async () => {
-  const qc = new QueryClient();
+  const qc = makeTestQueryClient();
   await act(async () =>
     render(
       <QueryClientProvider client={qc}>
@@ -68,6 +69,7 @@ describe('ThemeContext', () => {
   });
 
   it('toggleTheme toggles between g10 and g100', async () => {
+    const user = await userEvent.setup();
     (APIs.user.getUserPreferences as Mock)
       .mockResolvedValueOnce({ theme: 'g10' })
       .mockResolvedValueOnce({ theme: 'g100' })
@@ -76,7 +78,7 @@ describe('ThemeContext', () => {
     await renderWithProviders();
 
     // Default is g10, toggle should set to g100
-    await userEvent.click(screen.getByText('Toggle'));
+    await user.click(screen.getByText('Toggle'));
     await waitFor(() => {
       expect(screen.getByTestId('theme-value').textContent).toBe('g100');
     });

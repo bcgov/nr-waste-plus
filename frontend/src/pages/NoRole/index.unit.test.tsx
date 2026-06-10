@@ -1,14 +1,12 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import NoRolePage from './index';
 
 import type { FamLoginUser } from '@/context/auth/types';
 
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { Role } from '@/context/auth/types';
-import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
 
 let mockIsLoggedIn = false;
@@ -42,20 +40,7 @@ vi.mock('@tanstack/react-router', async () => {
   };
 });
 
-const renderWithProps = async () => {
-  const qc = new QueryClient();
-  await act(async () =>
-    render(
-      <QueryClientProvider client={qc}>
-        <PreferenceProvider>
-          <PageTitleProvider>
-            <NoRolePage />
-          </PageTitleProvider>
-        </PreferenceProvider>
-      </QueryClientProvider>,
-    ),
-  );
-};
+const renderWithProps = () => renderWithAppAsync(<NoRolePage />);
 
 describe('NoRolePage', () => {
   beforeEach(() => {
@@ -66,7 +51,7 @@ describe('NoRolePage', () => {
     vi.mocked(APIs.user.updateUserPreferences).mockResolvedValue(undefined);
   });
 
-  it('shouldNavigateToHome_whenUserIsNotLoggedIn', async () => {
+  it('should navigate to home when user is not logged in', async () => {
     mockIsLoggedIn = false;
     mockUser = null;
     await renderWithProps();
@@ -74,7 +59,7 @@ describe('NoRolePage', () => {
     expect(screen.queryByText('Unauthorized Access')).toBeNull();
   });
 
-  it('shouldNavigateToHome_whenLoggedInButUserNotLoaded', async () => {
+  it('should navigate to home when logged in but user not loaded', async () => {
     mockIsLoggedIn = true;
     mockUser = null;
     await renderWithProps();
@@ -82,7 +67,7 @@ describe('NoRolePage', () => {
     expect(screen.queryByText('Unauthorized Access')).toBeNull();
   });
 
-  it('shouldNavigateToHome_whenLoggedInUserHasRoles', async () => {
+  it('should navigate to home when logged in user has roles', async () => {
     mockIsLoggedIn = true;
     mockUser = {
       userName: 'testuser',
@@ -97,7 +82,7 @@ describe('NoRolePage', () => {
     expect(screen.queryByText('Unauthorized Access')).toBeNull();
   });
 
-  it('shouldRenderUnauthorizedMessage_whenUserHasNoRoles', async () => {
+  it('should render unauthorized message when user has no roles', async () => {
     mockIsLoggedIn = true;
     mockUser = {
       userName: 'testuser',
@@ -107,13 +92,13 @@ describe('NoRolePage', () => {
     };
     await renderWithProps();
     expect(mockNavigate).not.toHaveBeenCalledWith(expect.objectContaining({ to: '/' }));
-    expect(screen.getByText('Unauthorized Access')).toBeDefined();
+    screen.getByText('Unauthorized Access');
     expect(
       screen.getByText("You don't have FAM authorization to access this system"),
     ).toBeDefined();
   });
 
-  it('shouldRenderUnauthorizedMessage_whenUserHasUndefinedRoles', async () => {
+  it('should render unauthorized message when user has undefined roles', async () => {
     mockIsLoggedIn = true;
     mockUser = {
       userName: 'testuser',
@@ -123,13 +108,13 @@ describe('NoRolePage', () => {
     };
     await renderWithProps();
     expect(mockNavigate).not.toHaveBeenCalledWith(expect.objectContaining({ to: '/' }));
-    expect(screen.getByText('Unauthorized Access')).toBeDefined();
+    screen.getByText('Unauthorized Access');
     expect(
       screen.getByText("You don't have FAM authorization to access this system"),
     ).toBeDefined();
   });
 
-  it('shouldRenderUnauthorizedMessage_whenUserOnlyHasProviderMarkerRole', async () => {
+  it('should render unauthorized message when user only has provider marker role', async () => {
     mockIsLoggedIn = true;
     mockUser = {
       userName: 'testuser',
@@ -142,7 +127,7 @@ describe('NoRolePage', () => {
     await renderWithProps();
 
     expect(mockNavigate).not.toHaveBeenCalledWith('/');
-    expect(screen.getByText('Unauthorized Access')).toBeDefined();
+    screen.getByText('Unauthorized Access');
     expect(
       screen.getByText("You don't have FAM authorization to access this system"),
     ).toBeDefined();

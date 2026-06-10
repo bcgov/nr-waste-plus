@@ -41,7 +41,13 @@ const LegacyDataTag: FC<LegacyDataTagProps> = ({ url, label = 'Legacy data' }) =
   const finalUrl = buildFinalUrl(env.VITE_LEGACY_BASE_URL, url);
 
   const tag = (
-    <Tag className="legacy-data-tag" type="purple" size="md" renderIcon={Box}>
+    <Tag
+      className="legacy-data-tag"
+      type="purple"
+      size="md"
+      renderIcon={Box}
+      data-testid="legacy-data-tag"
+    >
       {label}
     </Tag>
   );

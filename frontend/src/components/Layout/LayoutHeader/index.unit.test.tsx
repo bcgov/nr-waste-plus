@@ -1,14 +1,9 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RouterProvider } from '@tanstack/react-router';
-import { render, screen, act } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, type Mock, beforeAll } from 'vitest';
 
 import { LayoutHeader } from '@/components/Layout/LayoutHeader';
-import { createTestRouter } from '@/config/tests/routerTestHelper';
-import { AuthProvider } from '@/context/auth/AuthProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import ThemeProvider from '@/context/theme/ThemeProvider';
 import APIs from '@/services/APIs';
 
 let mockBreakpoint = 'md';
@@ -27,28 +22,12 @@ vi.mock('@/hooks/useBreakpoint', () => ({
   default: () => mockBreakpoint,
 }));
 
-const renderWithProviders = async () => {
-  const qc = new QueryClient();
-  await act(async () =>
-    render(
-      <RouterProvider
-        router={createTestRouter(() => (
-          <AuthProvider>
-            <QueryClientProvider client={qc}>
-              <PreferenceProvider>
-                <ThemeProvider>
-                  <LayoutProvider>
-                    <LayoutHeader />
-                  </LayoutProvider>
-                </ThemeProvider>
-              </PreferenceProvider>
-            </QueryClientProvider>
-          </AuthProvider>
-        ))}
-      />,
-    ),
+const renderWithProviders = () =>
+  renderWithAppAsync(
+    <LayoutProvider>
+      <LayoutHeader />
+    </LayoutProvider>,
   );
-};
 
 describe('LayoutHeader', () => {
   beforeEach(() => {

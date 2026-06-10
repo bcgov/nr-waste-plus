@@ -6,24 +6,24 @@ import AvatarImage from './index';
 describe('AvatarImage', () => {
   it('renders initials for two-part name', () => {
     render(<AvatarImage userName="John Doe" size="large" />);
-    expect(screen.getByText('JD')).toBeDefined();
+    screen.getByText('JD');
     expect(screen.getByText('JD').parentElement).toHaveProperty('className', 'profile-image large');
   });
 
   it('renders initials for single-part name', () => {
     render(<AvatarImage userName="Alice" size="small" />);
-    expect(screen.getByText('A')).toBeDefined();
+    screen.getByText('A');
     expect(screen.getByText('A').parentElement).toHaveProperty('className', 'profile-image small');
   });
 
   it('renders empty initials for empty name', () => {
     render(<AvatarImage userName="" size="small" />);
     const initialsElement = screen.queryByTestId('avatar-initials');
-    expect(initialsElement!.textContent).to.equal('');
+    expect(initialsElement!.textContent).toBe('');
   });
 
   it('renders only first two initials for names with more than two parts', () => {
     render(<AvatarImage userName="John Michael Doe" size="large" />);
-    expect(screen.getByText('JM')).toBeDefined();
+    screen.getByText('JM');
   });
 });

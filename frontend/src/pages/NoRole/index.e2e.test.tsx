@@ -1,32 +1,11 @@
 import { test, expect } from '@playwright/test';
 
+import { setupAppShellMocks } from '@/config/tests/app.setup';
 import { mockJwt } from '@/config/tests/auth.helper';
-import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 test.describe('No Role Page', () => {
   test.beforeEach(async ({ page }, testInfo) => {
-    await mockApiResponsesWithStub(page, 'users/preferences', 'users/preferences-GET.json');
-
-    if (testInfo.project.metadata.userType === 'bceid') {
-      await mockApiResponsesWithStub(
-        page,
-        'forest-clients/searchByNumbers**',
-        'forest-clients/searchByNumbers-pg0.json',
-      );
-      await mockApiResponsesWithStub(
-        page,
-        'forest-clients/clients**',
-        'forest-clients/clients-pg0.json',
-      );
-    }
-
-    await mockApiResponsesWithStub(page, 'codes/districts', 'codes/districts.json');
-    await mockApiResponsesWithStub(page, 'codes/samplings', 'codes/samplings.json');
-    await mockApiResponsesWithStub(
-      page,
-      'codes/assess-area-statuses',
-      'codes/assess-area-statuses.json',
-    );
+    await setupAppShellMocks(page, testInfo.project.metadata.userType);
   });
 
   test('redirects to /no-role from a protected page when user has no assigned roles', async ({
@@ -42,7 +21,6 @@ test.describe('No Role Page', () => {
     });
 
     await page.goto('/search');
-    await page.waitForLoadState('networkidle');
 
     await expect(page).toHaveURL(/\/no-role$/);
     await expect(page.getByText('Unauthorized Access')).toBeVisible();
@@ -65,7 +43,6 @@ test.describe('No Role Page', () => {
     });
 
     await page.goto('/no-role');
-    await page.waitForLoadState('networkidle');
 
     await expect(page).not.toHaveURL(/\/no-role$/);
     await expect(page.getByRole('heading', { name: 'Unauthorized Access' })).toHaveCount(0);

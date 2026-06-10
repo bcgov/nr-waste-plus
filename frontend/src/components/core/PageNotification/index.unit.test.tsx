@@ -1,4 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import PageNotification from './index';
@@ -70,19 +71,19 @@ describe('PageNotification', () => {
     it('shouldRenderAlertRole_whenTitleIsPresent', () => {
       setupHook(makeEvent());
       render(<PageNotification eventTarget="scope" />);
-      expect(screen.getByRole('alert')).toBeDefined();
+      screen.getByRole('alert');
     });
 
     it('shouldRenderTitle_fromEventNotification', () => {
       setupHook(makeEvent({ title: 'Something failed' }));
       render(<PageNotification eventTarget="scope" />);
-      expect(screen.getByText('Something failed')).toBeDefined();
+      screen.getByText('Something failed');
     });
 
     it('shouldRenderSubtitle_fromEventNotificationDescription', () => {
       setupHook(makeEvent({ description: 'Check your input and try again' }));
       render(<PageNotification eventTarget="scope" />);
-      expect(screen.getByText('Check your input and try again')).toBeDefined();
+      screen.getByText('Check your input and try again');
     });
 
     it('shouldApplyClassName_whenProvided', () => {
@@ -102,8 +103,7 @@ describe('PageNotification', () => {
     it('shouldSetAriaLabel_containingEventType_onCloseButton', () => {
       setupHook(makeEvent({ eventType: 'warning' }));
       render(<PageNotification eventTarget="scope" />);
-      const closeButton = screen.getByRole('button');
-      expect(closeButton.getAttribute('aria-label')).toContain('warning');
+      screen.getByRole('button', { name: /warning/i });
     });
 
     it('shouldApplyKindClass_forError', () => {
@@ -135,10 +135,11 @@ describe('PageNotification', () => {
   });
 
   describe('close interaction', () => {
-    it('shouldCallClearNotification_whenCloseButtonClicked', () => {
+    it('shouldCallClearNotification_whenCloseButtonClicked', async () => {
+      const user = await userEvent.setup();
       setupHook(makeEvent());
       render(<PageNotification eventTarget="scope" />);
-      fireEvent.click(screen.getByRole('button'));
+      await user.click(screen.getByRole('button'));
       expect(mockClearNotification).toHaveBeenCalled();
     });
   });

@@ -75,7 +75,7 @@ export async function mockJwt(
 
   const { lastAuthUser, idToken, accessToken } = cookieData;
 
-  const clientId = metadata.userPoolsClientId ?? process.env.VITE_USER_POOLS_WEB_CLIENT_ID;
+  const clientId = process.env.VITE_USER_POOLS_WEB_CLIENT_ID;
   if (!clientId) {
     throw new Error('VITE_USER_POOLS_WEB_CLIENT_ID is not defined for mockJwt');
   }
@@ -139,22 +139,27 @@ async function initializeAndCheck(page: Page): Promise<boolean> {
 }
 
 export async function authenticate(page: Page, metadata: Record<string, any>): Promise<void> {
-  // Fill credentials (use env vars for security)
-  console.log(`Setup - Auth: ${metadata.user} via ${metadata.userType.toLowerCase()}`);
+  const userType = metadata.userType.toLowerCase() as 'idir' | 'bceid';
+  const user =
+    userType === 'idir' ? (process.env.IDIR_USERNAME ?? '') : (process.env.BCEID_USERNAME ?? '');
+  const password =
+    userType === 'idir' ? (process.env.IDIR_PASSWORD ?? '') : (process.env.BCEID_PASSWORD ?? '');
+  // Credentials are read lazily from process.env — never stored in project metadata
+  console.log(`Setup - Auth: ${user} via ${userType}`);
 
   const alreadyAuthenticated = await initializeAndCheck(page);
   if (alreadyAuthenticated) {
     return;
   }
 
-  await page.getByTestId(`landing-button__${metadata.userType.toLowerCase()}`).click();
+  await page.getByTestId(`landing-button__${userType}`).click();
 
   await page.waitForLoadState('networkidle');
   await page.locator('#user').waitFor({ state: 'visible', timeout: 60000 });
 
-  console.log(`Setup - Filling credentials for user: ${metadata.user}`);
-  await page.fill('#user', metadata.user);
-  await page.fill('#password', metadata.password);
+  console.log(`Setup - Filling credentials for user: ${user}`);
+  await page.fill('#user', user);
+  await page.fill('#password', password);
 
   console.log('Setup - Submitting login form');
   await page.click('input[name="btnSubmit"]');

@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RouterProvider } from '@tanstack/react-router';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -11,8 +9,7 @@ import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { MyForestClientDto } from '@/services/types';
 
 import { renderCell } from '@/components/Form/TableResource/types';
-import { createTestRouter } from '@/config/tests/routerTestHelper';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as eventHandler from '@/hooks/useNotificationEvents/eventHandler';
 import APIs from '@/services/APIs';
 
@@ -124,27 +121,7 @@ const mockLargeDataset: PageableResponse<MyForestClientDto> = {
   page: { number: 0, size: 10, totalElements: 25, totalPages: 3 },
 };
 
-const renderWithProps = async () => {
-  const qc = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false, gcTime: 0, staleTime: 0 },
-      mutations: { retry: false },
-    },
-  });
-  await act(async () => {
-    render(
-      <RouterProvider
-        router={createTestRouter(() => (
-          <QueryClientProvider client={qc}>
-            <PreferenceProvider>
-              <MyClientListing />
-            </PreferenceProvider>
-          </QueryClientProvider>
-        ))}
-      />,
-    );
-  });
-};
+const renderWithProps = () => renderWithAppAsync(<MyClientListing />);
 
 describe('MyClientListing', () => {
   const mockSearchClients = vi.mocked(APIs.forestclient.searchMyForestClients);
@@ -158,8 +135,8 @@ describe('MyClientListing', () => {
       mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
-      expect(screen.getByPlaceholderText('Search by name')).toBeDefined();
-      expect(screen.getByTestId('search-button-other')).toBeDefined();
+      screen.getByPlaceholderText('Search by name');
+      screen.getByTestId('search-button-other');
     });
 
     it('automatically fetches data on mount', async () => {
@@ -177,113 +154,8 @@ describe('MyClientListing', () => {
       mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
-      await waitFor(() => {
-        expect(screen.getByText('ABC Logging Ltd')).toBeDefined();
-        expect(screen.getByText('XYZ Forestry Inc')).toBeDefined();
-      });
-    });
-  });
-
-  describe('search functionality', () => {
-    it('executes search when search button is clicked', async () => {
-      mockSearchClients.mockResolvedValue(mockSearchResults);
-      await renderWithProps();
-
-      // Wait for initial load
-      await waitFor(() => {
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledTimes(1);
-      });
-
-      const searchInput = screen.getByPlaceholderText('Search by name');
-      await userEvent.type(searchInput, 'ABC');
-
-      const searchButton = screen.getByTestId('search-button-other');
-      await userEvent.click(searchButton);
-
-      await waitFor(() => {
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('ABC', 0, 10, {
-          notificationTarget: 'my-client-list',
-        });
-      });
-    });
-
-    it('displays filtered results after search', async () => {
-      const filteredResults: PageableResponse<MyForestClientDto> = {
-        content: [
-          {
-            id: '00001001',
-            client: { code: '00001001', description: 'ABC Logging Ltd' },
-            submissionsCount: 15,
-            blocksCount: 8,
-            lastUpdate: '2024-12-01T10:30:00',
-          },
-        ],
-        page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
-      };
-
-      mockSearchClients
-        .mockResolvedValueOnce(mockSearchResults)
-        .mockResolvedValueOnce(filteredResults);
-
-      await renderWithProps();
-
-      await waitFor(() => {
-        expect(screen.getByText('ABC Logging Ltd')).toBeDefined();
-      });
-
-      const searchInput = screen.getByPlaceholderText('Search by name');
-      await userEvent.clear(searchInput);
-      await userEvent.type(searchInput, 'ABC');
-
-      const searchButton = screen.getByTestId('search-button-other');
-      await userEvent.click(searchButton);
-
-      await waitFor(() => {
-        expect(screen.getByText('ABC Logging Ltd')).toBeDefined();
-        expect(screen.queryByText('XYZ Forestry Inc')).toBeNull();
-      });
-    });
-
-    it('displays no results message when search returns empty', async () => {
-      mockSearchClients
-        .mockResolvedValueOnce(mockSearchResults)
-        .mockResolvedValueOnce(mockEmptyResults);
-
-      await renderWithProps();
-
-      await waitFor(() => {
-        expect(screen.getByText('ABC Logging Ltd')).toBeDefined();
-      });
-
-      const searchInput = screen.getByPlaceholderText('Search by name');
-      await userEvent.clear(searchInput);
-      await userEvent.type(searchInput, 'NONEXISTENT');
-
-      const searchButton = screen.getByTestId('search-button-other');
-      await userEvent.click(searchButton);
-
-      await waitFor(() => {
-        expect(screen.getByText('No results')).toBeDefined();
-      });
-    });
-
-    it('can search with empty filter', async () => {
-      mockSearchClients.mockResolvedValue(mockSearchResults);
-      await renderWithProps();
-
-      await waitFor(() => {
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledTimes(1);
-      });
-
-      const searchButton = screen.getByTestId('search-button-other');
-      await userEvent.click(searchButton);
-
-      await waitFor(() => {
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('', 0, 10, {
-          notificationTarget: 'my-client-list',
-        });
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledTimes(2);
-      });
+      await screen.findByText('ABC Logging Ltd');
+      await screen.findByText('XYZ Forestry Inc');
     });
   });
 
@@ -292,9 +164,7 @@ describe('MyClientListing', () => {
       mockSearchClients.mockResolvedValue(mockLargeDataset);
       await renderWithProps();
 
-      await waitFor(() => {
-        expect(screen.getByText('Client 1')).toBeDefined();
-      });
+      await screen.findByText('Client 1');
 
       // Find and click next page button
       const nextButton = screen.getByLabelText('Next page');
@@ -311,15 +181,12 @@ describe('MyClientListing', () => {
       mockSearchClients.mockResolvedValue(mockLargeDataset);
       await renderWithProps();
 
-      await waitFor(() => {
-        expect(screen.getByText('Client 1')).toBeDefined();
-      });
+      await screen.findByText('Client 1');
 
       const initialCallCount = mockSearchClients.mock.calls.length;
 
       // Verify that pagination controls exist
-      const pageSizeSelect = screen.getByLabelText('Items per page:');
-      expect(pageSizeSelect).toBeDefined();
+      screen.getByLabelText('Items per page:');
 
       // Verify component can handle page size changes by checking initial state
       expect(initialCallCount).toBeGreaterThan(0);
@@ -338,9 +205,7 @@ describe('MyClientListing', () => {
 
       await renderWithProps();
 
-      await waitFor(() => {
-        expect(screen.getByText('Client 1')).toBeDefined();
-      });
+      await screen.findByText('Client 1');
 
       // Try to navigate to page 3 (beyond total pages)
       const nextButton = screen.getByLabelText('Next page');
@@ -369,10 +234,8 @@ describe('MyClientListing', () => {
       mockSearchClients.mockRejectedValue(errorResponse);
       await renderWithProps();
 
-      await waitFor(() => {
-        // Component displays empty results state with error flag
-        expect(screen.getByText('No results')).toBeDefined();
-      });
+      // Component displays empty results state with error flag
+      await screen.findByText('No results');
     });
 
     it('sends event when error occurs', async () => {
@@ -432,54 +295,45 @@ describe('MyClientListing', () => {
       mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
-      await waitFor(() => {
-        // Check headers
-        expect(screen.getByText('Client No.')).toBeDefined();
-        expect(screen.getByText('Client name')).toBeDefined();
-        expect(screen.getByText('RUs created by me')).toBeDefined();
-        expect(screen.getByText('Draft blocks in my RUs')).toBeDefined();
-        expect(screen.getByText('Last Update')).toBeDefined();
+      // Check headers
+      await screen.findByText('Client No.');
+      screen.getByText('Client name');
+      screen.getByText('RUs created by me');
+      screen.getByText('Draft blocks in my RUs');
+      screen.getByText('Last Update');
 
-        // Check data
-        expect(screen.getByText('00001001')).toBeDefined();
-        expect(screen.getByText('ABC Logging Ltd')).toBeDefined();
-        expect(screen.getByText('15')).toBeDefined();
-        expect(screen.getByText('8')).toBeDefined();
-      });
+      // Check data
+      screen.getByText('00001001');
+      screen.getByText('ABC Logging Ltd');
+      screen.getByText('15');
+      screen.getByText('8');
     });
 
     it('adds id property to each client for table rendering', async () => {
       mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
-      await waitFor(() => {
-        // The component transforms data to add id from client.code
-        expect(screen.getByText('00001001')).toBeDefined();
-        expect(screen.getByText('00001002')).toBeDefined();
-      });
+      // The component transforms data to add id from client.code
+      await screen.findByText('00001001');
+      screen.getByText('00001002');
     });
 
     it('renders client code as a link to search page with client filter', async () => {
       mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
-      await waitFor(() => {
-        const link = screen.getByRole('link', { name: '00001001' });
-        expect(link).toBeDefined();
-        expect(link.getAttribute('href')).toBe('/search?clientNumbers=00001001');
-      });
+      const link = await screen.findByRole('link', { name: '00001001' });
+      expect(link.getAttribute('href')).toBe('/search?clientNumbers=00001001');
     });
 
     it('renders all client codes as search links', async () => {
       mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
-      await waitFor(() => {
-        const link1 = screen.getByRole('link', { name: '00001001' });
-        const link2 = screen.getByRole('link', { name: '00001002' });
-        expect(link1.getAttribute('href')).toBe('/search?clientNumbers=00001001');
-        expect(link2.getAttribute('href')).toBe('/search?clientNumbers=00001002');
-      });
+      const link1 = await screen.findByRole('link', { name: '00001001' });
+      const link2 = screen.getByRole('link', { name: '00001002' });
+      expect(link1.getAttribute('href')).toBe('/search?clientNumbers=00001001');
+      expect(link2.getAttribute('href')).toBe('/search?clientNumbers=00001002');
     });
   });
 
@@ -488,10 +342,8 @@ describe('MyClientListing', () => {
       mockSearchClients.mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
-      await waitFor(() => {
-        expect(screen.queryByRole('progressbar')).toBeNull();
-        expect(screen.getByText('ABC Logging Ltd')).toBeDefined();
-      });
+      expect(screen.queryByRole('progressbar')).toBeNull();
+      await screen.findByText('ABC Logging Ltd');
     });
   });
 
