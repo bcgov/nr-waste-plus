@@ -66,9 +66,7 @@ describe('ExcelReader', () => {
       const file = createTestFile(workbook);
 
       // Act & Assert
-      await expect(reader.read(file, 'NonExistentSheet')).rejects.toThrow(
-        ExcelReadError
-      );
+      await expect(reader.read(file, 'NonExistentSheet')).rejects.toThrow(ExcelReadError);
       await expect(reader.read(file, 'NonExistentSheet')).rejects.toMatchObject({
         name: 'ExcelReadError',
       });

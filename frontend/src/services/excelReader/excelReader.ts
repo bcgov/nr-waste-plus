@@ -93,9 +93,7 @@ export class ExcelReader {
         message = String(error);
       }
 
-      throw new ExcelReadError(
-        `Failed to read file "${file.name}": ${message}`
-      );
+      throw new ExcelReadError(`Failed to read file "${file.name}": ${message}`);
     }
   }
 
@@ -107,32 +105,11 @@ export class ExcelReader {
    * @throws {ExcelReadError} If the file cannot be read.
    */
   private async fileToArrayBuffer(file: File): Promise<ArrayBuffer> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-
-      reader.onload = (event: ProgressEvent<FileReader>) => {
-        const buffer = event.target?.result;
-        if (buffer instanceof ArrayBuffer) {
-          resolve(buffer);
-        } else {
-          reject(new ExcelReadError('FileReader did not return an ArrayBuffer'));
-        }
-      };
-
-      reader.onerror = () => {
-        reject(
-          new ExcelReadError(
-            `FileReader error: ${reader.error?.message || 'Unknown'}`
-          )
-        );
-      };
-
-      reader.onabort = () => {
-        reject(new ExcelReadError('FileReader aborted'));
-      };
-
-      // Begin reading the file.
-      reader.readAsArrayBuffer(file);
-    });
+    try {
+      return await file.arrayBuffer();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new ExcelReadError(`Failed to read file: ${message}`);
+    }
   }
 }
