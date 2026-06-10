@@ -60,10 +60,7 @@ public final class DistrictVolumeMapper {
     );
   }
 
-  public static DistrictVolumeEntity toEntity(
-      DistrictVolumeCreateDto dto,
-      String uploadedBy
-  ) {
+  public static DistrictVolumeEntity toEntity(DistrictVolumeCreateDto dto) {
     var entity = new DistrictVolumeEntity();
     entity.setArea(Area.valueOf(dto.area()));
     entity.setStartDate(dto.startDate());
