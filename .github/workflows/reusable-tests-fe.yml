@@ -182,6 +182,31 @@ jobs:
             tar -xzf "$f" -C frontend
           done
 
+          # Determine correct prefix
+          if [[ "$(basename "$PWD")" == "frontend" ]]; then
+            CORRECT_PREFIX="$PWD"
+          else
+            CORRECT_PREFIX="$PWD/frontend"
+          fi
+
+          echo "Using prefix: $CORRECT_PREFIX"
+
+          # Target directories
+          TARGET_DIRS=(
+            "$CORRECT_PREFIX/coverage"
+            "$CORRECT_PREFIX/.nyc_output"
+          )
+
+          # Perform safe replacements
+          for DIR in "${TARGET_DIRS[@]}"; do
+            if [[ -d "$DIR" ]]; then
+              find "$DIR" -type f -name "*.json" -print0 \
+                | xargs -0 sed -i \
+                  "s|\"[^\"]*nr-waste-plus/frontend|\"$CORRECT_PREFIX|g"
+            fi
+          done
+
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
