@@ -8,4 +8,4 @@ export type * from './pagination.types';
 export type * from './search.types';
 export * from './forestclient.types';
 export * from './reportingUnit.types';
-export * from './districtVolumes.types';
+export * from './districtvolumes.types';
