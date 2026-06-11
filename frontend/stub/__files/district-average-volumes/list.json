@@ -1,0 +1,50 @@
+{
+  "content": [
+    {
+      "id": 1,
+      "area": "INTERIOR",
+      "startDate": "2026-06-01",
+      "endDate": null,
+      "uploadedBy": "jsmith@gov.bc.ca",
+      "dateOfUpload": "2026-05-15T14:23:00Z"
+    },
+    {
+      "id": 2,
+      "area": "INTERIOR",
+      "startDate": "2025-06-01",
+      "endDate": "2026-06-01",
+      "uploadedBy": "jsmith@gov.bc.ca",
+      "dateOfUpload": "2025-05-10T09:00:00Z"
+    },
+    {
+      "id": 3,
+      "area": "INTERIOR",
+      "startDate": "2024-06-01",
+      "endDate": "2025-06-01",
+      "uploadedBy": "alopez@gov.bc.ca",
+      "dateOfUpload": "2024-05-20T11:30:00Z"
+    },
+    {
+      "id": 4,
+      "area": "COASTAL",
+      "startDate": "2026-06-01",
+      "endDate": null,
+      "uploadedBy": "bwong@gov.bc.ca",
+      "dateOfUpload": "2026-05-15T14:50:00Z"
+    },
+    {
+      "id": 5,
+      "area": "COASTAL",
+      "startDate": "2025-06-01",
+      "endDate": "2026-06-01",
+      "uploadedBy": "bwong@gov.bc.ca",
+      "dateOfUpload": "2025-05-10T10:00:00Z"
+    }
+  ],
+  "page": {
+    "number": 0,
+    "size": 10,
+    "totalElements": 5,
+    "totalPages": 1
+  }
+}
