@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +33,20 @@ import org.springframework.web.server.ResponseStatusException;
 @DisplayName("Unit Test | District Volume Service")
 class DistrictVolumeServiceTest {
 
+  private static final OffsetDateTime MOCK_UPLOAD_TIME =
+      OffsetDateTime.of(
+          2026,
+          Month.JANUARY.getValue(),
+          1,
+          12,
+          0,
+          0,
+          0,
+          ZoneOffset.UTC);
+
+  private static final LocalDate MOCK_START_DATE =
+      LocalDate.of(2026, Month.FEBRUARY, 1);
+
   @Mock
   private DistrictVolumeRepository districtVolumeRepository;
 
@@ -45,10 +60,19 @@ class DistrictVolumeServiceTest {
     entity.setStartDate(LocalDate.of(2026, Month.JANUARY, 1));
     entity.setTableLevelFactor(new BigDecimal("1.000"));
     entity.setCreatedBy("TEST_USER");
-    entity.setDateOfUpload(OffsetDateTime.now());
-    TableData tableData = area == Area.INTERIOR
-        ? new TableData(Collections.emptyList(), null, Collections.emptyMap())
-        : new TableData(null, Collections.emptyList(), Collections.emptyMap());
+    entity.setDateOfUpload(MOCK_UPLOAD_TIME);
+
+    TableData tableData =
+        area == Area.INTERIOR
+            ? new TableData(
+                Collections.emptyList(),
+                null,
+                Collections.emptyMap())
+            : new TableData(
+                null,
+                Collections.emptyList(),
+                Collections.emptyMap());
+
     entity.setTableData(tableData);
     return entity;
   }
@@ -59,6 +83,7 @@ class DistrictVolumeServiceTest {
     // Arrange
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
     PageRequest pageable = PageRequest.of(0, 10);
+
     when(districtVolumeRepository.findAll(pageable))
         .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
@@ -77,10 +102,13 @@ class DistrictVolumeServiceTest {
   void getDistrictVolumeById_returnsDetailDto_whenFound() {
     // Arrange
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
-    when(districtVolumeRepository.findById(1L)).thenReturn(Optional.of(entity));
+
+    when(districtVolumeRepository.findById(1L))
+        .thenReturn(Optional.of(entity));
 
     // Act
-    DistrictVolumeDetailDto result = districtVolumeService.getDistrictVolumeById(1L);
+    DistrictVolumeDetailDto result =
+        districtVolumeService.getDistrictVolumeById(1L);
 
     // Assert
     assertThat(result).isNotNull();
@@ -92,70 +120,92 @@ class DistrictVolumeServiceTest {
   @DisplayName("getDistrictVolumeById — should throw 404 when entity not found")
   void getDistrictVolumeById_throws404_whenNotFound() {
     // Arrange
-    when(districtVolumeRepository.findById(99L)).thenReturn(Optional.empty());
+    when(districtVolumeRepository.findById(99L))
+        .thenReturn(Optional.empty());
 
     // Act & Assert
-    assertThatThrownBy(() -> districtVolumeService.getDistrictVolumeById(99L))
+    assertThatThrownBy(
+            () -> districtVolumeService.getDistrictVolumeById(99L))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("District volume record not found");
   }
 
   @Test
-  @DisplayName("createDistrictVolume — should throw 400 when InteriorDataDto used with area=COASTAL")
+  @DisplayName(
+      "createDistrictVolume — should throw 400 when "
+          + "InteriorDataDto used with area=COASTAL")
   void createDistrictVolume_throws400_whenInteriorDataWithCoastalArea() {
     // Arrange
     InteriorDataDto interiorData =
-        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
-    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
-        "COASTAL",
-        LocalDate.now().plusDays(1),
-        new BigDecimal("1.000"),
-        new BigDecimal("1.500"),
-        interiorData
-    );
+        new InteriorDataDto(
+            Collections.emptyList(),
+            Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "COASTAL",
+            MOCK_START_DATE,
+            new BigDecimal("1.000"),
+            new BigDecimal("1.500"),
+            interiorData);
 
     // Act & Assert
-    assertThatThrownBy(() -> districtVolumeService.createDistrictVolume(createDto))
+    assertThatThrownBy(
+            () -> districtVolumeService.createDistrictVolume(createDto))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining("Area mismatch: Expected INTERIOR data layout.");
+        .hasMessageContaining(
+            "Area mismatch: Expected INTERIOR data layout.");
   }
 
   @Test
-  @DisplayName("createDistrictVolume — should throw 400 when CoastDataDto used with area=INTERIOR")
+  @DisplayName(
+      "createDistrictVolume — should throw 400 when "
+          + "CoastDataDto used with area=INTERIOR")
   void createDistrictVolume_throws400_whenCoastalDataWithInteriorArea() {
     // Arrange
     CoastDataDto coastData =
-        new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
-    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
-        "INTERIOR",
-        LocalDate.now().plusDays(1),
-        new BigDecimal("1.000"),
-        null,
-        coastData
-    );
+        new CoastDataDto(
+            Collections.emptyList(),
+            Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "INTERIOR",
+            MOCK_START_DATE,
+            new BigDecimal("1.000"),
+            null,
+            coastData);
 
     // Act & Assert
-    assertThatThrownBy(() -> districtVolumeService.createDistrictVolume(createDto))
+    assertThatThrownBy(
+            () -> districtVolumeService.createDistrictVolume(createDto))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining("Area mismatch: Expected COASTAL data layout.");
+        .hasMessageContaining(
+            "Area mismatch: Expected COASTAL data layout.");
   }
 
   @Test
-  @DisplayName("createDistrictVolume — should throw 400 when CoastDataDto has no heliMultiplier")
+  @DisplayName(
+      "createDistrictVolume — should throw 400 when "
+          + "CoastDataDto has no heliMultiplier")
   void createDistrictVolume_throws400_whenCoastalDataMissingHeliMultiplier() {
     // Arrange
     CoastDataDto coastData =
-        new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
-    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
-        "COASTAL",
-        LocalDate.now().plusDays(1),
-        new BigDecimal("1.000"),
-        null, // missing heliMultiplier
-        coastData
-    );
+        new CoastDataDto(
+            Collections.emptyList(),
+            Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "COASTAL",
+            MOCK_START_DATE,
+            new BigDecimal("1.000"),
+            null,
+            coastData);
 
     // Act & Assert
-    assertThatThrownBy(() -> districtVolumeService.createDistrictVolume(createDto))
+    assertThatThrownBy(
+            () -> districtVolumeService.createDistrictVolume(createDto))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Missing helicopter multiplier");
   }
