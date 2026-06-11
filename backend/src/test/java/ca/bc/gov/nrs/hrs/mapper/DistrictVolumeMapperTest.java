@@ -28,7 +28,7 @@ class DistrictVolumeMapperTest {
     entity.setArea(Area.INTERIOR);
     entity.setStartDate(LocalDate.of(2025, 1, 1));
     entity.setCreatedBy("TEST_USER");
-    entity.setCreatedAt(
+    entity.setDateOfUpload(
         OffsetDateTime.of(2025, 1, 2, 10, 0, 0, 0, ZoneOffset.UTC)
     );
 
@@ -56,7 +56,7 @@ class DistrictVolumeMapperTest {
     entity.setStartDate(LocalDate.of(2026, 5, 1));
     entity.setTableLevelFactor(new BigDecimal("1.15"));
     entity.setCreatedBy("IDIR\\JSMITH");
-    entity.setCreatedAt(OffsetDateTime.now());
+    entity.setDateOfUpload(OffsetDateTime.now());
 
     TableData mockTableData =
         new TableData(Collections.emptyList(), null, Collections.emptyMap());
@@ -86,7 +86,7 @@ class DistrictVolumeMapperTest {
     entity.setTableLevelFactor(new BigDecimal("1.05"));
     entity.setHeliMultiplier(new BigDecimal("1.50"));
     entity.setCreatedBy("IDIR\\JSMITH");
-    entity.setCreatedAt(OffsetDateTime.now());
+    entity.setDateOfUpload(OffsetDateTime.now());
 
     TableData mockTableData =
         new TableData(null, Collections.emptyList(), Collections.emptyMap());
