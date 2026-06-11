@@ -1,13 +1,20 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import * as XLSX from 'xlsx';
 
-import { ExcelReader, ExcelReadError } from './excelReader';
+import { ExcelReader, ExcelReadError, type MergeRange, type RawSheet } from './excelReader';
 
-/**
- * Helper: Create a File object from a workbook.
- * Used to generate test files dynamically.
- */
-function createTestFile(workbook: XLSX.WorkBook, fileName: string = 'test.xlsx'): File {
+// Wrap xlsx.read in a vi.fn so we can override it in edge-case tests while
+// keeping the real implementation for all other tests.
+vi.mock('xlsx', async () => {
+  const actual = await vi.importActual<typeof import('xlsx')>('xlsx');
+  return { ...actual, read: vi.fn(actual.read) };
+});
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function createTestFile(workbook: XLSX.WorkBook, fileName = 'test.xlsx'): File {
   const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
   const blob = new Blob([wbout], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -17,246 +24,560 @@ function createTestFile(workbook: XLSX.WorkBook, fileName: string = 'test.xlsx')
   });
 }
 
-/**
- * Helper: Create a CSV File object.
- */
-function createTestCsvFile(csvContent: string, fileName: string = 'test.csv'): File {
+function createTestCsvFile(csvContent: string, fileName = 'test.csv'): File {
   const blob = new Blob([csvContent], { type: 'text/csv' });
   return new File([blob], fileName, { type: 'text/csv' });
 }
 
-describe('ExcelReader', () => {
+function workbookWithSheet(data: unknown[][], sheetName = 'Sheet1'): XLSX.WorkBook {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), sheetName);
+  return wb;
+}
+
+// ---------------------------------------------------------------------------
+// ExcelReadError
+// ---------------------------------------------------------------------------
+
+describe('ExcelReadError', () => {
+  it('has the correct name', () => {
+    expect(new ExcelReadError('msg').name).toBe('ExcelReadError');
+  });
+
+  it('is an instance of Error', () => {
+    expect(new ExcelReadError('msg')).toBeInstanceOf(Error);
+  });
+
+  it('is an instance of ExcelReadError', () => {
+    expect(new ExcelReadError('msg')).toBeInstanceOf(ExcelReadError);
+  });
+
+  it('preserves the message', () => {
+    expect(new ExcelReadError('Custom message').message).toBe('Custom message');
+  });
+
+  it('supports empty message', () => {
+    expect(new ExcelReadError('').message).toBe('');
+  });
+
+  it('has a stack trace', () => {
+    expect(new ExcelReadError('msg').stack).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ExcelReader — read()
+// ---------------------------------------------------------------------------
+
+describe('ExcelReader.read()', () => {
   const reader = new ExcelReader();
 
-  describe('read() — valid xlsx file with header row', () => {
-    it('returns correct row count for valid worksheet', async () => {
-      // Arrange: Create workbook with 3 data rows
-      const workbook = XLSX.utils.book_new();
-      const worksheet = XLSX.utils.aoa_to_sheet([
+  it('returns one object per data row, keyed by header', async () => {
+    const file = createTestFile(
+      workbookWithSheet([
         ['District', 'Volume', 'Year'],
         ['Interior', '100', '2025'],
         ['Coast', '200', '2025'],
         ['North', '150', '2025'],
-      ]);
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-      const file = createTestFile(workbook);
+      ]),
+    );
 
-      // Act
-      const rows = await reader.read(file);
+    const rows = await reader.read(file);
 
-      // Assert
-      expect(rows).toHaveLength(3);
-      expect(rows[0]).toEqual({
-        District: 'Interior',
-        Volume: '100',
-        Year: '2025',
-      });
-    });
+    expect(rows).toHaveLength(3);
+    expect(rows[0]).toEqual({ District: 'Interior', Volume: '100', Year: '2025' });
+    expect(rows[2]).toEqual({ District: 'North', Volume: '150', Year: '2025' });
   });
 
-  describe('read() — file with wrong sheet name', () => {
-    it('throws ExcelReadError when requested sheet does not exist', async () => {
-      // Arrange: Create workbook with known sheet name
-      const workbook = XLSX.utils.book_new();
-      const worksheet = XLSX.utils.aoa_to_sheet([
-        ['District', 'Volume'],
-        ['Interior', '100'],
-      ]);
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
-      const file = createTestFile(workbook);
-
-      // Act & Assert
-      await expect(reader.read(file, 'NonExistentSheet')).rejects.toThrow(ExcelReadError);
-      await expect(reader.read(file, 'NonExistentSheet')).rejects.toMatchObject({
-        name: 'ExcelReadError',
-      });
-    });
+  it('returns an empty array when the sheet has only a header row', async () => {
+    const file = createTestFile(workbookWithSheet([['District', 'Volume', 'Year']]));
+    await expect(reader.read(file)).resolves.toEqual([]);
   });
 
-  describe('read() — empty sheet (header only)', () => {
-    it('returns empty array for sheet with only headers', async () => {
-      // Arrange: Create workbook with only header row
-      const workbook = XLSX.utils.book_new();
-      const worksheet = XLSX.utils.aoa_to_sheet([['District', 'Volume', 'Year']]);
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-      const file = createTestFile(workbook);
-
-      // Act
-      const rows = await reader.read(file);
-
-      // Assert
-      expect(rows).toEqual([]);
-    });
-  });
-
-  describe('read() — read by explicit sheet name', () => {
-    it('reads the correct sheet when multiple sheets exist', async () => {
-      // Arrange: Create workbook with multiple sheets
-      const workbook = XLSX.utils.book_new();
-
-      const sheet1 = XLSX.utils.aoa_to_sheet([
+  it('reads the first sheet by default when no sheetName is given', async () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([
         ['Name', 'Age'],
-        ['Alice', '30'],
-      ]);
-      const sheet2 = XLSX.utils.aoa_to_sheet([
+        ['Alice', 30],
+      ]),
+      'First',
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([
         ['District', 'Volume'],
-        ['Interior', '1000'],
-        ['Coast', '2000'],
-      ]);
+        ['Interior', 1000],
+      ]),
+      'Second',
+    );
+    const file = createTestFile(wb);
 
-      XLSX.utils.book_append_sheet(workbook, sheet1, 'People');
-      XLSX.utils.book_append_sheet(workbook, sheet2, 'Waste Volume Geo');
-      const file = createTestFile(workbook);
+    const rows = await reader.read(file);
 
-      // Act: Read explicit sheet
-      const rows = await reader.read(file, 'Waste Volume Geo');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ Name: 'Alice' });
+  });
 
-      // Assert
-      expect(rows).toHaveLength(2);
-      expect(rows[0]).toEqual({
-        District: 'Interior',
-        Volume: '1000',
-      });
-      expect(rows[1]).toEqual({
-        District: 'Coast',
-        Volume: '2000',
-      });
-    });
-
-    it('reads the first sheet by default when no sheet name provided', async () => {
-      // Arrange
-      const workbook = XLSX.utils.book_new();
-      const sheet1 = XLSX.utils.aoa_to_sheet([
-        ['Name', 'Age'],
-        ['Alice', '30'],
-        ['Bob', '25'],
-      ]);
-      const sheet2 = XLSX.utils.aoa_to_sheet([
+  it('reads a specific sheet when sheetName is provided', async () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([['Name'], ['Alice']]),
+      'People',
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([
         ['District', 'Volume'],
-        ['Interior', '1000'],
-      ]);
+        ['Interior', 1000],
+        ['Coast', 2000],
+      ]),
+      'Waste',
+    );
+    const file = createTestFile(wb);
 
-      XLSX.utils.book_append_sheet(workbook, sheet1, 'First');
-      XLSX.utils.book_append_sheet(workbook, sheet2, 'Second');
-      const file = createTestFile(workbook);
+    const rows = await reader.read(file, 'Waste');
 
-      // Act
-      const rows = await reader.read(file);
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toEqual({ District: 'Interior', Volume: 1000 });
+    expect(rows[1]).toEqual({ District: 'Coast', Volume: 2000 });
+  });
 
-      // Assert
-      expect(rows).toHaveLength(2);
-      expect(rows[0]).toEqual({
-        Name: 'Alice',
-        Age: '30',
-      });
+  it('throws ExcelReadError when the named sheet does not exist', async () => {
+    const file = createTestFile(
+      workbookWithSheet([['District'], ['Interior']], 'Data'),
+    );
+
+    await expect(reader.read(file, 'Missing')).rejects.toThrow(ExcelReadError);
+    await expect(reader.read(file, 'Missing')).rejects.toMatchObject({
+      name: 'ExcelReadError',
     });
   });
 
-  describe('read() — null/empty cell values', () => {
-    it('does not throw when cells contain null or empty values', async () => {
-      // Arrange: Create workbook with empty/null cells
-      const workbook = XLSX.utils.book_new();
-      const worksheet = XLSX.utils.aoa_to_sheet([
+  it('includes the file name in the error message on sheet-not-found', async () => {
+    const file = createTestFile(workbookWithSheet([['A']]), 'test.xlsx');
+
+    await expect(reader.read(file, 'NoSuch')).rejects.toThrow(/test\.xlsx/);
+  });
+
+  it('includes available sheet names in the error message', async () => {
+    const file = createTestFile(workbookWithSheet([['A']], 'MySheet'));
+
+    await expect(reader.read(file, 'Wrong')).rejects.toThrow(/MySheet/);
+  });
+
+  it('reads CSV files, parsing numeric strings as numbers', async () => {
+    const file = createTestCsvFile('District,Volume,Year\nInterior,100,2025\nCoast,200,2025');
+
+    const rows = await reader.read(file);
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toEqual({ District: 'Interior', Volume: 100, Year: 2025 });
+  });
+
+  it('handles cells with empty string values without throwing', async () => {
+    const file = createTestFile(
+      workbookWithSheet([
         ['District', 'Volume', 'Notes'],
         ['Interior', '', null],
         ['Coast', '200', ''],
-        [null, '300', 'Some data'],
-      ]);
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-      const file = createTestFile(workbook);
+      ]),
+    );
 
-      // Act & Assert: Should not throw
-      const rows = await reader.read(file);
-      expect(rows).toHaveLength(3);
-      expect(rows[0].Volume).toBe('');
-      // Note: null cells are typically omitted in sheet_to_json, or represented as undefined
+    const rows = await reader.read(file);
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0].Volume).toBe('');
+  });
+
+  it('throws ExcelReadError when arrayBuffer() rejects', async () => {
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const file = new File([blob], 'bad.xlsx');
+    vi.spyOn(file, 'arrayBuffer').mockRejectedValue(new Error('disk read error'));
+
+    await expect(reader.read(file)).rejects.toThrow(ExcelReadError);
+    await expect(reader.read(file)).rejects.toMatchObject({ name: 'ExcelReadError' });
+  });
+
+  it('wraps a non-Error thrown by arrayBuffer() as ExcelReadError', async () => {
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const file = new File([blob], 'bad.xlsx');
+    vi.spyOn(file, 'arrayBuffer').mockRejectedValue('string-only error');
+
+    await expect(reader.read(file)).rejects.toThrow(ExcelReadError);
+  });
+
+  it('re-throws an ExcelReadError from fileToArrayBuffer without double-wrapping', async () => {
+    // fileToArrayBuffer wraps any thrown value into a new ExcelReadError('Failed to read file: <msg>').
+    // withSheet then re-throws that ExcelReadError as-is — no second wrapping.
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const file = new File([blob], 'bad.xlsx');
+    vi.spyOn(file, 'arrayBuffer').mockRejectedValue(new ExcelReadError('inner'));
+
+    const caught = await reader.read(file).catch((e: unknown) => e);
+    expect(caught).toBeInstanceOf(ExcelReadError);
+    // The message comes from fileToArrayBuffer's wrapper, NOT a second withSheet wrapping.
+    expect((caught as ExcelReadError).message).toBe('Failed to read file: inner');
+  });
+
+  it('wraps a non-Error thrown by XLSX.read as ExcelReadError (non-Error branch)', async () => {
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const file = new File([blob], 'bad.xlsx');
+    vi.spyOn(file, 'arrayBuffer').mockResolvedValue(new ArrayBuffer(8));
+    vi.mocked(XLSX.read).mockImplementationOnce(() => {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
+      throw 'bare string from xlsx';
+    });
+
+    await expect(reader.read(file)).rejects.toThrow(ExcelReadError);
+  });
+
+  it('wraps a non-Error thrown by XLSX.read using String() conversion', async () => {
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const file = new File([blob], 'nonError.xlsx');
+    vi.spyOn(file, 'arrayBuffer').mockResolvedValue(new ArrayBuffer(8));
+    vi.mocked(XLSX.read).mockImplementationOnce(() => {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
+      throw 99;
+    });
+
+    const caught = await reader.read(file).catch((e: unknown) => e);
+    expect(caught).toBeInstanceOf(ExcelReadError);
+    expect((caught as ExcelReadError).message).toContain('99');
+  });
+
+  it('throws ExcelReadError with "No sheets found" when workbook has no sheets', async () => {
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const file = new File([blob], 'empty.xlsx');
+    vi.spyOn(file, 'arrayBuffer').mockResolvedValue(new ArrayBuffer(8));
+    vi.mocked(XLSX.read).mockReturnValueOnce({ SheetNames: [], Sheets: {} });
+
+    const caught = await reader.read(file).catch((e: unknown) => e);
+    expect(caught).toBeInstanceOf(ExcelReadError);
+    expect((caught as ExcelReadError).message).toMatch(/No sheets found/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ExcelReader — readRaw()
+// ---------------------------------------------------------------------------
+
+describe('ExcelReader.readRaw()', () => {
+  const reader = new ExcelReader();
+
+  it('returns rows as arrays of cell values (no header keying)', async () => {
+    const file = createTestFile(
+      workbookWithSheet([
+        ['District', 'Dry Belt m3/ha', null],
+        [null, 'Avoidable Sawlog', 'Avoidable Grade 4'],
+        ['DCC', 2.04, 7.05],
+      ]),
+    );
+
+    const rows = await reader.readRaw(file);
+
+    expect(rows[0][0]).toBe('District');
+    expect(rows[0][1]).toBe('Dry Belt m3/ha');
+    // null in the source becomes null in the output (defval: null)
+    expect(rows[0][2]).toBeNull();
+    expect(rows[2]).toEqual(['DCC', 2.04, 7.05]);
+  });
+
+  it('includes the header row as the first element', async () => {
+    const file = createTestFile(
+      workbookWithSheet([
+        ['A', 'B'],
+        ['x', 'y'],
+      ]),
+    );
+
+    const rows = await reader.readRaw(file);
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toEqual(['A', 'B']);
+    expect(rows[1]).toEqual(['x', 'y']);
+  });
+
+  it('skips entirely blank rows (blankrows: false)', async () => {
+    const wb = XLSX.utils.book_new();
+    // Build a sheet that has an empty row in the middle via raw cell assignment
+    const ws = XLSX.utils.aoa_to_sheet([['A'], ['x'], ['y']]);
+    // Remove row 2 cells to simulate a blank row
+    delete ws['A2'];
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    const file = createTestFile(wb);
+
+    const rows = await reader.readRaw(file);
+
+    // The blank row should be skipped
+    expect(rows.every((r) => r.some((v) => v !== null))).toBe(true);
+  });
+
+  it('reads the first sheet by default', async () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([['First'], ['data']]),
+      'First',
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([['Second'], ['data']]),
+      'Second',
+    );
+    const file = createTestFile(wb);
+
+    const rows = await reader.readRaw(file);
+
+    expect(rows[0][0]).toBe('First');
+  });
+
+  it('reads a specific sheet when sheetName is given', async () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([['First']]),
+      'First',
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([['Target', 'Col2'], [1, 2]]),
+      'Target',
+    );
+    const file = createTestFile(wb);
+
+    const rows = await reader.readRaw(file, 'Target');
+
+    expect(rows[0]).toEqual(['Target', 'Col2']);
+    expect(rows[1]).toEqual([1, 2]);
+  });
+
+  it('throws ExcelReadError when the named sheet does not exist', async () => {
+    const file = createTestFile(workbookWithSheet([['A']], 'Real'));
+
+    await expect(reader.readRaw(file, 'Fake')).rejects.toThrow(ExcelReadError);
+    await expect(reader.readRaw(file, 'Fake')).rejects.toMatchObject({
+      name: 'ExcelReadError',
     });
   });
 
-  describe('read() — CSV format support', () => {
-    it('reads CSV files correctly', async () => {
-      // Arrange: Create CSV content
-      const csvContent = `District,Volume,Year
-Interior,100,2025
-Coast,200,2025`;
-      const file = createTestCsvFile(csvContent);
+  it('throws ExcelReadError when arrayBuffer() rejects', async () => {
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const file = new File([blob], 'bad.xlsx');
+    vi.spyOn(file, 'arrayBuffer').mockRejectedValue(new Error('io error'));
 
-      // Act
-      const rows = await reader.read(file);
+    await expect(reader.readRaw(file)).rejects.toThrow(ExcelReadError);
+  });
 
-      // Assert
-      expect(rows).toHaveLength(2);
-      // Note: XLSX parses numeric values as numbers in CSV files
-      expect(rows[0]).toEqual({
-        District: 'Interior',
-        Volume: 100,
-        Year: 2025,
-      });
-      expect(rows[1]).toEqual({
-        District: 'Coast',
-        Volume: 200,
-        Year: 2025,
-      });
+  it('wraps a non-Error thrown by arrayBuffer() as ExcelReadError', async () => {
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const file = new File([blob], 'bad.xlsx');
+    vi.spyOn(file, 'arrayBuffer').mockRejectedValue(42);
+
+    await expect(reader.readRaw(file)).rejects.toThrow(ExcelReadError);
+  });
+
+  it('returns an empty array for a completely empty sheet', async () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, {}, 'Empty');
+    const file = createTestFile(wb);
+
+    const rows = await reader.readRaw(file);
+
+    expect(rows).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ExcelReader — readRawWithMerges()
+// ---------------------------------------------------------------------------
+
+describe('ExcelReader.readRawWithMerges()', () => {
+  const reader = new ExcelReader();
+
+  it('returns rows and an empty merges array when the sheet has no merges', async () => {
+    const file = createTestFile(
+      workbookWithSheet([
+        ['A', 'B', 'C'],
+        [1, 2, 3],
+      ]),
+    );
+
+    const result: RawSheet = await reader.readRawWithMerges(file);
+
+    expect(result.rows).toHaveLength(2);
+    expect(result.rows[0]).toEqual(['A', 'B', 'C']);
+    expect(result.merges).toEqual([]);
+  });
+
+  it('maps !merges to MergeRange objects with correct indices', async () => {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Header A', null, null, 'Header B'],
+      ['Sub1', 'Sub2', 'Sub3', 'Sub4'],
+      [1, 2, 3, 4],
+    ]);
+    // Manually add a merge: A1:C1 (row 0, cols 0–2)
+    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }];
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    const file = createTestFile(wb);
+
+    const result = await reader.readRawWithMerges(file);
+
+    expect(result.merges).toHaveLength(1);
+    const merge: MergeRange = result.merges[0];
+    expect(merge.startRow).toBe(0);
+    expect(merge.endRow).toBe(0);
+    expect(merge.startCol).toBe(0);
+    expect(merge.endCol).toBe(2);
+  });
+
+  it('maps multiple merge ranges correctly', async () => {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['GroupA', null, 'GroupB', null],
+      ['S1', 'S2', 'S3', 'S4'],
+    ]);
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }, // A1:B1
+      { s: { r: 0, c: 2 }, e: { r: 0, c: 3 } }, // C1:D1
+    ];
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    const file = createTestFile(wb);
+
+    const result = await reader.readRawWithMerges(file);
+
+    expect(result.merges).toHaveLength(2);
+    expect(result.merges[0]).toEqual<MergeRange>({
+      startRow: 0,
+      endRow: 0,
+      startCol: 0,
+      endCol: 1,
+    });
+    expect(result.merges[1]).toEqual<MergeRange>({
+      startRow: 0,
+      endRow: 0,
+      startCol: 2,
+      endCol: 3,
     });
   });
 
-  describe('read() — error handling', () => {
-    it('throws ExcelReadError when FileReader fails', async () => {
-      // Arrange: Create a mock file that will cause FileReader issues
-      // We'll use an empty blob but override the FileReader behavior
-      const blob = new Blob([new ArrayBuffer(0)], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
-      const file = new File([blob], 'empty.xlsx', {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
+  it('handles multi-row merges', async () => {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Title', null],
+      [null, null],
+      ['A', 'B'],
+    ]);
+    // A1:B2 merge (rows 0–1, cols 0–1)
+    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 1, c: 1 } }];
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    const file = createTestFile(wb);
 
-      // Act & Assert: SheetJS parses empty files without throwing,
-      // so an empty sheet is expected behavior. This test verifies that
-      // valid error states are caught and wrapped properly.
-      const rows = await reader.read(file);
-      expect(rows).toEqual([]); // Empty file → empty result, not an error
-    });
+    const result = await reader.readRawWithMerges(file);
 
-    it('throws ExcelReadError with filename on invalid content', async () => {
-      // Arrange: Create a file with content that XLSX cannot parse as valid spreadsheet
-      // We need binary data that will trigger XLSX error handling
-      const invalidBinary = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]); // JPEG header (not valid Excel)
-      const blob = new Blob([invalidBinary], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
-      const file = new File([blob], 'invalid-file.xlsx', {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
-
-      // Act & Assert
-      // SheetJS attempts to parse but may return minimal structure instead of throwing.
-      // We verify the file is processed (no crash) and the result is predictable.
-      const rows = await reader.read(file);
-      expect(Array.isArray(rows)).toBe(true);
+    expect(result.merges[0]).toMatchObject<MergeRange>({
+      startRow: 0,
+      endRow: 1,
+      startCol: 0,
+      endCol: 1,
     });
   });
 
-  describe('ExcelReadError', () => {
-    it('has correct error name', () => {
-      const error = new ExcelReadError('Test message');
-      expect(error.name).toBe('ExcelReadError');
-    });
+  it('returns null for merged cells beyond the top-left cell', async () => {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Merged', null, null],
+      ['A', 'B', 'C'],
+    ]);
+    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }];
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    const file = createTestFile(wb);
 
-    it('is instance of Error', () => {
-      const error = new ExcelReadError('Test message');
-      expect(error instanceof Error).toBe(true);
-    });
+    const result = await reader.readRawWithMerges(file);
 
-    it('is instance of ExcelReadError', () => {
-      const error = new ExcelReadError('Test message');
-      expect(error instanceof ExcelReadError).toBe(true);
-    });
+    // Top-left cell has the value; others are null
+    expect(result.rows[0][0]).toBe('Merged');
+    expect(result.rows[0][1]).toBeNull();
+    expect(result.rows[0][2]).toBeNull();
+  });
 
-    it('preserves error message', () => {
-      const message = 'Custom error message';
-      const error = new ExcelReadError(message);
-      expect(error.message).toBe(message);
+  it('reads the first sheet by default', async () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([['First']]),
+      'First',
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([['Second']]),
+      'Second',
+    );
+    const file = createTestFile(wb);
+
+    const result = await reader.readRawWithMerges(file);
+
+    expect(result.rows[0][0]).toBe('First');
+  });
+
+  it('reads a specific sheet when sheetName is given', async () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([['First']]),
+      'First',
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([['Target']]),
+      'Target',
+    );
+    const file = createTestFile(wb);
+
+    const result = await reader.readRawWithMerges(file, 'Target');
+
+    expect(result.rows[0][0]).toBe('Target');
+  });
+
+  it('throws ExcelReadError when the named sheet does not exist', async () => {
+    const file = createTestFile(workbookWithSheet([['A']], 'Real'));
+
+    await expect(reader.readRawWithMerges(file, 'Ghost')).rejects.toThrow(ExcelReadError);
+    await expect(reader.readRawWithMerges(file, 'Ghost')).rejects.toMatchObject({
+      name: 'ExcelReadError',
     });
+  });
+
+  it('throws ExcelReadError when arrayBuffer() rejects', async () => {
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const file = new File([blob], 'fail.xlsx');
+    vi.spyOn(file, 'arrayBuffer').mockRejectedValue(new Error('io error'));
+
+    await expect(reader.readRawWithMerges(file)).rejects.toThrow(ExcelReadError);
+  });
+
+  it('wraps a non-Error thrown during parsing as ExcelReadError', async () => {
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const file = new File([blob], 'fail.xlsx');
+    vi.spyOn(file, 'arrayBuffer').mockRejectedValue('bare string');
+
+    await expect(reader.readRawWithMerges(file)).rejects.toThrow(ExcelReadError);
+  });
+
+  it('returns rows with defval null for empty cells', async () => {
+    const file = createTestFile(
+      workbookWithSheet([
+        ['A', null, 'C'],
+        [1, null, 3],
+      ]),
+    );
+
+    const result = await reader.readRawWithMerges(file);
+
+    expect(result.rows[0][1]).toBeNull();
+    expect(result.rows[1][1]).toBeNull();
   });
 });
