@@ -156,7 +156,7 @@ class DistrictVolumeMapperTest {
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setId(10L);
     entity.setArea(Area.INTERIOR);
-    entity.setStartDate(LocalDate.of(2026, 3, 1));
+    entity.setStartDate(LocalDate.of(2026, Month.MARCH, 1));
     entity.setTableLevelFactor(new BigDecimal("1.200"));
     entity.setCreatedBy("MAPPER_TEST");
     entity.setDateOfUpload(OffsetDateTime.now());
@@ -199,7 +199,7 @@ class DistrictVolumeMapperTest {
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setId(20L);
     entity.setArea(Area.COASTAL);
-    entity.setStartDate(LocalDate.of(2026, 4, 1));
+    entity.setStartDate(LocalDate.of(2026, Month.APRIL, 1));
     entity.setTableLevelFactor(new BigDecimal("1.050"));
     entity.setHeliMultiplier(new BigDecimal("1.500"));
     entity.setCreatedBy("MAPPER_TEST");
@@ -233,7 +233,7 @@ class DistrictVolumeMapperTest {
         new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
     DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
         "INTERIOR",
-        LocalDate.of(2027, 1, 1),
+        LocalDate.of(2027, Month.JANUARY, 1),
         new BigDecimal("1.100"),
         null,
         interiorDto
@@ -244,7 +244,7 @@ class DistrictVolumeMapperTest {
 
     // Assert
     assertThat(entity.getArea()).isEqualTo(Area.INTERIOR);
-    assertThat(entity.getStartDate()).isEqualTo(LocalDate.of(2027, 1, 1));
+    assertThat(entity.getStartDate()).isEqualTo(LocalDate.of(2027, Month.JANUARY, 1));
     assertThat(entity.getTableLevelFactor()).isEqualByComparingTo("1.100");
     assertThat(entity.getHeliMultiplier()).isNull();
     assertThat(entity.getTableData()).isNotNull();
@@ -260,7 +260,7 @@ class DistrictVolumeMapperTest {
         new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
     DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
         "COASTAL",
-        LocalDate.of(2027, 6, 1),
+        LocalDate.of(2027, Month.JUNE, 1),
         new BigDecimal("1.050"),
         new BigDecimal("1.750"),
         coastDto
@@ -286,7 +286,7 @@ class DistrictVolumeMapperTest {
         new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
     DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
         "COASTAL",
-        LocalDate.of(2027, 6, 1),
+        LocalDate.of(2027, Month.JUNE, 1),
         new BigDecimal("1.000"),
         null,
         coastDto
@@ -375,7 +375,7 @@ class DistrictVolumeMapperTest {
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setId(30L);
     entity.setArea(Area.INTERIOR);
-    entity.setStartDate(LocalDate.of(2026, 1, 1));
+    entity.setStartDate(LocalDate.of(2026, Month.JANUARY, 1));
     entity.setTableLevelFactor(new BigDecimal("1.000"));
     entity.setCreatedBy("TESTER");
     entity.setDateOfUpload(OffsetDateTime.now(ZoneOffset.UTC));
