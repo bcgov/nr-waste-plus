@@ -1,14 +1,14 @@
 package ca.bc.gov.nrs.hrs.mapper;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDataDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDistrictRowDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastSectionDto;
-import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDataDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeCreateDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeListItemDto;
-import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDistrictRowDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDistrictRowDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorZoneDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.TableDataDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
@@ -22,14 +22,34 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Utility mapper for converting between district volume entities and DTOs.
+ *
+ * <p>This class provides bidirectional mapping between:
+ *
+ * <ul>
+ *   <li>{@link DistrictVolumeEntity} and summary/detail DTOs
+ *   <li>Create DTOs and persistence entities
+ *   <li>Polymorphic table data DTOs and their corresponding JSONB-backed domain
+ *       representations
+ * </ul>
+ *
+ * <p>Numeric values are normalized to a scale of three decimal places using
+ * {@link RoundingMode#HALF_UP}.
+ */
 public final class DistrictVolumeMapper {
 
+  /**
+   * Prevents instantiation of this utility class.
+   */
   private DistrictVolumeMapper() {}
 
-  // -------------------------------------------------------------------------
-  // Public API
-  // -------------------------------------------------------------------------
-
+  /**
+   * Converts a district volume entity into a list item DTO.
+   *
+   * @param entity source entity
+   * @return mapped list item DTO
+   */
   public static DistrictVolumeListItemDto toListItemDto(DistrictVolumeEntity entity) {
     return new DistrictVolumeListItemDto(
         entity.getId(),
@@ -41,6 +61,19 @@ public final class DistrictVolumeMapper {
     );
   }
 
+  /**
+   * Converts a district volume entity into a detailed DTO representation.
+   *
+   * <p>The table data payload is mapped according to the entity area:
+   *
+   * <ul>
+   *   <li>{@code INTERIOR} → {@link InteriorDataDto}
+   *   <li>{@code COASTAL} → {@link CoastDataDto}
+   * </ul>
+   *
+   * @param entity source entity
+   * @return mapped detail DTO
+   */
   public static DistrictVolumeDetailDto toDetailDto(DistrictVolumeEntity entity) {
     TableDataDto tableDataDto = switch (entity.getArea()) {
       case INTERIOR -> toInteriorDto(entity.getTableData());
@@ -60,6 +93,15 @@ public final class DistrictVolumeMapper {
     );
   }
 
+  /**
+   * Creates a new entity from a district volume creation DTO.
+   *
+   * <p>Numeric values are normalized to three decimal places before being
+   * stored in the entity.
+   *
+   * @param dto source creation DTO
+   * @return newly populated entity
+   */
   public static DistrictVolumeEntity toEntity(DistrictVolumeCreateDto dto) {
     var entity = new DistrictVolumeEntity();
     entity.setArea(Area.valueOf(dto.area()));
@@ -71,11 +113,7 @@ public final class DistrictVolumeMapper {
     entity.setTableData(toEntityTableData(dto.tableData()));
     return entity;
   }
-
-  // -------------------------------------------------------------------------
-  // Private helpers
-  // -------------------------------------------------------------------------
-
+  
   private static InteriorDataDto toInteriorDto(TableData data) {
     List<InteriorZoneDto> zones = data.zones().stream()
         .map(zone -> new InteriorZoneDto(
@@ -124,10 +162,17 @@ public final class DistrictVolumeMapper {
   }
 
   /**
-   * Maps the polymorphic DTO hierarchy onto the entity's JSONB record.
+   * Maps the polymorphic table data DTO hierarchy into the entity's
+   * JSONB-backed table data model.
    *
-   * Pattern-matches on the sealed {@code TableDataDto} interface — the compiler
-   * enforces exhaustiveness, so adding a new subtype forces an update here.
+   * <p>This method pattern-matches on the sealed {@link TableDataDto}
+   * hierarchy. The compiler enforces exhaustiveness, ensuring that new DTO
+   * subtypes must be explicitly handled when introduced.
+   *
+   * <p>Missing formula maps are converted to an empty map.
+   *
+   * @param dto source table data DTO
+   * @return mapped table data record
    */
   public static TableData toEntityTableData(TableDataDto dto) {
     return switch (dto) {

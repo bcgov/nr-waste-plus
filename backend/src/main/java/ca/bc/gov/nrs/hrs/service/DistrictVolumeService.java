@@ -94,30 +94,30 @@ public class DistrictVolumeService {
     String areaStr = createDto.area().toUpperCase();
 
     switch (createDto.tableData()) {
+      
+      case InteriorDataDto i when !"INTERIOR".equals(areaStr) -> 
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Area mismatch: Expected INTERIOR data layout."
+        );
 
-      case InteriorDataDto i -> {
-        if (!"INTERIOR".equals(areaStr)) {
-          throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST,
-              "Area mismatch: Expected INTERIOR data layout."
-          );
-        }
-      }
+      case CoastDataDto c when !"COASTAL".equals(areaStr) -> 
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Area mismatch: Expected COASTAL data layout."
+        );
 
-      case CoastDataDto c -> {
-        if (!"COASTAL".equals(areaStr)) {
-          throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST,
-              "Area mismatch: Expected COASTAL data layout."
-          );
-        }
-
-        if (createDto.heliMultiplier() == null) {
-          throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST,
-              "Missing helicopter multiplier configuration required for Coastal tables."
-          );
-        }
+      case CoastDataDto c when createDto.heliMultiplier() == null -> 
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Missing helicopter multiplier configuration required for Coastal tables."
+        );
+        
+      default -> { 
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Invalid or missing table data payload structure."
+        );
       }
     }
   }
