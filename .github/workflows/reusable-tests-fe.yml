@@ -164,13 +164,13 @@ jobs:
           fetch-depth: 0
 
       - name: Download unit coverage artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: coverage-unit
           path: frontend/coverage/
 
       - name: Download e2e coverage artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           pattern: coverage-e2e-*
           path: frontend/coverage-artifacts/
