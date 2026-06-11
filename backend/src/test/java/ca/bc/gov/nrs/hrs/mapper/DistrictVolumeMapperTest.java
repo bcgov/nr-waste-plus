@@ -56,7 +56,7 @@ class DistrictVolumeMapperTest {
     entity.setStartDate(LocalDate.of(2026, Month.MAY, 1));
     entity.setTableLevelFactor(new BigDecimal("1.15"));
     entity.setCreatedBy("IDIR\\JSMITH");
-    entity.setDateOfUpload(MOCK_UPLOAD_TIME); // Fixed: Properly set upload date
+    entity.setDateOfUpload(MOCK_UPLOAD_TIME);
 
     TableData mockTableData =
         new TableData(Collections.emptyList(), null, Collections.emptyMap());
@@ -82,7 +82,7 @@ class DistrictVolumeMapperTest {
     entity.setTableLevelFactor(new BigDecimal("1.05"));
     entity.setHeliMultiplier(new BigDecimal("1.50"));
     entity.setCreatedBy("IDIR\\JSMITH");
-    entity.setDateOfUpload(MOCK_UPLOAD_TIME); // Fixed: Properly set upload date
+    entity.setDateOfUpload(MOCK_UPLOAD_TIME);
 
     TableData mockTableData =
         new TableData(null, Collections.emptyList(), Collections.emptyMap());
