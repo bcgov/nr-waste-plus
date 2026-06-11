@@ -92,7 +92,7 @@ public class DistrictVolumeService {
   private void validateAreaPayloadConsistency(DistrictVolumeCreateDto createDto) {
 
     String areaStr = createDto.area().toUpperCase();
-
+    
     switch (createDto.tableData()) {
       
       case InteriorDataDto i when !"INTERIOR".equals(areaStr) -> 

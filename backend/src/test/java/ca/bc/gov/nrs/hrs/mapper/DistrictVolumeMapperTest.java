@@ -15,6 +15,7 @@ import java.time.ZoneOffset;
 import java.util.Collections;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import java.time.Month;
 
 class DistrictVolumeMapperTest {
 
@@ -53,10 +54,10 @@ class DistrictVolumeMapperTest {
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setId(1L);
     entity.setArea(Area.INTERIOR);
-    entity.setStartDate(LocalDate.of(2026, 5, 1));
+    entity.setStartDate(LocalDate.of(2026, Month.MAY, 1));
     entity.setTableLevelFactor(new BigDecimal("1.15"));
     entity.setCreatedBy("IDIR\\JSMITH");
-    entity.setDateOfUpload(OffsetDateTime.now());
+    entity.setStartDate(LocalDate.of(2025, Month.JANUARY, 1));
 
     TableData mockTableData =
         new TableData(Collections.emptyList(), null, Collections.emptyMap());
@@ -82,11 +83,11 @@ class DistrictVolumeMapperTest {
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setId(2L);
     entity.setArea(Area.COASTAL);
-    entity.setStartDate(LocalDate.of(2026, 6, 1));
+    entity.setStartDate(LocalDate.of(2026, Month.JUNE, 1));
     entity.setTableLevelFactor(new BigDecimal("1.05"));
     entity.setHeliMultiplier(new BigDecimal("1.50"));
     entity.setCreatedBy("IDIR\\JSMITH");
-    entity.setDateOfUpload(OffsetDateTime.now());
+    entity.setStartDate(LocalDate.of(2025, Month.JANUARY, 1));
 
     TableData mockTableData =
         new TableData(null, Collections.emptyList(), Collections.emptyMap());
