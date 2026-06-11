@@ -7,7 +7,7 @@ import js from '@eslint/js';
 import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 import testingLibrary from 'eslint-plugin-testing-library';
-import vitest from 'eslint-plugin-vitest';
+import vitest from '@vitest/eslint-plugin';
 import { FlatCompat } from '@eslint/eslintrc';
 import { globalIgnores, defineConfig } from 'eslint/config';
 
