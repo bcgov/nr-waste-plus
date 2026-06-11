@@ -176,8 +176,9 @@ public final class DistrictVolumeMapper {
    */
   public static TableData toEntityTableData(TableDataDto dto) {
     return switch (dto) {
-      case InteriorDataDto i -> new TableData(
-          i.zones().stream()
+      
+      case InteriorDataDto(var zones, var formulas) -> new TableData(
+          zones.stream()
               .map(z -> new Zone(
                   z.name(),
                   z.districts().stream()
@@ -195,12 +196,12 @@ public final class DistrictVolumeMapper {
               ))
               .toList(),
           null,
-          i.formulas() == null ? Map.of() : i.formulas()
+          formulas == null ? Map.of() : formulas
       );
 
-      case CoastDataDto c -> new TableData(
+      case CoastDataDto(var sections, var formulas) -> new TableData(
           null,
-          c.sections().stream()
+          sections.stream()
               .map(s -> new Section(
                   s.name(),
                   s.districts().stream()
@@ -217,7 +218,7 @@ public final class DistrictVolumeMapper {
                       .toList()
               ))
               .toList(),
-          c.formulas() == null ? Map.of() : c.formulas()
+          formulas == null ? Map.of() : formulas
       );
     };
   }

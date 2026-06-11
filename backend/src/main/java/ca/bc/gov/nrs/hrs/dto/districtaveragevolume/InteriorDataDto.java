@@ -14,6 +14,6 @@ import java.util.Map;
  */
 public record InteriorDataDto(
     List<InteriorZoneDto> zones,
-    Map<String, Object> formulas // reserved; serializes as {}
+    Map<String, Object> formulas
 ) implements TableDataDto {
 }

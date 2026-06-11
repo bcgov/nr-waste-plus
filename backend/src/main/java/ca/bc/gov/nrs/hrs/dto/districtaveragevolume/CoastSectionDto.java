@@ -12,6 +12,6 @@ import java.util.List;
  * that hold the detailed numeric breakdown per district.</p>
  */
 public record CoastSectionDto(
-    String name, // "Mature" | "Immature"
+    String name,
     List<CoastDistrictRowDto> districts
 ) {}
