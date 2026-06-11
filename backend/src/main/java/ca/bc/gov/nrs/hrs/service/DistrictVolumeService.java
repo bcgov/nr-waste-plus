@@ -71,8 +71,6 @@ public class DistrictVolumeService {
     entity.setStartDate(createDto.startDate());
     entity.setTableLevelFactor(createDto.tableLevelFactor());
     entity.setHeliMultiplier(createDto.heliMultiplier());
-
-    // Maps the DTO polymorphic layout onto the JSONB mapping structures
     entity.setTableData(
         DistrictVolumeMapper.toEntityTableData(createDto.tableData())
     );
