@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.hrs.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
-
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDataDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeCreateDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
@@ -14,6 +13,7 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -42,7 +42,7 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setId(1L);
     entity.setArea(area);
-    entity.setStartDate(LocalDate.of(2026, 1, 1));
+    entity.setStartDate(LocalDate.of(2026, Month.JANUARY, 1));
     entity.setTableLevelFactor(new BigDecimal("1.000"));
     entity.setCreatedBy("TEST_USER");
     entity.setDateOfUpload(OffsetDateTime.now());
