@@ -10,6 +10,7 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.mapper.DistrictVolumeMapper;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import java.time.LocalDate;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,9 +29,21 @@ public class DistrictVolumeService {
    * Retrieves a paginated list of district volume records.
    */
   @Transactional(readOnly = true)
-  public Page<DistrictVolumeListItemDto> getDistrictVolumes(Pageable pageable) {
-    return districtVolumeRepository.findAll(pageable)
-        .map(DistrictVolumeMapper::toListItemDto);
+  public Page<DistrictVolumeListItemDto> getDistrictVolumes(
+      Optional<String> areaOptional,
+      Pageable pageable) {
+
+    Page<DistrictVolumeEntity> entities =
+        areaOptional
+            .map(areaStr -> {
+              Area areaEnum = Area.valueOf(areaStr.toUpperCase());
+              return districtVolumeRepository.findByArea(
+                  areaEnum,
+                  pageable);
+            })
+            .orElseGet(() -> districtVolumeRepository.findAll(pageable));
+
+    return entities.map(DistrictVolumeMapper::toListItemDto);
   }
 
   /**
@@ -38,11 +51,13 @@ public class DistrictVolumeService {
    */
   @Transactional(readOnly = true)
   public DistrictVolumeDetailDto getDistrictVolumeById(Long id) {
-    DistrictVolumeEntity entity = districtVolumeRepository.findById(id)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "District volume record not found"
-        ));
+
+    DistrictVolumeEntity entity =
+        districtVolumeRepository.findById(id)
+            .orElseThrow(
+                () -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "District volume record not found"));
 
     return DistrictVolumeMapper.toDetailDto(entity);
   }
@@ -51,7 +66,8 @@ public class DistrictVolumeService {
    * Creates a new district volume configuration record.
    */
   @Transactional
-  public DistrictVolumeDetailDto createDistrictVolume(DistrictVolumeCreateDto createDto) {
+  public DistrictVolumeDetailDto createDistrictVolume(
+      DistrictVolumeCreateDto createDto) {
 
     // 1. Cross-validate Area matching with the polymorphic payload structure
     validateAreaPayloadConsistency(createDto);
@@ -60,8 +76,7 @@ public class DistrictVolumeService {
     if (!createDto.startDate().isAfter(LocalDate.now())) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
-          "Start date must be strictly after today."
-      );
+          "Start date must be strictly after today.");
     }
 
     // 3. Map DTO onto the Entity
@@ -72,50 +87,54 @@ public class DistrictVolumeService {
     entity.setTableLevelFactor(createDto.tableLevelFactor());
     entity.setHeliMultiplier(createDto.heliMultiplier());
     entity.setTableData(
-        DistrictVolumeMapper.toEntityTableData(createDto.tableData())
-    );
+        DistrictVolumeMapper.toEntityTableData(
+            createDto.tableData()));
 
     // NOTE:
     // dateOfUpload, createdAt, createdBy, updatedAt, and updatedBy
-    // are intentionally left out here. The @AuditingEntityListener handles them automatically!
+    // are intentionally left out here.
+    // The @AuditingEntityListener handles them automatically.
 
     // 4. Persist and return structural DTO
-    DistrictVolumeEntity savedEntity = districtVolumeRepository.save(entity);
+    DistrictVolumeEntity savedEntity =
+        districtVolumeRepository.save(entity);
+
     return DistrictVolumeMapper.toDetailDto(savedEntity);
   }
 
   /**
    * Structural cross-check validation using updated, streamlined DTO names.
    */
-  private void validateAreaPayloadConsistency(DistrictVolumeCreateDto createDto) {
+  private void validateAreaPayloadConsistency(
+      DistrictVolumeCreateDto createDto) {
 
     String areaStr = createDto.area().toUpperCase();
-    
+
     switch (createDto.tableData()) {
-      
-      case InteriorDataDto i when !"INTERIOR".equals(areaStr) -> 
-        throw new ResponseStatusException(
-            HttpStatus.BAD_REQUEST,
-            "Area mismatch: Expected INTERIOR data layout."
-        );
 
-      case CoastDataDto c when !"COASTAL".equals(areaStr) -> 
-        throw new ResponseStatusException(
-            HttpStatus.BAD_REQUEST,
-            "Area mismatch: Expected COASTAL data layout."
-        );
+      case InteriorDataDto i
+          when !"INTERIOR".equals(areaStr) ->
+          throw new ResponseStatusException(
+              HttpStatus.BAD_REQUEST,
+              "Area mismatch: Expected INTERIOR data layout.");
 
-      case CoastDataDto c when createDto.heliMultiplier() == null -> 
+      case CoastDataDto c
+          when !"COASTAL".equals(areaStr) ->
+          throw new ResponseStatusException(
+              HttpStatus.BAD_REQUEST,
+              "Area mismatch: Expected COASTAL data layout.");
+
+      case CoastDataDto c
+          when createDto.heliMultiplier() == null ->
+          throw new ResponseStatusException(
+              HttpStatus.BAD_REQUEST,
+              "Missing helicopter multiplier configuration required "
+                  + "for Coastal tables.");
+
+      default -> {
         throw new ResponseStatusException(
             HttpStatus.BAD_REQUEST,
-            "Missing helicopter multiplier configuration required for Coastal tables."
-        );
-        
-      default -> { 
-        throw new ResponseStatusException(
-            HttpStatus.BAD_REQUEST,
-            "Invalid or missing table data payload structure."
-        );
+            "Invalid or missing table data payload structure.");
       }
     }
   }

@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.hrs.repository;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -24,7 +26,16 @@ public interface DistrictVolumeRepository
    *
    * @param area area for which the latest entry should be retrieved
    * @return the most recent entry for the area, or an empty {@link Optional}
-   *     if none exists
+   *         if none exists
    */
   Optional<DistrictVolumeEntity> findTopByAreaOrderByStartDateDesc(Area area);
+
+  /**
+   * Retrieves a paginated list of district volume records filtered by area.
+   *
+   * @param area area filter
+   * @param pageable pagination and sorting information
+   * @return paginated list of matching district volume entities
+   */
+  Page<DistrictVolumeEntity> findByArea(Area area, Pageable pageable);
 }
