@@ -1,0 +1,15 @@
+{
+  "mappings": [
+    {
+      "name": "List district volumes",
+      "request": {
+        "urlPattern": "/api/configuration/district-average-volumes",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "district-average-volumes/list.json"
+      }
+    }
+  ]
+}
