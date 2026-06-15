@@ -42,7 +42,7 @@ jobs:
     if: needs.detect-changes.outputs.triggered == 'true'
     needs: [detect-changes]
     container:
-      image: ghcr.io/microsoft/playwright:v1.60.0-noble
+      image: mcr.microsoft.com/playwright:v1.60.0-noble
     permissions:
       contents: write
       checks: write
@@ -91,7 +91,7 @@ jobs:
       matrix:
         target: [idir, bceid]
     container:
-      image: ghcr.io/microsoft/playwright:v1.60.0-noble
+      image: mcr.microsoft.com/playwright:v1.60.0-noble
     permissions:
       contents: write
       checks: write
@@ -230,5 +230,5 @@ jobs:
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.organization=bcgov-sonarcloud
             -Dsonar.projectKey=nr-waste-plus-frontend
-            -Dsonar.projectName="Waste Plus Frontend"
+            -Dsonar.projectName=Waste Plus Frontend
 
