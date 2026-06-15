@@ -42,7 +42,7 @@ jobs:
     if: needs.detect-changes.outputs.triggered == 'true'
     needs: [detect-changes]
     container:
-      image: mcr.microsoft.com/playwright:v1.60.0-noble
+      image: ghcr.io/microsoft/playwright:v1.60.0-noble
     permissions:
       contents: write
       checks: write
@@ -91,7 +91,7 @@ jobs:
       matrix:
         target: [idir, bceid]
     container:
-      image: mcr.microsoft.com/playwright:v1.60.0-noble
+      image: ghcr.io/microsoft/playwright:v1.60.0-noble
     permissions:
       contents: write
       checks: write
