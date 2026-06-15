@@ -24,6 +24,13 @@ interface FileUploadInputProps<T> {
    * domain objects. The component never inspects file contents directly.
    */
   processor: FileProcessor<T>;
+  /**
+   * Optional pre-processing validation hook.
+   * Called before processor.load() for each file. Return non-empty string[]
+   * to display errors and skip processing.
+   * Useful for file-type checks, header validation, etc.
+   */
+  validator?: (file: File) => Promise<string[]>;
   /** Called with the flat list of all parsed domain objects across all accepted files. */
   onProcessed: (results: T[]) => void;
   /**
@@ -113,6 +120,7 @@ function FileUploadInput<T>({
   maxFileSizeBytes = 500 * 1024,
   maxFiles = 1,
   processor,
+  validator,
   onProcessed,
   externalErrors = [],
   disabled = false,
@@ -189,10 +197,23 @@ function FileUploadInput<T>({
           };
         }
 
+        if (validator) {
+          const validationErrors = await validator(entry.file);
+          if (validationErrors.length > 0) {
+            return { uuid: entry.uuid, errors: validationErrors, data: null };
+          }
+        }
+
         try {
           const result = await processor.load(entry.file);
           if (result.success) {
-            return { uuid: entry.uuid, errors: [], data: result.data };
+            let flatData: T[];
+            if ('matrix' in result && result.matrix) {
+              flatData = Object.values(result.data).flat() as T[];
+            } else {
+              flatData = result.data as T[];
+            }
+            return { uuid: entry.uuid, errors: [], data: flatData };
           }
           return { uuid: entry.uuid, errors: result.errors, data: null };
         } catch {

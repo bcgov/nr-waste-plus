@@ -1,4 +1,22 @@
 /**
+ * Column descriptor produced by a processor alongside its parsed data.
+ *
+ * Mirrors the `TableHeaderType` contract used by `TableResource` so that
+ * consumers can feed `headers` directly into a table without manual mapping.
+ *
+ * `renderAs` returns `unknown` here to keep this contract framework-agnostic;
+ * cast to `(value: unknown) => ReactNode` at the call site.
+ */
+export interface ProcessorColumnHeader {
+  /** Data-access key matching the key used in each parsed row object. */
+  key: string;
+  /** Human-readable column label for display. */
+  header: string;
+  /** Optional cell renderer — cast to `(value: unknown) => ReactNode` at the call site. */
+  renderAs?: (value: unknown) => unknown;
+}
+
+/**
  * Represents a successful file processing result.
  *
  * @template T - The domain object type produced by the processor.
@@ -7,6 +25,32 @@ export interface ProcessorSuccess<T> {
   success: true;
   /** Parsed domain objects extracted from the file. */
   data: T[];
+  /**
+   * Optional column descriptors derived from the file headers + any column map.
+   * Present when the processor generates them; consumers may use them directly
+   * as `TableHeaderType` entries.
+   */
+  headers?: ProcessorColumnHeader[];
+}
+
+/**
+ * Represents a successful matrix processing result.
+ *
+ * The matrix is keyed by the first-column value. Each key maps to an array of
+ * value objects to naturally handle duplicate row keys.
+ *
+ * @template V - The type of each value object stored under a matrix key.
+ */
+export interface ProcessorMatrixSuccess<V> {
+  success: true;
+  matrix: true;
+  /** Keyed map: rowKey → array of value records (array handles duplicate keys). */
+  data: Record<string, V[]>;
+  /**
+   * Optional column descriptors for the value columns (key column excluded).
+   * Present when the processor generates them.
+   */
+  headers?: ProcessorColumnHeader[];
 }
 
 /**
@@ -22,8 +66,12 @@ export interface ProcessorFailure {
  * Union result type returned by {@link FileProcessor.load}.
  *
  * @template T - The domain object type produced by the processor.
+ * @template V - The value object type for matrix results (defaults to `T`).
  */
-export type ProcessorResult<T> = ProcessorSuccess<T> | ProcessorFailure;
+export type ProcessorResult<T, V = T> =
+  | ProcessorSuccess<T>
+  | ProcessorMatrixSuccess<V>
+  | ProcessorFailure;
 
 /**
  * Contract for a pluggable file processor.

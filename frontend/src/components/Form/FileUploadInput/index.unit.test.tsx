@@ -600,3 +600,223 @@ describe('FileUploadInput (external errors and UI)', () => {
     expect(onProcessed).not.toHaveBeenCalled();
   });
 });
+
+// ============================================================================
+// Validator prop tests
+// ============================================================================
+
+describe('FileUploadInput (validator prop)', () => {
+  it('blocks processing when validator returns errors', async () => {
+    const validator = vi.fn().mockResolvedValue(['Invalid file format']);
+    const processor = createMockProcessor();
+    const onProcessed = vi.fn();
+
+    render(
+      <FileUploadInput
+        processor={processor}
+        validator={validator}
+        onProcessed={onProcessed}
+      />,
+    );
+
+    const file = new File(['dummy'], 'bad.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, file);
+
+    await waitFor(() => {
+      expect(validator).toHaveBeenCalled();
+    });
+    expect(processor.load).not.toHaveBeenCalled();
+    const errorText = await screen.findByText('Invalid file format');
+    expect(errorText).toBeDefined();
+  });
+
+  it('calls processor when validator returns empty', async () => {
+    const validator = vi.fn().mockResolvedValue([]);
+    const processor = createMockProcessor();
+    const onProcessed = vi.fn();
+
+    render(
+      <FileUploadInput
+        processor={processor}
+        validator={validator}
+        onProcessed={onProcessed}
+      />,
+    );
+
+    const file = new File(['id,name,email\n1,Alice,alice@example.com'], 'customers.csv', {
+      type: 'text/csv',
+    });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, file);
+
+    await waitFor(() => {
+      expect(processor.load).toHaveBeenCalled();
+    });
+  });
+
+  it('skips validator for oversized files (size guard first)', async () => {
+    const validator = vi.fn().mockResolvedValue(['Should not be called']);
+    const processor = createMockProcessor();
+    const onProcessed = vi.fn();
+
+    render(
+      <FileUploadInput
+        processor={processor}
+        validator={validator}
+        onProcessed={onProcessed}
+        maxFileSizeBytes={10}
+      />,
+    );
+
+    const file = new File(['x'.repeat(20)], 'big.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, file);
+
+    await screen.findByText(/exceeds the maximum file size/);
+    expect(validator).not.toHaveBeenCalled();
+    expect(processor.load).not.toHaveBeenCalled();
+  });
+
+  it('handles mixed batch: validator blocks one, passes another', async () => {
+    const validator = vi
+      .fn<(file: File) => Promise<string[]>>()
+      .mockImplementation(async (file: File) => {
+        if (file.name === 'bad.xlsx') return ['Invalid format'];
+        return [];
+      });
+    const processor = createMockProcessor();
+    const onProcessed = vi.fn();
+
+    render(
+      <FileUploadInput
+        processor={processor}
+        validator={validator}
+        onProcessed={onProcessed}
+        maxFiles={3}
+      />,
+    );
+
+    const goodFile = new File(['data'], 'good.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const badFile = new File(['data'], 'bad.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, [goodFile, badFile]);
+
+    await waitFor(() => {
+      expect(validator).toHaveBeenCalledTimes(2);
+    });
+    expect(processor.load).toHaveBeenCalledTimes(1);
+    await screen.findByText('Invalid format');
+  });
+
+  it('shows validator error when processor also fails for another file', async () => {
+    const validator = vi.fn().mockResolvedValue(['Header column missing']);
+    const badProcessor = createMockProcessor(
+      vi.fn().mockResolvedValue({ success: true, data: [] }),
+    );
+    const onProcessed = vi.fn();
+
+    render(
+      <FileUploadInput
+        processor={badProcessor}
+        validator={validator}
+        onProcessed={onProcessed}
+      />,
+    );
+
+    const file = new File(['data'], 'bad.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, file);
+
+    await screen.findByText('Header column missing');
+    expect(badProcessor.load).not.toHaveBeenCalled();
+  });
+
+  it('calls onProcessed when validator passes and processor succeeds', async () => {
+    const validator = vi.fn().mockResolvedValue([]);
+    const processor = createMockProcessor(
+      vi.fn().mockResolvedValue({
+        success: true,
+        data: [{ id: '1', name: 'A', email: 'a@a.com' }],
+      }),
+    );
+    const onProcessed = vi.fn();
+
+    render(
+      <FileUploadInput
+        processor={processor}
+        validator={validator}
+        onProcessed={onProcessed}
+      />,
+    );
+
+    const file = new File(['data'], 'valid.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, file);
+
+    await waitFor(() => expect(onProcessed).toHaveBeenCalled());
+  });
+
+  it('does not call onProcessed when validator blocks all files', async () => {
+    const validator = vi.fn().mockResolvedValue(['Blocked']);
+    const processor = createMockProcessor();
+    const onProcessed = vi.fn();
+
+    render(
+      <FileUploadInput
+        processor={processor}
+        validator={validator}
+        onProcessed={onProcessed}
+      />,
+    );
+
+    const file = new File(['data'], 'blocked.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, file);
+
+    await waitFor(() => expect(validator).toHaveBeenCalled());
+    expect(onProcessed).not.toHaveBeenCalled();
+  });
+
+  it('works without validator prop (backward compat)', () => {
+    const processor = createMockProcessor();
+    expect(() =>
+      render(<FileUploadInput processor={processor} onProcessed={vi.fn()} />),
+    ).not.toThrow();
+  });
+});
