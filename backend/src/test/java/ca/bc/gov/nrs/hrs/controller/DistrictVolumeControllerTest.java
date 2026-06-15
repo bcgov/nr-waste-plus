@@ -27,13 +27,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.server.ResponseStatusException;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 @ExtendWith(MockitoExtension.class)
 class DistrictVolumeControllerTest {
@@ -59,10 +63,17 @@ class DistrictVolumeControllerTest {
 
   @BeforeEach
   void setUp() {
+    // Correct Jackson 3 Builder configuration
+    JsonMapper mapper = JsonMapper.builder()
+        .findAndAddModules()
+        .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+        .build();
+
     this.mockMvc =
         MockMvcBuilders.standaloneSetup(districtVolumeController)
             .setCustomArgumentResolvers(
                 new PageableHandlerMethodArgumentResolver())
+            .setMessageConverters(new JacksonJsonHttpMessageConverter(mapper))
             .build();
   }
 
@@ -82,8 +93,9 @@ class DistrictVolumeControllerTest {
             "TEST_USER",
             MOCK_UPLOAD_TIME.toInstant());
 
+    PageRequest pageRequest = PageRequest.of(0, 10);
     PageImpl<DistrictVolumeListItemDto> page =
-        new PageImpl<>(List.of(listItem));
+        new PageImpl<>(List.of(listItem), pageRequest, 1);
 
     when(districtVolumeService.getDistrictVolumes(
             eq(Optional.empty()), any(Pageable.class)))
@@ -116,8 +128,9 @@ class DistrictVolumeControllerTest {
             "TEST_USER",
             MOCK_UPLOAD_TIME.toInstant());
 
+    PageRequest pageRequest = PageRequest.of(0, 10);
     PageImpl<DistrictVolumeListItemDto> page =
-        new PageImpl<>(List.of(listItem));
+        new PageImpl<>(List.of(listItem), pageRequest, 1);
 
     when(districtVolumeService.getDistrictVolumes(
             eq(Optional.of("INTERIOR")), any(Pageable.class)))
