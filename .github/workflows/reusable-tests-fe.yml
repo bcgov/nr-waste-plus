@@ -41,8 +41,6 @@ jobs:
     name: Frontend Unit Tests
     if: needs.detect-changes.outputs.triggered == 'true'
     needs: [detect-changes]
-    container:
-      image: mcr.microsoft.com/playwright:v1.60.0-noble
     permissions:
       contents: write
       checks: write
@@ -50,7 +48,6 @@ jobs:
     steps:
       - name: Fix safe.directory for GitHub Actions
         run: git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
-
       - name: Run frontend unit tests without sonar
         uses: bcgov/action-test-and-analyse@8f699e3fd3fadd9a6adf6f4b1f2638ef7ecfefb9 # v2.0.0
         env:
@@ -90,8 +87,6 @@ jobs:
       fail-fast: false
       matrix:
         target: [idir, bceid]
-    container:
-      image: mcr.microsoft.com/playwright:v1.60.0-noble
     permissions:
       contents: write
       checks: write
@@ -99,7 +94,6 @@ jobs:
     steps:
       - name: Fix safe.directory for GitHub Actions
         run: git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
-
       - name: Run e2e tests without sonar
         uses: bcgov/action-test-and-analyse@8f699e3fd3fadd9a6adf6f4b1f2638ef7ecfefb9 # v2.0.0
         env:
@@ -111,8 +105,7 @@ jobs:
           commands: |
             git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
             npm ci
-            npx playwright install-deps
-            npx playwright install
+            npx playwright install --with-deps
             npm run test:e2e:${{ matrix.target }}
           dir: frontend
 
@@ -205,7 +198,6 @@ jobs:
                   "s|\"[^\"]*nr-waste-plus/frontend|\"$CORRECT_PREFIX|g"
             fi
           done
-
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
