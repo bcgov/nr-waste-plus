@@ -230,5 +230,5 @@ jobs:
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.organization=bcgov-sonarcloud
             -Dsonar.projectKey=nr-waste-plus-frontend
-            -Dsonar.projectName="Waste Plus Frontend"
+            -Dsonar.projectName=Waste Plus Frontend
 
