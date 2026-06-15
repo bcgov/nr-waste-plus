@@ -10,14 +10,14 @@ describe('EmptyValueTag', () => {
       expect(screen.getByText('Test Value')).not.toBeNull();
     });
 
-    it('renders numeric 0 (does not treat zero as empty)', () => {
-      render(<EmptyValueTag value={0} />);
-      expect(screen.getByText('0')).not.toBeNull();
-    });
-
     it('renders a numeric value', () => {
       render(<EmptyValueTag value={42} />);
       expect(screen.getByText('42')).not.toBeNull();
+    });
+
+    it('renders numeric 0 (does not fall back to dash)', () => {
+      render(<EmptyValueTag value={0} />);
+      expect(screen.getByText('0')).not.toBeNull();
     });
   });
 
