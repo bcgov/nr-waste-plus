@@ -729,7 +729,7 @@ describe('FileUploadInput (validator prop)', () => {
     await screen.findByText('Invalid format');
   });
 
-  it('shows validator error when processor also fails for another file', async () => {
+  it('shows validator error and skips processing for that file', async () => {
     const validator = vi.fn().mockResolvedValue(['Header column missing']);
     const badProcessor = createMockProcessor(
       vi.fn().mockResolvedValue({ success: true, data: [] }),
