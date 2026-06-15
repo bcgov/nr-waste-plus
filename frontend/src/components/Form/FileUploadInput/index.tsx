@@ -198,9 +198,17 @@ function FileUploadInput<T>({
         }
 
         if (validator) {
-          const validationErrors = await validator(entry.file);
-          if (validationErrors.length > 0) {
-            return { uuid: entry.uuid, errors: validationErrors, data: null };
+          try {
+            const validationErrors = await validator(entry.file);
+            if (validationErrors.length > 0) {
+              return { uuid: entry.uuid, errors: validationErrors, data: null };
+            }
+          } catch {
+            return {
+              uuid: entry.uuid,
+              errors: [`"${entry.file.name}" could not be validated. Please try again.`],
+              data: null,
+            };
           }
         }
 
