@@ -14,6 +14,11 @@ describe('EmptyValueTag', () => {
       render(<EmptyValueTag value={42} />);
       expect(screen.getByText('42')).not.toBeNull();
     });
+
+    it('renders numeric 0 (does not fall back to dash)', () => {
+      render(<EmptyValueTag value={0} />);
+      expect(screen.getByText('0')).not.toBeNull();
+    });
   });
 
   describe('renders dash for empty values', () => {
