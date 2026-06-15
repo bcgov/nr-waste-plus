@@ -1,8 +1,8 @@
 /**
  * Column descriptor produced by a processor alongside its parsed data.
  *
- * Mirrors the `TableHeaderType` contract used by `TableResource` so that
- * consumers can feed `headers` directly into a table without manual mapping.
+ * Similar to the `TableHeaderType` contract used by `TableResource` so that
+ * consumers can map/cast `headers` into a table header configuration with minimal effort.
  *
  * `renderAs` returns `unknown` here to keep this contract framework-agnostic;
  * cast to `(value: unknown) => ReactNode` at the call site.
