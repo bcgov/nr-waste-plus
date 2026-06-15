@@ -23,7 +23,7 @@ interface PrecisionNumberTagProps {
  * <PrecisionNumberTag value="789.123" precision={1} /> // renders "789.1"
  */
 const PrecisionNumberTag: FC<PrecisionNumberTagProps> = ({ value, precision = 2 }) => {
-  if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '')) {
+  if (value == null || (typeof value === 'string' && value.trim() === '')) {
     return <EmptyValueTag value={value} />;
   }
 
