@@ -1,14 +1,23 @@
 import { type FC } from 'react';
 
 /**
- * Displays a fallback dash when a value is empty.
+ * Renders a value or a fallback dash placeholder for empty/missing values.
  *
- * @param props The tag props.
- * @param props.value The value to render when present.
- * @returns The provided value or a placeholder dash.
+ * Handles `null`, `undefined`, empty strings, and whitespace-only strings
+ * by displaying a dash (`-`) with `data-testid="empty-value"`. Numeric
+ * values (including `0`) and non-empty strings are rendered as-is.
+ *
+ * @param props The component props.
+ * @param props.value The value to display. Accepts strings, numbers, null, or undefined.
+ * @returns A `<span>` with the value or a `<span>` with a dash placeholder.
  */
-const EmptyValueTag: FC<{ value: string }> = ({ value }) => {
-  if (value) {
+const EmptyValueTag: FC<{ value: string | number | null | undefined }> = ({ value }) => {
+  if (
+    value !== null &&
+    value !== undefined &&
+    value !== '' &&
+    !(typeof value === 'string' && value.trim() === '')
+  ) {
     return <span>{value}</span>;
   } else {
     return <span data-testid="empty-value">-</span>;
