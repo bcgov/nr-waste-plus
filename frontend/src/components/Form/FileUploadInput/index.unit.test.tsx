@@ -157,6 +157,251 @@ describe('FileUploadInput (processor pipeline)', () => {
 });
 
 // ============================================================================
+// ProcessorMatrixSuccess flattening tests
+// ============================================================================
+
+describe('FileUploadInput (ProcessorMatrixSuccess flattening)', () => {
+  it('flattens matrix success with single key into flat onProcessed array', async () => {
+    const mockLoad = vi
+      .fn<(file: File) => Promise<ProcessorResult<TestCustomer>>>()
+      .mockResolvedValue({
+        success: true,
+        matrix: true,
+        data: {
+          duplicates: [
+            { id: '1', name: 'Alice', email: 'alice@example.com' },
+            { id: '1', name: 'Alice', email: 'alice@example.com' },
+          ],
+        },
+      });
+    const processor = createMockProcessor();
+    processor.load = mockLoad;
+    const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
+
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} />);
+
+    const file = new File(['dup'], 'dupes.csv', { type: 'text/csv' });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, file);
+
+    await waitFor(() => expect(onProcessed).toHaveBeenCalled());
+    expect(onProcessed).toHaveBeenCalledWith([
+      { id: '1', name: 'Alice', email: 'alice@example.com' },
+      { id: '1', name: 'Alice', email: 'alice@example.com' },
+    ]);
+  });
+
+  it('flattens matrix success with multiple keys into single flat array', async () => {
+    const mockLoad = vi
+      .fn<(file: File) => Promise<ProcessorResult<TestCustomer>>>()
+      .mockResolvedValue({
+        success: true,
+        matrix: true,
+        data: {
+          sheet1: [{ id: '1', name: 'Alice', email: 'a@example.com' }],
+          sheet2: [
+            { id: '2', name: 'Bob', email: 'b@example.com' },
+            { id: '3', name: 'Charlie', email: 'c@example.com' },
+          ],
+        },
+      });
+    const processor = createMockProcessor();
+    processor.load = mockLoad;
+    const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
+
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} />);
+
+    const file = new File(['multi'], 'multi.csv', { type: 'text/csv' });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, file);
+
+    await waitFor(() => expect(onProcessed).toHaveBeenCalled());
+    const callData = onProcessed.mock.calls[0]?.[0] ?? [];
+    expect(callData).toHaveLength(3);
+    expect(callData.map((c) => c.id)).toEqual(['1', '2', '3']);
+  });
+
+  it('emits empty array when matrix success contains no data', async () => {
+    const mockLoad = vi
+      .fn<(file: File) => Promise<ProcessorResult<TestCustomer>>>()
+      .mockResolvedValue({
+        success: true,
+        matrix: true,
+        data: {},
+      });
+    const processor = createMockProcessor();
+    processor.load = mockLoad;
+    const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
+
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} />);
+
+    const file = new File(['empty'], 'empty.csv', { type: 'text/csv' });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, file);
+
+    await waitFor(() => expect(onProcessed).toHaveBeenCalled());
+    expect(onProcessed).toHaveBeenCalledWith([]);
+  });
+
+  it('flattens matrix success data alongside standard success in batch upload', async () => {
+    const mockLoad = vi
+      .fn<(file: File) => Promise<ProcessorResult<TestCustomer>>>()
+      .mockResolvedValueOnce({
+        success: true,
+        matrix: true,
+        data: {
+          groupA: [{ id: '1', name: 'Alice', email: 'a@a.com' }],
+          groupB: [{ id: '2', name: 'Bob', email: 'b@b.com' }],
+        },
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        data: [
+          { id: '3', name: 'Charlie', email: 'c@c.com' },
+          { id: '4', name: 'Diana', email: 'd@d.com' },
+        ],
+      });
+
+    const processor = createMockProcessor();
+    processor.load = mockLoad;
+    const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
+
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={3} />);
+
+    const f1 = new File(['m'], 'matrix.csv', { type: 'text/csv' });
+    const f2 = new File(['s'], 'standard.csv', { type: 'text/csv' });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, [f1, f2]);
+
+    await waitFor(() => expect(onProcessed).toHaveBeenCalled());
+    const callData = onProcessed.mock.calls[0]?.[0] ?? [];
+    expect(callData).toHaveLength(4);
+    expect(callData.map((c) => c.id)).toEqual(['1', '2', '3', '4']);
+  });
+
+  it('handles mixed batch: matrix success alongside processor failure', async () => {
+    const mockLoad = vi
+      .fn<(file: File) => Promise<ProcessorResult<TestCustomer>>>()
+      .mockResolvedValueOnce({
+        success: true,
+        matrix: true,
+        data: {
+          ok: [{ id: '1', name: 'Alice', email: 'a@a.com' }],
+        },
+      })
+      .mockResolvedValueOnce({
+        success: false,
+        errors: ['Invalid data format'],
+      });
+
+    const processor = createMockProcessor();
+    processor.load = mockLoad;
+    const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
+
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={3} />);
+
+    const good = new File(['g'], 'good.csv', { type: 'text/csv' });
+    const bad = new File(['b'], 'bad.csv', { type: 'text/csv' });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, [good, bad]);
+
+    await waitFor(() => expect(mockLoad).toHaveBeenCalledTimes(2));
+    await screen.findByText('Invalid data format');
+
+    // onProcessed should only include the matrix success data
+    await waitFor(() => expect(onProcessed).toHaveBeenCalled());
+    expect(onProcessed).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.objectContaining({ id: '1' })]),
+    );
+    expect(onProcessed.mock.calls[0]?.[0]).toHaveLength(1);
+  });
+
+  it('does not call onProcessed when all files return matrix success with empty data', async () => {
+    const mockLoad = vi
+      .fn<(file: File) => Promise<ProcessorResult<TestCustomer>>>()
+      .mockResolvedValue({
+        success: true,
+        matrix: true,
+        data: {},
+      });
+
+    const processor = createMockProcessor();
+    processor.load = mockLoad;
+    const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
+
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} />);
+
+    const file = new File(['e'], 'empty.csv', { type: 'text/csv' });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, file);
+
+    await waitFor(() => expect(mockLoad).toHaveBeenCalled());
+    // processedData will be empty → onProcessed should still fire with []
+    await waitFor(() => expect(onProcessed).toHaveBeenCalled());
+    expect(onProcessed).toHaveBeenCalledWith([]);
+  });
+
+  it('aggregates matrix-success data across sequential file uploads', async () => {
+    const mockLoad = vi
+      .fn<(file: File) => Promise<ProcessorResult<TestCustomer>>>()
+      .mockResolvedValueOnce({
+        success: true,
+        matrix: true,
+        data: { set1: [{ id: '1', name: 'Alice', email: 'a@a.com' }] },
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        matrix: true,
+        data: {
+          set2: [{ id: '2', name: 'Bob', email: 'b@b.com' }],
+          set3: [{ id: '3', name: 'Charlie', email: 'c@c.com' }],
+        },
+      });
+
+    const processor = createMockProcessor();
+    processor.load = mockLoad;
+    const onProcessed = vi.fn<(results: TestCustomer[]) => void>();
+
+    render(<FileUploadInput processor={processor} onProcessed={onProcessed} maxFiles={3} />);
+
+    const f1 = new File(['a'], 'a.csv', { type: 'text/csv' });
+    const f2 = new File(['b'], 'b.csv', { type: 'text/csv' });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+
+    await user.upload(input, f1);
+    await waitFor(() => expect(onProcessed).toHaveBeenCalledTimes(1));
+
+    await user.upload(input, f2);
+    await waitFor(() => expect(onProcessed).toHaveBeenCalledTimes(2));
+
+    const lastCall = onProcessed.mock.calls.at(-1)?.[0] ?? [];
+    expect(lastCall).toHaveLength(3);
+    expect(lastCall.map((c) => c.id)).toEqual(['1', '2', '3']);
+  });
+});
+
+// ============================================================================
 // Capacity and file count tests
 // ============================================================================
 
@@ -598,5 +843,225 @@ describe('FileUploadInput (external errors and UI)', () => {
 
     // onProcessed should not be called when all files fail
     expect(onProcessed).not.toHaveBeenCalled();
+  });
+});
+
+// ============================================================================
+// Validator prop tests
+// ============================================================================
+
+describe('FileUploadInput (validator prop)', () => {
+  it('blocks processing when validator returns errors', async () => {
+    const validator = vi.fn().mockResolvedValue(['Invalid file format']);
+    const processor = createMockProcessor();
+    const onProcessed = vi.fn();
+
+    render(
+      <FileUploadInput
+        processor={processor}
+        validator={validator}
+        onProcessed={onProcessed}
+      />,
+    );
+
+    const file = new File(['dummy'], 'bad.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, file);
+
+    await waitFor(() => {
+      expect(validator).toHaveBeenCalled();
+    });
+    expect(processor.load).not.toHaveBeenCalled();
+    const errorText = await screen.findByText('Invalid file format');
+    expect(errorText).toBeDefined();
+  });
+
+  it('calls processor when validator returns empty', async () => {
+    const validator = vi.fn().mockResolvedValue([]);
+    const processor = createMockProcessor();
+    const onProcessed = vi.fn();
+
+    render(
+      <FileUploadInput
+        processor={processor}
+        validator={validator}
+        onProcessed={onProcessed}
+      />,
+    );
+
+    const file = new File(['id,name,email\n1,Alice,alice@example.com'], 'customers.csv', {
+      type: 'text/csv',
+    });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, file);
+
+    await waitFor(() => {
+      expect(processor.load).toHaveBeenCalled();
+    });
+  });
+
+  it('skips validator for oversized files (size guard first)', async () => {
+    const validator = vi.fn().mockResolvedValue(['Should not be called']);
+    const processor = createMockProcessor();
+    const onProcessed = vi.fn();
+
+    render(
+      <FileUploadInput
+        processor={processor}
+        validator={validator}
+        onProcessed={onProcessed}
+        maxFileSizeBytes={10}
+      />,
+    );
+
+    const file = new File(['x'.repeat(20)], 'big.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, file);
+
+    await screen.findByText(/exceeds the maximum file size/);
+    expect(validator).not.toHaveBeenCalled();
+    expect(processor.load).not.toHaveBeenCalled();
+  });
+
+  it('handles mixed batch: validator blocks one, passes another', async () => {
+    const validator = vi
+      .fn<(file: File) => Promise<string[]>>()
+      .mockImplementation(async (file: File) => {
+        if (file.name === 'bad.xlsx') return ['Invalid format'];
+        return [];
+      });
+    const processor = createMockProcessor();
+    const onProcessed = vi.fn();
+
+    render(
+      <FileUploadInput
+        processor={processor}
+        validator={validator}
+        onProcessed={onProcessed}
+        maxFiles={3}
+      />,
+    );
+
+    const goodFile = new File(['data'], 'good.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const badFile = new File(['data'], 'bad.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, [goodFile, badFile]);
+
+    await waitFor(() => {
+      expect(validator).toHaveBeenCalledTimes(2);
+    });
+    expect(processor.load).toHaveBeenCalledTimes(1);
+    await screen.findByText('Invalid format');
+  });
+
+  it('shows validator error and skips processing for that file', async () => {
+    const validator = vi.fn().mockResolvedValue(['Header column missing']);
+    const badProcessor = createMockProcessor(
+      vi.fn().mockResolvedValue({ success: true, data: [] }),
+    );
+    const onProcessed = vi.fn();
+
+    render(
+      <FileUploadInput
+        processor={badProcessor}
+        validator={validator}
+        onProcessed={onProcessed}
+      />,
+    );
+
+    const file = new File(['data'], 'bad.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, file);
+
+    await screen.findByText('Header column missing');
+    expect(badProcessor.load).not.toHaveBeenCalled();
+  });
+
+  it('calls onProcessed when validator passes and processor succeeds', async () => {
+    const validator = vi.fn().mockResolvedValue([]);
+    const processor = createMockProcessor(
+      vi.fn().mockResolvedValue({
+        success: true,
+        data: [{ id: '1', name: 'A', email: 'a@a.com' }],
+      }),
+    );
+    const onProcessed = vi.fn();
+
+    render(
+      <FileUploadInput
+        processor={processor}
+        validator={validator}
+        onProcessed={onProcessed}
+      />,
+    );
+
+    const file = new File(['data'], 'valid.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, file);
+
+    await waitFor(() => expect(onProcessed).toHaveBeenCalled());
+  });
+
+  it('does not call onProcessed when validator blocks all files', async () => {
+    const validator = vi.fn().mockResolvedValue(['Blocked']);
+    const processor = createMockProcessor();
+    const onProcessed = vi.fn();
+
+    render(
+      <FileUploadInput
+        processor={processor}
+        validator={validator}
+        onProcessed={onProcessed}
+      />,
+    );
+
+    const file = new File(['data'], 'blocked.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const input = screen.getByLabelText(
+      'Drag and drop files here or click to upload',
+    ) as HTMLInputElement;
+    const user = userEvent.setup();
+    await user.upload(input, file);
+
+    await waitFor(() => expect(validator).toHaveBeenCalled());
+    expect(onProcessed).not.toHaveBeenCalled();
+  });
+
+  it('works without validator prop (backward compat)', () => {
+    const processor = createMockProcessor();
+    expect(() =>
+      render(<FileUploadInput processor={processor} onProcessed={vi.fn()} />),
+    ).not.toThrow();
   });
 });
