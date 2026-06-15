@@ -25,11 +25,15 @@ interface PrecisionNumberTagProps {
 const PrecisionNumberTag: FC<PrecisionNumberTagProps> = ({ value, precision = 2 }) => {
   if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '')) {
     return <EmptyValueTag value={value} />;
-  } else {
-    const parsedNumber = Number(value);
-    if (!Number.isFinite(parsedNumber)) return <EmptyValueTag value={null} />;
-    return <span>{parsedNumber.toFixed(precision)}</span>;
   }
+
+  const parsedNumber = Number(value);
+  if (!Number.isFinite(parsedNumber)) return <EmptyValueTag value={null} />;
+
+  const normalizedPrecision = Number.isFinite(precision) ? Math.trunc(precision) : 2;
+  const safePrecision = Math.min(100, Math.max(0, normalizedPrecision));
+
+  return <span>{parsedNumber.toFixed(safePrecision)}</span>;
 };
 
 export default PrecisionNumberTag;
