@@ -15,7 +15,7 @@ interface PrecisionNumberTagProps {
  *
  * @param props The component props.
  * @param props.value The number or numeric string to format. Null/undefined renders a dash.
- * @param props.precision Decimal places for `toFixed` (default: 2). May be negative.
+ * @param props.precision Decimal places for `toFixed` (default: 2). Values outside the 0100 range are clamped.
  * @returns A `<span>` with the formatted number or an `EmptyValueTag` dash.
  * @example
  * <PrecisionNumberTag value={123.456} precision={2} /> // renders "123.46"
