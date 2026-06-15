@@ -29,6 +29,7 @@ export interface ProcessorSuccess<T> {
    * Optional column descriptors derived from the file headers + any column map.
    * Present when the processor generates them; consumers may map/cast them into
    * `TableHeaderType` entries as needed.
+   */
   headers?: ProcessorColumnHeader[];
 }
 
