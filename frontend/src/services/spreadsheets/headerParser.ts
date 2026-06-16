@@ -71,6 +71,9 @@ function propagateMerges(
   lastRowIndex: number,
 ): void {
   for (const merge of merges) {
+    // Vertical merges (single column spanning multiple rows) don't affect header
+    // text propagation — they only visually group rows. Horizontal merges (single
+    // row spanning multiple columns) DO propagate the group title across columns.
     if (merge.startCol === merge.endCol) continue;
     if (merge.startRow > lastRowIndex) continue;
     const value = lines[merge.startRow]?.[merge.startCol];
