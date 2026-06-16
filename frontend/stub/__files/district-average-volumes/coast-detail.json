@@ -1,0 +1,50 @@
+{
+  "id": 4,
+  "area": "COASTAL",
+  "startDate": "2026-06-01",
+  "endDate": null,
+  "uploadedBy": "bwong@gov.bc.ca",
+  "dateOfUpload": "2026-05-15T14:50:00Z",
+  "tableLevelFactor": 0.4,
+  "heliMultiplier": 3.47,
+  "tableData": {
+    "type": "COASTAL",
+    "sections": [
+      {
+        "name": "Mature",
+        "districts": [
+          {
+            "code": "DCK",
+            "avoidableSawlog": 2.345,
+            "avoidableHembalGradeU": 1.234,
+            "avoidableGradeY": 0.567,
+            "unavoidable": 0.123,
+            "total": 4.269
+          },
+          {
+            "code": "DCR",
+            "avoidableSawlog": 2.456,
+            "avoidableHembalGradeU": 1.345,
+            "avoidableGradeY": 0.678,
+            "unavoidable": 0.234,
+            "total": 4.713
+          }
+        ]
+      },
+      {
+        "name": "Immature",
+        "districts": [
+          {
+            "code": "DNI",
+            "avoidableSawlog": 1.234,
+            "avoidableHembalGradeU": 0.567,
+            "avoidableGradeY": 0.234,
+            "unavoidable": 0.089,
+            "total": 2.124
+          }
+        ]
+      }
+    ],
+    "formulas": {}
+  }
+}
