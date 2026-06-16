@@ -1,5 +1,5 @@
 {
-  "name": "Get Coast district volume table",
+  "name": "Get Coast district volume detail",
   "request": {
     "urlPattern": "/api/configuration/district-average-volumes/4",
     "method": "GET"
