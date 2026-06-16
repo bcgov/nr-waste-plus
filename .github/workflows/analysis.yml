@@ -65,10 +65,11 @@ jobs:
         with:
           sarif_file: "trivy-results.sarif"
 
-  cve-lite:
+   cve-lite:
     name: CVE Lite Scan (${{ matrix.folder }})
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     permissions:
+      contents: read
       security-events: write
     runs-on: ubuntu-24.04
     strategy:
@@ -77,14 +78,20 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "22"
       - name: Run cve-lite-cli SARIF scan (${{ matrix.folder }})
-        run: npx cve-lite-cli "${{ matrix.folder }}" --sarif
+        run: npx --yes cve-lite-cli@1.23.1 "${{ matrix.folder }}" --sarif
       - name: Locate SARIF file
         id: locate
-        run: echo "path=$(ls ${{ github.workspace }}/cve-lite-scan-*.sarif)" >> $GITHUB_OUTPUT
+        run: |
+          sarif_file=$(ls ${{ github.workspace }}/cve-lite-scan-*.sarif 2>/dev/null | head -1)
+          if [ -z "$sarif_file" ]; then
+            echo "::error::No SARIF file found in ${{ github.workspace }}"
+            exit 1
+          fi
+          echo "path=$sarif_file" >> $GITHUB_OUTPUT
       - name: Upload SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
         with:
