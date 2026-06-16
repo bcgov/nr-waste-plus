@@ -66,5 +66,6 @@ export const coastConfig: SpreadsheetConfig = {
       header: 'Immature - Total',
     },
     'Heli Mulitplier': { key: 'heliMultiplier', header: 'Heli Multiplier' },
+    'Heli Multiplier': { key: 'heliMultiplier', header: 'Heli Multiplier' },
   },
 };

@@ -8,6 +8,14 @@ const EXPECTED_HEADERS: Record<SpreadsheetKind, string[]> = {
   coast: ['District', 'Mature', 'Immature', 'Heli Mulitplier'],
 };
 
+function headerMatches(actual: string, expected: string): boolean {
+  if (actual === expected || actual.startsWith(expected)) return true;
+  // Accept known spelling variants (e.g. "Heli Mulitplier" vs "Heli Multiplier").
+  const normalizedExpected = expected.replace('Heli Mulitplier', 'Heli Multiplier');
+  const normalizedActual = actual.replace('Heli Mulitplier', 'Heli Multiplier');
+  return normalizedActual === normalizedExpected || normalizedActual.startsWith(normalizedExpected);
+}
+
 export function createSpreadsheetValidator(): (file: File) => Promise<string[]> {
   return async (file: File): Promise<string[]> => {
     const errors: string[] = [];
@@ -36,7 +44,7 @@ export function createSpreadsheetValidator(): (file: File) => Promise<string[]> 
 
       for (const expectedHeader of expected) {
         const found = firstRow.some(
-          (h) => h === expectedHeader || h.startsWith(expectedHeader),
+          (h) => headerMatches(h, expectedHeader),
         );
         if (!found) {
           errors.push(
