@@ -126,7 +126,7 @@ export class ExcelReader {
    * This is the right entry point for sheets whose headers don't fit SheetJS's
    * "row 1 = header" assumption — e.g. multi-row headers, merged header cells,
    * or sheets where the data doesn't start on row 1. Callers are responsible for
-   * interpreting the leading rows themselves (see e.g. `ExcelDataProcessor`,
+   * interpreting the leading rows themselves (see e.g. `SpreadsheetProcessor`,
    * which composes multi-row headers from the result).
    *
    * @param file - The browser File object representing the uploaded spreadsheet.
@@ -165,7 +165,7 @@ export class ExcelReader {
    * span several columns (e.g. "Dry Belt m3/ha" spanning four sub-columns like
    * "Avoidable Sawlog", "Avoidable Grade 4", "Unavoidable", "Total"). SheetJS only
    * stores the value in the merge's top-left cell — the `merges` returned here let
-   * a caller (see `ExcelDataProcessor`) correctly propagate that value across the
+   * a caller (see `SpreadsheetProcessor`) correctly propagate that value across the
    * columns the merge spans, rather than guessing based on adjacent empty cells.
    *
    * @param file - The browser File object representing the uploaded spreadsheet.
