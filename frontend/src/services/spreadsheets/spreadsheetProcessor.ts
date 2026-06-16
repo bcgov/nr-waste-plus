@@ -210,7 +210,7 @@ export class SpreadsheetProcessor<
         data.push(parsed.data);
       } else {
         const messages = parsed.error.issues.map((issue: { message: string }) => issue.message);
-        errors.push(`Row ${i + 1}: ${messages.join('; ')}`);
+        errors.push(`Row ${i + this.options.headerRows + 1}: ${messages.join('; ')}`);
       }
     }
 

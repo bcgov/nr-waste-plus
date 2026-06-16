@@ -535,7 +535,7 @@ describe('SpreadsheetProcessor', () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.errors[0]).toContain('Row 1');
+      expect(result.errors[0]).toContain('Row 2');
     }
   });
 
@@ -598,7 +598,7 @@ describe('SpreadsheetProcessor', () => {
       if (!result.success) {
         expect(result.errors.length).toBeGreaterThan(0);
         expect(result.errors[0]).toContain('[DCC]');
-        expect(result.errors[0]).toContain('Row 1');
+        expect(result.errors[0]).toContain('Row 2');
       }
     });
 
