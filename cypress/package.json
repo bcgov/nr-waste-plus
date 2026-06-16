@@ -75,6 +75,9 @@
     },
     "module-lookup-amd": {
       "glob": "13.0.6"
-    }
+    },
+    "@opentelemetry/core": "2.8.0",
+    "diff": "8.0.3",
+    "ws@^7.0.0": "7.5.11"
   }
 }
