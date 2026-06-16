@@ -34,8 +34,6 @@
   },
   "dependencies": {
     "@bcgov-nr/nr-theme": "^1.8.9",
-    "@carbon/charts": "^1.27.3",
-    "@carbon/charts-react": "^1.27.3",
     "@carbon/icons-react": "^11.76.0",
     "@carbon/pictograms-react": "^11.97.0",
     "@carbon/react": "^1.103.0",
@@ -44,7 +42,6 @@
     "@tanstack/react-router": "^1.169.2",
     "aws-amplify": "^6.17.0",
     "axios": "^1.15.2",
-    "dotenv": "^17.2.3",
     "idb": "^8.0.3",
     "lodash": "^4.18.1",
     "luxon": "^3.7.2",
@@ -70,9 +67,7 @@
     "@types/node": "^25.0.3",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "@types/service-worker-mock": "^2.0.4",
     "@vitejs/plugin-react": "^5.2.0",
-    "@vitest/browser": "^4.1.0",
     "@vitest/coverage-v8": "^4.1.0",
     "@vitest/eslint-plugin": "^1.6.20",
     "axe-core": "^4.11.1",
@@ -101,7 +96,6 @@
     "vite-plugin-pwa": "^1.2.0",
     "vite-tsconfig-paths": "^6.0.3",
     "vitest": "^4.1.0",
-    "vitest-browser-react": "^2.0.2",
     "wiremock": "^3.13.2"
   },
   "engines": {
