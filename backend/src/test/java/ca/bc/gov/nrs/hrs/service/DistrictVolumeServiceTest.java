@@ -78,22 +78,41 @@ class DistrictVolumeServiceTest {
   }
 
   @Test
-  @DisplayName("getDistrictVolumes — should return mapped page from repository")
+  @DisplayName("getDistrictVolumes — should return mapped page from repository when no filter provided")
   void getDistrictVolumes_returnsMappedPage() {
     // Arrange
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
     PageRequest pageable = PageRequest.of(0, 10);
-
     when(districtVolumeRepository.findAll(pageable))
         .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
-    // Act
-    var result = districtVolumeService.getDistrictVolumes(pageable);
+    // Act — Fix: Pass Optional.empty() as the first argument to match the new signature
+    var result = districtVolumeService.getDistrictVolumes(Optional.empty(), pageable);
 
     // Assert
     assertThat(result).isNotNull();
     assertThat(result.getTotalElements()).isEqualTo(1);
     assertThat(result.getContent()).hasSize(1);
+    assertThat(result.getContent().get(0).area()).isEqualTo("INTERIOR");
+  }
+
+  @Test
+  @DisplayName("getDistrictVolumes — should return filtered page when area filter is provided")
+  void getDistrictVolumes_returnsFilteredPage_whenAreaProvided() {
+    // Arrange
+    DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
+    PageRequest pageable = PageRequest.of(0, 10);
+    
+    // Mock the new findByArea repository method we added
+    when(districtVolumeRepository.findByArea(Area.INTERIOR, pageable))
+        .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
+
+    // Act — Pass the explicit area string filter wrapped in an Optional
+    var result = districtVolumeService.getDistrictVolumes(Optional.of("INTERIOR"), pageable);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.getTotalElements()).isEqualTo(1);
     assertThat(result.getContent().get(0).area()).isEqualTo("INTERIOR");
   }
 
