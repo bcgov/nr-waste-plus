@@ -1,11 +1,15 @@
 {
-  "name": "Get Coast district volume detail",
-  "request": {
-    "urlPattern": "/api/configuration/district-average-volumes/4",
-    "method": "GET"
-  },
-  "response": {
-    "status": 200,
-    "bodyFileName": "district-volume-tables/coast-detail.json"
-  }
+  "mappings": [
+    {
+      "name": "Get Coast district volume detail",
+      "request": {
+        "urlPattern": "/api/configuration/district-average-volumes/4",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "district-average-volumes/coast-detail.json"
+      }
+    }
+  ]
 }
