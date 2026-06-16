@@ -33,7 +33,7 @@ export class CompositeSpreadsheetProcessor implements FileProcessor<AnyRow> {
 
     try {
       const processor = kind === 'interior' ? interiorProcessor : coastProcessor;
-      return (await processor.load(file)) as ProcessorResult<AnyRow>;
+      return await processor.load(file);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return {

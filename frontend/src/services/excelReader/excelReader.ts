@@ -27,7 +27,7 @@ export class ExcelReader {
       const headerValues = (headerRow.values as unknown[]).slice(1);
       const headers = headerValues.map((v) => String(v ?? ''));
 
-      if (headers.length === 0 || headers.every((h) => h === '')) return [];
+      if (headers.every((h) => h === '')) return [];
 
       const rows: Record<string, unknown>[] = [];
       sheet.eachRow((row, rowNumber) => {
@@ -35,7 +35,7 @@ export class ExcelReader {
         const values = (row.values as unknown[]).slice(1);
         const obj: Record<string, unknown> = {};
         headers.forEach((header, i) => {
-          obj[header] = values[i] !== undefined ? values[i] : null;
+          obj[header] = values[i] ?? null;
         });
         rows.push(obj);
       });
@@ -45,43 +45,13 @@ export class ExcelReader {
   }
 
   async readRaw(file: File, sheetName?: string): Promise<unknown[][]> {
-    return this.withSheet(file, sheetName, (sheet) => {
-      const columnCount = sheet.columnCount;
-      const rows: unknown[][] = [];
-
-      sheet.eachRow((row) => {
-        const values: unknown[] = [];
-        for (let c = 1; c <= columnCount; c++) {
-          const cellValue = row.getCell(c).value;
-          values.push(cellValue !== undefined ? cellValue : null);
-        }
-        if (values.some((v) => v !== null && v !== '')) {
-          rows.push(values);
-        }
-      });
-
-      return rows;
-    });
+    return this.withSheet(file, sheetName, (sheet) => this.extractRows(sheet));
   }
 
   async readRawWithMerges(file: File, sheetName?: string): Promise<RawSheet> {
     return this.withSheet(file, sheetName, (sheet) => {
-      const columnCount = sheet.columnCount;
-      const rows: unknown[][] = [];
-
-      sheet.eachRow((row) => {
-        const values: unknown[] = [];
-        for (let c = 1; c <= columnCount; c++) {
-          const cellValue = row.getCell(c).value;
-          values.push(cellValue !== undefined ? cellValue : null);
-        }
-        if (values.some((v) => v !== null && v !== '')) {
-          rows.push(values);
-        }
-      });
-
-      const merges: MergeRange[] = this.getMergeRanges(sheet);
-
+      const rows = this.extractRows(sheet);
+      const merges = this.getMergeRanges(sheet);
       return { rows, merges };
     });
   }
@@ -138,12 +108,30 @@ export class ExcelReader {
 
   private parseCellRef(ref: string): { row: number; col: number } | null {
     const match = ref.match(/^([A-Z]+)(\d+)$/);
-    if (!match) return null;
+    if (match == null) return null;
     const col = match[1]
       .split('')
       .reduce((acc: number, ch: string) => acc * 26 + (ch.charCodeAt(0) - 64), 0);
-    const row = parseInt(match[2], 10);
+    const row = Number.parseInt(match[2], 10);
     return { row, col };
+  }
+
+  private extractRows(sheet: Worksheet): unknown[][] {
+    const columnCount = sheet.columnCount;
+    const rows: unknown[][] = [];
+
+    sheet.eachRow((row) => {
+      const values: unknown[] = [];
+      for (let c = 1; c <= columnCount; c++) {
+        const cellValue = row.getCell(c).value;
+        values.push(cellValue ?? null);
+      }
+      if (values.some((v) => v !== null && v !== '')) {
+        rows.push(values);
+      }
+    });
+
+    return rows;
   }
 
   private async withSheet<T>(
@@ -190,7 +178,7 @@ export class ExcelReader {
       }
     } else {
       const arrayBuffer = await this.fileToArrayBuffer(file);
-      await (workbook.xlsx.load as (data: ArrayBuffer) => Promise<Workbook>)(arrayBuffer);
+      await workbook.xlsx.load(arrayBuffer);
     }
 
     return workbook;

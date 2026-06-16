@@ -20,7 +20,7 @@ export async function identifySpreadsheet(file: File): Promise<SpreadsheetKind> 
 
   if (firstRow.some((h) => h.includes('Dry Belt m3/ha'))) return 'interior';
 
-  if (firstRow.some((h) => h === 'Mature') && firstRow.some((h) => h === 'Immature')) {
+  if (firstRow.includes('Mature') && firstRow.includes('Immature')) {
     return 'coast';
   }
 

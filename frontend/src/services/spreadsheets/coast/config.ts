@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { col } from '../columnEntry';
+
 import type { SpreadsheetConfig } from '../spreadsheetProcessor';
 
 export const coastRowSchema = z.object({
@@ -19,53 +21,45 @@ export const coastRowSchema = z.object({
 
 export type CoastRow = z.infer<typeof coastRowSchema>;
 
+function columnGroup(prefix: string, keyPrefix: string) {
+  return {
+    ...col(
+      `${prefix} - Avoidable Sawlog \nFull Rate\n(m3/ha)`,
+      `${keyPrefix}AvoidableSawlog`,
+      `${prefix} - Avoidable Sawlog`,
+    ),
+    ...col(
+      `${prefix} - Avoidable \n0.25\n(m3/ha)`,
+      `${keyPrefix}Avoidable025`,
+      `${prefix} - Avoidable 0.25`,
+    ),
+    ...col(
+      `${prefix} - Avoidable Grade Y (m3/ha)`,
+      `${keyPrefix}AvoidableGradeY`,
+      `${prefix} - Avoidable Grade Y`,
+    ),
+    ...col(
+      `${prefix} - Unavoidable Grade Y\n(m3/ha)`,
+      `${keyPrefix}UnavoidableGradeY`,
+      `${prefix} - Unavoidable Grade Y`,
+    ),
+    ...col(
+      `${prefix} - Total All Grades All Class (m3/ha)`,
+      `${keyPrefix}Total`,
+      `${prefix} - Total`,
+    ),
+  };
+}
+
 export const coastConfig: SpreadsheetConfig = {
   sheetName: 'Coast',
   headerRows: 2,
   condensed: false,
   columnMap: {
-    'District': { key: 'district', header: 'District' },
-    'Mature - Avoidable Sawlog \nFull Rate\n(m3/ha)': {
-      key: 'matureAvoidableSawlog',
-      header: 'Mature - Avoidable Sawlog',
-    },
-    'Mature - Avoidable \n0.25\n(m3/ha)': {
-      key: 'matureAvoidable025',
-      header: 'Mature - Avoidable 0.25',
-    },
-    'Mature - Avoidable Grade Y (m3/ha)': {
-      key: 'matureAvoidableGradeY',
-      header: 'Mature - Avoidable Grade Y',
-    },
-    'Mature - Unavoidable Grade Y\n(m3/ha)': {
-      key: 'matureUnavoidableGradeY',
-      header: 'Mature - Unavoidable Grade Y',
-    },
-    'Mature - Total All Grades All Class (m3/ha)': {
-      key: 'matureTotal',
-      header: 'Mature - Total',
-    },
-    'Immature - Avoidable Sawlog \nFull Rate\n(m3/ha)': {
-      key: 'immatureAvoidableSawlog',
-      header: 'Immature - Avoidable Sawlog',
-    },
-    'Immature - Avoidable \n0.25\n(m3/ha)': {
-      key: 'immatureAvoidable025',
-      header: 'Immature - Avoidable 0.25',
-    },
-    'Immature - Avoidable Grade Y (m3/ha)': {
-      key: 'immatureAvoidableGradeY',
-      header: 'Immature - Avoidable Grade Y',
-    },
-    'Immature - Unavoidable Grade Y\n(m3/ha)': {
-      key: 'immatureUnavoidableGradeY',
-      header: 'Immature - Unavoidable Grade Y',
-    },
-    'Immature - Total All Grades All Class (m3/ha)': {
-      key: 'immatureTotal',
-      header: 'Immature - Total',
-    },
-    'Heli Mulitplier': { key: 'heliMultiplier', header: 'Heli Multiplier' },
-    'Heli Multiplier': { key: 'heliMultiplier', header: 'Heli Multiplier' },
+    ...col('District', 'district', 'District'),
+    ...columnGroup('Mature', 'mature'),
+    ...columnGroup('Immature', 'immature'),
+    ...col('Heli Mulitplier', 'heliMultiplier', 'Heli Multiplier'),
+    ...col('Heli Multiplier', 'heliMultiplier', 'Heli Multiplier'),
   },
 };

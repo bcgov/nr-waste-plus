@@ -144,9 +144,7 @@ export class SpreadsheetProcessor<
         resolvedHeaders,
         this.options.columnMap,
         this.options.skipEmptyRows,
-      ) as
-        | ProcessorSuccess<Record<string, unknown>>
-        | ProcessorMatrixSuccess<Record<string, unknown>>;
+      );
 
       if (this.schema) {
         return this.applyValidation(result);

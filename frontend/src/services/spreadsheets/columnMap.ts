@@ -25,7 +25,7 @@ export function toCodeFriendlyKey(naturalKey: string, index?: number): string {
     )
     .join('');
 
-  return camel || (index !== undefined ? `column${index}` : 'column');
+  return camel !== '' ? camel : index !== undefined ? `column${index}` : 'column';
 }
 
 export function applyColumnMap(
