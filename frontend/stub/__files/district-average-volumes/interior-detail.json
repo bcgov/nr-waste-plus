@@ -6,7 +6,6 @@
   "uploadedBy": "jsmith@gov.bc.ca",
   "dateOfUpload": "2026-05-15T14:23:00Z",
   "tableLevelFactor": 0.4,
-  "heliMultiplier": null,
   "tableData": {
     "type": "INTERIOR",
     "zones": [
