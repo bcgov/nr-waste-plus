@@ -65,7 +65,7 @@ jobs:
         with:
           sarif_file: "trivy-results.sarif"
 
-   cve-lite:
+  cve-lite:
     name: CVE Lite Scan (${{ matrix.folder }})
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     permissions:
