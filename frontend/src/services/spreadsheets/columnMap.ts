@@ -9,7 +9,7 @@ export interface ColumnRemapEntry {
 
 export type ColumnMap = Record<string, ColumnRemapEntry>;
 
-export function toCodeFriendlyKey(naturalKey: string): string {
+export function toCodeFriendlyKey(naturalKey: string, index?: number): string {
   const cleaned = naturalKey
     .replace(/\r?\n/g, ' ')
     .replace(/[^a-zA-Z0-9\s\-/]/g, ' ')
@@ -25,7 +25,7 @@ export function toCodeFriendlyKey(naturalKey: string): string {
     )
     .join('');
 
-  return camel || 'column';
+  return camel || (index !== undefined ? `column${index}` : 'column');
 }
 
 export function applyColumnMap(

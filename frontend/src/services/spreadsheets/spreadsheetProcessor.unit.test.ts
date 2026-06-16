@@ -48,6 +48,13 @@ describe('toCodeFriendlyKey', () => {
   it('handles only special characters', () => {
     expect(toCodeFriendlyKey('!!! @@@ ###')).toBe('column');
   });
+  it('appends index to deduplicate empty-key fallbacks', () => {
+    expect(toCodeFriendlyKey('', 0)).toBe('column0');
+    expect(toCodeFriendlyKey('', 1)).toBe('column1');
+  });
+  it('ignores index when a valid key is produced', () => {
+    expect(toCodeFriendlyKey('District', 5)).toBe('district');
+  });
 });
 
 // ---------------------------------------------------------------------------
