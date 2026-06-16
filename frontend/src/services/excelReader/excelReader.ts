@@ -115,7 +115,7 @@ export class ExcelReader {
    */
   async read(file: File, sheetName?: string): Promise<Record<string, unknown>[]> {
     return this.withSheet(file, sheetName, (sheet) =>
-      XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet),
+      XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: null }),
     );
   }
 
