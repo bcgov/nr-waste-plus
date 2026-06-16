@@ -154,9 +154,7 @@ export class ExcelReader {
     try {
       const workbook = await this.loadWorkbook(file);
 
-      let sheet = sheetName
-        ? workbook.getWorksheet(sheetName)
-        : workbook.worksheets[0];
+      let sheet = sheetName ? workbook.getWorksheet(sheetName) : workbook.worksheets[0];
 
       if (!sheet && sheetName) {
         const trimmed = sheetName.trim();

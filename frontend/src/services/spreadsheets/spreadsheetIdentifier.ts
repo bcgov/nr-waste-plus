@@ -1,6 +1,6 @@
-import { ExcelReader, ExcelReadError } from '@/services/excelReader/excelReader';
-
 import type { SpreadsheetKind } from './types';
+
+import { ExcelReader, ExcelReadError } from '@/services/excelReader/excelReader';
 
 export async function identifySpreadsheet(file: File): Promise<SpreadsheetKind> {
   const reader = new ExcelReader();

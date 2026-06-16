@@ -1,9 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { SpreadsheetProcessor } from './spreadsheetProcessor';
-
-import { interiorConfig, interiorRowSchema } from './interior/config';
 import { coastConfig, coastRowSchema } from './coast/config';
+import { interiorConfig, interiorRowSchema } from './interior/config';
+import { SpreadsheetProcessor } from './spreadsheetProcessor';
 
 const INTERIOR_HEADER = [
   'District',

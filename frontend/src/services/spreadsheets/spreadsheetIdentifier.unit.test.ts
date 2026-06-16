@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { ExcelReader } from '@/services/excelReader/excelReader';
-
 import { identifySpreadsheet } from './spreadsheetIdentifier';
+
+import { ExcelReader } from '@/services/excelReader/excelReader';
 
 const mockFile = new File(['dummy'], 'test.xlsx', {
   type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -24,17 +24,12 @@ describe('identifySpreadsheet', () => {
   });
 
   it('prefers interior when both sheets exist', async () => {
-    vi.spyOn(ExcelReader.prototype, 'listSheets').mockResolvedValue([
-      'Interior',
-      'Coast',
-    ]);
+    vi.spyOn(ExcelReader.prototype, 'listSheets').mockResolvedValue(['Interior', 'Coast']);
     await expect(identifySpreadsheet(mockFile)).resolves.toBe('interior');
   });
 
   it('trims whitespace from sheet names', async () => {
-    vi.spyOn(ExcelReader.prototype, 'listSheets').mockResolvedValue([
-      '  Interior  ',
-    ]);
+    vi.spyOn(ExcelReader.prototype, 'listSheets').mockResolvedValue(['  Interior  ']);
     await expect(identifySpreadsheet(mockFile)).resolves.toBe('interior');
   });
 
@@ -56,34 +51,24 @@ describe('identifySpreadsheet', () => {
 
   it('rejects unknown spreadsheet format', async () => {
     vi.spyOn(ExcelReader.prototype, 'listSheets').mockResolvedValue(['Random']);
-    vi.spyOn(ExcelReader.prototype, 'readRaw').mockResolvedValue([
-      ['Name', 'Value'],
-    ]);
-    await expect(identifySpreadsheet(mockFile)).rejects.toThrow(
-      'Unrecognized spreadsheet format',
-    );
+    vi.spyOn(ExcelReader.prototype, 'readRaw').mockResolvedValue([['Name', 'Value']]);
+    await expect(identifySpreadsheet(mockFile)).rejects.toThrow('Unrecognized spreadsheet format');
   });
 
   it('rejects empty workbook', async () => {
     vi.spyOn(ExcelReader.prototype, 'listSheets').mockResolvedValue(['Sheet1']);
     vi.spyOn(ExcelReader.prototype, 'readRaw').mockResolvedValue([]);
-    await expect(identifySpreadsheet(mockFile)).rejects.toThrow(
-      'appears to be empty',
-    );
+    await expect(identifySpreadsheet(mockFile)).rejects.toThrow('appears to be empty');
   });
 
   it('handles first-row null cell values gracefully', async () => {
     vi.spyOn(ExcelReader.prototype, 'listSheets').mockResolvedValue(['Sheet1']);
-    vi.spyOn(ExcelReader.prototype, 'readRaw').mockResolvedValue([
-      [null, 'Dry Belt m3/ha', null],
-    ]);
+    vi.spyOn(ExcelReader.prototype, 'readRaw').mockResolvedValue([[null, 'Dry Belt m3/ha', null]]);
     await expect(identifySpreadsheet(mockFile)).resolves.toBe('interior');
   });
 
   it('rejects unreadable file', async () => {
-    vi.spyOn(ExcelReader.prototype, 'listSheets').mockRejectedValue(
-      new Error('Corrupt file'),
-    );
+    vi.spyOn(ExcelReader.prototype, 'listSheets').mockRejectedValue(new Error('Corrupt file'));
     await expect(identifySpreadsheet(mockFile)).rejects.toThrow('Corrupt file');
   });
 

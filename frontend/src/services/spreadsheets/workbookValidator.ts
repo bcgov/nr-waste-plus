@@ -1,7 +1,8 @@
-import { ExcelReader } from '@/services/excelReader/excelReader';
-
 import { identifySpreadsheet } from './spreadsheetIdentifier';
+
 import type { SpreadsheetKind } from './types';
+
+import { ExcelReader } from '@/services/excelReader/excelReader';
 
 const EXPECTED_HEADERS: Record<SpreadsheetKind, string[]> = {
   interior: ['District', 'Dry Belt m3/ha', 'Transition Zone m3/ha', 'Wet Belt m3/ha'],
@@ -43,9 +44,7 @@ export function createSpreadsheetValidator(): (file: File) => Promise<string[]> 
       const expected = EXPECTED_HEADERS[kind];
 
       for (const expectedHeader of expected) {
-        const found = firstRow.some(
-          (h) => headerMatches(h, expectedHeader),
-        );
+        const found = firstRow.some((h) => headerMatches(h, expectedHeader));
         if (!found) {
           errors.push(
             `Expected column "${expectedHeader}" not found in sheet "${sheetName}". Found: ${firstRow.join(', ')}`,

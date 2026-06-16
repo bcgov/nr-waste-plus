@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
 import { Workbook } from 'exceljs';
+import { describe, it, expect, vi } from 'vitest';
 
 import { ExcelReader, ExcelReadError, type MergeRange, type RawSheet } from './excelReader';
 

@@ -1,14 +1,15 @@
+import { coastProcessor } from './coast/processor';
+import { interiorProcessor } from './interior/processor';
+import { identifySpreadsheet } from './spreadsheetIdentifier';
+
+import type { CoastRow } from './coast/config';
+import type { InteriorRow } from './interior/config';
+import type { SpreadsheetKind } from './types';
+
 import {
   type FileProcessor,
   type ProcessorResult,
 } from '@/components/Form/FileUploadInput/fileProcessor';
-
-import { coastProcessor } from './coast/processor';
-import type { CoastRow } from './coast/config';
-import { interiorProcessor } from './interior/processor';
-import type { InteriorRow } from './interior/config';
-import { identifySpreadsheet } from './spreadsheetIdentifier';
-import type { SpreadsheetKind } from './types';
 
 type AnyRow = InteriorRow | CoastRow;
 
@@ -31,8 +32,7 @@ export class CompositeSpreadsheetProcessor implements FileProcessor<AnyRow> {
     this._kind = kind;
 
     try {
-      const processor =
-        kind === 'interior' ? interiorProcessor : coastProcessor;
+      const processor = kind === 'interior' ? interiorProcessor : coastProcessor;
       return (await processor.load(file)) as ProcessorResult<AnyRow>;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { ExcelReader } from '@/services/excelReader/excelReader';
-
 import { createSpreadsheetValidator } from './workbookValidator';
+
+import { ExcelReader } from '@/services/excelReader/excelReader';
 
 const mockFile = new File(['dummy'], 'test.xlsx', {
   type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -68,18 +68,14 @@ describe('createSpreadsheetValidator', () => {
 
   it('reports missing column in interior sheet', async () => {
     vi.spyOn(ExcelReader.prototype, 'listSheets').mockResolvedValue(['Interior']);
-    vi.spyOn(ExcelReader.prototype, 'readRaw').mockResolvedValue([
-      ['District', 'Something Else'],
-    ]);
+    vi.spyOn(ExcelReader.prototype, 'readRaw').mockResolvedValue([['District', 'Something Else']]);
     const errors = await validator(mockFile);
     expect(errors.some((e) => e.includes('Dry Belt m3/ha'))).toBe(true);
   });
 
   it('reports missing column in coast sheet', async () => {
     vi.spyOn(ExcelReader.prototype, 'listSheets').mockResolvedValue(['Coast']);
-    vi.spyOn(ExcelReader.prototype, 'readRaw').mockResolvedValue([
-      ['District', 'Something Else'],
-    ]);
+    vi.spyOn(ExcelReader.prototype, 'readRaw').mockResolvedValue([['District', 'Something Else']]);
     const errors = await validator(mockFile);
     expect(errors.some((e) => e.includes('Mature'))).toBe(true);
   });
@@ -93,26 +89,20 @@ describe('createSpreadsheetValidator', () => {
 
   it('reports error when readRaw fails for the target sheet', async () => {
     vi.spyOn(ExcelReader.prototype, 'listSheets').mockResolvedValue(['Interior']);
-    vi.spyOn(ExcelReader.prototype, 'readRaw').mockRejectedValue(
-      new Error('read failed'),
-    );
+    vi.spyOn(ExcelReader.prototype, 'readRaw').mockRejectedValue(new Error('read failed'));
     const errors = await validator(mockFile);
     expect(errors.some((e) => e.includes('read failed'))).toBe(true);
   });
 
   it('handles non-Error thrown by readRaw', async () => {
     vi.spyOn(ExcelReader.prototype, 'listSheets').mockResolvedValue(['Interior']);
-    vi.spyOn(ExcelReader.prototype, 'readRaw').mockRejectedValue(
-      'string error from readRaw',
-    );
+    vi.spyOn(ExcelReader.prototype, 'readRaw').mockRejectedValue('string error from readRaw');
     const errors = await validator(mockFile);
     expect(errors.some((e) => e.includes('string error from readRaw'))).toBe(true);
   });
 
   it('fails for unreadable file at top level', async () => {
-    vi.spyOn(ExcelReader.prototype, 'listSheets').mockRejectedValue(
-      new Error('Corrupt'),
-    );
+    vi.spyOn(ExcelReader.prototype, 'listSheets').mockRejectedValue(new Error('Corrupt'));
     const errors = await validator(mockFile);
     expect(errors.length).toBeGreaterThan(0);
   });

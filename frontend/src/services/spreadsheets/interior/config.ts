@@ -58,10 +58,11 @@ export const interiorConfig: SpreadsheetConfig = {
       key: 'transitionZoneUnavoidable',
       header: 'Transition - Unavoidable',
     },
-    'Transition Zone m3/ha - Total Avoidable \r\nSawlog, Grade 4 \r\n+ Unavoidable \r\nWaste m3/Ha': {
-      key: 'transitionZoneTotal',
-      header: 'Transition - Total',
-    },
+    'Transition Zone m3/ha - Total Avoidable \r\nSawlog, Grade 4 \r\n+ Unavoidable \r\nWaste m3/Ha':
+      {
+        key: 'transitionZoneTotal',
+        header: 'Transition - Total',
+      },
     'Wet Belt m3/ha - Avoidable Sawlog   Waste m3/Ha': {
       key: 'wetBeltAvoidableSawlog',
       header: 'Wet Belt - Avoidable Sawlog',

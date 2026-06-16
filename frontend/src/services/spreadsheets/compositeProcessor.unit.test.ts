@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { ExcelReader } from '@/services/excelReader/excelReader';
-
-import { interiorProcessor } from './interior/processor';
 import { coastProcessor } from './coast/processor';
 import { CompositeSpreadsheetProcessor } from './compositeProcessor';
+import { interiorProcessor } from './interior/processor';
+
+import { ExcelReader } from '@/services/excelReader/excelReader';
 
 const mockFile = new File(['dummy'], 'test.xlsx', {
   type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
