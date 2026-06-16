@@ -24,13 +24,13 @@ describe('mapCoastSpreadsheet', () => {
   it('happy path — row with Section=Mature and a District lands in Mature section', () => {
     const rows = [
       {
-        Section: 'Mature',
-        District: 'DCC',
+        'Section': 'Mature',
+        'District': 'DCC',
         'Avoidable sawlog': 5.5,
         'Avoidable Hembal Grade U': 1.2,
         'Avoidable Grade Y': 0.8,
-        Unavoidable: 0.5,
-        Total: 8.0,
+        'Unavoidable': 0.5,
+        'Total': 8.0,
       },
     ];
 
@@ -48,13 +48,13 @@ describe('mapCoastSpreadsheet', () => {
   it('row with Section=Immature lands in Immature section', () => {
     const rows = [
       {
-        Section: 'Immature',
-        District: 'DSC',
+        'Section': 'Immature',
+        'District': 'DSC',
         'Avoidable sawlog': 3.0,
         'Avoidable Hembal Grade U': 0.5,
         'Avoidable Grade Y': 0.2,
-        Unavoidable: 0.1,
-        Total: 3.8,
+        'Unavoidable': 0.1,
+        'Total': 3.8,
       },
     ];
 
@@ -102,13 +102,13 @@ describe('mapCoastSpreadsheet', () => {
   it('coerces string numbers to numbers', () => {
     const rows = [
       {
-        Section: 'Mature',
-        District: 'DCC',
+        'Section': 'Mature',
+        'District': 'DCC',
         'Avoidable sawlog': '4.5',
         'Avoidable Hembal Grade U': '1.0',
         'Avoidable Grade Y': '0.5',
-        Unavoidable: '0.2',
-        Total: '6.2',
+        'Unavoidable': '0.2',
+        'Total': '6.2',
       },
     ];
 
@@ -121,10 +121,10 @@ describe('mapCoastSpreadsheet', () => {
 
   it('mixed valid and invalid rows — only valid rows land in sections', () => {
     const rows = [
-      { Section: 'Mature', District: 'DCC', Total: 5 },     // valid
-      { Section: 'Unknown', District: 'DXX', Total: 5 },    // bad section
-      { Section: 'Immature', District: '', Total: 3 },      // empty district
-      { Section: 'Immature', District: 'DSC', Total: 2 },   // valid
+      { Section: 'Mature', District: 'DCC', Total: 5 }, // valid
+      { Section: 'Unknown', District: 'DXX', Total: 5 }, // bad section
+      { Section: 'Immature', District: '', Total: 3 }, // empty district
+      { Section: 'Immature', District: 'DSC', Total: 2 }, // valid
     ];
 
     const result = mapCoastSpreadsheet(rows);

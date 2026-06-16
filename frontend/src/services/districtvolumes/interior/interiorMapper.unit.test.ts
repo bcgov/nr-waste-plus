@@ -26,11 +26,11 @@ describe('mapInteriorSpreadsheet', () => {
     const rows = [
       {
         'Benchmark zone': 'Dry belt',
-        District: 'DPG',
+        'District': 'DPG',
         'Avoidable sawlog': 10.5,
         'Avoidable Grade 4 sawing': 2.0,
         'Unavoidable Grade 4 sawing': 1.0,
-        Total: 13.5,
+        'Total': 13.5,
       },
     ];
 
@@ -48,11 +48,11 @@ describe('mapInteriorSpreadsheet', () => {
     const rows = [
       {
         'Benchmark zone': 'Transition zone',
-        District: 'DNI',
+        'District': 'DNI',
         'Avoidable sawlog': 5,
         'Avoidable Grade 4 sawing': 1,
         'Unavoidable Grade 4 sawing': 0.5,
-        Total: 6.5,
+        'Total': 6.5,
       },
     ];
 
@@ -63,7 +63,7 @@ describe('mapInteriorSpreadsheet', () => {
   });
 
   it('row with Wet belt lands in Wet belt bucket', () => {
-    const rows = [{ 'Benchmark zone': 'Wet belt', District: 'DKA', Total: 3 }];
+    const rows = [{ 'Benchmark zone': 'Wet belt', 'District': 'DKA', 'Total': 3 }];
 
     const result = mapInteriorSpreadsheet(rows);
     const wetBelt = result.zones.find((z) => z.name === 'Wet belt')!;
@@ -73,8 +73,8 @@ describe('mapInteriorSpreadsheet', () => {
 
   it('skips rows with unrecognised zone names', () => {
     const rows = [
-      { 'Benchmark zone': 'Unknown zone', District: 'DPG', Total: 5 },
-      { 'Benchmark zone': 'INVALID', District: 'DKA', Total: 3 },
+      { 'Benchmark zone': 'Unknown zone', 'District': 'DPG', 'Total': 5 },
+      { 'Benchmark zone': 'INVALID', 'District': 'DKA', 'Total': 3 },
     ];
 
     const result = mapInteriorSpreadsheet(rows);
@@ -84,8 +84,8 @@ describe('mapInteriorSpreadsheet', () => {
 
   it('skips rows with empty district code', () => {
     const rows = [
-      { 'Benchmark zone': 'Dry belt', District: '', Total: 5 },
-      { 'Benchmark zone': 'Dry belt', District: '   ', Total: 3 },
+      { 'Benchmark zone': 'Dry belt', 'District': '', 'Total': 5 },
+      { 'Benchmark zone': 'Dry belt', 'District': '   ', 'Total': 3 },
     ];
 
     const result = mapInteriorSpreadsheet(rows);
@@ -95,7 +95,7 @@ describe('mapInteriorSpreadsheet', () => {
   });
 
   it('missing numeric columns default to 0', () => {
-    const rows = [{ 'Benchmark zone': 'Dry belt', District: 'DPG' }];
+    const rows = [{ 'Benchmark zone': 'Dry belt', 'District': 'DPG' }];
 
     const result = mapInteriorSpreadsheet(rows);
     const district = result.zones.find((z) => z.name === 'Dry belt')!.districts[0];
@@ -109,11 +109,11 @@ describe('mapInteriorSpreadsheet', () => {
     const rows = [
       {
         'Benchmark zone': 'Dry belt',
-        District: 'DPG',
+        'District': 'DPG',
         'Avoidable sawlog': '7.5',
         'Avoidable Grade 4 sawing': '1.2',
         'Unavoidable Grade 4 sawing': '0.3',
-        Total: '9.0',
+        'Total': '9.0',
       },
     ];
 
@@ -126,10 +126,10 @@ describe('mapInteriorSpreadsheet', () => {
 
   it('mixed valid and invalid rows — only valid rows land in zones', () => {
     const rows = [
-      { 'Benchmark zone': 'Dry belt', District: 'DPG', Total: 5 },     // valid
-      { 'Benchmark zone': 'Unknown', District: 'DXX', Total: 5 },      // bad zone
-      { 'Benchmark zone': 'Transition zone', District: '', Total: 3 }, // empty district
-      { 'Benchmark zone': 'Wet belt', District: 'DKA', Total: 2 },     // valid
+      { 'Benchmark zone': 'Dry belt', 'District': 'DPG', 'Total': 5 }, // valid
+      { 'Benchmark zone': 'Unknown', 'District': 'DXX', 'Total': 5 }, // bad zone
+      { 'Benchmark zone': 'Transition zone', 'District': '', 'Total': 3 }, // empty district
+      { 'Benchmark zone': 'Wet belt', 'District': 'DKA', 'Total': 2 }, // valid
     ];
 
     const result = mapInteriorSpreadsheet(rows);
@@ -138,7 +138,7 @@ describe('mapInteriorSpreadsheet', () => {
   });
 
   it('other zones remain empty when only one zone has rows', () => {
-    const rows = [{ 'Benchmark zone': 'Dry belt', District: 'DPG', Total: 1 }];
+    const rows = [{ 'Benchmark zone': 'Dry belt', 'District': 'DPG', 'Total': 1 }];
 
     const result = mapInteriorSpreadsheet(rows);
     const transition = result.zones.find((z) => z.name === 'Transition zone')!;
