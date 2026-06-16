@@ -48,7 +48,7 @@ export function createSpreadsheetValidator(): (file: File) => Promise<string[]> 
         );
         if (!found) {
           errors.push(
-            `Expected column "${expectedHeader}" not found in sheet "${sheetName}".`,
+            `Expected column "${expectedHeader}" not found in sheet "${sheetName}". Found: ${firstRow.join(', ')}`,
           );
         }
       }
