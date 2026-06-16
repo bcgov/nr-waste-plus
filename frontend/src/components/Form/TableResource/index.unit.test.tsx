@@ -194,7 +194,7 @@ describe('TableResource', () => {
       onPageChange,
       displayToolbar: true,
     });
-    screen.getByTitle('Edit columns');
+    screen.getByTestId('table-toolbar');
   });
 
   it('renders custom toolbar entries when provided', async () => {
