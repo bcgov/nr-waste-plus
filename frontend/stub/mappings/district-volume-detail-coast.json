@@ -1,0 +1,11 @@
+{
+  "name": "Get Coast district volume table",
+  "request": {
+    "urlPattern": "/api/configuration/district-average-volumes/4",
+    "method": "GET"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName": "district-volume-tables/coast-detail.json"
+  }
+}
