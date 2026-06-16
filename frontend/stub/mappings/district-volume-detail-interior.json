@@ -1,11 +1,15 @@
 {
-  "name": "Get Interior district volume detail",
-  "request": {
-    "urlPattern": "/api/configuration/district-average-volumes/1",
-    "method": "GET"
-  },
-  "response": {
-    "status": 200,
-    "bodyFileName": "district-average-volumes/interior-detail.json"
-  }
+  "mappings": [
+    {
+      "name": "Get Interior district volume detail",
+      "request": {
+        "urlPattern": "/api/configuration/district-average-volumes/1",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "district-average-volumes/interior-detail.json"
+      }
+    }
+  ]
 }
