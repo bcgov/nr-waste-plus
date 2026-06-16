@@ -190,6 +190,28 @@ export class ExcelReader {
   }
 
   /**
+   * Returns the names of all worksheets in the workbook.
+   *
+   * Useful for callers that need to inspect workbook structure (e.g. which sheets
+   * exist) before deciding how to process the file.
+   *
+   * @param file - The browser File object representing the uploaded spreadsheet.
+   * @returns A Promise resolving to an array of worksheet name strings.
+   * @throws {ExcelReadError} If the file is malformed or inaccessible.
+   */
+  async listSheets(file: File): Promise<string[]> {
+    try {
+      const arrayBuffer = await this.fileToArrayBuffer(file);
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      return workbook.SheetNames;
+    } catch (error) {
+      if (error instanceof ExcelReadError) throw error;
+      const message = error instanceof Error ? error.message : String(error);
+      throw new ExcelReadError(`Failed to read file "${file.name}": ${message}`);
+    }
+  }
+
+  /**
    * Loads a file, resolves the target worksheet, and applies a SheetJS conversion
    * to it — sharing the file-reading and error-handling logic between {@link read}
    * and {@link readRaw}.

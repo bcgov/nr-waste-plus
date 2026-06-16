@@ -581,3 +581,93 @@ describe('ExcelReader.readRawWithMerges()', () => {
     expect(result.rows[1][1]).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// ExcelReader — listSheets()
+// ---------------------------------------------------------------------------
+
+describe('ExcelReader.listSheets()', () => {
+  const reader = new ExcelReader();
+
+  it('returns all sheet names for a valid workbook', async () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['A']]), 'Alpha');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['B']]), 'Beta');
+    const file = createTestFile(wb);
+
+    const names = await reader.listSheets(file);
+
+    expect(names).toEqual(['Alpha', 'Beta']);
+  });
+
+  it('returns a single-element array for a one-sheet workbook', async () => {
+    const file = createTestFile(workbookWithSheet([['X']], 'Only'));
+
+    const names = await reader.listSheets(file);
+
+    expect(names).toEqual(['Only']);
+  });
+
+  it('throws ExcelReadError when arrayBuffer() rejects with an Error', async () => {
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const file = new File([blob], 'bad.xlsx');
+    vi.spyOn(file, 'arrayBuffer').mockRejectedValue(new Error('io error'));
+
+    await expect(reader.listSheets(file)).rejects.toThrow(ExcelReadError);
+  });
+
+  it('wraps a non-Error from arrayBuffer() as ExcelReadError', async () => {
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const file = new File([blob], 'bad.xlsx');
+    vi.spyOn(file, 'arrayBuffer').mockRejectedValue('string error');
+
+    await expect(reader.listSheets(file)).rejects.toThrow(ExcelReadError);
+  });
+
+  it('re-throws an ExcelReadError from fileToArrayBuffer without double-wrapping', async () => {
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const file = new File([blob], 'bad.xlsx');
+    vi.spyOn(file, 'arrayBuffer').mockRejectedValue(new ExcelReadError('inner list'));
+
+    const caught = await reader.listSheets(file).catch((e: unknown) => e);
+    expect(caught).toBeInstanceOf(ExcelReadError);
+    expect((caught as ExcelReadError).message).toBe('Failed to read file: inner list');
+  });
+
+  it('throws ExcelReadError when XLSX.read throws an Error', async () => {
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const file = new File([blob], 'bad.xlsx');
+    vi.spyOn(file, 'arrayBuffer').mockResolvedValue(new ArrayBuffer(8));
+    vi.mocked(XLSX.read).mockImplementationOnce(() => {
+      throw new Error('corrupt file');
+    });
+
+    await expect(reader.listSheets(file)).rejects.toThrow(ExcelReadError);
+  });
+
+  it('wraps a non-Error thrown by XLSX.read as ExcelReadError', async () => {
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const file = new File([blob], 'bad.xlsx');
+    vi.spyOn(file, 'arrayBuffer').mockResolvedValue(new ArrayBuffer(8));
+    vi.mocked(XLSX.read).mockImplementationOnce(() => {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
+      throw 'parse error string';
+    });
+
+    await expect(reader.listSheets(file)).rejects.toThrow(ExcelReadError);
+  });
+
+  it('wraps a number thrown by XLSX.read with String() conversion', async () => {
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const file = new File([blob], 'bad.xlsx');
+    vi.spyOn(file, 'arrayBuffer').mockResolvedValue(new ArrayBuffer(8));
+    vi.mocked(XLSX.read).mockImplementationOnce(() => {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
+      throw 42;
+    });
+
+    const caught = await reader.listSheets(file).catch((e: unknown) => e);
+    expect(caught).toBeInstanceOf(ExcelReadError);
+    expect((caught as ExcelReadError).message).toContain('42');
+  });
+});

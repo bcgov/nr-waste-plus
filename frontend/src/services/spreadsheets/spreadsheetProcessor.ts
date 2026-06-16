@@ -77,7 +77,7 @@ export interface SpreadsheetConfig {
  * @example
  * ```ts
  * import { z } from 'zod';
- * import { SpreadsheetProcessor } from '@/services/spreadsheetProcessor';
+ * import { SpreadsheetProcessor } from '@/services/spreadsheets';
  *
  * const districtSchema = z.object({
  *   district: z.string().min(1),
