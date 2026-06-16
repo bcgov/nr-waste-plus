@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
-import FormData from 'form-data';
 import { describe, it, expect, vi } from 'vitest';
 
 import * as requestModule from './request';
