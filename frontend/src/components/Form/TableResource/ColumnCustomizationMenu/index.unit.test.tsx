@@ -35,8 +35,8 @@ describe('ColumnCustomizationMenu', () => {
     const onToggleHeader = vi.fn();
     render(<ColumnCustomizationMenu headers={headers} onToggleHeader={onToggleHeader} />);
 
-    // Verify button with Edit columns title exists
-    const button = screen.getByTitle('Edit columns');
+    // Verify button with Edit columns label exists
+    const button = screen.getByRole('button', { name: /edit columns/i });
     expect(button).toBeDefined();
     expect(button.className).toContain('column-menu-button');
   });
@@ -58,7 +58,7 @@ describe('ColumnCustomizationMenu', () => {
     }).not.toThrow();
 
     // Button should exist showing the component rendered successfully
-    screen.getByTitle('Edit columns');
+    screen.getByRole('button', { name: /edit columns/i });
   });
 
   it('works with empty headers array', () => {
@@ -69,7 +69,7 @@ describe('ColumnCustomizationMenu', () => {
       render(<ColumnCustomizationMenu headers={emptyHeaders} onToggleHeader={onToggleHeader} />);
     }).not.toThrow();
 
-    screen.getByTitle('Edit columns');
+    screen.getByRole('button', { name: /edit columns/i });
   });
 
   it('renders with various header configurations', () => {
@@ -85,7 +85,7 @@ describe('ColumnCustomizationMenu', () => {
     }).not.toThrow();
 
     // Button should render successfully with mixed header types
-    screen.getByTitle('Edit columns');
+    screen.getByRole('button', { name: /edit columns/i });
   });
 
   /**
