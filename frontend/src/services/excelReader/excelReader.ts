@@ -235,9 +235,16 @@ export class ExcelReader {
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
 
       // Determine which sheet to read: explicit name or first sheet.
-      const sheet = sheetName
+      let sheet = sheetName
         ? workbook.Sheets[sheetName]
         : workbook.Sheets[workbook.SheetNames[0]];
+
+      // Fallback: try trimmed name match (aligns with identifySpreadsheet).
+      if (!sheet && sheetName) {
+        const trimmed = sheetName.trim();
+        const match = workbook.SheetNames.find((n) => n.trim() === trimmed);
+        if (match) sheet = workbook.Sheets[match];
+      }
 
       if (!sheet) {
         const availableSheets = workbook.SheetNames.join(', ') || 'none';
