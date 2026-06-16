@@ -121,9 +121,6 @@ export default defineConfig(({ mode }) => {
             if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
               return 'react-vendor';
             }
-            if (id.includes('node_modules/@carbon/charts')) {
-              return 'carbon-charts';
-            }
             if (id.includes('node_modules/@carbon/')) {
               return 'carbon';
             }
