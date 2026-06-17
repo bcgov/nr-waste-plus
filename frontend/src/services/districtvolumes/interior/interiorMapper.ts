@@ -3,25 +3,22 @@ import type { InteriorDistrictRow, InteriorZone, InteriorData } from '@/services
 export function mapInteriorSpreadsheet(rows: Record<string, unknown>[]): InteriorData {
   const zoneMap = new Map<string, InteriorDistrictRow[]>();
 
-  // Initialize the mandatory zones
   zoneMap.set('Dry belt', []);
   zoneMap.set('Transition zone', []);
   zoneMap.set('Wet belt', []);
 
   for (const row of rows) {
-    const zoneName = String(row['Benchmark zone'] || '').trim();
-    const districtCode = String(row['District'] || '').trim();
+    const zoneName = String(row['zone'] ?? '').trim();
+    const districtCode = String(row['district'] ?? '').trim();
 
-    if (!zoneMap.has(zoneName) || !districtCode) {
-      continue; // Skip invalid zones or empty rows
-    }
+    if (!zoneMap.has(zoneName) || !districtCode) continue;
 
     const districtRow: InteriorDistrictRow = {
       code: districtCode,
-      avoidableSawlog: Number(row['Avoidable sawlog'] || 0),
-      avoidableGrade4: Number(row['Avoidable Grade 4 sawing'] || 0),
-      unavoidableGrade4: Number(row['Unavoidable Grade 4 sawing'] || 0),
-      total: Number(row['Total'] || 0),
+      avoidableSawlog: Number(row['avoidableSawlog'] ?? 0),
+      avoidableGrade4: Number(row['avoidableGradeY4'] ?? 0),
+      unavoidableGrade4: Number(row['unavoidable'] ?? 0),
+      total: Number(row['total'] ?? 0),
     };
 
     zoneMap.get(zoneName)?.push(districtRow);
@@ -32,9 +29,5 @@ export function mapInteriorSpreadsheet(rows: Record<string, unknown>[]): Interio
     districts,
   }));
 
-  return {
-    type: 'INTERIOR',
-    zones,
-    formulas: {}, // Reserved as per spec
-  };
+  return { type: 'INTERIOR', zones, formulas: {} };
 }

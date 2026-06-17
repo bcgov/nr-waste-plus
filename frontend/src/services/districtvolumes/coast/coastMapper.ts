@@ -1,27 +1,30 @@
 import type { CoastDistrictRow, CoastSection, CoastData } from '@/services/districtvolumes.types';
 
+function extractDistrictCode(raw: string): string {
+  const trimmed = raw.trim();
+  const dashIdx = trimmed.indexOf(' - ');
+  return dashIdx > 0 ? trimmed.slice(0, dashIdx) : trimmed;
+}
+
 export function mapCoastSpreadsheet(rows: Record<string, unknown>[]): CoastData {
   const sectionMap = new Map<string, CoastDistrictRow[]>();
 
-  // Initialize mandatory sections
   sectionMap.set('Mature', []);
   sectionMap.set('Immature', []);
 
   for (const row of rows) {
-    const sectionName = String(row['Section'] || '').trim();
-    const districtCode = String(row['District'] || '').trim();
+    const sectionName = String(row['section'] ?? '').trim();
+    const districtCode = extractDistrictCode(String(row['district'] ?? ''));
 
-    if (!sectionMap.has(sectionName) || !districtCode) {
-      continue;
-    }
+    if (!sectionMap.has(sectionName) || !districtCode) continue;
 
     const districtRow: CoastDistrictRow = {
       code: districtCode,
-      avoidableSawlog: Number(row['Avoidable sawlog'] || 0),
-      avoidableHembalGradeU: Number(row['Avoidable Hembal Grade U'] || 0),
-      avoidableGradeY: Number(row['Avoidable Grade Y'] || 0),
-      unavoidable: Number(row['Unavoidable'] || 0),
-      total: Number(row['Total'] || 0),
+      avoidableSawlog: Number(row['avoidableSawlog'] ?? 0),
+      avoidableHembalGradeU: Number(row['avoidable25'] ?? 0),
+      avoidableGradeY: Number(row['avoidableGradeY'] ?? 0),
+      unavoidable: Number(row['unavoidable'] ?? 0),
+      total: Number(row['total'] ?? 0),
     };
 
     sectionMap.get(sectionName)?.push(districtRow);
@@ -32,9 +35,5 @@ export function mapCoastSpreadsheet(rows: Record<string, unknown>[]): CoastData 
     districts,
   }));
 
-  return {
-    type: 'COASTAL',
-    sections,
-    formulas: {},
-  };
+  return { type: 'COASTAL', sections, formulas: {} };
 }
