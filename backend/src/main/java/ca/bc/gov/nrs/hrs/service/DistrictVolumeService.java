@@ -83,6 +83,12 @@ public class DistrictVolumeService {
 
     validateAreaPayloadConsistency(areaEnum, createDto);
 
+    if (areaEnum == Area.COASTAL && createDto.heliMultiplier() == null) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "heliMultiplier is required when area is COASTAL.");
+    }
+
     if (!createDto.startDate().isAfter(LocalDate.now())) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
@@ -127,12 +133,6 @@ public class DistrictVolumeService {
           throw new ResponseStatusException(
               HttpStatus.BAD_REQUEST,
               "Area mismatch: Expected COASTAL data layout.");
-        }
-        
-        if (createDto.heliMultiplier() == null) {
-          throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST,
-              "heliMultiplier is required when area is COASTAL.");
         }
       }
 
