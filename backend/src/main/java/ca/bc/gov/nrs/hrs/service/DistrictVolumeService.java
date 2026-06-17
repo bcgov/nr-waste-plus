@@ -12,6 +12,7 @@ import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import java.time.LocalDate;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.EnumUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -69,33 +70,43 @@ public class DistrictVolumeService {
   public DistrictVolumeDetailDto createDistrictVolume(
       DistrictVolumeCreateDto createDto) {
 
-    // 1. Cross-validate Area matching with the polymorphic payload structure
     validateAreaPayloadConsistency(createDto);
 
-    // 2. Business Rule: Effective Date must be strictly in the future
+    Area areaEnum = EnumUtils.getEnumIgnoreCase(
+        Area.class,
+        createDto.area());
+
+    if (areaEnum == null) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Invalid area: " + createDto.area()
+              + ". Must be INTERIOR or COASTAL.");
+    }
+
+    if (areaEnum == Area.COASTAL
+        && createDto.heliMultiplier() == null) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "heliMultiplier is required when area is COASTAL.");
+    }
+
     if (!createDto.startDate().isAfter(LocalDate.now())) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Start date must be strictly after today.");
     }
 
-    // 3. Map DTO onto the Entity
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
 
-    entity.setArea(Area.valueOf(createDto.area().toUpperCase()));
+    entity.setArea(areaEnum);
     entity.setStartDate(createDto.startDate());
     entity.setTableLevelFactor(createDto.tableLevelFactor());
     entity.setHeliMultiplier(createDto.heliMultiplier());
+
     entity.setTableData(
         DistrictVolumeMapper.toEntityTableData(
             createDto.tableData()));
 
-    // NOTE:
-    // dateOfUpload, createdAt, createdBy, updatedAt, and updatedBy
-    // are intentionally left out here.
-    // The @AuditingEntityListener handles them automatically.
-
-    // 4. Persist and return structural DTO
     DistrictVolumeEntity savedEntity =
         districtVolumeRepository.save(entity);
 
@@ -138,4 +149,5 @@ public class DistrictVolumeService {
       }
     }
   }
+
 }
