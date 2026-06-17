@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.14</version>
+        <version>4.0.6</version>
         <relativePath/> </parent>
     <groupId>ca.bc.gov.nrs</groupId>
     <artifactId>nr-waste-plus-legacy</artifactId>
@@ -272,7 +272,7 @@
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-webmvc</artifactId>
-                <version>6.2.18</version>
+                <version>7.0.8</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
