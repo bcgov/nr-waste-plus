@@ -28,8 +28,8 @@ describe('mapInteriorSpreadsheet', () => {
         zone: 'Dry belt',
         district: 'DPG',
         avoidableSawlog: 10.5,
-        avoidableGradeY4: 2.0,
-        unavoidable: 1.0,
+        avoidableGrade4: 2.0,
+        unavoidableGrade4: 1.0,
         total: 13.5,
       },
     ];
@@ -50,8 +50,8 @@ describe('mapInteriorSpreadsheet', () => {
         zone: 'Transition zone',
         district: 'DNI',
         avoidableSawlog: 5,
-        avoidableGradeY4: 1,
-        unavoidable: 0.5,
+        avoidableGrade4: 1,
+        unavoidableGrade4: 0.5,
         total: 6.5,
       },
     ];
@@ -110,8 +110,8 @@ describe('mapInteriorSpreadsheet', () => {
         zone: 'Dry belt',
         district: 'DPG',
         avoidableSawlog: '7.5',
-        avoidableGradeY4: '1.2',
-        unavoidable: '0.3',
+        avoidableGrade4: '1.2',
+        unavoidableGrade4: '0.3',
         total: '9.0',
       },
     ];

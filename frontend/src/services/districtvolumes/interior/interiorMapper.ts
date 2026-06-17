@@ -20,8 +20,8 @@ export function mapInteriorSpreadsheet(rows: Record<string, unknown>[]): Interio
     const districtRow: InteriorDistrictRow = {
       code: districtCode,
       avoidableSawlog: Number(row['avoidableSawlog'] ?? 0),
-      avoidableGrade4: Number(row['avoidableGradeY4'] ?? 0),
-      unavoidableGrade4: Number(row['unavoidable'] ?? 0),
+      avoidableGrade4: Number(row['avoidableGrade4'] ?? 0),
+      unavoidableGrade4: Number(row['unavoidableGrade4'] ?? 0),
       total: Number(row['total'] ?? 0),
     };
 

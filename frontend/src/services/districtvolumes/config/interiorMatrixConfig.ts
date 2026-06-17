@@ -16,8 +16,8 @@ export const interiorMatrixConfig: MatrixConfig = {
       colEnd: 5,
       subColumns: [
         { header: 'Avoidable Sawlog Waste m3/Ha', key: 'avoidableSawlog' },
-        { header: 'Avoidable Grade Y/4 Waste m3/Ha', key: 'avoidableGradeY4' },
-        { header: 'Unavoidable m3/ha', key: 'unavoidable' },
+        { header: 'Avoidable Grade Y/4 Waste m3/Ha', key: 'avoidableGrade4' },
+        { header: 'Unavoidable m3/ha', key: 'unavoidableGrade4' },
         { header: 'Total Avoidable Sawlog, Grade 4 + Unavoidable Waste m3/Ha', key: 'total' },
       ],
     },
@@ -27,8 +27,8 @@ export const interiorMatrixConfig: MatrixConfig = {
       colEnd: 9,
       subColumns: [
         { header: 'Avoidable Sawlog Waste m3/Ha', key: 'avoidableSawlog' },
-        { header: 'Avoidable Grade Y/4 Waste m3/Ha', key: 'avoidableGradeY4' },
-        { header: 'Unavoidable m3/ha', key: 'unavoidable' },
+        { header: 'Avoidable Grade Y/4 Waste m3/Ha', key: 'avoidableGrade4' },
+        { header: 'Unavoidable m3/ha', key: 'unavoidableGrade4' },
         { header: 'Total Avoidable Sawlog, Grade 4 + Unavoidable Waste m3/Ha', key: 'total' },
       ],
     },
@@ -38,8 +38,8 @@ export const interiorMatrixConfig: MatrixConfig = {
       colEnd: 13,
       subColumns: [
         { header: 'Avoidable Sawlog Waste m3/Ha', key: 'avoidableSawlog' },
-        { header: 'Avoidable Grade Y/4 Waste m3/Ha', key: 'avoidableGradeY4' },
-        { header: 'Unavoidable m3/ha', key: 'unavoidable' },
+        { header: 'Avoidable Grade Y/4 Waste m3/Ha', key: 'avoidableGrade4' },
+        { header: 'Unavoidable m3/ha', key: 'unavoidableGrade4' },
         { header: 'Total Avoidable Sawlog, Grade 4 + Unavoidable Waste m3/Ha', key: 'total' },
       ],
     },

@@ -16,7 +16,7 @@ export const coastMatrixConfig: MatrixConfig = {
       colEnd: 6,
       subColumns: [
         { header: 'Avoidable Sawlog Full Rate (m3/ha)', key: 'avoidableSawlog' },
-        { header: 'Avoidable 0.25 (m3/ha)', key: 'avoidable25' },
+        { header: 'Avoidable 0.25 (m3/ha)', key: 'avoidableHembalGradeU' },
         { header: 'Avoidable Grade Y (m3/ha)', key: 'avoidableGradeY' },
         { header: 'Unavoidable Grade Y (m3/ha)', key: 'unavoidable' },
         { header: 'Total All Grades All Class (m3/ha)', key: 'total' },
@@ -28,7 +28,7 @@ export const coastMatrixConfig: MatrixConfig = {
       colEnd: 11,
       subColumns: [
         { header: 'Avoidable Sawlog Full Rate (m3/ha)', key: 'avoidableSawlog' },
-        { header: 'Avoidable 0.25 (m3/ha)', key: 'avoidable25' },
+        { header: 'Avoidable 0.25 (m3/ha)', key: 'avoidableHembalGradeU' },
         { header: 'Avoidable Grade Y (m3/ha)', key: 'avoidableGradeY' },
         { header: 'Unavoidable Grade Y (m3/ha)', key: 'unavoidable' },
         { header: 'Total All Grades All Class (m3/ha)', key: 'total' },

@@ -21,7 +21,7 @@ export function mapCoastSpreadsheet(rows: Record<string, unknown>[]): CoastData 
     const districtRow: CoastDistrictRow = {
       code: districtCode,
       avoidableSawlog: Number(row['avoidableSawlog'] ?? 0),
-      avoidableHembalGradeU: Number(row['avoidable25'] ?? 0),
+      avoidableHembalGradeU: Number(row['avoidableHembalGradeU'] ?? 0),
       avoidableGradeY: Number(row['avoidableGradeY'] ?? 0),
       unavoidable: Number(row['unavoidable'] ?? 0),
       total: Number(row['total'] ?? 0),
