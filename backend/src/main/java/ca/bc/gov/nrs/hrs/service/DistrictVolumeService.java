@@ -70,8 +70,6 @@ public class DistrictVolumeService {
   public DistrictVolumeDetailDto createDistrictVolume(
       DistrictVolumeCreateDto createDto) {
 
-    validateAreaPayloadConsistency(createDto);
-
     Area areaEnum = EnumUtils.getEnumIgnoreCase(
         Area.class,
         createDto.area());
@@ -83,12 +81,7 @@ public class DistrictVolumeService {
               + ". Must be INTERIOR or COASTAL.");
     }
 
-    if (areaEnum == Area.COASTAL
-        && createDto.heliMultiplier() == null) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "heliMultiplier is required when area is COASTAL.");
-    }
+    validateAreaPayloadConsistency(areaEnum, createDto);
 
     if (!createDto.startDate().isAfter(LocalDate.now())) {
       throw new ResponseStatusException(
@@ -112,19 +105,17 @@ public class DistrictVolumeService {
 
     return DistrictVolumeMapper.toDetailDto(savedEntity);
   }
-
+  
   /**
-   * Structural cross-check validation using updated, streamlined DTO names.
+   * Structural cross-check validation.
    */
   private void validateAreaPayloadConsistency(
-      DistrictVolumeCreateDto createDto) {
-
-    String areaStr = createDto.area().toUpperCase();
+      Area areaEnum, DistrictVolumeCreateDto createDto) {
 
     switch (createDto.tableData()) {
 
       case InteriorDataDto i -> {
-        if (!"INTERIOR".equals(areaStr)) {
+        if (areaEnum != Area.INTERIOR) {
           throw new ResponseStatusException(
               HttpStatus.BAD_REQUEST,
               "Area mismatch: Expected INTERIOR data layout.");
@@ -132,16 +123,16 @@ public class DistrictVolumeService {
       }
 
       case CoastDataDto c -> {
-        if (!"COASTAL".equals(areaStr)) {
+        if (areaEnum != Area.COASTAL) {
           throw new ResponseStatusException(
               HttpStatus.BAD_REQUEST,
               "Area mismatch: Expected COASTAL data layout.");
         }
+        
         if (createDto.heliMultiplier() == null) {
           throw new ResponseStatusException(
               HttpStatus.BAD_REQUEST,
-              "Missing helicopter multiplier configuration required "
-                  + "for Coastal tables.");
+              "heliMultiplier is required when area is COASTAL.");
         }
       }
 
