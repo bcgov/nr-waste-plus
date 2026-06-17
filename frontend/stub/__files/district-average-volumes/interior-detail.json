@@ -1,0 +1,58 @@
+{
+  "id": 1,
+  "area": "INTERIOR",
+  "startDate": "2026-06-01",
+  "endDate": null,
+  "uploadedBy": "jsmith@gov.bc.ca",
+  "dateOfUpload": "2026-05-15T14:23:00Z",
+  "tableLevelFactor": 0.4,
+  "tableData": {
+    "type": "INTERIOR",
+    "zones": [
+      {
+        "name": "Dry belt",
+        "districts": [
+          {
+            "code": "DCC",
+            "avoidableSawlog": 1.234,
+            "avoidableGrade4": 0.567,
+            "unavoidableGrade4": 0.123,
+            "total": 1.924
+          },
+          {
+            "code": "DCS",
+            "avoidableSawlog": 1.345,
+            "avoidableGrade4": 0.678,
+            "unavoidableGrade4": 0.234,
+            "total": 2.257
+          }
+        ]
+      },
+      {
+        "name": "Transition zone",
+        "districts": [
+          {
+            "code": "DFN",
+            "avoidableSawlog": 1.456,
+            "avoidableGrade4": 0.789,
+            "unavoidableGrade4": 0.345,
+            "total": 2.59
+          }
+        ]
+      },
+      {
+        "name": "Wet belt",
+        "districts": [
+          {
+            "code": "DKA",
+            "avoidableSawlog": 1.567,
+            "avoidableGrade4": 0.89,
+            "unavoidableGrade4": 0.456,
+            "total": 2.913
+          }
+        ]
+      }
+    ],
+    "formulas": {}
+  }
+}
