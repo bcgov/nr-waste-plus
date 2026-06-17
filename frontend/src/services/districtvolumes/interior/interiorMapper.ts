@@ -4,6 +4,12 @@ import type {
   InteriorData,
 } from '@/services/districtvolumes.types';
 
+function extractDistrictCode(raw: string): string {
+  const trimmed = raw.trim();
+  const dashIdx = trimmed.indexOf(' - ');
+  return dashIdx > 0 ? trimmed.slice(0, dashIdx) : trimmed;
+}
+
 export function mapInteriorSpreadsheet(rows: Record<string, unknown>[]): InteriorData {
   const zoneMap = new Map<string, InteriorDistrictRow[]>();
 
@@ -13,7 +19,7 @@ export function mapInteriorSpreadsheet(rows: Record<string, unknown>[]): Interio
 
   for (const row of rows) {
     const zoneName = String(row['zone'] ?? '').trim();
-    const districtCode = String(row['district'] ?? '').trim();
+    const districtCode = extractDistrictCode(String(row['district'] ?? ''));
 
     if (!zoneMap.has(zoneName) || !districtCode) continue;
 

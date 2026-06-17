@@ -120,4 +120,81 @@ describe('SpreadsheetValidator', () => {
     expect(result.valid).toBe(false);
     expect(result.errors.length).toBeGreaterThanOrEqual(2);
   });
+
+  describe('validateStructure', () => {
+    it('passes for a valid interior worksheet', () => {
+      const ws = buildWorksheet(
+        [
+          ['District', 'Dry Belt', null, null, null],
+          [null, 'Avoidable Sawlog', 'Avoidable Grade Y/4', 'Unavoidable', 'Total'],
+          ['DCC', 2.04, 7.05, 0.08, 9.17],
+        ],
+        ['B1:E1'],
+      );
+
+      const result = validator.validateStructure(ws, interiorConfig);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it('reports missing numeric values', () => {
+      const ws = buildWorksheet(
+        [
+          ['District', 'Dry Belt', null, null, null],
+          [null, 'Avoidable Sawlog', 'Avoidable Grade Y/4', 'Unavoidable', 'Total'],
+          ['DCC', 2.04, null, 0.08, 9.17],
+        ],
+        ['B1:E1'],
+      );
+
+      const result = validator.validateStructure(ws, interiorConfig);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.includes('Missing value'))).toBe(true);
+    });
+
+    it('reports non-numeric values', () => {
+      const ws = buildWorksheet(
+        [
+          ['District', 'Dry Belt', null, null, null],
+          [null, 'Avoidable Sawlog', 'Avoidable Grade Y/4', 'Unavoidable', 'Total'],
+          ['DCC', 'abc', 7.05, 0.08, 9.17],
+        ],
+        ['B1:E1'],
+      );
+
+      const result = validator.validateStructure(ws, interiorConfig);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.includes('Non-numeric'))).toBe(true);
+    });
+
+    it('fails when worksheet has no data rows', () => {
+      const ws = buildWorksheet(
+        [
+          ['District', 'Dry Belt', null, null, null],
+          [null, 'Avoidable Sawlog', 'Avoidable Grade Y/4', 'Unavoidable', 'Total'],
+        ],
+        ['B1:E1'],
+      );
+
+      const result = validator.validateStructure(ws, interiorConfig);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.includes('no data rows'))).toBe(true);
+    });
+
+    it('skips rows with empty district code', () => {
+      const ws = buildWorksheet(
+        [
+          ['District', 'Dry Belt', null, null, null],
+          [null, 'Avoidable Sawlog', 'Avoidable Grade Y/4', 'Unavoidable', 'Total'],
+          ['', 1.0, 2.0, 3.0, 6.0],
+          ['DCC', 2.04, 7.05, 0.08, 9.17],
+        ],
+        ['B1:E1'],
+      );
+
+      const result = validator.validateStructure(ws, interiorConfig);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+  });
 });

@@ -183,7 +183,7 @@ describe('MatrixParser', () => {
     it('skips rows with empty district code', () => {
       const ws = buildWorksheet(
         [
-          ['District', 'Dry Belt', null, null, null],
+          ['District', 'Dry belt', null, null, null],
           [null, 'Avoidable Sawlog', 'Avoidable Grade Y/4', 'Unavoidable', 'Total'],
           ['', 1.0, 2.0, 3.0, 6.0],
           ['DCC', 4.0, 5.0, 6.0, 15.0],
@@ -205,7 +205,7 @@ describe('MatrixParser', () => {
     it('handles null cell values gracefully', () => {
       const ws = buildWorksheet(
         [
-          ['District', 'Dry Belt', null, null, null],
+          ['District', 'Dry belt', null, null, null],
           [null, 'Avoidable Sawlog', 'Avoidable Grade Y/4', 'Unavoidable', 'Total'],
           ['DCC', null, 5.0, null, 5.0],
         ],
@@ -227,7 +227,7 @@ describe('MatrixParser', () => {
     it('returns empty data when sheet has only headers', () => {
       const ws = buildWorksheet(
         [
-          ['District', 'Dry Belt', null, null, null],
+          ['District', 'Dry belt', null, null, null],
           [null, 'Avoidable Sawlog', 'Avoidable Grade Y/4', 'Unavoidable', 'Total'],
         ],
         ['B1:E1'],

@@ -1,5 +1,17 @@
 import type { MatrixConfig } from '@/services/spreadsheet/types';
 
+/**
+ * Interior district-averages spreadsheet layout (positional):
+ *
+ *   Col A  – District code
+ *   B–E    – Dry belt    (4 cols: avoidableSawlog / avoidableGrade4 / unavoidableGrade4 / total)
+ *   F–I    – Transition zone (same 4-column pattern)
+ *   J–M    – Wet belt        (same 4-column pattern)
+ *
+ * Row 1: merged group labels (Dry belt, Transition zone, Wet belt)
+ * Row 2: sub-column labels (not used for validation — layout is positional)
+ * Row 3+: data rows (last row is Weighted Average summary)
+ */
 export const interiorMatrixConfig: MatrixConfig = {
   sheetName: 'Interior',
   headerRows: 2,
@@ -15,10 +27,10 @@ export const interiorMatrixConfig: MatrixConfig = {
       colStart: 2,
       colEnd: 5,
       subColumns: [
-        { header: 'Avoidable Sawlog Waste m3/Ha', key: 'avoidableSawlog' },
-        { header: 'Avoidable Grade Y/4 Waste m3/Ha', key: 'avoidableGrade4' },
-        { header: 'Unavoidable m3/ha', key: 'unavoidableGrade4' },
-        { header: 'Total Avoidable Sawlog, Grade 4 + Unavoidable Waste m3/Ha', key: 'total' },
+        { key: 'avoidableSawlog' },
+        { key: 'avoidableGrade4' },
+        { key: 'unavoidableGrade4' },
+        { key: 'total' },
       ],
     },
     {
@@ -26,10 +38,10 @@ export const interiorMatrixConfig: MatrixConfig = {
       colStart: 6,
       colEnd: 9,
       subColumns: [
-        { header: 'Avoidable Sawlog Waste m3/Ha', key: 'avoidableSawlog' },
-        { header: 'Avoidable Grade Y/4 Waste m3/Ha', key: 'avoidableGrade4' },
-        { header: 'Unavoidable m3/ha', key: 'unavoidableGrade4' },
-        { header: 'Total Avoidable Sawlog, Grade 4 + Unavoidable Waste m3/Ha', key: 'total' },
+        { key: 'avoidableSawlog' },
+        { key: 'avoidableGrade4' },
+        { key: 'unavoidableGrade4' },
+        { key: 'total' },
       ],
     },
     {
@@ -37,10 +49,10 @@ export const interiorMatrixConfig: MatrixConfig = {
       colStart: 10,
       colEnd: 13,
       subColumns: [
-        { header: 'Avoidable Sawlog Waste m3/Ha', key: 'avoidableSawlog' },
-        { header: 'Avoidable Grade Y/4 Waste m3/Ha', key: 'avoidableGrade4' },
-        { header: 'Unavoidable m3/ha', key: 'unavoidableGrade4' },
-        { header: 'Total Avoidable Sawlog, Grade 4 + Unavoidable Waste m3/Ha', key: 'total' },
+        { key: 'avoidableSawlog' },
+        { key: 'avoidableGrade4' },
+        { key: 'unavoidableGrade4' },
+        { key: 'total' },
       ],
     },
   ],

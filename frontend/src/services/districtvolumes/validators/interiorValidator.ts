@@ -15,7 +15,7 @@ export async function interiorValidator(file: File): Promise<string[]> {
   }
 
   const validator = new SpreadsheetValidator();
-  const result = validator.validateWorksheet(worksheet, interiorMatrixConfig);
+  const result = validator.validateStructure(worksheet, interiorMatrixConfig);
   errors.push(...result.errors);
 
   return errors;

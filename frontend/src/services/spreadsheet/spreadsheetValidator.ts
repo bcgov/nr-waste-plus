@@ -30,12 +30,55 @@ export class SpreadsheetValidator {
     for (const group of config.groups) {
       for (let si = 0; si < group.subColumns.length; si++) {
         const colIdx = group.colStart + si;
-        const expected = group.subColumns[si].header;
+        const sub = group.subColumns[si];
+        if (!sub.header) continue; // header validation is opt-in
+        const expected = sub.header;
         const actual = getCellText(worksheet, config.columnHeaderRow, colIdx);
         if (!actual) {
           errors.push(
             `Missing column header at column ${colIdx} (row ${config.columnHeaderRow}), expected "${expected}".`,
           );
+        }
+      }
+    }
+
+    return { valid: errors.length === 0, errors };
+  }
+
+  validateStructure(worksheet: ExcelJS.Worksheet, config: MatrixConfig): ValidationResult {
+    const errors: string[] = [];
+    const lastRow = worksheet.rowCount;
+
+    if (lastRow < config.dataStartRow) {
+      errors.push('Worksheet has no data rows.');
+      return { valid: false, errors };
+    }
+
+    const dataRowCount = lastRow - config.dataStartRow + 1;
+    if (dataRowCount < 1) {
+      errors.push('Worksheet must contain at least one data row.');
+    }
+
+    const maxCol = Math.max(...config.groups.map((g) => g.colEnd));
+
+    for (let r = config.dataStartRow; r <= lastRow; r++) {
+      const districtVal = String(worksheet.getCell(r, config.districtCol).value ?? '').trim();
+      if (!districtVal) continue; // skip empty rows
+
+      for (const group of config.groups) {
+        for (let si = 0; si < group.subColumns.length; si++) {
+          const colIdx = group.colStart + si;
+          if (colIdx > maxCol) continue;
+          const cell = worksheet.getCell(r, colIdx);
+          if (cell.value == null || cell.value === '') {
+            errors.push(
+              `Missing value at row ${r}, column ${colIdx} (group "${group.label}", district "${districtVal}").`,
+            );
+          } else if (typeof cell.value !== 'number') {
+            errors.push(
+              `Non-numeric value at row ${r}, column ${colIdx}: "${String(cell.value)}" (group "${group.label}", district "${districtVal}").`,
+            );
+          }
         }
       }
     }

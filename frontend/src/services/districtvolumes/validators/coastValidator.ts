@@ -15,7 +15,7 @@ export async function coastValidator(file: File): Promise<string[]> {
   }
 
   const validator = new SpreadsheetValidator();
-  const result = validator.validateWorksheet(worksheet, coastMatrixConfig);
+  const result = validator.validateStructure(worksheet, coastMatrixConfig);
   errors.push(...result.errors);
 
   return errors;

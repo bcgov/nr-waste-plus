@@ -185,6 +185,64 @@ describe('DistrictVolumeProcessor', () => {
     }
   });
 
+  it('extracts heli multiplier from coast spreadsheet summary row', async () => {
+    const buf = await buildXlsxBuffer(
+      [
+        ['District', 'Mature', null, null, null, null, 'Immature', null, null, null, null, 'Heli'],
+        [
+          null,
+          'Avoidable Sawlog Full Rate (m3/ha)',
+          'Avoidable 0.25 (m3/ha)',
+          'Avoidable Grade Y (m3/ha)',
+          'Unavoidable Grade Y (m3/ha)',
+          'Total All Grades All Class (m3/ha)',
+          'Avoidable Sawlog Full Rate (m3/ha)',
+          'Avoidable 0.25 (m3/ha)',
+          'Avoidable Grade Y (m3/ha)',
+          'Unavoidable Grade Y (m3/ha)',
+          'Total All Grades All Class (m3/ha)',
+          null,
+        ],
+        [
+          'DCK - Chilliwack Natural Resource District',
+          16.19,
+          8.87,
+          5.24,
+          1.18,
+          31.48,
+          17.83,
+          9.77,
+          3.87,
+          1.3,
+          32.77,
+          null,
+        ],
+        [
+          'Weighted Coast District Average',
+          10.0,
+          5.0,
+          3.0,
+          1.0,
+          19.0,
+          12.0,
+          6.0,
+          2.0,
+          1.0,
+          21.0,
+          1.25,
+        ],
+      ],
+      'Coast',
+      ['A1:A2', 'B1:F1', 'G1:K1'],
+    );
+    const file = bufferToFile(buf, 'coast-heli.xlsx');
+    const result = await processor.load(file);
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(processor.heliMultiplier).toBe(1.25);
+  });
+
   it('returns failure for unsupported format (no Interior/Coast sheet)', async () => {
     const buf = await buildXlsxBuffer([['x']], 'OtherData');
     const file = bufferToFile(buf, 'other.xlsx');

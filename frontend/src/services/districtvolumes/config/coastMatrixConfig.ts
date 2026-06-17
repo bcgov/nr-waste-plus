@@ -1,5 +1,17 @@
 import type { MatrixConfig } from '@/services/spreadsheet/types';
 
+/**
+ * Coast district-averages spreadsheet layout (positional):
+ *
+ *   Col A  – District code
+ *   B–F    – Mature     (5 cols: avoidableSawlog / avoidableHembalGradeU / avoidableGradeY / unavoidable / total)
+ *   G–K    – Immature   (same 5-column pattern)
+ *   L      – Heli Multiplier (standalone value in last summary row)
+ *
+ * Row 1: merged group labels (Mature, Immature) + Heli Mulitplier header
+ * Row 2: sub-column labels with embedded newlines (not used for validation — layout is positional)
+ * Row 3+: data rows (last row is Weighted Average summary with heli multiplier in col L)
+ */
 export const coastMatrixConfig: MatrixConfig = {
   sheetName: 'Coast',
   headerRows: 2,
@@ -15,11 +27,11 @@ export const coastMatrixConfig: MatrixConfig = {
       colStart: 2,
       colEnd: 6,
       subColumns: [
-        { header: 'Avoidable Sawlog Full Rate (m3/ha)', key: 'avoidableSawlog' },
-        { header: 'Avoidable 0.25 (m3/ha)', key: 'avoidableHembalGradeU' },
-        { header: 'Avoidable Grade Y (m3/ha)', key: 'avoidableGradeY' },
-        { header: 'Unavoidable Grade Y (m3/ha)', key: 'unavoidable' },
-        { header: 'Total All Grades All Class (m3/ha)', key: 'total' },
+        { key: 'avoidableSawlog' },
+        { key: 'avoidableHembalGradeU' },
+        { key: 'avoidableGradeY' },
+        { key: 'unavoidable' },
+        { key: 'total' },
       ],
     },
     {
@@ -27,11 +39,11 @@ export const coastMatrixConfig: MatrixConfig = {
       colStart: 7,
       colEnd: 11,
       subColumns: [
-        { header: 'Avoidable Sawlog Full Rate (m3/ha)', key: 'avoidableSawlog' },
-        { header: 'Avoidable 0.25 (m3/ha)', key: 'avoidableHembalGradeU' },
-        { header: 'Avoidable Grade Y (m3/ha)', key: 'avoidableGradeY' },
-        { header: 'Unavoidable Grade Y (m3/ha)', key: 'unavoidable' },
-        { header: 'Total All Grades All Class (m3/ha)', key: 'total' },
+        { key: 'avoidableSawlog' },
+        { key: 'avoidableHembalGradeU' },
+        { key: 'avoidableGradeY' },
+        { key: 'unavoidable' },
+        { key: 'total' },
       ],
     },
   ],

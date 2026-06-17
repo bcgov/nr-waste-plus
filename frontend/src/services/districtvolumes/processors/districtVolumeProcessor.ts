@@ -27,7 +27,22 @@ function detectVariant(reader: ExcelReader, file: File): Promise<SpreadsheetVari
   });
 }
 
+function extractHeliMultiplier(worksheet: import('exceljs').Worksheet): number | undefined {
+  const heliCol = 12; // Col L
+  for (let r = worksheet.rowCount; r >= 1; r--) {
+    const districtVal = String(worksheet.getCell(r, 1).value ?? '').trim();
+    if (districtVal) {
+      const heliVal = worksheet.getCell(r, heliCol).value;
+      if (typeof heliVal === 'number') return heliVal;
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
 export class DistrictVolumeProcessor implements FileProcessor<TableData> {
+  heliMultiplier: number | undefined;
+
   async load(file: File): Promise<ProcessorResult<TableData>> {
     const reader = new ExcelReader();
 
@@ -60,8 +75,10 @@ export class DistrictVolumeProcessor implements FileProcessor<TableData> {
 
     if (variant === SpreadsheetVariant.INTERIOR) {
       data = mapInteriorSpreadsheet(parseResult.data);
+      this.heliMultiplier = undefined;
     } else {
       data = mapCoastSpreadsheet(parseResult.data);
+      this.heliMultiplier = extractHeliMultiplier(worksheet);
     }
 
     return { success: true, data: [data] };

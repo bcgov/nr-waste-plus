@@ -6,7 +6,7 @@ export class ExcelReadError extends Error {
 }
 
 export interface SubColumnDef {
-  header: string;
+  header?: string;
   key: string;
 }
 
