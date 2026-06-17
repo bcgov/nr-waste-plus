@@ -42,6 +42,7 @@
     "@tanstack/react-router": "^1.169.2",
     "aws-amplify": "^6.17.0",
     "axios": "^1.15.2",
+    "exceljs": "^4.4.0",
     "idb": "^8.0.3",
     "lodash": "^4.18.1",
     "luxon": "^3.7.2",
