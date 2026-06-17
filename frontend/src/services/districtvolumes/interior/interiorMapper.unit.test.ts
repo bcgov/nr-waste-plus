@@ -125,10 +125,10 @@ describe('mapInteriorSpreadsheet', () => {
 
   it('mixed valid and invalid rows — only valid rows land in zones', () => {
     const rows = [
-      { zone: 'Dry belt', district: 'DPG', total: 5 },     // valid
-      { zone: 'Unknown', district: 'DXX', total: 5 },      // bad zone
+      { zone: 'Dry belt', district: 'DPG', total: 5 }, // valid
+      { zone: 'Unknown', district: 'DXX', total: 5 }, // bad zone
       { zone: 'Transition zone', district: '', total: 3 }, // empty district
-      { zone: 'Wet belt', district: 'DKA', total: 2 },     // valid
+      { zone: 'Wet belt', district: 'DKA', total: 2 }, // valid
     ];
 
     const result = mapInteriorSpreadsheet(rows);

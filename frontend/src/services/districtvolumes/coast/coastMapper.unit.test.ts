@@ -156,10 +156,10 @@ describe('mapCoastSpreadsheet', () => {
 
   it('mixed valid and invalid rows — only valid rows land in sections', () => {
     const rows = [
-      { section: 'Mature', district: 'DCC', total: 5 },     // valid
-      { section: 'Unknown', district: 'DXX', total: 5 },    // bad section
-      { section: 'Immature', district: '', total: 3 },      // empty district
-      { section: 'Immature', district: 'DSC', total: 2 },   // valid
+      { section: 'Mature', district: 'DCC', total: 5 }, // valid
+      { section: 'Unknown', district: 'DXX', total: 5 }, // bad section
+      { section: 'Immature', district: '', total: 3 }, // empty district
+      { section: 'Immature', district: 'DSC', total: 2 }, // valid
     ];
 
     const result = mapCoastSpreadsheet(rows);

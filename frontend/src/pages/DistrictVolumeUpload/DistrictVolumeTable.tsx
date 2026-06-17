@@ -1,11 +1,4 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@carbon/react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@carbon/react';
 import { type FC } from 'react';
 
 import type { InteriorData, CoastData, TableData } from '@/services/districtvolumes.types';
@@ -60,9 +53,7 @@ const DistrictTable: FC<DistrictTableProps> = ({ title, rows, headers }) => (
             <TableRow key={String(row.code) + i}>
               {headers.map((h) => (
                 <TableCell key={h.key}>
-                  {h.key === 'code'
-                    ? String(row[h.key] ?? '')
-                    : fmt(Number(row[h.key]))}
+                  {h.key === 'code' ? String(row[h.key] ?? '') : fmt(Number(row[h.key]))}
                 </TableCell>
               ))}
             </TableRow>

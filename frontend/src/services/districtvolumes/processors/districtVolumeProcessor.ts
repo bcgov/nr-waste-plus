@@ -1,11 +1,15 @@
-import type { FileProcessor, ProcessorResult } from '@/components/Form/FileUploadInput/fileProcessor';
+import type {
+  FileProcessor,
+  ProcessorResult,
+} from '@/components/Form/FileUploadInput/fileProcessor';
+import type { TableData } from '@/services/districtvolumes.types';
+
+import { mapCoastSpreadsheet } from '@/services/districtvolumes/coast/coastMapper';
+import { coastMatrixConfig } from '@/services/districtvolumes/config/coastMatrixConfig';
+import { interiorMatrixConfig } from '@/services/districtvolumes/config/interiorMatrixConfig';
+import { mapInteriorSpreadsheet } from '@/services/districtvolumes/interior/interiorMapper';
 import { ExcelReader } from '@/services/spreadsheet/excelReader';
 import { MatrixParser } from '@/services/spreadsheet/matrixParser';
-import { interiorMatrixConfig } from '@/services/districtvolumes/config/interiorMatrixConfig';
-import { coastMatrixConfig } from '@/services/districtvolumes/config/coastMatrixConfig';
-import { mapInteriorSpreadsheet } from '@/services/districtvolumes/interior/interiorMapper';
-import { mapCoastSpreadsheet } from '@/services/districtvolumes/coast/coastMapper';
-import type { TableData } from '@/services/districtvolumes.types';
 
 enum SpreadsheetVariant {
   INTERIOR = 'INTERIOR',
@@ -37,27 +41,13 @@ export class DistrictVolumeProcessor implements FileProcessor<TableData> {
       };
     }
 
-    const config = variant === SpreadsheetVariant.INTERIOR ? interiorMatrixConfig : coastMatrixConfig;
+    const config =
+      variant === SpreadsheetVariant.INTERIOR ? interiorMatrixConfig : coastMatrixConfig;
 
-    let worksheet;
-    try {
-      worksheet = await reader.read(file, config.sheetName);
-    } catch (e) {
-      return {
-        success: false,
-        errors: [(e as Error).message],
-      };
-    }
+    const worksheet = await reader.read(file, config.sheetName);
 
     const parser = new MatrixParser();
     const parseResult = parser.parse(worksheet, config);
-
-    if (parseResult.errors.length > 0) {
-      return {
-        success: false,
-        errors: parseResult.errors.map((e) => `Row ${e.row}: ${e.message}`),
-      };
-    }
 
     if (parseResult.data.length === 0) {
       return {

@@ -1,14 +1,15 @@
 import { Column, RadioButton, RadioButtonGroup } from '@carbon/react';
 import { type FC, useMemo, useState } from 'react';
 
+import DistrictVolumeTable from './DistrictVolumeTable';
+
+import type { TableData } from '@/services/districtvolumes.types';
+
 import PageTitle from '@/components/core/PageTitle';
 import FileUploadInput from '@/components/Form/FileUploadInput';
 import { DistrictVolumeProcessor } from '@/services/districtvolumes/processors/districtVolumeProcessor';
-import { interiorValidator } from '@/services/districtvolumes/validators/interiorValidator';
 import { coastValidator } from '@/services/districtvolumes/validators/coastValidator';
-import type { TableData } from '@/services/districtvolumes.types';
-
-import DistrictVolumeTable from './DistrictVolumeTable';
+import { interiorValidator } from '@/services/districtvolumes/validators/interiorValidator';
 
 const processor = new DistrictVolumeProcessor();
 
@@ -33,9 +34,11 @@ const DistrictVolumeUploadPage: FC = () => {
         <RadioButtonGroup
           name="area-type"
           valueSelected={areaType}
-          onChange={(val: string) => {
-            setAreaType(val as 'INTERIOR' | 'COASTAL');
-            setTableData(null);
+          onChange={(selection) => {
+            if (typeof selection === 'string') {
+              setAreaType(selection as 'INTERIOR' | 'COASTAL');
+              setTableData(null);
+            }
           }}
           legendText="Select area type"
         >

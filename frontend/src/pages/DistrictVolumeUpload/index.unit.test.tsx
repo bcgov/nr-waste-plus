@@ -1,6 +1,10 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
+
+import DistrictVolumeUploadPage from './index';
+
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 
 vi.mock('@/env', () => ({
@@ -21,11 +25,11 @@ vi.mock('@/env', () => ({
   featureFlags: {},
 }));
 
-import DistrictVolumeUploadPage from './index';
-
 function renderPage() {
   return render(
-    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
       <PageTitleProvider>
         <DistrictVolumeUploadPage />
       </PageTitleProvider>
@@ -54,5 +58,26 @@ describe('DistrictVolumeUploadPage', () => {
     renderPage();
     const interior = screen.getByLabelText('Interior') as HTMLInputElement;
     expect(interior.checked).toBe(true);
+  });
+
+  it('toggles to Coast when Coast radio is clicked', async () => {
+    renderPage();
+    const user = userEvent.setup();
+    const coast = screen.getByLabelText('Coast') as HTMLInputElement;
+    await user.click(coast);
+    expect(coast.checked).toBe(true);
+    const interior = screen.getByLabelText('Interior') as HTMLInputElement;
+    expect(interior.checked).toBe(false);
+  });
+
+  it('toggles back to Interior after clicking Interior again', async () => {
+    renderPage();
+    const user = userEvent.setup();
+    const coast = screen.getByLabelText('Coast') as HTMLInputElement;
+    await user.click(coast);
+    const interior = screen.getByLabelText('Interior') as HTMLInputElement;
+    await user.click(interior);
+    expect(interior.checked).toBe(true);
+    expect(coast.checked).toBe(false);
   });
 });

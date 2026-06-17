@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest';
 import ExcelJS from 'exceljs';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import { SpreadsheetValidator } from './spreadsheetValidator';
+
 import type { MatrixConfig } from './types';
 
 function buildWorksheet(rows: unknown[][], mergeCells?: string[]): ExcelJS.Worksheet {
@@ -109,13 +110,11 @@ describe('SpreadsheetValidator', () => {
   });
 
   it('collects multiple errors when multiple headers are missing', () => {
-    const ws = buildWorksheet(
-      [
-        ['District', null],
-        [null, null],
-        ['DCC', 1],
-      ],
-    );
+    const ws = buildWorksheet([
+      ['District', null],
+      [null, null],
+      ['DCC', 1],
+    ]);
 
     const result = validator.validateWorksheet(ws, interiorConfig);
     expect(result.valid).toBe(false);

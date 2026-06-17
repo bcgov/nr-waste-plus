@@ -1,10 +1,12 @@
-import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import ExcelJS from 'exceljs';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import { ExcelReader } from './excelReader';
 import { ExcelReadError } from './types';
 
-async function buildWorkbookBuffer(sheets: { name: string; rows: unknown[][] }[]): Promise<ArrayBuffer> {
+async function buildWorkbookBuffer(
+  sheets: { name: string; rows: unknown[][] }[],
+): Promise<ArrayBuffer> {
   const wb = new ExcelJS.Workbook();
   for (const sheet of sheets) {
     const ws = wb.addWorksheet(sheet.name);
@@ -31,7 +33,15 @@ describe('ExcelReader', () => {
 
   describe('read', () => {
     it('returns first worksheet when no sheet name given', async () => {
-      const buffer = await buildWorkbookBuffer([{ name: 'Sheet1', rows: [[1, 2], [3, 4]] }]);
+      const buffer = await buildWorkbookBuffer([
+        {
+          name: 'Sheet1',
+          rows: [
+            [1, 2],
+            [3, 4],
+          ],
+        },
+      ]);
       const file = bufferToFile(buffer);
       const ws = await reader.read(file);
       expect(ws.name).toBe('Sheet1');
@@ -65,6 +75,16 @@ describe('ExcelReader', () => {
         value: () => Promise.reject(new Error('read error')),
       });
       await expect(reader.read(badFile)).rejects.toThrow(ExcelReadError);
+    });
+
+    it('throws ExcelReadError when workbook has no worksheets', async () => {
+      const emptyWb = new ExcelJS.Workbook();
+      const buffer = (await emptyWb.xlsx.writeBuffer()) as ArrayBuffer;
+      const file = new File([buffer], 'empty.xlsx', {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      await expect(reader.read(file)).rejects.toThrow(ExcelReadError);
+      await expect(reader.read(file)).rejects.toThrow('No worksheets found');
     });
   });
 

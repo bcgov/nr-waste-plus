@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest';
 import ExcelJS from 'exceljs';
+import { describe, it, expect } from 'vitest';
 
 import { MatrixParser } from './matrixParser';
+
 import type { MatrixConfig } from './types';
 
 function buildWorksheet(rows: unknown[][], mergeCells?: string[]): ExcelJS.Worksheet {
@@ -75,8 +76,36 @@ describe('MatrixParser', () => {
     it('parses a single district into one record per zone', () => {
       const ws = buildWorksheet(
         [
-          ['District', 'Dry Belt m3/ha', null, null, null, 'Transition Zone m3/ha', null, null, null, 'Wet Belt m3/ha', null, null, null],
-          [null, 'Avoidable Sawlog', 'Avoidable Grade Y/4', 'Unavoidable', 'Total', 'Avoidable Sawlog', 'Avoidable Grade Y/4', 'Unavoidable', 'Total', 'Avoidable Sawlog', 'Avoidable Grade Y/4', 'Unavoidable', 'Total'],
+          [
+            'District',
+            'Dry Belt m3/ha',
+            null,
+            null,
+            null,
+            'Transition Zone m3/ha',
+            null,
+            null,
+            null,
+            'Wet Belt m3/ha',
+            null,
+            null,
+            null,
+          ],
+          [
+            null,
+            'Avoidable Sawlog',
+            'Avoidable Grade Y/4',
+            'Unavoidable',
+            'Total',
+            'Avoidable Sawlog',
+            'Avoidable Grade Y/4',
+            'Unavoidable',
+            'Total',
+            'Avoidable Sawlog',
+            'Avoidable Grade Y/4',
+            'Unavoidable',
+            'Total',
+          ],
           ['DCC', 2.04, 7.05, 0.08, 9.17, 7.96, 12.93, 0.13, 21.02, 13.5, 15.85, 0.1, 29.45],
         ],
         ['B1:E1', 'F1:I1', 'J1:M1'],
@@ -109,8 +138,36 @@ describe('MatrixParser', () => {
     it('parses multiple districts', () => {
       const ws = buildWorksheet(
         [
-          ['District', 'Dry Belt m3/ha', null, null, null, 'Transition Zone m3/ha', null, null, null, 'Wet Belt m3/ha', null, null, null],
-          [null, 'Avoidable Sawlog', 'Avoidable Grade Y/4', 'Unavoidable', 'Total', 'Avoidable Sawlog', 'Avoidable Grade Y/4', 'Unavoidable', 'Total', 'Avoidable Sawlog', 'Avoidable Grade Y/4', 'Unavoidable', 'Total'],
+          [
+            'District',
+            'Dry Belt m3/ha',
+            null,
+            null,
+            null,
+            'Transition Zone m3/ha',
+            null,
+            null,
+            null,
+            'Wet Belt m3/ha',
+            null,
+            null,
+            null,
+          ],
+          [
+            null,
+            'Avoidable Sawlog',
+            'Avoidable Grade Y/4',
+            'Unavoidable',
+            'Total',
+            'Avoidable Sawlog',
+            'Avoidable Grade Y/4',
+            'Unavoidable',
+            'Total',
+            'Avoidable Sawlog',
+            'Avoidable Grade Y/4',
+            'Unavoidable',
+            'Total',
+          ],
           ['DCC', 2.0, 7.0, 0.1, 9.1, 8.0, 13.0, 0.1, 21.1, 13.5, 15.9, 0.1, 29.5],
           ['DCS', 9.1, 12.3, 0.4, 21.8, 16.6, 19.7, 1.2, 37.4, 18.7, 16.5, 2.0, 37.1],
         ],
@@ -229,7 +286,19 @@ describe('MatrixParser', () => {
       const ws = buildWorksheet(
         [
           ['District', 'Mature', null, null, null, null, 'Immature', null, null, null, null],
-          [null, 'Avoidable Sawlog Full Rate', 'Avoidable 0.25', 'Avoidable Grade Y', 'Unavoidable Grade Y', 'Total All Grades', 'Avoidable Sawlog Full Rate', 'Avoidable 0.25', 'Avoidable Grade Y', 'Unavoidable Grade Y', 'Total All Grades'],
+          [
+            null,
+            'Avoidable Sawlog Full Rate',
+            'Avoidable 0.25',
+            'Avoidable Grade Y',
+            'Unavoidable Grade Y',
+            'Total All Grades',
+            'Avoidable Sawlog Full Rate',
+            'Avoidable 0.25',
+            'Avoidable Grade Y',
+            'Unavoidable Grade Y',
+            'Total All Grades',
+          ],
           ['DCK', 16.19, 8.87, 5.24, 1.18, 31.48, 17.83, 9.77, 3.87, 1.3, 32.77],
         ],
         ['B1:F1', 'G1:K1'],

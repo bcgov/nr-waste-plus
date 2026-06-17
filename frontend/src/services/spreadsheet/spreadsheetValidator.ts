@@ -1,6 +1,5 @@
-import type ExcelJS from 'exceljs';
-
 import type { MatrixConfig, ValidationResult } from './types';
+import type ExcelJS from 'exceljs';
 
 function getCellText(worksheet: ExcelJS.Worksheet, row: number, col: number): string {
   const cell = worksheet.getRow(row)?.getCell(col);
@@ -12,7 +11,9 @@ export class SpreadsheetValidator {
     const errors: string[] = [];
 
     if (worksheet.rowCount < config.dataStartRow) {
-      errors.push(`Worksheet has no data rows (expected data starting at row ${config.dataStartRow}).`);
+      errors.push(
+        `Worksheet has no data rows (expected data starting at row ${config.dataStartRow}).`,
+      );
       return { valid: false, errors };
     }
 
@@ -20,7 +21,9 @@ export class SpreadsheetValidator {
       const expectedLabel = group.label;
       const actualLabel = getCellText(worksheet, config.groupHeaderRow, group.colStart);
       if (!actualLabel) {
-        errors.push(`Missing group header at column ${group.colStart}, expected "${expectedLabel}".`);
+        errors.push(
+          `Missing group header at column ${group.colStart}, expected "${expectedLabel}".`,
+        );
       }
     }
 
@@ -30,7 +33,9 @@ export class SpreadsheetValidator {
         const expected = group.subColumns[si].header;
         const actual = getCellText(worksheet, config.columnHeaderRow, colIdx);
         if (!actual) {
-          errors.push(`Missing column header at column ${colIdx} (row ${config.columnHeaderRow}), expected "${expected}".`);
+          errors.push(
+            `Missing column header at column ${colIdx} (row ${config.columnHeaderRow}), expected "${expected}".`,
+          );
         }
       }
     }
