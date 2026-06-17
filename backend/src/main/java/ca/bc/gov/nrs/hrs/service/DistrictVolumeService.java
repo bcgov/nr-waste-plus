@@ -83,11 +83,11 @@ public class DistrictVolumeService {
 
     validateAreaPayloadConsistency(areaEnum, createDto);
 
-    if (areaEnum == Area.COASTAL && createDto.heliMultiplier() == null) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "heliMultiplier is required when area is COASTAL.");
-    }
+if (areaEnum == Area.COASTAL && createDto.heliMultiplier() == null) {
+  throw new ResponseStatusException(
+      HttpStatus.BAD_REQUEST,
+      "Missing helicopter multiplier configuration required for Coastal tables.");
+}
 
     if (!createDto.startDate().isAfter(LocalDate.now())) {
       throw new ResponseStatusException(
