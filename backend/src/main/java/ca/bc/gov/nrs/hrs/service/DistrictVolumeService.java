@@ -86,7 +86,7 @@ public class DistrictVolumeService {
     if (areaEnum == Area.COASTAL && createDto.heliMultiplier() == null) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
-          "Missing helicopter multiplier configuration required  when area is COASTAL.");
+          "Missing helicopter multiplier configuration required when area is COASTAL.");
     }
 
     if (!createDto.startDate().isAfter(LocalDate.now())) {
