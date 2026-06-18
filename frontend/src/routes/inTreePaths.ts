@@ -16,7 +16,10 @@ export type InTreePath =
   | '/no-role'
   | '/unauthorized'
   | `/reporting-units/${number}`
-  | '/reporting-units/create';
+  | '/reporting-units/create'
+  | '/configuration'
+  | '/configuration/district-volume-tables'
+  | '/configuration/upload-district-volume';
 
 /**
  * Typed navigate helper for in-tree route paths.

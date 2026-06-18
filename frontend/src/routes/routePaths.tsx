@@ -6,6 +6,9 @@ import { type ComponentType } from 'react';
 import Layout from '@/components/Layout';
 import { Role, type FamRole } from '@/context/auth/types';
 import { featureFlags } from '@/env';
+import ConfigurationDistrictVolumeListPage from '@/pages/ConfigurationDistrictVolumeList';
+import ConfigurationPage from '@/pages/ConfigurationPage';
+import DistrictVolumeUploadPage from '@/pages/DistrictVolumeUploadRoute';
 import LandingPage from '@/pages/Landing';
 import MyClientListPage from '@/pages/MyClientList';
 import NoRolePage from '@/pages/NoRole';
@@ -130,6 +133,42 @@ export const ROUTES: RouteDescription[] = [
     ),
     isSideMenu: !!featureFlags['reporting-unit-create-enabled'],
     protected: true,
+  },
+  {
+    path: '/configuration',
+    id: 'Configuration',
+    component: () => (
+      <Layout>
+        <ConfigurationPage />
+      </Layout>
+    ),
+    isSideMenu: false,
+    protected: true,
+    roles: [{ role: Role.ADMIN, clients: [] }],
+  },
+  {
+    path: '/configuration/district-volume-tables',
+    id: 'District Volume Tables',
+    component: () => (
+      <Layout>
+        <ConfigurationDistrictVolumeListPage />
+      </Layout>
+    ),
+    isSideMenu: false,
+    protected: true,
+    roles: [{ role: Role.ADMIN, clients: [] }],
+  },
+  {
+    path: '/configuration/upload-district-volume',
+    id: 'Upload District Volume',
+    component: () => (
+      <Layout>
+        <DistrictVolumeUploadPage />
+      </Layout>
+    ),
+    isSideMenu: false,
+    protected: true,
+    roles: [{ role: Role.ADMIN, clients: [] }],
   },
 ];
 
