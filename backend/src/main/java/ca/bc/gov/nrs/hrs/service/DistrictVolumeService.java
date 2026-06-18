@@ -129,6 +129,10 @@ public class DistrictVolumeService {
         throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Area mismatch: Expected COASTAL data layout.");
+        
+      case InteriorDataDto i -> {}
+      
+      case CoastDataDto c -> {}
 
       case null, default -> throw new ResponseStatusException(
             HttpStatus.BAD_REQUEST,
