@@ -24,13 +24,13 @@ describe('mapCoastSpreadsheet', () => {
   it('happy path — row with Section=Mature and a District lands in Mature section', () => {
     const rows = [
       {
-        Section: 'Mature',
-        District: 'DCC',
-        'Avoidable sawlog': 5.5,
-        'Avoidable Hembal Grade U': 1.2,
-        'Avoidable Grade Y': 0.8,
-        Unavoidable: 0.5,
-        Total: 8.0,
+        section: 'Mature',
+        district: 'DCC',
+        avoidableSawlog: 5.5,
+        avoidableHembalGradeU: 1.2,
+        avoidableGradeY: 0.8,
+        unavoidable: 0.5,
+        total: 8.0,
       },
     ];
 
@@ -48,13 +48,13 @@ describe('mapCoastSpreadsheet', () => {
   it('row with Section=Immature lands in Immature section', () => {
     const rows = [
       {
-        Section: 'Immature',
-        District: 'DSC',
-        'Avoidable sawlog': 3.0,
-        'Avoidable Hembal Grade U': 0.5,
-        'Avoidable Grade Y': 0.2,
-        Unavoidable: 0.1,
-        Total: 3.8,
+        section: 'Immature',
+        district: 'DSC',
+        avoidableSawlog: 3.0,
+        avoidableHembalGradeU: 0.5,
+        avoidableGradeY: 0.2,
+        unavoidable: 0.1,
+        total: 3.8,
       },
     ];
 
@@ -64,10 +64,46 @@ describe('mapCoastSpreadsheet', () => {
     expect(immature.districts[0].code).toBe('DSC');
   });
 
+  it('extracts 3-char code from long district names with " - " separator', () => {
+    const rows = [
+      {
+        section: 'Mature',
+        district: 'DCK - Chilliwack Natural Resource District',
+        avoidableSawlog: 16.19,
+        avoidableHembalGradeU: 8.87,
+        avoidableGradeY: 5.24,
+        unavoidable: 1.18,
+        total: 31.48,
+      },
+    ];
+
+    const result = mapCoastSpreadsheet(rows);
+    const district = result.sections.find((s) => s.name === 'Mature')!.districts[0];
+    expect(district.code).toBe('DCK');
+  });
+
+  it('uses full district code when no separator found', () => {
+    const rows = [
+      {
+        section: 'Mature',
+        district: 'DCK',
+        avoidableSawlog: 1,
+        avoidableHembalGradeU: 2,
+        avoidableGradeY: 3,
+        unavoidable: 4,
+        total: 10,
+      },
+    ];
+
+    const result = mapCoastSpreadsheet(rows);
+    const district = result.sections.find((s) => s.name === 'Mature')!.districts[0];
+    expect(district.code).toBe('DCK');
+  });
+
   it('skips rows with unrecognised section names', () => {
     const rows = [
-      { Section: 'Unknown', District: 'DCC', Total: 5 },
-      { Section: 'INVALID', District: 'DSC', Total: 3 },
+      { section: 'Unknown', district: 'DCC', total: 5 },
+      { section: 'INVALID', district: 'DSC', total: 3 },
     ];
 
     const result = mapCoastSpreadsheet(rows);
@@ -77,18 +113,17 @@ describe('mapCoastSpreadsheet', () => {
 
   it('skips rows with empty district code', () => {
     const rows = [
-      { Section: 'Mature', District: '', Total: 5 },
-      { Section: 'Immature', District: '   ', Total: 3 },
+      { section: 'Mature', district: '', total: 5 },
+      { section: 'Immature', district: '   ', total: 3 },
     ];
 
     const result = mapCoastSpreadsheet(rows);
-    // '   '.trim() is '' which is falsy — both rows skipped
     const totalDistricts = result.sections.flatMap((s) => s.districts).length;
     expect(totalDistricts).toBe(0);
   });
 
   it('missing numeric columns default to 0', () => {
-    const rows = [{ Section: 'Mature', District: 'DCC' }];
+    const rows = [{ section: 'Mature', district: 'DCC' }];
 
     const result = mapCoastSpreadsheet(rows);
     const district = result.sections.find((s) => s.name === 'Mature')!.districts[0];
@@ -102,13 +137,13 @@ describe('mapCoastSpreadsheet', () => {
   it('coerces string numbers to numbers', () => {
     const rows = [
       {
-        Section: 'Mature',
-        District: 'DCC',
-        'Avoidable sawlog': '4.5',
-        'Avoidable Hembal Grade U': '1.0',
-        'Avoidable Grade Y': '0.5',
-        Unavoidable: '0.2',
-        Total: '6.2',
+        section: 'Mature',
+        district: 'DCC',
+        avoidableSawlog: '4.5',
+        avoidableHembalGradeU: '1.0',
+        avoidableGradeY: '0.5',
+        unavoidable: '0.2',
+        total: '6.2',
       },
     ];
 
@@ -121,10 +156,10 @@ describe('mapCoastSpreadsheet', () => {
 
   it('mixed valid and invalid rows — only valid rows land in sections', () => {
     const rows = [
-      { Section: 'Mature', District: 'DCC', Total: 5 },     // valid
-      { Section: 'Unknown', District: 'DXX', Total: 5 },    // bad section
-      { Section: 'Immature', District: '', Total: 3 },      // empty district
-      { Section: 'Immature', District: 'DSC', Total: 2 },   // valid
+      { section: 'Mature', district: 'DCC', total: 5 }, // valid
+      { section: 'Unknown', district: 'DXX', total: 5 }, // bad section
+      { section: 'Immature', district: '', total: 3 }, // empty district
+      { section: 'Immature', district: 'DSC', total: 2 }, // valid
     ];
 
     const result = mapCoastSpreadsheet(rows);
@@ -133,7 +168,7 @@ describe('mapCoastSpreadsheet', () => {
   });
 
   it('other section remains empty when only one section has rows', () => {
-    const rows = [{ Section: 'Mature', District: 'DCC', Total: 1 }];
+    const rows = [{ section: 'Mature', district: 'DCC', total: 1 }];
 
     const result = mapCoastSpreadsheet(rows);
     const immature = result.sections.find((s) => s.name === 'Immature')!;
@@ -142,9 +177,9 @@ describe('mapCoastSpreadsheet', () => {
 
   it('multiple rows in the same section are all collected', () => {
     const rows = [
-      { Section: 'Mature', District: 'DCC', Total: 1 },
-      { Section: 'Mature', District: 'DSC', Total: 2 },
-      { Section: 'Mature', District: 'DVA', Total: 3 },
+      { section: 'Mature', district: 'DCC', total: 1 },
+      { section: 'Mature', district: 'DSC', total: 2 },
+      { section: 'Mature', district: 'DVA', total: 3 },
     ];
 
     const result = mapCoastSpreadsheet(rows);
