@@ -91,7 +91,7 @@ public class DistrictVolumeService {
 
     if (!createDto.startDate().isAfter(LocalDate.now())) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
+          HttpStatus.UNPROCESSABLE_CONTENT,
           "Start date must be strictly after today.");
     }
 
