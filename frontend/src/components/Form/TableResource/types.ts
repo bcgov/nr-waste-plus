@@ -1,6 +1,8 @@
 import { type NestedKeyOf, type ValueByPath } from '@/services/types';
 import { getValueByPath } from '@/services/utils';
 
+export { pageTypeSchema, pageableResponseSchema } from './schemas';
+
 type TableRowActionValue<T, R> = R | ((row: IdentifiableContent<T>) => R);
 
 export type TableHeaderType<T, K extends NestedKeyOf<T> = NestedKeyOf<T>> = {
