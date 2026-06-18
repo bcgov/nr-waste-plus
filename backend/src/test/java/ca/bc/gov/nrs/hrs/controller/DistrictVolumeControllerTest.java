@@ -8,11 +8,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header; // Added missing import
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeCreateDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeListItemDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
+import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import ca.bc.gov.nrs.hrs.service.DistrictVolumeService;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -254,6 +254,9 @@ class DistrictVolumeControllerTest {
   @DisplayName(
       "POST / — Should return 201 Created with Location header "
           + "when payload is valid")
+  @WithMockJwt(
+      value = "jakethedog"
+  )
   void createDistrictVolume_returns201AndLocationHeader()
       throws Exception {
 
@@ -283,6 +286,7 @@ class DistrictVolumeControllerTest {
             interiorData);
 
     when(districtVolumeService.createDistrictVolume(
+            eq("jakethedog"),
             any(DistrictVolumeCreateDto.class)))
         .thenReturn(savedDetailDto);
 

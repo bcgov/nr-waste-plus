@@ -65,10 +65,11 @@ public class DistrictVolumeService {
 
   /**
    * Creates a new district volume configuration record.
+   * @param string 
    */
   @Transactional
   public DistrictVolumeDetailDto createDistrictVolume(
-      DistrictVolumeCreateDto createDto) {
+      String user, DistrictVolumeCreateDto createDto) {
 
     Area areaEnum = EnumUtils.getEnumIgnoreCase(
         Area.class,
@@ -101,6 +102,7 @@ public class DistrictVolumeService {
     entity.setStartDate(createDto.startDate());
     entity.setTableLevelFactor(createDto.tableLevelFactor());
     entity.setHeliMultiplier(createDto.heliMultiplier());
+    entity.setCreatedBy(user);
 
     entity.setTableData(
         DistrictVolumeMapper.toEntityTableData(

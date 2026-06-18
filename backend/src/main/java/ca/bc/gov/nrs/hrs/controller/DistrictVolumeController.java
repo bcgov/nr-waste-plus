@@ -4,6 +4,7 @@ import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeCreateDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeListItemDto;
 import ca.bc.gov.nrs.hrs.service.DistrictVolumeService;
+import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -15,6 +16,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -79,26 +82,31 @@ public class DistrictVolumeController {
   /**
    * Creates a new district volume.
    *
-   * <p>Creates a district volume using the provided request payload and returns a
-   * {@code 201 Created} response with the URI of the newly created resource in
-   * the {@code Location} header.
+   * <p>Creates a district volume using the provided request payload and the
+   * authenticated user and returns a {@code 201 Created} response with the URI
+   * of the newly created resource in the {@code Location} header.
    *
+   * @param jwt the authenticated user's JWT
    * @param request the district volume information to create
    * @return a {@link ResponseEntity} with status {@code 201 Created} and the
-   *         location of the created district volume
+   *     location of the created district volume
    */
   @PostMapping
   @Observed
   public ResponseEntity<Void> createDistrictVolume(
-      @Valid @RequestBody DistrictVolumeCreateDto request
-  ) {
+      @AuthenticationPrincipal Jwt jwt,
+      @Valid @RequestBody DistrictVolumeCreateDto request) {
+
     DistrictVolumeDetailDto createdVolume =
-        districtVolumeService.createDistrictVolume(request);
+        districtVolumeService.createDistrictVolume(
+            JwtPrincipalUtil.getUserId(jwt),
+            request);
 
     URI location =
-        URI.create("/api/configuration/district-average-volumes/" + createdVolume.id());
+        URI.create(
+            "/api/configuration/district-average-volumes/"
+                + createdVolume.id());
 
     return ResponseEntity.created(location).build();
   }
-
 }
