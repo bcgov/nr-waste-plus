@@ -383,3 +383,4 @@ cypress/summary.md
 graphify-out
 copilot-instructions.md
 .graphifyignore
+backend/.factorypath
