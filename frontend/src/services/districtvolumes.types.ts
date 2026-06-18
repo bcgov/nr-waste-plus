@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { pageableResponseSchema } from '@/components/Form/TableResource/schemas';
+
 // ─── INTERIOR SUB-SCHEMAS ────────────────────────────────────────────────────
 export const interiorDistrictRowSchema = z.object({
   code: z.string(), // Maps to CodeDescriptionDto on the backend during pipeline conversion
@@ -62,15 +64,7 @@ export const districtVolumeListItemSchema = z.object({
 });
 export type DistrictVolumeListItem = z.infer<typeof districtVolumeListItemSchema>;
 
-export const districtVolumeListResponseSchema = z.object({
-  content: z.array(districtVolumeListItemSchema),
-  pageable: z.object({
-    pageNumber: z.number(),
-    pageSize: z.number(),
-    totalElements: z.number(),
-    totalPages: z.number(),
-  }),
-});
+export const districtVolumeListResponseSchema = pageableResponseSchema(districtVolumeListItemSchema);
 export type DistrictVolumeListResponse = z.infer<typeof districtVolumeListResponseSchema>;
 
 // ─── DETAIL RESPONSE SCHEMA (DISCRIMINATED UNION) ───────────────────────────

@@ -7,10 +7,15 @@ import {
 } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
-import { queryKeys, type ReportingUnitsQueryParams } from './queryKeys';
+import {
+  queryKeys,
+  type DistrictVolumeQueryParams,
+  type ReportingUnitsQueryParams,
+} from './queryKeys';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { ProblemDetails } from '@/config/api/types';
+import type { DistrictVolumeListItem } from '@/services/districtvolumes.types';
 import type { CodeDescriptionDto, ReportingUnitSearchExpandedDto } from '@/services/search.types';
 import type {
   ForestClientDto,
@@ -545,4 +550,48 @@ export const useClientLookupQuery = <TData = CodeDescriptionDto[]>(
     staleTime: Infinity,
     ...options,
   });
+};
+
+/**
+ * Searches district volume configurations with the provided sort/pagination parameters.
+ *
+ * @param input - Sort configuration and pagination settings.
+ * @param options - Optional TanStack Query overrides plus an optional `notificationTarget`.
+ * @returns The TanStack Query result for the paginated {@link DistrictVolumeListItem} list.
+ */
+export const useDistrictVolumeListQuery = <TData = PageableResponse<DistrictVolumeListItem>>(
+  input: DistrictVolumeQueryParams,
+  options?: Omit<
+    UseQueryOptions<
+      PageableResponse<DistrictVolumeListItem>,
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.districtVolume.list>
+    >,
+    'queryKey' | 'queryFn'
+  > &
+    QueryNotificationOptions,
+) => {
+  const { notificationTarget, ...queryOptions } = options ?? {};
+
+  const query = useQuery({
+    queryKey: queryKeys.districtVolume.list(input, notificationTarget),
+    queryFn: () =>
+      API.districtVolume.getDistrictVolumes(undefined, {
+        page: input.page,
+        size: input.size,
+        sort: generateSortArray<DistrictVolumeListItem>(input.sort),
+      }),
+    ...queryOptions,
+  });
+
+  useEffect(() => {
+    if (!notificationTarget || !query.isError || !query.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(query.error, notificationTarget);
+  }, [notificationTarget, query.error, query.isError]);
+
+  return query;
 };

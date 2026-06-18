@@ -175,6 +175,26 @@ describe('mapCoastSpreadsheet', () => {
     expect(immature.districts).toHaveLength(0);
   });
 
+  it('skips rows with missing section property (undefined defaults to empty string)', () => {
+    const rows = [
+      { district: 'DCC', total: 5 },
+    ];
+
+    const result = mapCoastSpreadsheet(rows);
+    const totalDistricts = result.sections.flatMap((s) => s.districts).length;
+    expect(totalDistricts).toBe(0);
+  });
+
+  it('skips rows with missing district property (undefined defaults to empty string)', () => {
+    const rows = [
+      { section: 'Mature', total: 5 },
+    ];
+
+    const result = mapCoastSpreadsheet(rows);
+    const totalDistricts = result.sections.flatMap((s) => s.districts).length;
+    expect(totalDistricts).toBe(0);
+  });
+
   it('multiple rows in the same section are all collected', () => {
     const rows = [
       { section: 'Mature', district: 'DCC', total: 1 },

@@ -1,6 +1,18 @@
 import type { ReportingUnitSearchParametersDto, SortDirectionType } from '@/services/types';
 
 /**
+ * Parameters used to build the district-volume list query key and query function.
+ */
+export type DistrictVolumeQueryParams = {
+  /** Zero-based page index. */
+  page: number;
+  /** Number of items per page. */
+  size: number;
+  /** Column sort configuration (`{ key: direction }`). */
+  sort: Record<string, SortDirectionType>;
+};
+
+/**
  * Parameters used to build the reporting-units search query key and query function.
  *
  * Bundled as a single object so TanStack Query can treat all search variables
@@ -74,5 +86,9 @@ export const queryKeys = {
   },
   table: {
     sorting: (sort: Record<string, SortDirectionType>) => ['table', 'sorting', sort] as const,
+  },
+  districtVolume: {
+    list: (params: DistrictVolumeQueryParams, notificationTarget?: string) =>
+      ['district-volume', 'list', params, notificationTarget] as const,
   },
 } as const;
