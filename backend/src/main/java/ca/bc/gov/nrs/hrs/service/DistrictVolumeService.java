@@ -65,7 +65,8 @@ public class DistrictVolumeService {
 
   /**
    * Creates a new district volume configuration record.
-   * @param string 
+   * @param user the user creating the record
+   * @param createDto the district volume configuration payload
    */
   @Transactional
   public DistrictVolumeDetailDto createDistrictVolume(
