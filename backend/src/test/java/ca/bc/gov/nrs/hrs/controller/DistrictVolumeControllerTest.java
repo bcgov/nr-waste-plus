@@ -48,6 +48,9 @@ class DistrictVolumeControllerTest {
 
   private MockMvc mockMvc;
   private JsonMapper objectMapper;
+  
+  private static final Instant FIXED_DATE =
+      Instant.parse("2024-01-01T00:00:00Z");
 
   @Mock
   private DistrictVolumeService districtVolumeService;
@@ -262,7 +265,7 @@ class DistrictVolumeControllerTest {
     DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
             "INTERIOR",
-            LocalDate.now().plusDays(5),
+            LocalDate.of(9999, Month.JANUARY, 1),
             new BigDecimal("1.250"),
             null,
             interiorData);
@@ -271,10 +274,10 @@ class DistrictVolumeControllerTest {
         new DistrictVolumeDetailDto(
             42L,
             "INTERIOR",
-            LocalDate.now().plusDays(5),
+            LocalDate.of(9999, Month.JANUARY, 1),
             null,
             "TEST_USER",
-            Instant.now(),
+            FIXED_DATE,
             new BigDecimal("1.250"),
             null,
             interiorData);

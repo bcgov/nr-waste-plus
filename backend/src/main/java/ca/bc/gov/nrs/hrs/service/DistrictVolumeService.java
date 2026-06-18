@@ -120,21 +120,15 @@ public class DistrictVolumeService {
 
     switch (createDto.tableData()) {
 
-      case InteriorDataDto i -> {
-        if (areaEnum != Area.INTERIOR) {
-          throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST,
-              "Area mismatch: Expected INTERIOR data layout.");
-        }
-      }
+      case InteriorDataDto i when areaEnum != Area.INTERIOR ->
+        throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Area mismatch: Expected INTERIOR data layout.");
 
-      case CoastDataDto c -> {
-        if (areaEnum != Area.COASTAL) {
-          throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST,
-              "Area mismatch: Expected COASTAL data layout.");
-        }
-      }
+      case CoastDataDto c when areaEnum != Area.COASTAL ->
+        throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Area mismatch: Expected COASTAL data layout.");
 
       case null, default -> throw new ResponseStatusException(
             HttpStatus.BAD_REQUEST,
