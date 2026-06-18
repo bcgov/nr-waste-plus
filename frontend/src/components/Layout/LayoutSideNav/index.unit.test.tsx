@@ -5,6 +5,7 @@ import { LayoutSideNav } from './index';
 
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as useAuthModule from '@/context/auth/useAuth';
+import { Role } from '@/context/auth/types';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import * as routePathsModule from '@/routes/routePaths';
 
@@ -157,6 +158,91 @@ describe('LayoutSideNav', () => {
       await renderWithProviders('/dashboard');
       const helpLink = screen.getByRole('link', { name: 'Need Help?' });
       expect(helpLink.getAttribute('href')).toBe('https://test-bceid-help.example.com');
+    });
+  });
+
+  describe('configuration link', () => {
+    it('shouldRenderConfigurationLink_whenUserHasAdminRole', async () => {
+      vi.mocked(useAuthModule.useAuth).mockReturnValue({
+        user: {
+          idpProvider: 'IDIR',
+          roles: [{ role: Role.ADMIN, clients: [] }],
+          privileges: {},
+        },
+        isLoggedIn: true,
+        isLoading: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+        userToken: vi.fn(),
+        getClients: vi.fn(),
+      });
+      await renderWithProviders('/dashboard');
+      screen.getByTestId('side-nav-link-config');
+    });
+
+    it('shouldNotRenderConfigurationLink_whenUserHasNoAdminRole', async () => {
+      vi.mocked(useAuthModule.useAuth).mockReturnValue({
+        user: {
+          idpProvider: 'IDIR',
+          roles: [{ role: Role.VIEWER, clients: [] }],
+          privileges: {},
+        },
+        isLoggedIn: true,
+        isLoading: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+        userToken: vi.fn(),
+        getClients: vi.fn(),
+      });
+      await renderWithProviders('/dashboard');
+      expect(screen.queryByTestId('side-nav-link-config')).toBeNull();
+    });
+
+    it('shouldNotRenderConfigurationLink_whenUserHasMultipleRolesButNoAdmin', async () => {
+      vi.mocked(useAuthModule.useAuth).mockReturnValue({
+        user: {
+          idpProvider: 'IDIR',
+          roles: [
+            { role: Role.VIEWER, clients: [] },
+            { role: Role.SUBMITTER, clients: [] },
+          ],
+          privileges: {},
+        },
+        isLoggedIn: true,
+        isLoading: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+        userToken: vi.fn(),
+        getClients: vi.fn(),
+      });
+      await renderWithProviders('/dashboard');
+      expect(screen.queryByTestId('side-nav-link-config')).toBeNull();
+    });
+
+    it('shouldNotRenderConfigurationLink_whenUserIsUndefined', async () => {
+      await renderWithProviders('/dashboard');
+      expect(screen.queryByTestId('side-nav-link-config')).toBeNull();
+    });
+
+    it('shouldRenderConfigurationLink_whenUserHasAdminAmongMultipleRoles', async () => {
+      vi.mocked(useAuthModule.useAuth).mockReturnValue({
+        user: {
+          idpProvider: 'IDIR',
+          roles: [
+            { role: Role.VIEWER, clients: [] },
+            { role: Role.ADMIN, clients: [] },
+          ],
+          privileges: {},
+        },
+        isLoggedIn: true,
+        isLoading: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+        userToken: vi.fn(),
+        getClients: vi.fn(),
+      });
+      await renderWithProviders('/dashboard');
+      screen.getByTestId('side-nav-link-config');
     });
   });
 });

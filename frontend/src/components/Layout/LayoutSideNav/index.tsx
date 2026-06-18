@@ -3,12 +3,14 @@ import { Link, useRouterState } from '@tanstack/react-router';
 import { type FC, type ReactElement } from 'react';
 
 import { useAuth } from '@/context/auth/useAuth';
+import { Role } from '@/context/auth/types';
 import { useLayout } from '@/context/layout/useLayout';
 import { env } from '@/env';
 import useOfflineMode from '@/hooks/useOfflineMode';
 import { getMenuEntries, type MenuItem } from '@/routes/routePaths';
 
 import './index.scss';
+import { Help, ToolKit } from '@carbon/icons-react';
 
 /**
  * Collapsible side navigation shell for the application.
@@ -110,12 +112,24 @@ export const LayoutSideNav: FC = () => {
         )}
       </SideNavItems>
       <SideNavItems>
+        {user?.roles?.some((r) => r.role === Role.ADMIN) && (
+          <SideNavLink
+            data-testid="side-nav-link-config"
+            as={Link}
+            to={'/configuration'}
+            isActive={pathname === '/configuration'}
+            renderIcon={ToolKit}
+          >
+            Configuration
+          </SideNavLink>
+        )}
         <SideNavLink
           data-testid="side-nav-link-help"
           as={Link}
           to={user?.idpProvider === 'IDIR' ? env.VITE_IDIR_HELP : env.VITE_BCEID_HELP}
           target="_blank"
           rel="noopener noreferrer"
+          renderIcon={Help}
         >
           Need Help?
         </SideNavLink>
