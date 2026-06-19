@@ -8,7 +8,6 @@ import { Role, type FamRole } from '@/context/auth/types';
 import { featureFlags } from '@/env';
 import ConfigurationDistrictVolumeListPage from '@/pages/ConfigurationDistrictVolumeList';
 import ConfigurationPage from '@/pages/ConfigurationPage';
-import DistrictVolumeUploadPage from '@/pages/DistrictVolumeUploadRoute';
 import LandingPage from '@/pages/Landing';
 import MyClientListPage from '@/pages/MyClientList';
 import NoRolePage from '@/pages/NoRole';
@@ -152,18 +151,6 @@ export const ROUTES: RouteDescription[] = [
     component: () => (
       <Layout>
         <ConfigurationDistrictVolumeListPage />
-      </Layout>
-    ),
-    isSideMenu: false,
-    protected: true,
-    roles: [{ role: Role.ADMIN, clients: [] }],
-  },
-  {
-    path: '/configuration/upload-district-volume',
-    id: 'Upload District Volume',
-    component: () => (
-      <Layout>
-        <DistrictVolumeUploadPage />
       </Layout>
     ),
     isSideMenu: false,
