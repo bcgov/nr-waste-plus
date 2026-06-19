@@ -8,10 +8,10 @@ body:
       value: |
         **⚠️ Responsible Disclosure Notice**  
         Please do **not** include exploit code, proof-of-concept payloads, or
-        personally identifiable information (PII) in this public issue. If you
-        believe the vulnerability is sensitive, select **Report confidentially**
-        under Disclosure Preference below and email details to the security team
-        directly. For critical vulnerabilities, contact the team immediately.
+        personally identifiable information (PII) in this issue. This template
+        creates a **public** issue. For sensitive vulnerabilities that must not
+        be disclosed publicly, use GitHub's private vulnerability reporting
+        (Security → "Report a vulnerability") instead of this form.
 
   - type: input
     id: vulnerability_summary
@@ -90,14 +90,16 @@ body:
       placeholder: e.g., Sanitize input on line 42, add rate limiting, rotate API keys.
       render: shell
 
-  - type: checkboxes
+  - type: dropdown
     id: disclosure_preference
     attributes:
       label: Disclosure Preference
       description: How would you like to proceed?
       options:
-        - label: Report confidentially — do not create a public issue (email details to security team)
-        - label: Create public issue — no sensitive details included above
+        - "I confirm this is a public issue with no sensitive details included"
+        - "I have used GitHub's private vulnerability reporting for sensitive details"
+      validations:
+        required: true
 
   - type: textarea
     id: additional_context
