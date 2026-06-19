@@ -5,7 +5,7 @@ import { type ComponentType } from 'react';
 
 import Layout from '@/components/Layout';
 import { Role, type FamRole } from '@/context/auth/types';
-import { featureFlags } from '@/env';
+import { featureFlags, type FeatureFlags } from '@/env';
 import LandingPage from '@/pages/Landing';
 import MyClientListPage from '@/pages/MyClientList';
 import NoRolePage from '@/pages/NoRole';
@@ -59,6 +59,11 @@ export type RouteDescription = {
    * Stack order in array: [outermost, ..., innermost before protected].
    */
   guards?: RouteGuard[];
+  /**
+   * When set, wraps the component with {@link withFeatureFlag} using the
+   * current value of this feature flag. Throws `notFound()` when disabled.
+   */
+  featureFlag?: keyof FeatureFlags;
 };
 
 /** A leaf navigation item derived from a {@link RouteDescription} for rendering in the side-nav. */
