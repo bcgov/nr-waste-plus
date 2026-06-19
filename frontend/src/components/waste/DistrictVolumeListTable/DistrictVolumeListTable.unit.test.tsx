@@ -3,7 +3,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import DistrictVolumeListTable from './DistrictVolumeListTable';
+import DistrictVolumeListTable from './index';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { DistrictVolumeListItem } from '@/services/districtvolumes.types';
