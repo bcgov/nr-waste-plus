@@ -12,12 +12,13 @@ import { type ComponentType } from 'react';
  * - **Unauthenticated users** → redirects to `/` (landing page)
  *
  * @param Component - The route component to gate.
- * @param isEnabled - Whether the feature is currently enabled.
- * @returns A HOC that renders the component only when `isEnabled` is `true`.
+ * @param isEnabled - Whether the feature is currently enabled. Falsy values
+ * ({@code undefined}, {@code false}) are treated as disabled.
+ * @returns A HOC that renders the component only when {@code isEnabled} is {@code true}.
  */
 export function withFeatureFlag<P extends object>(
   Component: ComponentType<P>,
-  isEnabled: boolean,
+  isEnabled: boolean | undefined,
 ): ComponentType<P> {
   function FeatureFlagGuard(props: P) {
     if (!isEnabled) {

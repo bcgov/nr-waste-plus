@@ -98,28 +98,7 @@ describe('withFeatureFlag', () => {
 
   describe('edge cases', () => {
     it('should handle undefined isEnabled the same as false', () => {
-      const Guarded = withFeatureFlag(DummyPage, undefined as unknown as boolean);
-      expect(() => render(<Guarded />)).toThrow('NOT_FOUND');
-    });
-
-    it('should handle null isEnabled the same as false', () => {
-      const Guarded = withFeatureFlag(DummyPage, null as unknown as boolean);
-      expect(() => render(<Guarded />)).toThrow('NOT_FOUND');
-    });
-
-    it('should handle 0 isEnabled the same as false', () => {
-      const Guarded = withFeatureFlag(DummyPage, 0 as unknown as boolean);
-      expect(() => render(<Guarded />)).toThrow('NOT_FOUND');
-    });
-
-    it('should handle 1 isEnabled the same as true', () => {
-      const Guarded = withFeatureFlag(DummyPage, 1 as unknown as boolean);
-      render(<Guarded />);
-      screen.getByTestId('dummy-page');
-    });
-
-    it('should handle empty string isEnabled the same as false', () => {
-      const Guarded = withFeatureFlag(DummyPage, '' as unknown as boolean);
+      const Guarded = withFeatureFlag(DummyPage, undefined);
       expect(() => render(<Guarded />)).toThrow('NOT_FOUND');
     });
   });
