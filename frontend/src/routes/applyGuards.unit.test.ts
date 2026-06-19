@@ -8,6 +8,7 @@ import { applyGuards } from '@/routes/applyGuards';
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 const mockOfflineWrapper = vi.fn();
 const mockProtectedWrapper = vi.fn();
+const mockFeatureFlagWrapper = vi.fn();
 
 vi.mock('@/routes/guards/withOfflineSupport', () => ({
   withOfflineSupport: (Component: ComponentType, options: unknown) =>
@@ -19,10 +20,23 @@ vi.mock('@/routes/guards/withProtected', () => ({
     mockProtectedWrapper(Component, roles),
 }));
 
+vi.mock('@/routes/guards/withFeatureFlag', () => ({
+  withFeatureFlag: (Component: ComponentType, isEnabled: boolean | undefined) =>
+    mockFeatureFlagWrapper(Component, isEnabled),
+}));
+
+vi.mock('@/env', () => ({
+  featureFlags: {
+    'reporting-unit-create-enabled': true,
+    'bookmark-ru-enabled': false,
+  },
+}));
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const BaseComponent = () => null;
 const OfflineWrapped = () => null;
 const ProtectedWrapped = () => null;
+const FeatureFlagWrapped = () => null;
 
 function makeDesc(overrides: Partial<RouteDescription> = {}): RouteDescription {
   return {
@@ -39,6 +53,7 @@ describe('applyGuards', () => {
   beforeEach(() => {
     mockOfflineWrapper.mockReturnValue(OfflineWrapped);
     mockProtectedWrapper.mockReturnValue(ProtectedWrapped);
+    mockFeatureFlagWrapper.mockReturnValue(FeatureFlagWrapped);
   });
 
   it('shouldReturnOriginalComponent_whenNoGuardsConfigured', () => {
@@ -109,6 +124,50 @@ describe('applyGuards', () => {
     expect(guardA).toHaveBeenCalledWith(BaseComponent);
     expect(guardB).toHaveBeenCalledWith(FirstWrapped);
     expect(result).toBe(SecondWrapped);
+  });
+
+  it('shouldWrapWithFeatureFlag_whenFeatureFlagIsSet', () => {
+    const result = applyGuards(makeDesc({ featureFlag: 'reporting-unit-create-enabled' }));
+    expect(mockFeatureFlagWrapper).toHaveBeenCalledWith(BaseComponent, true);
+    expect(result).toBe(FeatureFlagWrapped);
+  });
+
+  it('shouldPassCorrectFlagValue_whenFlagIsDisabled', () => {
+    const result = applyGuards(makeDesc({ featureFlag: 'bookmark-ru-enabled' }));
+    expect(mockFeatureFlagWrapper).toHaveBeenCalledWith(BaseComponent, false);
+    expect(result).toBe(FeatureFlagWrapped);
+  });
+
+  it('shouldNotWrapWithFeatureFlag_whenFeatureFlagIsAbsent', () => {
+    applyGuards(makeDesc());
+    expect(mockFeatureFlagWrapper).not.toHaveBeenCalled();
+  });
+
+  it('shouldApplyFeatureFlagFirst_thenOffline_thenProtected_thenCustomGuards_inCorrectOrder', () => {
+    const CustomWrapped = () => null;
+    const customGuard = vi.fn().mockReturnValue(CustomWrapped);
+
+    const result = applyGuards(
+      makeDesc({
+        featureFlag: 'reporting-unit-create-enabled',
+        offlineReady: true,
+        protected: true,
+        guards: [customGuard],
+      }),
+    );
+
+    // 1. featureFlag wraps base
+    expect(mockFeatureFlagWrapper).toHaveBeenCalledWith(BaseComponent, true);
+    // 2. offline wraps the featureFlag output
+    expect(mockOfflineWrapper).toHaveBeenCalledWith(
+      FeatureFlagWrapped,
+      expect.objectContaining({ offlineReady: true }),
+    );
+    // 3. protected wraps the offline output
+    expect(mockProtectedWrapper).toHaveBeenCalledWith(OfflineWrapped, undefined);
+    // 4. custom guard wraps the protected output
+    expect(customGuard).toHaveBeenCalledWith(ProtectedWrapped);
+    expect(result).toBe(CustomWrapped);
   });
 
   it('shouldApplyOfflineThenProtectedThenCustomGuards_inCorrectOrder', () => {
