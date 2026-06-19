@@ -1,11 +1,9 @@
 import { DocumentAdd, Group, SearchLocate } from '@carbon/icons-react';
-import { type RouteLoaderFn } from '@tanstack/react-router';
-import { notFound } from '@tanstack/react-router';
 import { type ComponentType } from 'react';
 
 import Layout from '@/components/Layout';
 import { Role, type FamRole } from '@/context/auth/types';
-import { featureFlags, type FeatureFlags } from '@/env';
+import { type FeatureFlags } from '@/env';
 import ConfigurationDistrictVolumeListPage from '@/pages/ConfigurationDistrictVolumeList';
 import ConfigurationPage from '@/pages/ConfigurationPage';
 import LandingPage from '@/pages/Landing';
@@ -16,6 +14,7 @@ import ReportingUnitDetailsPage from '@/pages/ReportingUnitDetails';
 import { reportingUnitLoader } from '@/pages/ReportingUnitDetails/loader';
 import RoleErrorPage from '@/pages/RoleError';
 import WasteSearchPage from '@/pages/WasteSearch';
+import { type RouteLoaderFn } from '@tanstack/react-router';
 import { withPersistentRedirect } from '@/routes/guards/withPersistentRedirect';
 import { withPublicOnly } from '@/routes/guards/withPublicOnly';
 
@@ -125,18 +124,14 @@ export const ROUTES: RouteDescription[] = [
     path: '/reporting-units/create',
     id: 'Create reporting unit',
     icon: DocumentAdd,
-    loader: async () => {
-      if (!featureFlags['reporting-unit-create-enabled']) {
-        throw notFound();
-      }
-    },
     component: () => (
       <Layout>
         <ReportingUnitCreatePage />
       </Layout>
     ),
-    isSideMenu: !!featureFlags['reporting-unit-create-enabled'],
+    isSideMenu: true,
     protected: true,
+    featureFlag: 'reporting-unit-create-enabled',
   },
   {
     path: '/configuration',
@@ -149,6 +144,7 @@ export const ROUTES: RouteDescription[] = [
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
+    featureFlag: 'configuration-enabled',
   },
   {
     path: '/configuration/district-volume-tables',
@@ -161,6 +157,7 @@ export const ROUTES: RouteDescription[] = [
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
+    featureFlag: 'configuration-enabled',
   },
 ];
 
@@ -220,11 +217,5 @@ export const getMenuEntries = (isOnline: boolean, roles: FamRole[]): MenuItem[] 
       (r) =>
         !r.roles?.length || r.roles.some((role) => roles.map((u) => u.role).includes(role.role)),
     )
-    .filter((r) => {
-      // Conditionally exclude routes based on feature flags
-      if (r.id === 'Create reporting unit' && !featureFlags['reporting-unit-create-enabled']) {
-        return false;
-      }
-      return true;
-    })
+    .filter((r) => !('featureFlag' in r) || r.featureFlag)
     .map(({ id, path, icon }) => ({ id, path, icon }));

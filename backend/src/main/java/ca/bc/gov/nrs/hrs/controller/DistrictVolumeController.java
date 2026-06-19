@@ -5,6 +5,7 @@ import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeListItemDto;
 import ca.bc.gov.nrs.hrs.service.DistrictVolumeService;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -24,7 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("/api/configuration/district-average-volumes")
 @RequiredArgsConstructor
-@PreAuthorize("isAuthenticated()")
+@Slf4j
 public class DistrictVolumeController {
 
   private final DistrictVolumeService districtVolumeService;
@@ -47,7 +48,6 @@ public class DistrictVolumeController {
           "Invalid area parameter. Must be INTERIOR or COASTAL."
       );
     }
-
     Page<DistrictVolumeListItemDto> volumes =
         districtVolumeService.getDistrictVolumes(Optional.ofNullable(area), pageable);
 

@@ -70,6 +70,7 @@ jobs:
             'bookmark-ru-enabled': true,
             'reporting-unit-details-enabled': true,
             'reporting-unit-create-enabled': true,
+            'configuration-enabled': true,
           },
         };
 

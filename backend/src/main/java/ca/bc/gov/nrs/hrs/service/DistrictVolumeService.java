@@ -11,7 +11,10 @@ import ca.bc.gov.nrs.hrs.mapper.DistrictVolumeMapper;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import java.time.LocalDate;
 import java.util.Optional;
+
+import io.micrometer.tracing.annotation.NewSpan;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -21,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DistrictVolumeService {
 
   private final DistrictVolumeRepository districtVolumeRepository;
@@ -29,9 +33,12 @@ public class DistrictVolumeService {
    * Retrieves a paginated list of district volume records.
    */
   @Transactional(readOnly = true)
+  @NewSpan
   public Page<DistrictVolumeListItemDto> getDistrictVolumes(
       Optional<String> areaOptional,
       Pageable pageable) {
+
+    log.info("Listing existing district volumes with area filter: {} and page: {}", areaOptional.orElse("None"),pageable);
 
     Page<DistrictVolumeEntity> entities =
         areaOptional
