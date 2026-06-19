@@ -37,6 +37,10 @@ import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.server.ResponseStatusException;
@@ -84,7 +88,28 @@ class DistrictVolumeControllerTest {
     this.mockMvc =
         MockMvcBuilders.standaloneSetup(districtVolumeController)
             .setCustomArgumentResolvers(
-                new PageableHandlerMethodArgumentResolver())
+                new PageableHandlerMethodArgumentResolver(),
+                new org.springframework.web.method.support.HandlerMethodArgumentResolver() {
+                  @Override
+                  public boolean supportsParameter(org.springframework.core.MethodParameter parameter) {
+                    return parameter.hasParameterAnnotation(org.springframework.security.core.annotation.AuthenticationPrincipal.class);
+                  }
+
+                  @Override
+                  public Object resolveArgument(
+                      org.springframework.core.MethodParameter parameter,
+                      org.springframework.web.method.support.ModelAndViewContainer mavContainer,
+                      org.springframework.web.context.request.NativeWebRequest webRequest,
+                      org.springframework.web.bind.support.WebDataBinderFactory binderFactory) {
+                    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                    if (auth != null) {
+                      return auth.getPrincipal();
+                    }
+                    // Fallback for standalone setup without SecurityContext
+                    return ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory.createJwt(
+                        "jakethedog", java.util.Collections.emptyList(), "idir", "Jake", "jake@test.ca");
+                  }
+                })
             .setMessageConverters(
                 new JacksonJsonHttpMessageConverter(mapper))
             .build();
@@ -286,7 +311,7 @@ class DistrictVolumeControllerTest {
             interiorData);
 
     when(districtVolumeService.createDistrictVolume(
-            eq("jakethedog"),
+            eq("IDIR\\jakethedog"),
             any(DistrictVolumeCreateDto.class)))
         .thenReturn(savedDetailDto);
 
@@ -304,6 +329,9 @@ class DistrictVolumeControllerTest {
   @Test
   @DisplayName(
       "POST / — Should return 400 Bad Request when validation constraints are violated")
+  @WithMockJwt(
+      value = "jakethedog"
+  )
   void createDistrictVolume_returns400_whenRequiredFieldsAreNull()
       throws Exception {
 
