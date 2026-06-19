@@ -27,8 +27,8 @@ vi.mock('@/routes/guards/withFeatureFlag', () => ({
 
 vi.mock('@/env', () => ({
   featureFlags: {
-    'test-flag-enabled': true,
-    'test-flag-disabled': false,
+    'reporting-unit-create-enabled': true,
+    'bookmark-ru-enabled': false,
   },
 }));
 
@@ -127,13 +127,13 @@ describe('applyGuards', () => {
   });
 
   it('shouldWrapWithFeatureFlag_whenFeatureFlagIsSet', () => {
-    const result = applyGuards(makeDesc({ featureFlag: 'test-flag-enabled' }));
+    const result = applyGuards(makeDesc({ featureFlag: 'reporting-unit-create-enabled' }));
     expect(mockFeatureFlagWrapper).toHaveBeenCalledWith(BaseComponent, true);
     expect(result).toBe(FeatureFlagWrapped);
   });
 
   it('shouldPassCorrectFlagValue_whenFlagIsDisabled', () => {
-    const result = applyGuards(makeDesc({ featureFlag: 'test-flag-disabled' }));
+    const result = applyGuards(makeDesc({ featureFlag: 'bookmark-ru-enabled' }));
     expect(mockFeatureFlagWrapper).toHaveBeenCalledWith(BaseComponent, false);
     expect(result).toBe(FeatureFlagWrapped);
   });
@@ -149,7 +149,7 @@ describe('applyGuards', () => {
 
     const result = applyGuards(
       makeDesc({
-        featureFlag: 'test-flag-enabled',
+        featureFlag: 'reporting-unit-create-enabled',
         offlineReady: true,
         protected: true,
         guards: [customGuard],
