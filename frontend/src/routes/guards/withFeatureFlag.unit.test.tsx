@@ -84,16 +84,6 @@ describe('withFeatureFlag', () => {
       expect(screen.queryByTestId('dummy-page')).toBeNull();
     });
 
-    it('should not render any content when disabled', () => {
-      const Guarded = withFeatureFlag(DummyPage, false);
-      try {
-        render(<Guarded />);
-      } catch {
-        // Expected - notFound throws
-      }
-      // Component should not have rendered any content
-      expect(screen.queryByTestId('dummy-page')).toBeNull();
-    });
   });
 
   describe('edge cases', () => {
