@@ -1,9 +1,10 @@
 import { DocumentAdd, Group, SearchLocate } from '@carbon/icons-react';
+import { type RouteLoaderFn } from '@tanstack/react-router';
 import { type ComponentType } from 'react';
 
 import Layout from '@/components/Layout';
 import { Role, type FamRole } from '@/context/auth/types';
-import { type FeatureFlags } from '@/env';
+import { featureFlags, type FeatureFlags } from '@/env';
 import ConfigurationDistrictVolumeListPage from '@/pages/ConfigurationDistrictVolumeList';
 import ConfigurationPage from '@/pages/ConfigurationPage';
 import LandingPage from '@/pages/Landing';
@@ -14,7 +15,6 @@ import ReportingUnitDetailsPage from '@/pages/ReportingUnitDetails';
 import { reportingUnitLoader } from '@/pages/ReportingUnitDetails/loader';
 import RoleErrorPage from '@/pages/RoleError';
 import WasteSearchPage from '@/pages/WasteSearch';
-import { type RouteLoaderFn } from '@tanstack/react-router';
 import { withPersistentRedirect } from '@/routes/guards/withPersistentRedirect';
 import { withPublicOnly } from '@/routes/guards/withPublicOnly';
 
@@ -217,5 +217,5 @@ export const getMenuEntries = (isOnline: boolean, roles: FamRole[]): MenuItem[] 
       (r) =>
         !r.roles?.length || r.roles.some((role) => roles.map((u) => u.role).includes(role.role)),
     )
-    .filter((r) => !('featureFlag' in r) || r.featureFlag)
+    .filter((r) => !r.featureFlag || featureFlags[r.featureFlag])
     .map(({ id, path, icon }) => ({ id, path, icon }));
