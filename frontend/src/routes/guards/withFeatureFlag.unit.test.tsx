@@ -1,13 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { notFound } from '@tanstack/react-router';
 import { withFeatureFlag } from './withFeatureFlag';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 vi.mock('@tanstack/react-router', async () => {
-  const actual = await vi.importActual('@tanstack/react-router');
   return {
-    ...actual,
     notFound: () => new Error('NOT_FOUND'),
   };
 });
@@ -33,62 +32,50 @@ describe('withFeatureFlag', () => {
 
   describe('display name', () => {
     it('should set display name when wrapping a named component', () => {
-      const Guarded = withFeatureFlag(DummyPage, true);
+      const Guarded = withFeatureFlag(DummyPage, 'reporting-unit-create-enabled');
       expect(Guarded.displayName).toBe('withFeatureFlag(DummyPage)');
     });
 
     it('should use component name for display name when displayName is missing', () => {
-      const Guarded = withFeatureFlag(NamedPage, true);
+      const Guarded = withFeatureFlag(NamedPage, 'reporting-unit-create-enabled');
       expect(Guarded.displayName).toBe('withFeatureFlag(NamedPage)');
     });
 
     it('should use fallback name for display name when both are missing', () => {
       const anon = (() => null) as React.ComponentType;
-      const Guarded = withFeatureFlag(anon, true);
+      const Guarded = withFeatureFlag(anon, 'reporting-unit-create-enabled');
       expect(Guarded.displayName).toContain('withFeatureFlag(');
     });
   });
 
   describe('when flag is enabled', () => {
     it('should render the wrapped component', () => {
-      const Guarded = withFeatureFlag(DummyPage, true);
+      const Guarded = withFeatureFlag(DummyPage, 'reporting-unit-create-enabled');
       render(<Guarded />);
       screen.getByTestId('dummy-page');
     });
 
     it('should pass props to the wrapped component', () => {
-      const Guarded = withFeatureFlag(PropsPage, true);
+      const Guarded = withFeatureFlag(PropsPage, 'reporting-unit-create-enabled');
       render(<Guarded label="hello" />);
       expect(screen.getByTestId('props-page').textContent).toBe('hello');
     });
 
     it('should not throw an error', () => {
-      const Guarded = withFeatureFlag(DummyPage, true);
+      const Guarded = withFeatureFlag(DummyPage, 'reporting-unit-create-enabled');
       expect(() => render(<Guarded />)).not.toThrow();
     });
   });
 
-  describe('when flag is disabled', () => {
-    it('should throw notFound error', () => {
-      const Guarded = withFeatureFlag(DummyPage, false);
-      expect(() => render(<Guarded />)).toThrow('NOT_FOUND');
-    });
-
-    it('should not render the wrapped component', () => {
-      const Guarded = withFeatureFlag(DummyPage, false);
-      try {
-        render(<Guarded />);
-      } catch {
-        // Expected
-      }
-      expect(screen.queryByTestId('dummy-page')).toBeNull();
-    });
-
-  });
-
   describe('edge cases', () => {
-    it('should handle undefined isEnabled the same as false', () => {
+    it('should handle undefined flag name (no gating)', () => {
       const Guarded = withFeatureFlag(DummyPage, undefined);
+      render(<Guarded />);
+      screen.getByTestId('dummy-page');
+    });
+
+    it('should throw notFound error when flag is not set in featureFlags', () => {
+      const Guarded = withFeatureFlag(DummyPage, 'nonexistent-flag' as any);
       expect(() => render(<Guarded />)).toThrow('NOT_FOUND');
     });
   });
