@@ -5,8 +5,6 @@ import { withOfflineSupport } from './guards/withOfflineSupport';
 import { withProtected } from './guards/withProtected';
 import { type RouteDescription } from './routePaths';
 
-import { featureFlags } from '@/env';
-
 /**
  * Composes HOC guards onto a route component based on its {@link RouteDescription}.
  *
@@ -26,7 +24,7 @@ export function applyGuards(desc: RouteDescription): ComponentType {
   let Component: ComponentType = desc.component;
 
   if (desc.featureFlag) {
-    Component = withFeatureFlag(Component, featureFlags[desc.featureFlag]);
+    Component = withFeatureFlag(Component, desc.featureFlag);
   }
 
   if (desc.offlineOnly || desc.offlineReady) {
