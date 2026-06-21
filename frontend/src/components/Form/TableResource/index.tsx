@@ -262,7 +262,7 @@ const TableResource = <T,>({
   const inlineActionsLimit = Math.max(0, maxInlineRowActions);
 
   return (
-    <>
+    <div data-testid={id}>
       {displayToolbar && (
         <TableToolbar data-testid="table-toolbar">
           <TableToolbarContent className="table-action-toolbar-content">
@@ -368,7 +368,7 @@ const TableResource = <T,>({
           itemRangeText={displayRange ? itemRangeText : noItemRangeText}
         />
       )}
-    </>
+    </div>
   );
 };
 
