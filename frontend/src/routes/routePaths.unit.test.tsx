@@ -49,6 +49,74 @@ vi.mock('@/pages/RoleError', () => ({
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 describe('routePaths', () => {
+  describe('isRouteAccessible', () => {
+    it('shouldReturnTrue_whenNoRolesAndNoFlagRequired', () => {
+      expect(routePaths.isRouteAccessible([], undefined, undefined)).toBe(true);
+    });
+
+    it('shouldReturnTrue_whenUserHasRequiredRole', () => {
+      expect(
+        routePaths.isRouteAccessible(
+          [{ role: Role.ADMIN, clients: [] }],
+          [{ role: Role.ADMIN, clients: [] }],
+        ),
+      ).toBe(true);
+    });
+
+    it('shouldReturnFalse_whenUserLacksRequiredRole', () => {
+      expect(
+        routePaths.isRouteAccessible(
+          [{ role: Role.VIEWER, clients: [] }],
+          [{ role: Role.ADMIN, clients: [] }],
+        ),
+      ).toBe(false);
+    });
+
+    it('shouldReturnTrue_whenUserHasOneOfMultipleRequiredRoles', () => {
+      expect(
+        routePaths.isRouteAccessible(
+          [{ role: Role.VIEWER, clients: [] }],
+          [
+            { role: Role.ADMIN, clients: [] },
+            { role: Role.VIEWER, clients: [] },
+          ],
+        ),
+      ).toBe(true);
+    });
+
+    it('shouldReturnTrue_whenFeatureFlagEnabled', () => {
+      // 'reporting-unit-create-enabled' is mocked as true
+      expect(routePaths.isRouteAccessible([], undefined, 'reporting-unit-create-enabled')).toBe(
+        true,
+      );
+    });
+
+    it('shouldReturnFalse_whenFeatureFlagDisabled', () => {
+      // 'configuration-enabled' is mocked as false
+      expect(routePaths.isRouteAccessible([], undefined, 'configuration-enabled')).toBe(false);
+    });
+
+    it('shouldReturnFalse_whenRoleOkButFlagDisabled', () => {
+      expect(
+        routePaths.isRouteAccessible(
+          [{ role: Role.ADMIN, clients: [] }],
+          [{ role: Role.ADMIN, clients: [] }],
+          'configuration-enabled',
+        ),
+      ).toBe(false);
+    });
+
+    it('shouldReturnTrue_whenRoleOkAndFlagEnabled', () => {
+      expect(
+        routePaths.isRouteAccessible(
+          [{ role: Role.ADMIN, clients: [] }],
+          [{ role: Role.ADMIN, clients: [] }],
+          'reporting-unit-create-enabled',
+        ),
+      ).toBe(true);
+    });
+  });
+
   describe('getMenuEntries', () => {
     it('shouldReturnArray_whenCalled', () => {
       expect(Array.isArray(routePaths.getMenuEntries(true, []))).toBe(true);

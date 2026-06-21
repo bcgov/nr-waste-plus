@@ -5,9 +5,9 @@ import { type FC, type ReactElement } from 'react';
 import { useAuth } from '@/context/auth/useAuth';
 import { Role } from '@/context/auth/types';
 import { useLayout } from '@/context/layout/useLayout';
-import { env, featureFlags } from '@/env';
+import { env } from '@/env';
 import useOfflineMode from '@/hooks/useOfflineMode';
-import { getMenuEntries, type MenuItem } from '@/routes/routePaths';
+import { getMenuEntries, isRouteAccessible, type MenuItem } from '@/routes/routePaths';
 
 import './index.scss';
 import { Help, ToolKit } from '@carbon/icons-react';
@@ -112,18 +112,21 @@ export const LayoutSideNav: FC = () => {
         )}
       </SideNavItems>
       <SideNavItems>
-        {user?.roles?.some((r) => r.role === Role.ADMIN) &&
-          featureFlags['configuration-enabled'] && (
-            <SideNavLink
-              data-testid="side-nav-link-config"
-              as={Link}
-              to={'/configuration'}
-              isActive={pathname === '/configuration'}
-              renderIcon={ToolKit}
-            >
-              Configuration
-            </SideNavLink>
-          )}
+        {isRouteAccessible(
+          user?.roles || [],
+          [{ role: Role.ADMIN, clients: [] }],
+          'configuration-enabled',
+        ) && (
+          <SideNavLink
+            data-testid="side-nav-link-config"
+            as={Link}
+            to={'/configuration'}
+            isActive={pathname === '/configuration'}
+            renderIcon={ToolKit}
+          >
+            Configuration
+          </SideNavLink>
+        )}
         <SideNavLink
           data-testid="side-nav-link-help"
           as={Link}

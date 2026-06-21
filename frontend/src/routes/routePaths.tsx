@@ -197,6 +197,26 @@ export const SYSTEM_ROUTES: RouteDescription[] = [
 ];
 
 /**
+ * Checks whether a user with the given roles can access a route that
+ * requires specific roles and/or a feature flag.
+ *
+ * @param userRoles - The authenticated user's FAM role assignments.
+ * @param requiredRoles - Optional role requirements from the route. Empty/undefined means any role.
+ * @param featureFlag - Optional feature flag key. Undefined means no flag gating.
+ * @returns `true` when the user satisfies both role and feature-flag requirements.
+ */
+export const isRouteAccessible = (
+  userRoles: FamRole[],
+  requiredRoles?: readonly FamRole[],
+  featureFlag?: keyof FeatureFlags,
+): boolean => {
+  const hasRole =
+    !requiredRoles?.length || requiredRoles.some((r) => userRoles.some((u) => u.role === r.role));
+  const flagEnabled = !featureFlag || !!featureFlags[featureFlag];
+  return hasRole && flagEnabled;
+};
+
+/**
  * Returns the side-nav {@link MenuItem} entries visible to the current user.
  *
  * Filters {@link ROUTES} by:
@@ -213,9 +233,5 @@ export const SYSTEM_ROUTES: RouteDescription[] = [
 export const getMenuEntries = (isOnline: boolean, roles: FamRole[]): MenuItem[] =>
   ROUTES.filter((r) => r.isSideMenu)
     .filter((r) => (isOnline ? !r.offlineOnly : !!(r.offlineReady || r.offlineOnly)))
-    .filter(
-      (r) =>
-        !r.roles?.length || r.roles.some((role) => roles.map((u) => u.role).includes(role.role)),
-    )
-    .filter((r) => !r.featureFlag || featureFlags[r.featureFlag])
+    .filter((r) => isRouteAccessible(roles, r.roles, r.featureFlag))
     .map(({ id, path, icon }) => ({ id, path, icon }));

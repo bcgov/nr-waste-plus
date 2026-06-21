@@ -18,6 +18,13 @@ vi.mock(import('@/env'), async (importOriginal) => {
       VITE_IDIR_HELP: 'https://test-idir-help.example.com',
       VITE_BCEID_HELP: 'https://test-bceid-help.example.com',
     },
+    featureFlags: {
+      'offline-mode-enabled': false,
+      'bookmark-ru-enabled': false,
+      'reporting-unit-details-enabled': false,
+      'reporting-unit-create-enabled': true,
+      'configuration-enabled': true,
+    },
   };
 });
 
@@ -48,6 +55,7 @@ const defaultMenuEntries = [
 
 vi.mock('@/routes/routePaths', () => ({
   getMenuEntries: vi.fn(),
+  isRouteAccessible: vi.fn(),
 }));
 
 const renderWithProviders = (pathname = '/dashboard') =>
@@ -61,6 +69,7 @@ const renderWithProviders = (pathname = '/dashboard') =>
 describe('LayoutSideNav', () => {
   beforeEach(() => {
     vi.mocked(routePathsModule.getMenuEntries).mockReturnValue(defaultMenuEntries);
+    vi.mocked(routePathsModule.isRouteAccessible).mockReturnValue(true);
     vi.mocked(useAuthModule.useAuth).mockReturnValue({
       user: undefined,
       isLoggedIn: false,
@@ -163,6 +172,7 @@ describe('LayoutSideNav', () => {
 
   describe('configuration link', () => {
     it('shouldRenderConfigurationLink_whenUserHasAdminRole', async () => {
+      vi.mocked(routePathsModule.isRouteAccessible).mockReturnValue(true);
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: {
           idpProvider: 'IDIR',
@@ -181,6 +191,7 @@ describe('LayoutSideNav', () => {
     });
 
     it('shouldNotRenderConfigurationLink_whenUserHasNoAdminRole', async () => {
+      vi.mocked(routePathsModule.isRouteAccessible).mockReturnValue(false);
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: {
           idpProvider: 'IDIR',
@@ -199,6 +210,7 @@ describe('LayoutSideNav', () => {
     });
 
     it('shouldNotRenderConfigurationLink_whenUserHasMultipleRolesButNoAdmin', async () => {
+      vi.mocked(routePathsModule.isRouteAccessible).mockReturnValue(false);
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: {
           idpProvider: 'IDIR',
@@ -220,11 +232,13 @@ describe('LayoutSideNav', () => {
     });
 
     it('shouldNotRenderConfigurationLink_whenUserIsUndefined', async () => {
+      vi.mocked(routePathsModule.isRouteAccessible).mockReturnValue(false);
       await renderWithProviders('/dashboard');
       expect(screen.queryByTestId('side-nav-link-config')).toBeNull();
     });
 
     it('shouldRenderConfigurationLink_whenUserHasAdminAmongMultipleRoles', async () => {
+      vi.mocked(routePathsModule.isRouteAccessible).mockReturnValue(true);
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: {
           idpProvider: 'IDIR',
@@ -243,6 +257,25 @@ describe('LayoutSideNav', () => {
       });
       await renderWithProviders('/dashboard');
       screen.getByTestId('side-nav-link-config');
+    });
+
+    it('shouldNotRenderConfigurationLink_whenFeatureFlagDisabled', async () => {
+      vi.mocked(routePathsModule.isRouteAccessible).mockReturnValue(false);
+      vi.mocked(useAuthModule.useAuth).mockReturnValue({
+        user: {
+          idpProvider: 'IDIR',
+          roles: [{ role: Role.ADMIN, clients: [] }],
+          privileges: {},
+        },
+        isLoggedIn: true,
+        isLoading: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+        userToken: vi.fn(),
+        getClients: vi.fn(),
+      });
+      await renderWithProviders('/dashboard');
+      expect(screen.queryByTestId('side-nav-link-config')).toBeNull();
     });
   });
 });
