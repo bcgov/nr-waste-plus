@@ -15,9 +15,6 @@ import './index.scss';
  * tiles, each linking to a specific configuration section. Card actions use
  * {@link navigateInTree} for type-safe in-tree navigation.
  *
- * Also registered as the router's `defaultNotFoundComponent`, so unmatched URLs
- * render this page as a fallback for authenticated users.
- *
  * @returns A fragment containing the page header and configuration card columns.
  */
 const ConfigurationPage: FC = () => {
