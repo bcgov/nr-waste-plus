@@ -21,8 +21,8 @@ vi.mock('@/routes/guards/withProtected', () => ({
 }));
 
 vi.mock('@/routes/guards/withFeatureFlag', () => ({
-  withFeatureFlag: (Component: ComponentType, isEnabled: boolean | undefined) =>
-    mockFeatureFlagWrapper(Component, isEnabled),
+  withFeatureFlag: (Component: ComponentType, flagName: string | undefined) =>
+    mockFeatureFlagWrapper(Component, flagName),
 }));
 
 vi.mock('@/env', () => ({
@@ -128,13 +128,16 @@ describe('applyGuards', () => {
 
   it('shouldWrapWithFeatureFlag_whenFeatureFlagIsSet', () => {
     const result = applyGuards(makeDesc({ featureFlag: 'reporting-unit-create-enabled' }));
-    expect(mockFeatureFlagWrapper).toHaveBeenCalledWith(BaseComponent, true);
+    expect(mockFeatureFlagWrapper).toHaveBeenCalledWith(
+      BaseComponent,
+      'reporting-unit-create-enabled',
+    );
     expect(result).toBe(FeatureFlagWrapped);
   });
 
   it('shouldPassCorrectFlagValue_whenFlagIsDisabled', () => {
     const result = applyGuards(makeDesc({ featureFlag: 'bookmark-ru-enabled' }));
-    expect(mockFeatureFlagWrapper).toHaveBeenCalledWith(BaseComponent, false);
+    expect(mockFeatureFlagWrapper).toHaveBeenCalledWith(BaseComponent, 'bookmark-ru-enabled');
     expect(result).toBe(FeatureFlagWrapped);
   });
 
@@ -157,7 +160,10 @@ describe('applyGuards', () => {
     );
 
     // 1. featureFlag wraps base
-    expect(mockFeatureFlagWrapper).toHaveBeenCalledWith(BaseComponent, true);
+    expect(mockFeatureFlagWrapper).toHaveBeenCalledWith(
+      BaseComponent,
+      'reporting-unit-create-enabled',
+    );
     // 2. offline wraps the featureFlag output
     expect(mockOfflineWrapper).toHaveBeenCalledWith(
       FeatureFlagWrapped,

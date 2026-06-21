@@ -27,6 +27,7 @@ vi.mock('@/routes/routePaths', () => ({
       ],
     },
   ],
+  isRouteAccessible: () => true,
 }));
 
 vi.mock('@/services/APIs', () => {

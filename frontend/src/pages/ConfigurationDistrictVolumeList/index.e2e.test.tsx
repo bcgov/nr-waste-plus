@@ -36,7 +36,7 @@ test.describe('Configuration District Volume List Page', () => {
       await configLink.click();
       await expect(page).toHaveURL(/\/configuration$/);
 
-      const districtVolumeLink = page.getByRole('link', { name: /View or update tables/ });
+      const districtVolumeLink = page.getByRole('button', { name: /View or update tables/ });
       await districtVolumeLink.click();
       await expect(page).toHaveURL(/\/configuration\/district-volume-tables$/);
     });
@@ -76,9 +76,7 @@ test.describe('Configuration District Volume List Page', () => {
           'View tables used to calculate volumes when district average waste assessment is used',
         ),
       ).toBeVisible();
-      await expect(
-        page.getByRole('button', { name: /Upload new volumes table/i }),
-      ).toBeVisible();
+      await expect(page.getByRole('button', { name: /Upload new volumes table/i })).toBeVisible();
     });
 
     test('should display the data table with results @idir-only', async ({ page }, testInfo) => {
@@ -93,8 +91,8 @@ test.describe('Configuration District Volume List Page', () => {
       await page.waitForLoadState('domcontentloaded');
 
       await expect(page.getByTestId('district-volume-list')).toBeVisible();
-      await expect(page.getByText('INTERIOR')).toBeVisible();
-      await expect(page.getByText('COASTAL')).toBeVisible();
+      await expect(page.getByText('INTERIOR').first()).toBeVisible();
+      await expect(page.getByText('COASTAL').first()).toBeVisible();
     });
 
     test('should navigate to upload page when upload button is clicked @idir-only', async ({
