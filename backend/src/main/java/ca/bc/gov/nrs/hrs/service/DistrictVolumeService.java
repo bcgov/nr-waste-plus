@@ -38,7 +38,7 @@ public class DistrictVolumeService {
       Optional<String> areaOptional,
       Pageable pageable) {
 
-    log.info("Listing existing district volumes with area filter: {} and page: {}", areaOptional.orElse("None"),pageable);
+    log.debug("Listing existing district volumes with area filter: {} and page: {}", areaOptional.orElse("None"), pageable);
 
     Page<DistrictVolumeEntity> entities =
         areaOptional
