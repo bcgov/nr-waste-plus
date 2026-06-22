@@ -91,8 +91,8 @@ test.describe('Configuration District Volume List Page', () => {
       await page.waitForLoadState('domcontentloaded');
 
       await expect(page.getByTestId('district-volume-list')).toBeVisible();
-      await expect(page.getByText('INTERIOR').first()).toBeVisible();
-      await expect(page.getByText('COASTAL').first()).toBeVisible();
+      await expect(page.getByText('Interior').first()).toBeVisible();
+      await expect(page.getByText('Coast').first()).toBeVisible();
     });
 
     test('should navigate to upload page when upload button is clicked @idir-only', async ({
