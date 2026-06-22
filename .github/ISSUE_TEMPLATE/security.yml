@@ -1,0 +1,110 @@
+name: Security Vulnerability Report
+description: Report a security vulnerability or security-related issue.
+title: "[SECURITY]: "
+labels: [security]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **⚠️ Responsible Disclosure Notice**  
+        Please do **not** include exploit code, proof-of-concept payloads, or
+        personally identifiable information (PII) in this issue. This template
+        creates a **public** issue. For sensitive vulnerabilities that must not
+        be disclosed publicly, use GitHub's private vulnerability reporting
+        (Security → "Report a vulnerability") instead of this form.
+
+  - type: input
+    id: vulnerability_summary
+    attributes:
+      label: Vulnerability Summary
+      description: Provide a concise summary of the vulnerability.
+      placeholder: e.g., SQL injection in the search endpoint allows data exfiltration.
+
+  - type: textarea
+    id: affected_components
+    attributes:
+      label: Affected Component(s)
+      description: Which components, endpoints, or modules are affected?
+      placeholder: e.g., /api/v2/search endpoint, UserService.java, login form
+      render: shell
+
+  - type: checkboxes
+    id: vulnerability_type
+    attributes:
+      label: Vulnerability Type
+      description: Select the category that best describes this issue.
+      options:
+        - label: Cross-Site Scripting (XSS)
+        - label: SQL Injection
+        - label: Authentication / Authorization Bypass
+        - label: Sensitive Data Exposure
+        - label: Cross-Site Request Forgery (CSRF)
+        - label: Server-Side Request Forgery (SSRF)
+        - label: Dependency / Supply Chain Vulnerability
+        - label: Insecure Direct Object Reference (IDOR)
+        - label: Security Misconfiguration
+        - label: Other
+
+  - type: textarea
+    id: reproduction_steps
+    attributes:
+      label: Steps to Reproduce / Proof of Concept
+      description: |
+        Describe how to reproduce the issue. Avoid including
+        active exploit payloads; describe the pattern instead.
+      placeholder: |
+        1. Navigate to ...
+        2. Submit request with ...
+        3. Observe ...
+      render: shell
+
+  - type: textarea
+    id: potential_impact
+    attributes:
+      label: Potential Impact
+      description: What is the worst-case impact if this is exploited?
+      placeholder: e.g., Unauthorized access to user data, remote code execution, data loss.
+
+  - type: input
+    id: cvss_score
+    attributes:
+      label: CVSS Score / Severity (Optional)
+      description: Provide a CVSS v3/v4 score or severity rating if known.
+      placeholder: e.g., 8.2 (High)
+
+  - type: checkboxes
+    id: affected_environments
+    attributes:
+      label: Affected Environments
+      description: Select the environments where this vulnerability exists.
+      options:
+        - label: Development
+        - label: Test
+        - label: Production
+
+  - type: textarea
+    id: suggested_fix
+    attributes:
+      label: Suggested Fix / Mitigation (Optional)
+      description: Any ideas on how to address this vulnerability.
+      placeholder: e.g., Sanitize input on line 42, add rate limiting, rotate API keys.
+      render: shell
+
+  - type: dropdown
+    id: disclosure_preference
+    attributes:
+      label: Disclosure Preference
+      description: How would you like to proceed?
+      options:
+        - "I confirm this is a public issue with no sensitive details included"
+        - "I have used GitHub's private vulnerability reporting for sensitive details"
+      validations:
+        required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Add any other relevant information, references, or links.
+      placeholder: e.g., Related CVEs, security advisories, or internal ticket IDs.
+      render: shell
