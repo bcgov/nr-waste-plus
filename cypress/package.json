@@ -77,7 +77,7 @@
       "glob": "13.0.6"
     },
     "mocha": {
-      "diff": "8.0.3"
+      "diff": "8.0.4"
     },
     "@sentry/node": {
       "@opentelemetry/core": "2.8.0"
