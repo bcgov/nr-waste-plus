@@ -226,6 +226,7 @@ jobs:
           args: >
             -Dsonar.exclusions=**/*.test.ts,**/*.test.tsx,**/coverage/**,**/test-results/**,**/test-reports/**,**/node_modules/**,**/stub/**,**/reports/**,**/tests/**,**/vite-env.d.ts,**/types/**,**/*types.{ts,tsx},**/constants.{ts,tsx},**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx,**/playwright.config.ts,**/e2e.setup.ts,**/DevTools.tsx,**/vite.config.ts
             -Dsonar.coverage.exclusions=**/*.test.ts,**/*.test.tsx,**/coverage/**,**/test-results/**,**/test-reports/**,**/node_modules/**,**/stub/**,**/reports/**,**/tests/**,**/vite-env.d.ts,**/types/**,**/*types.{ts,tsx},**/constants.{ts,tsx},**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx,**/playwright.config.ts,**/DevTools.tsx,**/vite.config.ts
+            -Dsonar.javascript.node.maxspace=8192
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.organization=bcgov-sonarcloud
             -Dsonar.projectKey=nr-waste-plus-frontend
