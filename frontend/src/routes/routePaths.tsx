@@ -1,11 +1,12 @@
 import { DocumentAdd, Group, SearchLocate } from '@carbon/icons-react';
 import { type RouteLoaderFn } from '@tanstack/react-router';
-import { notFound } from '@tanstack/react-router';
 import { type ComponentType } from 'react';
 
 import Layout from '@/components/Layout';
 import { Role, type FamRole } from '@/context/auth/types';
 import { featureFlags, type FeatureFlags } from '@/env';
+import ConfigurationDistrictVolumeListPage from '@/pages/ConfigurationDistrictVolumeList';
+import ConfigurationPage from '@/pages/ConfigurationPage';
 import LandingPage from '@/pages/Landing';
 import MyClientListPage from '@/pages/MyClientList';
 import NoRolePage from '@/pages/NoRole';
@@ -123,18 +124,40 @@ export const ROUTES: RouteDescription[] = [
     path: '/reporting-units/create',
     id: 'Create reporting unit',
     icon: DocumentAdd,
-    loader: async () => {
-      if (!featureFlags['reporting-unit-create-enabled']) {
-        throw notFound();
-      }
-    },
     component: () => (
       <Layout>
         <ReportingUnitCreatePage />
       </Layout>
     ),
-    isSideMenu: !!featureFlags['reporting-unit-create-enabled'],
+    isSideMenu: true,
     protected: true,
+    featureFlag: 'reporting-unit-create-enabled',
+  },
+  {
+    path: '/configuration',
+    id: 'Configuration',
+    component: () => (
+      <Layout>
+        <ConfigurationPage />
+      </Layout>
+    ),
+    isSideMenu: false,
+    protected: true,
+    roles: [{ role: Role.ADMIN, clients: [] }],
+    featureFlag: 'configuration-enabled',
+  },
+  {
+    path: '/configuration/district-volume-tables',
+    id: 'District Volume Tables',
+    component: () => (
+      <Layout>
+        <ConfigurationDistrictVolumeListPage />
+      </Layout>
+    ),
+    isSideMenu: false,
+    protected: true,
+    roles: [{ role: Role.ADMIN, clients: [] }],
+    featureFlag: 'configuration-enabled',
   },
 ];
 
@@ -174,6 +197,26 @@ export const SYSTEM_ROUTES: RouteDescription[] = [
 ];
 
 /**
+ * Checks whether a user with the given roles can access a route that
+ * requires specific roles and/or a feature flag.
+ *
+ * @param userRoles - The authenticated user's FAM role assignments.
+ * @param requiredRoles - Optional role requirements from the route. Empty/undefined means any role.
+ * @param featureFlag - Optional feature flag key. Undefined means no flag gating.
+ * @returns `true` when the user satisfies both role and feature-flag requirements.
+ */
+export const isRouteAccessible = (
+  userRoles: FamRole[],
+  requiredRoles?: readonly FamRole[],
+  featureFlag?: keyof FeatureFlags,
+): boolean => {
+  const hasRole =
+    !requiredRoles?.length || requiredRoles.some((r) => userRoles.some((u) => u.role === r.role));
+  const flagEnabled = !featureFlag || !!featureFlags[featureFlag];
+  return hasRole && flagEnabled;
+};
+
+/**
  * Returns the side-nav {@link MenuItem} entries visible to the current user.
  *
  * Filters {@link ROUTES} by:
@@ -190,15 +233,5 @@ export const SYSTEM_ROUTES: RouteDescription[] = [
 export const getMenuEntries = (isOnline: boolean, roles: FamRole[]): MenuItem[] =>
   ROUTES.filter((r) => r.isSideMenu)
     .filter((r) => (isOnline ? !r.offlineOnly : !!(r.offlineReady || r.offlineOnly)))
-    .filter(
-      (r) =>
-        !r.roles?.length || r.roles.some((role) => roles.map((u) => u.role).includes(role.role)),
-    )
-    .filter((r) => {
-      // Conditionally exclude routes based on feature flags
-      if (r.id === 'Create reporting unit' && !featureFlags['reporting-unit-create-enabled']) {
-        return false;
-      }
-      return true;
-    })
+    .filter((r) => isRouteAccessible(roles, r.roles, r.featureFlag))
     .map(({ id, path, icon }) => ({ id, path, icon }));

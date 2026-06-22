@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import { mockApi, mockApiResponses, mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
+import { mockApi, mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 /**
  * Sets up the common API mocks shared by the ReportingUnitCreate e2e tests.
@@ -113,7 +113,17 @@ export const mockCreateRuServerError = async (page: Page): Promise<void> => {
  * @param page Playwright page.
  */
 export const mockCreateRuConflict = async (page: Page): Promise<void> => {
-  await mockApiResponses(page, 'reporting-units', 409, 'application/json', {
-    message: 'A reporting unit for client CONFLICT_TEST and district ABC already exists!',
+  await mockApi(page, 'reporting-units', async (route) => {
+    if (route.request().method() === 'POST') {
+      await route.fulfill({
+        status: 409,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          message: 'A reporting unit for client CONFLICT_TEST and district ABC already exists!',
+        }),
+      });
+    } else {
+      await route.continue();
+    }
   });
 };

@@ -71,6 +71,38 @@ describe('mapInteriorSpreadsheet', () => {
     expect(wetBelt.districts[0].code).toBe('DKA');
   });
 
+  it('extracts code from long district names with " - " separator', () => {
+    const rows = [
+      {
+        zone: 'Dry belt',
+        district: 'DPG - Prince George Natural Resource District',
+        avoidableSawlog: 10.5,
+        avoidableGrade4: 2.0,
+        unavoidableGrade4: 1.0,
+        total: 13.5,
+      },
+    ];
+
+    const result = mapInteriorSpreadsheet(rows);
+    const dryBelt = result.zones.find((z) => z.name === 'Dry belt')!;
+    expect(dryBelt.districts).toHaveLength(1);
+    expect(dryBelt.districts[0].code).toBe('DPG');
+  });
+
+  it('uses full district code when no separator found', () => {
+    const rows = [
+      {
+        zone: 'Dry belt',
+        district: 'DPG',
+        total: 5,
+      },
+    ];
+
+    const result = mapInteriorSpreadsheet(rows);
+    const dryBelt = result.zones.find((z) => z.name === 'Dry belt')!;
+    expect(dryBelt.districts[0].code).toBe('DPG');
+  });
+
   it('skips rows with unrecognised zone names', () => {
     const rows = [
       { zone: 'Unknown zone', district: 'DPG', total: 5 },
@@ -134,6 +166,26 @@ describe('mapInteriorSpreadsheet', () => {
     const result = mapInteriorSpreadsheet(rows);
     const totalDistricts = result.zones.flatMap((z) => z.districts).length;
     expect(totalDistricts).toBe(2);
+  });
+
+  it('skips rows with missing zone property (undefined defaults to empty string)', () => {
+    const rows = [
+      { district: 'DPG', total: 5 },
+    ];
+
+    const result = mapInteriorSpreadsheet(rows);
+    const totalDistricts = result.zones.flatMap((z) => z.districts).length;
+    expect(totalDistricts).toBe(0);
+  });
+
+  it('skips rows with missing district property (undefined defaults to empty string)', () => {
+    const rows = [
+      { zone: 'Dry belt', total: 5 },
+    ];
+
+    const result = mapInteriorSpreadsheet(rows);
+    const totalDistricts = result.zones.flatMap((z) => z.districts).length;
+    expect(totalDistricts).toBe(0);
   });
 
   it('other zones remain empty when only one zone has rows', () => {

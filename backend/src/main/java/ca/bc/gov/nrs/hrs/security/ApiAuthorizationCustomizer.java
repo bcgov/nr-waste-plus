@@ -105,7 +105,13 @@ public class ApiAuthorizationCustomizer implements
         .authenticated()
 
         .requestMatchers(HttpMethod.POST, "/api/reporting-units/**")
-        .access(roleCheck.gotRoleMatching(Role.SUBMITTER, Role.AREA, Role.DISTRICT, Role.ADMIN));
+        .access(roleCheck.gotRoleMatching(Role.SUBMITTER, Role.AREA, Role.DISTRICT, Role.ADMIN))
+
+
+            .requestMatchers("/api/configuration/**")
+            .access(roleCheck.gotRoleMatching(Role.ADMIN))
+
+    ;
 
   }
 }

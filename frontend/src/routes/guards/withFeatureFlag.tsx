@@ -1,6 +1,8 @@
 import { notFound } from '@tanstack/react-router';
 import { type ComponentType } from 'react';
 
+import { featureFlags } from '@/env';
+
 /**
  * HOC guard: renders the wrapped component only when the given feature flag is enabled.
  *
@@ -12,16 +14,16 @@ import { type ComponentType } from 'react';
  * - **Unauthenticated users** → redirects to `/` (landing page)
  *
  * @param Component - The route component to gate.
- * @param isEnabled - Whether the feature is currently enabled. Falsy values
- * ({@code undefined}, {@code false}) are treated as disabled.
- * @returns A HOC that renders the component only when {@code isEnabled} is {@code true}.
+ * @param flagName - The name of the feature flag to check. If `undefined` or not set,
+ * the component is always rendered. Falsy flag values are treated as disabled.
+ * @returns A HOC that renders the component only when the feature flag is enabled.
  */
 export function withFeatureFlag<P extends object>(
   Component: ComponentType<P>,
-  isEnabled: boolean | undefined,
+  flagName?: keyof import('@/env').FeatureFlags,
 ): ComponentType<P> {
   function FeatureFlagGuard(props: P) {
-    if (!isEnabled) {
+    if (flagName && !featureFlags[flagName]) {
       throw notFound();
     }
 

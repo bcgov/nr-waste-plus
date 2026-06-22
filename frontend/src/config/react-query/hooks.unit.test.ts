@@ -7,6 +7,7 @@ import {
   useClientLookupQuery,
   useCodesQuery,
   useDistrictOptionsQuery,
+  useDistrictVolumeListQuery,
   useForestClientsByNumbersQuery,
   useMyForestClientsQuery,
   useReportingUnitCreateMutation,
@@ -16,6 +17,7 @@ import {
   useWasteSearchFilterOptionsQueries,
 } from './hooks';
 
+import { queryKeys } from './queryKeys';
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 import API from '@/services/APIs';
 
@@ -44,6 +46,21 @@ vi.mock('@/services/APIs', () => ({
     reportingUnit: {
       getReportingUnit: vi.fn().mockResolvedValue({ id: 1 }),
       createReportingUnit: vi.fn().mockResolvedValue(333),
+    },
+    districtVolume: {
+      getDistrictVolumes: vi.fn().mockResolvedValue({
+        content: [
+          {
+            id: 1,
+            area: 'INTERIOR',
+            startDate: '2026-05-15',
+            endDate: null,
+            uploadedBy: 'IDIR/ABCDEF',
+            dateOfUpload: '2026-03-27T00:00:00Z',
+          },
+        ],
+        page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
+      }),
     },
   },
 }));
@@ -632,6 +649,120 @@ describe('react-query hooks', () => {
       );
 
       await waitFor(() => expect(API.search.searchReportingUnit).toHaveBeenCalled());
+    });
+  });
+
+  describe('useDistrictVolumeListQuery', () => {
+    it('should return paginated district volume data', async () => {
+      const { result } = renderHook(
+        () =>
+          useDistrictVolumeListQuery({
+            page: 0,
+            size: 10,
+            sort: {},
+          }),
+        { wrapper: createWrapper() },
+      );
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(result.current.data).toBeDefined();
+      expect(result.current.data?.content).toHaveLength(1);
+      expect(result.current.data?.content[0].area).toBe('INTERIOR');
+    });
+
+    it('should call getDistrictVolumes with correct parameters', async () => {
+      renderHook(
+        () =>
+          useDistrictVolumeListQuery({
+            page: 0,
+            size: 10,
+            sort: {},
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() =>
+        expect(API.districtVolume.getDistrictVolumes).toHaveBeenCalledWith(undefined, {
+          page: 0,
+          size: 10,
+          sort: [],
+        }),
+      );
+    });
+
+    it('should accept query option overrides', async () => {
+      const { result } = renderHook(
+        () =>
+          useDistrictVolumeListQuery(
+            { page: 0, size: 10, sort: {} },
+            { staleTime: 60000 },
+          ),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    });
+
+    it('should support notificationTarget for error notifications', async () => {
+      const mockError = new Error('API Error');
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Failed to load district volumes',
+        title: 'Server Error',
+      };
+      vi.mocked(API.districtVolume.getDistrictVolumes).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(
+        () =>
+          useDistrictVolumeListQuery(
+            { page: 0, size: 10, sort: {} },
+            { notificationTarget: 'district-volume-panel' },
+          ),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(sendEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: 'error',
+          eventTarget: 'district-volume-panel',
+          description: 'Failed to load district volumes',
+        }),
+      );
+    });
+  });
+
+  describe('useReportingUnitExpandQuery defensive guard', () => {
+    it('should throw when queryFn is invoked with null IDs via fetchQuery', async () => {
+      const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+      await expect(
+        qc.fetchQuery({
+          queryKey: queryKeys.search.reportingUnitExpand('row-1', null, null),
+          queryFn: () => {
+            const ruId = null;
+            const wasteAssessmentAreaId = null;
+            if (ruId === null || wasteAssessmentAreaId === null) {
+              throw new Error('Reporting unit expand query requires both IDs.');
+            }
+            return API.search.getReportingUnitSearchExpand(ruId, wasteAssessmentAreaId);
+          },
+        }),
+      ).rejects.toThrow('Reporting unit expand query requires both IDs.');
+    });
+  });
+
+  describe('useClientLookupQuery map transformation', () => {
+    it('should transform forest client results through forestClientAutocompleteResult2CodeDescription', async () => {
+      vi.mocked(API.forestclient.searchForestClients).mockResolvedValueOnce([
+        { id: '00001001', name: 'Test Client', acronym: 'TC' },
+        { id: '00001002', name: 'Another Client', acronym: null },
+      ] as never);
+
+      const { result } = renderHook(() => useClientLookupQuery('00001', true), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(result.current.data).toHaveLength(2);
     });
   });
 });

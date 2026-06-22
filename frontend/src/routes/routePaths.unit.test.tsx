@@ -5,6 +5,21 @@ import * as routePaths from './routePaths';
 
 import { Role } from '@/context/auth/types';
 
+// ── Mocks for env ──────────────────────────────────────────────────────────────
+vi.mock('@/env', async () => {
+  const actual = await vi.importActual('@/env');
+  return {
+    ...actual,
+    featureFlags: {
+      'offline-mode-enabled': false,
+      'bookmark-ru-enabled': false,
+      'reporting-unit-details-enabled': false,
+      'reporting-unit-create-enabled': true, // enabled by default in tests
+      'configuration-enabled': false,
+    },
+  };
+});
+
 // ── Mocks for route component rendering ───────────────────────────────────────
 vi.mock('@/components/Layout', () => ({
   default: ({ children }: { children: React.ReactNode }) => (
@@ -34,6 +49,74 @@ vi.mock('@/pages/RoleError', () => ({
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 describe('routePaths', () => {
+  describe('isRouteAccessible', () => {
+    it('shouldReturnTrue_whenNoRolesAndNoFlagRequired', () => {
+      expect(routePaths.isRouteAccessible([], undefined, undefined)).toBe(true);
+    });
+
+    it('shouldReturnTrue_whenUserHasRequiredRole', () => {
+      expect(
+        routePaths.isRouteAccessible(
+          [{ role: Role.ADMIN, clients: [] }],
+          [{ role: Role.ADMIN, clients: [] }],
+        ),
+      ).toBe(true);
+    });
+
+    it('shouldReturnFalse_whenUserLacksRequiredRole', () => {
+      expect(
+        routePaths.isRouteAccessible(
+          [{ role: Role.VIEWER, clients: [] }],
+          [{ role: Role.ADMIN, clients: [] }],
+        ),
+      ).toBe(false);
+    });
+
+    it('shouldReturnTrue_whenUserHasOneOfMultipleRequiredRoles', () => {
+      expect(
+        routePaths.isRouteAccessible(
+          [{ role: Role.VIEWER, clients: [] }],
+          [
+            { role: Role.ADMIN, clients: [] },
+            { role: Role.VIEWER, clients: [] },
+          ],
+        ),
+      ).toBe(true);
+    });
+
+    it('shouldReturnTrue_whenFeatureFlagEnabled', () => {
+      // 'reporting-unit-create-enabled' is mocked as true
+      expect(routePaths.isRouteAccessible([], undefined, 'reporting-unit-create-enabled')).toBe(
+        true,
+      );
+    });
+
+    it('shouldReturnFalse_whenFeatureFlagDisabled', () => {
+      // 'configuration-enabled' is mocked as false
+      expect(routePaths.isRouteAccessible([], undefined, 'configuration-enabled')).toBe(false);
+    });
+
+    it('shouldReturnFalse_whenRoleOkButFlagDisabled', () => {
+      expect(
+        routePaths.isRouteAccessible(
+          [{ role: Role.ADMIN, clients: [] }],
+          [{ role: Role.ADMIN, clients: [] }],
+          'configuration-enabled',
+        ),
+      ).toBe(false);
+    });
+
+    it('shouldReturnTrue_whenRoleOkAndFlagEnabled', () => {
+      expect(
+        routePaths.isRouteAccessible(
+          [{ role: Role.ADMIN, clients: [] }],
+          [{ role: Role.ADMIN, clients: [] }],
+          'reporting-unit-create-enabled',
+        ),
+      ).toBe(true);
+    });
+  });
+
   describe('getMenuEntries', () => {
     it('shouldReturnArray_whenCalled', () => {
       expect(Array.isArray(routePaths.getMenuEntries(true, []))).toBe(true);
@@ -82,6 +165,32 @@ describe('routePaths', () => {
         expect(e).toHaveProperty('id');
         expect(e).toHaveProperty('path');
       });
+    });
+
+    it('shouldExcludeFeatureFlaggedRoutes_whenFlagIsDisabled', () => {
+      // Test verifies that routes with disabled feature flags are excluded.
+      // "Configuration" has featureFlag: 'configuration-enabled' which is mocked as false
+      const entries = routePaths.getMenuEntries(true, [{ role: Role.ADMIN, clients: [] }]);
+
+      // "Configuration" should be excluded because its feature flag is false in the mock
+      expect(entries.some((e) => e.id === 'Configuration')).toBe(false);
+    });
+
+    it('shouldIncludeCreateReportingUnit_whenFeatureFlagIsEnabled', () => {
+      const entries = routePaths.getMenuEntries(true, [{ role: Role.VIEWER, clients: ['100'] }]);
+
+      // "Create reporting unit" should be included when flag is enabled (default in mock)
+      expect(entries.some((e) => e.id === 'Create reporting unit')).toBe(true);
+    });
+
+    it('shouldIncludeRoutesWithoutFeatureFlags_always', () => {
+      // Test verifies that routes without featureFlag property are always included
+      const entries = routePaths.getMenuEntries(true, [{ role: Role.VIEWER, clients: ['100'] }]);
+
+      // "My clients" has no featureFlag and should always be present
+      expect(entries.some((e) => e.id === 'My clients')).toBe(true);
+      // "Waste search" has no featureFlag and should always be present
+      expect(entries.some((e) => e.id === 'Waste search')).toBe(true);
     });
   });
 

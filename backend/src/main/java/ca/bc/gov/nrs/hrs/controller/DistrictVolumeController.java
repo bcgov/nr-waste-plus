@@ -10,12 +10,12 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,7 +33,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("/api/configuration/district-average-volumes")
 @RequiredArgsConstructor
-@PreAuthorize("isAuthenticated()")
+@Slf4j
 public class DistrictVolumeController {
 
   private final DistrictVolumeService districtVolumeService;
@@ -41,7 +41,7 @@ public class DistrictVolumeController {
   /**
    * Retrieves a paginated list of district volume configurations.
    *
-   * @param area optional area filter (must be INTERIOR or COASTAL)
+   * @param area     optional area filter (must be INTERIOR or COASTAL)
    * @param pageable pagination and sorting information
    * @return page of district volume list items
    */
@@ -52,11 +52,10 @@ public class DistrictVolumeController {
 
     if (area != null && !area.equalsIgnoreCase("INTERIOR") && !area.equalsIgnoreCase("COASTAL")) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, 
+          HttpStatus.BAD_REQUEST,
           "Invalid area parameter. Must be INTERIOR or COASTAL."
       );
     }
-
     Page<DistrictVolumeListItemDto> volumes =
         districtVolumeService.getDistrictVolumes(Optional.ofNullable(area), pageable);
 
@@ -78,7 +77,7 @@ public class DistrictVolumeController {
 
     return ResponseEntity.ok(volumeDetail);
   }
-  
+
   /**
    * Creates a new district volume.
    *
@@ -86,10 +85,10 @@ public class DistrictVolumeController {
    * authenticated user and returns a {@code 201 Created} response with the URI
    * of the newly created resource in the {@code Location} header.
    *
-   * @param jwt the authenticated user's JWT
+   * @param jwt     the authenticated user's JWT
    * @param request the district volume information to create
    * @return a {@link ResponseEntity} with status {@code 201 Created} and the
-   *     location of the created district volume
+   * location of the created district volume
    */
   @PostMapping
   @Observed

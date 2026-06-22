@@ -7,7 +7,7 @@ permissions: {}
 
 env:
   VITE_APP_NAME: Waste Plus
-  VITE_FEATURE_FLAGS: '{"offline-mode-enabled":false,"bookmark-ru-enabled":true, "reporting-unit-details-enabled": true, "reporting-unit-create-enabled": true}'
+  VITE_FEATURE_FLAGS: '{"offline-mode-enabled":false,"bookmark-ru-enabled":true, "reporting-unit-details-enabled": true, "reporting-unit-create-enabled": true, "configuration-enabled": true}'
   VITE_ZONE: TEST
   VITE_MOCK_AUTH: true
   VITE_USER_POOLS_ID: ${{ secrets.COGNITO_USER_POOL }}
@@ -206,11 +206,10 @@ jobs:
             fi
           done
 
-
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '24'
+          node-version: "24"
 
       - name: Merge coverage
         working-directory: frontend
@@ -227,8 +226,8 @@ jobs:
           args: >
             -Dsonar.exclusions=**/*.test.ts,**/*.test.tsx,**/coverage/**,**/test-results/**,**/test-reports/**,**/node_modules/**,**/stub/**,**/reports/**,**/tests/**,**/vite-env.d.ts,**/types/**,**/*types.{ts,tsx},**/constants.{ts,tsx},**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx,**/playwright.config.ts,**/e2e.setup.ts,**/DevTools.tsx,**/vite.config.ts
             -Dsonar.coverage.exclusions=**/*.test.ts,**/*.test.tsx,**/coverage/**,**/test-results/**,**/test-reports/**,**/node_modules/**,**/stub/**,**/reports/**,**/tests/**,**/vite-env.d.ts,**/types/**,**/*types.{ts,tsx},**/constants.{ts,tsx},**/config/fam/*,**/config/react-query/*,**/config/tests/*,**/*.env.ts,**/*.scss,**/*.css,**/*.d.ts,**/types.ts,**/*.types.ts,**/main.tsx,**/App.tsx,**/playwright.config.ts,**/DevTools.tsx,**/vite.config.ts
+            -Dsonar.javascript.node.maxspace=8192
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.organization=bcgov-sonarcloud
             -Dsonar.projectKey=nr-waste-plus-frontend
             -Dsonar.projectName="Waste Plus Frontend"
-

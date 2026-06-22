@@ -9,9 +9,11 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.mapper.DistrictVolumeMapper;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
+import io.micrometer.tracing.annotation.NewSpan;
 import java.time.LocalDate;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.EnumUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DistrictVolumeService {
 
   private final DistrictVolumeRepository districtVolumeRepository;
@@ -30,9 +33,13 @@ public class DistrictVolumeService {
    * Retrieves a paginated list of district volume records.
    */
   @Transactional(readOnly = true)
+  @NewSpan
   public Page<DistrictVolumeListItemDto> getDistrictVolumes(
       Optional<String> areaOptional,
       Pageable pageable) {
+
+    log.debug("Listing existing district volumes with area filter: {} and page: {}",
+        areaOptional.orElse("None"), pageable);
 
     Page<DistrictVolumeEntity> entities =
         areaOptional
@@ -65,7 +72,8 @@ public class DistrictVolumeService {
 
   /**
    * Creates a new district volume configuration record.
-   * @param user the user creating the record
+   *
+   * @param user      the user creating the record
    * @param createDto the district volume configuration payload
    */
   @Transactional
@@ -114,7 +122,7 @@ public class DistrictVolumeService {
 
     return DistrictVolumeMapper.toDetailDto(savedEntity);
   }
-  
+
   /**
    * Structural cross-check validation.
    */
@@ -123,27 +131,25 @@ public class DistrictVolumeService {
 
     switch (createDto.tableData()) {
 
-      case InteriorDataDto i when areaEnum != Area.INTERIOR ->
-        throw new ResponseStatusException(
+      case InteriorDataDto i when areaEnum != Area.INTERIOR -> throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Area mismatch: Expected INTERIOR data layout.");
 
-      case CoastDataDto c when areaEnum != Area.COASTAL ->
-        throw new ResponseStatusException(
+      case CoastDataDto c when areaEnum != Area.COASTAL -> throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Area mismatch: Expected COASTAL data layout.");
-        
+
       case InteriorDataDto i -> {
         // Valid structural combination; do nothing and allow processing to continue.
       }
-      
+
       case CoastDataDto c -> {
         // Valid structural combination; do nothing and allow processing to continue.
       }
 
       case null, default -> throw new ResponseStatusException(
-            HttpStatus.BAD_REQUEST,
-            "Invalid or missing table data payload structure.");
+          HttpStatus.BAD_REQUEST,
+          "Invalid or missing table data payload structure.");
     }
   }
 
