@@ -12,6 +12,7 @@ import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import java.time.LocalDate;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.EnumUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -64,78 +65,86 @@ public class DistrictVolumeService {
 
   /**
    * Creates a new district volume configuration record.
+   * @param user the user creating the record
+   * @param createDto the district volume configuration payload
    */
   @Transactional
   public DistrictVolumeDetailDto createDistrictVolume(
-      DistrictVolumeCreateDto createDto) {
+      String user, DistrictVolumeCreateDto createDto) {
 
-    // 1. Cross-validate Area matching with the polymorphic payload structure
-    validateAreaPayloadConsistency(createDto);
+    Area areaEnum = EnumUtils.getEnumIgnoreCase(
+        Area.class,
+        createDto.area());
 
-    // 2. Business Rule: Effective Date must be strictly in the future
-    if (!createDto.startDate().isAfter(LocalDate.now())) {
+    if (areaEnum == null) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
+          "Invalid area: " + createDto.area()
+              + ". Must be INTERIOR or COASTAL.");
+    }
+
+    validateAreaPayloadConsistency(areaEnum, createDto);
+
+    if (areaEnum == Area.COASTAL && createDto.heliMultiplier() == null) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Missing helicopter multiplier configuration required when area is COASTAL.");
+    }
+
+    if (!createDto.startDate().isAfter(LocalDate.now())) {
+      throw new ResponseStatusException(
+          HttpStatus.UNPROCESSABLE_CONTENT,
           "Start date must be strictly after today.");
     }
 
-    // 3. Map DTO onto the Entity
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
 
-    entity.setArea(Area.valueOf(createDto.area().toUpperCase()));
+    entity.setArea(areaEnum);
     entity.setStartDate(createDto.startDate());
     entity.setTableLevelFactor(createDto.tableLevelFactor());
     entity.setHeliMultiplier(createDto.heliMultiplier());
+    entity.setCreatedBy(user);
+
     entity.setTableData(
         DistrictVolumeMapper.toEntityTableData(
             createDto.tableData()));
 
-    // NOTE:
-    // dateOfUpload, createdAt, createdBy, updatedAt, and updatedBy
-    // are intentionally left out here.
-    // The @AuditingEntityListener handles them automatically.
-
-    // 4. Persist and return structural DTO
     DistrictVolumeEntity savedEntity =
         districtVolumeRepository.save(entity);
 
     return DistrictVolumeMapper.toDetailDto(savedEntity);
   }
-
+  
   /**
-   * Structural cross-check validation using updated, streamlined DTO names.
+   * Structural cross-check validation.
    */
   private void validateAreaPayloadConsistency(
-      DistrictVolumeCreateDto createDto) {
-
-    String areaStr = createDto.area().toUpperCase();
+      Area areaEnum, DistrictVolumeCreateDto createDto) {
 
     switch (createDto.tableData()) {
 
-      case InteriorDataDto i
-          when !"INTERIOR".equals(areaStr) ->
-          throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST,
-              "Area mismatch: Expected INTERIOR data layout.");
-
-      case CoastDataDto c
-          when !"COASTAL".equals(areaStr) ->
-          throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST,
-              "Area mismatch: Expected COASTAL data layout.");
-
-      case CoastDataDto c
-          when createDto.heliMultiplier() == null ->
-          throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST,
-              "Missing helicopter multiplier configuration required "
-                  + "for Coastal tables.");
-
-      default -> {
+      case InteriorDataDto i when areaEnum != Area.INTERIOR ->
         throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Area mismatch: Expected INTERIOR data layout.");
+
+      case CoastDataDto c when areaEnum != Area.COASTAL ->
+        throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Area mismatch: Expected COASTAL data layout.");
+        
+      case InteriorDataDto i -> {
+        // Valid structural combination; do nothing and allow processing to continue.
+      }
+      
+      case CoastDataDto c -> {
+        // Valid structural combination; do nothing and allow processing to continue.
+      }
+
+      case null, default -> throw new ResponseStatusException(
             HttpStatus.BAD_REQUEST,
             "Invalid or missing table data payload structure.");
-      }
     }
   }
+
 }
