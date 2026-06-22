@@ -2,7 +2,9 @@ package ca.bc.gov.nrs.hrs.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDataDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeCreateDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
@@ -78,18 +80,20 @@ class DistrictVolumeServiceTest {
   }
 
   @Test
-  @DisplayName("getDistrictVolumes — should return mapped page from repository when no filter provided")
+  @DisplayName(
+      "getDistrictVolumes — should return mapped page from repository "
+          + "when no filter provided")
   void getDistrictVolumes_returnsMappedPage() {
-    // Arrange
+
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
     PageRequest pageable = PageRequest.of(0, 10);
+
     when(districtVolumeRepository.findAll(pageable))
         .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
-    // Act — Fix: Pass Optional.empty() as the first argument to match the new signature
-    var result = districtVolumeService.getDistrictVolumes(Optional.empty(), pageable);
+    var result =
+        districtVolumeService.getDistrictVolumes(Optional.empty(), pageable);
 
-    // Assert
     assertThat(result).isNotNull();
     assertThat(result.getTotalElements()).isEqualTo(1);
     assertThat(result.getContent()).hasSize(1);
@@ -97,52 +101,52 @@ class DistrictVolumeServiceTest {
   }
 
   @Test
-  @DisplayName("getDistrictVolumes — should return filtered page when area filter is provided")
+  @DisplayName(
+      "getDistrictVolumes — should return filtered page when area filter is provided")
   void getDistrictVolumes_returnsFilteredPage_whenAreaProvided() {
-    // Arrange
+
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
     PageRequest pageable = PageRequest.of(0, 10);
-    
-    // Mock the new findByArea repository method we added
+
     when(districtVolumeRepository.findByArea(Area.INTERIOR, pageable))
         .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
-    // Act — Pass the explicit area string filter wrapped in an Optional
-    var result = districtVolumeService.getDistrictVolumes(Optional.of("INTERIOR"), pageable);
+    var result =
+        districtVolumeService.getDistrictVolumes(
+            Optional.of("INTERIOR"),
+            pageable);
 
-    // Assert
     assertThat(result).isNotNull();
     assertThat(result.getTotalElements()).isEqualTo(1);
     assertThat(result.getContent().get(0).area()).isEqualTo("INTERIOR");
   }
 
   @Test
-  @DisplayName("getDistrictVolumeById — should return detail DTO when entity found")
+  @DisplayName(
+      "getDistrictVolumeById — should return detail DTO when entity found")
   void getDistrictVolumeById_returnsDetailDto_whenFound() {
-    // Arrange
+
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
 
     when(districtVolumeRepository.findById(1L))
         .thenReturn(Optional.of(entity));
 
-    // Act
     DistrictVolumeDetailDto result =
         districtVolumeService.getDistrictVolumeById(1L);
 
-    // Assert
     assertThat(result).isNotNull();
     assertThat(result.id()).isEqualTo(1L);
     assertThat(result.area()).isEqualTo("INTERIOR");
   }
 
   @Test
-  @DisplayName("getDistrictVolumeById — should throw 404 when entity not found")
+  @DisplayName(
+      "getDistrictVolumeById — should throw 404 when entity not found")
   void getDistrictVolumeById_throws404_whenNotFound() {
-    // Arrange
+
     when(districtVolumeRepository.findById(99L))
         .thenReturn(Optional.empty());
 
-    // Act & Assert
     assertThatThrownBy(
             () -> districtVolumeService.getDistrictVolumeById(99L))
         .isInstanceOf(ResponseStatusException.class)
@@ -151,10 +155,10 @@ class DistrictVolumeServiceTest {
 
   @Test
   @DisplayName(
-      "createDistrictVolume — should throw 400 when "
-          + "InteriorDataDto used with area=COASTAL")
+      "createDistrictVolume — should throw 400 when InteriorDataDto used "
+          + "with area=COASTAL")
   void createDistrictVolume_throws400_whenInteriorDataWithCoastalArea() {
-    // Arrange
+
     InteriorDataDto interiorData =
         new InteriorDataDto(
             Collections.emptyList(),
@@ -168,9 +172,10 @@ class DistrictVolumeServiceTest {
             new BigDecimal("1.500"),
             interiorData);
 
-    // Act & Assert
     assertThatThrownBy(
-            () -> districtVolumeService.createDistrictVolume(createDto))
+            () -> districtVolumeService.createDistrictVolume(
+                "TEST_USER",
+                createDto))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining(
             "Area mismatch: Expected INTERIOR data layout.");
@@ -178,10 +183,10 @@ class DistrictVolumeServiceTest {
 
   @Test
   @DisplayName(
-      "createDistrictVolume — should throw 400 when "
-          + "CoastDataDto used with area=INTERIOR")
+      "createDistrictVolume — should throw 400 when CoastDataDto used "
+          + "with area=INTERIOR")
   void createDistrictVolume_throws400_whenCoastalDataWithInteriorArea() {
-    // Arrange
+
     CoastDataDto coastData =
         new CoastDataDto(
             Collections.emptyList(),
@@ -195,9 +200,10 @@ class DistrictVolumeServiceTest {
             null,
             coastData);
 
-    // Act & Assert
     assertThatThrownBy(
-            () -> districtVolumeService.createDistrictVolume(createDto))
+            () -> districtVolumeService.createDistrictVolume(
+                "TEST_USER",
+                createDto))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining(
             "Area mismatch: Expected COASTAL data layout.");
@@ -205,10 +211,10 @@ class DistrictVolumeServiceTest {
 
   @Test
   @DisplayName(
-      "createDistrictVolume — should throw 400 when "
-          + "CoastDataDto has no heliMultiplier")
+      "createDistrictVolume — should throw 400 when CoastDataDto has no "
+          + "heliMultiplier")
   void createDistrictVolume_throws400_whenCoastalDataMissingHeliMultiplier() {
-    // Arrange
+
     CoastDataDto coastData =
         new CoastDataDto(
             Collections.emptyList(),
@@ -222,10 +228,162 @@ class DistrictVolumeServiceTest {
             null,
             coastData);
 
-    // Act & Assert
     assertThatThrownBy(
-            () -> districtVolumeService.createDistrictVolume(createDto))
+            () -> districtVolumeService.createDistrictVolume(
+                "TEST_USER",
+                createDto))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Missing helicopter multiplier");
+  }
+
+  @Test
+  @DisplayName(
+      "createDistrictVolume — should throw 400 when area string is unrecognized")
+  void createDistrictVolume_throws400_whenAreaIsInvalid() {
+
+    InteriorDataDto interiorData =
+        new InteriorDataDto(
+            Collections.emptyList(),
+            Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "UNKNOWN_AREA",
+            LocalDate.of(9999, Month.JANUARY, 1),
+            new BigDecimal("1.000"),
+            null,
+            interiorData);
+
+    assertThatThrownBy(
+            () -> districtVolumeService.createDistrictVolume(
+                "TEST_USER",
+                createDto))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining(
+            "Invalid area: UNKNOWN_AREA. Must be INTERIOR or COASTAL.");
+  }
+
+  @Test
+  @DisplayName(
+      "createDistrictVolume — should throw 400 when tableData payload is missing")
+  void createDistrictVolume_throws400_whenTableDataIsNull() {
+
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "INTERIOR",
+            LocalDate.of(9999, Month.JANUARY, 1),
+            new BigDecimal("1.000"),
+            null,
+            null);
+
+    assertThatThrownBy(
+            () -> districtVolumeService.createDistrictVolume(
+                "TEST_USER",
+                createDto))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining(
+            "Invalid or missing table data payload structure.");
+  }
+
+  @Test
+  @DisplayName(
+      "createDistrictVolume — should throw 422 when start date is in the past")
+  void createDistrictVolume_throws422_whenStartDateIsInPast() {
+
+    InteriorDataDto interiorData =
+        new InteriorDataDto(
+            Collections.emptyList(),
+            Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "INTERIOR",
+            LocalDate.of(2000, Month.JANUARY, 1),
+            new BigDecimal("1.000"),
+            null,
+            interiorData);
+
+    assertThatThrownBy(
+            () -> districtVolumeService.createDistrictVolume(
+                "TEST_USER",
+                createDto))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining(
+            "Start date must be strictly after today.");
+  }
+
+  @Test
+  @DisplayName(
+      "createDistrictVolume — should save and return mapped DTO for "
+          + "valid INTERIOR payload")
+  void createDistrictVolume_returnsMappedDto_whenInteriorIsValid() {
+
+    InteriorDataDto interiorData =
+        new InteriorDataDto(
+            Collections.emptyList(),
+            Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "INTERIOR",
+            LocalDate.of(9999, Month.JANUARY, 1),
+            new BigDecimal("1.150"),
+            null,
+            interiorData);
+
+    DistrictVolumeEntity savedEntity = buildEntity(Area.INTERIOR);
+    savedEntity.setTableLevelFactor(new BigDecimal("1.150"));
+
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
+        .thenReturn(savedEntity);
+
+    DistrictVolumeDetailDto result =
+        districtVolumeService.createDistrictVolume(
+            "TEST_USER",
+            createDto);
+
+    assertThat(result).isNotNull();
+    assertThat(result.area()).isEqualTo("INTERIOR");
+    assertThat(result.tableLevelFactor())
+        .isEqualTo(new BigDecimal("1.150"));
+  }
+
+  @Test
+  @DisplayName(
+      "createDistrictVolume — should save and return mapped DTO for valid COASTAL payload")
+  void createDistrictVolume_returnsMappedDto_whenCoastalIsValid() {
+
+    CoastDataDto coastData =
+        new CoastDataDto(
+            Collections.emptyList(),
+            Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "COASTAL",
+            LocalDate.of(9999, Month.JANUARY, 1),
+            new BigDecimal("1.200"),
+            new BigDecimal("1.500"),
+            coastData);
+
+    DistrictVolumeEntity savedEntity = buildEntity(Area.COASTAL);
+    savedEntity.setTableLevelFactor(new BigDecimal("1.200"));
+    savedEntity.setHeliMultiplier(new BigDecimal("1.500"));
+
+    when(districtVolumeRepository.save(
+            any(DistrictVolumeEntity.class)))
+        .thenReturn(savedEntity);
+
+    DistrictVolumeDetailDto result =
+        districtVolumeService.createDistrictVolume(
+            "TEST_USER",
+            createDto);
+
+    assertThat(result).isNotNull();
+    assertThat(result.area()).isEqualTo("COASTAL");
+    assertThat(result.tableLevelFactor())
+        .isEqualTo(new BigDecimal("1.200"));
+    assertThat(result.heliMultiplier())
+        .isEqualTo(new BigDecimal("1.500"));
   }
 }
