@@ -17,10 +17,10 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 /**
  * Global Spring configuration for the application.
  *
- * <p>This configuration class registers several shared beans used across the
- * application, including REST clients for external services and a Jackson
- * ObjectMapper. It also registers reflection hints required for native image
- * builds via {@code @RegisterReflectionForBinding}.
+ * <p>This configuration class registers shared application infrastructure,
+ * including a Jackson {@link ObjectMapper}, a fallback
+ * {@link GlobalExceptionHandler} bean, and reflection hints required for
+ * native-image builds via {@code @RegisterReflectionForBinding}.
  *
  * @since 1.0.0
  */
