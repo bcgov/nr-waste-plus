@@ -1,7 +1,5 @@
 package ca.bc.gov.nrs.hrs;
 
-import static org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
@@ -17,7 +15,7 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport;
  *   <li>AspectJ auto-proxying ({@link EnableAspectJAutoProxy}) to support AOP-based
  *       concerns such as logging or transactions.</li>
  *   <li>Spring Data web support ({@link EnableSpringDataWebSupport}) configured to
- *       serialize page responses via DTOs (see {@code VIA_DTO}).</li>
+ *       serialize page responses via DTOs.</li>
  * </ul>
  *
  * <p>
@@ -28,7 +26,8 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport;
  */
 @SpringBootApplication
 @EnableAspectJAutoProxy(proxyTargetClass = true)
-@EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)
+@EnableSpringDataWebSupport(
+    pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 public class BackendApplication {
 
   /**

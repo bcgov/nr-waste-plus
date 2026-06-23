@@ -1,12 +1,6 @@
 package ca.bc.gov.nrs.hrs.controller;
 
 import static ca.bc.gov.nrs.hrs.BackendConstants.X_TOTAL_COUNT;
-import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE;
-import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.EMPTY_JSON;
-import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.EMPTY_PAGED_NOPAGE;
-import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.MY_FOREST_CLIENTS_LEGACY;
-import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST;
-import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE;
 import static com.github.tomakehurst.wiremock.client.WireMock.badRequest;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
@@ -22,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
+import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -200,7 +195,10 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
   @DisplayName("Fetch my client")
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00010004", "WASTE_PLUS_SUBMITTER_00012797"}
+      cognitoGroups = {
+          "WASTE_PLUS_SUBMITTER_00010004",
+          "WASTE_PLUS_SUBMITTER_00012797"
+      }
   )
   void fetchMyClientsWithValue(
       String value,
@@ -246,36 +244,36 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
         Arguments.argumentSet(
             "No arguments, with return",
             null,
-            okJson(ONE_BY_VALUE_LIST),
-            okJson(MY_FOREST_CLIENTS_LEGACY),
+            okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST),
+            okJson(ForestClientApiProviderTestConstants.MY_FOREST_CLIENTS_LEGACY),
             true
         ),
         Arguments.argumentSet(
             "With arguments, with return",
             "forest",
-            okJson(ONE_BY_VALUE_LIST),
-            okJson(MY_FOREST_CLIENTS_LEGACY),
+            okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST),
+            okJson(ForestClientApiProviderTestConstants.MY_FOREST_CLIENTS_LEGACY),
             true
         ),
         Arguments.argumentSet(
             "With arguments, no return",
             "kelp",
             okJson("[]"),
-            okJson(REPORTING_UNITS_EMPTY_SEARCH_RESPONSE),
+            okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE),
             false
         ),
         Arguments.argumentSet(
             "With return but no page",
             null,
             okJson("[]"),
-            okJson(EMPTY_PAGED_NOPAGE),
+            okJson(ForestClientApiProviderTestConstants.EMPTY_PAGED_NOPAGE),
             false
         ),
         Arguments.argumentSet(
             "With empty return",
             null,
             okJson("[]"),
-            okJson(EMPTY_JSON),
+            okJson(ForestClientApiProviderTestConstants.EMPTY_JSON),
             false
         )
     );
@@ -286,7 +284,7 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
         Arguments.argumentSet(
             "Happy path",
             "00012797",
-            okJson(CLIENTNUMBER_RESPONSE),
+            okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE),
             HttpStatusCode.valueOf(200)
         ),
         Arguments.argumentSet(
@@ -321,7 +319,7 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
         Arguments.argumentSet(
             "Happy path",
             "00012797",
-            okJson(ONE_BY_VALUE_LIST),
+            okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST),
             HttpStatusCode.valueOf(200)
         ),
         Arguments.argumentSet(
@@ -366,7 +364,8 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
             0,
             10,
             "INDIA",
-            okJson(ONE_BY_VALUE_LIST).withHeader(X_TOTAL_COUNT, "1"),
+            okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST)
+                .withHeader(X_TOTAL_COUNT, "1"),
             1
         ),
         Arguments.argumentSet(
@@ -374,7 +373,8 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
             0,
             10,
             "SAMPLIBC",
-            okJson(ONE_BY_VALUE_LIST).withHeader(X_TOTAL_COUNT, "1"),
+            okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST)
+                .withHeader(X_TOTAL_COUNT, "1"),
             1
         ),
         Arguments.argumentSet(
@@ -382,7 +382,8 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
             0,
             10,
             "00000001",
-            okJson(ONE_BY_VALUE_LIST).withHeader(X_TOTAL_COUNT, "1"),
+            okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST)
+                .withHeader(X_TOTAL_COUNT, "1"),
             1
         ),
         Arguments.argumentSet(
@@ -390,7 +391,8 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
             0,
             10,
             "1",
-            okJson(ONE_BY_VALUE_LIST).withHeader(X_TOTAL_COUNT, "1"),
+            okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST)
+                .withHeader(X_TOTAL_COUNT, "1"),
             1
         )
     );

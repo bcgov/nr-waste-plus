@@ -85,11 +85,15 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   @DisplayName("Get sampling happy Path should Succeed")
   void getSamplingOptions_happyPath_shouldSucceed() throws Exception {
     CodeDescriptionDto category = new CodeDescriptionDto("AGR", "Aggregate");
+    String samplingResponse = """
+        [{"code":"AGR","description":"Aggregate"},
+         {"code":"BLK","description":"Cutblock"},
+         {"code":"OCU","description":"Ocular"}]
+        """;
 
     clientApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/api/codes/samplings"))
-            .willReturn(okJson(
-                "[{\"code\":\"AGR\",\"description\":\"Aggregate\"},{\"code\":\"BLK\",\"description\":\"Cutblock\"},{\"code\":\"OCU\",\"description\":\"Ocular\"}]")));
+            .willReturn(okJson(samplingResponse)));
 
     mockMvc
         .perform(

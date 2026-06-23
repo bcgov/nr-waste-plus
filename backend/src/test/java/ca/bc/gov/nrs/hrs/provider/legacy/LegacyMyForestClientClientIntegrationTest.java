@@ -1,7 +1,5 @@
 package ca.bc.gov.nrs.hrs.provider.legacy;
 
-import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.EMPTY_JSON;
-import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.MY_FOREST_CLIENTS_LEGACY;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.serviceUnavailable;
@@ -12,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
+import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -63,7 +62,7 @@ class LegacyMyForestClientClientIntegrationTest extends AbstractTestContainerInt
   void searchMyClients_shouldReturnPagedContent() {
     clientApiStub.stubFor(
         get(urlPathEqualTo("/api/search/my-forest-clients"))
-            .willReturn(okJson(MY_FOREST_CLIENTS_LEGACY))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.MY_FOREST_CLIENTS_LEGACY))
     );
 
     var result = legacyMyForestClientClient.searchMyClients(
@@ -98,7 +97,7 @@ class LegacyMyForestClientClientIntegrationTest extends AbstractTestContainerInt
   void searchMyClients_shouldReturnEmptyForInvalidPayload() {
     clientApiStub.stubFor(
         get(urlPathEqualTo("/api/search/my-forest-clients"))
-            .willReturn(okJson(EMPTY_JSON))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.EMPTY_JSON))
     );
 
     var result = legacyMyForestClientClient.searchMyClients(
