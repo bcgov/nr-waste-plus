@@ -26,10 +26,14 @@ public class RetriableException extends ResponseStatusException {
    * @param retryAfter the retry-after header value
    */
   public RetriableException(HttpStatusCode status, String value, String retryAfter) {
-    super(status,
+    super(
+        status,
         String.format(
-            "Request failed with status %s: cannot retrieve data with parameter %s, retry after %s",
-            status, value, retryAfter));
+            "Request failed with status %s: cannot retrieve data with parameter %s, "
+                + "retry after %s",
+            status,
+            value,
+            retryAfter));
     this.retryAfter = parseRetryAfter(retryAfter);
   }
 

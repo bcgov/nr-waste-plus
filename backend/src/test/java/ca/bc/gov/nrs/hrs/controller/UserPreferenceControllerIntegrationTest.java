@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.hrs.controller;
 
 import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.context.TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -22,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -72,7 +72,7 @@ class UserPreferenceControllerIntegrationTest extends AbstractTestContainerInteg
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .content(preferencesJson)
                 .accept(MediaType.APPLICATION_JSON)
-                .with(csrf()))
+                .with(SecurityMockMvcRequestPostProcessors.csrf()))
         .andExpect(status().isAccepted())
         .andReturn();
   }

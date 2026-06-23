@@ -9,8 +9,8 @@ import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.core.env.Environment;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @DisplayName("Unit Test | FeatureFlagsConfiguration")
 class FeatureFlagsConfigurationTest {
@@ -57,7 +57,8 @@ class FeatureFlagsConfigurationTest {
   @Test
   @DisplayName("should return false when flags map is empty by default")
   void shouldReturnFalseWhenDefaultBuilder() {
-    FeatureFlagsConfiguration featureFlags = FeatureFlagsConfiguration.builder().build();
+    FeatureFlagsConfiguration featureFlags =
+        FeatureFlagsConfiguration.builder().build();
 
     assertThat(featureFlags.isEnabled("anything")).isFalse();
   }
@@ -74,7 +75,7 @@ class FeatureFlagsConfigurationTest {
 
     assertThat(enabled).isTrue();
     assertThat(meterRegistry.get("hrs.feature.flag.evaluations")
-      .tag("flag", FEATURE_NAME)
+        .tag("flag", FEATURE_NAME)
         .tag("value", "true")
         .counter()
         .count()).isEqualTo(1.0);
@@ -92,7 +93,7 @@ class FeatureFlagsConfigurationTest {
 
     assertThat(enabled).isFalse();
     assertThat(meterRegistry.get("hrs.feature.flag.evaluations")
-      .tag("flag", FEATURE_NAME)
+        .tag("flag", FEATURE_NAME)
         .tag("value", "false")
         .counter()
         .count()).isEqualTo(1.0);
@@ -101,12 +102,14 @@ class FeatureFlagsConfigurationTest {
   @Test
   @DisplayName("should detect production profile when prod is active")
   void shouldDetectProductionProfile() {
-    FeatureFlagsConfiguration featureFlags = FeatureFlagsConfiguration.builder().build();
+    FeatureFlagsConfiguration featureFlags =
+        FeatureFlagsConfiguration.builder().build();
     Environment environment = mock(Environment.class);
     when(environment.getActiveProfiles()).thenReturn(new String[]{"prod"});
     ReflectionTestUtils.setField(featureFlags, "environment", environment);
 
-    boolean production = ReflectionTestUtils.invokeMethod(featureFlags, "isProductionProfileActive");
+    boolean production =
+        ReflectionTestUtils.invokeMethod(featureFlags, "isProductionProfileActive");
 
     assertThat(production).isTrue();
   }

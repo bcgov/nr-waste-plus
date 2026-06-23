@@ -69,7 +69,9 @@ class JwtPrincipalUtilTest {
     assertEquals(expected, JwtPrincipalUtil.getUserId(createJwt(claims)));
   }
 
-  @ParameterizedTest(name = "For custom:idp_username {0} and custom:idp_name {1} idp_username is {2}")
+  @ParameterizedTest(
+      name = "For custom:idp_username {0} and custom:idp_name {1} idp_username is {2}"
+  )
   @CsvSource({
       "username, userid, ca.bc.gov.flnr.fam.dev, username",
       "username, userid, idir, username",
@@ -326,7 +328,7 @@ class JwtPrincipalUtilTest {
 
       assertThat(JwtPrincipalUtil.getClientFromRoles(createJwt(claims))
       ).isEmpty();
-    }else {
+    } else {
       assertThat(
           JwtPrincipalUtil.getClientFromRoles(createJwtAuthenticationToken(claims))
       )
@@ -352,7 +354,7 @@ class JwtPrincipalUtilTest {
             role)
     );
 
-    assertEquals(result,JwtPrincipalUtil.hasConcreteRole(createJwt(claims), role));
+    assertEquals(result, JwtPrincipalUtil.hasConcreteRole(createJwt(claims), role));
   }
 
   @ParameterizedTest
@@ -617,7 +619,10 @@ class JwtPrincipalUtilTest {
     Map<String, Object> claims = new HashMap<>();
     claims.put("custom:idp_name", "bceidbusiness");
     claims.put("custom:idp_username", "bceid_user");
-    claims.put("cognito:groups", List.of("WASTE_PLUS_Submitter_00001271", "WASTE_PLUS_Viewer_00002222"));
+    claims.put(
+        "cognito:groups",
+        List.of("WASTE_PLUS_Submitter_00001271", "WASTE_PLUS_Viewer_00002222")
+    );
 
     // Act
     List<String> result = JwtPrincipalUtil.getClientListFromJwt(createJwt(claims));
@@ -643,7 +648,10 @@ class JwtPrincipalUtilTest {
   }
 
   @Test
-  @DisplayName("getClientListFromJwt should return NOCLIENT sentinel for BCeID user with no cognito groups claim")
+  @DisplayName(
+      "getClientListFromJwt should return NOCLIENT sentinel for BCeID user "
+          + "with no cognito groups claim"
+  )
   void shouldReturnNoClientSentinel_forBceidUserWithNoCognitoGroups() {
     // Arrange
     Map<String, Object> claims = new HashMap<>();

@@ -6,8 +6,8 @@ import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component;
  * if (featureFlagsConfiguration.isEnabled("multi-address")) { … }
  * }</pre>
  *
- * Flags that are not defined default to {@code false} (disabled).
+ * <p>Flags that are not defined default to {@code false} (disabled).
  *
  * @since 1.0.0
  */
@@ -119,14 +119,24 @@ public class FeatureFlagsConfiguration {
           enabledCount,
           disabledCount
       );
-      flags.forEach((name, enabled) ->
-          log.debug("Feature flag '{}' is {}", name, Boolean.TRUE.equals(enabled) ? "ENABLED" : "DISABLED")
+      flags.forEach(
+          (name, enabled) ->
+              log.debug(
+                  "Feature flag '{}' is {}",
+                  name,
+                  Boolean.TRUE.equals(enabled) ? "ENABLED" : "DISABLED"
+              )
       );
       return;
     }
 
-    flags.forEach((name, enabled) ->
-        log.info("Feature flag '{}' is {}", name, Boolean.TRUE.equals(enabled) ? "ENABLED" : "DISABLED")
+    flags.forEach(
+        (name, enabled) ->
+            log.info(
+                "Feature flag '{}' is {}",
+                name,
+                Boolean.TRUE.equals(enabled) ? "ENABLED" : "DISABLED"
+            )
     );
   }
 
@@ -156,7 +166,9 @@ public class FeatureFlagsConfiguration {
 
     return Arrays.stream(environment.getActiveProfiles())
         .map(String::toLowerCase)
-        .anyMatch(profile -> PROD_PROFILE.equals(profile) || PRODUCTION_PROFILE.equals(profile));
+        .anyMatch(
+            profile -> PROD_PROFILE.equals(profile) || PRODUCTION_PROFILE.equals(profile)
+        );
   }
 }
 

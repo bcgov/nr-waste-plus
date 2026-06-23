@@ -1,9 +1,6 @@
 package ca.bc.gov.nrs.hrs.controller;
 
 import static ca.bc.gov.nrs.hrs.TestConstants.LEGACY_RU_DETAILS;
-import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE;
-import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE;
-import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
@@ -12,7 +9,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -21,6 +17,7 @@ import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
+import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -33,6 +30,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -98,12 +96,14 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     // Legacy search: no existing reporting units
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(okJson(REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
+            .willReturn(
+                okJson(
+                    ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
 
     // Forest client exists
     clientApiStub.stubFor(
         get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
-            .willReturn(okJson(CLIENTNUMBER_RESPONSE)));
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
 
     // Legacy create returns new id as numeric JSON
     legacyApiStub.stubFor(
@@ -118,7 +118,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .perform(
             MockMvcRequestBuilders
                 .post("/api/reporting-units")
-                .with(csrf())
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         )
@@ -134,7 +134,9 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     // Legacy search: no existing reporting units
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(okJson(REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
+            .willReturn(
+                okJson(
+                    ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
 
     var requestJson = """
         {"clientNumber":"00012797","districtCode":"DKM","samplingCode":"S01"}
@@ -144,7 +146,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .perform(
             MockMvcRequestBuilders
                 .post("/api/reporting-units")
-                .with(csrf())
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         )
@@ -160,7 +162,8 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     // Legacy search: returns an existing RU (totalElements > 0)
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(okJson(REPORTING_UNITS_SEARCH_RESPONSE)));
+            .willReturn(
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE)));
 
     var requestJson = """
         {"clientNumber":"00012797","districtCode":"DND","samplingCode":"S01","gradeCode":null}
@@ -170,7 +173,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .perform(
             MockMvcRequestBuilders
                 .post("/api/reporting-units")
-                .with(csrf())
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         )
@@ -187,7 +190,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
     clientApiStub.stubFor(
         get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
-            .willReturn(okJson(CLIENTNUMBER_RESPONSE)));
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
 
     mockMvc
         .perform(
@@ -230,7 +233,8 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @Test
   @WithMockJwt
   @DisplayName("shouldReturn404_whenReportingUnitDetailsFeatureFlagIsDisabled")
-  void shouldReturn404_whenReportingUnitDetailsFeatureFlagIsDisabled() throws Exception {
+  void shouldReturn404_whenReportingUnitDetailsFeatureFlagIsDisabled()
+      throws Exception {
     doReturn(false)
         .when(featureFlagsConfiguration)
         .isEnabled(FeatureFlag.REPORTING_UNIT_DETAILS_ENABLED);

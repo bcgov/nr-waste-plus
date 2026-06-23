@@ -73,7 +73,7 @@ class SearchServiceTest {
   }
 
   @BeforeEach
-  void setUp(){
+  void setUp() {
     when(featureFlagsConfiguration.isEnabled(FeatureFlag.BOOKMARK_REPORTING_UNIT_ENABLED))
         .thenReturn(true);
   }
@@ -90,7 +90,10 @@ class SearchServiceTest {
 
     when(legacyApiProvider.searchReportingUnit(any(), any())).thenReturn(page);
     when(forestClientService.getClientByNumber("00010002"))
-        .thenReturn(Optional.of(new ForestClientDto("00010002", "WEST FRASER", null, null, null, null, null)));
+        .thenReturn(
+            Optional.of(
+                new ForestClientDto(
+                    "00010002", "WEST FRASER", null, null, null, null, null)));
     when(userService.getUserBookmarksInList(USER_ID, List.of(36834L)))
         .thenReturn(List.of(36834L));
 
@@ -113,7 +116,10 @@ class SearchServiceTest {
 
     when(legacyApiProvider.searchReportingUnit(any(), any())).thenReturn(page);
     when(forestClientService.getClientByNumber("00010002"))
-        .thenReturn(Optional.of(new ForestClientDto("00010002", "WEST FRASER", null, null, null, null, null)));
+        .thenReturn(
+            Optional.of(
+                new ForestClientDto(
+                    "00010002", "WEST FRASER", null, null, null, null, null)));
     when(userService.getUserBookmarksInList(USER_ID, List.of(36834L)))
         .thenReturn(List.of());
 
@@ -139,7 +145,10 @@ class SearchServiceTest {
 
     when(legacyApiProvider.searchReportingUnit(any(), any())).thenReturn(page);
     when(forestClientService.getClientByNumber("00010002"))
-        .thenReturn(Optional.of(new ForestClientDto("00010002", "WEST FRASER", null, null, null, null, null)));
+        .thenReturn(
+            Optional.of(
+                new ForestClientDto(
+                    "00010002", "WEST FRASER", null, null, null, null, null)));
     when(userService.getUserBookmarksInList(USER_ID, List.of(36834L)))
         .thenReturn(List.of(36834L));
 
@@ -203,7 +212,10 @@ class SearchServiceTest {
 
     when(legacyApiProvider.searchReportingUnit(any(), any())).thenReturn(page);
     when(forestClientService.getClientByNumber("00010002"))
-        .thenReturn(Optional.of(new ForestClientDto("00010002", "WEST FRASER", null, null, null, null, null)));
+        .thenReturn(
+            Optional.of(
+                new ForestClientDto(
+                    "00010002", "WEST FRASER", null, null, null, null, null)));
     // Only RU 36834 is bookmarked
     when(userService.getUserBookmarksInList(USER_ID, List.of(36834L, 12345L)))
         .thenReturn(List.of(36834L));

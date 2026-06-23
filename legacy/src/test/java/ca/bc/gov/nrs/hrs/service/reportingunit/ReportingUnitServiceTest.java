@@ -10,27 +10,27 @@ import static org.mockito.Mockito.when;
 
 import ca.bc.gov.nrs.hrs.LegacyConstants;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
+import ca.bc.gov.nrs.hrs.entity.codes.OrgUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitDetailsProjection;
+import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.WasteReportingUnitNotFound;
 import ca.bc.gov.nrs.hrs.mappers.reportingunit.ReportingUnitDetailsMapper;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.codes.OrgUnitRepository;
-import ca.bc.gov.nrs.hrs.entity.codes.OrgUnitEntity;
-import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
-import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.ArgumentMatchers;
 
 @DisplayName("Unit Test | ReportingUnitService")
 @ExtendWith(MockitoExtension.class)
@@ -160,8 +160,12 @@ class ReportingUnitServiceTest {
     void shouldCreateReportingUnit_whenOrgUnitFound() {
       // Arrange
       String district = "DKM";
-      OrgUnitEntity orgUnit = OrgUnitEntity.builder().orgUnitNo(123L).orgUnitCode(district).build();
-      when(orgUnitRepository.findByOrgUnitCode(district)).thenReturn(java.util.Optional.of(orgUnit));
+      OrgUnitEntity orgUnit = OrgUnitEntity.builder()
+          .orgUnitNo(123L)
+          .orgUnitCode(district)
+          .build();
+      when(orgUnitRepository.findByOrgUnitCode(district))
+          .thenReturn(java.util.Optional.of(orgUnit));
 
       CreateReportingUnitRequestDto request = new CreateReportingUnitRequestDto(
           "00001271",
@@ -222,7 +226,6 @@ class ReportingUnitServiceTest {
           .hasMessageContaining(district);
       verify(ruRepository, never()).save(ArgumentMatchers.any());
     }
-    
+
   }
 }
-

@@ -79,8 +79,8 @@ public abstract class ReportingUnitSearchExpandedMapper implements
   )
   @Mapping(
       target = "totalChildren",
-      expression = "java(projection.getTotalChildCount() != null ? projection.getTotalChildCount().longValue() : 0)"
-
+      expression = "java(projection.getTotalChildCount() != null"
+          + " ? projection.getTotalChildCount().longValue() : 0)"
   )
   @Mapping(target = "status", expression = MapperConstants.STATUS_AS_DTO)
   public abstract ReportingUnitSearchExpandedDto fromProjection(
@@ -110,6 +110,4 @@ public abstract class ReportingUnitSearchExpandedMapper implements
       return List.of();
     }
   }
-
-
 }

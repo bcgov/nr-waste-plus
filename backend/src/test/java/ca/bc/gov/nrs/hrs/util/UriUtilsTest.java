@@ -21,8 +21,9 @@ class UriUtilsTest {
   @MethodSource("buildMultiValueQueryParam")
   @DisplayName("building multi value map")
   void shouldBuildMultiValue(List<String> values, List<String> results) {
-    MapAssert<String, List<String>> assertion = assertThat(UriUtils.buildMultiValueQueryParam("test", values))
-        .isNotNull();
+    MapAssert<String, List<String>> assertion =
+        assertThat(UriUtils.buildMultiValueQueryParam("test", values))
+            .isNotNull();
 
     if (results == null || results.isEmpty()) {
       assertion.isEmpty();
@@ -30,7 +31,7 @@ class UriUtilsTest {
       assertion
           .isNotEmpty()
           .hasSize(1)
-          .hasFieldOrPropertyWithValue("test",results);
+          .hasFieldOrPropertyWithValue("test", results);
 
     }
 
@@ -40,10 +41,15 @@ class UriUtilsTest {
   @MethodSource("buildPageableQueryParam")
   @DisplayName("building pageable map")
   void shouldBuildPageable(
-      Pageable page, boolean isEmpty, int size, int pageNumber, String sort
+      Pageable page,
+      boolean isEmpty,
+      int size,
+      int pageNumber,
+      String sort
   ) {
-    MapAssert<String, List<String>> assertion = assertThat(UriUtils.buildPageableQueryParam(page))
-        .isNotNull();
+    MapAssert<String, List<String>> assertion =
+        assertThat(UriUtils.buildPageableQueryParam(page))
+            .isNotNull();
 
     if (isEmpty) {
       assertion.isEmpty();
@@ -51,11 +57,11 @@ class UriUtilsTest {
       assertion
           .isNotEmpty()
           .hasSize(sort == null || sort.isBlank() ? 2 : 3)
-          .hasFieldOrPropertyWithValue("size",List.of(String.valueOf(size)))
-          .hasFieldOrPropertyWithValue("page",List.of(String.valueOf(pageNumber)));
+          .hasFieldOrPropertyWithValue("size", List.of(String.valueOf(size)))
+          .hasFieldOrPropertyWithValue("page", List.of(String.valueOf(pageNumber)));
 
       if (sort != null && !sort.isBlank()) {
-        assertion.hasFieldOrPropertyWithValue("sort",List.of(sort));
+        assertion.hasFieldOrPropertyWithValue("sort", List.of(sort));
       }
     }
 
@@ -66,19 +72,23 @@ class UriUtilsTest {
         Stream.of(
             Arguments.argumentSet(
                 "Null values",
-                null,List.of()
+                null,
+                List.of()
             ),
             Arguments.argumentSet(
                 "Empty values",
-                List.of(),List.of()
+                List.of(),
+                List.of()
             ),
             Arguments.argumentSet(
                 "Empty values on list",
-                List.of("james", "john","","don"),List.of("james", "john","don")
+                List.of("james", "john", "", "don"),
+                List.of("james", "john", "don")
             ),
             Arguments.argumentSet(
                 "Values on list",
-                List.of("james", "john","don"),List.of("james", "john","don")
+                List.of("james", "john", "don"),
+                List.of("james", "john", "don")
             )
         );
   }
@@ -103,13 +113,19 @@ class UriUtilsTest {
             ),
             Arguments.argumentSet(
                 "Sort",
-                PageRequest.of(0, 10, Direction.DESC,"name"),
-                false, 10, 0, "name,DESC"
+                PageRequest.of(0, 10, Direction.DESC, "name"),
+                false,
+                10,
+                0,
+                "name,DESC"
             ),
             Arguments.argumentSet(
                 "Sort",
-                PageRequest.of(0,10, Sort.by(Direction.DESC,"name")),
-                false, 10, 0, "name,DESC"
+                PageRequest.of(0, 10, Sort.by(Direction.DESC, "name")),
+                false,
+                10,
+                0,
+                "name,DESC"
             )
 
         );
