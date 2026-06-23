@@ -8,6 +8,7 @@ import {
   useCodesQuery,
   useDistrictOptionsQuery,
   useDistrictVolumeListQuery,
+  useDistrictVolumeTableCreateMutation,
   useForestClientsByNumbersQuery,
   useMyForestClientsQuery,
   useReportingUnitCreateMutation,
@@ -16,10 +17,11 @@ import {
   useSearchReportingUnitsQuery,
   useWasteSearchFilterOptionsQueries,
 } from './hooks';
-
 import { queryKeys } from './queryKeys';
+
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 import API from '@/services/APIs';
+import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
@@ -61,6 +63,7 @@ vi.mock('@/services/APIs', () => ({
         ],
         page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
       }),
+      createDistrictVolumeTable: vi.fn().mockResolvedValue(444),
     },
   },
 }));
@@ -691,11 +694,7 @@ describe('react-query hooks', () => {
 
     it('should accept query option overrides', async () => {
       const { result } = renderHook(
-        () =>
-          useDistrictVolumeListQuery(
-            { page: 0, size: 10, sort: {} },
-            { staleTime: 60000 },
-          ),
+        () => useDistrictVolumeListQuery({ page: 0, size: 10, sort: {} }, { staleTime: 60000 }),
         { wrapper: createWrapper() },
       );
 
@@ -763,6 +762,186 @@ describe('react-query hooks', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
       expect(result.current.data).toHaveLength(2);
+    });
+
+    it('should return empty array when queryFn runs with empty clientCode via fetchQuery', async () => {
+      const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+      const data = await qc.fetchQuery({
+        queryKey: queryKeys.forestClient.lookupByClientCode(''),
+        queryFn: async () => {
+          const clientCode = '';
+          if (!clientCode) {
+            return [];
+          }
+          return (await API.forestclient.searchForestClients(clientCode, 0, 1)).map(
+            forestClientAutocompleteResult2CodeDescription,
+          );
+        },
+      });
+
+      expect(data).toEqual([]);
+    });
+  });
+
+  describe('useDistrictVolumeTableCreateMutation', () => {
+    const validCreateRequest = {
+      area: 'INTERIOR' as const,
+      startDate: '2026-06-01',
+      tableLevelFactor: 1.5,
+      tableData: {
+        type: 'INTERIOR' as const,
+        zones: [
+          {
+            name: 'Dry belt' as const,
+            districts: [
+              {
+                code: 'DKM',
+                avoidableSawlog: 10,
+                avoidableGrade4: 5,
+                unavoidableGrade4: 3,
+                total: 18,
+              },
+            ],
+          },
+        ],
+        formulas: {},
+      },
+    };
+
+    it('should call createDistrictVolumeTable on mutate', async () => {
+      const { result } = renderHook(() => useDistrictVolumeTableCreateMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        await result.current.mutateAsync(validCreateRequest);
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(API.districtVolume.createDistrictVolumeTable).toHaveBeenCalledWith(validCreateRequest);
+    });
+
+    it('should return the created district volume ID', async () => {
+      const { result } = renderHook(() => useDistrictVolumeTableCreateMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      let createdId: number | undefined;
+      await act(async () => {
+        createdId = await result.current.mutateAsync(validCreateRequest);
+      });
+
+      expect(typeof createdId).toBe('number');
+      expect(createdId).toBe(444);
+    });
+
+    it('should invoke onSuccess callback with the created ID', async () => {
+      const onSuccessMock = vi.fn();
+      const { result } = renderHook(
+        () => useDistrictVolumeTableCreateMutation({ onSuccess: onSuccessMock }),
+        { wrapper: createWrapper() },
+      );
+
+      await act(async () => {
+        await result.current.mutateAsync(validCreateRequest);
+      });
+
+      expect(onSuccessMock).toHaveBeenCalledWith(444);
+      expect(onSuccessMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle mutation errors without throwing', async () => {
+      const mockError = new Error('Create failed');
+      vi.mocked(API.districtVolume.createDistrictVolumeTable).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(() => useDistrictVolumeTableCreateMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync(validCreateRequest);
+        } catch (_e) {
+          // Error is expected and caught
+        }
+      });
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true);
+      });
+    });
+
+    it('should support notificationTarget for error notifications', async () => {
+      const mockError = new Error('Create failed');
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Duplicate volume table',
+        title: 'Conflict',
+      };
+      vi.mocked(API.districtVolume.createDistrictVolumeTable).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(
+        () => useDistrictVolumeTableCreateMutation({ notificationTarget: 'dv-create' }),
+        { wrapper: createWrapper() },
+      );
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync(validCreateRequest);
+        } catch (_e) {
+          // expected
+        }
+      });
+
+      await waitFor(() => expect(sendEvent).toHaveBeenCalled());
+      expect(sendEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: 'error',
+          eventTarget: 'dv-create',
+          description: 'Duplicate volume table',
+        }),
+      );
+    });
+
+    it('should support both onSuccess and notificationTarget together', async () => {
+      const onSuccessMock = vi.fn();
+      const { result } = renderHook(
+        () =>
+          useDistrictVolumeTableCreateMutation({
+            onSuccess: onSuccessMock,
+            notificationTarget: 'dv-create',
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      await act(async () => {
+        await result.current.mutateAsync(validCreateRequest);
+      });
+
+      expect(onSuccessMock).toHaveBeenCalledWith(444);
+    });
+
+    it('should not dispatch notification when notificationTarget is omitted', async () => {
+      const mockError = new Error('Create failed');
+      vi.mocked(API.districtVolume.createDistrictVolumeTable).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(() => useDistrictVolumeTableCreateMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync(validCreateRequest);
+        } catch (_e) {
+          // expected
+        }
+      });
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(sendEvent).not.toHaveBeenCalled();
     });
   });
 });
