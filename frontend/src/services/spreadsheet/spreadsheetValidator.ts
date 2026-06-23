@@ -61,6 +61,12 @@ export class SpreadsheetValidator {
 
     const maxCol = Math.max(...config.groups.map((g) => g.colEnd));
 
+    if (worksheet.columnCount < maxCol) {
+      errors.push(
+        `Spreadsheet has ${worksheet.columnCount} column${worksheet.columnCount === 1 ? '' : 's'}, expected at least ${maxCol}.`,
+      );
+    }
+
     for (let r = config.dataStartRow; r <= lastRow; r++) {
       const districtVal = String(worksheet.getCell(r, config.districtCol).value ?? '').trim();
       if (!districtVal) continue; // skip empty rows
@@ -80,6 +86,14 @@ export class SpreadsheetValidator {
             );
           }
         }
+      }
+    }
+
+    if (config.heliMultiplierCol) {
+      const lastRow = worksheet.rowCount;
+      const heliCell = worksheet.getCell(lastRow, config.heliMultiplierCol);
+      if (heliCell.value == null || typeof heliCell.value !== 'number') {
+        errors.push('Coast spreadsheet must include a Heli Multiplier value.');
       }
     }
 

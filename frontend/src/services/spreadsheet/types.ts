@@ -27,6 +27,8 @@ export interface MatrixConfig {
   districtCol: number;
   districtKey: string;
   groupOutputKey: string;
+  /** Optional column index for heli multiplier (e.g., 12 for Coast col L). */
+  heliMultiplierCol?: number;
 }
 
 export interface ValidationResult {
