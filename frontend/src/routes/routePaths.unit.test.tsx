@@ -47,6 +47,26 @@ vi.mock('@/pages/RoleError', () => ({
   default: () => <div data-testid="role-error-page" />,
 }));
 
+vi.mock('@/pages/DistrictVolumeTableUpload', () => ({
+  default: () => <div data-testid="district-volume-table-upload" />,
+}));
+
+vi.mock('@/pages/ConfigurationDistrictVolumeList', () => ({
+  default: () => <div data-testid="configuration-district-volume-list" />,
+}));
+
+vi.mock('@/pages/ConfigurationPage', () => ({
+  default: () => <div data-testid="configuration-page" />,
+}));
+
+vi.mock('@/pages/ReportingUnitCreate', () => ({
+  default: () => <div data-testid="reporting-unit-create" />,
+}));
+
+vi.mock('@/pages/ReportingUnitDetails', () => ({
+  default: () => <div data-testid="reporting-unit-details" />,
+}));
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 describe('routePaths', () => {
   describe('isRouteAccessible', () => {
@@ -218,6 +238,43 @@ describe('routePaths', () => {
       const Comp = searchRoute.component;
       const { container } = render(<Comp />);
       expect(container).toBeDefined();
+    });
+
+    it('shouldDefineUploadDistrictVolumeRoute', () => {
+      expect(
+        routePaths.ROUTES.some((r) => r.path === '/configuration/upload-district-volume'),
+      ).toBe(true);
+    });
+
+    it('shouldMarkUploadDistrictVolumeRouteAsProtectedAdmin', () => {
+      const uploadRoute = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/upload-district-volume',
+      )!;
+      expect(uploadRoute.protected).toBe(true);
+      expect(uploadRoute.roles).toEqual([{ role: Role.ADMIN, clients: [] }]);
+    });
+
+    it('shouldRenderUploadDistrictVolumeRouteComponent_withoutThrowing', () => {
+      const uploadRoute = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/upload-district-volume',
+      )!;
+      const Comp = uploadRoute.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldNotShowUploadRouteInSideMenu', () => {
+      const uploadRoute = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/upload-district-volume',
+      )!;
+      expect(uploadRoute.isSideMenu).toBe(false);
+    });
+
+    it('shouldGateUploadRouteBehindConfigurationFeatureFlag', () => {
+      const uploadRoute = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/upload-district-volume',
+      )!;
+      expect(uploadRoute.featureFlag).toBe('configuration-enabled');
     });
   });
 

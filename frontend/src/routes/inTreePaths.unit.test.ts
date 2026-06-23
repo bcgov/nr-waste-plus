@@ -34,6 +34,7 @@ describe('inTreePaths', () => {
         '/clients',
         '/no-role',
         '/unauthorized',
+        '/configuration/district-volume-tables/123',
       ];
       paths.forEach((path) => {
         const navigate = vi.fn();
