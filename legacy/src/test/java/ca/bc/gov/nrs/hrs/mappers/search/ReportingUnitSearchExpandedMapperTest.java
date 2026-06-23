@@ -184,7 +184,8 @@ class ReportingUnitSearchExpandedMapperTest {
     void shouldParseSingleSecondaryMark() {
       // Given
       stubFullProjection();
-      String json = "[{\"mark\":\"SM1\",\"status\":{\"code\":\"AC\",\"description\":\"Active\"},\"area\":10.5}]";
+      String json = "[{\"mark\":\"SM1\",\"status\":{\"code\":\"AC\","
+          + "\"description\":\"Active\"},\"area\":10.5}]";
       when(projection.getSecondary()).thenReturn(json);
 
       // When
@@ -207,8 +208,10 @@ class ReportingUnitSearchExpandedMapperTest {
       // Given
       stubFullProjection();
       String json = "["
-          + "{\"mark\":\"SM1\",\"status\":{\"code\":\"AC\",\"description\":\"Active\"},\"area\":10.5},"
-          + "{\"mark\":\"SM2\",\"status\":{\"code\":\"IN\",\"description\":\"Inactive\"},\"area\":20.0}"
+          + "{\"mark\":\"SM1\",\"status\":{\"code\":\"AC\","
+          + "\"description\":\"Active\"},\"area\":10.5},"
+          + "{\"mark\":\"SM2\",\"status\":{\"code\":\"IN\","
+          + "\"description\":\"Inactive\"},\"area\":20.0}"
           + "]";
       when(projection.getSecondary()).thenReturn(json);
 

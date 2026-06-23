@@ -5,8 +5,16 @@ import java.util.UUID;
 import org.testcontainers.oracle.OracleContainer;
 import org.testcontainers.utility.DockerImageName;
 
+/**
+ * Testcontainers Oracle wrapper with project-specific defaults for integration tests.
+ */
 public class CustomOracleContainer extends OracleContainer {
 
+  /**
+   * Creates a configured Oracle test container instance.
+   *
+   * @param imageName the Docker image name to use for the Oracle container
+   */
   public CustomOracleContainer(String imageName) {
     super(
         DockerImageName

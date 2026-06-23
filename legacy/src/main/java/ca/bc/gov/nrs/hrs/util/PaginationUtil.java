@@ -49,7 +49,8 @@ public class PaginationUtil {
       if (dbField == null) {
         throw new InvalidSortingFieldException(order.getProperty());
       }
-      sort = sort != null ?
+      sort = sort != null
+          ?
           sort.andUnsafe(order.getDirection(), dbField)
           : JpaSort.unsafe(order.getDirection(), dbField);
     }

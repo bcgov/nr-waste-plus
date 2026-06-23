@@ -6,12 +6,12 @@ import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.entity.codes.OrgUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.exception.GlobalExceptionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import ca.bc.gov.nrs.hrs.exception.GlobalExceptionHandler;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
 /**
@@ -20,8 +20,7 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
  * <p>This configuration class registers several shared beans used across the
  * application, including REST clients for external services and a Jackson
  * ObjectMapper. It also registers reflection hints required for native image
- * builds via {@code @RegisterReflectionForBinding} and enables JPA auditing.
- * </p>
+ * builds via {@code @RegisterReflectionForBinding}.
  *
  * @since 1.0.0
  */
@@ -39,9 +38,9 @@ public class GlobalConfiguration {
   /**
    * Provides the application's Jackson {@link ObjectMapper} instance.
    *
-   * <p>The {@link Jackson2ObjectMapperBuilder} is used to construct and
-   * configure the {@code ObjectMapper} according to any customizations applied
-   * to the builder elsewhere in the application context.</p>
+   * <p>The {@link Jackson2ObjectMapperBuilder} is used to construct and configure the
+   * {@code ObjectMapper} according to any customizations applied to the builder elsewhere in the
+   * application context.
    *
    * @param builder the Jackson builder used to create the mapper
    * @return a configured {@link ObjectMapper}

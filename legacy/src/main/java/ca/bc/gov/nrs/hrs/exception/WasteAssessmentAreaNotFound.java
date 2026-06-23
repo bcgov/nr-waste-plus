@@ -8,7 +8,7 @@ import org.springframework.web.server.ResponseStatusException;
  * Exception thrown when a block is not found for a given reporting unit.
  *
  * <p>This exception is thrown when attempting to retrieve or access a block that does not exist
- * within a specific reporting unit. It returns an HTTP 404 Not Found status to the client.</p>
+ * within a specific reporting unit. It returns an HTTP 404 Not Found status to the client.
  */
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class WasteAssessmentAreaNotFound extends ResponseStatusException {
@@ -16,14 +16,20 @@ public class WasteAssessmentAreaNotFound extends ResponseStatusException {
   /**
    * Constructs a new BlockNotFound exception with the given reporting unit and block IDs.
    *
-   * <p>The exception message will include both the waste assessment area ID and the reporting unit ID for
-   * better debugging and error reporting.</p>
+   * <p>The exception message includes both the waste assessment area ID and the reporting unit ID
+   * for better debugging and error reporting.
    *
    * @param ruId    the ID of the reporting unit
    * @param wasteAssessmentAreaId the ID of the waste assessment area that was not found
    */
   public WasteAssessmentAreaNotFound(Long ruId, Long wasteAssessmentAreaId) {
-    super(HttpStatus.NOT_FOUND,
-        "Waste assessment area with ID " + wasteAssessmentAreaId + " not found for Reporting Unit with ID " + ruId + ".");
+    super(
+        HttpStatus.NOT_FOUND,
+        "Waste assessment area with ID "
+            + wasteAssessmentAreaId
+            + " not found for Reporting Unit with ID "
+            + ruId
+            + "."
+    );
   }
 }
