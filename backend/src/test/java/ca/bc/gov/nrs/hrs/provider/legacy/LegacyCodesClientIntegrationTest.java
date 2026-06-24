@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.hrs.provider.legacy;
 
-import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.DISTRICT_CODES_JSON;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.serviceUnavailable;
@@ -12,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
+import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -62,7 +62,7 @@ class LegacyCodesClientIntegrationTest extends AbstractTestContainerIntegrationT
 
     clientApiStub.stubFor(
         get(urlPathEqualTo("/api/codes/districts"))
-            .willReturn(okJson(DISTRICT_CODES_JSON)));
+            .willReturn(okJson(ForestClientApiProviderTestConstants.DISTRICT_CODES_JSON)));
 
     assertNotNull(legacyCodesClient.getDistrictCodes());
     assertFalse(legacyCodesClient.getDistrictCodes().isEmpty());

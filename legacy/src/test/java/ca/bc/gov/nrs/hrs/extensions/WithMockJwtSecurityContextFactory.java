@@ -14,7 +14,9 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.test.context.support.WithSecurityContextFactory;
 
-
+/**
+ * Factory that creates a mock JWT-based {@link SecurityContext} for tests.
+ */
 public class WithMockJwtSecurityContextFactory implements WithSecurityContextFactory<WithMockJwt> {
 
   @Override
@@ -37,6 +39,16 @@ public class WithMockJwtSecurityContextFactory implements WithSecurityContextFac
     return context;
   }
 
+  /**
+   * Builds a mock JWT instance populated from the annotation values.
+   *
+   * @param value the token subject
+   * @param cognitoGroups the Cognito groups claim
+   * @param idp the identity provider claim
+   * @param displayName the display name claim
+   * @param email the email claim
+   * @return a populated {@link Jwt}
+   */
   public static Jwt createJwt(
       String value,
       List<String> cognitoGroups,
@@ -59,6 +71,16 @@ public class WithMockJwtSecurityContextFactory implements WithSecurityContextFac
         .build();
   }
 
+  /**
+   * Creates the claims map used by the mock JWT.
+   *
+   * @param value the token subject
+   * @param cognitoGroups the Cognito groups claim
+   * @param idp the identity provider claim
+   * @param displayName the display name claim
+   * @param email the email claim
+   * @return a mutable map of claims
+   */
   public static Map<String, Object> createClaims(
       String value,
       List<String> cognitoGroups,
@@ -75,5 +97,4 @@ public class WithMockJwtSecurityContextFactory implements WithSecurityContextFac
     claims.put("email", email);
     return claims;
   }
-}
-
+}

@@ -34,8 +34,7 @@ class ReportingUnitSearchExpandedMapperTest {
   void setUp() {
     projection = mock(ReportingUnitSearchExpandedProjection.class);
   }
-
-  // -- Helper to set up a "complete" projection with sensible defaults --
+  
   private void stubFullProjection() {
     when(projection.getId()).thenReturn(1L);
     when(projection.getLicenseNo()).thenReturn("L123");
@@ -55,10 +54,7 @@ class ReportingUnitSearchExpandedMapperTest {
     when(projection.getStatusCode()).thenReturn("AC");
     when(projection.getStatusName()).thenReturn("Active");
   }
-
-  // -----------------------------------------------------------------------
-  // totalChildren tests
-  // -----------------------------------------------------------------------
+  
   @Nested
   @DisplayName("totalChildren mapping")
   class TotalChildrenMapping {
@@ -123,10 +119,7 @@ class ReportingUnitSearchExpandedMapperTest {
       assertEquals(999_999L, dto.totalChildren());
     }
   }
-
-  // -----------------------------------------------------------------------
-  // parseSecondaryJson tests
-  // -----------------------------------------------------------------------
+  
   @Nested
   @DisplayName("parseSecondaryJson mapping")
   class ParseSecondaryJson {
@@ -184,7 +177,8 @@ class ReportingUnitSearchExpandedMapperTest {
     void shouldParseSingleSecondaryMark() {
       // Given
       stubFullProjection();
-      String json = "[{\"mark\":\"SM1\",\"status\":{\"code\":\"AC\",\"description\":\"Active\"},\"area\":10.5}]";
+      String json = "[{\"mark\":\"SM1\",\"status\":{\"code\":\"AC\","
+          + "\"description\":\"Active\"},\"area\":10.5}]";
       when(projection.getSecondary()).thenReturn(json);
 
       // When
@@ -207,8 +201,10 @@ class ReportingUnitSearchExpandedMapperTest {
       // Given
       stubFullProjection();
       String json = "["
-          + "{\"mark\":\"SM1\",\"status\":{\"code\":\"AC\",\"description\":\"Active\"},\"area\":10.5},"
-          + "{\"mark\":\"SM2\",\"status\":{\"code\":\"IN\",\"description\":\"Inactive\"},\"area\":20.0}"
+          + "{\"mark\":\"SM1\",\"status\":{\"code\":\"AC\","
+          + "\"description\":\"Active\"},\"area\":10.5},"
+          + "{\"mark\":\"SM2\",\"status\":{\"code\":\"IN\","
+          + "\"description\":\"Inactive\"},\"area\":20.0}"
           + "]";
       when(projection.getSecondary()).thenReturn(json);
 
@@ -280,10 +276,7 @@ class ReportingUnitSearchExpandedMapperTest {
       assertNull(marks.get(0).area());
     }
   }
-
-  // -----------------------------------------------------------------------
-  // Null projection test
-  // -----------------------------------------------------------------------
+  
   @Test
   @DisplayName("should return null when projection is null")
   void shouldReturnNullWhenProjectionIsNull() {

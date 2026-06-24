@@ -15,11 +15,11 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Configuration for application metrics and Micrometer integration.
  *
- * <p>This class registers common metric-related beans such as a {@link TimedAspect}
- * for AOP-based @Timed support, common tags applied to all meters, and Prometheus registry
- * customizations. It reads application metadata (version, name, zone) from properties and applies
- * them as common tags to the meter registry.
- * </p>
+ * <p>This class registers common metric-related beans such as a
+ * {@link TimedAspect} for AOP-based @Timed support, common tags applied to all
+ * meters, and Prometheus registry customizations. It reads application metadata
+ * (version, name, zone) from properties and applies them as common tags to the
+ * meter registry.</p>
  *
  * @since 1.0.0
  */
@@ -45,8 +45,8 @@ public class HrsMetricConfiguration {
   private String appZone;
 
   /**
-   * Registers a {@link TimedAspect} that enables Micrometer's {@code @Timed} annotation support via
-   * AOP.
+   * Registers a {@link TimedAspect} that enables Micrometer's {@code @Timed}
+   * annotation support via AOP.
    *
    * @param registry the application's {@link MeterRegistry}
    * @return a configured {@link TimedAspect}
@@ -60,9 +60,9 @@ public class HrsMetricConfiguration {
    * Provides common tags and meter filters to be applied to all meters.
    *
    * <p>The returned {@link MeterRegistryCustomizer} adds the application
-   * metadata (version, app name and zone) as common tags and registers additional
-   * {@link MeterFilter}s for ignoring noisy tags and configuring distribution statistics
-   * (percentiles and service-level objectives).</p>
+   * metadata (version, app name and zone) as common tags and registers
+   * additional {@link MeterFilter}s for ignoring noisy tags and configuring
+   * distribution statistics (percentiles and service-level objectives).</p>
    *
    * @return a {@link MeterRegistryCustomizer} that customizes the provided registry
    */
@@ -101,8 +101,9 @@ public class HrsMetricConfiguration {
   }
 
   /**
-   * Creates a {@link MeterFilter} that configures distribution statistics for timers and summaries,
-   * including percentiles and SLO histogram service-level objectives.
+   * Creates a {@link MeterFilter} that configures distribution statistics for
+   * timers and summaries, including percentiles and SLO histogram
+   * service-level objectives.
    *
    * <p>The returned filter merges its configuration with any existing
    * configuration on the meter.</p>
@@ -113,7 +114,8 @@ public class HrsMetricConfiguration {
     return new MeterFilter() {
 
       @Override
-      public DistributionStatisticConfig configure(Meter.Id id,
+      public DistributionStatisticConfig configure(
+          Meter.Id id,
           DistributionStatisticConfig config) {
         return DistributionStatisticConfig
             .builder()

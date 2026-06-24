@@ -43,12 +43,12 @@ public class ReportingUnitService {
    * from the legacy API and enriches it with the client name and status from the
    * Forest Client API.
    *
-   * @param reportingUnitId the unique identifier of the reporting unit to retrieve (must not
-   *     be null)
-   * @return a fully populated {@link ReportingUnitDetailsDto} combining legacy and Forest Client
-   *     API data; never null
-   * @throws ForestClientNotFoundException if no Forest Client record can be found for the client
-   *     number returned by the legacy API
+   * @param reportingUnitId the unique identifier of the reporting unit to
+   *     retrieve (must not be null)
+   * @return a fully populated {@link ReportingUnitDetailsDto} combining legacy
+   *     and Forest Client API data; never null
+   * @throws ForestClientNotFoundException if no Forest Client record can be
+   *     found for the client number returned by the legacy API
    */
   @NewSpan
   public ReportingUnitDetailsDto getReportingUnitDetails(Long reportingUnitId) {
@@ -94,13 +94,13 @@ public class ReportingUnitService {
    *   <li>Creates the reporting unit in the legacy system and returns the generated id.</li>
    * </ul>
    *
-   * @param  request the validated create request containing client, district, sampling, and optional
-   *         grade information
+   * @param request the validated create request containing client, district,
+   *     sampling, and optional grade information
    * @return the id of the newly created reporting unit
-   * @throws ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException if the client does not exist
-   *         in the Forest Client API
-   * @throws org.springframework.web.server.ResponseStatusException if a duplicate reporting unit
-   *         exists or required validation fails
+   * @throws ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException if the
+   *     client does not exist in the Forest Client API
+   * @throws org.springframework.web.server.ResponseStatusException if a
+   *     duplicate reporting unit exists or required validation fails
    */
   @NewSpan
   public Long createReportingUnit(
@@ -119,8 +119,10 @@ public class ReportingUnitService {
     if (existing != null && existing.getTotalElements() > 0) {
       throw new ResponseStatusException(
           HttpStatus.CONFLICT,
-          String.format("Reporting unit for client %s and district %s already exists!",
-              request.clientNumber(), request.districtCode())
+          String.format(
+              "Reporting unit for client %s and district %s already exists!",
+              request.clientNumber(),
+              request.districtCode())
       );
     }
 

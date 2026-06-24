@@ -73,11 +73,12 @@ public class FeatureFlagsConfiguration {
   /**
    * Returns whether the given feature flag is enabled.
    *
-   * <p>Prefer {@link #isEnabled(FeatureFlag)} for production callers; this overload
-   * is retained for configuration-mechanism tests and framework use.
+   * <p>Prefer {@link #isEnabled(FeatureFlag)} for production callers; this
+   * overload is retained for configuration-mechanism tests and framework use.
    *
    * @param flag the flag name (must match the key in {@code features.flags.*})
-   * @return {@code true} if the flag exists and is set to {@code true}; {@code false} otherwise
+   * @return {@code true} if the flag exists and is set to {@code true};
+   *     {@code false} otherwise
    */
   public boolean isEnabled(String flag) {
     boolean enabled = Boolean.TRUE.equals(flags.get(flag));
@@ -88,11 +89,13 @@ public class FeatureFlagsConfiguration {
   /**
    * Returns whether the given feature flag is enabled.
    *
-   * <p>Prefer this overload over {@link #isEnabled(String)} — the {@link FeatureFlag} enum
-   * provides compile-time discoverability of all known flags and prevents silent typos.
+   * <p>Prefer this overload over {@link #isEnabled(String)} — the
+   * {@link FeatureFlag} enum provides compile-time discoverability of all known
+   * flags and prevents silent typos.
    *
    * @param flag the flag to evaluate
-   * @return {@code true} if the flag exists and is set to {@code true}; {@code false} otherwise
+   * @return {@code true} if the flag exists and is set to {@code true};
+   *     {@code false} otherwise
    * @see FeatureFlag
    */
   public boolean isEnabled(FeatureFlag flag) {
@@ -120,14 +123,18 @@ public class FeatureFlagsConfiguration {
           disabledCount
       );
       flags.forEach((name, enabled) ->
-          log.debug("Feature flag '{}' is {}", name, Boolean.TRUE.equals(enabled) ? "ENABLED" : "DISABLED")
+          log.debug("Feature flag '{}' is {}", name, enabledState(enabled))
       );
       return;
     }
 
     flags.forEach((name, enabled) ->
-        log.info("Feature flag '{}' is {}", name, Boolean.TRUE.equals(enabled) ? "ENABLED" : "DISABLED")
+        log.info("Feature flag '{}' is {}", name, enabledState(enabled))
     );
+  }
+
+  private String enabledState(Boolean enabled) {
+    return Boolean.TRUE.equals(enabled) ? "ENABLED" : "DISABLED";
   }
 
   private void recordEvaluation(String flag, boolean enabled) {
@@ -156,7 +163,7 @@ public class FeatureFlagsConfiguration {
 
     return Arrays.stream(environment.getActiveProfiles())
         .map(String::toLowerCase)
-        .anyMatch(profile -> PROD_PROFILE.equals(profile) || PRODUCTION_PROFILE.equals(profile));
+        .anyMatch(
+            profile -> PROD_PROFILE.equals(profile) || PRODUCTION_PROFILE.equals(profile));
   }
 }
-

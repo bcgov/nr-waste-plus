@@ -36,7 +36,11 @@ public class ReportingUnitEntity {
   @Id
   @Column(name = "REPORTING_UNIT_ID")
   @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq_gen")
-  @SequenceGenerator(name = "user_seq_gen", sequenceName = "THE.WASTE_REPORTING_UNIT_SEQ", allocationSize = 1)
+  @SequenceGenerator(
+      name = "user_seq_gen",
+      sequenceName = "THE.WASTE_REPORTING_UNIT_SEQ",
+      allocationSize = 1
+  )
   private Long id;
 
   /**
@@ -110,5 +114,4 @@ public class ReportingUnitEntity {
    */
   @Column(name = "UPDATE_TIMESTAMP", nullable = false)
   private LocalDateTime updatedAt;
-  
 }

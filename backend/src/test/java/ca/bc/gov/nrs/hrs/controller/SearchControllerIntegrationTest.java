@@ -7,7 +7,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.unauthorized;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -41,6 +40,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc(print = SYSTEM_OUT)
@@ -139,7 +139,8 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
   ) throws Exception {
     legacyApiStub.stubFor(
         WireMock.get(
-                urlPathEqualTo("/api/search/reporting-units/ex/" + ruId + "/" + wasteAssessmentAreaId))
+                urlPathEqualTo(
+                    "/api/search/reporting-units/ex/" + ruId + "/" + wasteAssessmentAreaId))
             .willReturn(stubResponse)
     );
 
@@ -371,12 +372,13 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             put("/api/users/bookmarks/{reportingUnitId}", 36834L)
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON)
-                .with(csrf()))
+                .with(SecurityMockMvcRequestPostProcessors.csrf()))
         .andExpect(status().isAccepted());
 
     legacyApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE))
+            .willReturn(
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE))
     );
 
     clientApiStub.stubFor(
@@ -405,7 +407,8 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
   void searchBookmarkedReportingUnits_withNoBookmarks_shouldReturnEmpty() throws Exception {
     legacyApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE))
+            .willReturn(
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE))
     );
 
     mockMvc
@@ -427,7 +430,8 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
   void searchReportingUnits_withoutBookmarks_shouldShowBookmarkedFalse() throws Exception {
     legacyApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE))
+            .willReturn(
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE))
     );
 
     clientApiStub.stubFor(
@@ -459,12 +463,13 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             put("/api/users/bookmarks/{reportingUnitId}", 36834L)
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON)
-                .with(csrf()))
+                .with(SecurityMockMvcRequestPostProcessors.csrf()))
         .andExpect(status().isAccepted());
 
     legacyApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE))
+            .willReturn(
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE))
     );
 
     clientApiStub.stubFor(

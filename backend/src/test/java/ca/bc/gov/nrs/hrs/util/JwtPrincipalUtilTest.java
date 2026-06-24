@@ -69,7 +69,8 @@ class JwtPrincipalUtilTest {
     assertEquals(expected, JwtPrincipalUtil.getUserId(createJwt(claims)));
   }
 
-  @ParameterizedTest(name = "For custom:idp_username {0} and custom:idp_name {1} idp_username is {2}")
+  @ParameterizedTest(
+      name = "For custom:idp_username {0} and custom:idp_name {1} idp_username is {2}")
   @CsvSource({
       "username, userid, ca.bc.gov.flnr.fam.dev, username",
       "username, userid, idir, username",
@@ -80,7 +81,11 @@ class JwtPrincipalUtilTest {
       "'', '','', ''"
   })
   @DisplayName("get idpUserName returns userId prefixed with provider when userId is not blank")
-  void shouldGetIdpUsername(String idpUsername, String idpUserId, String idpName, String expected) {
+  void shouldGetIdpUsername(
+      String idpUsername,
+      String idpUserId,
+      String idpName,
+      String expected) {
     Map<String, Object> claims =
         Map.of(
             "custom:idp_username", idpUsername,
@@ -93,7 +98,8 @@ class JwtPrincipalUtilTest {
     assertEquals(expected, JwtPrincipalUtil.getIdpUsername(createJwt(claims)));
   }
 
-  @ParameterizedTest(name = "For custom:idp_username {0} and custom:idp_name {1} provider is {2}")
+  @ParameterizedTest(
+      name = "For custom:idp_username {0} and custom:idp_name {1} provider is {2}")
   @CsvSource({
       "username, userid, ca.bc.gov.flnr.fam.dev, BCSC",
       "username, userid, idir, IDIR",
@@ -347,12 +353,14 @@ class JwtPrincipalUtilTest {
   @MethodSource("concreteRoles")
   @DisplayName("has concrete role?")
   void shouldCheckConcreteRole(Map<String, Object> claims, Role role, boolean result) {
-    assertEquals(result,
-        JwtPrincipalUtil.hasConcreteRole(createJwtAuthenticationToken(claims),
+    assertEquals(
+        result,
+        JwtPrincipalUtil.hasConcreteRole(
+            createJwtAuthenticationToken(claims),
             role)
     );
 
-    assertEquals(result,JwtPrincipalUtil.hasConcreteRole(createJwt(claims), role));
+    assertEquals(result, JwtPrincipalUtil.hasConcreteRole(createJwt(claims), role));
   }
 
   @ParameterizedTest
@@ -411,7 +419,9 @@ class JwtPrincipalUtilTest {
 
   private static Stream<Arguments> provideGroupsTestData() {
     return Stream.of(
-        Arguments.of(Map.of("cognito:groups", List.of("CLIENT_ADMIN")), Set.of("CLIENT_ADMIN")),
+        Arguments.of(
+            Map.of("cognito:groups", List.of("CLIENT_ADMIN")),
+            Set.of("CLIENT_ADMIN")),
         Arguments.of(Map.of("cognito:groups", List.of()), Set.of()),
         Arguments.of(
             new HashMap<>() {
