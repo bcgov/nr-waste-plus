@@ -1,32 +1,25 @@
 import { expect, type Page } from '@playwright/test';
 
 /**
- * Submits the Reporting Unit creation form by dispatching a submit event
- * on the `<form>` element.
+ * Blurs any focused element to avoid focus-driven race conditions in
+ * TanStack Form before clicking a submit button.
  *
- * Uses `dispatchEvent` instead of clicking the submit button to avoid a
- * focus-driven race condition in TanStack Form. When the button is clicked
- * while a ComboBox (e.g. the client AutoCompleteInput for IDIR users) still
- * has focus, the browser fires `blur` on the ComboBox **before** the `click`
- * event. The blur triggers the field's `onBlurAsync` validator, which sets
+ * When a Carbon ComboBox has focus and the submit button is clicked, the
+ * browser fires `blur` on the ComboBox **before** the `click` event. The
+ * blur triggers the field's `onBlurAsync` validator, which sets
  * `isValidating = true` synchronously in the form store. By the time the
- * click handler runs `form.handleSubmit()`, `canSubmit` is `false`, and the
- * submission is silently aborted.
+ * click handler runs `form.handleSubmit()`, `canSubmit` is `false`, and
+ * the submission is silently aborted.
  *
- * Calling `form.handleSubmit()` via the native `submit` event avoids this
- * race entirely — the `submit` event does not change element focus, so no
- * `blur` handler fires during the submission flow.
- *
- * The submit button must still be enabled (the caller should wait on
- * `toBeEnabled`) so we know all field validators have passed.
+ * Blurring the active element first lets validators settle so the submit
+ * button is truly enabled when clicked.
  *
  * @param page Playwright page.
  */
-export const formSubmit = async (page: Page): Promise<void> => {
+export const blurActiveElement = async (page: Page): Promise<void> => {
   await page.evaluate(() => {
-    const form = document.querySelector('form');
-    if (form) {
-      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
     }
   });
 };
@@ -95,12 +88,14 @@ export const fillFormAndSubmit = async (page: Page, userType: string): Promise<v
   // Select client
   await selectClient(page, userType);
 
+  // Blur any focused element first to let field validators settle
+  // (avoids a TanStack Form race where blur → onBlurAsync → isValidating →
+  // canSubmit=false).
+  await blurActiveElement(page);
+
   // Wait for the submit button to be enabled (all field validators have passed).
   const submitButton = page.getByRole('button', { name: 'Create' });
   await expect(submitButton).toBeEnabled({ timeout: 5000 });
 
-  // Use form.dispatchEvent instead of button.click() to avoid a TanStack Form
-  // race condition: clicking while a Carbon ComboBox is still focused fires
-  // blur → onBlurAsync → isValidating=true → canSubmit=false.
-  await formSubmit(page);
+  await submitButton.click();
 };

@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 
 import { mockCreateRuSuccess, setupCreateRuMocks } from './e2e.setup';
-import { formSubmit, selectClient, selectComboBoxOption } from './e2e.utils';
+import { blurActiveElement, selectClient, selectComboBoxOption } from './e2e.utils';
 
 import { test } from '@/config/tests/coverage.setup';
 
@@ -29,14 +29,16 @@ test.describe('Create Reporting Unit - Form Submission', () => {
       // Select client
       await selectClient(page, testInfo.project.metadata.userType);
 
+      // Blur any active element to let TanStack Form validators settle
+      // (avoids a race where combobox blur → onBlurAsync → isValidating →
+      // canSubmit=false silently aborts the click handler).
+      await blurActiveElement(page);
+
       // Wait for the submit button to be enabled (all field validators passed).
       const submitButton = page.getByRole('button', { name: 'Create' });
       await expect(submitButton).toBeEnabled({ timeout: 5000 });
 
-      // Use form.dispatchEvent to avoid a TanStack Form race condition:
-      // clicking while a Carbon ComboBox has focus fires blur → onBlurAsync →
-      // isValidating=true → canSubmit=false in the click handler.
-      await formSubmit(page);
+      await submitButton.click();
 
       // Wait for navigation to the new reporting unit's details page
       await page.waitForURL('**/reporting-units/99901');
@@ -65,12 +67,14 @@ test.describe('Create Reporting Unit - Form Submission', () => {
       // Select sampling option
       await selectComboBoxOption(page, 'Sampling option', 'Aggregate');
 
+      // Blur active element to let validators settle
+      await blurActiveElement(page);
+
       // Wait for the submit button to be enabled (all field validators passed).
       const submitButton = page.getByRole('button', { name: 'Create' });
       await expect(submitButton).toBeEnabled({ timeout: 5000 });
 
-      // Use form.dispatchEvent to avoid a TanStack Form race condition.
-      await formSubmit(page);
+      await submitButton.click();
 
       // Wait for navigation to the new reporting unit's details page
       await page.waitForURL('**/reporting-units/99901');
@@ -94,12 +98,14 @@ test.describe('Create Reporting Unit - Form Submission', () => {
       // Select sampling option
       await selectComboBoxOption(page, 'Sampling option', 'Cutblock');
 
+      // Blur active element to let validators settle
+      await blurActiveElement(page);
+
       // Wait for the submit button to be enabled (all field validators passed).
       const submitButton = page.getByRole('button', { name: 'Create' });
       await expect(submitButton).toBeEnabled({ timeout: 5000 });
 
-      // Use form.dispatchEvent to avoid a TanStack Form race condition.
-      await formSubmit(page);
+      await submitButton.click();
 
       await page.waitForURL('**/reporting-units/99901');
       await expect(page).toHaveURL(/\/reporting-units\/99901$/);
