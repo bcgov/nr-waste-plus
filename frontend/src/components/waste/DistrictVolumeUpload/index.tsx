@@ -187,6 +187,7 @@ const DistrictVolumeTableUpload: FC = () => {
           {(field) => (
             <div className="form-field">
               <RadioButtonGroup
+                data-testid="area-radio-group"
                 name="area"
                 legendText="Area"
                 defaultSelected="INTERIOR"
@@ -251,6 +252,7 @@ const DistrictVolumeTableUpload: FC = () => {
               >
                 <DatePickerInput
                   id="start-date-picker"
+                  data-testid="start-date-picker"
                   labelText="Start date"
                   placeholder="yyyy/mm/dd"
                   invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
@@ -271,7 +273,7 @@ const DistrictVolumeTableUpload: FC = () => {
         />
 
         {submitError && (
-          <div className="form-field--error" role="alert">
+          <div className="form-field--error" role="alert" data-testid="submit-error">
             {submitError}
           </div>
         )}
@@ -279,13 +281,19 @@ const DistrictVolumeTableUpload: FC = () => {
         <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
           {([canSubmit, isSubmitting]) => (
             <div className="button-group">
-              <Button kind="secondary" type="button" onClick={handleCancel}>
+              <Button
+                kind="secondary"
+                type="button"
+                onClick={handleCancel}
+                data-testid="cancel-button"
+              >
                 Cancel
               </Button>
               <Button
                 kind="primary"
                 onClick={handleSubmit}
                 disabled={!canSubmit || createMutation.isPending || isSubmitting}
+                data-testid="upload-table-button"
               >
                 Upload table
               </Button>

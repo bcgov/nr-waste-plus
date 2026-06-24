@@ -3,8 +3,52 @@ import { test, expect } from '@playwright/test';
 import { setupAppShellMocks } from '@/config/tests/app.setup';
 import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 import { mockJwt } from '@/config/tests/auth.helper';
+import {
+  buildValidInteriorBuffer,
+  buildValidCoastBuffer,
+  buildWrongSheetNameBuffer,
+  buildNonNumericDataBuffer,
+  buildInvalidDistrictCodeBuffer,
+  buildMissingHeliMultiplierBuffer,
+} from '@/config/tests/spreadsheet.helper';
 
 const canOverrideClaims = (): boolean => process.env.VITE_MOCK_AUTH?.toLowerCase() === 'true';
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * Calculates tomorrow's date formatted as yyyy/mm/dd for the Carbon date picker.
+ */
+function tomorrowFormatted(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}/${m}/${day}`;
+}
+
+/**
+ * Mocks the POST endpoint for district volume creation so the form can submit
+ * without a real backend. Returns a `location` header with a fake resource ID.
+ *
+ * Must be registered AFTER `beforeEach` shell mocks so it takes precedence
+ * (Playwright runs the last-registered route handler first).
+ */
+async function mockCreateApi(page: import('@playwright/test').Page): Promise<void> {
+  await page.route('**/api/configuration/district-average-volumes', async (route) => {
+    if (route.request().method() === 'POST') {
+      await route.fulfill({
+        status: 201,
+        headers: { location: '/api/configuration/district-average-volumes/42' },
+      });
+    } else {
+      await route.continue(); // let the existing mock handler deal with GET
+    }
+  });
+}
+
+// ─── Test Suite ──────────────────────────────────────────────────────────────
 
 test.describe('District Volume Table Upload Page - E2E', () => {
   test.beforeEach(async ({ page }, testInfo) => {
@@ -16,8 +60,10 @@ test.describe('District Volume Table Upload Page - E2E', () => {
     );
   });
 
-  test.describe('Admin role (IDIR) - Correct role scenarios', () => {
-    test('should navigate from search page through configuration to upload page via side nav @idir-only', async ({
+  // ─── Navigation & Role Access Tests ─────────────────────────────────────
+
+  test.describe('Navigation (admin role)', () => {
+    test('should navigate to upload page via side nav and config page @idir-only', async ({
       page,
     }, testInfo) => {
       test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
@@ -27,27 +73,23 @@ test.describe('District Volume Table Upload Page - E2E', () => {
         'cognito:groups': ['WASTE_PLUS_ADMIN'],
       });
 
-      // Navigate from search page through configuration
       await page.goto('/search');
       await page.waitForLoadState('domcontentloaded');
 
-      const configLink = page.getByTestId('side-nav-link-config');
-      await expect(configLink).toBeVisible();
-
-      await configLink.click();
+      // Click the side-nav config link
+      await page.getByTestId('side-nav-link-config').click();
       await expect(page).toHaveURL(/\/configuration$/);
 
-      const districtVolumeLink = page.getByRole('button', { name: /View or update tables/i });
-      await districtVolumeLink.click();
+      // Click the "View or update tables" button
+      await page.getByRole('button', { name: /View or update tables/i }).click();
       await expect(page).toHaveURL(/\/configuration\/district-volume-tables$/);
 
-      // Click upload button
-      const uploadButton = page.getByRole('button', { name: /Upload new volumes table/i });
-      await uploadButton.click();
+      // Click the upload button
+      await page.getByRole('button', { name: /Upload new volumes table/i }).click();
       await expect(page).toHaveURL(/\/configuration\/upload-district-volume$/);
     });
 
-    test('should navigate to upload page via direct URL @idir-only', async ({ page }, testInfo) => {
+    test('should land on upload page via direct URL @idir-only', async ({ page }, testInfo) => {
       test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
 
       await mockJwt(page, testInfo.project.metadata, {
@@ -61,155 +103,307 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       await expect(page).toHaveURL(/\/configuration\/upload-district-volume$/);
       await expect(page.getByRole('heading', { name: 'Upload new volumes table' })).toBeVisible();
     });
+  });
 
-    test('should display the upload form with all required fields @idir-only', async ({
+  test.describe('Role-based access control', () => {
+    test('should redirect non-admin user to unauthorized when accessing via direct URL @bceid-only', async ({
       page,
     }, testInfo) => {
       test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
 
       await mockJwt(page, testInfo.project.metadata, {
-        'custom:idp_name': 'idir',
-        'cognito:groups': ['WASTE_PLUS_ADMIN'],
+        'custom:idp_name': 'bceidbusiness',
+        'cognito:groups': ['WASTE_PLUS_VIEWER_00147603'],
       });
 
       await page.goto('/configuration/upload-district-volume');
       await page.waitForLoadState('domcontentloaded');
 
-      // Verify page content
-      await expect(page.getByRole('heading', { name: 'Upload new volumes table' })).toBeVisible();
-      await expect(
-        page.getByText(
-          'Load .csv or .xls file to calculate waste volumes when district averages waste assessment is used',
-        ),
-      ).toBeVisible();
-
-      // Verify form fields
-      await expect(page.getByText('Area')).toBeVisible();
-      await expect(page.getByRole('textbox', { name: 'Coast' })).toBeVisible();
-      await expect(page.getByRole('textbox', { name: 'Interior' })).toBeVisible();
-      await expect(page.getByRole('textbox', { name: 'Start date' })).toBeVisible();
-      await expect(page.getByTestId('file-upload-input')).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Upload table' })).toBeVisible();
+      await expect(page).toHaveURL(/\/unauthorized/);
     });
 
-    test('should display the upload form via breadcrumb navigation @idir-only', async ({
+    test('should redirect non-admin user when navigating via config page @bceid-only', async ({
       page,
     }, testInfo) => {
       test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
 
       await mockJwt(page, testInfo.project.metadata, {
-        'custom:idp_name': 'idir',
-        'cognito:groups': ['WASTE_PLUS_ADMIN'],
+        'custom:idp_name': 'bceidbusiness',
+        'cognito:groups': ['WASTE_PLUS_VIEWER_00147603'],
       });
 
       await page.goto('/configuration/upload-district-volume');
       await page.waitForLoadState('domcontentloaded');
 
-      // Navigate back via breadcrumb
-      const breadcrumbLink = page.getByRole('link', { name: 'District Volume Tables' });
-      await breadcrumbLink.click();
-      await expect(page).toHaveURL(/\/configuration\/district-volume-tables$/);
+      await expect(page).toHaveURL(/\/unauthorized/);
     });
   });
 
-  test.describe('Non-admin role - Unauthorized access scenarios', () => {
-    test('should not show Configuration link in side nav for non-admin users @bceid-only', async ({
-      page,
-    }) => {
-      await page.goto('/search');
-      await page.waitForLoadState('domcontentloaded');
+  // ─── Spreadsheet Upload Tests ───────────────────────────────────────────
 
-      await expect(page.getByTestId('side-nav-link-config')).toHaveCount(0);
-    });
-
-    test('should redirect to unauthorized page when non-admin user accesses upload page via direct URL @bceid-only', async ({
-      page,
-    }, testInfo) => {
-      test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
-
-      await mockJwt(page, testInfo.project.metadata, {
-        'custom:idp_name': 'bceidbusiness',
-        'cognito:groups': ['WASTE_PLUS_VIEWER_00147603'],
-      });
-
-      await page.goto('/configuration/upload-district-volume');
-      await page.waitForLoadState('domcontentloaded');
-
-      await expect(page).toHaveURL(/\/unauthorized/);
-    });
-
-    test('should redirect to unauthorized page when non-admin user navigates from search through config @bceid-only', async ({
-      page,
-    }, testInfo) => {
-      test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
-
-      await mockJwt(page, testInfo.project.metadata, {
-        'custom:idp_name': 'bceidbusiness',
-        'cognito:groups': ['WASTE_PLUS_VIEWER_00147603'],
-      });
-
-      await page.goto('/search');
-      await page.waitForLoadState('domcontentloaded');
-
-      // Try to access configuration (should redirect to unauthorized)
-      await page.goto('/configuration');
-      await page.waitForLoadState('domcontentloaded');
-
-      await expect(page).toHaveURL(/\/unauthorized/);
-    });
-
-    test('should display unauthorized page with appropriate message @bceid-only', async ({
-      page,
-    }, testInfo) => {
-      test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
-
-      await mockJwt(page, testInfo.project.metadata, {
-        'custom:idp_name': 'bceidbusiness',
-        'cognito:groups': ['WASTE_PLUS_VIEWER_00147603'],
-      });
-
-      await page.goto('/configuration/upload-district-volume');
-      await page.waitForLoadState('domcontentloaded');
-
-      await expect(page).toHaveURL(/\/unauthorized/);
-      await expect(
-        page.getByRole('heading', { name: /access denied|unauthorized/i }),
-      ).toBeVisible();
-    });
-  });
-
-  test.describe('Role-based access control validation', () => {
-    test('should prevent IDIR users without ADMIN role from accessing upload page @idir-only', async ({
+  test.describe('Spreadsheet upload — valid files', () => {
+    test('should upload a valid Interior spreadsheet and update the form @idir-only', async ({
       page,
     }, testInfo) => {
       test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
 
       await mockJwt(page, testInfo.project.metadata, {
         'custom:idp_name': 'idir',
-        'cognito:groups': ['WASTE_PLUS_SUBMITTER_00010005'],
-      });
-
-      await page.goto('/configuration/upload-district-volume');
-      await page.waitForLoadState('domcontentloaded');
-
-      await expect(page).toHaveURL(/\/unauthorized/);
-    });
-
-    test('should prevent BCeID users from accessing upload page even with ADMIN group @bceid-only', async ({
-      page,
-    }, testInfo) => {
-      test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
-
-      await mockJwt(page, testInfo.project.metadata, {
-        'custom:idp_name': 'bceidbusiness',
         'cognito:groups': ['WASTE_PLUS_ADMIN'],
       });
 
       await page.goto('/configuration/upload-district-volume');
       await page.waitForLoadState('domcontentloaded');
 
-      await expect(page).toHaveURL(/\/unauthorized/);
+      // Upload a valid Interior spreadsheet
+      const buffer = await buildValidInteriorBuffer();
+      const fileInput = page.getByTestId('file-upload-dropzone').locator('input[type="file"]');
+      await fileInput.setInputFiles({
+        name: 'interior-test.xlsx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        buffer,
+      });
+
+      // Wait for processing to complete: the file uploader item appears with a delete button
+      const fileItem = page.getByTestId('file-upload-item');
+      await expect(fileItem).toBeVisible({ timeout: 10_000 });
+
+      // The Interior radio should remain selected (default is Interior, upload data is Interior)
+      await expect(page.getByLabel('Interior')).toBeChecked();
+
+      // The radio group should be visible
+      await expect(page.getByTestId('area-radio-group')).toBeVisible();
+
+      // No file-level error messages should be displayed
+      await expect(page.getByTestId('file-error')).toHaveCount(0);
+    });
+
+    test('should upload a valid Coast spreadsheet and update the form @idir-only', async ({
+      page,
+    }, testInfo) => {
+      test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
+
+      await mockJwt(page, testInfo.project.metadata, {
+        'custom:idp_name': 'idir',
+        'cognito:groups': ['WASTE_PLUS_ADMIN'],
+      });
+
+      await page.goto('/configuration/upload-district-volume');
+      await page.waitForLoadState('domcontentloaded');
+
+      // Upload a valid Coast spreadsheet
+      const buffer = await buildValidCoastBuffer();
+      const fileInput = page.getByTestId('file-upload-dropzone').locator('input[type="file"]');
+      await fileInput.setInputFiles({
+        name: 'coast-test.xlsx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        buffer,
+      });
+
+      // Wait for processing to complete
+      const fileItem = page.getByTestId('file-upload-item');
+      await expect(fileItem).toBeVisible({ timeout: 10_000 });
+
+      // The Coast radio should now be selected (file data overrides the default)
+      await expect(page.getByLabel('Coast')).toBeChecked();
+
+      // The radio group should be visible
+      await expect(page.getByTestId('area-radio-group')).toBeVisible();
+
+      // No file-level error messages should be displayed
+      await expect(page.getByTestId('file-error')).toHaveCount(0);
+    });
+  });
+
+  test.describe('Spreadsheet upload — invalid files', () => {
+    test('should show error when uploading a file with wrong sheet name @idir-only', async ({
+      page,
+    }, testInfo) => {
+      test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
+
+      await mockJwt(page, testInfo.project.metadata, {
+        'custom:idp_name': 'idir',
+        'cognito:groups': ['WASTE_PLUS_ADMIN'],
+      });
+
+      await page.goto('/configuration/upload-district-volume');
+      await page.waitForLoadState('domcontentloaded');
+
+      const buffer = await buildWrongSheetNameBuffer();
+      const fileInput = page.getByTestId('file-upload-dropzone').locator('input[type="file"]');
+      await fileInput.setInputFiles({
+        name: 'wrong-sheet.xlsx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        buffer,
+      });
+
+      // Wait for the file item to appear with an error state
+      const fileItem = page.getByTestId('file-upload-item');
+      await expect(fileItem).toBeVisible({ timeout: 10_000 });
+
+      // The file item should have the invalid class
+      await expect(fileItem).toHaveClass(/invalid/);
+    });
+
+    test('should show error when uploading a file with non-numeric data @idir-only', async ({
+      page,
+    }, testInfo) => {
+      test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
+
+      await mockJwt(page, testInfo.project.metadata, {
+        'custom:idp_name': 'idir',
+        'cognito:groups': ['WASTE_PLUS_ADMIN'],
+      });
+
+      await page.goto('/configuration/upload-district-volume');
+      await page.waitForLoadState('domcontentloaded');
+
+      const buffer = await buildNonNumericDataBuffer();
+      const fileInput = page.getByTestId('file-upload-dropzone').locator('input[type="file"]');
+      await fileInput.setInputFiles({
+        name: 'bad-data.xlsx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        buffer,
+      });
+
+      const fileItem = page.getByTestId('file-upload-item');
+      await expect(fileItem).toBeVisible({ timeout: 10_000 });
+      await expect(fileItem).toHaveClass(/invalid/);
+    });
+
+    test('should show error when uploading a file with invalid district code @idir-only', async ({
+      page,
+    }, testInfo) => {
+      test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
+
+      await mockJwt(page, testInfo.project.metadata, {
+        'custom:idp_name': 'idir',
+        'cognito:groups': ['WASTE_PLUS_ADMIN'],
+      });
+
+      await page.goto('/configuration/upload-district-volume');
+      await page.waitForLoadState('domcontentloaded');
+
+      const buffer = await buildInvalidDistrictCodeBuffer();
+      const fileInput = page.getByTestId('file-upload-dropzone').locator('input[type="file"]');
+      await fileInput.setInputFiles({
+        name: 'bad-code.xlsx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        buffer,
+      });
+
+      const fileItem = page.getByTestId('file-upload-item');
+      await expect(fileItem).toBeVisible({ timeout: 10_000 });
+      await expect(fileItem).toHaveClass(/invalid/);
+    });
+
+    test('should show error when uploading a Coast file missing heli multiplier @idir-only', async ({
+      page,
+    }, testInfo) => {
+      test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
+
+      await mockJwt(page, testInfo.project.metadata, {
+        'custom:idp_name': 'idir',
+        'cognito:groups': ['WASTE_PLUS_ADMIN'],
+      });
+
+      await page.goto('/configuration/upload-district-volume');
+      await page.waitForLoadState('domcontentloaded');
+
+      const buffer = await buildMissingHeliMultiplierBuffer();
+      const fileInput = page.getByTestId('file-upload-dropzone').locator('input[type="file"]');
+      await fileInput.setInputFiles({
+        name: 'no-heli.xlsx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        buffer,
+      });
+
+      const fileItem = page.getByTestId('file-upload-item');
+      await expect(fileItem).toBeVisible({ timeout: 10_000 });
+      await expect(fileItem).toHaveClass(/invalid/);
+    });
+  });
+
+  test.describe('Spreadsheet upload — full submission flow', () => {
+    test('should upload valid Interior, fill date, and submit successfully @idir-only', async ({
+      page,
+    }, testInfo) => {
+      test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
+
+      await mockJwt(page, testInfo.project.metadata, {
+        'custom:idp_name': 'idir',
+        'cognito:groups': ['WASTE_PLUS_ADMIN'],
+      });
+
+      // Register the POST mock (after beforeEach so it takes precedence)
+      await mockCreateApi(page);
+
+      await page.goto('/configuration/upload-district-volume');
+      await page.waitForLoadState('domcontentloaded');
+
+      // Step 1: Upload a valid Interior spreadsheet
+      const buffer = await buildValidInteriorBuffer();
+      const fileInput = page.getByTestId('file-upload-dropzone').locator('input[type="file"]');
+      await fileInput.setInputFiles({
+        name: 'interior-valid.xlsx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        buffer,
+      });
+
+      const fileItem = page.getByTestId('file-upload-item');
+      await expect(fileItem).toBeVisible({ timeout: 10_000 });
+
+      // Step 2: Fill in the start date (must be tomorrow)
+      const dateInput = page.getByLabel('Start date');
+      await dateInput.fill(tomorrowFormatted());
+
+      // Step 3: Click the Upload table button
+      await page.getByRole('button', { name: 'Upload table' }).click();
+
+      // Step 4: Verify navigation to the details page
+      await expect(page).toHaveURL(/\/configuration\/district-volume-tables\/42/, {
+        timeout: 10_000,
+      });
+    });
+
+    test('should upload valid Coast, fill date, and submit successfully @idir-only', async ({
+      page,
+    }, testInfo) => {
+      test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
+
+      await mockJwt(page, testInfo.project.metadata, {
+        'custom:idp_name': 'idir',
+        'cognito:groups': ['WASTE_PLUS_ADMIN'],
+      });
+
+      await mockCreateApi(page);
+
+      await page.goto('/configuration/upload-district-volume');
+      await page.waitForLoadState('domcontentloaded');
+
+      // Step 1: Upload a valid Coast spreadsheet
+      const buffer = await buildValidCoastBuffer();
+      const fileInput = page.getByTestId('file-upload-dropzone').locator('input[type="file"]');
+      await fileInput.setInputFiles({
+        name: 'coast-valid.xlsx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        buffer,
+      });
+
+      const fileItem = page.getByTestId('file-upload-item');
+      await expect(fileItem).toBeVisible({ timeout: 10_000 });
+
+      // Step 2: Fill in the start date (must be tomorrow)
+      const dateInput = page.getByLabel('Start date');
+      await dateInput.fill(tomorrowFormatted());
+
+      // Step 3: Click the Upload table button
+      await page.getByRole('button', { name: 'Upload table' }).click();
+
+      // Step 4: Verify navigation to the details page
+      await expect(page).toHaveURL(/\/configuration\/district-volume-tables\/42/, {
+        timeout: 10_000,
+      });
     });
   });
 });

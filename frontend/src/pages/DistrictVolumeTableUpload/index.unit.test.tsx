@@ -118,8 +118,10 @@ describe('DistrictVolumeTableUploadPage', () => {
       expect(screen.getByLabelText('Interior')).toBeTruthy();
       expect(screen.getByLabelText('Start date')).toBeTruthy();
       expect(screen.getByTestId('file-upload-input')).toBeTruthy();
-      expect(screen.getByRole('button', { name: 'Cancel' })).toBeTruthy();
-      expect(screen.getByRole('button', { name: 'Upload table' })).toBeTruthy();
+      expect(screen.getByTestId('area-radio-group')).toBeTruthy();
+      expect(screen.getByTestId('start-date-picker')).toBeTruthy();
+      expect(screen.getByTestId('cancel-button')).toBeTruthy();
+      expect(screen.getByTestId('upload-table-button')).toBeTruthy();
     });
 
     it('should default area to INTERIOR when mounted', async () => {
