@@ -2,11 +2,8 @@ import ExcelJS from 'exceljs';
 
 // ─── Interior Config ────────────────────────────────────────────────────────
 // 13 columns: A=District code, B-E=Dry belt (4), F-I=Transition (4), J-M=Wet belt (4)
-const INTERIOR_COL_COUNT = 13;
-
 // ─── Coast Config ───────────────────────────────────────────────────────────
 // 12 columns: A=District code, B-F=Mature (5), G-K=Immature (5), L=Heli Multiplier
-const COAST_COL_COUNT = 12;
 
 /**
  * Builds a valid Interior workbook buffer (.xlsx).
@@ -47,7 +44,7 @@ export async function buildValidInteriorBuffer(): Promise<Buffer> {
   // Row 4: second district (tests multi-district and validates no-duplicate check)
   ws.addRow(['DRY', 2.1, 1.2, 0.5, 3.8, 2.3, 1.4, 0.6, 4.3, 2.5, 1.6, 0.7, 4.8]);
 
-  return (await wb.xlsx.writeBuffer()) as Buffer;
+  return (await wb.xlsx.writeBuffer()) as unknown as Buffer;
 }
 
 /**
@@ -101,7 +98,7 @@ export async function buildValidCoastBuffer(): Promise<Buffer> {
     3.47, // col L: heli multiplier value
   ]);
 
-  return (await wb.xlsx.writeBuffer()) as Buffer;
+  return (await wb.xlsx.writeBuffer()) as unknown as Buffer;
 }
 
 /**
@@ -132,7 +129,7 @@ export async function buildWrongSheetNameBuffer(): Promise<Buffer> {
     2.59,
   ]);
 
-  return (await wb.xlsx.writeBuffer()) as Buffer;
+  return (await wb.xlsx.writeBuffer()) as unknown as Buffer;
 }
 
 /**
@@ -165,7 +162,7 @@ export async function buildNonNumericDataBuffer(): Promise<Buffer> {
     2.59,
   ]);
 
-  return (await wb.xlsx.writeBuffer()) as Buffer;
+  return (await wb.xlsx.writeBuffer()) as unknown as Buffer;
 }
 
 /**
@@ -196,7 +193,7 @@ export async function buildInvalidDistrictCodeBuffer(): Promise<Buffer> {
     2.59,
   ]);
 
-  return (await wb.xlsx.writeBuffer()) as Buffer;
+  return (await wb.xlsx.writeBuffer()) as unknown as Buffer;
 }
 
 /**
@@ -229,5 +226,5 @@ export async function buildMissingHeliMultiplierBuffer(): Promise<Buffer> {
     '', // ← must be numeric, but is empty
   ]);
 
-  return (await wb.xlsx.writeBuffer()) as Buffer;
+  return (await wb.xlsx.writeBuffer()) as unknown as Buffer;
 }

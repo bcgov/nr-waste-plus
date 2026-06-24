@@ -98,10 +98,16 @@ describe('DistrictVolumeTableUploadPage', () => {
       ).toBeTruthy();
     });
 
-    it('should render the notification component', async () => {
+    it('should render the notification column wrapper', async () => {
       await renderWithAppAsync(<DistrictVolumeTableUploadPage />);
 
-      expect(screen.getByTestId('page-notification')).toBeTruthy();
+      // PageNotification renders conditionally only when a notification event is active.
+      // Verify the wrapping Column element exists with correct Carbon grid classes.
+      const notificationColumn = document.querySelector('.create-ru-column__notification');
+      expect(notificationColumn).toBeTruthy();
+      expect(notificationColumn?.classList.contains('cds--col-lg-16')).toBe(true);
+      expect(notificationColumn?.classList.contains('cds--col-md-8')).toBe(true);
+      expect(notificationColumn?.classList.contains('cds--col-sm-4')).toBe(true);
     });
 
     it('should render the upload form component', async () => {
@@ -168,19 +174,23 @@ describe('DistrictVolumeTableUploadPage', () => {
     it('should render a Column with lg=16, md=8, sm=4 for the banner', async () => {
       await renderWithAppAsync(<DistrictVolumeTableUploadPage />);
 
-      const bannerColumn = screen
-        .getByText('Upload new volumes table')
-        .closest('div[style*="max-width"]');
+      // Carbon v11 Column applies CSS grid classes, not inline max-width styles.
+      const bannerColumn = screen.getByText('Upload new volumes table').closest('.cds--col-lg-16');
       expect(bannerColumn).toBeTruthy();
+      expect(bannerColumn?.classList.contains('cds--col-sm-4')).toBe(true);
+      expect(bannerColumn?.classList.contains('cds--col-md-8')).toBe(true);
     });
 
     it('should render a Column with lg=16, md=8, sm=4 for the notification', async () => {
       await renderWithAppAsync(<DistrictVolumeTableUploadPage />);
 
-      const notificationColumn = screen
-        .getByText('PageNotification')
-        .closest('div[style*="max-width"]');
+      // Carbon v11 Column uses CSS grid classes; the notification column also has
+      // a semantic className that can be used to locate it.
+      const notificationColumn = document.querySelector('.create-ru-column__notification');
       expect(notificationColumn).toBeTruthy();
+      expect(notificationColumn?.classList.contains('cds--col-lg-16')).toBe(true);
+      expect(notificationColumn?.classList.contains('cds--col-sm-4')).toBe(true);
+      expect(notificationColumn?.classList.contains('cds--col-md-8')).toBe(true);
     });
   });
 
