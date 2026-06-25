@@ -215,6 +215,7 @@ export default defineConfig(({ mode }) => {
           '**/main.tsx',
           '**/App.tsx',
           '**/e2e.setup.ts',
+          '**/e2e.utils.ts',
           '**/DevTools.tsx',
           '**/vite.config.ts',
         ],
