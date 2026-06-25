@@ -11,12 +11,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
 import { useCallback, useState, type FC } from 'react';
 
-import type {
-  CoastData,
-  DistrictVolumeCreate,
-  InteriorData,
-  TableData,
-} from '@/services/districtvolumes.types';
+import type { CoastData, InteriorData, TableData } from '@/services/districtvolumes.types';
 
 import FileUploadInput from '@/components/Form/FileUploadInput';
 import { useDistrictVolumeTableCreateMutation } from '@/config/react-query/hooks';
@@ -41,7 +36,7 @@ const processor = new DistrictVolumeProcessor();
  * Provides a structured form workflow to:
  * - Select an area type (Coastal or Interior) via radio buttons
  * - Choose a start date via date picker (must be tomorrow)
- * - Upload a .xls/.xlsx file processed by the district volume processor
+ * - Upload a .xlsx file processed by the district volume processor
  *
  * On successful submission, the user is navigated to the details page
  * of the newly created table. Form validation is enforced on blur and
@@ -73,7 +68,7 @@ const DistrictVolumeTableUpload: FC = () => {
   const form = useForm({
     defaultValues: {
       area: 'INTERIOR' as 'INTERIOR' | 'COASTAL',
-      startDate: DateTime.now().toFormat(DATE_FORMAT),
+      startDate: DateTime.now().plus({ days: 1 }).toFormat(DATE_FORMAT),
       tableLevelFactor: 0,
       heliMultiplier: 1,
       tableData: { type: 'INTERIOR', zones: [], formulas: {} } as InteriorData | CoastData,
@@ -84,12 +79,24 @@ const DistrictVolumeTableUpload: FC = () => {
         if (!data.zones || data.zones.length === 0) {
           throw new Error('Please upload a valid Interior spreadsheet file');
         }
-      } else if (data.type === 'COASTAL') {
+        await createMutation.mutateAsync({
+          area: 'INTERIOR' as const,
+          startDate: value.startDate,
+          tableLevelFactor: value.tableLevelFactor,
+          tableData: data,
+        });
+      } else {
         if (!data.sections || data.sections.length === 0) {
           throw new Error('Please upload a valid Coast spreadsheet file');
         }
+        await createMutation.mutateAsync({
+          area: 'COASTAL' as const,
+          startDate: value.startDate,
+          tableLevelFactor: value.tableLevelFactor,
+          heliMultiplier: value.heliMultiplier,
+          tableData: data,
+        });
       }
-      await createMutation.mutateAsync(value as DistrictVolumeCreate);
     },
   });
 
@@ -131,7 +138,7 @@ const DistrictVolumeTableUpload: FC = () => {
 
   /**
    * Handles the Carbon DatePicker `onChange` callback.
-   * Validates that the selected date is exactly tomorrow (the only allowed start date)
+   * Validates that the selected date is tomorrow or later (the only allowed start dates)
    * and updates the form field accordingly; clears the value when the selection is invalid.
    *
    * @param dates - Array of selected dates from the date picker (empty when cleared).
@@ -141,7 +148,7 @@ const DistrictVolumeTableUpload: FC = () => {
       const selected = dates[0] ? DateTime.fromJSDate(dates[0]) : undefined;
       const tomorrow = DateTime.now().plus({ days: 1 }).startOf('day');
 
-      if (!selected || !selected.hasSame(tomorrow, 'day')) {
+      if (!selected || selected < tomorrow) {
         form.setFieldValue('startDate', '');
         return;
       }
@@ -222,7 +229,7 @@ const DistrictVolumeTableUpload: FC = () => {
                   const date = DateTime.fromFormat(v, DATE_FORMAT);
                   if (!date.isValid) return 'Start date must be a valid date';
                   const tomorrow = DateTime.now().plus({ days: 1 }).startOf('day');
-                  if (!date.hasSame(tomorrow, 'day')) return 'Start date must be tomorrow';
+                  if (date < tomorrow) return 'Start date must be tomorrow or later';
                   return undefined;
                 },
               ]),
@@ -234,7 +241,7 @@ const DistrictVolumeTableUpload: FC = () => {
                   const date = DateTime.fromFormat(v, DATE_FORMAT);
                   if (!date.isValid) return 'Start date must be a valid date';
                   const tomorrow = DateTime.now().plus({ days: 1 }).startOf('day');
-                  if (!date.hasSame(tomorrow, 'day')) return 'Start date must be tomorrow';
+                  if (date < tomorrow) return 'Start date must be tomorrow or later';
                   return undefined;
                 },
               ]),
@@ -248,7 +255,11 @@ const DistrictVolumeTableUpload: FC = () => {
                 allowInput
                 minDate={DateTime.now().plus({ days: 1 }).toFormat(DATE_FORMAT)}
                 onChange={handleStartDateChange}
-                value={field.state.value ? [new Date(field.state.value)] : []}
+                value={
+                  field.state.value
+                    ? [DateTime.fromFormat(field.state.value, DATE_FORMAT).toJSDate()]
+                    : []
+                }
               >
                 <DatePickerInput
                   id="start-date-picker"
@@ -264,7 +275,7 @@ const DistrictVolumeTableUpload: FC = () => {
         </form.Field>
 
         <FileUploadInput
-          accept=".xls,.xlsx"
+          accept=".xlsx"
           maxFileSizeBytes={2 * 1024 * 1024}
           processor={processor}
           validator={async (file: File) => {

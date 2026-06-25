@@ -65,7 +65,7 @@ export class DistrictVolumeService extends HttpClient {
           if (match) {
             resolve(Number(match[1]));
           } else {
-            resolve(0);
+            reject(new Error(`Could not parse resource ID from Location header: "${location}"`));
           }
         })
         .catch(reject);

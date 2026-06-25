@@ -11,7 +11,7 @@ import './index.scss';
 /**
  * Page component for uploading a new district volume table.
  *
- * This page allows administrators to upload spreadsheet files (.xls/.xlsx) containing
+ * This page allows administrators to upload spreadsheet files (.xlsx) containing
  * waste volume data for either Interior or Coastal regions. The uploaded data is used
  * to calculate waste volumes when district average waste assessment is applied.
  *
@@ -41,7 +41,7 @@ const DistrictVolumeTableUploadPage: FC = () => {
       <Column lg={16} md={8} sm={4} className="create-ru-column__banner">
         <PageTitle
           title="Upload new volumes table"
-          subtitle="Load .csv or .xls file to calculate waste volumes when district averages waste assessment is used"
+          subtitle="Load .xlsx file to calculate waste volumes when district averages waste assessment is used"
         />
       </Column>
 

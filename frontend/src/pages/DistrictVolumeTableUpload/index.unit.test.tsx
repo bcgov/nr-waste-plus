@@ -93,7 +93,7 @@ describe('DistrictVolumeTableUploadPage', () => {
       expect(screen.getByText('Upload new volumes table')).toBeTruthy();
       expect(
         screen.getByText(
-          'Load .csv or .xls file to calculate waste volumes when district averages waste assessment is used',
+          'Load .xlsx file to calculate waste volumes when district averages waste assessment is used',
         ),
       ).toBeTruthy();
     });

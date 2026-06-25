@@ -9,8 +9,8 @@ import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { DistrictVolumeListItem } from '@/services/districtvolumes.types';
 
 import { renderCell } from '@/components/Form/TableResource/types';
-import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as hooks from '@/config/react-query/hooks';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 
 vi.mock('@/config/react-query/hooks');
 
@@ -83,10 +83,7 @@ vi.mock('@/components/Form/TableResource', () => ({
             Previous
           </button>
         </div>
-        <button
-          aria-label="Sort by Area"
-          onClick={() => onSortChange?.({ area: 'ASC' })}
-        >
+        <button aria-label="Sort by Area" onClick={() => onSortChange?.({ area: 'ASC' })}>
           Sort
         </button>
       </div>
@@ -325,9 +322,7 @@ describe('DistrictVolumeListTable', () => {
       await renderWithAppAsync(<DistrictVolumeListTable />);
 
       const callArgs = mockUseDistrictVolumeListQuery.mock.calls[0];
-      expect(callArgs[1]).toEqual(
-        expect.objectContaining({ enabled: false, staleTime: Infinity }),
-      );
+      expect(callArgs[1]).toEqual(expect.objectContaining({ enabled: false, staleTime: Infinity }));
     });
   });
 });

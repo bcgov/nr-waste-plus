@@ -857,11 +857,7 @@ describe('FileUploadInput (validator prop)', () => {
     const onProcessed = vi.fn();
 
     render(
-      <FileUploadInput
-        processor={processor}
-        validator={validator}
-        onProcessed={onProcessed}
-      />,
+      <FileUploadInput processor={processor} validator={validator} onProcessed={onProcessed} />,
     );
 
     const file = new File(['dummy'], 'bad.xlsx', {
@@ -887,11 +883,7 @@ describe('FileUploadInput (validator prop)', () => {
     const onProcessed = vi.fn();
 
     render(
-      <FileUploadInput
-        processor={processor}
-        validator={validator}
-        onProcessed={onProcessed}
-      />,
+      <FileUploadInput processor={processor} validator={validator} onProcessed={onProcessed} />,
     );
 
     const file = new File(['id,name,email\n1,Alice,alice@example.com'], 'customers.csv', {
@@ -982,11 +974,7 @@ describe('FileUploadInput (validator prop)', () => {
     const onProcessed = vi.fn();
 
     render(
-      <FileUploadInput
-        processor={badProcessor}
-        validator={validator}
-        onProcessed={onProcessed}
-      />,
+      <FileUploadInput processor={badProcessor} validator={validator} onProcessed={onProcessed} />,
     );
 
     const file = new File(['data'], 'bad.xlsx', {
@@ -1013,11 +1001,7 @@ describe('FileUploadInput (validator prop)', () => {
     const onProcessed = vi.fn();
 
     render(
-      <FileUploadInput
-        processor={processor}
-        validator={validator}
-        onProcessed={onProcessed}
-      />,
+      <FileUploadInput processor={processor} validator={validator} onProcessed={onProcessed} />,
     );
 
     const file = new File(['data'], 'valid.xlsx', {
@@ -1038,11 +1022,7 @@ describe('FileUploadInput (validator prop)', () => {
     const onProcessed = vi.fn();
 
     render(
-      <FileUploadInput
-        processor={processor}
-        validator={validator}
-        onProcessed={onProcessed}
-      />,
+      <FileUploadInput processor={processor} validator={validator} onProcessed={onProcessed} />,
     );
 
     const file = new File(['data'], 'blocked.xlsx', {
