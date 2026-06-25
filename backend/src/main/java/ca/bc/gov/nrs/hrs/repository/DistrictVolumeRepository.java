@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.repository;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -69,4 +70,13 @@ public interface DistrictVolumeRepository
    */
   Optional<DistrictVolumeEntity> findTopByAreaAndEndDateIsNullOrderByStartDateDesc(
       Area area);
+
+  /**
+   * Finds all open-ended district volume entries for the specified area, ordered by most recent
+   * start date first.
+   *
+   * @param area area for which open-ended entries should be retrieved
+   * @return ordered list of open-ended entries for the area
+   */
+  List<DistrictVolumeEntity> findByAreaAndEndDateIsNullOrderByStartDateDesc(Area area);
 }

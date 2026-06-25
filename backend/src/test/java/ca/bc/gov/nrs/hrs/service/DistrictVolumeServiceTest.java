@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.hrs.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDataDto;
@@ -331,6 +333,8 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity savedEntity = buildEntity(Area.INTERIOR);
     savedEntity.setTableLevelFactor(new BigDecimal("1.150"));
 
+    when(districtVolumeRepository.findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.INTERIOR))
+        .thenReturn(Collections.emptyList());
     when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
         .thenReturn(savedEntity);
 
@@ -343,6 +347,44 @@ class DistrictVolumeServiceTest {
     assertThat(result.area()).isEqualTo("INTERIOR");
     assertThat(result.tableLevelFactor())
         .isEqualTo(new BigDecimal("1.150"));
+  }
+
+  @Test
+  @DisplayName(
+      "createDistrictVolume — should throw 409 when multiple open-ended rows exist for area")
+  void createDistrictVolume_throws409_whenMultipleOpenEndedRowsExist() {
+
+    InteriorDataDto interiorData =
+        new InteriorDataDto(
+            Collections.emptyList(),
+            Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "INTERIOR",
+            LocalDate.of(9999, Month.JANUARY, 1),
+            new BigDecimal("1.150"),
+            null,
+            interiorData);
+
+    DistrictVolumeEntity newestOpenEntry = buildEntity(Area.INTERIOR);
+    newestOpenEntry.setStartDate(LocalDate.of(2026, Month.FEBRUARY, 1));
+
+    DistrictVolumeEntity olderOpenEntry = buildEntity(Area.INTERIOR);
+    olderOpenEntry.setId(2L);
+    olderOpenEntry.setStartDate(LocalDate.of(2026, Month.JANUARY, 1));
+
+    when(districtVolumeRepository.findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.INTERIOR))
+        .thenReturn(List.of(newestOpenEntry, olderOpenEntry));
+
+    assertThatThrownBy(
+            () -> districtVolumeService.createDistrictVolume(
+                "TEST_USER",
+                createDto))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("multiple open-ended district volume records exist for area INTERIOR");
+
+    verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
   }
 
   @Test
@@ -367,6 +409,8 @@ class DistrictVolumeServiceTest {
     savedEntity.setTableLevelFactor(new BigDecimal("1.200"));
     savedEntity.setHeliMultiplier(new BigDecimal("1.500"));
 
+    when(districtVolumeRepository.findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.COASTAL))
+        .thenReturn(Collections.emptyList());
     when(districtVolumeRepository.save(
             any(DistrictVolumeEntity.class)))
         .thenReturn(savedEntity);
