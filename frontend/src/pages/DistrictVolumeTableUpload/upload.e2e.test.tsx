@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 import { setupAppShellMocks } from '@/config/tests/app.setup';
-import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 import { mockJwt } from '@/config/tests/auth.helper';
+import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 import {
   buildValidInteriorBuffer,
   buildValidCoastBuffer,
@@ -15,6 +15,21 @@ import {
 const canOverrideClaims = (): boolean => process.env.VITE_MOCK_AUTH?.toLowerCase() === 'true';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * Uploads a file via Carbon's hidden `<input class="cds--file-input">`.
+ * Uses `setInputFiles()` directly instead of clicking the dropzone button,
+ * because Carbon's dropzone button does not reliably trigger Playwright's
+ * filechooser event.
+ */
+async function uploadFile(page: import('@playwright/test').Page, buffer: Buffer): Promise<void> {
+  const input = page.locator('.cds--file-input');
+  await input.setInputFiles({
+    name: 'test.xlsx',
+    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    buffer,
+  });
+}
 
 /**
  * Calculates tomorrow's date formatted as yyyy/mm/dd for the Carbon date picker.
@@ -40,10 +55,15 @@ async function mockCreateApi(page: import('@playwright/test').Page): Promise<voi
     if (route.request().method() === 'POST') {
       await route.fulfill({
         status: 201,
-        headers: { location: '/api/configuration/district-average-volumes/42' },
+        headers: {
+          'location': '/api/configuration/district-average-volumes/42',
+          // CORS expose — without this, Axios can't read the `location` header
+          // from `xhr.getAllResponseHeaders()` for cross-origin requests.
+          'access-control-expose-headers': 'location',
+        },
       });
     } else {
-      await route.continue(); // let the existing mock handler deal with GET
+      await route.continue();
     }
   });
 }
@@ -157,12 +177,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
 
       // Upload a valid Interior spreadsheet
       const buffer = await buildValidInteriorBuffer();
-      const fileInput = page.getByTestId('file-upload-dropzone').locator('input[type="file"]');
-      await fileInput.setInputFiles({
-        name: 'interior-test.xlsx',
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        buffer,
-      });
+      await uploadFile(page, buffer);
 
       // Wait for processing to complete: the file uploader item appears with a delete button
       const fileItem = page.getByTestId('file-upload-item');
@@ -193,12 +208,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
 
       // Upload a valid Coast spreadsheet
       const buffer = await buildValidCoastBuffer();
-      const fileInput = page.getByTestId('file-upload-dropzone').locator('input[type="file"]');
-      await fileInput.setInputFiles({
-        name: 'coast-test.xlsx',
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        buffer,
-      });
+      await uploadFile(page, buffer);
 
       // Wait for processing to complete
       const fileItem = page.getByTestId('file-upload-item');
@@ -230,12 +240,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       await page.waitForLoadState('domcontentloaded');
 
       const buffer = await buildWrongSheetNameBuffer();
-      const fileInput = page.getByTestId('file-upload-dropzone').locator('input[type="file"]');
-      await fileInput.setInputFiles({
-        name: 'wrong-sheet.xlsx',
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        buffer,
-      });
+      await uploadFile(page, buffer);
 
       // Wait for the file item to appear with an error state
       const fileItem = page.getByTestId('file-upload-item');
@@ -259,12 +264,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       await page.waitForLoadState('domcontentloaded');
 
       const buffer = await buildNonNumericDataBuffer();
-      const fileInput = page.getByTestId('file-upload-dropzone').locator('input[type="file"]');
-      await fileInput.setInputFiles({
-        name: 'bad-data.xlsx',
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        buffer,
-      });
+      await uploadFile(page, buffer);
 
       const fileItem = page.getByTestId('file-upload-item');
       await expect(fileItem).toBeVisible({ timeout: 10_000 });
@@ -285,12 +285,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       await page.waitForLoadState('domcontentloaded');
 
       const buffer = await buildInvalidDistrictCodeBuffer();
-      const fileInput = page.getByTestId('file-upload-dropzone').locator('input[type="file"]');
-      await fileInput.setInputFiles({
-        name: 'bad-code.xlsx',
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        buffer,
-      });
+      await uploadFile(page, buffer);
 
       const fileItem = page.getByTestId('file-upload-item');
       await expect(fileItem).toBeVisible({ timeout: 10_000 });
@@ -311,12 +306,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       await page.waitForLoadState('domcontentloaded');
 
       const buffer = await buildMissingHeliMultiplierBuffer();
-      const fileInput = page.getByTestId('file-upload-dropzone').locator('input[type="file"]');
-      await fileInput.setInputFiles({
-        name: 'no-heli.xlsx',
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        buffer,
-      });
+      await uploadFile(page, buffer);
 
       const fileItem = page.getByTestId('file-upload-item');
       await expect(fileItem).toBeVisible({ timeout: 10_000 });
@@ -343,22 +333,23 @@ test.describe('District Volume Table Upload Page - E2E', () => {
 
       // Step 1: Upload a valid Interior spreadsheet
       const buffer = await buildValidInteriorBuffer();
-      const fileInput = page.getByTestId('file-upload-dropzone').locator('input[type="file"]');
-      await fileInput.setInputFiles({
-        name: 'interior-valid.xlsx',
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        buffer,
-      });
+      await uploadFile(page, buffer);
 
       const fileItem = page.getByTestId('file-upload-item');
       await expect(fileItem).toBeVisible({ timeout: 10_000 });
 
+      // Wait for file processing to complete (status changes from 'uploading' to 'edit')
+      await expect(page.getByText(/Uploading/)).toHaveCount(0, { timeout: 15_000 });
+
       // Step 2: Fill in the start date (must be tomorrow)
       const dateInput = page.getByLabel('Start date');
       await dateInput.fill(tomorrowFormatted());
+      // Carbon DatePicker fires onChange on Enter/blur, not on input events
+      await page.keyboard.press('Enter');
 
-      // Step 3: Click the Upload table button
-      await page.getByRole('button', { name: 'Upload table' }).click();
+      // Step 3: Wait for button to be enabled then click
+      await expect(page.getByTestId('upload-table-button')).toBeEnabled({ timeout: 10_000 });
+      await page.getByTestId('upload-table-button').click();
 
       // Step 4: Verify navigation to the details page
       await expect(page).toHaveURL(/\/configuration\/district-volume-tables\/42/, {
@@ -383,22 +374,23 @@ test.describe('District Volume Table Upload Page - E2E', () => {
 
       // Step 1: Upload a valid Coast spreadsheet
       const buffer = await buildValidCoastBuffer();
-      const fileInput = page.getByTestId('file-upload-dropzone').locator('input[type="file"]');
-      await fileInput.setInputFiles({
-        name: 'coast-valid.xlsx',
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        buffer,
-      });
+      await uploadFile(page, buffer);
 
       const fileItem = page.getByTestId('file-upload-item');
       await expect(fileItem).toBeVisible({ timeout: 10_000 });
 
+      // Wait for file processing to complete (status changes from 'uploading' to 'edit')
+      await expect(page.getByText(/Uploading/)).toHaveCount(0, { timeout: 15_000 });
+
       // Step 2: Fill in the start date (must be tomorrow)
       const dateInput = page.getByLabel('Start date');
       await dateInput.fill(tomorrowFormatted());
+      // Carbon DatePicker fires onChange on Enter/blur, not on input events
+      await page.keyboard.press('Enter');
 
-      // Step 3: Click the Upload table button
-      await page.getByRole('button', { name: 'Upload table' }).click();
+      // Step 3: Wait for button to be enabled then click
+      await expect(page.getByTestId('upload-table-button')).toBeEnabled({ timeout: 10_000 });
+      await page.getByTestId('upload-table-button').click();
 
       // Step 4: Verify navigation to the details page
       await expect(page).toHaveURL(/\/configuration\/district-volume-tables\/42/, {

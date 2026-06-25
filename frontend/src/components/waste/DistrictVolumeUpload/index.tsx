@@ -193,7 +193,7 @@ const DistrictVolumeTableUpload: FC = () => {
                 defaultSelected="INTERIOR"
                 invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
                 invalidText={field.state.meta.errors[0] ?? undefined}
-                value={field.state.value ?? 'INTERIOR'}
+                valueSelected={field.state.value ?? 'INTERIOR'}
                 onChange={(
                   _selection: string | number | undefined,
                   _name: string,
@@ -267,7 +267,14 @@ const DistrictVolumeTableUpload: FC = () => {
           accept=".xls,.xlsx"
           maxFileSizeBytes={2 * 1024 * 1024}
           processor={processor}
-          validator={form.state.values.area === 'INTERIOR' ? interiorValidator : coastValidator}
+          validator={async (file: File) => {
+            const [interiorErrors, coastErrors] = await Promise.all([
+              interiorValidator(file),
+              coastValidator(file),
+            ]);
+            if (interiorErrors.length === 0 || coastErrors.length === 0) return [];
+            return [...interiorErrors, ...coastErrors];
+          }}
           onProcessed={handleFileChange}
           externalErrors={fileErrors}
         />
