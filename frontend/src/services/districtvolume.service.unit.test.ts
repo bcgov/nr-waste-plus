@@ -172,7 +172,8 @@ describe('DistrictVolumeService', () => {
       const result = await service.createDistrictVolumeTable({
         area: 'INTERIOR',
         startDate: '2026-06-01',
-        file: new File([''], 'test.xlsx'),
+        tableLevelFactor: 0,
+        tableData: { type: 'INTERIOR', zones: [], formulas: {} },
       });
 
       expect(result).toBe(42);
@@ -193,7 +194,8 @@ describe('DistrictVolumeService', () => {
         service.createDistrictVolumeTable({
           area: 'INTERIOR',
           startDate: '2026-06-01',
-          file: new File([''], 'test.xlsx'),
+          tableLevelFactor: 0,
+          tableData: { type: 'INTERIOR', zones: [], formulas: {} },
         }),
       ).rejects.toThrow('Could not parse resource ID from Location header');
     });
@@ -205,7 +207,8 @@ describe('DistrictVolumeService', () => {
         service.createDistrictVolumeTable({
           area: 'INTERIOR',
           startDate: '2026-06-01',
-          file: new File([''], 'test.xlsx'),
+          tableLevelFactor: 0,
+          tableData: { type: 'INTERIOR', zones: [], formulas: {} },
         }),
       ).rejects.toThrow('Network Error');
     });
@@ -218,7 +221,8 @@ describe('DistrictVolumeService', () => {
       const request = service.createDistrictVolumeTable({
         area: 'INTERIOR',
         startDate: '2026-06-01',
-        file: new File([''], 'test.xlsx'),
+        tableLevelFactor: 0,
+        tableData: { type: 'INTERIOR', zones: [], formulas: {} },
       });
 
       request.cancel();
@@ -234,7 +238,8 @@ describe('DistrictVolumeService', () => {
         {
           area: 'INTERIOR',
           startDate: '2026-06-01',
-          file: new File([''], 'test.xlsx'),
+          tableLevelFactor: 0,
+          tableData: { type: 'INTERIOR', zones: [], formulas: {} },
         },
         meta,
       );
@@ -249,7 +254,8 @@ describe('DistrictVolumeService', () => {
       await service.createDistrictVolumeTable({
         area: 'INTERIOR',
         startDate: '2026-06-01',
-        file: new File([''], 'test.xlsx'),
+        tableLevelFactor: 0,
+        tableData: { type: 'INTERIOR', zones: [], formulas: {} },
       });
 
       const callArgs = (service as any).doRequest.mock.calls[0][1];
