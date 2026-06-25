@@ -291,6 +291,7 @@ function FileUploadInput<T>({
         Max file size is {fmt(maxFileSizeBytes)}. Supported file types are {accept}.
       </p>
       <FileUploaderDropContainer
+        data-testid="file-upload-dropzone"
         className={`file-upload-dropzone ${disabled ? 'file-upload-dropzone--disabled' : ''}`}
         id={dropId}
         accept={accept.split(',').map((s) => s.trim())}
@@ -321,7 +322,7 @@ function FileUploadInput<T>({
       {allComponentErrors.length > 0 && (
         <div className="file-upload-errors" role="alert">
           {allComponentErrors.map((msg) => (
-            <p key={msg} className="file-upload-error-message">
+            <p key={msg} className="file-upload-error-message" data-testid="file-error">
               {msg}
             </p>
           ))}

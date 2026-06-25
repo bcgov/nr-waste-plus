@@ -107,12 +107,16 @@ const useSyncFiltersToSearchParams = <T extends Record<string, unknown>>(
   const hasHydratedRef = useRef(false);
   const managedKeysRef = useRef<Set<string>>(new Set());
 
-  // Ref updated on every render so the sync effect can read the current URL params
-  // without listing searchParams as a reactive dependency — which would cause the
-  // effect to fire whenever the user navigates *away* from this route and the URL
-  // search string changes to the destination's (empty) params.
   const searchParamsRef = useRef(searchParams);
-  searchParamsRef.current = searchParams;
+
+  // Keep the ref in sync with the latest searchParams after every render so the
+  // sync effect can read current URL params without listing searchParams as a
+  // reactive dependency — which would cause the effect to fire whenever the user
+  // navigates *away* from this route and the URL search string changes to the
+  // destination's (empty) params.
+  useEffect(() => {
+    searchParamsRef.current = searchParams;
+  });
 
   /**
    * Attempts to parse a string as JSON when it begins with `[` or `{`.

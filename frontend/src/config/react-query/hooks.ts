@@ -55,6 +55,7 @@ type CodeResource = 'samplingOptions' | 'districtOptions' | 'statusOptions';
  * on query failure instead of (or in addition to) propagating the error state.
  */
 type QueryNotificationOptions = {
+  /** Target element identifier for inline error notifications. When omitted, no notification is dispatched. */
   notificationTarget?: string;
 };
 
@@ -110,6 +111,13 @@ const notifyProblemDetailsError = (error: Error, eventTarget: string) => {
  * @param options - TanStack Query options merged on top of reference-data defaults,
  *   plus an optional `notificationTarget` for inline error notifications.
  * @returns The TanStack Query result object for the requested code list.
+ *
+ * @example
+ * ```tsx
+ * const { data, isLoading } = useCodesQuery('districtOptions', {
+ *   notificationTarget: 'waste-search-panel',
+ * });
+ * ```
  */
 export const useCodesQuery = <TData = CodeDescriptionDto[]>(
   resource: CodeResource,
@@ -161,6 +169,15 @@ export const useCodesQuery = <TData = CodeDescriptionDto[]>(
  *
  * @param notificationTarget Optional target for inline error notifications
  * @returns Array of three query results [samplingOptions, districtOptions, statusOptions]
+ *
+ * @example
+ * ```tsx
+ * const [sampling, districts, statuses] = useWasteSearchFilterOptionsQueries('search-filters');
+ *
+ * if (sampling.isLoading || districts.isLoading || statuses.isLoading) {
+ *   return <Spinner />;
+ * }
+ * ```
  */
 export const useWasteSearchFilterOptionsQueries = (notificationTarget?: string) => {
   const queries = useQueries({
@@ -394,6 +411,16 @@ export const useSearchReportingUnitsQuery = <
  *   - `notificationTarget`: Optional target for inline error notifications.
  *   - `onSuccess`: Optional callback invoked with the created reporting unit ID (allows caller to navigate).
  * @returns The TanStack Query mutation result for creating a reporting unit (returns the ID as number).
+ *
+ * @example
+ * ```tsx
+ * const mutation = useReportingUnitCreateMutation({
+ *   notificationTarget: 'create-ru-form',
+ *   onSuccess: (id) => navigate(`/reporting-units/${id}`),
+ * });
+ *
+ * mutation.mutate({ clientNumber: '00012797', districtCode: 'DKM', samplingCode: 'AVG', gradeCode: null });
+ * ```
  */
 export const useReportingUnitCreateMutation = (
   options?: Omit<
@@ -480,6 +507,13 @@ export const useReportingUnitDetailsQuery = <TData = ReportingUnitDto>(
  * @param wasteAssessmentAreaId - Waste assessment area ID; query is disabled when `null`.
  * @param options - Optional TanStack Query overrides.
  * @returns The TanStack Query result containing the {@link ReportingUnitSearchExpandedDto}.
+ *
+ * @example
+ * ```tsx
+ * const { data, isLoading } = useReportingUnitExpandQuery(row.id, row.ruId, row.wasteAssessmentAreaId);
+ *
+ * if (isLoading) return <ExpandableRowSkeleton />;
+ * ```
  */
 export const useReportingUnitExpandQuery = <TData = ReportingUnitSearchExpandedDto>(
   rowId: string,
@@ -521,6 +555,12 @@ export const useReportingUnitExpandQuery = <TData = ReportingUnitSearchExpandedD
  * @param enabled - Whether the query is allowed to run.
  * @param options - Optional TanStack Query overrides.
  * @returns The TanStack Query result containing the matched {@link CodeDescriptionDto} entries.
+ *
+ * @example
+ * ```tsx
+ * const [debouncedCode] = useDebouncedValue(clientCode, 300);
+ * const { data, isLoading } = useClientLookupQuery(debouncedCode, debouncedCode.length >= 3);
+ * ```
  */
 export const useClientLookupQuery = <TData = CodeDescriptionDto[]>(
   clientCode: string | undefined,
@@ -558,6 +598,15 @@ export const useClientLookupQuery = <TData = CodeDescriptionDto[]>(
  * @param input - Sort configuration and pagination settings.
  * @param options - Optional TanStack Query overrides plus an optional `notificationTarget`.
  * @returns The TanStack Query result for the paginated {@link DistrictVolumeListItem} list.
+ *
+ * @example
+ * ```tsx
+ * const { data, isLoading } = useDistrictVolumeListQuery({
+ *   page: 0,
+ *   size: 25,
+ *   sort: { area: 'ASC' },
+ * });
+ * ```
  */
 export const useDistrictVolumeListQuery = <TData = PageableResponse<DistrictVolumeListItem>>(
   input: DistrictVolumeQueryParams,
@@ -594,4 +643,65 @@ export const useDistrictVolumeListQuery = <TData = PageableResponse<DistrictVolu
   }, [notificationTarget, query.error, query.isError]);
 
   return query;
+};
+
+/**
+ * Creates a new district volume table and returns the created resource ID.
+ *
+ * The backend returns HTTP 201 (Created) with a Location header pointing to the
+ * created resource. The service layer extracts and parses this header to return
+ * the numeric ID, which is passed to optional `onSuccess` callback.
+ *
+ * On error, dispatches an inline notification to `notificationTarget` (when supplied)
+ * using the RFC 7807 problem-details payload from the backend when available.
+ *
+ * @param options - Optional TanStack Query mutation overrides plus:
+ *   - `notificationTarget`: Optional target for inline error notifications.
+ *   - `onSuccess`: Optional callback invoked with the created district volume ID (allows caller to navigate).
+ * @returns The TanStack Query mutation result for creating a district volume table (returns the ID as number).
+ *
+ * @example
+ * ```tsx
+ * const mutation = useDistrictVolumeTableCreateMutation({
+ *   notificationTarget: 'dv-upload-form',
+ *   onSuccess: (id) => navigate(`/district-volumes/${id}`),
+ * });
+ *
+ * mutation.mutate({ area: 'INTERIOR', startDate: '2026-06-01', tableLevelFactor: 1.5, tableData: ... });
+ * ```
+ */
+export const useDistrictVolumeTableCreateMutation = (
+  options?: Omit<
+    UseMutationOptions<
+      number,
+      Error,
+      import('@/services/districtvolumes.types').DistrictVolumeCreate
+    >,
+    'mutationKey' | 'mutationFn' | 'onSuccess'
+  > &
+    QueryNotificationOptions & {
+      /** Called with the created district volume ID on success. */
+      onSuccess?: (id: number) => void;
+    },
+) => {
+  const { notificationTarget, onSuccess, ...mutationOptions } = options ?? {};
+
+  const mutation = useMutation({
+    mutationKey: queryKeys.districtVolume.create(),
+    mutationFn: (body) => API.districtVolume.createDistrictVolumeTable(body),
+    onSuccess: (data) => {
+      onSuccess?.(data);
+    },
+    ...mutationOptions,
+  });
+
+  useEffect(() => {
+    if (!notificationTarget || !mutation.isError || !mutation.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(mutation.error, notificationTarget);
+  }, [notificationTarget, mutation.error, mutation.isError]);
+
+  return mutation;
 };

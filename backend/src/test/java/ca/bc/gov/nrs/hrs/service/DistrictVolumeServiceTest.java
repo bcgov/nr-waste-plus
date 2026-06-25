@@ -15,9 +15,8 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -35,16 +34,14 @@ import org.springframework.web.server.ResponseStatusException;
 @DisplayName("Unit Test | District Volume Service")
 class DistrictVolumeServiceTest {
 
-  private static final OffsetDateTime MOCK_UPLOAD_TIME =
-      OffsetDateTime.of(
+  private static final LocalDateTime MOCK_UPLOAD_TIME =
+      LocalDateTime.of(
           2026,
-          Month.JANUARY.getValue(),
+          Month.JANUARY,
           1,
           12,
           0,
-          0,
-          0,
-          ZoneOffset.UTC);
+          0);
 
   private static final LocalDate MOCK_START_DATE =
       LocalDate.of(2026, Month.FEBRUARY, 1);

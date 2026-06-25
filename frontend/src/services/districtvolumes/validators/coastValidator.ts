@@ -1,6 +1,7 @@
 import { coastMatrixConfig } from '@/services/districtvolumes/config/coastMatrixConfig';
 import { ExcelReader } from '@/services/spreadsheet/excelReader';
 import { SpreadsheetValidator } from '@/services/spreadsheet/spreadsheetValidator';
+import { validateDistrictCodes } from './districtCodeValidator';
 
 export async function coastValidator(file: File): Promise<string[]> {
   const errors: string[] = [];
@@ -17,6 +18,9 @@ export async function coastValidator(file: File): Promise<string[]> {
   const validator = new SpreadsheetValidator();
   const result = validator.validateStructure(worksheet, coastMatrixConfig);
   errors.push(...result.errors);
+
+  // District code format + uniqueness
+  validateDistrictCodes(worksheet, coastMatrixConfig, errors);
 
   return errors;
 }

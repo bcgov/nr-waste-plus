@@ -2,9 +2,9 @@ import { removeEmpty } from './utils';
 
 import type { DistrictVolumeListItem } from './districtvolumes.types';
 import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { CancelablePromise } from '@/config/api/CancelablePromise';
 import type { PageableRequest } from '@/services/types';
 
+import { CancelablePromise } from '@/config/api/CancelablePromise';
 import { HttpClient, type APIConfig } from '@/config/api/types';
 
 /**
@@ -40,7 +40,35 @@ export class DistrictVolumeService extends HttpClient {
         ...removeEmpty(pageable),
         ...(area ? { area } : {}),
       },
-      ...(meta !== undefined ? { meta } : {}),
+      ...(meta === undefined ? {} : { meta }),
+    });
+  }
+
+  createDistrictVolumeTable(
+    dto: import('@/services/districtvolumes.types').DistrictVolumeCreate,
+    meta?: Record<string, unknown>,
+  ): CancelablePromise<number> {
+    return new CancelablePromise<number>((resolve, reject, onCancel) => {
+      const request = this.doRequest<string>(this.config, {
+        method: 'POST',
+        url: '/api/configuration/district-average-volumes',
+        body: dto,
+        responseHeader: 'location',
+        ...(meta === undefined ? {} : { meta }),
+      });
+
+      onCancel(() => request.cancel());
+
+      request
+        .then((location) => {
+          const match = /\/(\d+)$/.exec(location);
+          if (match) {
+            resolve(Number(match[1]));
+          } else {
+            reject(new Error(`Could not parse resource ID from Location header: "${location}"`));
+          }
+        })
+        .catch(reject);
     });
   }
 }

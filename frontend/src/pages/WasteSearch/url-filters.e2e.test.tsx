@@ -74,11 +74,14 @@ test.describe('Waste Search - URL-Populated Filters', () => {
     await districtInput.click();
     await page.getByRole('option', { name: 'Fort Nelson' }).click();
 
+    // Wait for the placeholder text to update before evaluating color,
+    // ensuring React's state update has propagated to the DOM.
+    await expect(districtInput).toHaveAttribute('placeholder', 'DFN');
+
     const selectedPlaceholderColor = await districtInput.evaluate((el) => {
       return globalThis.getComputedStyle(el, '::placeholder').color;
     });
 
-    await expect(districtInput).toHaveAttribute('placeholder', 'DFN');
     expect(selectedPlaceholderColor).not.toBe(defaultPlaceholderColor);
   });
 

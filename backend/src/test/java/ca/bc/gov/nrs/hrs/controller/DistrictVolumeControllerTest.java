@@ -19,8 +19,8 @@ import ca.bc.gov.nrs.hrs.service.DistrictVolumeService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
-import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
@@ -68,16 +68,14 @@ class DistrictVolumeControllerTest {
   @InjectMocks
   private DistrictVolumeController districtVolumeController;
 
-  private static final OffsetDateTime MOCK_UPLOAD_TIME =
-      OffsetDateTime.of(
+  private static final LocalDateTime MOCK_UPLOAD_TIME =
+      LocalDateTime.of(
           2026,
-          Month.JUNE.getValue(),
+          Month.JUNE,
           11,
           14,
           0,
-          0,
-          0,
-          ZoneOffset.UTC);
+          0);
 
   @BeforeEach
   void setUp() {
@@ -140,7 +138,7 @@ class DistrictVolumeControllerTest {
             LocalDate.of(2026, Month.JANUARY, 1),
             null,
             "TEST_USER",
-            MOCK_UPLOAD_TIME.toInstant());
+            MOCK_UPLOAD_TIME.atOffset(ZoneOffset.UTC).toInstant());
 
     PageRequest pageRequest = PageRequest.of(0, 10);
 
@@ -177,7 +175,7 @@ class DistrictVolumeControllerTest {
             LocalDate.of(2026, Month.JANUARY, 1),
             null,
             "TEST_USER",
-            MOCK_UPLOAD_TIME.toInstant());
+            MOCK_UPLOAD_TIME.atOffset(ZoneOffset.UTC).toInstant());
 
     PageRequest pageRequest = PageRequest.of(0, 10);
 
@@ -247,7 +245,7 @@ class DistrictVolumeControllerTest {
             LocalDate.of(2026, Month.JANUARY, 1),
             null,
             "TEST_USER",
-            MOCK_UPLOAD_TIME.toInstant(),
+            MOCK_UPLOAD_TIME.atOffset(ZoneOffset.UTC).toInstant(),
             new BigDecimal("1.150"),
             null,
             interiorData);

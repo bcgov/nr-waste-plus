@@ -169,9 +169,7 @@ describe('mapInteriorSpreadsheet', () => {
   });
 
   it('skips rows with missing zone property (undefined defaults to empty string)', () => {
-    const rows = [
-      { district: 'DPG', total: 5 },
-    ];
+    const rows = [{ district: 'DPG', total: 5 }];
 
     const result = mapInteriorSpreadsheet(rows);
     const totalDistricts = result.zones.flatMap((z) => z.districts).length;
@@ -179,9 +177,7 @@ describe('mapInteriorSpreadsheet', () => {
   });
 
   it('skips rows with missing district property (undefined defaults to empty string)', () => {
-    const rows = [
-      { zone: 'Dry belt', total: 5 },
-    ];
+    const rows = [{ zone: 'Dry belt', total: 5 }];
 
     const result = mapInteriorSpreadsheet(rows);
     const totalDistricts = result.zones.flatMap((z) => z.districts).length;

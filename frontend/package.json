@@ -14,6 +14,7 @@
     "test:unit:watch": "vitest --allowOnly",
     "pree2e": "echo '{}' > src/config/tests/user.bceid.json && echo '{}' > src/config/tests/user.idir.json",
     "serve:e2e": "vite preview",
+    "serve:e2e:test": "cross-env VITE_MOCK_AUTH=true npm run build && npm run serve:e2e",
     "pw:install": "playwright install-deps && playwright install",
     "pretest:e2e": "node -e \"if (!process.env.CI) require('child_process').execSync('npm run pw:install', {stdio:'inherit'})\" && npm run pree2e",
     "pretest:e2e:watch": "npm run pw:install && npm run pree2e",

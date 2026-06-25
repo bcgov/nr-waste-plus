@@ -125,4 +125,22 @@ describe('queryKeys', () => {
       expect(queryKeys.table.sorting(sort)).toEqual(['table', 'sorting', sort]);
     });
   });
+
+  describe('districtVolume', () => {
+    it('should build list key without notificationTarget', () => {
+      const params = { page: 0, size: 10, sort: {} };
+      const key = queryKeys.districtVolume.list(params);
+      expect(key).toEqual(['district-volume', 'list', params, undefined]);
+    });
+
+    it('should include notificationTarget in list key', () => {
+      const params = { page: 0, size: 10, sort: {} };
+      const key = queryKeys.districtVolume.list(params, 'dv-panel');
+      expect(key[3]).toBe('dv-panel');
+    });
+
+    it('should build create key', () => {
+      expect(queryKeys.districtVolume.create()).toEqual(['district-volume', 'create']);
+    });
+  });
 });

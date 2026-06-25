@@ -90,5 +90,6 @@ export const queryKeys = {
   districtVolume: {
     list: (params: DistrictVolumeQueryParams, notificationTarget?: string) =>
       ['district-volume', 'list', params, notificationTarget] as const,
+    create: () => ['district-volume', 'create'] as const,
   },
 } as const;
