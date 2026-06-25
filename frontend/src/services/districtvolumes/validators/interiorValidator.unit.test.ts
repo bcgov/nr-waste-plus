@@ -2,27 +2,11 @@ import ExcelJS from 'exceljs';
 import { describe, it, expect } from 'vitest';
 
 import { interiorValidator } from './interiorValidator';
-
-async function buildXlsxFile(rows: unknown[][], mergeCells?: string[]): Promise<File> {
-  const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet('Interior');
-  for (const row of rows) {
-    ws.addRow(row);
-  }
-  if (mergeCells) {
-    for (const range of mergeCells) {
-      ws.mergeCells(range);
-    }
-  }
-  const buffer = (await wb.xlsx.writeBuffer()) as ArrayBuffer;
-  return new File([buffer], 'interior.xlsx', {
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  });
-}
+import { buildXlsxFile } from './testHelper';
 
 describe('interiorValidator', () => {
   it('returns empty errors for a valid interior spreadsheet', async () => {
-    const file = await buildXlsxFile(
+    const file = await buildXlsxFile('Interior', 
       [
         [
           'District',
@@ -75,14 +59,14 @@ describe('interiorValidator', () => {
   });
 
   it('returns errors for missing headers', async () => {
-    const file = await buildXlsxFile([['District'], [null], ['DCC', 1]]);
+    const file = await buildXlsxFile('Interior', [['District'], [null], ['DCC', 1]]);
 
     const errors = await interiorValidator(file);
     expect(errors.length).toBeGreaterThan(0);
   });
 
   it('returns error for invalid district code format', async () => {
-    const file = await buildXlsxFile(
+    const file = await buildXlsxFile('Interior', 
       [
         [
           'District',
@@ -124,7 +108,7 @@ describe('interiorValidator', () => {
   });
 
   it('returns error for duplicate district codes', async () => {
-    const file = await buildXlsxFile(
+    const file = await buildXlsxFile('Interior', 
       [
         [
           'District',
@@ -167,7 +151,7 @@ describe('interiorValidator', () => {
   });
 
   it('does not flag summary row as invalid district code', async () => {
-    const file = await buildXlsxFile(
+    const file = await buildXlsxFile('Interior', 
       [
         [
           'District',
@@ -225,7 +209,7 @@ describe('interiorValidator', () => {
   });
 
   it('returns error when column count is insufficient', async () => {
-    const file = await buildXlsxFile(
+    const file = await buildXlsxFile('Interior', 
       [
         ['District', 'Dry Belt', null, null, null],
         [null, 'Avoidable Sawlog', 'Avoidable Grade Y/4', 'Unavoidable', 'Total'],

@@ -164,4 +164,96 @@ describe('DistrictVolumeService', () => {
       expect(service.config).toEqual(mockConfig);
     });
   });
+
+  describe('createDistrictVolumeTable', () => {
+    it('should parse resource ID from Location header', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('http://example.com/api/configuration/district-average-volumes/42');
+
+      const result = await service.createDistrictVolumeTable({
+        area: 'INTERIOR',
+        startDate: '2026-06-01',
+        file: new File([''], 'test.xlsx'),
+      });
+
+      expect(result).toBe(42);
+      expect((service as any).doRequest).toHaveBeenCalledWith(
+        mockConfig,
+        expect.objectContaining({
+          method: 'POST',
+          url: '/api/configuration/district-average-volumes',
+          responseHeader: 'location',
+        }),
+      );
+    });
+
+    it('should reject when Location header cannot be parsed', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('invalid-location');
+
+      await expect(
+        service.createDistrictVolumeTable({
+          area: 'INTERIOR',
+          startDate: '2026-06-01',
+          file: new File([''], 'test.xlsx'),
+        }),
+      ).rejects.toThrow('Could not parse resource ID from Location header');
+    });
+
+    it('should propagate network errors', async () => {
+      (service as any).doRequest = vi.fn().mockRejectedValue(new Error('Network Error'));
+
+      await expect(
+        service.createDistrictVolumeTable({
+          area: 'INTERIOR',
+          startDate: '2026-06-01',
+          file: new File([''], 'test.xlsx'),
+        }),
+      ).rejects.toThrow('Network Error');
+    });
+
+    it('should reject with CancelError when cancelled', async () => {
+      const innerRequest = new Promise(() => {});
+      (innerRequest as any).cancel = vi.fn();
+      (service as any).doRequest = vi.fn().mockReturnValue(innerRequest);
+
+      const request = service.createDistrictVolumeTable({
+        area: 'INTERIOR',
+        startDate: '2026-06-01',
+        file: new File([''], 'test.xlsx'),
+      });
+
+      request.cancel();
+
+      await expect(request).rejects.toThrow('Request aborted');
+    });
+
+    it('should pass meta to doRequest when provided', async () => {
+      const meta = { notificationTarget: 'district-volume-create' };
+      (service as any).doRequest = vi.fn().mockResolvedValue('http://example.com/42');
+
+      await service.createDistrictVolumeTable(
+        {
+          area: 'INTERIOR',
+          startDate: '2026-06-01',
+          file: new File([''], 'test.xlsx'),
+        },
+        meta,
+      );
+
+      const callArgs = (service as any).doRequest.mock.calls[0][1];
+      expect(callArgs.meta).toEqual(meta);
+    });
+
+    it('should not include meta when not provided', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue('http://example.com/42');
+
+      await service.createDistrictVolumeTable({
+        area: 'INTERIOR',
+        startDate: '2026-06-01',
+        file: new File([''], 'test.xlsx'),
+      });
+
+      const callArgs = (service as any).doRequest.mock.calls[0][1];
+      expect(callArgs.meta).toBeUndefined();
+    });
+  });
 });

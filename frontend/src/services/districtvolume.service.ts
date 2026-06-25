@@ -40,7 +40,7 @@ export class DistrictVolumeService extends HttpClient {
         ...removeEmpty(pageable),
         ...(area ? { area } : {}),
       },
-      ...(meta !== undefined ? { meta } : {}),
+      ...(meta === undefined ? {} : { meta }),
     });
   }
 
@@ -54,14 +54,14 @@ export class DistrictVolumeService extends HttpClient {
         url: '/api/configuration/district-average-volumes',
         body: dto,
         responseHeader: 'location',
-        ...(meta !== undefined ? { meta } : {}),
+        ...(meta === undefined ? {} : { meta }),
       });
 
       onCancel(() => request.cancel());
 
       request
         .then((location) => {
-          const match = location.match(/\/(\d+)$/);
+          const match = /\/(\d+)$/.exec(location);
           if (match) {
             resolve(Number(match[1]));
           } else {

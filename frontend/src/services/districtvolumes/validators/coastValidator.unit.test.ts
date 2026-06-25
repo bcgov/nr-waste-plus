@@ -2,27 +2,11 @@ import ExcelJS from 'exceljs';
 import { describe, it, expect } from 'vitest';
 
 import { coastValidator } from './coastValidator';
-
-async function buildXlsxFile(rows: unknown[][], mergeCells?: string[]): Promise<File> {
-  const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet('Coast');
-  for (const row of rows) {
-    ws.addRow(row);
-  }
-  if (mergeCells) {
-    for (const range of mergeCells) {
-      ws.mergeCells(range);
-    }
-  }
-  const buffer = (await wb.xlsx.writeBuffer()) as ArrayBuffer;
-  return new File([buffer], 'coast.xlsx', {
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  });
-}
+import { buildXlsxFile } from './testHelper';
 
 describe('coastValidator', () => {
   it('returns empty errors for a valid coast spreadsheet', async () => {
-    const file = await buildXlsxFile(
+    const file = await buildXlsxFile('Coast', 
       [
         ['District', 'Mature', null, null, null, null, 'Immature', null, null, null, null],
         [
@@ -59,14 +43,14 @@ describe('coastValidator', () => {
   });
 
   it('returns errors for missing headers', async () => {
-    const file = await buildXlsxFile([['District'], [null], ['DCK', 1]]);
+    const file = await buildXlsxFile('Coast', [['District'], [null], ['DCK', 1]]);
 
     const errors = await coastValidator(file);
     expect(errors.length).toBeGreaterThan(0);
   });
 
   it('returns error for invalid district code format', async () => {
-    const file = await buildXlsxFile(
+    const file = await buildXlsxFile('Coast', 
       [
         ['District', 'Mature', null, null, null, null, 'Immature', null, null, null, null, null],
         [
@@ -106,7 +90,7 @@ describe('coastValidator', () => {
   });
 
   it('returns error for duplicate district codes', async () => {
-    const file = await buildXlsxFile(
+    const file = await buildXlsxFile('Coast', 
       [
         ['District', 'Mature', null, null, null, null, 'Immature', null, null, null, null, null],
         [
@@ -147,7 +131,7 @@ describe('coastValidator', () => {
   });
 
   it('returns error when heli multiplier is missing', async () => {
-    const file = await buildXlsxFile(
+    const file = await buildXlsxFile('Coast', 
       [
         ['District', 'Mature', null, null, null, null, 'Immature', null, null, null, null],
         [
@@ -186,7 +170,7 @@ describe('coastValidator', () => {
   });
 
   it('does not flag summary row as invalid district code', async () => {
-    const file = await buildXlsxFile(
+    const file = await buildXlsxFile('Coast', 
       [
         ['District', 'Mature', null, null, null, null, 'Immature', null, null, null, null, null],
         [
@@ -226,7 +210,7 @@ describe('coastValidator', () => {
   });
 
   it('returns error when column count is insufficient', async () => {
-    const file = await buildXlsxFile(
+    const file = await buildXlsxFile('Coast', 
       [
         ['District', 'Mature', null, null, null, null],
         [
