@@ -22,6 +22,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Service for managing district volume configurations.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -104,6 +107,12 @@ public class DistrictVolumeService {
           HttpStatus.UNPROCESSABLE_CONTENT,
           "Start date must be strictly after today.");
     }
+
+    districtVolumeRepository.findTopByAreaOrderByStartDateDesc(areaEnum)
+        .ifPresent(previousEntry -> {
+          previousEntry.setEndDate(createDto.startDate());
+          districtVolumeRepository.save(previousEntry);
+        });
 
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
 
