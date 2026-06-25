@@ -14,8 +14,7 @@ import org.springframework.stereotype.Repository;
 /**
  * Repository for managing {@link DistrictVolumeEntity} records.
  *
- * <p>Provides standard CRUD operations through {@link JpaRepository} and
- * custom queries used by district volume business logic.
+ * Contains custom queries used by district volume business logic.
  */
 @Repository
 public interface DistrictVolumeRepository
@@ -24,12 +23,11 @@ public interface DistrictVolumeRepository
   /**
    * Finds the most recent district volume entry for the specified area.
    *
-   * <p>Used when creating a new entry to determine the end date of the
-   * previously active record for the same area.
+   * <p>Used to retrieve the latest configured record, regardless of whether it is the
+   * currently active record or a previously active record for the same area.
    *
    * @param area area for which the latest entry should be retrieved
-   * @return the most recent entry for the area, or an empty {@link Optional}
-   *         if none exists
+   * @return the most recent entry for the area, or an empty {@link Optional} if none exists
    */
   Optional<DistrictVolumeEntity> findTopByAreaOrderByStartDateDesc(Area area);
 
@@ -56,6 +54,19 @@ public interface DistrictVolumeRepository
           + "AND (d.endDate IS NULL OR d.endDate >= :currentDate)")
   Optional<DistrictVolumeEntity> findActiveByArea(
       @Param("area") Area area,
-      @Param("currentDate") LocalDate currentDate
-  );
+      @Param("currentDate") LocalDate currentDate);
+
+  /**
+   * Finds the most recent district volume entry for the specified area whose end date
+   * is not set.
+   *
+   * <p>Used to retrieve the latest open-ended record, typically the currently configured
+   * entry before it is closed by a newer one.
+   *
+   * @param area area for which the latest open-ended entry should be retrieved
+   * @return the most recent open-ended entry for the area, or an empty {@link Optional}
+   *     if none exists
+   */
+  Optional<DistrictVolumeEntity> findTopByAreaAndEndDateIsNullOrderByStartDateDesc(
+      Area area);
 }

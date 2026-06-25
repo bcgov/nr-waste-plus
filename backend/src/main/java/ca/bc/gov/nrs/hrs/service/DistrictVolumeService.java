@@ -108,9 +108,16 @@ public class DistrictVolumeService {
           "Start date must be strictly after today.");
     }
 
-    districtVolumeRepository.findTopByAreaOrderByStartDateDesc(areaEnum)
+    districtVolumeRepository
+        .findTopByAreaAndEndDateIsNullOrderByStartDateDesc(areaEnum)
         .ifPresent(previousEntry -> {
-          previousEntry.setEndDate(createDto.startDate());
+          if (!createDto.startDate().isAfter(previousEntry.getStartDate())) {
+            throw new ResponseStatusException(
+                HttpStatus.UNPROCESSABLE_CONTENT,
+                "Start date must be after the most recent existing start date ("
+                    + previousEntry.getStartDate() + ").");
+          }
+          previousEntry.setEndDate(createDto.startDate().minusDays(1));
           districtVolumeRepository.save(previousEntry);
         });
 

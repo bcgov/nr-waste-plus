@@ -87,8 +87,8 @@ public class DistrictVolumeController {
    *
    * @param jwt     the authenticated user's JWT
    * @param request the district volume information to create
-   * @return a {@link ResponseEntity} with status {@code 201 Created} and the
-   * location of the created district volume
+   * @return a {@link ResponseEntity} with status {@code 201 Created} and the location of
+   *     the created district volume
    */
   @PostMapping
   @Observed
