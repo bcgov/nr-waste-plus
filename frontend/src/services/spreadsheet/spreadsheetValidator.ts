@@ -59,10 +59,9 @@ export class SpreadsheetValidator {
       errors.push('Worksheet must contain at least one data row.');
     }
 
-    const maxCol = Math.max(
-      ...config.groups.map((g) => g.colEnd),
-      ...(config.heliMultiplierCol ? [config.heliMultiplierCol] : []),
-    );
+    const cols = config.groups.map((g) => g.colEnd);
+    if (config.heliMultiplierCol) cols.push(config.heliMultiplierCol);
+    const maxCol = Math.max(...cols);
 
     if (worksheet.columnCount < maxCol) {
       errors.push(
