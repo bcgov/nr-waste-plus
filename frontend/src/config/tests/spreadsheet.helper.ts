@@ -5,6 +5,23 @@ import ExcelJS from 'exceljs';
 // ─── Coast Config ───────────────────────────────────────────────────────────
 // 12 columns: A=District code, B-F=Mature (5), G-K=Immature (5), L=Heli Multiplier
 
+const INTERIOR_COL_COUNT = 13;
+const COAST_COL_COUNT = 12;
+
+function addInteriorRow(ws: ExcelJS.Worksheet, values: unknown[]): void {
+  if (values.length !== INTERIOR_COL_COUNT) {
+    throw new Error(`Interior row must have exactly ${INTERIOR_COL_COUNT} columns`);
+  }
+  ws.addRow(values);
+}
+
+function addCoastRow(ws: ExcelJS.Worksheet, values: unknown[]): void {
+  if (values.length !== COAST_COL_COUNT) {
+    throw new Error(`Coast row must have exactly ${COAST_COL_COUNT} columns`);
+  }
+  ws.addRow(values);
+}
+
 /**
  * Builds a valid Interior workbook buffer (.xlsx).
  *
@@ -25,7 +42,7 @@ export async function buildValidInteriorBuffer(): Promise<Buffer> {
   ws.addRow([]);
 
   // Row 3: first data row with district code and 12 numeric values
-  ws.addRow([
+  addInteriorRow(ws, [
     'DCC', // col A: district code
     1.234,
     0.567,
@@ -42,7 +59,7 @@ export async function buildValidInteriorBuffer(): Promise<Buffer> {
   ]);
 
   // Row 4: second district (tests multi-district and validates no-duplicate check)
-  ws.addRow(['DRY', 2.1, 1.2, 0.5, 3.8, 2.3, 1.4, 0.6, 4.3, 2.5, 1.6, 0.7, 4.8]);
+  addInteriorRow(ws, ['DRY', 2.1, 1.2, 0.5, 3.8, 2.3, 1.4, 0.6, 4.3, 2.5, 1.6, 0.7, 4.8]);
 
   return (await wb.xlsx.writeBuffer()) as unknown as Buffer;
 }
@@ -67,7 +84,7 @@ export async function buildValidCoastBuffer(): Promise<Buffer> {
   ws.addRow([]);
 
   // Row 3: data district
-  ws.addRow([
+  addCoastRow(ws, [
     'DCK', // col A: district code
     16.19,
     8.87,
@@ -83,7 +100,7 @@ export async function buildValidCoastBuffer(): Promise<Buffer> {
   ]);
 
   // Row 4: summary row with heli multiplier in col 12
-  ws.addRow([
+  addCoastRow(ws, [
     'Weighted Coast District Average',
     42.03,
     20.64,
@@ -113,7 +130,7 @@ export async function buildWrongSheetNameBuffer(): Promise<Buffer> {
 
   ws.addRow([]);
   ws.addRow([]);
-  ws.addRow([
+  addInteriorRow(ws, [
     'DCC',
     1.234,
     0.567,
@@ -146,7 +163,7 @@ export async function buildNonNumericDataBuffer(): Promise<Buffer> {
   ws.addRow([]);
 
   // Fourth value (col 5, Dry belt "Total") is a non-numeric string
-  ws.addRow([
+  addInteriorRow(ws, [
     'DCC',
     1.234,
     0.567,
@@ -177,7 +194,7 @@ export async function buildInvalidDistrictCodeBuffer(): Promise<Buffer> {
   ws.addRow([]);
   ws.addRow([]);
 
-  ws.addRow([
+  addInteriorRow(ws, [
     'INVALID_CODE', // ← not 3 uppercase letters
     1.234,
     0.567,
@@ -208,10 +225,10 @@ export async function buildMissingHeliMultiplierBuffer(): Promise<Buffer> {
   ws.addRow([]);
   ws.addRow([]);
 
-  ws.addRow(['DCK', 16.19, 8.87, 5.24, 1.18, 31.48, 17.83, 9.77, 3.87, 1.3, 32.77, '']);
+  addCoastRow(ws, ['DCK', 16.19, 8.87, 5.24, 1.18, 31.48, 17.83, 9.77, 3.87, 1.3, 32.77, '']);
 
   // Last row — missing heli multiplier in col 12
-  ws.addRow([
+  addCoastRow(ws, [
     'Weighted Coast District Average',
     42.03,
     20.64,
