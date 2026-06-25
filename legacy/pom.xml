@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.14</version>
+        <version>3.5.15</version>
         <relativePath/> </parent>
     <groupId>ca.bc.gov.nrs</groupId>
     <artifactId>nr-waste-plus-legacy</artifactId>
@@ -83,7 +83,7 @@
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <oci.revision>${project.version}</oci.revision>
         <snakeyaml.version>2.2</snakeyaml.version>
-        <hibernate.version>6.6.52.Final</hibernate.version>
+        <hibernate.version>6.6.53.Final</hibernate.version>
         <flyway.version>10.13.0</flyway.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <tomcat.version>11.0.10</tomcat.version>
@@ -272,12 +272,12 @@
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-webmvc</artifactId>
-                <version>6.2.18</version>
+                <version>6.2.19</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
-                <version>11.0.22</version>
+                <version>11.0.23</version>
             </dependency>
             <dependency>
                 <groupId>com.nimbusds</groupId>
@@ -379,7 +379,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.14</version>
+                <version>0.8.15</version>
                 <configuration>
                     <skip>${jacoco.skip}</skip>
                     <excludes>
@@ -534,7 +534,7 @@
                     <dependency>
                         <groupId>com.puppycrawl.tools</groupId>
                         <artifactId>checkstyle</artifactId>
-                        <version>13.5.0</version>
+                        <version>13.6.0</version>
                     </dependency>
                 </dependencies>
                 <configuration>
