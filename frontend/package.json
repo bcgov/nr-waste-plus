@@ -128,7 +128,7 @@
       "esbuild": "0.28.1"
     },
     "@istanbuljs/load-nyc-config": {
-      "js-yaml": "4.2.0"
+      "js-yaml": "5.1.0"
     }
   },
   "nyc": {
