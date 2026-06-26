@@ -9,7 +9,6 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
-import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
