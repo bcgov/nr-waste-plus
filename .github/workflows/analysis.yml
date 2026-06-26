@@ -50,7 +50,7 @@ jobs:
       security-events: write
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Run Trivy vulnerability scanner in repo mode
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -77,11 +77,11 @@ jobs:
       matrix:
         folder: [cypress, frontend]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: "24"
       - name: Run cve-lite-cli SARIF scan (${{ matrix.folder }})
         run: npx --yes cve-lite-cli@1.24.0 "${{ matrix.folder }}" --sarif
       - name: Locate SARIF file
