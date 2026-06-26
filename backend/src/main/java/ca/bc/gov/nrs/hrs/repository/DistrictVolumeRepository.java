@@ -14,8 +14,9 @@ import org.springframework.stereotype.Repository;
 
 /**
  * Repository for managing {@link DistrictVolumeEntity} records.
- *
- * Contains custom queries used by district volume business logic.
+ * 
+ * <p>Provides standard JPA operations together with custom queries used by
+ * district volume business logic.
  */
 @Repository
 public interface DistrictVolumeRepository

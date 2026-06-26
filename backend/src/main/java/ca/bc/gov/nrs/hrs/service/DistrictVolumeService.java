@@ -121,16 +121,19 @@ public class DistrictVolumeService {
               + areaEnum + ". Resolve the duplicates before creating a new configuration.");
     }
 
-    openEntries.stream().findFirst().ifPresent(previousEntry -> {
-          if (!createDto.startDate().isAfter(previousEntry.getStartDate())) {
-            throw new ResponseStatusException(
-                HttpStatus.UNPROCESSABLE_CONTENT,
-                "Start date must be after the most recent existing start date ("
-                    + previousEntry.getStartDate() + ").");
-          }
-          previousEntry.setEndDate(createDto.startDate().minusDays(1));
-          districtVolumeRepository.save(previousEntry);
-        });
+    if (!openEntries.isEmpty()) {
+      DistrictVolumeEntity previousEntry = openEntries.getFirst();
+
+      if (!createDto.startDate().isAfter(previousEntry.getStartDate())) {
+        throw new ResponseStatusException(
+            HttpStatus.UNPROCESSABLE_CONTENT,
+            "Start date must be after the most recent existing start date ("
+                + previousEntry.getStartDate() + ").");
+      }
+
+      previousEntry.setEndDate(createDto.startDate().minusDays(1));
+      districtVolumeRepository.save(previousEntry);
+    }
 
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
 
