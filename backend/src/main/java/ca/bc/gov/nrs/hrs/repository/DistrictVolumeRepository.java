@@ -56,21 +56,7 @@ public interface DistrictVolumeRepository
   Optional<DistrictVolumeEntity> findActiveByArea(
       @Param("area") Area area,
       @Param("currentDate") LocalDate currentDate);
-
-  /**
-   * Finds the most recent district volume entry for the specified area whose end date
-   * is not set.
-   *
-   * <p>Used to retrieve the latest open-ended record, typically the currently configured
-   * entry before it is closed by a newer one.
-   *
-   * @param area area for which the latest open-ended entry should be retrieved
-   * @return the most recent open-ended entry for the area, or an empty {@link Optional}
-   *     if none exists
-   */
-  Optional<DistrictVolumeEntity> findTopByAreaAndEndDateIsNullOrderByStartDateDesc(
-      Area area);
-
+  
   /**
    * Finds all open-ended district volume entries for the specified area, ordered by most recent
    * start date first.

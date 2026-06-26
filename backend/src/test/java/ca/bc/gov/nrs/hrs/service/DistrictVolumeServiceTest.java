@@ -25,6 +25,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -347,6 +348,105 @@ class DistrictVolumeServiceTest {
     assertThat(result.area()).isEqualTo("INTERIOR");
     assertThat(result.tableLevelFactor())
         .isEqualTo(new BigDecimal("1.150"));
+  }
+
+  @Test
+  @DisplayName(
+      "createDistrictVolume — should close the existing open-ended row before saving the new row")
+  void createDistrictVolume_closesExistingOpenEndedRow_beforeSavingNewRow() {
+
+    InteriorDataDto interiorData =
+        new InteriorDataDto(
+            Collections.emptyList(),
+            Collections.emptyMap());
+
+    LocalDate newStartDate = LocalDate.of(9999, Month.JANUARY, 1);
+
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "INTERIOR",
+            newStartDate,
+            new BigDecimal("1.150"),
+            null,
+            interiorData);
+
+    DistrictVolumeEntity existingOpenEntry = buildEntity(Area.INTERIOR);
+    existingOpenEntry.setStartDate(LocalDate.of(2026, Month.JANUARY, 1));
+    existingOpenEntry.setEndDate(null);
+
+    DistrictVolumeEntity savedEntity = buildEntity(Area.INTERIOR);
+    savedEntity.setId(2L);
+    savedEntity.setStartDate(newStartDate);
+    savedEntity.setEndDate(null);
+    savedEntity.setTableLevelFactor(new BigDecimal("1.150"));
+
+    when(districtVolumeRepository.findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.INTERIOR))
+        .thenReturn(List.of(existingOpenEntry));
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
+        .thenReturn(existingOpenEntry, savedEntity);
+
+    DistrictVolumeDetailDto result =
+        districtVolumeService.createDistrictVolume(
+            "TEST_USER",
+            createDto);
+
+    ArgumentCaptor<DistrictVolumeEntity> saveCaptor =
+        ArgumentCaptor.forClass(DistrictVolumeEntity.class);
+
+    verify(districtVolumeRepository).findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.INTERIOR);
+    verify(districtVolumeRepository, org.mockito.Mockito.times(2)).save(saveCaptor.capture());
+
+    List<DistrictVolumeEntity> savedEntities = saveCaptor.getAllValues();
+
+    assertThat(savedEntities.get(0)).isSameAs(existingOpenEntry);
+    assertThat(savedEntities.get(0).getEndDate())
+        .isEqualTo(newStartDate.minusDays(1));
+
+    assertThat(savedEntities.get(1).getArea()).isEqualTo(Area.INTERIOR);
+    assertThat(savedEntities.get(1).getStartDate()).isEqualTo(newStartDate);
+    assertThat(savedEntities.get(1).getEndDate()).isNull();
+    assertThat(savedEntities.get(1).getCreatedBy()).isEqualTo("TEST_USER");
+    assertThat(savedEntities.get(1).getTableLevelFactor())
+        .isEqualTo(new BigDecimal("1.150"));
+
+    assertThat(result.id()).isEqualTo(2L);
+    assertThat(result.startDate()).isEqualTo(newStartDate);
+  }
+
+  @Test
+  @DisplayName(
+      "createDistrictVolume — should throw 422 when start date is not after the existing open-ended row")
+  void createDistrictVolume_throws422_whenStartDateIsNotAfterExistingOpenEndedRow() {
+
+    InteriorDataDto interiorData =
+        new InteriorDataDto(
+            Collections.emptyList(),
+            Collections.emptyMap());
+
+    LocalDate existingStartDate = LocalDate.now().plusDays(5);
+
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "INTERIOR",
+            existingStartDate,
+            new BigDecimal("1.150"),
+            null,
+            interiorData);
+
+    DistrictVolumeEntity existingOpenEntry = buildEntity(Area.INTERIOR);
+    existingOpenEntry.setStartDate(existingStartDate);
+
+    when(districtVolumeRepository.findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.INTERIOR))
+        .thenReturn(List.of(existingOpenEntry));
+
+    assertThatThrownBy(
+            () -> districtVolumeService.createDistrictVolume(
+                "TEST_USER",
+                createDto))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("Start date must be after the most recent existing start date");
+
+    verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
   }
 
   @Test
