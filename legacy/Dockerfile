@@ -1,6 +1,6 @@
 ### Builder
 # Use GraalVM Native Image with Java 21 (LTS) to satisfy connectivity with Oracle DB
-FROM ghcr.io/graalvm/native-image-community:21 AS build
+FROM ghcr.io/graalvm/native-image-community:25 AS build
 
 # Copy
 WORKDIR /app
