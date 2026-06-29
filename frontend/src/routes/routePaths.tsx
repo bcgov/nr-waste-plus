@@ -7,6 +7,7 @@ import { Role, type FamRole } from '@/context/auth/types';
 import { featureFlags, type FeatureFlags } from '@/env';
 import ConfigurationDistrictVolumeListPage from '@/pages/ConfigurationDistrictVolumeList';
 import ConfigurationPage from '@/pages/ConfigurationPage';
+import DistrictVolumeTableDetailPage from '@/pages/DistrictVolumeTableDetail';
 import DistrictVolumeTableUploadPage from '@/pages/DistrictVolumeTableUpload';
 import LandingPage from '@/pages/Landing';
 import MyClientListPage from '@/pages/MyClientList';
@@ -153,6 +154,19 @@ export const ROUTES: RouteDescription[] = [
     component: () => (
       <Layout>
         <ConfigurationDistrictVolumeListPage />
+      </Layout>
+    ),
+    isSideMenu: false,
+    protected: true,
+    roles: [{ role: Role.ADMIN, clients: [] }],
+    featureFlag: 'configuration-enabled',
+  },
+  {
+    path: '/configuration/district-volume-tables/$id',
+    id: 'District Volume Table Detail',
+    component: () => (
+      <Layout>
+        <DistrictVolumeTableDetailPage />
       </Layout>
     ),
     isSideMenu: false,
