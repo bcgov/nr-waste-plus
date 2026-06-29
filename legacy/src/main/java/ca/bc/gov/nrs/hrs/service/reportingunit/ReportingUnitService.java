@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.hrs.service.reportingunit;
 import ca.bc.gov.nrs.hrs.LegacyConstants;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
-import ca.bc.gov.nrs.hrs.entity.codes.SamplingOptionEntity;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.WasteReportingUnitNotFound;
 import ca.bc.gov.nrs.hrs.mappers.reportingunit.ReportingUnitDetailsMapper;
@@ -76,44 +75,50 @@ public class ReportingUnitService {
   }
   
   /**
-   * Creates a new Reporting Unit by delegating to the {@code WASTE_501_REPORTING_UNIT} Oracle
-   * package, which generates the ID and performs the INSERT internally.
+   * Creates a new reporting unit.
    *
-   * <p>Resolves the {@code districtCode} to its corresponding org-unit number by looking up
-   * the {@link ca.bc.gov.nrs.hrs.entity.codes.OrgUnitEntity} with the matching code.</p>
+   * <p>Resolves the district code to its corresponding organization unit,
+   * validates the sampling code, creates a new reporting unit entity, and
+   * persists it.
    *
-   * @param request the DTO carrying the fields for the new reporting unit
-   * @param userId  the identifier of the authenticated user performing the creation
-   * @return the ID of the newly created reporting unit
-   * @throws IllegalArgumentException if no org unit is found for the supplied district code
+   * @param request the DTO containing the values for the new reporting unit
+   * @param userId the identifier of the authenticated user performing the
+   *     creation
+   * @return the id of the newly created reporting unit
+   * @throws IllegalArgumentException if no organization unit exists for the
+   *     supplied district code
    * @throws ResponseStatusException if the sampling code is invalid
    */
   @Transactional
-  public Long createReportingUnit(CreateReportingUnitRequestDto request, String userId) {
+  public Long createReportingUnit(
+      CreateReportingUnitRequestDto request,
+      String userId) {
 
     Long orgUnitNo = orgUnitRepository.findByOrgUnitCode(request.districtCode())
         .orElseThrow(() ->
-            new IllegalArgumentException("No district found for code: " + request.districtCode())
-        )
+            new IllegalArgumentException(
+                "No district found for code: " + request.districtCode()))
         .getOrgUnitNo();
 
     String samplingCode = request.samplingCode();
-    SamplingOptionEntity samplingOption = samplingOptionRepository.findAllValid().stream()
-        .filter(s -> s.getId().equals(samplingCode))
-        .findFirst()
-        .orElseThrow(() -> 
-            new ResponseStatusException(
-            HttpStatus.BAD_REQUEST,
-            "Invalid samplingCode: " + samplingCode
-        ));
-    
+    boolean isValidSamplingCode = samplingOptionRepository
+        .findAllValid()
+        .stream()
+        .anyMatch(s -> s.getId().equals(samplingCode));
+
+    if (!isValidSamplingCode) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Invalid samplingCode: " + samplingCode);
+    }
+
     LocalDateTime now = LocalDateTime.now();
 
     ReportingUnitEntity entity = ReportingUnitEntity.builder()
         .orgUnitNo(orgUnitNo)
         .clientNumber(request.clientNumber())
         .clientLocationCode(DEFAULT_LOCATION_CODE)
-        .wasteSamplingOptionCode(samplingOption.getId())
+        .wasteSamplingOptionCode(samplingCode)
         .wasteDispersedCvCode(null)
         .wasteAccumulatedCvCode(null)
         .appraisalMethodCode(null)
