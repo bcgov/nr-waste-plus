@@ -269,7 +269,8 @@ class ReportingUnitServiceTest {
           .satisfies(ex -> {
             ResponseStatusException statusEx = (ResponseStatusException) ex;
             assertThat(statusEx.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-            assertThat(statusEx.getReason()).isEqualTo("Invalid samplingCode: " + invalidSamplingCode);
+            assertThat(statusEx.getReason())
+                .isEqualTo("Invalid samplingCode: " + invalidSamplingCode);
           });
       verify(ruRepository, never()).save(ArgumentMatchers.any());
     }
