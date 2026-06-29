@@ -33,6 +33,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 @DisplayName("Unit Test | ReportingUnitService")
@@ -265,7 +266,11 @@ class ReportingUnitServiceTest {
       // Act & Assert
       assertThatThrownBy(() -> service.createReportingUnit(request, "user"))
           .isInstanceOf(ResponseStatusException.class)
-          .hasMessageContaining("Invalid samplingCode");
+          .satisfies(ex -> {
+            ResponseStatusException statusEx = (ResponseStatusException) ex;
+            assertThat(statusEx.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(statusEx.getReason()).isEqualTo("Invalid samplingCode: " + invalidSamplingCode);
+          });
       verify(ruRepository, never()).save(ArgumentMatchers.any());
     }
 
