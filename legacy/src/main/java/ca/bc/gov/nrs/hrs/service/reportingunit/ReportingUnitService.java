@@ -86,9 +86,9 @@ public class ReportingUnitService {
    * @param userId  the identifier of the authenticated user performing the creation
    * @return the ID of the newly created reporting unit
    * @throws IllegalArgumentException if no org unit is found for the supplied district code
+   * @throws ResponseStatusException if the sampling code is invalid
    */
   @Transactional
-  @SuppressWarnings("null")
   public Long createReportingUnit(CreateReportingUnitRequestDto request, String userId) {
 
     Long orgUnitNo = orgUnitRepository.findByOrgUnitCode(request.districtCode())
