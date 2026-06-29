@@ -11,6 +11,7 @@ import ca.bc.gov.nrs.hrs.mapper.DistrictVolumeMapper;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import io.micrometer.tracing.annotation.NewSpan;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,9 +20,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Service for managing district volume configurations.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -76,7 +81,7 @@ public class DistrictVolumeService {
    * @param user      the user creating the record
    * @param createDto the district volume configuration payload
    */
-  @Transactional
+  @Transactional(isolation = Isolation.SERIALIZABLE)
   public DistrictVolumeDetailDto createDistrictVolume(
       String user, DistrictVolumeCreateDto createDto) {
 
@@ -103,6 +108,31 @@ public class DistrictVolumeService {
       throw new ResponseStatusException(
           HttpStatus.UNPROCESSABLE_CONTENT,
           "Start date must be strictly after today.");
+    }
+
+    List<DistrictVolumeEntity> openEntries =
+        districtVolumeRepository
+            .findByAreaAndEndDateIsNullOrderByStartDateDesc(areaEnum);
+
+    if (openEntries.size() > 1) {
+      throw new ResponseStatusException(
+          HttpStatus.CONFLICT,
+          "Data integrity issue: multiple open-ended district volume records exist for area "
+              + areaEnum + ". Resolve the duplicates before creating a new configuration.");
+    }
+
+    if (!openEntries.isEmpty()) {
+      DistrictVolumeEntity previousEntry = openEntries.getFirst();
+
+      if (!createDto.startDate().isAfter(previousEntry.getStartDate())) {
+        throw new ResponseStatusException(
+            HttpStatus.UNPROCESSABLE_CONTENT,
+            "Start date must be after the most recent existing start date ("
+                + previousEntry.getStartDate() + ").");
+      }
+
+      previousEntry.setEndDate(createDto.startDate().minusDays(1));
+      districtVolumeRepository.save(previousEntry);
     }
 
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
