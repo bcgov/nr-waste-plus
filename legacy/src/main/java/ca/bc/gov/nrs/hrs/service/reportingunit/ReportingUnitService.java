@@ -98,7 +98,9 @@ public class ReportingUnitService {
         .getOrgUnitNo();
 
     String samplingCode = request.samplingCode();
-    SamplingOptionEntity samplingOption = samplingOptionRepository.findById(samplingCode)
+    SamplingOptionEntity samplingOption = samplingOptionRepository.findAllValid().stream()
+        .filter(s -> s.getId().equals(samplingCode))
+        .findFirst()
         .orElseThrow(() -> 
             new ResponseStatusException(
             HttpStatus.BAD_REQUEST,

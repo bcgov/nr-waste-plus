@@ -176,8 +176,8 @@ class ReportingUnitServiceTest {
       SamplingOptionEntity samplingOption = SamplingOptionEntity.builder()
           .id("AGR")
           .build();
-      when(samplingOptionRepository.findById("AGR"))
-          .thenReturn(java.util.Optional.of(samplingOption));
+      when(samplingOptionRepository.findAllValid())
+          .thenReturn(List.of(samplingOption));
 
       CreateReportingUnitRequestDto request = new CreateReportingUnitRequestDto(
           "00001271",
@@ -252,8 +252,8 @@ class ReportingUnitServiceTest {
           .thenReturn(java.util.Optional.of(orgUnit));
 
       String invalidSamplingCode = "BAD";
-      when(samplingOptionRepository.findById(invalidSamplingCode))
-          .thenReturn(java.util.Optional.empty());
+      when(samplingOptionRepository.findAllValid())
+          .thenReturn(List.of());
 
       CreateReportingUnitRequestDto request = new CreateReportingUnitRequestDto(
           "00001271",
