@@ -1,6 +1,7 @@
 import { Column } from '@carbon/react';
 import { useEffect, useState, type FC } from 'react';
 
+import { useDistrictVolumeListRowActions } from './actions';
 import { headers } from './constants';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
@@ -27,6 +28,8 @@ const DistrictVolumeListTable: FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [sort, setSort] = useState<Record<string, SortDirectionType>>({});
   const [searchTrigger, setSearchTrigger] = useState(0);
+
+  const getRowActions = useDistrictVolumeListRowActions();
 
   const { data, isLoading, isFetching, isError, refetch } = useDistrictVolumeListQuery(
     { page: currentPage, size: pageSize, sort },
@@ -80,6 +83,7 @@ const DistrictVolumeListTable: FC = () => {
         onSortChange={handleSort}
         displayRange
         displayToolbar
+        getRowActions={getRowActions}
       />
     </Column>
   );
