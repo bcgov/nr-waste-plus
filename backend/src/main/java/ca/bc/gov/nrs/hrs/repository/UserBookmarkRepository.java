@@ -24,9 +24,10 @@ public interface UserBookmarkRepository
    * Returns all bookmarks belonging to a user that are included in the list of RUs.
    *
    * @param userId the user's identifier
-   * @param reportingUnitIds a reference list of RU identifiers to filter the user's bookmarks by
+   * @param reportingUnitIds a reference list of RU identifiers to filter the user's bookmarks
+   *     by.
    * @return list of bookmarked reporting units for the selected filters
    */
   List<UserBookmarkEntity> findByUserIdAndReportingUnitIdIn(
-      String userId, List<String> reportingUnitIds);
+      String userId, List<Long> reportingUnitIds);
 }
