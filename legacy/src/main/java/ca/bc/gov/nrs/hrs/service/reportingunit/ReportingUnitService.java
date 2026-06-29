@@ -3,19 +3,25 @@ package ca.bc.gov.nrs.hrs.service.reportingunit;
 import ca.bc.gov.nrs.hrs.LegacyConstants;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
+import ca.bc.gov.nrs.hrs.entity.codes.SamplingOptionEntity;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.WasteReportingUnitNotFound;
 import ca.bc.gov.nrs.hrs.mappers.reportingunit.ReportingUnitDetailsMapper;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.codes.OrgUnitRepository;
+import ca.bc.gov.nrs.hrs.repository.codes.SamplingOptionRepository;
 import io.micrometer.observation.annotation.Observed;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Service that provides detail-retrieval operations for Reporting Units.
@@ -34,6 +40,7 @@ public class ReportingUnitService {
   private final ReportingUnitRepository ruRepository;
   private final ReportingUnitDetailsMapper ruDetailsMapper;
   private final OrgUnitRepository orgUnitRepository;
+  private final SamplingOptionRepository samplingOptionRepository;
   
   private static final String DEFAULT_LOCATION_CODE = "00";
 
@@ -83,6 +90,7 @@ public class ReportingUnitService {
    * @throws IllegalArgumentException if no org unit is found for the supplied district code
    */
   @Transactional
+  @SuppressWarnings("null")
   public Long createReportingUnit(CreateReportingUnitRequestDto request, String userId) {
 
     Long orgUnitNo = orgUnitRepository.findByOrgUnitCode(request.districtCode())
@@ -91,13 +99,21 @@ public class ReportingUnitService {
         )
         .getOrgUnitNo();
 
+    String samplingCode = request.samplingCode();
+    SamplingOptionEntity samplingOption = samplingOptionRepository.findById(samplingCode)
+        .orElseThrow(() -> 
+            new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Invalid samplingCode: " + samplingCode
+        ));
+    
     LocalDateTime now = LocalDateTime.now();
 
     ReportingUnitEntity entity = ReportingUnitEntity.builder()
         .orgUnitNo(orgUnitNo)
         .clientNumber(request.clientNumber())
         .clientLocationCode(DEFAULT_LOCATION_CODE)
-        .wasteSamplingOptionCode(request.samplingCode())
+        .wasteSamplingOptionCode(samplingOption.getId())
         .wasteDispersedCvCode(null)
         .wasteAccumulatedCvCode(null)
         .appraisalMethodCode(null)

@@ -13,12 +13,14 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.entity.codes.OrgUnitEntity;
+import ca.bc.gov.nrs.hrs.entity.codes.SamplingOptionEntity;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitDetailsProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.WasteReportingUnitNotFound;
 import ca.bc.gov.nrs.hrs.mappers.reportingunit.ReportingUnitDetailsMapper;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.repository.codes.OrgUnitRepository;
+import ca.bc.gov.nrs.hrs.repository.codes.SamplingOptionRepository;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -31,6 +33,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
 
 @DisplayName("Unit Test | ReportingUnitService")
 @ExtendWith(MockitoExtension.class)
@@ -44,6 +47,9 @@ class ReportingUnitServiceTest {
 
   @Mock
   private OrgUnitRepository orgUnitRepository;
+
+  @Mock
+  private SamplingOptionRepository samplingOptionRepository;
 
   @InjectMocks
   private ReportingUnitService service;
@@ -167,6 +173,12 @@ class ReportingUnitServiceTest {
       when(orgUnitRepository.findByOrgUnitCode(district))
           .thenReturn(java.util.Optional.of(orgUnit));
 
+      SamplingOptionEntity samplingOption = SamplingOptionEntity.builder()
+          .id("AGR")
+          .build();
+      when(samplingOptionRepository.findById("AGR"))
+          .thenReturn(java.util.Optional.of(samplingOption));
+
       CreateReportingUnitRequestDto request = new CreateReportingUnitRequestDto(
           "00001271",
           district,
@@ -224,6 +236,36 @@ class ReportingUnitServiceTest {
       assertThatThrownBy(() -> service.createReportingUnit(request, "user"))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining(district);
+      verify(ruRepository, never()).save(ArgumentMatchers.any());
+    }
+
+    @Test
+    @DisplayName("should throw ResponseStatusException when sampling code is invalid")
+    void shouldThrow_whenSamplingCodeNotFound() {
+      // Arrange
+      String district = "DKM";
+      OrgUnitEntity orgUnit = OrgUnitEntity.builder()
+          .orgUnitNo(123L)
+          .orgUnitCode(district)
+          .build();
+      when(orgUnitRepository.findByOrgUnitCode(district))
+          .thenReturn(java.util.Optional.of(orgUnit));
+
+      String invalidSamplingCode = "BAD";
+      when(samplingOptionRepository.findById(invalidSamplingCode))
+          .thenReturn(java.util.Optional.empty());
+
+      CreateReportingUnitRequestDto request = new CreateReportingUnitRequestDto(
+          "00001271",
+          district,
+          invalidSamplingCode,
+          null
+      );
+
+      // Act & Assert
+      assertThatThrownBy(() -> service.createReportingUnit(request, "user"))
+          .isInstanceOf(ResponseStatusException.class)
+          .hasMessageContaining("Invalid samplingCode");
       verify(ruRepository, never()).save(ArgumentMatchers.any());
     }
 
