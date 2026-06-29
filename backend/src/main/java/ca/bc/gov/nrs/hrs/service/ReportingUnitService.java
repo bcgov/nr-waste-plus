@@ -115,7 +115,7 @@ public class ReportingUnitService {
     if (!"AVG".equals(request.samplingCode())) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
-          "Invalid samplingCode: " + request.samplingCode() + " (only AVG is currently supported)";
+          "Invalid samplingCode: " + request.samplingCode() + " (only AVG is currently supported)");
     }
 
     // Check for existing reporting unit with the same client number and district
