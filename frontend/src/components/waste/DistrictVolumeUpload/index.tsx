@@ -279,12 +279,9 @@ const DistrictVolumeTableUpload: FC = () => {
           maxFileSizeBytes={2 * 1024 * 1024}
           processor={processor}
           validator={async (file: File) => {
-            const [interiorErrors, coastErrors] = await Promise.all([
-              interiorValidator(file),
-              coastValidator(file),
-            ]);
-            if (interiorErrors.length === 0 || coastErrors.length === 0) return [];
-            return [...interiorErrors, ...coastErrors];
+            const area = form.getFieldValue('area');
+            if (area === 'COASTAL') return coastValidator(file);
+            return interiorValidator(file);
           }}
           onProcessed={handleFileChange}
           externalErrors={fileErrors}
