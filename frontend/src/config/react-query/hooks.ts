@@ -15,13 +15,16 @@ import {
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { ProblemDetails } from '@/config/api/types';
-import type { DistrictVolumeListItem } from '@/services/districtvolumes.types';
+import type {
+  DistrictVolumeCreate,
+  DistrictVolumeDetail,
+  DistrictVolumeListItem,
+} from '@/services/districtvolumes.types';
 import type { CodeDescriptionDto, ReportingUnitSearchExpandedDto } from '@/services/search.types';
 import type {
   ForestClientDto,
   MyForestClientDto,
   ReportingUnitCreateDto,
-  ReportingUnitDto,
   ReportingUnitSearchResultDto,
 } from '@/services/types';
 
@@ -455,23 +458,18 @@ export const useReportingUnitCreateMutation = (
 };
 
 /**
- * Fetches the full details for a single reporting unit by its numeric ID.
+ * Fetches the detailed information for a specific district volume table by its ID.
  *
  * On error, dispatches an inline notification to `notificationTarget` (when supplied).
  *
- * @param ruId - The numeric reporting unit ID.
+ * @param id - The numeric district volume table ID.
  * @param options - Optional TanStack Query overrides plus an optional `notificationTarget`.
- * @returns The TanStack Query result containing the {@link ReportingUnitDto}.
+ * @returns The TanStack Query result containing the {@link DistrictVolumeDetail}.
  */
-export const useReportingUnitDetailsQuery = <TData = ReportingUnitDto>(
-  ruId: number,
+export const useDistrictVolumeTableDetailQuery = <TData = DistrictVolumeDetail>(
+  id: number,
   options?: Omit<
-    UseQueryOptions<
-      ReportingUnitDto,
-      Error,
-      TData,
-      ReturnType<typeof queryKeys.reportingUnit.details>
-    >,
+    UseQueryOptions<TData, Error, TData, ReturnType<typeof queryKeys.districtVolume.detail>>,
     'queryKey' | 'queryFn'
   > &
     QueryNotificationOptions,
@@ -479,8 +477,8 @@ export const useReportingUnitDetailsQuery = <TData = ReportingUnitDto>(
   const { notificationTarget, ...queryOptions } = options ?? {};
 
   const query = useQuery({
-    queryKey: queryKeys.reportingUnit.details(ruId),
-    queryFn: () => API.reportingUnit.getReportingUnit(ruId),
+    queryKey: queryKeys.districtVolume.detail(id),
+    queryFn: () => API.districtVolume.getDistrictVolumeTableDetail(id) as unknown as Promise<TData>,
     ...queryOptions,
   });
 
@@ -672,11 +670,7 @@ export const useDistrictVolumeListQuery = <TData = PageableResponse<DistrictVolu
  */
 export const useDistrictVolumeTableCreateMutation = (
   options?: Omit<
-    UseMutationOptions<
-      number,
-      Error,
-      import('@/services/districtvolumes.types').DistrictVolumeCreate
-    >,
+    UseMutationOptions<number, Error, DistrictVolumeCreate>,
     'mutationKey' | 'mutationFn' | 'onSuccess'
   > &
     QueryNotificationOptions & {
