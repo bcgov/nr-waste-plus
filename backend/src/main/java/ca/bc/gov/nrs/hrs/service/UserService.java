@@ -64,7 +64,6 @@ public class UserService {
    * @param preferences the preferences to save
    */
   @NewSpan
-  @Transactional
   @Retry(name = "saveUserPreferences")
   public void saveUserPreferences(String userId, Map<String, Object> preferences) {
 
