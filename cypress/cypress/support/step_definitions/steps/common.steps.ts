@@ -3,7 +3,7 @@ import { Given } from "@badeball/cypress-cucumber-preprocessor";
 Given('I visit {string}', (url: string) => {
   if (url.includes('/search')) {
     cy.intercept('GET', '**/api/codes/districts*').as('getDistricts');
-    cy.intercept('GET', '**/api/codes/sampling*').as('getSampling');
+    cy.intercept('GET', '**/api/codes/samplings*').as('getSampling');
     cy.intercept('GET', '**/api/codes/assess-area-statuses*').as('getStatuses');
   }
 
