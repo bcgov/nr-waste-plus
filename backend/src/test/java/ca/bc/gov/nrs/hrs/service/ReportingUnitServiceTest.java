@@ -150,7 +150,7 @@ class ReportingUnitServiceTest {
   void shouldCreateReportingUnit_whenRequestIsValid() {
     // Arrange
     var request = new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-        CLIENT_NUMBER, "DND", "S01", null);
+        CLIENT_NUMBER, "DND", "AVG", null);
 
     when(
         legacyApiProvider.searchReportingUnit(
@@ -176,7 +176,7 @@ class ReportingUnitServiceTest {
   void shouldThrowBadRequest_whenGradeMissingForDKM() {
     // Arrange — ensure no duplicate exists
     var request = new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-        CLIENT_NUMBER, "DKM", "S01", null);
+        CLIENT_NUMBER, "DKM", "AVG", null);
 
     when(
         legacyApiProvider.searchReportingUnit(
@@ -197,7 +197,7 @@ class ReportingUnitServiceTest {
   void shouldThrowConflict_whenReportingUnitAlreadyExists() {
     // Arrange
     var request = new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-        CLIENT_NUMBER, "DND", "S01", null);
+        CLIENT_NUMBER, "DND", "AVG", null);
 
     var existingResult = new ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto(
         "1", 26L, "", 36834L,
@@ -220,5 +220,23 @@ class ReportingUnitServiceTest {
         .satisfies(
             e -> assertThat(((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(org.springframework.http.HttpStatus.CONFLICT));
+  }
+
+  @Test
+  @DisplayName("shouldThrowBadRequest_whenSamplingCodeIsNotAvg")
+  void shouldThrowBadRequest_whenSamplingCodeIsNotAvg() {
+    // Arrange
+    var request = new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+        CLIENT_NUMBER, "DND", "NOT_AVG", null);
+
+    // Act & Assert
+    assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(
+            e -> {
+              ResponseStatusException rse = (ResponseStatusException) e;
+              assertThat(rse.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST);
+              assertThat(rse.getReason()).contains("Invalid samplingCode");
+            });
   }
 }
