@@ -6,6 +6,7 @@ import java.net.URI;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -49,6 +50,32 @@ public class GlobalExceptionHandler {
     ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
     problem.setTitle("Database Constraint Violation");
     problem.setDetail(extractConstraintMessage(ex));
+    problem.setInstance(URI.create(request.getRequestURI()));
+
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(problem);
+  }
+
+  /**
+   * Handle transaction serialization and similar concurrent modification failures.
+   *
+   * <p>This method maps {@link ConcurrencyFailureException} to an HTTP 409 CONFLICT response so
+   * callers can retry when another request modified the same logical record set concurrently.</p>
+   *
+   * @param ex the caught {@link ConcurrencyFailureException}
+   * @param request the current {@link HttpServletRequest}
+   * @return a {@link ResponseEntity} containing a conflict {@link ProblemDetail}
+   */
+  @ExceptionHandler(ConcurrencyFailureException.class)
+  public ResponseEntity<ProblemDetail> handleConcurrencyFailure(
+      ConcurrencyFailureException ex, HttpServletRequest request) {
+    log.warn("Concurrent update conflict: {}", ex.getMessage(), ex);
+
+    ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+    problem.setTitle("Concurrent Update Conflict");
+    problem.setDetail(
+        "The resource was modified by another request. Please retry.");
     problem.setInstance(URI.create(request.getRequestURI()));
 
     return ResponseEntity.status(HttpStatus.CONFLICT)
