@@ -111,7 +111,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
             .willReturn(okJson("333")));
 
     var requestJson = """
-        {"clientNumber":"00012797","districtCode":"DND","samplingCode":"S01","gradeCode":null}
+        {"clientNumber":"00012797","districtCode":"DND","samplingCode":"AVG","gradeCode":null}
         """;
 
     mockMvc
@@ -139,7 +139,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                     ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
 
     var requestJson = """
-        {"clientNumber":"00012797","districtCode":"DKM","samplingCode":"S01"}
+        {"clientNumber":"00012797","districtCode":"DKM","samplingCode":"AVG"}
         """;
 
     mockMvc
@@ -166,7 +166,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                 okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE)));
 
     var requestJson = """
-        {"clientNumber":"00012797","districtCode":"DND","samplingCode":"S01","gradeCode":null}
+        {"clientNumber":"00012797","districtCode":"DND","samplingCode":"AVG","gradeCode":null}
         """;
 
     mockMvc
