@@ -1,20 +1,19 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import DistrictZoneSection from './index';
 
-import type { CoastDistrictRow, InteriorDistrictRow } from '@/services/districtvolumes.types';
 import type { TableHeaderType } from '@/components/Form/TableResource/types';
+import type { CoastDistrictRow, InteriorDistrictRow } from '@/services/districtvolumes.types';
 
 // ============================================================================
 // Mocks
 // ============================================================================
 
 // Mock TableResource so we don't need the full Carbon rendering stack.
-// We verify the props it receives via data-testid attributes and querying.
 const mockTableResourceId = vi.fn();
 vi.mock('@/components/Form/TableResource', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   default: (props: any) => {
     mockTableResourceId(props.id);
     return (
@@ -28,14 +27,23 @@ vi.mock('@/components/Form/TableResource', () => ({
         {props.content.content.length > 0 && (
           <span data-testid="tr-first-id">{String(props.content.content[0].id)}</span>
         )}
-        {/* Render first row to verify spread */}
+        {/* Render first row to verify spread preserves original props */}
         {props.content.content.length > 0 && (
           <span data-testid="tr-first-code">{String(props.content.content[0].code)}</span>
         )}
         {/* Render page metadata */}
         {props.content.page && (
-          <span data-testid="tr-page-total">{props.content.page.totalElements}</span>
+          <>
+            <span data-testid="tr-page-size">{props.content.page.size}</span>
+            <span data-testid="tr-page-number">{props.content.page.number}</span>
+            <span data-testid="tr-page-total">{props.content.page.totalElements}</span>
+            <span data-testid="tr-page-total-pages">{props.content.page.totalPages}</span>
+          </>
         )}
+        {/* Render headers array to verify renderAs is passed through */}
+        <span data-testid="tr-headers-json">{JSON.stringify(props.headers)}</span>
+        {/* Render entire content object to verify the spread creates an id */}
+        <span data-testid="tr-content-json">{JSON.stringify(props.content)}</span>
       </div>
     );
   },
@@ -93,132 +101,249 @@ describe('DistrictZoneSection', () => {
     vi.clearAllMocks();
   });
 
-  it('should render TableResource with correct zone-based id', () => {
-    render(
-      <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
-    );
+  describe('rendering', () => {
+    it('should render TableResource with correct zone-based id', () => {
+      render(
+        <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
+      );
 
-    expect(screen.getByTestId('table-resource')).toBeTruthy();
-    expect(screen.getByTestId('tr-id').textContent).toBe('district-zone-Dry belt');
+      expect(screen.getByTestId('table-resource')).toBeTruthy();
+      expect(screen.getByTestId('tr-id').textContent).toBe('district-zone-Dry belt');
+    });
+
+    it('should pass correct number of headers to TableResource', () => {
+      render(
+        <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
+      );
+
+      expect(screen.getByTestId('tr-headers-count').textContent).toBe('5');
+    });
+
+    it('should pass headers through unchanged', () => {
+      render(
+        <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
+      );
+
+      const parsed = JSON.parse(screen.getByTestId('tr-headers-json').textContent!);
+      expect(parsed).toEqual(interiorHeaders);
+    });
+
+    it('should render with zone name containing spaces and hyphens', () => {
+      render(
+        <DistrictZoneSection
+          zoneName="Transition zone"
+          rows={interiorRows}
+          headers={interiorHeaders}
+        />,
+      );
+
+      expect(screen.getByTestId('tr-id').textContent).toBe('district-zone-Transition zone');
+    });
   });
 
-  it('should pass correct number of headers to TableResource', () => {
-    render(
-      <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
-    );
+  describe('content mapping', () => {
+    it('should map rows with id from code for TableResource content', () => {
+      render(
+        <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
+      );
 
-    expect(screen.getByTestId('tr-headers-count').textContent).toBe('5');
+      // id is derived from code via spread: { ...row, id: row.code }
+      expect(screen.getByTestId('tr-first-id').textContent).toBe('DCC');
+      expect(screen.getByTestId('tr-first-code').textContent).toBe('DCC');
+    });
+
+    it('should pass correct number of content items matching row count', () => {
+      render(
+        <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
+      );
+
+      expect(screen.getByTestId('tr-content-count').textContent).toBe('2');
+    });
+
+    it('should create a new object per row (immutable — original rows lack id)', () => {
+      const originalRow = { ...interiorRows[0] };
+      render(
+        <DistrictZoneSection zoneName="Dry belt" rows={[originalRow]} headers={interiorHeaders} />,
+      );
+
+      // Original should be unchanged (spread creates new objects)
+      expect(originalRow).not.toHaveProperty('id');
+      expect(originalRow.code).toBe('DCC');
+    });
+
+    it('should assign each content item its own id equal to code', () => {
+      render(
+        <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
+      );
+
+      const content = JSON.parse(screen.getByTestId('tr-content-json').textContent!);
+      expect(content.content).toHaveLength(2);
+      expect(content.content[0].id).toBe('DCC');
+      expect(content.content[1].id).toBe('DKL');
+      // Original properties are preserved
+      expect(content.content[0].avoidableSawlog).toBe(2.04);
+    });
+
+    it('should handle empty rows array gracefully', () => {
+      render(<DistrictZoneSection zoneName="Dry belt" rows={[]} headers={interiorHeaders} />);
+
+      expect(screen.getByTestId('tr-content-count').textContent).toBe('0');
+      expect(screen.getByTestId('tr-page-total').textContent).toBe('0');
+    });
+
+    it('should handle single row', () => {
+      const singleRow: InteriorDistrictRow[] = [interiorRows[0]];
+      render(
+        <DistrictZoneSection zoneName="Dry belt" rows={singleRow} headers={interiorHeaders} />,
+      );
+
+      expect(screen.getByTestId('tr-content-count').textContent).toBe('1');
+    });
+
+    it('should work with many rows', () => {
+      const manyRows: InteriorDistrictRow[] = Array.from({ length: 50 }, (_, i) => ({
+        code: `D${String(i).padStart(3, '0')}`,
+        avoidableSawlog: i + 0.5,
+        avoidableGrade4: i * 2,
+        unavoidableGrade4: i * 0.1,
+        total: i * 3 + 0.5,
+      }));
+      render(<DistrictZoneSection zoneName="Large" rows={manyRows} headers={interiorHeaders} />);
+
+      expect(screen.getByTestId('tr-content-count').textContent).toBe('50');
+      expect(screen.getByTestId('tr-page-size').textContent).toBe('50');
+    });
   });
 
-  it('should map rows with id from code for TableResource content', () => {
-    render(
-      <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
-    );
+  describe('loading state', () => {
+    it('should show loading state when loading prop is true', () => {
+      render(
+        <DistrictZoneSection
+          zoneName="Dry belt"
+          rows={interiorRows}
+          headers={interiorHeaders}
+          loading={true}
+        />,
+      );
 
-    // id is derived from code
-    expect(screen.getByTestId('tr-first-id').textContent).toBe('DCC');
-    expect(screen.getByTestId('tr-first-code').textContent).toBe('DCC');
+      expect(screen.getByTestId('tr-loading').textContent).toBe('true');
+    });
+
+    it('should show non-loading state when loading is false (explicit)', () => {
+      render(
+        <DistrictZoneSection
+          zoneName="Dry belt"
+          rows={interiorRows}
+          headers={interiorHeaders}
+          loading={false}
+        />,
+      );
+
+      expect(screen.getByTestId('tr-loading').textContent).toBe('false');
+    });
+
+    it('should default loading to false when not provided', () => {
+      render(
+        <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
+      );
+
+      expect(screen.getByTestId('tr-loading').textContent).toBe('false');
+    });
   });
 
-  it('should pass correct number of content items', () => {
-    render(
-      <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
-    );
+  describe('error state', () => {
+    it('should always pass error=false to TableResource', () => {
+      render(
+        <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
+      );
+      render(
+        <DistrictZoneSection
+          zoneName="Other"
+          rows={interiorRows}
+          headers={interiorHeaders}
+          loading={true}
+        />,
+      );
 
-    expect(screen.getByTestId('tr-content-count').textContent).toBe('2');
+      // Both renders should have error=false
+      const errorElements = screen.getAllByTestId('tr-error');
+      expect(errorElements).toHaveLength(2);
+      expect(errorElements[0].textContent).toBe('false');
+      expect(errorElements[1].textContent).toBe('false');
+    });
   });
 
-  it('should show loading state when loading prop is true', () => {
-    render(
-      <DistrictZoneSection
-        zoneName="Dry belt"
-        rows={interiorRows}
-        headers={interiorHeaders}
-        loading={true}
-      />,
-    );
+  describe('page metadata', () => {
+    it('should pass page.size equal to rows.length', () => {
+      render(
+        <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
+      );
 
-    expect(screen.getByTestId('tr-loading').textContent).toBe('true');
+      expect(screen.getByTestId('tr-page-size').textContent).toBe('2');
+    });
+
+    it('should pass page.number=0 (static, non-paginated)', () => {
+      render(
+        <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
+      );
+
+      expect(screen.getByTestId('tr-page-number').textContent).toBe('0');
+    });
+
+    it('should pass page.totalElements equal to row count', () => {
+      render(
+        <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
+      );
+
+      expect(screen.getByTestId('tr-page-total').textContent).toBe('2');
+    });
+
+    it('should pass page.totalPages=1 (static, non-paginated)', () => {
+      render(
+        <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
+      );
+
+      expect(screen.getByTestId('tr-page-total-pages').textContent).toBe('1');
+    });
+
+    it('should have correct page metadata for coast data', () => {
+      render(<DistrictZoneSection zoneName="Mature" rows={coastRows} headers={coastHeaders} />);
+
+      expect(screen.getByTestId('tr-page-size').textContent).toBe('1');
+      expect(screen.getByTestId('tr-page-number').textContent).toBe('0');
+      expect(screen.getByTestId('tr-page-total').textContent).toBe('1');
+      expect(screen.getByTestId('tr-page-total-pages').textContent).toBe('1');
+    });
   });
 
-  it('should show non-loading state by default', () => {
-    render(
-      <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
-    );
+  describe('type polymorphism', () => {
+    it('should work with coast district data type and layout-specific headers', () => {
+      render(<DistrictZoneSection zoneName="Mature" rows={coastRows} headers={coastHeaders} />);
 
-    expect(screen.getByTestId('tr-loading').textContent).toBe('false');
-  });
+      expect(screen.getByTestId('tr-id').textContent).toBe('district-zone-Mature');
+      expect(screen.getByTestId('tr-first-id').textContent).toBe('DCK');
+      expect(screen.getByTestId('tr-first-code').textContent).toBe('DCK');
+      expect(screen.getByTestId('tr-headers-count').textContent).toBe('6');
+    });
 
-  it('should pass error=false to TableResource', () => {
-    render(
-      <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
-    );
+    it('should render coast data with coast-specific numeric values', () => {
+      render(<DistrictZoneSection zoneName="Mature" rows={coastRows} headers={coastHeaders} />);
 
-    expect(screen.getByTestId('tr-error').textContent).toBe('false');
-  });
+      const content = JSON.parse(screen.getByTestId('tr-content-json').textContent!);
+      expect(content.content[0].avoidableHembalGradeU).toBe(8.87);
+      expect(content.content[0].avoidableGradeY).toBe(5.24);
+    });
 
-  it('should pass page metadata with total elements equal to row count', () => {
-    render(
-      <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
-    );
+    it('should handle interior data with interior-specific headers', () => {
+      render(
+        <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
+      );
 
-    expect(screen.getByTestId('tr-page-total').textContent).toBe('2');
-  });
-
-  it('should handle empty rows array gracefully', () => {
-    render(<DistrictZoneSection zoneName="Dry belt" rows={[]} headers={interiorHeaders} />);
-
-    expect(screen.getByTestId('tr-content-count').textContent).toBe('0');
-    expect(screen.getByTestId('tr-page-total').textContent).toBe('0');
-  });
-
-  it('should handle single row', () => {
-    const singleRow: InteriorDistrictRow[] = [interiorRows[0]];
-    render(<DistrictZoneSection zoneName="Dry belt" rows={singleRow} headers={interiorHeaders} />);
-
-    expect(screen.getByTestId('tr-content-count').textContent).toBe('1');
-  });
-
-  it('should work with coast district data type', () => {
-    render(<DistrictZoneSection zoneName="Mature" rows={coastRows} headers={coastHeaders} />);
-
-    expect(screen.getByTestId('tr-id').textContent).toBe('district-zone-Mature');
-    expect(screen.getByTestId('tr-first-id').textContent).toBe('DCK');
-    expect(screen.getByTestId('tr-headers-count').textContent).toBe('6');
-  });
-
-  it('should have page.number=0 and page.totalPages=1 (static, non-paginated)', () => {
-    // This test asserts the internal pagination structure is correct
-    // by looking at the mock TableResource's rendered output.
-    // The content.page metadata includes number=0 and totalPages=1.
-    render(
-      <DistrictZoneSection zoneName="Dry belt" rows={interiorRows} headers={interiorHeaders} />,
-    );
-
-    // Total elements = row count
-    expect(screen.getByTestId('tr-page-total').textContent).toBe('2');
-  });
-
-  it('should render with zone name containing special characters', () => {
-    render(
-      <DistrictZoneSection
-        zoneName="Transition zone"
-        rows={interiorRows}
-        headers={interiorHeaders}
-      />,
-    );
-
-    expect(screen.getByTestId('tr-id').textContent).toBe('district-zone-Transition zone');
-  });
-
-  it('should not mutate the original row objects', () => {
-    const originalRow = { ...interiorRows[0] };
-    render(
-      <DistrictZoneSection zoneName="Dry belt" rows={[originalRow]} headers={interiorHeaders} />,
-    );
-
-    // Original should be unchanged (spread creates new objects)
-    expect(originalRow).not.toHaveProperty('id');
-    expect(originalRow.code).toBe('DCC');
+      const headers = JSON.parse(screen.getByTestId('tr-headers-json').textContent!);
+      const keys = headers.map((h: { key: string }) => h.key);
+      expect(keys).toContain('avoidableGrade4');
+      expect(keys).toContain('unavoidableGrade4');
+      expect(keys).not.toContain('avoidableHembalGradeU');
+    });
   });
 });

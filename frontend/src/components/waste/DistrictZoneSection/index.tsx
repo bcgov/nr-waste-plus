@@ -1,5 +1,3 @@
-import { type FC } from 'react';
-
 import type { PageableResponse, TableHeaderType } from '@/components/Form/TableResource/types';
 import type { CoastDistrictRow, InteriorDistrictRow } from '@/services/districtvolumes.types';
 
