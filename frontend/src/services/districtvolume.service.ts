@@ -3,7 +3,6 @@ import { removeEmpty } from './utils';
 import type {
   DistrictVolumeCreate,
   DistrictVolumeDetail,
-  DistrictVolumeDetail,
   DistrictVolumeListItem,
 } from './districtvolumes.types';
 import type { PageableResponse } from '@/components/Form/TableResource/types';
