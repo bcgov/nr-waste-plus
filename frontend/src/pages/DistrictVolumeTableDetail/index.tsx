@@ -65,6 +65,10 @@ const DistrictVolumeTableDetailPage: FC = () => {
         <PageTitle
           title={`Volumes table: ${normalizeText(data.area)}`}
           subtitle="View tables used to calculate volumes when district average waste assessment is used"
+          breadCrumbs={[
+            { name: 'Configuration', path: '/configuration' },
+            { name: 'District average volumes', path: '/configuration/district-volume-tables' },
+          ]}
         />
       </Column>
       <Column lg={16} md={8} sm={4} className="district-volume-detail-column__notification">

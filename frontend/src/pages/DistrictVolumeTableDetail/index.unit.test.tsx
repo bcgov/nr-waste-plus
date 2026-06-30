@@ -1,11 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { useDistrictVolumeTableDetailQuery } from '@/config/react-query/hooks';
-
 import DistrictVolumeTableDetailPage from './index';
 
 import type { DistrictVolumeDetail } from '@/services/districtvolumes.types';
+
+import { useDistrictVolumeTableDetailQuery } from '@/config/react-query/hooks';
 
 // ============================================================================
 // Mocks
@@ -32,10 +32,23 @@ vi.mock('@/components/waste/DistrictVolumeDetail/DistrictVolumeDetailSkeleton', 
 }));
 
 vi.mock('@/components/core/PageTitle', () => ({
-  default: ({ title, subtitle }: { title: string; subtitle?: string }) => (
+  default: ({
+    title,
+    subtitle,
+    breadCrumbs,
+  }: {
+    title: string;
+    subtitle?: string;
+    breadCrumbs?: Array<{ name: string; path: string }>;
+  }) => (
     <div data-testid="page-title">
       <span data-testid="page-title-text">{title}</span>
       {subtitle && <span data-testid="page-subtitle-text">{subtitle}</span>}
+      {breadCrumbs?.map((crumb) => (
+        <a key={crumb.name} data-testid={`breadcrumb-${crumb.name}`} href={crumb.path}>
+          {crumb.name}
+        </a>
+      ))}
     </div>
   ),
 }));
@@ -184,6 +197,26 @@ describe('DistrictVolumeTableDetailPage', () => {
 
     expect(screen.getByTestId('page-subtitle-text').textContent).toBe(
       'View tables used to calculate volumes when district average waste assessment is used',
+    );
+  });
+
+  it('should pass breadcrumbs to PageTitle', () => {
+    const data = createData('INTERIOR', 1);
+    vi.mocked(useDistrictVolumeTableDetailQuery).mockReturnValue({
+      data,
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof useDistrictVolumeTableDetailQuery>);
+
+    render(<DistrictVolumeTableDetailPage />);
+
+    expect(screen.getByTestId('breadcrumb-Configuration')).toBeTruthy();
+    expect(screen.getByTestId('breadcrumb-Configuration').getAttribute('href')).toBe(
+      '/configuration',
+    );
+    expect(screen.getByTestId('breadcrumb-District average volumes')).toBeTruthy();
+    expect(screen.getByTestId('breadcrumb-District average volumes').getAttribute('href')).toBe(
+      '/configuration/district-volume-tables',
     );
   });
 });
