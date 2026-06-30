@@ -6,7 +6,8 @@ import { buildXlsxFile } from './testHelper';
 
 describe('interiorValidator', () => {
   it('returns empty errors for a valid interior spreadsheet', async () => {
-    const file = await buildXlsxFile('Interior', 
+    const file = await buildXlsxFile(
+      'Interior',
       [
         [
           'District',
@@ -66,7 +67,8 @@ describe('interiorValidator', () => {
   });
 
   it('returns error for invalid district code format', async () => {
-    const file = await buildXlsxFile('Interior', 
+    const file = await buildXlsxFile(
+      'Interior',
       [
         [
           'District',
@@ -108,7 +110,8 @@ describe('interiorValidator', () => {
   });
 
   it('returns error for duplicate district codes', async () => {
-    const file = await buildXlsxFile('Interior', 
+    const file = await buildXlsxFile(
+      'Interior',
       [
         [
           'District',
@@ -151,7 +154,8 @@ describe('interiorValidator', () => {
   });
 
   it('does not flag summary row as invalid district code', async () => {
-    const file = await buildXlsxFile('Interior', 
+    const file = await buildXlsxFile(
+      'Interior',
       [
         [
           'District',
@@ -209,7 +213,8 @@ describe('interiorValidator', () => {
   });
 
   it('returns error when column count is insufficient', async () => {
-    const file = await buildXlsxFile('Interior', 
+    const file = await buildXlsxFile(
+      'Interior',
       [
         ['District', 'Dry Belt', null, null, null],
         [null, 'Avoidable Sawlog', 'Avoidable Grade Y/4', 'Unavoidable', 'Total'],

@@ -1,7 +1,8 @@
+import { validateDistrictCodes } from './districtCodeValidator';
+
 import { interiorMatrixConfig } from '@/services/districtvolumes/config/interiorMatrixConfig';
 import { ExcelReader } from '@/services/spreadsheet/excelReader';
 import { SpreadsheetValidator } from '@/services/spreadsheet/spreadsheetValidator';
-import { validateDistrictCodes } from './districtCodeValidator';
 
 export async function interiorValidator(file: File): Promise<string[]> {
   const errors: string[] = [];

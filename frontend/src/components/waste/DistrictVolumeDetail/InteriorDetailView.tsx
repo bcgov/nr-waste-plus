@@ -1,14 +1,12 @@
-import { Column } from '@carbon/react';
-import { Tab, TabList, TabPanel, TabPanels, Tabs } from '@carbon/react';
 import { type FC } from 'react';
+
+import DistrictVolumeDetailHeader from './DistrictVolumeDetailHeader';
+import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs';
 
 import type { TableHeaderType } from '@/components/Form/TableResource/types';
 import type { DistrictVolumeDetail, InteriorDistrictRow } from '@/services/districtvolumes.types';
 
-import DateTag from '@/components/core/Tags/DateTag';
 import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
-import ReadonlyInput from '@/components/Form/ReadonlyInput';
-import DistrictZoneSection from '@/components/waste/DistrictZoneSection';
 
 /**
  * Props for the {@link InteriorDetailView} component.
@@ -69,39 +67,12 @@ const InteriorDetailView: FC<InteriorDetailViewProps> = ({ data }) => {
 
   return (
     <>
-      <Column lg={4} md={4} sm={4} className="district-volume-detail__start-date">
-        <ReadonlyInput label="Start date">
-          {startDate && <DateTag date={startDate} format="MMMM dd, yyyy" />}
-        </ReadonlyInput>
-      </Column>
-      <Column lg={12} md={4} sm={4} className="district-volume-detail__end-date">
-        {endDate && <DateTag date={endDate} format="MMMM dd, yyyy" />}
-      </Column>
-      <Column lg={4} md={4} sm={4} className="district-volume-detail__table-level-factor">
-        <ReadonlyInput label="Dispersed retention reduction factor">
-          <PrecisionNumberTag value={tableLevelFactor} precision={3} />
-        </ReadonlyInput>
-      </Column>
-      <Column lg={12} md={4} sm={4} className="district-volume-detail__heli-multiplier">
-        <ReadonlyInput label="Heli multiplier">TBD</ReadonlyInput>
-      </Column>
-
-      <Column lg={16} md={8} sm={4} className="district-volume-detail__zones">
-        <Tabs defaultSelectedIndex={0}>
-          <TabList aria-label="District zones" contained size="lg">
-            {zones.map((zone) => (
-              <Tab key={zone.name}>{zone.name}</Tab>
-            ))}
-          </TabList>
-          <TabPanels>
-            {zones.map((zone) => (
-              <TabPanel key={zone.name}>
-                <DistrictZoneSection zoneName={zone.name} rows={zone.districts} headers={headers} />
-              </TabPanel>
-            ))}
-          </TabPanels>
-        </Tabs>
-      </Column>
+      <DistrictVolumeDetailHeader
+        startDate={startDate}
+        endDate={endDate}
+        tableLevelFactor={tableLevelFactor}
+      />
+      <DistrictVolumeDetailTabs ariaLabel="District zones" items={zones} headers={headers} />
     </>
   );
 };
