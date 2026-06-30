@@ -142,5 +142,9 @@ describe('queryKeys', () => {
     it('should build create key', () => {
       expect(queryKeys.districtVolume.create()).toEqual(['district-volume', 'create']);
     });
+
+    it('should build detail key', () => {
+      expect(queryKeys.districtVolume.detail(42)).toEqual(['district-volume', 'detail', 42]);
+    });
   });
 });

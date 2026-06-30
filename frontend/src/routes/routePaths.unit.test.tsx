@@ -47,6 +47,10 @@ vi.mock('@/pages/RoleError', () => ({
   default: () => <div data-testid="role-error-page" />,
 }));
 
+vi.mock('@/pages/DistrictVolumeTableDetail', () => ({
+  default: () => <div data-testid="district-volume-table-detail" />,
+}));
+
 vi.mock('@/pages/DistrictVolumeTableUpload', () => ({
   default: () => <div data-testid="district-volume-table-upload" />,
 }));
@@ -275,6 +279,43 @@ describe('routePaths', () => {
         (r) => r.path === '/configuration/upload-district-volume',
       )!;
       expect(uploadRoute.featureFlag).toBe('configuration-enabled');
+    });
+
+    it('shouldDefineDistrictVolumeTableDetailRoute', () => {
+      expect(
+        routePaths.ROUTES.some((r) => r.path === '/configuration/district-volume-tables/$id'),
+      ).toBe(true);
+    });
+
+    it('shouldMarkDistrictVolumeTableDetailAsProtectedAdmin', () => {
+      const detailRoute = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/district-volume-tables/$id',
+      )!;
+      expect(detailRoute.protected).toBe(true);
+      expect(detailRoute.roles).toEqual([{ role: Role.ADMIN, clients: [] }]);
+    });
+
+    it('shouldNotShowDistrictVolumeTableDetailInSideMenu', () => {
+      const detailRoute = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/district-volume-tables/$id',
+      )!;
+      expect(detailRoute.isSideMenu).toBe(false);
+    });
+
+    it('shouldGateDistrictVolumeTableDetailBehindConfigurationFlag', () => {
+      const detailRoute = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/district-volume-tables/$id',
+      )!;
+      expect(detailRoute.featureFlag).toBe('configuration-enabled');
+    });
+
+    it('shouldRenderDistrictVolumeTableDetailComponent_withoutThrowing', () => {
+      const detailRoute = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/district-volume-tables/$id',
+      )!;
+      const Comp = detailRoute.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
     });
   });
 

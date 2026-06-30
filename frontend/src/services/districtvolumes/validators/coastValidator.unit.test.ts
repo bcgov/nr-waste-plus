@@ -6,7 +6,8 @@ import { buildXlsxFile } from './testHelper';
 
 describe('coastValidator', () => {
   it('returns empty errors for a valid coast spreadsheet', async () => {
-    const file = await buildXlsxFile('Coast', 
+    const file = await buildXlsxFile(
+      'Coast',
       [
         ['District', 'Mature', null, null, null, null, 'Immature', null, null, null, null],
         [
@@ -50,7 +51,8 @@ describe('coastValidator', () => {
   });
 
   it('returns error for invalid district code format', async () => {
-    const file = await buildXlsxFile('Coast', 
+    const file = await buildXlsxFile(
+      'Coast',
       [
         ['District', 'Mature', null, null, null, null, 'Immature', null, null, null, null, null],
         [
@@ -90,7 +92,8 @@ describe('coastValidator', () => {
   });
 
   it('returns error for duplicate district codes', async () => {
-    const file = await buildXlsxFile('Coast', 
+    const file = await buildXlsxFile(
+      'Coast',
       [
         ['District', 'Mature', null, null, null, null, 'Immature', null, null, null, null, null],
         [
@@ -131,7 +134,8 @@ describe('coastValidator', () => {
   });
 
   it('returns error when heli multiplier is missing', async () => {
-    const file = await buildXlsxFile('Coast', 
+    const file = await buildXlsxFile(
+      'Coast',
       [
         ['District', 'Mature', null, null, null, null, 'Immature', null, null, null, null],
         [
@@ -170,7 +174,8 @@ describe('coastValidator', () => {
   });
 
   it('does not flag summary row as invalid district code', async () => {
-    const file = await buildXlsxFile('Coast', 
+    const file = await buildXlsxFile(
+      'Coast',
       [
         ['District', 'Mature', null, null, null, null, 'Immature', null, null, null, null, null],
         [
@@ -210,7 +215,8 @@ describe('coastValidator', () => {
   });
 
   it('returns error when column count is insufficient', async () => {
-    const file = await buildXlsxFile('Coast', 
+    const file = await buildXlsxFile(
+      'Coast',
       [
         ['District', 'Mature', null, null, null, null],
         [

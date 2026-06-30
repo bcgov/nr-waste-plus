@@ -92,8 +92,17 @@ export class SpreadsheetValidator {
     }
 
     if (config.heliMultiplierCol) {
-      const lastRow = worksheet.rowCount;
-      const heliCell = worksheet.getCell(lastRow, config.heliMultiplierCol);
+      // Walk upward from bottom — worksheet.rowCount can include empty
+      // rows from template formatting (e.g. A1:Q24 with data only in rows 1-11).
+      let heliRow = worksheet.rowCount;
+      while (heliRow >= config.dataStartRow) {
+        const districtVal = String(
+          worksheet.getCell(heliRow, config.districtCol).value ?? '',
+        ).trim();
+        if (districtVal) break;
+        heliRow--;
+      }
+      const heliCell = worksheet.getCell(heliRow, config.heliMultiplierCol);
       if (heliCell.value == null || typeof heliCell.value !== 'number') {
         errors.push('Coast spreadsheet must include a Heli Multiplier value.');
       }

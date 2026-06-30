@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { DistrictVolumeService } from './districtvolume.service';
 
-import type { DistrictVolumeListItem } from './districtvolumes.types';
+import type { DistrictVolumeDetail, DistrictVolumeListItem } from './districtvolumes.types';
 import type { PageableRequest } from './types';
 
 const mockConfig = { baseURL: 'http://localhost' };
@@ -30,6 +30,64 @@ const mockPageResponse = {
     size: 10,
     totalElements: 1,
     totalPages: 1,
+  },
+};
+
+const mockInteriorDetail: DistrictVolumeDetail = {
+  id: 1,
+  area: 'INTERIOR',
+  startDate: '2026-05-15',
+  endDate: null,
+  uploadedBy: 'IDIR/ABCDEF',
+  dateOfUpload: '2026-03-27T00:00:00Z',
+  tableLevelFactor: 0,
+  tableData: {
+    type: 'INTERIOR',
+    zones: [
+      {
+        name: 'Dry belt',
+        districts: [
+          {
+            code: 'D1',
+            avoidableSawlog: 100,
+            avoidableGrade4: 50,
+            unavoidableGrade4: 25,
+            total: 175,
+          },
+        ],
+      },
+    ],
+    formulas: {},
+  },
+};
+
+const mockCoastalDetail: DistrictVolumeDetail = {
+  id: 2,
+  area: 'COASTAL',
+  startDate: '2026-06-01',
+  endDate: '2026-12-31',
+  uploadedBy: 'IDIR/WXYZ',
+  dateOfUpload: '2026-04-01T00:00:00Z',
+  tableLevelFactor: 1,
+  heliMultiplier: 1.5,
+  tableData: {
+    type: 'COASTAL',
+    sections: [
+      {
+        name: 'Mature',
+        districts: [
+          {
+            code: 'C1',
+            avoidableSawlog: 200,
+            avoidableHembalGradeU: 30,
+            avoidableGradeY: 20,
+            unavoidable: 10,
+            total: 260,
+          },
+        ],
+      },
+    ],
+    formulas: {},
   },
 };
 
@@ -167,7 +225,9 @@ describe('DistrictVolumeService', () => {
 
   describe('createDistrictVolumeTable', () => {
     it('should parse resource ID from Location header', async () => {
-      (service as any).doRequest = vi.fn().mockResolvedValue('http://example.com/api/configuration/district-average-volumes/42');
+      (service as any).doRequest = vi
+        .fn()
+        .mockResolvedValue('http://example.com/api/configuration/district-average-volumes/42');
 
       const result = await service.createDistrictVolumeTable({
         area: 'INTERIOR',
@@ -260,6 +320,67 @@ describe('DistrictVolumeService', () => {
 
       const callArgs = (service as any).doRequest.mock.calls[0][1];
       expect(callArgs.meta).toBeUndefined();
+    });
+  });
+
+  describe('getDistrictVolumeTableDetail', () => {
+    it('should call API with correct ID and return detail', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue(mockInteriorDetail);
+
+      const result = await service.getDistrictVolumeTableDetail(1);
+
+      expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+        method: 'GET',
+        url: '/api/configuration/district-average-volumes/1',
+      });
+      expect(result.id).toBe(1);
+      expect(result.area).toBe('INTERIOR');
+      expect(result.tableData.type).toBe('INTERIOR');
+    });
+
+    it('should return COASTAL detail with heliMultiplier', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue(mockCoastalDetail);
+
+      const result = await service.getDistrictVolumeTableDetail(2);
+
+      expect(result.id).toBe(2);
+      expect(result.area).toBe('COASTAL');
+      expect((result as DistrictVolumeDetail & { heliMultiplier: number }).heliMultiplier).toBe(
+        1.5,
+      );
+      expect(result.endDate).toBe('2026-12-31');
+      expect(result.tableData.type).toBe('COASTAL');
+    });
+
+    it('should include meta when provided', async () => {
+      const meta = { notificationTarget: 'district-volume-detail' };
+      (service as any).doRequest = vi.fn().mockResolvedValue(mockInteriorDetail);
+
+      await service.getDistrictVolumeTableDetail(1, meta);
+
+      const callArgs = (service as any).doRequest.mock.calls[0][1];
+      expect(callArgs.meta).toEqual(meta);
+    });
+
+    it('should not include meta when not provided', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue(mockInteriorDetail);
+
+      await service.getDistrictVolumeTableDetail(1);
+
+      const callArgs = (service as any).doRequest.mock.calls[0][1];
+      expect(callArgs.meta).toBeUndefined();
+    });
+
+    it('should propagate network errors', async () => {
+      (service as any).doRequest = vi.fn().mockRejectedValue(new Error('Network Error'));
+
+      await expect(service.getDistrictVolumeTableDetail(1)).rejects.toThrow('Network Error');
+    });
+
+    it('should handle API 404 error', async () => {
+      (service as any).doRequest = vi.fn().mockRejectedValue(new Error('Not Found'));
+
+      await expect(service.getDistrictVolumeTableDetail(999)).rejects.toThrow('Not Found');
     });
   });
 });

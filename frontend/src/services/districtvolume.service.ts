@@ -1,6 +1,10 @@
 import { removeEmpty } from './utils';
 
-import type { DistrictVolumeListItem } from './districtvolumes.types';
+import type {
+  DistrictVolumeCreate,
+  DistrictVolumeDetail,
+  DistrictVolumeListItem,
+} from './districtvolumes.types';
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { PageableRequest } from '@/services/types';
 
@@ -45,7 +49,7 @@ export class DistrictVolumeService extends HttpClient {
   }
 
   createDistrictVolumeTable(
-    dto: import('@/services/districtvolumes.types').DistrictVolumeCreate,
+    dto: DistrictVolumeCreate,
     meta?: Record<string, unknown>,
   ): CancelablePromise<number> {
     return new CancelablePromise<number>((resolve, reject, onCancel) => {
@@ -69,6 +73,24 @@ export class DistrictVolumeService extends HttpClient {
           }
         })
         .catch(reject);
+    });
+  }
+
+  /**
+   * Retrieves detailed information for a specific district volume configuration.
+   *
+   * @param id The district volume configuration ID.
+   * @param meta Optional request metadata.
+   * @returns The detailed district volume configuration.
+   */
+  getDistrictVolumeTableDetail(
+    id: number,
+    meta?: Record<string, unknown>,
+  ): CancelablePromise<DistrictVolumeDetail> {
+    return this.doRequest<DistrictVolumeDetail>(this.config, {
+      method: 'GET',
+      url: `/api/configuration/district-average-volumes/${id}`,
+      ...(meta === undefined ? {} : { meta }),
     });
   }
 }

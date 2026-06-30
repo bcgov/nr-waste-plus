@@ -12,7 +12,8 @@ export function validateDistrictCodes(
 
   for (let r = config.dataStartRow; r <= worksheet.rowCount; r++) {
     const raw = worksheet.getCell(r, config.districtCol).value;
-    const districtVal = typeof raw === 'string' ? raw.trim() : typeof raw === 'number' ? String(raw) : '';
+    const districtVal =
+      typeof raw === 'string' ? raw.trim() : typeof raw === 'number' ? String(raw) : '';
     if (!districtVal) continue;
 
     // Skip summary rows

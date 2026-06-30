@@ -19,6 +19,7 @@ import { navigateInTree } from '@/routes/inTreePaths';
 import { DistrictVolumeProcessor } from '@/services/districtvolumes/processors/districtVolumeProcessor';
 import { coastValidator } from '@/services/districtvolumes/validators/coastValidator';
 import { interiorValidator } from '@/services/districtvolumes/validators/interiorValidator';
+import { ExcelReader } from '@/services/spreadsheet/excelReader';
 import { runValidators } from '@/utils/runValidators';
 import { required } from '@/utils/validators';
 
@@ -279,12 +280,18 @@ const DistrictVolumeTableUpload: FC = () => {
           maxFileSizeBytes={2 * 1024 * 1024}
           processor={processor}
           validator={async (file: File) => {
-            const [interiorErrors, coastErrors] = await Promise.all([
-              interiorValidator(file),
-              coastValidator(file),
-            ]);
-            if (interiorErrors.length === 0 || coastErrors.length === 0) return [];
-            return [...interiorErrors, ...coastErrors];
+            try {
+              const reader = new ExcelReader();
+              const sheets = await reader.listSheets(file);
+              const upperSheets = sheets.map((s) => s.trim().toUpperCase());
+              if (upperSheets.includes('COAST')) return coastValidator(file);
+              if (upperSheets.includes('INTERIOR')) return interiorValidator(file);
+              return [
+                'Could not detect spreadsheet format. Expected a sheet named "Interior" or "Coast".',
+              ];
+            } catch (e) {
+              return [(e as Error).message];
+            }
           }}
           onProcessed={handleFileChange}
           externalErrors={fileErrors}

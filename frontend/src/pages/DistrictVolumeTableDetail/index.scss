@@ -1,0 +1,32 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/theme' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+@use '@carbon/react/scss/colors' as *;
+@use '@carbon/styles/scss/components/tabs';
+
+.district-volume {
+
+  &-detail-column__notification,
+  &-detail-column__banner,
+  &-detail__start-date, 
+  &-detail__end-date,
+  &-detail__table-level-factor,
+  &-detail__heli-multiplier,
+  &-detail__zones {
+      display: flex;
+      flex-direction: column;
+      margin-top: $spacing-08;
+      gap: $spacing-08;
+
+      @include breakpoint-down(md) {      
+        margin-top: $spacing-01;
+        padding: $spacing-05 $spacing-07;
+        flex-shrink: 0;      
+      }
+  }
+
+  &-detail__zones {
+    gap: 0;
+  }
+
+}

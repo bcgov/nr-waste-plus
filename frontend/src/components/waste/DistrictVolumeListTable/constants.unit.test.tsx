@@ -57,16 +57,16 @@ describe('District Volume List headers', () => {
   });
 
   describe('EndDate column renderAs', () => {
-    it('should render dash for null end date', () => {
+    it('should render invalid-date marker for null end date', () => {
       const endDateHeader = headers.find((h) => h.key === 'endDate');
       render(<>{endDateHeader?.renderAs?.(null)}</>);
-      expect(screen.getByText('-')).toBeTruthy();
+      expect(screen.getByTestId('invalid-date')).toBeTruthy();
     });
 
-    it('should render raw date string for non-null end date', () => {
+    it('should render formatted date string for non-null end date', () => {
       const endDateHeader = headers.find((h) => h.key === 'endDate');
       render(<>{endDateHeader?.renderAs?.('2026-05-14')}</>);
-      expect(screen.getByText('2026-05-14')).toBeTruthy();
+      expect(screen.getByText('May 14, 2026')).toBeTruthy();
     });
   });
 });

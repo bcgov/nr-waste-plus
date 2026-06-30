@@ -110,4 +110,11 @@ export default defineConfig([
       'vitest/valid-expect': 'error',
     },
   },
+  // E2E test files — Playwright uses page.getByRole() etc., not screen queries
+  {
+    files: ['**/*.e2e.test.{ts,tsx}'],
+    rules: {
+      'testing-library/prefer-screen-queries': 'off',
+    },
+  },
 ]);
