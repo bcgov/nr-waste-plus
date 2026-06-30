@@ -1,5 +1,12 @@
 import { Given } from "@badeball/cypress-cucumber-preprocessor";
+
 Given('I visit {string}', (url: string) => {
+  if (url.includes('/search')) {
+    cy.intercept('GET', '**/api/codes/districts*').as('getDistricts');
+    cy.intercept('GET', '**/api/codes/sampling-options*').as('getSampling');
+    cy.intercept('GET', '**/api/codes/assess-area-statuses*').as('getStatuses');
+  }
+
   cy.visit(url).then(() => {
     cy.window().then((win) => {
       return new Cypress.Promise((resolve) => {
@@ -11,4 +18,9 @@ Given('I visit {string}', (url: string) => {
       });
     });
   });
+
+  if (url.includes('/search')) {
+    // Wait for the reference data to load so dropdowns are populated
+    cy.wait(['@getDistricts', '@getSampling', '@getStatuses'], { timeout: 15000 });
+  }
 });
