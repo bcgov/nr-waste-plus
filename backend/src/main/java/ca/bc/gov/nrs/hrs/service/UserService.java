@@ -5,6 +5,7 @@ import ca.bc.gov.nrs.hrs.entity.users.UserBookmarkEntityId;
 import ca.bc.gov.nrs.hrs.entity.users.UserPreferenceEntity;
 import ca.bc.gov.nrs.hrs.repository.UserBookmarkRepository;
 import ca.bc.gov.nrs.hrs.repository.UserPreferenceRepository;
+import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import java.util.List;
@@ -63,6 +64,8 @@ public class UserService {
    * @param preferences the preferences to save
    */
   @NewSpan
+  @Transactional
+  @Retry(name = "saveUserPreferences")
   public void saveUserPreferences(String userId, Map<String, Object> preferences) {
 
     log.info("Saving preferences for user: {}", userId);
