@@ -9,6 +9,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.oracle.OracleContainer;
 
+/**
+ * Base integration-test configuration backed by a shared Oracle Testcontainers instance.
+ */
 @Testcontainers
 @ExtendWith({SpringExtension.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -22,6 +25,11 @@ public abstract class AbstractTestContainerIntegrationTest {
     oracle.start();
   }
 
+  /**
+   * Registers datasource properties resolved from the shared Oracle container.
+   *
+   * @param registry the dynamic property registry used by Spring tests
+   */
   @DynamicPropertySource
   static void registerDynamicProperties(DynamicPropertyRegistry registry) {
     registry.add("spring.datasource.jdbcUrl", oracle::getJdbcUrl);

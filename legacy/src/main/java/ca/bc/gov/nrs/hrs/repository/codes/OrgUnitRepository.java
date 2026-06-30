@@ -31,8 +31,9 @@ public interface OrgUnitRepository extends JpaRepository<OrgUnitEntity, Long> {
    * {@code orgUnitCode}. The {@link Optional} will be empty if no matching record exists.</p>
    *
    * @param districtCode the organization unit code to look up (e.g. "DKM")
-   * @return an {@link Optional} containing the matching {@link OrgUnitEntity}, or empty if none found
+   * @return an {@link Optional} containing the matching {@link OrgUnitEntity}, or empty if none
+   *     found
    */
   Optional<OrgUnitEntity> findByOrgUnitCode(String districtCode);
-  
+
 }

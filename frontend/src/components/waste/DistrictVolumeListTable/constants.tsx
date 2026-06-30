@@ -2,7 +2,6 @@ import type { TableHeaderType } from '@/components/Form/TableResource/types';
 import type { DistrictVolumeListItem } from '@/services/districtvolumes.types';
 
 import DateTag from '@/components/core/Tags/DateTag';
-import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 
 const areaDisplayMap: Record<string, string> = {
   INTERIOR: 'Interior',
@@ -29,7 +28,7 @@ export const headers: TableHeaderType<DistrictVolumeListItem>[] = [
     header: 'End date',
     sortable: false,
     selected: true,
-    renderAs: (value) => <EmptyValueTag value={value as string | number | null | undefined} />,
+    renderAs: (value) => <DateTag date={value as string} format="MMMM dd, yyyy" />,
   },
   {
     key: 'uploadedBy',

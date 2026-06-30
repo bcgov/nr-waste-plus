@@ -9,8 +9,8 @@ import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { DistrictVolumeListItem } from '@/services/districtvolumes.types';
 
 import { renderCell } from '@/components/Form/TableResource/types';
-import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as hooks from '@/config/react-query/hooks';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 
 vi.mock('@/config/react-query/hooks');
 
@@ -18,7 +18,16 @@ const mockUseDistrictVolumeListQuery = vi.mocked(hooks.useDistrictVolumeListQuer
 
 // Mock TableResource to avoid slow Carbon component rendering
 vi.mock('@/components/Form/TableResource', () => ({
-  default: ({ headers, content, loading, error, onPageChange, onSortChange, id }: any) => {
+  default: ({
+    headers,
+    content,
+    loading,
+    error,
+    onPageChange,
+    onSortChange,
+    id,
+    getRowActions,
+  }: any) => {
     if (loading) {
       return <div data-testid="loading-skeleton">Loading...</div>;
     }
@@ -33,6 +42,8 @@ vi.mock('@/components/Form/TableResource', () => ({
       );
     }
 
+    const hasActions = Boolean(getRowActions);
+
     return (
       <div data-testid={id}>
         <table>
@@ -41,6 +52,7 @@ vi.mock('@/components/Form/TableResource', () => ({
               {headers.map((h: any) => (
                 <th key={h.key}>{h.header}</th>
               ))}
+              {hasActions && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -49,6 +61,15 @@ vi.mock('@/components/Form/TableResource', () => ({
                 {headers.map((h: any) => (
                   <td key={h.key}>{renderCell(row, h)}</td>
                 ))}
+                {hasActions && (
+                  <td>
+                    {getRowActions(row).map((action: any) => (
+                      <button key={action.id} onClick={() => action.onClick(row)}>
+                        {typeof action.label === 'string' ? action.label : 'Action'}
+                      </button>
+                    ))}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -83,10 +104,7 @@ vi.mock('@/components/Form/TableResource', () => ({
             Previous
           </button>
         </div>
-        <button
-          aria-label="Sort by Area"
-          onClick={() => onSortChange?.({ area: 'ASC' })}
-        >
+        <button aria-label="Sort by Area" onClick={() => onSortChange?.({ area: 'ASC' })}>
           Sort
         </button>
       </div>
@@ -325,9 +343,38 @@ describe('DistrictVolumeListTable', () => {
       await renderWithAppAsync(<DistrictVolumeListTable />);
 
       const callArgs = mockUseDistrictVolumeListQuery.mock.calls[0];
-      expect(callArgs[1]).toEqual(
-        expect.objectContaining({ enabled: false, staleTime: Infinity }),
-      );
+      expect(callArgs[1]).toEqual(expect.objectContaining({ enabled: false, staleTime: Infinity }));
+    });
+  });
+
+  describe('row actions', () => {
+    it('renders Actions column when getRowActions is provided', async () => {
+      mockUseDistrictVolumeListQuery.mockReturnValue({
+        data: mockData,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch: vi.fn(),
+      } as any);
+      await renderWithAppAsync(<DistrictVolumeListTable />);
+
+      await screen.findByTestId('district-volume-list');
+      screen.getByText('Actions');
+    });
+
+    it('renders See details button for each row', async () => {
+      mockUseDistrictVolumeListQuery.mockReturnValue({
+        data: mockData,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch: vi.fn(),
+      } as any);
+      await renderWithAppAsync(<DistrictVolumeListTable />);
+
+      await screen.findByTestId('district-volume-list');
+      const seeDetailsButtons = screen.getAllByText('See details');
+      expect(seeDetailsButtons).toHaveLength(mockData.content.length);
     });
   });
 });

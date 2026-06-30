@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,6 +25,9 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+/**
+ * Persistence entity for district average volume configurations.
+ */
 @Entity
 @Table(name = "district_volume", schema = "hrs")
 @EntityListeners(AuditingEntityListener.class)
@@ -51,7 +54,7 @@ public class DistrictVolumeEntity {
 
   @CreatedDate
   @Column(name = "date_of_upload", nullable = false, updatable = false)
-  private OffsetDateTime dateOfUpload;
+  private LocalDateTime dateOfUpload;
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "table_data", nullable = false, columnDefinition = "jsonb")
@@ -65,7 +68,7 @@ public class DistrictVolumeEntity {
 
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
-  private OffsetDateTime createdAt;
+  private LocalDateTime createdAt;
 
   @CreatedBy
   @Column(name = "created_by", nullable = false, updatable = false, length = 128)
@@ -73,7 +76,7 @@ public class DistrictVolumeEntity {
 
   @LastModifiedDate
   @Column(name = "updated_at", nullable = false)
-  private OffsetDateTime updatedAt;
+  private LocalDateTime updatedAt;
 
   @LastModifiedBy
   @Column(name = "updated_by", nullable = false, length = 128)

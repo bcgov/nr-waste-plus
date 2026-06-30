@@ -1,11 +1,11 @@
 package ca.bc.gov.nrs.hrs.controller;
 
 import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.context.TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,7 +52,7 @@ class UserBookmarkControllerIntegrationTest extends AbstractTestContainerIntegra
             put("/api/users/bookmarks/{reportingUnitId}", REPORTING_UNIT_A)
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON)
-                .with(csrf()))
+                .with(SecurityMockMvcRequestPostProcessors.csrf()))
         .andExpect(status().isAccepted())
         .andReturn();
 
@@ -60,7 +61,7 @@ class UserBookmarkControllerIntegrationTest extends AbstractTestContainerIntegra
             put("/api/users/bookmarks/{reportingUnitId}", REPORTING_UNIT_A)
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON)
-                .with(csrf()))
+                .with(SecurityMockMvcRequestPostProcessors.csrf()))
         .andExpect(status().isAccepted())
         .andReturn();
   }
@@ -74,7 +75,7 @@ class UserBookmarkControllerIntegrationTest extends AbstractTestContainerIntegra
             put("/api/users/bookmarks/{reportingUnitId}", REPORTING_UNIT_B)
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON)
-                .with(csrf()))
+                .with(SecurityMockMvcRequestPostProcessors.csrf()))
         .andExpect(status().isAccepted())
         .andReturn();
   }
@@ -88,7 +89,7 @@ class UserBookmarkControllerIntegrationTest extends AbstractTestContainerIntegra
             delete("/api/users/bookmarks/{reportingUnitId}", REPORTING_UNIT_A)
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON)
-                .with(csrf()))
+                .with(SecurityMockMvcRequestPostProcessors.csrf()))
         .andExpect(status().isNoContent())
         .andReturn();
 
@@ -97,7 +98,7 @@ class UserBookmarkControllerIntegrationTest extends AbstractTestContainerIntegra
             delete("/api/users/bookmarks/{reportingUnitId}", REPORTING_UNIT_A)
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON)
-                .with(csrf()))
+                .with(SecurityMockMvcRequestPostProcessors.csrf()))
         .andExpect(status().isNoContent())
         .andReturn();
   }

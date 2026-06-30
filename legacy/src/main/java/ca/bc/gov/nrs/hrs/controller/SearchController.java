@@ -31,8 +31,9 @@ import org.springframework.web.bind.annotation.RestController;
  * REST controller that provides search endpoints for reporting units and related data.
  *
  * <p>Endpoints support paged and filtered searches for reporting units, searching reporting unit
- * users and fetching client districts for the authenticated user's forest (my-forest-clients).
- * Security and client-scoping are handled by inspecting the authenticated JWT principal.</p>
+ * users, and fetching client districts for the authenticated user's forest
+ * ({@code my-forest-clients}). Security and client scoping are handled by inspecting the
+ * authenticated JWT principal.
  *
  */
 @RestController
@@ -84,15 +85,17 @@ public class SearchController {
   /**
    * Retrieve an expanded search entry for a specific reporting unit and waste assessment area.
    *
-   * <p>This endpoint fetches detailed information about a reporting unit and waste assessment area, including all
-   * related expanded data for the search view. If the reporting unit or waste assessment area combination is not
-   * found, a {@link WasteAssessmentAreaNotFound} exception is thrown.</p>
+   * <p>This endpoint fetches detailed information about a reporting unit and waste assessment area,
+   * including all related expanded data for the search view. If the reporting unit or waste
+   * assessment area combination is not found, a {@link WasteAssessmentAreaNotFound} exception is
+   * thrown.
    *
    * @param jwt             the authenticated JWT principal
    * @param reportingUnitId the ID of the reporting unit
-   * @param wasteAssessmentAreaId         the ID of the waste assessment area within the reporting unit
+   * @param wasteAssessmentAreaId the ID of the waste assessment area within the reporting unit
    * @return an expanded {@link ReportingUnitSearchExpandedDto} containing detailed search data
-   * @throws WasteAssessmentAreaNotFound if the reporting unit and waste assessment area combination is not found
+   * @throws WasteAssessmentAreaNotFound if the reporting unit and waste assessment area
+   *     combination is not found
    */
   @GetMapping("/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}")
   public ReportingUnitSearchExpandedDto getSearchExpandedEntry(
@@ -106,7 +109,9 @@ public class SearchController {
 
     return ruSearchService
         .getReportingUnitBlockExpanded(reportingUnitId, wasteAssessmentAreaId)
-        .orElseThrow(() -> new WasteAssessmentAreaNotFound(reportingUnitId, wasteAssessmentAreaId));
+        .orElseThrow(
+            () -> new WasteAssessmentAreaNotFound(reportingUnitId, wasteAssessmentAreaId)
+        );
   }
 
   /**

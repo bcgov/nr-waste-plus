@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.hrs.provider.forestclient;
 
-import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE;
 import static com.github.tomakehurst.wiremock.client.WireMock.badRequest;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
@@ -84,7 +83,9 @@ class ForestClientFetchClientIntegrationTest extends AbstractTestContainerIntegr
       Assertions.assertEquals("MINISTRY OF FORESTS", forestClient.clientName());
       Assertions.assertNull(forestClient.legalFirstName());
       Assertions.assertNull(forestClient.legalMiddleName());
-      Assertions.assertEquals(ForestClientStatusEnum.ACTIVE, forestClient.clientStatusCode());
+      Assertions.assertEquals(
+          ForestClientStatusEnum.ACTIVE,
+          forestClient.clientStatusCode());
       Assertions.assertEquals(
           ForestClientTypeEnum.MINISTRY_OF_FORESTS_AND_RANGE, forestClient.clientTypeCode());
       Assertions.assertEquals("MOF", forestClient.acronym());
@@ -98,7 +99,7 @@ class ForestClientFetchClientIntegrationTest extends AbstractTestContainerIntegr
         Arguments.argumentSet(
             "Happy path",
             "00012797",
-            okJson(CLIENTNUMBER_RESPONSE)
+            okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)
         ),
         Arguments.argumentSet(
             "Not found breaker",

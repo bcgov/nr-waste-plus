@@ -4,8 +4,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post; // Added missing import
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header; // Added missing import
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeCreateDto;
@@ -13,12 +14,13 @@ import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeListItemDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
+import ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory;
 import ca.bc.gov.nrs.hrs.service.DistrictVolumeService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
-import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,11 +41,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
-import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.support.WebDataBinderFactory;
+import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
@@ -52,7 +58,7 @@ class DistrictVolumeControllerTest {
 
   private MockMvc mockMvc;
   private JsonMapper objectMapper;
-  
+
   private static final Instant FIXED_DATE =
       Instant.parse("2024-01-01T00:00:00Z");
 
@@ -62,16 +68,14 @@ class DistrictVolumeControllerTest {
   @InjectMocks
   private DistrictVolumeController districtVolumeController;
 
-  private static final OffsetDateTime MOCK_UPLOAD_TIME =
-      OffsetDateTime.of(
+  private static final LocalDateTime MOCK_UPLOAD_TIME =
+      LocalDateTime.of(
           2026,
-          Month.JUNE.getValue(),
+          Month.JUNE,
           11,
           14,
           0,
-          0,
-          0,
-          ZoneOffset.UTC);
+          0);
 
   @BeforeEach
   void setUp() {
@@ -89,25 +93,31 @@ class DistrictVolumeControllerTest {
         MockMvcBuilders.standaloneSetup(districtVolumeController)
             .setCustomArgumentResolvers(
                 new PageableHandlerMethodArgumentResolver(),
-                new org.springframework.web.method.support.HandlerMethodArgumentResolver() {
+                new HandlerMethodArgumentResolver() {
                   @Override
-                  public boolean supportsParameter(org.springframework.core.MethodParameter parameter) {
-                    return parameter.hasParameterAnnotation(org.springframework.security.core.annotation.AuthenticationPrincipal.class);
+                  public boolean supportsParameter(MethodParameter parameter) {
+                    return parameter.hasParameterAnnotation(
+                        AuthenticationPrincipal.class);
                   }
 
                   @Override
                   public Object resolveArgument(
-                      org.springframework.core.MethodParameter parameter,
-                      org.springframework.web.method.support.ModelAndViewContainer mavContainer,
-                      org.springframework.web.context.request.NativeWebRequest webRequest,
-                      org.springframework.web.bind.support.WebDataBinderFactory binderFactory) {
-                    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                      MethodParameter parameter,
+                      ModelAndViewContainer mavContainer,
+                      NativeWebRequest webRequest,
+                      WebDataBinderFactory binderFactory) {
+                    Authentication auth =
+                        SecurityContextHolder.getContext().getAuthentication();
                     if (auth != null) {
                       return auth.getPrincipal();
                     }
                     // Fallback for standalone setup without SecurityContext
-                    return ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory.createJwt(
-                        "jakethedog", java.util.Collections.emptyList(), "idir", "Jake", "jake@test.ca");
+                    return WithMockJwtSecurityContextFactory.createJwt(
+                        "jakethedog",
+                        Collections.emptyList(),
+                        "idir",
+                        "Jake",
+                        "jake@test.ca");
                   }
                 })
             .setMessageConverters(
@@ -128,7 +138,7 @@ class DistrictVolumeControllerTest {
             LocalDate.of(2026, Month.JANUARY, 1),
             null,
             "TEST_USER",
-            MOCK_UPLOAD_TIME.toInstant());
+            MOCK_UPLOAD_TIME.atOffset(ZoneOffset.UTC).toInstant());
 
     PageRequest pageRequest = PageRequest.of(0, 10);
 
@@ -165,7 +175,7 @@ class DistrictVolumeControllerTest {
             LocalDate.of(2026, Month.JANUARY, 1),
             null,
             "TEST_USER",
-            MOCK_UPLOAD_TIME.toInstant());
+            MOCK_UPLOAD_TIME.atOffset(ZoneOffset.UTC).toInstant());
 
     PageRequest pageRequest = PageRequest.of(0, 10);
 
@@ -235,7 +245,7 @@ class DistrictVolumeControllerTest {
             LocalDate.of(2026, Month.JANUARY, 1),
             null,
             "TEST_USER",
-            MOCK_UPLOAD_TIME.toInstant(),
+            MOCK_UPLOAD_TIME.atOffset(ZoneOffset.UTC).toInstant(),
             new BigDecimal("1.150"),
             null,
             interiorData);

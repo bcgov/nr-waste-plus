@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 import { setupAppShellMocks } from '@/config/tests/app.setup';
-import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 import { mockJwt } from '@/config/tests/auth.helper';
+import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 const canOverrideClaims = (): boolean => process.env.VITE_MOCK_AUTH?.toLowerCase() === 'true';
 

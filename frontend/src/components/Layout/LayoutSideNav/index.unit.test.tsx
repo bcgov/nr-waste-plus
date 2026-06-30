@@ -4,8 +4,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { LayoutSideNav } from './index';
 
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import * as useAuthModule from '@/context/auth/useAuth';
 import { Role } from '@/context/auth/types';
+import * as useAuthModule from '@/context/auth/useAuth';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import * as routePathsModule from '@/routes/routePaths';
 

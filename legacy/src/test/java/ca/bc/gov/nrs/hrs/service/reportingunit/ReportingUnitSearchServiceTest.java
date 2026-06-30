@@ -59,20 +59,19 @@ class ReportingUnitSearchServiceTest {
     @DisplayName("should call repository and return mapped page")
     void shouldCallRepository_andReturnMappedPage() {
       // Arrange
-      ReportingUnitSearchParametersDto filters =
-          new ReportingUnitSearchParametersDto();
-      PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
-      
       ReportingUnitSearchProjection projection =
           mock(ReportingUnitSearchProjection.class);
       ReportingUnitSearchResultDto dto =
           mock(ReportingUnitSearchResultDto.class);
-          
+
       List<ReportingUnitSearchProjection> projections = new ArrayList<>();
       projections.add(projection);
-      
+
       Page<ReportingUnitSearchProjection> projPage =
           new PageImpl<>(projections);
+      ReportingUnitSearchParametersDto filters =
+          new ReportingUnitSearchParametersDto();
+      PageRequest pageable = PageRequest.of(0, 10, Sort.unsorted());
 
       when(ruRepository.searchReportingUnits(any(), any()))
           .thenReturn(projPage);
@@ -91,8 +90,10 @@ class ReportingUnitSearchServiceTest {
     }
 
     @Test
-    @DisplayName("should replace filter client numbers with user client numbers " +
-        "when filter has NOVALUE")
+    @DisplayName(
+        "should replace filter client numbers with user client numbers "
+            + "when filter has NOVALUE"
+    )
     void shouldReplaceClientNumbers_whenFilterHasNoValue() {
       // Arrange
       ReportingUnitSearchParametersDto filters =

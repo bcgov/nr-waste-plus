@@ -8,18 +8,20 @@ import {
   useCodesQuery,
   useDistrictOptionsQuery,
   useDistrictVolumeListQuery,
+  useDistrictVolumeTableCreateMutation,
   useForestClientsByNumbersQuery,
   useMyForestClientsQuery,
   useReportingUnitCreateMutation,
-  useReportingUnitDetailsQuery,
   useReportingUnitExpandQuery,
   useSearchReportingUnitsQuery,
+  useDistrictVolumeTableDetailQuery,
   useWasteSearchFilterOptionsQueries,
 } from './hooks';
-
 import { queryKeys } from './queryKeys';
+
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 import API from '@/services/APIs';
+import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
@@ -61,6 +63,13 @@ vi.mock('@/services/APIs', () => ({
         ],
         page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
       }),
+      getDistrictVolumeTableDetail: vi.fn().mockResolvedValue({
+        area: 'INTERIOR',
+        id: 42,
+        startDate: '2026-06-01',
+        zones: [],
+      }),
+      createDistrictVolumeTable: vi.fn().mockResolvedValue(444),
     },
   },
 }));
@@ -174,15 +183,6 @@ describe('react-query hooks', () => {
           }),
         { wrapper: createWrapper() },
       );
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    });
-  });
-
-  describe('useReportingUnitDetailsQuery', () => {
-    it('should return reporting unit details', async () => {
-      const { result } = renderHook(() => useReportingUnitDetailsQuery(123), {
-        wrapper: createWrapper(),
-      });
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
     });
   });
@@ -442,31 +442,6 @@ describe('react-query hooks', () => {
       );
     });
 
-    it('useReportingUnitDetailsQuery should dispatch error notification when notificationTarget is provided', async () => {
-      const mockError = new Error('Not found');
-      (mockError as unknown as { body: { detail: string; title: string } }).body = {
-        detail: 'Reporting unit not found',
-        title: 'Not Found',
-      };
-      vi.mocked(API.reportingUnit.getReportingUnit).mockRejectedValueOnce(mockError);
-
-      const { result } = renderHook(
-        () => useReportingUnitDetailsQuery(999, { notificationTarget: 'details' }),
-        {
-          wrapper: createWrapper(),
-        },
-      );
-
-      await waitFor(() => expect(result.current.isError).toBe(true));
-      expect(sendEvent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          eventType: 'error',
-          eventTarget: 'details',
-          description: 'Reporting unit not found',
-        }),
-      );
-    });
-
     it('useReportingUnitCreateMutation should dispatch error notification when notificationTarget is provided', async () => {
       const mockError = new Error('Create failed');
       (mockError as unknown as { body: { detail: string; title: string } }).body = {
@@ -504,6 +479,112 @@ describe('react-query hooks', () => {
         }),
       );
     });
+
+    it('should use fallback description when problem details exist but detail is empty', async () => {
+      const mockError = new Error('API Error');
+      (mockError as unknown as { body: { detail?: string; title: string } }).body = {
+        title: 'Bad Request',
+      };
+      vi.mocked(API.codes.getSamplingOptions).mockRejectedValueOnce(mockError);
+
+      renderHook(() => useCodesQuery('samplingOptions', { notificationTarget: 'test-panel' }), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() =>
+        expect(sendEvent).toHaveBeenCalledWith(
+          expect.objectContaining({
+            description: 'No additional details provided.',
+            title: 'Bad Request',
+          }),
+        ),
+      );
+    });
+
+    it('should use fallback title when problem details exist but title is empty', async () => {
+      const mockError = new Error('API Error');
+      (mockError as unknown as { body: { detail: string; title?: string } }).body = {
+        detail: 'Something went wrong',
+      };
+      vi.mocked(API.codes.getDistricts).mockRejectedValueOnce(mockError);
+
+      renderHook(() => useCodesQuery('districtOptions', { notificationTarget: 'panel' }), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() =>
+        expect(sendEvent).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'Request failed',
+          }),
+        ),
+      );
+    });
+
+    it('useWasteSearchFilterOptionsQueries should not send notifications when notificationTarget is omitted', async () => {
+      const mockError = new Error('API Error');
+      vi.mocked(API.codes.getSamplingOptions).mockRejectedValueOnce(mockError);
+
+      renderHook(() => useWasteSearchFilterOptionsQueries(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(API.codes.getSamplingOptions).toHaveBeenCalled();
+      });
+
+      expect(sendEvent).not.toHaveBeenCalled();
+    });
+
+    it('useCodesQuery should not send duplicate notifications for the same error via errorUpdatedAt dedup', async () => {
+      const mockError = new Error('API Error');
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Error detail',
+        title: 'Title',
+      };
+      vi.mocked(API.codes.getSamplingOptions).mockRejectedValueOnce(mockError);
+
+      const { rerender } = renderHook(
+        () => useCodesQuery('samplingOptions', { notificationTarget: 'panel' }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(sendEvent).toHaveBeenCalledTimes(1));
+
+      // Re-render with same notification target — should NOT send another event
+      // because errorUpdatedAt hasn't changed
+      rerender();
+
+      // Give the effect time to run
+      await vi.waitFor(() => {
+        expect(sendEvent).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('useMyForestClientsQuery should not send notification when notificationTarget is omitted', async () => {
+      const mockError = new Error('API Error');
+      vi.mocked(API.forestclient.searchMyForestClients).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(() => useMyForestClientsQuery('filter', 0, 10), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(sendEvent).not.toHaveBeenCalled();
+    });
+
+    it('useSearchReportingUnitsQuery should not send notification when notificationTarget is omitted', async () => {
+      const mockError = new Error('Search failed');
+      vi.mocked(API.search.searchReportingUnit).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(
+        () => useSearchReportingUnitsQuery({ filters: {}, page: 0, size: 10, sort: {} }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(sendEvent).not.toHaveBeenCalled();
+    });
   });
 
   describe('query option overrides', () => {
@@ -518,14 +599,6 @@ describe('react-query hooks', () => {
 
     it('useDistrictOptionsQuery should accept query option overrides', async () => {
       const { result } = renderHook(() => useDistrictOptionsQuery({ enabled: true }), {
-        wrapper: createWrapper(),
-      });
-
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    });
-
-    it('useReportingUnitDetailsQuery should accept query option overrides', async () => {
-      const { result } = renderHook(() => useReportingUnitDetailsQuery(123, { staleTime: 30000 }), {
         wrapper: createWrapper(),
       });
 
@@ -590,6 +663,22 @@ describe('react-query hooks', () => {
       await waitFor(() => expect(result.current.isError).toBe(true));
       // Without notificationTarget, no event should be sent
       expect(sendEvent).not.toHaveBeenCalled();
+    });
+
+    it('should invoke queryFn guard clause when refetch is called with null IDs', async () => {
+      const { result } = renderHook(() => useReportingUnitExpandQuery('row-1', null, null), {
+        wrapper: createWrapper(),
+      });
+
+      // Query starts disabled
+      expect(result.current.fetchStatus).toBe('idle');
+
+      // refetch() ignores the enabled flag and calls queryFn, which throws
+      // because the guard clause catches null IDs. TanStack Query catches
+      // the error and sets status to 'error' rather than rejecting.
+      const refetchResult = await result.current.refetch();
+      expect(refetchResult.status).toBe('error');
+      expect(refetchResult.error).toBeDefined();
     });
   });
 
@@ -691,11 +780,7 @@ describe('react-query hooks', () => {
 
     it('should accept query option overrides', async () => {
       const { result } = renderHook(
-        () =>
-          useDistrictVolumeListQuery(
-            { page: 0, size: 10, sort: {} },
-            { staleTime: 60000 },
-          ),
+        () => useDistrictVolumeListQuery({ page: 0, size: 10, sort: {} }, { staleTime: 60000 }),
         { wrapper: createWrapper() },
       );
 
@@ -727,6 +812,62 @@ describe('react-query hooks', () => {
           description: 'Failed to load district volumes',
         }),
       );
+    });
+  });
+
+  describe('useDistrictVolumeTableDetailQuery', () => {
+    it('should return district volume table detail', async () => {
+      const { result } = renderHook(() => useDistrictVolumeTableDetailQuery(42), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(result.current.data).toBeDefined();
+      expect(API.districtVolume.getDistrictVolumeTableDetail).toHaveBeenCalledWith(42);
+    });
+
+    it('should support query option overrides', async () => {
+      const { result } = renderHook(
+        () => useDistrictVolumeTableDetailQuery(42, { staleTime: 60000 }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    });
+
+    it('should dispatch error notification when notificationTarget is provided', async () => {
+      const mockError = new Error('Detail fetch failed');
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Volume table not found',
+        title: 'Not Found',
+      };
+      vi.mocked(API.districtVolume.getDistrictVolumeTableDetail).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(
+        () => useDistrictVolumeTableDetailQuery(999, { notificationTarget: 'dv-detail-panel' }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(sendEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: 'error',
+          eventTarget: 'dv-detail-panel',
+          description: 'Volume table not found',
+        }),
+      );
+    });
+
+    it('should not dispatch notification when notificationTarget is omitted on error', async () => {
+      const mockError = new Error('Detail fetch failed');
+      vi.mocked(API.districtVolume.getDistrictVolumeTableDetail).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(() => useDistrictVolumeTableDetailQuery(999), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(sendEvent).not.toHaveBeenCalled();
     });
   });
 
@@ -763,6 +904,199 @@ describe('react-query hooks', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
       expect(result.current.data).toHaveLength(2);
+    });
+
+    it('should return empty array when queryFn runs with empty clientCode via fetchQuery', async () => {
+      const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+      const data = await qc.fetchQuery({
+        queryKey: queryKeys.forestClient.lookupByClientCode(''),
+        queryFn: async () => {
+          const clientCode = '';
+          if (!clientCode) {
+            return [];
+          }
+          return (await API.forestclient.searchForestClients(clientCode, 0, 1)).map(
+            forestClientAutocompleteResult2CodeDescription,
+          );
+        },
+      });
+
+      expect(data).toEqual([]);
+    });
+
+    it('should return empty array when refetch is called with empty clientCode', async () => {
+      const { result } = renderHook(() => useClientLookupQuery('', true), {
+        wrapper: createWrapper(),
+      });
+
+      // Query is disabled because clientCode is empty string
+      expect(result.current.fetchStatus).toBe('idle');
+
+      // refetch() ignores enabled flag, invokes queryFn which returns [] for empty clientCode
+      const { data } = await result.current.refetch();
+      expect(data).toEqual([]);
+    });
+  });
+
+  describe('useDistrictVolumeTableCreateMutation', () => {
+    const validCreateRequest = {
+      area: 'INTERIOR' as const,
+      startDate: '2026-06-01',
+      tableLevelFactor: 1.5,
+      tableData: {
+        type: 'INTERIOR' as const,
+        zones: [
+          {
+            name: 'Dry belt' as const,
+            districts: [
+              {
+                code: 'DKM',
+                avoidableSawlog: 10,
+                avoidableGrade4: 5,
+                unavoidableGrade4: 3,
+                total: 18,
+              },
+            ],
+          },
+        ],
+        formulas: {},
+      },
+    };
+
+    it('should call createDistrictVolumeTable on mutate', async () => {
+      const { result } = renderHook(() => useDistrictVolumeTableCreateMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        await result.current.mutateAsync(validCreateRequest);
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(API.districtVolume.createDistrictVolumeTable).toHaveBeenCalledWith(validCreateRequest);
+    });
+
+    it('should return the created district volume ID', async () => {
+      const { result } = renderHook(() => useDistrictVolumeTableCreateMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      let createdId: number | undefined;
+      await act(async () => {
+        createdId = await result.current.mutateAsync(validCreateRequest);
+      });
+
+      expect(typeof createdId).toBe('number');
+      expect(createdId).toBe(444);
+    });
+
+    it('should invoke onSuccess callback with the created ID', async () => {
+      const onSuccessMock = vi.fn();
+      const { result } = renderHook(
+        () => useDistrictVolumeTableCreateMutation({ onSuccess: onSuccessMock }),
+        { wrapper: createWrapper() },
+      );
+
+      await act(async () => {
+        await result.current.mutateAsync(validCreateRequest);
+      });
+
+      expect(onSuccessMock).toHaveBeenCalledWith(444);
+      expect(onSuccessMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle mutation errors without throwing', async () => {
+      const mockError = new Error('Create failed');
+      vi.mocked(API.districtVolume.createDistrictVolumeTable).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(() => useDistrictVolumeTableCreateMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync(validCreateRequest);
+        } catch (_e) {
+          // Error is expected and caught
+        }
+      });
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true);
+      });
+    });
+
+    it('should support notificationTarget for error notifications', async () => {
+      const mockError = new Error('Create failed');
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Duplicate volume table',
+        title: 'Conflict',
+      };
+      vi.mocked(API.districtVolume.createDistrictVolumeTable).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(
+        () => useDistrictVolumeTableCreateMutation({ notificationTarget: 'dv-create' }),
+        { wrapper: createWrapper() },
+      );
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync(validCreateRequest);
+        } catch (_e) {
+          // expected
+        }
+      });
+
+      await waitFor(() => expect(sendEvent).toHaveBeenCalled());
+      expect(sendEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: 'error',
+          eventTarget: 'dv-create',
+          description: 'Duplicate volume table',
+        }),
+      );
+    });
+
+    it('should support both onSuccess and notificationTarget together', async () => {
+      const onSuccessMock = vi.fn();
+      const { result } = renderHook(
+        () =>
+          useDistrictVolumeTableCreateMutation({
+            onSuccess: onSuccessMock,
+            notificationTarget: 'dv-create',
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      await act(async () => {
+        await result.current.mutateAsync(validCreateRequest);
+      });
+
+      expect(onSuccessMock).toHaveBeenCalledWith(444);
+    });
+
+    it('should not dispatch notification when notificationTarget is omitted', async () => {
+      const mockError = new Error('Create failed');
+      vi.mocked(API.districtVolume.createDistrictVolumeTable).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(() => useDistrictVolumeTableCreateMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync(validCreateRequest);
+        } catch (_e) {
+          // expected
+        }
+      });
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(sendEvent).not.toHaveBeenCalled();
     });
   });
 });

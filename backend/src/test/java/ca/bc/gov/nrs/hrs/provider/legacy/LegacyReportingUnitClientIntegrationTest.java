@@ -84,7 +84,8 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
   @Test
   @DisplayName("shouldCreateReportingUnit_whenLegacyReturnsId")
   void shouldCreateReportingUnit_whenLegacyReturnsId() {
-    CreateReportingUnitRequestDto request = new CreateReportingUnitRequestDto( "00012797", "DND", "S01", null);
+    CreateReportingUnitRequestDto request =
+        new CreateReportingUnitRequestDto("00012797", "DND", "S01", null);
 
     // Legacy returns a numeric id in the body
     clientApiStub.stubFor(
@@ -100,14 +101,16 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
   @Test
   @DisplayName("shouldThrowUnretriableException_whenLegacyReturnsError")
   void shouldThrowUnretriableException_whenLegacyReturnsError() {
-    CreateReportingUnitRequestDto request = new CreateReportingUnitRequestDto( "00012797", "DND", "S01", null);
+    CreateReportingUnitRequestDto request =
+        new CreateReportingUnitRequestDto("00012797", "DND", "S01", null);
 
     clientApiStub.stubFor(
         post(urlPathEqualTo("/api/reporting-units"))
             .willReturn(serviceUnavailable())
     );
 
-    var ex = assertThrows(ca.bc.gov.nrs.hrs.exception.UnretriableException.class,
+    var ex = assertThrows(
+        ca.bc.gov.nrs.hrs.exception.UnretriableException.class,
         () -> legacyReportingUnitClient.createReportingUnit(request));
 
     assertEquals(503, ex.getStatusCode().value());
@@ -165,7 +168,8 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
   ) {
     clientApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units/ex/" + ruId + "/" + wasteAssessmentAreaId))
-            .willReturn(stubResponse));
+            .willReturn(stubResponse)
+    );
 
     var value = legacyReportingUnitClient.getSearchExpanded(ruId, wasteAssessmentAreaId);
     assertNotNull(value);
@@ -217,21 +221,85 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
 
   private static Stream<Arguments> expandedDetailsArguments() {
     ReportingUnitSearchExpandedDto fullDto = new ReportingUnitSearchExpandedDto(
-        201L, "LIC123", "CP01", "TMK456", true, false,
-        new CodeDescriptionDto("APP", "Approved"), List.of(), 12.5, 12.0, "submitter1", null,
-        "Some comments", 3L, 0L);
+        201L,
+        "LIC123",
+        "CP01",
+        "TMK456",
+        true,
+        false,
+        new CodeDescriptionDto("APP", "Approved"),
+        List.of(),
+        12.5,
+        12.0,
+        "submitter1",
+        null,
+        "Some comments",
+        3L,
+        0L);
     ReportingUnitSearchExpandedDto emptyDto = new ReportingUnitSearchExpandedDto(
-        202L, null, null, null, false, false,
-        new CodeDescriptionDto("APP", "Approved"), List.of(), 0.0, 0.0, null, null, null, 0L, 0L);
+        202L,
+        null,
+        null,
+        null,
+        false,
+        false,
+        new CodeDescriptionDto("APP", "Approved"),
+        List.of(),
+        0.0,
+        0.0,
+        null,
+        null,
+        null,
+        0L,
+        0L);
     ReportingUnitSearchExpandedDto fallbackDto = new ReportingUnitSearchExpandedDto(
-        203L, null, null, null, false, false,
-        new CodeDescriptionDto("APP", "Approved"), List.of(), 0.0, 0.0, null, null, null, 0L, 0L);
+        203L,
+        null,
+        null,
+        null,
+        false,
+        false,
+        new CodeDescriptionDto("APP", "Approved"),
+        List.of(),
+        0.0,
+        0.0,
+        null,
+        null,
+        null,
+        0L,
+        0L);
     ReportingUnitSearchExpandedDto nullDto = new ReportingUnitSearchExpandedDto(
-        null, null, null, null, false, false, new CodeDescriptionDto("APP", "Approved"), List.of(),
-        0.0, 0.0, null, null, null, 0L, 0L);
+        null,
+        null,
+        null,
+        null,
+        false,
+        false,
+        new CodeDescriptionDto("APP", "Approved"),
+        List.of(),
+        0.0,
+        0.0,
+        null,
+        null,
+        null,
+        0L,
+        0L);
     ReportingUnitSearchExpandedDto negativeDto = new ReportingUnitSearchExpandedDto(
-        -2L, null, null, null, false, false, new CodeDescriptionDto("APP", "Approved"), List.of(),
-        0.0, 0.0, null, null, null, 0L, 0L);
+        -2L,
+        null,
+        null,
+        null,
+        false,
+        false,
+        new CodeDescriptionDto("APP", "Approved"),
+        List.of(),
+        0.0,
+        0.0,
+        null,
+        null,
+        null,
+        0L,
+        0L);
 
     return Stream.of(
         Arguments.argumentSet("101: Full details", 101L, 201L, okJson(TestConstants.EXPANDED_101),

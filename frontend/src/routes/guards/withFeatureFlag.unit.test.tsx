@@ -74,6 +74,7 @@ describe('withFeatureFlag', () => {
     });
 
     it('should throw notFound error when flag is not set in featureFlags', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const Guarded = withFeatureFlag(DummyPage, 'nonexistent-flag' as any);
       expect(() => render(<Guarded />)).toThrow('NOT_FOUND');
     });

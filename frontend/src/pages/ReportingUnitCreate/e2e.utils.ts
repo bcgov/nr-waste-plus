@@ -1,6 +1,30 @@
 import { expect, type Page } from '@playwright/test';
 
 /**
+ * Blurs any focused element to avoid focus-driven race conditions in
+ * TanStack Form before clicking a submit button.
+ *
+ * When a Carbon ComboBox has focus and the submit button is clicked, the
+ * browser fires `blur` on the ComboBox **before** the `click` event. The
+ * blur triggers the field's `onBlurAsync` validator, which sets
+ * `isValidating = true` synchronously in the form store. By the time the
+ * click handler runs `form.handleSubmit()`, `canSubmit` is `false`, and
+ * the submission is silently aborted.
+ *
+ * Blurring the active element first lets validators settle so the submit
+ * button is truly enabled when clicked.
+ *
+ * @param page Playwright page.
+ */
+export const blurActiveElement = async (page: Page): Promise<void> => {
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  });
+};
+
+/**
  * Selects an option from a Carbon ComboBox by clicking the option directly.
  * This avoids Carbon keyboard-navigation quirks that can select the wrong item.
  *
@@ -64,9 +88,14 @@ export const fillFormAndSubmit = async (page: Page, userType: string): Promise<v
   // Select client
   await selectClient(page, userType);
 
-  // Pre-focus the submit button to flush blur-triggered async validators first.
+  // Blur any focused element first to let field validators settle
+  // (avoids a TanStack Form race where blur → onBlurAsync → isValidating →
+  // canSubmit=false).
+  await blurActiveElement(page);
+
+  // Wait for the submit button to be enabled (all field validators have passed).
   const submitButton = page.getByRole('button', { name: 'Create' });
-  await submitButton.focus();
   await expect(submitButton).toBeEnabled({ timeout: 5000 });
+
   await submitButton.click();
 };

@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.repository;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,9 +14,9 @@ import org.springframework.stereotype.Repository;
 
 /**
  * Repository for managing {@link DistrictVolumeEntity} records.
- *
- * <p>Provides standard CRUD operations through {@link JpaRepository} and
- * custom queries used by district volume business logic.
+ * 
+ * <p>Provides standard JPA operations together with custom queries used by
+ * district volume business logic.
  */
 @Repository
 public interface DistrictVolumeRepository
@@ -24,12 +25,11 @@ public interface DistrictVolumeRepository
   /**
    * Finds the most recent district volume entry for the specified area.
    *
-   * <p>Used when creating a new entry to determine the end date of the
-   * previously active record for the same area.
+   * <p>Used to retrieve the latest configured record, regardless of whether it is the
+   * currently active record or a previously active record for the same area.
    *
    * @param area area for which the latest entry should be retrieved
-   * @return the most recent entry for the area, or an empty {@link Optional}
-   *         if none exists
+   * @return the most recent entry for the area, or an empty {@link Optional} if none exists
    */
   Optional<DistrictVolumeEntity> findTopByAreaOrderByStartDateDesc(Area area);
 
@@ -56,6 +56,14 @@ public interface DistrictVolumeRepository
           + "AND (d.endDate IS NULL OR d.endDate >= :currentDate)")
   Optional<DistrictVolumeEntity> findActiveByArea(
       @Param("area") Area area,
-      @Param("currentDate") LocalDate currentDate
-  );
+      @Param("currentDate") LocalDate currentDate);
+  
+  /**
+   * Finds all open-ended district volume entries for the specified area, ordered by most recent
+   * start date first.
+   *
+   * @param area area for which open-ended entries should be retrieved
+   * @return ordered list of open-ended entries for the area
+   */
+  List<DistrictVolumeEntity> findByAreaAndEndDateIsNullOrderByStartDateDesc(Area area);
 }

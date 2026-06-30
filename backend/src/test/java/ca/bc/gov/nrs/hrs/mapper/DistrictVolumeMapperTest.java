@@ -19,9 +19,8 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Zone;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -29,8 +28,8 @@ import org.junit.jupiter.api.Test;
 
 class DistrictVolumeMapperTest {
 
-  private static final OffsetDateTime MOCK_UPLOAD_TIME = 
-      OffsetDateTime.of(2026, Month.JUNE.getValue(), 1, 12, 0, 0, 0, ZoneOffset.UTC);
+  private static final LocalDateTime MOCK_UPLOAD_TIME = 
+      LocalDateTime.of(2026, Month.JUNE, 1, 12, 0, 0);
 
   @Test
   @DisplayName("Should map Entity to ListItemDto correctly")
@@ -159,7 +158,7 @@ class DistrictVolumeMapperTest {
     entity.setStartDate(LocalDate.of(2026, Month.MARCH, 1));
     entity.setTableLevelFactor(new BigDecimal("1.200"));
     entity.setCreatedBy("MAPPER_TEST");
-    entity.setDateOfUpload(OffsetDateTime.now());
+    entity.setDateOfUpload(LocalDateTime.now());
     entity.setTableData(tableData);
 
     // Act
@@ -203,7 +202,7 @@ class DistrictVolumeMapperTest {
     entity.setTableLevelFactor(new BigDecimal("1.050"));
     entity.setHeliMultiplier(new BigDecimal("1.500"));
     entity.setCreatedBy("MAPPER_TEST");
-    entity.setDateOfUpload(OffsetDateTime.now());
+    entity.setDateOfUpload(LocalDateTime.now());
     entity.setTableData(tableData);
 
     // Act
@@ -378,7 +377,7 @@ class DistrictVolumeMapperTest {
     entity.setStartDate(LocalDate.of(2026, Month.JANUARY, 1));
     entity.setTableLevelFactor(new BigDecimal("1.000"));
     entity.setCreatedBy("TESTER");
-    entity.setDateOfUpload(OffsetDateTime.now(ZoneOffset.UTC));
+    entity.setDateOfUpload(LocalDateTime.now());
     entity.setTableData(tableData);
 
     // Act

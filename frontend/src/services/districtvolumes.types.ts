@@ -64,7 +64,9 @@ export const districtVolumeListItemSchema = z.object({
 });
 export type DistrictVolumeListItem = z.infer<typeof districtVolumeListItemSchema>;
 
-export const districtVolumeListResponseSchema = pageableResponseSchema(districtVolumeListItemSchema);
+export const districtVolumeListResponseSchema = pageableResponseSchema(
+  districtVolumeListItemSchema,
+);
 export type DistrictVolumeListResponse = z.infer<typeof districtVolumeListResponseSchema>;
 
 // ─── DETAIL RESPONSE SCHEMA (DISCRIMINATED UNION) ───────────────────────────

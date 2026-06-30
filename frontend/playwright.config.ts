@@ -118,7 +118,7 @@ export default defineConfig({
   globalTeardown: './src/config/tests/browser.teardown.ts',
   projects,
   webServer: {
-    command: 'npm run build && npm run serve:e2e',
+    command: 'npm run serve:e2e:test',
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

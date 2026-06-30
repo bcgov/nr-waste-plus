@@ -11,7 +11,7 @@ jobs:
     name: Frontend UI Tests
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     container:
-      image: mcr.microsoft.com/playwright:v1.61.0-noble
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
     permissions:
       contents: write
       checks: write
@@ -33,7 +33,7 @@ jobs:
       VITE_BCEID_HELP: ${{ secrets.VITE_BCEID_HELP }}
       VITE_IDIR_HELP: ${{ secrets.VITE_IDIR_HELP }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Fix safe.directory for GitHub Actions
         run: git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus

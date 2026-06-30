@@ -14,9 +14,8 @@ import org.springframework.format.annotation.DateTimeFormat;
  * Search parameters used when searching for reporting units.
  *
  * <p>This DTO captures the set of filters the frontend can supply when querying the
- * reporting-unit search endpoint. Several getters are overridden to provide safe, default values
- * when list-based filters are null or empty.</p> Some getters are overridden to provide default
- * values if the lists are null or empty.
+ * reporting-unit search endpoint. Several getters are overridden to provide safe default values
+ * when list-based filters are null or empty.
  */
 @Data
 @NoArgsConstructor
@@ -124,6 +123,14 @@ public class ReportingUnitSearchParametersDto {
         : LegacyConstants.NOVALUE;
   }
 
+  /**
+   * Returns the reporting-unit ID filter values.
+   *
+   * <p>If the underlying list is {@code null} or empty, a single sentinel value of {@code -1L}
+   * is returned so downstream queries can treat the filter as absent.
+   *
+   * @return the reporting-unit IDs or a singleton list containing {@code -1L} when absent
+   */
   public List<Long> getReportingUnitIds() {
     if (reportingUnitIds == null || reportingUnitIds.isEmpty()) {
       return List.of(-1L);

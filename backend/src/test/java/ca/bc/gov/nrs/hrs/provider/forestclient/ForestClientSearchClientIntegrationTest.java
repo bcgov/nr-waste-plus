@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.hrs.provider.forestclient;
 
 import static ca.bc.gov.nrs.hrs.BackendConstants.X_TOTAL_COUNT;
-import static ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.serviceUnavailable;
@@ -108,7 +107,8 @@ class ForestClientSearchClientIntegrationTest extends AbstractTestContainerInteg
             0,
             10,
             "INDIA",
-            okJson(ONE_BY_VALUE_LIST).withHeader(X_TOTAL_COUNT, "1"),
+            okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST)
+                .withHeader(X_TOTAL_COUNT, "1"),
             1
         ),
         Arguments.argumentSet(
@@ -116,7 +116,8 @@ class ForestClientSearchClientIntegrationTest extends AbstractTestContainerInteg
             0,
             10,
             "SAMPLIBC",
-            okJson(ONE_BY_VALUE_LIST).withHeader(X_TOTAL_COUNT, "1"),
+            okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST)
+                .withHeader(X_TOTAL_COUNT, "1"),
             1
         ),
         Arguments.argumentSet(
@@ -124,7 +125,8 @@ class ForestClientSearchClientIntegrationTest extends AbstractTestContainerInteg
             0,
             10,
             "00000001",
-            okJson(ONE_BY_VALUE_LIST).withHeader(X_TOTAL_COUNT, "1"),
+            okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST)
+                .withHeader(X_TOTAL_COUNT, "1"),
             1
         ),
         Arguments.argumentSet(
@@ -132,7 +134,8 @@ class ForestClientSearchClientIntegrationTest extends AbstractTestContainerInteg
             0,
             10,
             "1",
-            okJson(ONE_BY_VALUE_LIST).withHeader(X_TOTAL_COUNT, "1"),
+            okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST)
+                .withHeader(X_TOTAL_COUNT, "1"),
             1
         )
     );

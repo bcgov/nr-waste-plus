@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.6</version>
+        <version>4.1.0</version>
         <relativePath/> </parent>
     <groupId>ca.bc.gov.nrs</groupId>
     <artifactId>nr-waste-plus-backend</artifactId>
@@ -345,7 +345,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.14</version>
+                <version>0.8.15</version>
                 <configuration>
                     <skip>${jacoco.skip}</skip>
                     <excludes>
@@ -499,7 +499,7 @@
                     <dependency>
                         <groupId>com.puppycrawl.tools</groupId>
                         <artifactId>checkstyle</artifactId>
-                        <version>13.5.0</version>
+                        <version>13.6.0</version>
                     </dependency>
                 </dependencies>
                 <configuration>

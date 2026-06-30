@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.hrs.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDataDto;
@@ -15,15 +17,15 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -35,16 +37,14 @@ import org.springframework.web.server.ResponseStatusException;
 @DisplayName("Unit Test | District Volume Service")
 class DistrictVolumeServiceTest {
 
-  private static final OffsetDateTime MOCK_UPLOAD_TIME =
-      OffsetDateTime.of(
+  private static final LocalDateTime MOCK_UPLOAD_TIME =
+      LocalDateTime.of(
           2026,
-          Month.JANUARY.getValue(),
+          Month.JANUARY,
           1,
           12,
           0,
-          0,
-          0,
-          ZoneOffset.UTC);
+          0);
 
   private static final LocalDate MOCK_START_DATE =
       LocalDate.of(2026, Month.FEBRUARY, 1);
@@ -334,6 +334,8 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity savedEntity = buildEntity(Area.INTERIOR);
     savedEntity.setTableLevelFactor(new BigDecimal("1.150"));
 
+    when(districtVolumeRepository.findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.INTERIOR))
+        .thenReturn(Collections.emptyList());
     when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
         .thenReturn(savedEntity);
 
@@ -346,6 +348,143 @@ class DistrictVolumeServiceTest {
     assertThat(result.area()).isEqualTo("INTERIOR");
     assertThat(result.tableLevelFactor())
         .isEqualTo(new BigDecimal("1.150"));
+  }
+
+  @Test
+  @DisplayName(
+      "createDistrictVolume — should close the existing open-ended row before saving the new row")
+  void createDistrictVolume_closesExistingOpenEndedRow_beforeSavingNewRow() {
+
+    InteriorDataDto interiorData =
+        new InteriorDataDto(
+            Collections.emptyList(),
+            Collections.emptyMap());
+
+    LocalDate newStartDate = LocalDate.of(9999, Month.JANUARY, 1);
+
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "INTERIOR",
+            newStartDate,
+            new BigDecimal("1.150"),
+            null,
+            interiorData);
+
+    DistrictVolumeEntity existingOpenEntry = buildEntity(Area.INTERIOR);
+    existingOpenEntry.setStartDate(LocalDate.of(2026, Month.JANUARY, 1));
+    existingOpenEntry.setEndDate(null);
+
+    DistrictVolumeEntity savedEntity = buildEntity(Area.INTERIOR);
+    savedEntity.setId(2L);
+    savedEntity.setStartDate(newStartDate);
+    savedEntity.setEndDate(null);
+    savedEntity.setTableLevelFactor(new BigDecimal("1.150"));
+
+    when(districtVolumeRepository.findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.INTERIOR))
+        .thenReturn(List.of(existingOpenEntry));
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
+        .thenReturn(existingOpenEntry, savedEntity);
+
+    DistrictVolumeDetailDto result =
+        districtVolumeService.createDistrictVolume(
+            "TEST_USER",
+            createDto);
+
+    ArgumentCaptor<DistrictVolumeEntity> saveCaptor =
+        ArgumentCaptor.forClass(DistrictVolumeEntity.class);
+
+    verify(districtVolumeRepository).findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.INTERIOR);
+    verify(districtVolumeRepository, org.mockito.Mockito.times(2)).save(saveCaptor.capture());
+
+    List<DistrictVolumeEntity> savedEntities = saveCaptor.getAllValues();
+
+    assertThat(savedEntities.get(0)).isSameAs(existingOpenEntry);
+    assertThat(savedEntities.get(0).getEndDate())
+        .isEqualTo(newStartDate.minusDays(1));
+
+    assertThat(savedEntities.get(1).getArea()).isEqualTo(Area.INTERIOR);
+    assertThat(savedEntities.get(1).getStartDate()).isEqualTo(newStartDate);
+    assertThat(savedEntities.get(1).getEndDate()).isNull();
+    assertThat(savedEntities.get(1).getCreatedBy()).isEqualTo("TEST_USER");
+    assertThat(savedEntities.get(1).getTableLevelFactor())
+        .isEqualTo(new BigDecimal("1.150"));
+
+    assertThat(result.id()).isEqualTo(2L);
+    assertThat(result.startDate()).isEqualTo(newStartDate);
+  }
+
+  @Test
+  @DisplayName(
+      "createDistrictVolume — should throw 422 when start date is not after the existing open-ended row")
+  void createDistrictVolume_throws422_whenStartDateIsNotAfterExistingOpenEndedRow() {
+
+    InteriorDataDto interiorData =
+        new InteriorDataDto(
+            Collections.emptyList(),
+            Collections.emptyMap());
+
+    LocalDate existingStartDate = LocalDate.now().plusDays(5);
+
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "INTERIOR",
+            existingStartDate,
+            new BigDecimal("1.150"),
+            null,
+            interiorData);
+
+    DistrictVolumeEntity existingOpenEntry = buildEntity(Area.INTERIOR);
+    existingOpenEntry.setStartDate(existingStartDate);
+
+    when(districtVolumeRepository.findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.INTERIOR))
+        .thenReturn(List.of(existingOpenEntry));
+
+    assertThatThrownBy(
+            () -> districtVolumeService.createDistrictVolume(
+                "TEST_USER",
+                createDto))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("Start date must be after the most recent existing start date");
+
+    verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
+  }
+
+  @Test
+  @DisplayName(
+      "createDistrictVolume — should throw 409 when multiple open-ended rows exist for area")
+  void createDistrictVolume_throws409_whenMultipleOpenEndedRowsExist() {
+
+    InteriorDataDto interiorData =
+        new InteriorDataDto(
+            Collections.emptyList(),
+            Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "INTERIOR",
+            LocalDate.of(9999, Month.JANUARY, 1),
+            new BigDecimal("1.150"),
+            null,
+            interiorData);
+
+    DistrictVolumeEntity newestOpenEntry = buildEntity(Area.INTERIOR);
+    newestOpenEntry.setStartDate(LocalDate.of(2026, Month.FEBRUARY, 1));
+
+    DistrictVolumeEntity olderOpenEntry = buildEntity(Area.INTERIOR);
+    olderOpenEntry.setId(2L);
+    olderOpenEntry.setStartDate(LocalDate.of(2026, Month.JANUARY, 1));
+
+    when(districtVolumeRepository.findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.INTERIOR))
+        .thenReturn(List.of(newestOpenEntry, olderOpenEntry));
+
+    assertThatThrownBy(
+            () -> districtVolumeService.createDistrictVolume(
+                "TEST_USER",
+                createDto))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("multiple open-ended district volume records exist for area INTERIOR");
+
+    verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
   }
 
   @Test
@@ -370,6 +509,8 @@ class DistrictVolumeServiceTest {
     savedEntity.setTableLevelFactor(new BigDecimal("1.200"));
     savedEntity.setHeliMultiplier(new BigDecimal("1.500"));
 
+    when(districtVolumeRepository.findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.COASTAL))
+        .thenReturn(Collections.emptyList());
     when(districtVolumeRepository.save(
             any(DistrictVolumeEntity.class)))
         .thenReturn(savedEntity);

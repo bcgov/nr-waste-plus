@@ -19,6 +19,7 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Zone;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 
@@ -57,7 +58,7 @@ public final class DistrictVolumeMapper {
         entity.getStartDate(),
         entity.getEndDate(),
         entity.getCreatedBy(),
-        entity.getDateOfUpload().toInstant()
+        entity.getDateOfUpload().atOffset(ZoneOffset.UTC).toInstant()
     );
   }
 
@@ -86,7 +87,7 @@ public final class DistrictVolumeMapper {
         entity.getStartDate(),
         entity.getEndDate(),
         entity.getCreatedBy(),
-        entity.getDateOfUpload().toInstant(),
+        entity.getDateOfUpload().atOffset(ZoneOffset.UTC).toInstant(),
         entity.getTableLevelFactor(),
         entity.getHeliMultiplier(),
         tableDataDto

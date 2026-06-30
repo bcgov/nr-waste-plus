@@ -10,8 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.XXssConfig;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 import org.springframework.security.web.header.writers.StaticHeadersWriter;
 import org.springframework.stereotype.Component;
@@ -19,11 +17,9 @@ import org.springframework.stereotype.Component;
 /**
  * Configuration for HTTP security headers applied to the application.
  *
- * <p>
- * This customizer builds a Content-Security-Policy and other security headers.
- * The CSP differs between local and non-local environments to enable development
- * conveniences when needed.
- * </p>
+ * <p>This customizer builds a Content-Security-Policy and other security
+ * headers. The CSP differs between local and non-local environments to enable
+ * development conveniences when needed.</p>
  */
 @RequiredArgsConstructor
 @Component
@@ -53,11 +49,11 @@ public class HeadersSecurityCustomizer
 
   @Override
   public void customize(HeadersConfigurer<HttpSecurity> headerSpec) {
-
     String policyDirectives;
 
     if (SecurityEnvironmentUtil.isLocalEnvironment(environment)) {
-      policyDirectives = String.join("; ",
+      policyDirectives = String.join(
+          "; ",
           "default-src 'self'",
           "connect-src 'self' " + selfUri,
           "script-src 'self' 'unsafe-inline'",
@@ -69,10 +65,12 @@ public class HeadersSecurityCustomizer
           "report-uri " + selfUri
       );
     } else {
-      policyDirectives = String.join("; ",
+      String nonce = UUID.randomUUID().toString();
+      policyDirectives = String.join(
+          "; ",
           "default-src 'none'",
           "connect-src 'self' " + selfUri,
-          "script-src 'strict-dynamic' 'nonce-" + UUID.randomUUID() + "' https:",
+          "script-src 'strict-dynamic' 'nonce-" + nonce + "' https:",
           "object-src 'none'",
           "base-uri 'none'",
           "frame-ancestors 'none'",
@@ -82,13 +80,13 @@ public class HeadersSecurityCustomizer
     }
 
     headerSpec
-        .frameOptions(FrameOptionsConfig::deny)
+        .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
         .contentSecurityPolicy(csp ->
             csp.policyDirectives(policyDirectives))
         .httpStrictTransportSecurity(hsts ->
             hsts.maxAgeInSeconds(Duration.ofDays(30).getSeconds())
                 .includeSubDomains(true))
-        .xssProtection(XXssConfig::disable)
+        .xssProtection(HeadersConfigurer.XXssConfig::disable)
         .contentTypeOptions(Customizer.withDefaults())
         .referrerPolicy(referrer ->
             referrer.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
@@ -111,13 +109,12 @@ public class HeadersSecurityCustomizer
             "same-origin"
         ))
         .addHeaderWriter(new StaticHeadersWriter(
-            "Cache-Control", 
+            "Cache-Control",
             "no-store, no-cache, must-revalidate, max-age=0"
         ))
         .addHeaderWriter(new StaticHeadersWriter(
-            "Pragma", 
+            "Pragma",
             "no-cache"
         ));
   }
-  
 }
