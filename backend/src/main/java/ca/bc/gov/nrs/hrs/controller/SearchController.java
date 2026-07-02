@@ -96,10 +96,16 @@ public class SearchController {
   /**
    * Get the expanded search entry for a specific reporting unit and block.
    *
+   * <p>Validates that the authenticated user has permission to access the specified reporting unit
+   * by checking that the reportingUnitId matches one of the user's authorized client numbers.
+   * </p>
+   *
    * @param jwt             the JWT principal for the authenticated caller
    * @param reportingUnitId the reporting unit ID
    * @param wasteAssessmentAreaId         the waste assessment area ID
    * @return the expanded search entry as a {@link ReportingUnitSearchExpandedDto}
+   * @throws org.springframework.security.access.AccessDeniedException when the user is not
+   *         authorized to access the specified reporting unit
    */
   @GetMapping("/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}")
   public ReportingUnitSearchExpandedDto getSearchExpandedEntry(
@@ -110,6 +116,17 @@ public class SearchController {
     log.info("Fetching expanded search entry for reporting unit ID: {} for: {}",
         reportingUnitId, JwtPrincipalUtil.getUserId(jwt)
     );
+
+    // SECURITY FIX: Validate user authorization to access this reporting unit
+    String reportingUnitIdStr = String.valueOf(reportingUnitId);
+    List<String> userClientNumbers = JwtPrincipalUtil.getClientFromRoles(jwt);
+
+    if (!userClientNumbers.contains(reportingUnitIdStr)) {
+      log.warn("SECURITY: User {} attempted unauthorized access to reporting unit {}",
+          JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
+      throw new org.springframework.security.access.AccessDeniedException(
+          "User is not authorized to access reporting unit: " + reportingUnitId);
+    }
 
     return service.getSearchExpanded(reportingUnitId, wasteAssessmentAreaId);
   }
