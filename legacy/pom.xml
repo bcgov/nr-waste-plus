@@ -88,9 +88,9 @@
         <mapstruct.version>1.6.3</mapstruct.version>
         <tomcat.version>11.0.10</tomcat.version>
         <testcontainers.version>1.21.3</testcontainers.version>
-        <jackson.version>2.21.1</jackson.version>
-        <jackson-bom.version>2.21.1</jackson-bom.version>
-        <spring-security.version>6.5.10</spring-security.version>
+        <jackson.version>2.21.4</jackson.version>
+        <jackson-bom.version>2.21.4</jackson-bom.version>
+        <spring-security.version>6.5.11</spring-security.version>
     </properties>
     <profiles>
         <profile>
