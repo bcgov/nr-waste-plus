@@ -55,7 +55,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
     "@eslint/js": "^9.39.2",
-    "@playwright/test": "1.61.0",
+    "@playwright/test": "1.61.1",
     "@tanstack/eslint-plugin-query": "^5.91.2",
     "@tanstack/react-devtools": "^0.10.5",
     "@tanstack/react-form-devtools": "^0.2.27",
@@ -88,7 +88,7 @@
     "jsdom": "^29.0.1",
     "lint-staged": "^17.0.0",
     "nyc": "^18.0.0",
-    "playwright": "1.61.0",
+    "playwright": "1.61.1",
     "prettier": "^3.7.4",
     "sass": "^1.98.0",
     "typescript": "~5.9.3",
