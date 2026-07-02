@@ -6,12 +6,17 @@ import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.service.ReportingUnitService;
+import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -56,15 +61,34 @@ public class ReportingUnitController {
    * <p>Returns HTTP 404 when {@link FeatureFlag#REPORTING_UNIT_DETAILS_ENABLED} is
    * disabled.</p>
    *
+   * <p>Validates that the authenticated user has permission to access the specified
+   * reporting unit by checking that the reportingUnitId matches one of the user's
+   * authorized client numbers.</p>
+   *
+   * @param jwt the JWT principal for the authenticated caller
    * @param reportingUnitId the unique identifier of the reporting unit to retrieve
    * @return a {@link ReportingUnitDetailsDto} containing the reporting unit's full details
    * @throws NotFoundGenericException when the feature flag is disabled
+   * @throws AccessDeniedException when the user is not authorized to access the reporting unit
    */
   @GetMapping("/{reportingUnitId}")
-  public ReportingUnitDetailsDto getReportingUnitDetails(@PathVariable Long reportingUnitId) {
+  public ReportingUnitDetailsDto getReportingUnitDetails(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable Long reportingUnitId) {
 
     if (!featureFlagsConfiguration.isEnabled(FeatureFlag.REPORTING_UNIT_DETAILS_ENABLED)) {
       throw new NotFoundGenericException("reporting-unit-details");
+    }
+
+    // SECURITY FIX: Validate user authorization to access this reporting unit
+    String reportingUnitIdStr = String.valueOf(reportingUnitId);
+    List<String> userClientNumbers = JwtPrincipalUtil.getClientFromRoles(jwt);
+
+    if (!userClientNumbers.contains(reportingUnitIdStr)) {
+      log.warn("SECURITY: User {} attempted unauthorized access to reporting unit {}",
+          JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
+      throw new AccessDeniedException(
+          "User is not authorized to access reporting unit: " + reportingUnitId);
     }
 
     log.info("Fetching reporting unit details for RU {}", reportingUnitId);
