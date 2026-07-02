@@ -55,8 +55,8 @@ Feature: Simple search
     Given I visit "/search"
     When I click on the "Advanced Search" button
     Then I can read "Advanced search"
-    And I type "2024-01-01" into the "Start date" input
-    And I type "2024-12-31" into the "End date" input
+    And I type "2024/01/01" into the "Start date" input
+    And I type "2024/12/31" into the "End date" input
     Then I search
     And I can read "TOLKO INDUSTRIES LTD."
     And I can read "CANADIAN FOREST PRODUCTS LTD."

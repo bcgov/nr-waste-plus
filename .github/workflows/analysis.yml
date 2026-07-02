@@ -83,7 +83,7 @@ jobs:
         with:
           node-version: "24"
       - name: Run cve-lite-cli SARIF scan (${{ matrix.folder }})
-        run: npx --yes cve-lite-cli@1.24.0 "${{ matrix.folder }}" --sarif
+        run: npx --yes cve-lite-cli@1.25.0 "${{ matrix.folder }}" --sarif --check-overrides
       - name: Locate SARIF file
         id: locate
         run: |

@@ -1,26 +1,24 @@
-export const selectFromAutocomplete = (label: string, option: string, url: string = '/api/search/reporting-units-users') => {
-
+export const selectFromAutocomplete = (
+  label: string,
+  option: string,
+  url: string = "/api/search/reporting-units-users",
+) => {
   const pattern = new RegExp(String.raw`(?=.*\/api)(?=.*=${option})`);
-  cy.intercept(pattern).as('acUrl');
-  const autocomplete = findInputByLabel(label);
+  cy.intercept(pattern).as("acUrl");
+  findInputByLabel(label)
+    .should("be.visible")
+    .should("not.be.disabled")
+    .type(option);
 
-  autocomplete
-  .then($input => {
-    if ($input.length) {
-      cy.wrap($input).type(option);
+  cy.wait(`@acUrl`, { timeout: 15 * 1000 });
 
-      cy.wait(`@acUrl`, { timeout: 15 * 1000 });
-
-      cy.wrap($input)
-        .closest('.cds--list-box')
-        .find('ul[role="listbox"]')
-        .should('be.visible')
-        .find('li')
-        .contains(option,{ matchCase: false })
-        .click({ force: true });
-    }
-  });
-
+  findInputByLabel(label)
+    .closest(".cds--list-box")
+    .find('ul[role="listbox"]')
+    .should("be.visible")
+    .find("li")
+    .contains(option, { matchCase: false })
+    .click({ force: true });
 };
 
 /**
@@ -36,20 +34,18 @@ export const selectFromAutocomplete = (label: string, option: string, url: strin
  * Supports Carbon's `cds--multi-select--filterable` and `cds--combo-box`.
  */
 export const selectFromFilterableDropdown = (label: string, option: string) => {
-  cy.get('body')
-  .find(`input[placeholder="${label}"]`)
-  .then($input => {
-    if ($input.length) {
-      cy.wrap($input).type(option)
-      cy.wrap($input)
-        .closest('.cds--list-box')
-        .find('ul[role="listbox"]')
-        .should('be.visible')
-        .find('li')
-        .contains(option)
-        .click({ force: true });
-    }
-  });
+  cy.get(`input[placeholder="${label}"]`, { timeout: 10000 })
+    .should("be.visible")
+    .should("not.be.disabled")
+    .type(option);
+
+  cy.get(`input[placeholder="${label}"]`)
+    .closest(".cds--list-box")
+    .find('ul[role="listbox"]')
+    .should("be.visible")
+    .find("li")
+    .contains(option)
+    .click({ force: true });
 };
 
 /**
@@ -63,10 +59,9 @@ export const selectFromFilterableDropdown = (label: string, option: string) => {
 export const findInputByLabel = (labelText: string) => {
   // Synchronous check to decide which strategy to use
   return cy.document().then((doc) => {
-    
     // Case 1-3: Label-based lookup
-    return cy.contains('label', labelText).then(($label) => {
-      const id = $label.attr('for');
+    return cy.contains("label", labelText).then(($label) => {
+      const id = $label.attr("for");
 
       if (id) {
         // Case 1: direct semantic link
@@ -74,19 +69,22 @@ export const findInputByLabel = (labelText: string) => {
       }
 
       // Case 2: Carbon-style shared container
-      const carbonContainer = $label.closest('.cds--form-item, .cds--search, .cds--text-input, div');
+      const carbonContainer = $label.closest(
+        ".cds--form-item, .cds--search, .cds--text-input, div",
+      );
       if (carbonContainer.length) {
-        const input = carbonContainer.find('input, textarea');
+        const input = carbonContainer.find("input, textarea");
         if (input.length) {
           return cy.wrap(input.first());
         }
       }
 
       // Case 3: fallback — search nearby
-      return cy.contains(labelText)
-        .parentsUntil('form')
+      return cy
+        .contains(labelText)
+        .parentsUntil("form")
         .parent()
-        .find('input, textarea')
+        .find("input, textarea")
         .first();
     });
   });
@@ -94,7 +92,7 @@ export const findInputByLabel = (labelText: string) => {
 
 /**
  * Attempts to click a button by trying multiple selectors in priority order.
- * 
+ *
  * Cypress commands are NOT Promises — they don't have .catch().
  * Instead, we use $body.find() (synchronous jQuery) to check which selector
  * matches, then use cy.get() on the matched selector for proper Cypress
@@ -126,7 +124,7 @@ export const findButton = (
   name: string,
   retries: number = 3,
   retryDelay: number = 100,
-  selector: string = 'body'
+  selector: string = "body",
 ): Cypress.Chainable<JQuery<HTMLElement>> => {
   const selectors = [
     `[data-testid="${name}"]`,
@@ -140,18 +138,21 @@ export const findButton = (
   function tryFind(attempt: number): Cypress.Chainable<JQuery<HTMLElement>> {
     return cy.get(selector).then(($body) => {
       const matchedSelector = selectors.find(
-        (sel) => $body.find(sel).length > 0
+        (sel) => $body.find(sel).length > 0,
       );
 
       if (matchedSelector) {
         return cy.get(matchedSelector).first();
-      } else if ($body.find(`.cds--tooltip-content:contains("${name}")`).length > 0) {
+      } else if (
+        $body.find(`.cds--tooltip-content:contains("${name}")`).length > 0
+      ) {
         // Icon-only Carbon button: locate the tooltip text and trace back
         // to the button via the tooltip's id / aria-labelledby relationship
-        return cy.contains('.cds--tooltip-content', name)
-          .invoke('closest', '[id]')
-          .then($tooltip => {
-            const id = $tooltip.attr('id');
+        return cy
+          .contains(".cds--tooltip-content", name)
+          .invoke("closest", "[id]")
+          .then(($tooltip) => {
+            const id = $tooltip.attr("id");
             return cy.get(`button[aria-labelledby="${id}"]`).first();
           });
       } else if (attempt < retries) {
@@ -160,16 +161,20 @@ export const findButton = (
       } else {
         // Last resort: use @testing-library/cypress findByRole
         // Try button first, then link role — covers <a> acting as buttons
-        const nameRegex = new RegExp(name, 'i');
-        return cy.get('body').then(($body) => {
-          const hasButton = Array.from($body.find('button, [role="button"]')).some((el) =>
-            nameRegex.test(el.textContent || '') || nameRegex.test(el.getAttribute('aria-label') || '')
+        const nameRegex = new RegExp(name, "i");
+        return cy.get("body").then(($body) => {
+          const hasButton = Array.from(
+            $body.find('button, [role="button"]'),
+          ).some(
+            (el) =>
+              nameRegex.test(el.textContent || "") ||
+              nameRegex.test(el.getAttribute("aria-label") || ""),
           );
 
           if (hasButton) {
-            return cy.findByRole('button', { name: nameRegex });
+            return cy.findByRole("button", { name: nameRegex });
           } else {
-            return cy.findByRole('link', { name: nameRegex });
+            return cy.findByRole("link", { name: nameRegex });
           }
         });
       }

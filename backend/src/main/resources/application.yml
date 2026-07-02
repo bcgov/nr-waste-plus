@@ -142,6 +142,11 @@ resilience4j:
         automatic-transition-from-open-to-half-open-enabled: true
   retry:
     instances:
+      saveUserPreferences:
+        max-attempts: 3
+        wait-duration: 100ms
+        retry-exceptions:
+          - org.springframework.orm.ObjectOptimisticLockingFailureException
       apiRetry:
         max-attempts: 3
         wait-duration: 500ms
