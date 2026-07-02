@@ -13,13 +13,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc
 @WithMockJwt(value = "concurrent-user")
 @DisplayName("Integrated Test | User Preference Concurrency")
-class UserPreferenceConcurrencyIT extends AbstractTestContainerIntegrationTest {
+class UserPreferenceConcurrencyIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @Autowired
   private MockMvc mockMvc;
@@ -27,12 +29,20 @@ class UserPreferenceConcurrencyIT extends AbstractTestContainerIntegrationTest {
   @Test
   @DisplayName("Concurrent updates should succeed due to retry mechanism")
   void concurrentUpdates_shouldSucceed() throws Exception {
+    SecurityContext securityContext = SecurityContextHolder.getContext();
     String preferencesJson1 = "{\"theme\": \"dark\"}";
     String preferencesJson2 = "{\"theme\": \"light\"}";
+
+    mockMvc.perform(put("/api/users/preferences")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(preferencesJson1)
+        .with(SecurityMockMvcRequestPostProcessors.csrf()))
+        .andExpect(status().isAccepted());
 
     ExecutorService executor = Executors.newFixedThreadPool(2);
 
     CompletableFuture<Void> task1 = CompletableFuture.runAsync(() -> {
+      SecurityContextHolder.setContext(securityContext);
       try {
         mockMvc.perform(put("/api/users/preferences")
             .contentType(MediaType.APPLICATION_JSON)
@@ -45,6 +55,7 @@ class UserPreferenceConcurrencyIT extends AbstractTestContainerIntegrationTest {
     }, executor);
 
     CompletableFuture<Void> task2 = CompletableFuture.runAsync(() -> {
+      SecurityContextHolder.setContext(securityContext);
       try {
         mockMvc.perform(put("/api/users/preferences")
             .contentType(MediaType.APPLICATION_JSON)

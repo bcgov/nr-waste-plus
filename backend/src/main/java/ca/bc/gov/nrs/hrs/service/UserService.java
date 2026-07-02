@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.CollectionUtils;
 
 /**
@@ -33,6 +34,7 @@ public class UserService {
 
   private final UserPreferenceRepository preferenceRepository;
   private final UserBookmarkRepository bookmarkRepository;
+  private final TransactionTemplate transactionTemplate;
 
   /**
    * Retrieve preferences for a given user id.
@@ -69,19 +71,22 @@ public class UserService {
 
     log.info("Saving preferences for user: {}", userId);
 
-    UserPreferenceEntity preferenceEntity =
-        preferenceRepository
-            .findById(userId)
-            .map(preference -> preference.withPreferences(preferences))
-            .orElse(
-                UserPreferenceEntity
-                    .builder()
-                    .userId(userId)
-                    .preferences(preferences)
-                    .build()
-            );
+    transactionTemplate.execute(status -> {
+      UserPreferenceEntity preferenceEntity =
+          preferenceRepository
+              .findById(userId)
+              .map(preference -> preference.withPreferences(preferences))
+              .orElse(
+                  UserPreferenceEntity
+                      .builder()
+                      .userId(userId)
+                      .preferences(preferences)
+                      .build()
+              );
 
-    preferenceRepository.save(preferenceEntity);
+      preferenceRepository.save(preferenceEntity);
+      return null;
+    });
   }
 
   /**
