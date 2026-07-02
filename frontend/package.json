@@ -129,7 +129,8 @@
     },
     "@istanbuljs/load-nyc-config": {
       "js-yaml": "4.2.0"
-    }
+    },
+    "@babel/plugin-transform-runtime": "^7.29.0"
   },
   "nyc": {
     "reporter": [
