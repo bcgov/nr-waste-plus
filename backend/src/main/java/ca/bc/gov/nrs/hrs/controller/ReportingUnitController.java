@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.hrs.controller;
 
 import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
+import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
@@ -13,10 +14,11 @@ import java.net.URI;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -62,14 +64,16 @@ public class ReportingUnitController {
    * disabled.</p>
    *
    * <p>Validates that the authenticated user has permission to access the specified
-   * reporting unit by checking that the reportingUnitId matches one of the user's
-   * authorized client numbers.</p>
+   * reporting unit. For BCeID users, validates that the reporting unit's client
+   * number matches one of the user's authorized client numbers. IDIR and BCSC
+   * users bypass the client-level check.</p>
    *
    * @param jwt the JWT principal for the authenticated caller
    * @param reportingUnitId the unique identifier of the reporting unit to retrieve
    * @return a {@link ReportingUnitDetailsDto} containing the reporting unit's full details
    * @throws NotFoundGenericException when the feature flag is disabled
-   * @throws AccessDeniedException when the user is not authorized to access the reporting unit
+   * @throws org.springframework.web.server.ResponseStatusException when the user is not authorized to
+   *     access the reporting unit
    */
   @GetMapping("/{reportingUnitId}")
   public ReportingUnitDetailsDto getReportingUnitDetails(
@@ -80,20 +84,26 @@ public class ReportingUnitController {
       throw new NotFoundGenericException("reporting-unit-details");
     }
 
-    // SECURITY FIX: Validate user authorization to access this reporting unit
-    String reportingUnitIdStr = String.valueOf(reportingUnitId);
-    List<String> userClientNumbers = JwtPrincipalUtil.getClientFromRoles(jwt);
-
-    if (!userClientNumbers.contains(reportingUnitIdStr)) {
-      log.warn("SECURITY: User {} attempted unauthorized access to reporting unit {}",
-          JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
-      throw new AccessDeniedException(
-          "User is not authorized to access reporting unit: " + reportingUnitId);
-    }
-
     log.info("Fetching reporting unit details for RU {}", reportingUnitId);
 
-    return reportingUnitService.getReportingUnitDetails(reportingUnitId);
+    ReportingUnitDetailsDto details = reportingUnitService.getReportingUnitDetails(reportingUnitId);
+
+    // Enforce client-based authorization only for BCeID business users
+    IdentityProvider idp = JwtPrincipalUtil.getIdentityProvider(jwt);
+    if (IdentityProvider.BUSINESS_BCEID == idp) {
+      String clientCode = details.client().code();
+      List<String> userClientNumbers = JwtPrincipalUtil.getClientFromRoles(jwt);
+
+      if (!userClientNumbers.contains(clientCode)) {
+        log.warn("SECURITY: BCeID user {} attempted unauthorized access to reporting unit {}",
+            JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
+        throw new ResponseStatusException(
+            HttpStatus.FORBIDDEN,
+            "User is not authorized to access reporting unit: " + reportingUnitId);
+      }
+    }
+
+    return details;
   }
   
   /**
