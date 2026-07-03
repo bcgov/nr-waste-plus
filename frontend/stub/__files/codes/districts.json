@@ -9,7 +9,8 @@
   },
   {
     "code": "DCR",
-    "description": "Campbell River"
+    "description": "Campbell River",
+    "areas": ["COASTAL"]
   },
   {
     "code": "DCS",
@@ -25,7 +26,8 @@
   },
   {
     "code": "DKM",
-    "description": "Coast Mountains"
+    "description": "Coast Mountains",
+    "areas": ["COASTAL", "INTERIOR"]
   },
   {
     "code": "DMH",
@@ -53,7 +55,8 @@
   },
   {
     "code": "DPG",
-    "description": "Prince George"
+    "description": "Prince George",
+    "areas": []
   },
   {
     "code": "DQC",
