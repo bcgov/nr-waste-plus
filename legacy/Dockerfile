@@ -1,11 +1,6 @@
 ### Builder
-# GraalVM Native Image with Java 25. Override jdk.tls.disabledAlgorithms to
-# re-enable TLS_RSA cipher suites and SHA-1 handshake signatures required by
-# Oracle 19c TCPS (see java.security.override and issue #1020).
-# NOTE: -Djava.security.properties applies process-wide (all TLS connections
-# including JWKS/issuer metadata HTTPS). Temporary workaround until the Oracle
-# DB certificate chain is upgraded to stronger keys and modern signatures.
-FROM ghcr.io/graalvm/native-image-community:25.0.2 AS build
+# Use GraalVM Native Image with Java 21 (LTS) to satisfy connectivity with Oracle DB
+FROM ghcr.io/graalvm/native-image-community:21 AS build
 
 # Copy
 WORKDIR /app
@@ -23,7 +18,6 @@ ARG PORT=9090
 # Copy
 WORKDIR /app
 COPY --from=build /app/target/nr-waste-plus-legacy ./nr-waste-plus-legacy
-COPY --from=build /app/target/classes/java.security.override ./java.security.override
 
 # User, port and health check
 USER 1001
@@ -33,4 +27,4 @@ HEALTHCHECK CMD curl -f http://localhost:${PORT}/actuator/health | grep '"status
 ENV SPRING_PROFILES_ACTIVE=container,prod
 
 # Startup
-ENTRYPOINT ["/app/nr-waste-plus-legacy", "-Djava.security.properties=/app/java.security.override"]
+ENTRYPOINT ["/app/nr-waste-plus-legacy"]
