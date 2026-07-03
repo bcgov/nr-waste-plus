@@ -17,15 +17,14 @@ const fs = require('fs');
 const { createCoverageMap } = require('istanbul-lib-coverage');
 const { createContext } = require('istanbul-lib-report');
 const reports = require('istanbul-reports');
-const makeDir = require('make-dir');
 
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 const NYC_OUTPUT_DIR = path.resolve(PROJECT_ROOT, '.nyc_output');
 const COVERAGE_DIR = path.resolve(PROJECT_ROOT, 'coverage');
 
-async function main() {
+function main() {
   // 1. Copy unit coverage from vitest into .nyc_output so it gets merged
-  await makeDir(NYC_OUTPUT_DIR);
+  fs.mkdirSync(NYC_OUTPUT_DIR, { recursive: true });
   const unitCoveragePath = path.join(COVERAGE_DIR, 'coverage-final.json');
   if (fs.existsSync(unitCoveragePath)) {
     fs.copyFileSync(
@@ -71,7 +70,7 @@ async function main() {
   );
 
   // 4. Generate lcov report (consumed by SonarQube)
-  await makeDir(COVERAGE_DIR);
+  fs.mkdirSync(COVERAGE_DIR, { recursive: true });
   const context = createContext({
     dir: COVERAGE_DIR,
     coverageMap: map,
@@ -96,7 +95,9 @@ async function main() {
   console.info('LCOV and text-summary reports generated in %s', COVERAGE_DIR);
 }
 
-main().catch((err) => {
+try {
+  main();
+} catch (err) {
   console.error(err);
   process.exit(1);
-});
+}
