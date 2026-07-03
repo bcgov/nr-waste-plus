@@ -1,1 +1,16 @@
-jdk.certpath.disabledAlgorithms=MD2,MD5,DSA,RSA keySize < 1024
+# Adapted from the JDK 25 default jdk.tls.disabledAlgorithms.
+# Two entries from the JDK 25 default have been removed to restore Oracle 19c TCPS:
+#   - TLS_RSA_*                          (JDK-8245545 — disabled in JDK 21.0.10+)
+#   - rsa_pkcs1_sha1 usage HandshakeSignature,
+#     ecdsa_sha1 usage HandshakeSignature,
+#     dsa_sha1 usage HandshakeSignature  (JDK-8340321 — disabled in JDK 21.0.10+)
+#
+# WARNING: -Djava.security.properties applies process-wide, affecting ALL TLS
+# connections (e.g. JWKS/issuer metadata HTTPS calls, not just Oracle DB TCPS).
+# This override should be reviewed when the Oracle DB certificate chain is
+# upgraded to use stronger keys (>1024-bit RSA) and modern signature algorithms.
+#
+# When updating the JDK version, diff the new default jdk.tls.disabledAlgorithms
+# and re-add only the entries that need to be removed for Oracle 19c TCPS above.
+# See https://github.com/bcgov/nr-waste-plus/issues/1020
+jdk.tls.disabledAlgorithms=SSLv3, TLSv1, TLSv1.1, DTLSv1.0, RC4, DES, MD5withRSA, DH keySize < 1024, EC keySize < 224, 3DES_EDE_CBC, anon, NULL, ECDH
