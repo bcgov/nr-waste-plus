@@ -70,9 +70,9 @@ vi.mock(
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
 const mockDistrictOptions: CodeDescriptionDto[] = [
-  { code: 'DKM', description: 'Dease Lake' },
-  { code: 'DCR', description: 'Campbell River' },
-  { code: 'DPG', description: 'Prince George' },
+  { code: 'DKM', description: 'Dease Lake', areas: ['COASTAL', 'INTERIOR'] },
+  { code: 'DCR', description: 'Campbell River', areas: ['COASTAL'] },
+  { code: 'DPG', description: 'Prince George', areas: [] },
 ];
 
 const mockSamplingOptions: CodeDescriptionDto[] = [
@@ -214,13 +214,13 @@ describe('ReportingUnitCreate', () => {
   });
 
   describe('conditional rendering', () => {
-    it('does not render grade field when district is not DKM', async () => {
+    it('does not render grade field for districts without both configured areas', async () => {
       await renderComponent();
       const gradeGroup = document.querySelector('#create-ru-grade');
       expect(gradeGroup).toBeNull();
     });
 
-    it('renders grade field when district is DKM and shows radio options', async () => {
+    it('renders grade field when district supports both areas and shows radio options', async () => {
       await renderComponent();
 
       // Select district DKM
