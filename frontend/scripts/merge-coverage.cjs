@@ -44,7 +44,7 @@ async function main() {
   const map = createCoverageMap({});
   const files = fs
     .readdirSync(NYC_OUTPUT_DIR)
-    .filter((f) => f.endsWith('.json'));
+    .filter((f) => f.endsWith('.json') && f !== 'coverage.json');
 
   if (files.length === 0) {
     console.error('No coverage JSON files found in %s', NYC_OUTPUT_DIR);
