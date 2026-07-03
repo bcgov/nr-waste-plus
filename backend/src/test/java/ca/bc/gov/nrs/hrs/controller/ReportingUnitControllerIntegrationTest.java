@@ -247,4 +247,56 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         )
         .andExpect(status().isNotFound());
   }
+
+  @Test
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"WASTE_PLUS_VIEWER_00012797"}
+  )
+  @DisplayName("shouldReturn200_whenBceidUserHasMatchingClientRole")
+  void shouldReturn200_whenBceidUserHasMatchingClientRole() throws Exception {
+    legacyApiStub.stubFor(
+        get(urlPathEqualTo("/api/reporting-units/12345"))
+            .willReturn(okJson(LEGACY_RU_DETAILS)));
+
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders
+                .get("/api/reporting-units/{id}", 12345L)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON)
+        )
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.id").value(12345))
+        .andExpect(jsonPath("$.client.code").value("00012797"));
+  }
+
+  @Test
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_99999999"}
+  )
+  @DisplayName("shouldReturn403_whenBceidUserHasNoMatchingClientRole")
+  void shouldReturn403_whenBceidUserHasNoMatchingClientRole() throws Exception {
+    legacyApiStub.stubFor(
+        get(urlPathEqualTo("/api/reporting-units/12345"))
+            .willReturn(okJson(LEGACY_RU_DETAILS)));
+
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders
+                .get("/api/reporting-units/{id}", 12345L)
+                .accept(MediaType.APPLICATION_JSON)
+        )
+        .andExpect(status().isForbidden());
+  }
 }
