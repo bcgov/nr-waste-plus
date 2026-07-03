@@ -1,0 +1,1 @@
+jdk.certpath.disabledAlgorithms=MD2,MD5,DSA,RSA keySize < 1024
