@@ -96,8 +96,10 @@ public class SearchController {
   /**
    * Get the expanded search entry for a specific reporting unit and block.
    *
-   * <p>Validates that the authenticated user has permission to access the specified reporting unit
-   * by checking that the reportingUnitId matches one of the user's authorized client numbers.
+   * <p>Validates that the authenticated user has permission to access the specified reporting unit.
+   * For BCeID callers, the reporting unit's associated client number is compared against the
+   * caller's assigned client roles. IDIR callers (government users) are permitted without
+   * additional checks since they have system-level access.
    * </p>
    *
    * @param jwt             the JWT principal for the authenticated caller
@@ -117,15 +119,19 @@ public class SearchController {
         reportingUnitId, JwtPrincipalUtil.getUserId(jwt)
     );
 
-    // SECURITY FIX: Validate user authorization to access this reporting unit
-    String reportingUnitIdStr = String.valueOf(reportingUnitId);
-    List<String> userClientNumbers = JwtPrincipalUtil.getClientFromRoles(jwt);
+    // Look up the reporting unit's client number to enforce client-scoped authorization
+    String clientNumber = service.getClientNumberForReportingUnit(reportingUnitId);
 
-    if (!userClientNumbers.contains(reportingUnitIdStr)) {
-      log.warn("SECURITY: User {} attempted unauthorized access to reporting unit {}",
-          JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
-      throw new org.springframework.security.access.AccessDeniedException(
-          "User is not authorized to access reporting unit: " + reportingUnitId);
+    // For BCeID callers, verify the reporting unit belongs to one of their clients
+    if (IdentityProvider.BUSINESS_BCEID.equals(JwtPrincipalUtil.getIdentityProvider(jwt))) {
+      List<String> userClientNumbers = JwtPrincipalUtil.getClientFromRoles(jwt);
+
+      if (!userClientNumbers.contains(clientNumber)) {
+        log.warn("SECURITY: BCeID user {} attempted unauthorized access to reporting unit {}",
+            JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
+        throw new org.springframework.security.access.AccessDeniedException(
+            "User is not authorized to access reporting unit: " + reportingUnitId);
+      }
     }
 
     return service.getSearchExpanded(reportingUnitId, wasteAssessmentAreaId);

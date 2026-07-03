@@ -130,6 +130,26 @@ public class SearchService {
   }
 
   /**
+   * Look up the client number associated with a reporting unit.
+   *
+   * <p>The client number is obtained from the legacy API and can be used for
+   * authorization checks (e.g. verifying that a BCeID caller is allowed to
+   * access the reporting unit that belongs to that client).
+   * </p>
+   *
+   * @param reportingUnitId the reporting unit id
+   * @return the client number associated with the reporting unit
+   * @throws ca.bc.gov.nrs.hrs.exception.NotFoundGenericException if the reporting
+   *         unit is not found in the legacy system
+   */
+  @NewSpan
+  public String getClientNumberForReportingUnit(Long reportingUnitId) {
+    return legacyApiProvider
+        .getReportingUnitDetails(reportingUnitId)
+        .clientNumber();
+  }
+
+  /**
    * Search reporting units associated with a user.
    *
    * @param userId the user id to query
