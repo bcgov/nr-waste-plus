@@ -16,9 +16,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -106,8 +108,8 @@ public class SearchController {
    * @param reportingUnitId the reporting unit ID
    * @param wasteAssessmentAreaId         the waste assessment area ID
    * @return the expanded search entry as a {@link ReportingUnitSearchExpandedDto}
-   * @throws org.springframework.security.access.AccessDeniedException when the user is not
-   *         authorized to access the specified reporting unit
+   * @throws org.springframework.web.server.ResponseStatusException with HTTP 403 when the user
+   *         is not authorized to access the specified reporting unit
    */
   @GetMapping("/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}")
   public ReportingUnitSearchExpandedDto getSearchExpandedEntry(
@@ -129,7 +131,8 @@ public class SearchController {
       if (!userClientNumbers.contains(clientNumber)) {
         log.warn("SECURITY: BCeID user {} attempted unauthorized access to reporting unit {}",
             JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
-        throw new org.springframework.security.access.AccessDeniedException(
+        throw new ResponseStatusException(
+            HttpStatus.FORBIDDEN,
             "User is not authorized to access reporting unit: " + reportingUnitId);
       }
     }
