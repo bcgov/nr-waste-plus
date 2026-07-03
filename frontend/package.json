@@ -30,7 +30,7 @@
     "test:a11y:watch": "playwright test --project=a11y-chromium --ui",
     "pretest:coverage": "echo '{}' > src/config/tests/user.bceid.json && echo '{}' > src/config/tests/user.idir.json",
     "test:coverage": "npm run test:unit; UNIT=$?; npm run test:e2e; E2E=$?; exit $((UNIT||E2E))",
-    "coverage:merge": "mkdir -p .nyc_output && cp coverage/coverage-final.json .nyc_output/unit-coverage.json && nyc merge .nyc_output .nyc_output/coverage.json && nyc report --reporter=lcov --reporter=text-summary --report-dir=coverage",
+    "coverage:merge": "node scripts/merge-coverage.cjs",
     "posttest:coverage": "npm run coverage:merge"
   },
   "dependencies": {
@@ -87,7 +87,6 @@
     "globals": "^17.0.0",
     "jsdom": "^29.0.1",
     "lint-staged": "^17.0.0",
-    "nyc": "^18.0.0",
     "playwright": "1.61.1",
     "prettier": "^3.7.4",
     "sass": "^1.98.0",
@@ -126,29 +125,6 @@
     "vite": {
       "esbuild": "0.28.1"
     },
-    "@istanbuljs/load-nyc-config": {
-      "js-yaml": "4.2.0"
-    },
     "@babel/plugin-transform-runtime": "^8.0.0"
-  },
-  "nyc": {
-    "reporter": [
-      "lcov",
-      "text-summary"
-    ],
-    "report-dir": "coverage",
-    "include": [
-      "src/**/*.ts",
-      "src/**/*.tsx"
-    ],
-    "exclude": [
-      "**/*.spec.ts",
-      "**/__tests__/**",
-      "**/__e2e__/**"
-    ],
-    "extension": [
-      ".ts",
-      ".tsx"
-    ]
   }
 }
