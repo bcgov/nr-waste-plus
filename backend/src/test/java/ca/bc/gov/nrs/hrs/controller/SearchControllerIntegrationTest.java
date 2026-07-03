@@ -133,10 +133,19 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
   void shouldGetExpandedDetails(
       Long ruId,
       Long wasteAssessmentAreaId,
+      String clientNumber,
       ResponseDefinitionBuilder stubResponse,
       String expectedJsonPath,
       Object expectedValue
   ) throws Exception {
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/reporting-units/" + ruId))
+            .willReturn(
+                okJson("""
+                    {"clientNumber": "%s", "clientLocnCode": "00"}
+                    """.formatted(clientNumber))
+            )
+    );
     legacyApiStub.stubFor(
         WireMock.get(
                 urlPathEqualTo(
@@ -153,6 +162,43 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
         .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath(expectedJsonPath).value(expectedValue))
         .andReturn();
+  }
+
+  @ParameterizedTest
+  @MethodSource("searchReportingUnitExpandedBceid")
+  @DisplayName("Get Expanded Details for Reporting Unit with BCeID user")
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"Viewer_00010002"}
+  )
+  void shouldGetExpandedDetails_bceid(
+      Long ruId,
+      Long wasteAssessmentAreaId,
+      String ruClientNumber,
+      ResponseDefinitionBuilder stubResponse,
+      int expectedStatus
+  ) throws Exception {
+    legacyApiStub.stubFor(
+        WireMock.get(urlPathEqualTo("/api/reporting-units/" + ruId))
+            .willReturn(
+                okJson("""
+                    {"clientNumber": "%s", "clientLocnCode": "00"}
+                    """.formatted(ruClientNumber))
+            )
+    );
+    legacyApiStub.stubFor(
+        WireMock.get(
+                urlPathEqualTo(
+                    "/api/search/reporting-units/ex/" + ruId + "/" + wasteAssessmentAreaId))
+            .willReturn(stubResponse)
+    );
+
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units/ex/" + ruId + "/" + wasteAssessmentAreaId)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().is(expectedStatus));
   }
 
   @ParameterizedTest
@@ -269,6 +315,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             "Get expanded with full details",
             101L,
             201L,
+            "00010002",
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNIT_EXPANDED_FULL),
             "$.id",
             101
@@ -277,6 +324,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             "Get expanded with minimal details",
             102L,
             202L,
+            "00010002",
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNIT_EXPANDED_MINIMAL),
             "$.id",
             102
@@ -285,6 +333,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             "Get expanded with empty response (fallback)",
             103L,
             203L,
+            "00010002",
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNIT_EXPANDED_EMPTY),
             "$.id",
             203
@@ -293,6 +342,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             "Service unavailable triggers fallback",
             104L,
             204L,
+            "00010002",
             serviceUnavailable(),
             "$.id",
             204
@@ -301,6 +351,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             "Not found triggers fallback",
             105L,
             205L,
+            "00010002",
             notFound(),
             "$.id",
             205
@@ -309,9 +360,31 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             "Unauthorized triggers fallback",
             106L,
             206L,
+            "00010002",
             unauthorized(),
             "$.id",
             206
+        )
+    );
+  }
+
+  private static Stream<Arguments> searchReportingUnitExpandedBceid() {
+    return Stream.of(
+        Arguments.argumentSet(
+            "BCeID with matching client number",
+            201L,
+            301L,
+            "00010002",
+            okJson(ForestClientApiProviderTestConstants.REPORTING_UNIT_EXPANDED_FULL),
+            200
+        ),
+        Arguments.argumentSet(
+            "BCeID with non-matching client number",
+            202L,
+            302L,
+            "99999999",
+            okJson(ForestClientApiProviderTestConstants.REPORTING_UNIT_EXPANDED_MINIMAL),
+            403
         )
     );
   }
