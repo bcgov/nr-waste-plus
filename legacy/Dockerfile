@@ -1,5 +1,7 @@
 ### Builder
-# Use GraalVM Native Image with Java 25 (latest LTS) to satisfy connectivity with Oracle DB
+# GraalVM Native Image with Java 25. Override jdk.tls.disabledAlgorithms to
+# re-enable TLS_RSA cipher suites and SHA-1 handshake signatures required by
+# Oracle 19c TCPS (see java.security.override and issue #1020).
 FROM ghcr.io/graalvm/native-image-community:25.0.2 AS build
 
 # Copy

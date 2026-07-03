@@ -152,7 +152,7 @@
                                     -H:ServiceLoaderFeatureExcludeServices=org.springframework.security.core.context.ReactiveSecurityContextHolderThreadLocalAccessor
                                 </buildArg>
                                 <buildArg>
-                                    -H:IncludeResources=java.security.override
+                                    -H:IncludeResources=java\.security\.override
                                 </buildArg>
                             </buildArgs>
                         </configuration>
