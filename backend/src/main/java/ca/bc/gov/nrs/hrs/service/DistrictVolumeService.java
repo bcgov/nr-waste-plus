@@ -11,11 +11,13 @@ import ca.bc.gov.nrs.hrs.mapper.DistrictVolumeMapper;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import io.micrometer.tracing.annotation.NewSpan;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.EnumUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -26,6 +28,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Service for managing district volume configurations.
+ *
+ * <p>Handles retrieval, creation, and validation of district volume records. Supports filtering
+ * by geographic area (INTERIOR, COASTAL) and provides methods to determine which areas have
+ * active configurations for a given district code.</p>
  */
 @Service
 @RequiredArgsConstructor
@@ -36,6 +42,14 @@ public class DistrictVolumeService {
 
   /**
    * Retrieves a paginated list of district volume records.
+   *
+   * <p>Optionally filters results by geographic area. If no area filter is provided, returns all
+   * district volume records.</p>
+   *
+   * @param areaOptional optional area filter (INTERIOR or COASTAL); if empty, no filtering is
+   *     applied
+   * @param pageable pagination parameters
+   * @return a page of {@link DistrictVolumeListItemDto} matching the filter criteria
    */
   @Transactional(readOnly = true)
   @NewSpan
@@ -61,6 +75,10 @@ public class DistrictVolumeService {
 
   /**
    * Retrieves a single district volume record by its ID.
+   *
+   * @param id the unique identifier of the district volume record
+   * @return the {@link DistrictVolumeDetailDto} for the specified ID
+   * @throws ResponseStatusException with HTTP 404 if the record is not found
    */
   @Transactional(readOnly = true)
   public DistrictVolumeDetailDto getDistrictVolumeById(Long id) {
@@ -76,10 +94,58 @@ public class DistrictVolumeService {
   }
 
   /**
+   * Returns the geographic areas that currently have active district-volume data for a district.
+   *
+   * <p>Checks both INTERIOR and COASTAL areas to determine which ones have active (non-expired)
+   * configurations containing the specified district code.</p>
+   *
+   * @param districtCode the district code to search for (e.g., "DND", "DKM")
+   * @return list of area names (INTERIOR, COASTAL) that have active data for the district; empty
+   *     list if no areas are found or if districtCode is blank
+   */
+  @Transactional(readOnly = true)
+  @NewSpan
+  public List<String> getAreasForDistrictCode(String districtCode) {
+    if (StringUtils.isBlank(districtCode)) {
+      return List.of();
+    }
+
+    List<String> matchedAreas = new ArrayList<>();
+    LocalDate currentDate = LocalDate.now();
+
+    for (Area area : List.of(Area.INTERIOR, Area.COASTAL)) {
+      districtVolumeRepository.findActiveByArea(area, currentDate)
+          .filter(entity -> containsDistrict(entity.getTableData(), districtCode))
+          .ifPresent(entity -> matchedAreas.add(area.name()));
+    }
+
+    return matchedAreas;
+  }
+
+  /**
    * Creates a new district volume configuration record.
    *
-   * @param user      the user creating the record
+   * <p>Performs comprehensive validation including:
+   * <ul>
+   *   <li>Area enum validation</li>
+   *   <li>Payload structure consistency with the specified area</li>
+   *   <li>Helicopter multiplier requirement for COASTAL area</li>
+   *   <li>Start date must be strictly after today</li>
+   *   <li>No duplicate open-ended records for the area</li>
+   *   <li>Start date must be after the most recent existing start date</li>
+   * </ul>
+   * If a previous open-ended record exists, its end date is set to one day before the new start
+   * date.
+   *
+   * @param user the user creating the record (for audit trail)
    * @param createDto the district volume configuration payload
+   * @return the newly created {@link DistrictVolumeDetailDto}
+   * @throws ResponseStatusException with HTTP 400 if validation fails (invalid area, missing
+   *     helicopter multiplier, invalid start date, payload mismatch)
+   * @throws ResponseStatusException with HTTP 409 if multiple open-ended records exist for the
+   *     area
+   * @throws ResponseStatusException with HTTP 422 if start date is not strictly after today or
+   *     after the most recent existing start date
    */
   @Transactional(isolation = Isolation.SERIALIZABLE)
   public DistrictVolumeDetailDto createDistrictVolume(
@@ -154,7 +220,47 @@ public class DistrictVolumeService {
   }
 
   /**
-   * Structural cross-check validation.
+   * Checks if the provided table data contains a district with the specified code.
+   *
+   * <p>Searches through zones or sections (depending on the table data structure) to find a
+   * matching district code. Comparison is case-insensitive.</p>
+   *
+   * @param tableData the table data structure to search (may be null)
+   * @param districtCode the district code to search for
+   * @return true if the district code is found in the table data; false otherwise
+   */
+  private boolean containsDistrict(ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData tableData,
+      String districtCode) {
+    if (tableData == null) {
+      return false;
+    }
+
+    if (tableData.zones() != null) {
+      return tableData.zones().stream()
+          .flatMap(zone -> zone.districts().stream())
+          .map(districtRow -> districtRow.district().code())
+          .anyMatch(code -> StringUtils.equalsIgnoreCase(code, districtCode));
+    }
+
+    if (tableData.sections() != null) {
+      return tableData.sections().stream()
+          .flatMap(section -> section.districts().stream())
+          .map(districtRow -> districtRow.district().code())
+          .anyMatch(code -> StringUtils.equalsIgnoreCase(code, districtCode));
+    }
+
+    return false;
+  }
+
+  /**
+   * Validates that the table data payload structure matches the specified area.
+   *
+   * <p>Ensures that INTERIOR areas have InteriorDataDto and COASTAL areas have CoastDataDto.</p>
+   *
+   * @param areaEnum the geographic area (INTERIOR or COASTAL)
+   * @param createDto the district volume creation request
+   * @throws ResponseStatusException with HTTP 400 if the payload structure does not match the
+   *     area or if the payload is null/invalid
    */
   private void validateAreaPayloadConsistency(
       Area areaEnum, DistrictVolumeCreateDto createDto) {
