@@ -1,5 +1,5 @@
-# Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,eclipse,node,java,maven,macos,intellij+all
-# Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,eclipse,node,java,maven,macos,intellij+all
+# Created by https://www.toptal.com/developers/gitignore/api/intellij+all,visualstudiocode,eclipse,macos,linux,windows,java,maven,node
+# Edit at https://www.toptal.com/developers/gitignore?templates=intellij+all,visualstudiocode,eclipse,macos,linux,windows,java,maven,node
 
 ### Eclipse ###
 .metadata
@@ -180,6 +180,21 @@ fabric.properties
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+### Linux ###
+*~
+
+# temporary files which can be created if a process still has a handle open of a deleted file
+.fuse_hidden*
+
+# KDE directory preferences
+.directory
+
+# Linux trash folder which might appear on any partition or disk
+.Trash-*
+
+# .nfs files are created when an open file is removed but is still being accessed
+.nfs*
 
 ### macOS ###
 # General
@@ -391,10 +406,38 @@ dist
 .history
 .ionide
 
-# End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,eclipse,node,java,maven,macos,intellij+all
+### Windows ###
+# Windows thumbnail cache files
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+
+# Dump file
+*.stackdump
+
+# Folder config file
+[Dd]esktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+# End of https://www.toptal.com/developers/gitignore/api/intellij+all,visualstudiocode,eclipse,macos,linux,windows,java,maven,node
 
 ### User related configuration
 # The below expression will prevent user specific configuration files from being added to the repository
+**/build/
+**/target/
 config/application-dev-*.yml
 .checkstyle
 temp/
