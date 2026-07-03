@@ -63,7 +63,7 @@ async function main() {
 
   // 3. Write merged coverage
   const mergedPath = path.join(NYC_OUTPUT_DIR, 'coverage.json');
-  fs.writeFileSync(mergedPath, JSON.stringify(map, null, 2));
+  fs.writeFileSync(mergedPath, JSON.stringify(map.toJSON(), null, 2));
   console.info(
     'Coverage files in %s merged into %s',
     NYC_OUTPUT_DIR,
