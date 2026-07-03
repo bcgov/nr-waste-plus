@@ -1,4 +1,4 @@
-FROM postgres:17.4-alpine
+FROM postgres:17.10-alpine
 
 HEALTHCHECK --interval=35s --timeout=4s CMD pg_isready -U "${POSTGRES_USER}" -d "${POSTGRES_DB}"
  
