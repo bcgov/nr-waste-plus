@@ -2,6 +2,9 @@
 # GraalVM Native Image with Java 25. Override jdk.tls.disabledAlgorithms to
 # re-enable TLS_RSA cipher suites and SHA-1 handshake signatures required by
 # Oracle 19c TCPS (see java.security.override and issue #1020).
+# NOTE: -Djava.security.properties applies process-wide (all TLS connections
+# including JWKS/issuer metadata HTTPS). Temporary workaround until the Oracle
+# DB certificate chain is upgraded to stronger keys and modern signatures.
 FROM ghcr.io/graalvm/native-image-community:25.0.2 AS build
 
 # Copy
