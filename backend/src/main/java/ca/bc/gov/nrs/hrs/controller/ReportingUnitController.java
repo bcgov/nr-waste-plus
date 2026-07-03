@@ -72,8 +72,7 @@ public class ReportingUnitController {
    * @param reportingUnitId the unique identifier of the reporting unit to retrieve
    * @return a {@link ReportingUnitDetailsDto} containing the reporting unit's full details
    * @throws NotFoundGenericException when the feature flag is disabled
-   * @throws org.springframework.web.server.ResponseStatusException when the user is not authorized to
-   *     access the reporting unit
+   * @throws ResponseStatusException when the user is not authorized to access the reporting unit
    */
   @GetMapping("/{reportingUnitId}")
   public ReportingUnitDetailsDto getReportingUnitDetails(
