@@ -10,9 +10,11 @@ import lombok.With;
  * corresponding description. Optionally includes a list of configured geographic areas associated
  * with the code.</p>
  *
- * @param code the code value (e.g., district code, status code)
- * @param description the human-readable description for the code
- * @param areas optional list of configured geographic areas for the code
+ * <ul>
+ *   <li>{@code code} — the code value (e.g., district code, status code)</li>
+ *   <li>{@code description} — the human-readable description for the code</li>
+ *   <li>{@code areas} — optional list of configured geographic areas for the code</li>
+ * </ul>
  */
 @With
 public record CodeDescriptionDto(
