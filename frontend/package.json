@@ -123,9 +123,6 @@
       "glob": "^13.0.0"
     },
     "rollup": "^4.54.0",
-    "vite": {
-      "esbuild": "0.28.1"
-    },
     "@istanbuljs/load-nyc-config": {
       "js-yaml": "4.2.0"
     },
