@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.util.CollectionUtils;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Controller exposing search-related REST endpoints for reporting units.
@@ -96,10 +98,18 @@ public class SearchController {
   /**
    * Get the expanded search entry for a specific reporting unit and block.
    *
+   * <p>Validates that the authenticated user has permission to access the specified reporting unit.
+   * For BCeID callers, the reporting unit's associated client number is compared against the
+   * caller's assigned client roles. IDIR callers (government users) are permitted without
+   * additional checks since they have system-level access.
+   * </p>
+   *
    * @param jwt             the JWT principal for the authenticated caller
    * @param reportingUnitId the reporting unit ID
    * @param wasteAssessmentAreaId         the waste assessment area ID
    * @return the expanded search entry as a {@link ReportingUnitSearchExpandedDto}
+   * @throws org.springframework.web.server.ResponseStatusException with HTTP 403 when the user
+   *         is not authorized to access the specified reporting unit
    */
   @GetMapping("/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}")
   public ReportingUnitSearchExpandedDto getSearchExpandedEntry(
@@ -110,6 +120,22 @@ public class SearchController {
     log.info("Fetching expanded search entry for reporting unit ID: {} for: {}",
         reportingUnitId, JwtPrincipalUtil.getUserId(jwt)
     );
+
+    // Look up the reporting unit's client number to enforce client-scoped authorization
+    String clientNumber = service.getClientNumberForReportingUnit(reportingUnitId);
+
+    // For BCeID callers, verify the reporting unit belongs to one of their clients
+    if (IdentityProvider.BUSINESS_BCEID.equals(JwtPrincipalUtil.getIdentityProvider(jwt))) {
+      List<String> userClientNumbers = JwtPrincipalUtil.getClientFromRoles(jwt);
+
+      if (!userClientNumbers.contains(clientNumber)) {
+        log.warn("SECURITY: BCeID user {} attempted unauthorized access to reporting unit {}",
+            JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
+        throw new ResponseStatusException(
+            HttpStatus.FORBIDDEN,
+            "User is not authorized to access reporting unit: " + reportingUnitId);
+      }
+    }
 
     return service.getSearchExpanded(reportingUnitId, wasteAssessmentAreaId);
   }
