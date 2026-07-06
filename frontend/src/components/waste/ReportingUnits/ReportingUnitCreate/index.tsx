@@ -96,6 +96,7 @@ const ReportingUnitCreate: FC = () => {
     const nextGradeCode = selectedDistrictAreas.length === 1 ? selectedDistrictAreas[0] : null;
 
     handleChange(selectedDistrictCode);
+    form.resetField('gradeCode');
     form.setFieldValue('gradeCode', nextGradeCode);
   };
 

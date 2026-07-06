@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.hrs.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -15,6 +17,7 @@ import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import java.util.List;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,6 +43,11 @@ class ReportingUnitServiceTest {
 
   @InjectMocks
   private ReportingUnitService reportingUnitService;
+
+  @BeforeEach
+  void setUp() {
+    lenient().when(districtVolumeService.getAreasForDistrictCode(anyString())).thenReturn(List.of());
+  }
 
   private static final Long RU_ID = 12345L;
   private static final String CLIENT_NUMBER = "00012797";

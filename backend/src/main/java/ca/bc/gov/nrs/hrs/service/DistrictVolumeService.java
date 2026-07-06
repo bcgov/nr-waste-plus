@@ -12,8 +12,11 @@ import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import io.micrometer.tracing.annotation.NewSpan;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.EnumUtils;
@@ -120,6 +123,45 @@ public class DistrictVolumeService {
     }
 
     return matchedAreas;
+  }
+
+  /**
+   * Returns the geographic areas for multiple district codes in a single pass.
+   *
+   * <p>Fetches the active INTERIOR and COASTAL configurations once and checks all district codes
+   * against both, avoiding the N+1 query pattern that would result from calling
+   * {@link #getAreasForDistrictCode(String)} in a loop.</p>
+   *
+   * @param districtCodes the district codes to look up (null or empty returns an empty map)
+   * @return map of district code to its list of area names (INTERIOR, COASTAL); each list is empty
+   *     if the district was not found in any active configuration
+   */
+  @Transactional(readOnly = true)
+  @NewSpan
+  public Map<String, List<String>> getAreasForMultipleDistricts(List<String> districtCodes) {
+    if (districtCodes == null || districtCodes.isEmpty()) {
+      return Map.of();
+    }
+
+    Map<String, List<String>> result = new HashMap<>();
+    for (String code : districtCodes) {
+      result.put(code, new ArrayList<>());
+    }
+
+    LocalDate currentDate = LocalDate.now();
+
+    for (Area area : List.of(Area.INTERIOR, Area.COASTAL)) {
+      districtVolumeRepository.findActiveByArea(area, currentDate)
+          .ifPresent(entity -> {
+            for (String districtCode : districtCodes) {
+              if (containsDistrict(entity.getTableData(), districtCode)) {
+                result.get(districtCode).add(area.name());
+              }
+            }
+          });
+    }
+
+    return result;
   }
 
   /**
@@ -237,14 +279,14 @@ public class DistrictVolumeService {
 
     if (tableData.zones() != null) {
       return tableData.zones().stream()
-          .flatMap(zone -> zone.districts().stream())
+          .flatMap(zone -> zone.districts() != null ? zone.districts().stream() : Stream.empty())
           .map(districtRow -> districtRow.district().code())
           .anyMatch(code -> StringUtils.equalsIgnoreCase(code, districtCode));
     }
 
     if (tableData.sections() != null) {
       return tableData.sections().stream()
-          .flatMap(section -> section.districts().stream())
+          .flatMap(section -> section.districts() != null ? section.districts().stream() : Stream.empty())
           .map(districtRow -> districtRow.district().code())
           .anyMatch(code -> StringUtils.equalsIgnoreCase(code, districtCode));
     }
