@@ -104,6 +104,7 @@
   },
   "overrides": {
     "flatted": "^3.4.2",
+    "glob": "^13.0.0",
     "immutable": "^5.1.5",
     "serialize-javascript": "^7.0.5",
     "rollup": "^4.54.0",
