@@ -106,20 +106,6 @@
     "immutable": "^5.1.5",
     "serialize-javascript": "^7.0.5",
     "rollup": "^4.54.0",
-    "workbox-build": {
-      "glob": "^13.0.0"
-    },
-    "vite": {
-      "esbuild": "0.28.1"
-    },
-    "@eslint/eslintrc": {
-      "js-yaml": "4.2.0"
-    },
-    "@aws-amplify/core": {
-      "uuid": "^11.1.1"
-    },
-    "exceljs": {
-      "uuid": "^11.1.1"
-    }
+    "uuid": "^11.1.1"
   }
 }
