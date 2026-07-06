@@ -4,7 +4,6 @@ import { useForm } from '@tanstack/react-form';
 import { useRouter } from '@tanstack/react-router';
 import { type ChangeEvent, type FC } from 'react';
 
-import ConditionalField from '@/components/Form/ConditionalField';
 import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import AdvancedFilterClientInput from '@/components/waste/WasteSearch/WasteSearchFiltersAdvanced/AdvancedFilterClientInput';
@@ -88,6 +87,19 @@ const ReportingUnitCreate: FC = () => {
       handleChange(event.selectedItem?.code ?? null);
     };
 
+  const updateDistrictSelection = (
+    selectedDistrictCode: string | null,
+    handleChange: (value: string | null) => void,
+  ) => {
+    const selectedDistrict = findSelectedItem(districtOptions, selectedDistrictCode);
+    const selectedDistrictAreas = selectedDistrict?.areas ?? [];
+    const nextGradeCode = selectedDistrictAreas.length === 1 ? selectedDistrictAreas[0] : null;
+
+    handleChange(selectedDistrictCode);
+    form.resetField('gradeCode');
+    form.setFieldValue('gradeCode', nextGradeCode);
+  };
+
   return (
     <Column
       max={6}
@@ -155,76 +167,86 @@ const ReportingUnitCreate: FC = () => {
               ),
           }}
         >
-          {(field) => (
-            <ComboBox
-              placeholder="District"
-              titleText="District"
-              id="create-ru-district"
-              items={districtOptions ?? []}
-              itemToString={(option) => activeMSItemToString(option, '')}
-              onBlur={field.handleBlur}
-              onChange={createComboBoxOnChange(field.handleChange)}
-              selectedItem={findSelectedItem(districtOptions, field.state.value)}
-              invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
-              invalidText={field.state.meta.errors[0]}
-            />
-          )}
-        </form.Field>
+          {(field) => {
+            const selectedDistrict = findSelectedItem(districtOptions, field.state.value);
+            const selectedDistrictAreas = selectedDistrict?.areas ?? [];
+            const shouldShowGradeSelection =
+              selectedDistrictAreas.includes('COASTAL') &&
+              selectedDistrictAreas.includes('INTERIOR');
 
-        <ConditionalField
-          form={form}
-          conditions={{ field: 'districtCode', operator: 'equals', value: 'DKM' }}
-          fieldNames={['gradeCode']}
-        >
-          <form.Field
-            name="gradeCode"
-            validators={{
-              onBlurAsync: async ({ value }) =>
-                runValidators(
-                  value,
-                  [required('You must select one option to proceed')],
-                  reportingUnitCreateRequestSchema.shape.gradeCode,
-                ),
-              onChangeAsync: async ({ value }) =>
-                runValidators(
-                  value,
-                  [required('You must select one option to proceed')],
-                  reportingUnitCreateRequestSchema.shape.gradeCode,
-                ),
-            }}
-          >
-            {(field) => (
-              <RadioButtonGroup
-                defaultSelected=""
-                invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
-                invalidText={field.state.meta.errors[0]}
-                value={field.state.value ?? ''}
-                onChange={(
-                  _selection: string | number | undefined,
-                  _name: string,
-                  event: ChangeEvent<HTMLInputElement>,
-                ) => {
-                  field.handleChange(event.target.value);
-                }}
-                onBlur={field.handleBlur}
-                legendText="Select grades you will use"
-                name="create-ru-grade"
-                id="create-ru-grade"
-              >
-                <RadioButton
-                  id="create-ru-grade-coastal"
-                  labelText="Coastal grades"
-                  value="COASTAL"
+            return (
+              <>
+                <ComboBox
+                  placeholder="District"
+                  titleText="District"
+                  id="create-ru-district"
+                  items={districtOptions ?? []}
+                  itemToString={(option) => activeMSItemToString(option, '')}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => {
+                    updateDistrictSelection(event.selectedItem?.code ?? null, field.handleChange);
+                  }}
+                  selectedItem={selectedDistrict}
+                  invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
+                  invalidText={field.state.meta.errors[0]}
                 />
-                <RadioButton
-                  id="create-ru-grade-interior"
-                  labelText="Interior grades"
-                  value="INTERIOR"
-                />
-              </RadioButtonGroup>
-            )}
-          </form.Field>
-        </ConditionalField>
+
+                {shouldShowGradeSelection && (
+                  <form.Field
+                    name="gradeCode"
+                    validators={{
+                      onBlurAsync: async ({ value }) =>
+                        runValidators(
+                          value,
+                          [required('You must select one option to proceed')],
+                          reportingUnitCreateRequestSchema.shape.gradeCode,
+                        ),
+                      onChangeAsync: async ({ value }) =>
+                        runValidators(
+                          value,
+                          [required('You must select one option to proceed')],
+                          reportingUnitCreateRequestSchema.shape.gradeCode,
+                        ),
+                    }}
+                  >
+                    {(gradeField) => (
+                      <RadioButtonGroup
+                        defaultSelected=""
+                        invalid={
+                          gradeField.state.meta.isTouched && !!gradeField.state.meta.errors.length
+                        }
+                        invalidText={gradeField.state.meta.errors[0]}
+                        value={gradeField.state.value ?? ''}
+                        onChange={(
+                          _selection: string | number | undefined,
+                          _name: string,
+                          event: ChangeEvent<HTMLInputElement>,
+                        ) => {
+                          gradeField.handleChange(event.target.value);
+                        }}
+                        onBlur={gradeField.handleBlur}
+                        legendText="Select grades you will use"
+                        name="create-ru-grade"
+                        id="create-ru-grade"
+                      >
+                        <RadioButton
+                          id="create-ru-grade-coastal"
+                          labelText="Coastal grades"
+                          value="COASTAL"
+                        />
+                        <RadioButton
+                          id="create-ru-grade-interior"
+                          labelText="Interior grades"
+                          value="INTERIOR"
+                        />
+                      </RadioButtonGroup>
+                    )}
+                  </form.Field>
+                )}
+              </>
+            );
+          }}
+        </form.Field>
 
         <form.Field
           name="samplingCode"

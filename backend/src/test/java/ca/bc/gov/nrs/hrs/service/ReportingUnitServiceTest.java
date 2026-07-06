@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.hrs.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -15,6 +17,7 @@ import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import java.util.List;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,8 +38,16 @@ class ReportingUnitServiceTest {
   @Mock
   private ForestClientApiProvider forestClientApiProvider;
 
+  @Mock
+  private DistrictVolumeService districtVolumeService;
+
   @InjectMocks
   private ReportingUnitService reportingUnitService;
+
+  @BeforeEach
+  void setUp() {
+    lenient().when(districtVolumeService.getAreasForDistrictCode(anyString())).thenReturn(List.of());
+  }
 
   private static final Long RU_ID = 12345L;
   private static final String CLIENT_NUMBER = "00012797";
@@ -83,9 +94,8 @@ class ReportingUnitServiceTest {
         .isEqualTo(ForestClientStatusEnum.ACTIVE.getDescription());
     assertThat(result.sampling()).isEqualTo(legacyDetails.sampling());
     assertThat(result.district()).isEqualTo(legacyDetails.district());
-    // TODO(grade-configuration): Assert result.grade() here once the grade-configuration
-    // feature branch populates the field from a real data source and reinstates it in
-    // ReportingUnitDetailsDto.
+    assertThat(result.grade().code()).isNull();
+    assertThat(result.grade().description()).isNull();
   }
 
   @Test
@@ -160,6 +170,7 @@ class ReportingUnitServiceTest {
 
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of());
 
     when(legacyApiProvider.createReportingUnit(request)).thenReturn(333L);
 
@@ -184,12 +195,39 @@ class ReportingUnitServiceTest {
             org.mockito.ArgumentMatchers.any()))
         .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
 
+    when(districtVolumeService.getAreasForDistrictCode("DKM")).thenReturn(List.of("COASTAL", "INTERIOR"));
+
     // Act & Assert — grade validation happens before forest client lookup
     assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(
             e -> assertThat(((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST));
+  }
+
+  @Test
+  @DisplayName("shouldCreateReportingUnit_whenDistrictHasSingleConfiguredArea")
+  void shouldCreateReportingUnit_whenDistrictHasSingleConfiguredArea() {
+    // Arrange
+    var request = new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+        CLIENT_NUMBER, "DND", "AVG", null);
+
+    when(
+        legacyApiProvider.searchReportingUnit(
+            org.mockito.ArgumentMatchers.any(),
+            org.mockito.ArgumentMatchers.any()))
+        .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
+
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
+    when(legacyApiProvider.createReportingUnit(request)).thenReturn(333L);
+
+    // Act
+    var response = reportingUnitService.createReportingUnit(request);
+
+    // Assert
+    assertThat(response).isEqualTo(333L);
   }
 
   @Test
