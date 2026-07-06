@@ -36,8 +36,11 @@ public class CodesService {
   @NewSpan
   public List<CodeDescriptionDto> getDistrictCodes() {
     log.info("Fetching district codes from legacy API");
-    return legacyApiProvider.getDistrictCodes().stream()
-        .map(dto -> dto.withAreas(districtVolumeService.getAreasForDistrictCode(dto.code())))
+    var districtCodes = legacyApiProvider.getDistrictCodes();
+    var areasMap = districtVolumeService.getAreasForMultipleDistricts(
+        districtCodes.stream().map(CodeDescriptionDto::code).toList());
+    return districtCodes.stream()
+        .map(dto -> dto.withAreas(areasMap.getOrDefault(dto.code(), List.of())))
         .toList();
   }
 
