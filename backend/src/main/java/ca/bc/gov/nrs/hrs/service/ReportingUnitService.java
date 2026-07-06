@@ -145,7 +145,7 @@ public class ReportingUnitService {
 
     var districtAreas = districtVolumeService.getAreasForDistrictCode(request.districtCode());
 
-    if (districtAreas.size() == 2 && StringUtils.isBlank(request.gradeCode())) {
+    if (districtAreas.size() > 1 && StringUtils.isBlank(request.gradeCode())) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           String.format("Grade code is required for district %s", request.districtCode()));
