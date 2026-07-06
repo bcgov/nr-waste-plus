@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider, type UseMutationResult } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import type { ChangeEvent, ReactElement, ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ReportingUnitCreate from './index';
@@ -64,14 +66,48 @@ vi.mock('@carbon/react', async () => {
   const React = await import('react');
   const { Children, cloneElement, isValidElement } = React;
 
+  type MockButtonProps = {
+    children?: ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+    renderIcon?: ReactElement;
+    [key: string]: unknown;
+  };
+
+  type MockComboBoxProps = {
+    id?: string;
+    titleText?: string;
+    items?: CodeDescriptionDto[];
+    selectedItem?: CodeDescriptionDto | null;
+    onChange?: (event: { selectedItem?: CodeDescriptionDto | null }) => void;
+    onBlur?: () => void;
+  };
+
+  type MockRadioButtonGroupProps = {
+    children?: ReactNode;
+    onChange?: (selection?: string | number, name?: string, event?: ChangeEvent<HTMLInputElement>) => void;
+    onBlur?: () => void;
+    legendText?: string;
+    id?: string;
+    value?: string;
+  };
+
+  type MockRadioButtonProps = {
+    id?: string;
+    labelText?: string;
+    value?: string;
+    checked?: boolean;
+    onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  };
+
   return {
-    Button: ({ children, onClick, disabled, renderIcon: _renderIcon, ...props }: Record<string, unknown>) => (
-      <button type="button" onClick={onClick as () => void} disabled={disabled as boolean} {...props}>
+    Button: ({ children, onClick, disabled, renderIcon: _renderIcon, ...props }: MockButtonProps) => (
+      <button type="button" onClick={onClick} disabled={disabled} {...props}>
         {children}
       </button>
     ),
-    Column: ({ children, ...props }: Record<string, unknown>) => <div {...props}>{children}</div>,
-    ComboBox: ({ id, titleText, items, selectedItem, onChange, onBlur }: any) => (
+    Column: ({ children, ...props }: { children?: ReactNode; [key: string]: unknown }) => <div {...props}>{children}</div>,
+    ComboBox: ({ id, titleText, items = [], selectedItem, onChange, onBlur }: MockComboBoxProps) => (
       <div>
         <label htmlFor={id}>{titleText}</label>
         <select
@@ -80,12 +116,12 @@ vi.mock('@carbon/react', async () => {
           value={selectedItem?.code ?? ''}
           onBlur={onBlur}
           onChange={(event) => {
-            const selectedOption = items.find((item: CodeDescriptionDto) => item.code === event.target.value);
+            const selectedOption = items.find((item) => item.code === event.target.value);
             onChange?.({ selectedItem: selectedOption ?? null });
           }}
         >
           <option value="">Select</option>
-          {items.map((item: CodeDescriptionDto) => (
+          {items.map((item) => (
             <option key={item.code} value={item.code}>
               {item.description}
             </option>
@@ -93,7 +129,7 @@ vi.mock('@carbon/react', async () => {
         </select>
       </div>
     ),
-    RadioButtonGroup: ({ children, onChange, onBlur, legendText, id, value }: any) => (
+    RadioButtonGroup: ({ children, onChange, onBlur, legendText, id, value }: MockRadioButtonGroupProps) => (
       <fieldset id={id} onBlur={onBlur}>
         <legend>{legendText}</legend>
         {Children.map(children, (child) => {
@@ -101,17 +137,19 @@ vi.mock('@carbon/react', async () => {
             return child;
           }
 
+          const childProps = child.props as { value?: string };
+
           return cloneElement(child, {
-            checked: child.props.value === value,
+            checked: childProps.value === value,
             onChange: () =>
               onChange?.(undefined, undefined, {
-                target: { value: child.props.value },
+                target: { value: childProps.value },
               }),
           });
         })}
       </fieldset>
     ),
-    RadioButton: ({ id, labelText, value, checked, onChange }: any) => (
+    RadioButton: ({ id, labelText, value, checked, onChange }: MockRadioButtonProps) => (
       <label htmlFor={id}>
         <input id={id} type="radio" value={value} checked={checked} onChange={onChange} />
         <span>{labelText}</span>
@@ -222,9 +260,11 @@ describe('ReportingUnitCreate branch coverage', () => {
   });
 
   it('shows grade options when a district supports both grade areas', async () => {
+    const user = userEvent.setup();
+
     await renderComponent();
 
-    fireEvent.change(screen.getByLabelText('District'), { target: { value: 'DKM' } });
+    await user.selectOptions(screen.getByLabelText('District'), 'DKM');
 
     await waitFor(() => {
       expect(screen.getByText('Select grades you will use')).toBeTruthy();
@@ -232,9 +272,11 @@ describe('ReportingUnitCreate branch coverage', () => {
   });
 
   it('does not show grade options for districts with a single area', async () => {
+    const user = userEvent.setup();
+
     await renderComponent();
 
-    fireEvent.change(screen.getByLabelText('District'), { target: { value: 'DCR' } });
+    await user.selectOptions(screen.getByLabelText('District'), 'DCR');
 
     await waitFor(() => {
       expect(screen.queryByText('Select grades you will use')).toBeNull();
@@ -242,20 +284,31 @@ describe('ReportingUnitCreate branch coverage', () => {
   });
 
   it('submits the form with the selected client, district, grade, and sampling values', async () => {
+    const user = userEvent.setup();
     const mutateAsync = vi.fn().mockResolvedValue(12345);
     vi.mocked(useReportingUnitCreateMutation).mockReturnValue(createMockMutation({ mutateAsync }));
 
     await renderComponent();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Select Client' }));
+    await user.click(screen.getByRole('button', { name: 'Select Client' }));
 
-    fireEvent.change(screen.getByLabelText('District'), { target: { value: 'DKM' } });
+    await user.selectOptions(screen.getByLabelText('District'), 'DKM');
 
-    fireEvent.click(screen.getByLabelText('Coastal grades'));
+    await user.click(screen.getByLabelText('Coastal grades'));
 
-    fireEvent.change(screen.getByLabelText('Sampling option'), { target: { value: 'GND' } });
+    await user.selectOptions(screen.getByLabelText('Sampling option'), 'GND');
 
-    fireEvent.click(screen.getByRole('button', { name: /Create/i }));
+    await waitFor(() => {
+      const submitButton = screen.getByRole('button', { name: /Create/i });
+      expect(submitButton.hasAttribute('disabled')).toBe(false);
+    });
+
+    const form = screen.getByRole('button', { name: /Create/i }).closest('form');
+    if (!form) {
+      throw new Error('Form element not found');
+    }
+
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(mutateAsync).toHaveBeenCalledWith({
