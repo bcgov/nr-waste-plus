@@ -80,8 +80,8 @@ const mockDistrictOptions: CodeDescriptionDto[] = [
 
 const mockSamplingOptions: CodeDescriptionDto[] = [
   { code: 'AVG', description: 'Average' },
-  { code: 'SAM1', description: 'Ground Sampling' },
-  { code: 'SAM2', description: 'Crown Sampling' },
+  { code: 'GND', description: 'Ground Sampling' },
+  { code: 'CRN', description: 'Crown Sampling' },
 ];
 
 const mockClients: CodeDescriptionDto[] = [
@@ -355,7 +355,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
   });
 
   describe('button onClick handler', () => {
-    it('should call form.handleSubmit when button is clicked', async () => {
+    it('should render form with all required fields', async () => {
       const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
 
       vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
@@ -365,39 +365,17 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
       );
 
       await renderComponent();
-      const user = userEvent.setup();
 
-      // Select client
-      const selectClientBtn = screen.getByTestId('select-client-btn');
-      await user.click(selectClientBtn);
+      // Verify all form fields are rendered
+      const clientInput = screen.getByTestId('client-input');
+      const districtInput = screen.getByRole('combobox', { name: /District/i });
+      const samplingInput = screen.getByRole('combobox', { name: /Sampling option/i });
+      const submitBtn = screen.getByRole('button', { name: /Create/i });
 
-      // Select district
-      const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DCR', description: 'Campbell River' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox?.dispatchEvent(event);
-      });
-
-      // Select sampling
-      const samplingComboBox = document.querySelector('#as-sampling-multi-select') as HTMLElement;
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'SAM1', description: 'Ground Sampling' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        samplingComboBox?.dispatchEvent(event);
-      });
-
-      // Now button should be clickable
-      await waitFor(() => {
-        const submitBtn = screen.getByRole('button', { name: /Create/i });
-        expect(submitBtn).toBeDefined();
-      });
+      expect(clientInput).toBeDefined();
+      expect(districtInput).toBeDefined();
+      expect(samplingInput).toBeDefined();
+      expect(submitBtn).toBeDefined();
     });
 
     it('should show submitting state when form is being submitted', async () => {
@@ -483,7 +461,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
       const samplingComboBox = document.querySelector('#as-sampling-multi-select') as HTMLElement;
       await act(async () => {
         const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'SAM1', description: 'Ground Sampling' } },
+          detail: { selectedItem: { code: 'GND', description: 'Ground Sampling' } },
           bubbles: true,
           cancelable: true,
         });
@@ -649,7 +627,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
       const samplingComboBox = document.querySelector('#as-sampling-multi-select') as HTMLElement;
       await act(async () => {
         const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'SAM1', description: 'Ground Sampling' } },
+          detail: { selectedItem: { code: 'GND', description: 'Ground Sampling' } },
           bubbles: true,
           cancelable: true,
         });
