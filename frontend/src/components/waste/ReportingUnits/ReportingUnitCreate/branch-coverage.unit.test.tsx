@@ -137,21 +137,28 @@ vi.mock('@carbon/react', async () => {
             return child;
           }
 
-          const childProps = child.props as { value?: string };
+          const childProps = child.props as Partial<MockRadioButtonProps>;
+          const childValue = childProps.value ?? '';
 
-          return cloneElement(child, {
-            checked: childProps.value === value,
+          return cloneElement(child as ReactElement<MockRadioButtonProps>, {
+            checked: childValue === (value ?? ''),
             onChange: () =>
               onChange?.(undefined, undefined, {
-                target: { value: childProps.value },
-              }),
+                target: { value: childValue },
+              } as unknown as ChangeEvent<HTMLInputElement>),
           });
         })}
       </fieldset>
     ),
     RadioButton: ({ id, labelText, value, checked, onChange }: MockRadioButtonProps) => (
       <label htmlFor={id}>
-        <input id={id} type="radio" value={value} checked={checked} onChange={onChange} />
+        <input
+          id={id}
+          type="radio"
+          value={value ?? ''}
+          checked={checked}
+          onChange={onChange}
+        />
         <span>{labelText}</span>
       </label>
     ),
