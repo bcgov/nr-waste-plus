@@ -42,6 +42,11 @@ describe('ConfigurationPage', () => {
     screen.getByText('Check and manage configuration data');
   });
 
+  it('renders the section heading "District average criteria"', () => {
+    render(<ConfigurationPage />);
+    screen.getByText('District average criteria');
+  });
+
   it('renders the district volume card title', () => {
     render(<ConfigurationPage />);
     screen.getByText('District average waste volumes');
@@ -50,25 +55,50 @@ describe('ConfigurationPage', () => {
   it('renders the card description', () => {
     render(<ConfigurationPage />);
     screen.getByText(
-      'Tables used to calculate volumes when district averages are used for waste assessment',
+      'Volume tables used to calculate volumes when district averages are used for waste assessment',
     );
   });
 
-  it('renders the card action button', () => {
+  it('renders the card action link for district waste volumes', () => {
     render(<ConfigurationPage />);
-    screen.getByRole('button', { name: 'View or update tables →' });
+    const links = screen.getAllByText('View or update tables →');
+    expect(links.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('calls navigateInTree with correct path when button is clicked', async () => {
+  it('calls navigateInTree with correct path when first card link is clicked', async () => {
     const user = userEvent.setup();
     render(<ConfigurationPage />);
 
-    await user.click(screen.getByRole('button', { name: 'View or update tables →' }));
+    const links = screen.getAllByText('View or update tables →');
+    await user.click(links[0]);
 
     expect(navigateInTree).toHaveBeenCalledOnce();
     expect(navigateInTree).toHaveBeenCalledWith(
       mockNavigate,
       '/configuration/district-volume-tables',
     );
+  });
+
+  it('renders the species composition card title', () => {
+    render(<ConfigurationPage />);
+    screen.getByText('District level species composition');
+  });
+
+  it('renders the species composition card description', () => {
+    render(<ConfigurationPage />);
+    screen.getByText(
+      'Species composition table used to calculate volumes when HBS mark monthly billing report is not available',
+    );
+  });
+
+  it('species composition card link does not call navigateInTree when clicked', async () => {
+    const user = userEvent.setup();
+    render(<ConfigurationPage />);
+
+    const links = screen.getAllByText('View or update tables →');
+    // links[1] is the species composition card (second card, disabled)
+    await user.click(links[1]);
+
+    expect(navigateInTree).not.toHaveBeenCalled();
   });
 });

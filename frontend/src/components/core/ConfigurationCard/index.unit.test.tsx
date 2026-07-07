@@ -111,4 +111,46 @@ describe('ConfigurationCard', () => {
     const button = screen.getByRole('button', { name: 'Disabled action' });
     expect((button as HTMLButtonElement).disabled).toBe(true);
   });
+
+  it('renders icon when icon prop is provided', () => {
+    render(<ConfigurationCard title="Title" icon={<svg data-testid="card-icon" />} />);
+    expect(screen.getByTestId('card-icon')).toBeDefined();
+  });
+
+  it('does not render icon container when icon prop is absent', () => {
+    render(<ConfigurationCard title="Title" />);
+    expect(document.querySelector('.configuration-card__icon')).toBeNull();
+  });
+
+  it('renders a link element (not a button) when linkVariant is true', () => {
+    const onButtonClick = vi.fn();
+    render(
+      <ConfigurationCard
+        title="Title"
+        buttonLabel="View or update tables →"
+        onButtonClick={onButtonClick}
+        linkVariant
+      />,
+    );
+    expect(screen.queryByRole('button', { name: 'View or update tables →' })).toBeNull();
+    const link = screen.getByText('View or update tables →');
+    expect(link.closest('.cds--link')).toBeDefined();
+  });
+
+  it('does not call onButtonClick when linkVariant link is disabled', async () => {
+    const user = userEvent.setup();
+    const onButtonClick = vi.fn();
+    render(
+      <ConfigurationCard
+        title="Title"
+        buttonLabel="View or update tables →"
+        onButtonClick={onButtonClick}
+        linkVariant
+        disabled
+      />,
+    );
+    const linkText = screen.getByText('View or update tables →');
+    await user.click(linkText);
+    expect(onButtonClick).not.toHaveBeenCalled();
+  });
 });
