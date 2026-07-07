@@ -79,8 +79,8 @@ export interface ConfigurationCardProps {
  * **Content priority:** when both `children` and `description` are provided,
  * `children` is rendered and `description` is ignored.
  *
- * **CTA rendering:** the CTA is only rendered when *both* `buttonLabel`
- * and `onButtonClick` are provided.
+ * **CTA rendering:** the CTA is only rendered when `buttonLabel` is set
+ * and either `onButtonClick` is provided or `disabled` is `true`.
  *
  * @example
  * ```tsx
