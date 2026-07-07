@@ -18,7 +18,8 @@
 }
 
 .configuration-section__heading {
-  @include type-style('heading-compact-01');
+  @include type-style('heading-compact-02');
+  font-weight: 700;
   margin-bottom: $spacing-05;
 }
 
