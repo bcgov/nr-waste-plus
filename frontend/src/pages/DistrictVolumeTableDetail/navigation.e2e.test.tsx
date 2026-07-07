@@ -46,8 +46,11 @@ test.describe('District Volume Table Detail — Navigation & Access Control', ()
       await configLink.click();
       await expect(page).toHaveURL(/\/configuration$/);
 
-      // Step 3: Click "View or update tables" button
-      await page.getByRole('button', { name: /View or update tables/ }).click();
+      // Step 3: Click "View or update tables" link
+      await page
+        .getByRole('link', { name: /View or update tables/ })
+        .first()
+        .click();
       await expect(page).toHaveURL(/\/configuration\/district-volume-tables$/);
 
       // Step 4: Click on the first Interior row's "See details" action (id=1, current)
@@ -91,8 +94,11 @@ test.describe('District Volume Table Detail — Navigation & Access Control', ()
       await configLink.click();
       await expect(page).toHaveURL(/\/configuration$/);
 
-      // Step 3: Click "View or update tables" button
-      await page.getByRole('button', { name: /View or update tables/ }).click();
+      // Step 3: Click "View or update tables" link
+      await page
+        .getByRole('link', { name: /View or update tables/ })
+        .first()
+        .click();
       await expect(page).toHaveURL(/\/configuration\/district-volume-tables$/);
 
       // Step 4: Click on the first Coast row's "See details" action (id=4, current)

@@ -1,10 +1,30 @@
 @use '../../styles/variables' as vars;
 @use '@carbon/react/scss/spacing' as *;
 @use '@carbon/react/scss/breakpoint' as *;
+@use '@carbon/type' as *;
 
 .configuration-column__header {
   margin-bottom: $spacing-08;
+
   @include breakpoint-down(md) {
     margin: $spacing-04;
   }
+}
+
+.configuration-section {
+  background-color: var(--cds-layer-01);
+  border-radius: 0.25rem;
+  padding: $spacing-05;
+}
+
+.configuration-section__heading {
+  @include type-style('heading-compact-02');
+  font-weight: 700;
+  margin-bottom: $spacing-05;
+}
+
+.configuration-section__cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-05;
 }

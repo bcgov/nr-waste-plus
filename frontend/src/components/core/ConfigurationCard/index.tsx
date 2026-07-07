@@ -1,4 +1,4 @@
-import { Button, Tile } from '@carbon/react';
+import { Button, Link, Tile } from '@carbon/react';
 import { type FC, type ReactNode } from 'react';
 
 import './index.scss';
@@ -46,27 +46,50 @@ export interface ConfigurationCardProps {
 
   /** When `true`, the action button is rendered in a disabled state. */
   readonly disabled?: boolean;
+
+  /**
+   * Optional icon rendered at the top of the card (above the title).
+   * Pass a rendered Carbon icon component, e.g. `<AccumulationRain />`.
+   */
+  readonly icon?: ReactNode;
+
+  /**
+   * When `true`, renders a Carbon `<Link>` instead of a `<Button>` for the CTA.
+   * Use this when the design calls for an inline link style action.
+   * Defaults to `false`.
+   */
+  readonly linkVariant?: boolean;
+
+  /**
+   * Icon rendered inside the link CTA (next to the label).
+   * Pass a rendered Carbon icon component, e.g. `<ArrowRight />`.
+   * Only used when `linkVariant` is `true`.
+   */
+  readonly linkIcon?: ReactNode;
 }
 
 /**
  * Generic presentational card built on Carbon {@link Tile}.
  *
- * Renders a heading, optional body content, and an optional action button.
+ * Renders an optional icon, a heading, optional body content, and an optional
+ * action CTA (either a Button or a Link depending on `linkVariant`).
  * The component has no router coupling — all navigation and external actions
  * are delegated to the parent via the `onButtonClick` callback prop.
  *
  * **Content priority:** when both `children` and `description` are provided,
  * `children` is rendered and `description` is ignored.
  *
- * **Button rendering:** the button is only rendered when *both* `buttonLabel`
- * and `onButtonClick` are provided.
+ * **CTA rendering:** the CTA is only rendered when `buttonLabel` is set
+ * and either `onButtonClick` is provided or `disabled` is `true`.
  *
  * @example
  * ```tsx
  * <ConfigurationCard
+ *   icon={<AccumulationRain />}
  *   title="District average waste volumes"
- *   description="View or manage district volume tables for each district."
+ *   description="Volume tables used to calculate volumes when district averages are used for waste assessment"
  *   buttonLabel="View or update tables →"
+ *   linkVariant
  *   onButtonClick={() => navigate({ to: '/configuration/district-volume-tables' })}
  * />
  * ```
@@ -79,6 +102,9 @@ export const ConfigurationCard: FC<ConfigurationCardProps> = ({
   onButtonClick,
   kind = 'ghost',
   disabled = false,
+  icon,
+  linkVariant = false,
+  linkIcon,
 }) => {
   let descriptionContent: ReactNode = null;
   if (description != null) {
@@ -87,15 +113,29 @@ export const ConfigurationCard: FC<ConfigurationCardProps> = ({
 
   return (
     <Tile className="configuration-card">
+      {icon && <div className="configuration-card__icon">{icon}</div>}
+
       <h4>{title}</h4>
 
       {children ?? descriptionContent}
 
-      {buttonLabel && onButtonClick && (
-        <Button kind={kind} onClick={onButtonClick} disabled={disabled}>
-          {buttonLabel}
-        </Button>
-      )}
+      {buttonLabel &&
+        (onButtonClick || disabled) &&
+        (linkVariant ? (
+          <Link
+            className="configuration-card__link"
+            onClick={disabled ? undefined : onButtonClick}
+            disabled={disabled}
+            {...(!disabled ? { role: 'link', tabIndex: 0 } : {})}
+          >
+            <span>{buttonLabel}</span>
+            {linkIcon}
+          </Link>
+        ) : (
+          <Button kind={kind} onClick={onButtonClick} disabled={disabled}>
+            {buttonLabel}
+          </Button>
+        ))}
     </Tile>
   );
 };

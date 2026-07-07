@@ -42,11 +42,11 @@ describe('ConfigurationCard', () => {
     render(
       <ConfigurationCard
         title="Title"
-        buttonLabel="View or update tables →"
+        buttonLabel="View or update tables"
         onButtonClick={onButtonClick}
       />,
     );
-    screen.getByRole('button', { name: 'View or update tables →' });
+    screen.getByRole('button', { name: 'View or update tables' });
   });
 
   it('calls onButtonClick when button is clicked', async () => {
@@ -55,16 +55,16 @@ describe('ConfigurationCard', () => {
     render(
       <ConfigurationCard
         title="Title"
-        buttonLabel="View or update tables →"
+        buttonLabel="View or update tables"
         onButtonClick={onButtonClick}
       />,
     );
-    await user.click(screen.getByRole('button', { name: 'View or update tables →' }));
+    await user.click(screen.getByRole('button', { name: 'View or update tables' }));
     expect(onButtonClick).toHaveBeenCalledOnce();
   });
 
   it('does not render button when onButtonClick is undefined', () => {
-    render(<ConfigurationCard title="Title" buttonLabel="View or update tables →" />);
+    render(<ConfigurationCard title="Title" buttonLabel="View or update tables" />);
     expect(screen.queryByRole('button')).toBeNull();
   });
 
@@ -110,5 +110,62 @@ describe('ConfigurationCard', () => {
     );
     const button = screen.getByRole('button', { name: 'Disabled action' });
     expect((button as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('renders icon when icon prop is provided', () => {
+    render(<ConfigurationCard title="Title" icon={<svg data-testid="card-icon" />} />);
+    expect(screen.getByTestId('card-icon')).toBeDefined();
+  });
+
+  it('does not render icon container when icon prop is absent', () => {
+    const { container } = render(<ConfigurationCard title="Title" />);
+    // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
+    expect(container.querySelector('.configuration-card__icon')).toBeNull();
+  });
+
+  it('renders a link element (not a button) when linkVariant is true', () => {
+    const onButtonClick = vi.fn();
+    render(
+      <ConfigurationCard
+        title="Title"
+        buttonLabel="View or update tables"
+        onButtonClick={onButtonClick}
+        linkVariant
+      />,
+    );
+    expect(screen.queryByRole('button', { name: 'View or update tables' })).toBeNull();
+    // eslint-disable-next-line testing-library/no-node-access
+    const link = screen.getByText('View or update tables').closest('.cds--link');
+    expect(link).toBeDefined();
+  });
+
+  it('renders linkIcon inside the link when linkVariant and linkIcon are provided', () => {
+    render(
+      <ConfigurationCard
+        title="Title"
+        buttonLabel="View or update tables"
+        onButtonClick={vi.fn()}
+        linkVariant
+        linkIcon={<svg data-testid="link-icon" />}
+      />,
+    );
+    expect(screen.getByTestId('link-icon')).toBeDefined();
+  });
+
+  it('does not call onButtonClick when linkVariant link is disabled', async () => {
+    const user = userEvent.setup();
+    const onButtonClick = vi.fn();
+    render(
+      <ConfigurationCard
+        title="Title"
+        buttonLabel="View or update tables"
+        onButtonClick={onButtonClick}
+        linkVariant
+        disabled
+      />,
+    );
+    const linkText = screen.getByText('View or update tables');
+    await user.click(linkText);
+    expect(onButtonClick).not.toHaveBeenCalled();
   });
 });

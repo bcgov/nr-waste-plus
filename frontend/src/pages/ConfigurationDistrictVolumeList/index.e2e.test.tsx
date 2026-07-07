@@ -36,7 +36,7 @@ test.describe('Configuration District Volume List Page', () => {
       await configLink.click();
       await expect(page).toHaveURL(/\/configuration$/);
 
-      const districtVolumeLink = page.getByRole('button', { name: /View or update tables/ });
+      const districtVolumeLink = page.getByRole('link', { name: /View or update tables/ }).first();
       await districtVolumeLink.click();
       await expect(page).toHaveURL(/\/configuration\/district-volume-tables$/);
     });

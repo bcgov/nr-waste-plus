@@ -1,3 +1,4 @@
+import { AccumulationRain, ArrowRight, CropGrowth } from '@carbon/icons-react';
 import { Column } from '@carbon/react';
 import { useNavigate } from '@tanstack/react-router';
 import { type FC } from 'react';
@@ -27,13 +28,33 @@ const ConfigurationPage: FC = () => {
       </Column>
 
       <Column lg={16} md={8} sm={4} className="configuration-column__cards">
-        <ConfigurationCard
-          title="District average waste volumes"
-          description="Tables used to calculate volumes when district averages are used for waste assessment"
-          buttonLabel="View or update tables →"
-          kind="tertiary"
-          onButtonClick={() => navigateInTree(navigate, '/configuration/district-volume-tables')}
-        />
+        <div className="configuration-section">
+          <h2 className="configuration-section__heading">District average criteria</h2>
+
+          <div className="configuration-section__cards">
+            <ConfigurationCard
+              icon={<AccumulationRain />}
+              title="District average waste volumes"
+              description="Volume tables used to calculate volumes when district averages are used for waste assessment"
+              buttonLabel="View or update tables"
+              linkVariant={true}
+              linkIcon={<ArrowRight />}
+              onButtonClick={() =>
+                navigateInTree(navigate, '/configuration/district-volume-tables')
+              }
+            />
+
+            <ConfigurationCard
+              icon={<CropGrowth />}
+              title="District level species composition"
+              description="Species composition table used to calculate volumes when HBS mark monthly billing report is not available"
+              buttonLabel="View or update tables"
+              linkVariant={true}
+              linkIcon={<ArrowRight />}
+              disabled={true}
+            />
+          </div>
+        </div>
       </Column>
     </>
   );
