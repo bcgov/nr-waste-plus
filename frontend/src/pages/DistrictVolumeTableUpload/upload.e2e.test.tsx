@@ -209,8 +209,9 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       await page.goto('/configuration/upload-district-volume');
       await page.waitForLoadState('domcontentloaded');
 
-      // Select "Coast" first — the validator rejects files that don't match the selected area
-      await page.getByLabel('Coast').click();
+      // Select "Coast" first — the validator rejects files that don't match the selected area.
+      // Carbon renders radio inputs as visually-hidden; click the <label> instead.
+      await page.locator('label[for="area-coast"]').click();
       await expect(page.getByLabel('Coast')).toBeChecked();
 
       // Upload a valid Coast spreadsheet
@@ -379,8 +380,9 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       await page.goto('/configuration/upload-district-volume');
       await page.waitForLoadState('domcontentloaded');
 
-      // Select "Coast" first — the validator rejects files that don't match the selected area
-      await page.getByLabel('Coast').click();
+      // Select "Coast" first — the validator rejects files that don't match the selected area.
+      // Carbon renders radio inputs as visually-hidden; click the <label> instead.
+      await page.locator('label[for="area-coast"]').click();
       await expect(page.getByLabel('Coast')).toBeChecked();
 
       // Step 1: Upload a valid Coast spreadsheet
