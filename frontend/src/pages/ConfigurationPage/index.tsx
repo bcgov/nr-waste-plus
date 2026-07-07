@@ -52,7 +52,6 @@ const ConfigurationPage: FC = () => {
               linkVariant={true}
               linkIcon={<ArrowRight />}
               disabled={true}
-              onButtonClick={() => {}}
             />
           </div>
         </div>

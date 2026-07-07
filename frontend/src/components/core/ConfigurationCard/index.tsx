@@ -120,7 +120,7 @@ export const ConfigurationCard: FC<ConfigurationCardProps> = ({
       {children ?? descriptionContent}
 
       {buttonLabel &&
-        onButtonClick &&
+        (onButtonClick || disabled) &&
         (linkVariant ? (
           <Link
             className="configuration-card__link"
