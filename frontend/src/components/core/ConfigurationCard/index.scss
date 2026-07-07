@@ -35,4 +35,11 @@
     display: inline-flex;
     gap: $spacing-02;
   }
+
+  .configuration-card__link:hover {
+    cursor: pointer;
+  }
+  .configuration-card__link.cds--link--disabled:hover {
+    cursor: not-allowed;
+  }
 }
