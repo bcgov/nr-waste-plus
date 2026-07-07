@@ -5,6 +5,7 @@
 
 .configuration-card {
   max-width: min(100%, 22.5rem);
+  background-color: var(--cds-layer-02);
 
   .configuration-card__icon {
     margin-bottom: $spacing-05;
@@ -29,5 +30,9 @@
 
   .configuration-card__link {
     @include type-style('body-compact-01');
+    align-items: center;
+    display: inline-flex;
+    gap: $spacing-02;
+    text-decoration: none;
   }
 }

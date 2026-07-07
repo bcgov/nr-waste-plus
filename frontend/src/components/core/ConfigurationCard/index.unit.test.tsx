@@ -42,11 +42,11 @@ describe('ConfigurationCard', () => {
     render(
       <ConfigurationCard
         title="Title"
-        buttonLabel="View or update tables →"
+        buttonLabel="View or update tables"
         onButtonClick={onButtonClick}
       />,
     );
-    screen.getByRole('button', { name: 'View or update tables →' });
+    screen.getByRole('button', { name: 'View or update tables' });
   });
 
   it('calls onButtonClick when button is clicked', async () => {
@@ -55,16 +55,16 @@ describe('ConfigurationCard', () => {
     render(
       <ConfigurationCard
         title="Title"
-        buttonLabel="View or update tables →"
+        buttonLabel="View or update tables"
         onButtonClick={onButtonClick}
       />,
     );
-    await user.click(screen.getByRole('button', { name: 'View or update tables →' }));
+    await user.click(screen.getByRole('button', { name: 'View or update tables' }));
     expect(onButtonClick).toHaveBeenCalledOnce();
   });
 
   it('does not render button when onButtonClick is undefined', () => {
-    render(<ConfigurationCard title="Title" buttonLabel="View or update tables →" />);
+    render(<ConfigurationCard title="Title" buttonLabel="View or update tables" />);
     expect(screen.queryByRole('button')).toBeNull();
   });
 
@@ -128,14 +128,14 @@ describe('ConfigurationCard', () => {
     render(
       <ConfigurationCard
         title="Title"
-        buttonLabel="View or update tables →"
+        buttonLabel="View or update tables"
         onButtonClick={onButtonClick}
         linkVariant
       />,
     );
-    expect(screen.queryByRole('button', { name: 'View or update tables →' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'View or update tables' })).toBeNull();
     // eslint-disable-next-line testing-library/no-node-access
-    const link = screen.getByText('View or update tables →').closest('.cds--link');
+    const link = screen.getByText('View or update tables').closest('.cds--link');
     expect(link).toBeDefined();
   });
 
@@ -145,13 +145,13 @@ describe('ConfigurationCard', () => {
     render(
       <ConfigurationCard
         title="Title"
-        buttonLabel="View or update tables →"
+        buttonLabel="View or update tables"
         onButtonClick={onButtonClick}
         linkVariant
         disabled
       />,
     );
-    const linkText = screen.getByText('View or update tables →');
+    const linkText = screen.getByText('View or update tables');
     await user.click(linkText);
     expect(onButtonClick).not.toHaveBeenCalled();
   });

@@ -36,7 +36,7 @@ const ConfigurationPage: FC = () => {
               icon={<AccumulationRain />}
               title="District average waste volumes"
               description="Volume tables used to calculate volumes when district averages are used for waste assessment"
-              buttonLabel="View or update tables →"
+              buttonLabel="View or update tables"
               linkVariant={true}
               onButtonClick={() =>
                 navigateInTree(navigate, '/configuration/district-volume-tables')
@@ -47,7 +47,7 @@ const ConfigurationPage: FC = () => {
               icon={<CropGrowth />}
               title="District level species composition"
               description="Species composition table used to calculate volumes when HBS mark monthly billing report is not available"
-              buttonLabel="View or update tables →"
+              buttonLabel="View or update tables"
               linkVariant={true}
               disabled={true}
               onButtonClick={() => {}}

@@ -1,3 +1,4 @@
+import { ArrowRight } from '@carbon/icons-react';
 import { Button, Link, Tile } from '@carbon/react';
 import { type FC, type ReactNode } from 'react';
 
@@ -119,7 +120,8 @@ export const ConfigurationCard: FC<ConfigurationCardProps> = ({
             onClick={disabled ? undefined : onButtonClick}
             disabled={disabled}
           >
-            {buttonLabel}
+            <span>{buttonLabel}</span>
+            <ArrowRight />
           </Link>
         ) : (
           <Button kind={kind} onClick={onButtonClick} disabled={disabled}>

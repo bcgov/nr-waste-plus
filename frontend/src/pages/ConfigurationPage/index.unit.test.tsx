@@ -61,7 +61,7 @@ describe('ConfigurationPage', () => {
 
   it('renders the card action link for district waste volumes', () => {
     render(<ConfigurationPage />);
-    const links = screen.getAllByText('View or update tables →');
+    const links = screen.getAllByText('View or update tables');
     expect(links.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -69,7 +69,7 @@ describe('ConfigurationPage', () => {
     const user = userEvent.setup();
     render(<ConfigurationPage />);
 
-    const links = screen.getAllByText('View or update tables →');
+    const links = screen.getAllByText('View or update tables');
     await user.click(links[0]);
 
     expect(navigateInTree).toHaveBeenCalledOnce();
@@ -95,7 +95,7 @@ describe('ConfigurationPage', () => {
     const user = userEvent.setup();
     render(<ConfigurationPage />);
 
-    const links = screen.getAllByText('View or update tables →');
+    const links = screen.getAllByText('View or update tables');
     // links[1] is the species composition card (second card, disabled)
     await user.click(links[1]);
 
