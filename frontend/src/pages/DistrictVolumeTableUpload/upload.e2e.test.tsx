@@ -100,8 +100,8 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       await page.getByTestId('side-nav-link-config').click();
       await expect(page).toHaveURL(/\/configuration$/);
 
-      // Click the "View or update tables" button
-      await page.getByRole('button', { name: /View or update tables/i }).click();
+      // Click the "View or update tables" link
+      await page.getByRole('link', { name: /View or update tables/i }).click();
       await expect(page).toHaveURL(/\/configuration\/district-volume-tables$/);
 
       // Click the upload button
