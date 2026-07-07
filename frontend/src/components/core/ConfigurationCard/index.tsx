@@ -47,12 +47,16 @@ export interface ConfigurationCardProps {
   /** When `true`, the action button is rendered in a disabled state. */
   readonly disabled?: boolean;
 
-  /** Optional icon to display on the left side of the card. */
+  /**
+   * Optional icon rendered at the top of the card (above the title).
+   * Pass a rendered Carbon icon component, e.g. `<AccumulationRain />`.
+   */
   readonly icon?: ReactNode;
 
   /**
-   * If `true`, renders a `<Link>` instead of `<Button>` for the action.
-   * When using Link, `onButtonClick` is ignored and `buttonLabel` is used as the link text.
+   * When `true`, renders a Carbon `<Link>` instead of a `<Button>` for the CTA.
+   * Use this when the design calls for an inline link style action.
+   * Defaults to `false`.
    */
   readonly linkVariant?: boolean;
 }
@@ -60,22 +64,25 @@ export interface ConfigurationCardProps {
 /**
  * Generic presentational card built on Carbon {@link Tile}.
  *
- * Renders a heading, optional body content, and an optional action button.
+ * Renders an optional icon, a heading, optional body content, and an optional
+ * action CTA (either a Button or a Link depending on `linkVariant`).
  * The component has no router coupling — all navigation and external actions
  * are delegated to the parent via the `onButtonClick` callback prop.
  *
  * **Content priority:** when both `children` and `description` are provided,
  * `children` is rendered and `description` is ignored.
  *
- * **Button rendering:** the button is only rendered when *both* `buttonLabel`
+ * **CTA rendering:** the CTA is only rendered when *both* `buttonLabel`
  * and `onButtonClick` are provided.
  *
  * @example
  * ```tsx
  * <ConfigurationCard
+ *   icon={<AccumulationRain />}
  *   title="District average waste volumes"
- *   description="View or manage district volume tables for each district."
+ *   description="Volume tables used to calculate volumes when district averages are used for waste assessment"
  *   buttonLabel="View or update tables →"
+ *   linkVariant
  *   onButtonClick={() => navigate({ to: '/configuration/district-volume-tables' })}
  * />
  * ```
@@ -98,22 +105,27 @@ export const ConfigurationCard: FC<ConfigurationCardProps> = ({
 
   return (
     <Tile className="configuration-card">
+      {icon && <div className="configuration-card__icon">{icon}</div>}
+
       <h4>{title}</h4>
 
       {children ?? descriptionContent}
 
-      {buttonLabel && (linkVariant ? onButtonClick : onButtonClick) && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          {icon}
-          {linkVariant ? (
-            <Link href={onButtonClick ? '#' : ''}>{buttonLabel}</Link>
-          ) : (
-            <Button kind={kind} onClick={onButtonClick} disabled={disabled}>
-              {buttonLabel}
-            </Button>
-          )}
-        </div>
-      )}
+      {buttonLabel &&
+        onButtonClick &&
+        (linkVariant ? (
+          <Link
+            className="configuration-card__link"
+            onClick={disabled ? undefined : onButtonClick}
+            disabled={disabled}
+          >
+            {buttonLabel}
+          </Link>
+        ) : (
+          <Button kind={kind} onClick={onButtonClick} disabled={disabled}>
+            {buttonLabel}
+          </Button>
+        ))}
     </Tile>
   );
 };
