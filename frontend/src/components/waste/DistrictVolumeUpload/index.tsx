@@ -101,6 +101,21 @@ const DistrictVolumeTableUpload: FC = () => {
     },
   });
 
+  const resetUploadedTableData = useCallback(
+    (
+      selectedArea: 'INTERIOR' | 'COASTAL' = form.getFieldValue('area') as 'INTERIOR' | 'COASTAL',
+    ) => {
+      const clearedData =
+        selectedArea === 'COASTAL'
+          ? ({ type: 'COASTAL', sections: [], formulas: {} } as CoastData)
+          : ({ type: 'INTERIOR', zones: [], formulas: {} } as InteriorData);
+
+      form.setFieldValue('tableData', clearedData);
+      form.setFieldValue('heliMultiplier', 1);
+    },
+    [form],
+  );
+
   /**
    * Handles form submission by clearing any prior error and invoking the TanStack form submit.
    * Catches validation or mutation errors and surfaces them as an inline error message.
@@ -114,7 +129,10 @@ const DistrictVolumeTableUpload: FC = () => {
 
   /**
    * Processes the results emitted by {@link FileUploadInput} after the spreadsheet is parsed.
-   * Updates the form's `area` and `tableData` fields to match the parsed file.
+   * Validates that the uploaded file type matches the currently selected area.
+   * If the file type does not match the selected area, sets a file-level error
+   * and rejects the file without updating form state.
+   * Otherwise, updates the form's `area` and `tableData` fields to match the parsed file.
    * For Coastal files, also reads the heli multiplier extracted from the spreadsheet.
    *
    * @param results - Array of parsed table data returned by the file processor.
@@ -126,6 +144,19 @@ const DistrictVolumeTableUpload: FC = () => {
       const data = results[0];
       if (!data) return;
 
+      // Check for area/file type mismatch
+      const currentArea = form.getFieldValue('area');
+      if (currentArea !== data.type) {
+        const areaLabel = currentArea === 'INTERIOR' ? 'Interior' : 'Coast';
+        const fileTypeLabel = data.type === 'COASTAL' ? 'Coast' : 'Interior';
+        setFileErrors([
+          `Area mismatch: "${areaLabel}" is selected, but the uploaded file is a "${fileTypeLabel}" spreadsheet. ` +
+            `Please select "${fileTypeLabel}" as the area or upload a "${areaLabel}" spreadsheet instead.`,
+        ]);
+        resetUploadedTableData(currentArea);
+        return;
+      }
+
       setFileErrors([]);
       form.setFieldValue('area', data.type);
       form.setFieldValue('tableData', data);
@@ -134,7 +165,7 @@ const DistrictVolumeTableUpload: FC = () => {
         form.setFieldValue('heliMultiplier', processor.heliMultiplier ?? 1);
       }
     },
-    [form],
+    [form, resetUploadedTableData],
   );
 
   /**
@@ -284,12 +315,46 @@ const DistrictVolumeTableUpload: FC = () => {
               const reader = new ExcelReader();
               const sheets = await reader.listSheets(file);
               const upperSheets = sheets.map((s) => s.trim().toUpperCase());
-              if (upperSheets.includes('COAST')) return coastValidator(file);
-              if (upperSheets.includes('INTERIOR')) return interiorValidator(file);
+
+              // Detect the file type from sheet names
+              const detectedType = upperSheets.some((sheet) => sheet.includes('COAST'))
+                ? 'COASTAL'
+                : upperSheets.some((sheet) => sheet.includes('INTERIOR'))
+                  ? 'INTERIOR'
+                  : null;
+
+              if (detectedType) {
+                // Check for area/file type mismatch before format validation
+                const currentArea = form.getFieldValue('area');
+                if (currentArea !== detectedType) {
+                  resetUploadedTableData(currentArea);
+                  const areaLabel = currentArea === 'INTERIOR' ? 'Interior' : 'Coast';
+                  const fileTypeLabel = detectedType === 'COASTAL' ? 'Coast' : 'Interior';
+                  return [
+                    `Area mismatch: "${areaLabel}" is selected, but the uploaded file is a "${fileTypeLabel}" spreadsheet. ` +
+                      `Please select "${fileTypeLabel}" as the area or upload a "${areaLabel}" spreadsheet instead.`,
+                  ];
+                }
+
+                // Area matches — proceed with format validation
+                const validationErrors =
+                  detectedType === 'COASTAL'
+                    ? await coastValidator(file)
+                    : await interiorValidator(file);
+
+                if (validationErrors.length > 0) {
+                  resetUploadedTableData(currentArea);
+                }
+
+                return validationErrors;
+              }
+
+              resetUploadedTableData(form.getFieldValue('area'));
               return [
                 'Could not detect spreadsheet format. Expected a sheet named "Interior" or "Coast".',
               ];
             } catch (e) {
+              resetUploadedTableData(form.getFieldValue('area'));
               return [(e as Error).message];
             }
           }}

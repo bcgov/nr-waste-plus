@@ -15,6 +15,37 @@ import * as inTreePaths from '@/routes/inTreePaths';
 // Mocks
 // ============================================================================
 
+/**
+ * Hoisted mock utilities shared across module-level mocks.
+ *
+ * - `mockListSheets` controls what ExcelReader.listSheets() returns
+ * - `mockTableData` controls what FileUploadInput's onProcessed receives
+ * - `coastValidator` / `interiorValidator` intercept format-validation calls
+ */
+const { mockListSheets, mockTableData, coastValidator, interiorValidator } = vi.hoisted(() => ({
+  mockListSheets: vi.fn().mockResolvedValue(['Interior']),
+  mockTableData: { current: null as unknown },
+  coastValidator: vi.fn().mockResolvedValue([] as string[]),
+  interiorValidator: vi.fn().mockResolvedValue([] as string[]),
+}));
+
+// Mock ExcelReader so the validator doesn't need real .xlsx files
+// Must use a regular function (not arrow) so `new ExcelReader()` works as a constructor.
+vi.mock('@/services/spreadsheet/excelReader', () => ({
+  ExcelReader: vi.fn().mockImplementation(function () {
+    return { listSheets: mockListSheets };
+  }),
+}));
+
+// Mock the format-specific validators the component validator delegates to
+vi.mock('@/services/districtvolumes/validators/coastValidator', () => ({
+  coastValidator,
+}));
+
+vi.mock('@/services/districtvolumes/validators/interiorValidator', () => ({
+  interiorValidator,
+}));
+
 vi.mock('@/config/react-query/hooks');
 
 const mockMutateAsync = vi.fn();
@@ -26,14 +57,25 @@ vi.mock('@/routes/inTreePaths', () => ({
   navigateInTree: vi.fn(),
 }));
 
-// Mock FileUploadInput to avoid Excel processing in tests
+/**
+ * FileUploadInput mock that mirrors the real component's validation flow:
+ *
+ * 1. Calls the `validator` prop with the selected file
+ * 2. If validator returns errors → file is rejected, onProcessed is NOT called
+ * 3. If validator passes → onProcessed is called with the current mockTableData
+ *
+ * This lets tests exercise the area-mismatch & format-detection logic in the
+ * component's inlined validator function.
+ */
 vi.mock('@/components/Form/FileUploadInput', () => ({
   default: ({
     onProcessed,
     externalErrors,
+    validator,
   }: {
     onProcessed: (results: TableData[]) => void;
     externalErrors?: string[];
+    validator?: (file: File) => Promise<string[]>;
   }) => (
     <div data-testid="file-upload-input">
       <label htmlFor="mock-file-input">Upload spreadsheet</label>
@@ -41,16 +83,16 @@ vi.mock('@/components/Form/FileUploadInput', () => ({
         id="mock-file-input"
         type="file"
         data-testid="mock-file-input"
-        onChange={(e) => {
-          // Simulate processor returning interior data
+        onChange={async (e) => {
           if (e.target.files?.[0]) {
-            onProcessed([
-              {
-                type: 'INTERIOR',
-                zones: [{ name: 'Dry belt', districts: [] }],
-                formulas: {},
-              },
-            ]);
+            if (validator) {
+              const errors = await validator(e.target.files[0]);
+              if (errors && errors.length > 0) {
+                return;
+              }
+            }
+
+            onProcessed([mockTableData.current] as TableData[]);
           }
         }}
       />
@@ -87,6 +129,15 @@ describe('DistrictVolumeTableUpload', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseDistrictVolumeTableCreateMutation.mockReturnValue(createDefaultMutationReturn());
+    // Restore hoisted mock defaults
+    mockListSheets.mockResolvedValue(['Interior']);
+    mockTableData.current = {
+      type: 'INTERIOR' as const,
+      zones: [{ name: 'Dry belt', districts: [] }],
+      formulas: {},
+    } as unknown;
+    coastValidator.mockResolvedValue([]);
+    interiorValidator.mockResolvedValue([]);
   });
 
   describe('rendering', () => {
@@ -263,6 +314,207 @@ describe('DistrictVolumeTableUpload', () => {
       await renderWithAppAsync(<DistrictVolumeTableUpload />);
 
       expect(screen.getByTestId('district-volume-upload-column')).toBeTruthy();
+    });
+  });
+
+  describe('validator (area/file-type mismatch detection)', () => {
+    it('should accept a file when detected type matches the selected area (Interior)', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+
+      // Default area is INTERIOR, default mockListSheets returns ['Interior']
+      const fileInput = screen.getByTestId('mock-file-input');
+      await user.upload(
+        fileInput,
+        new File(['test'], 'interior.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      );
+
+      // Validator passed → onProcessed was called → file errors stay empty & Interior stays checked
+      await waitFor(() => {
+        expect((screen.getByLabelText('Interior') as HTMLInputElement).checked).toBe(true);
+      });
+      expect(screen.queryByTestId('file-error')).toBeNull();
+    });
+
+    it('should reject a Coast file when Interior is selected', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+
+      // Make ExcelReader report Coast-style sheet names
+      mockListSheets.mockResolvedValue(['Coast Districts']);
+
+      const fileInput = screen.getByTestId('mock-file-input');
+      await user.upload(
+        fileInput,
+        new File(['test'], 'coast.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      );
+
+      // Validator rejects the file — onProcessed is never called, Interior stays selected
+      await waitFor(() => {
+        expect((screen.getByLabelText('Interior') as HTMLInputElement).checked).toBe(true);
+      });
+    });
+
+    it('should reject an Interior file when Coast is selected', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+
+      // First switch area to Coast
+      await user.click(screen.getByLabelText('Coast'));
+
+      // mockListSheets already defaults to ['Interior']
+      const fileInput = screen.getByTestId('mock-file-input');
+      await user.upload(
+        fileInput,
+        new File(['test'], 'interior.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      );
+
+      // Validator rejects the file — area stays Coast
+      await waitFor(() => {
+        expect((screen.getByLabelText('Coast') as HTMLInputElement).checked).toBe(true);
+      });
+    });
+
+    it('should return a format error when sheet names are unrecognized', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+
+      mockListSheets.mockResolvedValue(['Unknown Sheet']);
+
+      // The validator can't match "COAST" or "INTERIOR" and returns a format error.
+      // The mock rejects the file when errors are present, so onProcessed is not called.
+      const fileInput = screen.getByTestId('mock-file-input');
+      await user.upload(
+        fileInput,
+        new File(['test'], 'unknown.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      );
+
+      // Interior stays selected (default) since onProcessed was never called
+      await waitFor(() => {
+        expect((screen.getByLabelText('Interior') as HTMLInputElement).checked).toBe(true);
+      });
+    });
+
+    it('should catch and return errors thrown during sheet inspection', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+
+      mockListSheets.mockRejectedValue(new Error('Corrupted file'));
+
+      const fileInput = screen.getByTestId('mock-file-input');
+      await user.upload(
+        fileInput,
+        new File(['test'], 'corrupted.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      );
+
+      // Validator's catch block returns the error message; onProcessed never called
+      await waitFor(() => {
+        expect((screen.getByLabelText('Interior') as HTMLInputElement).checked).toBe(true);
+      });
+    });
+  });
+
+  describe('file upload processing (handleFileChange)', () => {
+    it('should update area to COASTAL and set heliMultiplier when a Coast-file result is processed', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+
+      // Switch area to Coast first so the mismatch guard doesn't block
+      await user.click(screen.getByLabelText('Coast'));
+
+      // Set up the mock to return Coast data
+      mockTableData.current = {
+        type: 'COASTAL',
+        sections: [{ name: 'Mature', districts: [] }],
+        formulas: {},
+      } as unknown;
+
+      // Also need the validator to pass — mock sheets containing "COAST"
+      mockListSheets.mockResolvedValue(['Coast Districts']);
+
+      const fileInput = screen.getByTestId('mock-file-input');
+      await user.upload(
+        fileInput,
+        new File(['test'], 'coast.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      );
+
+      await waitFor(() => {
+        expect((screen.getByLabelText('Coast') as HTMLInputElement).checked).toBe(true);
+      });
+    });
+  });
+
+  describe('form submission', () => {
+    it('should successfully submit a valid COASTAL form', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+
+      // 1. Switch area to Coast
+      await user.click(screen.getByLabelText('Coast'));
+
+      // 2. Upload a Coast file so tableData gets populated with sections
+      mockTableData.current = {
+        type: 'COASTAL',
+        sections: [{ name: 'Mature', districts: [] }],
+        formulas: {},
+      } as unknown;
+      mockListSheets.mockResolvedValue(['Coast Districts']);
+
+      const fileInput = screen.getByTestId('mock-file-input');
+      await user.upload(
+        fileInput,
+        new File(['test'], 'coast.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      );
+
+      // Wait for async validators to settle & re-render
+      await waitFor(() => {
+        expect((screen.getByTestId('upload-table-button') as HTMLButtonElement).disabled).toBe(
+          false,
+        );
+      });
+
+      // 3. Submit the form by clicking the Upload table button after the async
+      // validation cycle resolves.
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+
+      await waitFor(() => {
+        expect(mockMutateAsync).toHaveBeenCalledWith(
+          expect.objectContaining({
+            area: 'COASTAL' as const,
+            startDate: expect.any(String),
+          }),
+        );
+      });
+    });
+
+    it('should display a submit error when the mutation fails', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+
+      // Make mutateAsync reject on submission
+      mockMutateAsync.mockRejectedValue(new Error('API failure'));
+
+      // Click submit — form validation fails (no file uploaded)
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+
+      // The submit error should appear
+      await waitFor(() => {
+        expect(screen.getByTestId('submit-error')).toBeTruthy();
+      });
     });
   });
 });
