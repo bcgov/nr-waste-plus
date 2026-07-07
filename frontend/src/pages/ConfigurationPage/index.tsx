@@ -29,7 +29,7 @@ const ConfigurationPage: FC = () => {
 
       <Column lg={16} md={8} sm={4} className="configuration-column__cards">
         <div className="configuration-section">
-          <p className="configuration-section__heading">District average criteria</p>
+          <h2 className="configuration-section__heading">District average criteria</h2>
 
           <div className="configuration-section__cards">
             <ConfigurationCard
