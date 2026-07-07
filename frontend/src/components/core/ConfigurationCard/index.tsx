@@ -126,6 +126,7 @@ export const ConfigurationCard: FC<ConfigurationCardProps> = ({
             className="configuration-card__link"
             onClick={disabled ? undefined : onButtonClick}
             disabled={disabled}
+            {...(!disabled ? { role: 'link', tabIndex: 0 } : {})}
           >
             <span>{buttonLabel}</span>
             {linkIcon}
