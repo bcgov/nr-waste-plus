@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { screen, waitFor, fireEvent } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -84,29 +84,14 @@ vi.mock('@/components/Form/FileUploadInput', () => ({
         type="file"
         data-testid="mock-file-input"
         onChange={async (e) => {
-          console.log('[DEBUG mock onChange] fired');
           if (e.target.files?.[0]) {
-            console.log('[DEBUG mock onChange] file received:', e.target.files[0].name);
-            // Run validation first (mirrors real component behaviour)
             if (validator) {
-              console.log('[DEBUG mock onChange] calling validator...');
               const errors = await validator(e.target.files[0]);
-              console.log(
-                '[DEBUG mock onChange] validator returned:',
-                JSON.stringify(errors),
-                'length:',
-                errors?.length,
-              );
               if (errors && errors.length > 0) {
-                console.log('[DEBUG mock onChange] validator rejected file');
                 return;
               }
             }
-            console.log(
-              '[DEBUG mock onChange] validator passed, calling onProcessed with:',
-              JSON.stringify(mockTableData.current),
-            );
-            // Validation passed — simulate successful processing
+
             onProcessed([mockTableData.current] as TableData[]);
           }
         }}
@@ -502,11 +487,9 @@ describe('DistrictVolumeTableUpload', () => {
         );
       });
 
-      // 3. Submit the form by dispatching a submit event on the <form> element.
-      // Using fireEvent.submit avoids issues with the button being disabled during
-      // TanStack Form's async validation cycle after setFieldValue.
-      const formEl = screen.getByTestId('district-volume-upload-column').querySelector('form')!;
-      fireEvent.submit(formEl);
+      // 3. Submit the form by clicking the Upload table button after the async
+      // validation cycle resolves.
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
 
       await waitFor(() => {
         expect(mockMutateAsync).toHaveBeenCalledWith(
