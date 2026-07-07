@@ -1,4 +1,4 @@
-import { AccumulationRain, CropGrowth } from '@carbon/icons-react';
+import { AccumulationRain, ArrowRight, CropGrowth } from '@carbon/icons-react';
 import { Column } from '@carbon/react';
 import { useNavigate } from '@tanstack/react-router';
 import { type FC } from 'react';
@@ -38,6 +38,7 @@ const ConfigurationPage: FC = () => {
               description="Volume tables used to calculate volumes when district averages are used for waste assessment"
               buttonLabel="View or update tables"
               linkVariant={true}
+              linkIcon={<ArrowRight />}
               onButtonClick={() =>
                 navigateInTree(navigate, '/configuration/district-volume-tables')
               }
@@ -49,6 +50,7 @@ const ConfigurationPage: FC = () => {
               description="Species composition table used to calculate volumes when HBS mark monthly billing report is not available"
               buttonLabel="View or update tables"
               linkVariant={true}
+              linkIcon={<ArrowRight />}
               disabled={true}
               onButtonClick={() => {}}
             />

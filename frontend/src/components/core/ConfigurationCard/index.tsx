@@ -1,4 +1,3 @@
-import { ArrowRight } from '@carbon/icons-react';
 import { Button, Link, Tile } from '@carbon/react';
 import { type FC, type ReactNode } from 'react';
 
@@ -60,6 +59,13 @@ export interface ConfigurationCardProps {
    * Defaults to `false`.
    */
   readonly linkVariant?: boolean;
+
+  /**
+   * Icon rendered inside the link CTA (next to the label).
+   * Pass a rendered Carbon icon component, e.g. `<ArrowRight />`.
+   * Only used when `linkVariant` is `true`.
+   */
+  readonly linkIcon?: ReactNode;
 }
 
 /**
@@ -98,6 +104,7 @@ export const ConfigurationCard: FC<ConfigurationCardProps> = ({
   disabled = false,
   icon,
   linkVariant = false,
+  linkIcon,
 }) => {
   let descriptionContent: ReactNode = null;
   if (description != null) {
@@ -121,7 +128,7 @@ export const ConfigurationCard: FC<ConfigurationCardProps> = ({
             disabled={disabled}
           >
             <span>{buttonLabel}</span>
-            <ArrowRight />
+            {linkIcon}
           </Link>
         ) : (
           <Button kind={kind} onClick={onButtonClick} disabled={disabled}>

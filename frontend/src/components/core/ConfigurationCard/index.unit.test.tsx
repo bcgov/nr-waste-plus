@@ -139,6 +139,19 @@ describe('ConfigurationCard', () => {
     expect(link).toBeDefined();
   });
 
+  it('renders linkIcon inside the link when linkVariant and linkIcon are provided', () => {
+    render(
+      <ConfigurationCard
+        title="Title"
+        buttonLabel="View or update tables"
+        onButtonClick={vi.fn()}
+        linkVariant
+        linkIcon={<svg data-testid="link-icon" />}
+      />,
+    );
+    expect(screen.getByTestId('link-icon')).toBeDefined();
+  });
+
   it('does not call onButtonClick when linkVariant link is disabled', async () => {
     const user = userEvent.setup();
     const onButtonClick = vi.fn();

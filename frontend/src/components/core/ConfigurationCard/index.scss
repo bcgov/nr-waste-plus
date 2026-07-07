@@ -20,6 +20,7 @@
     margin-bottom: $spacing-05;
 
     @include type-style('heading-compact-01');
+    font-weight: 700;
   }
 
   p {
