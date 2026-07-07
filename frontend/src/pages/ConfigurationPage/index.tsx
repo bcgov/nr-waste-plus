@@ -1,4 +1,4 @@
-import { Column } from '@carbon/react';
+import { Column, Link } from '@carbon/react';
 import { useNavigate } from '@tanstack/react-router';
 import { type FC } from 'react';
 
@@ -31,7 +31,7 @@ const ConfigurationPage: FC = () => {
           title="District average waste volumes"
           description="Tables used to calculate volumes when district averages are used for waste assessment"
           buttonLabel="View or update tables →"
-          kind="tertiary"
+          linkVariant={true}
           onButtonClick={() => navigateInTree(navigate, '/configuration/district-volume-tables')}
         />
       </Column>

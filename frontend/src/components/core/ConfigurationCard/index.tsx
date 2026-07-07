@@ -1,4 +1,4 @@
-import { Button, Tile } from '@carbon/react';
+import { Button, Link, Tile } from '@carbon/react';
 import { type FC, type ReactNode } from 'react';
 
 import './index.scss';
@@ -46,6 +46,15 @@ export interface ConfigurationCardProps {
 
   /** When `true`, the action button is rendered in a disabled state. */
   readonly disabled?: boolean;
+
+  /** Optional icon to display on the left side of the card. */
+  readonly icon?: ReactNode;
+
+  /**
+   * If `true`, renders a `<Link>` instead of `<Button>` for the action.
+   * When using Link, `onButtonClick` is ignored and `buttonLabel` is used as the link text.
+   */
+  readonly linkVariant?: boolean;
 }
 
 /**
@@ -79,6 +88,8 @@ export const ConfigurationCard: FC<ConfigurationCardProps> = ({
   onButtonClick,
   kind = 'ghost',
   disabled = false,
+  icon,
+  linkVariant = false,
 }) => {
   let descriptionContent: ReactNode = null;
   if (description != null) {
@@ -91,10 +102,17 @@ export const ConfigurationCard: FC<ConfigurationCardProps> = ({
 
       {children ?? descriptionContent}
 
-      {buttonLabel && onButtonClick && (
-        <Button kind={kind} onClick={onButtonClick} disabled={disabled}>
-          {buttonLabel}
-        </Button>
+      {buttonLabel && (linkVariant ? onButtonClick : onButtonClick) && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {icon}
+          {linkVariant ? (
+            <Link href={onButtonClick ? '#' : ''}>{buttonLabel}</Link>
+          ) : (
+            <Button kind={kind} onClick={onButtonClick} disabled={disabled}>
+              {buttonLabel}
+            </Button>
+          )}
+        </div>
       )}
     </Tile>
   );
