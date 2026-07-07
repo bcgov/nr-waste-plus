@@ -5,8 +5,15 @@
 
 .configuration-card {
   max-width: min(100%, 22.5rem);
-  min-block-size: min(100%, 22.5rem);
-  min-inline-size: min(100%, 22.5rem);
+
+  .configuration-card__icon {
+    margin-bottom: $spacing-05;
+    color: var(--cds-link-primary);
+
+    svg {
+      display: block;
+    }
+  }
 
   h4 {
     margin-bottom: $spacing-05;
@@ -20,10 +27,7 @@
     @include type-style('label-01');
   }
 
-  .#{vars.$bcgov-prefix}--btn {
-    max-width: min(100%, 12.75rem);
-    max-inline-size: min(100%, 12.75rem);
-    padding-inline: calc(var(--cds-layout-density-padding-inline-local) - 0.0625rem)
-      calc(var(--cds-layout-density-padding-inline-local) * 3 + 1rem - 3.0625rem);
+  .configuration-card__link {
+    @include type-style('body-compact-01');
   }
 }
