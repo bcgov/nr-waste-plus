@@ -101,7 +101,10 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       await expect(page).toHaveURL(/\/configuration$/);
 
       // Click the "View or update tables" link
-      await page.getByRole('link', { name: /View or update tables/i }).click();
+      await page
+        .getByRole('link', { name: /View or update tables/i })
+        .first()
+        .click();
       await expect(page).toHaveURL(/\/configuration\/district-volume-tables$/);
 
       // Click the upload button

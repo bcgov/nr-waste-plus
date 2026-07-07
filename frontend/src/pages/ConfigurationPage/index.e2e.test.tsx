@@ -66,7 +66,7 @@ test.describe('Configuration Page', () => {
           'Volume tables used to calculate volumes when district averages are used for waste assessment',
         ),
       ).toBeVisible();
-      await expect(page.getByRole('link', { name: 'View or update tables' })).toBeVisible();
+      await expect(page.getByRole('link', { name: 'View or update tables' }).first()).toBeVisible();
     });
 
     test('should navigate to district volume tables when card button is clicked @idir-only', async ({
@@ -82,7 +82,7 @@ test.describe('Configuration Page', () => {
       await page.goto('/configuration');
       await page.waitForLoadState('domcontentloaded');
 
-      await page.getByRole('link', { name: 'View or update tables' }).click();
+      await page.getByRole('link', { name: 'View or update tables' }).first().click();
 
       await expect(page).toHaveURL(/\/configuration\/district-volume-tables$/);
     });
