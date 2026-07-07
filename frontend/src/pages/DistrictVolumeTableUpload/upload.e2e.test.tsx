@@ -209,6 +209,10 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       await page.goto('/configuration/upload-district-volume');
       await page.waitForLoadState('domcontentloaded');
 
+      // Select "Coast" first — the validator rejects files that don't match the selected area
+      await page.getByLabel('Coast').click();
+      await expect(page.getByLabel('Coast')).toBeChecked();
+
       // Upload a valid Coast spreadsheet
       const buffer = await buildValidCoastBuffer();
       await uploadFile(page, buffer);
@@ -217,7 +221,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       const fileItem = page.getByTestId('file-upload-item');
       await expect(fileItem).toBeVisible({ timeout: 10_000 });
 
-      // The Coast radio should now be selected (file data overrides the default)
+      // The Coast radio should remain selected
       await expect(page.getByLabel('Coast')).toBeChecked();
 
       // The radio group should be visible
@@ -374,6 +378,10 @@ test.describe('District Volume Table Upload Page - E2E', () => {
 
       await page.goto('/configuration/upload-district-volume');
       await page.waitForLoadState('domcontentloaded');
+
+      // Select "Coast" first — the validator rejects files that don't match the selected area
+      await page.getByLabel('Coast').click();
+      await expect(page.getByLabel('Coast')).toBeChecked();
 
       // Step 1: Upload a valid Coast spreadsheet
       const buffer = await buildValidCoastBuffer();
