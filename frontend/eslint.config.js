@@ -14,7 +14,7 @@ import { globalIgnores, defineConfig } from 'eslint/config';
 const compat = new FlatCompat();
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage', 'node_modules', 'dev-dist', '.devcontainer']),
+  globalIgnores(['dist', 'coverage', 'node_modules', 'dev-dist', '.devcontainer', 'scripts']),
   ...compat.config({
     extends: ['plugin:react-hooks/recommended'],
   }),
