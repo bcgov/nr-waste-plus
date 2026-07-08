@@ -107,6 +107,6 @@
     "immutable": "^5.1.5",
     "serialize-javascript": "^7.0.5",
     "rollup": "^4.54.0",
-    "uuid": "^11.1.1"
+    "uuid": "^14.0.0"
   }
 }
