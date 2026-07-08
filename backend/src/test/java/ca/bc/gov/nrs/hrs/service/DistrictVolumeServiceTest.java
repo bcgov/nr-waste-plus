@@ -416,7 +416,7 @@ class DistrictVolumeServiceTest {
   @Test
   @DisplayName(
       "createDistrictVolume — should throw 422 when start date is not after existing open row")
-  void shouldThrow422_whenStartDateNotAfterExistingOpenEndedRow() {
+  void createDistrictVolume_throws422_whenStartDateNotAfterExistingOpenEndedRow() {
 
     InteriorDataDto interiorData =
         new InteriorDataDto(
