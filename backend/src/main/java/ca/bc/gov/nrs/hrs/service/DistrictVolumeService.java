@@ -276,15 +276,19 @@ public class DistrictVolumeService {
       TableData tableData,
       String districtCode) {
 
-    if (tableData == null) {
+    if (tableData == null || StringUtils.isBlank(districtCode)) {
       return false;
     }
+
+    String normalizedCode = districtCode.toUpperCase();
 
     if (tableData.sections() != null) {
       boolean match = tableData.sections().stream()
           .flatMap(section ->
-              section.districts() != null ? section.districts().stream() : Stream.empty())
-          .anyMatch(d -> districtCode.equals(d.district().code()));
+              section.districts() != null ? section.districts().stream()
+                  : Stream.empty())
+          .anyMatch(d -> normalizedCode.equals(
+              d.district().code().toUpperCase()));
       if (match) {
         return true;
       }
@@ -294,7 +298,8 @@ public class DistrictVolumeService {
       return tableData.zones().stream()
           .flatMap(zone ->
               zone.districts() != null ? zone.districts().stream() : Stream.empty())
-          .anyMatch(d -> districtCode.equals(d.district().code()));
+          .anyMatch(d -> normalizedCode.equals(
+              d.district().code().toUpperCase()));
     }
 
     return false;
