@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.hrs.health;
 
 import ca.bc.gov.nrs.hrs.configuration.HrsConfiguration;
 import io.micrometer.observation.annotation.Observed;
+import java.net.http.HttpClient;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -10,6 +11,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestClient;
@@ -49,8 +51,12 @@ public class CdogsHealthIndicator implements HealthIndicator {
   ) {
     this.cdogsApi = cdogsApi;
     this.cdogsConfig = configuration.getCdogs();
+    HttpClient httpClient = HttpClient.newBuilder()
+        .version(HttpClient.Version.HTTP_1_1)
+        .build();
     this.cdogsTokenApi = RestClient.builder()
         .baseUrl(cdogsConfig.getTokenUrl())
+        .requestFactory(new JdkClientHttpRequestFactory(httpClient))
         .build();
   }
 

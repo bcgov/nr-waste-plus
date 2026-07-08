@@ -21,6 +21,7 @@ import ca.bc.gov.nrs.hrs.exception.UnretriableException;
 import ca.bc.gov.nrs.hrs.exception.UserNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.forwarders.B3HeaderForwarder;
 import ca.bc.gov.nrs.hrs.provider.forwarders.JwtForwarderRequestInitializer;
+import java.net.http.HttpClient;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +29,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.web.client.RestClient;
 import ca.bc.gov.nrs.hrs.health.CdogsHealthIndicator;
@@ -180,8 +182,12 @@ public class GlobalConfiguration {
    */
   @Bean
   public RestClient cdogsApi(HrsConfiguration configuration, B3HeaderForwarder b3Header) {
+    HttpClient httpClient = HttpClient.newBuilder()
+        .version(HttpClient.Version.HTTP_1_1)
+        .build();
     return RestClient.builder()
         .baseUrl(configuration.getCdogs().getUri())
+        .requestFactory(new JdkClientHttpRequestFactory(httpClient))
         .requestInitializer(b3Header)
         .build();
   }
