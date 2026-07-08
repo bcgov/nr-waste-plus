@@ -133,3 +133,18 @@ services:
     #image: ghcr.io/bcgov/nr-waste-plus/frontend:XXX
     ports: [3000:3000]
     <<: *defaults
+
+  # CDOGS Document Generation Service
+  # Local instance of the BC Government Common Document Generation Service
+  # Runs in unauthenticated mode for local development
+  cdogs:
+    container_name: cdogs
+    image: ghcr.io/bcgov/common-document-generation-service:latest
+    ports: [3009:3000]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/v2/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    <<: *defaults

@@ -30,6 +30,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.web.client.RestClient;
+import ca.bc.gov.nrs.hrs.health.CdogsHealthIndicator;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.json.JsonMapper.Builder;
@@ -64,7 +65,8 @@ import tools.jackson.databind.json.JsonMapper.Builder;
     ReportingUnitSearchParametersDto.class,
     HttpSecurity.class,
     ReportingUnitDetailsDto.class,
-    ReportingUnitLegacyDetailsDto.class
+    ReportingUnitLegacyDetailsDto.class,
+    CdogsHealthIndicator.class
 })
 @EnableJpaAuditing(auditorAwareRef = "databaseAuditor")
 public class GlobalConfiguration {
@@ -162,6 +164,25 @@ public class GlobalConfiguration {
   public JsonMapper objectMapper(Builder builder) {
     return builder
         .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+        .build();
+  }
+
+  /**
+   * Builds a {@link RestClient} configured to call the CDOGS backend API.
+   *
+   * <p>The returned client is configured with the base URL from {@link HrsConfiguration}
+   * and applies the {@link B3HeaderForwarder} as a request initializer for tracing.
+   * No Authorization header is set here — each call supplies its own token.</p>
+   *
+   * @param configuration application configuration providing the CDOGS service URI
+   * @param b3Header      request initializer that forwards B3 trace headers
+   * @return a configured {@link RestClient} for the CDOGS backend API
+   */
+  @Bean
+  public RestClient cdogsApi(HrsConfiguration configuration, B3HeaderForwarder b3Header) {
+    return RestClient.builder()
+        .baseUrl(configuration.getCdogs().getUri())
+        .requestInitializer(b3Header)
         .build();
   }
 

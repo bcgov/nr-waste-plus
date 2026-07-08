@@ -24,6 +24,10 @@ spring:
       charset: UTF-8
       enabled: true
       force: true
+  multipart:
+    enabled: true
+    max-file-size: 10MB
+    max-request-size: 50MB
   security:
     oauth2:
       resourceserver:
@@ -178,6 +182,12 @@ ca:
         hydration:
           paths:
             - /api/users/preferences
+        cdogs:
+          uri: ${CDOGS_URI:https://cdogs.api.gov.bc.ca/api/v2}
+          token-url: ${CDOGS_TOKEN_URL:https://loginproxy.gov.bc.ca/auth/realms/comsvcauth/protocol/openid-connect/token}
+          client-id: ${CDOGS_CLIENT_ID:placeholder}
+          client-secret: ${CDOGS_CLIENT_SECRET:placeholder}
+          expires-in: ${CDOGS_TOKEN_EXPIRY:300}
         frontend:
           url: ${FRONTEND_URL:http://localhost:3000}
           cors:

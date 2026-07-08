@@ -190,4 +190,57 @@ public class HrsConfiguration {
     private List<String> paths = List.of("/api/users/preferences");
   }
 
+  /**
+   * CDOGS backend configuration properties.
+   *
+   * <p>This nested configuration holds the CDOGS service URI, token endpoint,
+   * and OAuth2 client credentials. Credentials are provided via environment
+   * variables and must never appear in configuration files.</p>
+   */
+  @NestedConfigurationProperty
+  private CdogsConfiguration cdogs;
+
+  /**
+   * The CDOGS configuration.
+   *
+   * <p>Contains the CDOGS service address, token URL, and OAuth2 client
+   * credentials used for authentication.</p>
+   */
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class CdogsConfiguration {
+
+    /**
+     * Base URL of the CDOGS service.
+     * Default: {@code https://cdogs.api.gov.bc.ca/api/v2}
+     */
+    private String uri;
+
+    /**
+     * Token endpoint URL for OAuth2 authentication.
+     * Default: {@code https://loginproxy.gov.bc.ca/auth/realms/comsvcauth/protocol/openid-connect/token}
+     */
+    private String tokenUrl;
+
+    /**
+     * OAuth2 client ID for authentication.
+     * Default: {@code placeholder}
+     */
+    private String clientId;
+
+    /**
+     * OAuth2 client secret for authentication.
+     * Default: {@code placeholder}
+     */
+    private String clientSecret;
+
+    /**
+     * Expected token lifetime in seconds. Default: 300 (5 minutes).
+     */
+    @Builder.Default
+    private long expiresIn = 300;
+  }
+
 }
