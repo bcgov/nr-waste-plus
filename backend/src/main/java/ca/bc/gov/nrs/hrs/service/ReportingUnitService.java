@@ -67,7 +67,8 @@ public class ReportingUnitService {
                 )
             );
 
-    var districtAreas = districtVolumeService.getAreasForDistrictCode(legacyClient.district().code());
+    var districtAreas =
+        districtVolumeService.getAreasForDistrictCode(legacyClient.district().code());
     var grade = districtAreas.size() == 1
         ? new CodeDescriptionDto(districtAreas.getFirst(), districtAreas.getFirst())
         : new CodeDescriptionDto(null, null);
