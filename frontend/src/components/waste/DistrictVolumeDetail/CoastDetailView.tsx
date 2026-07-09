@@ -1,13 +1,13 @@
-import { useMemo, type FC } from 'react';
+import { type FC } from 'react';
 
 import DistrictVolumeDetailHeader from './DistrictVolumeDetailHeader';
 import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs';
+import { useDistrictCodeColumn } from './useDistrictCodeColumn';
 
 import type { TableHeaderType } from '@/components/Form/TableResource/types';
 import type { CoastDistrictRow, DistrictVolumeDetail } from '@/services/districtvolumes.types';
 import type { CodeDescriptionDto } from '@/services/search.types';
 
-import CodeDescriptionTag from '@/components/waste/CodeDescriptionTag';
 import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 
 /**
@@ -39,21 +39,15 @@ const CoastDetailView: FC<CoastDetailViewProps> = ({ data, districtOptions }) =>
   const { tableData, startDate, endDate, tableLevelFactor, heliMultiplier } = data;
   const sections = tableData.sections;
 
-  /** Pre-built O(1) code→description lookup map. */
-  const districtMap = useMemo(
-    () => new Map(districtOptions.map((d) => [d.code, d.description])),
-    [districtOptions],
-  );
+  /** O(1) code→description render function for the district column. */
+  const renderDistrictCode = useDistrictCodeColumn(districtOptions);
 
   const headers: TableHeaderType<CoastDistrictRow>[] = [
     {
       key: 'code',
       header: 'District',
       selected: true,
-      renderAs: (value) => {
-        const description = districtMap.get(value as string) ?? (value as string);
-        return <CodeDescriptionTag value={{ code: value as string, description }} />;
-      },
+      renderAs: renderDistrictCode,
     },
     {
       key: 'avoidableSawlog',

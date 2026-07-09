@@ -1,13 +1,13 @@
-import { useMemo, type FC } from 'react';
+import { type FC } from 'react';
 
 import DistrictVolumeDetailHeader from './DistrictVolumeDetailHeader';
 import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs';
+import { useDistrictCodeColumn } from './useDistrictCodeColumn';
 
 import type { TableHeaderType } from '@/components/Form/TableResource/types';
 import type { DistrictVolumeDetail, InteriorDistrictRow } from '@/services/districtvolumes.types';
 import type { CodeDescriptionDto } from '@/services/search.types';
 
-import CodeDescriptionTag from '@/components/waste/CodeDescriptionTag';
 import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 
 /**
@@ -40,11 +40,8 @@ const InteriorDetailView: FC<InteriorDetailViewProps> = ({ data, districtOptions
   const { tableData, startDate, endDate, tableLevelFactor } = data;
   const zones = tableData.zones;
 
-  /** Pre-built O(1) code→description lookup map. */
-  const districtMap = useMemo(
-    () => new Map(districtOptions.map((d) => [d.code, d.description])),
-    [districtOptions],
-  );
+  /** O(1) code→description render function for the district column. */
+  const renderDistrictCode = useDistrictCodeColumn(districtOptions);
 
   /** Table headers for interior district volume rows. */
   const headers: TableHeaderType<InteriorDistrictRow>[] = [
@@ -52,10 +49,7 @@ const InteriorDetailView: FC<InteriorDetailViewProps> = ({ data, districtOptions
       key: 'code',
       header: 'District',
       selected: true,
-      renderAs: (value) => {
-        const description = districtMap.get(value as string) ?? (value as string);
-        return <CodeDescriptionTag value={{ code: value as string, description }} />;
-      },
+      renderAs: renderDistrictCode,
     },
     {
       key: 'avoidableSawlog',
