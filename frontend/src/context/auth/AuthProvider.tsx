@@ -88,9 +88,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   useEffect(() => {
-    refreshUserState().catch(() => {
-      setUser(undefined);
-    });
+    const initializeAuth = async () => {
+      try {
+        await refreshUserState();
+      } catch {
+        setUser(undefined);
+      }
+    };
+
+    void initializeAuth();
 
     const interval = setInterval(
       () => {
@@ -98,6 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
       3 * 60 * 1000,
     );
+
     return () => clearInterval(interval);
   }, [refreshUserState]);
 

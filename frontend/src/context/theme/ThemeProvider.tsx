@@ -1,5 +1,5 @@
 import { Theme } from '@carbon/react';
-import { useState, useEffect, type ReactNode, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { ThemeContext } from './ThemeContext';
 
@@ -14,42 +14,40 @@ import { usePreference } from '@/context/preference/usePreference';
  * @returns The theme context provider and Carbon theme wrapper.
  */
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const preferences = usePreference();
-  const { updatePreferences, userPreference } = preferences;
-  const [theme, setTheme] = useState<CarbonTheme | undefined>(undefined);
+  const { userPreference, updatePreferences } = usePreference();
+  const [theme, setThemeState] = useState<CarbonTheme>(userPreference?.theme ?? 'g10');
 
-  // Set theme when userPreference.theme changes
-  useEffect(() => {
-    if (userPreference?.theme) {
-      setTheme(userPreference.theme);
-    }
-    document.documentElement.dataset.carbonTheme = userPreference.theme;
-  }, [userPreference.theme]);
+  const currentTheme = theme ?? userPreference?.theme ?? 'g10';
 
-  // Sync theme changes to preferences, but only after initial load
+  const setTheme = useCallback(
+    (nextTheme: CarbonTheme) => {
+      setThemeState(nextTheme);
+      updatePreferences({ theme: nextTheme });
+    },
+    [updatePreferences],
+  );
+
+  const toggleTheme = useCallback(() => {
+    const nextTheme = currentTheme === 'g10' ? 'g100' : 'g10';
+    setThemeState(nextTheme);
+    updatePreferences({ theme: nextTheme });
+  }, [currentTheme, updatePreferences]);
+
   useEffect(() => {
-    if (theme && theme !== userPreference.theme) {
-      updatePreferences({ theme });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme]);
+    document.documentElement.dataset.carbonTheme = currentTheme;
+  }, [currentTheme]);
 
   const contextValue = useMemo(() => {
-    const toggleTheme = () => {
-      setTheme((prevTheme) => (prevTheme === 'g10' ? 'g100' : 'g10'));
-    };
-
     return {
-      theme: theme ?? 'g10',
+      theme: currentTheme,
       setTheme,
       toggleTheme,
     };
-  }, [theme, setTheme]);
+  }, [currentTheme, setTheme, toggleTheme]);
 
-  // Only render Theme when theme is set
   return (
     <ThemeContext.Provider value={contextValue}>
-      {theme ? <Theme theme={theme}>{children}</Theme> : null}
+      <Theme theme={contextValue.theme}>{children}</Theme>
     </ThemeContext.Provider>
   );
 };
