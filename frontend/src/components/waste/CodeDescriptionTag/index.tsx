@@ -12,7 +12,7 @@ import type { CodeDescriptionDto } from '@/services/search.types';
 const CodeDescriptionTag: FC<{ value: CodeDescriptionDto }> = ({ value }) => {
   return (
     <span>
-      {value.code} - {value.description}
+      {value.code === value.description ? value.code : `${value.code} - ${value.description}`}
     </span>
   );
 };

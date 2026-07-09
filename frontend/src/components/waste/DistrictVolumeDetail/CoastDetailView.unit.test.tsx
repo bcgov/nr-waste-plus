@@ -6,6 +6,13 @@ import CoastDetailView from './CoastDetailView';
 
 import type { DistrictVolumeDetail } from '@/services/districtvolumes.types';
 
+/** Shared district options for testing the lookup in the coast district column. */
+const SAMPLE_DISTRICT_OPTIONS = [
+  { code: 'DCK', description: 'Chilliwack' },
+  { code: 'DUN', description: 'Duncan' },
+  { code: 'DKL', description: 'Dakota Knowles' },
+];
+
 // ============================================================================
 // Mocks
 // ============================================================================
@@ -163,7 +170,9 @@ describe('CoastDetailView', () => {
 
   describe('header fields', () => {
     it('should render start date with ReadonlyInput and DateTag', async () => {
-      render(<CoastDetailView data={createCoastData()} />);
+      render(
+        <CoastDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={createCoastData()} />,
+      );
       await waitFor(() => {});
 
       const startDateField = screen.getByTestId('readonly-input-start-date');
@@ -178,14 +187,18 @@ describe('CoastDetailView', () => {
     });
 
     it('should render end date with ReadonlyInput and DateTag', async () => {
-      render(<CoastDetailView data={createCoastData()} />);
+      render(
+        <CoastDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={createCoastData()} />,
+      );
       await waitFor(() => {});
 
       expect(screen.getByTestId('readonly-input-end-date')).toBeTruthy();
     });
 
     it('should render table level factor with ReadonlyInput and PrecisionNumberTag', async () => {
-      render(<CoastDetailView data={createCoastData()} />);
+      render(
+        <CoastDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={createCoastData()} />,
+      );
       await waitFor(() => {});
 
       const factorField = screen.getByTestId('readonly-input-dispersed-retention-reduction-factor');
@@ -197,7 +210,9 @@ describe('CoastDetailView', () => {
     });
 
     it('should render heli multiplier with ReadonlyInput and PrecisionNumberTag', async () => {
-      render(<CoastDetailView data={createCoastData()} />);
+      render(
+        <CoastDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={createCoastData()} />,
+      );
       await waitFor(() => {});
 
       expect(screen.getByTestId('readonly-input-heli-multiplier')).toBeTruthy();
@@ -206,7 +221,9 @@ describe('CoastDetailView', () => {
 
   describe('tabs and sections', () => {
     it('should render a tab for each section', async () => {
-      render(<CoastDetailView data={createCoastData()} />);
+      render(
+        <CoastDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={createCoastData()} />,
+      );
       await waitFor(() => {});
 
       expect(screen.getByRole('tab', { name: 'Mature' })).toBeTruthy();
@@ -214,14 +231,18 @@ describe('CoastDetailView', () => {
     });
 
     it('should render DistrictZoneSection for each section', async () => {
-      render(<CoastDetailView data={createCoastData()} />);
+      render(
+        <CoastDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={createCoastData()} />,
+      );
       await waitFor(() => {});
 
       expect(screen.getAllByTestId('district-zone-section').length).toBe(2);
     });
 
     it('should pass correct zone name and headers to DistrictZoneSection', async () => {
-      render(<CoastDetailView data={createCoastData()} />);
+      render(
+        <CoastDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={createCoastData()} />,
+      );
       await waitFor(() => {});
 
       const zoneNames = screen.getAllByTestId('dzz-zone-name');
@@ -237,7 +258,9 @@ describe('CoastDetailView', () => {
     });
 
     it('should pass correct row count per section', async () => {
-      render(<CoastDetailView data={createCoastData()} />);
+      render(
+        <CoastDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={createCoastData()} />,
+      );
       await waitFor(() => {});
 
       const rowCounts = screen.getAllByTestId('dzz-rows-count');
@@ -261,7 +284,7 @@ describe('CoastDetailView', () => {
         total: 9.25,
       });
 
-      render(<CoastDetailView data={data} />);
+      render(<CoastDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={data} />);
       await waitFor(() => {});
 
       expect(screen.getAllByTestId('dzz-rows-count')[0].textContent).toBe('2');
@@ -271,7 +294,7 @@ describe('CoastDetailView', () => {
   describe('edge cases', () => {
     it('should handle null endDate — not render DateTag for end date', async () => {
       const data = createCoastData({ endDate: null });
-      render(<CoastDetailView data={data} />);
+      render(<CoastDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={data} />);
       await waitFor(() => {});
 
       // End date field children should be empty (no DateTag when endDate is null)
@@ -283,7 +306,7 @@ describe('CoastDetailView', () => {
       const data = createCoastData({
         tableData: { type: 'COASTAL', sections: [], formulas: {} },
       });
-      render(<CoastDetailView data={data} />);
+      render(<CoastDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={data} />);
       await waitFor(() => {});
 
       expect(screen.queryAllByTestId('district-zone-section').length).toBe(0);
@@ -292,7 +315,7 @@ describe('CoastDetailView', () => {
 
     it('should skip DateTag when startDate is an empty string', async () => {
       const data = createCoastData({ startDate: '' });
-      render(<CoastDetailView data={data} />);
+      render(<CoastDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={data} />);
       await waitFor(() => {});
 
       // Only the end-date DateTag renders; start-date is empty string (falsy)
@@ -309,6 +332,7 @@ describe('CoastDetailView', () => {
       render(
         <TestErrorBoundary onError={onError}>
           <CoastDetailView
+            districtOptions={SAMPLE_DISTRICT_OPTIONS}
             data={
               {
                 ...BASE_COAST_DATA,

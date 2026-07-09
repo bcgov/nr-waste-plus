@@ -9,6 +9,16 @@ import type { DistrictVolumeDetail } from '@/services/districtvolumes.types';
 // Mocks
 // ============================================================================
 
+// Mock the TanStack Query hook that fetches district codes/descriptions
+vi.mock('@/config/react-query/hooks', () => ({
+  useDistrictOptionsQuery: vi.fn(() => ({
+    data: [
+      { code: 'DCC', description: 'Cariboo-Chilcotin' },
+      { code: 'DKM', description: 'Coast Mountains' },
+    ],
+  })),
+}));
+
 // Mock the sub-views to isolate the conditional routing logic
 vi.mock('./InteriorDetailView', () => ({
   default: ({ data }: { data: DistrictVolumeDetail }) => (
