@@ -29,7 +29,7 @@ describe('SpeciesCompositionProcessor', () => {
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const data = result.data[0] as SpeciesCompositionData;
+    const data = (result.data as SpeciesCompositionData[])[0];
     expect(data.rows).toHaveLength(1);
 
     const row = data.rows[0];
@@ -48,7 +48,7 @@ describe('SpeciesCompositionProcessor', () => {
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const data = result.data[0] as SpeciesCompositionData;
+    const data = (result.data as SpeciesCompositionData[])[0];
     expect(data.rows).toHaveLength(3);
     expect(data.rows[0].district.code).toBe('DCC');
     expect(data.rows[1].district.code).toBe('DCK');
@@ -62,7 +62,7 @@ describe('SpeciesCompositionProcessor', () => {
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const data = result.data[0] as SpeciesCompositionData;
+    const data = (result.data as SpeciesCompositionData[])[0];
     expect(data.rows[0].district.code).toBe('DCC');
   });
 
@@ -76,7 +76,7 @@ describe('SpeciesCompositionProcessor', () => {
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const data = result.data[0] as SpeciesCompositionData;
+    const data = (result.data as SpeciesCompositionData[])[0];
     expect(data.rows).toHaveLength(1);
     expect(data.rows[0].district.code).toBe('DCC');
   });
@@ -92,7 +92,7 @@ describe('SpeciesCompositionProcessor', () => {
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const data = result.data[0] as SpeciesCompositionData;
+    const data = (result.data as SpeciesCompositionData[])[0];
     expect(data.rows).toHaveLength(2);
   });
 
@@ -105,7 +105,7 @@ describe('SpeciesCompositionProcessor', () => {
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const data = result.data[0] as SpeciesCompositionData;
+    const data = (result.data as SpeciesCompositionData[])[0];
     expect(data.rows[0].balsam).toBe(0);
   });
 
