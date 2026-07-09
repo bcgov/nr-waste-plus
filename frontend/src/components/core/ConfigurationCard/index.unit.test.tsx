@@ -119,8 +119,7 @@ describe('ConfigurationCard', () => {
 
   it('does not render icon container when icon prop is absent', () => {
     const { container } = render(<ConfigurationCard title="Title" />);
-    // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
-    expect(container.querySelector('.configuration-card__icon')).toBeNull();
+    expect(container.firstChild).not.toHaveClass('configuration-card__icon');
   });
 
   it('renders a link element (not a button) when linkVariant is true', () => {
@@ -134,7 +133,6 @@ describe('ConfigurationCard', () => {
       />,
     );
     expect(screen.queryByRole('button', { name: 'View or update tables' })).toBeNull();
-    // eslint-disable-next-line testing-library/no-node-access
     const link = screen.getByText('View or update tables').closest('.cds--link');
     expect(link).toBeDefined();
   });

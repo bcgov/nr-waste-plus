@@ -324,8 +324,9 @@ describe('ActiveMultiSelect', () => {
       expect(input).toBeDefined();
 
       // Verify the input is properly rendered
-      await user.click(input);
-      expect(input).toBe(document.activeElement);
+      await user.click(screen.getByRole('combobox'));
+      const combobox = screen.getByRole('combobox');
+      expect(combobox).toBe(document.activeElement);
 
       await user.tab();
 
