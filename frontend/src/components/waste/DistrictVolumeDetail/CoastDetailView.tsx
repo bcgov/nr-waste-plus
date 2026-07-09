@@ -5,7 +5,9 @@ import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs';
 
 import type { TableHeaderType } from '@/components/Form/TableResource/types';
 import type { CoastDistrictRow, DistrictVolumeDetail } from '@/services/districtvolumes.types';
+import type { CodeDescriptionDto } from '@/services/search.types';
 
+import CodeDescriptionTag from '@/components/waste/CodeDescriptionTag';
 import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 
 /**
@@ -14,6 +16,8 @@ import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 interface CoastDetailViewProps {
   /** The district volume detail data (must be COASTAL variant). */
   readonly data: DistrictVolumeDetail;
+  /** All district codes/descriptions for looking up district names by code. */
+  readonly districtOptions: CodeDescriptionDto[];
 }
 
 /**
@@ -26,7 +30,7 @@ interface CoastDetailViewProps {
  * @param props.data - The district volume detail data.
  * @returns The Coast Detail view.
  */
-const CoastDetailView: FC<CoastDetailViewProps> = ({ data }) => {
+const CoastDetailView: FC<CoastDetailViewProps> = ({ data, districtOptions }) => {
   // Narrow the discriminated union to the COASTAL variant
   if (data.area !== 'COASTAL') {
     throw new Error('CoastDetailView requires data with area="COASTAL"');
@@ -36,7 +40,19 @@ const CoastDetailView: FC<CoastDetailViewProps> = ({ data }) => {
   const sections = tableData.sections;
 
   const headers: TableHeaderType<CoastDistrictRow>[] = [
-    { key: 'code', header: 'Code', selected: true },
+    {
+      key: 'code',
+      header: 'District',
+      selected: true,
+      renderAs: (value) => {
+        const match = districtOptions.find((d) => d.code === value);
+        return (
+          <CodeDescriptionTag
+            value={{ code: value as string, description: match?.description ?? (value as string) }}
+          />
+        );
+      },
+    },
     {
       key: 'avoidableSawlog',
       header: 'Avoidable sawlog',

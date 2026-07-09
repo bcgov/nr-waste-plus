@@ -5,7 +5,9 @@ import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs';
 
 import type { TableHeaderType } from '@/components/Form/TableResource/types';
 import type { DistrictVolumeDetail, InteriorDistrictRow } from '@/services/districtvolumes.types';
+import type { CodeDescriptionDto } from '@/services/search.types';
 
+import CodeDescriptionTag from '@/components/waste/CodeDescriptionTag';
 import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 
 /**
@@ -14,6 +16,8 @@ import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 interface InteriorDetailViewProps {
   /** The district volume detail data (must be INTERIOR variant). */
   readonly data: DistrictVolumeDetail;
+  /** All district codes/descriptions for looking up district names by code. */
+  readonly districtOptions: CodeDescriptionDto[];
 }
 
 /**
@@ -27,7 +31,7 @@ interface InteriorDetailViewProps {
  * @param props.data - The district volume detail data.
  * @returns The Interior Detail view.
  */
-const InteriorDetailView: FC<InteriorDetailViewProps> = ({ data }) => {
+const InteriorDetailView: FC<InteriorDetailViewProps> = ({ data, districtOptions }) => {
   // Narrow the discriminated union to the INTERIOR variant
   if (data.area !== 'INTERIOR') {
     throw new Error('InteriorDetailView requires data with area="INTERIOR"');
@@ -38,7 +42,19 @@ const InteriorDetailView: FC<InteriorDetailViewProps> = ({ data }) => {
 
   /** Table headers for interior district volume rows. */
   const headers: TableHeaderType<InteriorDistrictRow>[] = [
-    { key: 'code', header: 'Code', selected: true },
+    {
+      key: 'code',
+      header: 'District',
+      selected: true,
+      renderAs: (value) => {
+        const match = districtOptions.find((d) => d.code === value);
+        return (
+          <CodeDescriptionTag
+            value={{ code: value as string, description: match?.description ?? (value as string) }}
+          />
+        );
+      },
+    },
     {
       key: 'avoidableSawlog',
       header: 'Avoidable sawlog',
