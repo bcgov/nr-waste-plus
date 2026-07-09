@@ -41,7 +41,7 @@ describe('ReadonlyInput', () => {
         Content
       </ReadonlyInput>,
     );
-    const dl = screen.getByRole('definition').closest('dl');
+    const dl = screen.getByTestId('card-item-test');
     expect(dl).not.toBeNull();
   });
 
@@ -123,14 +123,14 @@ describe('ReadonlyInput', () => {
   });
 
   it('wraps string content in span when tooltipText is provided', () => {
-    const { container } = render(
+    render(
       <ReadonlyInput label="Field" tooltipText="Info">
         String Content
       </ReadonlyInput>,
     );
-    const span = container.querySelector('span');
+    const span = screen.getByText('String Content');
     expect(span).toBeDefined();
-    expect(span?.textContent).toContain('String Content');
+    expect(span.tagName).toBe('SPAN');
   });
 
   it('renders React elements inside tooltip without span wrapper', () => {
@@ -204,7 +204,7 @@ describe('ReadonlyInput', () => {
         12345
       </ReadonlyInput>,
     );
-    const dl = screen.getByRole('definition').closest('dl');
+    const dl = screen.getByTestId('card-item-complete-field');
     expect(dl?.getAttribute('id')).toBe('field-id');
     screen.getByRole('definition');
     screen.getByTestId('card-item-complete-field');
@@ -273,7 +273,7 @@ describe('ReadonlyInput', () => {
           12345
         </ReadonlyInput>,
       );
-      const dl2 = screen.getByRole('definition').closest('dl');
+      const dl2 = screen.getByTestId('card-item-hidden-field');
       expect(dl2?.getAttribute('id')).toBe('hidden-field-id');
       screen.getByRole('definition');
       screen.getByText('12345');
