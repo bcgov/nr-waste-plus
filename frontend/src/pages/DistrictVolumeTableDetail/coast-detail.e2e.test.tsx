@@ -92,7 +92,7 @@ test.describe('District Volume Table Detail — Coast View', () => {
     await expect(matureSection.getByText('DCR')).toBeVisible();
 
     // Table headers visible
-    await expect(matureSection.getByText('Code')).toBeVisible();
+    await expect(matureSection.getByText('District')).toBeVisible();
   });
 
   // ─── E6: Switch to Immature Tab ─────────────────────────────────────────
@@ -124,7 +124,7 @@ test.describe('District Volume Table Detail — Coast View', () => {
     // Default Mature tab — verify all column headers (Coast has 6 columns)
     // Scope to the Mature section to avoid strict mode violation from Immature panel
     const matureSection = page.getByTestId('district-zone-Mature');
-    await expect(matureSection.getByText('Code')).toBeVisible();
+    await expect(matureSection.getByText('District')).toBeVisible();
     await expect(matureSection.getByText('Avoidable sawlog')).toBeVisible();
     await expect(matureSection.getByText('Avoidable Hembal Grade U')).toBeVisible();
     await expect(matureSection.getByText('Avoidable Grade Y')).toBeVisible();
