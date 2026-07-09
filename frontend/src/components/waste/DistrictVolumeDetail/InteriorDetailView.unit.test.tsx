@@ -6,6 +6,15 @@ import InteriorDetailView from './InteriorDetailView';
 
 import type { DistrictVolumeDetail } from '@/services/districtvolumes.types';
 
+/** Shared district options for testing the lookup in the district column. */
+const SAMPLE_DISTRICT_OPTIONS = [
+  { code: 'DCC', description: 'Cariboo-Chilcotin' },
+  { code: 'DKL', description: 'Dakota Knowles' },
+  { code: 'DTH', description: 'Thompson' },
+  { code: 'DN1', description: 'District North 1' },
+  { code: 'DN2', description: 'District North 2' },
+];
+
 // ============================================================================
 // Mocks
 // ============================================================================
@@ -171,7 +180,12 @@ describe('InteriorDetailView', () => {
 
   describe('header fields', () => {
     it('should render start date with ReadonlyInput and DateTag', async () => {
-      render(<InteriorDetailView data={createInteriorData()} />);
+      render(
+        <InteriorDetailView
+          districtOptions={SAMPLE_DISTRICT_OPTIONS}
+          data={createInteriorData()}
+        />,
+      );
       await waitFor(() => {});
 
       const startDateField = screen.getByTestId('readonly-input-start-date');
@@ -184,7 +198,12 @@ describe('InteriorDetailView', () => {
     });
 
     it('should render end date with DateTag (NOT wrapped in ReadonlyInput)', async () => {
-      render(<InteriorDetailView data={createInteriorData()} />);
+      render(
+        <InteriorDetailView
+          districtOptions={SAMPLE_DISTRICT_OPTIONS}
+          data={createInteriorData()}
+        />,
+      );
       await waitFor(() => {});
 
       // End date in InteriorDetailView is rendered directly, NOT inside ReadonlyInput
@@ -196,7 +215,12 @@ describe('InteriorDetailView', () => {
     });
 
     it('should render table level factor with ReadonlyInput and PrecisionNumberTag', async () => {
-      render(<InteriorDetailView data={createInteriorData()} />);
+      render(
+        <InteriorDetailView
+          districtOptions={SAMPLE_DISTRICT_OPTIONS}
+          data={createInteriorData()}
+        />,
+      );
       await waitFor(() => {});
 
       const factorField = screen.getByTestId('readonly-input-dispersed-retention-reduction-factor');
@@ -208,7 +232,12 @@ describe('InteriorDetailView', () => {
     });
 
     it('should render heli multiplier ReadonlyInput with literal "TBD" text', async () => {
-      render(<InteriorDetailView data={createInteriorData()} />);
+      render(
+        <InteriorDetailView
+          districtOptions={SAMPLE_DISTRICT_OPTIONS}
+          data={createInteriorData()}
+        />,
+      );
       await waitFor(() => {});
 
       const heliField = screen.getByTestId('readonly-input-heli-multiplier');
@@ -220,7 +249,12 @@ describe('InteriorDetailView', () => {
 
   describe('tabs and zones', () => {
     it('should render a tab for each zone', async () => {
-      render(<InteriorDetailView data={createInteriorData()} />);
+      render(
+        <InteriorDetailView
+          districtOptions={SAMPLE_DISTRICT_OPTIONS}
+          data={createInteriorData()}
+        />,
+      );
       await waitFor(() => {});
 
       expect(screen.getByRole('tab', { name: 'Dry belt' })).toBeTruthy();
@@ -229,14 +263,24 @@ describe('InteriorDetailView', () => {
     });
 
     it('should render DistrictZoneSection for each zone', async () => {
-      render(<InteriorDetailView data={createInteriorData()} />);
+      render(
+        <InteriorDetailView
+          districtOptions={SAMPLE_DISTRICT_OPTIONS}
+          data={createInteriorData()}
+        />,
+      );
       await waitFor(() => {});
 
       expect(screen.getAllByTestId('district-zone-section').length).toBe(3);
     });
 
     it('should pass correct zone names to DistrictZoneSection', async () => {
-      render(<InteriorDetailView data={createInteriorData()} />);
+      render(
+        <InteriorDetailView
+          districtOptions={SAMPLE_DISTRICT_OPTIONS}
+          data={createInteriorData()}
+        />,
+      );
       await waitFor(() => {});
 
       const zoneNames = screen.getAllByTestId('dzz-zone-name');
@@ -246,7 +290,12 @@ describe('InteriorDetailView', () => {
     });
 
     it('should pass correct row counts per zone', async () => {
-      render(<InteriorDetailView data={createInteriorData()} />);
+      render(
+        <InteriorDetailView
+          districtOptions={SAMPLE_DISTRICT_OPTIONS}
+          data={createInteriorData()}
+        />,
+      );
       await waitFor(() => {});
 
       const rowCounts = screen.getAllByTestId('dzz-rows-count');
@@ -256,7 +305,12 @@ describe('InteriorDetailView', () => {
     });
 
     it('should pass all 5 headers to DistrictZoneSection', async () => {
-      render(<InteriorDetailView data={createInteriorData()} />);
+      render(
+        <InteriorDetailView
+          districtOptions={SAMPLE_DISTRICT_OPTIONS}
+          data={createInteriorData()}
+        />,
+      );
       await waitFor(() => {});
 
       const headersCounts = screen.getAllByTestId('dzz-headers-count');
@@ -269,7 +323,7 @@ describe('InteriorDetailView', () => {
   describe('edge cases', () => {
     it('should handle null endDate — not render DateTag for end date', async () => {
       const data = createInteriorData({ endDate: null });
-      render(<InteriorDetailView data={data} />);
+      render(<InteriorDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={data} />);
       await waitFor(() => {});
 
       // Only the start-date DateTag should render
@@ -279,7 +333,7 @@ describe('InteriorDetailView', () => {
 
     it('should skip DateTag when startDate is an empty string', async () => {
       const data = createInteriorData({ startDate: '' });
-      render(<InteriorDetailView data={data} />);
+      render(<InteriorDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={data} />);
       await waitFor(() => {});
 
       // startDate is '' (falsy), endDate is present — only end date renders
@@ -291,7 +345,7 @@ describe('InteriorDetailView', () => {
       const data = createInteriorData({
         tableData: { type: 'INTERIOR', zones: [], formulas: {} },
       });
-      render(<InteriorDetailView data={data} />);
+      render(<InteriorDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={data} />);
       await waitFor(() => {});
 
       expect(screen.queryAllByTestId('district-zone-section').length).toBe(0);
@@ -325,7 +379,7 @@ describe('InteriorDetailView', () => {
         },
       );
 
-      render(<InteriorDetailView data={data} />);
+      render(<InteriorDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={data} />);
       await waitFor(() => {});
 
       const rowCounts = screen.getAllByTestId('dzz-rows-count');
@@ -341,6 +395,7 @@ describe('InteriorDetailView', () => {
       render(
         <TestErrorBoundary onError={onError}>
           <InteriorDetailView
+            districtOptions={SAMPLE_DISTRICT_OPTIONS}
             data={
               {
                 ...BASE_INTERIOR_DATA,

@@ -2,9 +2,11 @@ import { type FC } from 'react';
 
 import DistrictVolumeDetailHeader from './DistrictVolumeDetailHeader';
 import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs';
+import { useDistrictCodeColumn } from './useDistrictCodeColumn';
 
 import type { TableHeaderType } from '@/components/Form/TableResource/types';
 import type { CoastDistrictRow, DistrictVolumeDetail } from '@/services/districtvolumes.types';
+import type { CodeDescriptionDto } from '@/services/search.types';
 
 import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 
@@ -14,6 +16,8 @@ import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 interface CoastDetailViewProps {
   /** The district volume detail data (must be COASTAL variant). */
   readonly data: DistrictVolumeDetail;
+  /** All district codes/descriptions for looking up district names by code. */
+  readonly districtOptions: CodeDescriptionDto[];
 }
 
 /**
@@ -26,7 +30,7 @@ interface CoastDetailViewProps {
  * @param props.data - The district volume detail data.
  * @returns The Coast Detail view.
  */
-const CoastDetailView: FC<CoastDetailViewProps> = ({ data }) => {
+const CoastDetailView: FC<CoastDetailViewProps> = ({ data, districtOptions }) => {
   // Narrow the discriminated union to the COASTAL variant
   if (data.area !== 'COASTAL') {
     throw new Error('CoastDetailView requires data with area="COASTAL"');
@@ -35,8 +39,16 @@ const CoastDetailView: FC<CoastDetailViewProps> = ({ data }) => {
   const { tableData, startDate, endDate, tableLevelFactor, heliMultiplier } = data;
   const sections = tableData.sections;
 
+  /** O(1) code→description render function for the district column. */
+  const renderDistrictCode = useDistrictCodeColumn(districtOptions);
+
   const headers: TableHeaderType<CoastDistrictRow>[] = [
-    { key: 'code', header: 'Code', selected: true },
+    {
+      key: 'code',
+      header: 'District',
+      selected: true,
+      renderAs: renderDistrictCode,
+    },
     {
       key: 'avoidableSawlog',
       header: 'Avoidable sawlog',

@@ -90,7 +90,7 @@ test.describe('District Volume Table Detail — Interior View', () => {
 
     // Table headers visible (use exact matching to avoid "Avoidable Grade 4"
     // matching "Unavoidable Grade 4" as a substring)
-    await expect(dryBeltSection.getByText('Code', { exact: true })).toBeVisible();
+    await expect(dryBeltSection.getByText('District', { exact: true })).toBeVisible();
     await expect(dryBeltSection.getByText('Avoidable sawlog', { exact: true })).toBeVisible();
   });
 
@@ -139,7 +139,7 @@ test.describe('District Volume Table Detail — Interior View', () => {
 
     // Default Dry belt tab — verify all column headers (use exact matching to
     // avoid "Avoidable Grade 4" matching "Unavoidable Grade 4" as a substring)
-    await expect(dryBeltSection.getByText('Code', { exact: true })).toBeVisible();
+    await expect(dryBeltSection.getByText('District', { exact: true })).toBeVisible();
     await expect(dryBeltSection.getByText('Avoidable sawlog', { exact: true })).toBeVisible();
     await expect(dryBeltSection.getByText('Avoidable Grade 4', { exact: true })).toBeVisible();
     await expect(dryBeltSection.getByText('Unavoidable Grade 4', { exact: true })).toBeVisible();
