@@ -389,10 +389,8 @@ describe('ConditionalField — keepMounted', () => {
     expect(screen.getByText('Conditional Content')).toBeTruthy();
 
     // Wrapper should carry aria-hidden when condition is false
-    const wrapper = screen
-      .getByRole('span', { name: 'Conditional Content' })
-      .closest('.conditional-field');
-    expect(wrapper?.getAttribute('aria-hidden')).toBe('true');
+    const wrapper = screen.getByTestId('conditional-field');
+    expect(wrapper.getAttribute('aria-hidden')).toBe('true');
 
     // Make visible
     await act(async () => {
@@ -401,10 +399,8 @@ describe('ConditionalField — keepMounted', () => {
 
     // Children still in DOM, aria-hidden removed
     expect(screen.getByText('Conditional Content')).toBeTruthy();
-    const wrapper2 = screen
-      .getByRole('span', { name: 'Conditional Content' })
-      .closest('.conditional-field');
-    expect(wrapper2?.getAttribute('aria-hidden')).toBeNull();
+    const wrapper2 = screen.getByTestId('conditional-field');
+    expect(wrapper2.getAttribute('aria-hidden')).toBeNull();
   });
 });
 
@@ -425,11 +421,9 @@ describe('ConditionalField — animateIn false', () => {
       formRef.setFieldValue('status', 'active');
     });
 
-    const wrapper2 = screen
-      .getByRole('span', { name: 'Conditional Content' })
-      .closest('.conditional-field');
+    const wrapper2 = screen.getByTestId('conditional-field');
     expect(wrapper2).toBeTruthy();
-    expect(wrapper2?.className).not.toContain('conditional-field--animate');
+    expect(wrapper2.className).not.toContain('conditional-field--animate');
   });
 
   it('omits the animate class when `animateIn` is false and keepMounted is true (hidden)', async () => {
@@ -445,18 +439,16 @@ describe('ConditionalField — animateIn false', () => {
     });
 
     // Initially hidden but present in DOM
-    const wrapper3 = screen
-      .getByRole('span', { name: 'Conditional Content' })
-      .closest('.conditional-field');
+    const wrapper = screen.getByTestId('conditional-field');
     expect(wrapper).toBeTruthy();
-    expect(wrapper?.className).toContain('conditional-field--hidden');
-    expect(wrapper?.className).not.toContain('conditional-field--animate');
+    expect(wrapper.className).toContain('conditional-field--hidden');
+    expect(wrapper.className).not.toContain('conditional-field--animate');
 
     // Make visible and ensure animate class still not present
     await act(async () => {
       formRef.setFieldValue('status', 'active');
     });
 
-    expect(wrapper?.className).not.toContain('conditional-field--animate');
+    expect(wrapper.className).not.toContain('conditional-field--animate');
   });
 });

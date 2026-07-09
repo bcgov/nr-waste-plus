@@ -35,7 +35,11 @@ const ConditionalFieldInner = <TFormData extends Record<string, unknown>>({
       .join(' ');
 
     return (
-      <div className={classNames} aria-hidden={!isVisible || undefined}>
+      <div
+        className={classNames}
+        aria-hidden={!isVisible || undefined}
+        data-testid="conditional-field"
+      >
         {children}
       </div>
     );
