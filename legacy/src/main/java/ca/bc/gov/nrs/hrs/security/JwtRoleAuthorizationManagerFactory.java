@@ -20,7 +20,6 @@ import org.springframework.stereotype.Component;
  *
  * <p>The factory methods return AuthorizationManager lambdas that can be used in security
  * configuration to enforce role and provider checks per request.
- * </p>
  */
 @Component
 @RequiredArgsConstructor
@@ -52,15 +51,16 @@ public class JwtRoleAuthorizationManagerFactory {
       requiredRolePrefixes.add(role.getRoleName());
     }
 
-    return gotRoleMatching(role -> {
-      String upperRole = role.toUpperCase(Locale.ROOT);
-      for (String requiredRole : requiredRolePrefixes) {
-        if (upperRole.startsWith(requiredRole)) {
-          return true;
-        }
-      }
-      return false;
-    });
+    return gotRoleMatching(
+        role -> {
+          String upperRole = role.toUpperCase(Locale.ROOT);
+          for (String requiredRole : requiredRolePrefixes) {
+            if (upperRole.startsWith(requiredRole)) {
+              return true;
+            }
+          }
+          return false;
+        });
   }
 
   /**
@@ -70,24 +70,22 @@ public class JwtRoleAuthorizationManagerFactory {
    * @return an AuthorizationManager for request contexts
    */
   public AuthorizationManager<RequestAuthorizationContext> gotRole(String role) {
-    return (authSupplier, context) ->
-        new AuthorizationDecision(roleChecker.hasRole(role));
+    return (authSupplier, context) -> new AuthorizationDecision(roleChecker.hasRole(role));
   }
 
   /**
    * Create an AuthorizationManager that checks for an abstract role constructed from a prefix and a
    * client id extracted from the request.
    *
-   * @param rolePrefix        the role prefix (e.g. PLANNER)
+   * @param rolePrefix the role prefix (e.g. PLANNER)
    * @param clientIdExtractor function to extract client id from the request
    * @return an AuthorizationManager for request contexts
    */
-  public AuthorizationManager<RequestAuthorizationContext> gotAbstractRole(String rolePrefix,
-      Function<HttpServletRequest, String> clientIdExtractor) {
+  public AuthorizationManager<RequestAuthorizationContext> gotAbstractRole(
+      String rolePrefix, Function<HttpServletRequest, String> clientIdExtractor) {
     return (authSupplier, context) ->
         new AuthorizationDecision(
-            roleChecker.hasAbstractRole(rolePrefix, clientIdExtractor.apply(context.getRequest()))
-        );
+            roleChecker.hasAbstractRole(rolePrefix, clientIdExtractor.apply(context.getRequest())));
   }
 
   /**

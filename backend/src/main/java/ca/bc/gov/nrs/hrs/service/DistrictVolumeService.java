@@ -7,6 +7,7 @@ import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeListItemDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
+import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
 import ca.bc.gov.nrs.hrs.mapper.DistrictVolumeMapper;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import io.micrometer.tracing.annotation.NewSpan;
@@ -271,24 +272,34 @@ public class DistrictVolumeService {
    * @param districtCode the district code to search for
    * @return true if the district code is found in the table data; false otherwise
    */
-  private boolean containsDistrict(ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData tableData,
+  private boolean containsDistrict(
+      TableData tableData,
       String districtCode) {
-    if (tableData == null) {
+
+    if (tableData == null || StringUtils.isBlank(districtCode)) {
       return false;
+    }
+
+    String normalizedCode = districtCode.toUpperCase();
+
+    if (tableData.sections() != null) {
+      boolean match = tableData.sections().stream()
+          .flatMap(section ->
+              section.districts() != null ? section.districts().stream()
+                  : Stream.empty())
+          .anyMatch(d -> normalizedCode.equals(
+              d.district().code().toUpperCase()));
+      if (match) {
+        return true;
+      }
     }
 
     if (tableData.zones() != null) {
       return tableData.zones().stream()
-          .flatMap(zone -> zone.districts() != null ? zone.districts().stream() : Stream.empty())
-          .map(districtRow -> districtRow.district().code())
-          .anyMatch(code -> StringUtils.equalsIgnoreCase(code, districtCode));
-    }
-
-    if (tableData.sections() != null) {
-      return tableData.sections().stream()
-          .flatMap(section -> section.districts() != null ? section.districts().stream() : Stream.empty())
-          .map(districtRow -> districtRow.district().code())
-          .anyMatch(code -> StringUtils.equalsIgnoreCase(code, districtCode));
+          .flatMap(zone ->
+              zone.districts() != null ? zone.districts().stream() : Stream.empty())
+          .anyMatch(d -> normalizedCode.equals(
+              d.district().code().toUpperCase()));
     }
 
     return false;
