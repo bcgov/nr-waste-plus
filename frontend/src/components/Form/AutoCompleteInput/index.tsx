@@ -69,7 +69,7 @@ const AutoCompleteInput = <T,>({
   const debounce = useDebounce<string>(typedValue, debounceTime);
 
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.autocomplete.byFieldAndValue(props.id, debounce),
+    queryKey: [...queryKeys.autocomplete.byFieldAndValue(props.id, debounce), onAutoCompleteChange],
     queryFn: async () => await onAutoCompleteChange(debounce),
     staleTime: 30000,
     enabled: debounce.length >= 2,
