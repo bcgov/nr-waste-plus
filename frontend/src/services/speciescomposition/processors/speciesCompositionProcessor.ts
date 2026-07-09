@@ -11,6 +11,7 @@ import type {
 import {
   HEADER_TO_SPECIES_KEY,
   EXPECTED_SPECIES_HEADERS,
+  SUMMARY_ROW_PATTERNS,
 } from '@/services/speciescomposition/config/speciesCompositionConfig';
 import { ExcelReader } from '@/services/spreadsheet/excelReader';
 
@@ -107,7 +108,7 @@ export class SpeciesCompositionProcessor implements FileProcessor<SpeciesComposi
       if (!districtRaw) continue;
 
       // Skip summary/average rows
-      if (/weighted|average|total/i.test(districtRaw)) continue;
+      if (SUMMARY_ROW_PATTERNS.test(districtRaw)) continue;
 
       const code = extractDistrictCode(districtRaw);
       if (!code) continue;
