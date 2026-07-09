@@ -40,34 +40,27 @@ import org.springframework.web.server.ResponseStatusException;
 @ExtendWith(MockitoExtension.class)
 class ReportingUnitServiceTest {
 
-  @Mock
-  private ReportingUnitRepository ruRepository;
+  @Mock private ReportingUnitRepository ruRepository;
 
-  @Mock
-  private ReportingUnitDetailsMapper ruDetailsMapper;
+  @Mock private ReportingUnitDetailsMapper ruDetailsMapper;
 
-  @Mock
-  private OrgUnitRepository orgUnitRepository;
+  @Mock private OrgUnitRepository orgUnitRepository;
 
-  @Mock
-  private SamplingOptionRepository samplingOptionRepository;
+  @Mock private SamplingOptionRepository samplingOptionRepository;
 
-  @InjectMocks
-  private ReportingUnitService service;
+  @InjectMocks private ReportingUnitService service;
 
   private static final Long RU_ID = 879L;
   private static final List<String> CLIENTS = List.of("00001271", "00001272");
 
-  @Captor
-  private ArgumentCaptor<ReportingUnitEntity> ruEntityCaptor;
+  @Captor private ArgumentCaptor<ReportingUnitEntity> ruEntityCaptor;
 
   private ReportingUnitDetailsDto buildDetailsDto() {
     return new ReportingUnitDetailsDto(
         "00001271",
         "00",
         new CodeDescriptionDto("AGR", "Aggregate"),
-        new CodeDescriptionDto("DSS", "Skeena Stikine")
-    );
+        new CodeDescriptionDto("DSS", "Skeena Stikine"));
   }
 
   @Nested
@@ -99,8 +92,7 @@ class ReportingUnitServiceTest {
     @DisplayName("should throw WasteReportingUnitNotFound when reporting unit does not exist")
     void shouldThrowException_whenReportingUnitNotFound() {
       // Arrange
-      when(ruRepository.getReportingUnitDetails(RU_ID, CLIENTS))
-          .thenReturn(Optional.empty());
+      when(ruRepository.getReportingUnitDetails(RU_ID, CLIENTS)).thenReturn(Optional.empty());
 
       // Act & Assert
       assertThatThrownBy(() -> service.getReportingUnitDetails(RU_ID, CLIENTS))
@@ -113,8 +105,7 @@ class ReportingUnitServiceTest {
     void shouldUseNoValueSentinel_whenClientsEmpty() {
       // Arrange
       List<String> noValueList = List.of(LegacyConstants.NOVALUE);
-      when(ruRepository.getReportingUnitDetails(RU_ID, noValueList))
-          .thenReturn(Optional.empty());
+      when(ruRepository.getReportingUnitDetails(RU_ID, noValueList)).thenReturn(Optional.empty());
 
       // Act & Assert
       assertThatThrownBy(() -> service.getReportingUnitDetails(RU_ID, List.of()))
@@ -127,8 +118,7 @@ class ReportingUnitServiceTest {
     void shouldUseNoValueSentinel_whenClientsNull() {
       // Arrange
       List<String> noValueList = List.of(LegacyConstants.NOVALUE);
-      when(ruRepository.getReportingUnitDetails(RU_ID, noValueList))
-          .thenReturn(Optional.empty());
+      when(ruRepository.getReportingUnitDetails(RU_ID, noValueList)).thenReturn(Optional.empty());
 
       // Act & Assert
       assertThatThrownBy(() -> service.getReportingUnitDetails(RU_ID, null))
@@ -167,39 +157,29 @@ class ReportingUnitServiceTest {
     void shouldCreateReportingUnit_whenOrgUnitFound() {
       // Arrange
       String district = "DKM";
-      OrgUnitEntity orgUnit = OrgUnitEntity.builder()
-          .orgUnitNo(123L)
-          .orgUnitCode(district)
-          .build();
+      OrgUnitEntity orgUnit = OrgUnitEntity.builder().orgUnitNo(123L).orgUnitCode(district).build();
       when(orgUnitRepository.findByOrgUnitCode(district))
           .thenReturn(java.util.Optional.of(orgUnit));
 
-      SamplingOptionEntity samplingOption = SamplingOptionEntity.builder()
-          .id("AGR")
-          .build();
-      when(samplingOptionRepository.findAllValid())
-          .thenReturn(List.of(samplingOption));
+      SamplingOptionEntity samplingOption = SamplingOptionEntity.builder().id("AGR").build();
+      when(samplingOptionRepository.findAllValid()).thenReturn(List.of(samplingOption));
 
-      CreateReportingUnitRequestDto request = new CreateReportingUnitRequestDto(
-          "00001271",
-          district,
-          "AGR",
-          null
-      );
+      CreateReportingUnitRequestDto request =
+          new CreateReportingUnitRequestDto("00001271", district, "AGR", null);
 
-      ReportingUnitEntity saved = ReportingUnitEntity.builder()
-          .id(555L)
-          .orgUnitNo(123L)
-          .clientNumber(request.clientNumber())
-          .clientLocationCode("00")
-          .wasteSamplingOptionCode(request.samplingCode())
-          .createdBy("IDIR\\user")
-          .updatedBy("IDIR\\user")
-          .revision(1L)
-          .build();
+      ReportingUnitEntity saved =
+          ReportingUnitEntity.builder()
+              .id(555L)
+              .orgUnitNo(123L)
+              .clientNumber(request.clientNumber())
+              .clientLocationCode("00")
+              .wasteSamplingOptionCode(request.samplingCode())
+              .createdBy("IDIR\\user")
+              .updatedBy("IDIR\\user")
+              .revision(1L)
+              .build();
 
-      when(ruRepository.save(ArgumentMatchers.any(ReportingUnitEntity.class)))
-          .thenReturn(saved);
+      when(ruRepository.save(ArgumentMatchers.any(ReportingUnitEntity.class))).thenReturn(saved);
 
       // Act
       Long result = service.createReportingUnit(request, "IDIR\\user");
@@ -226,12 +206,8 @@ class ReportingUnitServiceTest {
       String district = "UNKNOWN";
       when(orgUnitRepository.findByOrgUnitCode(district)).thenReturn(java.util.Optional.empty());
 
-      CreateReportingUnitRequestDto request = new CreateReportingUnitRequestDto(
-          "00001271",
-          district,
-          "AGR",
-          null
-      );
+      CreateReportingUnitRequestDto request =
+          new CreateReportingUnitRequestDto("00001271", district, "AGR", null);
 
       // Act & Assert
       assertThatThrownBy(() -> service.createReportingUnit(request, "user"))
@@ -245,35 +221,27 @@ class ReportingUnitServiceTest {
     void shouldThrow_whenSamplingCodeNotFound() {
       // Arrange
       String district = "DKM";
-      OrgUnitEntity orgUnit = OrgUnitEntity.builder()
-          .orgUnitNo(123L)
-          .orgUnitCode(district)
-          .build();
+      OrgUnitEntity orgUnit = OrgUnitEntity.builder().orgUnitNo(123L).orgUnitCode(district).build();
       when(orgUnitRepository.findByOrgUnitCode(district))
           .thenReturn(java.util.Optional.of(orgUnit));
 
       String invalidSamplingCode = "BAD";
-      when(samplingOptionRepository.findAllValid())
-          .thenReturn(List.of());
+      when(samplingOptionRepository.findAllValid()).thenReturn(List.of());
 
-      CreateReportingUnitRequestDto request = new CreateReportingUnitRequestDto(
-          "00001271",
-          district,
-          invalidSamplingCode,
-          null
-      );
+      CreateReportingUnitRequestDto request =
+          new CreateReportingUnitRequestDto("00001271", district, invalidSamplingCode, null);
 
       // Act & Assert
       assertThatThrownBy(() -> service.createReportingUnit(request, "user"))
           .isInstanceOf(ResponseStatusException.class)
-          .satisfies(ex -> {
-            ResponseStatusException statusEx = (ResponseStatusException) ex;
-            assertThat(statusEx.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-            assertThat(statusEx.getReason())
-                .isEqualTo("Invalid samplingCode: " + invalidSamplingCode);
-          });
+          .satisfies(
+              ex -> {
+                ResponseStatusException statusEx = (ResponseStatusException) ex;
+                assertThat(statusEx.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                assertThat(statusEx.getReason())
+                    .isEqualTo("Invalid samplingCode: " + invalidSamplingCode);
+              });
       verify(ruRepository, never()).save(ArgumentMatchers.any());
     }
-
   }
 }

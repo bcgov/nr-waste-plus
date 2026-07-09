@@ -19,9 +19,9 @@ import org.springframework.stereotype.Component;
  * Factory for creating {@link AuthorizationManager} instances that evaluate
  * role- and identity-provider-based decisions using {@link JwtRoleChecker}.
  *
- * <p>The factory methods return AuthorizationManager lambdas that can be used
- * in security configuration to enforce role and provider checks per request.
- * </p>
+ * <p>
+ * Used in security configuration to enforce role and provider checks per
+ * request.
  */
 @Component
 @RequiredArgsConstructor
@@ -43,15 +43,15 @@ public class JwtRoleAuthorizationManagerFactory {
   }
 
   /**
-   * Creates an AuthorizationManager that checks whether the current user holds any of the
-   * specified roles.
+   * Creates an AuthorizationManager that checks whether the current user holds
+   * any of the specified roles.
    *
    * @param roles the roles to check against
    * @return an AuthorizationManager for request contexts
    */
-  public AuthorizationManager<RequestAuthorizationContext> gotRoleMatching(Role... roles) {
-    final Set<String> requiredRolePrefixes = Stream
-        .of(roles)
+  public AuthorizationManager<RequestAuthorizationContext> gotRoleMatching(
+      Role... roles) {
+    final Set<String> requiredRolePrefixes = Stream.of(roles)
         .map(Role::getRoleName)
         .map(name -> name.toUpperCase(Locale.ROOT))
         .collect(Collectors.toSet());
@@ -69,7 +69,8 @@ public class JwtRoleAuthorizationManagerFactory {
    * @param role the role to check
    * @return an AuthorizationManager for request contexts
    */
-  public AuthorizationManager<RequestAuthorizationContext> gotRole(String role) {
+  public AuthorizationManager<RequestAuthorizationContext> gotRole(
+      String role) {
     return (authSupplier, context) ->
         new AuthorizationDecision(roleChecker.hasRole(role));
   }
@@ -82,12 +83,14 @@ public class JwtRoleAuthorizationManagerFactory {
    * @param clientIdExtractor function to extract client id from the request
    * @return an AuthorizationManager for request contexts
    */
-  public AuthorizationManager<RequestAuthorizationContext> gotAbstractRole(String rolePrefix,
+  public AuthorizationManager<RequestAuthorizationContext> gotAbstractRole(
+      String rolePrefix,
       Function<HttpServletRequest, String> clientIdExtractor) {
     return (authSupplier, context) ->
         new AuthorizationDecision(
-            roleChecker.hasAbstractRole(rolePrefix, clientIdExtractor.apply(context.getRequest()))
-        );
+            roleChecker.hasAbstractRole(
+                rolePrefix,
+                clientIdExtractor.apply(context.getRequest())));
   }
 
   /**
@@ -97,7 +100,8 @@ public class JwtRoleAuthorizationManagerFactory {
    * @param provider provider claim string
    * @return an AuthorizationManager for request contexts
    */
-  public AuthorizationManager<RequestAuthorizationContext> gotIdp(String provider) {
+  public AuthorizationManager<RequestAuthorizationContext> gotIdp(
+      String provider) {
     return (authSupplier, context) ->
         new AuthorizationDecision(roleChecker.hasIdpProvider(provider));
   }
@@ -109,7 +113,8 @@ public class JwtRoleAuthorizationManagerFactory {
    * @param provider the identity provider enum to check
    * @return an AuthorizationManager for request contexts
    */
-  public AuthorizationManager<RequestAuthorizationContext> gotIdp(IdentityProvider provider) {
+  public AuthorizationManager<RequestAuthorizationContext> gotIdp(
+      IdentityProvider provider) {
     return (authSupplier, context) ->
         new AuthorizationDecision(roleChecker.hasIdpProvider(provider));
   }

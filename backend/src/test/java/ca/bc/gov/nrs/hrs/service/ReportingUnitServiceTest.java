@@ -32,6 +32,9 @@ import org.springframework.web.server.ResponseStatusException;
 @DisplayName("Unit Test | Reporting Unit Service")
 class ReportingUnitServiceTest {
 
+  private static final Long RU_ID = 12345L;
+  private static final String CLIENT_NUMBER = "00012797";
+
   @Mock
   private LegacyApiProvider legacyApiProvider;
 
@@ -46,11 +49,10 @@ class ReportingUnitServiceTest {
 
   @BeforeEach
   void setUp() {
-    lenient().when(districtVolumeService.getAreasForDistrictCode(anyString())).thenReturn(List.of());
+    lenient().when(
+            districtVolumeService.getAreasForDistrictCode(anyString()))
+        .thenReturn(List.of());
   }
-
-  private static final Long RU_ID = 12345L;
-  private static final String CLIENT_NUMBER = "00012797";
 
   private ReportingUnitLegacyDetailsDto buildLegacyDetails(String clientNumber) {
     return new ReportingUnitLegacyDetailsDto(
@@ -76,7 +78,8 @@ class ReportingUnitServiceTest {
     var legacyDetails = buildLegacyDetails(CLIENT_NUMBER);
     var clientDto = buildClientDto(CLIENT_NUMBER);
 
-    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyDetails);
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID))
+        .thenReturn(legacyDetails);
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(clientDto));
 
@@ -87,7 +90,8 @@ class ReportingUnitServiceTest {
     assertThat(result).isNotNull();
     assertThat(result.id()).isEqualTo(RU_ID);
     assertThat(result.client().code()).isEqualTo(CLIENT_NUMBER);
-    assertThat(result.client().description()).isEqualTo("MINISTRY OF FORESTS");
+    assertThat(result.client().description())
+        .isEqualTo("MINISTRY OF FORESTS");
     assertThat(result.clientStatus().code())
         .isEqualTo(ForestClientStatusEnum.ACTIVE.getCode());
     assertThat(result.clientStatus().description())
@@ -104,8 +108,10 @@ class ReportingUnitServiceTest {
     // Arrange
     var legacyDetails = buildLegacyDetails("00099999");
 
-    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyDetails);
-    when(forestClientApiProvider.fetchClientByNumber("00099999")).thenReturn(Optional.empty());
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID))
+        .thenReturn(legacyDetails);
+    when(forestClientApiProvider.fetchClientByNumber("00099999"))
+        .thenReturn(Optional.empty());
 
     // Act & Assert
     assertThatThrownBy(() -> reportingUnitService.getReportingUnitDetails(RU_ID))
@@ -120,14 +126,15 @@ class ReportingUnitServiceTest {
     var legacyDetails = buildLegacyDetails(CLIENT_NUMBER);
     var clientDto = buildClientDto(CLIENT_NUMBER);
 
-    when(legacyApiProvider.getReportingUnitDetails(anotherRuId)).thenReturn(legacyDetails);
+    when(legacyApiProvider.getReportingUnitDetails(anotherRuId))
+        .thenReturn(legacyDetails);
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(clientDto));
 
     // Act
     reportingUnitService.getReportingUnitDetails(anotherRuId);
 
-    // Assert — legacy provider must be called with the exact ID
+    // Assert
     verify(legacyApiProvider).getReportingUnitDetails(anotherRuId);
     verify(forestClientApiProvider).fetchClientByNumber(CLIENT_NUMBER);
   }
@@ -139,18 +146,25 @@ class ReportingUnitServiceTest {
     var customSampling = new CodeDescriptionDto("S99", "Custom Sampling");
     var customDistrict =
         new CodeDescriptionDto("DCK", "Chilliwack Natural Resource District");
+
     var legacyDetails = new ReportingUnitLegacyDetailsDto(
-        CLIENT_NUMBER, "01", customSampling, customDistrict);
+        CLIENT_NUMBER,
+        "01",
+        customSampling,
+        customDistrict
+    );
+
     var clientDto = buildClientDto(CLIENT_NUMBER);
 
-    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyDetails);
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID))
+        .thenReturn(legacyDetails);
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(clientDto));
 
     // Act
     var result = reportingUnitService.getReportingUnitDetails(RU_ID);
 
-    // Assert — sampling and district must come from legacy response unchanged
+    // Assert
     assertThat(result.sampling()).isEqualTo(customSampling);
     assertThat(result.district()).isEqualTo(customDistrict);
   }
@@ -159,8 +173,13 @@ class ReportingUnitServiceTest {
   @DisplayName("shouldCreateReportingUnit_whenRequestIsValid")
   void shouldCreateReportingUnit_whenRequestIsValid() {
     // Arrange
-    var request = new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-        CLIENT_NUMBER, "DND", "AVG", null);
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER,
+            "DND",
+            "AVG",
+            null
+        );
 
     when(
         legacyApiProvider.searchReportingUnit(
@@ -170,9 +189,11 @@ class ReportingUnitServiceTest {
 
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
-    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of());
+    when(districtVolumeService.getAreasForDistrictCode("DND"))
+        .thenReturn(List.of());
 
-    when(legacyApiProvider.createReportingUnit(request)).thenReturn(333L);
+    when(legacyApiProvider.createReportingUnit(request))
+        .thenReturn(333L);
 
     // Act
     var response = reportingUnitService.createReportingUnit(request);
@@ -185,9 +206,14 @@ class ReportingUnitServiceTest {
   @Test
   @DisplayName("shouldThrowBadRequest_whenGradeMissingForDKM")
   void shouldThrowBadRequest_whenGradeMissingForDKM() {
-    // Arrange — ensure no duplicate exists
-    var request = new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-        CLIENT_NUMBER, "DKM", "AVG", null);
+    // Arrange
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER,
+            "DKM",
+            "AVG",
+            null
+        );
 
     when(
         legacyApiProvider.searchReportingUnit(
@@ -195,22 +221,29 @@ class ReportingUnitServiceTest {
             org.mockito.ArgumentMatchers.any()))
         .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
 
-    when(districtVolumeService.getAreasForDistrictCode("DKM")).thenReturn(List.of("COASTAL", "INTERIOR"));
+    when(districtVolumeService.getAreasForDistrictCode("DKM"))
+        .thenReturn(List.of("COASTAL", "INTERIOR"));
 
-    // Act & Assert — grade validation happens before forest client lookup
+    // Act & Assert
     assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(
             e -> assertThat(((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST));
+                .isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST)
+        );
   }
 
   @Test
   @DisplayName("shouldCreateReportingUnit_whenDistrictHasSingleConfiguredArea")
   void shouldCreateReportingUnit_whenDistrictHasSingleConfiguredArea() {
     // Arrange
-    var request = new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-        CLIENT_NUMBER, "DND", "AVG", null);
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER,
+            "DND",
+            "AVG",
+            null
+        );
 
     when(
         legacyApiProvider.searchReportingUnit(
@@ -220,8 +253,11 @@ class ReportingUnitServiceTest {
 
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
-    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
-    when(legacyApiProvider.createReportingUnit(request)).thenReturn(333L);
+    when(districtVolumeService.getAreasForDistrictCode("DND"))
+        .thenReturn(List.of("COASTAL"));
+
+    when(legacyApiProvider.createReportingUnit(request))
+        .thenReturn(333L);
 
     // Act
     var response = reportingUnitService.createReportingUnit(request);
@@ -234,38 +270,77 @@ class ReportingUnitServiceTest {
   @DisplayName("shouldThrowConflict_whenReportingUnitAlreadyExists")
   void shouldThrowConflict_whenReportingUnitAlreadyExists() {
     // Arrange
-    var request = new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-        CLIENT_NUMBER, "DND", "AVG", null);
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER,
+            "DND",
+            "AVG",
+            null
+        );
 
-    var existingResult = new ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto(
-        "1", 26L, "", 36834L,
-        new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(CLIENT_NUMBER, null),
-        null, null, null, false, false,
-        new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("S01", "Sample"),
-        new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DND", "Nadina"),
-        new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DFT", "Draft"),
-        LocalDateTime.now(), false);
+    var existingResult =
+        new ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto(
+            "1",
+            26L,
+            "",
+            36834L,
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(
+                CLIENT_NUMBER,
+                null
+            ),
+            null,
+            null,
+            null,
+            false,
+            false,
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(
+                "S01",
+                "Sample"
+            ),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(
+                "DND",
+                "Nadina"
+            ),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(
+                "DFT",
+                "Draft"
+            ),
+            LocalDateTime.now(),
+            false
+        );
 
     when(
         legacyApiProvider.searchReportingUnit(
             org.mockito.ArgumentMatchers.any(),
             org.mockito.ArgumentMatchers.any()))
-        .thenReturn(new PageImpl<>(List.of(existingResult), PageRequest.of(0, 1), 1));
+        .thenReturn(
+            new PageImpl<>(
+                List.of(existingResult),
+                PageRequest.of(0, 1),
+                1
+            )
+        );
 
     // Act & Assert
     assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(
             e -> assertThat(((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(org.springframework.http.HttpStatus.CONFLICT));
+                .isEqualTo(org.springframework.http.HttpStatus.CONFLICT)
+        );
   }
 
   @Test
   @DisplayName("shouldThrowBadRequest_whenSamplingCodeIsNotAvg")
   void shouldThrowBadRequest_whenSamplingCodeIsNotAvg() {
     // Arrange
-    var request = new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-        CLIENT_NUMBER, "DND", "NOT_AVG", null);
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER,
+            "DND",
+            "NOT_AVG",
+            null
+        );
 
     // Act & Assert
     assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
@@ -273,8 +348,11 @@ class ReportingUnitServiceTest {
         .satisfies(
             e -> {
               ResponseStatusException rse = (ResponseStatusException) e;
-              assertThat(rse.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST);
-              assertThat(rse.getReason()).contains("Invalid samplingCode");
-            });
+              assertThat(rse.getStatusCode())
+                  .isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST);
+              assertThat(rse.getReason())
+                  .contains("Invalid samplingCode");
+            }
+        );
   }
 }
