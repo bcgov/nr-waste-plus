@@ -1,3 +1,4 @@
+import { Help, ToolKit } from '@carbon/icons-react';
 import { SideNav, SideNavItems, SideNavLink, SideNavMenu, SideNavMenuItem } from '@carbon/react';
 import { Link, useRouterState } from '@tanstack/react-router';
 import { type FC, type ReactElement } from 'react';
@@ -10,7 +11,6 @@ import useOfflineMode from '@/hooks/useOfflineMode';
 import { getMenuEntries, isRouteAccessible, type MenuItem } from '@/routes/routePaths';
 
 import './index.scss';
-import { Help, ToolKit } from '@carbon/icons-react';
 
 /**
  * Collapsible side navigation shell for the application.
