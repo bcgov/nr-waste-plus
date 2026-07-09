@@ -1,3 +1,4 @@
+/* eslint-disable import/order */
 import { TanStackDevtools } from '@tanstack/react-devtools';
 import { FormDevtoolsPanel } from '@tanstack/react-form-devtools';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
