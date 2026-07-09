@@ -49,14 +49,14 @@ describe('PageNotification', () => {
 
   describe('null render', () => {
     it('shouldReturnNull_whenEventNotificationIsUndefined', () => {
-      const { container } = render(<PageNotification eventTarget="scope" />);
-      expect(container.firstChild).toBeNull();
+      render(<PageNotification eventTarget="scope" />);
+      expect(screen.queryByRole('alert')).toBeNull();
     });
 
     it('shouldReturnNull_whenEventNotificationTitleIsEmptyString', () => {
       setupHook(makeEvent({ title: '' }));
-      const { container } = render(<PageNotification eventTarget="scope" />);
-      expect(container.firstChild).toBeNull();
+      render(<PageNotification eventTarget="scope" />);
+      expect(screen.queryByRole('alert')).toBeNull();
     });
   });
 
