@@ -20,7 +20,7 @@ import { usePreference } from '@/context/preference/usePreference';
 export function useTableToolbar<T>(id: string, headers: TableHeaderType<T, NestedKeyOf<T>>[]) {
   const [tableHeaders, setTableHeaders] = useState(headers);
   const tableHeadersRef = useRef<string[] | undefined>(undefined);
-  const { userPreference, updatePreferences } = usePreference();
+  const { updatePreferences } = usePreference();
 
   useEffect(() => {
     const preferenceHeaders = tableHeaders
@@ -29,7 +29,7 @@ export function useTableToolbar<T>(id: string, headers: TableHeaderType<T, Neste
     // Update the ref to track saved IDs
     tableHeadersRef.current = [...new Set(preferenceHeaders)];
     updatePreferences({ tableHeaders: { [id]: [...new Set(preferenceHeaders)] } });
-  }, [tableHeaders, id]);
+  }, [tableHeaders, id, updatePreferences]);
 
   useEffect(() => {
     if (tableHeadersRef.current) {
@@ -41,7 +41,7 @@ export function useTableToolbar<T>(id: string, headers: TableHeaderType<T, Neste
         })),
       );
     }
-  }, [id]);
+  }, [id, headers]);
 
   const onToggleHeader = (headerId: string) => {
     setTableHeaders((prevHeaders) => {
