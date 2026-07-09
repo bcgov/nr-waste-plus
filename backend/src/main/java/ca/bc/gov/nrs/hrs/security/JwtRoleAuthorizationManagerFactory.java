@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
  * Factory for creating {@link AuthorizationManager} instances that evaluate
  * role- and identity-provider-based decisions using {@link JwtRoleChecker}.
  *
+ * <p>
  * Used in security configuration to enforce role and provider checks per
  * request.
  */
