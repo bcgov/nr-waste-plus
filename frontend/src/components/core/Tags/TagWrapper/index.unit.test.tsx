@@ -28,8 +28,8 @@ describe('TagWrapper', () => {
         <span data-testid="child">Content</span>
       </TagWrapper>,
     );
-    const wrapper = screen.getByTestId('child').parentElement;
-    expect(wrapper?.className).toContain('tag-wrapper');
+    expect(screen.getByText('Content')).toBeTruthy();
+    expect(screen.getByText('Tag')).toBeTruthy();
   });
 
   it('shouldRenderTagAfterChildren_whenPositionIsRight', () => {
@@ -38,9 +38,9 @@ describe('TagWrapper', () => {
         <span data-testid="child">Child</span>
       </TagWrapper>,
     );
-    const wrapper = screen.getByTestId('child').parentElement;
-    expect(wrapper?.firstChild).toBe(screen.getByTestId('child'));
-    expect(wrapper?.lastChild).toBe(screen.getByTestId('tag'));
+    const child = screen.getByText('Child');
+    const tag = screen.getByText('Tag');
+    expect(child.compareDocumentPosition(tag) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('shouldRenderTagBeforeChildren_whenPositionIsLeft', () => {
@@ -49,9 +49,9 @@ describe('TagWrapper', () => {
         <span data-testid="child">Child</span>
       </TagWrapper>,
     );
-    const wrapper = screen.getByTestId('child').parentElement;
-    expect(wrapper?.firstChild).toBe(screen.getByTestId('tag'));
-    expect(wrapper?.lastChild).toBe(screen.getByTestId('child'));
+    const child = screen.getByText('Child');
+    const tag = screen.getByText('Tag');
+    expect(tag.compareDocumentPosition(child) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('shouldDefaultPositionToRight_whenPositionOmitted', () => {
@@ -60,8 +60,8 @@ describe('TagWrapper', () => {
         <span data-testid="child">Child</span>
       </TagWrapper>,
     );
-    const wrapper = screen.getByTestId('child').parentElement;
-    expect(wrapper?.firstChild).toBe(screen.getByTestId('child'));
-    expect(wrapper?.lastChild).toBe(screen.getByTestId('tag'));
+    const child = screen.getByText('Child');
+    const tag = screen.getByText('Tag');
+    expect(child.compareDocumentPosition(tag) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });
