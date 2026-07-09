@@ -1,4 +1,4 @@
-import { type FC } from 'react';
+import { useMemo, type FC } from 'react';
 
 import DistrictVolumeDetailHeader from './DistrictVolumeDetailHeader';
 import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs';
@@ -40,6 +40,12 @@ const InteriorDetailView: FC<InteriorDetailViewProps> = ({ data, districtOptions
   const { tableData, startDate, endDate, tableLevelFactor } = data;
   const zones = tableData.zones;
 
+  /** Pre-built O(1) code→description lookup map. */
+  const districtMap = useMemo(
+    () => new Map(districtOptions.map((d) => [d.code, d.description])),
+    [districtOptions],
+  );
+
   /** Table headers for interior district volume rows. */
   const headers: TableHeaderType<InteriorDistrictRow>[] = [
     {
@@ -47,12 +53,8 @@ const InteriorDetailView: FC<InteriorDetailViewProps> = ({ data, districtOptions
       header: 'District',
       selected: true,
       renderAs: (value) => {
-        const match = districtOptions.find((d) => d.code === value);
-        return (
-          <CodeDescriptionTag
-            value={{ code: value as string, description: match?.description ?? (value as string) }}
-          />
-        );
+        const description = districtMap.get(value as string) ?? (value as string);
+        return <CodeDescriptionTag value={{ code: value as string, description }} />;
       },
     },
     {
