@@ -110,6 +110,18 @@ describe('speciesCompositionValidator', () => {
     expect(errors.some((e) => e.includes('Weighted'))).toBe(false);
   });
 
+  it('accepts district cells with description suffix (e.g. "DCC - Cariboo")', async () => {
+    const rows = EXPECTED_DISTRICT_CODES.map((code, i) =>
+      i === 0
+        ? dataRow(`${code} - Cariboo-Chilcotin`, sampleValues(i + 1))
+        : dataRow(code, sampleValues(i + 1)),
+    );
+    const file = await makeFile(rows);
+
+    const errors = await speciesCompositionValidator(file);
+    expect(errors).toHaveLength(0);
+  });
+
   it('returns error for empty spreadsheet', async () => {
     const file = await buildSpeciesCompositionFile([]);
     const errors = await speciesCompositionValidator(file);

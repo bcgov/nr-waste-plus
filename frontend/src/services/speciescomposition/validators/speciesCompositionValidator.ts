@@ -11,6 +11,12 @@ function normalise(text: string): string {
   return text.replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
+function extractDistrictCode(raw: string): string {
+  const trimmed = raw.trim();
+  const dashIdx = trimmed.indexOf(' - ');
+  return dashIdx > 0 ? trimmed.slice(0, dashIdx).trim() : trimmed;
+}
+
 function getCellText(worksheet: import('exceljs').Worksheet, row: number, col: number): string {
   const cell = worksheet.getRow(row)?.getCell(col);
   return cell?.value != null ? String(cell.value).replace(/\s+/g, ' ').trim() : '';
@@ -64,20 +70,23 @@ export async function speciesCompositionValidator(file: File): Promise<string[]>
     // Skip summary/average rows
     if (SUMMARY_ROW_PATTERNS.test(districtRaw)) continue;
 
+    // Extract the 3-letter code from cells like "DCC - Cariboo-Chilcotin"
+    const districtCode = extractDistrictCode(districtRaw);
+
     // District code validation
-    if (!DISTRICT_CODE_REGEX.test(districtRaw)) {
+    if (!DISTRICT_CODE_REGEX.test(districtCode)) {
       errors.push(
         `Invalid district code at row ${r}: "${districtRaw}". District codes must be 3 uppercase letters.`,
       );
       continue;
     }
 
-    // Duplicate check
-    const prevRow = seenDistricts.get(districtRaw);
+    // Duplicate check (on extracted code)
+    const prevRow = seenDistricts.get(districtCode);
     if (prevRow) {
-      errors.push(`Duplicate district code "${districtRaw}" found at rows ${prevRow} and ${r}.`);
+      errors.push(`Duplicate district code "${districtCode}" found at rows ${prevRow} and ${r}.`);
     } else {
-      seenDistricts.set(districtRaw, r);
+      seenDistricts.set(districtCode, r);
     }
 
     // Species value validation (columns B–T)
