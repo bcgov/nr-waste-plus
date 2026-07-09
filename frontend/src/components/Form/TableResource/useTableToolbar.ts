@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 import { type TableHeaderType, getHeaderId } from './types';
 
@@ -19,45 +19,50 @@ import { usePreference } from '@/context/preference/usePreference';
  */
 export function useTableToolbar<T>(id: string, headers: TableHeaderType<T, NestedKeyOf<T>>[]) {
   const [tableHeaders, setTableHeaders] = useState(headers);
-  const { userPreference, updatePreferences, isLoaded } = usePreference();
-
-  const loadTableFromPreferences = () => {
-    if (userPreference.tableHeaders) {
-      const savedIds = (userPreference.tableHeaders as Record<string, string[]>)[id];
-
-      if (savedIds && Array.isArray(savedIds)) {
-        setTableHeaders(
-          headers.map((header) => ({
-            ...header,
-            selected: savedIds.includes(getHeaderId(header)),
-          })),
-        );
-      } else {
-        setTableHeaders(headers); // fallback to default
-      }
-    }
-  };
+  const tableHeadersRef = useRef<string[] | undefined>(undefined);
+  const { userPreference, updatePreferences } = usePreference();
 
   useEffect(() => {
     const preferenceHeaders = tableHeaders
       .filter((header) => header.selected)
       .map((header) => getHeaderId(header));
+    // Update the ref to track saved IDs
+    tableHeadersRef.current = [...new Set(preferenceHeaders)];
     updatePreferences({ tableHeaders: { [id]: [...new Set(preferenceHeaders)] } });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableHeaders]);
+  }, [tableHeaders, id]);
 
   useEffect(() => {
-    loadTableFromPreferences();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded]);
+    if (tableHeadersRef.current) {
+      // Update table headers with saved IDs from ref
+      setTableHeaders(
+        headers.map((header) => ({
+          ...header,
+          selected: tableHeadersRef.current!.includes(getHeaderId(header)),
+        })),
+      );
+    }
+  }, [id]);
 
   const onToggleHeader = (headerId: string) => {
     setTableHeaders((prevHeaders) => {
+      const savedIds = tableHeadersRef.current;
       return prevHeaders.map((header) => {
         // Find the header to toggle by id
         if (getHeaderId(header) === headerId) {
           // Toggle the header's selected state
-          return { ...header, selected: !header.selected };
+          const newSelected = !header.selected;
+          // Update the ref to track saved IDs
+          if (savedIds) {
+            const newSavedIds = [...savedIds];
+            const idx = newSavedIds.indexOf(getHeaderId(header));
+            if (idx > -1) {
+              newSavedIds.splice(idx, 1);
+            } else {
+              newSavedIds.push(getHeaderId(header));
+            }
+            tableHeadersRef.current = newSavedIds;
+          }
+          return { ...header, selected: newSelected };
         }
         return header;
       });

@@ -1,6 +1,6 @@
 import { fetchAuthSession, signInWithRedirect, signOut } from 'aws-amplify/auth';
 import isEqual from 'lodash/isEqual';
-import { useEffect, useMemo, useState, useCallback, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef, type ReactNode } from 'react';
 
 import { AuthContext, type AuthContextType } from './AuthContext';
 import { parseToken, getUserAccessTokenFromCookie, getUserIdTokenFromCookie } from './authUtils';
@@ -42,6 +42,7 @@ export const preserveRolesReference = (
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FamLoginUser | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
+  const isLoadingRef = useRef(true);
 
   const appEnv = Number.isNaN(Number(env.VITE_ZONE)) ? (env.VITE_ZONE ?? 'TEST') : 'TEST';
   const isMock = env.VITE_MOCK_AUTH === 'true';
@@ -65,7 +66,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    */
   const refreshUserState = useCallback(
     async (silent = false) => {
-      if (!silent) setIsLoading(true);
+      if (!silent) {
+        isLoadingRef.current = true;
+        setIsLoading(true);
+      }
       try {
         const idToken = await loadUserIdToken();
         const newUser = idToken ? parseToken(idToken) : undefined;
@@ -77,16 +81,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(undefined);
         if (!silent) await signOut();
       } finally {
-        if (!silent) setIsLoading(false);
+        if (!silent) {
+          isLoadingRef.current = false;
+        }
       }
     },
     [loadUserIdToken],
   );
 
   useEffect(() => {
-    void refreshUserState().catch(() => {
+    refreshUserState().catch(() => {
       setUser(undefined);
-      setIsLoading(false);
     });
 
     const interval = setInterval(
@@ -97,6 +102,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
     return () => clearInterval(interval);
   }, [refreshUserState]);
+
+  // Sync isLoading ref to state on next render
+  useEffect(() => {
+    setIsLoading(isLoadingRef.current);
+  }, [isLoadingRef.current]);
 
   const login = useCallback(
     async (provider: IdpProviderType) => {

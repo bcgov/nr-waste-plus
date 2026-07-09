@@ -22,9 +22,9 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (userPreference?.theme) {
       setTheme(userPreference.theme);
-      document.documentElement.dataset.carbonTheme = userPreference.theme;
     }
-  }, [userPreference]);
+    document.documentElement.dataset.carbonTheme = userPreference.theme;
+  }, [userPreference.theme]);
 
   // Sync theme changes to preferences, but only after initial load
   useEffect(() => {
