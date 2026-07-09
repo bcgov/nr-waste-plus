@@ -415,8 +415,8 @@ class DistrictVolumeServiceTest {
 
   @Test
   @DisplayName(
-      "createDistrictVolume — should throw 422 when start date is not after the existing open-ended row")
-  void createDistrictVolume_throws422_whenStartDateIsNotAfterExistingOpenEndedRow() {
+      "createDistrictVolume — should throw 422 when start date is not after existing open row")
+  void createDistrictVolume_throws422_whenStartDateNotAfterExistingOpenEndedRow() {
 
     InteriorDataDto interiorData =
         new InteriorDataDto(
@@ -482,7 +482,8 @@ class DistrictVolumeServiceTest {
                 "TEST_USER",
                 createDto))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining("multiple open-ended district volume records exist for area INTERIOR");
+        .hasMessageContaining(
+            "multiple open-ended district volume records exist for area INTERIOR");
 
     verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
   }
