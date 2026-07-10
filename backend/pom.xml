@@ -470,7 +470,7 @@
                                     <message>Invalid Maven version. At least 3.2 required</message>
                                 </requireMavenVersion>
                                 <requireJavaVersion>
-                                    <version>22</version>
+                                    <version>[22,)</version>
                                     <message>Invalid Java Version. At least 22 required</message>
                                 </requireJavaVersion>
                                 <requireNoRepositories>
