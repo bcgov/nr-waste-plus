@@ -90,14 +90,6 @@
         <spring-security.version>7.0.5</spring-security.version>
         <tomcat.version>11.0.22</tomcat.version>
         <postgresql.version>42.7.11</postgresql.version>
-        <!--
-          Suppress java:S117 (naming convention) for the Java 22 unnamed variable
-          '_' used as a lambda parameter. SonarCloud's rule does not yet recognise
-          '_' as an unnamed variable and reports it as a false positive.
-        -->
-        <sonar.issue.ignore.multicriteria>unnamedVar</sonar.issue.ignore.multicriteria>
-        <sonar.issue.ignore.multicriteria.unnamedVar.ruleKey>java:S117</sonar.issue.ignore.multicriteria.unnamedVar.ruleKey>
-        <sonar.issue.ignore.multicriteria.unnamedVar.resourceKey>**/*.java</sonar.issue.ignore.multicriteria.unnamedVar.resourceKey>
     </properties>
 
     <dependencies>
