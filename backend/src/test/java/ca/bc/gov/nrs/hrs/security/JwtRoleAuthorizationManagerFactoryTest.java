@@ -98,15 +98,9 @@ class JwtRoleAuthorizationManagerFactoryTest {
     @Test
     @DisplayName("should deny access when no roles are provided")
     void shouldDenyWhenNoRolesProvided() {
-      when(roleChecker.hasRoleMatching(any(Predicate.class))).thenAnswer(invocation -> {
-        Predicate<String> p = invocation.getArgument(0);
-        // Any authority should fail because the required set is empty
-        return p.test("WASTE_PLUS_VIEWER");
-      });
+      when(roleChecker.hasRoleMatching(any(Predicate.class))).thenReturn(false);
 
       AuthorizationManager<RequestAuthorizationContext> manager = factory.gotRoleMatching();
-      // The predicate never matches → hasRoleMatching returns false
-      when(roleChecker.hasRoleMatching(any(Predicate.class))).thenReturn(false);
       AuthorizationResult result = manager.authorize(() -> null, context);
 
       assertFalse(result.isGranted());
@@ -124,8 +118,8 @@ class JwtRoleAuthorizationManagerFactoryTest {
       Predicate<String> builtPredicate = captor.getValue();
       assertFalse(builtPredicate.test("WASTE_PLUS_VIEW"),
           "Should not match a string that is a prefix of the role name");
-      assertFalse(builtPredicate.test("WASTE_PLUS_VIEWER_"),
-          "Should match role name as prefix even with trailing underscore");
+      assertTrue(builtPredicate.test("WASTE_PLUS_VIEWER_"),
+          "Should match role name with a trailing underscore (abstract-role suffix)");
     }
 
     @SuppressWarnings("unchecked")
