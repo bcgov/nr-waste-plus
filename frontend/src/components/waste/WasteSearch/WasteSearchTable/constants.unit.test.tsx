@@ -1,5 +1,6 @@
 import { act, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { DateTime } from 'luxon';
 
 import { headers } from './constants';
 
@@ -179,7 +180,7 @@ describe('WasteSearchTable Constants', () => {
         const result = ruHeader.renderAs('RU-001');
         render(result);
         await act(async () => {});
-        expect(screen.getByTestId('redirect-link-tag')).toBeDefined();
+        expect(screen.getByText('RU-001')).toBeDefined();
       }
     });
 
@@ -263,7 +264,7 @@ describe('WasteSearchTable Constants', () => {
       const lastUpdatedHeader = headers.find((h) => h.id === 'lastUpdated');
       if (lastUpdatedHeader?.renderAs) {
         render(lastUpdatedHeader.renderAs('2024-01-15T10:30:00Z'));
-        expect(screen.getByText('15')).toBeDefined();
+        expect(screen.getByText('Jan 15, 2024')).toBeDefined();
       }
     });
 
@@ -271,7 +272,9 @@ describe('WasteSearchTable Constants', () => {
       const timestampHeader = headers.find((h) => h.id === 'lastUpdatedTimestamp');
       if (timestampHeader?.renderAs) {
         render(timestampHeader.renderAs('2024-01-15T10:30:00Z'));
-        expect(screen.getByText('10:30 AM')).toBeDefined();
+        expect(
+          screen.getByText(DateTime.fromISO('2024-01-15T10:30:00Z').toFormat('t')),
+        ).toBeDefined();
       }
     });
 
@@ -293,7 +296,7 @@ describe('WasteSearchTable Constants', () => {
           const result = ruHeader.renderAs('123');
           render(result, { wrapper: createRouterWrapper('/') });
           await act(async () => {});
-          expect(screen.queryByTestId('redirect-link-tag')).not.toBeNull();
+          expect(screen.getByText('123')).toBeDefined();
           // The internal-route path should not render a legacy external href.
           const legacyLinks = screen
             .queryAllByRole('link')

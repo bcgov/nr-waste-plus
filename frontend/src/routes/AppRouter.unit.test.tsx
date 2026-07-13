@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
 import AppRouter from './AppRouter';
@@ -32,12 +32,12 @@ vi.mock('@tanstack/react-router', async () => {
 
 describe('AppRouter', () => {
   it('shouldRenderRouterProvider', () => {
-    const { getByTestId } = render(<AppRouter />);
-    getByTestId('router-provider'); // getBy* throws if not found
+    render(<AppRouter />);
+    screen.getByTestId('router-provider'); // getBy* throws if not found
   });
 
   it('shouldPassRouterPropToRouterProvider', () => {
-    const { getByTestId } = render(<AppRouter />);
-    expect(getByTestId('router-provider').dataset.router).toBe('present');
+    render(<AppRouter />);
+    expect(screen.getByTestId('router-provider').dataset.router).toBe('present');
   });
 });

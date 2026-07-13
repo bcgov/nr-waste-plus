@@ -93,8 +93,8 @@ describe('routeTree module', () => {
       expect(pending).toBeTruthy();
       return;
     }
-    const { getByTestId } = render(pending());
-    expect(getByTestId('loading')).toBeTruthy();
+    render(pending());
+    expect(screen.getByTestId('loading')).toBeTruthy();
   });
 
   it('shouldRenderErrorLayout_forDefaultErrorComponent', () => {
@@ -199,8 +199,8 @@ describe('routeTree module', () => {
       mockMatches = [];
       const RootLayout = getRootLayoutComponent();
       if (!RootLayout) return;
-      const { getByTestId } = render(<RootLayout />);
-      expect(getByTestId('outlet')).toBeTruthy();
+      render(<RootLayout />);
+      expect(screen.getByTestId('outlet')).toBeTruthy();
     });
 
     it('shouldNotCallSetPageTitle_whenMatchesIsEmpty', async () => {
