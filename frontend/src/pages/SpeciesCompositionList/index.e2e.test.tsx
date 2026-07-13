@@ -86,8 +86,9 @@ test.describe('Species Composition List Page', () => {
       await page.goto('/configuration/species-composition');
       await page.waitForLoadState('domcontentloaded');
 
-      const breadcrumb = page.getByRole('link', { name: 'Configuration' });
-      await breadcrumb.click();
+      // Scope to the breadcrumb container to avoid matching side nav links
+      const breadcrumb = page.locator('.page-title-breadcrumb');
+      await breadcrumb.getByText('Configuration').click();
 
       await expect(page).toHaveURL(/\/configuration$/);
     });

@@ -23,6 +23,7 @@ const SpeciesCompositionUploadPage: FC = () => {
         <PageTitle
           title="Upload new species composition table"
           subtitle="Load .xlsx file containing species composition data"
+          breadCrumbs={[{ name: 'Configuration', path: '/configuration' }]}
         />
       </Column>
 

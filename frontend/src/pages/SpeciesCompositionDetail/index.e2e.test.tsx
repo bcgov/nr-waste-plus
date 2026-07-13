@@ -53,8 +53,9 @@ test.describe('Species Composition Detail Page', () => {
       await page.goto('/configuration/species-composition/42');
       await page.waitForLoadState('domcontentloaded');
 
-      const breadcrumb = page.getByRole('link', { name: 'Configuration' });
-      await breadcrumb.click();
+      // Scope to the breadcrumb container to avoid matching side nav links
+      const breadcrumb = page.locator('.page-title-breadcrumb');
+      await breadcrumb.getByText('Configuration').click();
 
       await expect(page).toHaveURL(/\/configuration$/);
     });
@@ -72,10 +73,9 @@ test.describe('Species Composition Detail Page', () => {
       await page.goto('/configuration/species-composition/42');
       await page.waitForLoadState('domcontentloaded');
 
-      // Carbon BreadcrumbItem without href renders as <span> with class cds--link.
-      // Use getByText since it is not an <a> or role="link" element.
-      const breadcrumb = page.getByText('Species composition').first();
-      await breadcrumb.click();
+      // Scope to the breadcrumb container to avoid matching side nav links
+      const breadcrumb = page.locator('.page-title-breadcrumb');
+      await breadcrumb.getByText('Species composition').click();
 
       await expect(page).toHaveURL(/\/configuration\/species-composition$/);
     });

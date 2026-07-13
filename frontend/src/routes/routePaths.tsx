@@ -204,7 +204,7 @@ export const ROUTES: RouteDescription[] = [
     featureFlag: 'configuration-enabled',
   },
   {
-    path: '/configuration/upload-species-composition',
+    path: '/configuration/species-composition/upload',
     id: 'Upload Species Composition',
     component: () => (
       <Layout>

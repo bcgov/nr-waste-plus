@@ -19,10 +19,10 @@ test.describe('Species Composition Upload Page', () => {
         'cognito:groups': ['WASTE_PLUS_ADMIN'],
       });
 
-      await page.goto('/configuration/upload-species-composition');
+      await page.goto('/configuration/species-composition/upload');
       await page.waitForLoadState('domcontentloaded');
 
-      await expect(page).toHaveURL(/\/configuration\/upload-species-composition$/);
+      await expect(page).toHaveURL(/\/configuration\/species-composition\/upload$/);
     });
 
     test('should display correct page content @idir-only', async ({ page }, testInfo) => {
@@ -33,7 +33,7 @@ test.describe('Species Composition Upload Page', () => {
         'cognito:groups': ['WASTE_PLUS_ADMIN'],
       });
 
-      await page.goto('/configuration/upload-species-composition');
+      await page.goto('/configuration/species-composition/upload');
       await page.waitForLoadState('domcontentloaded');
 
       await expect(
@@ -54,11 +54,12 @@ test.describe('Species Composition Upload Page', () => {
         'cognito:groups': ['WASTE_PLUS_ADMIN'],
       });
 
-      await page.goto('/configuration/upload-species-composition');
+      await page.goto('/configuration/species-composition/upload');
       await page.waitForLoadState('domcontentloaded');
 
-      const breadcrumb = page.getByRole('link', { name: 'Configuration' });
-      await breadcrumb.click();
+      // Scope to the breadcrumb container to avoid matching side nav links
+      const breadcrumb = page.locator('.page-title-breadcrumb');
+      await breadcrumb.getByText('Configuration').click();
 
       await expect(page).toHaveURL(/\/configuration$/);
     });
@@ -75,7 +76,7 @@ test.describe('Species Composition Upload Page', () => {
         'cognito:groups': ['WASTE_PLUS_VIEWER_00147603'],
       });
 
-      await page.goto('/configuration/upload-species-composition');
+      await page.goto('/configuration/species-composition/upload');
       await page.waitForLoadState('domcontentloaded');
 
       await expect(page).toHaveURL(/\/unauthorized/);
