@@ -45,7 +45,13 @@ const DistrictVolumeTableUploadPage: FC = () => {
         />
       </Column>
 
-      <Column lg={16} md={8} sm={4} className="create-ru-column__notification">
+      <Column
+        lg={16}
+        md={8}
+        sm={4}
+        className="create-ru-column__notification"
+        data-testid="create-ru-column__notification"
+      >
         <PageNotification eventTarget="upload-district-volume" />
       </Column>
 

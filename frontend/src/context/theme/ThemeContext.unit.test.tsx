@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { waitFor } from '@testing-library/dom';
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, type Mock, beforeEach } from 'vitest';
 
@@ -34,18 +34,16 @@ const TestComponent = () => {
   );
 };
 
-const renderWithProviders = async () => {
+const renderWithProviders = () => {
   const qc = makeTestQueryClient();
-  await act(async () =>
-    render(
-      <QueryClientProvider client={qc}>
-        <PreferenceProvider>
-          <ThemeProvider>
-            <TestComponent />
-          </ThemeProvider>
-        </PreferenceProvider>
-      </QueryClientProvider>,
-    ),
+  render(
+    <QueryClientProvider client={qc}>
+      <PreferenceProvider>
+        <ThemeProvider>
+          <TestComponent />
+        </ThemeProvider>
+      </PreferenceProvider>
+    </QueryClientProvider>,
   );
 };
 
@@ -54,28 +52,29 @@ describe('ThemeContext', () => {
     vi.clearAllMocks();
   });
 
-  it('provides the default theme', async () => {
+  it('provides the default theme', () => {
     (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'g10' });
-    await renderWithProviders();
+    renderWithProviders();
     expect(screen.getByTestId('theme-value').textContent).toBe('g10');
   });
 
   it('setTheme changes the theme', async () => {
     (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'g10' });
-    await renderWithProviders();
-    act(() => screen.getByText('Set g100').click());
+    renderWithProviders();
+    const setThemeButton = screen.getByText('Set g100');
+    await userEvent.click(setThemeButton);
     expect(CARBON_THEMES).toContain(screen.getByTestId('theme-value').textContent);
     expect(screen.getByTestId('theme-value').textContent).toBe('g100');
   });
 
   it('toggleTheme toggles between g10 and g100', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     (APIs.user.getUserPreferences as Mock)
       .mockResolvedValueOnce({ theme: 'g10' })
       .mockResolvedValueOnce({ theme: 'g100' })
       .mockResolvedValueOnce({ theme: 'g10' });
     (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
-    await renderWithProviders();
+    renderWithProviders();
 
     // Default is g10, toggle should set to g100
     await user.click(screen.getByText('Toggle'));
@@ -84,7 +83,7 @@ describe('ThemeContext', () => {
     });
 
     // Toggle again should set back to g10
-    await userEvent.click(screen.getByText('Toggle'));
+    await user.click(screen.getByText('Toggle'));
     await waitFor(() => {
       expect(screen.getByTestId('theme-value').textContent).toBe('g10');
     });

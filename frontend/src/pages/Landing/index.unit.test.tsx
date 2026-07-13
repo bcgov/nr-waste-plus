@@ -59,6 +59,7 @@ describe('LandingPage', () => {
     await renderWithProps();
     const wrapper = screen
       .getByTestId('landing-title')
+      // eslint-disable-next-line testing-library/no-node-access
       .closest('.landing-content-wrapper') as HTMLElement | null;
     expect(wrapper).not.toBeNull();
     expect(wrapper?.style.gap).toBe('3rem');
