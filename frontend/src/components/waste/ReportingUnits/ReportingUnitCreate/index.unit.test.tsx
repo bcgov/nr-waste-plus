@@ -137,11 +137,6 @@ async function renderComponent(_routerOptions = {}) {
       <RouterProvider router={router} />
     </QueryClientProvider>,
   );
-
-  // Flush pending microtasks from Carbon async transitions (ComboBox, MultiSelect)
-  // This ensures that Transitioner, MatchesInner, LocalSubscribe async state updates complete
-  // before the test assertions run, eliminating React act() warnings.
-  await act(async () => {});
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -231,7 +226,7 @@ describe('ReportingUnitCreate', () => {
           bubbles: true,
           cancelable: true,
         });
-        districtComboBox?.dispatchEvent(event);
+        districtComboBox.dispatchEvent(event);
       });
 
       await waitFor(() => {
@@ -253,6 +248,8 @@ describe('ReportingUnitCreate', () => {
           bubbles: true,
           cancelable: true,
         });
+        districtComboBox?.dispatchEvent(event);
+      });
         districtComboBox?.dispatchEvent(event);
       });
 
