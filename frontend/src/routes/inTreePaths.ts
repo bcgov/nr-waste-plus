@@ -20,7 +20,10 @@ export type InTreePath =
   | '/configuration'
   | '/configuration/district-volume-tables'
   | '/configuration/upload-district-volume'
-  | `/configuration/district-volume-tables/${number}`;
+  | `/configuration/district-volume-tables/${number}`
+  | '/configuration/species-composition'
+  | '/configuration/upload-species-composition'
+  | `/configuration/species-composition/${number}`;
 
 /**
  * Typed navigate helper for in-tree route paths.

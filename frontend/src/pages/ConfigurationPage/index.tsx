@@ -51,7 +51,7 @@ const ConfigurationPage: FC = () => {
               buttonLabel="View or update tables"
               linkVariant={true}
               linkIcon={<ArrowRight />}
-              disabled={true}
+              onButtonClick={() => navigateInTree(navigate, '/configuration/species-composition')}
             />
           </div>
         </div>
