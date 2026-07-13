@@ -71,6 +71,18 @@ vi.mock('@/pages/ReportingUnitDetails', () => ({
   default: () => <div data-testid="reporting-unit-details" />,
 }));
 
+vi.mock('@/pages/SpeciesCompositionList', () => ({
+  default: () => <div data-testid="species-composition-list" />,
+}));
+
+vi.mock('@/pages/SpeciesCompositionUpload', () => ({
+  default: () => <div data-testid="species-composition-upload" />,
+}));
+
+vi.mock('@/pages/SpeciesCompositionDetail', () => ({
+  default: () => <div data-testid="species-composition-detail" />,
+}));
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 describe('routePaths', () => {
   describe('isRouteAccessible', () => {
@@ -314,6 +326,109 @@ describe('routePaths', () => {
         (r) => r.path === '/configuration/district-volume-tables/$id',
       )!;
       const Comp = detailRoute.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldDefineSpeciesCompositionRoute', () => {
+      expect(routePaths.ROUTES.some((r) => r.path === '/configuration/species-composition')).toBe(
+        true,
+      );
+    });
+
+    it('shouldMarkSpeciesCompositionAsProtectedAdmin', () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/configuration/species-composition')!;
+      expect(route.protected).toBe(true);
+      expect(route.roles).toEqual([{ role: Role.ADMIN, clients: [] }]);
+    });
+
+    it('shouldNotShowSpeciesCompositionInSideMenu', () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/configuration/species-composition')!;
+      expect(route.isSideMenu).toBe(false);
+    });
+
+    it('shouldGateSpeciesCompositionBehindConfigurationFlag', () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/configuration/species-composition')!;
+      expect(route.featureFlag).toBe('configuration-enabled');
+    });
+
+    it('shouldRenderSpeciesCompositionComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/configuration/species-composition')!;
+      const Comp = route.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldDefineSpeciesCompositionUploadRoute', () => {
+      expect(
+        routePaths.ROUTES.some((r) => r.path === '/configuration/species-composition/upload'),
+      ).toBe(true);
+    });
+
+    it('shouldMarkSpeciesCompositionUploadAsProtectedAdmin', () => {
+      const route = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/species-composition/upload',
+      )!;
+      expect(route.protected).toBe(true);
+      expect(route.roles).toEqual([{ role: Role.ADMIN, clients: [] }]);
+    });
+
+    it('shouldNotShowSpeciesCompositionUploadInSideMenu', () => {
+      const route = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/species-composition/upload',
+      )!;
+      expect(route.isSideMenu).toBe(false);
+    });
+
+    it('shouldGateSpeciesCompositionUploadBehindConfigurationFlag', () => {
+      const route = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/species-composition/upload',
+      )!;
+      expect(route.featureFlag).toBe('configuration-enabled');
+    });
+
+    it('shouldRenderSpeciesCompositionUploadComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/species-composition/upload',
+      )!;
+      const Comp = route.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldDefineSpeciesCompositionDetailRoute', () => {
+      expect(
+        routePaths.ROUTES.some((r) => r.path === '/configuration/species-composition/$id'),
+      ).toBe(true);
+    });
+
+    it('shouldMarkSpeciesCompositionDetailAsProtectedAdmin', () => {
+      const route = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/species-composition/$id',
+      )!;
+      expect(route.protected).toBe(true);
+      expect(route.roles).toEqual([{ role: Role.ADMIN, clients: [] }]);
+    });
+
+    it('shouldNotShowSpeciesCompositionDetailInSideMenu', () => {
+      const route = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/species-composition/$id',
+      )!;
+      expect(route.isSideMenu).toBe(false);
+    });
+
+    it('shouldGateSpeciesCompositionDetailBehindConfigurationFlag', () => {
+      const route = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/species-composition/$id',
+      )!;
+      expect(route.featureFlag).toBe('configuration-enabled');
+    });
+
+    it('shouldRenderSpeciesCompositionDetailComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/species-composition/$id',
+      )!;
+      const Comp = route.component;
       const { container } = render(<Comp />);
       expect(container).toBeDefined();
     });
