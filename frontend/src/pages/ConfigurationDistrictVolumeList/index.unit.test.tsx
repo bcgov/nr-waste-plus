@@ -72,7 +72,7 @@ describe('ConfigurationDistrictVolumeListPage', () => {
     expect(navigateInTree).toHaveBeenCalledOnce();
     expect(navigateInTree).toHaveBeenCalledWith(
       mockNavigate,
-      '/configuration/upload-district-volume',
+      '/configuration/district-volume-tables/upload',
     );
   });
 });

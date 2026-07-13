@@ -33,7 +33,7 @@ import './index.scss';
  * @see {@link DistrictVolumeTableUpload} for the form component details
  *
  * @protected Requires ADMIN role with client access
- * @route /configuration/upload-district-volume
+ * @route /configuration/district-volume-tables/upload
  */
 const DistrictVolumeTableUploadPage: FC = () => {
   return (
@@ -46,7 +46,7 @@ const DistrictVolumeTableUploadPage: FC = () => {
       </Column>
 
       <Column lg={16} md={8} sm={4} className="create-ru-column__notification">
-        <PageNotification eventTarget="upload-district-volume" />
+        <PageNotification eventTarget="district-volume-tables-upload" />
       </Column>
 
       <DistrictVolumeTableUpload />

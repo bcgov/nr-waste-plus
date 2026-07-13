@@ -120,7 +120,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
         'cognito:groups': ['WASTE_PLUS_ADMIN'],
       });
 
-      await page.goto('/configuration/upload-district-volume');
+      await page.goto('/configuration/district-volume-tables/upload');
       await page.waitForLoadState('domcontentloaded');
 
       await expect(page).toHaveURL(/\/configuration\/upload-district-volume$/);
@@ -139,7 +139,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
         'cognito:groups': ['WASTE_PLUS_VIEWER_00147603'],
       });
 
-      await page.goto('/configuration/upload-district-volume');
+      await page.goto('/configuration/district-volume-tables/upload');
       await page.waitForLoadState('domcontentloaded');
 
       await expect(page).toHaveURL(/\/unauthorized/);
@@ -155,7 +155,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
         'cognito:groups': ['WASTE_PLUS_VIEWER_00147603'],
       });
 
-      await page.goto('/configuration/upload-district-volume');
+      await page.goto('/configuration/district-volume-tables/upload');
       await page.waitForLoadState('domcontentloaded');
 
       await expect(page).toHaveURL(/\/unauthorized/);
@@ -175,7 +175,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
         'cognito:groups': ['WASTE_PLUS_ADMIN'],
       });
 
-      await page.goto('/configuration/upload-district-volume');
+      await page.goto('/configuration/district-volume-tables/upload');
       await page.waitForLoadState('domcontentloaded');
 
       // Upload a valid Interior spreadsheet
@@ -206,7 +206,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
         'cognito:groups': ['WASTE_PLUS_ADMIN'],
       });
 
-      await page.goto('/configuration/upload-district-volume');
+      await page.goto('/configuration/district-volume-tables/upload');
       await page.waitForLoadState('domcontentloaded');
 
       // Select "Coast" first — the validator rejects files that don't match the selected area.
@@ -244,7 +244,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
         'cognito:groups': ['WASTE_PLUS_ADMIN'],
       });
 
-      await page.goto('/configuration/upload-district-volume');
+      await page.goto('/configuration/district-volume-tables/upload');
       await page.waitForLoadState('domcontentloaded');
 
       const buffer = await buildWrongSheetNameBuffer();
@@ -268,7 +268,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
         'cognito:groups': ['WASTE_PLUS_ADMIN'],
       });
 
-      await page.goto('/configuration/upload-district-volume');
+      await page.goto('/configuration/district-volume-tables/upload');
       await page.waitForLoadState('domcontentloaded');
 
       const buffer = await buildNonNumericDataBuffer();
@@ -289,7 +289,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
         'cognito:groups': ['WASTE_PLUS_ADMIN'],
       });
 
-      await page.goto('/configuration/upload-district-volume');
+      await page.goto('/configuration/district-volume-tables/upload');
       await page.waitForLoadState('domcontentloaded');
 
       const buffer = await buildInvalidDistrictCodeBuffer();
@@ -310,7 +310,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
         'cognito:groups': ['WASTE_PLUS_ADMIN'],
       });
 
-      await page.goto('/configuration/upload-district-volume');
+      await page.goto('/configuration/district-volume-tables/upload');
       await page.waitForLoadState('domcontentloaded');
 
       const buffer = await buildMissingHeliMultiplierBuffer();
@@ -336,7 +336,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       // Register the POST mock (after beforeEach so it takes precedence)
       await mockCreateApi(page);
 
-      await page.goto('/configuration/upload-district-volume');
+      await page.goto('/configuration/district-volume-tables/upload');
       await page.waitForLoadState('domcontentloaded');
 
       // Step 1: Upload a valid Interior spreadsheet
@@ -377,7 +377,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
 
       await mockCreateApi(page);
 
-      await page.goto('/configuration/upload-district-volume');
+      await page.goto('/configuration/district-volume-tables/upload');
       await page.waitForLoadState('domcontentloaded');
 
       // Select "Coast" first — the validator rejects files that don't match the selected area.
