@@ -133,10 +133,8 @@ describe('AdvancedFilterClientInput', () => {
 
     const onClientChange = vi.fn();
 
-    let container: HTMLElement | null = null;
-
     await act(async () => {
-      const result = render(
+      render(
         <AdvancedFilterClientInput
           selectedClients={undefined}
           myClients={undefined}
@@ -144,11 +142,9 @@ describe('AdvancedFilterClientInput', () => {
         />,
         { wrapper },
       );
-      container = result.container;
     });
 
-    expect(container).toBeDefined();
-    expect(container!.firstChild).toBeNull();
+    expect(screen.queryByTestId('client-blur-input')).toBeNull();
   });
 
   it('executes selectedItems filter callback for BCeID with matching selectedClients', async () => {

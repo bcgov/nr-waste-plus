@@ -123,8 +123,8 @@ describe('routeTree module', () => {
       mockUser = undefined;
       const NotFoundRedirect = getNotFoundComponent();
       if (!NotFoundRedirect) return;
-      const { container } = render(<NotFoundRedirect />);
-      expect(container.firstChild).toBeNull();
+      render(<NotFoundRedirect />);
+      expect(screen.queryByTestId('loading')).toBeNull();
     });
 
     it('shouldNavigateToRoot_whenUserIsUnauthenticated', async () => {

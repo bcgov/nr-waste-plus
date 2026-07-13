@@ -1,4 +1,4 @@
-import { act, render, within } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
 import { headers } from './constants';
@@ -100,8 +100,8 @@ describe('WasteSearchTable Constants', () => {
           const result = header.renderAs('test-value');
           expect(result).toBeDefined();
 
-          const { container } = render(result);
-          expect(container.firstChild).toBeDefined();
+          render(result);
+          expect(screen.getAllByText('test-value').length).toBeGreaterThan(0);
         }
       });
     });
@@ -113,14 +113,14 @@ describe('WasteSearchTable Constants', () => {
         const emptyResult = cutBlockIdHeader.renderAs('');
         expect(emptyResult).toBeDefined();
 
-        const { container: emptyContainer } = render(emptyResult);
-        expect(emptyContainer.firstChild).toBeDefined();
+        render(emptyResult);
+        expect(screen.getAllByTestId('empty-value').length).toBeGreaterThan(0);
 
         const nullResult = cutBlockIdHeader.renderAs(null);
         expect(nullResult).toBeDefined();
 
-        const { container: nullContainer } = render(nullResult);
-        expect(nullContainer.firstChild).toBeDefined();
+        render(nullResult);
+        expect(screen.getAllByTestId('empty-value').length).toBeGreaterThan(0);
       }
     });
 
@@ -177,9 +177,9 @@ describe('WasteSearchTable Constants', () => {
       expect(ruHeader?.renderAs).toBeDefined();
       if (ruHeader?.renderAs) {
         const result = ruHeader.renderAs('RU-001');
-        const { container } = render(result);
+        render(result);
         await act(async () => {});
-        expect(container.firstChild).toBeDefined();
+        expect(screen.getByTestId('redirect-link-tag')).toBeDefined();
       }
     });
 
@@ -189,9 +189,9 @@ describe('WasteSearchTable Constants', () => {
       expect(clientHeader?.renderAs).toBeDefined();
       if (clientHeader?.renderAs) {
         const result = clientHeader.renderAs('00001001');
-        const { container } = render(result);
+        render(result);
         await act(async () => {});
-        expect(container.firstChild).toBeDefined();
+        expect(screen.getByText('00001001')).toBeDefined();
       }
     });
 
@@ -200,9 +200,9 @@ describe('WasteSearchTable Constants', () => {
       const clientHeader = headers.find((h) => h.key === 'client.code');
       if (clientHeader?.renderAs) {
         const result = clientHeader.renderAs('00001002');
-        const { container } = render(result);
+        render(result);
         await act(async () => {});
-        expect(container.firstChild).toBeDefined();
+        expect(screen.getByText('00001002')).toBeDefined();
       }
     });
 
@@ -211,26 +211,26 @@ describe('WasteSearchTable Constants', () => {
       if (samplingHeader?.renderAs) {
         const value: CodeDescriptionDto = { code: 'S1', description: 'Ground Sampling' };
         const result = samplingHeader.renderAs(value);
-        const { container } = render(result);
-        expect(container.firstChild).toBeDefined();
+        render(result);
+        expect(screen.getByText('S1 - Ground Sampling')).toBeDefined();
       }
     });
 
     it('should render multiMark as YesNoTag', () => {
       const multiMarkHeader = headers.find((h) => h.key === 'multiMark');
       if (multiMarkHeader?.renderAs) {
-        const { container: yesContainer } = render(multiMarkHeader.renderAs('Y'));
-        expect(yesContainer.firstChild).toBeDefined();
-        const { container: noContainer } = render(multiMarkHeader.renderAs('N'));
-        expect(noContainer.firstChild).toBeDefined();
+        render(multiMarkHeader.renderAs('Y'));
+        expect(screen.getByText('Yes')).toBeDefined();
+        render(multiMarkHeader.renderAs('N'));
+        expect(screen.getByText('No')).toBeDefined();
       }
     });
 
     it('should render secondaryEntry as YesNoTag', () => {
       const secondaryHeader = headers.find((h) => h.key === 'secondaryEntry');
       if (secondaryHeader?.renderAs) {
-        const { container } = render(secondaryHeader.renderAs(true));
-        expect(container.firstChild).toBeDefined();
+        render(secondaryHeader.renderAs(true));
+        expect(screen.getByText('Yes')).toBeDefined();
       }
     });
 
@@ -238,44 +238,40 @@ describe('WasteSearchTable Constants', () => {
       const districtHeader = headers.find((h) => h.key === 'district');
       if (districtHeader?.renderAs) {
         const value: CodeDescriptionDto = { code: 'DCR', description: 'Campbell River' };
-        const { container } = render(districtHeader.renderAs(value));
-        expect(container.firstChild).toBeDefined();
+        render(districtHeader.renderAs(value));
+        expect(screen.getByText('DCR - Campbell River')).toBeDefined();
       }
     });
 
     it('should render status using ColorTag with mapped colour', () => {
       const statusHeader = headers.find((h) => h.key === 'status');
       if (statusHeader?.renderAs) {
-        const { container } = render(
-          statusHeader.renderAs({ code: 'APP', description: 'Approved' }),
-        );
-        expect(container.firstChild).toBeDefined();
+        render(statusHeader.renderAs({ code: 'APP', description: 'Approved' }));
+        expect(screen.getByText('Approved')).toBeDefined();
       }
     });
 
     it('should render status using ColorTag for unmapped status code', () => {
       const statusHeader = headers.find((h) => h.key === 'status');
       if (statusHeader?.renderAs) {
-        const { container } = render(
-          statusHeader.renderAs({ code: 'UNKNOWN', description: 'Unknown' }),
-        );
-        expect(container.firstChild).toBeDefined();
+        render(statusHeader.renderAs({ code: 'UNKNOWN', description: 'Unknown' }));
+        expect(screen.getByText('Unknown')).toBeDefined();
       }
     });
 
     it('should render lastUpdated date with DD format', () => {
       const lastUpdatedHeader = headers.find((h) => h.id === 'lastUpdated');
       if (lastUpdatedHeader?.renderAs) {
-        const { container } = render(lastUpdatedHeader.renderAs('2024-01-15T10:30:00Z'));
-        expect(container.firstChild).toBeDefined();
+        render(lastUpdatedHeader.renderAs('2024-01-15T10:30:00Z'));
+        expect(screen.getByText('15')).toBeDefined();
       }
     });
 
     it('should render lastUpdatedTimestamp with timestamp format', () => {
       const timestampHeader = headers.find((h) => h.id === 'lastUpdatedTimestamp');
       if (timestampHeader?.renderAs) {
-        const { container } = render(timestampHeader.renderAs('2024-01-15T10:30:00Z'));
-        expect(container.firstChild).toBeDefined();
+        render(timestampHeader.renderAs('2024-01-15T10:30:00Z'));
+        expect(screen.getByText('10:30 AM')).toBeDefined();
       }
     });
 
@@ -295,11 +291,11 @@ describe('WasteSearchTable Constants', () => {
         expect(ruHeader?.renderAs).toBeDefined();
         if (ruHeader?.renderAs) {
           const result = ruHeader.renderAs('123');
-          const { container } = render(result, { wrapper: createRouterWrapper('/') });
+          render(result, { wrapper: createRouterWrapper('/') });
           await act(async () => {});
-          expect(container.firstChild).not.toBeNull();
+          expect(screen.queryByTestId('redirect-link-tag')).not.toBeNull();
           // The internal-route path should not render a legacy external href.
-          const legacyLinks = within(container)
+          const legacyLinks = screen
             .queryAllByRole('link')
             .filter((a) => a.getAttribute('href')?.includes('/waste101'));
           expect(legacyLinks).toHaveLength(0);
