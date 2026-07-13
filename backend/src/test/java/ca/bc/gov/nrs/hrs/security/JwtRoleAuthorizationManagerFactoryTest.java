@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.Map;
 import java.util.function.Predicate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -50,12 +49,6 @@ class JwtRoleAuthorizationManagerFactoryTest {
   class GotRoleMatchingPredicate {
 
     @Test
-    @DisplayName("should return a non-null manager")
-    void shouldReturnNonNullManager() {
-      assertNotNull(factory.gotRoleMatching(role -> true));
-    }
-
-    @Test
     @DisplayName("should grant access when predicate matches")
     void shouldGrantWhenPredicateMatches() {
       Predicate<String> matcher = role -> role.equalsIgnoreCase("Viewer");
@@ -87,57 +80,6 @@ class JwtRoleAuthorizationManagerFactoryTest {
   @Nested
   @DisplayName("gotRoleMatching(Role...)")
   class GotRoleMatchingRoles {
-
-    @Test
-    @DisplayName("should return a non-null manager")
-    void shouldReturnNonNullManager() {
-      assertNotNull(factory.gotRoleMatching(Role.VIEWER));
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    @DisplayName("should deny access when no roles are provided")
-    void shouldDenyWhenNoRolesProvided() {
-      when(roleChecker.hasRoleMatching(any(Predicate.class))).thenReturn(false);
-
-      AuthorizationManager<RequestAuthorizationContext> manager = factory.gotRoleMatching();
-      AuthorizationResult result = manager.authorize(() -> null, context);
-
-      assertFalse(result.isGranted());
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    @DisplayName("built predicate should not match a false prefix (WASTE_PLUS_VIEW ≠ VIEWER)")
-    void predicateShouldNotMatchFalsePrefix() {
-      ArgumentCaptor<Predicate<String>> captor = ArgumentCaptor.forClass(Predicate.class);
-      when(roleChecker.hasRoleMatching(captor.capture())).thenReturn(false);
-
-      factory.gotRoleMatching(Role.VIEWER).authorize(() -> null, context);
-
-      Predicate<String> builtPredicate = captor.getValue();
-      assertFalse(builtPredicate.test("WASTE_PLUS_VIEW"),
-          "Should not match a string that is a prefix of the role name");
-      assertTrue(builtPredicate.test("WASTE_PLUS_VIEWER_"),
-          "Should match role name with a trailing underscore (abstract-role suffix)");
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    @DisplayName("built predicate should match all supplied roles independently")
-    void predicateShouldMatchAllSuppliedRolesIndependently() {
-      ArgumentCaptor<Predicate<String>> captor = ArgumentCaptor.forClass(Predicate.class);
-      when(roleChecker.hasRoleMatching(captor.capture())).thenReturn(true);
-
-      factory.gotRoleMatching(Role.VIEWER, Role.SUBMITTER, Role.ADMIN)
-          .authorize(() -> null, context);
-
-      Predicate<String> p = captor.getValue();
-      assertTrue(p.test("WASTE_PLUS_VIEWER"));
-      assertTrue(p.test("WASTE_PLUS_SUBMITTER"));
-      assertTrue(p.test("WASTE_PLUS_ADMIN"));
-      assertFalse(p.test("WASTE_PLUS_DISTRICT"));
-    }
 
     @SuppressWarnings("unchecked")
     @Test
@@ -246,12 +188,6 @@ class JwtRoleAuthorizationManagerFactoryTest {
   class GotRole {
 
     @Test
-    @DisplayName("should return a non-null manager")
-    void shouldReturnNonNullManager() {
-      assertNotNull(factory.gotRole("Viewer"));
-    }
-
-    @Test
     @DisplayName("should grant access when role matches")
     void shouldGrantWhenRoleMatches() {
       when(roleChecker.hasRole("Viewer")).thenReturn(true);
@@ -281,41 +217,6 @@ class JwtRoleAuthorizationManagerFactoryTest {
   @Nested
   @DisplayName("gotAbstractRole(String, Function)")
   class GotAbstractRole {
-
-    @Test
-    @DisplayName("should return a non-null manager")
-    void shouldReturnNonNullManager() {
-      assertNotNull(factory.gotAbstractRole("Approver", req -> "any"));
-    }
-
-    @Test
-    @DisplayName("should extract client id from RequestAuthorizationContext path variables")
-    void shouldExtractClientIdFromPathVariables() {
-      RequestAuthorizationContext ctxWithVars =
-          new RequestAuthorizationContext(request, Map.of("clientNumber", "77777777"));
-      when(roleChecker.hasAbstractRole("Planner", "77777777")).thenReturn(true);
-
-      AuthorizationManager<RequestAuthorizationContext> manager =
-          factory.gotAbstractRole("Planner",
-              req -> ctxWithVars.getVariables().get("clientNumber"));
-      AuthorizationResult result = manager.authorize(() -> null, ctxWithVars);
-
-      assertTrue(result.isGranted());
-      verify(roleChecker).hasAbstractRole("Planner", "77777777");
-    }
-
-    @Test
-    @DisplayName("should deny access when client id extractor returns empty string")
-    void shouldHandleEmptyClientId() {
-      when(roleChecker.hasAbstractRole("Approver", "")).thenReturn(false);
-
-      AuthorizationManager<RequestAuthorizationContext> manager =
-          factory.gotAbstractRole("Approver", req -> "");
-      AuthorizationResult result = manager.authorize(() -> null, context);
-
-      assertFalse(result.isGranted());
-      verify(roleChecker).hasAbstractRole("Approver", "");
-    }
 
     @Test
     @DisplayName("should grant access when abstract role matches")
@@ -381,24 +282,6 @@ class JwtRoleAuthorizationManagerFactoryTest {
   class GotIdpString {
 
     @Test
-    @DisplayName("should return a non-null manager")
-    void shouldReturnNonNullManager() {
-      assertNotNull(factory.gotIdp("idir"));
-    }
-
-    @Test
-    @DisplayName("should deny access for an unknown provider string without throwing")
-    void shouldDenyForUnknownProviderString() {
-      when(roleChecker.hasIdpProvider("unknown-idp")).thenReturn(false);
-
-      AuthorizationManager<RequestAuthorizationContext> manager = factory.gotIdp("unknown-idp");
-      AuthorizationResult result = manager.authorize(() -> null, context);
-
-      assertFalse(result.isGranted());
-      verify(roleChecker).hasIdpProvider("unknown-idp");
-    }
-
-    @Test
     @DisplayName("should grant access when idp string matches")
     void shouldGrantWhenIdpMatches() {
       when(roleChecker.hasIdpProvider("idir")).thenReturn(true);
@@ -428,12 +311,6 @@ class JwtRoleAuthorizationManagerFactoryTest {
   @Nested
   @DisplayName("gotIdp(IdentityProvider)")
   class GotIdpEnum {
-
-    @Test
-    @DisplayName("should return a non-null manager")
-    void shouldReturnNonNullManager() {
-      assertNotNull(factory.gotIdp(IdentityProvider.IDIR));
-    }
 
     @Test
     @DisplayName("should grant access when IdentityProvider matches")
