@@ -59,45 +59,51 @@ const AdvancedFilterClientInput: FC<AdvancedFilterClientInputProps> = ({
   // IDIR: Autocomplete search across all clients
   if (auth.user?.idpProvider === 'IDIR') {
     return (
-      <AutoCompleteInput<CodeDescriptionDto>
-        id="as-forestclient-client-ac"
-        data-testid="forestclient-client-ac"
-        titleText="Client"
-        placeholder="Search by client name, number, or acronym"
-        helperText="Search by client name, number or acronym"
-        initialSelectedItem={selectedClients?.[0]}
-        onAutoCompleteChange={async (value) =>
-          (await APIs.forestclient.searchForestClients(value, 0, 10)).map(
-            forestClientAutocompleteResult2CodeDescription,
-          )
-        }
-        itemToString={(item) => item!.description}
-        onBlur={onBlur ? (e: React.FocusEvent) => onBlur(e.nativeEvent) : undefined}
-        onSelect={(rawData) => {
-          const data = rawData ? [rawData as CodeDescriptionDto] : [];
-          onClientChange({ selectedItems: data });
-        }}
-        {...carbonProps}
-      />
+      <div data-testid="client-blur-input">
+        <AutoCompleteInput<CodeDescriptionDto>
+          id="as-forestclient-client-ac"
+          data-testid="forestclient-client-ac"
+          titleText="Client"
+          placeholder="Search by client name, number, or acronym"
+          helperText="Search by client name, number or acronym"
+          initialSelectedItem={selectedClients?.[0]}
+          onAutoCompleteChange={async (value) =>
+            (await APIs.forestclient.searchForestClients(value, 0, 10)).map(
+              forestClientAutocompleteResult2CodeDescription,
+            )
+          }
+          itemToString={(item) => item!.description}
+          onBlur={onBlur ? (e: React.FocusEvent) => onBlur(e.nativeEvent) : undefined}
+          onSelect={(rawData) => {
+            const data = rawData ? [rawData as CodeDescriptionDto] : [];
+            onClientChange({ selectedItems: data });
+          }}
+          data-testid="select-client-btn"
+          {...carbonProps}
+        />
+      </div>
     );
   }
 
   // BCeID: Multiselect limited to assigned clients
   if (auth.user?.idpProvider === 'BCEIDBUSINESS') {
     return (
-      <ActiveMultiSelect
-        placeholder="Client"
-        titleText="Client"
-        id="as-client-multi-select"
-        items={myClients ?? []}
-        itemToString={activeMSItemToString}
-        onChange={onClientChange}
-        selectedItems={(myClients ?? []).filter((option) =>
-          (selectedClients || []).some((item) => item.code === option.code),
-        )}
-        onBlur={onBlur}
-        {...carbonProps}
-      />
+      <div data-testid="client-blur-input">
+        <ActiveMultiSelect
+          placeholder="Client"
+          titleText="Client"
+          id="as-client-multi-select"
+          items={myClients ?? []}
+          itemToString={activeMSItemToString}
+          onChange={onClientChange}
+          selectedItems={(myClients ?? []).filter((option) =>
+            (selectedClients || []).some((item) => item.code === option.code),
+          )}
+          onBlur={onBlur}
+          data-testid="select-client-btn"
+          {...carbonProps}
+        />
+      </div>
     );
   }
 
