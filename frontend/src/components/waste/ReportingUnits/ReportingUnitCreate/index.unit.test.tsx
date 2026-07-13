@@ -5,10 +5,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import ReportingUnitCreate from './index';
 
-import type { ChangeEvent, ReactElement, ReactNode } from 'react';
-
 import type { FamLoginUser } from '@/context/auth/types';
 import type { CodeDescriptionDto, ReportingUnitCreateDto } from '@/services/types';
+import type { ChangeEvent, ReactElement, ReactNode } from 'react';
 
 import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
 import {
