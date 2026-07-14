@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider, type UseMutationResult } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import ReportingUnitCreate from './index';
@@ -351,7 +352,7 @@ describe('ReportingUnitCreate', async () => {
 
       // Select district DKM
       const districtComboBox = screen.getByLabelText('District');
-      fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
+      await userEvent.selectOptions(districtComboBox, 'DKM');
 
       await waitFor(() => {
         const gradeGroup = screen.getByTestId('grade-radio-group');
@@ -366,7 +367,7 @@ describe('ReportingUnitCreate', async () => {
       const districtComboBox = screen.getByLabelText('District');
       expect(districtComboBox).toBeDefined();
 
-      fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
+      await userEvent.selectOptions(districtComboBox, 'DKM');
 
       expect(districtComboBox).toBeDefined();
     });
@@ -378,7 +379,7 @@ describe('ReportingUnitCreate', async () => {
     expect(districtComboBox).toBeDefined();
 
     // Simulate selecting a district
-    fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
+    await userEvent.selectOptions(districtComboBox, 'DKM');
 
     expect(districtComboBox).toBeDefined();
   });
@@ -397,7 +398,7 @@ describe('form validation', async () => {
     await renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
-    fireEvent.blur(districtComboBox);
+    await userEvent.tab();
 
     await waitFor(() => {
       expect(districtComboBox).toBeDefined();
@@ -408,7 +409,7 @@ describe('form validation', async () => {
     await renderComponent();
     const samplingComboBox = screen.getByLabelText('Sampling option');
 
-    fireEvent.blur(samplingComboBox);
+    await userEvent.tab();
 
     await waitFor(() => {
       expect(samplingComboBox).toBeDefined();
@@ -419,7 +420,7 @@ describe('form validation', async () => {
     await renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
-    fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
+    await userEvent.selectOptions(districtComboBox, 'DKM');
 
     await waitFor(() => {
       const gradeGroup = screen.getByTestId('grade-radio-group');
@@ -433,7 +434,7 @@ describe('grade selection', async () => {
     await renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
-    fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
+    await userEvent.selectOptions(districtComboBox, 'DKM');
 
     await waitFor(() => {
       const coastalRadio = screen.getByLabelText('Coastal grades');
@@ -445,7 +446,7 @@ describe('grade selection', async () => {
     await renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
-    fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
+    await userEvent.selectOptions(districtComboBox, 'DKM');
 
     await waitFor(() => {
       const interiorRadio = screen.getByLabelText('Interior grades');
@@ -457,7 +458,7 @@ describe('grade selection', async () => {
     await renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
-    fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
+    await userEvent.selectOptions(districtComboBox, 'DKM');
 
     await waitFor(() => {
       const coastalRadio = screen.getByLabelText('Coastal grades') as HTMLInputElement;
@@ -469,7 +470,7 @@ describe('grade selection', async () => {
     await renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
-    fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
+    await userEvent.selectOptions(districtComboBox, 'DKM');
 
     await waitFor(() => {
       const interiorRadio = screen.getByLabelText('Interior grades') as HTMLInputElement;
@@ -481,7 +482,7 @@ describe('grade selection', async () => {
     await renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
-    fireEvent.change(districtComboBox, { target: { value: 'DCR' } });
+    await userEvent.selectOptions(districtComboBox, 'DCR');
 
     await waitFor(() => {
       const gradeGroup = screen.queryByTestId('grade-radio-group');
@@ -501,7 +502,7 @@ describe('sampling selection', async () => {
     await renderComponent();
     const samplingComboBox = screen.getByLabelText('Sampling option');
 
-    fireEvent.change(samplingComboBox, { target: { value: 'SAM1' } });
+    await userEvent.selectOptions(samplingComboBox, 'SAM1');
 
     expect(samplingComboBox).toBeDefined();
   });
@@ -562,7 +563,7 @@ describe('field ids and attributes', async () => {
     await renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
-    fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
+    await userEvent.selectOptions(districtComboBox, 'DKM');
 
     await waitFor(() => {
       expect(screen.getByTestId('grade-radio-group')).toBeDefined();
@@ -644,7 +645,7 @@ describe('helper function coverage', async () => {
     await renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
-    fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
+    await userEvent.selectOptions(districtComboBox, 'DKM');
 
     await waitFor(() => {
       const gradeGroup = screen.getByTestId('grade-radio-group');
@@ -656,7 +657,7 @@ describe('helper function coverage', async () => {
     await renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
-    fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
+    await userEvent.selectOptions(districtComboBox, 'DKM');
 
     expect(districtComboBox).toBeDefined();
   });
@@ -665,7 +666,7 @@ describe('helper function coverage', async () => {
     await renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
-    fireEvent.change(districtComboBox, { target: { value: '' } });
+    await userEvent.selectOptions(districtComboBox, '');
 
     expect(districtComboBox).toBeDefined();
   });
