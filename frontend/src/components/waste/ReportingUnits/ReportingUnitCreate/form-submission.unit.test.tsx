@@ -22,9 +22,12 @@ vi.mock('@/context/auth/useAuth', async () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock('@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions', async () => ({
-  useWasteSearchFilterOptions: vi.fn(),
-}));
+vi.mock(
+  '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions',
+  async () => ({
+    useWasteSearchFilterOptions: vi.fn(),
+  }),
+);
 
 vi.mock('@/config/react-query/hooks', async () => ({
   useReportingUnitCreateMutation: vi.fn(),
