@@ -19,15 +19,15 @@ import { useAuth } from '@/context/auth/useAuth';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
-vi.mock('@/context/auth/useAuth', () => ({
+vi.mock('@/context/auth/useAuth', async () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock('@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions', () => ({
+vi.mock('@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions', async () => ({
   useWasteSearchFilterOptions: vi.fn(),
 }));
 
-vi.mock('@/config/react-query/hooks', () => ({
+vi.mock('@/config/react-query/hooks', async () => ({
   useReportingUnitCreateMutation: vi.fn(),
   useMyForestClientsQuery: vi.fn(),
 }));
@@ -127,7 +127,7 @@ function createMockMutation(
   } as UseMutationResult<number, Error, ReportingUnitCreateDto>;
 }
 
-function renderComponent() {
+async function renderComponent() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -135,6 +135,7 @@ function renderComponent() {
     },
   });
   const router = createTestRouter(() => <ReportingUnitCreate />);
+  await router.load();
 
   render(
     <QueryClientProvider client={queryClient}>
@@ -145,7 +146,7 @@ function renderComponent() {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe('ReportingUnitCreate - Coverage Enhancement', () => {
+describe('ReportingUnitCreate - Coverage Enhancement', async () => {
   beforeEach(() => {
     vi.mocked(useAuth).mockReturnValue({
       user: mockAuthUser,
@@ -186,8 +187,8 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     vi.clearAllMocks();
   });
 
-  describe('form submission with valid data', () => {
-    it('should render form with all required fields', () => {
+  describe('form submission with valid data', async () => {
+    it('should render form with all required fields', async () => {
       const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
 
       vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
@@ -196,7 +197,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
         }),
       );
 
-      renderComponent();
+      await renderComponent();
 
       // Verify all form fields are rendered
       const clientInput = screen.getByTestId('client-input');
@@ -210,7 +211,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
       expect(submitBtn).toBeDefined();
     });
 
-    it('should navigate to reporting unit details on successful creation', () => {
+    it('should navigate to reporting unit details on successful creation', async () => {
       const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
 
       vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
@@ -219,7 +220,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
         }),
       );
 
-      renderComponent();
+      await renderComponent();
 
       // Verify mutation was set up with onSuccess callback
       const mutationCall = vi.mocked(useReportingUnitCreateMutation).mock.calls[0];
@@ -228,7 +229,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
   });
 
-  describe('grade field auto-selection', () => {
+  describe('grade field auto-selection', async () => {
     it('should auto-select grade when district has single area', async () => {
       // Mock district with single area
       vi.mocked(useWasteSearchFilterOptions).mockReturnValue({
@@ -241,7 +242,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
         statusOptions: [],
       });
 
-      renderComponent();
+      await renderComponent();
 
       const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
       await act(async () => {
@@ -267,7 +268,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
         statusOptions: [],
       });
 
-      renderComponent();
+      await renderComponent();
 
       const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
       await act(async () => {
@@ -287,8 +288,8 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
   });
 
-  describe('client query behavior', () => {
-    it('should disable client query when user is IDIR', () => {
+  describe('client query behavior', async () => {
+    it('should disable client query when user is IDIR', async () => {
       vi.mocked(useAuth).mockReturnValue({
         user: mockAuthUserIdir,
         isLoggedIn: true,
@@ -299,7 +300,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
         login: vi.fn(),
       });
 
-      renderComponent();
+      await renderComponent();
 
       // Verify useMyForestClientsQuery was called with enabled: false
       const queryCall = vi.mocked(useMyForestClientsQuery).mock.calls[0];
@@ -309,15 +310,15 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
       expect(queryCall[3]).toHaveProperty('enabled', false);
     });
 
-    it('should enable client query when user is not IDIR', () => {
-      renderComponent();
+    it('should enable client query when user is not IDIR', async () => {
+      await renderComponent();
 
       const queryCall = vi.mocked(useMyForestClientsQuery).mock.calls[0];
       expect(queryCall[3]).toHaveProperty('enabled', true);
     });
 
-    it('should use gcTime 0 and staleTime Infinity for client query', () => {
-      renderComponent();
+    it('should use gcTime 0 and staleTime Infinity for client query', async () => {
+      await renderComponent();
 
       const queryCall = vi.mocked(useMyForestClientsQuery).mock.calls[0];
       expect(queryCall[3]).toHaveProperty('gcTime', 0);
@@ -325,34 +326,34 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
   });
 
-  describe('button state management', () => {
-    it('should disable button when mutation is pending', () => {
+  describe('button state management', async () => {
+    it('should disable button when mutation is pending', async () => {
       vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
         createMockMutation({
           isPending: true,
         }),
       );
 
-      renderComponent();
+      await renderComponent();
 
       const submitBtn = screen.getByRole('button', { name: /Create/i });
       expect((submitBtn as HTMLButtonElement).disabled).toBe(true);
     });
 
-    it('should show submitting text when mutation is pending', () => {
+    it('should show submitting text when mutation is pending', async () => {
       vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
         createMockMutation({
           isPending: true,
         }),
       );
 
-      renderComponent();
+      await renderComponent();
 
       expect(screen.getByText('Submitting...')).toBeDefined();
     });
 
-    it('should disable button when form cannot submit', () => {
-      renderComponent();
+    it('should disable button when form cannot submit', async () => {
+      await renderComponent();
 
       const submitBtn = screen.getByRole('button', { name: /Create/i });
       // Button is enabled by default (form.Subscribe doesn't disable it initially)
@@ -361,9 +362,9 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
   });
 
-  describe('field blur and change validation', () => {
+  describe('field blur and change validation', async () => {
     it('should trigger validation on client field blur', async () => {
-      renderComponent();
+      await renderComponent();
       const user = userEvent.setup();
 
       const clientBlurInput = screen.getByTestId('client-blur-input');
@@ -377,7 +378,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
 
     it('should trigger validation on district field blur', async () => {
-      renderComponent();
+      await renderComponent();
 
       const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
       await act(async () => {
@@ -389,7 +390,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
 
     it('should trigger validation on sampling field blur', async () => {
-      renderComponent();
+      await renderComponent();
 
       const samplingComboBox = document.querySelector('#as-sampling-multi-select') as HTMLElement;
       await act(async () => {
@@ -401,9 +402,9 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
   });
 
-  describe('grade field interaction', () => {
+  describe('grade field interaction', async () => {
     it('should handle grade field change event', async () => {
-      renderComponent();
+      await renderComponent();
 
       const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
       await act(async () => {
@@ -435,7 +436,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
 
     it('should trigger validation on grade field blur', async () => {
-      renderComponent();
+      await renderComponent();
 
       const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
       await act(async () => {
@@ -462,9 +463,9 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
   });
 
-  describe('form submission event handling', () => {
+  describe('form submission event handling', async () => {
     it('should prevent default form submission', async () => {
-      renderComponent();
+      await renderComponent();
 
       const form = document.querySelector('form') as HTMLFormElement;
 
@@ -477,7 +478,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
 
     it('should stop propagation on form submission', async () => {
-      renderComponent();
+      await renderComponent();
 
       const form = document.querySelector('form') as HTMLFormElement;
 
@@ -490,17 +491,17 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
   });
 
-  describe('helper function coverage', () => {
-    it('should use findSelectedItem when district value is null', () => {
-      renderComponent();
+  describe('helper function coverage', async () => {
+    it('should use findSelectedItem when district value is null', async () => {
+      await renderComponent();
 
       const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
       // Initially no selection, findSelectedItem should return null
       expect(districtComboBox).toBeDefined();
     });
 
-    it('should use findSelectedItem when sampling value is null', () => {
-      renderComponent();
+    it('should use findSelectedItem when sampling value is null', async () => {
+      await renderComponent();
 
       const samplingComboBox = document.querySelector('#as-sampling-multi-select') as HTMLElement;
       // Initially no selection, findSelectedItem should return null
@@ -508,7 +509,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
 
     it('should use createComboBoxOnChange with null selectedItem', async () => {
-      renderComponent();
+      await renderComponent();
 
       const samplingComboBox = document.querySelector('#as-sampling-multi-select') as HTMLElement;
       await act(async () => {
@@ -524,9 +525,9 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
   });
 
-  describe('column wrapper attributes', () => {
-    it('should render column with correct responsive breakpoints', () => {
-      renderComponent();
+  describe('column wrapper attributes', async () => {
+    it('should render column with correct responsive breakpoints', async () => {
+      await renderComponent();
 
       const column = document.querySelector('.create-ru-column__content');
       expect(column).toBeDefined();
@@ -535,24 +536,24 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
       expect(column?.classList.contains('create-ru-column__content')).toBe(true);
     });
 
-    it('should render column with data-testid', () => {
-      renderComponent();
+    it('should render column with data-testid', async () => {
+      await renderComponent();
 
       const column = document.querySelector('[data-testid="create-ru-column-content"]');
       expect(column).toBeDefined();
     });
   });
 
-  describe('form field subscriptions', () => {
-    it('should subscribe to form state for button state', () => {
-      renderComponent();
+  describe('form field subscriptions', async () => {
+    it('should subscribe to form state for button state', async () => {
+      await renderComponent();
 
       const submitBtn = screen.getByRole('button', { name: /Create/i });
       expect(submitBtn).toBeDefined();
     });
 
     it('should update button state when form state changes', async () => {
-      renderComponent();
+      await renderComponent();
       const user = userEvent.setup();
 
       // Select client
@@ -565,25 +566,25 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
   });
 
-  describe('combobox itemToString helper', () => {
-    it('should use itemToString for district display', () => {
-      renderComponent();
+  describe('combobox itemToString helper', async () => {
+    it('should use itemToString for district display', async () => {
+      await renderComponent();
 
       const districtComboBox = document.querySelector('#create-ru-district');
       expect(districtComboBox).toBeDefined();
     });
 
-    it('should use itemToString for sampling display', () => {
-      renderComponent();
+    it('should use itemToString for sampling display', async () => {
+      await renderComponent();
 
       const samplingComboBox = document.querySelector('#as-sampling-multi-select');
       expect(samplingComboBox).toBeDefined();
     });
   });
 
-  describe('district selection with grade auto-assignment', () => {
+  describe('district selection with grade auto-assignment', async () => {
     it('should clear grade when switching from DKM to non-DKM district', async () => {
-      renderComponent();
+      await renderComponent();
 
       const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
 
@@ -619,7 +620,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
 
     it('should handle district with no areas', async () => {
-      renderComponent();
+      await renderComponent();
 
       const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
       await act(async () => {
@@ -638,9 +639,9 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
   });
 
-  describe('form field validators', () => {
+  describe('form field validators', async () => {
     it('should validate client field on blur', async () => {
-      renderComponent();
+      await renderComponent();
 
       const clientBlurInput = screen.getByTestId('client-blur-input');
       await act(async () => {
@@ -652,7 +653,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
 
     it('should validate district field on blur', async () => {
-      renderComponent();
+      await renderComponent();
 
       const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
       await act(async () => {
@@ -664,7 +665,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
 
     it('should validate sampling field on blur', async () => {
-      renderComponent();
+      await renderComponent();
 
       const samplingComboBox = document.querySelector('#as-sampling-multi-select') as HTMLElement;
       await act(async () => {
@@ -676,7 +677,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
 
     it('should validate grade field on blur when visible', async () => {
-      renderComponent();
+      await renderComponent();
 
       const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
       await act(async () => {
@@ -703,9 +704,9 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
   });
 
-  describe('client selection flow', () => {
+  describe('client selection flow', async () => {
     it('should handle client selection through AdvancedFilterClientInput', async () => {
-      renderComponent();
+      await renderComponent();
       const user = userEvent.setup();
 
       const selectClientBtn = screen.getByTestId('select-client-btn');
@@ -718,9 +719,9 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
     });
   });
 
-  describe('sampling default value', () => {
-    it('should initialize sampling with AVG default value', () => {
-      renderComponent();
+  describe('sampling default value', async () => {
+    it('should initialize sampling with AVG default value', async () => {
+      await renderComponent();
 
       // The form should be initialized with samplingCode: 'AVG'
       const samplingComboBox = document.querySelector('#as-sampling-multi-select');
