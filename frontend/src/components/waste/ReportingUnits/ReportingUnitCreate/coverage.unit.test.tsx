@@ -259,7 +259,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
 
       // Grade field should not appear for single-area district
       await waitFor(() => {
-        const gradeGroup = document.querySelector('#create-ru-grade');
+        const gradeGroup = screen.queryByTestId('grade-radio-group');
         expect(gradeGroup).toBeNull();
       });
     });
@@ -285,7 +285,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
 
       // Grade should be auto-selected, so field should not show
       await waitFor(() => {
-        const gradeGroup = document.querySelector('#create-ru-grade');
+        const gradeGroup = screen.queryByTestId('grade-radio-group');
         expect(gradeGroup).toBeNull();
       });
     });
