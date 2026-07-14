@@ -78,7 +78,6 @@ const AdvancedFilterClientInput: FC<AdvancedFilterClientInputProps> = ({
             const data = rawData ? [rawData as CodeDescriptionDto] : [];
             onClientChange({ selectedItems: data });
           }}
-          data-testid="select-client-btn"
           {...carbonProps}
         />
       </div>

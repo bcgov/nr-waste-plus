@@ -53,7 +53,11 @@ const ConditionalFieldInner = <TFormData extends Record<string, unknown>>({
     .filter(Boolean)
     .join(' ');
 
-  return <div className={classNames}>{children}</div>;
+  return (
+    <div className={classNames} data-testid="conditional-field">
+      {children}
+    </div>
+  );
 };
 
 /**
