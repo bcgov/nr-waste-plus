@@ -18,15 +18,15 @@ import { useAuth } from '@/context/auth/useAuth';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
-vi.mock('@/context/auth/useAuth', () => ({
+vi.mock('@/context/auth/useAuth', async () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock('@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions', () => ({
+vi.mock('@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions', async () => ({
   useWasteSearchFilterOptions: vi.fn(),
 }));
 
-vi.mock('@/config/react-query/hooks', () => ({
+vi.mock('@/config/react-query/hooks', async () => ({
   useReportingUnitCreateMutation: vi.fn(),
   useMyForestClientsQuery: vi.fn(),
 }));
@@ -118,7 +118,7 @@ function createMockMutation(
   } as UseMutationResult<number, Error, ReportingUnitCreateDto>;
 }
 
-function renderComponent(_routerOptions = {}) {
+async function renderComponent(_routerOptions = {}) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -126,6 +126,7 @@ function renderComponent(_routerOptions = {}) {
     },
   });
   const router = createTestRouter(() => <ReportingUnitCreate />);
+  await router.load();
 
   render(
     <QueryClientProvider client={queryClient}>
@@ -136,7 +137,7 @@ function renderComponent(_routerOptions = {}) {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe('ReportingUnitCreate - Form Submission', () => {
+describe('ReportingUnitCreate - Form Submission', async () => {
   beforeEach(() => {
     vi.mocked(useAuth).mockReturnValue({
       user: mockAuthUser,
@@ -177,94 +178,94 @@ describe('ReportingUnitCreate - Form Submission', () => {
     vi.clearAllMocks();
   });
 
-  describe('form submission', () => {
-    it('mutation hook is called when form is used', () => {
+  describe('form submission', async () => {
+    it('mutation hook is called when form is used', async () => {
       const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
       vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
         createMockMutation({ mutateAsync: mutateAsyncMock }),
       );
 
-      renderComponent();
+      await renderComponent();
       const form = document.querySelector('form');
       expect(form).toBeDefined();
     });
 
-    it('form and fields are ready for submission workflow', () => {
-      renderComponent();
+    it('form and fields are ready for submission workflow', async () => {
+      await renderComponent();
       const form = document.querySelector('form');
       expect(form).toBeDefined();
     });
 
-    it('component renders district and sampling fields for submission', () => {
-      renderComponent();
+    it('component renders district and sampling fields for submission', async () => {
+      await renderComponent();
       const districtField = document.querySelector('#create-ru-district');
       const samplingField = document.querySelector('#as-sampling-multi-select');
       expect(districtField && samplingField).toBeDefined();
     });
 
-    it('calls mutation with correct payload for non-DKM district', () => {
+    it('calls mutation with correct payload for non-DKM district', async () => {
       const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
       vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
         createMockMutation({ mutateAsync: mutateAsyncMock }),
       );
 
-      renderComponent();
+      await renderComponent();
       const form = document.querySelector('form');
       expect(form).toBeDefined();
     });
 
-    it('calls mutation with gradeCode when DKM district is selected', () => {
+    it('calls mutation with gradeCode when DKM district is selected', async () => {
       const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
       vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
         createMockMutation({ mutateAsync: mutateAsyncMock }),
       );
 
-      renderComponent();
+      await renderComponent();
       const districtField = document.querySelector('#create-ru-district');
       expect(districtField).toBeDefined();
     });
   });
 
-  describe('button behavior', () => {
-    it('button exists in the component', () => {
-      renderComponent();
+  describe('button behavior', async () => {
+    it('button exists in the component', async () => {
+      await renderComponent();
       const button = document.querySelector('.create-ru-submit-button');
       expect(button).toBeDefined();
     });
 
-    it('shows "Submitting..." text during submission', () => {
+    it('shows "Submitting..." text during submission', async () => {
       vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
         createMockMutation({ isPending: true }),
       );
 
-      renderComponent();
+      await renderComponent();
 
       expect(document.querySelector('.create-ru-submit-button')).toBeDefined();
     });
 
-    it('button shows primary kind', () => {
-      renderComponent();
+    it('button shows primary kind', async () => {
+      await renderComponent();
       const button = document.querySelector('.create-ru-submit-button');
       expect(button).toBeDefined();
     });
 
-    it('button has submit capability', () => {
-      renderComponent();
+    it('button has submit capability', async () => {
+      await renderComponent();
       const form = document.querySelector('form');
       expect(form).toBeDefined();
     });
   });
 
-  describe('form submission flow', () => {
-    it('form element is present and functional', () => {
-      renderComponent();
+  describe('form submission flow', async () => {
+    it('form element is present and functional', async () => {
+      await renderComponent();
 
       const form = document.querySelector('form');
       expect(form).toBeDefined();
     });
 
-    it('form and fields are ready for submission', () => {
-      renderComponent();
+    it('form and fields are ready for submission', async () => {
+      await renderComponent();
 
       const form = document.querySelector('form');
       const districtField = document.querySelector('#create-ru-district');
@@ -273,19 +274,19 @@ describe('ReportingUnitCreate - Form Submission', () => {
     });
   });
 
-  describe('mutation error handling', () => {
-    it('handles mutation being called with  values', () => {
+  describe('mutation error handling', async () => {
+    it('handles mutation being called with  values', async () => {
       const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
       vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
         createMockMutation({ mutateAsync: mutateAsyncMock }),
       );
 
-      renderComponent();
+      await renderComponent();
       const form = document.querySelector('form');
       expect(form).toBeDefined();
     });
 
-    it('component renders even with error state from mutation', () => {
+    it('component renders even with error state from mutation', async () => {
       vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
         createMockMutation({
           isError: true,
@@ -293,7 +294,7 @@ describe('ReportingUnitCreate - Form Submission', () => {
         }),
       );
 
-      renderComponent();
+      await renderComponent();
       const form = document.querySelector('form');
       expect(form).toBeDefined();
     });
