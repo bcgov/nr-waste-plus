@@ -120,7 +120,7 @@ public class DistrictVolumeService {
     for (Area area : List.of(Area.INTERIOR, Area.COASTAL)) {
       districtVolumeRepository.findActiveByArea(area, currentDate)
           .filter(entity -> containsDistrict(entity.getTableData(), districtCode))
-          .ifPresent(entity -> matchedAreas.add(area.name()));
+          .ifPresent(_ -> matchedAreas.add(area.name()));
     }
 
     return matchedAreas;
@@ -320,19 +320,19 @@ public class DistrictVolumeService {
 
     switch (createDto.tableData()) {
 
-      case InteriorDataDto i when areaEnum != Area.INTERIOR -> throw new ResponseStatusException(
+      case InteriorDataDto _ when areaEnum != Area.INTERIOR -> throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Area mismatch: Expected INTERIOR data layout.");
 
-      case CoastDataDto c when areaEnum != Area.COASTAL -> throw new ResponseStatusException(
+      case CoastDataDto _ when areaEnum != Area.COASTAL -> throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Area mismatch: Expected COASTAL data layout.");
 
-      case InteriorDataDto i -> {
+      case InteriorDataDto _ -> {
         // Valid structural combination; do nothing and allow processing to continue.
       }
 
-      case CoastDataDto c -> {
+      case CoastDataDto _ -> {
         // Valid structural combination; do nothing and allow processing to continue.
       }
 
