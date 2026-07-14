@@ -195,15 +195,16 @@ describe('ReportingUnitCreate - Form Submission', async () => {
 
     it('form and fields are ready for submission workflow', async () => {
       await renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
+      expect(form).toBeTruthy();
     });
 
     it('component renders district and sampling fields for submission', async () => {
       await renderComponent();
-      const districtField = document.querySelector('#create-ru-district');
-      const samplingField = document.querySelector('#as-sampling-multi-select');
-      expect(districtField && samplingField).toBeDefined();
+      const districtField = screen.getByTestId('district-combobox');
+      const samplingField = screen.getByTestId('sampling-combobox');
+      expect(districtField).toBeTruthy();
+      expect(samplingField).toBeTruthy();
     });
 
     it('calls mutation with correct payload for non-DKM district', async () => {
@@ -213,8 +214,8 @@ describe('ReportingUnitCreate - Form Submission', async () => {
       );
 
       await renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
+      expect(form).toBeTruthy();
     });
 
     it('calls mutation with gradeCode when DKM district is selected', async () => {
@@ -224,16 +225,16 @@ describe('ReportingUnitCreate - Form Submission', async () => {
       );
 
       await renderComponent();
-      const districtField = document.querySelector('#create-ru-district');
-      expect(districtField).toBeDefined();
+      const districtField = screen.getByTestId('district-combobox');
+      expect(districtField).toBeTruthy();
     });
   });
 
   describe('button behavior', async () => {
     it('button exists in the component', async () => {
       await renderComponent();
-      const button = document.querySelector('.create-ru-submit-button');
-      expect(button).toBeDefined();
+      const button = screen.getByTestId('create-ru-submit-button');
+      expect(button).toBeTruthy();
     });
 
     it('shows "Submitting..." text during submission', async () => {
@@ -243,19 +244,19 @@ describe('ReportingUnitCreate - Form Submission', async () => {
 
       await renderComponent();
 
-      expect(document.querySelector('.create-ru-submit-button')).toBeDefined();
+      expect(screen.getByTestId('create-ru-submit-button')).toBeTruthy();
     });
 
     it('button shows primary kind', async () => {
       await renderComponent();
-      const button = document.querySelector('.create-ru-submit-button');
-      expect(button).toBeDefined();
+      const button = screen.getByTestId('create-ru-submit-button');
+      expect(button).toBeTruthy();
     });
 
     it('button has submit capability', async () => {
       await renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
+      expect(form).toBeTruthy();
     });
   });
 
@@ -263,17 +264,19 @@ describe('ReportingUnitCreate - Form Submission', async () => {
     it('form element is present and functional', async () => {
       await renderComponent();
 
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
+      expect(form).toBeTruthy();
     });
 
     it('form and fields are ready for submission', async () => {
       await renderComponent();
 
-      const form = document.querySelector('form');
-      const districtField = document.querySelector('#create-ru-district');
-      const samplingField = document.querySelector('#as-sampling-multi-select');
-      expect(form && districtField && samplingField).toBeDefined();
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
+      const districtField = screen.getByTestId('district-combobox');
+      const samplingField = screen.getByTestId('sampling-combobox');
+      expect(form).toBeTruthy();
+      expect(districtField).toBeTruthy();
+      expect(samplingField).toBeTruthy();
     });
   });
 
@@ -285,8 +288,8 @@ describe('ReportingUnitCreate - Form Submission', async () => {
       );
 
       await renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
+      expect(form).toBeTruthy();
     });
 
     it('component renders even with error state from mutation', async () => {
@@ -298,8 +301,8 @@ describe('ReportingUnitCreate - Form Submission', async () => {
       );
 
       await renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
+      expect(form).toBeTruthy();
     });
   });
 });
