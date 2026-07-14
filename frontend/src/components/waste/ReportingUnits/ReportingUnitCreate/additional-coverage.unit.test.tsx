@@ -437,11 +437,12 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should validate district field with runValidators on blur', async () => {
       await renderComponent();
 
-      const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
-      await act(async () => {
-        const blurEvent = new FocusEvent('blur', { bubbles: true });
-        districtComboBox?.dispatchEvent(blurEvent);
-      });
+      const districtComboBox = screen.getByRole('combobox', { name: /district/i });
+
+      // Focus first to ensure the element exists in DOM
+      districtComboBox.focus();
+      // Then blur to trigger blur validation
+      districtComboBox.blur();
 
       expect(districtComboBox).toBeDefined();
     });
