@@ -109,7 +109,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
 
       // Click the upload button
       await page.getByRole('button', { name: /Upload new volumes table/i }).click();
-      await expect(page).toHaveURL(/\/configuration\/upload-district-volume$/);
+      await expect(page).toHaveURL(/\/configuration\/district-volume-tables\/upload$/);
     });
 
     test('should land on upload page via direct URL @idir-only', async ({ page }, testInfo) => {
@@ -123,7 +123,7 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       await page.goto('/configuration/district-volume-tables/upload');
       await page.waitForLoadState('domcontentloaded');
 
-      await expect(page).toHaveURL(/\/configuration\/upload-district-volume$/);
+      await expect(page).toHaveURL(/\/configuration\/district-volume-tables\/upload$/);
       await expect(page.getByRole('heading', { name: 'Upload new volumes table' })).toBeVisible();
     });
   });
