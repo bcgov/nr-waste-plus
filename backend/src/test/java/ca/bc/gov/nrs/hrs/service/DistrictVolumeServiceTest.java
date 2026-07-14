@@ -6,12 +6,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDataDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeCreateDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
+import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.ConfigType;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
@@ -406,6 +406,8 @@ class DistrictVolumeServiceTest {
     assertThat(savedEntities.get(1).getStartDate()).isEqualTo(newStartDate);
     assertThat(savedEntities.get(1).getEndDate()).isNull();
     assertThat(savedEntities.get(1).getCreatedBy()).isEqualTo("TEST_USER");
+    assertThat(savedEntities.get(1).getConfigType())
+        .isEqualTo(ConfigType.DISTRICT_VOLUME);
     assertThat(savedEntities.get(1).getTableLevelFactor())
         .isEqualTo(new BigDecimal("1.150"));
 
