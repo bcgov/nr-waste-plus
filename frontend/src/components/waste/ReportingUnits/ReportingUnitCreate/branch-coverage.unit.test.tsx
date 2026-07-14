@@ -18,15 +18,15 @@ import {
 import { createTestRouter } from '@/config/tests/routerTestHelper';
 import { useAuth } from '@/context/auth/useAuth';
 
-vi.mock('@/context/auth/useAuth', () => ({
+vi.mock('@/context/auth/useAuth', async () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock('@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions', () => ({
+vi.mock('@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions', async () => ({
   useWasteSearchFilterOptions: vi.fn(),
 }));
 
-vi.mock('@/config/react-query/hooks', () => ({
+vi.mock('@/config/react-query/hooks', async () => ({
   useReportingUnitCreateMutation: vi.fn(),
   useMyForestClientsQuery: vi.fn(),
 }));
@@ -232,7 +232,7 @@ function createMockMutation(
   } as UseMutationResult<number, Error, ReportingUnitCreateDto>;
 }
 
-function renderComponent() {
+async function renderComponent() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -241,6 +241,7 @@ function renderComponent() {
   });
 
   const router = createTestRouter(() => <ReportingUnitCreate />);
+  await router.load();
 
   render(
     <QueryClientProvider client={queryClient}>
@@ -249,7 +250,7 @@ function renderComponent() {
   );
 }
 
-describe('ReportingUnitCreate branch coverage', () => {
+describe('ReportingUnitCreate branch coverage', async () => {
   beforeEach(() => {
     vi.mocked(useAuth).mockReturnValue({
       user: mockAuthUser,
@@ -289,7 +290,7 @@ describe('ReportingUnitCreate branch coverage', () => {
   it('shows grade options when a district supports both grade areas', async () => {
     const user = userEvent.setup();
 
-    renderComponent();
+    await renderComponent();
 
     await user.selectOptions(screen.getByLabelText('District'), 'DKM');
 
@@ -301,7 +302,7 @@ describe('ReportingUnitCreate branch coverage', () => {
   it('does not show grade options for districts with a single area', async () => {
     const user = userEvent.setup();
 
-    renderComponent();
+    await renderComponent();
 
     await user.selectOptions(screen.getByLabelText('District'), 'DCR');
 
@@ -315,7 +316,7 @@ describe('ReportingUnitCreate branch coverage', () => {
     const mutateAsync = vi.fn().mockResolvedValue(12345);
     vi.mocked(useReportingUnitCreateMutation).mockReturnValue(createMockMutation({ mutateAsync }));
 
-    renderComponent();
+    await renderComponent();
 
     await user.click(screen.getByRole('button', { name: 'Select Client' }));
 
