@@ -55,27 +55,27 @@ public class ForestClientFetchClient {
             .uri("/clients/findByClientNumber/{number}", number)
             .retrieve()
             .onStatus(status -> status.value() == 404,
-                (req, res) -> {
+                (_, res) -> {
                   log.error("Finished {} request - Client error: {}", PROVIDER,
                       res.getStatusCode());
                   throw new ForestClientNotFoundException(number);
                 }
             )
             .onStatus(status -> status.value() == 429,
-                (req, res) -> {
+                (_, res) -> {
                   log.warn("Rate limit hit when fetching {}, status 429", number);
                   String retryAfter = res.getHeaders().getFirst("Retry-After");
                   throw new TooManyRequestsException("Forest Client", retryAfter);
                 }
             )
             .onStatus(HttpStatusCode::is4xxClientError,
-                (req, res) -> {
+                (_, res) -> {
                   log.error("Unhandled 4xx error: {}", res.getStatusCode());
                   throw new UnretriableException(res.getStatusCode(), number);
                 }
             )
             .onStatus(HttpStatusCode::is5xxServerError,
-                (req, res) -> {
+                (_, res) -> {
                   log.error("Finished {} request - Server error: {}", PROVIDER,
                       res.getStatusCode());
                   throw new RetriableException(res.getStatusCode(), res.getStatusText());

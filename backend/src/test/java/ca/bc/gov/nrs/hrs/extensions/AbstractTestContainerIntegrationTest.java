@@ -7,7 +7,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -17,7 +16,6 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @Testcontainers
 @ExtendWith({SpringExtension.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ContextConfiguration
 public abstract class AbstractTestContainerIntegrationTest {
 
   static final PostgreSQLContainer postgres =

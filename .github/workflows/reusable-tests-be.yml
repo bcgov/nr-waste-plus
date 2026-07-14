@@ -23,7 +23,7 @@ jobs:
           dir: backend
           java-cache: maven
           java-distribution: temurin
-          java-version: "21"
+          java-version: "22"
           sonar_args: >
             -Dsonar.organization=bcgov-sonarcloud
             -Dsonar.projectKey=nr-waste-plus-backend
@@ -41,7 +41,7 @@ jobs:
           dir: legacy
           java-cache: maven
           java-distribution: temurin
-          java-version: "21"
+          java-version: "22"
           sonar_args: >
             -Dsonar.organization=bcgov-sonarcloud
             -Dsonar.projectKey=nr-waste-plus-legacy
