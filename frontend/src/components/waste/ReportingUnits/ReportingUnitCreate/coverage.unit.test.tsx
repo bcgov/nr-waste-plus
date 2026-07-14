@@ -681,29 +681,25 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
 
     it('should validate grade field on blur when visible', async () => {
       await renderComponent();
+      const user = userEvent.setup();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox.dispatchEvent(event);
-      });
+      // Interact with the real Carbon ComboBox like a user would
+      const districtInput = screen.getByRole('combobox', { name: /district/i });
+      await user.click(districtInput);
+      await user.type(districtInput, 'DKM');
 
-      await waitFor(() => {
-        const gradeGroup = document.querySelector('#create-ru-grade');
-        expect(gradeGroup).toBeDefined();
-      });
+      // Select the option from the dropdown
+      const dkmOption = screen.getByText('DKM - Dease Lake');
+      await user.click(dkmOption);
 
-      const gradeGroup = document.querySelector('#create-ru-grade') as HTMLElement;
-      await act(async () => {
-        const blurEvent = new FocusEvent('blur', { bubbles: true });
-        gradeGroup?.dispatchEvent(blurEvent);
-      });
+      // Wait for grade radio group to appear (DKM has both COASTAL and INTERIOR areas)
+      const gradeGroup = await screen.findByTestId('grade-radio-group');
+      expect(gradeGroup).toBeTruthy();
 
-      expect(gradeGroup).toBeDefined();
+      // Blur the grade field
+      await user.click(screen.getByLabelText('Coastal grades'));
+
+      expect(gradeGroup).toBeTruthy();
     });
   });
 
