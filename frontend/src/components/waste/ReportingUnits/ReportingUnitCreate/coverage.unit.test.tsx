@@ -247,15 +247,13 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
 
       await renderComponent();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DCR', description: 'Campbell River' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox.dispatchEvent(event);
-      });
+      // Interact with the real Carbon ComboBox like a user would (DCR)
+      const districtInput = await screen.findByTestId('district-combobox');
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DCR');
+
+      const districtText = await screen.findByText(/Campbell River/i);
+      districtText.click();
 
       // Grade field should not appear for single-area district
       await waitFor(() => {
@@ -273,15 +271,13 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
 
       await renderComponent();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox.dispatchEvent(event);
-      });
+      // Interact with the real Carbon ComboBox like a user would (DKM)
+      const districtInput = await screen.findByTestId('district-combobox');
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DKM');
+
+      const districtText = await screen.findByText(/Dease Lake/i);
+      districtText.click();
 
       // Grade should be auto-selected, so field should not show
       await waitFor(() => {

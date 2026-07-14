@@ -168,8 +168,10 @@ describe('AdvancedFilterClientInput', () => {
 
     // The .some() callback (line 99) fires during render to compute selectedItems
     // When selectedClients contains matches, the multiselect shows as selected
-    const multiSelectWrapper = document.getElementById('as-client-multi-select');
-    expect(multiSelectWrapper).toBeDefined();
+    const multiSelectWrapper = screen.getByTestId('as-client-multi-select');
+    expect(multiSelectWrapper).toBeTruthy();
+    // The .some() selection must actually resolve to 1 matched item (not just render)
+    expect(screen.getByText(/Total items selected: 1/)).toBeTruthy();
   });
 
   it('renders BCeID multiselect with empty items when myClients is undefined', () => {
@@ -193,7 +195,10 @@ describe('AdvancedFilterClientInput', () => {
     );
 
     // Covers the myClients ?? [] branches on lines 95 and 98
-    expect(document.getElementById('as-client-multi-select')).toBeDefined();
+    const multiSelectWrapper = screen.getByTestId('as-client-multi-select');
+    expect(multiSelectWrapper).toBeTruthy();
+    // With empty items, the multiselect must report zero selections (proves ?? [] branch)
+    expect(screen.getByText(/Total items selected:\s*0/)).toBeTruthy();
   });
 
   describe('validation props forwarding', () => {
