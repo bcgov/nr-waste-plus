@@ -334,8 +334,7 @@ describe('ReportingUnitCreate', async () => {
 
     it('renders form element', async () => {
       await renderComponent();
-      // eslint-disable-next-line testing-library/no-node-access
-      const form = screen.getByTestId('create-ru-submit-button').closest('form');
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
       expect(form).not.toBeNull();
     });
   });
@@ -390,7 +389,7 @@ describe('form validation', async () => {
     await renderComponent();
 
     // The component has client field ready for validation
-    const form = screen.getByTestId('create-ru-submit-button').closest('form');
+    const form = screen.getByRole('form', { name: /create reporting unit/i });
     expect(form).not.toBeNull();
   });
 
@@ -511,7 +510,7 @@ describe('sampling selection', async () => {
 describe('auth integration', async () => {
   it('component renders with proper auth setup', async () => {
     await renderComponent();
-    const form = screen.getByTestId('create-ru-submit-button').closest('form');
+    const form = screen.getByRole('form', { name: /create reporting unit/i });
     expect(form).not.toBeNull();
   });
 
@@ -527,7 +526,7 @@ describe('auth integration', async () => {
     });
 
     await renderComponent();
-    const form = screen.getByTestId('create-ru-submit-button').closest('form');
+    const form = screen.getByRole('form', { name: /create reporting unit/i });
     expect(form).not.toBeNull();
   });
 
@@ -543,7 +542,7 @@ describe('auth integration', async () => {
     });
 
     await renderComponent();
-    const form = screen.getByTestId('create-ru-submit-button').closest('form');
+    const form = screen.getByRole('form', { name: /create reporting unit/i });
     expect(form).not.toBeNull();
   });
 });
@@ -572,7 +571,7 @@ describe('field ids and attributes', async () => {
 
   it('form element has form tag', async () => {
     await renderComponent();
-    const form = screen.getByTestId('create-ru-submit-button').closest('form');
+    const form = screen.getByRole('form', { name: /create reporting unit/i });
     expect(form).not.toBeNull();
   });
 });
@@ -598,7 +597,7 @@ describe('component initialization', async () => {
 
   it('sets up form with initial null values', async () => {
     await renderComponent();
-    const form = screen.getByTestId('create-ru-submit-button').closest('form');
+    const form = screen.getByRole('form', { name: /create reporting unit/i });
     expect(form).not.toBeNull();
   });
 });

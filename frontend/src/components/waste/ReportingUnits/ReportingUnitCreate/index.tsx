@@ -111,6 +111,8 @@ const ReportingUnitCreate: FC = () => {
       data-testid="create-ru-column-content"
     >
       <form
+        aria-label="Create reporting unit"
+        data-testid="create-ru-form"
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
