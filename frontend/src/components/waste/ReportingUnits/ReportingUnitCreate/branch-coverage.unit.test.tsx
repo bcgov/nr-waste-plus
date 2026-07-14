@@ -330,6 +330,7 @@ describe('ReportingUnitCreate branch coverage', () => {
       expect(submitButton.hasAttribute('disabled')).toBe(false);
     });
 
+    // eslint-disable-next-line testing-library/no-node-access
     const form = screen.getByRole('button', { name: /Create/i }).closest('form');
     if (!form) {
       throw new Error('Form element not found');
