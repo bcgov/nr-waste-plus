@@ -409,57 +409,42 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     it('should handle grade field change event', async () => {
       await renderComponent();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox.dispatchEvent(event);
-      });
+      const districtInput = await screen.findByTestId('district-combobox');
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DKM');
+
+      const districtText = await screen.findByText(/Dease Lake/i);
+      districtText.click();
 
       await waitFor(() => {
-        const gradeGroup = document.querySelector('#create-ru-grade');
+        const gradeGroup = screen.getByTestId('grade-radio-group');
         expect(gradeGroup).toBeDefined();
       });
 
       // Simulate grade selection
-      const coastalRadio = document.querySelector('#create-ru-grade-coastal') as HTMLInputElement;
-      if (coastalRadio) {
-        await act(async () => {
-          const event = new Event('change', { bubbles: true });
-          Object.defineProperty(event, 'target', {
-            value: { value: 'COASTAL' },
-            enumerable: true,
-          });
-          coastalRadio.dispatchEvent(event);
-        });
-      }
+      const coastalRadio = screen.getByRole('radio', { name: /Coastal/i });
+      await userEvent.click(coastalRadio);
     });
 
     it('should trigger validation on grade field blur', async () => {
       await renderComponent();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox.dispatchEvent(event);
-      });
+      const districtInput = await screen.findByTestId('district-combobox');
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DKM');
+
+      const districtText = await screen.findByText(/Dease Lake/i);
+      districtText.click();
 
       await waitFor(() => {
-        const gradeGroup = document.querySelector('#create-ru-grade');
+        const gradeGroup = screen.getByTestId('grade-radio-group');
         expect(gradeGroup).toBeDefined();
       });
 
-      const gradeGroup = document.querySelector('#create-ru-grade') as HTMLElement;
+      const gradeGroup = screen.getByTestId('grade-radio-group');
       await act(async () => {
         const blurEvent = new FocusEvent('blur', { bubbles: true });
-        gradeGroup?.dispatchEvent(blurEvent);
+        gradeGroup.dispatchEvent(blurEvent);
       });
 
       expect(gradeGroup).toBeDefined();
@@ -589,35 +574,29 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     it('should clear grade when switching from DKM to non-DKM district', async () => {
       await renderComponent();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
+      const districtInput = await screen.findByTestId('district-combobox');
 
       // First select DKM
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox.dispatchEvent(event);
-      });
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DKM');
+
+      const districtText = await screen.findByText(/Dease Lake/i);
+      districtText.click();
 
       await waitFor(() => {
-        const gradeGroup = document.querySelector('#create-ru-grade');
+        const gradeGroup = screen.getByTestId('grade-radio-group');
         expect(gradeGroup).toBeDefined();
       });
 
       // Then switch to DCR
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DCR', description: 'Campbell River' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox?.dispatchEvent(event);
-      });
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DCR');
+
+      const dcrText = await screen.findByText(/Campbell River/i);
+      dcrText.click();
 
       await waitFor(() => {
-        const gradeGroup = document.querySelector('#create-ru-grade');
+        const gradeGroup = screen.queryByTestId('grade-radio-group');
         expect(gradeGroup).toBeNull();
       });
     });
@@ -625,18 +604,15 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     it('should handle district with no areas', async () => {
       await renderComponent();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DPG', description: 'Prince George' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox.dispatchEvent(event);
-      });
+      const districtInput = await screen.findByTestId('district-combobox');
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DPG');
+
+      const districtText = await screen.findByText(/Prince George/i);
+      districtText.click();
 
       await waitFor(() => {
-        const gradeGroup = document.querySelector('#create-ru-grade');
+        const gradeGroup = screen.queryByTestId('grade-radio-group');
         expect(gradeGroup).toBeNull();
       });
     });
