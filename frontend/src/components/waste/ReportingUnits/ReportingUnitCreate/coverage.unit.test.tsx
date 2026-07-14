@@ -247,14 +247,14 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
 
       await renderComponent();
 
-      const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
+      const districtComboBox = screen.getByTestId('district-combobox');
       await act(async () => {
         const event = new CustomEvent('change', {
           detail: { selectedItem: { code: 'DCR', description: 'Campbell River' } },
           bubbles: true,
           cancelable: true,
         });
-        districtComboBox?.dispatchEvent(event);
+        districtComboBox.dispatchEvent(event);
       });
 
       // Grade field should not appear for single-area district
@@ -273,14 +273,14 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
 
       await renderComponent();
 
-      const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
+      const districtComboBox = screen.getByTestId('district-combobox');
       await act(async () => {
         const event = new CustomEvent('change', {
           detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
           bubbles: true,
           cancelable: true,
         });
-        districtComboBox?.dispatchEvent(event);
+        districtComboBox.dispatchEvent(event);
       });
 
       // Grade should be auto-selected, so field should not show
@@ -383,25 +383,25 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     it('should trigger validation on district field blur', async () => {
       await renderComponent();
 
-      const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
+      const districtComboBox = screen.getByTestId('district-combobox');
       await act(async () => {
         const blurEvent = new FocusEvent('blur', { bubbles: true });
-        districtComboBox?.dispatchEvent(blurEvent);
+        districtComboBox.dispatchEvent(blurEvent);
       });
 
-      expect(districtComboBox).toBeDefined();
+      expect(districtComboBox).toBeTruthy();
     });
 
     it('should trigger validation on sampling field blur', async () => {
       await renderComponent();
 
-      const samplingComboBox = document.querySelector('#as-sampling-multi-select') as HTMLElement;
+      const samplingComboBox = screen.getByTestId('sampling-combobox');
       await act(async () => {
         const blurEvent = new FocusEvent('blur', { bubbles: true });
-        samplingComboBox?.dispatchEvent(blurEvent);
+        samplingComboBox.dispatchEvent(blurEvent);
       });
 
-      expect(samplingComboBox).toBeDefined();
+      expect(samplingComboBox).toBeTruthy();
     });
   });
 
@@ -409,14 +409,14 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     it('should handle grade field change event', async () => {
       await renderComponent();
 
-      const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
+      const districtComboBox = screen.getByTestId('district-combobox');
       await act(async () => {
         const event = new CustomEvent('change', {
           detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
           bubbles: true,
           cancelable: true,
         });
-        districtComboBox?.dispatchEvent(event);
+        districtComboBox.dispatchEvent(event);
       });
 
       await waitFor(() => {
@@ -441,14 +441,14 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     it('should trigger validation on grade field blur', async () => {
       await renderComponent();
 
-      const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
+      const districtComboBox = screen.getByTestId('district-combobox');
       await act(async () => {
         const event = new CustomEvent('change', {
           detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
           bubbles: true,
           cancelable: true,
         });
-        districtComboBox?.dispatchEvent(event);
+        districtComboBox.dispatchEvent(event);
       });
 
       await waitFor(() => {
@@ -470,27 +470,27 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     it('should prevent default form submission', async () => {
       await renderComponent();
 
-      const form = document.querySelector('form') as HTMLFormElement;
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
 
       await act(async () => {
         const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
-        form?.dispatchEvent(submitEvent);
+        form.dispatchEvent(submitEvent);
       });
 
-      expect(form).toBeDefined();
+      expect(form).toBeTruthy();
     });
 
     it('should stop propagation on form submission', async () => {
       await renderComponent();
 
-      const form = document.querySelector('form') as HTMLFormElement;
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
 
       await act(async () => {
         const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
-        form?.dispatchEvent(submitEvent);
+        form.dispatchEvent(submitEvent);
       });
 
-      expect(form).toBeDefined();
+      expect(form).toBeTruthy();
     });
   });
 
@@ -498,33 +498,33 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     it('should use findSelectedItem when district value is null', async () => {
       await renderComponent();
 
-      const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
+      const districtComboBox = screen.getByTestId('district-combobox');
       // Initially no selection, findSelectedItem should return null
-      expect(districtComboBox).toBeDefined();
+      expect(districtComboBox).toBeTruthy();
     });
 
     it('should use findSelectedItem when sampling value is null', async () => {
       await renderComponent();
 
-      const samplingComboBox = document.querySelector('#as-sampling-multi-select') as HTMLElement;
+      const samplingComboBox = screen.getByTestId('sampling-combobox');
       // Initially no selection, findSelectedItem should return null
-      expect(samplingComboBox).toBeDefined();
+      expect(samplingComboBox).toBeTruthy();
     });
 
     it('should use createComboBoxOnChange with null selectedItem', async () => {
       await renderComponent();
 
-      const samplingComboBox = document.querySelector('#as-sampling-multi-select') as HTMLElement;
+      const samplingComboBox = screen.getByTestId('sampling-combobox');
       await act(async () => {
         const event = new CustomEvent('change', {
           detail: {},
           bubbles: true,
           cancelable: true,
         });
-        samplingComboBox?.dispatchEvent(event);
+        samplingComboBox.dispatchEvent(event);
       });
 
-      expect(samplingComboBox).toBeDefined();
+      expect(samplingComboBox).toBeTruthy();
     });
   });
 
@@ -532,18 +532,18 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     it('should render column with correct responsive breakpoints', async () => {
       await renderComponent();
 
-      const column = document.querySelector('.create-ru-column__content');
-      expect(column).toBeDefined();
+      const column = screen.getByTestId('create-ru-column-content');
+      expect(column).toBeTruthy();
       // Carbon Column component uses props, not HTML attributes
       // Just verify the column exists with the correct class
-      expect(column?.classList.contains('create-ru-column__content')).toBe(true);
+      expect(column.classList.contains('create-ru-column__content')).toBe(true);
     });
 
     it('should render column with data-testid', async () => {
       await renderComponent();
 
-      const column = document.querySelector('[data-testid="create-ru-column-content"]');
-      expect(column).toBeDefined();
+      const column = screen.getByTestId('create-ru-column-content');
+      expect(column).toBeTruthy();
     });
   });
 
@@ -573,15 +573,15 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     it('should use itemToString for district display', async () => {
       await renderComponent();
 
-      const districtComboBox = document.querySelector('#create-ru-district');
-      expect(districtComboBox).toBeDefined();
+      const districtComboBox = screen.getByTestId('district-combobox');
+      expect(districtComboBox).toBeTruthy();
     });
 
     it('should use itemToString for sampling display', async () => {
       await renderComponent();
 
-      const samplingComboBox = document.querySelector('#as-sampling-multi-select');
-      expect(samplingComboBox).toBeDefined();
+      const samplingComboBox = screen.getByTestId('sampling-combobox');
+      expect(samplingComboBox).toBeTruthy();
     });
   });
 
@@ -589,7 +589,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     it('should clear grade when switching from DKM to non-DKM district', async () => {
       await renderComponent();
 
-      const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
+      const districtComboBox = screen.getByTestId('district-combobox');
 
       // First select DKM
       await act(async () => {
@@ -598,7 +598,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
           bubbles: true,
           cancelable: true,
         });
-        districtComboBox?.dispatchEvent(event);
+        districtComboBox.dispatchEvent(event);
       });
 
       await waitFor(() => {
@@ -625,14 +625,14 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     it('should handle district with no areas', async () => {
       await renderComponent();
 
-      const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
+      const districtComboBox = screen.getByTestId('district-combobox');
       await act(async () => {
         const event = new CustomEvent('change', {
           detail: { selectedItem: { code: 'DPG', description: 'Prince George' } },
           bubbles: true,
           cancelable: true,
         });
-        districtComboBox?.dispatchEvent(event);
+        districtComboBox.dispatchEvent(event);
       });
 
       await waitFor(() => {
@@ -658,38 +658,38 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     it('should validate district field on blur', async () => {
       await renderComponent();
 
-      const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
+      const districtComboBox = screen.getByTestId('district-combobox');
       await act(async () => {
         const blurEvent = new FocusEvent('blur', { bubbles: true });
-        districtComboBox?.dispatchEvent(blurEvent);
+        districtComboBox.dispatchEvent(blurEvent);
       });
 
-      expect(districtComboBox).toBeDefined();
+      expect(districtComboBox).toBeTruthy();
     });
 
     it('should validate sampling field on blur', async () => {
       await renderComponent();
 
-      const samplingComboBox = document.querySelector('#as-sampling-multi-select') as HTMLElement;
+      const samplingComboBox = screen.getByTestId('sampling-combobox');
       await act(async () => {
         const blurEvent = new FocusEvent('blur', { bubbles: true });
-        samplingComboBox?.dispatchEvent(blurEvent);
+        samplingComboBox.dispatchEvent(blurEvent);
       });
 
-      expect(samplingComboBox).toBeDefined();
+      expect(samplingComboBox).toBeTruthy();
     });
 
     it('should validate grade field on blur when visible', async () => {
       await renderComponent();
 
-      const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
+      const districtComboBox = screen.getByTestId('district-combobox');
       await act(async () => {
         const event = new CustomEvent('change', {
           detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
           bubbles: true,
           cancelable: true,
         });
-        districtComboBox?.dispatchEvent(event);
+        districtComboBox.dispatchEvent(event);
       });
 
       await waitFor(() => {
@@ -727,8 +727,8 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
       await renderComponent();
 
       // The form should be initialized with samplingCode: 'AVG'
-      const samplingComboBox = document.querySelector('#as-sampling-multi-select');
-      expect(samplingComboBox).toBeDefined();
+      const samplingComboBox = screen.getByTestId('sampling-combobox');
+      expect(samplingComboBox).toBeTruthy();
     });
   });
 });
