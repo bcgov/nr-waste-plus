@@ -286,13 +286,13 @@ describe('WasteSearchTable Constants', () => {
           false;
       });
 
-      it('should render ruNumber as an internal router link when feature flag is enabled', () => {
+      it('should render ruNumber as an internal router link when feature flag is enabled', async () => {
         const ruHeader = headers.find((h) => h.key === 'ruNumber');
         expect(ruHeader?.renderAs).toBeDefined();
         if (ruHeader?.renderAs) {
           const result = ruHeader.renderAs('123');
           render(result, { wrapper: createRouterWrapper('/') });
-          expect(screen.getByText('123')).toBeDefined();
+          expect(await screen.findByText('123')).toBeDefined();
           // The internal-route path should not render a legacy external href.
           const legacyLinks = screen
             .queryAllByRole('link')
