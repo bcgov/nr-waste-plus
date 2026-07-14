@@ -7,6 +7,7 @@ import WasteSearchTableExpandContent from './index';
 
 import type { ReportingUnitSearchExpandedDto } from '@/services/search.types';
 
+import { toKebabCase } from '@/components/Form/ReadonlyInput/utils';
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
 
@@ -192,6 +193,7 @@ describe('WasteSearchTableExpandContent', () => {
       container = result.container;
 
       // Should show skeletons initially (not actual data)
+      // eslint-disable-next-line testing-library/no-node-access
       const skeletons = container?.querySelectorAll('.cds--skeleton');
       expect(skeletons?.length).toBeGreaterThan(0);
 
@@ -319,7 +321,9 @@ describe('WasteSearchTableExpandContent', () => {
       renderWithProps(rowId);
 
       await waitFor(() => {
-        const agreementsCommentsEl = document.getElementById(`${rowId}-attachments-comments`);
+        const agreementsCommentsEl = screen.getByTestId(
+          `card-item-${toKebabCase(`${rowId}-attachments-comments`)}`,
+        );
         expect(agreementsCommentsEl).not.toBeNull();
 
         // When wasteAssessmentAreaId is finite, the component should render the link
@@ -339,7 +343,9 @@ describe('WasteSearchTableExpandContent', () => {
       );
 
       await waitFor(() => {
-        const agreementsCommentsEl = document.getElementById(`${rowId}-attachments-comments`);
+        const agreementsCommentsEl = screen.getByTestId(
+          `card-item-${toKebabCase(`${rowId}-attachments-comments`)}`,
+        );
         expect(agreementsCommentsEl).not.toBeNull();
 
         // When wasteAssessmentAreaId is not a finite number (e.g. '411B'), the component should render EmptyValueTag
@@ -391,16 +397,28 @@ describe('WasteSearchTableExpandContent', () => {
       );
 
       await waitFor(() => {
-        expect(document.getElementById(`${rowId}-license-number`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-cutting-permit`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-timber-mark`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-exempted`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-net-area`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-submitter`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-attachments-comments`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-comment`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-block-count`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-secondary-marks-count`)).not.toBeNull();
+        expect(
+          screen.getByTestId(`card-item-${toKebabCase(`${rowId}-license-number`)}`),
+        ).not.toBeNull();
+        expect(
+          screen.getByTestId(`card-item-${toKebabCase(`${rowId}-cutting-permit`)}`),
+        ).not.toBeNull();
+        expect(
+          screen.getByTestId(`card-item-${toKebabCase(`${rowId}-timber-mark`)}`),
+        ).not.toBeNull();
+        expect(screen.getByTestId(`card-item-${toKebabCase(`${rowId}-exempted`)}`)).not.toBeNull();
+        expect(screen.getByTestId(`card-item-${toKebabCase(`${rowId}-net-area`)}`)).not.toBeNull();
+        expect(screen.getByTestId(`card-item-${toKebabCase(`${rowId}-submitter`)}`)).not.toBeNull();
+        expect(
+          screen.getByTestId(`card-item-${toKebabCase(`${rowId}-attachments-comments`)}`),
+        ).not.toBeNull();
+        expect(screen.getByTestId(`card-item-${toKebabCase(`${rowId}-comment`)}`)).not.toBeNull();
+        expect(
+          screen.getByTestId(`card-item-${toKebabCase(`${rowId}-block-count`)}`),
+        ).not.toBeNull();
+        expect(
+          screen.getByTestId(`card-item-${toKebabCase(`${rowId}-secondary-marks-count`)}`),
+        ).not.toBeNull();
       });
     });
   });

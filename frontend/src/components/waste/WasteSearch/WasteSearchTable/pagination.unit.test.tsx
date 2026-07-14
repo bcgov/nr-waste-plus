@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { screen, waitFor, fireEvent } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
@@ -203,8 +203,9 @@ const altMockSearchResults2: PageableResponse<ReportingUnitSearchResultDto> = {
   },
 };
 
-const setInputValue = (input: HTMLElement, value: string) => {
-  fireEvent.change(input, { target: { value } });
+const setInputValue = async (input: HTMLElement, value: string) => {
+  await userEvent.clear(input);
+  await userEvent.type(input, value);
 };
 
 const renderWithProps = () => renderWithAppAsync(<WasteSearchTable />);
@@ -257,7 +258,7 @@ describe('WasteSearchTable - Pagination', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
+      await setInputValue(keywordInput, 'BLOCK');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -293,7 +294,7 @@ describe('WasteSearchTable - Pagination', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
+      await setInputValue(keywordInput, 'BLOCK');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -329,7 +330,7 @@ describe('WasteSearchTable - Pagination', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
+      await setInputValue(keywordInput, 'BLOCK');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -358,7 +359,7 @@ describe('WasteSearchTable - Pagination', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
+      await setInputValue(keywordInput, 'BLOCK');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -398,7 +399,7 @@ describe('WasteSearchTable - Pagination', () => {
       };
       (APIs.search.searchReportingUnit as Mock).mockResolvedValue(fewResults);
 
-      setInputValue(keywordInput, 'LESS');
+      await setInputValue(keywordInput, 'LESS');
       await userEvent.click(searchButton);
 
       await waitFor(() => {

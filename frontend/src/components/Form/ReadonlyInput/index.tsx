@@ -110,13 +110,13 @@ const ReadonlyInput = ({
   }
 
   return (
-    <dl className="card-item" id={id} data-testid={`card-item-${toKebabCase(label)}`}>
+    <dl className="card-item" id={id} data-testid={`card-item-${toKebabCase(id || label)}`}>
       <dt className={`card-item-label ${labelClassName}`} aria-label={label}>
         {displayLabel ? label : ''}
       </dt>
       <dd
         className={`${isNumber ? 'card-item-content-number' : 'card-item-content'}`}
-        data-testid={`card-item-content-${toKebabCase(label)}`}
+        data-testid={`card-item-content-${toKebabCase(id || label)}`}
         title={typeof children === 'string' && !showSkeleton ? children : undefined}
       >
         {content}

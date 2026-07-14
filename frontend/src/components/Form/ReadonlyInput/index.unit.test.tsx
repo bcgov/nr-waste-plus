@@ -41,7 +41,7 @@ describe('ReadonlyInput', () => {
         Content
       </ReadonlyInput>,
     );
-    const dl = screen.getByTestId('card-item-test');
+    const dl = screen.getByTestId('card-item-custom-id');
     expect(dl).not.toBeNull();
   });
 
@@ -204,10 +204,10 @@ describe('ReadonlyInput', () => {
         12345
       </ReadonlyInput>,
     );
-    const dl = screen.getByTestId('card-item-complete-field');
+    const dl = screen.getByTestId('card-item-field-id');
     expect(dl?.getAttribute('id')).toBe('field-id');
     screen.getByRole('definition');
-    screen.getByTestId('card-item-complete-field');
+    screen.getByTestId('card-item-field-id');
     screen.getByText('12345');
   });
 
@@ -273,7 +273,7 @@ describe('ReadonlyInput', () => {
           12345
         </ReadonlyInput>,
       );
-      const dl2 = screen.getByTestId('card-item-hidden-field');
+      const dl2 = screen.getByTestId('card-item-hidden-field-id');
       expect(dl2?.getAttribute('id')).toBe('hidden-field-id');
       screen.getByRole('definition');
       screen.getByText('12345');
