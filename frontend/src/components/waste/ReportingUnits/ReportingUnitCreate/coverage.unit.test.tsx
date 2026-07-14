@@ -379,13 +379,14 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     it('should trigger validation on district field blur', async () => {
       await renderComponent();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
-      await act(async () => {
-        const blurEvent = new FocusEvent('blur', { bubbles: true });
-        districtComboBox.dispatchEvent(blurEvent);
-      });
+      const districtInput = screen.getByRole('combobox', { name: /district/i });
+      // Blur the district field without a selection → required validation must fire
+      districtInput.focus();
+      districtInput.blur();
 
-      expect(districtComboBox).toBeTruthy();
+      await waitFor(() => {
+        expect(screen.getByText(/You must select a district to proceed/i)).toBeTruthy();
+      });
     });
 
     it('should trigger validation on sampling field blur', async () => {
@@ -438,12 +439,16 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
       });
 
       const gradeGroup = screen.getByTestId('grade-radio-group');
-      await act(async () => {
-        const blurEvent = new FocusEvent('blur', { bubbles: true });
-        gradeGroup.dispatchEvent(blurEvent);
-      });
+      expect(gradeGroup).toBeTruthy();
 
-      expect(gradeGroup).toBeDefined();
+      // Blur the grade field without selecting an option → required validation must fire
+      const coastalRadio = screen.getByRole('radio', { name: /Coastal grades/i });
+      coastalRadio.focus();
+      coastalRadio.blur();
+
+      await waitFor(() => {
+        expect(screen.getByText(/You must select one option to proceed/i)).toBeTruthy();
+      });
     });
   });
 
@@ -495,17 +500,20 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     it('should use createComboBoxOnChange with null selectedItem', async () => {
       await renderComponent();
 
-      const samplingComboBox = screen.getByTestId('sampling-combobox');
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: {},
-          bubbles: true,
-          cancelable: true,
-        });
-        samplingComboBox.dispatchEvent(event);
+      const samplingInput = screen.getByRole<HTMLInputElement>('combobox', {
+        name: /sampling option/i,
       });
+      // Select a sampling option through the real ComboBox — exercises createComboBoxOnChange
+      await userEvent.clear(samplingInput);
+      await userEvent.type(samplingInput, 'AVG');
 
-      expect(samplingComboBox).toBeTruthy();
+      const samplingText = await screen.findByText(/Average/i);
+      await userEvent.click(samplingText);
+
+      // The selected code must propagate to the field via createComboBoxOnChange
+      await waitFor(() => {
+        expect(samplingInput.value).toBe('AVG - Average');
+      });
     });
   });
 
@@ -630,25 +638,27 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     it('should validate district field on blur', async () => {
       await renderComponent();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
-      await act(async () => {
-        const blurEvent = new FocusEvent('blur', { bubbles: true });
-        districtComboBox.dispatchEvent(blurEvent);
-      });
+      const districtInput = screen.getByRole('combobox', { name: /district/i });
+      // Blur the district field without a selection → required validation must fire
+      districtInput.focus();
+      districtInput.blur();
 
-      expect(districtComboBox).toBeTruthy();
+      await waitFor(() => {
+        expect(screen.getByText(/You must select a district to proceed/i)).toBeTruthy();
+      });
     });
 
     it('should validate sampling field on blur', async () => {
       await renderComponent();
 
-      const samplingComboBox = screen.getByTestId('sampling-combobox');
-      await act(async () => {
-        const blurEvent = new FocusEvent('blur', { bubbles: true });
-        samplingComboBox.dispatchEvent(blurEvent);
-      });
+      const samplingInput = screen.getByRole('combobox', { name: /sampling option/i });
+      // Sampling has a default value (AVG), so blurring it must validate as valid → no error
+      samplingInput.focus();
+      samplingInput.blur();
 
-      expect(samplingComboBox).toBeTruthy();
+      await waitFor(() => {
+        expect(screen.queryByText(/You must select a sampling option to proceed/i)).toBeNull();
+      });
     });
 
     it('should validate grade field on blur when visible', async () => {
