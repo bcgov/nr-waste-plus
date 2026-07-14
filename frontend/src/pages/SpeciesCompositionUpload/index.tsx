@@ -28,7 +28,7 @@ const SpeciesCompositionUploadPage: FC = () => {
       </Column>
 
       <Column lg={16} md={8} sm={4} className="species-composition-upload-column__notification">
-        <PageNotification eventTarget="upload-species-composition" />
+        <PageNotification eventTarget="species-composition-upload" />
       </Column>
 
       {/* Upload form — populated in #1058 */}

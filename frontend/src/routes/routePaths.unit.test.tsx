@@ -258,13 +258,13 @@ describe('routePaths', () => {
 
     it('shouldDefineUploadDistrictVolumeRoute', () => {
       expect(
-        routePaths.ROUTES.some((r) => r.path === '/configuration/upload-district-volume'),
+        routePaths.ROUTES.some((r) => r.path === '/configuration/district-volume-tables/upload'),
       ).toBe(true);
     });
 
     it('shouldMarkUploadDistrictVolumeRouteAsProtectedAdmin', () => {
       const uploadRoute = routePaths.ROUTES.find(
-        (r) => r.path === '/configuration/upload-district-volume',
+        (r) => r.path === '/configuration/district-volume-tables/upload',
       )!;
       expect(uploadRoute.protected).toBe(true);
       expect(uploadRoute.roles).toEqual([{ role: Role.ADMIN, clients: [] }]);
@@ -272,7 +272,7 @@ describe('routePaths', () => {
 
     it('shouldRenderUploadDistrictVolumeRouteComponent_withoutThrowing', () => {
       const uploadRoute = routePaths.ROUTES.find(
-        (r) => r.path === '/configuration/upload-district-volume',
+        (r) => r.path === '/configuration/district-volume-tables/upload',
       )!;
       const Comp = uploadRoute.component;
       const { container } = render(<Comp />);
@@ -281,14 +281,14 @@ describe('routePaths', () => {
 
     it('shouldNotShowUploadRouteInSideMenu', () => {
       const uploadRoute = routePaths.ROUTES.find(
-        (r) => r.path === '/configuration/upload-district-volume',
+        (r) => r.path === '/configuration/district-volume-tables/upload',
       )!;
       expect(uploadRoute.isSideMenu).toBe(false);
     });
 
     it('shouldGateUploadRouteBehindConfigurationFeatureFlag', () => {
       const uploadRoute = routePaths.ROUTES.find(
-        (r) => r.path === '/configuration/upload-district-volume',
+        (r) => r.path === '/configuration/district-volume-tables/upload',
       )!;
       expect(uploadRoute.featureFlag).toBe('configuration-enabled');
     });

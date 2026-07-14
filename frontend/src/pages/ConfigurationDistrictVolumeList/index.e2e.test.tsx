@@ -110,7 +110,7 @@ test.describe('Configuration District Volume List Page', () => {
 
       await page.getByRole('button', { name: /Upload new volumes table/i }).click();
 
-      await expect(page).toHaveURL(/\/configuration\/upload-district-volume$/);
+      await expect(page).toHaveURL(/\/configuration\/district-volume-tables\/upload$/);
     });
 
     test('should navigate back to configuration via breadcrumb @idir-only', async ({

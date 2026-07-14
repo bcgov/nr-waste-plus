@@ -178,7 +178,7 @@ export const ROUTES: RouteDescription[] = [
     featureFlag: 'configuration-enabled',
   },
   {
-    path: '/configuration/upload-district-volume',
+    path: '/configuration/district-volume-tables/upload',
     id: 'Upload District Volume Table',
     component: () => (
       <Layout>

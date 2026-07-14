@@ -98,7 +98,7 @@ test.describe('District Volume Table Detail — Post-Upload', () => {
     await mockCreateApi(page);
 
     // Navigate to the upload page
-    await page.goto('/configuration/upload-district-volume');
+    await page.goto('/configuration/district-volume-tables/upload');
     await page.waitForLoadState('domcontentloaded');
 
     // Step 1: Upload a valid Interior spreadsheet
@@ -157,7 +157,7 @@ test.describe('District Volume Table Detail — Post-Upload', () => {
     await mockCreateApi(page);
 
     // Navigate to the upload page
-    await page.goto('/configuration/upload-district-volume');
+    await page.goto('/configuration/district-volume-tables/upload');
     await page.waitForLoadState('domcontentloaded');
 
     // Step 1: Select Coast area before uploading the Coast spreadsheet
