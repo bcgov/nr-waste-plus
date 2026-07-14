@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { DateTime } from 'luxon';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
@@ -173,36 +173,33 @@ describe('WasteSearchTable Constants', () => {
       });
     });
 
-    it('should render ruNumber as legacy link when feature flag is disabled', async () => {
+    it('should render ruNumber as legacy link when feature flag is disabled', () => {
       const ruHeader = headers.find((h) => h.key === 'ruNumber');
       expect(ruHeader?.renderAs).toBeDefined();
       if (ruHeader?.renderAs) {
         const result = ruHeader.renderAs('RU-001');
         render(result);
-        await act(async () => {});
         expect(screen.getByText('RU-001')).toBeDefined();
       }
     });
 
-    it('should render client.code as role-based redirect link for IDIR user', async () => {
+    it('should render client.code as role-based redirect link for IDIR user', () => {
       mockIdirUser();
       const clientHeader = headers.find((h) => h.key === 'client.code');
       expect(clientHeader?.renderAs).toBeDefined();
       if (clientHeader?.renderAs) {
         const result = clientHeader.renderAs('00001001');
         render(result);
-        await act(async () => {});
         expect(screen.getByText('00001001')).toBeDefined();
       }
     });
 
-    it('should render client.code without link for BCeID user', async () => {
+    it('should render client.code without link for BCeID user', () => {
       mockBceidUser();
       const clientHeader = headers.find((h) => h.key === 'client.code');
       if (clientHeader?.renderAs) {
         const result = clientHeader.renderAs('00001002');
         render(result);
-        await act(async () => {});
         expect(screen.getByText('00001002')).toBeDefined();
       }
     });
@@ -289,13 +286,12 @@ describe('WasteSearchTable Constants', () => {
           false;
       });
 
-      it('should render ruNumber as an internal router link when feature flag is enabled', async () => {
+      it('should render ruNumber as an internal router link when feature flag is enabled', () => {
         const ruHeader = headers.find((h) => h.key === 'ruNumber');
         expect(ruHeader?.renderAs).toBeDefined();
         if (ruHeader?.renderAs) {
           const result = ruHeader.renderAs('123');
           render(result, { wrapper: createRouterWrapper('/') });
-          await act(async () => {});
           expect(screen.getByText('123')).toBeDefined();
           // The internal-route path should not render a legacy external href.
           const legacyLinks = screen

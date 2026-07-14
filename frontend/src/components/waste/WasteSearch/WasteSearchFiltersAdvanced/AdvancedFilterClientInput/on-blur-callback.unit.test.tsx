@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -54,26 +54,22 @@ describe('onBlur callback', () => {
     const onClientChange = vi.fn();
     const onBlur = vi.fn();
 
-    await act(async () => {
-      render(
-        <AdvancedFilterClientInput
-          selectedClients={undefined}
-          myClients={undefined}
-          onClientChange={onClientChange}
-          onBlur={onBlur}
-        />,
-        { wrapper },
-      );
-    });
+    render(
+      <AdvancedFilterClientInput
+        selectedClients={undefined}
+        myClients={undefined}
+        onClientChange={onClientChange}
+        onBlur={onBlur}
+      />,
+      { wrapper },
+    );
 
     const acInput = screen.getByTestId('forestclient-client-ac');
     expect(acInput).toBeDefined();
 
-    await act(async () => {
-      const user = userEvent.setup();
-      await user.click(acInput);
-      await user.tab();
-    });
+    const user = userEvent.setup();
+    await user.click(acInput);
+    await user.tab();
 
     expect(onBlur).toHaveBeenCalledTimes(1);
   });
@@ -96,26 +92,22 @@ describe('onBlur callback', () => {
       { code: 'B', description: 'Client B' },
     ];
 
-    await act(async () => {
-      render(
-        <AdvancedFilterClientInput
-          selectedClients={undefined}
-          myClients={myClients}
-          onClientChange={onClientChange}
-          onBlur={onBlur}
-        />,
-        { wrapper },
-      );
-    });
+    render(
+      <AdvancedFilterClientInput
+        selectedClients={undefined}
+        myClients={myClients}
+        onClientChange={onClientChange}
+        onBlur={onBlur}
+      />,
+      { wrapper },
+    );
 
     const multiSelectInput = screen.getByPlaceholderText('Client');
     expect(multiSelectInput).toBeDefined();
 
-    await act(async () => {
-      const user = userEvent.setup();
-      await user.click(multiSelectInput);
-      await user.tab();
-    });
+    const user = userEvent.setup();
+    await user.click(multiSelectInput);
+    await user.tab();
 
     expect(onBlur).toHaveBeenCalledTimes(1);
   });
@@ -123,24 +115,20 @@ describe('onBlur callback', () => {
   it('does not call onBlur when onBlur is not provided (IDIR)', async () => {
     const onClientChange = vi.fn();
 
-    await act(async () => {
-      render(
-        <AdvancedFilterClientInput
-          selectedClients={undefined}
-          myClients={undefined}
-          onClientChange={onClientChange}
-        />,
-        { wrapper },
-      );
-    });
+    render(
+      <AdvancedFilterClientInput
+        selectedClients={undefined}
+        myClients={undefined}
+        onClientChange={onClientChange}
+      />,
+      { wrapper },
+    );
 
     const acInput = screen.getByTestId('forestclient-client-ac');
 
-    await act(async () => {
-      const user = userEvent.setup();
-      await user.click(acInput);
-      await user.tab();
-    });
+    const user = userEvent.setup();
+    await user.click(acInput);
+    await user.tab();
 
     // Component should render without error even without onBlur
     expect(acInput).toBeDefined();
@@ -163,24 +151,20 @@ describe('onBlur callback', () => {
       { code: 'B', description: 'Client B' },
     ];
 
-    await act(async () => {
-      render(
-        <AdvancedFilterClientInput
-          selectedClients={undefined}
-          myClients={myClients}
-          onClientChange={onClientChange}
-        />,
-        { wrapper },
-      );
-    });
+    render(
+      <AdvancedFilterClientInput
+        selectedClients={undefined}
+        myClients={myClients}
+        onClientChange={onClientChange}
+      />,
+      { wrapper },
+    );
 
     const multiSelectInput = screen.getByPlaceholderText('Client');
 
-    await act(async () => {
-      const user = userEvent.setup();
-      await user.click(multiSelectInput);
-      await user.tab();
-    });
+    const user = userEvent.setup();
+    await user.click(multiSelectInput);
+    await user.tab();
 
     // Component should render without error even without onBlur
     expect(multiSelectInput).toBeDefined();

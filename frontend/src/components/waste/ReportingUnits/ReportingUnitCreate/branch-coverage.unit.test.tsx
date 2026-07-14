@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider, type UseMutationResult } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -232,7 +232,7 @@ function createMockMutation(
   } as UseMutationResult<number, Error, ReportingUnitCreateDto>;
 }
 
-async function renderComponent() {
+function renderComponent() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -247,8 +247,6 @@ async function renderComponent() {
       <RouterProvider router={router} />
     </QueryClientProvider>,
   );
-
-  await act(async () => {});
 }
 
 describe('ReportingUnitCreate branch coverage', () => {
@@ -291,7 +289,7 @@ describe('ReportingUnitCreate branch coverage', () => {
   it('shows grade options when a district supports both grade areas', async () => {
     const user = userEvent.setup();
 
-    await renderComponent();
+    renderComponent();
 
     await user.selectOptions(screen.getByLabelText('District'), 'DKM');
 
@@ -303,7 +301,7 @@ describe('ReportingUnitCreate branch coverage', () => {
   it('does not show grade options for districts with a single area', async () => {
     const user = userEvent.setup();
 
-    await renderComponent();
+    renderComponent();
 
     await user.selectOptions(screen.getByLabelText('District'), 'DCR');
 
@@ -317,7 +315,7 @@ describe('ReportingUnitCreate branch coverage', () => {
     const mutateAsync = vi.fn().mockResolvedValue(12345);
     vi.mocked(useReportingUnitCreateMutation).mockReturnValue(createMockMutation({ mutateAsync }));
 
-    await renderComponent();
+    renderComponent();
 
     await user.click(screen.getByRole('button', { name: 'Select Client' }));
 

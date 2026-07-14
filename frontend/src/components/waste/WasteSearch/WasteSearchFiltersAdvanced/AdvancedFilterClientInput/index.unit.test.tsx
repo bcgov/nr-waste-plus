@@ -51,7 +51,7 @@ describe('AdvancedFilterClientInput', () => {
     });
   });
 
-  it('renders autocomplete for IDIR users', async () => {
+  it('renders autocomplete for IDIR users', () => {
     const onClientChange = vi.fn();
 
     render(
@@ -67,7 +67,7 @@ describe('AdvancedFilterClientInput', () => {
     expect(acInput).toBeDefined();
   });
 
-  it('renders multiselect for BCeID users', async () => {
+  it('renders multiselect for BCeID users', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { idpProvider: 'BCEIDBUSINESS' } as FamLoginUser,
       getClients: vi.fn(),
@@ -97,7 +97,7 @@ describe('AdvancedFilterClientInput', () => {
     screen.getByPlaceholderText('Client');
   });
 
-  it('passes selected clients to autocomplete', async () => {
+  it('passes selected clients to autocomplete', () => {
     const onClientChange = vi.fn();
     const selectedClients = [{ code: '12345', description: '12345 ACME' }];
 
@@ -114,7 +114,7 @@ describe('AdvancedFilterClientInput', () => {
     expect(acInput.value).toBe('12345 ACME');
   });
 
-  it('returns null when provider is unknown', async () => {
+  it('returns null when provider is unknown', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { idpProvider: 'UNKNOWN', privileges: {} } as unknown as FamLoginUser,
       getClients: vi.fn(),
@@ -139,7 +139,7 @@ describe('AdvancedFilterClientInput', () => {
     expect(screen.queryByTestId('client-blur-input')).toBeNull();
   });
 
-  it('executes selectedItems filter callback for BCeID with matching selectedClients', async () => {
+  it('executes selectedItems filter callback for BCeID with matching selectedClients', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { idpProvider: 'BCEIDBUSINESS' } as FamLoginUser,
       getClients: vi.fn(),
@@ -172,7 +172,7 @@ describe('AdvancedFilterClientInput', () => {
     expect(multiSelectWrapper).toBeDefined();
   });
 
-  it('renders BCeID multiselect with empty items when myClients is undefined', async () => {
+  it('renders BCeID multiselect with empty items when myClients is undefined', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { idpProvider: 'BCEIDBUSINESS' } as FamLoginUser,
       getClients: vi.fn(),
@@ -197,7 +197,7 @@ describe('AdvancedFilterClientInput', () => {
   });
 
   describe('validation props forwarding', () => {
-    it('passes invalid and invalidText to AutoCompleteInput (IDIR)', async () => {
+    it('passes invalid and invalidText to AutoCompleteInput (IDIR)', () => {
       const onClientChange = vi.fn();
 
       render(
@@ -218,7 +218,7 @@ describe('AdvancedFilterClientInput', () => {
       expect(acInput).toBeTruthy();
     });
 
-    it('passes invalid and invalidText to ActiveMultiSelect (BCEIDBUSINESS)', async () => {
+    it('passes invalid and invalidText to ActiveMultiSelect (BCEIDBUSINESS)', () => {
       vi.mocked(useAuth).mockReturnValue({
         user: { idpProvider: 'BCEIDBUSINESS' } as FamLoginUser,
         getClients: vi.fn(),
@@ -253,7 +253,7 @@ describe('AdvancedFilterClientInput', () => {
       expect(multiSelectInput).toBeTruthy();
     });
 
-    it('passes warn and warnText props through both paths', async () => {
+    it('passes warn and warnText props through both paths', () => {
       const onClientChange = vi.fn();
 
       render(

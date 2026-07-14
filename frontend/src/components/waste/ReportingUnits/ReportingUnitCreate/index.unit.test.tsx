@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider, type UseMutationResult } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
-import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import ReportingUnitCreate from './index';
@@ -249,7 +249,7 @@ function createMockMutation(
   } as UseMutationResult<number, Error, ReportingUnitCreateDto>;
 }
 
-async function renderComponent(_routerOptions = {}) {
+function renderComponent(_routerOptions = {}) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -263,8 +263,6 @@ async function renderComponent(_routerOptions = {}) {
       <RouterProvider router={router} />
     </QueryClientProvider>,
   );
-
-  await act(async () => {});
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -311,40 +309,40 @@ describe('ReportingUnitCreate', () => {
   });
 
   describe('rendering', () => {
-    it('renders the form wrapper with correct class', async () => {
-      await renderComponent();
+    it('renders the form wrapper with correct class', () => {
+      renderComponent();
       const column = screen.getByTestId('create-ru-column-content');
       expect(column).toBeDefined();
     });
 
-    it('renders the district dropdown', async () => {
-      await renderComponent();
+    it('renders the district dropdown', () => {
+      renderComponent();
       const districtInput = screen.getByLabelText('District');
       expect(districtInput).toBeDefined();
     });
 
-    it('renders the sampling option dropdown', async () => {
-      await renderComponent();
+    it('renders the sampling option dropdown', () => {
+      renderComponent();
       const samplingInput = screen.getByLabelText('Sampling option');
       expect(samplingInput).toBeDefined();
     });
 
-    it('renders form element', async () => {
-      await renderComponent();
+    it('renders form element', () => {
+      renderComponent();
       const form = screen.getByTestId('create-ru-submit-button').closest('form');
       expect(form).not.toBeNull();
     });
   });
 
   describe('conditional rendering', () => {
-    it('does not render grade field for districts without both configured areas', async () => {
-      await renderComponent();
+    it('does not render grade field for districts without both configured areas', () => {
+      renderComponent();
       const gradeGroup = screen.queryByTestId('grade-radio-group');
       expect(gradeGroup).toBeNull();
     });
 
     it('renders grade field when district supports both areas and shows radio options', async () => {
-      await renderComponent();
+      renderComponent();
 
       // Select district DKM
       const districtComboBox = screen.getByLabelText('District');
@@ -358,8 +356,8 @@ describe('ReportingUnitCreate', () => {
   });
 
   describe('form field state tracking', () => {
-    it('district code field is ready for state changes', async () => {
-      await renderComponent();
+    it('district code field is ready for state changes', () => {
+      renderComponent();
       const districtComboBox = screen.getByLabelText('District');
       expect(districtComboBox).toBeDefined();
 
@@ -369,8 +367,8 @@ describe('ReportingUnitCreate', () => {
     });
   });
 
-  it('tracking district code state when changed', async () => {
-    await renderComponent();
+  it('tracking district code state when changed', () => {
+    renderComponent();
     const districtComboBox = screen.getByLabelText('District');
     expect(districtComboBox).toBeDefined();
 
@@ -382,8 +380,8 @@ describe('ReportingUnitCreate', () => {
 });
 
 describe('form validation', () => {
-  it('client field is present for validation', async () => {
-    await renderComponent();
+  it('client field is present for validation', () => {
+    renderComponent();
 
     // The component has client field ready for validation
     const form = screen.getByTestId('create-ru-submit-button').closest('form');
@@ -391,7 +389,7 @@ describe('form validation', () => {
   });
 
   it('shows validation error for district when touched without selection', async () => {
-    await renderComponent();
+    renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
     fireEvent.blur(districtComboBox);
@@ -402,7 +400,7 @@ describe('form validation', () => {
   });
 
   it('shows validation error for sampling when touched without selection', async () => {
-    await renderComponent();
+    renderComponent();
     const samplingComboBox = screen.getByLabelText('Sampling option');
 
     fireEvent.blur(samplingComboBox);
@@ -413,7 +411,7 @@ describe('form validation', () => {
   });
 
   it('shows validation error for grade when DKM selected and not touched', async () => {
-    await renderComponent();
+    renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
     fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
@@ -427,7 +425,7 @@ describe('form validation', () => {
 
 describe('grade selection', () => {
   it('renders coastal grade option when DKM district is selected', async () => {
-    await renderComponent();
+    renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
     fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
@@ -439,7 +437,7 @@ describe('grade selection', () => {
   });
 
   it('renders interior grade option when DKM district is selected', async () => {
-    await renderComponent();
+    renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
     fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
@@ -451,7 +449,7 @@ describe('grade selection', () => {
   });
 
   it('allows selection of coastal grade', async () => {
-    await renderComponent();
+    renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
     fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
@@ -463,7 +461,7 @@ describe('grade selection', () => {
   });
 
   it('allows selection of interior grade', async () => {
-    await renderComponent();
+    renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
     fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
@@ -475,7 +473,7 @@ describe('grade selection', () => {
   });
 
   it('does not render grade field for non-DKM districts', async () => {
-    await renderComponent();
+    renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
     fireEvent.change(districtComboBox, { target: { value: 'DCR' } });
@@ -488,14 +486,14 @@ describe('grade selection', () => {
 });
 
 describe('sampling selection', () => {
-  it('renders sampling dropdown', async () => {
-    await renderComponent();
+  it('renders sampling dropdown', () => {
+    renderComponent();
     const samplingInput = screen.getByLabelText('Sampling option');
     expect(samplingInput).toBeDefined();
   });
 
-  it('allows sampling option selection', async () => {
-    await renderComponent();
+  it('allows sampling option selection', () => {
+    renderComponent();
     const samplingComboBox = screen.getByLabelText('Sampling option');
 
     fireEvent.change(samplingComboBox, { target: { value: 'SAM1' } });
@@ -505,13 +503,13 @@ describe('sampling selection', () => {
 });
 
 describe('auth integration', () => {
-  it('component renders with proper auth setup', async () => {
-    await renderComponent();
+  it('component renders with proper auth setup', () => {
+    renderComponent();
     const form = screen.getByTestId('create-ru-submit-button').closest('form');
     expect(form).not.toBeNull();
   });
 
-  it('component renders when user is BCEID', async () => {
+  it('component renders when user is BCEID', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: mockAuthUser,
       isLoggedIn: true,
@@ -522,12 +520,12 @@ describe('auth integration', () => {
       login: vi.fn(),
     });
 
-    await renderComponent();
+    renderComponent();
     const form = screen.getByTestId('create-ru-submit-button').closest('form');
     expect(form).not.toBeNull();
   });
 
-  it('component renders when user is IDIR', async () => {
+  it('component renders when user is IDIR', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: mockAuthUserIdir,
       isLoggedIn: true,
@@ -538,25 +536,25 @@ describe('auth integration', () => {
       login: vi.fn(),
     });
 
-    await renderComponent();
+    renderComponent();
     const form = screen.getByTestId('create-ru-submit-button').closest('form');
     expect(form).not.toBeNull();
   });
 });
 
 describe('field ids and attributes', () => {
-  it('district field has correct id', async () => {
-    await renderComponent();
+  it('district field has correct id', () => {
+    renderComponent();
     expect(screen.getByLabelText('District')).toBeDefined();
   });
 
-  it('sampling field has correct id', async () => {
-    await renderComponent();
+  it('sampling field has correct id', () => {
+    renderComponent();
     expect(screen.getByLabelText('Sampling option')).toBeDefined();
   });
 
   it('grade field has correct id when visible', async () => {
-    await renderComponent();
+    renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
     fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
@@ -566,54 +564,54 @@ describe('field ids and attributes', () => {
     });
   });
 
-  it('form element has form tag', async () => {
-    await renderComponent();
+  it('form element has form tag', () => {
+    renderComponent();
     const form = screen.getByTestId('create-ru-submit-button').closest('form');
     expect(form).not.toBeNull();
   });
 });
 
 describe('styling classes', () => {
-  it('applies create-ru-column__content class to wrapper', async () => {
-    await renderComponent();
+  it('applies create-ru-column__content class to wrapper', () => {
+    renderComponent();
     const wrapper = screen.getByTestId('create-ru-column-content');
     expect(wrapper).toBeDefined();
   });
 
-  it('applies create-ru-submit-button class to submit button', async () => {
-    await renderComponent();
+  it('applies create-ru-submit-button class to submit button', () => {
+    renderComponent();
     const button = screen.getByTestId('create-ru-submit-button');
     expect(button).toBeDefined();
   });
 });
 
 describe('component initialization', () => {
-  it('initializes without errors', async () => {
+  it('initializes without errors', () => {
     expect(() => renderComponent()).not.toThrow();
   });
 
-  it('sets up form with initial null values', async () => {
-    await renderComponent();
+  it('sets up form with initial null values', () => {
+    renderComponent();
     const form = screen.getByTestId('create-ru-submit-button').closest('form');
     expect(form).not.toBeNull();
   });
 });
 
 describe('district and sampling options integration', () => {
-  it('district field is present in the form', async () => {
-    await renderComponent();
+  it('district field is present in the form', () => {
+    renderComponent();
     const districtField = screen.getByLabelText('District');
     expect(districtField).toBeDefined();
   });
 
-  it('sampling field is present in the form', async () => {
-    await renderComponent();
+  it('sampling field is present in the form', () => {
+    renderComponent();
     const samplingField = screen.getByLabelText('Sampling option');
     expect(samplingField).toBeDefined();
   });
 
-  it('form has both district and sampling fields together', async () => {
-    await renderComponent();
+  it('form has both district and sampling fields together', () => {
+    renderComponent();
     const districtField = screen.getByLabelText('District');
     const samplingField = screen.getByLabelText('Sampling option');
     expect(districtField && samplingField).toBeDefined();
@@ -621,16 +619,16 @@ describe('district and sampling options integration', () => {
 });
 
 describe('helper function coverage', () => {
-  it('findSelectedItem should be used when district value exists', async () => {
-    await renderComponent();
+  it('findSelectedItem should be used when district value exists', () => {
+    renderComponent();
     // The findSelectedItem helper is used internally in the component
     // to find the selected district option
     const districtField = screen.getByLabelText('District');
     expect(districtField).toBeDefined();
   });
 
-  it('findSelectedItem should be used when sampling value exists', async () => {
-    await renderComponent();
+  it('findSelectedItem should be used when sampling value exists', () => {
+    renderComponent();
     // The findSelectedItem helper is used internally in the component
     // to find the selected sampling option
     const samplingField = screen.getByLabelText('Sampling option');
@@ -638,7 +636,7 @@ describe('helper function coverage', () => {
   });
 
   it('findSelectedItem should be used when grade value exists', async () => {
-    await renderComponent();
+    renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
     fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
@@ -649,8 +647,8 @@ describe('helper function coverage', () => {
     });
   });
 
-  it('createComboBoxOnChange handler extracts code from selectedItem', async () => {
-    await renderComponent();
+  it('createComboBoxOnChange handler extracts code from selectedItem', () => {
+    renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
     fireEvent.change(districtComboBox, { target: { value: 'DKM' } });
@@ -658,8 +656,8 @@ describe('helper function coverage', () => {
     expect(districtComboBox).toBeDefined();
   });
 
-  it('createComboBoxOnChange handler handles undefined selectedItem', async () => {
-    await renderComponent();
+  it('createComboBoxOnChange handler handles undefined selectedItem', () => {
+    renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
     fireEvent.change(districtComboBox, { target: { value: '' } });
@@ -669,18 +667,18 @@ describe('helper function coverage', () => {
 });
 
 describe('combobox interactions', () => {
-  it('district combobox has correct placeholder', async () => {
-    await renderComponent();
+  it('district combobox has correct placeholder', () => {
+    renderComponent();
     expect(screen.getByLabelText('District')).toBeDefined();
   });
 
-  it('sampling combobox has correct placeholder', async () => {
-    await renderComponent();
+  it('sampling combobox has correct placeholder', () => {
+    renderComponent();
     expect(screen.getByLabelText('Sampling option')).toBeDefined();
   });
 
-  it('comboboxes use itemToString helper for display', async () => {
-    await renderComponent();
+  it('comboboxes use itemToString helper for display', () => {
+    renderComponent();
     const districtField = screen.getByLabelText('District');
     const samplingField = screen.getByLabelText('Sampling option');
 
@@ -690,20 +688,20 @@ describe('combobox interactions', () => {
 });
 
 describe('form field subscriptions', () => {
-  it('button element exists in the form', async () => {
-    await renderComponent();
+  it('button element exists in the form', () => {
+    renderComponent();
     const button = screen.getByTestId('create-ru-submit-button');
     expect(button).toBeDefined();
   });
 
-  it('button has primary kind style', async () => {
-    await renderComponent();
+  it('button has primary kind style', () => {
+    renderComponent();
     const button = screen.getByTestId('create-ru-submit-button');
     expect(button).toBeDefined();
   });
 
-  it('button is a form control', async () => {
-    await renderComponent();
+  it('button is a form control', () => {
+    renderComponent();
     const button = screen.getByTestId('create-ru-submit-button');
     expect(button).toBeDefined();
     // Button exists even if tagName isn't BUTTON (could be wrapped)
