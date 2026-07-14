@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider, type UseMutationResult } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import ReportingUnitCreate from './index';
@@ -189,8 +189,8 @@ describe('ReportingUnitCreate - Form Submission', async () => {
       );
 
       await renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
+      expect(form).toBeTruthy();
     });
 
     it('form and fields are ready for submission workflow', async () => {
