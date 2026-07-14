@@ -199,8 +199,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
 
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const districtComboBox = document.querySelector('#create-ru-district');
+      const districtComboBox = screen.getByTestId('district-combobox');
       await act(async () => {
         const event = new CustomEvent('change', {
           detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
@@ -212,8 +211,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
 
       // Grade should be auto-selected, so field should not show
       await waitFor(() => {
-        // eslint-disable-next-line testing-library/no-node-access
-        const gradeGroup = document.querySelector('#create-ru-grade');
+        const gradeGroup = screen.getByTestId('grade-radio-group');
         expect(gradeGroup).toBeNull();
       });
     });
@@ -221,20 +219,15 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should set grade to null when district has multiple areas', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const districtComboBox = document.querySelector('#create-ru-district');
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox?.dispatchEvent(event);
-      });
+      const districtInput = await screen.findByTestId('district-combobox');
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DKM');
+
+      const districtText = await screen.findByText(/Dease Lake/i);
+      districtText.click();
 
       await waitFor(() => {
-        // eslint-disable-next-line testing-library/no-node-access
-        const gradeGroup = document.querySelector('#create-ru-grade');
+        const gradeGroup = screen.getByTestId('grade-radio-group');
         expect(gradeGroup).toBeDefined();
       });
     });
@@ -244,8 +237,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should render district combobox with itemToString', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const districtComboBox = document.querySelector('#create-ru-district');
+      const districtComboBox = screen.getByTestId('district-combobox');
       expect(districtComboBox).toBeDefined();
       // itemToString is used internally by Carbon ComboBox
     });
@@ -253,8 +245,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should render sampling combobox with itemToString', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const samplingComboBox = document.querySelector('#as-sampling-multi-select');
+      const samplingComboBox = screen.getByTestId('sampling-combobox');
       expect(samplingComboBox).toBeDefined();
       // itemToString is used internally by Carbon ComboBox
     });
@@ -264,8 +255,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should render grade field with correct structure when visible', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const districtComboBox = document.querySelector('#create-ru-district');
+      const districtComboBox = screen.getByTestId('district-combobox');
       await act(async () => {
         const event = new CustomEvent('change', {
           detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
@@ -276,8 +266,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
       });
 
       await waitFor(() => {
-        // eslint-disable-next-line testing-library/no-node-access
-        const gradeGroup = document.querySelector('#create-ru-grade');
+        const gradeGroup = screen.getByTestId('grade-radio-group');
         expect(gradeGroup).toBeDefined();
       });
     });
@@ -285,8 +274,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should render both coastal and interior radio buttons', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const districtComboBox = document.querySelector('#create-ru-district');
+      const districtComboBox = screen.getByTestId('district-combobox');
       await act(async () => {
         const event = new CustomEvent('change', {
           detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
@@ -297,10 +285,9 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
       });
 
       await waitFor(() => {
-        // eslint-disable-next-line testing-library/no-node-access
-        const coastalRadio = document.querySelector('#create-ru-grade-coastal');
-        // eslint-disable-next-line testing-library/no-node-access
-        const interiorRadio = document.querySelector('#create-ru-grade-interior');
+        const coastalRadio = screen.getByRole('radio', { name: /Coastal/i });
+
+        const interiorRadio = screen.getByRole('radio', { name: /Interior/i });
         expect(coastalRadio).toBeDefined();
         expect(interiorRadio).toBeDefined();
       });
@@ -309,8 +296,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should handle grade field onChange with proper event handling', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const districtComboBox = document.querySelector('#create-ru-district');
+      const districtComboBox = screen.getByTestId('district-combobox');
       await act(async () => {
         const event = new CustomEvent('change', {
           detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
@@ -321,13 +307,11 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
       });
 
       await waitFor(() => {
-        // eslint-disable-next-line testing-library/no-node-access
-        const gradeGroup = document.querySelector('#create-ru-grade');
+        const gradeGroup = screen.getByTestId('grade-radio-group');
         expect(gradeGroup).toBeDefined();
       });
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const coastalRadio = document.querySelector('#create-ru-grade-coastal');
+      const coastalRadio = screen.getByRole('radio', { name: /Coastal/i });
       if (coastalRadio) {
         await act(async () => {
           const changeEvent = new Event('change', { bubbles: true });
@@ -345,8 +329,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should display grade field validation errors when touched', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const districtComboBox = document.querySelector('#create-ru-district');
+      const districtComboBox = screen.getByTestId('district-combobox');
       await act(async () => {
         const event = new CustomEvent('change', {
           detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
@@ -357,13 +340,11 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
       });
 
       await waitFor(() => {
-        // eslint-disable-next-line testing-library/no-node-access
-        const gradeGroup = document.querySelector('#create-ru-grade');
+        const gradeGroup = screen.getByTestId('grade-radio-group');
         expect(gradeGroup).toBeDefined();
       });
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const gradeGroup = document.querySelector('#create-ru-grade');
+      const gradeGroup = screen.getByTestId('grade-radio-group');
       await act(async () => {
         const blurEvent = new FocusEvent('blur', { bubbles: true });
         gradeGroup?.dispatchEvent(blurEvent);
@@ -450,8 +431,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should validate district field with runValidators on change', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const districtComboBox = document.querySelector('#create-ru-district');
+      const districtComboBox = screen.getByTestId('district-combobox');
       await act(async () => {
         const event = new CustomEvent('change', {
           detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
@@ -467,8 +447,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should validate sampling field with runValidators on blur', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const samplingComboBox = document.querySelector('#as-sampling-multi-select');
+      const samplingComboBox = screen.getByTestId('sampling-combobox');
 
       // Focus first to ensure the element exists in DOM
       samplingComboBox?.focus();
@@ -481,8 +460,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should validate sampling field with runValidators on change', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const samplingComboBox = document.querySelector('#as-sampling-multi-select');
+      const samplingComboBox = screen.getByTestId('sampling-combobox');
       await act(async () => {
         const event = new CustomEvent('change', {
           detail: { selectedItem: { code: 'GND', description: 'Ground Sampling' } },
@@ -498,8 +476,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should validate grade field with runValidators on blur when visible', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const districtComboBox = document.querySelector('#create-ru-district');
+      const districtComboBox = screen.getByTestId('district-combobox');
       // Select district to make grade field visible
       await act(async () => {
         const event = new CustomEvent('change', {
@@ -512,16 +489,20 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
 
       // Wait for grade field to appear
       await waitFor(() => {
-        // eslint-disable-next-line testing-library/no-node-access
-        const gradeGroup = document.querySelector('#create-ru-grade');
+        const gradeGroup = screen.getByTestId('grade-radio-group');
         expect(gradeGroup).toBeDefined();
       });
 
       // Trigger blur to run validators
-      // eslint-disable-next-line testing-library/no-node-access
-      const gradeGroup = document.querySelector('#create-ru-grade');
-      gradeGroup?.focus();
-      gradeGroup?.blur();
+      const gradeGroup = screen.getByTestId('grade-radio-group');
+      await act(async () => {
+        const focusEvent = new FocusEvent('focus', { bubbles: true });
+        districtComboBox?.dispatchEvent(focusEvent);
+      });
+      await act(async () => {
+        const blurEvent = new FocusEvent('blur', { bubbles: true });
+        gradeGroup?.dispatchEvent(blurEvent);
+      });
 
       expect(gradeGroup).toBeDefined();
     });
@@ -529,8 +510,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should validate grade field with runValidators on change when visible', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const districtComboBox = document.querySelector('#create-ru-district');
+      const districtComboBox = screen.getByTestId('district-combobox');
       // Select district to make grade field visible
       await act(async () => {
         const event = new CustomEvent('change', {
@@ -543,14 +523,12 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
 
       // Wait for grade field to appear
       await waitFor(() => {
-        // eslint-disable-next-line testing-library/no-node-access
-        const gradeGroup = document.querySelector('#create-ru-grade');
+        const gradeGroup = screen.getByTestId('grade-radio-group');
         expect(gradeGroup).toBeDefined();
       });
 
       // Simulate selecting coastal option
-      // eslint-disable-next-line testing-library/no-node-access
-      const coastalRadio = document.querySelector('#create-ru-grade-coastal');
+      const coastalRadio = screen.getByRole('radio', { name: /Coastal/i });
       await act(async () => {
         const changeEvent = new Event('change', { bubbles: true });
         Object.defineProperty(changeEvent, 'target', {
@@ -568,8 +546,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should clear grade when switching from multi-area to single-area district', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const districtComboBox = document.querySelector('#create-ru-district');
+      const districtComboBox = screen.getByTestId('district-combobox');
 
       // First select DKM (multi-area)
       await act(async () => {
@@ -582,7 +559,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
       });
 
       // Wait for grade field to appear
-      const gradeGroup = await waitFor(() => document.querySelector('#create-ru-grade'));
+      const gradeGroup = await screen.findByTestId('grade-radio-group');
       expect(gradeGroup).toBeDefined();
 
       // Then switch to DCR (single-area)
@@ -597,7 +574,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
 
       // Grade field should be null/hidden now
       await waitFor(() => {
-        const gradeGroup = document.querySelector('#create-ru-grade');
+        const gradeGroup = screen.getByTestId('grade-radio-group');
         expect(gradeGroup).toBeNull();
       });
     });
@@ -607,8 +584,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should handle district combobox onChange with null selectedItem', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const districtComboBox = document.querySelector('#create-ru-district');
+      const districtComboBox = screen.getByTestId('district-combobox');
 
       // Simulate null selection by clearing and bluring
       await act(async () => {
@@ -619,7 +595,10 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
         });
         districtComboBox?.dispatchEvent(event);
       });
-      districtComboBox?.blur();
+      await act(async () => {
+        const blurEvent = new FocusEvent('blur', { bubbles: true });
+        districtComboBox?.dispatchEvent(blurEvent);
+      });
 
       expect(districtComboBox).toBeDefined();
     });
@@ -627,8 +606,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should handle sampling combobox onChange with null selectedItem', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const samplingComboBox = document.querySelector('#as-sampling-multi-select');
+      const samplingComboBox = screen.getByTestId('sampling-combobox');
 
       // Simulate null selection by clearing and bluring
       await act(async () => {
@@ -639,7 +617,10 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
         });
         samplingComboBox?.dispatchEvent(event);
       });
-      samplingComboBox?.blur();
+      await act(async () => {
+        const blurEvent = new FocusEvent('blur', { bubbles: true });
+        samplingComboBox?.dispatchEvent(blurEvent);
+      });
 
       expect(samplingComboBox).toBeDefined();
     });
@@ -649,8 +630,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should track district field state changes', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const districtComboBox = document.querySelector('#create-ru-district');
+      const districtComboBox = screen.getByTestId('district-combobox');
 
       // Simulate change by selecting an option
       await act(async () => {
@@ -668,8 +648,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should track sampling field state changes', async () => {
       await renderComponent();
 
-      // eslint-disable-next-line testing-library/no-node-access
-      const samplingComboBox = document.querySelector('#as-sampling-multi-select');
+      const samplingComboBox = screen.getByTestId('sampling-combobox');
       await act(async () => {
         const event = new CustomEvent('change', {
           detail: { selectedItem: { code: 'GND', description: 'Ground Sampling' } },
