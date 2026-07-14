@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider, type UseMutationResult } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
@@ -627,12 +627,14 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
       await renderComponent();
 
       const clientBlurInput = screen.getByTestId('client-blur-input');
-      await act(async () => {
-        clientBlurInput.blur();
-      });
+      // Fire a bubbling focusout so React's onBlur (delegated via focusout) runs the
+      // client validation. A bare .blur() on the hidden input never bubbles, so the
+      // handler never fired — that was the original false green.
+      fireEvent(clientBlurInput, new FocusEvent('focusout', { bubbles: true }));
 
-      // Validation should have run
-      expect(clientBlurInput).toBeDefined();
+      await waitFor(() => {
+        expect(screen.getByText(/Please select a client/i)).toBeTruthy();
+      });
     });
 
     it('should validate district field on blur', async () => {
