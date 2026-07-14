@@ -199,19 +199,16 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
 
       await renderComponent();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox?.dispatchEvent(event);
-      });
+      const districtInput = await screen.findByTestId('district-combobox');
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DKM');
+
+      const districtText = await screen.findByText(/Dease Lake/i);
+      districtText.click();
 
       // Grade should be auto-selected, so field should not show
       await waitFor(() => {
-        const gradeGroup = screen.getByTestId('grade-radio-group');
+        const gradeGroup = screen.queryByTestId('grade-radio-group');
         expect(gradeGroup).toBeNull();
       });
     });
@@ -255,15 +252,12 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should render grade field with correct structure when visible', async () => {
       await renderComponent();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox?.dispatchEvent(event);
-      });
+      const districtInput = await screen.findByTestId('district-combobox');
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DKM');
+
+      const districtText = await screen.findByText(/Dease Lake/i);
+      districtText.click();
 
       await waitFor(() => {
         const gradeGroup = screen.getByTestId('grade-radio-group');
@@ -274,15 +268,12 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should render both coastal and interior radio buttons', async () => {
       await renderComponent();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox?.dispatchEvent(event);
-      });
+      const districtInput = await screen.findByTestId('district-combobox');
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DKM');
+
+      const districtText = await screen.findByText(/Dease Lake/i);
+      districtText.click();
 
       await waitFor(() => {
         const coastalRadio = screen.getByRole('radio', { name: /Coastal/i });
@@ -296,15 +287,12 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should handle grade field onChange with proper event handling', async () => {
       await renderComponent();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox?.dispatchEvent(event);
-      });
+      const districtInput = await screen.findByTestId('district-combobox');
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DKM');
+
+      const districtText = await screen.findByText(/Dease Lake/i);
+      districtText.click();
 
       await waitFor(() => {
         const gradeGroup = screen.getByTestId('grade-radio-group');
@@ -329,15 +317,12 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should display grade field validation errors when touched', async () => {
       await renderComponent();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox?.dispatchEvent(event);
-      });
+      const districtInput = await screen.findByTestId('district-combobox');
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DKM');
+
+      const districtText = await screen.findByText(/Dease Lake/i);
+      districtText.click();
 
       await waitFor(() => {
         const gradeGroup = screen.getByTestId('grade-radio-group');
@@ -476,16 +461,12 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should validate grade field with runValidators on blur when visible', async () => {
       await renderComponent();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
-      // Select district to make grade field visible
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox?.dispatchEvent(event);
-      });
+      const districtInput = await screen.findByTestId('district-combobox');
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DKM');
+
+      const districtText = await screen.findByText(/Dease Lake/i);
+      districtText.click();
 
       // Wait for grade field to appear
       await waitFor(() => {
@@ -497,7 +478,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
       const gradeGroup = screen.getByTestId('grade-radio-group');
       await act(async () => {
         const focusEvent = new FocusEvent('focus', { bubbles: true });
-        districtComboBox?.dispatchEvent(focusEvent);
+        districtInput?.dispatchEvent(focusEvent);
       });
       await act(async () => {
         const blurEvent = new FocusEvent('blur', { bubbles: true });
@@ -510,16 +491,12 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should validate grade field with runValidators on change when visible', async () => {
       await renderComponent();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
-      // Select district to make grade field visible
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox?.dispatchEvent(event);
-      });
+      const districtInput = await screen.findByTestId('district-combobox');
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DKM');
+
+      const districtText = await screen.findByText(/Dease Lake/i);
+      districtText.click();
 
       // Wait for grade field to appear
       await waitFor(() => {
@@ -546,35 +523,29 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     it('should clear grade when switching from multi-area to single-area district', async () => {
       await renderComponent();
 
-      const districtComboBox = screen.getByTestId('district-combobox');
+      const districtInput = await screen.findByTestId('district-combobox');
 
       // First select DKM (multi-area)
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DKM', description: 'Dease Lake' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox?.dispatchEvent(event);
-      });
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DKM');
+
+      const districtText = await screen.findByText(/Dease Lake/i);
+      districtText.click();
 
       // Wait for grade field to appear
       const gradeGroup = await screen.findByTestId('grade-radio-group');
       expect(gradeGroup).toBeDefined();
 
       // Then switch to DCR (single-area)
-      await act(async () => {
-        const event = new CustomEvent('change', {
-          detail: { selectedItem: { code: 'DCR', description: 'Campbell River' } },
-          bubbles: true,
-          cancelable: true,
-        });
-        districtComboBox?.dispatchEvent(event);
-      });
+      await userEvent.clear(districtInput);
+      await userEvent.type(districtInput, 'DCR');
+
+      const dcrText = await screen.findByText(/Campbell River/i);
+      dcrText.click();
 
       // Grade field should be null/hidden now
       await waitFor(() => {
-        const gradeGroup = screen.getByTestId('grade-radio-group');
+        const gradeGroup = screen.queryByTestId('grade-radio-group');
         expect(gradeGroup).toBeNull();
       });
     });
