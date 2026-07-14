@@ -531,4 +531,5 @@ class DistrictVolumeServiceTest {
     assertThat(result.heliMultiplier())
         .isEqualTo(new BigDecimal("1.500"));
   }
+  
 }
