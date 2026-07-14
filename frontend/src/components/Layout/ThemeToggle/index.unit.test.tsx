@@ -42,7 +42,7 @@ describe('ThemeToggle', () => {
   });
 
   it('calls toggleTheme on click', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     const spy = vi.spyOn(mockCtxLight, 'toggleTheme');
     await renderWithProviders();
     await user.click(screen.getByRole('button'));
@@ -50,7 +50,7 @@ describe('ThemeToggle', () => {
   });
 
   it('calls toggleTheme on Enter key', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     const spy = vi.spyOn(mockCtxLight, 'toggleTheme');
     await renderWithProviders();
     const button = screen.getByRole('button');
@@ -60,7 +60,7 @@ describe('ThemeToggle', () => {
   });
 
   it('calls toggleTheme on Space key', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     const spy = vi.spyOn(mockCtxLight, 'toggleTheme');
     await renderWithProviders();
     const button = screen.getByRole('button');

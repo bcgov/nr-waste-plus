@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -54,16 +54,14 @@ describe('AdvancedFilterClientInput', () => {
   it('renders autocomplete for IDIR users', async () => {
     const onClientChange = vi.fn();
 
-    await act(async () => {
-      render(
-        <AdvancedFilterClientInput
-          selectedClients={undefined}
-          myClients={undefined}
-          onClientChange={onClientChange}
-        />,
-        { wrapper },
-      );
-    });
+    render(
+      <AdvancedFilterClientInput
+        selectedClients={undefined}
+        myClients={undefined}
+        onClientChange={onClientChange}
+      />,
+      { wrapper },
+    );
 
     const acInput = screen.getByTestId('forestclient-client-ac');
     expect(acInput).toBeDefined();
@@ -86,16 +84,14 @@ describe('AdvancedFilterClientInput', () => {
       { code: 'B', description: 'Client B' },
     ];
 
-    await act(async () => {
-      render(
-        <AdvancedFilterClientInput
-          selectedClients={undefined}
-          myClients={myClients}
-          onClientChange={onClientChange}
-        />,
-        { wrapper },
-      );
-    });
+    render(
+      <AdvancedFilterClientInput
+        selectedClients={undefined}
+        myClients={myClients}
+        onClientChange={onClientChange}
+      />,
+      { wrapper },
+    );
 
     expect(screen.queryByTestId('forestclient-client-ac')).toBeNull();
     screen.getByPlaceholderText('Client');
@@ -105,16 +101,14 @@ describe('AdvancedFilterClientInput', () => {
     const onClientChange = vi.fn();
     const selectedClients = [{ code: '12345', description: '12345 ACME' }];
 
-    await act(async () => {
-      render(
-        <AdvancedFilterClientInput
-          selectedClients={selectedClients}
-          myClients={undefined}
-          onClientChange={onClientChange}
-        />,
-        { wrapper },
-      );
-    });
+    render(
+      <AdvancedFilterClientInput
+        selectedClients={selectedClients}
+        myClients={undefined}
+        onClientChange={onClientChange}
+      />,
+      { wrapper },
+    );
 
     const acInput = screen.getByTestId('forestclient-client-ac') as HTMLInputElement;
     expect(acInput.value).toBe('12345 ACME');
@@ -133,16 +127,14 @@ describe('AdvancedFilterClientInput', () => {
 
     const onClientChange = vi.fn();
 
-    await act(async () => {
-      render(
-        <AdvancedFilterClientInput
-          selectedClients={undefined}
-          myClients={undefined}
-          onClientChange={onClientChange}
-        />,
-        { wrapper },
-      );
-    });
+    render(
+      <AdvancedFilterClientInput
+        selectedClients={undefined}
+        myClients={undefined}
+        onClientChange={onClientChange}
+      />,
+      { wrapper },
+    );
 
     expect(screen.queryByTestId('client-blur-input')).toBeNull();
   });
@@ -165,16 +157,14 @@ describe('AdvancedFilterClientInput', () => {
     const selectedClients = [{ code: 'A', description: 'Client A' }];
     const onClientChange = vi.fn();
 
-    await act(async () => {
-      render(
-        <AdvancedFilterClientInput
-          selectedClients={selectedClients}
-          myClients={myClients}
-          onClientChange={onClientChange}
-        />,
-        { wrapper },
-      );
-    });
+    render(
+      <AdvancedFilterClientInput
+        selectedClients={selectedClients}
+        myClients={myClients}
+        onClientChange={onClientChange}
+      />,
+      { wrapper },
+    );
 
     // The .some() callback (line 99) fires during render to compute selectedItems
     // When selectedClients contains matches, the multiselect shows as selected
@@ -193,16 +183,14 @@ describe('AdvancedFilterClientInput', () => {
       isLoggedIn: true,
     });
 
-    await act(async () => {
-      render(
-        <AdvancedFilterClientInput
-          selectedClients={undefined}
-          myClients={undefined}
-          onClientChange={vi.fn()}
-        />,
-        { wrapper },
-      );
-    });
+    render(
+      <AdvancedFilterClientInput
+        selectedClients={undefined}
+        myClients={undefined}
+        onClientChange={vi.fn()}
+      />,
+      { wrapper },
+    );
 
     // Covers the myClients ?? [] branches on lines 95 and 98
     expect(document.getElementById('as-client-multi-select')).toBeDefined();
@@ -212,18 +200,16 @@ describe('AdvancedFilterClientInput', () => {
     it('passes invalid and invalidText to AutoCompleteInput (IDIR)', async () => {
       const onClientChange = vi.fn();
 
-      await act(async () => {
-        render(
-          <AdvancedFilterClientInput
-            selectedClients={undefined}
-            myClients={undefined}
-            onClientChange={onClientChange}
-            invalid={true}
-            invalidText="Client is required"
-          />,
-          { wrapper },
-        );
-      });
+      render(
+        <AdvancedFilterClientInput
+          selectedClients={undefined}
+          myClients={undefined}
+          onClientChange={onClientChange}
+          invalid={true}
+          invalidText="Client is required"
+        />,
+        { wrapper },
+      );
 
       // Verify the component renders with validation props accepted
       const acInput = screen.getByTestId('forestclient-client-ac');
@@ -249,18 +235,16 @@ describe('AdvancedFilterClientInput', () => {
         { code: 'B', description: 'Client B' },
       ];
 
-      await act(async () => {
-        render(
-          <AdvancedFilterClientInput
-            selectedClients={undefined}
-            myClients={myClients}
-            onClientChange={onClientChange}
-            invalid={true}
-            invalidText="Client is required"
-          />,
-          { wrapper },
-        );
-      });
+      render(
+        <AdvancedFilterClientInput
+          selectedClients={undefined}
+          myClients={myClients}
+          onClientChange={onClientChange}
+          invalid={true}
+          invalidText="Client is required"
+        />,
+        { wrapper },
+      );
 
       // Verify the component renders with validation props accepted
       const multiSelectInput = screen.getByPlaceholderText('Client');
@@ -272,18 +256,16 @@ describe('AdvancedFilterClientInput', () => {
     it('passes warn and warnText props through both paths', async () => {
       const onClientChange = vi.fn();
 
-      await act(async () => {
-        render(
-          <AdvancedFilterClientInput
-            selectedClients={undefined}
-            myClients={undefined}
-            onClientChange={onClientChange}
-            warn={true}
-            warnText="Warning: multiple matches found"
-          />,
-          { wrapper },
-        );
-      });
+      render(
+        <AdvancedFilterClientInput
+          selectedClients={undefined}
+          myClients={undefined}
+          onClientChange={onClientChange}
+          warn={true}
+          warnText="Warning: multiple matches found"
+        />,
+        { wrapper },
+      );
 
       // Component renders without error when warn props are present
       const acInput = screen.getByTestId('forestclient-client-ac');
@@ -341,16 +323,14 @@ describe('AdvancedFilterClientInput', () => {
       const onClientChange = vi.fn();
       const user = userEvent.setup();
 
-      await act(async () => {
-        render(
-          <AdvancedFilterClientInput
-            selectedClients={[{ code: '12345', description: '12345 ACME' }]}
-            myClients={undefined}
-            onClientChange={onClientChange}
-          />,
-          { wrapper },
-        );
-      });
+      render(
+        <AdvancedFilterClientInput
+          selectedClients={[{ code: '12345', description: '12345 ACME' }]}
+          myClients={undefined}
+          onClientChange={onClientChange}
+        />,
+        { wrapper },
+      );
 
       // Carbon ComboBox renders a clear button when a selection exists (inputValue is non-empty)
       // Clicking it triggers onChange({ selectedItem: null }) → onSelect(null) → data = []

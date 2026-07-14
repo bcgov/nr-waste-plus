@@ -1,4 +1,4 @@
-import { render, act, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
@@ -25,27 +25,25 @@ const TestComponent = () => {
   );
 };
 
-const renderWithProvider = async () => {
-  await act(async () => {
-    render(
-      <LayoutProvider>
-        <TestComponent />
-      </LayoutProvider>,
-    );
-  });
+const renderWithProvider = () => {
+  render(
+    <LayoutProvider>
+      <TestComponent />
+    </LayoutProvider>,
+  );
 };
 
 describe('LayoutContext', () => {
-  it('provides default layout values', async () => {
-    await renderWithProvider();
+  it('provides default layout values', () => {
+    renderWithProvider();
     // Initial state depends on breakpoint, but default isSideNavExpanded is true in tests
     expect(screen.getByTestId('side-nav').textContent).toMatch(/expanded|collapsed/);
     expect(screen.getByTestId('header-panel').textContent).toBe('closed');
   });
 
   it('toggleSideNav toggles the side nav state', async () => {
-    const user = await userEvent.setup();
-    await renderWithProvider();
+    const user = userEvent.setup();
+    renderWithProvider();
     const btn = screen.getByText('Toggle SideNav');
     const value = screen.getByTestId('side-nav');
     expect(value.textContent).toBe('collapsed');
@@ -56,8 +54,8 @@ describe('LayoutContext', () => {
   });
 
   it('toggleHeaderPanel and closeHeaderPanel work as expected', async () => {
-    const user = await userEvent.setup();
-    await renderWithProvider();
+    const user = userEvent.setup();
+    renderWithProvider();
     const toggleBtn = screen.getByText('Toggle HeaderPanel');
     const closeBtn = screen.getByText('Close HeaderPanel');
     const value = screen.getByTestId('header-panel');

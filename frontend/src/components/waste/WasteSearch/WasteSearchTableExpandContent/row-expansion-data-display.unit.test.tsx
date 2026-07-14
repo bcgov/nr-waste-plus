@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
 import WasteSearchTableExpandContent from './index';
@@ -40,14 +40,12 @@ const mockExpandedData: ReportingUnitSearchExpandedDto = {
   ],
 };
 
-const renderWithProps = async (rowId: string) => {
+const renderWithProps = (rowId: string) => {
   const qc = makeTestQueryClient();
-  await act(async () =>
-    render(
-      <QueryClientProvider client={qc}>
-        <WasteSearchTableExpandContent rowId={rowId} />
-      </QueryClientProvider>,
-    ),
+  render(
+    <QueryClientProvider client={qc}>
+      <WasteSearchTableExpandContent rowId={rowId} />
+    </QueryClientProvider>,
   );
 };
 
@@ -60,7 +58,7 @@ describe('WasteSearchTableExpandContent - Row Expansion Data Display', () => {
   describe('row expansion data display', () => {
     it('displays all key information together', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         // Verify multiple fields are displayed
@@ -80,7 +78,7 @@ describe('WasteSearchTableExpandContent - Row Expansion Data Display', () => {
       (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithDecimal);
 
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         screen.getByText('2500.75 ha');
@@ -95,7 +93,7 @@ describe('WasteSearchTableExpandContent - Row Expansion Data Display', () => {
       (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithZeroBlocks);
 
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         screen.getByText('Blocks in the RU: 0');
@@ -104,7 +102,7 @@ describe('WasteSearchTableExpandContent - Row Expansion Data Display', () => {
 
     it('displays timber mark multiple times for different screen sizes', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         const timberMarkElements = screen.getAllByText('TM-001');
@@ -115,7 +113,7 @@ describe('WasteSearchTableExpandContent - Row Expansion Data Display', () => {
 
     it('displays mark area multiple times for different screen sizes', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         const markAreaElements = screen.getAllByText('2000 ha');
@@ -126,7 +124,7 @@ describe('WasteSearchTableExpandContent - Row Expansion Data Display', () => {
 
     it('displays status description multiple times for different screen sizes', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         const statusElements = screen.getAllByText('Active');
@@ -137,7 +135,7 @@ describe('WasteSearchTableExpandContent - Row Expansion Data Display', () => {
 
     it('displays all secondary marks with their areas and statuses', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         // Check secondary marks appear
@@ -151,7 +149,7 @@ describe('WasteSearchTableExpandContent - Row Expansion Data Display', () => {
 
     it('displays total secondary marks count', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         screen.getByText('Secondary marks in the block: 3');
@@ -166,7 +164,7 @@ describe('WasteSearchTableExpandContent - Row Expansion Data Display', () => {
       (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNullTimberMark);
 
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();

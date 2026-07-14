@@ -136,7 +136,7 @@ describe('PageNotification', () => {
 
   describe('close interaction', () => {
     it('shouldCallClearNotification_whenCloseButtonClicked', async () => {
-      const user = await userEvent.setup();
+      const user = userEvent.setup();
       setupHook(makeEvent());
       render(<PageNotification eventTarget="scope" />);
       await user.click(screen.getByRole('button'));
