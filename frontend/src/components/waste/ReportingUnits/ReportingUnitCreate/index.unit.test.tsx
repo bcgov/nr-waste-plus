@@ -329,6 +329,7 @@ describe('ReportingUnitCreate', () => {
 
     it('renders form element', () => {
       renderComponent();
+      // eslint-disable-next-line testing-library/no-node-access
       const form = screen.getByTestId('create-ru-submit-button').closest('form');
       expect(form).not.toBeNull();
     });

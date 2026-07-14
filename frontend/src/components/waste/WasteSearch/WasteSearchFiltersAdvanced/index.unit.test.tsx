@@ -150,6 +150,7 @@ describe('WasteSearchFiltersActive', () => {
     await renderWithProps({ samplingOptions, onChange });
 
     const samplingBox = screen.getByRole('combobox', { name: /Sampling/i });
+    // eslint-disable-next-line testing-library/no-node-access
     const samplingButton = within(samplingBox.parentElement!).getByRole('button');
 
     expect(samplingBox).toBeDefined();
