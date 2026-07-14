@@ -19,15 +19,15 @@ import { useAuth } from '@/context/auth/useAuth';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
-vi.mock('@/context/auth/useAuth', () => ({
+vi.mock('@/context/auth/useAuth', async () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock('@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions', () => ({
+vi.mock('@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions', async () => ({
   useWasteSearchFilterOptions: vi.fn(),
 }));
 
-vi.mock('@/config/react-query/hooks', () => ({
+vi.mock('@/config/react-query/hooks', async () => ({
   useReportingUnitCreateMutation: vi.fn(),
   useMyForestClientsQuery: vi.fn(),
 }));
@@ -130,6 +130,7 @@ async function renderComponent() {
     },
   });
   const router = createTestRouter(() => <ReportingUnitCreate />);
+  await router.load();
 
   render(
     <QueryClientProvider client={queryClient}>
@@ -140,7 +141,7 @@ async function renderComponent() {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe('ReportingUnitCreate - Additional Coverage', () => {
+describe('ReportingUnitCreate - Additional Coverage', async () => {
   beforeEach(() => {
     vi.mocked(useAuth).mockReturnValue({
       user: mockAuthUser,
@@ -181,7 +182,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     vi.clearAllMocks();
   });
 
-  describe('grade auto-selection with form.setFieldValue', () => {
+  describe('grade auto-selection with form.setFieldValue', async () => {
     it('should auto-select grade when district with single area is selected', async () => {
       // Mock district with single area
       vi.mocked(useWasteSearchFilterOptions).mockReturnValue({
@@ -193,7 +194,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
         statusOptions: [],
       });
 
-      await renderComponent();
+      await await renderComponent();
 
       // eslint-disable-next-line testing-library/no-node-access
       const districtComboBox = document.querySelector('#create-ru-district');
@@ -215,7 +216,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
 
     it('should set grade to null when district has multiple areas', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       // eslint-disable-next-line testing-library/no-node-access
       const districtComboBox = document.querySelector('#create-ru-district');
@@ -236,9 +237,9 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
   });
 
-  describe('itemToString callback coverage', () => {
+  describe('itemToString callback coverage', async () => {
     it('should render district combobox with itemToString', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       // eslint-disable-next-line testing-library/no-node-access
       const districtComboBox = document.querySelector('#create-ru-district');
@@ -247,7 +248,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
 
     it('should render sampling combobox with itemToString', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       // eslint-disable-next-line testing-library/no-node-access
       const samplingComboBox = document.querySelector('#as-sampling-multi-select');
@@ -256,9 +257,9 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
   });
 
-  describe('grade field rendering and interaction', () => {
+  describe('grade field rendering and interaction', async () => {
     it('should render grade field with correct structure when visible', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       // eslint-disable-next-line testing-library/no-node-access
       const districtComboBox = document.querySelector('#create-ru-district');
@@ -279,7 +280,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
 
     it('should render both coastal and interior radio buttons', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       // eslint-disable-next-line testing-library/no-node-access
       const districtComboBox = document.querySelector('#create-ru-district');
@@ -303,7 +304,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
 
     it('should handle grade field onChange with proper event handling', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       // eslint-disable-next-line testing-library/no-node-access
       const districtComboBox = document.querySelector('#create-ru-district');
@@ -339,7 +340,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
 
     it('should display grade field validation errors when touched', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       // eslint-disable-next-line testing-library/no-node-access
       const districtComboBox = document.querySelector('#create-ru-district');
@@ -369,7 +370,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
   });
 
-  describe('button onClick handler', () => {
+  describe('button onClick handler', async () => {
     it('should render form with all required fields', async () => {
       const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
 
@@ -379,7 +380,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
         }),
       );
 
-      await renderComponent();
+      await await renderComponent();
 
       // Verify all form fields are rendered
       const clientInput = screen.getByTestId('client-input');
@@ -400,7 +401,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
         }),
       );
 
-      await renderComponent();
+      await await renderComponent();
 
       const submitBtn = screen.getByRole('button', { name: /Create/i });
       expect((submitBtn as HTMLButtonElement).disabled).toBe(true);
@@ -408,9 +409,9 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
   });
 
-  describe('form field validators - async validation', () => {
+  describe('form field validators - async validation', async () => {
     it('should validate client field with runValidators on blur', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       const clientBlurInput = screen.getByTestId('client-blur-input');
       await act(async () => {
@@ -421,7 +422,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
 
     it('should validate client field with runValidators on change', async () => {
-      await renderComponent();
+      await await renderComponent();
       const user = userEvent.setup();
 
       const selectClientBtn = screen.getByTestId('select-client-btn');
@@ -431,7 +432,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
 
     it('should validate district field with runValidators on blur', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
       await act(async () => {
@@ -443,7 +444,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
 
     it('should validate district field with runValidators on change', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
       await act(async () => {
@@ -459,7 +460,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
 
     it('should validate sampling field with runValidators on blur', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       const samplingComboBox = document.querySelector('#as-sampling-multi-select') as HTMLElement;
       await act(async () => {
@@ -471,7 +472,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
 
     it('should validate sampling field with runValidators on change', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       const samplingComboBox = document.querySelector('#as-sampling-multi-select') as HTMLElement;
       await act(async () => {
@@ -487,7 +488,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
 
     it('should validate grade field with runValidators on blur when visible', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
       await act(async () => {
@@ -514,7 +515,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
 
     it('should validate grade field with runValidators on change when visible', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       const districtComboBox = document.querySelector('#create-ru-district') as HTMLElement;
       await act(async () => {
@@ -547,9 +548,9 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
   });
 
-  describe('district selection with grade clearing', () => {
+  describe('district selection with grade clearing', async () => {
     it('should clear grade when switching from multi-area to single-area district', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       // eslint-disable-next-line testing-library/no-node-access
       const districtComboBox = document.querySelector('#create-ru-district');
@@ -588,9 +589,9 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
   });
 
-  describe('combobox onChange with null selectedItem', () => {
+  describe('combobox onChange with null selectedItem', async () => {
     it('should handle district combobox onChange with null selectedItem', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       // eslint-disable-next-line testing-library/no-node-access
       const districtComboBox = document.querySelector('#create-ru-district');
@@ -607,7 +608,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
 
     it('should handle sampling combobox onChange with null selectedItem', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       // eslint-disable-next-line testing-library/no-node-access
       const samplingComboBox = document.querySelector('#as-sampling-multi-select');
@@ -624,9 +625,9 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
   });
 
-  describe('form field state tracking', () => {
+  describe('form field state tracking', async () => {
     it('should track district field state changes', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       // eslint-disable-next-line testing-library/no-node-access
       const districtComboBox = document.querySelector('#create-ru-district');
@@ -643,7 +644,7 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
     });
 
     it('should track sampling field state changes', async () => {
-      await renderComponent();
+      await await renderComponent();
 
       // eslint-disable-next-line testing-library/no-node-access
       const samplingComboBox = document.querySelector('#as-sampling-multi-select');
