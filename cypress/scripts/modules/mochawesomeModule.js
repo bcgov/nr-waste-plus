@@ -1,7 +1,23 @@
+const fs = require('node:fs');
+const path = require('node:path');
+
+const FLAKY_SUMMARY_FILE = path.resolve(__dirname, '..', '..', 'reports', 'flaky', 'flaky-summary.json');
+
+function readFlakyCount() {
+  try {
+    const content = fs.readFileSync(FLAKY_SUMMARY_FILE, 'utf8');
+    const parsed = JSON.parse(content);
+    return typeof parsed.flaky === 'number' ? parsed.flaky : 0;
+  } catch {
+    return 0;
+  }
+}
+
 function mochawesomeToMarkdown(reports) {
   let total = 0, passed = 0, failed = 0, pending = 0, skipped = 0;
   let durationMs = 0;
   const failedTests = [];
+  let flaky = readFlakyCount();
 
   for (const report of reports) {
     const stats = report.stats;
@@ -53,6 +69,7 @@ function testSummaryToMarkdown(reports) {
   let total = 0, passed = 0, failed = 0, pending = 0, skipped = 0;
   let durationMs = 0;
   const failedTests = [];
+  let flaky = readFlakyCount();
 
   for (const report of reports) {
     const stats = report.stats;
@@ -92,7 +109,7 @@ function testSummaryToMarkdown(reports) {
 | Pending | ${pending} |
 | Skipped | ${skipped} |
 | Duration | ${duration} |
-`;
+${flaky > 0 ? `| Flaky (passed after retry) | ${flaky} |\n` : ""}`;
 }
 
 module.exports = {

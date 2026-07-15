@@ -49,6 +49,26 @@ jobs:
         if: always()
         run: cat summary.md >> $GITHUB_STEP_SUMMARY
 
+      - name: Persist mochawesome JSON reports
+        working-directory: cypress
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mochawesome-reports
+          path: reports/mochawesome
+          retention-days: 30
+
+      - name: Persist Cypress RunResult and flaky summary
+        working-directory: cypress
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cypress-run-result
+          path: |
+            reports/run-result.json
+            reports/flaky/flaky-summary.json
+          retention-days: 30
+
       - name: Check for Cypress Screenshots and Videos
         continue-on-error: true
         if: always()

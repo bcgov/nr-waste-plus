@@ -11,6 +11,9 @@ const A11Y_REPORT_FILE = path.resolve(__dirname, "reports", "a11y", "a11y-result
 const UIUX_REPORT_FILE = path.resolve(__dirname, "reports", "uiux", "uiux-results.json");
 const LIGHTHOUSE_REPORT_FILE = path.resolve(__dirname, "reports", "lighthouse", "lighthouse-results.json");
 
+const RUN_RESULT_FILE = path.resolve(__dirname, "reports", "run-result.json");
+const FLAKY_SUMMARY_FILE = path.resolve(__dirname, "reports", "flaky", "flaky-summary.json");
+
 let debugPort = 0;
 
 interface LighthouseScreenEmulation {
@@ -34,6 +37,11 @@ const writeFile = (filePath: string, data: Array<Record<string, unknown>>) => {
       JSON.stringify({ generatedAt: new Date().toISOString(), checks: data }, null, 2),
       "utf8"
     );
+};
+
+const writeJsonFile = (filePath: string, data: unknown) => {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");
 };
 
 const cleanFile = (filePath: string) => {
@@ -207,12 +215,35 @@ async function setupNodeEvents(
     cleanFile(A11Y_REPORT_FILE);
     cleanFile(UIUX_REPORT_FILE);
     cleanFile(LIGHTHOUSE_REPORT_FILE);
+    cleanFile(RUN_RESULT_FILE);
+    cleanFile(FLAKY_SUMMARY_FILE);
   });
 
-  on("after:run", () => {
+  on("after:run", (results) => {
     writeFile(A11Y_REPORT_FILE, a11yResults);
     writeFile(UIUX_REPORT_FILE, uiuxResults);
     writeFile(LIGHTHOUSE_REPORT_FILE, lighthouseResults);
+
+    // Persist the full Cypress RunResult so retry data (results.tests[].attempts[])
+    // survives the run for analysis. The mochawesome JSON does NOT carry attempt/flaky
+    // fields, so this is the only source of truth for flaky detection.
+    if (results && "tests" in results) {
+      writeJsonFile(RUN_RESULT_FILE, results);
+
+      // A test is flaky when it was retried (attempts.length > 1) and ultimately passed.
+      const runResult = results as unknown as CypressCommandLine.RunResult;
+      let flakyCount = 0;
+      for (const test of runResult.tests ?? []) {
+        const attempts = test.attempts ?? [];
+        const finalState = attempts.length
+          ? attempts[attempts.length - 1]?.state
+          : test.state;
+        if (attempts.length > 1 && finalState === "passed") {
+          flakyCount += 1;
+        }
+      }
+      writeJsonFile(FLAKY_SUMMARY_FILE, { flaky: flakyCount, generatedAt: new Date().toISOString() });
+    }
   });
 
   on(
