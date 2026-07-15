@@ -41,15 +41,13 @@ jobs:
     name: Frontend Unit Tests
     if: needs.detect-changes.outputs.triggered == 'true'
     needs: [detect-changes]
-    container:
-      image: mcr.microsoft.com/playwright:v1.61.1-noble
     permissions:
       contents: write
       checks: write
     runs-on: ubuntu-24.04
     steps:
       - name: Fix safe.directory for GitHub Actions
-        run: git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Run frontend unit tests without sonar
         uses: bcgov/action-test-and-analyse@8f699e3fd3fadd9a6adf6f4b1f2638ef7ecfefb9 # v2.0.0
@@ -60,7 +58,7 @@ jobs:
           node_version: 24
           dep_scan: off
           commands: |
-            git config --global --add safe.directory /__w/nr-waste-plus/nr-waste-plus
+            git config --global --add safe.directory "$GITHUB_WORKSPACE"
             npm ci
             npm run test:unit
           dir: frontend
