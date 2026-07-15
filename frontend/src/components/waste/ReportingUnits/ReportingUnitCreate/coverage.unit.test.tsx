@@ -142,6 +142,7 @@ async function renderComponent() {
 
   // Wrap render in act() so the router's (Transitioner) mount-time async
   // state updates are flushed inside the act environment.
+  // eslint-disable-next-line testing-library/no-unnecessary-act
   await act(async () => {
     render(
       <QueryClientProvider client={queryClient}>

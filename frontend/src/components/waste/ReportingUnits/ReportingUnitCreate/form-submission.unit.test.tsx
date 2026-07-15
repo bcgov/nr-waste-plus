@@ -134,6 +134,7 @@ async function renderComponent(_routerOptions = {}) {
   // Wrap render in act() so the router's (Transitioner) mount-time async
   // state updates are flushed inside the act environment, avoiding
   // "An update to Transitioner inside a test was not wrapped in act(...)" warnings.
+  // eslint-disable-next-line testing-library/no-unnecessary-act
   await act(async () => {
     render(
       <QueryClientProvider client={queryClient}>
