@@ -62,3 +62,35 @@ export const speciesCompositionDataSchema = z.object({
   rows: z.array(speciesCompositionRowSchema),
 });
 export type SpeciesCompositionData = z.infer<typeof speciesCompositionDataSchema>;
+
+export const CodeDescriptionDtoSchema = z.object({
+  code: z.string(),
+  description: z.string(),
+});
+
+export const SpeciesCompositionRowSchema = z.object({
+  district: CodeDescriptionDtoSchema,
+  balsam: z.number(),
+  cedar: z.number(),
+  cottonwood: z.number(),
+  cypress: z.number(),
+  fir: z.number(),
+  hemlock: z.number(),
+  larch: z.number(),
+  maple: z.number(),
+  pine: z.number(),
+  poplar: z.number(),
+  redcedar: z.number(),
+  redwood: z.number(),
+  spruce: z.number(),
+  whitebirch: z.number(),
+  whitepine: z.number(),
+  yew: z.number(),
+  other: z.number(),
+  unknown: z.number(),
+  total: z.number(),
+});
+
+export const SpeciesCompositionDataSchema = z.object({
+  rows: z.array(SpeciesCompositionRowSchema),
+});
