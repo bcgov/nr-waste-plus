@@ -2,6 +2,7 @@ FROM node:24.18-bullseye-slim AS build
 
 # Cache npm dependencies by copying package files first
 WORKDIR /app
+# Cache npm dependencies by copying package files first
 COPY package*.json ./
 RUN npm ci --ignore-scripts
 
