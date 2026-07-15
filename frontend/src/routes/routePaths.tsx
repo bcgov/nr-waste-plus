@@ -16,6 +16,9 @@ import ReportingUnitCreatePage from '@/pages/ReportingUnitCreate';
 import ReportingUnitDetailsPage from '@/pages/ReportingUnitDetails';
 import { reportingUnitLoader } from '@/pages/ReportingUnitDetails/loader';
 import RoleErrorPage from '@/pages/RoleError';
+import SpeciesCompositionDetailPage from '@/pages/SpeciesCompositionDetail';
+import SpeciesCompositionListPage from '@/pages/SpeciesCompositionList';
+import SpeciesCompositionUploadPage from '@/pages/SpeciesCompositionUpload';
 import WasteSearchPage from '@/pages/WasteSearch';
 import { withPersistentRedirect } from '@/routes/guards/withPersistentRedirect';
 import { withPublicOnly } from '@/routes/guards/withPublicOnly';
@@ -175,11 +178,50 @@ export const ROUTES: RouteDescription[] = [
     featureFlag: 'configuration-enabled',
   },
   {
-    path: '/configuration/upload-district-volume',
+    path: '/configuration/district-volume-tables/upload',
     id: 'Upload District Volume Table',
     component: () => (
       <Layout>
         <DistrictVolumeTableUploadPage />
+      </Layout>
+    ),
+    isSideMenu: false,
+    protected: true,
+    roles: [{ role: Role.ADMIN, clients: [] }],
+    featureFlag: 'configuration-enabled',
+  },
+  {
+    path: '/configuration/species-composition',
+    id: 'Species Composition',
+    component: () => (
+      <Layout>
+        <SpeciesCompositionListPage />
+      </Layout>
+    ),
+    isSideMenu: false,
+    protected: true,
+    roles: [{ role: Role.ADMIN, clients: [] }],
+    featureFlag: 'configuration-enabled',
+  },
+  {
+    path: '/configuration/species-composition/upload',
+    id: 'Upload Species Composition',
+    component: () => (
+      <Layout>
+        <SpeciesCompositionUploadPage />
+      </Layout>
+    ),
+    isSideMenu: false,
+    protected: true,
+    roles: [{ role: Role.ADMIN, clients: [] }],
+    featureFlag: 'configuration-enabled',
+  },
+  {
+    path: '/configuration/species-composition/$id',
+    id: 'Species Composition Detail',
+    component: () => (
+      <Layout>
+        <SpeciesCompositionDetailPage />
       </Layout>
     ),
     isSideMenu: false,

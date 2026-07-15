@@ -91,14 +91,15 @@ describe('ConfigurationPage', () => {
     );
   });
 
-  it('species composition card link does not call navigateInTree when clicked', async () => {
+  it('species composition card link calls navigateInTree when clicked', async () => {
     const user = userEvent.setup();
     render(<ConfigurationPage />);
 
     const links = screen.getAllByText('View or update tables');
-    // links[1] is the species composition card (second card, disabled)
+    // links[1] is the species composition card (second card)
     await user.click(links[1]);
 
-    expect(navigateInTree).not.toHaveBeenCalled();
+    expect(navigateInTree).toHaveBeenCalledOnce();
+    expect(navigateInTree).toHaveBeenCalledWith(mockNavigate, '/configuration/species-composition');
   });
 });

@@ -19,8 +19,11 @@ export type InTreePath =
   | '/reporting-units/create'
   | '/configuration'
   | '/configuration/district-volume-tables'
-  | '/configuration/upload-district-volume'
-  | `/configuration/district-volume-tables/${number}`;
+  | '/configuration/district-volume-tables/upload'
+  | `/configuration/district-volume-tables/${number}`
+  | '/configuration/species-composition'
+  | '/configuration/species-composition/upload'
+  | `/configuration/species-composition/${number}`;
 
 /**
  * Typed navigate helper for in-tree route paths.
