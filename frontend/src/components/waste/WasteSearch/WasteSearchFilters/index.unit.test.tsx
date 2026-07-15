@@ -1,4 +1,4 @@
-import { screen, fireEvent, within, waitFor } from '@testing-library/react';
+import { screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
@@ -71,7 +71,7 @@ describe('WasteSearchFilters', () => {
     await renderWithProps({ onSearch });
     const searchButton = screen.getByTestId('search-button-most');
     expect(searchButton).toBeDefined();
-    fireEvent.click(searchButton);
+    await userEvent.click(searchButton);
     expect(onSearch).toHaveBeenCalled();
   });
 
@@ -97,14 +97,17 @@ describe('WasteSearchFilters', () => {
     expect(APIs.codes.getAssessAreaStatuses).toHaveBeenCalled();
 
     const samplingBox = screen.getByPlaceholderText(/Sampling/i);
+    // eslint-disable-next-line testing-library/no-node-access
     const samplingButton = within(samplingBox.parentElement!).getByRole('button');
     expect(samplingButton).not.toBeNull();
 
     const districtBox = screen.getByPlaceholderText(/District/i);
+    // eslint-disable-next-line testing-library/no-node-access
     const districtButton = within(districtBox.parentElement!).getByRole('button');
     expect(districtButton).not.toBeNull();
 
     const statusBox = screen.getByPlaceholderText(/Status/i);
+    // eslint-disable-next-line testing-library/no-node-access
     const statusButton = within(statusBox.parentElement!).getByRole('button');
     expect(statusButton).not.toBeNull();
 
@@ -148,6 +151,7 @@ describe('WasteSearchFilters', () => {
     await renderWithProps({ onChange });
 
     const samplingBox = screen.getByPlaceholderText(/Sampling/i);
+    // eslint-disable-next-line testing-library/no-node-access
     const samplingButton = within(samplingBox.parentElement!).getByRole('button');
     expect(samplingBox).toBeDefined();
     expect(samplingButton).toBeDefined();

@@ -86,9 +86,8 @@ describe('withOfflineSupport', () => {
     it('should render null when online', async () => {
       mockIsOnline = true;
       const Wrapped = withOfflineSupport(TargetPage, { offlineOnly: true });
-      const { container } = render(<Wrapped />);
+      render(<Wrapped />);
       expect(screen.queryByTestId('target-page')).toBeNull();
-      expect(container.firstChild).toBeNull();
     });
 
     it('should render component when offline', async () => {

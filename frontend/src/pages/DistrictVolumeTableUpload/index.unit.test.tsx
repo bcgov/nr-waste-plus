@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import DistrictVolumeTableUploadPage from './index';
@@ -103,7 +104,7 @@ describe('DistrictVolumeTableUploadPage', () => {
 
       // PageNotification renders conditionally only when a notification event is active.
       // Verify the wrapping Column element exists with correct Carbon grid classes.
-      const notificationColumn = document.querySelector('.create-ru-column__notification');
+      const notificationColumn = screen.getByTestId('create-ru-column__notification');
       expect(notificationColumn).toBeTruthy();
       expect(notificationColumn?.classList.contains('cds--col-lg-16')).toBe(true);
       expect(notificationColumn?.classList.contains('cds--col-md-8')).toBe(true);
@@ -142,7 +143,8 @@ describe('DistrictVolumeTableUploadPage', () => {
     it('should call navigateInTree with list path when Cancel is clicked', async () => {
       await renderWithAppAsync(<DistrictVolumeTableUploadPage />);
 
-      await screen.getByRole('button', { name: 'Cancel' }).click();
+      const cancelButton = await screen.findByRole('button', { name: 'Cancel' });
+      await userEvent.click(cancelButton);
 
       expect(inTreePaths.navigateInTree).toHaveBeenCalledWith(
         expect.anything(),
@@ -175,6 +177,7 @@ describe('DistrictVolumeTableUploadPage', () => {
       await renderWithAppAsync(<DistrictVolumeTableUploadPage />);
 
       // Carbon v11 Column applies CSS grid classes, not inline max-width styles.
+      // eslint-disable-next-line testing-library/no-node-access
       const bannerColumn = screen.getByText('Upload new volumes table').closest('.cds--col-lg-16');
       expect(bannerColumn).toBeTruthy();
       expect(bannerColumn?.classList.contains('cds--col-sm-4')).toBe(true);
@@ -186,7 +189,7 @@ describe('DistrictVolumeTableUploadPage', () => {
 
       // Carbon v11 Column uses CSS grid classes; the notification column also has
       // a semantic className that can be used to locate it.
-      const notificationColumn = document.querySelector('.create-ru-column__notification');
+      const notificationColumn = screen.getByTestId('create-ru-column__notification');
       expect(notificationColumn).toBeTruthy();
       expect(notificationColumn?.classList.contains('cds--col-lg-16')).toBe(true);
       expect(notificationColumn?.classList.contains('cds--col-sm-4')).toBe(true);

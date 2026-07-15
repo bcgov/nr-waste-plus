@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -51,25 +51,23 @@ describe('AdvancedFilterClientInput', () => {
     });
   });
 
-  it('renders autocomplete for IDIR users', async () => {
+  it('renders autocomplete for IDIR users', () => {
     const onClientChange = vi.fn();
 
-    await act(async () => {
-      render(
-        <AdvancedFilterClientInput
-          selectedClients={undefined}
-          myClients={undefined}
-          onClientChange={onClientChange}
-        />,
-        { wrapper },
-      );
-    });
+    render(
+      <AdvancedFilterClientInput
+        selectedClients={undefined}
+        myClients={undefined}
+        onClientChange={onClientChange}
+      />,
+      { wrapper },
+    );
 
     const acInput = screen.getByTestId('forestclient-client-ac');
     expect(acInput).toBeDefined();
   });
 
-  it('renders multiselect for BCeID users', async () => {
+  it('renders multiselect for BCeID users', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { idpProvider: 'BCEIDBUSINESS' } as FamLoginUser,
       getClients: vi.fn(),
@@ -86,41 +84,37 @@ describe('AdvancedFilterClientInput', () => {
       { code: 'B', description: 'Client B' },
     ];
 
-    await act(async () => {
-      render(
-        <AdvancedFilterClientInput
-          selectedClients={undefined}
-          myClients={myClients}
-          onClientChange={onClientChange}
-        />,
-        { wrapper },
-      );
-    });
+    render(
+      <AdvancedFilterClientInput
+        selectedClients={undefined}
+        myClients={myClients}
+        onClientChange={onClientChange}
+      />,
+      { wrapper },
+    );
 
     expect(screen.queryByTestId('forestclient-client-ac')).toBeNull();
     screen.getByPlaceholderText('Client');
   });
 
-  it('passes selected clients to autocomplete', async () => {
+  it('passes selected clients to autocomplete', () => {
     const onClientChange = vi.fn();
     const selectedClients = [{ code: '12345', description: '12345 ACME' }];
 
-    await act(async () => {
-      render(
-        <AdvancedFilterClientInput
-          selectedClients={selectedClients}
-          myClients={undefined}
-          onClientChange={onClientChange}
-        />,
-        { wrapper },
-      );
-    });
+    render(
+      <AdvancedFilterClientInput
+        selectedClients={selectedClients}
+        myClients={undefined}
+        onClientChange={onClientChange}
+      />,
+      { wrapper },
+    );
 
     const acInput = screen.getByTestId('forestclient-client-ac') as HTMLInputElement;
     expect(acInput.value).toBe('12345 ACME');
   });
 
-  it('returns null when provider is unknown', async () => {
+  it('returns null when provider is unknown', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { idpProvider: 'UNKNOWN', privileges: {} } as unknown as FamLoginUser,
       getClients: vi.fn(),
@@ -133,25 +127,19 @@ describe('AdvancedFilterClientInput', () => {
 
     const onClientChange = vi.fn();
 
-    let container: HTMLElement | null = null;
+    render(
+      <AdvancedFilterClientInput
+        selectedClients={undefined}
+        myClients={undefined}
+        onClientChange={onClientChange}
+      />,
+      { wrapper },
+    );
 
-    await act(async () => {
-      const result = render(
-        <AdvancedFilterClientInput
-          selectedClients={undefined}
-          myClients={undefined}
-          onClientChange={onClientChange}
-        />,
-        { wrapper },
-      );
-      container = result.container;
-    });
-
-    expect(container).toBeDefined();
-    expect(container!.firstChild).toBeNull();
+    expect(screen.queryByTestId('client-blur-input')).toBeNull();
   });
 
-  it('executes selectedItems filter callback for BCeID with matching selectedClients', async () => {
+  it('executes selectedItems filter callback for BCeID with matching selectedClients', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { idpProvider: 'BCEIDBUSINESS' } as FamLoginUser,
       getClients: vi.fn(),
@@ -169,24 +157,24 @@ describe('AdvancedFilterClientInput', () => {
     const selectedClients = [{ code: 'A', description: 'Client A' }];
     const onClientChange = vi.fn();
 
-    await act(async () => {
-      render(
-        <AdvancedFilterClientInput
-          selectedClients={selectedClients}
-          myClients={myClients}
-          onClientChange={onClientChange}
-        />,
-        { wrapper },
-      );
-    });
+    render(
+      <AdvancedFilterClientInput
+        selectedClients={selectedClients}
+        myClients={myClients}
+        onClientChange={onClientChange}
+      />,
+      { wrapper },
+    );
 
     // The .some() callback (line 99) fires during render to compute selectedItems
     // When selectedClients contains matches, the multiselect shows as selected
-    const multiSelectWrapper = document.getElementById('as-client-multi-select');
-    expect(multiSelectWrapper).toBeDefined();
+    const multiSelectWrapper = screen.getByTestId('as-client-multi-select');
+    expect(multiSelectWrapper).toBeTruthy();
+    // The .some() selection must actually resolve to 1 matched item (not just render)
+    expect(screen.getByText(/Total items selected: 1/)).toBeTruthy();
   });
 
-  it('renders BCeID multiselect with empty items when myClients is undefined', async () => {
+  it('renders BCeID multiselect with empty items when myClients is undefined', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { idpProvider: 'BCEIDBUSINESS' } as FamLoginUser,
       getClients: vi.fn(),
@@ -197,37 +185,36 @@ describe('AdvancedFilterClientInput', () => {
       isLoggedIn: true,
     });
 
-    await act(async () => {
+    render(
+      <AdvancedFilterClientInput
+        selectedClients={undefined}
+        myClients={undefined}
+        onClientChange={vi.fn()}
+      />,
+      { wrapper },
+    );
+
+    // Covers the myClients ?? [] branches on lines 95 and 98
+    const multiSelectWrapper = screen.getByTestId('as-client-multi-select');
+    expect(multiSelectWrapper).toBeTruthy();
+    // With empty items, the multiselect must report zero selections (proves ?? [] branch)
+    expect(screen.getByText(/Total items selected:\s*0/)).toBeTruthy();
+  });
+
+  describe('validation props forwarding', () => {
+    it('passes invalid and invalidText to AutoCompleteInput (IDIR)', () => {
+      const onClientChange = vi.fn();
+
       render(
         <AdvancedFilterClientInput
           selectedClients={undefined}
           myClients={undefined}
-          onClientChange={vi.fn()}
+          onClientChange={onClientChange}
+          invalid={true}
+          invalidText="Client is required"
         />,
         { wrapper },
       );
-    });
-
-    // Covers the myClients ?? [] branches on lines 95 and 98
-    expect(document.getElementById('as-client-multi-select')).toBeDefined();
-  });
-
-  describe('validation props forwarding', () => {
-    it('passes invalid and invalidText to AutoCompleteInput (IDIR)', async () => {
-      const onClientChange = vi.fn();
-
-      await act(async () => {
-        render(
-          <AdvancedFilterClientInput
-            selectedClients={undefined}
-            myClients={undefined}
-            onClientChange={onClientChange}
-            invalid={true}
-            invalidText="Client is required"
-          />,
-          { wrapper },
-        );
-      });
 
       // Verify the component renders with validation props accepted
       const acInput = screen.getByTestId('forestclient-client-ac');
@@ -236,7 +223,7 @@ describe('AdvancedFilterClientInput', () => {
       expect(acInput).toBeTruthy();
     });
 
-    it('passes invalid and invalidText to ActiveMultiSelect (BCEIDBUSINESS)', async () => {
+    it('passes invalid and invalidText to ActiveMultiSelect (BCEIDBUSINESS)', () => {
       vi.mocked(useAuth).mockReturnValue({
         user: { idpProvider: 'BCEIDBUSINESS' } as FamLoginUser,
         getClients: vi.fn(),
@@ -253,18 +240,16 @@ describe('AdvancedFilterClientInput', () => {
         { code: 'B', description: 'Client B' },
       ];
 
-      await act(async () => {
-        render(
-          <AdvancedFilterClientInput
-            selectedClients={undefined}
-            myClients={myClients}
-            onClientChange={onClientChange}
-            invalid={true}
-            invalidText="Client is required"
-          />,
-          { wrapper },
-        );
-      });
+      render(
+        <AdvancedFilterClientInput
+          selectedClients={undefined}
+          myClients={myClients}
+          onClientChange={onClientChange}
+          invalid={true}
+          invalidText="Client is required"
+        />,
+        { wrapper },
+      );
 
       // Verify the component renders with validation props accepted
       const multiSelectInput = screen.getByPlaceholderText('Client');
@@ -273,21 +258,19 @@ describe('AdvancedFilterClientInput', () => {
       expect(multiSelectInput).toBeTruthy();
     });
 
-    it('passes warn and warnText props through both paths', async () => {
+    it('passes warn and warnText props through both paths', () => {
       const onClientChange = vi.fn();
 
-      await act(async () => {
-        render(
-          <AdvancedFilterClientInput
-            selectedClients={undefined}
-            myClients={undefined}
-            onClientChange={onClientChange}
-            warn={true}
-            warnText="Warning: multiple matches found"
-          />,
-          { wrapper },
-        );
-      });
+      render(
+        <AdvancedFilterClientInput
+          selectedClients={undefined}
+          myClients={undefined}
+          onClientChange={onClientChange}
+          warn={true}
+          warnText="Warning: multiple matches found"
+        />,
+        { wrapper },
+      );
 
       // Component renders without error when warn props are present
       const acInput = screen.getByTestId('forestclient-client-ac');
@@ -345,16 +328,14 @@ describe('AdvancedFilterClientInput', () => {
       const onClientChange = vi.fn();
       const user = userEvent.setup();
 
-      await act(async () => {
-        render(
-          <AdvancedFilterClientInput
-            selectedClients={[{ code: '12345', description: '12345 ACME' }]}
-            myClients={undefined}
-            onClientChange={onClientChange}
-          />,
-          { wrapper },
-        );
-      });
+      render(
+        <AdvancedFilterClientInput
+          selectedClients={[{ code: '12345', description: '12345 ACME' }]}
+          myClients={undefined}
+          onClientChange={onClientChange}
+        />,
+        { wrapper },
+      );
 
       // Carbon ComboBox renders a clear button when a selection exists (inputValue is non-empty)
       // Clicking it triggers onChange({ selectedItem: null }) → onSelect(null) → data = []

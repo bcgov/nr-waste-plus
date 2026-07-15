@@ -49,14 +49,14 @@ describe('PageNotification', () => {
 
   describe('null render', () => {
     it('shouldReturnNull_whenEventNotificationIsUndefined', () => {
-      const { container } = render(<PageNotification eventTarget="scope" />);
-      expect(container.firstChild).toBeNull();
+      render(<PageNotification eventTarget="scope" />);
+      expect(screen.queryByRole('alert')).toBeNull();
     });
 
     it('shouldReturnNull_whenEventNotificationTitleIsEmptyString', () => {
       setupHook(makeEvent({ title: '' }));
-      const { container } = render(<PageNotification eventTarget="scope" />);
-      expect(container.firstChild).toBeNull();
+      render(<PageNotification eventTarget="scope" />);
+      expect(screen.queryByRole('alert')).toBeNull();
     });
   });
 
@@ -136,7 +136,7 @@ describe('PageNotification', () => {
 
   describe('close interaction', () => {
     it('shouldCallClearNotification_whenCloseButtonClicked', async () => {
-      const user = await userEvent.setup();
+      const user = userEvent.setup();
       setupHook(makeEvent());
       render(<PageNotification eventTarget="scope" />);
       await user.click(screen.getByRole('button'));

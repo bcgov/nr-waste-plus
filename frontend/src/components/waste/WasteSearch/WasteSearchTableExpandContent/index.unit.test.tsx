@@ -7,6 +7,7 @@ import WasteSearchTableExpandContent from './index';
 
 import type { ReportingUnitSearchExpandedDto } from '@/services/search.types';
 
+import { toKebabCase } from '@/components/Form/ReadonlyInput/utils';
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
 
@@ -41,14 +42,12 @@ const mockExpandedData: ReportingUnitSearchExpandedDto = {
   ],
 };
 
-const renderWithProps = async (rowId: string) => {
+const renderWithProps = (rowId: string) => {
   const qc = makeTestQueryClient();
-  await act(async () =>
-    render(
-      <QueryClientProvider client={qc}>
-        <WasteSearchTableExpandContent rowId={rowId} />
-      </QueryClientProvider>,
-    ),
+  render(
+    <QueryClientProvider client={qc}>
+      <WasteSearchTableExpandContent rowId={rowId} />
+    </QueryClientProvider>,
   );
 };
 
@@ -61,7 +60,7 @@ describe('WasteSearchTableExpandContent', () => {
   describe('data extraction from rowId', () => {
     it('extracts ruId and wasteAssessmentAreaId from rowId correctly', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalledWith(4069, 411);
@@ -70,7 +69,7 @@ describe('WasteSearchTableExpandContent', () => {
 
     it('handles different rowId formats', async () => {
       const rowId = 'RU-5000-Block-500-999999999';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalledWith(5000, 500);
@@ -79,7 +78,7 @@ describe('WasteSearchTableExpandContent', () => {
 
     it('does not call API when ruId is null', async () => {
       const rowId = 'RU-N/A-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       // Assert that no API call was triggered (ruId is null, so skip fetch)
       expect(APIs.search.getReportingUnitSearchExpand).not.toHaveBeenCalled();
@@ -87,7 +86,7 @@ describe('WasteSearchTableExpandContent', () => {
 
     it('does not call API when wasteAssessmentAreaId is null', async () => {
       const rowId = 'RU-4069-Block-N/A-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       // Assert that no API call was triggered (wasteAssessmentAreaId is null, so skip fetch)
       expect(APIs.search.getReportingUnitSearchExpand).not.toHaveBeenCalled();
@@ -97,7 +96,7 @@ describe('WasteSearchTableExpandContent', () => {
   describe('rendering expanded content', () => {
     it('renders all readonly input fields', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         screen.getByText('Licence number');
@@ -113,7 +112,7 @@ describe('WasteSearchTableExpandContent', () => {
 
     it('displays license number correctly', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         screen.getByText('LIC-12345');
@@ -122,7 +121,7 @@ describe('WasteSearchTableExpandContent', () => {
 
     it('displays cutting permit correctly', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         screen.getByText('CP-001');
@@ -131,7 +130,7 @@ describe('WasteSearchTableExpandContent', () => {
 
     it('displays timber mark correctly', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         screen.getAllByText('TM-001');
@@ -140,7 +139,7 @@ describe('WasteSearchTableExpandContent', () => {
 
     it('displays submitter correctly', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         screen.getByText('IDIR\\TESTUSER');
@@ -149,7 +148,7 @@ describe('WasteSearchTableExpandContent', () => {
 
     it('displays net area with number styling', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         screen.getByText('1500.5 ha');
@@ -158,7 +157,7 @@ describe('WasteSearchTableExpandContent', () => {
 
     it('displays total entries in reporting unit', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         screen.getByText('Blocks in the RU: 5');
@@ -167,7 +166,7 @@ describe('WasteSearchTableExpandContent', () => {
 
     it('displays comments', async () => {
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         screen.getByText('Test comments for this reporting unit');
@@ -186,16 +185,15 @@ describe('WasteSearchTableExpandContent', () => {
       const rowId = 'RU-4069-Block-411-224813681';
       const qc = makeTestQueryClient();
       let container: HTMLElement = document.createElement('div');
-      await act(async () => {
-        const result = render(
-          <QueryClientProvider client={qc}>
-            <WasteSearchTableExpandContent rowId={rowId} />
-          </QueryClientProvider>,
-        );
-        container = result.container;
-      });
+      const result = render(
+        <QueryClientProvider client={qc}>
+          <WasteSearchTableExpandContent rowId={rowId} />
+        </QueryClientProvider>,
+      );
+      container = result.container;
 
       // Should show skeletons initially (not actual data)
+      // eslint-disable-next-line testing-library/no-node-access
       const skeletons = container?.querySelectorAll('.cds--skeleton');
       expect(skeletons?.length).toBeGreaterThan(0);
 
@@ -212,7 +210,7 @@ describe('WasteSearchTableExpandContent', () => {
 
     it('hides loading skeleton after data is fetched', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         screen.getByText('LIC-12345');
@@ -232,7 +230,7 @@ describe('WasteSearchTableExpandContent', () => {
       (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNulls);
 
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
@@ -247,7 +245,7 @@ describe('WasteSearchTableExpandContent', () => {
       (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNulls);
 
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
@@ -262,7 +260,7 @@ describe('WasteSearchTableExpandContent', () => {
       (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNulls);
 
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
@@ -277,7 +275,7 @@ describe('WasteSearchTableExpandContent', () => {
       (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNulls);
 
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
@@ -294,7 +292,7 @@ describe('WasteSearchTableExpandContent', () => {
       (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithTrue);
 
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
@@ -309,7 +307,7 @@ describe('WasteSearchTableExpandContent', () => {
       (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithFalse);
 
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
@@ -320,10 +318,12 @@ describe('WasteSearchTableExpandContent', () => {
   describe('attachment handling', () => {
     it('renders link when wasteAssessmentAreaId is finite', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
-        const agreementsCommentsEl = document.getElementById(`${rowId}-attachments-comments`);
+        const agreementsCommentsEl = screen.getByTestId(
+          `card-item-${toKebabCase(`${rowId}-attachments-comments`)}`,
+        );
         expect(agreementsCommentsEl).not.toBeNull();
 
         // When wasteAssessmentAreaId is finite, the component should render the link
@@ -336,16 +336,16 @@ describe('WasteSearchTableExpandContent', () => {
       const rowId = 'RU-4069-Block-411B-224813681';
       const qc = makeTestQueryClient();
 
-      await act(async () =>
-        render(
-          <QueryClientProvider client={qc}>
-            <WasteSearchTableExpandContent rowId={rowId} />
-          </QueryClientProvider>,
-        ),
+      render(
+        <QueryClientProvider client={qc}>
+          <WasteSearchTableExpandContent rowId={rowId} />
+        </QueryClientProvider>,
       );
 
       await waitFor(() => {
-        const agreementsCommentsEl = document.getElementById(`${rowId}-attachments-comments`);
+        const agreementsCommentsEl = screen.getByTestId(
+          `card-item-${toKebabCase(`${rowId}-attachments-comments`)}`,
+        );
         expect(agreementsCommentsEl).not.toBeNull();
 
         // When wasteAssessmentAreaId is not a finite number (e.g. '411B'), the component should render EmptyValueTag
@@ -365,7 +365,7 @@ describe('WasteSearchTableExpandContent', () => {
       (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataNoAttachment);
 
       const rowId = 'RU-4069-Block-411B-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
@@ -374,7 +374,7 @@ describe('WasteSearchTableExpandContent', () => {
 
     it('constructs correct attachment URL with wasteAssessmentAreaId', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalledWith(4069, 411);
@@ -390,25 +390,35 @@ describe('WasteSearchTableExpandContent', () => {
           queries: { retry: false, gcTime: 0, staleTime: 0 },
         },
       });
-      await act(async () =>
-        render(
-          <QueryClientProvider client={qc}>
-            <WasteSearchTableExpandContent rowId={rowId} />
-          </QueryClientProvider>,
-        ),
+      render(
+        <QueryClientProvider client={qc}>
+          <WasteSearchTableExpandContent rowId={rowId} />
+        </QueryClientProvider>,
       );
 
       await waitFor(() => {
-        expect(document.getElementById(`${rowId}-license-number`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-cutting-permit`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-timber-mark`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-exempted`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-net-area`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-submitter`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-attachments-comments`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-comment`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-block-count`)).not.toBeNull();
-        expect(document.getElementById(`${rowId}-secondary-marks-count`)).not.toBeNull();
+        expect(
+          screen.getByTestId(`card-item-${toKebabCase(`${rowId}-license-number`)}`),
+        ).not.toBeNull();
+        expect(
+          screen.getByTestId(`card-item-${toKebabCase(`${rowId}-cutting-permit`)}`),
+        ).not.toBeNull();
+        expect(
+          screen.getByTestId(`card-item-${toKebabCase(`${rowId}-timber-mark`)}`),
+        ).not.toBeNull();
+        expect(screen.getByTestId(`card-item-${toKebabCase(`${rowId}-exempted`)}`)).not.toBeNull();
+        expect(screen.getByTestId(`card-item-${toKebabCase(`${rowId}-net-area`)}`)).not.toBeNull();
+        expect(screen.getByTestId(`card-item-${toKebabCase(`${rowId}-submitter`)}`)).not.toBeNull();
+        expect(
+          screen.getByTestId(`card-item-${toKebabCase(`${rowId}-attachments-comments`)}`),
+        ).not.toBeNull();
+        expect(screen.getByTestId(`card-item-${toKebabCase(`${rowId}-comment`)}`)).not.toBeNull();
+        expect(
+          screen.getByTestId(`card-item-${toKebabCase(`${rowId}-block-count`)}`),
+        ).not.toBeNull();
+        expect(
+          screen.getByTestId(`card-item-${toKebabCase(`${rowId}-secondary-marks-count`)}`),
+        ).not.toBeNull();
       });
     });
   });
@@ -422,12 +432,10 @@ describe('WasteSearchTableExpandContent', () => {
         },
       });
 
-      await act(async () =>
-        render(
-          <QueryClientProvider client={qc}>
-            <WasteSearchTableExpandContent rowId={rowId} />
-          </QueryClientProvider>,
-        ),
+      render(
+        <QueryClientProvider client={qc}>
+          <WasteSearchTableExpandContent rowId={rowId} />
+        </QueryClientProvider>,
       );
 
       await waitFor(() => {
@@ -440,7 +448,7 @@ describe('WasteSearchTableExpandContent', () => {
 
     it('includes all parameters in query key', async () => {
       const rowId = 'RU-4069-Block-411-224813681';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         const callArgs = (APIs.search.getReportingUnitSearchExpand as Mock).mock.calls[0];
@@ -453,7 +461,7 @@ describe('WasteSearchTableExpandContent', () => {
   describe('different rowId formats', () => {
     it('handles rowId with different RU numbers', async () => {
       const rowId = 'RU-100-Block-1A-123456789';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       // Block ID extraction only gets numeric part (position 3)
       await waitFor(() => {
@@ -463,7 +471,7 @@ describe('WasteSearchTableExpandContent', () => {
 
     it('handles rowId with larger RU numbers', async () => {
       const rowId = 'RU-9999-Block-999-987654321';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalledWith(9999, 999);
@@ -472,7 +480,7 @@ describe('WasteSearchTableExpandContent', () => {
 
     it('handles rowId with zero-padded values', async () => {
       const rowId = 'RU-0050-Block-050-111111111';
-      await renderWithProps(rowId);
+      renderWithProps(rowId);
 
       await waitFor(() => {
         expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalledWith(50, 50);

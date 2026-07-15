@@ -111,6 +111,8 @@ const ReportingUnitCreate: FC = () => {
       data-testid="create-ru-column-content"
     >
       <form
+        aria-label="Create reporting unit"
+        data-testid="create-ru-form"
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -146,6 +148,7 @@ const ReportingUnitCreate: FC = () => {
               }
               invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
               invalidText={field.state.meta.errors[0]}
+              data-testid="client-input"
             />
           )}
         </form.Field>
@@ -189,6 +192,7 @@ const ReportingUnitCreate: FC = () => {
                   selectedItem={selectedDistrict}
                   invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
                   invalidText={field.state.meta.errors[0]}
+                  data-testid="district-combobox"
                 />
 
                 {shouldShowGradeSelection && (
@@ -211,7 +215,6 @@ const ReportingUnitCreate: FC = () => {
                   >
                     {(gradeField) => (
                       <RadioButtonGroup
-                        defaultSelected=""
                         invalid={
                           gradeField.state.meta.isTouched && !!gradeField.state.meta.errors.length
                         }
@@ -228,6 +231,7 @@ const ReportingUnitCreate: FC = () => {
                         legendText="Select grades you will use"
                         name="create-ru-grade"
                         id="create-ru-grade"
+                        data-testid="grade-radio-group"
                       >
                         <RadioButton
                           id="create-ru-grade-coastal"
@@ -277,6 +281,7 @@ const ReportingUnitCreate: FC = () => {
               selectedItem={findSelectedItem(samplingOptions, field.state.value)}
               invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
               invalidText={field.state.meta.errors[0]}
+              data-testid="sampling-combobox"
             />
           )}
         </form.Field>
@@ -288,6 +293,7 @@ const ReportingUnitCreate: FC = () => {
               renderIcon={Add}
               disabled={!canSubmit || createMutation.isPending}
               className="create-ru-submit-button"
+              data-testid="create-ru-submit-button"
             >
               Create
               {(isSubmitting || createMutation.isPending) && (

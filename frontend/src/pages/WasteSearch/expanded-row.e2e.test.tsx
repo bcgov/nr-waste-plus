@@ -5,6 +5,15 @@ import { setupWasteSearchMocks } from './e2e.setup';
 import { test } from '@/config/tests/coverage.setup';
 import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
+/**
+ * Builds a `data-testid` selector for an expanded-row value cell (the `<dd>`),
+ * anchored so it never collides with the wrapping `<dl>` (which omits `content-`).
+ *
+ * @param field The field suffix (e.g. `license-number`).
+ * @returns A regex matching the value cell testid for the single expanded row.
+ */
+const valueCell = (field: string): RegExp => new RegExp(`^card-item-content-.*${field}$`);
+
 test.describe('Waste Search - Expanded Row Content', () => {
   test.beforeEach(async ({ page }, testInfo) => {
     await setupWasteSearchMocks(page, testInfo.project.metadata.userType, {
@@ -33,19 +42,15 @@ test.describe('Waste Search - Expanded Row Content', () => {
     await expandButton.click();
 
     // Verify all fields are displayed
-    await expect(page.getByTestId('card-item-content-licence-number')).toHaveText('A97537'); // licenceNo
-    await expect(page.getByTestId('card-item-content-cutting-permit')).toHaveText('R02'); // cuttingPermit
+    await expect(page.getByTestId(valueCell('license-number'))).toHaveText('A97537'); // licenceNo
+    await expect(page.getByTestId(valueCell('cutting-permit'))).toHaveText('R02'); // cutingPermit
+    await expect(page.getByTestId(valueCell('timber-mark'))).toContainText('HK4C02'); // timberMark
+    await expect(page.getByTestId(valueCell('exempted'))).toHaveText('No'); // exempted (false)
+    await expect(page.getByTestId(valueCell('net-area'))).toHaveText('7.39 ha'); // netArea
+    await expect(page.getByTestId(valueCell('submitter'))).toHaveText(String.raw`BCEID\ICEKING`); // submitter
     await expect(
-      page.getByTestId('card-item-timber-mark').first().getByRole('definition'),
-    ).toContainText('HK4C02'); // timberMark
-    await expect(page.getByTestId('card-item-content-exempted-(yes/no)')).toHaveText('No'); // exempted (false)
-    await expect(page.getByTestId('card-item-content-net-area')).toHaveText('7.39 ha'); // netArea
-    await expect(page.getByTestId('card-item-content-submitter')).toHaveText(
-      String.raw`BCEID\ICEKING`,
-    ); // submitter
-    await expect(page.getByTestId('card-item-comment:')).toHaveText(
-      'Comment:This is a sample comment for the reporting unit.',
-    ); // comments
+      page.getByText('Comment:This is a sample comment for the reporting unit.'),
+    ).toBeVisible(); // comments
     await expect(page.getByRole('link', { name: /Link/i })).toBeVisible(); // attachments and comments link
     await expect(page.getByText('Blocks in the RU: 15')).toBeVisible(); // totalBlocks
     await expect(page.getByText('Secondary marks in the block: 0')).toBeVisible(); // totalChildren (defaults to 0)
@@ -80,17 +85,13 @@ test.describe('Waste Search - Expanded Row Content', () => {
     await secondExpandButton.click();
 
     // Verify all fields are displayed
-    await expect(page.getByTestId('card-item-content-licence-number')).toHaveText('W1940'); // licenceNo
-    await expect(page.getByTestId('card-item-content-cutting-permit')).toHaveText('EA'); // cuttingPermit
-    await expect(
-      page.getByTestId('card-item-timber-mark').first().getByRole('definition'),
-    ).toContainText('WBMJEC'); // timberMark
-    await expect(page.getByTestId('card-item-content-exempted-(yes/no)')).toHaveText('Yes'); // exempted (false)
-    await expect(page.getByTestId('card-item-content-net-area')).toHaveText('3.07 ha'); // netArea
-    await expect(page.getByTestId('card-item-content-submitter')).toHaveText(
-      String.raw`BCEID\\BMO`,
-    ); // submitter
-    await expect(page.getByTestId('card-item-comment:')).toHaveText('Comment:-'); // comments
+    await expect(page.getByTestId(valueCell('license-number'))).toHaveText('W1940'); // licenceNo
+    await expect(page.getByTestId(valueCell('cutting-permit'))).toHaveText('EA'); // cutingPermit
+    await expect(page.getByTestId(valueCell('timber-mark'))).toContainText('WBMJEC'); // timberMark
+    await expect(page.getByTestId(valueCell('exempted'))).toHaveText('Yes'); // exempted (true)
+    await expect(page.getByTestId(valueCell('net-area'))).toHaveText('3.07 ha'); // netArea
+    await expect(page.getByTestId(valueCell('submitter'))).toHaveText(String.raw`BCEID\\BMO`); // submitter
+    await expect(page.getByText('Comment:-')).toBeVisible(); // comments (empty)
     await expect(page.getByText('Blocks in the RU: 2')).toBeVisible(); // totalBlocks
     await expect(page.getByText('Secondary marks in the block: 0')).toBeVisible(); // totalChildren (defaults to 0)
 
@@ -176,12 +177,13 @@ test.describe('Waste Search - Expanded Row Content', () => {
   });
 
   test('check primary and secondary', async ({ page }) => {
-    // Mock the expand API endpoint
+    // Expand a primary-mark row (RU-34906-Block-102, wasteAssessmentAreaId 102) …
     await mockApiResponsesWithStub(
       page,
-      'search/reporting-units/ex/10501/2',
-      'search/reporting-units-expanded-primary.json',
+      'search/reporting-units/ex/34906/102',
+      'search/reporting-units-expanded-full.json',
     );
+    // … and a secondary-mark row (RU-36834-Block-26, wasteAssessmentAreaId 26).
     await mockApiResponsesWithStub(
       page,
       'search/reporting-units/ex/36834/26',
@@ -195,22 +197,22 @@ test.describe('Waste Search - Expanded Row Content', () => {
     const searchButton = page.getByTestId('search-button-most');
     await searchButton.click();
 
-    // Click the expand button for the first row
-    const secondary = page.locator(
-      'tr:nth-child(17) > .cds--table-expand > .cds--table-expand__button',
-    );
-    await secondary.click();
+    // Expand rows by their visible RU identifier (robust to column/row ordering).
+    const expandRowByText = async (text: string) => {
+      const row = page.getByRole('row').filter({ hasText: text }).first();
+      await row.getByRole('button', { name: 'Expand row for more details' }).click();
+    };
 
-    await expect(
-      page.getByTestId('card-item-timber-mark').first().getByRole('definition'),
-    ).toContainText('JY1009'); // timberMark
+    await expandRowByText('34906'); // first row (RU-34906-Block-102)
+    await expandRowByText('36834'); // secondary-entry row (RU-36834-Block-26)
 
-    const primary = page.locator(
-      'tr:nth-child(19) > .cds--table-expand > .cds--table-expand__button',
-    );
-    await primary.click();
-
+    // Both rows should be expanded.
     const expandedRows = page.locator('tr.cds--parent-row.cds--expandable-row');
     await expect(expandedRows).toHaveCount(2);
+
+    // Primary row renders its timber mark (HK4C02 from expanded-full.json).
+    await expect(page.getByTestId(valueCell('timber-mark')).first()).toContainText('HK4C02');
+    // Secondary row renders its timber mark (JY1009 from expanded-secondary.json).
+    await expect(page.getByTestId(valueCell('timber-mark')).nth(1)).toContainText('JY1009');
   });
 });

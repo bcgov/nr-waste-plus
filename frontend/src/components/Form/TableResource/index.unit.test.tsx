@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CheckmarkFilled, CloseFilled, Edit } from '@carbon/icons-react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
@@ -49,15 +49,13 @@ describe('TableResource', () => {
 
   const renderWithProps = async (props: any) => {
     const qc = makeTestQueryClient();
-    await act(async () =>
-      render(
-        <QueryClientProvider client={qc}>
-          <PreferenceProvider>
-            <TableResource id="test-table" {...props} />
-          </PreferenceProvider>
-        </QueryClientProvider>,
-        { reactStrictMode: true },
-      ),
+    render(
+      <QueryClientProvider client={qc}>
+        <PreferenceProvider>
+          <TableResource id="test-table" {...props} />
+        </PreferenceProvider>
+      </QueryClientProvider>,
+      { reactStrictMode: true },
     );
   };
 

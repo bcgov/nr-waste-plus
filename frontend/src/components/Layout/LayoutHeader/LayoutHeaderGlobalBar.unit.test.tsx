@@ -31,7 +31,7 @@ describe('LayoutHeaderGlobalBar', () => {
   });
 
   it('calls toggleHeaderPanel when profile settings is clicked', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     await renderWithProviders();
     await user.click(screen.getByLabelText('Profile settings'));
     expect(mockToggleHeaderPanel).toHaveBeenCalled();

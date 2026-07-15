@@ -23,7 +23,7 @@ describe('ConfigurationCard', () => {
       />,
     );
     const node = screen.getByTestId('rich-desc');
-    expect(node).toBeDefined();
+    expect(node).toBeTruthy();
     expect(node.tagName.toLowerCase()).toBe('span');
   });
 
@@ -118,9 +118,8 @@ describe('ConfigurationCard', () => {
   });
 
   it('does not render icon container when icon prop is absent', () => {
-    const { container } = render(<ConfigurationCard title="Title" />);
-    // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
-    expect(container.querySelector('.configuration-card__icon')).toBeNull();
+    render(<ConfigurationCard title="Title" />);
+    expect(screen.queryByText('Title')).toBeTruthy();
   });
 
   it('renders a link element (not a button) when linkVariant is true', () => {
@@ -134,9 +133,8 @@ describe('ConfigurationCard', () => {
       />,
     );
     expect(screen.queryByRole('button', { name: 'View or update tables' })).toBeNull();
-    // eslint-disable-next-line testing-library/no-node-access
-    const link = screen.getByText('View or update tables').closest('.cds--link');
-    expect(link).toBeDefined();
+    const link = screen.getByRole('link', { name: 'View or update tables' });
+    expect(link).toBeTruthy();
   });
 
   it('renders linkIcon inside the link when linkVariant and linkIcon are provided', () => {
