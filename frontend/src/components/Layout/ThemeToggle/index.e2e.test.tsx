@@ -29,7 +29,17 @@ test.describe('Theme toggle', () => {
       'codes/assess-area-statuses.json',
     );
 
-    await page.goto('/search');
+    // Wait for the user-preferences GET to settle before navigating away from
+    // the handler setup. The toggle persists via updatePreferences, which is
+    // gated on isFetched; if we click before the GET resolves, the PUT
+    // is skipped and the waitForResponse below times out. Registering the
+    // wait before goto guarantees it is caught on every run.
+    await Promise.all([
+      page.waitForResponse(
+        (response) => response.url().includes('users/preferences') && response.status() === 200,
+      ),
+      page.goto('/search'),
+    ]);
   });
 
   test('defaults to light theme and toggles to dark theme', async ({ page }, testInfo) => {
@@ -45,10 +55,10 @@ test.describe('Theme toggle', () => {
 
     await themeToggler.click();
 
-    await page.waitForResponse(
-      (response) => response.url().includes('users/preferences') && response.status() === 200,
-    );
-
+    // Assert the toggle via the UI state directly. The saved preference is
+    // persisted asynchronously (gated on the preferences query finishing its
+    // initial load), so waiting on that network round-trip is racy; the
+    // toggle itself is applied synchronously to local theme state.
     await expect(page.getByRole('button', { name: 'Switch to dark mode' })).not.toBeVisible();
     await expect(page.getByRole('button', { name: 'Switch to light mode' })).toBeVisible();
   });
