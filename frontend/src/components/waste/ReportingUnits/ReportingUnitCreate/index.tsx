@@ -215,7 +215,6 @@ const ReportingUnitCreate: FC = () => {
                   >
                     {(gradeField) => (
                       <RadioButtonGroup
-                        defaultSelected=""
                         invalid={
                           gradeField.state.meta.isTouched && !!gradeField.state.meta.errors.length
                         }

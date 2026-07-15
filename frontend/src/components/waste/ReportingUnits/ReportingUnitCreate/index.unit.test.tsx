@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider, type UseMutationResult } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
@@ -263,11 +263,15 @@ async function renderComponent(_routerOptions = {}) {
   const router = createTestRouter(() => <ReportingUnitCreate />);
   await router.load();
 
-  render(
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>,
-  );
+  // Wrap render in act() so the router's (Transitioner) mount-time async
+  // state updates are flushed inside the act environment.
+  await act(async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>,
+    );
+  });
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────

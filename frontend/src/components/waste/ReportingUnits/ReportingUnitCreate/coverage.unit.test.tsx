@@ -140,11 +140,15 @@ async function renderComponent() {
   const router = createTestRouter(() => <ReportingUnitCreate />);
   await router.load();
 
-  render(
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>,
-  );
+  // Wrap render in act() so the router's (Transitioner) mount-time async
+  // state updates are flushed inside the act environment.
+  await act(async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>,
+    );
+  });
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
