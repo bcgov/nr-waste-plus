@@ -309,8 +309,11 @@ export default defineConfig({
   includeShadowDom: false,
   viewportHeight: 1080,
   viewportWidth: 1920,
-  retries: {    
-    runMode: 2,
+  retries: {
+    // Interim reduction (Q4, #1083): dropped 2 -> 1 now that the Q3 flaky signal
+    // is visible in the CI summary. Move to 0 only after 2-4 weeks of Q3 data show
+    // a flaky rate below 1%.
+    runMode: 1,
     openMode: 0,
   },
 });
