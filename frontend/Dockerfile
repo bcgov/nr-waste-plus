@@ -10,7 +10,6 @@ COPY . .
 RUN npm run build && \
     rm -rf node_modules
 
-
 # Caddy
 FROM caddy:2.11.4-alpine
 ENV LOG_LEVEL=info
