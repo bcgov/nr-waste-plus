@@ -2,11 +2,15 @@ FROM node:24.18-bullseye-slim AS build
 
 # Build static files
 WORKDIR /app
+COPY package*.json ./
+
+RUN npm ci --ignore-scripts
+
 COPY . .
 
-RUN npm ci --ignore-scripts && \
-    npm run build && \
+RUN npm run build && \
     rm -rf node_modules
+
 
 # Caddy
 FROM caddy:2.11.4-alpine
