@@ -65,8 +65,7 @@ function getDefaultPendingComponent(): (() => React.ReactElement) | undefined {
 }
 
 function getDefaultErrorComponent():
-  | (({ error }: { error: Error }) => React.ReactElement)
-  | undefined {
+  (({ error }: { error: Error }) => React.ReactElement) | undefined {
   return anyRouter.options?.defaultErrorComponent;
 }
 

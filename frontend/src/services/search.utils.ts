@@ -10,7 +10,9 @@ type ReportingUnitSearchParametersConverter<
 > = (value: ReportingUnitSearchParametersViewDto[K]) => ReportingUnitSearchParametersDto[K];
 
 type ReportingUnitSearchParametersConverterMap = {
-  [field in keyof ReportingUnitSearchParametersViewSpecific]-?: ReportingUnitSearchParametersConverter<field>;
+  [
+    field in keyof ReportingUnitSearchParametersViewSpecific
+  ]-?: ReportingUnitSearchParametersConverter<field>;
 };
 
 /**
@@ -108,9 +110,9 @@ export const reportingUnitSearchParametersView2Plain = (
       While the type casting below might not be necessary right now, it will be, as soon as
       ReportingUnitSearchParametersViewSpecific has more than 1 property.
       */
-      const converter = reportingUnitSearchParametersConverterMap[ //NOSONAR
-        key
-      ] as ReportingUnitSearchParametersConverter<typeof key>;
+      const converter =
+        reportingUnitSearchParametersConverterMap //NOSONAR
+        [key] as ReportingUnitSearchParametersConverter<typeof key>;
       setDataValueWithConverter(key, viewData[key], converter);
     } else {
       setDataValue(key, viewData[key]);
