@@ -1,13 +1,12 @@
 FROM node:24.18-bullseye-slim AS build
 
-# Build static files
+# Cache npm dependencies by copying package files first
 WORKDIR /app
 COPY package*.json ./
-
 RUN npm ci --ignore-scripts
 
+# Build static files
 COPY . .
-
 RUN npm run build && \
     rm -rf node_modules
 
