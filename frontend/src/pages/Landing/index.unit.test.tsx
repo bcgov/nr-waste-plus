@@ -59,6 +59,7 @@ describe('LandingPage', () => {
     await renderWithProps();
     const wrapper = screen
       .getByTestId('landing-title')
+      // eslint-disable-next-line testing-library/no-node-access
       .closest('.landing-content-wrapper') as HTMLElement | null;
     expect(wrapper).not.toBeNull();
     expect(wrapper?.style.gap).toBe('3rem');
@@ -101,14 +102,14 @@ describe('LandingPage', () => {
   });
 
   it('calls login with correct provider when IDIR button is clicked', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     await renderWithProps();
     await user.click(screen.getByTestId('landing-button__idir'));
     expect(loginMock).toHaveBeenCalledWith('IDIR');
   });
 
   it('calls login with correct provider when BCeID button is clicked', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     await renderWithProps();
     await user.click(screen.getByTestId('landing-button__bceid'));
     expect(loginMock).toHaveBeenCalledWith('BCEIDBUSINESS');

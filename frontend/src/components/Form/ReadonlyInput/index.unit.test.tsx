@@ -41,7 +41,7 @@ describe('ReadonlyInput', () => {
         Content
       </ReadonlyInput>,
     );
-    const dl = document.getElementById('custom-id');
+    const dl = screen.getByTestId('card-item-custom-id');
     expect(dl).not.toBeNull();
   });
 
@@ -123,14 +123,14 @@ describe('ReadonlyInput', () => {
   });
 
   it('wraps string content in span when tooltipText is provided', () => {
-    const { container } = render(
+    render(
       <ReadonlyInput label="Field" tooltipText="Info">
         String Content
       </ReadonlyInput>,
     );
-    const span = container.querySelector('span');
+    const span = screen.getByText('String Content');
     expect(span).toBeDefined();
-    expect(span?.textContent).toContain('String Content');
+    expect(span.tagName).toBe('SPAN');
   });
 
   it('renders React elements inside tooltip without span wrapper', () => {
@@ -154,8 +154,8 @@ describe('ReadonlyInput', () => {
         <div>Content</div>
       </ReadonlyInput>,
     );
-    const dd = screen.getByRole('definition');
-    expect(dd.getAttribute('title')).toBeNull();
+    const dd2 = screen.getByRole('definition');
+    expect(dd2.getAttribute('title')).toBeNull();
   });
 
   it('does not set title attribute when showSkeleton is true', () => {
@@ -204,9 +204,10 @@ describe('ReadonlyInput', () => {
         12345
       </ReadonlyInput>,
     );
-    expect(document.getElementById('field-id')).not.toBeNull();
+    const dl = screen.getByTestId('card-item-field-id');
+    expect(dl?.getAttribute('id')).toBe('field-id');
     screen.getByRole('definition');
-    screen.getByTestId('card-item-complete-field');
+    screen.getByTestId('card-item-field-id');
     screen.getByText('12345');
   });
 
@@ -272,7 +273,8 @@ describe('ReadonlyInput', () => {
           12345
         </ReadonlyInput>,
       );
-      expect(document.getElementById('hidden-field-id')).not.toBeNull();
+      const dl2 = screen.getByTestId('card-item-hidden-field-id');
+      expect(dl2?.getAttribute('id')).toBe('hidden-field-id');
       screen.getByRole('definition');
       screen.getByText('12345');
       expect(screen.queryByText('Hidden Field')).toBeNull();

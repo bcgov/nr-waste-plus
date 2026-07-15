@@ -92,7 +92,7 @@ describe('LayoutSideNav', () => {
 
   it('shouldMarkCorrectLinkAsActive_whenPathMatches', async () => {
     await renderWithProviders('/settings/profile');
-    const profileLink = screen.getByText('Profile').closest('a');
+    const profileLink = screen.getByRole('link', { name: 'Profile' });
     expect(profileLink?.className).toContain('cds--side-nav__link--current');
   });
 

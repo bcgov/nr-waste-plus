@@ -143,7 +143,11 @@ const RenderMultiSelect = <ItemType extends HasCodeOrValue>({
   }, []);
 
   return (
-    <div ref={wrapperRef} className="active-multi-select-wrapper">
+    <div
+      ref={wrapperRef}
+      className="active-multi-select-wrapper"
+      data-testid="as-client-multi-select"
+    >
       <FilterableMultiSelect
         {...props}
         selectedItems={selectedItems}

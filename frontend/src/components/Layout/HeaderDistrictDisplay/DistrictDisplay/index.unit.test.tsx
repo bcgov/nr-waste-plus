@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import DistrictDisplay from '.';
@@ -58,16 +58,14 @@ vi.mock('@/context/preference/usePreference', () => ({
 
 const renderWithProviders = async (active: boolean) => {
   const qc = makeTestQueryClient();
-  await act(async () =>
-    render(
-      <AuthProvider>
-        <QueryClientProvider client={qc}>
-          <PreferenceProvider>
-            <DistrictDisplay isActive={active} />
-          </PreferenceProvider>
-        </QueryClientProvider>
-      </AuthProvider>,
-    ),
+  render(
+    <AuthProvider>
+      <QueryClientProvider client={qc}>
+        <PreferenceProvider>
+          <DistrictDisplay isActive={active} />
+        </PreferenceProvider>
+      </QueryClientProvider>
+    </AuthProvider>,
   );
 };
 
@@ -100,8 +98,10 @@ describe('DistrictDisplay', () => {
     mockBreakpoint = 'sm';
 
     await renderWithProviders(false);
-    const name = screen.queryByTestId('client-name');
-    expect(name).toBeNull();
+    await waitFor(() => {
+      const name = screen.queryByTestId('client-name');
+      expect(name).toBeNull();
+    });
   });
 
   it('small size with client should not display anything', async () => {
@@ -109,8 +109,10 @@ describe('DistrictDisplay', () => {
     mockedPreference = { selectedDistrict: 'DEF' };
 
     await renderWithProviders(false);
-    const name = screen.queryByTestId('client-name');
-    expect(name).toBeNull();
+    await waitFor(() => {
+      const name = screen.queryByTestId('client-name');
+      expect(name).toBeNull();
+    });
   });
 
   it('no client selected should display that', async () => {

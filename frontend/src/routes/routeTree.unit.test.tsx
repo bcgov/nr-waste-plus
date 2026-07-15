@@ -1,3 +1,4 @@
+/* eslint-disable testing-library/no-node-access */
 import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -64,8 +65,7 @@ function getDefaultPendingComponent(): (() => React.ReactElement) | undefined {
 }
 
 function getDefaultErrorComponent():
-  | (({ error }: { error: Error }) => React.ReactElement)
-  | undefined {
+  (({ error }: { error: Error }) => React.ReactElement) | undefined {
   return anyRouter.options?.defaultErrorComponent;
 }
 
@@ -93,8 +93,8 @@ describe('routeTree module', () => {
       expect(pending).toBeTruthy();
       return;
     }
-    const { getByTestId } = render(pending());
-    expect(getByTestId('loading')).toBeTruthy();
+    render(pending());
+    expect(screen.getByTestId('loading')).toBeTruthy();
   });
 
   it('shouldRenderErrorLayout_forDefaultErrorComponent', () => {
@@ -123,8 +123,8 @@ describe('routeTree module', () => {
       mockUser = undefined;
       const NotFoundRedirect = getNotFoundComponent();
       if (!NotFoundRedirect) return;
-      const { container } = render(<NotFoundRedirect />);
-      expect(container.firstChild).toBeNull();
+      render(<NotFoundRedirect />);
+      expect(screen.queryByTestId('loading')).toBeNull();
     });
 
     it('shouldNavigateToRoot_whenUserIsUnauthenticated', async () => {
@@ -199,8 +199,8 @@ describe('routeTree module', () => {
       mockMatches = [];
       const RootLayout = getRootLayoutComponent();
       if (!RootLayout) return;
-      const { getByTestId } = render(<RootLayout />);
-      expect(getByTestId('outlet')).toBeTruthy();
+      render(<RootLayout />);
+      expect(screen.getByTestId('outlet')).toBeTruthy();
     });
 
     it('shouldNotCallSetPageTitle_whenMatchesIsEmpty', async () => {

@@ -1,14 +1,14 @@
 import { QueryClient, QueryClientProvider, type UseMutationResult } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { ChangeEvent, ReactElement, ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ReportingUnitCreate from './index';
 
 import type { FamLoginUser } from '@/context/auth/types';
 import type { CodeDescriptionDto, ReportingUnitCreateDto } from '@/services/types';
+import type { ChangeEvent, ReactElement, ReactNode } from 'react';
 
 import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
 import {
@@ -18,15 +18,18 @@ import {
 import { createTestRouter } from '@/config/tests/routerTestHelper';
 import { useAuth } from '@/context/auth/useAuth';
 
-vi.mock('@/context/auth/useAuth', () => ({
+vi.mock('@/context/auth/useAuth', async () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock('@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions', () => ({
-  useWasteSearchFilterOptions: vi.fn(),
-}));
+vi.mock(
+  '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions',
+  async () => ({
+    useWasteSearchFilterOptions: vi.fn(),
+  }),
+);
 
-vi.mock('@/config/react-query/hooks', () => ({
+vi.mock('@/config/react-query/hooks', async () => ({
   useReportingUnitCreateMutation: vi.fn(),
   useMyForestClientsQuery: vi.fn(),
 }));
@@ -85,7 +88,11 @@ vi.mock('@carbon/react', async () => {
 
   type MockRadioButtonGroupProps = {
     children?: ReactNode;
-    onChange?: (selection?: string | number, name?: string, event?: ChangeEvent<HTMLInputElement>) => void;
+    onChange?: (
+      selection?: string | number,
+      name?: string,
+      event?: ChangeEvent<HTMLInputElement>,
+    ) => void;
     onBlur?: () => void;
     legendText?: string;
     id?: string;
@@ -101,13 +108,28 @@ vi.mock('@carbon/react', async () => {
   };
 
   return {
-    Button: ({ children, onClick, disabled, renderIcon: _renderIcon, ...props }: MockButtonProps) => (
+    Button: ({
+      children,
+      onClick,
+      disabled,
+      renderIcon: _renderIcon,
+      ...props
+    }: MockButtonProps) => (
       <button type="button" onClick={onClick} disabled={disabled} {...props}>
         {children}
       </button>
     ),
-    Column: ({ children, ...props }: { children?: ReactNode; [key: string]: unknown }) => <div {...props}>{children}</div>,
-    ComboBox: ({ id, titleText, items = [], selectedItem, onChange, onBlur }: MockComboBoxProps) => (
+    Column: ({ children, ...props }: { children?: ReactNode; [key: string]: unknown }) => (
+      <div {...props}>{children}</div>
+    ),
+    ComboBox: ({
+      id,
+      titleText,
+      items = [],
+      selectedItem,
+      onChange,
+      onBlur,
+    }: MockComboBoxProps) => (
       <div>
         <label htmlFor={id}>{titleText}</label>
         <select
@@ -129,7 +151,14 @@ vi.mock('@carbon/react', async () => {
         </select>
       </div>
     ),
-    RadioButtonGroup: ({ children, onChange, onBlur, legendText, id, value }: MockRadioButtonGroupProps) => (
+    RadioButtonGroup: ({
+      children,
+      onChange,
+      onBlur,
+      legendText,
+      id,
+      value,
+    }: MockRadioButtonGroupProps) => (
       <fieldset id={id} onBlur={onBlur}>
         <legend>{legendText}</legend>
         {Children.map(children, (child) => {
@@ -152,13 +181,7 @@ vi.mock('@carbon/react', async () => {
     ),
     RadioButton: ({ id, labelText, value, checked, onChange }: MockRadioButtonProps) => (
       <label htmlFor={id}>
-        <input
-          id={id}
-          type="radio"
-          value={value ?? ''}
-          checked={checked}
-          onChange={onChange}
-        />
+        <input id={id} type="radio" value={value ?? ''} checked={checked} onChange={onChange} />
         <span>{labelText}</span>
       </label>
     ),
@@ -188,7 +211,9 @@ const mockAuthUser: FamLoginUser = {
   privileges: {},
 };
 
-function createMockMutation(overrides?: Partial<UseMutationResult<number, Error, ReportingUnitCreateDto>>) {
+function createMockMutation(
+  overrides?: Partial<UseMutationResult<number, Error, ReportingUnitCreateDto>>,
+) {
   return {
     mutateAsync: vi.fn().mockResolvedValue(12345),
     isPending: false,
@@ -219,14 +244,13 @@ async function renderComponent() {
   });
 
   const router = createTestRouter(() => <ReportingUnitCreate />);
+  await router.load();
 
   render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
     </QueryClientProvider>,
   );
-
-  await act(async () => {});
 }
 
 describe('ReportingUnitCreate branch coverage', () => {
@@ -310,6 +334,7 @@ describe('ReportingUnitCreate branch coverage', () => {
       expect(submitButton.hasAttribute('disabled')).toBe(false);
     });
 
+    // eslint-disable-next-line testing-library/no-node-access
     const form = screen.getByRole('button', { name: /Create/i }).closest('form');
     if (!form) {
       throw new Error('Form element not found');

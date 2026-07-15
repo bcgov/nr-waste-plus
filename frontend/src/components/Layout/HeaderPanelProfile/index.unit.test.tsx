@@ -72,7 +72,7 @@ describe('HeaderPanelProfile', () => {
   });
 
   it('calls logout when Log out is clicked', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     await renderWithProviders();
     await user.click(screen.getByText('Log out'));
     expect(mockLogout).toHaveBeenCalled();

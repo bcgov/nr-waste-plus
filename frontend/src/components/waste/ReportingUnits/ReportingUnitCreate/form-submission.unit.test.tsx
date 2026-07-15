@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider, type UseMutationResult } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
-import { render, act } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import ReportingUnitCreate from './index';
@@ -18,15 +18,18 @@ import { useAuth } from '@/context/auth/useAuth';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
-vi.mock('@/context/auth/useAuth', () => ({
+vi.mock('@/context/auth/useAuth', async () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock('@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions', () => ({
-  useWasteSearchFilterOptions: vi.fn(),
-}));
+vi.mock(
+  '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions',
+  async () => ({
+    useWasteSearchFilterOptions: vi.fn(),
+  }),
+);
 
-vi.mock('@/config/react-query/hooks', () => ({
+vi.mock('@/config/react-query/hooks', async () => ({
   useReportingUnitCreateMutation: vi.fn(),
   useMyForestClientsQuery: vi.fn(),
 }));
@@ -126,14 +129,19 @@ async function renderComponent(_routerOptions = {}) {
     },
   });
   const router = createTestRouter(() => <ReportingUnitCreate />);
+  await router.load();
 
-  render(
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>,
-  );
-
-  await act(async () => {});
+  // Wrap render in act() so the router's (Transitioner) mount-time async
+  // state updates are flushed inside the act environment, avoiding
+  // "An update to Transitioner inside a test was not wrapped in act(...)" warnings.
+  // eslint-disable-next-line testing-library/no-unnecessary-act
+  await act(async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>,
+    );
+  });
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -187,21 +195,22 @@ describe('ReportingUnitCreate - Form Submission', () => {
       );
 
       await renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
+      expect(form).toBeTruthy();
     });
 
     it('form and fields are ready for submission workflow', async () => {
       await renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
+      expect(form).toBeTruthy();
     });
 
     it('component renders district and sampling fields for submission', async () => {
       await renderComponent();
-      const districtField = document.querySelector('#create-ru-district');
-      const samplingField = document.querySelector('#as-sampling-multi-select');
-      expect(districtField && samplingField).toBeDefined();
+      const districtField = screen.getByTestId('district-combobox');
+      const samplingField = screen.getByTestId('sampling-combobox');
+      expect(districtField).toBeTruthy();
+      expect(samplingField).toBeTruthy();
     });
 
     it('calls mutation with correct payload for non-DKM district', async () => {
@@ -211,8 +220,8 @@ describe('ReportingUnitCreate - Form Submission', () => {
       );
 
       await renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
+      expect(form).toBeTruthy();
     });
 
     it('calls mutation with gradeCode when DKM district is selected', async () => {
@@ -222,16 +231,16 @@ describe('ReportingUnitCreate - Form Submission', () => {
       );
 
       await renderComponent();
-      const districtField = document.querySelector('#create-ru-district');
-      expect(districtField).toBeDefined();
+      const districtField = screen.getByTestId('district-combobox');
+      expect(districtField).toBeTruthy();
     });
   });
 
   describe('button behavior', () => {
     it('button exists in the component', async () => {
       await renderComponent();
-      const button = document.querySelector('.create-ru-submit-button');
-      expect(button).toBeDefined();
+      const button = screen.getByTestId('create-ru-submit-button');
+      expect(button).toBeTruthy();
     });
 
     it('shows "Submitting..." text during submission', async () => {
@@ -241,19 +250,19 @@ describe('ReportingUnitCreate - Form Submission', () => {
 
       await renderComponent();
 
-      expect(document.querySelector('.create-ru-submit-button')).toBeDefined();
+      expect(screen.getByTestId('create-ru-submit-button')).toBeTruthy();
     });
 
     it('button shows primary kind', async () => {
       await renderComponent();
-      const button = document.querySelector('.create-ru-submit-button');
-      expect(button).toBeDefined();
+      const button = screen.getByTestId('create-ru-submit-button');
+      expect(button).toBeTruthy();
     });
 
     it('button has submit capability', async () => {
       await renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
+      expect(form).toBeTruthy();
     });
   });
 
@@ -261,30 +270,32 @@ describe('ReportingUnitCreate - Form Submission', () => {
     it('form element is present and functional', async () => {
       await renderComponent();
 
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
+      expect(form).toBeTruthy();
     });
 
     it('form and fields are ready for submission', async () => {
       await renderComponent();
 
-      const form = document.querySelector('form');
-      const districtField = document.querySelector('#create-ru-district');
-      const samplingField = document.querySelector('#as-sampling-multi-select');
-      expect(form && districtField && samplingField).toBeDefined();
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
+      const districtField = screen.getByTestId('district-combobox');
+      const samplingField = screen.getByTestId('sampling-combobox');
+      expect(form).toBeTruthy();
+      expect(districtField).toBeTruthy();
+      expect(samplingField).toBeTruthy();
     });
   });
 
   describe('mutation error handling', () => {
-    it('handles mutation being called with async values', async () => {
+    it('handles mutation being called with  values', async () => {
       const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
       vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
         createMockMutation({ mutateAsync: mutateAsyncMock }),
       );
 
       await renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
+      expect(form).toBeTruthy();
     });
 
     it('component renders even with error state from mutation', async () => {
@@ -296,8 +307,8 @@ describe('ReportingUnitCreate - Form Submission', () => {
       );
 
       await renderComponent();
-      const form = document.querySelector('form');
-      expect(form).toBeDefined();
+      const form = screen.getByRole('form', { name: /create reporting unit/i });
+      expect(form).toBeTruthy();
     });
   });
 });

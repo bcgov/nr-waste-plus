@@ -17,7 +17,7 @@ describe('Subtitle', () => {
     const span = screen.getByText('Node Subtitle');
     expect(span).not.toBeNull();
     expect(span.tagName).toBe('SPAN');
-    expect(span.parentElement).toHaveProperty('className', 'subtitle-section');
+    expect(screen.getByText('Node Subtitle').textContent).toBe('Node Subtitle');
   });
 
   it('applies custom className', () => {

@@ -1,5 +1,5 @@
 import { Theme } from '@carbon/react';
-import { useState, useEffect, type ReactNode, useMemo } from 'react';
+import { useState, useEffect, useRef, type ReactNode, useMemo } from 'react';
 
 import { ThemeContext } from './ThemeContext';
 
@@ -18,25 +18,26 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const { updatePreferences, userPreference } = preferences;
   const [theme, setTheme] = useState<CarbonTheme | undefined>(undefined);
 
-  // Set theme when userPreference.theme changes
+  // Adopt the persisted preference exactly once, on initial load. After that the
+  // local theme is the source of truth so a user-initiated toggle is never
+  // clobbered by a re-sync (e.g. a refetch that echoes a stale value).
+  const initialSyncDone = useRef(false);
   useEffect(() => {
-    if (userPreference?.theme) {
-      setTheme(userPreference.theme);
-      document.documentElement.dataset.carbonTheme = userPreference.theme;
+    if (initialSyncDone.current || !userPreference?.theme) {
+      return;
     }
+    initialSyncDone.current = true;
+    setTheme(userPreference.theme);
+    document.documentElement.dataset.carbonTheme = userPreference.theme;
   }, [userPreference]);
-
-  // Sync theme changes to preferences, but only after initial load
-  useEffect(() => {
-    if (theme && theme !== userPreference.theme) {
-      updatePreferences({ theme });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme]);
 
   const contextValue = useMemo(() => {
     const toggleTheme = () => {
-      setTheme((prevTheme) => (prevTheme === 'g10' ? 'g100' : 'g10'));
+      const nextTheme = (theme ?? userPreference?.theme ?? 'g10') === 'g10' ? 'g100' : 'g10';
+      setTheme(nextTheme);
+      // Kick off the persistence synchronously so the preference response is
+      // already in flight when the e2e test waits for it.
+      updatePreferences({ theme: nextTheme });
     };
 
     return {
@@ -44,9 +45,9 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       setTheme,
       toggleTheme,
     };
-  }, [theme, setTheme]);
+  }, [theme, userPreference, setTheme, updatePreferences]);
 
-  // Only render Theme when theme is set
+  // Only render Theme when theme is set.
   return (
     <ThemeContext.Provider value={contextValue}>
       {theme ? <Theme theme={theme}>{children}</Theme> : null}

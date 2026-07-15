@@ -65,7 +65,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    */
   const refreshUserState = useCallback(
     async (silent = false) => {
-      if (!silent) setIsLoading(true);
+      if (!silent) {
+        setIsLoading(true);
+      }
       try {
         const idToken = await loadUserIdToken();
         const newUser = idToken ? parseToken(idToken) : undefined;
@@ -77,17 +79,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(undefined);
         if (!silent) await signOut();
       } finally {
-        if (!silent) setIsLoading(false);
+        if (!silent) {
+          setIsLoading(false);
+        }
       }
     },
     [loadUserIdToken],
   );
 
   useEffect(() => {
-    void refreshUserState().catch(() => {
-      setUser(undefined);
-      setIsLoading(false);
-    });
+    const initializeAuth = async () => {
+      try {
+        await refreshUserState();
+      } catch {
+        setUser(undefined);
+      }
+    };
+
+    void initializeAuth();
 
     const interval = setInterval(
       () => {
@@ -95,6 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
       3 * 60 * 1000,
     );
+
     return () => clearInterval(interval);
   }, [refreshUserState]);
 

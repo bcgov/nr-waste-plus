@@ -33,7 +33,7 @@ function AvatarImage({ userName, size }: AvatarImageProps): React.JSX.Element {
   const initials = getInitials(userName);
 
   return (
-    <div className={`profile-image ${size}`}>
+    <div className={`profile-image ${size}`} data-testid="avatar-container">
       <div className="initials" data-testid="avatar-initials">
         {initials}
       </div>
