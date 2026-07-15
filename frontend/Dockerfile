@@ -18,9 +18,8 @@ ENV LOG_LEVEL=info
 COPY --from=build /app/build/ /srv
 COPY Caddyfile /etc/caddy/Caddyfile
 
-# CA certs and Caddy format
-RUN apk add --no-cache ca-certificates && \
-    caddy fmt --overwrite /etc/caddy/Caddyfile
+# CA certs
+RUN apk add --no-cache ca-certificates
 
 # User, port and healthcheck
 USER 1001
