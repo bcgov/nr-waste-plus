@@ -94,6 +94,3 @@ export const SpeciesCompositionRowSchema = z.object({
 export const SpeciesCompositionDataSchema = z.object({
   rows: z.array(SpeciesCompositionRowSchema),
 });
-
-export type SpeciesCompositionRow = z.infer<typeof SpeciesCompositionRowSchema>;
-export type SpeciesCompositionData = z.infer<typeof SpeciesCompositionDataSchema>;
