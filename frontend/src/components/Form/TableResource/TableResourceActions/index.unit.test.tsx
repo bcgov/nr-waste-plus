@@ -182,7 +182,9 @@ describe('TableResourceActions', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Options' }));
 
-    const archiveItem = screen.getByText('Archive').closest('button');
+    const archiveItem = screen
+      .getAllByRole('menuitem', { hidden: true })
+      .find((el) => el.textContent?.trim() === 'Archive');
     expect(archiveItem?.hasAttribute('disabled')).toBe(true);
   });
 
@@ -208,7 +210,9 @@ describe('TableResourceActions', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Options' }));
 
-    const archiveItem = screen.getByText('Archive').closest('button');
+    const archiveItem = screen
+      .getAllByRole('menuitem', { hidden: true })
+      .find((el) => el.textContent?.trim() === 'Archive');
     expect(archiveItem?.hasAttribute('disabled')).toBe(true);
   });
 });

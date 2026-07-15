@@ -110,9 +110,14 @@ export default defineConfig([
       'vitest/valid-expect': 'error',
     },
   },
-  // E2E test files — Playwright uses page.getByRole() etc., not screen queries
+  // E2E test files — and their Playwright helper utilities — use page.getByRole()
+  // etc., not screen queries; the testing-library rule misfires on `page` queries.
   {
-    files: ['**/*.e2e.test.{ts,tsx}'],
+    files: [
+      '**/*.e2e.test.{ts,tsx}',
+      '**/config/tests/auth.helper.ts',
+      '**/pages/ReportingUnitCreate/e2e.utils.ts',
+    ],
     rules: {
       'testing-library/prefer-screen-queries': 'off',
     },

@@ -69,9 +69,7 @@ export interface ProcessorFailure {
  * @template V - The value object type for matrix results (defaults to `T`).
  */
 export type ProcessorResult<T, V = T> =
-  | ProcessorSuccess<T>
-  | ProcessorMatrixSuccess<V>
-  | ProcessorFailure;
+  ProcessorSuccess<T> | ProcessorMatrixSuccess<V> | ProcessorFailure;
 
 /**
  * Contract for a pluggable file processor.

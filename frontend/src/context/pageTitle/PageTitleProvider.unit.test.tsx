@@ -26,7 +26,7 @@ describe('PageTitleProvider', () => {
   });
 
   it('updates the page title when setPageTitle is called', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     render(
       <PageTitleProvider>
         <TestComponent />
@@ -38,7 +38,7 @@ describe('PageTitleProvider', () => {
   });
 
   it('shares the page title across multiple consumers', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     function AnotherComponent() {
       const { pageTitle } = usePageTitle();
       return <span data-testid="another-title">{pageTitle}</span>;

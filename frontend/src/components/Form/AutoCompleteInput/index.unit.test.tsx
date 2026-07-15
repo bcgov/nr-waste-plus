@@ -29,7 +29,7 @@ const renderWithProps = async (props: any) => {
 
 describe('AutoCompleteInput', () => {
   it('renders and fetches suggestions on input', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     const onAutoCompleteChange = vi.fn(async (val) =>
       items.filter((i) => i.name.toLowerCase().includes(val.toLowerCase())),
     );
@@ -41,7 +41,7 @@ describe('AutoCompleteInput', () => {
   });
 
   it('calls onSelect when an item is selected', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     const onAutoCompleteChange = vi.fn(async () => items);
     const extractItems = (raw: any) => raw;
     const onSelect = vi.fn();
@@ -56,7 +56,7 @@ describe('AutoCompleteInput', () => {
   });
 
   it('uses custom itemToString if provided', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     const onAutoCompleteChange = vi.fn(async () => items);
     const extractItems = (raw: any) => raw;
     await renderWithProps({
@@ -70,7 +70,7 @@ describe('AutoCompleteInput', () => {
   });
 
   it('shows no suggestions when none match', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     const onAutoCompleteChange = vi.fn(async () => []);
     const extractItems = (raw: any) => raw;
     await renderWithProps({ onAutoCompleteChange, extractItems });
@@ -80,7 +80,7 @@ describe('AutoCompleteInput', () => {
   });
 
   it('handles loading state', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     let resolve: (v: any) => void = () => {};
     const onAutoCompleteChange = vi
       .fn()
@@ -94,7 +94,7 @@ describe('AutoCompleteInput', () => {
   });
 
   it('handles blur and focus events', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     const onAutoCompleteChange = vi.fn(async () => items);
     const extractItems = (raw: any) => raw;
     await renderWithProps({ onAutoCompleteChange, extractItems });
@@ -104,7 +104,7 @@ describe('AutoCompleteInput', () => {
   });
 
   it('calls onSelect with correct item when suggestion is clicked', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     const onAutoCompleteChange = vi.fn(async () => items);
     const extractItems = (raw: any) => raw;
     const onSelect = vi.fn();
@@ -119,7 +119,7 @@ describe('AutoCompleteInput', () => {
   });
 
   it('handles keyboard navigation (arrow down/up, enter, escape)', async () => {
-    const user = await userEvent.setup();
+    const user = userEvent.setup();
     const onAutoCompleteChange = vi.fn(async () => items);
     const onSelect = vi.fn();
     const extractItems = (raw: any) => raw;
@@ -152,7 +152,7 @@ describe('AutoCompleteInput', () => {
     });
 
     it('calls onSelect with null when the text input gets cleared', async () => {
-      const user = await userEvent.setup();
+      const user = userEvent.setup();
       const input = screen.getByRole('combobox');
 
       // input text gets completely cleared
@@ -162,7 +162,7 @@ describe('AutoCompleteInput', () => {
     });
 
     it("restores the input text when it's been only partially changed", async () => {
-      const user = await userEvent.setup();
+      const user = userEvent.setup();
       const input = screen.getByRole<HTMLInputElement>('combobox');
 
       // input text gets changed but not cleared

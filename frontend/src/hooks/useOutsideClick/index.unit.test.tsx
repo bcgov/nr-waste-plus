@@ -1,3 +1,4 @@
+/* eslint-disable testing-library/prefer-user-event */
 import { render, screen, fireEvent } from '@testing-library/react';
 import { useRef } from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';

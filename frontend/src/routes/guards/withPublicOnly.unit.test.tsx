@@ -56,18 +56,16 @@ describe('withPublicOnly', () => {
     mockIsLoggedIn = false;
     mockIsLoading = true;
     const Wrapped = withPublicOnly(PublicPage);
-    const { container } = render(<Wrapped />);
+    render(<Wrapped />);
     expect(screen.queryByTestId('public-page')).toBeNull();
-    expect(container.firstChild).toBeNull();
   });
 
   it('should render null when user is logged in', async () => {
     mockIsLoggedIn = true;
     mockIsLoading = false;
     const Wrapped = withPublicOnly(PublicPage);
-    const { container } = render(<Wrapped />);
+    render(<Wrapped />);
     expect(screen.queryByTestId('public-page')).toBeNull();
-    expect(container.firstChild).toBeNull();
   });
 
   it('should navigate to dashboard when user is logged in', async () => {

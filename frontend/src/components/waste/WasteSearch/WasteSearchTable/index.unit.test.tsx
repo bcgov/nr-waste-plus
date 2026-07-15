@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { act, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
@@ -176,8 +176,9 @@ const mockEmptyResults: PageableResponse<ReportingUnitSearchResultDto> = {
 };
 
 // Helper to instantly change input value without character-by-character typing
-const setInputValue = (input: HTMLElement, value: string) => {
-  fireEvent.change(input, { target: { value } });
+const setInputValue = async (input: HTMLElement, value: string) => {
+  await userEvent.clear(input);
+  await userEvent.type(input, value);
 };
 
 const renderWithProps = () => renderWithAppAsync(<WasteSearchTable />);
@@ -247,7 +248,7 @@ describe('WasteSearchTable', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, '411B');
+      await setInputValue(keywordInput, '411B');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -266,7 +267,7 @@ describe('WasteSearchTable', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
+      await setInputValue(keywordInput, 'BLOCK');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -282,7 +283,7 @@ describe('WasteSearchTable', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'NONEXISTENT');
+      await setInputValue(keywordInput, 'NONEXISTENT');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -307,7 +308,7 @@ describe('WasteSearchTable', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
+      await setInputValue(keywordInput, 'BLOCK');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -324,7 +325,7 @@ describe('WasteSearchTable', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
+      await setInputValue(keywordInput, 'BLOCK');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -346,7 +347,7 @@ describe('WasteSearchTable', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
+      await setInputValue(keywordInput, 'BLOCK');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -381,7 +382,7 @@ describe('WasteSearchTable', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
+      await setInputValue(keywordInput, 'BLOCK');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -413,7 +414,7 @@ describe('WasteSearchTable', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
+      await setInputValue(keywordInput, 'BLOCK');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -438,7 +439,7 @@ describe('WasteSearchTable', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
+      await setInputValue(keywordInput, 'BLOCK');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -463,7 +464,7 @@ describe('WasteSearchTable', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'test');
+      await setInputValue(keywordInput, 'test');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -487,7 +488,7 @@ describe('WasteSearchTable', () => {
 
       // Fill in some filters
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
+      await setInputValue(keywordInput, 'BLOCK');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -513,7 +514,7 @@ describe('WasteSearchTable', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
+      await setInputValue(keywordInput, 'BLOCK');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -533,7 +534,7 @@ describe('WasteSearchTable', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
+      await setInputValue(keywordInput, 'BLOCK');
 
       const searchButton = screen.getByTestId('search-button-most');
       await userEvent.click(searchButton);
@@ -558,7 +559,7 @@ describe('WasteSearchTable', () => {
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
-      setInputValue(keywordInput, 'BLOCK');
+      await setInputValue(keywordInput, 'BLOCK');
 
       const searchButton = screen.getByTestId('search-button-most');
 

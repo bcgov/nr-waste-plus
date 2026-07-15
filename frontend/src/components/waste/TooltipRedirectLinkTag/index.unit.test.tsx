@@ -108,13 +108,12 @@ describe('TooltipRedirectLinkTag', () => {
   });
 
   it('renders tooltip wrapper around link', () => {
-    const { container } = render(
+    render(
       <TooltipRedirectLinkTag tooltip="Help text" text="Click me" url="https://example.com" />,
     );
 
     // DefinitionTooltip from Carbon should be in the component tree
-    const tooltipWrapper = container.firstChild;
-    expect(tooltipWrapper).toBeTruthy();
+    expect(screen.getByTestId('redirect-link-tag')).toBeTruthy();
   });
 
   it('shouldForwardClearSearchTrue_whenClearSearchPropIsTrue', () => {

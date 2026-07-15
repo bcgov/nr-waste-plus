@@ -130,8 +130,7 @@ export function useConditionalField<TFormData extends Record<string, unknown>>({
 }: UseConditionalFieldOptions<TFormData>): { isVisible: boolean } {
   const conditionsArray = useMemo(
     () => (Array.isArray(conditions) ? conditions : [conditions]),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(conditions)],
+    [conditions],
   );
 
   const uniqueFieldNames = useMemo(

@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import DistrictListing from '.';
@@ -51,16 +51,14 @@ vi.mock('@/context/preference/usePreference', () => ({
 
 const renderWithProviders = async () => {
   const qc = makeTestQueryClient();
-  await act(async () =>
-    render(
-      <AuthProvider>
-        <QueryClientProvider client={qc}>
-          <PreferenceProvider>
-            <DistrictListing />
-          </PreferenceProvider>
-        </QueryClientProvider>
-      </AuthProvider>,
-    ),
+  render(
+    <AuthProvider>
+      <QueryClientProvider client={qc}>
+        <PreferenceProvider>
+          <DistrictListing />
+        </PreferenceProvider>
+      </QueryClientProvider>
+    </AuthProvider>,
   );
 };
 

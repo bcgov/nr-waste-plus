@@ -7,13 +7,19 @@ describe('AvatarImage', () => {
   it('renders initials for two-part name', () => {
     render(<AvatarImage userName="John Doe" size="large" />);
     screen.getByText('JD');
-    expect(screen.getByText('JD').parentElement).toHaveProperty('className', 'profile-image large');
+    expect(screen.getByTestId('avatar-container')).toHaveProperty(
+      'className',
+      'profile-image large',
+    );
   });
 
   it('renders initials for single-part name', () => {
     render(<AvatarImage userName="Alice" size="small" />);
     screen.getByText('A');
-    expect(screen.getByText('A').parentElement).toHaveProperty('className', 'profile-image small');
+    expect(screen.getByTestId('avatar-container')).toHaveProperty(
+      'className',
+      'profile-image small',
+    );
   });
 
   it('renders empty initials for empty name', () => {
