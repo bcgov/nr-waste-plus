@@ -1,10 +1,12 @@
 package ca.bc.gov.nrs.hrs.repository;
 
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
+import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.ConfigType;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,7 +16,7 @@ import org.springframework.stereotype.Repository;
 
 /**
  * Repository for managing {@link DistrictVolumeEntity} records.
- * 
+ *
  * <p>Provides standard JPA operations together with custom queries used by
  * district volume business logic.
  */
@@ -57,7 +59,7 @@ public interface DistrictVolumeRepository
   Optional<DistrictVolumeEntity> findActiveByArea(
       @Param("area") Area area,
       @Param("currentDate") LocalDate currentDate);
-  
+
   /**
    * Finds all open-ended district volume entries for the specified area, ordered by most recent
    * start date first.
@@ -66,4 +68,30 @@ public interface DistrictVolumeRepository
    * @return ordered list of open-ended entries for the area
    */
   List<DistrictVolumeEntity> findByAreaAndEndDateIsNullOrderByStartDateDesc(Area area);
+
+  /**
+   * Retrieves a paginated list of district volume records filtered by config type.
+   *
+   * <p>Used to scope queries to a specific configuration (e.g. district volume vs
+   * species composition), since both share the same underlying table and entity.
+   *
+   * @param configType config type filter
+   * @param pageable pagination and sorting information
+   * @return paginated list of matching district volume entities
+   */
+  Page<DistrictVolumeEntity> findAllByConfigType(ConfigType configType, Pageable pageable);
+
+  /**
+   * Retrieves a single district volume record by id, scoped to the specified config type.
+   *
+   * <p>Ensures records of one config type (e.g. species composition) cannot be looked up
+   * or returned as if they belonged to another.
+   *
+   * @param id record identifier
+   * @param configType config type the record must match
+   * @return the matching entity, or an empty {@link Optional} if not found or if the
+   *     config type does not match
+   */
+  Optional<DistrictVolumeEntity> findByIdAndConfigType(Long id, ConfigType configType);
+
 }
