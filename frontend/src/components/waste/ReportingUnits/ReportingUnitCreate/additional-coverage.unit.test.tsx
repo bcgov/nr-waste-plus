@@ -149,7 +149,7 @@ async function renderComponent() {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe('ReportingUnitCreate - Additional Coverage', async () => {
+describe('ReportingUnitCreate - Additional Coverage', () => {
   beforeEach(() => {
     vi.mocked(useAuth).mockReturnValue({
       user: mockAuthUser,
@@ -190,7 +190,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     vi.clearAllMocks();
   });
 
-  describe('grade auto-selection with form.setFieldValue', async () => {
+  describe('grade auto-selection with form.setFieldValue', () => {
     it('should auto-select grade when district with single area is selected', async () => {
       // Mock district with single area
       vi.mocked(useWasteSearchFilterOptions).mockReturnValue({
@@ -235,7 +235,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     });
   });
 
-  describe('itemToString callback coverage', async () => {
+  describe('itemToString callback coverage', () => {
     it('should render district combobox with itemToString', async () => {
       await renderComponent();
 
@@ -253,7 +253,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     });
   });
 
-  describe('grade field rendering and interaction', async () => {
+  describe('grade field rendering and interaction', () => {
     it('should render grade field with correct structure when visible', async () => {
       await renderComponent();
 
@@ -344,7 +344,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     });
   });
 
-  describe('button onClick handler', async () => {
+  describe('button onClick handler', () => {
     it('should render form with all required fields', async () => {
       const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
 
@@ -383,7 +383,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     });
   });
 
-  describe('form field validators - async validation', async () => {
+  describe('form field validators - async validation', () => {
     it('should validate client field with runValidators on blur', async () => {
       await renderComponent();
 
@@ -524,7 +524,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     });
   });
 
-  describe('district selection with grade clearing', async () => {
+  describe('district selection with grade clearing', () => {
     it('should clear grade when switching from multi-area to single-area district', async () => {
       await renderComponent();
 
@@ -556,7 +556,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     });
   });
 
-  describe('combobox onChange with null selectedItem', async () => {
+  describe('combobox onChange with null selectedItem', () => {
     it('should handle district combobox onChange with null selectedItem', async () => {
       await renderComponent();
 
@@ -602,7 +602,7 @@ describe('ReportingUnitCreate - Additional Coverage', async () => {
     });
   });
 
-  describe('form field state tracking', async () => {
+  describe('form field state tracking', () => {
     it('should track district field state changes', async () => {
       await renderComponent();
 

@@ -253,7 +253,7 @@ async function renderComponent() {
   );
 }
 
-describe('ReportingUnitCreate branch coverage', async () => {
+describe('ReportingUnitCreate branch coverage', () => {
   beforeEach(() => {
     vi.mocked(useAuth).mockReturnValue({
       user: mockAuthUser,

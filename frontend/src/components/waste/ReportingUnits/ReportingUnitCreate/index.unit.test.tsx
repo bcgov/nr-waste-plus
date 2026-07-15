@@ -277,7 +277,7 @@ async function renderComponent(_routerOptions = {}) {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe('ReportingUnitCreate', async () => {
+describe('ReportingUnitCreate', () => {
   beforeEach(() => {
     vi.mocked(useAuth).mockReturnValue({
       user: mockAuthUser,
@@ -318,7 +318,7 @@ describe('ReportingUnitCreate', async () => {
     vi.clearAllMocks();
   });
 
-  describe('rendering', async () => {
+  describe('rendering', () => {
     it('renders the form wrapper with correct class', async () => {
       await renderComponent();
       const column = screen.getByTestId('create-ru-column-content');
@@ -344,7 +344,7 @@ describe('ReportingUnitCreate', async () => {
     });
   });
 
-  describe('conditional rendering', async () => {
+  describe('conditional rendering', () => {
     it('does not render grade field for districts without both configured areas', async () => {
       await renderComponent();
       const gradeGroup = screen.queryByTestId('grade-radio-group');
@@ -365,7 +365,7 @@ describe('ReportingUnitCreate', async () => {
     });
   });
 
-  describe('form field state tracking', async () => {
+  describe('form field state tracking', () => {
     it('district code field is ready for state changes', async () => {
       await renderComponent();
       const districtComboBox = screen.getByLabelText('District');
@@ -389,7 +389,7 @@ describe('ReportingUnitCreate', async () => {
   });
 });
 
-describe('form validation', async () => {
+describe('form validation', () => {
   it('client field is present for validation', async () => {
     await renderComponent();
 
@@ -433,7 +433,7 @@ describe('form validation', async () => {
   });
 });
 
-describe('grade selection', async () => {
+describe('grade selection', () => {
   it('renders coastal grade option when DKM district is selected', async () => {
     await renderComponent();
     const districtComboBox = screen.getByLabelText('District');
@@ -495,7 +495,7 @@ describe('grade selection', async () => {
   });
 });
 
-describe('sampling selection', async () => {
+describe('sampling selection', () => {
   it('renders sampling dropdown', async () => {
     await renderComponent();
     const samplingInput = screen.getByLabelText('Sampling option');
@@ -512,7 +512,7 @@ describe('sampling selection', async () => {
   });
 });
 
-describe('auth integration', async () => {
+describe('auth integration', () => {
   it('component renders with proper auth setup', async () => {
     await renderComponent();
     const form = screen.getByRole('form', { name: /create reporting unit/i });
@@ -552,7 +552,7 @@ describe('auth integration', async () => {
   });
 });
 
-describe('field ids and attributes', async () => {
+describe('field ids and attributes', () => {
   it('district field has correct id', async () => {
     await renderComponent();
     expect(screen.getByLabelText('District')).toBeDefined();
@@ -581,7 +581,7 @@ describe('field ids and attributes', async () => {
   });
 });
 
-describe('styling classes', async () => {
+describe('styling classes', () => {
   it('applies create-ru-column__content class to wrapper', async () => {
     await renderComponent();
     const wrapper = screen.getByTestId('create-ru-column-content');
@@ -595,7 +595,7 @@ describe('styling classes', async () => {
   });
 });
 
-describe('component initialization', async () => {
+describe('component initialization', () => {
   it('initializes without errors', async () => {
     expect(() => renderComponent()).not.toThrow();
   });
@@ -607,7 +607,7 @@ describe('component initialization', async () => {
   });
 });
 
-describe('district and sampling options integration', async () => {
+describe('district and sampling options integration', () => {
   it('district field is present in the form', async () => {
     await renderComponent();
     const districtField = screen.getByLabelText('District');
@@ -628,7 +628,7 @@ describe('district and sampling options integration', async () => {
   });
 });
 
-describe('helper function coverage', async () => {
+describe('helper function coverage', () => {
   it('findSelectedItem should be used when district value exists', async () => {
     await renderComponent();
     // The findSelectedItem helper is used internally in the component
@@ -676,7 +676,7 @@ describe('helper function coverage', async () => {
   });
 });
 
-describe('combobox interactions', async () => {
+describe('combobox interactions', () => {
   it('district combobox has correct placeholder', async () => {
     await renderComponent();
     expect(screen.getByLabelText('District')).toBeDefined();
@@ -697,7 +697,7 @@ describe('combobox interactions', async () => {
   });
 });
 
-describe('form field subscriptions', async () => {
+describe('form field subscriptions', () => {
   it('button element exists in the form', async () => {
     await renderComponent();
     const button = screen.getByTestId('create-ru-submit-button');

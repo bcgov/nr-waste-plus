@@ -154,7 +154,7 @@ async function renderComponent() {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe('ReportingUnitCreate - Coverage Enhancement', async () => {
+describe('ReportingUnitCreate - Coverage Enhancement', () => {
   beforeEach(() => {
     vi.mocked(useAuth).mockReturnValue({
       user: mockAuthUser,
@@ -195,7 +195,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     vi.clearAllMocks();
   });
 
-  describe('form submission with valid data', async () => {
+  describe('form submission with valid data', () => {
     it('should render form with all required fields', async () => {
       const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
 
@@ -237,7 +237,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     });
   });
 
-  describe('grade field auto-selection', async () => {
+  describe('grade field auto-selection', () => {
     it('should auto-select grade when district has single area', async () => {
       // Mock district with single area
       vi.mocked(useWasteSearchFilterOptions).mockReturnValue({
@@ -292,7 +292,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     });
   });
 
-  describe('client query behavior', async () => {
+  describe('client query behavior', () => {
     it('should disable client query when user is IDIR', async () => {
       vi.mocked(useAuth).mockReturnValue({
         user: mockAuthUserIdir,
@@ -330,7 +330,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     });
   });
 
-  describe('button state management', async () => {
+  describe('button state management', () => {
     it('should disable button when mutation is pending', async () => {
       vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
         createMockMutation({
@@ -366,7 +366,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     });
   });
 
-  describe('field blur and change validation', async () => {
+  describe('field blur and change validation', () => {
     it('should trigger validation on client field blur', async () => {
       await renderComponent();
       const user = userEvent.setup();
@@ -407,7 +407,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     });
   });
 
-  describe('grade field interaction', async () => {
+  describe('grade field interaction', () => {
     it('should handle grade field change event', async () => {
       await renderComponent();
 
@@ -457,7 +457,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     });
   });
 
-  describe('form submission event handling', async () => {
+  describe('form submission event handling', () => {
     it('should prevent default form submission', async () => {
       await renderComponent();
 
@@ -485,7 +485,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     });
   });
 
-  describe('helper function coverage', async () => {
+  describe('helper function coverage', () => {
     it('should use findSelectedItem when district value is null', async () => {
       await renderComponent();
 
@@ -522,7 +522,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     });
   });
 
-  describe('column wrapper attributes', async () => {
+  describe('column wrapper attributes', () => {
     it('should render column with correct responsive breakpoints', async () => {
       await renderComponent();
 
@@ -541,7 +541,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     });
   });
 
-  describe('form field subscriptions', async () => {
+  describe('form field subscriptions', () => {
     it('should subscribe to form state for button state', async () => {
       await renderComponent();
 
@@ -563,7 +563,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     });
   });
 
-  describe('combobox itemToString helper', async () => {
+  describe('combobox itemToString helper', () => {
     it('should use itemToString for district display', async () => {
       await renderComponent();
 
@@ -579,7 +579,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     });
   });
 
-  describe('district selection with grade auto-assignment', async () => {
+  describe('district selection with grade auto-assignment', () => {
     it('should clear grade when switching from DKM to non-DKM district', async () => {
       await renderComponent();
 
@@ -627,7 +627,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     });
   });
 
-  describe('form field validators', async () => {
+  describe('form field validators', () => {
     it('should validate client field on blur', async () => {
       await renderComponent();
 
@@ -692,7 +692,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     });
   });
 
-  describe('client selection flow', async () => {
+  describe('client selection flow', () => {
     it('should handle client selection through AdvancedFilterClientInput', async () => {
       await renderComponent();
       const user = userEvent.setup();
@@ -707,7 +707,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', async () => {
     });
   });
 
-  describe('sampling default value', async () => {
+  describe('sampling default value', () => {
     it('should initialize sampling with AVG default value', async () => {
       await renderComponent();
 

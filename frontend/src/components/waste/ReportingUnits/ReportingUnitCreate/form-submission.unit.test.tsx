@@ -146,7 +146,7 @@ async function renderComponent(_routerOptions = {}) {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe('ReportingUnitCreate - Form Submission', async () => {
+describe('ReportingUnitCreate - Form Submission', () => {
   beforeEach(() => {
     vi.mocked(useAuth).mockReturnValue({
       user: mockAuthUser,
@@ -187,7 +187,7 @@ describe('ReportingUnitCreate - Form Submission', async () => {
     vi.clearAllMocks();
   });
 
-  describe('form submission', async () => {
+  describe('form submission', () => {
     it('mutation hook is called when form is used', async () => {
       const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
       vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
@@ -236,7 +236,7 @@ describe('ReportingUnitCreate - Form Submission', async () => {
     });
   });
 
-  describe('button behavior', async () => {
+  describe('button behavior', () => {
     it('button exists in the component', async () => {
       await renderComponent();
       const button = screen.getByTestId('create-ru-submit-button');
@@ -266,7 +266,7 @@ describe('ReportingUnitCreate - Form Submission', async () => {
     });
   });
 
-  describe('form submission flow', async () => {
+  describe('form submission flow', () => {
     it('form element is present and functional', async () => {
       await renderComponent();
 
@@ -286,7 +286,7 @@ describe('ReportingUnitCreate - Form Submission', async () => {
     });
   });
 
-  describe('mutation error handling', async () => {
+  describe('mutation error handling', () => {
     it('handles mutation being called with  values', async () => {
       const mutateAsyncMock = vi.fn().mockResolvedValue(12345);
       vi.mocked(useReportingUnitCreateMutation).mockReturnValue(
