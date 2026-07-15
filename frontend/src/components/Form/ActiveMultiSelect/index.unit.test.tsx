@@ -179,7 +179,7 @@ describe('ActiveMultiSelect', () => {
     });
 
     // Click the clear selection button rendered by Carbon
-    const clearButton = await screen.findByTitle('Clear all selected items');
+    const clearButton = await screen.findByTitle('Clear selected item');
     await user.click(clearButton);
 
     await waitFor(() => {
