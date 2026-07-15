@@ -17,6 +17,18 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const { userPreference, updatePreferences } = usePreference();
   const [theme, setThemeState] = useState<CarbonTheme>(userPreference?.theme ?? 'g10');
 
+  // Re-sync the local theme whenever the persisted preference loads or changes.
+  // This effect intentionally copies an external store value into local state to
+  // preserve optimistic updates in setTheme/toggleTheme; it is the sanctioned
+  // exception to react-hooks/set-state-in-effect.
+  useEffect(() => {
+    if (userPreference?.theme) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setThemeState(userPreference.theme);
+      document.documentElement.dataset.carbonTheme = userPreference.theme;
+    }
+  }, [userPreference]);
+
   const currentTheme = theme ?? userPreference?.theme ?? 'g10';
 
   const setTheme = useCallback(

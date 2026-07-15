@@ -68,8 +68,12 @@ const AutoCompleteInput = <T,>({
   const [typedValue, setTypedValue] = useState<string>('');
   const debounce = useDebounce<string>(typedValue, debounceTime);
 
+  // The callback is intentionally omitted from the queryKey: it is a
+  // non-serializable function (often an inline lambda) whose identity changes
+  // every render. The debounced `id`/`value` pair is the real cache key.
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   const { data, isLoading } = useQuery({
-    queryKey: [...queryKeys.autocomplete.byFieldAndValue(props.id, debounce), onAutoCompleteChange],
+    queryKey: queryKeys.autocomplete.byFieldAndValue(props.id, debounce),
     queryFn: async () => await onAutoCompleteChange(debounce),
     staleTime: 30000,
     enabled: debounce.length >= 2,

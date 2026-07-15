@@ -20,54 +20,64 @@ import { usePreference } from '@/context/preference/usePreference';
 export function useTableToolbar<T>(id: string, headers: TableHeaderType<T, NestedKeyOf<T>>[]) {
   const [tableHeaders, setTableHeaders] = useState(headers);
   const tableHeadersRef = useRef<string[] | undefined>(undefined);
-  const { updatePreferences } = usePreference();
+  const { userPreference, updatePreferences, isLoaded } = usePreference();
 
+  // Apply the saved column selection once preferences have loaded. Until then we
+  // keep the default `headers` so we never overwrite stored selections.
   useEffect(() => {
-    const preferenceHeaders = tableHeaders
-      .filter((header) => header.selected)
-      .map((header) => getHeaderId(header));
-    // Update the ref to track saved IDs
-    tableHeadersRef.current = [...new Set(preferenceHeaders)];
-    updatePreferences({ tableHeaders: { [id]: [...new Set(preferenceHeaders)] } });
-  }, [tableHeaders, id, updatePreferences]);
-
-  useEffect(() => {
-    if (tableHeadersRef.current) {
-      // Update table headers with saved IDs from ref
-      setTableHeaders(
-        headers.map((header) => ({
-          ...header,
-          selected: tableHeadersRef.current!.includes(getHeaderId(header)),
-        })),
-      );
+    if (!isLoaded) {
+      return;
     }
-  }, [id, headers]);
+    const savedIds = (userPreference.tableHeaders as Record<string, string[]> | undefined)?.[id];
+    const initialIds =
+      savedIds && Array.isArray(savedIds)
+        ? savedIds
+        : headers.filter((header) => header.selected).map(getHeaderId);
+    const nextIds = [...new Set(initialIds)];
+    // Skip the update when the applied selection is unchanged to avoid render loops.
+    if (tableHeadersRef.current && tableHeadersRef.current.join(',') === nextIds.join(',')) {
+      return;
+    }
+    tableHeadersRef.current = nextIds;
+    setTableHeaders(
+      headers.map((header) => ({
+        ...header,
+        selected: nextIds.includes(getHeaderId(header)),
+      })),
+    );
+  }, [id, headers, isLoaded, userPreference]);
 
   const onToggleHeader = (headerId: string) => {
     setTableHeaders((prevHeaders) => {
-      const savedIds = tableHeadersRef.current;
-      return prevHeaders.map((header) => {
-        // Find the header to toggle by id
-        if (getHeaderId(header) === headerId) {
-          // Toggle the header's selected state
-          const newSelected = !header.selected;
-          // Update the ref to track saved IDs
-          if (savedIds) {
-            const newSavedIds = [...savedIds];
-            const idx = newSavedIds.indexOf(getHeaderId(header));
-            if (idx > -1) {
-              newSavedIds.splice(idx, 1);
-            } else {
-              newSavedIds.push(getHeaderId(header));
-            }
-            tableHeadersRef.current = newSavedIds;
-          }
-          return { ...header, selected: newSelected };
-        }
-        return header;
-      });
+      const savedIds = tableHeadersRef.current
+        ? [...tableHeadersRef.current]
+        : prevHeaders.filter((header) => header.selected).map(getHeaderId);
+      const toggled = prevHeaders.find((header) => getHeaderId(header) === headerId);
+      if (!toggled) {
+        return prevHeaders;
+      }
+      const newSelected = !toggled.selected;
+      const idx = savedIds.indexOf(headerId);
+      if (idx > -1) {
+        savedIds.splice(idx, 1);
+      } else {
+        savedIds.push(headerId);
+      }
+      tableHeadersRef.current = savedIds;
+      return prevHeaders.map((header) =>
+        getHeaderId(header) === headerId ? { ...header, selected: newSelected } : header,
+      );
     });
   };
+
+  // Persist the selection, but only after it has been initialized from
+  // preferences so we never overwrite stored selections with defaults.
+  useEffect(() => {
+    if (!tableHeadersRef.current) {
+      return;
+    }
+    updatePreferences({ tableHeaders: { [id]: [...new Set(tableHeadersRef.current)] } });
+  }, [tableHeaders, id, updatePreferences]);
 
   return { tableHeaders, onToggleHeader };
 }
