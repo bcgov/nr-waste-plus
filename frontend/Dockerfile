@@ -1,11 +1,13 @@
 FROM node:24.18-bullseye-slim AS build
 
-# Build static files
+# Cache npm dependencies by copying package files first
 WORKDIR /app
-COPY . .
+COPY package*.json .npmrc* ./
+RUN npm ci --ignore-scripts
 
-RUN npm ci --ignore-scripts && \
-    npm run build && \
+# Build static files
+COPY . .
+RUN npm run build && \
     rm -rf node_modules
 
 # Caddy
@@ -16,9 +18,8 @@ ENV LOG_LEVEL=info
 COPY --from=build /app/build/ /srv
 COPY Caddyfile /etc/caddy/Caddyfile
 
-# CA certs and Caddy format
-RUN apk add --no-cache ca-certificates && \
-    caddy fmt --overwrite /etc/caddy/Caddyfile
+# CA certs
+RUN apk add --no-cache ca-certificates
 
 # User, port and healthcheck
 USER 1001
