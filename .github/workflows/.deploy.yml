@@ -47,7 +47,7 @@ on:
         required: false
         type: string
 
-permissions: {}
+    permissions: {}
 
 jobs:
   vars:
@@ -112,14 +112,17 @@ jobs:
           - name: database
             overwrite: false
           - name: frontend
+            overwrite: true
             parameters:
               -p URL=${{ inputs.url }}
               -p CONFIG_MAP="${{ inputs.configmap-frontend }}"
           - name: backend
+            overwrite: true
             parameters:
               -p FRONTEND_URL=${{ inputs.url }}
               -p CONFIG_MAP="${{ inputs.configmap-backend }}"
           - name: legacy
+            overwrite: true
             parameters:
               -p ORACLEDB_PORT=${{ inputs.oracledb-port }}
             verification_path: actuator/health
@@ -132,6 +135,8 @@ jobs:
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token }}
           overwrite: ${{ matrix.overwrite }}
+          # PRs: strip HPA/PDB, force 1 replica + Recreate. TEST/PROD keep RollingUpdate + HPA.
+          lite_mode: ${{ github.event_name == 'pull_request' }}
           parameters:
             -p TAG=${{ needs.vars.outputs.tag }}
             -p ZONE=${{ inputs.zone }}

@@ -27,6 +27,12 @@ parameters:
   - name: REGISTRY
     description: Container registry to import from (internal is image-registry.openshift-image-registry.svc:5000)
     value: ghcr.io
+  - name: MIN_REPLICAS
+    description: Minimum replicas for the horizontal pod autoscaler
+    value: "3"
+  - name: MAX_REPLICAS
+    description: Maximum replicas for the horizontal pod autoscaler
+    value: "7"
   - name: CPU_REQUEST
     value: 75m
   - name: MEMORY_REQUEST
@@ -55,7 +61,6 @@ objects:
         app: ${NAME}-${ZONE}
       name: ${NAME}-${ZONE}-${COMPONENT}
     spec:
-      replicas: 1
       selector:
         matchLabels:
           deployment: ${NAME}-${ZONE}-${COMPONENT}
@@ -71,6 +76,16 @@ objects:
             app: ${NAME}-${ZONE}
             deployment: ${NAME}-${ZONE}-${COMPONENT}
         spec:
+          terminationGracePeriodSeconds: 30
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        deployment: ${NAME}-${ZONE}-${COMPONENT}
+                    topologyKey: kubernetes.io/hostname
           volumes:
             - name: ${COMPONENT}-config
               configMap:
@@ -146,6 +161,10 @@ objects:
                 initialDelaySeconds: 10
                 periodSeconds: 30
                 timeoutSeconds: 5
+              lifecycle:
+                preStop:
+                  exec:
+                    command: ["/bin/sleep", "10"]
   - kind: Service
     apiVersion: v1
     metadata:
@@ -186,3 +205,49 @@ objects:
     data:
       application.yml: |
         ${CONFIG_MAP}
+  - apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    metadata:
+      labels:
+        app: ${NAME}-${ZONE}
+      name: ${NAME}-${ZONE}-${COMPONENT}
+    spec:
+      scaleTargetRef:
+        apiVersion: apps/v1
+        kind: Deployment
+        name: ${NAME}-${ZONE}-${COMPONENT}
+      minReplicas: ${{MIN_REPLICAS}}
+      maxReplicas: ${{MAX_REPLICAS}}
+      metrics:
+        - type: Resource
+          resource:
+            name: cpu
+            target:
+              type: Utilization
+              averageUtilization: 80
+      behavior:
+        scaleUp:
+          stabilizationWindowSeconds: 30
+          policies:
+            - type: Percent
+              value: 100
+              periodSeconds: 60
+          selectPolicy: Max
+        scaleDown:
+          stabilizationWindowSeconds: 300
+          policies:
+            - type: Percent
+              value: 50
+              periodSeconds: 60
+          selectPolicy: Max
+  - apiVersion: policy/v1
+    kind: PodDisruptionBudget
+    metadata:
+      labels:
+        app: ${NAME}-${ZONE}
+      name: ${NAME}-${ZONE}-${COMPONENT}
+    spec:
+      maxUnavailable: 1
+      selector:
+        matchLabels:
+          deployment: ${NAME}-${ZONE}-${COMPONENT}
