@@ -17,18 +17,26 @@
  * parseResourceIdFromLocation('/api/2024/reporting-units/777') // 777
  */
 export function parseResourceIdFromLocation(location: string): number {
-  // Strip any query string or hash so the ID is read from the path only,
-  // then drop any trailing slash. Trailing-slash removal lets the matcher
-  // anchor to the exact end of the path without an optional `\/?` quantifier,
-  // which avoids super-linear backtracking (Sonar typescript:S8786).
-  const path = location.replace(/[?#].*$/, '').replace(/\/+$/, '');
-  // Anchor to the end of the path: match the final numeric segment, so
-  // `/api/2024/reporting-units/777` -> 777 and `/foo/777?v=1` -> 777
-  // (not the intermediate `2024`). The greedy `\d+` is the only quantifier
-  // and is bounded by `$`, so the match runs in linear time.
-  const match = /\/(\d+)$/.exec(path);
-  if (!match) {
+  // Read only the path: cut at the first `?` (query) or `#` (fragment).
+  // Plain string indexing avoids the greedy `/[?#].*$/` pattern that triggers
+  // super-linear backtracking (Sonar typescript:S8786).
+  const hashIdx = location.indexOf('#');
+  const queryIdx = location.indexOf('?');
+  const cut = Math.min(
+    hashIdx >= 0 ? hashIdx : location.length,
+    queryIdx >= 0 ? queryIdx : location.length,
+  );
+  let path = location.slice(0, cut);
+  // Drop any trailing slashes so the final segment is the resource ID.
+  while (path.endsWith('/')) {
+    path = path.slice(0, -1);
+  }
+  // The resource ID is the final path segment; it must be all digits.
+  // `^\d+$` is anchored at both ends with a single group, so it cannot
+  // backtrack (linear time).
+  const lastSegment = path.slice(path.lastIndexOf('/') + 1);
+  if (lastSegment === '' || !/^\d+$/.test(lastSegment)) {
     throw new Error(`Invalid Location header: "${location}"`);
   }
-  return Number.parseInt(match[1], 10);
+  return Number.parseInt(lastSegment, 10);
 }
