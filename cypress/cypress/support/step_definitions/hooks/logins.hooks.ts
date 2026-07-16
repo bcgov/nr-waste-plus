@@ -43,8 +43,14 @@ const doLogin = (context: Mocha.Context, kind: string, afterLoginLocation: strin
     {
       validate: () => {
         cy.request(afterLoginLocation).its('status').should('eq', 200);
-        cy.visit(afterLoginLocation);        
+        cy.visit(afterLoginLocation);
       },
+      // B1 (#1083): reuse the IdP session across specs in one run, so the
+      // logontest7.gov.bc.ca login dance runs once per run instead of once per
+      // spec. Safe with logouts.feature: cy.session restores the cached snapshot
+      // (re-establishing login) before validate, so an in-app logout in one spec
+      // does not break later specs.
+      cacheAcrossSpecs: true,
     });
     cy.visit(afterLoginLocation);
     
