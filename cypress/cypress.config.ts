@@ -209,6 +209,26 @@ async function setupNodeEvents(
   },
   });
 
+  // Q2 (video-on-failure): drop a spec's video when no test failed in it.
+  // NOTE: videoUploadOnPasses was removed in Cypress 13, so we delete the
+  // passing-spec video here instead of relying on a removed option.
+  on("after:spec", (_spec: unknown, results: CypressCommandLine.RunResult) => {
+    if (!results) return;
+    const video = results.video;
+    if (!video) return;
+    const failed = (results.tests ?? []).some((test) => {
+      const attempts = (test as unknown as { attempts?: Array<{ state: string }> }).attempts ?? [];
+      return attempts.some((a) => a.state === "failed");
+    });
+    if (!failed) {
+      try {
+        fs.unlinkSync(video);
+      } catch {
+        // video already gone or locked; ignore
+      }
+    }
+  });
+
   on("before:run", () => {
     a11yResults = [];
     lighthouseReport = {};
@@ -224,17 +244,46 @@ async function setupNodeEvents(
     writeFile(UIUX_REPORT_FILE, uiuxResults);
     writeFile(LIGHTHOUSE_REPORT_FILE, lighthouseResults);
 
-    // Persist the full Cypress RunResult so retry data (results.tests[].attempts[])
-    // survives the run for analysis. The mochawesome JSON does NOT carry attempt/flaky
-    // fields, so this is the only source of truth for flaky detection.
-    if (results && "tests" in results) {
-      writeJsonFile(RUN_RESULT_FILE, results);
+    // Persist flaky/retry signal. The mochawesome JSON does NOT carry attempt/flaky
+    // fields, so the Cypress RunResult (results.runs[].tests[].attempts[], the Cypress 15
+    // shape) is the only source of truth. Writes are defensive: a full RunResult can be
+    // non-serializable, and a failed run may carry no `tests`, so we never let one bad
+    // write abort the others.
+    try {
+      // Cypress 15 exposes per-test data under `results.runs[].tests[]`, each test with
+      // `attempts[]`. (The Q3 plan assumed `results.tests` from Cypress 13 — that shape no
+      // longer exists, which is why the flaky signal was always empty.) Flatten across runs.
+      const runs = (results as unknown as { runs?: Array<{ tests?: unknown[]; spec?: { name?: string } }> } | undefined)?.runs ?? [];
+      const tests: Array<{ title: (string | number)[]; state?: string; attempts?: Array<{ state: string }> }> = [];
+      for (const run of runs) {
+        for (const t of run.tests ?? []) {
+          const test = t as { title: (string | number)[]; state?: string; attempts?: Array<{ state: string }> };
+          tests.push({ title: test.title, state: test.state, attempts: test.attempts ?? [] });
+        }
+      }
+
+      // Persist a curated, serializable slice of the RunResult (attempts are the part
+      // we actually analyze). Fall back to stringifying the whole result if needed.
+      let runResultJson: string;
+      try {
+        runResultJson = JSON.stringify({
+          generatedAt: new Date().toISOString(),
+          tests: tests.map((t) => ({
+            title: t.title,
+            state: t.state,
+            attempts: (t as unknown as { attempts?: Array<{ state: string }> }).attempts ?? [],
+          })),
+        }, null, 2);
+      } catch {
+        runResultJson = JSON.stringify({ generatedAt: new Date().toISOString(), error: "unserializable-run-result" });
+      }
+      fs.mkdirSync(path.dirname(RUN_RESULT_FILE), { recursive: true });
+      fs.writeFileSync(RUN_RESULT_FILE, runResultJson, "utf8");
 
       // A test is flaky when it was retried (attempts.length > 1) and ultimately passed.
-      const runResult = results as unknown as CypressCommandLine.RunResult;
       let flakyCount = 0;
-      for (const test of runResult.tests ?? []) {
-        const attempts = test.attempts ?? [];
+      for (const test of tests) {
+        const attempts = (test as unknown as { attempts?: Array<{ state: string }> }).attempts ?? [];
         const finalState = attempts.length
           ? attempts[attempts.length - 1]?.state
           : test.state;
@@ -243,6 +292,9 @@ async function setupNodeEvents(
         }
       }
       writeJsonFile(FLAKY_SUMMARY_FILE, { flaky: flakyCount, generatedAt: new Date().toISOString() });
+    } catch (err) {
+      // Never let persist failures break the run or mask other artifacts.
+      console.error("[after:run] failed to persist RunResult/flaky summary:", err);
     }
   });
 
@@ -309,7 +361,12 @@ export default defineConfig({
   includeShadowDom: false,
   viewportHeight: 1080,
   viewportWidth: 1920,
-  retries: {    
+  retries: {
+    // runMode 2 self-heals the suite's inherent flakiness: local reproduction against the
+    // deployed URL showed failures shuffle between runs (reporting_unit_details 1->2->9,
+    // search 0->1->3) and are all async data-render races in the Vite SPA, not a product
+    // regression. runMode 1 turned that into hard CI failures. Lower to 1, then 0, only
+    // once the flaky signal (persisted RunResult retries) shows a sustained rate below 1%.
     runMode: 2,
     openMode: 0,
   },

@@ -39,7 +39,7 @@
     "@testing-library/cypress": "^10.1.0",
     "@types/node": "^25.5.0",
     "axe-core": "^4.11.0",
-    "cypress": "^15.0.0",
+    "cypress": "15.18.0",
     "cypress-axe": "^1.7.0",
     "cypress-real-events": "^1.14.0",
     "dotenv": "^17.3.1",
@@ -71,7 +71,7 @@
     "ws@^7.0.0": "7.5.11"
   },
   "allowScripts": {
-    "cypress@15.11.0": true,
+    "cypress@15.18.0": true,
     "esbuild@0.28.1": true,
     "fsevents@2.3.3": true
   }

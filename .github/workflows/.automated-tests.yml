@@ -23,12 +23,24 @@ jobs:
         with:
           node-version: 24
 
+      - name: Cache cypress node_modules
+        uses: actions/cache@v4
+        with:
+          path: cypress/node_modules
+          key: cypress-node_modules-b3v1-${{ hashFiles('cypress/package-lock.json') }}
+          restore-keys: |
+            cypress-node_modules-b3v1-
+            cypress-node_modules-
+
       - name: Run Cypress End-to-End
         uses: cypress-io/github-action@v7.4.1
         with:
           working-directory: cypress
           browser: chrome
-          install-command: npm ci
+          # Use `npm install --prefer-offline` (not `npm ci`) so the restored node_modules
+          # cache is actually leveraged. `npm ci` wipes node_modules and defeats the cache.
+          # See plan b3-cache-node-modules.md (#1083).
+          install-command: npm install --prefer-offline --no-audit --no-fund
         env:
           CYPRESS_baseUrl: https://${{ inputs.url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
@@ -48,14 +60,6 @@ jobs:
         working-directory: cypress
         if: always()
         run: cat summary.md >> $GITHUB_STEP_SUMMARY
-
-      - name: Persist mochawesome JSON reports
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: mochawesome-reports
-          path: cypress/reports/mochawesome
-          retention-days: 30
 
       - name: Persist Cypress RunResult and flaky summary
         if: always()
@@ -92,7 +96,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         name: Upload Cypress Screenshots
-        if: always()
+        if: always() && steps.check_artifacts.outputs.screenshots == 'true'
         with:
           name: cypress-screenshots
           path: cypress/cypress/screenshots
@@ -100,7 +104,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         name: Upload Cypress Videos
-        if: always()
+        if: always() && steps.check_artifacts.outputs.videos == 'true'
         with:
           name: cypress-videos
           path: cypress/cypress/videos
