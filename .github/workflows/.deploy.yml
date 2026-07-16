@@ -47,7 +47,7 @@ on:
         required: false
         type: string
 
-    permissions: {}
+permissions: {}
 
 jobs:
   vars:
