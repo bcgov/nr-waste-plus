@@ -16,6 +16,9 @@ import {
   useSearchReportingUnitsQuery,
   useDistrictVolumeTableDetailQuery,
   useWasteSearchFilterOptionsQueries,
+  useSpeciesCompositionListQuery,
+  useSpeciesCompositionDetailQuery,
+  useSpeciesCompositionCreateMutation,
 } from './hooks';
 import { queryKeys } from './queryKeys';
 
@@ -70,6 +73,29 @@ vi.mock('@/services/APIs', () => ({
         zones: [],
       }),
       createDistrictVolumeTable: vi.fn().mockResolvedValue(444),
+    },
+    speciesComposition: {
+      listSpeciesCompositions: vi.fn().mockResolvedValue({
+        content: [
+          {
+            id: 1,
+            startDate: '2026-05-15',
+            endDate: null,
+            uploadedBy: 'IDIR/ABCDEF',
+            dateOfUpload: '2026-03-27T00:00:00Z',
+          },
+        ],
+        page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
+      }),
+      getSpeciesCompositionById: vi.fn().mockResolvedValue({
+        id: 1,
+        startDate: '2026-05-15',
+        endDate: null,
+        uploadedBy: 'IDIR/ABCDEF',
+        dateOfUpload: '2026-03-27T00:00:00Z',
+        tableData: { rows: [] },
+      }),
+      createSpeciesComposition: vi.fn().mockResolvedValue(555),
     },
   },
 }));
@@ -1084,6 +1110,185 @@ describe('react-query hooks', () => {
       vi.mocked(API.districtVolume.createDistrictVolumeTable).mockRejectedValueOnce(mockError);
 
       const { result } = renderHook(() => useDistrictVolumeTableCreateMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync(validCreateRequest);
+        } catch (_e) {
+          // expected
+        }
+      });
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(sendEvent).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('useSpeciesCompositionListQuery', () => {
+    it('should call listSpeciesCompositions with the correct params', async () => {
+      const { result } = renderHook(
+        () => useSpeciesCompositionListQuery({ page: 0, size: 10, sort: {} }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+      expect(API.speciesComposition.listSpeciesCompositions).toHaveBeenCalledWith({
+        page: 0,
+        size: 10,
+        sort: [],
+      });
+      expect(result.current.data).toBeDefined();
+    });
+
+    it('should accept an options object with staleTime', async () => {
+      const { result } = renderHook(
+        () => useSpeciesCompositionListQuery({ page: 0, size: 10, sort: {} }, { staleTime: 60000 }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    });
+
+    it('should dispatch a notification on error when notificationTarget is supplied', async () => {
+      const mockError = new Error('List failed');
+      vi.mocked(API.speciesComposition.listSpeciesCompositions).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(
+        () =>
+          useSpeciesCompositionListQuery(
+            { page: 0, size: 10, sort: {} },
+            { notificationTarget: 'sc-list' },
+          ),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      await waitFor(() => expect(sendEvent).toHaveBeenCalled());
+    });
+  });
+
+  describe('useSpeciesCompositionDetailQuery', () => {
+    it('should call getSpeciesCompositionById with the correct ID', async () => {
+      const { result } = renderHook(() => useSpeciesCompositionDetailQuery(42), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+      expect(API.speciesComposition.getSpeciesCompositionById).toHaveBeenCalledWith(42);
+    });
+
+    it('should accept an options object with staleTime', async () => {
+      const { result } = renderHook(
+        () => useSpeciesCompositionDetailQuery(42, { staleTime: 60000 }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    });
+
+    it('should dispatch a notification on error when notificationTarget is supplied', async () => {
+      const mockError = new Error('Detail failed');
+      vi.mocked(API.speciesComposition.getSpeciesCompositionById).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(
+        () => useSpeciesCompositionDetailQuery(999, { notificationTarget: 'sc-detail-panel' }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      await waitFor(() => expect(sendEvent).toHaveBeenCalled());
+    });
+  });
+
+  describe('useSpeciesCompositionCreateMutation', () => {
+    const validCreateRequest = {
+      tableData: {
+        rows: [
+          {
+            district: { code: 'DCC', description: 'Cariboo' },
+            balsam: 0.1,
+            cedar: 0.2,
+            cottonwood: 0,
+            cypress: 0,
+            fir: 0.3,
+            hemlock: 0,
+            larch: 0,
+            maple: 0,
+            pine: 0.1,
+            poplar: 0,
+            redcedar: 0,
+            redwood: 0,
+            spruce: 0,
+            whitebirch: 0,
+            whitepine: 0,
+            yew: 0,
+            other: 0,
+            unknown: 0,
+            total: 0.7,
+          },
+        ],
+      },
+    };
+
+    it('should call createSpeciesComposition and return the new ID', async () => {
+      const { result } = renderHook(() => useSpeciesCompositionCreateMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        await result.current.mutateAsync(validCreateRequest);
+      });
+
+      expect(API.speciesComposition.createSpeciesComposition).toHaveBeenCalledWith(
+        validCreateRequest,
+      );
+      await waitFor(() => expect(result.current.data).toBe(555));
+    });
+
+    it('should invoke onSuccess with the created ID', async () => {
+      const onSuccessMock = vi.fn();
+      const { result } = renderHook(
+        () => useSpeciesCompositionCreateMutation({ onSuccess: onSuccessMock }),
+        { wrapper: createWrapper() },
+      );
+
+      await act(async () => {
+        await result.current.mutateAsync(validCreateRequest);
+      });
+
+      expect(onSuccessMock).toHaveBeenCalledWith(555);
+    });
+
+    it('should dispatch a notification on error when notificationTarget is supplied', async () => {
+      const mockError = new Error('Create failed');
+      vi.mocked(API.speciesComposition.createSpeciesComposition).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(
+        () => useSpeciesCompositionCreateMutation({ notificationTarget: 'sc-create' }),
+        { wrapper: createWrapper() },
+      );
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync(validCreateRequest);
+        } catch (_e) {
+          // expected
+        }
+      });
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      await waitFor(() => expect(sendEvent).toHaveBeenCalled());
+    });
+
+    it('should not dispatch notification when notificationTarget is omitted', async () => {
+      const mockError = new Error('Create failed');
+      vi.mocked(API.speciesComposition.createSpeciesComposition).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(() => useSpeciesCompositionCreateMutation(), {
         wrapper: createWrapper(),
       });
 
