@@ -361,10 +361,14 @@ export default defineConfig({
   viewportHeight: 1080,
   viewportWidth: 1920,
   retries: {
-    // Interim reduction (Q4, #1083): dropped 2 -> 1 now that the Q3 flaky signal
-    // is visible in the CI summary. Move to 0 only after 2-4 weeks of Q3 data show
-    // a flaky rate below 1%.
-    runMode: 1,
+    // Reverted 1 -> 2 (Q4, #1083): local reproduction against the same deployed URL
+    // showed the suite is fundamentally flaky (not a product regression) — failures
+    // shuffle between runs (reporting_unit_details 1->2->9, search 0->1->3) and are
+    // all async data-render races in the Vite SPA. runMode 1 turned that inherent
+    // flakiness into hard CI failures. Until the wait strategy is hardened (wait on
+    // the RU/client network responses + longer content-wait timeouts), keep 2 so the
+    // run self-heals. Revisit 0 once the flaky rate is confirmed <1% via Q3 data.
+    runMode: 2,
     openMode: 0,
   },
 });
