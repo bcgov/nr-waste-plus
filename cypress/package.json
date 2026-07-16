@@ -71,7 +71,7 @@
     "ws@^7.0.0": "7.5.11"
   },
   "allowScripts": {
-    "cypress@15.11.0": true,
+    "cypress@15.18.0": true,
     "esbuild@0.28.1": true,
     "fsevents@2.3.3": true
   }
