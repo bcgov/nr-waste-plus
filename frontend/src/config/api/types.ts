@@ -1,8 +1,9 @@
 import axios from 'axios';
 
+import { CancelablePromise } from './CancelablePromise';
+import { parseResourceIdFromLocation } from './locationHeader';
 import { request } from './request';
 
-import type { CancelablePromise } from './CancelablePromise';
 import type {
   AxiosError,
   AxiosInstance,
@@ -121,4 +122,50 @@ export class HttpClient {
 
   protected doRequest = <T>(config: APIConfig, options: ApiRequestOptions): CancelablePromise<T> =>
     request<T>(config, options, this.axiosInstance);
+
+  /**
+   * Performs a create request that returns the new resource ID via the
+   * `Location` response header.
+   *
+   * Issues the request with `responseHeader: 'location'`, then parses the
+   * returned header value into a resource identifier. Cancellation is
+   * forwarded to the underlying request, and any HTTP / parse error is
+   * propagated unchanged.
+   *
+   * @template T - the resolved resource identifier type
+   * @param options - the request configuration (method, url, body, meta, ...)
+   * @param idParser - optional custom `Location` parser; defaults to the
+   * trailing-numeric ID strategy
+   * @returns a promise that resolves to the parsed resource identifier
+   * @throws {ApiError} when the HTTP request fails (400, 409, 500, etc.)
+   * @throws {Error} when the `Location` header value cannot be parsed
+   * @example
+   * const id = await this.createResource<number>({
+   *   method: 'POST',
+   *   url: '/api/reporting-units',
+   *   body,
+   * });
+   */
+  protected createResource = <T = number>(
+    options: ApiRequestOptions,
+    idParser: (location: string) => T = parseResourceIdFromLocation as (location: string) => T,
+  ): CancelablePromise<T> =>
+    new CancelablePromise<T>((resolve, reject, onCancel) => {
+      const request$ = this.doRequest<string>(this.config, {
+        ...options,
+        responseHeader: 'location',
+      });
+
+      onCancel(() => request$.cancel());
+
+      request$
+        .then((location) => {
+          try {
+            resolve(idParser(location));
+          } catch (error) {
+            reject(error);
+          }
+        })
+        .catch(reject);
+    });
 }

@@ -268,7 +268,7 @@ describe('ReportingUnitService', () => {
       (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/');
 
       await expect(service.createReportingUnit(validCreateRequest)).rejects.toThrow(
-        'Invalid Location header format: /reporting-units/',
+        'Invalid Location header: "/reporting-units/"',
       );
     });
 
@@ -276,7 +276,7 @@ describe('ReportingUnitService', () => {
       (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/abc');
 
       await expect(service.createReportingUnit(validCreateRequest)).rejects.toThrow(
-        'Invalid Location header format: /reporting-units/abc',
+        'Invalid Location header: "/reporting-units/abc"',
       );
     });
 
@@ -284,7 +284,7 @@ describe('ReportingUnitService', () => {
       (service as any).doRequest = vi.fn().mockResolvedValue('not-a-valid-path');
 
       await expect(service.createReportingUnit(validCreateRequest)).rejects.toThrow(
-        'Invalid Location header format: not-a-valid-path',
+        'Invalid Location header: "not-a-valid-path"',
       );
     });
 
@@ -315,11 +315,12 @@ describe('ReportingUnitService', () => {
       );
     });
 
-    it('handles Location header with query parameters (if backend adds them)', async () => {
+    it('resolves the ID when the Location header carries a query string', async () => {
       (service as any).doRequest = vi.fn().mockResolvedValue('/reporting-units/777?v=1');
 
-      // Should still extract the ID correctly
-      await expect(service.createReportingUnit(validCreateRequest)).rejects.toThrow();
+      const result = await service.createReportingUnit(validCreateRequest);
+
+      expect(result).toBe(777);
     });
 
     it('propagates conflict errors (409 Duplicate RU)', async () => {

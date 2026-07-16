@@ -37,9 +37,9 @@ export class ReportingUnitService extends HttpClient {
   }
 
   /**
-   * Creates a new reporting unit and extracts the ID from the Location header.
+   * Creates a new reporting unit and returns its numeric ID.
    *
-   * The backend returns HTTP 201 (Created) with a Location header pointing to
+   * The backend returns HTTP 201 (Created) with a `Location` header pointing to
    * `/reporting-units/{id}`. This method extracts the ID from that header and
    * returns it as a number for immediate navigation.
    *
@@ -48,26 +48,10 @@ export class ReportingUnitService extends HttpClient {
    * @throws {ApiError} When the HTTP request fails (400, 409, 500, etc.).
    */
   createReportingUnit(body: ReportingUnitCreateDto): CancelablePromise<number> {
-    return new CancelablePromise<number>((resolve, reject, onCancel) => {
-      const request = this.doRequest<string>(this.config, {
-        method: 'POST',
-        url: '/api/reporting-units',
-        body,
-        responseHeader: 'location',
-      });
-
-      // Forward cancellation to the underlying HTTP request.
-      onCancel(() => request.cancel());
-
-      request.then((locationHeader) => {
-        // Extract ID from Location header (format: `/reporting-units/{id}`)
-        const match = new RegExp(/\/(\d+)$/).exec(locationHeader);
-        if (!match?.[1]) {
-          reject(new Error(`Invalid Location header format: ${locationHeader}`));
-          return;
-        }
-        resolve(Number.parseInt(match[1], 10));
-      }, reject);
+    return this.createResource<number>({
+      method: 'POST',
+      url: '/api/reporting-units',
+      body,
     });
   }
 }
