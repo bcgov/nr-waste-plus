@@ -92,7 +92,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         name: Upload Cypress Screenshots
-        if: always()
+        if: always() && steps.check_artifacts.outputs.screenshots == 'true'
         with:
           name: cypress-screenshots
           path: cypress/cypress/screenshots
@@ -100,7 +100,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         name: Upload Cypress Videos
-        if: always()
+        if: always() && steps.check_artifacts.outputs.videos == 'true'
         with:
           name: cypress-videos
           path: cypress/cypress/videos
