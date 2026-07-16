@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Deployment Init
-        uses: bcgov/action-deployer-openshift@b12e12b7825e675387385c4713cf659edefc6de8 # after v4.2.0
+        uses: bcgov/action-deployer-openshift@27a85b7b157bfc9c3c9bf0aca53bcd288d4d2506 # v4.2.1
         with:
           file: common/openshift.init.yml
           oc_namespace: ${{ secrets.OC_NAMESPACE }}
@@ -127,7 +127,7 @@ jobs:
               -p ORACLEDB_PORT=${{ inputs.oracledb-port }}
             verification_path: actuator/health
     steps:
-      - uses: bcgov/action-deployer-openshift@b12e12b7825e675387385c4713cf659edefc6de8 # after v4.2.0
+      - uses: bcgov/action-deployer-openshift@27a85b7b157bfc9c3c9bf0aca53bcd288d4d2506 # v4.2.1
         id: deploys
         with:
           file: ${{ matrix.name }}/openshift.deploy.yml
