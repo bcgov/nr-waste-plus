@@ -17,12 +17,16 @@
  * parseResourceIdFromLocation('/api/2024/reporting-units/777') // 777
  */
 export function parseResourceIdFromLocation(location: string): number {
-  // Strip any query string or hash so the ID is read from the path only.
-  const path = location.replace(/[?#].*$/, '');
-  // Anchor to the end of the path: match the final numeric segment, allowing
-  // an optional trailing slash, so `/api/2024/reporting-units/777` -> 777 and
-  // `/foo/777?v=1` -> 777 (not the intermediate `2024`).
-  const match = /\/(\d+)\/?$/.exec(path);
+  // Strip any query string or hash so the ID is read from the path only,
+  // then drop any trailing slash. Trailing-slash removal lets the matcher
+  // anchor to the exact end of the path without an optional `\/?` quantifier,
+  // which avoids super-linear backtracking (Sonar typescript:S8786).
+  const path = location.replace(/[?#].*$/, '').replace(/\/+$/, '');
+  // Anchor to the end of the path: match the final numeric segment, so
+  // `/api/2024/reporting-units/777` -> 777 and `/foo/777?v=1` -> 777
+  // (not the intermediate `2024`). The greedy `\d+` is the only quantifier
+  // and is bounded by `$`, so the match runs in linear time.
+  const match = /\/(\d+)$/.exec(path);
   if (!match) {
     throw new Error(`Invalid Location header: "${location}"`);
   }
