@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { parseLocationResourceId, parseResourceIdFromLocation } from './locationHeader';
+import { parseResourceIdFromLocation } from './locationHeader';
 
 describe('parseResourceIdFromLocation', () => {
   it('extracts the trailing numeric ID from a relative path', () => {
@@ -17,6 +17,16 @@ describe('parseResourceIdFromLocation', () => {
 
   it('ignores a trailing hash and resolves the path ID', () => {
     expect(parseResourceIdFromLocation('/reporting-units/123#frag')).toBe(123);
+  });
+
+  it('reads the final numeric segment, not an intermediate one', () => {
+    // The earlier regex matched the first numeric segment anywhere in the
+    // path; anchoring to the end ensures the trailing ID wins.
+    expect(parseResourceIdFromLocation('/api/2024/reporting-units/777')).toBe(777);
+  });
+
+  it('ignores a query string when choosing the final segment', () => {
+    expect(parseResourceIdFromLocation('/api/2024/reporting-units/777?v=1')).toBe(777);
   });
 
   it('handles single-digit IDs', () => {
@@ -43,23 +53,5 @@ describe('parseResourceIdFromLocation', () => {
     expect(() => parseResourceIdFromLocation('not-a-valid-path')).toThrow(
       'Invalid Location header: "not-a-valid-path"',
     );
-  });
-});
-
-describe('parseLocationResourceId', () => {
-  it('uses the default trailing-numeric parser when none is supplied', () => {
-    expect(parseLocationResourceId('/reporting-units/42')).toBe(42);
-  });
-
-  it('delegates to a custom parser when provided', () => {
-    const custom = (location: string): string => location.split('/').pop()!;
-    expect(parseLocationResourceId('/reporting-units/abc', custom)).toBe('abc');
-  });
-
-  it('propagates errors thrown by the custom parser', () => {
-    const custom = (): number => {
-      throw new Error('custom failure');
-    };
-    expect(() => parseLocationResourceId('/foo', custom)).toThrow('custom failure');
   });
 });
