@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Deployment Init
-        uses: bcgov/action-deployer-openshift@b12e12b7825e675387385c4713cf659edefc6de8 # fix lite_mode Recreate+rollingUpdate (PR #163)
+        uses: bcgov/action-deployer-openshift@b12e12b7825e675387385c4713cf659edefc6de8 # after v4.2.0
         with:
           file: common/openshift.init.yml
           oc_namespace: ${{ secrets.OC_NAMESPACE }}
@@ -127,7 +127,7 @@ jobs:
               -p ORACLEDB_PORT=${{ inputs.oracledb-port }}
             verification_path: actuator/health
     steps:
-      - uses: bcgov/action-deployer-openshift@b12e12b7825e675387385c4713cf659edefc6de8 # fix lite_mode Recreate+rollingUpdate (PR #163)
+      - uses: bcgov/action-deployer-openshift@b12e12b7825e675387385c4713cf659edefc6de8 # after v4.2.0
         id: deploys
         with:
           file: ${{ matrix.name }}/openshift.deploy.yml
@@ -135,7 +135,6 @@ jobs:
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token }}
           overwrite: ${{ matrix.overwrite }}
-          # PRs: strip HPA/PDB, force 1 replica + Recreate. TEST/PROD keep RollingUpdate + HPA.
           parameters:
             -p TAG=${{ needs.vars.outputs.tag }}
             -p ZONE=${{ inputs.zone }}
