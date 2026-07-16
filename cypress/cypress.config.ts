@@ -209,6 +209,26 @@ async function setupNodeEvents(
   },
   });
 
+  // Q2 (video-on-failure): drop a spec's video when no test failed in it.
+  // NOTE: videoUploadOnPasses was removed in Cypress 13, so we delete the
+  // passing-spec video here instead of relying on a removed option.
+  on("after:spec", (_spec: unknown, results: CypressCommandLine.RunResult) => {
+    if (!results) return;
+    const video = results.video;
+    if (!video) return;
+    const failed = (results.tests ?? []).some((test) => {
+      const attempts = (test as unknown as { attempts?: Array<{ state: string }> }).attempts ?? [];
+      return attempts.some((a) => a.state === "failed");
+    });
+    if (!failed) {
+      try {
+        fs.unlinkSync(video);
+      } catch {
+        // video already gone or locked; ignore
+      }
+    }
+  });
+
   on("before:run", () => {
     a11yResults = [];
     lighthouseReport = {};
