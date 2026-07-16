@@ -245,9 +245,10 @@ async function setupNodeEvents(
     writeFile(LIGHTHOUSE_REPORT_FILE, lighthouseResults);
 
     // Persist flaky/retry signal. The mochawesome JSON does NOT carry attempt/flaky
-    // fields, so the Cypress RunResult (results.tests[].attempts[]) is the only source
-    // of truth. Writes are defensive: a full RunResult can be non-serializable, and a
-    // failed run may carry no `tests`, so we never let one bad write abort the others.
+    // fields, so the Cypress RunResult (results.runs[].tests[].attempts[], the Cypress 15
+    // shape) is the only source of truth. Writes are defensive: a full RunResult can be
+    // non-serializable, and a failed run may carry no `tests`, so we never let one bad
+    // write abort the others.
     try {
       // Cypress 15 exposes per-test data under `results.runs[].tests[]`, each test with
       // `attempts[]`. (The Q3 plan assumed `results.tests` from Cypress 13 — that shape no
@@ -361,13 +362,11 @@ export default defineConfig({
   viewportHeight: 1080,
   viewportWidth: 1920,
   retries: {
-    // Reverted 1 -> 2 (Q4, #1083): local reproduction against the same deployed URL
-    // showed the suite is fundamentally flaky (not a product regression) — failures
-    // shuffle between runs (reporting_unit_details 1->2->9, search 0->1->3) and are
-    // all async data-render races in the Vite SPA. runMode 1 turned that inherent
-    // flakiness into hard CI failures. Until the wait strategy is hardened (wait on
-    // the RU/client network responses + longer content-wait timeouts), keep 2 so the
-    // run self-heals. Revisit 0 once the flaky rate is confirmed <1% via Q3 data.
+    // runMode 2 self-heals the suite's inherent flakiness: local reproduction against the
+    // deployed URL showed failures shuffle between runs (reporting_unit_details 1->2->9,
+    // search 0->1->3) and are all async data-render races in the Vite SPA, not a product
+    // regression. runMode 1 turned that into hard CI failures. Lower to 1, then 0, only
+    // once the flaky signal (persisted RunResult retries) shows a sustained rate below 1%.
     runMode: 2,
     openMode: 0,
   },

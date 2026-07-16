@@ -43,7 +43,6 @@ const doLogin = (context: Mocha.Context, kind: string, afterLoginLocation: strin
     {
       validate: () => {
         cy.request(afterLoginLocation).its('status').should('eq', 200);
-        cy.visit(afterLoginLocation);
       },
       // B1 (#1083): reuse the IdP session across specs in one run, so the
       // logontest7.gov.bc.ca login dance runs once per run instead of once per
