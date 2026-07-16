@@ -31,7 +31,7 @@ parameters:
     value: "1543"
   - name: MIN_REPLICAS
     description: Minimum replicas for the horizontal pod autoscaler
-    value: "3"
+    value: "2"
   - name: MAX_REPLICAS
     description: Maximum replicas for the horizontal pod autoscaler
     value: "5"
@@ -75,6 +75,9 @@ objects:
           deployment: ${NAME}-${ZONE}-${COMPONENT}
       strategy:
         type: RollingUpdate
+        rollingUpdate:
+          maxUnavailable: 1
+          maxSurge: 1
       template:
         metadata:
           annotations:
