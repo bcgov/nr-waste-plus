@@ -54,7 +54,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: mochawesome-reports
-          path: cypress/reports/mochawesome
+          path: cypress/reports/
           retention-days: 30
 
       - name: Persist Cypress RunResult and flaky summary
