@@ -132,25 +132,48 @@ export class HttpClient {
    * forwarded to the underlying request, and any HTTP / parse error is
    * propagated unchanged.
    *
-   * @template T - the resolved resource identifier type
+   * The default parser extracts the trailing numeric path segment and returns
+   * a `number`. To resolve a non-numeric or differently-shaped identifier,
+   * supply an `idParser` — its return type drives the method's type parameter.
+   *
    * @param options - the request configuration (method, url, body, meta, ...)
-   * @param idParser - optional custom `Location` parser; defaults to the
-   * trailing-numeric ID strategy
-   * @returns a promise that resolves to the parsed resource identifier
+   * @returns a promise that resolves to the numeric resource ID
    * @throws {ApiError} when the HTTP request fails (400, 409, 500, etc.)
    * @throws {Error} when the `Location` header value cannot be parsed
    * @example
-   * const id = await this.createResource<number>({
+   * const id = await this.createResource({
    *   method: 'POST',
    *   url: '/api/reporting-units',
    *   body,
    * });
    */
-  protected createResource = <T = number>(
+  protected createResource(options: ApiRequestOptions): CancelablePromise<number>;
+
+  /**
+   * Performs a create request that returns a resource identifier of type `T`
+   * via a custom `Location` parser.
+   *
+   * @template T - the resolved resource identifier type
+   * @param options - the request configuration (method, url, body, meta, ...)
+   * @param idParser - custom `Location` parser producing a `T`
+   * @returns a promise that resolves to the parsed resource identifier
+   * @throws {ApiError} when the HTTP request fails (400, 409, 500, etc.)
+   * @throws {Error} when the `Location` header value cannot be parsed
+   */
+  protected createResource<T>(
     options: ApiRequestOptions,
-    idParser: (location: string) => T = parseResourceIdFromLocation as (location: string) => T,
-  ): CancelablePromise<T> =>
-    new CancelablePromise<T>((resolve, reject, onCancel) => {
+    idParser: (location: string) => T,
+  ): CancelablePromise<T>;
+
+  protected createResource<T = number>(
+    options: ApiRequestOptions,
+    idParser?: (location: string) => T,
+  ): CancelablePromise<T> {
+    // When no custom parser is supplied, fall back to the trailing-numeric
+    // strategy (which always yields a number). The public overloads keep the
+    // no-parser form constrained to `number`, so this cast is internal only.
+    const parser = (idParser ?? parseResourceIdFromLocation) as (location: string) => T;
+    return new CancelablePromise<T>((resolve, reject, onCancel) => {
       const request$ = this.doRequest<string>(this.config, {
         ...options,
         responseHeader: 'location',
@@ -161,11 +184,12 @@ export class HttpClient {
       request$
         .then((location) => {
           try {
-            resolve(idParser(location));
+            resolve(parser(location));
           } catch (error) {
             reject(error);
           }
         })
         .catch(reject);
     });
+  }
 }

@@ -48,7 +48,7 @@ export class ReportingUnitService extends HttpClient {
    * @throws {ApiError} When the HTTP request fails (400, 409, 500, etc.).
    */
   createReportingUnit(body: ReportingUnitCreateDto): CancelablePromise<number> {
-    return this.createResource<number>({
+    return this.createResource({
       method: 'POST',
       url: '/api/reporting-units',
       body,

@@ -60,7 +60,7 @@ export class DistrictVolumeService extends HttpClient {
     dto: DistrictVolumeCreate,
     meta?: Record<string, unknown>,
   ): CancelablePromise<number> {
-    return this.createResource<number>({
+    return this.createResource({
       method: 'POST',
       url: '/api/configuration/district-average-volumes',
       body: dto,
