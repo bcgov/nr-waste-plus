@@ -24,7 +24,7 @@ jobs:
           node-version: 24
 
       - name: Cache cypress node_modules
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: cypress/node_modules
           key: cypress-node_modules-b3v1-${{ hashFiles('cypress/package-lock.json') }}
