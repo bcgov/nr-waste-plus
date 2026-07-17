@@ -48,31 +48,23 @@ export class DistrictVolumeService extends HttpClient {
     });
   }
 
+  /**
+   * Creates a district volume table and returns the new resource ID.
+   *
+   * @param dto - the district volume create payload
+   * @param meta - optional request metadata
+   * @returns a promise that resolves to the numeric ID of the created table
+   * @throws {ApiError} When the HTTP request fails (400, 409, 500, etc.)
+   */
   createDistrictVolumeTable(
     dto: DistrictVolumeCreate,
     meta?: Record<string, unknown>,
   ): CancelablePromise<number> {
-    return new CancelablePromise<number>((resolve, reject, onCancel) => {
-      const request = this.doRequest<string>(this.config, {
-        method: 'POST',
-        url: '/api/configuration/district-average-volumes',
-        body: dto,
-        responseHeader: 'location',
-        ...(meta === undefined ? {} : { meta }),
-      });
-
-      onCancel(() => request.cancel());
-
-      request
-        .then((location) => {
-          const match = /\/(\d+)$/.exec(location);
-          if (match) {
-            resolve(Number(match[1]));
-          } else {
-            reject(new Error(`Could not parse resource ID from Location header: "${location}"`));
-          }
-        })
-        .catch(reject);
+    return this.createResource({
+      method: 'POST',
+      url: '/api/configuration/district-average-volumes',
+      body: dto,
+      ...(meta === undefined ? {} : { meta }),
     });
   }
 
