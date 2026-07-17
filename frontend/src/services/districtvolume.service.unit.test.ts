@@ -257,7 +257,7 @@ describe('DistrictVolumeService', () => {
           tableLevelFactor: 0,
           tableData: { type: 'INTERIOR', zones: [], formulas: {} },
         }),
-      ).rejects.toThrow('Could not parse resource ID from Location header');
+      ).rejects.toThrow('Invalid Location header: "invalid-location"');
     });
 
     it('should propagate network errors', async () => {
