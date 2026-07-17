@@ -7,7 +7,7 @@ import type {
   SpeciesCompositionDetail,
   SpeciesCompositionListItem,
 } from './speciesComposition.types';
-import type { PageableRequest } from './types';
+import type { PageableRequest } from '@/services/types';
 
 const mockConfig = { baseURL: 'http://localhost' };
 let service: SpeciesCompositionService;
@@ -236,7 +236,7 @@ describe('SpeciesCompositionService', () => {
       (service as any).doRequest = vi.fn().mockResolvedValue('invalid-location');
 
       await expect(service.createSpeciesComposition(validCreateRequest)).rejects.toThrow(
-        'Could not parse resource ID from Location header',
+        'Invalid Location header: "invalid-location"',
       );
     });
 

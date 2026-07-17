@@ -4,7 +4,7 @@ import type {
   SpeciesCompositionCreate,
   SpeciesCompositionDetail,
   SpeciesCompositionListItem,
-} from './speciescomposition/speciesComposition.types';
+} from './speciesComposition.types';
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { PageableRequest } from '@/services/types';
 
@@ -67,7 +67,8 @@ export class SpeciesCompositionService extends HttpClient {
    * Creates a new species composition table and returns the created resource ID.
    *
    * The backend returns HTTP 201 (Created) with a Location header pointing to the
-   * created resource. This method extracts and parses that header to return the
+   * created resource. This method delegates to `createResource`, which extracts
+   * and parses that header (via `parseResourceIdFromLocation`) to return the
    * numeric ID, mirroring the district volume create behaviour.
    *
    * @param dto The species composition create payload.
@@ -78,27 +79,11 @@ export class SpeciesCompositionService extends HttpClient {
     dto: SpeciesCompositionCreate,
     meta?: Record<string, unknown>,
   ): CancelablePromise<number> {
-    return new CancelablePromise<number>((resolve, reject, onCancel) => {
-      const request = this.doRequest<string>(this.config, {
-        method: 'POST',
-        url: '/api/configuration/species-composition',
-        body: dto,
-        responseHeader: 'location',
-        ...(meta === undefined ? {} : { meta }),
-      });
-
-      onCancel(() => request.cancel());
-
-      request
-        .then((location) => {
-          const match = /\/(\d+)$/.exec(location);
-          if (match) {
-            resolve(Number(match[1]));
-          } else {
-            reject(new Error(`Could not parse resource ID from Location header: "${location}"`));
-          }
-        })
-        .catch(reject);
+    return this.createResource({
+      method: 'POST',
+      url: '/api/configuration/species-composition',
+      body: dto,
+      ...(meta === undefined ? {} : { meta }),
     });
   }
 }
