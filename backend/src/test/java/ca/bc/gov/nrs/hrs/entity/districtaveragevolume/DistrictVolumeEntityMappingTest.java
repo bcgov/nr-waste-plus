@@ -37,7 +37,7 @@ public class DistrictVolumeEntityMappingTest
 
     Zone zone = new Zone("Dry belt", List.of(row));
 
-    TableData tableData = new TableData(List.of(zone), null, Map.of());
+    TableData tableData = new TableData(List.of(zone), null, null, Map.of());
 
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setArea(Area.INTERIOR);
