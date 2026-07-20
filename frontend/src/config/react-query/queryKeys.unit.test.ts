@@ -147,4 +147,30 @@ describe('queryKeys', () => {
       expect(queryKeys.districtVolume.detail(42)).toEqual(['district-volume', 'detail', 42]);
     });
   });
+
+  describe('speciesComposition', () => {
+    it('should build list key without notificationTarget', () => {
+      const params = { page: 0, size: 10, sort: {} };
+      const key = queryKeys.speciesComposition.list(params);
+      expect(key).toEqual(['species-composition', 'list', params, undefined]);
+    });
+
+    it('should include notificationTarget in list key', () => {
+      const params = { page: 0, size: 10, sort: {} };
+      const key = queryKeys.speciesComposition.list(params, 'sc-panel');
+      expect(key[3]).toBe('sc-panel');
+    });
+
+    it('should build create key', () => {
+      expect(queryKeys.speciesComposition.create()).toEqual(['species-composition', 'create']);
+    });
+
+    it('should build detail key', () => {
+      expect(queryKeys.speciesComposition.detail(42)).toEqual([
+        'species-composition',
+        'detail',
+        42,
+      ]);
+    });
+  });
 });

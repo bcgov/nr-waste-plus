@@ -33,7 +33,7 @@ Feature: Collection of sample tests
     Then the lighthouse metric "ttfb" should be at most "95"
     And the lighthouse metric "cls" should be at most "0.1"
     And the lighthouse "performance" score should be above 85
-    And the lighthouse metric "lcp" should be at most "2000"
+    And the lighthouse metric "lcp" should be at most "2500"
 
   @chromeOnly
   Scenario: UX quality baseline

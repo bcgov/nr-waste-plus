@@ -30,6 +30,18 @@ export type ReportingUnitsQueryParams = {
 };
 
 /**
+ * Parameters used to build the species-composition list query key and query function.
+ */
+export type SpeciesCompositionQueryParams = {
+  /** Zero-based page index. */
+  page: number;
+  /** Number of items per page. */
+  size: number;
+  /** Column sort configuration (`{ key: direction }`). */
+  sort: Record<string, SortDirectionType>;
+};
+
+/**
  * Centralised query-key factory for all TanStack Query caches in the application.
  *
  * Each key is a `const` tuple so that TypeScript can narrow the exact key type
@@ -92,5 +104,11 @@ export const queryKeys = {
       ['district-volume', 'list', params, notificationTarget] as const,
     create: () => ['district-volume', 'create'] as const,
     detail: (id: number) => ['district-volume', 'detail', id] as const,
+  },
+  speciesComposition: {
+    list: (params: SpeciesCompositionQueryParams, notificationTarget?: string) =>
+      ['species-composition', 'list', params, notificationTarget] as const,
+    create: () => ['species-composition', 'create'] as const,
+    detail: (id: number) => ['species-composition', 'detail', id] as const,
   },
 } as const;

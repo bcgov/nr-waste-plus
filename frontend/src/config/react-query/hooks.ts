@@ -11,6 +11,7 @@ import {
   queryKeys,
   type DistrictVolumeQueryParams,
   type ReportingUnitsQueryParams,
+  type SpeciesCompositionQueryParams,
 } from './queryKeys';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
@@ -21,6 +22,11 @@ import type {
   DistrictVolumeListItem,
 } from '@/services/districtvolumes.types';
 import type { CodeDescriptionDto, ReportingUnitSearchExpandedDto } from '@/services/search.types';
+import type {
+  SpeciesCompositionCreate,
+  SpeciesCompositionDetail,
+  SpeciesCompositionListItem,
+} from '@/services/speciescomposition/speciesComposition.types';
 import type {
   ForestClientDto,
   MyForestClientDto,
@@ -683,6 +689,155 @@ export const useDistrictVolumeTableCreateMutation = (
   const mutation = useMutation({
     mutationKey: queryKeys.districtVolume.create(),
     mutationFn: (body) => API.districtVolume.createDistrictVolumeTable(body),
+    onSuccess: (data) => {
+      onSuccess?.(data);
+    },
+    ...mutationOptions,
+  });
+
+  useEffect(() => {
+    if (!notificationTarget || !mutation.isError || !mutation.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(mutation.error, notificationTarget);
+  }, [notificationTarget, mutation.error, mutation.isError]);
+
+  return mutation;
+};
+
+/**
+ * Fetches the detailed information for a specific species composition configuration by its ID.
+ *
+ * On error, dispatches an inline notification to `notificationTarget` (when supplied).
+ *
+ * @param id - The numeric species composition configuration ID.
+ * @param options - Optional TanStack Query overrides plus an optional `notificationTarget`.
+ * @returns The TanStack Query result containing the {@link SpeciesCompositionDetail}.
+ */
+export const useSpeciesCompositionDetailQuery = <TData = SpeciesCompositionDetail>(
+  id: number,
+  options?: Omit<
+    UseQueryOptions<TData, Error, TData, ReturnType<typeof queryKeys.speciesComposition.detail>>,
+    'queryKey' | 'queryFn'
+  > &
+    QueryNotificationOptions,
+) => {
+  const { notificationTarget, ...queryOptions } = options ?? {};
+
+  const query = useQuery({
+    queryKey: queryKeys.speciesComposition.detail(id),
+    queryFn: () =>
+      API.speciesComposition.getSpeciesCompositionById(id) as unknown as Promise<TData>,
+    ...queryOptions,
+  });
+
+  useEffect(() => {
+    if (!notificationTarget || !query.isError || !query.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(query.error, notificationTarget);
+  }, [notificationTarget, query.error, query.isError]);
+
+  return query;
+};
+
+/**
+ * Searches species composition configurations with the provided sort/pagination parameters.
+ *
+ * @param input - Sort configuration and pagination settings.
+ * @param options - Optional TanStack Query overrides plus an optional `notificationTarget`.
+ * @returns The TanStack Query result for the paginated {@link SpeciesCompositionListItem} list.
+ *
+ * @example
+ * ```tsx
+ * const { data, isLoading } = useSpeciesCompositionListQuery({
+ *   page: 0,
+ *   size: 25,
+ *   sort: { startDate: 'DESC' },
+ * });
+ * ```
+ */
+export const useSpeciesCompositionListQuery = <
+  TData = PageableResponse<SpeciesCompositionListItem>,
+>(
+  input: SpeciesCompositionQueryParams,
+  options?: Omit<
+    UseQueryOptions<
+      PageableResponse<SpeciesCompositionListItem>,
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.speciesComposition.list>
+    >,
+    'queryKey' | 'queryFn'
+  > &
+    QueryNotificationOptions,
+) => {
+  const { notificationTarget, ...queryOptions } = options ?? {};
+
+  const query = useQuery({
+    queryKey: queryKeys.speciesComposition.list(input, notificationTarget),
+    queryFn: () =>
+      API.speciesComposition.listSpeciesCompositions({
+        page: input.page,
+        size: input.size,
+        sort: generateSortArray<SpeciesCompositionListItem>(input.sort),
+      }),
+    ...queryOptions,
+  });
+
+  useEffect(() => {
+    if (!notificationTarget || !query.isError || !query.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(query.error, notificationTarget);
+  }, [notificationTarget, query.error, query.isError]);
+
+  return query;
+};
+
+/**
+ * Creates a new species composition table and returns the created resource ID.
+ *
+ * The backend returns HTTP 201 (Created) with a Location header pointing to the
+ * created resource. The service layer extracts and parses this header to return
+ * the numeric ID, which is passed to the optional `onSuccess` callback.
+ *
+ * On error, dispatches an inline notification to `notificationTarget` (when supplied)
+ * using the RFC 7807 problem-details payload from the backend when available.
+ *
+ * @param options - Optional TanStack Query mutation overrides plus:
+ *   - `notificationTarget`: Optional target for inline error notifications.
+ *   - `onSuccess`: Optional callback invoked with the created species composition ID (allows caller to navigate).
+ * @returns The TanStack Query mutation result for creating a species composition table (returns the ID as number).
+ *
+ * @example
+ * ```tsx
+ * const mutation = useSpeciesCompositionCreateMutation({
+ *   notificationTarget: 'sc-upload-form',
+ *   onSuccess: (id) => navigate(`/configuration/species-composition/${id}`),
+ * });
+ *
+ * mutation.mutate({ tableData: { rows: [...] } });
+ * ```
+ */
+export const useSpeciesCompositionCreateMutation = (
+  options?: Omit<
+    UseMutationOptions<number, Error, SpeciesCompositionCreate>,
+    'mutationKey' | 'mutationFn' | 'onSuccess'
+  > &
+    QueryNotificationOptions & {
+      /** Called with the created species composition ID on success. */
+      onSuccess?: (id: number) => void;
+    },
+) => {
+  const { notificationTarget, onSuccess, ...mutationOptions } = options ?? {};
+
+  const mutation = useMutation({
+    mutationKey: queryKeys.speciesComposition.create(),
+    mutationFn: (body) => API.speciesComposition.createSpeciesComposition(body),
     onSuccess: (data) => {
       onSuccess?.(data);
     },
