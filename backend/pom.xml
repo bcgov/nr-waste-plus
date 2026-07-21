@@ -89,7 +89,7 @@
         <jackson-bom.version>3.1.4</jackson-bom.version>
         <spring-security.version>7.0.5</spring-security.version>
         <tomcat.version>11.0.22</tomcat.version>
-        <postgresql.version>42.7.11</postgresql.version>
+        <postgresql.version>42.7.13</postgresql.version>
     </properties>
 
     <dependencies>
