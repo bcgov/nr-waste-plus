@@ -31,8 +31,9 @@ const ConfigurationDistrictVolumeListPage: FC = () => {
           <Button
             kind="primary"
             onClick={() => navigateInTree(navigate, '/configuration/district-volume-tables/upload')}
+            renderIcon={Add}
           >
-            Upload new volumes table <Add />
+            Upload new volumes table
           </Button>
         </PageTitle>
       </Column>
