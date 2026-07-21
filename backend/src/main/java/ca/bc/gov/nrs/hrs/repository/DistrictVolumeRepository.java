@@ -17,38 +17,48 @@ import org.springframework.stereotype.Repository;
  * Repository for managing {@link DistrictVolumeEntity} records.
  *
  * <p>Provides standard JPA operations together with custom queries used by
- * district volume business logic.
+ * district volume and species composition business logic.
  */
 @Repository
 public interface DistrictVolumeRepository
     extends JpaRepository<DistrictVolumeEntity, Long> {
 
   /**
-   * Finds the most recent district volume entry for the specified area.
-   *
-   * <p>Used to retrieve the latest configured record, regardless of whether it is the
-   * currently active record or a previously active record for the same area.
-   *
-   * @param area area for which the latest entry should be retrieved
-   * @return the most recent entry for the area, or an empty {@link Optional} if none exists
+   * Finds the most recent entry for the specified config type and area.
    */
-  Optional<DistrictVolumeEntity> findTopByAreaOrderByStartDateDesc(Area area);
+  Optional<DistrictVolumeEntity> findTopByConfigTypeAndAreaOrderByStartDateDesc(ConfigType configType, Area area);
 
   /**
-   * Retrieves a paginated list of district volume records filtered by area.
-   *
-   * @param area area filter
-   * @param pageable pagination and sorting information
-   * @return paginated list of matching district volume entities
+   * Retrieves a paginated list of records filtered by area (Warning: mixes ConfigTypes).
    */
   Page<DistrictVolumeEntity> findByArea(Area area, Pageable pageable);
 
   /**
-   * Retrieves the currently active district volume record for the specified area.
+   * Retrieves a paginated list of records filtered by config type and area.
    *
+   * @param configType config type filter
    * @param area area filter
-   * @param currentDate current date used to determine whether the record is active
-   * @return active district volume entity, if present
+   * @param pageable pagination and sorting information
+   * @return paginated list of matching entities
+   */
+  Page<DistrictVolumeEntity> findAllByConfigTypeAndArea(ConfigType configType, Area area, Pageable pageable);
+
+  /**
+   * Retrieves the currently active record for the specified config type and area.
+   */
+  @Query(
+      "SELECT d FROM DistrictVolumeEntity d "
+          + "WHERE d.configType = :configType "
+          + "AND d.area = :area "
+          + "AND d.startDate <= :currentDate "
+          + "AND (d.endDate IS NULL OR d.endDate >= :currentDate)")
+  Optional<DistrictVolumeEntity> findActiveByConfigTypeAndArea(
+      @Param("configType") ConfigType configType,
+      @Param("area") Area area,
+      @Param("currentDate") LocalDate currentDate);
+
+  /**
+   * Retrieves the currently active record for the specified area (Warning: mixes ConfigTypes).
    */
   @Query(
       "SELECT d FROM DistrictVolumeEntity d "
@@ -60,36 +70,27 @@ public interface DistrictVolumeRepository
       @Param("currentDate") LocalDate currentDate);
 
   /**
-   * Finds all open-ended district volume entries for the specified area, ordered by most recent
-   * start date first.
-   *
-   * @param area area for which open-ended entries should be retrieved
-   * @return ordered list of open-ended entries for the area
+   * Finds all open-ended entries for the specified area (Warning: mixes ConfigTypes).
    */
   List<DistrictVolumeEntity> findByAreaAndEndDateIsNullOrderByStartDateDesc(Area area);
 
   /**
-   * Retrieves a paginated list of district volume records filtered by config type.
-   *
-   * <p>Used to scope queries to a specific configuration (e.g. district volume vs
-   * species composition), since both share the same underlying table and entity.
+   * Finds all open-ended entries for the specified config type and area, ordered by most recent
+   * start date first.
    *
    * @param configType config type filter
-   * @param pageable pagination and sorting information
-   * @return paginated list of matching district volume entities
+   * @param area area filter
+   * @return ordered list of open-ended entries
+   */
+  List<DistrictVolumeEntity> findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(ConfigType configType, Area area);
+
+  /**
+   * Retrieves a paginated list of records filtered by config type.
    */
   Page<DistrictVolumeEntity> findAllByConfigType(ConfigType configType, Pageable pageable);
 
   /**
-   * Retrieves a single district volume record by id, scoped to the specified config type.
-   *
-   * <p>Ensures records of one config type (e.g. species composition) cannot be looked up
-   * or returned as if they belonged to another.
-   *
-   * @param id record identifier
-   * @param configType config type the record must match
-   * @return the matching entity, or an empty {@link Optional} if not found or if the
-   *     config type does not match
+   * Retrieves a single record by id, scoped to the specified config type.
    */
   Optional<DistrictVolumeEntity> findByIdAndConfigType(Long id, ConfigType configType);
 
