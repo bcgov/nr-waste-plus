@@ -33,13 +33,13 @@ public class DistrictVolumeRepositoryTest
     DistrictVolumeEntity first = new DistrictVolumeEntity();
     first.setArea(Area.INTERIOR);
     first.setStartDate(LocalDate.now().plusDays(1));
-    first.setTableData(new TableData(null, null, java.util.Map.of()));
+    first.setTableData(new TableData(null, null, null, java.util.Map.of()));
     first.setTableLevelFactor(new BigDecimal("1.000").setScale(3));
 
     DistrictVolumeEntity second = new DistrictVolumeEntity();
     second.setArea(Area.INTERIOR);
     second.setStartDate(LocalDate.now().plusDays(2));
-    second.setTableData(new TableData(null, null, java.util.Map.of()));
+    second.setTableData(new TableData(null, null, null, java.util.Map.of()));
     second.setTableLevelFactor(new BigDecimal("2.000").setScale(3));
 
     repository.save(first);
@@ -62,14 +62,14 @@ public class DistrictVolumeRepositoryTest
     DistrictVolumeEntity districtVolume = new DistrictVolumeEntity();
     districtVolume.setArea(Area.INTERIOR);
     districtVolume.setStartDate(LocalDate.now().plusDays(1));
-    districtVolume.setTableData(new TableData(null, null, java.util.Map.of()));
+    districtVolume.setTableData(new TableData(null, null, null, java.util.Map.of()));
     districtVolume.setTableLevelFactor(new BigDecimal("1.000").setScale(3));
     districtVolume.setConfigType(ConfigType.DISTRICT_VOLUME);
 
     DistrictVolumeEntity speciesComposition = new DistrictVolumeEntity();
     speciesComposition.setArea(Area.INTERIOR);
     speciesComposition.setStartDate(LocalDate.now().plusDays(2));
-    speciesComposition.setTableData(new TableData(null, null, java.util.Map.of()));
+    speciesComposition.setTableData(new TableData(null, null, null, java.util.Map.of()));
     speciesComposition.setTableLevelFactor(new BigDecimal("2.000").setScale(3));
     speciesComposition.setConfigType(ConfigType.SPECIES_COMPOSITION);
 
@@ -97,7 +97,7 @@ public class DistrictVolumeRepositoryTest
     DistrictVolumeEntity districtVolume = new DistrictVolumeEntity();
     districtVolume.setArea(Area.INTERIOR);
     districtVolume.setStartDate(LocalDate.now().plusDays(1));
-    districtVolume.setTableData(new TableData(null, null, java.util.Map.of()));
+    districtVolume.setTableData(new TableData(null, null, null, java.util.Map.of()));
     districtVolume.setTableLevelFactor(new BigDecimal("1.000").setScale(3));
     districtVolume.setConfigType(ConfigType.DISTRICT_VOLUME);
 

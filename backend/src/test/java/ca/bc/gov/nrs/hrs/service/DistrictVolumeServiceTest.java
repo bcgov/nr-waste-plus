@@ -70,10 +70,12 @@ class DistrictVolumeServiceTest {
             ? new TableData(
                 Collections.emptyList(),
                 null,
+                null,
                 Collections.emptyMap())
             : new TableData(
                 null,
                 Collections.emptyList(),
+                null,
                 Collections.emptyMap());
 
     entity.setTableData(tableData);
@@ -149,7 +151,7 @@ class DistrictVolumeServiceTest {
         .thenReturn(Optional.empty());
 
     assertThatThrownBy(
-            () -> districtVolumeService.getDistrictVolumeById(99L))
+          () -> districtVolumeService.getDistrictVolumeById(99L))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("District volume record not found");
   }
@@ -174,9 +176,9 @@ class DistrictVolumeServiceTest {
             interiorData);
 
     assertThatThrownBy(
-            () -> districtVolumeService.createDistrictVolume(
-                "TEST_USER",
-                createDto))
+          () -> districtVolumeService.createDistrictVolume(
+              "TEST_USER",
+              createDto))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining(
             "Area mismatch: Expected INTERIOR data layout.");
@@ -202,9 +204,9 @@ class DistrictVolumeServiceTest {
             coastData);
 
     assertThatThrownBy(
-            () -> districtVolumeService.createDistrictVolume(
-                "TEST_USER",
-                createDto))
+          () -> districtVolumeService.createDistrictVolume(
+              "TEST_USER",
+              createDto))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining(
             "Area mismatch: Expected COASTAL data layout.");
@@ -230,9 +232,9 @@ class DistrictVolumeServiceTest {
             coastData);
 
     assertThatThrownBy(
-            () -> districtVolumeService.createDistrictVolume(
-                "TEST_USER",
-                createDto))
+          () -> districtVolumeService.createDistrictVolume(
+              "TEST_USER",
+              createDto))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Missing helicopter multiplier");
   }
@@ -256,9 +258,9 @@ class DistrictVolumeServiceTest {
             interiorData);
 
     assertThatThrownBy(
-            () -> districtVolumeService.createDistrictVolume(
-                "TEST_USER",
-                createDto))
+          () -> districtVolumeService.createDistrictVolume(
+              "TEST_USER",
+              createDto))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining(
             "Invalid area: UNKNOWN_AREA. Must be INTERIOR or COASTAL.");
@@ -278,9 +280,9 @@ class DistrictVolumeServiceTest {
             null);
 
     assertThatThrownBy(
-            () -> districtVolumeService.createDistrictVolume(
-                "TEST_USER",
-                createDto))
+          () -> districtVolumeService.createDistrictVolume(
+              "TEST_USER",
+              createDto))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining(
             "Invalid or missing table data payload structure.");
@@ -305,9 +307,9 @@ class DistrictVolumeServiceTest {
             interiorData);
 
     assertThatThrownBy(
-            () -> districtVolumeService.createDistrictVolume(
-                "TEST_USER",
-                createDto))
+          () -> districtVolumeService.createDistrictVolume(
+              "TEST_USER",
+              createDto))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining(
             "Start date must be strictly after today.");
@@ -443,9 +445,9 @@ class DistrictVolumeServiceTest {
         .thenReturn(List.of(existingOpenEntry));
 
     assertThatThrownBy(
-            () -> districtVolumeService.createDistrictVolume(
-                "TEST_USER",
-                createDto))
+          () -> districtVolumeService.createDistrictVolume(
+              "TEST_USER",
+              createDto))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Start date must be after the most recent existing start date");
 
@@ -481,9 +483,9 @@ class DistrictVolumeServiceTest {
         .thenReturn(List.of(newestOpenEntry, olderOpenEntry));
 
     assertThatThrownBy(
-            () -> districtVolumeService.createDistrictVolume(
-                "TEST_USER",
-                createDto))
+          () -> districtVolumeService.createDistrictVolume(
+              "TEST_USER",
+              createDto))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining(
             "multiple open-ended district volume records exist for area INTERIOR");

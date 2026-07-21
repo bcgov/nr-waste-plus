@@ -196,12 +196,13 @@ public final class DistrictVolumeMapper {
                       .toList()
               ))
               .toList(),
-          null,
+          null, // sections
+          null, // speciesRows (not applicable for District Volume)
           formulas == null ? Map.of() : formulas
       );
 
       case CoastDataDto(var sections, var formulas) -> new TableData(
-          null,
+          null, // zones
           sections.stream()
               .map(s -> new Section(
                   s.name(),
@@ -219,6 +220,7 @@ public final class DistrictVolumeMapper {
                       .toList()
               ))
               .toList(),
+          null, // speciesRows (not applicable for District Volume)
           formulas == null ? Map.of() : formulas
       );
     };
