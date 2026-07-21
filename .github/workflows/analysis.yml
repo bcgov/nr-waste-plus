@@ -97,12 +97,25 @@ jobs:
         run: |
           FILE="${{ steps.locate.outputs.path }}"
           jq --arg folder "${{ matrix.folder }}" '
-            .runs[0].results |= map(
-              .locations[0].physicalLocation.artifactLocation.uri =
-                $folder + "/" + .locations[0].physicalLocation.artifactLocation.uri
+            # Only prefix URIs that are relative (no scheme like https://)
+            def prefix_uri:
+              if . == null then .
+              elif test("^[a-zA-Z][a-zA-Z0-9+\\-\\.]*:") then .
+              else $folder + "/" + .
+              end;
+            # Fix results: iterate all runs, all results, all locations
+            .runs |= map(
+              .results |= (if type == "array" then map(
+                .locations |= (if type == "array" then map(
+                  .physicalLocation.artifactLocation.uri |= prefix_uri
+                ) else . end)
+              ) else . end)
             ) |
-            .runs[0].artifacts |= map(
-              .location.uri = $folder + "/" + .location.uri
+            # Fix artifacts: iterate all runs, all artifacts
+            .runs |= map(
+              .artifacts |= (if type == "array" then map(
+                .location.uri |= prefix_uri
+              ) else . end)
             )
           ' "$FILE" > "${FILE}.fixed" && mv "${FILE}.fixed" "$FILE"
       - name: Upload SARIF to GitHub Security tab
