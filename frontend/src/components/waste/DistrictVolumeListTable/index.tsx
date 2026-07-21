@@ -37,11 +37,11 @@ const DistrictVolumeListTable: FC = () => {
   );
 
   /**
-   * Triggers a fetch with the current pagination and sort state.
+   * Triggers a fetch with the given pagination state.
    */
-  const executeSearch = (page?: number, size?: number) => {
-    setCurrentPage(page ?? currentPage);
-    setPageSize(size ?? pageSize);
+  const executeSearch = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
     setSearchTrigger((n) => n + 1);
   };
 

@@ -28,24 +28,21 @@ vi.mock('@/components/Form/TableResource', () => ({
     id,
     getRowActions,
   }: any) => {
+    let body: React.ReactNode;
     if (loading) {
-      return <div data-testid="loading-skeleton">Loading...</div>;
-    }
-    if (error) {
-      return <div>Something went wrong!</div>;
-    }
-    if (!content?.content || content.content.length === 0) {
-      return content?.page?.totalElements === 0 ? (
-        <div>No results</div>
-      ) : (
-        <div>Nothing to show yet!</div>
-      );
-    }
-
-    const hasActions = Boolean(getRowActions);
-
-    return (
-      <div data-testid={id}>
+      body = <div data-testid="loading-skeleton">Loading...</div>;
+    } else if (error) {
+      body = <div>Something went wrong!</div>;
+    } else if (!content?.content || content.content.length === 0) {
+      body =
+        content?.page?.totalElements === 0 ? (
+          <div>No results</div>
+        ) : (
+          <div>Nothing to show yet!</div>
+        );
+    } else {
+      const hasActions = Boolean(getRowActions);
+      body = (
         <table>
           <thead>
             <tr>
@@ -74,13 +71,22 @@ vi.mock('@/components/Form/TableResource', () => ({
             ))}
           </tbody>
         </table>
+      );
+    }
+
+    return (
+      <div data-testid={id}>
+        {body}
         <div>
           <label htmlFor="page-size-select">Items per page:</label>
           <select
             id="page-size-select"
             aria-label="Items per page:"
             onChange={(e) =>
-              onPageChange?.({ page: content.page.number, pageSize: Number(e.target.value) })
+              onPageChange?.({
+                page: content?.page?.number ?? 0,
+                pageSize: Number(e.target.value),
+              })
             }
           >
             <option value="10">10</option>
@@ -90,7 +96,10 @@ vi.mock('@/components/Form/TableResource', () => ({
           <button
             aria-label="Next page"
             onClick={() =>
-              onPageChange?.({ page: content.page.number + 1, pageSize: content.page.size })
+              onPageChange?.({
+                page: (content?.page?.number ?? 0) + 1,
+                pageSize: content?.page?.size ?? 10,
+              })
             }
           >
             Next
@@ -98,7 +107,10 @@ vi.mock('@/components/Form/TableResource', () => ({
           <button
             aria-label="Previous page"
             onClick={() =>
-              onPageChange?.({ page: content.page.number - 1, pageSize: content.page.size })
+              onPageChange?.({
+                page: (content?.page?.number ?? 0) - 1,
+                pageSize: content?.page?.size ?? 10,
+              })
             }
           >
             Previous
@@ -305,6 +317,26 @@ describe('DistrictVolumeListTable', () => {
 
       await waitFor(() => {
         expect(mockUseDistrictVolumeListQuery).toHaveBeenCalled();
+      });
+    });
+
+    it('handles page change when no data is present', async () => {
+      const refetch = vi.fn();
+      mockUseDistrictVolumeListQuery.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch,
+      } as any);
+      await renderWithAppAsync(<DistrictVolumeListTable />);
+
+      await screen.findByText('Next');
+      const nextButton = screen.getByLabelText('Next page');
+      await userEvent.click(nextButton);
+
+      await waitFor(() => {
+        expect(refetch).toHaveBeenCalled();
       });
     });
   });

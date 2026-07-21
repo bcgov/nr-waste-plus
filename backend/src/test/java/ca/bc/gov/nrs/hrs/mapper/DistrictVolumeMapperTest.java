@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -67,7 +68,7 @@ class DistrictVolumeMapperTest {
     entity.setDateOfUpload(MOCK_UPLOAD_TIME);
 
     TableData mockTableData =
-        new TableData(Collections.emptyList(), null, Collections.emptyMap());
+        new TableData(Collections.emptyList(), null, null, Map.of());
     entity.setTableData(mockTableData);
 
     // Act
@@ -93,7 +94,7 @@ class DistrictVolumeMapperTest {
     entity.setDateOfUpload(MOCK_UPLOAD_TIME);
 
     TableData mockTableData =
-        new TableData(null, Collections.emptyList(), Collections.emptyMap());
+        new TableData(null, Collections.emptyList(), null, Map.of());
     entity.setTableData(mockTableData);
 
     // Act
@@ -111,7 +112,7 @@ class DistrictVolumeMapperTest {
   void testToEntityTableData_Interior() {
     // Arrange
     InteriorDataDto interiorDto =
-        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Map.of());
 
     // Act
     TableData tableData = DistrictVolumeMapper.toEntityTableData(interiorDto);
@@ -126,7 +127,7 @@ class DistrictVolumeMapperTest {
   void testToEntityTableData_Coastal() {
     // Arrange
     CoastDataDto coastDto =
-        new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
+        new CoastDataDto(Collections.emptyList(), Map.of());
 
     // Act
     TableData tableData = DistrictVolumeMapper.toEntityTableData(coastDto);
@@ -150,7 +151,7 @@ class DistrictVolumeMapperTest {
         new BigDecimal("13.5")
     );
     Zone zone = new Zone("Dry belt", List.of(row));
-    TableData tableData = new TableData(List.of(zone), null, Collections.emptyMap());
+    TableData tableData = new TableData(List.of(zone), null, null, Map.of());
 
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setId(10L);
@@ -193,7 +194,7 @@ class DistrictVolumeMapperTest {
         new BigDecimal("8.0")
     );
     Section section = new Section("Mature", List.of(row));
-    TableData tableData = new TableData(null, List.of(section), Collections.emptyMap());
+    TableData tableData = new TableData(null, List.of(section), null, Map.of());
 
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setId(20L);
@@ -229,7 +230,7 @@ class DistrictVolumeMapperTest {
 
     // Arrange
     InteriorDataDto interiorDto =
-        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Map.of());
     DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
         "INTERIOR",
         LocalDate.of(2027, Month.JANUARY, 1),
@@ -256,7 +257,7 @@ class DistrictVolumeMapperTest {
 
     // Arrange
     CoastDataDto coastDto =
-        new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
+        new CoastDataDto(Collections.emptyList(), Map.of());
     DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
         "COASTAL",
         LocalDate.of(2027, Month.JUNE, 1),
@@ -282,7 +283,7 @@ class DistrictVolumeMapperTest {
 
     // Arrange
     CoastDataDto coastDto =
-        new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
+        new CoastDataDto(Collections.emptyList(), Map.of());
     DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
         "COASTAL",
         LocalDate.of(2027, Month.JUNE, 1),
@@ -312,7 +313,7 @@ class DistrictVolumeMapperTest {
     );
     InteriorZoneDto zoneDto = new InteriorZoneDto("Wet belt", List.of(rowDto));
     InteriorDataDto interiorDto =
-        new InteriorDataDto(List.of(zoneDto), Collections.emptyMap());
+        new InteriorDataDto(List.of(zoneDto), Map.of());
 
     // Act
     TableData tableData = DistrictVolumeMapper.toEntityTableData(interiorDto);
@@ -341,7 +342,7 @@ class DistrictVolumeMapperTest {
     );
     CoastSectionDto sectionDto = new CoastSectionDto("Immature", List.of(rowDto));
     CoastDataDto coastDto =
-        new CoastDataDto(List.of(sectionDto), Collections.emptyMap());
+        new CoastDataDto(List.of(sectionDto), Map.of());
 
     // Act
     TableData tableData = DistrictVolumeMapper.toEntityTableData(coastDto);
@@ -369,7 +370,7 @@ class DistrictVolumeMapperTest {
         null  // total
     );
     Zone zone = new Zone("Dry belt", List.of(row));
-    TableData tableData = new TableData(List.of(zone), null, Collections.emptyMap());
+    TableData tableData = new TableData(List.of(zone), null, null, Map.of());
 
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setId(30L);
@@ -391,4 +392,3 @@ class DistrictVolumeMapperTest {
     assertThat(rowDto.total()).isNull();
   }
 }
-
