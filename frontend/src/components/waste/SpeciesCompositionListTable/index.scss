@@ -1,0 +1,14 @@
+@use '../../../styles/variables' as vars;
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+
+.species-composition-column__content {
+  margin-left: -1.25rem;
+  margin-right: -1.25rem;
+  margin-top: $spacing-08;
+
+  @include breakpoint-down(md) {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
