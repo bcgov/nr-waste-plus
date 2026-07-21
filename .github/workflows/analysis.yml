@@ -93,6 +93,18 @@ jobs:
             exit 1
           fi
           echo "path=$sarif_file" >> $GITHUB_OUTPUT
+      - name: Fix SARIF artifact paths to include folder prefix
+        run: |
+          FILE="${{ steps.locate.outputs.path }}"
+          jq --arg folder "${{ matrix.folder }}" '
+            .runs[0].results |= map(
+              .locations[0].physicalLocation.artifactLocation.uri =
+                $folder + "/" + .locations[0].physicalLocation.artifactLocation.uri
+            ) |
+            .runs[0].artifacts |= map(
+              .location.uri = $folder + "/" + .location.uri
+            )
+          ' "$FILE" > "${FILE}.fixed" && mv "${FILE}.fixed" "$FILE"
       - name: Upload SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
         with:
