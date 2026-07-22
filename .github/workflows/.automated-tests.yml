@@ -32,6 +32,14 @@ jobs:
             cypress-node_modules-b3v1-
             cypress-node_modules-
 
+      - name: Cache Cypress binary
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-binary-${{ hashFiles('cypress/package-lock.json') }}
+          restore-keys: |
+            cypress-binary-
+
       - name: Run Cypress End-to-End
         uses: cypress-io/github-action@v7.4.1
         with:
