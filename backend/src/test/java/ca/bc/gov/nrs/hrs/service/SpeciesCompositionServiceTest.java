@@ -516,30 +516,4 @@ class SpeciesCompositionServiceTest {
     assertThat(result.heliMultiplier())
         .isEqualTo(new BigDecimal("1.500"));
   }
-
-  @Test
-  @DisplayName("deleteSpeciesComposition — should delete entity when found")
-  void deleteSpeciesComposition_deletesEntity_whenFound() {
-    DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
-
-    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.SPECIES_COMPOSITION))
-        .thenReturn(Optional.of(entity));
-
-    speciesCompositionService.deleteSpeciesComposition(1L);
-
-    verify(districtVolumeRepository, times(1)).delete(entity);
-  }
-
-  @Test
-  @DisplayName("deleteSpeciesComposition — should throw 404 when not found")
-  void deleteSpeciesComposition_throws404_whenNotFound() {
-    when(districtVolumeRepository.findByIdAndConfigType(99L, ConfigType.SPECIES_COMPOSITION))
-        .thenReturn(Optional.empty());
-
-    assertThatThrownBy(() -> speciesCompositionService.deleteSpeciesComposition(99L))
-        .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining("Species composition record not found for id: 99");
-
-    verify(districtVolumeRepository, never()).delete(any());
-  }
 }

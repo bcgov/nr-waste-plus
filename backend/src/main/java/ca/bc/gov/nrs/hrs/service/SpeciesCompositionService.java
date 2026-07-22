@@ -154,28 +154,4 @@ public class SpeciesCompositionService {
           "Invalid or missing table data payload structure.");
     }
   }
-  
-  /**
-   * Deletes a species composition configuration record by its unique identifier.
-   *
-   * <p>This method ensures that only records corresponding to the 
-   * {@code SPECIES_COMPOSITION} configuration type are targeted. If no matching 
-   * record is found, it aborts the operation and throws a 404 Not Found exception.
-   *
-   * @param id the unique identifier of the species composition record to delete
-   * @throws ResponseStatusException with a 404 status if the record does not exist
-   */
-  @Transactional
-  public void deleteSpeciesComposition(Long id) {
-    log.debug("Deleting species composition record for ID: {}", id);
-    
-    DistrictVolumeEntity entity = districtVolumeRepository
-        .findByIdAndConfigType(id, ConfigType.SPECIES_COMPOSITION)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "Species composition record not found for id: " + id));
-
-    districtVolumeRepository.delete(entity);
-    log.info("Successfully deleted species composition record with ID: {}", id);
-  }
 }
