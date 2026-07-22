@@ -154,4 +154,18 @@ public class SpeciesCompositionService {
           "Invalid or missing table data payload structure.");
     }
   }
+  
+  @Transactional
+  public void deleteSpeciesComposition(Long id) {
+    log.debug("Deleting species composition record for ID: {}", id);
+    
+    DistrictVolumeEntity entity = districtVolumeRepository
+        .findByIdAndConfigType(id, ConfigType.SPECIES_COMPOSITION)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "Species composition record not found for id: " + id));
+
+    districtVolumeRepository.delete(entity);
+    log.info("Successfully deleted species composition record with ID: {}", id);
+  }
 }

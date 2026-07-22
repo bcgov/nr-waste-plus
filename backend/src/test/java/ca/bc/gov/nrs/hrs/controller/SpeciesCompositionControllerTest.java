@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -358,5 +359,32 @@ class SpeciesCompositionControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidDto)))
         .andExpect(status().isBadRequest());
+  }
+  
+  @Test
+  @DisplayName("DELETE /{id} — Should return 204 No Content when deletion is successful")
+  @WithMockJwt(value = "jakethedog")
+  void deleteSpeciesComposition_returns204() throws Exception {
+
+    mockMvc.perform(
+            delete("/api/configuration/species-compositions/1")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNoContent());
+  }
+
+  @Test
+  @DisplayName("DELETE /{id} — Should return 404 Not Found when ID does not exist")
+  @WithMockJwt(value = "jakethedog")
+  void deleteSpeciesComposition_returns404_whenNotFound() throws Exception {
+
+    // You need an import for doThrow: import static org.mockito.Mockito.doThrow;
+    org.mockito.Mockito.doThrow(
+            new ResponseStatusException(HttpStatus.NOT_FOUND, "Not Found"))
+        .when(speciesCompositionService).deleteSpeciesComposition(99L);
+
+    mockMvc.perform(
+            delete("/api/configuration/species-compositions/99")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound());
   }
 }
