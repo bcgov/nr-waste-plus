@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -371,7 +372,7 @@ class SpeciesCompositionServiceTest {
     verify(districtVolumeRepository)
         .findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
             ConfigType.SPECIES_COMPOSITION, Area.INTERIOR);
-    verify(districtVolumeRepository, org.mockito.Mockito.times(2))
+    verify(districtVolumeRepository, times(2))
         .save(saveCaptor.capture());
 
     List<DistrictVolumeEntity> savedEntities = saveCaptor.getAllValues();
