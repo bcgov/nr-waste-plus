@@ -115,10 +115,16 @@ vi.mock('@/components/Form/TableResource', () => ({
           >
             Previous
           </button>
-          <button aria-label="Change page only" onClick={() => onPageChange?.({ page: 2 })}>
+          <button
+            aria-label="Change page only"
+            onClick={() => onPageChange?.({ page: 2, pageSize: content?.page?.size ?? 10 })}
+          >
             Change page only
           </button>
-          <button aria-label="Change size only" onClick={() => onPageChange?.({ pageSize: 25 })}>
+          <button
+            aria-label="Change size only"
+            onClick={() => onPageChange?.({ page: content?.page?.number ?? 0, pageSize: 25 })}
+          >
             Change size only
           </button>
         </div>
@@ -346,7 +352,7 @@ describe('SpeciesCompositionListTable', () => {
       });
     });
 
-    it('handles page change with only the page argument', async () => {
+    it('handles page change triggered by the page control', async () => {
       const refetch = vi.fn();
       mockUseSpeciesCompositionListQuery.mockReturnValue({
         data: mockMultiPageData,
@@ -366,7 +372,7 @@ describe('SpeciesCompositionListTable', () => {
       });
     });
 
-    it('handles page change with only the size argument', async () => {
+    it('handles page change triggered by the page size control', async () => {
       const refetch = vi.fn();
       mockUseSpeciesCompositionListQuery.mockReturnValue({
         data: mockMultiPageData,

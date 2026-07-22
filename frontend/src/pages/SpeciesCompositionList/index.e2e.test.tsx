@@ -11,7 +11,7 @@ test.describe('Species Composition List Page', () => {
     await setupAppShellMocks(page, testInfo.project.metadata.userType);
     await mockApiResponsesWithStub(
       page,
-      'configuration/species-composition**',
+      'configuration/species-compositions**',
       'species-composition/list.json',
     );
   });
