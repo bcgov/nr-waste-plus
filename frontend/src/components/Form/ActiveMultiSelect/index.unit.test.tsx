@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, it, expect, vi } from 'vitest';
@@ -30,7 +30,10 @@ const openDropdown = async (user?: ReturnType<typeof userEvent.setup>) => {
   if (user) {
     await user.click(button);
   } else {
-    button.click();
+    await act(async () => {
+      button.click();
+      await new Promise((r) => setTimeout(r, 0));
+    });
   }
 };
 

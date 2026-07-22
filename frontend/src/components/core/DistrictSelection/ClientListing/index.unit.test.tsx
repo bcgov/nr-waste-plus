@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import ClientListing from '.';
 
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
-import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
 
@@ -85,16 +84,16 @@ vi.mock('@/context/preference/usePreference', () => ({
   }),
 }));
 
+// `useAuth` is mocked above, so the real `AuthProvider` is unnecessary here —
+// mounting it only adds an unawaited effect that produces act(...) warnings.
 const renderWithProviders = async () => {
   const qc = makeTestQueryClient();
   render(
-    <AuthProvider>
-      <QueryClientProvider client={qc}>
-        <PreferenceProvider>
-          <ClientListing />
-        </PreferenceProvider>
-      </QueryClientProvider>
-    </AuthProvider>,
+    <QueryClientProvider client={qc}>
+      <PreferenceProvider>
+        <ClientListing />
+      </PreferenceProvider>
+    </QueryClientProvider>,
   );
 };
 
