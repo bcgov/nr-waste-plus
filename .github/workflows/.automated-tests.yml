@@ -40,15 +40,20 @@ jobs:
           restore-keys: |
             cypress-binary-${{ runner.os }}-${{ runner.arch }}-
 
+      - name: Install cypress dependencies
+        working-directory: cypress
+        run: npm install --prefer-offline --no-audit --no-fund
+
+      - name: Install Cypress binary
+        working-directory: cypress
+        run: npx cypress install
+
       - name: Run Cypress End-to-End
         uses: cypress-io/github-action@v7.4.1
         with:
           working-directory: cypress
           browser: chrome
-          # Use `npm install --prefer-offline` (not `npm ci`) so the restored node_modules
-          # cache is actually leveraged. `npm ci` wipes node_modules and defeats the cache.
-          # See plan b3-cache-node-modules.md (#1083).
-          install-command: npm install --prefer-offline --no-audit --no-fund
+          install: false
         env:
           CYPRESS_baseUrl: https://${{ inputs.url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
