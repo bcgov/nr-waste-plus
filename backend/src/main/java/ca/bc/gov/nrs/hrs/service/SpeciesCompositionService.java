@@ -155,6 +155,16 @@ public class SpeciesCompositionService {
     }
   }
   
+  /**
+   * Deletes a species composition configuration record by its unique identifier.
+   *
+   * <p>This method ensures that only records corresponding to the 
+   * {@code SPECIES_COMPOSITION} configuration type are targeted. If no matching 
+   * record is found, it aborts the operation and throws a 404 Not Found exception.
+   *
+   * @param id the unique identifier of the species composition record to delete
+   * @throws ResponseStatusException with a 404 status if the record does not exist
+   */
   @Transactional
   public void deleteSpeciesComposition(Long id) {
     log.debug("Deleting species composition record for ID: {}", id);

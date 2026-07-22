@@ -377,7 +377,6 @@ class SpeciesCompositionControllerTest {
   @WithMockJwt(value = "jakethedog")
   void deleteSpeciesComposition_returns404_whenNotFound() throws Exception {
 
-    // You need an import for doThrow: import static org.mockito.Mockito.doThrow;
     org.mockito.Mockito.doThrow(
             new ResponseStatusException(HttpStatus.NOT_FOUND, "Not Found"))
         .when(speciesCompositionService).deleteSpeciesComposition(99L);
