@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.hrs.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -377,8 +378,7 @@ class SpeciesCompositionControllerTest {
   @WithMockJwt(value = "jakethedog")
   void deleteSpeciesComposition_returns404_whenNotFound() throws Exception {
 
-    org.mockito.Mockito.doThrow(
-            new ResponseStatusException(HttpStatus.NOT_FOUND, "Not Found"))
+    doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Not Found"))
         .when(speciesCompositionService).deleteSpeciesComposition(99L);
 
     mockMvc.perform(
