@@ -36,9 +36,9 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.cache/Cypress
-          key: cypress-binary-${{ hashFiles('cypress/package-lock.json') }}
+          key: cypress-binary-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('cypress/package-lock.json') }}
           restore-keys: |
-            cypress-binary-
+            cypress-binary-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Run Cypress End-to-End
         uses: cypress-io/github-action@v7.4.1
