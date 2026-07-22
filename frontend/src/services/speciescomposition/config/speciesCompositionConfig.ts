@@ -1,4 +1,4 @@
-import type { SpeciesKey } from '@/services/speciescomposition/speciesComposition.types';
+import type { SpeciesKey } from '@/services/speciesComposition.types';
 
 /** All 23 BC natural resource district codes expected in the spreadsheet. */
 export const EXPECTED_DISTRICT_CODES = [

@@ -9,3 +9,4 @@ export type * from '@/services/search.types';
 export * from '@/services/forestclient.types';
 export * from '@/services/reportingUnit.types';
 export * from '@/services/districtvolumes.types';
+export * from '@/services/speciesComposition.types';

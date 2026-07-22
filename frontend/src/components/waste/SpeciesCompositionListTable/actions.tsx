@@ -2,7 +2,7 @@ import { TableShortcut } from '@carbon/icons-react';
 import { useNavigate } from '@tanstack/react-router';
 
 import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types';
-import type { SpeciesCompositionListItem } from '@/services/speciescomposition/speciesComposition.types';
+import type { SpeciesCompositionListItem } from '@/services/speciesComposition.types';
 
 import { navigateInTree } from '@/routes/inTreePaths';
 

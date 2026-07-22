@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import SpeciesCompositionListTable from './index';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { SpeciesCompositionListItem } from '@/services/speciescomposition/speciesComposition.types';
+import type { SpeciesCompositionListItem } from '@/services/speciesComposition.types';
 
 import { renderCell } from '@/components/Form/TableResource/types';
 import * as hooks from '@/config/react-query/hooks';

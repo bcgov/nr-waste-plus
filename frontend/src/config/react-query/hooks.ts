@@ -26,7 +26,7 @@ import type {
   SpeciesCompositionCreate,
   SpeciesCompositionDetail,
   SpeciesCompositionListItem,
-} from '@/services/speciescomposition/speciesComposition.types';
+} from '@/services/speciesComposition.types';
 import type {
   ForestClientDto,
   MyForestClientDto,

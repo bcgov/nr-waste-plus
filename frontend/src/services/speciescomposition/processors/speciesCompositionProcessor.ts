@@ -6,7 +6,7 @@ import type {
   SpeciesCompositionData,
   SpeciesCompositionRow,
   SpeciesKey,
-} from '@/services/speciescomposition/speciesComposition.types';
+} from '@/services/speciesComposition.types';
 
 import {
   HEADER_TO_SPECIES_KEY,

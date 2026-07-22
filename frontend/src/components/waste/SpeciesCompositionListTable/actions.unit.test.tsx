@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { useSpeciesCompositionListRowActions } from './actions';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { SpeciesCompositionListItem } from '@/services/speciescomposition/speciesComposition.types';
+import type { SpeciesCompositionListItem } from '@/services/speciesComposition.types';
 
 import { navigateInTree } from '@/routes/inTreePaths';
 

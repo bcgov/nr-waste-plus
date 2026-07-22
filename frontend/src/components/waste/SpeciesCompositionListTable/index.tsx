@@ -5,7 +5,7 @@ import { useSpeciesCompositionListRowActions } from './actions';
 import { headers } from './constants';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { SpeciesCompositionListItem } from '@/services/speciescomposition/speciesComposition.types';
+import type { SpeciesCompositionListItem } from '@/services/speciesComposition.types';
 import type { SortDirectionType } from '@/services/types';
 
 import TableResource from '@/components/Form/TableResource';
