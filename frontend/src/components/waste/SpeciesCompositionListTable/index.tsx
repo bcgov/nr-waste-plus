@@ -4,8 +4,6 @@ import { useEffect, useState, type FC } from 'react';
 import { useSpeciesCompositionListRowActions } from './actions';
 import { headers } from './constants';
 
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { SpeciesCompositionListItem } from '@/services/speciesComposition.types';
 import type { SortDirectionType } from '@/services/types';
 
 import TableResource from '@/components/Form/TableResource';
@@ -18,8 +16,10 @@ import './index.scss';
  *
  * Manages its own pagination, sorting, and data-fetching state, delegating
  * rendering to {@link TableResource}. The query is configured with
- * `enabled: false` and `staleTime: Infinity` so every search is explicit
- * and results are never served from cache.
+ * `enabled: false` so it never fetches automatically on state changes, and
+ * `staleTime: Infinity` so a completed result is reused until an explicit
+ * `refetch()` call (triggered on mount and on every pagination/sort change)
+ * replaces it.
  *
  * @returns The species composition list table view.
  */
@@ -76,7 +76,12 @@ const SpeciesCompositionListTable: FC = () => {
       <TableResource
         id="species-composition-list"
         headers={headers}
-        content={data ?? ({} as PageableResponse<SpeciesCompositionListItem>)}
+        content={
+          data ?? {
+            content: [],
+            page: { number: 0, size: pageSize, totalElements: 0, totalPages: 0 },
+          }
+        }
         loading={isLoading}
         error={!isFetching && isError}
         onPageChange={handlePageChange}

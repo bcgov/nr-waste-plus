@@ -16,7 +16,7 @@ export const headers: TableHeaderType<SpeciesCompositionListItem>[] = [
     header: 'End date',
     sortable: false,
     selected: true,
-    renderAs: (value) => <DateTag date={value as string} format="MMMM dd, yyyy" />,
+    renderAs: (value) => (value ? <DateTag date={value as string} format="MMMM dd, yyyy" /> : '-'),
   },
   {
     key: 'uploadedBy',

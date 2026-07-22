@@ -45,10 +45,10 @@ describe('Species Composition List headers', () => {
   });
 
   describe('End date column renderAs', () => {
-    it('should render invalid-date marker for null end date', () => {
+    it('should render a placeholder dash for null end date', () => {
       const endDateHeader = headers.find((h) => h.key === 'endDate');
       render(<>{endDateHeader?.renderAs?.(null)}</>);
-      expect(screen.getByTestId('invalid-date')).toBeTruthy();
+      expect(screen.getByText('-')).toBeTruthy();
     });
 
     it('should render formatted date string for non-null end date', () => {
