@@ -40,7 +40,7 @@ test.describe('Species Composition Upload Page', () => {
         page.getByRole('heading', { name: 'Upload new species composition table' }),
       ).toBeVisible();
       await expect(
-        page.getByText('Load .xlsx file containing species composition data'),
+        page.getByText('Load .xls or .xlsx file to calculate volumes by species'),
       ).toBeVisible();
     });
 

@@ -29,6 +29,30 @@ export const SPECIES_COLUMNS = [
 
 export type SpeciesKey = (typeof SPECIES_COLUMNS)[number];
 
+// ─── SPECIES COLUMN LABELS ──────────────────────────────────────────────────
+/** Display labels for species columns, keyed by {@link SpeciesKey}. */
+export const SPECIES_LABELS: Record<SpeciesKey, string> = {
+  balsam: 'Balsam',
+  cedar: 'Cedar',
+  cottonwood: 'Cottonwood',
+  cypress: 'Cypress',
+  fir: 'Fir',
+  hemlock: 'Hemlock',
+  larch: 'Larch',
+  maple: 'Maple',
+  pine: 'Pine',
+  poplar: 'Poplar',
+  redcedar: 'Redcedar',
+  redwood: 'Redwood',
+  spruce: 'Spruce',
+  whitebirch: 'Whitebirch',
+  whitepine: 'Whitepine',
+  yew: 'Yew',
+  other: 'Other',
+  unknown: 'Unknown',
+  total: 'Total',
+};
+
 // ─── ROW ─────────────────────────────────────────────────────────────────────
 export const speciesCompositionRowSchema = z.object({
   district: codeDescriptionSchema,

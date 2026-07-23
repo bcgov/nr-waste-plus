@@ -1,0 +1,47 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/theme' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+@use '@carbon/type' as *;
+
+.species-composition-upload {
+  &__content {
+    form {
+      display: flex;
+      flex-direction: column;
+      margin-top: $spacing-08;
+      gap: $spacing-08;
+
+      @include breakpoint-down(md) {
+        margin-top: $spacing-01;
+        padding: $spacing-05 $spacing-07;
+        flex-shrink: 0;
+      }
+
+      .button-group {
+        display: flex;
+        gap: $spacing-07;
+      }
+    }
+  }
+
+  &-submit-button {
+    align-self: flex-start;
+  }
+
+  &-submitting-text {
+    margin-left: $spacing-02;
+  }
+}
+
+.species-composition-review-table {
+  margin-top: $spacing-08;
+
+  &__title {
+    margin-bottom: $spacing-05;
+    @include type-style('heading-03');
+  }
+
+  .cds--data-table {
+    overflow-x: auto;
+  }
+}

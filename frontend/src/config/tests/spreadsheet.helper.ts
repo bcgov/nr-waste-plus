@@ -1,9 +1,13 @@
 import ExcelJS from 'exceljs';
 
+import { EXPECTED_DISTRICT_CODES } from '@/services/speciescomposition/config/speciesCompositionConfig';
+
 // ─── Interior Config ────────────────────────────────────────────────────────
 // 13 columns: A=District code, B-E=Dry belt (4), F-I=Transition (4), J-M=Wet belt (4)
 // ─── Coast Config ───────────────────────────────────────────────────────────
 // 12 columns: A=District code, B-F=Mature (5), G-K=Immature (5), L=Heli Multiplier
+// ─── Species Composition Config ─────────────────────────────────────────────
+// 20 columns: A=District code, B-T=19 species + Total (headers in row 1)
 
 const INTERIOR_COL_COUNT = 13;
 const COAST_COL_COUNT = 12;
@@ -242,6 +246,151 @@ export async function buildMissingHeliMultiplierBuffer(): Promise<Buffer> {
     47.62,
     '', // ← must be numeric, but is empty
   ]);
+
+  return (await wb.xlsx.writeBuffer()) as unknown as Buffer;
+}
+
+// ─── Species Composition Helpers ─────────────────────────────────────────────
+
+/** The 19 species headers + Total that must appear in row 1 (columns B–T). */
+const SPECIES_HEADERS = [
+  'Balsam',
+  'Cedar',
+  'Cottonwood',
+  'Cypress',
+  'Fir',
+  'Hemlock',
+  'Larch',
+  'Maple',
+  'Pine',
+  'Poplar',
+  'Redcedar',
+  'Redwood',
+  'Spruce',
+  'Whitebirch',
+  'Whitepine',
+  'Yew',
+  'Other',
+  'Unknown',
+  'Total',
+];
+
+/**
+ * Adds a header row (row 1) with district label in A1 and species headers in B1–T1.
+ */
+function addSpeciesHeaderRow(ws: ExcelJS.Worksheet): void {
+  const headerRow = [undefined, ...SPECIES_HEADERS]; // A1 empty, B1–T1 headers
+  ws.addRow(headerRow);
+}
+
+/**
+ * Adds a data row with a district code and 19 numeric species values (0–1 range).
+ */
+function addSpeciesDataRow(ws: ExcelJS.Worksheet, districtCode: string, values: number[]): void {
+  if (values.length !== SPECIES_HEADERS.length) {
+    throw new Error(`Species row must have exactly ${SPECIES_HEADERS.length} values`);
+  }
+  ws.addRow([districtCode, ...values]);
+}
+
+/**
+ * Generates a deterministic set of species values for a district.
+ * Uses a seeded pseudo-random approach based on the district code's char codes.
+ */
+function generateSpeciesValues(districtCode: string): number[] {
+  const seed = districtCode.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  const raw = SPECIES_HEADERS.map((_, i) => {
+    const x = Math.sin(seed + i) * 10000;
+    return x - Math.floor(x); // 0–1 range
+  });
+  // Ensure Total = sum of first 18 species, capped at 1
+  const sum = raw.slice(0, 18).reduce((a, b) => a + b, 0);
+  raw[18] = Math.min(sum, 1);
+  return raw;
+}
+
+/**
+ * Builds a valid species composition workbook buffer (.xlsx).
+ *
+ * Layout:
+ * - Row 1: headers (A1 empty, B1–T1 = 19 species headers including Total)
+ * - Row 2+: one row per district with code in column A and 19 numeric values in B–T
+ * - All values are in the 0–1 range
+ * - Includes all 23 expected district codes
+ *
+ * @returns A Buffer of the .xlsx file ready for Playwright file upload.
+ */
+export async function buildValidSpeciesCompositionBuffer(): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Species Composition');
+
+  addSpeciesHeaderRow(ws);
+
+  for (const code of EXPECTED_DISTRICT_CODES) {
+    addSpeciesDataRow(ws, code, generateSpeciesValues(code));
+  }
+
+  return (await wb.xlsx.writeBuffer()) as unknown as Buffer;
+}
+
+/**
+ * Builds a species composition workbook missing some expected district codes.
+ * Only includes the first 5 districts from the expected list.
+ *
+ * @returns A Buffer of the .xlsx file ready for Playwright file upload.
+ */
+export async function buildMissingDistrictsBuffer(): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Species Composition');
+
+  addSpeciesHeaderRow(ws);
+
+  // Only include first 5 districts — missing the other 18
+  for (const code of EXPECTED_DISTRICT_CODES.slice(0, 5)) {
+    addSpeciesDataRow(ws, code, generateSpeciesValues(code));
+  }
+
+  return (await wb.xlsx.writeBuffer()) as unknown as Buffer;
+}
+
+/**
+ * Builds a species composition workbook with a non-numeric value in a species column.
+ *
+ * @returns A Buffer of the .xlsx file ready for Playwright file upload.
+ */
+export async function buildSpeciesNonNumericBuffer(): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Species Composition');
+
+  addSpeciesHeaderRow(ws);
+
+  for (const code of EXPECTED_DISTRICT_CODES) {
+    const values = generateSpeciesValues(code);
+    // Inject a non-numeric value in the first species column (Balsam)
+    values[0] = 'INVALID' as unknown as number;
+    addSpeciesDataRow(ws, code, values);
+  }
+
+  return (await wb.xlsx.writeBuffer()) as unknown as Buffer;
+}
+
+/**
+ * Builds a species composition workbook with a value out of range (>1).
+ *
+ * @returns A Buffer of the .xlsx file ready for Playwright file upload.
+ */
+export async function buildSpeciesOutOfRangeBuffer(): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Species Composition');
+
+  addSpeciesHeaderRow(ws);
+
+  for (const code of EXPECTED_DISTRICT_CODES) {
+    const values = generateSpeciesValues(code);
+    // Inject an out-of-range value (1.5 > 1)
+    values[0] = 1.5;
+    addSpeciesDataRow(ws, code, values);
+  }
 
   return (await wb.xlsx.writeBuffer()) as unknown as Buffer;
 }
