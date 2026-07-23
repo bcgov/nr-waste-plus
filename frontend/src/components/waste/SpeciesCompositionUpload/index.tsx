@@ -117,6 +117,7 @@ const SpeciesCompositionUpload: FC = () => {
       data-testid="species-composition-upload-column"
     >
       <form
+        data-testid="species-composition-upload-form"
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();

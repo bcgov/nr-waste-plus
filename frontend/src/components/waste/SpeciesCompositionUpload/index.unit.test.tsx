@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { screen } from '@testing-library/react';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -24,6 +24,14 @@ vi.mock('@/routes/inTreePaths', () => ({
   navigateInTree: vi.fn(),
 }));
 
+/**
+ * Hoisted mock data reference for FileUploadInput.
+ * Tests can set `mockFileData.current` to control what onProcessed receives.
+ */
+const { mockFileData } = vi.hoisted(() => ({
+  mockFileData: { current: null as unknown as any[] | null },
+}));
+
 // Mock FileUploadInput to avoid Excel processing in tests
 vi.mock('@/components/Form/FileUploadInput', () => ({
   default: ({
@@ -40,9 +48,9 @@ vi.mock('@/components/Form/FileUploadInput', () => ({
         type="file"
         data-testid="mock-file-input"
         onChange={(e) => {
-          // Simulate processor returning species composition data
           if (e.target.files?.[0]) {
-            onProcessed([
+            // Use controlled data if set, otherwise use default valid row
+            const data = mockFileData.current ?? [
               {
                 rows: [
                   {
@@ -69,7 +77,8 @@ vi.mock('@/components/Form/FileUploadInput', () => ({
                   },
                 ],
               },
-            ]);
+            ];
+            onProcessed(data);
           }
         }}
       />
@@ -106,6 +115,7 @@ describe('SpeciesCompositionUpload', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseSpeciesCompositionCreateMutation.mockReturnValue(createDefaultMutationReturn());
+    mockFileData.current = null;
   });
 
   describe('rendering', () => {
@@ -198,6 +208,213 @@ describe('SpeciesCompositionUpload', () => {
         expect.anything(),
         '/configuration/species-composition/42',
       );
+    });
+  });
+
+  describe('file upload edge cases (handleFileChange)', () => {
+    it('should not set form data when results array is empty', async () => {
+      // Mock onProcessed with empty array
+      mockFileData.current = [];
+
+      await renderWithAppAsync(<SpeciesCompositionUpload />);
+
+      const fileInput = screen.getByTestId('mock-file-input');
+      await userEvent.upload(
+        fileInput,
+        new File(['test'], 'test.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      );
+
+      // Upload button should remain disabled (no data loaded)
+      expect((screen.getByTestId('upload-table-button') as HTMLButtonElement).disabled).toBe(true);
+    });
+
+    it('should not set form data when first result is undefined', async () => {
+      mockFileData.current = [undefined as any];
+
+      await renderWithAppAsync(<SpeciesCompositionUpload />);
+
+      const fileInput = screen.getByTestId('mock-file-input');
+      await userEvent.upload(
+        fileInput,
+        new File(['test'], 'test.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      );
+
+      expect((screen.getByTestId('upload-table-button') as HTMLButtonElement).disabled).toBe(true);
+    });
+  });
+
+  describe('form submission', () => {
+    it('should call mutateAsync with tableData on valid submission', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<SpeciesCompositionUpload />);
+
+      // Upload a file first to populate data
+      const fileInput = screen.getByTestId('mock-file-input');
+      await user.upload(
+        fileInput,
+        new File(['test'], 'test.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      );
+
+      await waitFor(() => {
+        expect((screen.getByTestId('upload-table-button') as HTMLButtonElement).disabled).toBe(
+          false,
+        );
+      });
+
+      // Click the Upload table button (calls handleSubmit)
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+
+      await waitFor(() => {
+        expect(mockMutateAsync).toHaveBeenCalledWith({
+          tableData: {
+            rows: [
+              expect.objectContaining({
+                district: { code: 'DCC', description: '' },
+              }),
+            ],
+          },
+        });
+      });
+    });
+
+    it('should show submit error when mutation throws an Error', async () => {
+      const user = userEvent.setup();
+      mockMutateAsync.mockRejectedValue(new Error('API failure'));
+
+      await renderWithAppAsync(<SpeciesCompositionUpload />);
+
+      // Upload data to enable submit
+      const fileInput = screen.getByTestId('mock-file-input');
+      await user.upload(
+        fileInput,
+        new File(['test'], 'test.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      );
+
+      await waitFor(() => {
+        expect((screen.getByTestId('upload-table-button') as HTMLButtonElement).disabled).toBe(
+          false,
+        );
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('submit-error')).toBeTruthy();
+        expect(screen.getByText('API failure')).toBeTruthy();
+      });
+    });
+
+    it('should show generic submit error when mutation throws a non-Error', async () => {
+      const user = userEvent.setup();
+      mockMutateAsync.mockRejectedValue('unknown error');
+
+      await renderWithAppAsync(<SpeciesCompositionUpload />);
+
+      const fileInput = screen.getByTestId('mock-file-input');
+      await user.upload(
+        fileInput,
+        new File(['test'], 'test.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      );
+
+      await waitFor(() => {
+        expect((screen.getByTestId('upload-table-button') as HTMLButtonElement).disabled).toBe(
+          false,
+        );
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('submit-error')).toBeTruthy();
+        expect(screen.getByText('Submission failed')).toBeTruthy();
+      });
+    });
+
+    it('should clear previous submit error on new submission attempt', async () => {
+      const user = userEvent.setup();
+      mockMutateAsync.mockRejectedValueOnce(new Error('First failure'));
+
+      await renderWithAppAsync(<SpeciesCompositionUpload />);
+
+      const fileInput = screen.getByTestId('mock-file-input');
+      await user.upload(
+        fileInput,
+        new File(['test'], 'test.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      );
+
+      await waitFor(() => {
+        expect((screen.getByTestId('upload-table-button') as HTMLButtonElement).disabled).toBe(
+          false,
+        );
+      });
+
+      // First submission — fails
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('submit-error')).toBeTruthy();
+      });
+
+      // Second submission — should clear error before attempt
+      mockMutateAsync.mockResolvedValue(undefined);
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('submit-error')).toBeNull();
+      });
+    });
+  });
+
+  describe('button disabled states', () => {
+    it('should disable Upload table button when mutation is pending', async () => {
+      mockUseSpeciesCompositionCreateMutation.mockReturnValue(
+        createDefaultMutationReturn({ isPending: true }),
+      );
+
+      await renderWithAppAsync(<SpeciesCompositionUpload />);
+
+      const uploadButton = screen.getByTestId('upload-table-button');
+      expect((uploadButton as HTMLButtonElement).disabled).toBe(true);
+    });
+  });
+
+  describe('native form submission (onSubmit handler)', () => {
+    it('should handle native form submit event', async () => {
+      await renderWithAppAsync(<SpeciesCompositionUpload />);
+
+      // Upload data first
+      const fileInput = screen.getByTestId('mock-file-input');
+      await userEvent.upload(
+        fileInput,
+        new File(['test'], 'test.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      );
+
+      await waitFor(() => {
+        expect((screen.getByTestId('upload-table-button') as HTMLButtonElement).disabled).toBe(
+          false,
+        );
+      });
+
+      // Trigger native form submission (simulates pressing Enter)
+      fireEvent.submit(screen.getByTestId('species-composition-upload-form'));
+
+      await waitFor(() => {
+        expect(mockMutateAsync).toHaveBeenCalled();
+      });
     });
   });
 });
