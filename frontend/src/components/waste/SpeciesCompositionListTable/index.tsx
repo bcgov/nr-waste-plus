@@ -1,10 +1,11 @@
 import { Column } from '@carbon/react';
-import { useEffect, useState, type FC } from 'react';
+
+import { useListTableState } from '../useListTableState';
 
 import { useSpeciesCompositionListRowActions } from './actions';
 import { headers } from './constants';
 
-import type { SortDirectionType } from '@/services/types';
+import type { FC } from 'react';
 
 import TableResource from '@/components/Form/TableResource';
 import { useSpeciesCompositionListQuery } from '@/config/react-query/hooks';
@@ -24,53 +25,10 @@ import './index.scss';
  * @returns The species composition list table view.
  */
 const SpeciesCompositionListTable: FC = () => {
-  const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [sort, setSort] = useState<Record<string, SortDirectionType>>({});
-  const [searchTrigger, setSearchTrigger] = useState(0);
-
   const getRowActions = useSpeciesCompositionListRowActions();
 
-  const { data, isLoading, isFetching, isError, refetch } = useSpeciesCompositionListQuery(
-    { page: currentPage, size: pageSize, sort },
-    { enabled: false, staleTime: Infinity },
-  );
-
-  /**
-   * Triggers a fetch with the given pagination state.
-   */
-  const executeSearch = (page: number, size: number) => {
-    setCurrentPage(page);
-    setPageSize(size);
-    setSearchTrigger((n) => n + 1);
-  };
-
-  useEffect(() => {
-    if (searchTrigger > 0) {
-      refetch();
-    }
-  }, [searchTrigger, refetch]);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  /**
-   * Applies a table page change and fetches the corresponding result set.
-   */
-  const handlePageChange = ({ page, pageSize }: { page: number; pageSize: number }) => {
-    const maxPage = Math.max((data?.page.totalPages ?? 1) - 1, 0);
-    const adjustedPage = Math.min(Math.max(page, 0), maxPage);
-    executeSearch(adjustedPage, pageSize);
-  };
-
-  /**
-   * Applies updated sort keys and reruns the current search.
-   */
-  const handleSort = (sortingKeys: Record<string, SortDirectionType>) => {
-    setSort(sortingKeys);
-    executeSearch(currentPage, pageSize);
-  };
+  const { data, isLoading, isFetching, isError, handlePageChange, handleSort, pageSize } =
+    useListTableState({ queryHook: useSpeciesCompositionListQuery });
 
   return (
     <Column lg={16} md={8} sm={4} className="species-composition-column__content">
