@@ -270,10 +270,10 @@ test.describe('Species Composition Upload Page - E2E', () => {
       const reviewTable = page.getByTestId('species-composition-review-table');
       await expect(reviewTable).toBeVisible();
 
-      // Should display district codes in the table (23 districts)
-      // Carbon DataTable renders rows with role="row"
-      const rows = reviewTable.locator('[role="row"]');
-      await expect(rows).toHaveCount(23, { timeout: 5_000 });
+      // Should display district codes in the table (23 data rows + 1 header row)
+      // Carbon DataTable renders <tr> elements inside <tbody> for data rows
+      const dataRows = reviewTable.locator('tbody tr');
+      await expect(dataRows).toHaveCount(23, { timeout: 5_000 });
     });
 
     test('should hide review table when no data is loaded @idir-only', async ({
@@ -464,7 +464,8 @@ test.describe('Species Composition Upload Page - E2E', () => {
 
       // Should show an error notification (Carbon toast or inline error)
       // The mutation error handler should display a notification
-      await expect(page.getByRole('alert')).toBeVisible({ timeout: 10_000 });
+      // Use .first() because Carbon may render multiple alert elements
+      await expect(page.getByRole('alert').first()).toBeVisible({ timeout: 10_000 });
 
       // Should remain on the upload page
       await expect(page).toHaveURL(/\/configuration\/species-composition\/upload$/);
