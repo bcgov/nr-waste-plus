@@ -4,15 +4,15 @@ import type { FC } from 'react';
 
 import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
+import SpeciesCompositionUpload from '@/components/waste/SpeciesCompositionUpload';
 
 import './index.scss';
 
 /**
  * Page shell for uploading a new species composition table.
  *
- * Minimal stub — full implementation is tracked in #1058.
- * Renders the page title and notification area. The upload form,
- * file parsing, and validation logic will be added as a follow-up.
+ * Renders the page title, notification area, and the upload form component.
+ * The form handles file upload, parsing, validation, and submission.
  *
  * @returns The species composition upload page.
  */
@@ -22,7 +22,7 @@ const SpeciesCompositionUploadPage: FC = () => {
       <Column lg={16} md={8} sm={4} className="species-composition-upload-column__banner">
         <PageTitle
           title="Upload new species composition table"
-          subtitle="Load .xlsx file containing species composition data"
+          subtitle="Load .xls or .xlsx file to calculate volumes by species when HBS mark monthly billing history report is not available"
           breadCrumbs={[{ name: 'Configuration', path: '/configuration' }]}
         />
       </Column>
@@ -31,7 +31,7 @@ const SpeciesCompositionUploadPage: FC = () => {
         <PageNotification eventTarget="species-composition-upload" />
       </Column>
 
-      {/* Upload form — populated in #1058 */}
+      <SpeciesCompositionUpload />
     </>
   );
 };

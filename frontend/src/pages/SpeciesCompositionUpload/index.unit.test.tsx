@@ -27,6 +27,8 @@ describe('SpeciesCompositionUploadPage', () => {
 
   it('renders the subtitle', async () => {
     await renderWithAppAsync(<SpeciesCompositionUploadPage />);
-    screen.getByText('Load .xlsx file containing species composition data');
+    screen.getByText(
+      'Load .xls or .xlsx file to calculate volumes by species when HBS mark monthly billing history report is not available',
+    );
   });
 });
