@@ -8,33 +8,10 @@ import {
   TableRow,
 } from '@carbon/react';
 
-import type { SpeciesCompositionRow, SpeciesKey } from '@/services/speciesComposition.types';
+import type { SpeciesCompositionRow } from '@/services/speciesComposition.types';
 import type { FC } from 'react';
 
-import { SPECIES_COLUMNS } from '@/services/speciesComposition.types';
-
-/** Display labels for species columns. */
-const SPECIES_LABELS: Record<SpeciesKey, string> = {
-  balsam: 'Balsam',
-  cedar: 'Cedar',
-  cottonwood: 'Cottonwood',
-  cypress: 'Cypress',
-  fir: 'Fir',
-  hemlock: 'Hemlock',
-  larch: 'Larch',
-  maple: 'Maple',
-  pine: 'Pine',
-  poplar: 'Poplar',
-  redcedar: 'Redcedar',
-  redwood: 'Redwood',
-  spruce: 'Spruce',
-  whitebirch: 'Whitebirch',
-  whitepine: 'Whitepine',
-  yew: 'Yew',
-  other: 'Other',
-  unknown: 'Unknown',
-  total: 'Total',
-};
+import { SPECIES_COLUMNS, SPECIES_LABELS } from '@/services/speciesComposition.types';
 
 /**
  * Props for the SpeciesCompositionReviewTable component.
