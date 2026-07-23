@@ -8,7 +8,6 @@ import AdvancedFilterClientInput from './index';
 import type { FamLoginUser } from '@/context/auth/types';
 
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
-import { AuthProvider } from '@/context/auth/AuthProvider';
 import { useAuth } from '@/context/auth/useAuth';
 import APIs from '@/services/APIs';
 
@@ -28,13 +27,11 @@ vi.mock('@/services/APIs', () => ({
   },
 }));
 
+// `useAuth` is mocked above, so the real `AuthProvider` is unnecessary here —
+// mounting it only adds an unawaited effect that produces act(...) warnings.
 const wrapper = ({ children }: { children: React.ReactNode }) => {
   const qc = makeTestQueryClient();
-  return (
-    <QueryClientProvider client={qc}>
-      <AuthProvider>{children}</AuthProvider>
-    </QueryClientProvider>
-  );
+  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
 };
 
 describe('AdvancedFilterClientInput', () => {

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import { SpeciesCompositionProcessor } from './speciesCompositionProcessor';
 
-import type { SpeciesCompositionData } from '@/services/speciescomposition/speciesComposition.types';
+import type { SpeciesCompositionData } from '@/services/speciesComposition.types';
 
 import {
   buildSpeciesCompositionFile,

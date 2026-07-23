@@ -1,12 +1,12 @@
-import { removeEmpty } from '../utils';
+import { removeEmpty } from './utils';
 
+import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type {
   SpeciesCompositionCreate,
   SpeciesCompositionDetail,
   SpeciesCompositionListItem,
-} from './speciesComposition.types';
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { PageableRequest } from '@/services/types';
+  PageableRequest,
+} from '@/services/types';
 
 import { CancelablePromise } from '@/config/api/CancelablePromise';
 import { HttpClient, type APIConfig } from '@/config/api/types';
@@ -37,7 +37,7 @@ export class SpeciesCompositionService extends HttpClient {
   ): CancelablePromise<PageableResponse<SpeciesCompositionListItem>> {
     return this.doRequest<PageableResponse<SpeciesCompositionListItem>>(this.config, {
       method: 'GET',
-      url: '/api/configuration/species-composition',
+      url: '/api/configuration/species-compositions',
       query: {
         ...removeEmpty(pageable),
       },
@@ -58,7 +58,7 @@ export class SpeciesCompositionService extends HttpClient {
   ): CancelablePromise<SpeciesCompositionDetail> {
     return this.doRequest<SpeciesCompositionDetail>(this.config, {
       method: 'GET',
-      url: `/api/configuration/species-composition/${id}`,
+      url: `/api/configuration/species-compositions/${id}`,
       ...(meta === undefined ? {} : { meta }),
     });
   }
@@ -81,7 +81,7 @@ export class SpeciesCompositionService extends HttpClient {
   ): CancelablePromise<number> {
     return this.createResource({
       method: 'POST',
-      url: '/api/configuration/species-composition',
+      url: '/api/configuration/species-compositions',
       body: dto,
       ...(meta === undefined ? {} : { meta }),
     });

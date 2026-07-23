@@ -258,7 +258,10 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
       await userEvent.type(districtInput, 'DCR');
 
       const districtText = await screen.findByText(/Campbell River/i);
-      districtText.click();
+      await act(async () => {
+        districtText.click();
+        await new Promise((r) => setTimeout(r, 0));
+      });
 
       // Grade field should not appear for single-area district
       await waitFor(() => {
@@ -282,7 +285,10 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
       await userEvent.type(districtInput, 'DKM');
 
       const districtText = await screen.findByText(/Dease Lake/i);
-      districtText.click();
+      await act(async () => {
+        districtText.click();
+        await new Promise((r) => setTimeout(r, 0));
+      });
 
       // Grade should be auto-selected, so field should not show
       await waitFor(() => {
@@ -375,6 +381,7 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
       await user.click(clientBlurInput);
       await act(async () => {
         clientBlurInput.blur();
+        await new Promise((r) => setTimeout(r, 0));
       });
 
       // Validation should have been triggered
@@ -386,8 +393,14 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
 
       const districtInput = screen.getByRole('combobox', { name: /district/i });
       // Blur the district field without a selection → required validation must fire
-      districtInput.focus();
-      districtInput.blur();
+      await act(async () => {
+        districtInput.focus();
+        await new Promise((r) => setTimeout(r, 0));
+      });
+      await act(async () => {
+        districtInput.blur();
+        await new Promise((r) => setTimeout(r, 0));
+      });
 
       await waitFor(() => {
         expect(screen.getByText(/You must select a district to proceed/i)).toBeTruthy();
@@ -416,7 +429,10 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
       await userEvent.type(districtInput, 'DKM');
 
       const districtText = await screen.findByText(/Dease Lake/i);
-      districtText.click();
+      await act(async () => {
+        districtText.click();
+        await new Promise((r) => setTimeout(r, 0));
+      });
 
       await waitFor(() => {
         const gradeGroup = screen.getByTestId('grade-radio-group');
@@ -436,7 +452,10 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
       await userEvent.type(districtInput, 'DKM');
 
       const districtText = await screen.findByText(/Dease Lake/i);
-      districtText.click();
+      await act(async () => {
+        districtText.click();
+        await new Promise((r) => setTimeout(r, 0));
+      });
 
       await waitFor(() => {
         const gradeGroup = screen.getByTestId('grade-radio-group');
@@ -448,8 +467,14 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
 
       // Blur the grade field without selecting an option → required validation must fire
       const coastalRadio = screen.getByRole('radio', { name: /Coastal grades/i });
-      coastalRadio.focus();
-      coastalRadio.blur();
+      await act(async () => {
+        coastalRadio.focus();
+        await new Promise((r) => setTimeout(r, 0));
+      });
+      await act(async () => {
+        coastalRadio.blur();
+        await new Promise((r) => setTimeout(r, 0));
+      });
 
       await waitFor(() => {
         expect(screen.getByText(/You must select one option to proceed/i)).toBeTruthy();
@@ -590,7 +615,10 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
       await userEvent.type(districtInput, 'DKM');
 
       const districtText = await screen.findByText(/Dease Lake/i);
-      districtText.click();
+      await act(async () => {
+        districtText.click();
+        await new Promise((r) => setTimeout(r, 0));
+      });
 
       await waitFor(() => {
         const gradeGroup = screen.getByTestId('grade-radio-group');
@@ -602,7 +630,10 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
       await userEvent.type(districtInput, 'DCR');
 
       const dcrText = await screen.findByText(/Campbell River/i);
-      dcrText.click();
+      await act(async () => {
+        dcrText.click();
+        await new Promise((r) => setTimeout(r, 0));
+      });
 
       await waitFor(() => {
         const gradeGroup = screen.queryByTestId('grade-radio-group');
@@ -618,7 +649,10 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
       await userEvent.type(districtInput, 'DPG');
 
       const districtText = await screen.findByText(/Prince George/i);
-      districtText.click();
+      await act(async () => {
+        districtText.click();
+        await new Promise((r) => setTimeout(r, 0));
+      });
 
       await waitFor(() => {
         const gradeGroup = screen.queryByTestId('grade-radio-group');
@@ -647,8 +681,14 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
 
       const districtInput = screen.getByRole('combobox', { name: /district/i });
       // Blur the district field without a selection → required validation must fire
-      districtInput.focus();
-      districtInput.blur();
+      await act(async () => {
+        districtInput.focus();
+        await new Promise((r) => setTimeout(r, 0));
+      });
+      await act(async () => {
+        districtInput.blur();
+        await new Promise((r) => setTimeout(r, 0));
+      });
 
       await waitFor(() => {
         expect(screen.getByText(/You must select a district to proceed/i)).toBeTruthy();
@@ -660,8 +700,14 @@ describe('ReportingUnitCreate - Coverage Enhancement', () => {
 
       const samplingInput = screen.getByRole('combobox', { name: /sampling option/i });
       // Sampling has a default value (AVG), so blurring it must validate as valid → no error
-      samplingInput.focus();
-      samplingInput.blur();
+      await act(async () => {
+        samplingInput.focus();
+        await new Promise((r) => setTimeout(r, 0));
+      });
+      await act(async () => {
+        samplingInput.blur();
+        await new Promise((r) => setTimeout(r, 0));
+      });
 
       await waitFor(() => {
         expect(screen.queryByText(/You must select a sampling option to proceed/i)).toBeNull();

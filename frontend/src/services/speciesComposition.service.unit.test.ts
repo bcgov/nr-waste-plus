@@ -82,7 +82,7 @@ describe('SpeciesCompositionService', () => {
 
       expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
         method: 'GET',
-        url: '/api/configuration/species-composition',
+        url: '/api/configuration/species-compositions',
         query: { size: 10 },
       });
       expect(result.content).toHaveLength(1);
@@ -217,7 +217,7 @@ describe('SpeciesCompositionService', () => {
     it('should parse resource ID from Location header', async () => {
       (service as any).doRequest = vi
         .fn()
-        .mockResolvedValue('http://example.com/api/configuration/species-composition/42');
+        .mockResolvedValue('http://example.com/api/configuration/species-compositions/42');
 
       const result = await service.createSpeciesComposition(validCreateRequest);
 
@@ -226,7 +226,7 @@ describe('SpeciesCompositionService', () => {
         mockConfig,
         expect.objectContaining({
           method: 'POST',
-          url: '/api/configuration/species-composition',
+          url: '/api/configuration/species-compositions',
           responseHeader: 'location',
         }),
       );
@@ -288,7 +288,7 @@ describe('SpeciesCompositionService', () => {
 
       expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
         method: 'GET',
-        url: '/api/configuration/species-composition/1',
+        url: '/api/configuration/species-compositions/1',
       });
       expect(result.id).toBe(1);
       expect(result.tableData.rows).toHaveLength(1);

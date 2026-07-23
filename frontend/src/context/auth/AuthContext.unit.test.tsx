@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { AuthProvider } from './AuthProvider';
@@ -17,12 +17,18 @@ const TestComponent = () => {
   );
 };
 
-const renderWithProvider = () => {
+const renderWithProvider = async () => {
   render(
     <AuthProvider>
       <TestComponent />
     </AuthProvider>,
   );
+  // AuthProvider's mount effect resolves loadUserIdToken/refreshUserState
+  // asynchronously; flush it inside act() before assertions/unmount so the
+  // resulting setUser/setIsLoading calls aren't reported as unwrapped updates.
+  await waitFor(() => {
+    expect(screen.getByTestId('is-loading').textContent).toBe('no');
+  });
 };
 
 describe('AuthContext', () => {
@@ -30,10 +36,10 @@ describe('AuthContext', () => {
     // Reset mocks before each test
     vi.clearAllMocks();
   });
-  it('provides default auth values', () => {
-    renderWithProvider();
+  it('provides default auth values', async () => {
+    await renderWithProvider();
     expect(screen.getByTestId('is-logged-in').textContent).toBe('no');
-    expect(screen.getByTestId('is-loading').textContent).toMatch(/yes|no/);
+    expect(screen.getByTestId('is-loading').textContent).toBe('no');
     expect(screen.getByTestId('user').textContent).toBe('none');
   });
 

@@ -1,6 +1,6 @@
 import { CodesService } from './codes.service';
 import { DistrictVolumeService } from './districtvolume.service';
-import { SpeciesCompositionService } from './speciescomposition/speciesComposition.service';
+import { SpeciesCompositionService } from './speciesComposition.service';
 
 import type { APIConfig } from '@/config/api/types';
 

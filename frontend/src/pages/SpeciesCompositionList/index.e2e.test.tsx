@@ -2,12 +2,18 @@ import { test, expect } from '@playwright/test';
 
 import { setupAppShellMocks } from '@/config/tests/app.setup';
 import { mockJwt } from '@/config/tests/auth.helper';
+import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 const canOverrideClaims = (): boolean => process.env.VITE_MOCK_AUTH?.toLowerCase() === 'true';
 
 test.describe('Species Composition List Page', () => {
   test.beforeEach(async ({ page }, testInfo) => {
     await setupAppShellMocks(page, testInfo.project.metadata.userType);
+    await mockApiResponsesWithStub(
+      page,
+      'configuration/species-compositions**',
+      'species-composition/list.json',
+    );
   });
 
   test.describe('admin role (IDIR)', () => {
@@ -71,6 +77,7 @@ test.describe('Species Composition List Page', () => {
           'View tables used to calculate volumes when district average waste assessment is used',
         ),
       ).toBeVisible();
+      await expect(page.getByRole('button', { name: /Upload Spreadsheet/i })).toBeVisible();
     });
 
     test('should navigate back to configuration via breadcrumb @idir-only', async ({

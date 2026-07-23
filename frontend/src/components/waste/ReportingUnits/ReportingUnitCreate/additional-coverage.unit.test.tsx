@@ -209,7 +209,9 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
       await userEvent.type(districtInput, 'DKM');
 
       const districtText = await screen.findByText(/Dease Lake/i);
-      districtText.click();
+      await act(async () => {
+        districtText.click();
+      });
 
       // Grade should be auto-selected, so field should not show
       await waitFor(() => {
@@ -226,7 +228,9 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
       await userEvent.type(districtInput, 'DKM');
 
       const districtText = await screen.findByText(/Dease Lake/i);
-      districtText.click();
+      await act(async () => {
+        districtText.click();
+      });
 
       await waitFor(() => {
         const gradeGroup = screen.getByTestId('grade-radio-group');
@@ -262,7 +266,9 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
       await userEvent.type(districtInput, 'DKM');
 
       const districtText = await screen.findByText(/Dease Lake/i);
-      districtText.click();
+      await act(async () => {
+        districtText.click();
+      });
 
       await waitFor(() => {
         const gradeGroup = screen.getByTestId('grade-radio-group');
@@ -278,7 +284,9 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
       await userEvent.type(districtInput, 'DKM');
 
       const districtText = await screen.findByText(/Dease Lake/i);
-      districtText.click();
+      await act(async () => {
+        districtText.click();
+      });
 
       await waitFor(() => {
         const coastalRadio = screen.getByRole('radio', { name: /Coastal/i });
@@ -297,7 +305,9 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
       await userEvent.type(districtInput, 'DKM');
 
       const districtText = await screen.findByText(/Dease Lake/i);
-      districtText.click();
+      await act(async () => {
+        districtText.click();
+      });
 
       await waitFor(() => {
         const gradeGroup = screen.getByTestId('grade-radio-group');
@@ -327,7 +337,9 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
       await userEvent.type(districtInput, 'DKM');
 
       const districtText = await screen.findByText(/Dease Lake/i);
-      districtText.click();
+      await act(async () => {
+        districtText.click();
+      });
 
       await waitFor(() => {
         const gradeGroup = screen.getByTestId('grade-radio-group');
@@ -411,9 +423,15 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
       const districtComboBox = screen.getByRole('combobox', { name: /district/i });
 
       // Focus first to ensure the element exists in DOM
-      districtComboBox.focus();
-      // Then blur to trigger blur validation
-      districtComboBox.blur();
+      await act(async () => {
+        districtComboBox.focus();
+        await new Promise((r) => setTimeout(r, 0));
+      });
+      // Then blur to trigger blur validation, flushing the async validator inside act()
+      await act(async () => {
+        districtComboBox.blur();
+        await new Promise((r) => setTimeout(r, 0));
+      });
 
       expect(districtComboBox).toBeDefined();
     });
@@ -440,9 +458,15 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
       const samplingComboBox = screen.getByTestId('sampling-combobox');
 
       // Focus first to ensure the element exists in DOM
-      samplingComboBox?.focus();
-      // Then blur to trigger blur validation
-      samplingComboBox?.blur();
+      await act(async () => {
+        samplingComboBox?.focus();
+        await new Promise((r) => setTimeout(r, 0));
+      });
+      // Then blur to trigger blur validation, flushing the async validator inside act()
+      await act(async () => {
+        samplingComboBox?.blur();
+        await new Promise((r) => setTimeout(r, 0));
+      });
 
       expect(samplingComboBox).toBeDefined();
     });
@@ -471,7 +495,9 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
       await userEvent.type(districtInput, 'DKM');
 
       const districtText = await screen.findByText(/Dease Lake/i);
-      districtText.click();
+      await act(async () => {
+        districtText.click();
+      });
 
       // Wait for grade field to appear
       await waitFor(() => {
@@ -501,7 +527,9 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
       await userEvent.type(districtInput, 'DKM');
 
       const districtText = await screen.findByText(/Dease Lake/i);
-      districtText.click();
+      await act(async () => {
+        districtText.click();
+      });
 
       // Wait for grade field to appear
       await waitFor(() => {
@@ -535,7 +563,9 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
       await userEvent.type(districtInput, 'DKM');
 
       const districtText = await screen.findByText(/Dease Lake/i);
-      districtText.click();
+      await act(async () => {
+        districtText.click();
+      });
 
       // Wait for grade field to appear
       const gradeGroup = await screen.findByTestId('grade-radio-group');
@@ -546,7 +576,9 @@ describe('ReportingUnitCreate - Additional Coverage', () => {
       await userEvent.type(districtInput, 'DCR');
 
       const dcrText = await screen.findByText(/Campbell River/i);
-      dcrText.click();
+      await act(async () => {
+        dcrText.click();
+      });
 
       // Grade field should be null/hidden now
       await waitFor(() => {

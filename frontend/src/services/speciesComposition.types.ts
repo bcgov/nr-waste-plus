@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { codeDescriptionSchema } from './reportingUnit.types';
+
 import { pageableResponseSchema } from '@/components/Form/TableResource/schemas';
 
 // ─── SPECIES COLUMN KEYS ─────────────────────────────────────────────────────
@@ -26,13 +28,6 @@ export const SPECIES_COLUMNS = [
 ] as const;
 
 export type SpeciesKey = (typeof SPECIES_COLUMNS)[number];
-
-// ─── CODE DESCRIPTION ────────────────────────────────────────────────────────
-export const codeDescriptionSchema = z.object({
-  code: z.string(),
-  description: z.string(),
-});
-export type CodeDescriptionDto = z.infer<typeof codeDescriptionSchema>;
 
 // ─── ROW ─────────────────────────────────────────────────────────────────────
 export const speciesCompositionRowSchema = z.object({

@@ -649,7 +649,15 @@ describe('helper function coverage', () => {
     await renderComponent();
     const districtComboBox = screen.getByLabelText('District');
 
-    await userEvent.selectOptions(districtComboBox, 'DKM');
+    // selectOptions alone leaves the ComboBox/Field/LocalSubscribe async validation
+    // cascade unflushed; an extra act() + double setTimeout(0) tick is required to
+    // fully drain it before assertions run.
+    // eslint-disable-next-line testing-library/no-unnecessary-act
+    await act(async () => {
+      await userEvent.selectOptions(districtComboBox, 'DKM');
+      await new Promise((r) => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
+    });
 
     await waitFor(() => {
       const gradeGroup = screen.getByTestId('grade-radio-group');
