@@ -59,7 +59,8 @@ const SpeciesCompositionListTable: FC = () => {
    * Applies a table page change and fetches the corresponding result set.
    */
   const handlePageChange = ({ page, pageSize }: { page: number; pageSize: number }) => {
-    const adjustedPage = Math.min(Math.max(page, 0), (data?.page.totalPages ?? 1) - 1);
+    const maxPage = Math.max((data?.page.totalPages ?? 1) - 1, 0);
+    const adjustedPage = Math.min(Math.max(page, 0), maxPage);
     executeSearch(adjustedPage, pageSize);
   };
 
