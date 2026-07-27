@@ -12,9 +12,8 @@ import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDistrictRowDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorZoneDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.SpeciesCompositionTableDataDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.TableDataDto;
-import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
-import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictRow;
 import ca.bc.gov.nrs.hrs.dto.speciescomposition.SpeciesCompositionDataDto;
+import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Section;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
@@ -85,8 +84,8 @@ public final class DistrictVolumeMapper {
       tableDataDto = new SpeciesCompositionTableDataDto(tableData.speciesRows());
     } else {
       tableDataDto = switch (entity.getArea()) {
-        case INTERIOR -> toInteriorDto(tableData);
-        case COASTAL -> toCoastDto(tableData);
+        case INTERIOR -> toInteriorDto(tableData != null ? tableData : new TableData());
+        case COASTAL -> toCoastDto(tableData != null ? tableData : new TableData());
       };
     }
 
@@ -96,7 +95,7 @@ public final class DistrictVolumeMapper {
         entity.getStartDate(),
         entity.getEndDate(),
         entity.getCreatedBy(),
-        entity.getDateOfUpload().atOffset(ZoneOffset.UTC).toInstant(),
+        entity.getDateOfUpload() != null ? entity.getDateOfUpload().atOffset(ZoneOffset.UTC).toInstant() : null,
         entity.getTableLevelFactor(),
         entity.getHeliMultiplier(),
         tableDataDto
