@@ -11,7 +11,9 @@ import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeListItemDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDistrictRowDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorZoneDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.SpeciesCompositionTableDataDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
+import ca.bc.gov.nrs.hrs.entity.speciescomposition.SpeciesCompositionRow;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictRow;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Section;
@@ -390,5 +392,25 @@ class DistrictVolumeMapperTest {
     assertThat(rowDto.avoidableSawlog()).isNull();
     assertThat(rowDto.avoidableGrade4()).isNull();
     assertThat(rowDto.total()).isNull();
+  }
+
+  @Test
+  @DisplayName(
+      "toEntityTableData — should map SpeciesCompositionTableDataDto rows to speciesRows via SpeciesCompositionMapper")
+  void toEntityTableData_mapsSpeciesCompositionRows_whenDtoIsSpeciesComposition() {
+    // Arrange
+    SpeciesCompositionTableDataDto dto =
+        new SpeciesCompositionTableDataDto(
+            List.of(
+                new SpeciesCompositionRow(
+                    new CodeDescriptionDto("DKM", "Kamloops"),
+                    Map.of("balsam", new BigDecimal("0.100")))));
+
+    // Act
+    TableData result = DistrictVolumeMapper.toEntityTableData(dto);
+
+    // Assert
+    assertThat(result.speciesRows()).hasSize(1);
+    assertThat(result.speciesRows().get(0).district().code()).isEqualTo("DKM");
   }
 }
