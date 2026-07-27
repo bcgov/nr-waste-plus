@@ -1,4 +1,4 @@
-FROM node:24.18-bullseye-slim AS build
+FROM node:24.18-bookworm-slim AS build
 
 # Cache npm dependencies by copying package files first
 WORKDIR /app
