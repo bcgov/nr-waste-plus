@@ -187,7 +187,12 @@ describe('SpeciesCompositionService', () => {
 
   describe('createSpeciesComposition', () => {
     const validCreateRequest = {
+      area: 'INTERIOR',
+      startDate: '2026-05-15',
+      tableLevelFactor: 1.0,
+      heliMultiplier: null,
       tableData: {
+        type: 'SPECIES_COMPOSITION' as const,
         rows: [
           {
             district: { code: 'DCC', description: 'Cariboo' },
