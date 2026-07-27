@@ -174,4 +174,39 @@ class SpeciesCompositionMapperTest {
     assertThat(mapped.species()).isEmpty();
     assertThat(mapped.district().code()).isEqualTo("DND");
   }
+
+  @Test
+  @DisplayName("toEntityTableData — should scale rows with null species values without error")
+  void toEntityTableData_scalesRowsWithNullSpeciesValues() {
+
+    SpeciesCompositionRow row = new SpeciesCompositionRow(
+        new CodeDescriptionDto("DND", "Nadina Natural Resource District"),
+        Map.of("BA", new BigDecimal("1.5"))
+    );
+
+    SpeciesCompositionDataDto dto = new SpeciesCompositionDataDto(List.of(row));
+
+    TableData result = SpeciesCompositionMapper.toEntityTableData(dto);
+
+    assertThat(result.speciesRows()).hasSize(1);
+    assertThat(result.speciesRows().get(0).species().get("BA"))
+        .isEqualByComparingTo(new BigDecimal("1.500"));
+  }
+
+  @Test
+  @DisplayName("toEntityTableData — should handle row with null species map gracefully")
+  void toEntityTableData_handlesNullSpeciesMapGracefully() {
+
+    SpeciesCompositionRow row = new SpeciesCompositionRow(
+        new CodeDescriptionDto("DND", "Nadina Natural Resource District"),
+        null
+    );
+
+    SpeciesCompositionDataDto dto = new SpeciesCompositionDataDto(List.of(row));
+
+    TableData result = SpeciesCompositionMapper.toEntityTableData(dto);
+
+    assertThat(result.speciesRows()).hasSize(1);
+    assertThat(result.speciesRows().get(0).species()).isEmpty();
+  }
 }
