@@ -14,6 +14,7 @@ import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.SpeciesCompositionTableDataDt
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.TableDataDto;
 import ca.bc.gov.nrs.hrs.dto.speciescomposition.SpeciesCompositionDataDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
+import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictRow;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Section;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
