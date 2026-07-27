@@ -447,7 +447,7 @@ class DistrictVolumeMapperTest {
   @DisplayName(
       "toDetailDto — should handle null tableData with INTERIOR area by returning empty InteriorDataDto")
   void toDetailDto_handlesNullTableData_withInteriorArea() {
-    // Arrange
+    // Arrange — use empty zones list so toInteriorDto can iterate without NPE
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setId(51L);
     entity.setArea(Area.INTERIOR);
@@ -455,7 +455,7 @@ class DistrictVolumeMapperTest {
     entity.setTableLevelFactor(new BigDecimal("1.000"));
     entity.setCreatedBy("MAPPER_TEST");
     entity.setDateOfUpload(MOCK_UPLOAD_TIME);
-    entity.setTableData(null);
+    entity.setTableData(new TableData(Collections.emptyList(), null, null, Map.of()));
 
     // Act
     DistrictVolumeDetailDto dto = DistrictVolumeMapper.toDetailDto(entity);
@@ -468,7 +468,7 @@ class DistrictVolumeMapperTest {
   @DisplayName(
       "toDetailDto — should handle null tableData with COASTAL area by returning empty CoastDataDto")
   void toDetailDto_handlesNullTableData_withCoastalArea() {
-    // Arrange
+    // Arrange — use empty sections list so toCoastDto can iterate without NPE
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setId(52L);
     entity.setArea(Area.COASTAL);
@@ -476,7 +476,7 @@ class DistrictVolumeMapperTest {
     entity.setTableLevelFactor(new BigDecimal("1.000"));
     entity.setCreatedBy("MAPPER_TEST");
     entity.setDateOfUpload(MOCK_UPLOAD_TIME);
-    entity.setTableData(null);
+    entity.setTableData(new TableData(null, Collections.emptyList(), null, Map.of()));
 
     // Act
     DistrictVolumeDetailDto dto = DistrictVolumeMapper.toDetailDto(entity);
@@ -497,7 +497,7 @@ class DistrictVolumeMapperTest {
     entity.setTableLevelFactor(new BigDecimal("1.000"));
     entity.setCreatedBy("MAPPER_TEST");
     entity.setDateOfUpload(null);
-    entity.setTableData(new TableData(null, null, null, Map.of()));
+    entity.setTableData(new TableData(Collections.emptyList(), null, null, Map.of()));
 
     // Act
     DistrictVolumeDetailDto dto = DistrictVolumeMapper.toDetailDto(entity);
