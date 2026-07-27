@@ -85,8 +85,8 @@ public final class DistrictVolumeMapper {
       tableDataDto = new SpeciesCompositionTableDataDto(tableData.speciesRows());
     } else {
       tableDataDto = switch (entity.getArea()) {
-        case INTERIOR -> toInteriorDto(tableData != null ? tableData : new TableData());
-        case COASTAL -> toCoastDto(tableData != null ? tableData : new TableData());
+        case INTERIOR -> toInteriorDto(tableData != null ? tableData : new TableData(null, null, null, null));
+        case COASTAL -> toCoastDto(tableData != null ? tableData : new TableData(null, null, null, null));
       };
     }
 
