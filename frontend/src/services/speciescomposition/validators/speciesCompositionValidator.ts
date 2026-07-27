@@ -4,6 +4,10 @@ import {
   EXPECTED_SPECIES_HEADERS,
   HEADER_TO_SPECIES_KEY,
   SUMMARY_ROW_PATTERNS,
+  HEADER_ROW,
+  DATA_START_ROW,
+  DISTRICT_COL,
+  SPECIES_START_COL,
 } from '@/services/speciescomposition/config/speciesCompositionConfig';
 import { ExcelReader } from '@/services/spreadsheet/excelReader';
 
@@ -34,16 +38,16 @@ export async function speciesCompositionValidator(file: File): Promise<string[]>
     return errors;
   }
 
-  if (worksheet.rowCount < 2) {
+  if (worksheet.rowCount < DATA_START_ROW) {
     errors.push('Spreadsheet must contain a header row and at least one data row.');
     return errors;
   }
 
   // ── Validate header row contains all 19 species columns ──────────────
-  const headerRow = worksheet.getRow(1);
+  const headerRow = worksheet.getRow(HEADER_ROW);
   const foundHeaders = new Set<string>();
 
-  for (let c = 2; c <= headerRow.cellCount; c++) {
+  for (let c = SPECIES_START_COL; c <= headerRow.cellCount; c++) {
     const raw = String(headerRow.getCell(c).value ?? '').trim();
     if (!raw) continue;
 
@@ -54,8 +58,7 @@ export async function speciesCompositionValidator(file: File): Promise<string[]>
   }
 
   for (const expected of EXPECTED_SPECIES_HEADERS) {
-    const key = HEADER_TO_SPECIES_KEY[normalise(expected)];
-    if (key && !foundHeaders.has(key)) {
+    if (!foundHeaders.has(expected)) {
       errors.push(`Missing species column header: "${expected}".`);
     }
   }
@@ -63,8 +66,8 @@ export async function speciesCompositionValidator(file: File): Promise<string[]>
   // ── Validate data rows ───────────────────────────────────────────────
   const seenDistricts = new Map<string, number>();
 
-  for (let r = 2; r <= worksheet.rowCount; r++) {
-    const districtRaw = String(worksheet.getRow(r).getCell(1).value ?? '').trim();
+  for (let r = DATA_START_ROW; r <= worksheet.rowCount; r++) {
+    const districtRaw = String(worksheet.getRow(r).getCell(DISTRICT_COL).value ?? '').trim();
     if (!districtRaw) continue;
 
     // Skip summary/average rows
@@ -89,9 +92,9 @@ export async function speciesCompositionValidator(file: File): Promise<string[]>
       seenDistricts.set(districtCode, r);
     }
 
-    // Species value validation (columns B–T)
-    for (let c = 2; c <= headerRow.cellCount; c++) {
-      const headerText = getCellText(worksheet, 1, c);
+    // Species value validation (columns C–U)
+    for (let c = SPECIES_START_COL; c <= headerRow.cellCount; c++) {
+      const headerText = getCellText(worksheet, HEADER_ROW, c);
       if (!headerText) continue;
 
       const key = HEADER_TO_SPECIES_KEY[normalise(headerText)];

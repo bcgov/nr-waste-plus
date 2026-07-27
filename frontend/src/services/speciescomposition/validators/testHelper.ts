@@ -1,5 +1,10 @@
 import ExcelJS from 'exceljs';
 
+import {
+  DISTRICT_COL,
+  SPECIES_START_COL,
+} from '@/services/speciescomposition/config/speciesCompositionConfig';
+
 export async function buildSpeciesCompositionFile(
   rows: unknown[][],
   sheetName = 'Species Composition',
@@ -15,37 +20,70 @@ export async function buildSpeciesCompositionFile(
   });
 }
 
-/** The 19 species header names in spreadsheet column order (B–T). */
+/** The 19 abbreviated species header codes in spreadsheet column order. */
 export const SPECIES_HEADERS = [
-  'Balsam',
-  'Cedar',
-  'Cottonwood',
-  'Cypress',
-  'Fir',
-  'Hemlock',
-  'Larch',
-  'Maple',
-  'Pine',
-  'Poplar',
-  'Redcedar',
-  'Redwood',
-  'Spruce',
-  'Whitebirch',
-  'Whitepine',
-  'Yew',
-  'Other',
-  'Unknown',
-  'Total',
+  'AL',
+  'AR',
+  'AS',
+  'BA',
+  'BI',
+  'CE',
+  'CO',
+  'CY',
+  'FI',
+  'HE',
+  'LA',
+  'LO',
+  'MA',
+  'SP',
+  'UU',
+  'WB',
+  'WH',
+  'WI',
+  'YE',
 ];
 
-/** Header row: ['District', ...19 species headers] */
+/**
+ * Builds a minimal spreadsheet matching the actual layout:
+ * - Row 1: empty
+ * - Row 2: title row (empty placeholder)
+ * - Row 3: header row — 'District/ Species' in col B, species codes in cols C–U
+ * - Row 4+: data rows — district code in col B, values in cols C–U
+ */
 export function headerRow(): unknown[] {
-  return ['District', ...SPECIES_HEADERS];
+  // Row 3: place headers to match actual spreadsheet layout
+  // Initialize all cells up to the last column to avoid ExcelJS sparse-array shifting
+  const lastCol = SPECIES_START_COL - 1 + SPECIES_HEADERS.length;
+  const row: unknown[] = new Array(lastCol).fill(undefined);
+  row[DISTRICT_COL - 1] = 'District/ Species';
+  for (let i = 0; i < SPECIES_HEADERS.length; i++) {
+    row[SPECIES_START_COL - 1 + i] = SPECIES_HEADERS[i];
+  }
+  return row;
 }
 
-/** Build a data row: [districtCode, ...19 numeric values]. */
+/** Build a data row matching actual layout: empty col A, district in col B, values in C–U. */
 export function dataRow(code: string, values: number[]): unknown[] {
-  return [code, ...values];
+  const lastCol = SPECIES_START_COL - 1 + values.length;
+  const row: unknown[] = new Array(lastCol).fill(undefined);
+  row[DISTRICT_COL - 1] = code;
+  for (let i = 0; i < values.length; i++) {
+    row[SPECIES_START_COL - 1 + i] = values[i];
+  }
+  return row;
+}
+
+/**
+ * Wraps header and data rows in the actual spreadsheet layout
+ * (empty row 1, title row 2, header row 3, data rows 4+).
+ */
+export function wrapInSpreadsheetLayout(header: unknown[], dataRows: unknown[][]): unknown[][] {
+  return [
+    [], // Row 1: empty
+    ['District Level Volume-Weighted Species Composition'], // Row 2: title
+    header, // Row 3: headers
+    ...dataRows, // Row 4+: data
+  ];
 }
 
 /** Sample valid values (all between 0 and 1). */

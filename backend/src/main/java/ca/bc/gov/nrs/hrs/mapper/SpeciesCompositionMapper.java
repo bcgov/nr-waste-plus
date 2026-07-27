@@ -84,34 +84,24 @@ public final class SpeciesCompositionMapper {
   /**
    * Recreates the row to ensure all BigDecimals are strictly scaled to 3 decimal places.
    * Explicitly passes through the full district object without stripping the description.
+   *
+   * <p>Species values are scaled by iterating over the map, preserving all keys and
+   * only transforming non-null values.
    */
   private static SpeciesCompositionRow scaleRow(SpeciesCompositionRow row) {
     if (row == null) {
       return null;
     }
 
-    return new SpeciesCompositionRow(
-        row.district(), 
-        scale(row.balsam()),
-        scale(row.cedar()),
-        scale(row.cottonwood()),
-        scale(row.cypress()),
-        scale(row.fir()),
-        scale(row.hemlock()),
-        scale(row.larch()),
-        scale(row.maple()),
-        scale(row.pine()),
-        scale(row.poplar()),
-        scale(row.redcedar()),
-        scale(row.redwood()),
-        scale(row.spruce()),
-        scale(row.whitebirch()),
-        scale(row.whitepine()),
-        scale(row.yew()),
-        scale(row.other()),
-        scale(row.unknown()),
-        scale(row.total())
-    );
+    if (row.species() == null || row.species().isEmpty()) {
+      return new SpeciesCompositionRow(row.district(), Map.of());
+    }
+
+    java.util.LinkedHashMap<String, BigDecimal> scaled = new java.util.LinkedHashMap<>();
+    for (Map.Entry<String, BigDecimal> entry : row.species().entrySet()) {
+      scaled.put(entry.getKey(), scale(entry.getValue()));
+    }
+    return new SpeciesCompositionRow(row.district(), scaled);
   }
 
   private static BigDecimal scale(BigDecimal value) {

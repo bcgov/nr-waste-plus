@@ -10,9 +10,11 @@ import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeListItemDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDistrictRowDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorZoneDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.SpeciesCompositionTableDataDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.TableDataDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictRow;
+import ca.bc.gov.nrs.hrs.dto.speciescomposition.SpeciesCompositionDataDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Section;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
@@ -76,10 +78,17 @@ public final class DistrictVolumeMapper {
    * @return mapped detail DTO
    */
   public static DistrictVolumeDetailDto toDetailDto(DistrictVolumeEntity entity) {
-    TableDataDto tableDataDto = switch (entity.getArea()) {
-      case INTERIOR -> toInteriorDto(entity.getTableData());
-      case COASTAL -> toCoastDto(entity.getTableData());
-    };
+    TableDataDto tableDataDto;
+    TableData tableData = entity.getTableData();
+
+    if (tableData != null && tableData.speciesRows() != null) {
+      tableDataDto = new SpeciesCompositionTableDataDto(tableData.speciesRows());
+    } else {
+      tableDataDto = switch (entity.getArea()) {
+        case INTERIOR -> toInteriorDto(tableData);
+        case COASTAL -> toCoastDto(tableData);
+      };
+    }
 
     return new DistrictVolumeDetailDto(
         entity.getId(),
@@ -222,6 +231,10 @@ public final class DistrictVolumeMapper {
               .toList(),
           null, // speciesRows (not applicable for District Volume)
           formulas == null ? Map.of() : formulas
+      );
+
+      case SpeciesCompositionTableDataDto(var rows) -> SpeciesCompositionMapper.toEntityTableData(
+          new SpeciesCompositionDataDto(rows)
       );
     };
   }

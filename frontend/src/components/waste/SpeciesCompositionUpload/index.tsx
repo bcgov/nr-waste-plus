@@ -1,9 +1,8 @@
-import { Button, Column } from '@carbon/react';
+import { Button, Column, DatePicker, DatePickerInput } from '@carbon/react';
 import { useForm } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
+import { DateTime } from 'luxon';
 import { useCallback, useState, type FC } from 'react';
-
-import SpeciesCompositionReviewTable from './SpeciesCompositionReviewTable';
 
 import type {
   SpeciesCompositionCreate,
@@ -18,6 +17,9 @@ import { speciesCompositionValidator } from '@/services/speciescomposition/valid
 
 import './index.scss';
 
+/** Constant for date format used across the form. */
+const DATE_FORMAT = 'yyyy-MM-dd' as const;
+
 /** Singleton processor for species composition file parsing. */
 const processor = new SpeciesCompositionProcessor();
 
@@ -26,7 +28,6 @@ const processor = new SpeciesCompositionProcessor();
  *
  * Provides a structured form workflow to:
  * - Upload a .xls or .xlsx file processed by the species composition processor
- * - Review parsed data in a table (districts × species columns)
  * - Confirm and submit the data via the create mutation
  *
  * On successful submission, the user is navigated to the details page
@@ -35,8 +36,8 @@ const processor = new SpeciesCompositionProcessor();
  * The form uses `@tanstack/react-form` for state management and
  * `useSpeciesCompositionCreateMutation` for the API call.
  *
- * @returns A Column wrapper containing the form with file upload,
- *   review table, and action buttons.
+ * @returns A Column wrapper containing the form with file upload
+ *   and action buttons.
  */
 const SpeciesCompositionUpload: FC = () => {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ const SpeciesCompositionUpload: FC = () => {
 
   const form = useForm({
     defaultValues: {
+      startDate: DateTime.now().plus({ days: 1 }).toFormat(DATE_FORMAT),
       tableData: { rows: [] } as SpeciesCompositionData,
     },
     onSubmit: async ({ value }) => {
@@ -60,7 +62,14 @@ const SpeciesCompositionUpload: FC = () => {
         throw new Error('Please upload a valid species composition spreadsheet file');
       }
       const createPayload: SpeciesCompositionCreate = {
-        tableData: data,
+        area: 'INTERIOR',
+        startDate: value.startDate,
+        tableLevelFactor: 0,
+        heliMultiplier: 0,
+        tableData: {
+          type: 'SPECIES_COMPOSITION',
+          rows: data.rows,
+        },
       };
       await createMutation.mutateAsync(createPayload);
     },
@@ -124,6 +133,38 @@ const SpeciesCompositionUpload: FC = () => {
           form.handleSubmit();
         }}
       >
+        <form.Field name="startDate">
+          {(field) => (
+            <div className="form-field">
+              <DatePicker
+                datePickerType="single"
+                dateFormat="Y/m/d"
+                allowInput
+                minDate={DateTime.now().plus({ days: 1 }).toFormat(DATE_FORMAT)}
+                onChange={([selected]) => {
+                  if (selected) {
+                    field.handleChange(DateTime.fromJSDate(selected).toFormat(DATE_FORMAT));
+                  }
+                }}
+                value={
+                  field.state.value
+                    ? [DateTime.fromFormat(field.state.value, DATE_FORMAT).toJSDate()]
+                    : []
+                }
+              >
+                <DatePickerInput
+                  id="start-date-picker"
+                  data-testid="start-date-picker"
+                  labelText="Set start date"
+                  placeholder="mm/dd/yyyy"
+                  invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
+                  invalidText={field.state.meta.errors[0] ?? undefined}
+                />
+              </DatePicker>
+            </div>
+          )}
+        </form.Field>
+
         <FileUploadInput
           accept=".xls,.xlsx"
           maxFileSizeBytes={2 * 1024 * 1024}
@@ -132,13 +173,6 @@ const SpeciesCompositionUpload: FC = () => {
           onProcessed={handleFileChange}
           externalErrors={fileErrors}
         />
-
-        {hasRows && (
-          <SpeciesCompositionReviewTable
-            rows={tableData.rows}
-            data-testid="species-composition-review-table"
-          />
-        )}
 
         {submitError && (
           <div className="form-field--error" role="alert" data-testid="submit-error">
