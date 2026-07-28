@@ -5,6 +5,7 @@ import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeCreateDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeListItemDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.SpeciesCompositionTableDataDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.ConfigType;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
@@ -147,6 +148,10 @@ public class SpeciesCompositionService {
 
       case CoastDataDto _ -> {
         // Valid structural combination; do nothing and allow processing to continue.
+      }
+
+      case SpeciesCompositionTableDataDto ignored -> {
+        // Species composition data is area-agnostic; valid for any area type.
       }
 
       case null, default -> throw new ResponseStatusException(

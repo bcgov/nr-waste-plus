@@ -1,12 +1,22 @@
 import { describe, it, expect } from 'vitest';
 
 import { speciesCompositionValidator } from './speciesCompositionValidator';
-import { buildSpeciesCompositionFile, headerRow, dataRow, sampleValues } from './testHelper';
+import {
+  buildSpeciesCompositionFile,
+  headerRow,
+  dataRow,
+  sampleValues,
+  wrapInSpreadsheetLayout,
+} from './testHelper';
 
-import { EXPECTED_DISTRICT_CODES } from '@/services/speciescomposition/config/speciesCompositionConfig';
+import {
+  EXPECTED_DISTRICT_CODES,
+  DISTRICT_COL,
+  SPECIES_START_COL,
+} from '@/services/speciescomposition/config/speciesCompositionConfig';
 
-async function makeFile(rows: unknown[][]) {
-  return buildSpeciesCompositionFile([headerRow(), ...rows]);
+async function makeFile(dataRows: unknown[][]) {
+  return buildSpeciesCompositionFile(wrapInSpreadsheetLayout(headerRow(), dataRows));
 }
 
 describe('speciesCompositionValidator', () => {
@@ -20,10 +30,20 @@ describe('speciesCompositionValidator', () => {
   });
 
   it('returns error for missing species column headers', async () => {
-    const file = await buildSpeciesCompositionFile([
-      ['District', 'Balsam', 'Cedar'], // only 2 of 19 species
-      ...EXPECTED_DISTRICT_CODES.map((code, i) => [code, ...sampleValues(i + 1).slice(0, 2)]),
-    ]);
+    // Build a partial header row with only 2 of 19 species at the correct column positions
+    const partialHeader: unknown[] = [];
+    partialHeader[DISTRICT_COL - 1] = 'District/ Species';
+    partialHeader[SPECIES_START_COL - 1] = 'AL';
+    partialHeader[SPECIES_START_COL] = 'AR';
+
+    const dataRows = EXPECTED_DISTRICT_CODES.map((code, i) => {
+      const values = sampleValues(i + 1);
+      return dataRow(code, values);
+    });
+
+    const file = await buildSpeciesCompositionFile(
+      wrapInSpreadsheetLayout(partialHeader, dataRows),
+    );
 
     const errors = await speciesCompositionValidator(file);
     expect(errors.length).toBeGreaterThan(0);

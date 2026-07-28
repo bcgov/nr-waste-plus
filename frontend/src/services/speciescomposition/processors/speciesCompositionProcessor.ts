@@ -12,6 +12,10 @@ import {
   HEADER_TO_SPECIES_KEY,
   EXPECTED_SPECIES_HEADERS,
   SUMMARY_ROW_PATTERNS,
+  HEADER_ROW,
+  DATA_START_ROW,
+  DISTRICT_COL,
+  SPECIES_START_COL,
 } from '@/services/speciescomposition/config/speciesCompositionConfig';
 import { ExcelReader } from '@/services/spreadsheet/excelReader';
 
@@ -37,11 +41,11 @@ function normalise(text: string): string {
 }
 
 function buildColumnMapping(worksheet: import('exceljs').Worksheet): MappingOutcome {
-  const headerRow = worksheet.getRow(1);
+  const headerRow = worksheet.getRow(HEADER_ROW);
   const mapping: ColumnMapping[] = [];
   const missing: string[] = [];
 
-  for (let c = 2; c <= headerRow.cellCount; c++) {
+  for (let c = SPECIES_START_COL; c <= headerRow.cellCount; c++) {
     const raw = String(headerRow.getCell(c).value ?? '').trim();
     if (!raw) continue;
 
@@ -55,8 +59,7 @@ function buildColumnMapping(worksheet: import('exceljs').Worksheet): MappingOutc
   const mappedKeys = new Set(mapping.map((m) => m.key));
 
   for (const expected of EXPECTED_SPECIES_HEADERS) {
-    const key = HEADER_TO_SPECIES_KEY[normalise(expected)];
-    if (key && !mappedKeys.has(key)) {
+    if (!mappedKeys.has(expected)) {
       missing.push(expected);
     }
   }
@@ -88,7 +91,7 @@ export class SpeciesCompositionProcessor implements FileProcessor<SpeciesComposi
       };
     }
 
-    if (worksheet.rowCount < 2) {
+    if (worksheet.rowCount < DATA_START_ROW) {
       return {
         success: false,
         errors: ['Spreadsheet must contain a header row and at least one data row.'],
@@ -103,8 +106,8 @@ export class SpeciesCompositionProcessor implements FileProcessor<SpeciesComposi
     const { mapping } = outcome;
     const rows: SpeciesCompositionRow[] = [];
 
-    for (let r = 2; r <= worksheet.rowCount; r++) {
-      const districtRaw = String(worksheet.getRow(r).getCell(1).value ?? '').trim();
+    for (let r = DATA_START_ROW; r <= worksheet.rowCount; r++) {
+      const districtRaw = String(worksheet.getRow(r).getCell(DISTRICT_COL).value ?? '').trim();
       if (!districtRaw) continue;
 
       // Skip summary/average rows
@@ -113,36 +116,16 @@ export class SpeciesCompositionProcessor implements FileProcessor<SpeciesComposi
       const code = extractDistrictCode(districtRaw);
       if (!code) continue;
 
-      const speciesValues: Record<SpeciesKey, number> = {
-        balsam: 0,
-        cedar: 0,
-        cottonwood: 0,
-        cypress: 0,
-        fir: 0,
-        hemlock: 0,
-        larch: 0,
-        maple: 0,
-        pine: 0,
-        poplar: 0,
-        redcedar: 0,
-        redwood: 0,
-        spruce: 0,
-        whitebirch: 0,
-        whitepine: 0,
-        yew: 0,
-        other: 0,
-        unknown: 0,
-        total: 0,
-      };
+      const species: Record<SpeciesKey, number> = {} as Record<SpeciesKey, number>;
 
       for (const { colIndex, key } of mapping) {
         const cellValue = worksheet.getRow(r).getCell(colIndex).value;
-        speciesValues[key] = typeof cellValue === 'number' ? cellValue : 0;
+        species[key] = typeof cellValue === 'number' ? cellValue : 0;
       }
 
       const row: SpeciesCompositionRow = {
         district: { code, description: '' },
-        ...speciesValues,
+        species,
       };
 
       rows.push(row);

@@ -11,7 +11,9 @@ import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeListItemDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDistrictRowDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorZoneDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.SpeciesCompositionTableDataDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
+import ca.bc.gov.nrs.hrs.entity.speciescomposition.SpeciesCompositionRow;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictRow;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Section;
@@ -390,5 +392,117 @@ class DistrictVolumeMapperTest {
     assertThat(rowDto.avoidableSawlog()).isNull();
     assertThat(rowDto.avoidableGrade4()).isNull();
     assertThat(rowDto.total()).isNull();
+  }
+
+  @Test
+  @DisplayName(
+      "toEntityTableData — should map SpeciesCompositionTableDataDto rows to speciesRows via SpeciesCompositionMapper")
+  void toEntityTableData_mapsSpeciesCompositionRows_whenDtoIsSpeciesComposition() {
+    // Arrange
+    SpeciesCompositionTableDataDto dto =
+        new SpeciesCompositionTableDataDto(
+            List.of(
+                new SpeciesCompositionRow(
+                    new CodeDescriptionDto("DKM", "Kamloops"),
+                    Map.of("balsam", new BigDecimal("0.100")))));
+
+    // Act
+    TableData result = DistrictVolumeMapper.toEntityTableData(dto);
+
+    // Assert
+    assertThat(result.speciesRows()).hasSize(1);
+    assertThat(result.speciesRows().get(0).district().code()).isEqualTo("DKM");
+  }
+
+  @Test
+  @DisplayName(
+      "toDetailDto — should return SpeciesCompositionTableDataDto when entity has speciesRows")
+  void toDetailDto_returnsSpeciesCompositionDto_whenEntityHasSpeciesRows() {
+    // Arrange
+    SpeciesCompositionRow row = new SpeciesCompositionRow(
+        new CodeDescriptionDto("DPG", "Prince George"),
+        Map.of("BA", new BigDecimal("10.000")));
+    TableData tableData = new TableData(null, null, List.of(row), Map.of());
+
+    DistrictVolumeEntity entity = new DistrictVolumeEntity();
+    entity.setId(50L);
+    entity.setArea(Area.INTERIOR);
+    entity.setStartDate(LocalDate.of(2026, Month.JULY, 1));
+    entity.setTableLevelFactor(new BigDecimal("1.000"));
+    entity.setCreatedBy("MAPPER_TEST");
+    entity.setDateOfUpload(MOCK_UPLOAD_TIME);
+    entity.setTableData(tableData);
+
+    // Act
+    DistrictVolumeDetailDto dto = DistrictVolumeMapper.toDetailDto(entity);
+
+    // Assert
+    assertThat(dto.tableData()).isInstanceOf(SpeciesCompositionTableDataDto.class);
+    SpeciesCompositionTableDataDto speciesDto = (SpeciesCompositionTableDataDto) dto.tableData();
+    assertThat(speciesDto.speciesRows()).hasSize(1);
+    assertThat(speciesDto.speciesRows().get(0).district().code()).isEqualTo("DPG");
+  }
+
+  @Test
+  @DisplayName(
+      "toDetailDto — should handle null tableData with INTERIOR area by returning empty InteriorDataDto")
+  void toDetailDto_handlesNullTableData_withInteriorArea() {
+    // Arrange — use empty zones list so toInteriorDto can iterate without NPE
+    DistrictVolumeEntity entity = new DistrictVolumeEntity();
+    entity.setId(51L);
+    entity.setArea(Area.INTERIOR);
+    entity.setStartDate(LocalDate.of(2026, Month.AUGUST, 1));
+    entity.setTableLevelFactor(new BigDecimal("1.000"));
+    entity.setCreatedBy("MAPPER_TEST");
+    entity.setDateOfUpload(MOCK_UPLOAD_TIME);
+    entity.setTableData(new TableData(Collections.emptyList(), null, null, Map.of()));
+
+    // Act
+    DistrictVolumeDetailDto dto = DistrictVolumeMapper.toDetailDto(entity);
+
+    // Assert
+    assertThat(dto.tableData()).isInstanceOf(InteriorDataDto.class);
+  }
+
+  @Test
+  @DisplayName(
+      "toDetailDto — should handle null tableData with COASTAL area by returning empty CoastDataDto")
+  void toDetailDto_handlesNullTableData_withCoastalArea() {
+    // Arrange — use empty sections list so toCoastDto can iterate without NPE
+    DistrictVolumeEntity entity = new DistrictVolumeEntity();
+    entity.setId(52L);
+    entity.setArea(Area.COASTAL);
+    entity.setStartDate(LocalDate.of(2026, Month.SEPTEMBER, 1));
+    entity.setTableLevelFactor(new BigDecimal("1.000"));
+    entity.setCreatedBy("MAPPER_TEST");
+    entity.setDateOfUpload(MOCK_UPLOAD_TIME);
+    entity.setTableData(new TableData(null, Collections.emptyList(), null, Map.of()));
+
+    // Act
+    DistrictVolumeDetailDto dto = DistrictVolumeMapper.toDetailDto(entity);
+
+    // Assert
+    assertThat(dto.tableData()).isInstanceOf(CoastDataDto.class);
+  }
+
+  @Test
+  @DisplayName(
+      "toDetailDto — should handle null dateOfUpload without throwing NPE")
+  void toDetailDto_handlesNullDateOfUpload() {
+    // Arrange
+    DistrictVolumeEntity entity = new DistrictVolumeEntity();
+    entity.setId(53L);
+    entity.setArea(Area.INTERIOR);
+    entity.setStartDate(LocalDate.of(2026, Month.OCTOBER, 1));
+    entity.setTableLevelFactor(new BigDecimal("1.000"));
+    entity.setCreatedBy("MAPPER_TEST");
+    entity.setDateOfUpload(null);
+    entity.setTableData(new TableData(Collections.emptyList(), null, null, Map.of()));
+
+    // Act
+    DistrictVolumeDetailDto dto = DistrictVolumeMapper.toDetailDto(entity);
+
+    // Assert
+    assertThat(dto.dateOfUpload()).isNull();
   }
 }

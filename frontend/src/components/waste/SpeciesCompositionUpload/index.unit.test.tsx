@@ -55,25 +55,27 @@ vi.mock('@/components/Form/FileUploadInput', () => ({
                 rows: [
                   {
                     district: { code: 'DCC', description: '' },
-                    balsam: 0.1,
-                    cedar: 0.2,
-                    cottonwood: 0.05,
-                    cypress: 0.02,
-                    fir: 0.15,
-                    hemlock: 0.08,
-                    larch: 0.03,
-                    maple: 0.04,
-                    pine: 0.1,
-                    poplar: 0.05,
-                    redcedar: 0.02,
-                    redwood: 0.01,
-                    spruce: 0.03,
-                    whitebirch: 0.01,
-                    whitepine: 0.01,
-                    yew: 0.005,
-                    other: 0.005,
-                    unknown: 0.005,
-                    total: 1.0,
+                    species: {
+                      AL: 0.1,
+                      AR: 0.05,
+                      AS: 0.03,
+                      BA: 0.08,
+                      BI: 0.02,
+                      CE: 0.12,
+                      CO: 0.04,
+                      CY: 0.06,
+                      FI: 0.07,
+                      HE: 0.09,
+                      LA: 0.03,
+                      LO: 0.02,
+                      MA: 0.04,
+                      SP: 0.11,
+                      UU: 0.01,
+                      WB: 0.03,
+                      WH: 0.05,
+                      WI: 0.02,
+                      YE: 0.01,
+                    },
                   },
                 ],
               },
@@ -147,7 +149,7 @@ describe('SpeciesCompositionUpload', () => {
   });
 
   describe('file upload', () => {
-    it('should show review table after file is uploaded', async () => {
+    it('should show file item after file is uploaded', async () => {
       await renderWithAppAsync(<SpeciesCompositionUpload />);
 
       const fileInput = screen.getByTestId('mock-file-input');
@@ -158,8 +160,7 @@ describe('SpeciesCompositionUpload', () => {
         }),
       );
 
-      expect(screen.getByTestId('species-composition-review-table')).toBeTruthy();
-      expect(screen.getByText('Review uploaded data')).toBeTruthy();
+      expect(screen.getByTestId('file-upload-input')).toBeTruthy();
     });
 
     it('should enable Upload table button after data is loaded', async () => {
@@ -271,15 +272,21 @@ describe('SpeciesCompositionUpload', () => {
       await user.click(screen.getByRole('button', { name: 'Upload table' }));
 
       await waitFor(() => {
-        expect(mockMutateAsync).toHaveBeenCalledWith({
-          tableData: {
-            rows: [
-              expect.objectContaining({
-                district: { code: 'DCC', description: '' },
-              }),
-            ],
-          },
-        });
+        expect(mockMutateAsync).toHaveBeenCalledWith(
+          expect.objectContaining({
+            area: 'INTERIOR',
+            tableLevelFactor: 0,
+            heliMultiplier: 0,
+            tableData: {
+              type: 'SPECIES_COMPOSITION',
+              rows: [
+                expect.objectContaining({
+                  district: { code: 'DCC', description: '' },
+                }),
+              ],
+            },
+          }),
+        );
       });
     });
 

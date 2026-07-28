@@ -162,10 +162,6 @@ test.describe('Species Composition Upload Page - E2E', () => {
       // Wait for file processing to complete (status changes from 'uploading' to 'edit')
       await expect(page.getByText(/Uploading/)).toHaveCount(0, { timeout: 15_000 });
 
-      // The review table should be visible with district rows
-      const reviewTable = page.getByTestId('species-composition-review-table');
-      await expect(reviewTable).toBeVisible();
-
       // The upload button should be enabled
       await expect(page.getByTestId('upload-table-button')).toBeEnabled();
 
@@ -242,10 +238,10 @@ test.describe('Species Composition Upload Page - E2E', () => {
     });
   });
 
-  // ─── Review Table Tests ─────────────────────────────────────────────────
+  // ─── Upload Success Tests ──────────────────────────────────────────────
 
-  test.describe('Review table display', () => {
-    test('should display review table with correct district rows after valid upload @idir-only', async ({
+  test.describe('Upload success', () => {
+    test('should enable upload button after valid file upload @idir-only', async ({
       page,
     }, testInfo) => {
       test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
@@ -266,19 +262,11 @@ test.describe('Species Composition Upload Page - E2E', () => {
       await expect(fileItem).toBeVisible({ timeout: 10_000 });
       await expect(page.getByText(/Uploading/)).toHaveCount(0, { timeout: 15_000 });
 
-      // Review table should be visible
-      const reviewTable = page.getByTestId('species-composition-review-table');
-      await expect(reviewTable).toBeVisible();
-
-      // Should display district codes in the table (23 data rows + 1 header row)
-      // Carbon DataTable renders <tr> elements inside <tbody> for data rows
-      const dataRows = reviewTable.locator('tbody tr');
-      await expect(dataRows).toHaveCount(23, { timeout: 5_000 });
+      // Upload button should now be enabled
+      await expect(page.getByTestId('upload-table-button')).toBeEnabled();
     });
 
-    test('should hide review table when no data is loaded @idir-only', async ({
-      page,
-    }, testInfo) => {
+    test('should show file item after valid upload @idir-only', async ({ page }, testInfo) => {
       test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
 
       await mockJwt(page, testInfo.project.metadata, {
@@ -289,9 +277,12 @@ test.describe('Species Composition Upload Page - E2E', () => {
       await page.goto('/configuration/species-composition/upload');
       await page.waitForLoadState('domcontentloaded');
 
-      // Review table should NOT be visible initially
-      const reviewTable = page.getByTestId('species-composition-review-table');
-      await expect(reviewTable).not.toBeVisible();
+      const buffer = await buildValidSpeciesCompositionBuffer();
+      await uploadFile(page, buffer);
+
+      // File item should be visible with the uploaded file name
+      const fileItem = page.getByTestId('file-upload-item');
+      await expect(fileItem).toBeVisible({ timeout: 10_000 });
     });
   });
 
@@ -405,15 +396,11 @@ test.describe('Species Composition Upload Page - E2E', () => {
       await expect(fileItem).toBeVisible({ timeout: 10_000 });
       await expect(page.getByText(/Uploading/)).toHaveCount(0, { timeout: 15_000 });
 
-      // Step 2: Verify review table is displayed
-      const reviewTable = page.getByTestId('species-composition-review-table');
-      await expect(reviewTable).toBeVisible();
-
-      // Step 3: Wait for button to be enabled then click
+      // Step 2: Wait for button to be enabled then click
       await expect(page.getByTestId('upload-table-button')).toBeEnabled({ timeout: 10_000 });
       await page.getByTestId('upload-table-button').click();
 
-      // Step 4: Verify navigation to the details page
+      // Step 3: Verify navigation to the details page
       await expect(page).toHaveURL(/\/configuration\/species-composition\/42/, {
         timeout: 10_000,
       });

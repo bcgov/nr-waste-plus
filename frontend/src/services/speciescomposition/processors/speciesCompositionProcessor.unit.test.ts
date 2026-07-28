@@ -5,14 +5,19 @@ import { SpeciesCompositionProcessor } from './speciesCompositionProcessor';
 import type { SpeciesCompositionData } from '@/services/speciesComposition.types';
 
 import {
+  DISTRICT_COL,
+  SPECIES_START_COL,
+} from '@/services/speciescomposition/config/speciesCompositionConfig';
+import {
   buildSpeciesCompositionFile,
   headerRow,
   dataRow,
   sampleValues,
+  wrapInSpreadsheetLayout,
 } from '@/services/speciescomposition/validators/testHelper';
 
-async function makeFile(rows: unknown[][]) {
-  return buildSpeciesCompositionFile([headerRow(), ...rows]);
+async function makeFile(dataRows: unknown[][]) {
+  return buildSpeciesCompositionFile(wrapInSpreadsheetLayout(headerRow(), dataRows));
 }
 
 describe('SpeciesCompositionProcessor', () => {
@@ -35,8 +40,8 @@ describe('SpeciesCompositionProcessor', () => {
     const row = data.rows[0];
     expect(row.district.code).toBe('DCC');
     expect(row.district.description).toBe('');
-    expect(row.balsam).toBe(sampleValues(1)[0]);
-    expect(row.total).toBe(sampleValues(1)[18]);
+    expect(row.species.AL).toBe(sampleValues(1)[0]);
+    expect(row.species.YE).toBe(sampleValues(1)[18]);
   });
 
   it('processes a spreadsheet with multiple districts', async () => {
@@ -106,7 +111,7 @@ describe('SpeciesCompositionProcessor', () => {
     if (!result.success) return;
 
     const data = (result.data as SpeciesCompositionData[])[0];
-    expect(data.rows[0].balsam).toBe(0);
+    expect(data.rows[0].species.AL).toBe(0);
   });
 
   it('returns failure for corrupt file', async () => {
@@ -133,10 +138,14 @@ describe('SpeciesCompositionProcessor', () => {
   });
 
   it('returns failure when required species headers are missing', async () => {
-    const file = await buildSpeciesCompositionFile([
-      ['District', 'Balsam', 'Cedar'], // only 2 of 19 species
-      ['DCC', 0.1, 0.2],
-    ]);
+    // Build a partial header row with only 2 of 19 species at the correct column positions
+    const partialHeader: unknown[] = [];
+    partialHeader[DISTRICT_COL - 1] = 'District/ Species';
+    partialHeader[SPECIES_START_COL - 1] = 'AL';
+    partialHeader[SPECIES_START_COL] = 'AR';
+    const file = await buildSpeciesCompositionFile(
+      wrapInSpreadsheetLayout(partialHeader, [dataRow('DCC', sampleValues(1))]),
+    );
     const result = await processor.load(file);
 
     expect(result.success).toBe(false);

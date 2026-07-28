@@ -19,27 +19,29 @@ import org.junit.jupiter.api.Test;
 class SpeciesCompositionMapperTest {
 
   private SpeciesCompositionRow buildRow(String code, String description) {
+    java.util.LinkedHashMap<String, BigDecimal> species = new java.util.LinkedHashMap<>();
+    species.put("AL", new BigDecimal("1.1"));
+    species.put("AR", new BigDecimal("2.2"));
+    species.put("AS", new BigDecimal("3.3"));
+    species.put("BA", new BigDecimal("4.4"));
+    species.put("BI", new BigDecimal("5.5"));
+    species.put("CE", new BigDecimal("6.6"));
+    species.put("CO", new BigDecimal("7.7"));
+    species.put("CY", new BigDecimal("8.8"));
+    species.put("FI", new BigDecimal("9.9"));
+    species.put("HE", new BigDecimal("10.1"));
+    species.put("LA", new BigDecimal("11.1"));
+    species.put("LO", new BigDecimal("12.1"));
+    species.put("MA", new BigDecimal("13.1"));
+    species.put("SP", new BigDecimal("14.1"));
+    species.put("UU", new BigDecimal("15.1"));
+    species.put("WB", new BigDecimal("16.1"));
+    species.put("WH", new BigDecimal("17.1"));
+    species.put("WI", new BigDecimal("18.1"));
+    species.put("YE", new BigDecimal("100.0"));
     return new SpeciesCompositionRow(
         new CodeDescriptionDto(code, description),
-        new BigDecimal("1.1"),
-        new BigDecimal("2.2"),
-        new BigDecimal("3.3"),
-        new BigDecimal("4.4"),
-        new BigDecimal("5.5"),
-        new BigDecimal("6.6"),
-        new BigDecimal("7.7"),
-        new BigDecimal("8.8"),
-        new BigDecimal("9.9"),
-        new BigDecimal("10.1"),
-        new BigDecimal("11.1"),
-        new BigDecimal("12.1"),
-        new BigDecimal("13.1"),
-        new BigDecimal("14.1"),
-        new BigDecimal("15.1"),
-        new BigDecimal("16.1"),
-        new BigDecimal("17.1"),
-        new BigDecimal("18.1"),
-        new BigDecimal("100.0")
+        species
     );
   }
 
@@ -70,8 +72,8 @@ class SpeciesCompositionMapperTest {
     assertThat(result.rows().get(0).district().code()).isEqualTo("DPG");
     assertThat(result.rows().get(0).district().description())
         .isEqualTo("Prince George Natural Resource District");
-    assertThat(result.rows().get(0).balsam()).isEqualByComparingTo(new BigDecimal("1.100"));
-    assertThat(result.rows().get(0).total()).isEqualByComparingTo(new BigDecimal("100.000"));
+    assertThat(result.rows().get(0).species().get("AL")).isEqualByComparingTo(new BigDecimal("1.100"));
+    assertThat(result.rows().get(0).species().get("YE")).isEqualByComparingTo(new BigDecimal("100.000"));
   }
 
   @Test
@@ -107,8 +109,8 @@ class SpeciesCompositionMapperTest {
 
     assertThat(result.rows()).hasSize(1);
     SpeciesCompositionRow mapped = result.rows().get(0);
-    assertThat(mapped.cedar()).isEqualByComparingTo(new BigDecimal("2.200"));
-    assertThat(mapped.unknown()).isEqualByComparingTo(new BigDecimal("18.100"));
+    assertThat(mapped.species().get("CE")).isEqualByComparingTo(new BigDecimal("6.600"));
+    assertThat(mapped.species().get("UU")).isEqualByComparingTo(new BigDecimal("15.100"));
   }
 
   @Test
@@ -151,18 +153,17 @@ class SpeciesCompositionMapperTest {
     assertThat(result.speciesRows().get(0).district().code()).isEqualTo("DKM");
     assertThat(result.speciesRows().get(0).district().description())
         .isEqualTo("Kamloops Natural Resource District");
-    assertThat(result.speciesRows().get(0).pine()).isEqualByComparingTo(new BigDecimal("9.900"));
+    assertThat(result.speciesRows().get(0).species().get("FI")).isEqualByComparingTo(new BigDecimal("9.900"));
     assertThat(result.formulas()).isEqualTo(Map.of());
   }
 
   @Test
-  @DisplayName("scaleRow (via toSpeciesDataDto) — should preserve null values instead of scaling them")
-  void toSpeciesDataDto_preservesNulls_whenFieldsAreNull() {
+  @DisplayName("scaleRow (via toSpeciesDataDto) — should preserve empty species map instead of scaling them")
+  void toSpeciesDataDto_preservesEmptyMap_whenSpeciesMapIsEmpty() {
 
     SpeciesCompositionRow row = new SpeciesCompositionRow(
         new CodeDescriptionDto("DND", "Nadina Natural Resource District"),
-        null, null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, null, null, null
+        Map.of()
     );
 
     TableData tableData = new TableData(null, null, List.of(row), Map.of());
@@ -170,8 +171,42 @@ class SpeciesCompositionMapperTest {
     SpeciesCompositionDataDto result = SpeciesCompositionMapper.toSpeciesDataDto(tableData);
 
     SpeciesCompositionRow mapped = result.rows().get(0);
-    assertThat(mapped.balsam()).isNull();
-    assertThat(mapped.total()).isNull();
+    assertThat(mapped.species()).isEmpty();
     assertThat(mapped.district().code()).isEqualTo("DND");
+  }
+
+  @Test
+  @DisplayName("toEntityTableData — should scale rows with null species values without error")
+  void toEntityTableData_scalesRowsWithNullSpeciesValues() {
+
+    SpeciesCompositionRow row = new SpeciesCompositionRow(
+        new CodeDescriptionDto("DND", "Nadina Natural Resource District"),
+        Map.of("BA", new BigDecimal("1.5"))
+    );
+
+    SpeciesCompositionDataDto dto = new SpeciesCompositionDataDto(List.of(row));
+
+    TableData result = SpeciesCompositionMapper.toEntityTableData(dto);
+
+    assertThat(result.speciesRows()).hasSize(1);
+    assertThat(result.speciesRows().get(0).species().get("BA"))
+        .isEqualByComparingTo(new BigDecimal("1.500"));
+  }
+
+  @Test
+  @DisplayName("toEntityTableData — should handle row with null species map gracefully")
+  void toEntityTableData_handlesNullSpeciesMapGracefully() {
+
+    SpeciesCompositionRow row = new SpeciesCompositionRow(
+        new CodeDescriptionDto("DND", "Nadina Natural Resource District"),
+        null
+    );
+
+    SpeciesCompositionDataDto dto = new SpeciesCompositionDataDto(List.of(row));
+
+    TableData result = SpeciesCompositionMapper.toEntityTableData(dto);
+
+    assertThat(result.speciesRows()).hasSize(1);
+    assertThat(result.speciesRows().get(0).species()).isEmpty();
   }
 }

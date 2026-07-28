@@ -12,10 +12,13 @@ import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDataDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeCreateDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.SpeciesCompositionTableDataDto;
+import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.ConfigType;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
+import ca.bc.gov.nrs.hrs.entity.speciescomposition.SpeciesCompositionRow;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -23,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -470,6 +474,88 @@ class SpeciesCompositionServiceTest {
             "multiple open-ended species composition records exist for area INTERIOR");
 
     verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
+  }
+
+  @Test
+  @DisplayName(
+      "createSpeciesComposition — should accept SpeciesCompositionTableDataDto "
+          + "with INTERIOR area (area-agnostic validation)")
+  void createSpeciesComposition_acceptsSpeciesCompositionDataDto_withInteriorArea() {
+
+    SpeciesCompositionTableDataDto speciesData =
+        new SpeciesCompositionTableDataDto(
+            List.of(
+                new SpeciesCompositionRow(
+                    new CodeDescriptionDto("DPG", "Prince George"),
+                    Map.of("BA", new BigDecimal("10.000")))));
+
+    LocalDate futureDate = LocalDate.now().plusDays(10);
+
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "INTERIOR",
+            futureDate,
+            new BigDecimal("1.000"),
+            null,
+            speciesData);
+
+    DistrictVolumeEntity savedEntity = buildEntity(Area.INTERIOR);
+    savedEntity.setStartDate(futureDate);
+
+    when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.SPECIES_COMPOSITION, Area.INTERIOR))
+        .thenReturn(Collections.emptyList());
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
+        .thenReturn(savedEntity);
+
+    DistrictVolumeDetailDto result =
+        speciesCompositionService.createSpeciesComposition(
+            "TEST_USER",
+            createDto);
+
+    assertThat(result).isNotNull();
+    assertThat(result.area()).isEqualTo("INTERIOR");
+  }
+
+  @Test
+  @DisplayName(
+      "createSpeciesComposition — should accept SpeciesCompositionTableDataDto "
+          + "with COASTAL area (area-agnostic validation)")
+  void createSpeciesComposition_acceptsSpeciesCompositionDataDto_withCoastalArea() {
+
+    SpeciesCompositionTableDataDto speciesData =
+        new SpeciesCompositionTableDataDto(
+            List.of(
+                new SpeciesCompositionRow(
+                    new CodeDescriptionDto("DCC", "Chilliwack"),
+                    Map.of("BA", new BigDecimal("5.000")))));
+
+    LocalDate futureDate = LocalDate.now().plusDays(10);
+
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "COASTAL",
+            futureDate,
+            new BigDecimal("1.000"),
+            null,
+            speciesData);
+
+    DistrictVolumeEntity savedEntity = buildEntity(Area.COASTAL);
+    savedEntity.setStartDate(futureDate);
+
+    when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.SPECIES_COMPOSITION, Area.COASTAL))
+        .thenReturn(Collections.emptyList());
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
+        .thenReturn(savedEntity);
+
+    DistrictVolumeDetailDto result =
+        speciesCompositionService.createSpeciesComposition(
+            "TEST_USER",
+            createDto);
+
+    assertThat(result).isNotNull();
+    assertThat(result.area()).isEqualTo("COASTAL");
   }
 
   @Test

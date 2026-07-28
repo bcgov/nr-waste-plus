@@ -7,7 +7,8 @@ import { EXPECTED_DISTRICT_CODES } from '@/services/speciescomposition/config/sp
 // ─── Coast Config ───────────────────────────────────────────────────────────
 // 12 columns: A=District code, B-F=Mature (5), G-K=Immature (5), L=Heli Multiplier
 // ─── Species Composition Config ─────────────────────────────────────────────
-// 20 columns: A=District code, B-T=19 species + Total (headers in row 1)
+// Row 1: empty, Row 2: title, Row 3: headers (B=District, C–U=19 species)
+// Row 4+: data rows with district in col B and 19 values in cols C–U
 
 const INTERIOR_COL_COUNT = 13;
 const COAST_COL_COUNT = 12;
@@ -252,69 +253,86 @@ export async function buildMissingHeliMultiplierBuffer(): Promise<Buffer> {
 
 // ─── Species Composition Helpers ─────────────────────────────────────────────
 
-/** The 19 species headers + Total that must appear in row 1 (columns B–T). */
+/** The 19 species abbreviated codes that must appear in row 3 (columns C–U). */
 const SPECIES_HEADERS = [
-  'Balsam',
-  'Cedar',
-  'Cottonwood',
-  'Cypress',
-  'Fir',
-  'Hemlock',
-  'Larch',
-  'Maple',
-  'Pine',
-  'Poplar',
-  'Redcedar',
-  'Redwood',
-  'Spruce',
-  'Whitebirch',
-  'Whitepine',
-  'Yew',
-  'Other',
-  'Unknown',
-  'Total',
+  'AL',
+  'AR',
+  'AS',
+  'BA',
+  'BI',
+  'CE',
+  'CO',
+  'CY',
+  'FI',
+  'HE',
+  'LA',
+  'LO',
+  'MA',
+  'SP',
+  'UU',
+  'WB',
+  'WH',
+  'WI',
+  'YE',
 ];
 
 /**
- * Adds a header row (row 1) with district label in A1 and species headers in B1–T1.
+ * Adds header rows matching the actual spreadsheet layout:
+ * - Row 1: empty
+ * - Row 2: title row
+ * - Row 3: 'District/ Species' in col B, species codes in cols C–U
  */
 function addSpeciesHeaderRow(ws: ExcelJS.Worksheet): void {
-  const headerRow = [undefined, ...SPECIES_HEADERS]; // A1 empty, B1–T1 headers
-  ws.addRow(headerRow);
+  ws.addRow([]); // Row 1: empty
+  ws.addRow(['District Level Volume-Weighted Species Composition']); // Row 2: title
+  // Initialize all cells to avoid ExcelJS sparse-array column shifting
+  const lastCol = 2 + SPECIES_HEADERS.length; // 0-indexed: 2 + 19 = 21
+  const row: unknown[] = new Array(lastCol).fill(undefined);
+  row[1] = 'District/ Species'; // col B (0-indexed: 1)
+  for (let i = 0; i < SPECIES_HEADERS.length; i++) {
+    row[2 + i] = SPECIES_HEADERS[i]; // cols C–U (0-indexed: 2+)
+  }
+  ws.addRow(row); // Row 3: headers
 }
 
 /**
- * Adds a data row with a district code and 19 numeric species values (0–1 range).
+ * Adds a data row with a district code in col B and 19 numeric species values in cols C–U.
  */
 function addSpeciesDataRow(ws: ExcelJS.Worksheet, districtCode: string, values: number[]): void {
   if (values.length !== SPECIES_HEADERS.length) {
     throw new Error(`Species row must have exactly ${SPECIES_HEADERS.length} values`);
   }
-  ws.addRow([districtCode, ...values]);
+  const lastCol = 2 + values.length;
+  const row: unknown[] = new Array(lastCol).fill(undefined);
+  row[1] = districtCode; // col B (0-indexed: 1)
+  for (let i = 0; i < values.length; i++) {
+    row[2 + i] = values[i]; // cols C–U (0-indexed: 2+)
+  }
+  ws.addRow(row);
 }
 
 /**
  * Generates a deterministic set of species values for a district.
  * Uses a seeded pseudo-random approach based on the district code's char codes.
+ * All 19 values are in the 0–1 range.
  */
 function generateSpeciesValues(districtCode: string): number[] {
   const seed = districtCode.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  const raw = SPECIES_HEADERS.map((_, i) => {
+  return SPECIES_HEADERS.map((_, i) => {
     const x = Math.sin(seed + i) * 10000;
-    return x - Math.floor(x); // 0–1 range
+    const v = x - Math.floor(x); // 0–1 range
+    return Math.round(v * 1000) / 1000;
   });
-  // Ensure Total = sum of first 18 species, capped at 1
-  const sum = raw.slice(0, 18).reduce((a, b) => a + b, 0);
-  raw[18] = Math.min(sum, 1);
-  return raw;
 }
 
 /**
  * Builds a valid species composition workbook buffer (.xlsx).
  *
  * Layout:
- * - Row 1: headers (A1 empty, B1–T1 = 19 species headers including Total)
- * - Row 2+: one row per district with code in column A and 19 numeric values in B–T
+ * - Row 1: empty
+ * - Row 2: title row
+ * - Row 3: headers (B3='District/ Species', C3–U3=19 abbreviated species codes)
+ * - Row 4+: one row per district with code in column B and 19 numeric values in C–U
  * - All values are in the 0–1 range
  * - Includes all 23 expected district codes
  *

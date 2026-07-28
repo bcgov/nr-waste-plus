@@ -43,7 +43,7 @@ const SpeciesCompositionReviewTable: FC<SpeciesCompositionReviewTableProps> = ({
   const tableRows = rows.map((row, index) => ({
     id: `row-${index}`,
     district: row.district.code,
-    ...Object.fromEntries(SPECIES_COLUMNS.map((key) => [key, row[key]])),
+    ...Object.fromEntries(SPECIES_COLUMNS.map((key) => [key, row.species[key] ?? 0])),
   }));
 
   return (

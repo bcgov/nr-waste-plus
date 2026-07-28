@@ -5,26 +5,27 @@ import { codeDescriptionSchema } from './reportingUnit.types';
 import { pageableResponseSchema } from '@/components/Form/TableResource/schemas';
 
 // ─── SPECIES COLUMN KEYS ─────────────────────────────────────────────────────
+/** The 19 abbreviated species codes used in the spreadsheet and API. */
 export const SPECIES_COLUMNS = [
-  'balsam',
-  'cedar',
-  'cottonwood',
-  'cypress',
-  'fir',
-  'hemlock',
-  'larch',
-  'maple',
-  'pine',
-  'poplar',
-  'redcedar',
-  'redwood',
-  'spruce',
-  'whitebirch',
-  'whitepine',
-  'yew',
-  'other',
-  'unknown',
-  'total',
+  'AL',
+  'AR',
+  'AS',
+  'BA',
+  'BI',
+  'CE',
+  'CO',
+  'CY',
+  'FI',
+  'HE',
+  'LA',
+  'LO',
+  'MA',
+  'SP',
+  'UU',
+  'WB',
+  'WH',
+  'WI',
+  'YE',
 ] as const;
 
 export type SpeciesKey = (typeof SPECIES_COLUMNS)[number];
@@ -32,49 +33,31 @@ export type SpeciesKey = (typeof SPECIES_COLUMNS)[number];
 // ─── SPECIES COLUMN LABELS ──────────────────────────────────────────────────
 /** Display labels for species columns, keyed by {@link SpeciesKey}. */
 export const SPECIES_LABELS: Record<SpeciesKey, string> = {
-  balsam: 'Balsam',
-  cedar: 'Cedar',
-  cottonwood: 'Cottonwood',
-  cypress: 'Cypress',
-  fir: 'Fir',
-  hemlock: 'Hemlock',
-  larch: 'Larch',
-  maple: 'Maple',
-  pine: 'Pine',
-  poplar: 'Poplar',
-  redcedar: 'Redcedar',
-  redwood: 'Redwood',
-  spruce: 'Spruce',
-  whitebirch: 'Whitebirch',
-  whitepine: 'Whitepine',
-  yew: 'Yew',
-  other: 'Other',
-  unknown: 'Unknown',
-  total: 'Total',
+  AL: 'AL',
+  AR: 'AR',
+  AS: 'AS',
+  BA: 'BA',
+  BI: 'BI',
+  CE: 'CE',
+  CO: 'CO',
+  CY: 'CY',
+  FI: 'FI',
+  HE: 'HE',
+  LA: 'LA',
+  LO: 'LO',
+  MA: 'MA',
+  SP: 'SP',
+  UU: 'UU',
+  WB: 'WB',
+  WH: 'WH',
+  WI: 'WI',
+  YE: 'YE',
 };
 
 // ─── ROW ─────────────────────────────────────────────────────────────────────
 export const speciesCompositionRowSchema = z.object({
   district: codeDescriptionSchema,
-  balsam: z.number(),
-  cedar: z.number(),
-  cottonwood: z.number(),
-  cypress: z.number(),
-  fir: z.number(),
-  hemlock: z.number(),
-  larch: z.number(),
-  maple: z.number(),
-  pine: z.number(),
-  poplar: z.number(),
-  redcedar: z.number(),
-  redwood: z.number(),
-  spruce: z.number(),
-  whitebirch: z.number(),
-  whitepine: z.number(),
-  yew: z.number(),
-  other: z.number(),
-  unknown: z.number(),
-  total: z.number(),
+  species: z.record(z.string(), z.number()),
 });
 export type SpeciesCompositionRow = z.infer<typeof speciesCompositionRowSchema>;
 
@@ -112,6 +95,13 @@ export type SpeciesCompositionDetail = z.infer<typeof speciesCompositionDetailSc
 
 // ─── CREATE REQUEST SCHEMA ───────────────────────────────────────────────────
 export const speciesCompositionCreateSchema = z.object({
-  tableData: speciesCompositionDataSchema,
+  area: z.string(),
+  startDate: z.string(),
+  tableLevelFactor: z.number(),
+  heliMultiplier: z.number().nullable(),
+  tableData: z.object({
+    type: z.literal('SPECIES_COMPOSITION'),
+    rows: z.array(speciesCompositionRowSchema),
+  }),
 });
 export type SpeciesCompositionCreate = z.infer<typeof speciesCompositionCreateSchema>;

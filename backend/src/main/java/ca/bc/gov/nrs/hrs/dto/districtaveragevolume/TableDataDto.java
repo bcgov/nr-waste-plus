@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * <ul>
  *   <li>{@link InteriorDataDto} mapped to "INTERIOR"</li>
  *   <li>{@link CoastDataDto} mapped to "COASTAL"</li>
+ *   <li>{@link SpeciesCompositionTableDataDto} mapped to "SPECIES_COMPOSITION"</li>
  * </ul>
  *
  * <p>The sealed nature of this interface ensures compile-time exhaustiveness
@@ -29,8 +30,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 )
 @JsonSubTypes({
     @JsonSubTypes.Type(value = InteriorDataDto.class, name = "INTERIOR"),
-    @JsonSubTypes.Type(value = CoastDataDto.class, name = "COASTAL")
+    @JsonSubTypes.Type(value = CoastDataDto.class, name = "COASTAL"),
+    @JsonSubTypes.Type(value = SpeciesCompositionTableDataDto.class, name = "SPECIES_COMPOSITION")
 })
 public sealed interface TableDataDto
-    permits InteriorDataDto, CoastDataDto {
+    permits InteriorDataDto, CoastDataDto, SpeciesCompositionTableDataDto {
 }
