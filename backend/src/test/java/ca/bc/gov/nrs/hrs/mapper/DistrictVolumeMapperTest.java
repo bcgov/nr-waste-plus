@@ -439,8 +439,8 @@ class DistrictVolumeMapperTest {
     // Assert
     assertThat(dto.tableData()).isInstanceOf(SpeciesCompositionTableDataDto.class);
     SpeciesCompositionTableDataDto speciesDto = (SpeciesCompositionTableDataDto) dto.tableData();
-    assertThat(speciesDto.speciesRows()).hasSize(1);
-    assertThat(speciesDto.speciesRows().get(0).district().code()).isEqualTo("DPG");
+    assertThat(speciesDto.rows()).hasSize(1);
+    assertThat(speciesDto.rows().getFirst().district().code()).isEqualTo("DPG");
   }
 
   @Test

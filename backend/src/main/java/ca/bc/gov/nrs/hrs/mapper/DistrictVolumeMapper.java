@@ -85,18 +85,22 @@ public final class DistrictVolumeMapper {
       tableDataDto = new SpeciesCompositionTableDataDto(tableData.speciesRows());
     } else {
       tableDataDto = switch (entity.getArea()) {
-        case INTERIOR -> toInteriorDto(tableData != null ? tableData : new TableData(null, null, null, null));
-        case COASTAL -> toCoastDto(tableData != null ? tableData : new TableData(null, null, null, null));
+        case INTERIOR -> toInteriorDto(tableData);
+        case COASTAL -> toCoastDto(tableData);
       };
     }
 
+    var uploadInstant =
+        entity.getDateOfUpload() != null
+            ? entity.getDateOfUpload().atOffset(ZoneOffset.UTC).toInstant()
+            : null;
     return new DistrictVolumeDetailDto(
         entity.getId(),
         entity.getArea().name(),
         entity.getStartDate(),
         entity.getEndDate(),
         entity.getCreatedBy(),
-        entity.getDateOfUpload() != null ? entity.getDateOfUpload().atOffset(ZoneOffset.UTC).toInstant() : null,
+        uploadInstant,
         entity.getTableLevelFactor(),
         entity.getHeliMultiplier(),
         tableDataDto
