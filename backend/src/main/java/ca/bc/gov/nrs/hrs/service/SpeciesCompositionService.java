@@ -150,7 +150,7 @@ public class SpeciesCompositionService {
         // Valid structural combination; do nothing and allow processing to continue.
       }
 
-      case SpeciesCompositionTableDataDto _ -> {
+      case SpeciesCompositionTableDataDto ignored -> {
         // Species composition data is area-agnostic; valid for any area type.
       }
 
