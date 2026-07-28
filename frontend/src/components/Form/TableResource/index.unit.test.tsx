@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CheckmarkFilled, CloseFilled, Edit } from '@carbon/icons-react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
@@ -359,18 +359,19 @@ describe('TableResource', () => {
       onSortChange,
     });
 
-    const nameHeader = screen.getByText('Name');
-
+    const nameHeader = await screen.findByText('Name');
+    // Use fireEvent to bypass userEvent's interaction checks that hang
+    // due to Carbon Tooltip's pointer-interception CSS on the sort header.
     // NONE → ASC
-    await userEvent.click(nameHeader);
+    fireEvent.click(nameHeader);
     expect(onSortChange).toHaveBeenLastCalledWith({ name: 'ASC' });
 
     // ASC → DESC
-    await userEvent.click(nameHeader);
+    fireEvent.click(nameHeader);
     expect(onSortChange).toHaveBeenLastCalledWith({ name: 'DESC' });
 
     // DESC → NONE (cleared)
-    await userEvent.click(nameHeader);
+    fireEvent.click(nameHeader);
     expect(onSortChange).toHaveBeenLastCalledWith({});
   });
 

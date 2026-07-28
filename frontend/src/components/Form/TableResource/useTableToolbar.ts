@@ -30,7 +30,7 @@ export function useTableToolbar<T>(id: string, headers: TableHeaderType<T, Neste
     }
     const savedIds = (userPreference.tableHeaders as Record<string, string[]> | undefined)?.[id];
     const initialIds =
-      savedIds && Array.isArray(savedIds)
+      savedIds && Array.isArray(savedIds) && savedIds.length > 0
         ? savedIds
         : headers.filter((header) => header.selected).map(getHeaderId);
     const nextIds = [...new Set(initialIds)];
@@ -72,8 +72,11 @@ export function useTableToolbar<T>(id: string, headers: TableHeaderType<T, Neste
 
   // Persist the selection, but only after it has been initialized from
   // preferences so we never overwrite stored selections with defaults.
+  // Never persist an empty column set — an empty saved set can be produced
+  // by stale defaults (e.g., when headers omitted `selected: true`) and
+  // would permanently hide all columns from tables without a toolbar.
   useEffect(() => {
-    if (!tableHeadersRef.current) {
+    if (!tableHeadersRef.current || tableHeadersRef.current.length === 0) {
       return;
     }
     updatePreferences({ tableHeaders: { [id]: [...new Set(tableHeadersRef.current)] } });
