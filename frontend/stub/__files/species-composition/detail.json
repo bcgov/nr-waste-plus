@@ -1,0 +1,59 @@
+{
+  "id": 42,
+  "startDate": "2026-06-01",
+  "endDate": null,
+  "uploadedBy": "jsmith@gov.bc.ca",
+  "dateOfUpload": "2026-05-15T14:23:00Z",
+  "tableData": {
+    "rows": [
+      {
+        "district": {
+          "code": "DCC",
+          "description": "Cariboo-Chilcotin",
+          "name": "Cariboo-Chilcotin"
+        },
+        "balsam": 0,
+        "cedar": 0,
+        "cottonwood": 5,
+        "cypress": 0,
+        "fir": 0,
+        "hemlock": 0,
+        "larch": 0,
+        "maple": 0,
+        "pine": 43,
+        "poplar": 0,
+        "redcedar": 0,
+        "redwood": 0,
+        "spruce": 52,
+        "whitebirch": 0,
+        "whitepine": 0,
+        "yew": 0,
+        "other": 0,
+        "unknown": 0,
+        "total": 100
+      },
+      {
+        "district": { "code": "DCS", "description": "Coast", "name": "Coast" },
+        "balsam": 10,
+        "cedar": 30,
+        "cottonwood": 0,
+        "cypress": 15,
+        "fir": 5,
+        "hemlock": 20,
+        "larch": 0,
+        "maple": 0,
+        "pine": 0,
+        "poplar": 0,
+        "redcedar": 5,
+        "redwood": 0,
+        "spruce": 10,
+        "whitebirch": 0,
+        "whitepine": 0,
+        "yew": 0,
+        "other": 5,
+        "unknown": 0,
+        "total": 100
+      }
+    ]
+  }
+}

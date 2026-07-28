@@ -2,28 +2,68 @@ import { Column } from '@carbon/react';
 import { useParams } from '@tanstack/react-router';
 import { type FC } from 'react';
 
+import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
+import SpeciesCompositionDetailView from '@/components/waste/SpeciesCompositionDetailView';
+import SpeciesCompositionDetailSkeleton from '@/components/waste/SpeciesCompositionDetailView/SpeciesCompositionDetailSkeleton';
+import { useSpeciesCompositionDetailQuery } from '@/config/react-query/hooks';
 
 import './index.scss';
 
 /**
- * Page shell for species composition detail view.
+ * Species Composition Detail page — displays detailed information for a specific
+ * species composition configuration.
  *
- * Minimal stub — full implementation is tracked in #1059.
- * Renders the page title with breadcrumbs. The detail table,
- * zone breakdown, and metadata will be added as a follow-up.
+ * Fetches the detail data via {@link useSpeciesCompositionDetailQuery} using the
+ * `id` route param and delegates to {@link SpeciesCompositionDetailView} which
+ * renders the metadata header and a district × species composition matrix table.
  *
- * @returns The species composition detail page.
+ * On loading, displays a skeleton. On error or missing data, displays an error
+ * page with inline notifications via {@link PageNotification}.
+ *
+ * @returns The Species Composition Detail page.
  */
 const SpeciesCompositionDetailPage: FC = () => {
   const params = useParams({ strict: false });
   const id = Number(params.id);
 
+  const { data, isLoading, isError } = useSpeciesCompositionDetailQuery(id, {
+    notificationTarget: 'species-composition-detail',
+  });
+
+  if (isLoading) {
+    return (
+      <Column lg={16} md={8} sm={4} className="species-composition-detail-column__banner">
+        <SpeciesCompositionDetailSkeleton />
+      </Column>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <>
+        <Column lg={16} md={8} sm={4} className="species-composition-detail-column__banner">
+          <PageTitle
+            title={isError || !data ? 'Species composition not found' : 'Species composition table'}
+            subtitle={isError || !data ? undefined : 'View species composition table details'}
+            breadCrumbs={[
+              { name: 'Configuration', path: '/configuration' },
+              { name: 'Species composition', path: '/configuration/species-composition' },
+            ]}
+          />
+        </Column>
+        <Column lg={16} md={8} sm={4} className="species-composition-detail-column__notification">
+          <PageNotification eventTarget="species-composition-detail" />
+        </Column>
+      </>
+    );
+  }
+
   return (
     <>
       <Column lg={16} md={8} sm={4} className="species-composition-detail-column__banner">
         <PageTitle
-          title={`Species composition: ${id}`}
+          title="Species composition table"
           subtitle="View species composition table details"
           breadCrumbs={[
             { name: 'Configuration', path: '/configuration' },
@@ -31,8 +71,10 @@ const SpeciesCompositionDetailPage: FC = () => {
           ]}
         />
       </Column>
-
-      {/* Detail view — populated in #1059 */}
+      <Column lg={16} md={8} sm={4} className="species-composition-detail-column__notification">
+        <PageNotification eventTarget="species-composition-detail" />
+      </Column>
+      <SpeciesCompositionDetailView data={data} />
     </>
   );
 };

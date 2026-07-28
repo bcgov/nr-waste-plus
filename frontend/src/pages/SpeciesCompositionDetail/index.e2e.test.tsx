@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 import { setupAppShellMocks } from '@/config/tests/app.setup';
 import { mockJwt } from '@/config/tests/auth.helper';
+import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 const canOverrideClaims = (): boolean => process.env.VITE_MOCK_AUTH?.toLowerCase() === 'true';
 
@@ -33,11 +34,80 @@ test.describe('Species Composition Detail Page', () => {
         'cognito:groups': ['WASTE_PLUS_ADMIN'],
       });
 
+      await mockApiResponsesWithStub(
+        page,
+        'configuration/species-compositions/42',
+        'species-composition/detail.json',
+      );
+
       await page.goto('/configuration/species-composition/42');
       await page.waitForLoadState('domcontentloaded');
 
-      await expect(page.getByRole('heading', { name: 'Species composition: 42' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Species composition table' })).toBeVisible();
       await expect(page.getByText('View species composition table details')).toBeVisible();
+    });
+
+    test('should display species composition metadata header @idir-only', async ({
+      page,
+    }, testInfo) => {
+      test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
+
+      await mockJwt(page, testInfo.project.metadata, {
+        'custom:idp_name': 'idir',
+        'cognito:groups': ['WASTE_PLUS_ADMIN'],
+      });
+
+      await mockApiResponsesWithStub(
+        page,
+        'configuration/species-compositions/42',
+        'species-composition/detail.json',
+      );
+
+      await page.goto('/configuration/species-composition/42');
+      await page.waitForLoadState('domcontentloaded');
+
+      // Header labels
+      await expect(page.getByText('Start date')).toBeVisible();
+      await expect(page.getByText('End date')).toBeVisible();
+      await expect(page.getByText('Uploaded by')).toBeVisible();
+      await expect(page.getByText('Date of upload')).toBeVisible();
+
+      // Header values from stub
+      await expect(page.getByText('June 01, 2026')).toBeVisible();
+      await expect(page.getByText('jsmith@gov.bc.ca')).toBeVisible();
+    });
+
+    test('should display district × species matrix table @idir-only', async ({
+      page,
+    }, testInfo) => {
+      test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
+
+      await mockJwt(page, testInfo.project.metadata, {
+        'custom:idp_name': 'idir',
+        'cognito:groups': ['WASTE_PLUS_ADMIN'],
+      });
+
+      await mockApiResponsesWithStub(
+        page,
+        'configuration/species-compositions/42',
+        'species-composition/detail.json',
+      );
+
+      await page.goto('/configuration/species-composition/42');
+      await page.waitForLoadState('domcontentloaded');
+
+      // District column with CodeDescriptionTag format
+      await expect(page.getByText('DCC - Cariboo-Chilcotin')).toBeVisible();
+      await expect(page.getByText('DCS - Coast')).toBeVisible();
+
+      // Species column headers
+      await expect(page.getByText('Pine')).toBeVisible();
+      await expect(page.getByText('Spruce')).toBeVisible();
+
+      // Species values from stub data (DCC row)
+      await expect(page.getByText('43')).toBeVisible();
+      await expect(page.getByText('52')).toBeVisible();
+      await expect(page.getByText('100')).toBeVisible();
     });
 
     test('should navigate back to configuration via breadcrumb @idir-only', async ({
