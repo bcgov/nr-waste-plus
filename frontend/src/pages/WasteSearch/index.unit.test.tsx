@@ -73,7 +73,7 @@ describe('WasteSearchPage', () => {
 
     // Sync act() flushes the NotificationProvider's state update triggered
     // by sendEvent() — avoids the V8-coverage hang of async act().
-    // eslint-disable-next-line testing-library/no-unnecessary-act
+
     act(() =>
       sendEvent({
         title: 'Test Error',
@@ -90,7 +90,6 @@ describe('WasteSearchPage', () => {
   it('should display warning notification when warning event sent', async () => {
     renderWithProps();
 
-    // eslint-disable-next-line testing-library/no-unnecessary-act
     act(() =>
       sendEvent({
         title: 'Test Warning',
@@ -107,7 +106,6 @@ describe('WasteSearchPage', () => {
   it('should display info notification when info event sent', async () => {
     renderWithProps();
 
-    // eslint-disable-next-line testing-library/no-unnecessary-act
     act(() =>
       sendEvent({
         title: 'Test Info',
@@ -124,7 +122,6 @@ describe('WasteSearchPage', () => {
   it('should not display notification when event target does not match', async () => {
     renderWithProps();
 
-    // eslint-disable-next-line testing-library/no-unnecessary-act
     act(() =>
       sendEvent({
         title: 'Different Target Error',
