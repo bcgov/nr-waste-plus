@@ -173,12 +173,15 @@ describe('TableResource', () => {
     });
     screen.getByTestId('pagination');
     screen.getByText('1-10 of 15 items');
+
+    // Use fireEvent to bypass userEvent's interaction checks that hang
+    // under V8 coverage with Carbon Pagination's async state updates.
     const button = screen.getByRole('button', { name: 'Next page' });
-    await userEvent.click(button);
+    fireEvent.click(button);
     expect(onPageChange).toHaveBeenCalledWith({ page: 1, pageSize: 10 });
 
     const previousButton = screen.getByRole('button', { name: 'Previous page' });
-    await userEvent.click(previousButton);
+    fireEvent.click(previousButton);
     expect(onPageChange).toHaveBeenCalledWith({ page: 0, pageSize: 10 });
   });
 
@@ -339,8 +342,11 @@ describe('TableResource', () => {
     });
 
     expect(screen.getAllByRole('button', { name: 'Edit' }).length).toBeGreaterThan(0);
-    await userEvent.click(screen.getAllByRole('button', { name: 'Options' })[0]);
-    await userEvent.click(screen.getAllByText('Activate')[0]);
+
+    // Use fireEvent to bypass userEvent's interaction checks that hang
+    // under V8 coverage with Carbon OverflowMenu's async popover updates.
+    fireEvent.click(screen.getAllByRole('button', { name: 'Options' })[0]);
+    fireEvent.click(screen.getAllByText('Activate')[0]);
 
     expect(overflowAction).toHaveBeenCalledWith(content.content[0]);
   });
