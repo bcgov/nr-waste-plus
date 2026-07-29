@@ -16,10 +16,8 @@ const loadUserPreference = async (): Promise<UserPreference> => {
 };
 
 const saveUserPreference = async (preference: Partial<UserPreference>): Promise<UserPreference> => {
-  const currentPreferences = await APIs.user.getUserPreferences();
-  const updatedPreferences = { ...currentPreferences, ...preference } as UserPreference;
-  await APIs.user.updateUserPreferences(updatedPreferences);
-  return updatedPreferences;
+  await APIs.user.updateUserPreferences(preference as UserPreference);
+  return preference as UserPreference;
 };
 
 export { loadUserPreference, saveUserPreference };

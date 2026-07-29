@@ -22,7 +22,7 @@ describe('loadUserPreference', () => {
   });
 
   it('no value initially, resort to default', async () => {
-    (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({}).mockResolvedValueOnce({});
+    (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({});
     const result = await loadUserPreference();
     expect(result).toEqual(initialValue);
   });
@@ -35,14 +35,12 @@ describe('loadUserPreference', () => {
 });
 
 describe('saveUserPreference', () => {
-  it('saves merged preference', async () => {
-    (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'g100' });
+  it('saves the preference as-is (merge happens upstream in updatePreferences)', async () => {
     const result = await saveUserPreference({ otherSetting: 'value' });
-    expect(result).toEqual({ theme: 'g100', otherSetting: 'value' });
+    expect(result).toEqual({ otherSetting: 'value' });
   });
 
   it('saves new preference when nothing exists in API', async () => {
-    (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({});
     const result = await saveUserPreference({ theme: 'g90' });
     expect(result).toEqual({ theme: 'g90' });
   });

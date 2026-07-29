@@ -16,9 +16,12 @@ export const PreferenceProvider: FC<PreferenceProviderProps> = ({ children }) =>
     enabled: false,
   });
 
-  const { mutate } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: saveUserPreference,
     onSuccess: () => refetch(),
+    onError: (error: Error) => {
+      console.error('Failed to save user preference:', error);
+    },
   });
 
   const updatePreferences = useCallback(
@@ -37,13 +40,14 @@ export const PreferenceProvider: FC<PreferenceProviderProps> = ({ children }) =>
       // Check if preference actually contains changes compared to existing data
       const hasChanges = !isEqual(updatedPreferences, data);
 
-      // Don't update until loaded and only if there are changes
-      if (!hasChanges || !isFetched) {
+      // Skip when there are no changes and no mutation is already in flight
+      // (the isPending check prevents stale cached data from blocking a rapid toggle-back)
+      if (!isPending && !hasChanges) {
         return;
       }
       mutate(updatedPreferences);
     },
-    [mutate, isFetched, data],
+    [mutate, isPending, data],
   );
 
   useEffect(() => {
