@@ -97,12 +97,15 @@ test.describe('Species Composition Detail Page', () => {
       await expect(page.getByText('DCS - Coast')).toBeVisible();
 
       // Species column headers (2-letter codes)
-      await expect(page.getByText('CO')).toBeVisible();
-      await expect(page.getByText('SP')).toBeVisible();
+      // Use { exact: true } to avoid matching "Configuration", "Coast", "Species composition", etc.
+      await expect(page.getByText('CO', { exact: true })).toBeVisible();
+      await expect(page.getByText('SP', { exact: true })).toBeVisible();
 
       // Species values from stub data (DCC row)
-      await expect(page.getByText('43')).toBeVisible();
-      await expect(page.getByText('52')).toBeVisible();
+      // Use getByRole('cell') to avoid strict mode violation from getByText
+      // matching both the <td> and its parent <tr>
+      await expect(page.getByRole('cell', { name: '43' })).toBeVisible();
+      await expect(page.getByRole('cell', { name: '52' })).toBeVisible();
     });
 
     test('should navigate back to configuration via breadcrumb @idir-only', async ({
