@@ -18,11 +18,6 @@ import org.junit.jupiter.api.Test;
 @DisplayName("Unit Test | Species Composition Mapper")
 class SpeciesCompositionMapperTest {
 
-  private static final String[] SPECIES_KEYS = {
-      "AL", "AR", "AS", "BA", "BI", "CE", "CO", "CY", "FI",
-      "HE", "LA", "LO", "MA", "SP", "UU", "WB", "WH", "WI", "YE"
-  };
-
   private SpeciesCompositionRow buildRow(String code, String description) {
     java.util.LinkedHashMap<String, BigDecimal> species = new java.util.LinkedHashMap<>();
     species.put("AL", new BigDecimal("1.1"));

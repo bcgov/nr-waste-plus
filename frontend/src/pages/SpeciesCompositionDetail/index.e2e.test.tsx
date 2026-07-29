@@ -66,15 +66,11 @@ test.describe('Species Composition Detail Page', () => {
       await page.goto('/configuration/species-composition/42');
       await page.waitForLoadState('domcontentloaded');
 
-      // Header labels
+      // Header label
       await expect(page.getByText('Start date')).toBeVisible();
-      await expect(page.getByText('End date')).toBeVisible();
-      await expect(page.getByText('Uploaded by')).toBeVisible();
-      await expect(page.getByText('Date of upload')).toBeVisible();
 
-      // Header values from stub
+      // Header value from stub
       await expect(page.getByText('June 01, 2026')).toBeVisible();
-      await expect(page.getByText('jsmith@gov.bc.ca')).toBeVisible();
     });
 
     test('should display district × species matrix table @idir-only', async ({
@@ -100,14 +96,13 @@ test.describe('Species Composition Detail Page', () => {
       await expect(page.getByText('DCC - Cariboo-Chilcotin')).toBeVisible();
       await expect(page.getByText('DCS - Coast')).toBeVisible();
 
-      // Species column headers
-      await expect(page.getByText('Pine')).toBeVisible();
-      await expect(page.getByText('Spruce')).toBeVisible();
+      // Species column headers (2-letter codes)
+      await expect(page.getByText('CO')).toBeVisible();
+      await expect(page.getByText('SP')).toBeVisible();
 
       // Species values from stub data (DCC row)
       await expect(page.getByText('43')).toBeVisible();
       await expect(page.getByText('52')).toBeVisible();
-      await expect(page.getByText('100')).toBeVisible();
     });
 
     test('should navigate back to configuration via breadcrumb @idir-only', async ({

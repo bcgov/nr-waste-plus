@@ -129,6 +129,9 @@ public final class DistrictVolumeMapper {
   }
   
   private static InteriorDataDto toInteriorDto(TableData data) {
+    if (data == null) {
+      return new InteriorDataDto(List.of(), Map.of());
+    }
     List<InteriorZoneDto> zones = data.zones().stream()
         .map(zone -> new InteriorZoneDto(
             zone.name(),
@@ -142,6 +145,9 @@ public final class DistrictVolumeMapper {
   }
 
   private static CoastDataDto toCoastDto(TableData data) {
+    if (data == null) {
+      return new CoastDataDto(List.of(), Map.of());
+    }
     List<CoastSectionDto> sections = data.sections().stream()
         .map(section -> new CoastSectionDto(
             section.name(),
