@@ -411,7 +411,10 @@ describe('TableResource', () => {
 
     // Expand first row
     const expandButtons = screen.getAllByRole('button', { name: /expand/i });
-    await userEvent.click(expandButtons[0]);
+
+    // Use fireEvent to bypass userEvent's interaction checks that hang
+    // under V8 coverage with Carbon expandable row's async state updates.
+    fireEvent.click(expandButtons[0]);
 
     expect(onRowExpanded).toHaveBeenCalledWith(1);
 
@@ -419,7 +422,7 @@ describe('TableResource', () => {
     await screen.findByText('Expanded content');
 
     // Collapse the row
-    await userEvent.click(expandButtons[0]);
+    fireEvent.click(expandButtons[0]);
 
     // The expanded content should be removed
     expect(screen.queryByText('Expanded content')).toBeNull();
