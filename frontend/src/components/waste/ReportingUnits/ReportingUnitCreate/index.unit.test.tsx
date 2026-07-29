@@ -130,6 +130,8 @@ vi.mock('@carbon/react', async () => {
       legendText,
       id,
       value,
+      invalid: _invalid,
+      invalidText: _invalidText,
       ...props
     }: MockRadioButtonGroupProps) => (
       <fieldset id={id} onBlur={onBlur} {...props}>
