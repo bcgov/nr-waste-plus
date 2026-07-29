@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import WasteSearchPage from './index';
@@ -26,8 +26,18 @@ vi.mock('@/services/APIs', () => {
   };
 });
 
-/** @see {@link renderWithApp} — not using renderWithAppAsync because act() under V8 coverage can hang indefinitely. */
-const renderWithProps = () => renderWithApp(<WasteSearchPage />);
+/**
+ * Sync render helper that wraps render in act() so the RouterProvider's
+ * (Transitioner) mount-time state updates are flushed inside the act
+ * environment.
+ *
+ * Using sync act() (not async/await) avoids the V8-coverage hang that
+ * afflicts async renderWithAppAsync — see issue #1130.
+ *
+ * @see {@link renderWithApp}
+ */
+// eslint-disable-next-line testing-library/no-unnecessary-act
+const renderWithProps = () => act(() => renderWithApp(<WasteSearchPage />));
 
 describe('WasteSearchPage', () => {
   beforeEach(() => {
@@ -61,14 +71,17 @@ describe('WasteSearchPage', () => {
   it('should display error notification when error event sent', async () => {
     renderWithProps();
 
-    // Not wrapped in act() — with V8 coverage, act() can delay the React
-    // state update indefinitely. findByText retries until the element appears.
-    sendEvent({
-      title: 'Test Error',
-      description: 'This is a test error message',
-      eventType: 'error',
-      eventTarget: 'waste-search',
-    });
+    // Sync act() flushes the NotificationProvider's state update triggered
+    // by sendEvent() — avoids the V8-coverage hang of async act().
+    // eslint-disable-next-line testing-library/no-unnecessary-act
+    act(() =>
+      sendEvent({
+        title: 'Test Error',
+        description: 'This is a test error message',
+        eventType: 'error',
+        eventTarget: 'waste-search',
+      }),
+    );
 
     await screen.findByText('Test Error');
     expect(screen.getAllByText('This is a test error message')).toHaveLength(1);
@@ -77,12 +90,15 @@ describe('WasteSearchPage', () => {
   it('should display warning notification when warning event sent', async () => {
     renderWithProps();
 
-    sendEvent({
-      title: 'Test Warning',
-      description: 'This is a test warning message',
-      eventType: 'warning',
-      eventTarget: 'waste-search',
-    });
+    // eslint-disable-next-line testing-library/no-unnecessary-act
+    act(() =>
+      sendEvent({
+        title: 'Test Warning',
+        description: 'This is a test warning message',
+        eventType: 'warning',
+        eventTarget: 'waste-search',
+      }),
+    );
 
     await screen.findByText('Test Warning');
     expect(screen.getAllByText('This is a test warning message')).toHaveLength(1);
@@ -91,12 +107,15 @@ describe('WasteSearchPage', () => {
   it('should display info notification when info event sent', async () => {
     renderWithProps();
 
-    sendEvent({
-      title: 'Test Info',
-      description: 'This is a test info message',
-      eventType: 'info',
-      eventTarget: 'waste-search',
-    });
+    // eslint-disable-next-line testing-library/no-unnecessary-act
+    act(() =>
+      sendEvent({
+        title: 'Test Info',
+        description: 'This is a test info message',
+        eventType: 'info',
+        eventTarget: 'waste-search',
+      }),
+    );
 
     await screen.findByText('Test Info');
     expect(screen.getAllByText('This is a test info message')).toHaveLength(1);
@@ -105,12 +124,19 @@ describe('WasteSearchPage', () => {
   it('should not display notification when event target does not match', async () => {
     renderWithProps();
 
-    sendEvent({
-      title: 'Different Target Error',
-      description: 'This should not be displayed',
-      eventType: 'error',
-      eventTarget: 'different-target',
-    });
+    // eslint-disable-next-line testing-library/no-unnecessary-act
+    act(() =>
+      sendEvent({
+        title: 'Different Target Error',
+        description: 'This should not be displayed',
+        eventType: 'error',
+        eventTarget: 'different-target',
+      }),
+    );
+
+    // Flush deferred React updates (Transitioner, Carbon lazy init, etc.)
+    // that would otherwise produce act() warnings after the test body ends.
+    await screen.findByText('Waste search');
 
     expect(screen.queryByText('Different Target Error')).toBeNull();
     expect(screen.queryByText('This should not be displayed')).toBeNull();
