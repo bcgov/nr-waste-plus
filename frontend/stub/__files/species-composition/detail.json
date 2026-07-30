@@ -1,0 +1,62 @@
+{
+  "id": 42,
+  "startDate": "2026-06-01",
+  "endDate": null,
+  "uploadedBy": "jsmith@gov.bc.ca",
+  "dateOfUpload": "2026-05-15T14:23:00Z",
+  "tableData": {
+    "rows": [
+      {
+        "district": {
+          "code": "DCC",
+          "description": "Cariboo-Chilcotin"
+        },
+        "species": {
+          "AL": 0,
+          "AR": 0,
+          "AS": 0,
+          "BA": 0,
+          "BI": 0,
+          "CE": 0,
+          "CO": 43,
+          "CY": 0,
+          "FI": 0,
+          "HE": 0,
+          "LA": 0,
+          "LO": 0,
+          "MA": 0,
+          "SP": 52,
+          "UU": 0,
+          "WB": 0,
+          "WH": 0,
+          "WI": 0,
+          "YE": 0
+        }
+      },
+      {
+        "district": { "code": "DCS", "description": "Coast" },
+        "species": {
+          "AL": 0,
+          "AR": 0,
+          "AS": 0,
+          "BA": 10,
+          "BI": 0,
+          "CE": 30,
+          "CO": 0,
+          "CY": 15,
+          "FI": 5,
+          "HE": 20,
+          "LA": 0,
+          "LO": 0,
+          "MA": 0,
+          "SP": 10,
+          "UU": 0,
+          "WB": 0,
+          "WH": 0,
+          "WI": 0,
+          "YE": 0
+        }
+      }
+    ]
+  }
+}

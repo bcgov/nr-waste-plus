@@ -7,14 +7,14 @@ import java.util.List;
 /**
  * Species composition implementation of the polymorphic {@link TableDataDto}.
  *
- * <p>This structure represents a flat matrix of species percentages by
- * district, without the interior/coastal split used in district volume
- * data.</p>
+ * <p>Unlike INTERIOR/COASTAL which split data by zone or section, species composition
+ * is a flat matrix of species percentages by district. The {@code rows} list contains
+ * one entry per district (plus a Provincial Weighted Avg row).</p>
  *
- * @param speciesRows one row per district
+ * @param rows flat list of species composition rows
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record SpeciesCompositionTableDataDto(
-    List<SpeciesCompositionRow> speciesRows
+    List<SpeciesCompositionRow> rows
 ) implements TableDataDto {
 }

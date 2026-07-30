@@ -7,7 +7,6 @@ import ClientDisplay from '.';
 import type { UserPreference } from '@/context/preference/types';
 
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
-import { AuthProvider } from '@/context/auth/AuthProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
 
@@ -81,13 +80,11 @@ vi.mock('@/context/preference/usePreference', () => ({
 const renderWithProviders = async (active: boolean) => {
   const qc = makeTestQueryClient();
   render(
-    <AuthProvider>
-      <QueryClientProvider client={qc}>
-        <PreferenceProvider>
-          <ClientDisplay isActive={active} />
-        </PreferenceProvider>
-      </QueryClientProvider>
-    </AuthProvider>,
+    <QueryClientProvider client={qc}>
+      <PreferenceProvider>
+        <ClientDisplay isActive={active} />
+      </PreferenceProvider>
+    </QueryClientProvider>,
   );
 };
 

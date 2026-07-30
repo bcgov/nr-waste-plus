@@ -439,8 +439,8 @@ class DistrictVolumeMapperTest {
     // Assert
     assertThat(dto.tableData()).isInstanceOf(SpeciesCompositionTableDataDto.class);
     SpeciesCompositionTableDataDto speciesDto = (SpeciesCompositionTableDataDto) dto.tableData();
-    assertThat(speciesDto.speciesRows()).hasSize(1);
-    assertThat(speciesDto.speciesRows().get(0).district().code()).isEqualTo("DPG");
+    assertThat(speciesDto.rows()).hasSize(1);
+    assertThat(speciesDto.rows().getFirst().district().code()).isEqualTo("DPG");
   }
 
   @Test
@@ -504,5 +504,83 @@ class DistrictVolumeMapperTest {
 
     // Assert
     assertThat(dto.dateOfUpload()).isNull();
+  }
+
+  @Test
+  @DisplayName(
+      "toDetailDto — should return empty InteriorDataDto when entity tableData is null")
+  void toDetailDto_handlesNullTableData_Interior() {
+    // Arrange — entity with null tableData (not set)
+    DistrictVolumeEntity entity = new DistrictVolumeEntity();
+    entity.setId(60L);
+    entity.setArea(Area.INTERIOR);
+    entity.setStartDate(LocalDate.of(2026, Month.NOVEMBER, 1));
+    entity.setTableLevelFactor(new BigDecimal("1.000"));
+    entity.setCreatedBy("MAPPER_TEST");
+    entity.setDateOfUpload(MOCK_UPLOAD_TIME);
+    // tableData intentionally left null
+
+    // Act
+    DistrictVolumeDetailDto dto = DistrictVolumeMapper.toDetailDto(entity);
+
+    // Assert
+    assertThat(dto.tableData()).isInstanceOf(InteriorDataDto.class);
+    InteriorDataDto interiorDto = (InteriorDataDto) dto.tableData();
+    assertThat(interiorDto.zones()).isEmpty();
+    assertThat(interiorDto.formulas()).isEmpty();
+  }
+
+  @Test
+  @DisplayName(
+      "toDetailDto — should return empty CoastDataDto when entity tableData is null")
+  void toDetailDto_handlesNullTableData_Coastal() {
+    // Arrange — entity with null tableData (not set)
+    DistrictVolumeEntity entity = new DistrictVolumeEntity();
+    entity.setId(61L);
+    entity.setArea(Area.COASTAL);
+    entity.setStartDate(LocalDate.of(2026, Month.DECEMBER, 1));
+    entity.setTableLevelFactor(new BigDecimal("1.000"));
+    entity.setCreatedBy("MAPPER_TEST");
+    entity.setDateOfUpload(MOCK_UPLOAD_TIME);
+    // tableData intentionally left null
+
+    // Act
+    DistrictVolumeDetailDto dto = DistrictVolumeMapper.toDetailDto(entity);
+
+    // Assert
+    assertThat(dto.tableData()).isInstanceOf(CoastDataDto.class);
+    CoastDataDto coastDto = (CoastDataDto) dto.tableData();
+    assertThat(coastDto.sections()).isEmpty();
+    assertThat(coastDto.formulas()).isEmpty();
+  }
+
+  @Test
+  @DisplayName(
+      "toEntityTableData — should use empty map when InteriorDataDto has null formulas")
+  void toEntityTableData_interior_nullFormulas() {
+    // Arrange
+    InteriorDataDto interiorDto = new InteriorDataDto(Collections.emptyList(), null);
+
+    // Act
+    TableData result = DistrictVolumeMapper.toEntityTableData(interiorDto);
+
+    // Assert
+    assertThat(result.zones()).isEmpty();
+    assertThat(result.formulas()).isEmpty();
+  }
+
+  @Test
+  @DisplayName(
+      "toEntityTableData — should use empty map when CoastDataDto has null formulas")
+  void toEntityTableData_coastal_nullFormulas() {
+    // Arrange
+    CoastDataDto coastDto = new CoastDataDto(Collections.emptyList(), null);
+
+    // Act
+    TableData result = DistrictVolumeMapper.toEntityTableData(coastDto);
+
+    // Assert
+    assertThat(result.sections()).isEmpty();
+    assertThat(result.formulas()).isEmpty();
   }
 }

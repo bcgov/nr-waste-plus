@@ -119,6 +119,8 @@ public class DistrictVolumeService {
 
     for (Area area : List.of(Area.INTERIOR, Area.COASTAL)) {
       districtVolumeRepository.findActiveByArea(area, currentDate)
+          .stream()
+          .findFirst()
           .filter(entity -> containsDistrict(entity.getTableData(), districtCode))
           .ifPresent(_ -> matchedAreas.add(area.name()));
     }
@@ -153,6 +155,8 @@ public class DistrictVolumeService {
 
     for (Area area : List.of(Area.INTERIOR, Area.COASTAL)) {
       districtVolumeRepository.findActiveByArea(area, currentDate)
+          .stream()
+          .findFirst()
           .ifPresent(entity -> {
             for (String districtCode : districtCodes) {
               if (containsDistrict(entity.getTableData(), districtCode)) {

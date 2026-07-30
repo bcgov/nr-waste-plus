@@ -3,25 +3,32 @@ package ca.bc.gov.nrs.hrs.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDataDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeCreateDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.ConfigType;
+import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictRow;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
+import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Section;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
+import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Zone;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -532,5 +539,245 @@ class DistrictVolumeServiceTest {
         .isEqualTo(new BigDecimal("1.200"));
     assertThat(result.heliMultiplier())
         .isEqualTo(new BigDecimal("1.500"));
+  }
+
+  // ---- helper methods ----
+
+  private DistrictVolumeEntity buildEntityWithDistricts(
+      Area area,
+      String... districtCodes) {
+
+    DistrictVolumeEntity entity = new DistrictVolumeEntity();
+    entity.setArea(area);
+    entity.setStartDate(LocalDate.of(2026, Month.JANUARY, 1));
+
+    List<DistrictRow> rows =
+        Arrays.stream(districtCodes)
+            .map(code ->
+                new DistrictRow(
+                    new CodeDescriptionDto(code, code + " Description"),
+                    BigDecimal.TEN,   // avoidableSawlog
+                    null,             // avoidableGrade4
+                    null,             // unavoidableGrade4
+                    null,             // avoidableHembalGradeU
+                    null,             // avoidableGradeY
+                    null,             // unavoidable
+                    BigDecimal.TEN    // total
+                ))
+            .toList();
+
+    TableData tableData =
+        area == Area.INTERIOR
+            ? new TableData(
+                List.of(new Zone("Zone 1", rows)),
+                null,   // sections
+                null,   // speciesRows
+                Map.of())
+            : new TableData(
+                null,   // zones
+                List.of(new Section("Section 1", rows)),
+                null,   // speciesRows
+                Map.of());
+
+    entity.setTableData(tableData);
+    return entity;
+  }
+
+  // ---- getAreasForDistrictCode tests ----
+
+  @Test
+  @DisplayName(
+      "getAreasForDistrictCode — should return empty list when district code is blank")
+  void getAreasForDistrictCode_returnsEmptyList_whenBlankInput() {
+
+    var result = districtVolumeService.getAreasForDistrictCode(" ");
+
+    assertThat(result).isEmpty();
+    verify(districtVolumeRepository, never())
+        .findActiveByArea(any(), any());
+  }
+
+  @Test
+  @DisplayName(
+      "getAreasForDistrictCode — should return both areas when district found in both")
+  void getAreasForDistrictCode_returnsBothAreas_whenFoundInBoth() {
+
+    DistrictVolumeEntity interiorEntity =
+        buildEntityWithDistricts(Area.INTERIOR, "DND");
+    DistrictVolumeEntity coastalEntity =
+        buildEntityWithDistricts(Area.COASTAL, "DND");
+
+    when(districtVolumeRepository.findActiveByArea(eq(Area.INTERIOR), any()))
+        .thenReturn(List.of(interiorEntity));
+    when(districtVolumeRepository.findActiveByArea(eq(Area.COASTAL), any()))
+        .thenReturn(List.of(coastalEntity));
+
+    var result = districtVolumeService.getAreasForDistrictCode("DND");
+
+    assertThat(result).containsExactly("INTERIOR", "COASTAL");
+  }
+
+  @Test
+  @DisplayName(
+      "getAreasForDistrictCode — should return only INTERIOR when district found only there")
+  void getAreasForDistrictCode_returnsOnlyInterior_whenFoundOnlyInInterior() {
+
+    DistrictVolumeEntity interiorEntity =
+        buildEntityWithDistricts(Area.INTERIOR, "DND");
+
+    when(districtVolumeRepository.findActiveByArea(eq(Area.INTERIOR), any()))
+        .thenReturn(List.of(interiorEntity));
+    when(districtVolumeRepository.findActiveByArea(eq(Area.COASTAL), any()))
+        .thenReturn(List.of());
+
+    var result = districtVolumeService.getAreasForDistrictCode("DND");
+
+    assertThat(result).containsExactly("INTERIOR");
+  }
+
+  @Test
+  @DisplayName(
+      "getAreasForDistrictCode — should return only COASTAL when district found only there")
+  void getAreasForDistrictCode_returnsOnlyCoastal_whenFoundOnlyInCoastal() {
+
+    DistrictVolumeEntity coastalEntity =
+        buildEntityWithDistricts(Area.COASTAL, "DND");
+
+    when(districtVolumeRepository.findActiveByArea(eq(Area.INTERIOR), any()))
+        .thenReturn(List.of());
+    when(districtVolumeRepository.findActiveByArea(eq(Area.COASTAL), any()))
+        .thenReturn(List.of(coastalEntity));
+
+    var result = districtVolumeService.getAreasForDistrictCode("DND");
+
+    assertThat(result).containsExactly("COASTAL");
+  }
+
+  @Test
+  @DisplayName(
+      "getAreasForDistrictCode — should return empty list when district code "
+          + "not found in any active config")
+  void getAreasForDistrictCode_returnsEmptyList_whenDistrictNotFound() {
+
+    DistrictVolumeEntity interiorEntity =
+        buildEntityWithDistricts(Area.INTERIOR, "OTHER");
+    DistrictVolumeEntity coastalEntity =
+        buildEntityWithDistricts(Area.COASTAL, "OTHER");
+
+    when(districtVolumeRepository.findActiveByArea(eq(Area.INTERIOR), any()))
+        .thenReturn(List.of(interiorEntity));
+    when(districtVolumeRepository.findActiveByArea(eq(Area.COASTAL), any()))
+        .thenReturn(List.of(coastalEntity));
+
+    var result = districtVolumeService.getAreasForDistrictCode("DND");
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  @DisplayName(
+      "getAreasForDistrictCode — should return empty list when no active config exists")
+  void getAreasForDistrictCode_returnsEmptyList_whenNoActiveConfig() {
+
+    when(districtVolumeRepository.findActiveByArea(eq(Area.INTERIOR), any()))
+        .thenReturn(List.of());
+    when(districtVolumeRepository.findActiveByArea(eq(Area.COASTAL), any()))
+        .thenReturn(List.of());
+
+    var result = districtVolumeService.getAreasForDistrictCode("DND");
+
+    assertThat(result).isEmpty();
+  }
+
+  // ---- getAreasForMultipleDistricts tests ----
+
+  @Test
+  @DisplayName(
+      "getAreasForMultipleDistricts — should return empty map when input is null")
+  void getAreasForMultipleDistricts_returnsEmptyMap_whenNullInput() {
+
+    var result = districtVolumeService.getAreasForMultipleDistricts(null);
+
+    assertThat(result).isEmpty();
+    verify(districtVolumeRepository, never())
+        .findActiveByArea(any(), any());
+  }
+
+  @Test
+  @DisplayName(
+      "getAreasForMultipleDistricts — should return empty map when input is empty")
+  void getAreasForMultipleDistricts_returnsEmptyMap_whenEmptyInput() {
+
+    var result = districtVolumeService.getAreasForMultipleDistricts(List.of());
+
+    assertThat(result).isEmpty();
+    verify(districtVolumeRepository, never())
+        .findActiveByArea(any(), any());
+  }
+
+  @Test
+  @DisplayName(
+      "getAreasForMultipleDistricts — should map multiple codes to correct areas")
+  void getAreasForMultipleDistricts_returnsCorrectMap_whenMixedMatches() {
+
+    DistrictVolumeEntity interiorEntity =
+        buildEntityWithDistricts(Area.INTERIOR, "DND", "DKM");
+    DistrictVolumeEntity coastalEntity =
+        buildEntityWithDistricts(Area.COASTAL, "DND", "DFO");
+
+    when(districtVolumeRepository.findActiveByArea(eq(Area.INTERIOR), any()))
+        .thenReturn(List.of(interiorEntity));
+    when(districtVolumeRepository.findActiveByArea(eq(Area.COASTAL), any()))
+        .thenReturn(List.of(coastalEntity));
+
+    var result =
+        districtVolumeService.getAreasForMultipleDistricts(
+            List.of("DND", "DKM", "DFO", "XYZ"));
+
+    assertThat(result).hasSize(4);
+    assertThat(result.get("DND")).containsExactly("INTERIOR", "COASTAL");
+    assertThat(result.get("DKM")).containsExactly("INTERIOR");
+    assertThat(result.get("DFO")).containsExactly("COASTAL");
+    assertThat(result.get("XYZ")).isEmpty();
+  }
+
+  @Test
+  @DisplayName(
+      "getAreasForMultipleDistricts — should return empty lists when no "
+          + "active config exists")
+  void getAreasForMultipleDistricts_returnsEmptyLists_whenNoActiveConfig() {
+
+    when(districtVolumeRepository.findActiveByArea(eq(Area.INTERIOR), any()))
+        .thenReturn(List.of());
+    when(districtVolumeRepository.findActiveByArea(eq(Area.COASTAL), any()))
+        .thenReturn(List.of());
+
+    var result =
+        districtVolumeService.getAreasForMultipleDistricts(
+            List.of("DND", "DKM"));
+
+    assertThat(result).hasSize(2);
+    assertThat(result.get("DND")).isEmpty();
+    assertThat(result.get("DKM")).isEmpty();
+  }
+
+  @Test
+  @DisplayName(
+      "getAreasForMultipleDistricts — should not fail when district codes "
+          + "overlap and case differs")
+  void getAreasForMultipleDistricts_handlesCaseInsensitiveMatch() {
+
+    DistrictVolumeEntity coastalEntity =
+        buildEntityWithDistricts(Area.COASTAL, "DND");
+
+    when(districtVolumeRepository.findActiveByArea(eq(Area.INTERIOR), any()))
+        .thenReturn(List.of());
+    when(districtVolumeRepository.findActiveByArea(eq(Area.COASTAL), any()))
+        .thenReturn(List.of(coastalEntity));
+
+    var result =
+        districtVolumeService.getAreasForMultipleDistricts(List.of("dnd"));
+
+    assertThat(result.get("dnd")).containsExactly("COASTAL");
   }
 }

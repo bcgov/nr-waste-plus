@@ -26,7 +26,8 @@ public interface DistrictVolumeRepository
   /**
    * Finds the most recent entry for the specified config type and area.
    */
-  Optional<DistrictVolumeEntity> findTopByConfigTypeAndAreaOrderByStartDateDesc(ConfigType configType, Area area);
+  Optional<DistrictVolumeEntity> findTopByConfigTypeAndAreaOrderByStartDateDesc(
+      ConfigType configType, Area area);
 
   /**
    * Retrieves a paginated list of records filtered by area (Warning: mixes ConfigTypes).
@@ -41,7 +42,8 @@ public interface DistrictVolumeRepository
    * @param pageable pagination and sorting information
    * @return paginated list of matching entities
    */
-  Page<DistrictVolumeEntity> findAllByConfigTypeAndArea(ConfigType configType, Area area, Pageable pageable);
+  Page<DistrictVolumeEntity> findAllByConfigTypeAndArea(
+      ConfigType configType, Area area, Pageable pageable);
 
   /**
    * Retrieves the currently active record for the specified config type and area.
@@ -64,8 +66,9 @@ public interface DistrictVolumeRepository
       "SELECT d FROM DistrictVolumeEntity d "
           + "WHERE d.area = :area "
           + "AND d.startDate <= :currentDate "
-          + "AND (d.endDate IS NULL OR d.endDate >= :currentDate)")
-  Optional<DistrictVolumeEntity> findActiveByArea(
+          + "AND (d.endDate IS NULL OR d.endDate >= :currentDate) "
+          + "ORDER BY d.startDate DESC")
+  List<DistrictVolumeEntity> findActiveByArea(
       @Param("area") Area area,
       @Param("currentDate") LocalDate currentDate);
 
@@ -82,7 +85,8 @@ public interface DistrictVolumeRepository
    * @param area area filter
    * @return ordered list of open-ended entries
    */
-  List<DistrictVolumeEntity> findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(ConfigType configType, Area area);
+  List<DistrictVolumeEntity> findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+      ConfigType configType, Area area);
 
   /**
    * Retrieves a paginated list of records filtered by config type.

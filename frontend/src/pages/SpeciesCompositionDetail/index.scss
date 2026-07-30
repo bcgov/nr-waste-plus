@@ -1,15 +1,42 @@
 @use '@carbon/react/scss/spacing' as *;
 @use '@carbon/react/scss/breakpoint' as *;
 
-.species-composition-detail-column__banner {
-  display: flex;
-  flex-direction: column;
-  margin-top: $spacing-08;
-  gap: $spacing-08;
+.species-composition-detail-column {
+  &__banner {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-08;
 
-  @include breakpoint-down(md) {
-    margin-top: $spacing-01;
-    padding: $spacing-05 $spacing-07;
-    flex-shrink: 0;
+    @include breakpoint-down(md) {
+      margin-top: $spacing-01;
+      padding: $spacing-05 $spacing-07;
+      flex-shrink: 0;
+    }
+  }
+
+  &__start-date,
+  &__end-date,
+  &__uploaded-by,
+  &__date-of-upload {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__notification {
+    display: flex;
+    flex-direction: column;
+    margin-top: $spacing-08; /* added for spacing similar to district volume */
+  }
+
+  &__matrix {
+    display: flex;
+    flex-direction: column;
+    margin-top: $spacing-08; /* updated from $spacing-06 to match district volume spacing */
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    margin-top: $spacing-06;
   }
 }

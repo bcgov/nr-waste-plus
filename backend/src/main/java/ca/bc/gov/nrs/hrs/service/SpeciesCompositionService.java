@@ -25,6 +25,12 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Service for managing species composition records.
+ *
+ * <p>Provides operations for listing, retrieving, and creating species
+ * composition records, including validation and business rule enforcement.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -32,6 +38,14 @@ public class SpeciesCompositionService {
 
   private final DistrictVolumeRepository districtVolumeRepository;
 
+  /**
+   * Retrieves a paginated list of species composition records, optionally
+   * filtered by area.
+   *
+   * @param areaOptional optional area filter
+   * @param pageable     pagination and sorting information
+   * @return paginated list of species composition list item DTOs
+   */
   @Transactional(readOnly = true)
   public Page<DistrictVolumeListItemDto> getSpeciesCompositions(
       Optional<String> areaOptional,
@@ -54,6 +68,14 @@ public class SpeciesCompositionService {
     return entities.map(DistrictVolumeMapper::toListItemDto);
   }
 
+  /**
+   * Retrieves a single species composition record by its ID.
+   *
+   * @param id the record identifier
+   * @return the species composition detail DTO
+   * @throws org.springframework.web.server.ResponseStatusException with
+   *         {@code NOT_FOUND} if no record exists for the given ID
+   */
   @Transactional(readOnly = true)
   public DistrictVolumeDetailDto getSpeciesCompositionById(Long id) {
     log.debug("Fetching species composition detail for ID: {}", id);
@@ -66,6 +88,21 @@ public class SpeciesCompositionService {
     return DistrictVolumeMapper.toDetailDto(entity);
   }
 
+  /**
+   * Creates a new species composition record.
+   *
+   * <p>Validates payload consistency with the specified area, ensures the
+   * start date is in the future and chronologically after any existing
+   * open-ended records, closes any currently open-ended record, and
+   * persists the new entry.
+   *
+   * @param currentUser the authenticated user creating the record
+   * @param createDto   the creation payload
+   * @return the persisted species composition detail DTO
+   * @throws org.springframework.web.server.ResponseStatusException with
+   *         {@code BAD_REQUEST}, {@code CONFLICT}, or
+   *         {@code UNPROCESSABLE_CONTENT} on validation failures
+   */
   @Transactional(isolation = Isolation.SERIALIZABLE)
   public DistrictVolumeDetailDto createSpeciesComposition(
       String currentUser,
@@ -150,7 +187,7 @@ public class SpeciesCompositionService {
         // Valid structural combination; do nothing and allow processing to continue.
       }
 
-      case SpeciesCompositionTableDataDto ignored -> {
+      case SpeciesCompositionTableDataDto _ -> {
         // Species composition data is area-agnostic; valid for any area type.
       }
 
