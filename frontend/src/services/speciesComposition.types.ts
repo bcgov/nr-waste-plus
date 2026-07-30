@@ -5,7 +5,7 @@ import { codeDescriptionSchema } from './reportingUnit.types';
 import { pageableResponseSchema } from '@/components/Form/TableResource/schemas';
 
 // ─── SPECIES COLUMN KEYS ─────────────────────────────────────────────────────
-/** The 19 abbreviated species codes used in the spreadsheet and API. */
+/** The species codes used in the spreadsheet and API. */
 export const SPECIES_COLUMNS = [
   'AL',
   'AR',
@@ -20,8 +20,11 @@ export const SPECIES_COLUMNS = [
   'LA',
   'LO',
   'MA',
+  'OT',
+  'R',
   'SP',
   'UU',
+  'WA',
   'WB',
   'WH',
   'WI',
@@ -46,12 +49,41 @@ export const SPECIES_LABELS: Record<SpeciesKey, string> = {
   LA: 'LA',
   LO: 'LO',
   MA: 'MA',
+  OT: 'OT',
+  R: 'R',
   SP: 'SP',
   UU: 'UU',
+  WA: 'WA',
   WB: 'WB',
   WH: 'WH',
   WI: 'WI',
   YE: 'YE',
+};
+
+/** Full species names for tooltip display, keyed by {@link SpeciesKey}. */
+export const SPECIES_DESCRIPTIONS: Record<SpeciesKey, string> = {
+  AL: 'Alder',
+  AR: 'Arbutus',
+  AS: 'Aspen',
+  BA: 'Balsam',
+  BI: 'Birch',
+  CE: 'Cedar',
+  CO: 'Cottonwood',
+  CY: 'Cypress',
+  FI: 'Fir',
+  HE: 'Hemlock',
+  LA: 'Larch',
+  LO: 'Lodge-Pine',
+  MA: 'Maple',
+  OT: 'Other Species',
+  R: 'Rejects',
+  SP: 'Spruce',
+  UU: 'Yew',
+  WA: 'Waste',
+  WB: 'White Bark Pine',
+  WH: 'White Pine',
+  WI: 'Willow',
+  YE: 'Yellow Pine',
 };
 
 // ─── ROW ─────────────────────────────────────────────────────────────────────

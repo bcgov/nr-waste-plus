@@ -1,3 +1,4 @@
+import { useParams } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -88,8 +89,11 @@ const createData = (id = 42): SpeciesCompositionDetail =>
             LA: 0,
             LO: 0,
             MA: 0,
+            OT: 0,
+            R: 0,
             SP: 43,
             UU: 0,
+            WA: 0,
             WB: 0,
             WH: 0,
             WI: 0,
@@ -198,5 +202,37 @@ describe('SpeciesCompositionDetailPage', () => {
     expect(screen.getByTestId('breadcrumb-Species composition').getAttribute('href')).toBe(
       '/configuration/species-composition',
     );
+  });
+
+  it('passes the numeric id derived from route params to the query hook', () => {
+    // The default useParams mock returns "42" (string).
+    vi.mocked(useSpeciesCompositionDetailQuery).mockReturnValue({
+      data: null,
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof useSpeciesCompositionDetailQuery>);
+
+    render(<SpeciesCompositionDetailPage />);
+
+    expect(useSpeciesCompositionDetailQuery).toHaveBeenCalledWith(42, {
+      notificationTarget: 'species-composition-detail',
+    });
+  });
+
+  it('forwards NaN when the route id cannot be parsed as a number', () => {
+    // Override the useParams mock for this test only.
+    vi.mocked(useParams).mockReturnValue({ id: 'not-a-number' });
+
+    vi.mocked(useSpeciesCompositionDetailQuery).mockReturnValue({
+      data: null,
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof useSpeciesCompositionDetailQuery>);
+
+    render(<SpeciesCompositionDetailPage />);
+
+    expect(useSpeciesCompositionDetailQuery).toHaveBeenCalledWith(NaN, {
+      notificationTarget: 'species-composition-detail',
+    });
   });
 });

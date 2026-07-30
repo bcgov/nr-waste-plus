@@ -12,6 +12,7 @@ import type { ReactNode } from 'react';
 interface MatrixHeader {
   key: string;
   header: string;
+  headerTooltip?: string;
   renderAs?: (value: unknown) => ReactNode;
 }
 
@@ -30,7 +31,19 @@ const TableResourceMock = vi.hoisted(() =>
   )),
 );
 
+const useDistrictOptionsQueryMock = vi.hoisted(() =>
+  vi.fn(() => ({
+    data: [
+      { code: 'DCC', description: 'Cariboo-Chilcotin' },
+      { code: 'DCS', description: 'Coast' },
+    ],
+  })),
+);
+
 vi.mock('@/components/Form/TableResource', () => ({ default: TableResourceMock }));
+vi.mock('@/config/react-query/hooks', () => ({
+  useDistrictOptionsQuery: useDistrictOptionsQueryMock,
+}));
 
 // ============================================================================
 // Helpers
@@ -126,7 +139,14 @@ describe('SpeciesCompositionDetailMatrix', () => {
     expect(getMockCallArgs().content.content).toHaveLength(2);
   });
 
-  it('should pass district column with CodeDescriptionTag renderAs', () => {
+  it('should fetch district options via useDistrictOptionsQuery', () => {
+    const tableData = createTableData();
+    render(<SpeciesCompositionDetailMatrix rows={tableData.rows} />);
+
+    expect(useDistrictOptionsQueryMock).toHaveBeenCalledOnce();
+  });
+
+  it('should pass district column with TooltipTag renderAs', () => {
     const tableData = createTableData();
     render(<SpeciesCompositionDetailMatrix rows={tableData.rows} />);
 
@@ -151,6 +171,20 @@ describe('SpeciesCompositionDetailMatrix', () => {
       const header = headers.find((h) => h.key === col);
       expect(header).toBeTruthy();
       expect(header?.renderAs).toBeUndefined();
+    }
+  });
+
+  it('should set headerTooltip on each species column', () => {
+    const tableData = createTableData();
+    render(<SpeciesCompositionDetailMatrix rows={tableData.rows} />);
+
+    const { headers } = getMockCallArgs();
+    const speciesHeaders = headers.filter((h) => h.key.startsWith('species.'));
+
+    expect(speciesHeaders.length).toBeGreaterThan(0);
+    for (const header of speciesHeaders) {
+      expect(header.headerTooltip).toBeTruthy();
+      expect(typeof header.headerTooltip).toBe('string');
     }
   });
 
