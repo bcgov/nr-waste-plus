@@ -121,7 +121,7 @@ jobs:
             parameters:
               -p FRONTEND_URL=${{ inputs.url }}
               -p CONFIG_MAP="${{ inputs.configmap-backend }}"
-              -p POSTGRES_HOST="${{ inputs.zone }}-nr-waste-plus-database"
+              -p POSTGRES_HOST="nr-waste-plus-${{ inputs.zone }}-database"
               -p POSTGRES_PORT=5432
           - name: legacy
             overwrite: true

@@ -55,6 +55,7 @@ parameters:
     generate: expression
   - name: POSTGRES_HOST
     description: Postgres host
+    value: "${NAME}-${ZONE}-database"
   - name: POSTGRES_PORT
     description: Postgres port
     value: "5432"
