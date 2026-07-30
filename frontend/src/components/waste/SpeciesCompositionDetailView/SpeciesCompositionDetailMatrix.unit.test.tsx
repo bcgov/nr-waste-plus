@@ -69,8 +69,11 @@ const createTableData = () => ({
         LA: 0,
         LO: 0,
         MA: 0,
+        OT: 0,
+        R: 0,
         SP: 0,
         UU: 0,
+        WA: 0,
         WB: 0,
         WH: 0,
         WI: 0,
@@ -93,8 +96,11 @@ const createTableData = () => ({
         LA: 0,
         LO: 0,
         MA: 0,
+        OT: 0,
+        R: 0,
         SP: 10,
         UU: 0,
+        WA: 0,
         WB: 0,
         WH: 0,
         WI: 0,
@@ -188,11 +194,11 @@ describe('SpeciesCompositionDetailMatrix', () => {
     }
   });
 
-  it('should have correct number of headers (1 district + 19 species columns)', () => {
+  it('should have correct number of headers (1 district + 22 species columns)', () => {
     const tableData = createTableData();
     render(<SpeciesCompositionDetailMatrix rows={tableData.rows} />);
 
-    expect(getMockCallArgs().headers.length).toBe(20);
+    expect(getMockCallArgs().headers.length).toBe(23);
   });
 
   it('should include all expected column keys', () => {
@@ -217,8 +223,11 @@ describe('SpeciesCompositionDetailMatrix', () => {
       'species.LA',
       'species.LO',
       'species.MA',
+      'species.OT',
+      'species.R',
       'species.SP',
       'species.UU',
+      'species.WA',
       'species.WB',
       'species.WH',
       'species.WI',
