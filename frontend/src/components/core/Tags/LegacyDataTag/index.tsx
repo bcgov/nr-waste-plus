@@ -1,7 +1,8 @@
 import { Box } from '@carbon/icons-react';
-import { Tag, Tooltip } from '@carbon/react';
+import { Tag } from '@carbon/react';
 import { type FC } from 'react';
 
+import TooltipTag from '@/components/core/Tags/TooltipTag';
 import './index.scss';
 import { env } from '@/env';
 
@@ -53,8 +54,8 @@ const LegacyDataTag: FC<LegacyDataTagProps> = ({ url, label = 'Legacy data' }) =
   );
 
   return (
-    <Tooltip
-      description="This data originates from a legacy system. Click to view the source record."
+    <TooltipTag
+      tooltip="This data originates from a legacy system. Click to view the source record."
       align="bottom"
     >
       <a
@@ -65,7 +66,7 @@ const LegacyDataTag: FC<LegacyDataTagProps> = ({ url, label = 'Legacy data' }) =
       >
         {tag}
       </a>
-    </Tooltip>
+    </TooltipTag>
   );
 };
 

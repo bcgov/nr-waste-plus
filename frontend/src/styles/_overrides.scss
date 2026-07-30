@@ -718,4 +718,16 @@ div:has(.#{variables.$bcgov-prefix}--header) ~ .#{variables.$bcgov-prefix}--cont
   font-weight: var(--cds-heading-compact-01-font-weight, 600);
 }
 
+/* ------------------ Popover / Tooltip z-index -----------------
+- Carbon's popover (used by DefinitionTooltip, Tooltip) uses z('floating') = 6000
+- SideNav uses z('header') = 8000
+- Tooltips behind the sidebar are clipped/hidden
+- Override popover z-index to be above side-nav but below modal (9000)
+-------------------------------------------------------------- */
+.#{variables.$bcgov-prefix}--popover-content {
+  z-index: 8500;
+}
 
+.#{variables.$bcgov-prefix}--popover-caret {
+  z-index: 8500;
+}

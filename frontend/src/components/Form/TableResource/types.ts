@@ -14,6 +14,9 @@ export type TableHeaderType<T, K extends NestedKeyOf<T> = NestedKeyOf<T>> = {
   // If not provided, falls back to using the key. Use this when you need multiple columns
   // with the same data property (key) but different renderings.
   id?: string;
+  // Tooltip text displayed on hover over the column header.
+  // Useful for providing descriptions or additional context for abbreviated headers.
+  headerTooltip?: string;
   // renderAs function should expect as argument the value of the key in T
   // and return a React node to be rendered in the table cell
   // This is useful for custom rendering, like in the StatusTag component
