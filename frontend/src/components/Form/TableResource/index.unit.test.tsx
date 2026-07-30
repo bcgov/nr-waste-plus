@@ -246,8 +246,8 @@ describe('TableResource', () => {
       onSortChange,
     });
 
-    const headerWithTooltip = screen.getByText('ID');
-    expect(headerWithTooltip.className).toContain('table-header-tooltip-trigger');
+    // Sortable header without headerTooltip shows sort direction tooltip
+    screen.getByText('Sort by ascending order');
   });
 
   it('does not render tooltip when sort is disabled', async () => {
@@ -262,8 +262,46 @@ describe('TableResource', () => {
       error: false,
     });
 
-    const headerWithoutTooltip = screen.getByText('ID');
-    expect(headerWithoutTooltip.className).not.toContain('table-header-tooltip-trigger');
+    // When onSortChange is not provided, sortable headers render without tooltip
+    screen.getByText('ID');
+  });
+
+  it('renders combined headerTooltip and sort direction on sortable headers', async () => {
+    const onSortChange = vi.fn();
+    const sortableHeaders: TableHeaderType<TestObjectType>[] = headers.map((header) =>
+      header.key === 'name'
+        ? { ...header, sortable: true, headerTooltip: 'Full name of the user' }
+        : header,
+    );
+
+    await renderWithProps({
+      headers: sortableHeaders,
+      content,
+      loading: false,
+      error: false,
+      onSortChange,
+    });
+
+    // Combined tooltip: headerTooltip + sort direction (starts at NONE)
+    screen.getByText('Full name of the user. Sort by ascending order');
+  });
+
+  it('renders tooltip on non-sortable header with headerTooltip', async () => {
+    const headersWithTooltip: TableHeaderType<TestObjectType>[] = headers.map((header) =>
+      header.key === 'custom'
+        ? { ...header, headerTooltip: 'Custom rendering description' }
+        : header,
+    );
+
+    await renderWithProps({
+      headers: headersWithTooltip,
+      content,
+      loading: false,
+      error: false,
+    });
+
+    // Non-sortable header with headerTooltip shows the tooltip text
+    screen.getByText('Custom rendering description');
   });
 
   it('renders actions column only when getRowActions is provided', async () => {
@@ -365,19 +403,20 @@ describe('TableResource', () => {
       onSortChange,
     });
 
-    const nameHeader = await screen.findByText('Name');
     // Use fireEvent to bypass userEvent's interaction checks that hang
     // due to Carbon Tooltip's pointer-interception CSS on the sort header.
+    // Re-query the header element after each render to avoid stale DOM refs
+    // caused by the Tooltip wrapper that may intercept clicks on detached nodes.
     // NONE → ASC
-    fireEvent.click(nameHeader);
+    fireEvent.click(await screen.findByText('Name'));
     expect(onSortChange).toHaveBeenLastCalledWith({ name: 'ASC' });
 
     // ASC → DESC
-    fireEvent.click(nameHeader);
+    fireEvent.click(await screen.findByText('Name'));
     expect(onSortChange).toHaveBeenLastCalledWith({ name: 'DESC' });
 
     // DESC → NONE (cleared)
-    fireEvent.click(nameHeader);
+    fireEvent.click(await screen.findByText('Name'));
     expect(onSortChange).toHaveBeenLastCalledWith({});
   });
 

@@ -1,7 +1,8 @@
 import { Construction } from '@carbon/icons-react';
-import { Tag, Tooltip } from '@carbon/react';
+import { Tag } from '@carbon/react';
 import { type FC } from 'react';
 
+import TooltipTag from '@/components/core/Tags/TooltipTag';
 import './index.scss';
 
 export type UnderConstructionTagProps = {
@@ -19,14 +20,14 @@ export type UnderConstructionTagProps = {
  * @returns {JSX.Element} A styled tag wrapped in a tooltip
  */
 const UnderConstructionTag: FC<UnderConstructionTagProps> = ({ type = 'feature' }) => (
-  <Tooltip
-    label={`This ${type} is under development. Features may be incomplete or display incorrect data.`}
+  <TooltipTag
+    tooltip={`This ${type} is under development. Features may be incomplete or display incorrect data.`}
     align="bottom"
   >
     <Tag className="under-construction-tag" type="cyan" size="md" renderIcon={Construction}>
       Under construction
     </Tag>
-  </Tooltip>
+  </TooltipTag>
 );
 
 export default UnderConstructionTag;
