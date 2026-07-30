@@ -1,6 +1,7 @@
-import { Tag, Tooltip } from '@carbon/react';
+import { Tag } from '@carbon/react';
 import { type FC } from 'react';
 
+import TooltipTag from '@/components/core/Tags/TooltipTag';
 import './index.scss';
 
 /**
@@ -85,9 +86,9 @@ const ColorTag: FC<ColorTagProps> = ({ value, colorMap, showTooltip = true }) =>
   );
 
   return showTooltip && tooltipLabel ? (
-    <Tooltip label={tooltipLabel} align="top" autoAlign>
+    <TooltipTag tooltip={tooltipLabel} align="top" autoAlign>
       {tag}
-    </Tooltip>
+    </TooltipTag>
   ) : (
     tag
   );

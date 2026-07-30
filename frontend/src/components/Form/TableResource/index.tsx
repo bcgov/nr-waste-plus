@@ -11,7 +11,6 @@ import {
   TableRow,
   TableToolbar,
   TableToolbarContent,
-  Tooltip,
 } from '@carbon/react';
 import { Children, useEffect, useRef, useState, type ReactNode } from 'react';
 
@@ -31,6 +30,7 @@ import { useTableToolbar } from './useTableToolbar';
 import type { NestedKeyOf, SortDirectionType } from '@/services/types';
 
 import EmptySection from '@/components/core/EmptySection';
+import TooltipTag from '@/components/core/Tags/TooltipTag';
 
 import './index.scss';
 
@@ -289,14 +289,19 @@ const TableResource = <T,>({
                   }
                   onClick={() => handleSortClick(header.key)}
                 >
-                  {Boolean(header.sortable) && Boolean(onSortChange) ? (
-                    <Tooltip
-                      label={getSortTooltip(sortState[header.key] ?? 'NONE')}
-                      align="top"
-                      autoAlign
+                  {(Boolean(header.sortable) && Boolean(onSortChange)) || header.headerTooltip ? (
+                    <TooltipTag
+                      tooltip={
+                        Boolean(header.sortable) && Boolean(onSortChange) && header.headerTooltip
+                          ? `${header.headerTooltip}. ${getSortTooltip(sortState[header.key] ?? 'NONE')}`
+                          : Boolean(header.sortable) && Boolean(onSortChange)
+                            ? getSortTooltip(sortState[header.key] ?? 'NONE')
+                            : (header.headerTooltip ?? '')
+                      }
+                      align="bottom"
                     >
-                      <strong className="table-header-tooltip-trigger">{header.header}</strong>
-                    </Tooltip>
+                      <strong>{header.header}</strong>
+                    </TooltipTag>
                   ) : (
                     <strong>{header.header}</strong>
                   )}

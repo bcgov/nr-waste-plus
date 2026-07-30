@@ -90,11 +90,9 @@ describe('LegacyDataTag', () => {
       screen.getByText(/click to view the source record/i);
     });
 
-    it('positions the tooltip at the bottom', () => {
+    it('renders the tooltip text in the document', () => {
       render(<LegacyDataTag url="/record/1" />);
-      // The link should be aria-describedby the tooltip
-      const link = screen.getByRole('link');
-      expect(link.getAttribute('aria-describedby')).not.toBeNull();
+      screen.getByText(/this data originates from a legacy system/i);
     });
   });
 
