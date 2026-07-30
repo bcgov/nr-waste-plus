@@ -92,9 +92,9 @@ test.describe('Species Composition Detail Page', () => {
       await page.goto('/configuration/species-composition/42');
       await page.waitForLoadState('domcontentloaded');
 
-      // District column with CodeDescriptionTag format
-      await expect(page.getByText('DCC - Cariboo-Chilcotin')).toBeVisible();
-      await expect(page.getByText('DCS - Coast')).toBeVisible();
+      // District column codes with tooltip (full description visible on hover via TooltipTag)
+      await expect(page.getByRole('cell', { name: 'DCC' })).toBeVisible();
+      await expect(page.getByRole('cell', { name: 'DCS' })).toBeVisible();
 
       // Species column headers (2-letter codes)
       // Use { exact: true } to avoid matching "Configuration", "Coast", "Species composition", etc.
