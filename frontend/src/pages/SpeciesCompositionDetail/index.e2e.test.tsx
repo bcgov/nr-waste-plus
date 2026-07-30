@@ -88,13 +88,17 @@ test.describe('Species Composition Detail Page', () => {
         'configuration/species-compositions/42',
         'species-composition/detail.json',
       );
+      await mockApiResponsesWithStub(page, 'codes/districts', 'codes/districts.json');
 
       await page.goto('/configuration/species-composition/42');
       await page.waitForLoadState('domcontentloaded');
 
       // District column codes with tooltip (full description visible on hover via TooltipTag)
-      await expect(page.getByRole('cell', { name: 'DCC' })).toBeVisible();
-      await expect(page.getByRole('cell', { name: 'DCS' })).toBeVisible();
+      // Use getByText('DCC') not getByRole('cell', { name: 'DCC' }) — the Carbon
+      // Tooltip trigger element (role="button") inside the cell consumes the text
+      // for its own accessible name, so the cell's accessible name is empty.
+      await expect(page.getByText('DCC')).toBeVisible();
+      await expect(page.getByText('DCS')).toBeVisible();
 
       // Species column headers (2-letter codes)
       // Use { exact: true } to avoid matching "Configuration", "Coast", "Species composition", etc.
