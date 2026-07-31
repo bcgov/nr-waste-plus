@@ -24,9 +24,6 @@ parameters:
     value: bcgov
   - name: DOMAIN
     value: apps.silver.devops.gov.bc.ca
-  - name: REGISTRY
-    description: Container registry to import from (internal is image-registry.openshift-image-registry.svc:5000)
-    value: ghcr.io
   - name: MIN_REPLICAS
     description: Minimum replicas for the horizontal pod autoscaler
     value: "2"
@@ -170,6 +167,15 @@ objects:
                   port: 8080
                   scheme: HTTP
                 initialDelaySeconds: 10
+                periodSeconds: 30
+                timeoutSeconds: 5
+              livenessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /actuator/health
+                  port: 8080
+                  scheme: HTTP
+                initialDelaySeconds: 60
                 periodSeconds: 30
                 timeoutSeconds: 5
               lifecycle:
