@@ -5,10 +5,22 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeNameDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientAutocompleteResultDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientLocationDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDataDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDistrictRowDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastSectionDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeCreateDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeListItemDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDistrictRowDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorZoneDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.SpeciesCompositionTableDataDto;
+import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.TableDataDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import ca.bc.gov.nrs.hrs.entity.speciescomposition.SpeciesCompositionRow;
 import ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity;
 import ca.bc.gov.nrs.hrs.entity.users.UserPreferenceEntity;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
@@ -64,7 +76,19 @@ import tools.jackson.databind.json.JsonMapper.Builder;
     ReportingUnitSearchParametersDto.class,
     HttpSecurity.class,
     ReportingUnitDetailsDto.class,
-    ReportingUnitLegacyDetailsDto.class
+    ReportingUnitLegacyDetailsDto.class,
+    DistrictVolumeCreateDto.class,
+    DistrictVolumeDetailDto.class,
+    DistrictVolumeListItemDto.class,
+    TableDataDto.class,
+    InteriorDataDto.class,
+    InteriorZoneDto.class,
+    InteriorDistrictRowDto.class,
+    CoastDataDto.class,
+    CoastSectionDto.class,
+    CoastDistrictRowDto.class,
+    SpeciesCompositionTableDataDto.class,
+    SpeciesCompositionRow.class
 })
 @EnableJpaAuditing(auditorAwareRef = "databaseAuditor")
 public class GlobalConfiguration {
