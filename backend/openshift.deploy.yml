@@ -111,8 +111,11 @@ objects:
                   value: http://${NAME}-${ZONE}-legacy                
                 - name: SELF_URI
                   value: https://${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}                
-                - name: POSTGRES_HOST
-                  value: ${POSTGRES_HOST}
+                - name: POSTGRES_HOST                  
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: database-host
                 - name: POSTGRES_PORT
                   value: ${POSTGRES_PORT}
                 - name: POSTGRES_DATABASE
