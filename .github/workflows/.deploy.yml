@@ -89,6 +89,9 @@ jobs:
             -p URL_FRONTEND=${{ inputs.url }}
             -p LANDING_URL=${{ inputs.url }}
             -p DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            -p POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            -p POSTGRES_USERNAME=${{ secrets.POSTGRES_USERNAME }}
+            -p POSTGRES_DB=${{ secrets.POSTGRES_DB }}
             -p SPRING_PROFILES_ACTIVE=${{ secrets.OC_NAMESPACE }}
             -p VITE_ZONE=${{ inputs.zone || 'dev' }}
             -p VITE_LEGACY_BASE_URL=${{ secrets.GREEN_DOMAIN }}
@@ -121,8 +124,8 @@ jobs:
             parameters:
               -p FRONTEND_URL=${{ inputs.url }}
               -p CONFIG_MAP="${{ inputs.configmap-backend }}"
-              -p POSTGRES_HOST="nr-waste-plus-${{ inputs.zone }}-database"
-              -p POSTGRES_PORT=5432
+              -p POSTGRES_HOST="${{ secrets.POSTGRES_HOST }}"
+              -p POSTGRES_PORT=5440
           - name: legacy
             overwrite: true
             parameters:
