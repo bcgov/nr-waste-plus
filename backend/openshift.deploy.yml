@@ -24,9 +24,6 @@ parameters:
     value: bcgov
   - name: DOMAIN
     value: apps.silver.devops.gov.bc.ca
-  - name: REGISTRY
-    description: Container registry to import from (internal is image-registry.openshift-image-registry.svc:5000)
-    value: ghcr.io
   - name: MIN_REPLICAS
     description: Minimum replicas for the horizontal pod autoscaler
     value: "2"
@@ -53,6 +50,12 @@ parameters:
     description: Random expression to make sure deployments update
     from: "[a-zA-Z0-9]{32}"
     generate: expression
+  - name: POSTGRES_HOST
+    description: Postgres host
+    value: "${NAME}-${ZONE}-database"
+  - name: POSTGRES_PORT
+    description: Postgres port
+    value: "5432"
 objects:
   - kind: Deployment
     apiVersion: apps/v1
@@ -109,7 +112,9 @@ objects:
                 - name: SELF_URI
                   value: https://${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}                
                 - name: POSTGRES_HOST
-                  value: ${NAME}-${ZONE}-database                
+                  value: ${POSTGRES_HOST}
+                - name: POSTGRES_PORT
+                  value: ${POSTGRES_PORT}
                 - name: POSTGRES_DATABASE
                   valueFrom:
                     secretKeyRef:
@@ -162,6 +167,15 @@ objects:
                   port: 8080
                   scheme: HTTP
                 initialDelaySeconds: 10
+                periodSeconds: 30
+                timeoutSeconds: 5
+              livenessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /actuator/health
+                  port: 8080
+                  scheme: HTTP
+                initialDelaySeconds: 60
                 periodSeconds: 30
                 timeoutSeconds: 5
               lifecycle:
