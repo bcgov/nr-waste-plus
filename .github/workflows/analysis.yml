@@ -124,6 +124,103 @@ jobs:
           sarif_file: ${{ steps.locate.outputs.path }}
           category: "cve-lite-${{ matrix.folder }}"
 
+  npm-audit:
+    name: npm Audit (${{ matrix.folder }})
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        folder: [cypress, frontend]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: ${{ matrix.folder }}/package-lock.json
+      - name: Run npm audit (${{ matrix.folder }})
+        working-directory: ${{ matrix.folder }}
+        run: npm audit --package-lock-only --audit-level=high
+
+  sbom-node:
+    name: Node SBOM (${{ matrix.folder }})
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        folder: [cypress, frontend]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: ${{ matrix.folder }}/package-lock.json
+      - name: Install CycloneDX Node generator
+        run: npm install --global @cyclonedx/cyclonedx-npm@1.20.0
+      - name: Generate CycloneDX SBOM
+        working-directory: ${{ matrix.folder }}
+        run: cyclonedx-npm --package-lock-only --output-format JSON --output-file "../sbom-${{ matrix.folder }}.json"
+      - name: Validate SBOM JSON
+        run: |
+          node -e "const fs=require('fs'); const p='sbom-${{ matrix.folder }}.json'; let b; try { b=JSON.parse(fs.readFileSync(p,'utf8')); } catch (e) { console.error('Failed to read or parse ' + p + ': ' + e.message); process.exit(1); } if (!b.bomFormat || b.bomFormat !== 'CycloneDX') { console.error(p + ' is not a valid CycloneDX BOM (bomFormat=' + b.bomFormat + ')'); process.exit(1); }"
+      - name: Upload Node SBOM
+        uses: actions/upload-artifact@v7
+        with:
+          name: sbom-${{ matrix.folder }}
+          path: sbom-${{ matrix.folder }}.json
+          if-no-files-found: error
+          retention-days: 30
+
+  sbom-java:
+    name: Java SBOM
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "22"
+          cache: maven
+      - name: Generate backend CycloneDX SBOM
+        working-directory: backend
+        run: ./mvnw -B validate -Dcheckstyle.skip=false --file pom.xml
+      - name: Generate legacy CycloneDX SBOM
+        working-directory: legacy
+        run: ./mvnw -B validate -Dcheckstyle.skip=false --file pom.xml
+      - name: Validate backend and legacy CycloneDX
+        run: |
+          test -s backend/target/classes/META-INF/sbom/application.cdx.json
+          test "$(jq -r '.bomFormat' backend/target/classes/META-INF/sbom/application.cdx.json)" = "CycloneDX"
+          test -s legacy/target/classes/META-INF/sbom/application.cdx.json
+          test "$(jq -r '.bomFormat' legacy/target/classes/META-INF/sbom/application.cdx.json)" = "CycloneDX"
+      - name: Upload backend CycloneDX
+        uses: actions/upload-artifact@v7
+        with:
+          name: sbom-backend
+          path: backend/target/classes/META-INF/sbom/application.cdx.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload legacy CycloneDX
+        uses: actions/upload-artifact@v7
+        with:
+          name: sbom-legacy
+          path: legacy/target/classes/META-INF/sbom/application.cdx.json
+          if-no-files-found: error
+          retention-days: 30
+
   # ==========================================================================
   # WARNING: This job acts as the required merge gate for this workflow.
   # If you add a new job to this workflow, you MUST add its ID to the 'needs'
@@ -131,7 +228,7 @@ jobs:
   # ==========================================================================
   results:
     name: Analysis Results
-    needs: [tests-java, tests-frontend, tests-frontend-ex, trivy, cve-lite]
+    needs: [tests-java, tests-frontend, tests-frontend-ex, trivy, cve-lite, npm-audit, sbom-node, sbom-java]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 1
