@@ -150,7 +150,7 @@ jobs:
     name: Node SBOM (${{ matrix.folder }})
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     permissions:
-      contents: read
+      contents: write
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -179,12 +179,17 @@ jobs:
           path: sbom-${{ matrix.folder }}.json
           if-no-files-found: error
           retention-days: 30
+      - name: Submit Node SBOM to Dependency Graph
+        if: github.event_name != 'pull_request'
+        uses: evryfs/sbom-dependency-submission-action@4466eb923772acc3bd54081f8e2a0ef601d2f28a # v0.0.14
+        with:
+          sbom-files: sbom-${{ matrix.folder }}.json
 
   sbom-java:
     name: Java SBOM
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     permissions:
-      contents: read
+      contents: write
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -220,6 +225,11 @@ jobs:
           path: legacy/target/classes/META-INF/sbom/application.cdx.json
           if-no-files-found: error
           retention-days: 30
+      - name: Submit Java SBOM to Dependency Graph
+        if: github.event_name != 'pull_request'
+        uses: evryfs/sbom-dependency-submission-action@4466eb923772acc3bd54081f8e2a0ef601d2f28a # v0.0.14
+        with:
+          sbom-files: backend/target/classes/META-INF/sbom/application.cdx.json legacy/target/classes/META-INF/sbom/application.cdx.json
 
   # ==========================================================================
   # WARNING: This job acts as the required merge gate for this workflow.
