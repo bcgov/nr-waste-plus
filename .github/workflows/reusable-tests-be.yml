@@ -51,22 +51,6 @@ jobs:
           sonar_token: ${{ secrets.SONAR_TOKEN_LEGACY }}
           triggers: ('legacy/')
 
-      - name: Archive backend CycloneDX
-        uses: actions/upload-artifact@v7
-        with:
-          name: sbom-backend
-          path: backend/target/bom.json
-          if-no-files-found: error
-          retention-days: 30
-
-      - name: Archive legacy CycloneDX
-        uses: actions/upload-artifact@v7
-        with:
-          name: sbom-legacy
-          path: legacy/target/bom.json
-          if-no-files-found: error
-          retention-days: 30
-
       - name: Checkstyle report
         continue-on-error: true
         uses: jwgmeligmeyling/checkstyle-github-action@master
