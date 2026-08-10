@@ -51,13 +51,6 @@ jobs:
           sonar_token: ${{ secrets.SONAR_TOKEN_LEGACY }}
           triggers: ('legacy/')
 
-      - name: Validate backend and legacy CycloneDX
-        run: |
-          test -s backend/target/bom.json
-          test "$(jq -r '.bomFormat' backend/target/bom.json)" = "CycloneDX"
-          test -s legacy/target/bom.json
-          test "$(jq -r '.bomFormat' legacy/target/bom.json)" = "CycloneDX"
-
       - name: Archive backend CycloneDX
         uses: actions/upload-artifact@v7
         with:

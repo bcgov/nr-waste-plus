@@ -180,6 +180,31 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  sbom-java:
+    name: Java SBOM
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    needs: [tests-java]
+    steps:
+      - name: Download backend SBOM
+        uses: actions/download-artifact@v8
+        with:
+          name: sbom-backend
+          path: backend/
+      - name: Download legacy SBOM
+        uses: actions/download-artifact@v8
+        with:
+          name: sbom-legacy
+          path: legacy/
+      - name: Validate backend and legacy CycloneDX
+        run: |
+          test -s backend/bom.json
+          test "$(jq -r '.bomFormat' backend/bom.json)" = "CycloneDX"
+          test -s legacy/bom.json
+          test "$(jq -r '.bomFormat' legacy/bom.json)" = "CycloneDX"
+
   # ==========================================================================
   # WARNING: This job acts as the required merge gate for this workflow.
   # If you add a new job to this workflow, you MUST add its ID to the 'needs'
@@ -187,7 +212,7 @@ jobs:
   # ==========================================================================
   results:
     name: Analysis Results
-    needs: [tests-java, tests-frontend, tests-frontend-ex, trivy, cve-lite, npm-audit, sbom-node]
+    needs: [tests-java, tests-frontend, tests-frontend-ex, trivy, cve-lite, npm-audit, sbom-node, sbom-java]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 1
