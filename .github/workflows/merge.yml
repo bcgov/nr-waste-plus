@@ -45,6 +45,7 @@ jobs:
           ...(window.config ?? {}),
           VITE_FEATURE_FLAGS: {
             'offline-mode-enabled': false,
+            'configuration-enabled': true,
           },
         };
 
