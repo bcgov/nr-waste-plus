@@ -170,7 +170,8 @@ jobs:
         working-directory: ${{ matrix.folder }}
         run: cyclonedx-npm --package-lock-only --output-format JSON --output-file "../sbom-${{ matrix.folder }}.json"
       - name: Validate SBOM JSON
-        run: node -e "const fs=require('fs'); const p='sbom-${{ matrix.folder }}.json'; const b=JSON.parse(fs.readFileSync(p)); if (!b.bomFormat || b.bomFormat !== 'CycloneDX') process.exit(1)"
+        run: |
+          node -e "const fs=require('fs'); const p='sbom-${{ matrix.folder }}.json'; let b; try { b=JSON.parse(fs.readFileSync(p,'utf8')); } catch (e) { console.error('Failed to read or parse ' + p + ': ' + e.message); process.exit(1); } if (!b.bomFormat || b.bomFormat !== 'CycloneDX') { console.error(p + ' is not a valid CycloneDX BOM (bomFormat=' + b.bomFormat + ')'); process.exit(1); }"
       - name: Upload Node SBOM
         uses: actions/upload-artifact@v7
         with:
