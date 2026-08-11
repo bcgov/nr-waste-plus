@@ -1,4 +1,4 @@
-import { Button, Column, DatePicker, DatePickerInput } from '@carbon/react';
+import { Column, DatePicker, DatePickerInput } from '@carbon/react';
 import { useForm } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
@@ -12,6 +12,7 @@ import type {
 } from '@/services/speciesComposition.types';
 
 import FileUploadInput from '@/components/Form/FileUploadInput';
+import UploadReviewActions from '@/components/waste/UploadReviewActions';
 import { useSpeciesCompositionCreateMutation } from '@/config/react-query/hooks';
 import { navigateInTree } from '@/routes/inTreePaths';
 import { SpeciesCompositionProcessor } from '@/services/speciescomposition/processors/speciesCompositionProcessor';
@@ -205,31 +206,16 @@ const SpeciesCompositionUpload: FC = () => {
 
         <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
           {([canSubmit, isSubmitting]) => (
-            <div className="button-group">
-              {isReviewing ? (
-                <Button kind="secondary" type="button" onClick={handleBackToUpload}>
-                  Back
-                </Button>
-              ) : (
-                <Button
-                  kind="secondary"
-                  type="button"
-                  onClick={handleCancel}
-                  data-testid="cancel-button"
-                >
-                  Cancel
-                </Button>
-              )}
-              <Button
-                kind="primary"
-                type="button"
-                onClick={handleSubmit}
-                disabled={!canSubmit || createMutation.isPending || isSubmitting || !hasRows}
-                data-testid="upload-table-button"
-              >
-                {isReviewing ? 'Save' : 'Upload table'}
-              </Button>
-            </div>
+            <UploadReviewActions
+              isReviewing={isReviewing}
+              canSubmit={canSubmit}
+              isSubmitting={isSubmitting}
+              isMutationPending={createMutation.isPending}
+              hasData={hasRows}
+              onSubmit={handleSubmit}
+              onBack={handleBackToUpload}
+              onCancel={handleCancel}
+            />
           )}
         </form.Subscribe>
       </form>

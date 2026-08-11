@@ -1,5 +1,4 @@
 import {
-  Button,
   Column,
   DatePicker,
   DatePickerInput,
@@ -20,6 +19,7 @@ import { useCallback, useState, type FC } from 'react';
 import type { CoastData, InteriorData, TableData } from '@/services/districtvolumes.types';
 
 import FileUploadInput from '@/components/Form/FileUploadInput';
+import UploadReviewActions from '@/components/waste/UploadReviewActions';
 import { useDistrictVolumeTableCreateMutation } from '@/config/react-query/hooks';
 import { navigateInTree } from '@/routes/inTreePaths';
 import { DistrictVolumeProcessor } from '@/services/districtvolumes/processors/districtVolumeProcessor';
@@ -470,32 +470,16 @@ const DistrictVolumeTableUpload: FC = () => {
 
         <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
           {([canSubmit, isSubmitting]) => (
-            <div className="button-group">
-              {isReviewing ? (
-                <Button kind="secondary" type="button" onClick={handleBackToUpload}>
-                  Back
-                </Button>
-              ) : (
-                <Button
-                  kind="secondary"
-                  type="button"
-                  onClick={handleCancel}
-                  data-testid="cancel-button"
-                >
-                  Cancel
-                </Button>
-              )}
-              <Button
-                kind="primary"
-                type="button"
-                onClick={handleSubmit}
-                disabled={!canSubmit || createMutation.isPending || isSubmitting}
-                data-testid="upload-table-button"
-                data-upload-ready={hasUploadedData ? 'true' : 'false'}
-              >
-                {isReviewing ? 'Save' : 'Upload table'}
-              </Button>
-            </div>
+            <UploadReviewActions
+              isReviewing={isReviewing}
+              canSubmit={canSubmit}
+              isSubmitting={isSubmitting}
+              isMutationPending={createMutation.isPending}
+              onSubmit={handleSubmit}
+              onBack={handleBackToUpload}
+              onCancel={handleCancel}
+              uploadReady={hasUploadedData ? 'true' : 'false'}
+            />
           )}
         </form.Subscribe>
       </form>
