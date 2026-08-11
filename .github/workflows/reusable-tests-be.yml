@@ -51,16 +51,6 @@ jobs:
           sonar_token: ${{ secrets.SONAR_TOKEN_LEGACY }}
           triggers: ('legacy/')
 
-      - name: Archive CycloneDX
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: cyclone-backend
-          path: |
-            backend/target/bom.json
-            legacy/target/bom.json
-          retention-days: 5
-
       - name: Checkstyle report
         continue-on-error: true
         uses: jwgmeligmeyling/checkstyle-github-action@master
