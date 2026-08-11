@@ -1,7 +1,7 @@
 import { FileUploaderDropContainer, FileUploaderItem, FormItem } from '@carbon/react';
 import prettyBytes from 'pretty-bytes';
-import { flushSync } from 'react-dom';
 import { type SyntheticEvent, useId, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 import { type FileProcessor } from './fileProcessor';
 

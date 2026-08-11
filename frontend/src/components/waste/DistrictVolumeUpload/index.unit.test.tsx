@@ -682,7 +682,7 @@ describe('DistrictVolumeTableUpload', () => {
 
       expect(screen.getByText('Dry belt')).toBeTruthy();
       expect(screen.getByText('DCC')).toBeTruthy();
-      expect(screen.getByText('6')).toBeTruthy();
+      expect(screen.getByText('6.000')).toBeTruthy();
     });
 
     it('should render populated coastal review rows and values', async () => {
@@ -714,7 +714,7 @@ describe('DistrictVolumeTableUpload', () => {
       await user.click(screen.getByRole('button', { name: 'Upload table' }));
 
       expect(screen.getByText('Mature')).toBeTruthy();
-      expect(screen.getByText('10')).toBeTruthy();
+      expect(screen.getByText('10.000')).toBeTruthy();
     });
   });
 

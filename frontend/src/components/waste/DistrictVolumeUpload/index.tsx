@@ -1,25 +1,23 @@
-import {
-  Column,
-  DatePicker,
-  DatePickerInput,
-  RadioButton,
-  RadioButtonGroup,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@carbon/react';
+import { Column, DatePicker, DatePickerInput, RadioButton, RadioButtonGroup } from '@carbon/react';
 import { useForm } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
 import { useCallback, useState, type FC } from 'react';
 
-import type { CoastData, InteriorData, TableData } from '@/services/districtvolumes.types';
+import type { TableHeaderType } from '@/components/Form/TableResource/types';
+import type {
+  CoastData,
+  CoastDistrictRow,
+  InteriorData,
+  InteriorDistrictRow,
+  TableData,
+} from '@/services/districtvolumes.types';
 
+import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 import FileUploadInput from '@/components/Form/FileUploadInput';
+import DistrictVolumeDetailTabs from '@/components/waste/DistrictVolumeDetail/DistrictVolumeDetailTabs';
 import UploadReviewActions from '@/components/waste/UploadReviewActions';
+import { useDistrictOptionsQuery } from '@/config/react-query/hooks';
 import { useDistrictVolumeTableCreateMutation } from '@/config/react-query/hooks';
 import { navigateInTree } from '@/routes/inTreePaths';
 import { DistrictVolumeProcessor } from '@/services/districtvolumes/processors/districtVolumeProcessor';
@@ -43,60 +41,98 @@ interface DistrictVolumeReviewTableProps {
 }
 
 const DistrictVolumeReviewTable: FC<DistrictVolumeReviewTableProps> = ({ data }) => {
-  const isInterior = data.type === 'INTERIOR';
-  const headers = isInterior
-    ? ['District', 'Avoidable sawlog', 'Avoidable Grade 4', 'Unavoidable Grade 4', 'Total']
-    : [
-        'District',
-        'Avoidable sawlog',
-        'Avoidable Hembal Grade U',
-        'Avoidable Grade Y',
-        'Unavoidable',
-        'Total',
-      ];
-
-  const renderGroup = (group: InteriorData['zones'][number] | CoastData['sections'][number]) => (
-    <div key={group.name}>
-      <h4>{group.name}</h4>
-      <Table size="md">
-        <TableHead>
-          <TableRow>
-            {headers.map((header) => (
-              <TableHeader key={header}>{header}</TableHeader>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {group.districts.map((row) => (
-            <TableRow key={row.code}>
-              <TableCell>{row.code}</TableCell>
-              <TableCell>{row.avoidableSawlog}</TableCell>
-              {isInterior ? (
-                <>
-                  <TableCell>{'avoidableGrade4' in row ? row.avoidableGrade4 : null}</TableCell>
-                  <TableCell>{'unavoidableGrade4' in row ? row.unavoidableGrade4 : null}</TableCell>
-                </>
-              ) : (
-                <>
-                  <TableCell>
-                    {'avoidableHembalGradeU' in row ? row.avoidableHembalGradeU : null}
-                  </TableCell>
-                  <TableCell>{'avoidableGradeY' in row ? row.avoidableGradeY : null}</TableCell>
-                  <TableCell>{'unavoidable' in row ? row.unavoidable : null}</TableCell>
-                </>
-              )}
-              <TableCell>{row.total}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+  const districtOptionsQuery = useDistrictOptionsQuery();
+  const districtMap = new Map(
+    (districtOptionsQuery?.data ?? []).map((district) => [district.code, district.description]),
   );
+  const isInterior = data.type === 'INTERIOR';
+  const renderDistrict = (value: unknown) => {
+    const code = typeof value === 'string' ? value : '';
+    return <span title={districtMap.get(code) ?? code}>{code}</span>;
+  };
+  const headers: TableHeaderType<InteriorDistrictRow>[] = [
+    {
+      key: 'code',
+      header: 'District',
+      selected: true,
+      renderAs: renderDistrict,
+    },
+    {
+      key: 'avoidableSawlog',
+      header: 'Avoidable sawlog',
+      selected: true,
+      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
+    },
+    {
+      key: 'avoidableGrade4',
+      header: 'Avoidable Grade 4',
+      selected: true,
+      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
+    },
+    {
+      key: 'unavoidableGrade4',
+      header: 'Unavoidable Grade 4',
+      selected: true,
+      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
+    },
+    {
+      key: 'total',
+      header: 'Total',
+      selected: true,
+      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
+    },
+  ];
+  const coastHeaders: TableHeaderType<CoastDistrictRow>[] = [
+    {
+      key: 'code',
+      header: 'District',
+      selected: true,
+      renderAs: renderDistrict,
+    },
+    {
+      key: 'avoidableSawlog',
+      header: 'Avoidable sawlog',
+      selected: true,
+      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
+    },
+    {
+      key: 'avoidableHembalGradeU',
+      header: 'Avoidable Hembal Grade U',
+      selected: true,
+      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
+    },
+    {
+      key: 'avoidableGradeY',
+      header: 'Avoidable Grade Y',
+      selected: true,
+      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
+    },
+    {
+      key: 'unavoidable',
+      header: 'Unavoidable',
+      selected: true,
+      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
+    },
+    {
+      key: 'total',
+      header: 'Total',
+      selected: true,
+      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
+    },
+  ];
 
   return (
     <div data-testid="district-volume-review-table">
       <h3>Review uploaded data</h3>
-      {isInterior ? data.zones.map(renderGroup) : data.sections.map(renderGroup)}
+      {isInterior ? (
+        <DistrictVolumeDetailTabs ariaLabel="District zones" items={data.zones} headers={headers} />
+      ) : (
+        <DistrictVolumeDetailTabs
+          ariaLabel="Coast sections"
+          items={data.sections}
+          headers={coastHeaders}
+        />
+      )}
     </div>
   );
 };

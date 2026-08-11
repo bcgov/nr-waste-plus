@@ -38,11 +38,14 @@ interface SpeciesCompositionDetailMatrixProps {
  * @returns The matrix table component.
  */
 const SpeciesCompositionDetailMatrix: FC<SpeciesCompositionDetailMatrixProps> = ({ rows }) => {
-  const { data: districtOptions = [] } = useDistrictOptionsQuery();
+  const districtOptionsQuery = useDistrictOptionsQuery();
 
   const districtMap = useMemo(
-    () => new Map(districtOptions.map((d) => [d.code, d.description])),
-    [districtOptions],
+    () =>
+      new Map(
+        (districtOptionsQuery?.data ?? []).map((district) => [district.code, district.description]),
+      ),
+    [districtOptionsQuery?.data],
   );
 
   const content: PageableResponse<SpeciesCompositionRow> = useMemo(() => {

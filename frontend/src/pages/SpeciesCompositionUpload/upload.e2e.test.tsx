@@ -399,6 +399,8 @@ test.describe('Species Composition Upload Page - E2E', () => {
       // Step 2: Wait for button to be enabled then click
       await expect(page.getByTestId('upload-table-button')).toBeEnabled({ timeout: 10_000 });
       await page.getByTestId('upload-table-button').click();
+      await expect(page.getByTestId('species-composition-matrix')).toBeVisible();
+      await expect(page.getByRole('columnheader', { name: 'District' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Save' })).toBeVisible();
       await page.getByRole('button', { name: 'Save' }).click();
 

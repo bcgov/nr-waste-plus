@@ -41,6 +41,9 @@ async function reviewAndSave(page: import('@playwright/test').Page): Promise<voi
     if (await uploadButton.isVisible()) await uploadButton.click();
   }
   await expect(saveButton).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByTestId('district-volume-review-table')).toBeVisible();
+  await expect(page.getByRole('tab').first()).toBeVisible();
+  await expect(page.getByRole('table')).toBeVisible();
   await saveButton.click();
 }
 
