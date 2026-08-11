@@ -455,3 +455,4 @@ test-reports/
 **/user.*.json
 **/screenshots/**.png
 **/*.code-workspace
+.playwright-mcp
