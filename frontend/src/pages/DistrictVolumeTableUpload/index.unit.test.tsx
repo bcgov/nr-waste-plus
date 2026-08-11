@@ -104,7 +104,7 @@ describe('DistrictVolumeTableUploadPage', () => {
 
       // PageNotification renders conditionally only when a notification event is active.
       // Verify the wrapping Column element exists with correct Carbon grid classes.
-      const notificationColumn = screen.getByTestId('create-ru-column__notification');
+      const notificationColumn = screen.getByTestId('district-volume-upload-column__notification');
       expect(notificationColumn).toBeTruthy();
       expect(notificationColumn?.classList.contains('cds--col-lg-16')).toBe(true);
       expect(notificationColumn?.classList.contains('cds--col-md-8')).toBe(true);
@@ -189,7 +189,7 @@ describe('DistrictVolumeTableUploadPage', () => {
 
       // Carbon v11 Column uses CSS grid classes; the notification column also has
       // a semantic className that can be used to locate it.
-      const notificationColumn = screen.getByTestId('create-ru-column__notification');
+      const notificationColumn = screen.getByTestId('district-volume-upload-column__notification');
       expect(notificationColumn).toBeTruthy();
       expect(notificationColumn?.classList.contains('cds--col-lg-16')).toBe(true);
       expect(notificationColumn?.classList.contains('cds--col-sm-4')).toBe(true);

@@ -13,14 +13,18 @@
       gap: $spacing-08;
 
       @include breakpoint-down(md) {
-        margin-top: $spacing-01;
-        padding: $spacing-05 $spacing-07;
+        margin-top: $spacing-04;
+        padding: $spacing-02 $spacing-02;
         flex-shrink: 0;
       }
 
-      .button-group {
+      div.button-group {
         display: flex;
         gap: $spacing-07;
+        margin-bottom: $spacing-05;
+        @include breakpoint-down(md) {
+          margin-bottom: $spacing-05;
+        }
       }
     }
   }

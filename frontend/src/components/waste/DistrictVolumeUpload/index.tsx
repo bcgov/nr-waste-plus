@@ -1,4 +1,11 @@
-import { Column, DatePicker, DatePickerInput, RadioButton, RadioButtonGroup } from '@carbon/react';
+import {
+  Column,
+  DatePicker,
+  DatePickerInput,
+  Grid,
+  RadioButton,
+  RadioButtonGroup,
+} from '@carbon/react';
 import { useForm } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
@@ -322,209 +329,211 @@ const DistrictVolumeTableUpload: FC = () => {
 
   return (
     <>
-      <form
-        data-testid="district-volume-upload-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          handleSubmit();
-        }}
+      <Column
+        max={16}
+        xlg={16}
+        lg={16}
+        md={8}
+        sm={4}
+        className="district-volume-upload-column__content"
+        data-testid="district-volume-upload-column"
       >
-        {isReviewing ? (
-          <Column
-            lg={16}
-            md={8}
-            sm={4}
-            className="district-volume-upload-column__review"
-            data-testid="district-volume-upload-column"
-          >
-            <DistrictVolumeReviewTable data={form.state.values.tableData} />
-          </Column>
-        ) : (
-          <Column
-            max={4}
-            xlg={4}
-            lg={4}
-            md={4}
-            sm={4}
-            className="district-volume-upload-column__content"
-            data-testid="district-volume-upload-column"
-          >
-            <form.Field
-              name="area"
-              validators={{
-                onBlurAsync: async ({ value }) =>
-                  runValidators(value, [required('Area type is required')]),
-                onChangeAsync: async ({ value }) =>
-                  runValidators(value, [required('Area type is required')]),
-              }}
-            >
-              {(field) => (
-                <div className="form-field">
-                  <RadioButtonGroup
-                    data-testid="area-radio-group"
+        <form
+          data-testid="district-volume-upload-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleSubmit();
+          }}
+        >
+          <Grid>
+            {isReviewing ? (
+              <Column max={16} xlg={16} lg={16} md={8} sm={4}>
+                <DistrictVolumeReviewTable data={form.state.values.tableData} />
+              </Column>
+            ) : (
+              <>
+                <Column max={16} xlg={16} lg={16} md={8} sm={4}>
+                  <form.Field
                     name="area"
-                    legendText="Area"
-                    defaultSelected="INTERIOR"
-                    invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
-                    invalidText={field.state.meta.errors[0] ?? undefined}
-                    valueSelected={field.state.value}
-                    onChange={(
-                      _selection: string | number | undefined,
-                      _name: string,
-                      _event: React.ChangeEvent<HTMLInputElement>,
-                    ) => {
-                      const value = _selection as 'INTERIOR' | 'COASTAL';
-                      field.handleChange(value);
+                    validators={{
+                      onBlurAsync: async ({ value }) =>
+                        runValidators(value, [required('Area type is required')]),
+                      onChangeAsync: async ({ value }) =>
+                        runValidators(value, [required('Area type is required')]),
                     }}
-                    onBlur={field.handleBlur}
                   >
-                    <RadioButton labelText="Coast" value="COASTAL" id="area-coast" />
-                    <RadioButton labelText="Interior" value="INTERIOR" id="area-interior" />
-                  </RadioButtonGroup>
-                </div>
-              )}
-            </form.Field>
+                    {(field) => (
+                      <div className="form-field">
+                        <RadioButtonGroup
+                          data-testid="area-radio-group"
+                          name="area"
+                          legendText="Area"
+                          defaultSelected="INTERIOR"
+                          invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
+                          invalidText={field.state.meta.errors[0] ?? undefined}
+                          valueSelected={field.state.value}
+                          onChange={(
+                            _selection: string | number | undefined,
+                            _name: string,
+                            _event: React.ChangeEvent<HTMLInputElement>,
+                          ) => {
+                            const value = _selection as 'INTERIOR' | 'COASTAL';
+                            field.handleChange(value);
+                          }}
+                          onBlur={field.handleBlur}
+                        >
+                          <RadioButton labelText="Coast" value="COASTAL" id="area-coast" />
+                          <RadioButton labelText="Interior" value="INTERIOR" id="area-interior" />
+                        </RadioButtonGroup>
+                      </div>
+                    )}
+                  </form.Field>
+                </Column>
+                <Column max={16} xlg={16} lg={16} md={8} sm={4}>
+                  <form.Field
+                    name="startDate"
+                    validators={{
+                      onBlurAsync: async ({ value }) =>
+                        runValidators(value, [
+                          required('Start date is required'),
+                          (v) => {
+                            if (typeof v !== 'string') return 'Start date must be a valid date';
+                            const date = DateTime.fromFormat(v, DATE_FORMAT);
+                            if (!date.isValid) return 'Start date must be a valid date';
+                            const tomorrow = DateTime.now().plus({ days: 1 }).startOf('day');
+                            if (date < tomorrow) return 'Start date must be tomorrow or later';
+                            return undefined;
+                          },
+                        ]),
+                      onChangeAsync: async ({ value }) =>
+                        runValidators(value, [
+                          required('Start date is required'),
+                          (v) => {
+                            if (typeof v !== 'string') return 'Start date must be a valid date';
+                            const date = DateTime.fromFormat(v, DATE_FORMAT);
+                            if (!date.isValid) return 'Start date must be a valid date';
+                            const tomorrow = DateTime.now().plus({ days: 1 }).startOf('day');
+                            if (date < tomorrow) return 'Start date must be tomorrow or later';
+                            return undefined;
+                          },
+                        ]),
+                    }}
+                  >
+                    {(field) => (
+                      <div className="form-field">
+                        <DatePicker
+                          datePickerType="single"
+                          dateFormat="Y/m/d"
+                          allowInput
+                          minDate={DateTime.now().plus({ days: 1 }).toFormat(DATE_FORMAT)}
+                          onChange={handleStartDateChange}
+                          value={
+                            field.state.value
+                              ? [DateTime.fromFormat(field.state.value, DATE_FORMAT).toJSDate()]
+                              : []
+                          }
+                        >
+                          <DatePickerInput
+                            id="start-date-picker"
+                            data-testid="start-date-picker"
+                            labelText="Start date"
+                            placeholder="yyyy/mm/dd"
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                              field.handleChange(event.target.value)
+                            }
+                            onBlur={field.handleBlur}
+                            invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
+                            invalidText={field.state.meta.errors[0] ?? undefined}
+                          />
+                        </DatePicker>
+                      </div>
+                    )}
+                  </form.Field>
+                </Column>
+                <Column max={6} xlg={6} lg={6} md={8} sm={4}>
+                  <FileUploadInput
+                    accept=".xlsx"
+                    maxFileSizeBytes={2 * 1024 * 1024}
+                    processor={processor}
+                    validator={async (file: File) => {
+                      try {
+                        const reader = new ExcelReader();
+                        const sheets = await reader.listSheets(file);
+                        const upperSheets = sheets.map((s) => s.trim().toUpperCase());
 
-            <form.Field
-              name="startDate"
-              validators={{
-                onBlurAsync: async ({ value }) =>
-                  runValidators(value, [
-                    required('Start date is required'),
-                    (v) => {
-                      if (typeof v !== 'string') return 'Start date must be a valid date';
-                      const date = DateTime.fromFormat(v, DATE_FORMAT);
-                      if (!date.isValid) return 'Start date must be a valid date';
-                      const tomorrow = DateTime.now().plus({ days: 1 }).startOf('day');
-                      if (date < tomorrow) return 'Start date must be tomorrow or later';
-                      return undefined;
-                    },
-                  ]),
-                onChangeAsync: async ({ value }) =>
-                  runValidators(value, [
-                    required('Start date is required'),
-                    (v) => {
-                      if (typeof v !== 'string') return 'Start date must be a valid date';
-                      const date = DateTime.fromFormat(v, DATE_FORMAT);
-                      if (!date.isValid) return 'Start date must be a valid date';
-                      const tomorrow = DateTime.now().plus({ days: 1 }).startOf('day');
-                      if (date < tomorrow) return 'Start date must be tomorrow or later';
-                      return undefined;
-                    },
-                  ]),
-              }}
-            >
-              {(field) => (
-                <div className="form-field">
-                  <DatePicker
-                    datePickerType="single"
-                    dateFormat="Y/m/d"
-                    allowInput
-                    minDate={DateTime.now().plus({ days: 1 }).toFormat(DATE_FORMAT)}
-                    onChange={handleStartDateChange}
-                    value={
-                      field.state.value
-                        ? [DateTime.fromFormat(field.state.value, DATE_FORMAT).toJSDate()]
-                        : []
-                    }
-                  >
-                    <DatePickerInput
-                      id="start-date-picker"
-                      data-testid="start-date-picker"
-                      labelText="Start date"
-                      placeholder="yyyy/mm/dd"
-                      onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                        field.handleChange(event.target.value)
+                        // Detect the file type from sheet names
+                        const detectedType = upperSheets.some((sheet) => sheet.includes('COAST'))
+                          ? 'COASTAL'
+                          : upperSheets.some((sheet) => sheet.includes('INTERIOR'))
+                            ? 'INTERIOR'
+                            : null;
+
+                        if (detectedType) {
+                          // Check for area/file type mismatch before format validation
+                          const currentArea = form.getFieldValue('area');
+                          if (currentArea !== detectedType) {
+                            resetUploadedTableData(currentArea);
+                            const areaLabel = currentArea === 'INTERIOR' ? 'Interior' : 'Coast';
+                            const fileTypeLabel = detectedType === 'COASTAL' ? 'Coast' : 'Interior';
+                            return [
+                              `Area mismatch: "${areaLabel}" is selected, but the uploaded file is a "${fileTypeLabel}" spreadsheet. ` +
+                                `Please select "${fileTypeLabel}" as the area or upload a "${areaLabel}" spreadsheet instead.`,
+                            ];
+                          }
+
+                          // Area matches — proceed with format validation
+                          const validationErrors =
+                            detectedType === 'COASTAL'
+                              ? await coastValidator(file)
+                              : await interiorValidator(file);
+
+                          if (validationErrors.length > 0) {
+                            resetUploadedTableData(currentArea);
+                          }
+
+                          return validationErrors;
+                        }
+
+                        resetUploadedTableData(form.getFieldValue('area'));
+                        return [
+                          'Could not detect spreadsheet format. Expected a sheet named "Interior" or "Coast".',
+                        ];
+                      } catch (e) {
+                        resetUploadedTableData(form.getFieldValue('area'));
+                        return [(e as Error).message];
                       }
-                      onBlur={field.handleBlur}
-                      invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
-                      invalidText={field.state.meta.errors[0] ?? undefined}
-                    />
-                  </DatePicker>
-                </div>
-              )}
-            </form.Field>
+                    }}
+                    onProcessed={handleFileChange}
+                    externalErrors={fileErrors}
+                  />
+                </Column>
+                <Column max={10} xlg={10} lg={10} md={0} sm={0}></Column>
+              </>
+            )}
+          </Grid>
+          <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
+            {([canSubmit, isSubmitting]) => (
+              <UploadReviewActions
+                isReviewing={isReviewing}
+                canSubmit={canSubmit}
+                isSubmitting={isSubmitting}
+                isMutationPending={createMutation.isPending}
+                onSubmit={handleSubmit}
+                onBack={handleBackToUpload}
+                onCancel={handleCancel}
+                uploadReady={hasUploadedData ? 'true' : 'false'}
+              />
+            )}
+          </form.Subscribe>
+        </form>
+      </Column>
 
-            <FileUploadInput
-              accept=".xlsx"
-              maxFileSizeBytes={2 * 1024 * 1024}
-              processor={processor}
-              validator={async (file: File) => {
-                try {
-                  const reader = new ExcelReader();
-                  const sheets = await reader.listSheets(file);
-                  const upperSheets = sheets.map((s) => s.trim().toUpperCase());
-
-                  // Detect the file type from sheet names
-                  const detectedType = upperSheets.some((sheet) => sheet.includes('COAST'))
-                    ? 'COASTAL'
-                    : upperSheets.some((sheet) => sheet.includes('INTERIOR'))
-                      ? 'INTERIOR'
-                      : null;
-
-                  if (detectedType) {
-                    // Check for area/file type mismatch before format validation
-                    const currentArea = form.getFieldValue('area');
-                    if (currentArea !== detectedType) {
-                      resetUploadedTableData(currentArea);
-                      const areaLabel = currentArea === 'INTERIOR' ? 'Interior' : 'Coast';
-                      const fileTypeLabel = detectedType === 'COASTAL' ? 'Coast' : 'Interior';
-                      return [
-                        `Area mismatch: "${areaLabel}" is selected, but the uploaded file is a "${fileTypeLabel}" spreadsheet. ` +
-                          `Please select "${fileTypeLabel}" as the area or upload a "${areaLabel}" spreadsheet instead.`,
-                      ];
-                    }
-
-                    // Area matches — proceed with format validation
-                    const validationErrors =
-                      detectedType === 'COASTAL'
-                        ? await coastValidator(file)
-                        : await interiorValidator(file);
-
-                    if (validationErrors.length > 0) {
-                      resetUploadedTableData(currentArea);
-                    }
-
-                    return validationErrors;
-                  }
-
-                  resetUploadedTableData(form.getFieldValue('area'));
-                  return [
-                    'Could not detect spreadsheet format. Expected a sheet named "Interior" or "Coast".',
-                  ];
-                } catch (e) {
-                  resetUploadedTableData(form.getFieldValue('area'));
-                  return [(e as Error).message];
-                }
-              }}
-              onProcessed={handleFileChange}
-              externalErrors={fileErrors}
-            />
-          </Column>
-        )}
-
-        {submitError && (
-          <div className="form-field--error" role="alert" data-testid="submit-error">
-            {submitError}
-          </div>
-        )}
-
-        <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-          {([canSubmit, isSubmitting]) => (
-            <UploadReviewActions
-              isReviewing={isReviewing}
-              canSubmit={canSubmit}
-              isSubmitting={isSubmitting}
-              isMutationPending={createMutation.isPending}
-              onSubmit={handleSubmit}
-              onBack={handleBackToUpload}
-              onCancel={handleCancel}
-              uploadReady={hasUploadedData ? 'true' : 'false'}
-            />
-          )}
-        </form.Subscribe>
-      </form>
+      {submitError && (
+        <div className="form-field--error" role="alert" data-testid="submit-error">
+          {submitError}
+        </div>
+      )}
     </>
   );
 };
