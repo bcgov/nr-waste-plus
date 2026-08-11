@@ -5,6 +5,12 @@ import {
   DatePickerInput,
   RadioButton,
   RadioButtonGroup,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@carbon/react';
 import { useForm } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
@@ -30,6 +36,70 @@ const DATE_FORMAT = 'yyyy-MM-dd' as const;
 
 /** Singleton processor for district volume file parsing. */
 const processor = new DistrictVolumeProcessor();
+
+interface DistrictVolumeReviewTableProps {
+  /** Parsed district volume data to display. */
+  readonly data: TableData;
+}
+
+const DistrictVolumeReviewTable: FC<DistrictVolumeReviewTableProps> = ({ data }) => {
+  const isInterior = data.type === 'INTERIOR';
+  const headers = isInterior
+    ? ['District', 'Avoidable sawlog', 'Avoidable Grade 4', 'Unavoidable Grade 4', 'Total']
+    : [
+        'District',
+        'Avoidable sawlog',
+        'Avoidable Hembal Grade U',
+        'Avoidable Grade Y',
+        'Unavoidable',
+        'Total',
+      ];
+
+  const renderGroup = (group: InteriorData['zones'][number] | CoastData['sections'][number]) => (
+    <div key={group.name}>
+      <h4>{group.name}</h4>
+      <Table size="md">
+        <TableHead>
+          <TableRow>
+            {headers.map((header) => (
+              <TableHeader key={header}>{header}</TableHeader>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {group.districts.map((row) => (
+            <TableRow key={row.code}>
+              <TableCell>{row.code}</TableCell>
+              <TableCell>{row.avoidableSawlog}</TableCell>
+              {isInterior ? (
+                <>
+                  <TableCell>{'avoidableGrade4' in row ? row.avoidableGrade4 : null}</TableCell>
+                  <TableCell>{'unavoidableGrade4' in row ? row.unavoidableGrade4 : null}</TableCell>
+                </>
+              ) : (
+                <>
+                  <TableCell>
+                    {'avoidableHembalGradeU' in row ? row.avoidableHembalGradeU : null}
+                  </TableCell>
+                  <TableCell>{'avoidableGradeY' in row ? row.avoidableGradeY : null}</TableCell>
+                  <TableCell>{'unavoidable' in row ? row.unavoidable : null}</TableCell>
+                </>
+              )}
+              <TableCell>{row.total}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+
+  return (
+    <div data-testid="district-volume-review-table">
+      <h3>Review uploaded data</h3>
+      {isInterior ? data.zones.map(renderGroup) : data.sections.map(renderGroup)}
+    </div>
+  );
+};
 
 /**
  * Form component for uploading a new district volume table.
@@ -65,6 +135,7 @@ const DistrictVolumeTableUpload: FC = () => {
 
   const [fileErrors, setFileErrors] = useState<string[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isReviewing, setIsReviewing] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -76,10 +147,19 @@ const DistrictVolumeTableUpload: FC = () => {
     },
     onSubmit: async ({ value }) => {
       const data = value.tableData;
+      const hasData = data.type === 'INTERIOR' ? data.zones.length > 0 : data.sections.length > 0;
+      if (!hasData) {
+        throw new Error(
+          data.type === 'INTERIOR'
+            ? 'Please upload a valid Interior spreadsheet file'
+            : 'Please upload a valid Coast spreadsheet file',
+        );
+      }
+      if (!isReviewing) {
+        setIsReviewing(true);
+        return;
+      }
       if (data.type === 'INTERIOR') {
-        if (!data.zones || data.zones.length === 0) {
-          throw new Error('Please upload a valid Interior spreadsheet file');
-        }
         await createMutation.mutateAsync({
           area: 'INTERIOR' as const,
           startDate: value.startDate,
@@ -87,9 +167,6 @@ const DistrictVolumeTableUpload: FC = () => {
           tableData: data,
         });
       } else {
-        if (!data.sections || data.sections.length === 0) {
-          throw new Error('Please upload a valid Coast spreadsheet file');
-        }
         await createMutation.mutateAsync({
           area: 'COASTAL' as const,
           startDate: value.startDate,
@@ -126,6 +203,11 @@ const DistrictVolumeTableUpload: FC = () => {
       setSubmitError(err instanceof Error ? err.message : 'Submission failed');
     });
   }, [form]);
+
+  const handleBackToUpload = useCallback(() => {
+    setSubmitError(null);
+    setIsReviewing(false);
+  }, []);
 
   /**
    * Processes the results emitted by {@link FileUploadInput} after the spreadsheet is parsed.
@@ -208,159 +290,172 @@ const DistrictVolumeTableUpload: FC = () => {
       data-testid="district-volume-upload-column"
     >
       <form
+        data-testid="district-volume-upload-form"
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          form.handleSubmit();
+          handleSubmit();
         }}
       >
-        <form.Field
-          name="area"
-          validators={{
-            onBlurAsync: async ({ value }) =>
-              runValidators(value, [required('Area type is required')]),
-            onChangeAsync: async ({ value }) =>
-              runValidators(value, [required('Area type is required')]),
-          }}
-        >
-          {(field) => (
-            <div className="form-field">
-              <RadioButtonGroup
-                data-testid="area-radio-group"
-                name="area"
-                legendText="Area"
-                defaultSelected="INTERIOR"
-                invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
-                invalidText={field.state.meta.errors[0] ?? undefined}
-                valueSelected={field.state.value ?? 'INTERIOR'}
-                onChange={(
-                  _selection: string | number | undefined,
-                  _name: string,
-                  _event: React.ChangeEvent<HTMLInputElement>,
-                ) => {
-                  const value = (_selection as 'INTERIOR' | 'COASTAL') ?? 'INTERIOR';
-                  field.handleChange(value);
-                }}
-                onBlur={field.handleBlur}
-              >
-                <RadioButton labelText="Coast" value="COASTAL" id="area-coast" />
-                <RadioButton labelText="Interior" value="INTERIOR" id="area-interior" />
-              </RadioButtonGroup>
-            </div>
-          )}
-        </form.Field>
-
-        <form.Field
-          name="startDate"
-          validators={{
-            onBlurAsync: async ({ value }) =>
-              runValidators(value, [
-                required('Start date is required'),
-                (v) => {
-                  if (typeof v !== 'string') return 'Start date must be a valid date';
-                  const date = DateTime.fromFormat(v, DATE_FORMAT);
-                  if (!date.isValid) return 'Start date must be a valid date';
-                  const tomorrow = DateTime.now().plus({ days: 1 }).startOf('day');
-                  if (date < tomorrow) return 'Start date must be tomorrow or later';
-                  return undefined;
-                },
-              ]),
-            onChangeAsync: async ({ value }) =>
-              runValidators(value, [
-                required('Start date is required'),
-                (v) => {
-                  if (typeof v !== 'string') return 'Start date must be a valid date';
-                  const date = DateTime.fromFormat(v, DATE_FORMAT);
-                  if (!date.isValid) return 'Start date must be a valid date';
-                  const tomorrow = DateTime.now().plus({ days: 1 }).startOf('day');
-                  if (date < tomorrow) return 'Start date must be tomorrow or later';
-                  return undefined;
-                },
-              ]),
-          }}
-        >
-          {(field) => (
-            <div className="form-field">
-              <DatePicker
-                datePickerType="single"
-                dateFormat="Y/m/d"
-                allowInput
-                minDate={DateTime.now().plus({ days: 1 }).toFormat(DATE_FORMAT)}
-                onChange={handleStartDateChange}
-                value={
-                  field.state.value
-                    ? [DateTime.fromFormat(field.state.value, DATE_FORMAT).toJSDate()]
-                    : []
-                }
-              >
-                <DatePickerInput
-                  id="start-date-picker"
-                  data-testid="start-date-picker"
-                  labelText="Start date"
-                  placeholder="yyyy/mm/dd"
+        {!isReviewing ? (
+          <form.Field
+            name="area"
+            validators={{
+              onBlurAsync: async ({ value }) =>
+                runValidators(value, [required('Area type is required')]),
+              onChangeAsync: async ({ value }) =>
+                runValidators(value, [required('Area type is required')]),
+            }}
+          >
+            {(field) => (
+              <div className="form-field">
+                <RadioButtonGroup
+                  data-testid="area-radio-group"
+                  name="area"
+                  legendText="Area"
+                  defaultSelected="INTERIOR"
                   invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
                   invalidText={field.state.meta.errors[0] ?? undefined}
-                />
-              </DatePicker>
-            </div>
-          )}
-        </form.Field>
+                  valueSelected={field.state.value}
+                  onChange={(
+                    _selection: string | number | undefined,
+                    _name: string,
+                    _event: React.ChangeEvent<HTMLInputElement>,
+                  ) => {
+                    const value = _selection as 'INTERIOR' | 'COASTAL';
+                    field.handleChange(value);
+                  }}
+                  onBlur={field.handleBlur}
+                >
+                  <RadioButton labelText="Coast" value="COASTAL" id="area-coast" />
+                  <RadioButton labelText="Interior" value="INTERIOR" id="area-interior" />
+                </RadioButtonGroup>
+              </div>
+            )}
+          </form.Field>
+        ) : null}
 
-        <FileUploadInput
-          accept=".xlsx"
-          maxFileSizeBytes={2 * 1024 * 1024}
-          processor={processor}
-          validator={async (file: File) => {
-            try {
-              const reader = new ExcelReader();
-              const sheets = await reader.listSheets(file);
-              const upperSheets = sheets.map((s) => s.trim().toUpperCase());
+        {!isReviewing ? (
+          <form.Field
+            name="startDate"
+            validators={{
+              onBlurAsync: async ({ value }) =>
+                runValidators(value, [
+                  required('Start date is required'),
+                  (v) => {
+                    if (typeof v !== 'string') return 'Start date must be a valid date';
+                    const date = DateTime.fromFormat(v, DATE_FORMAT);
+                    if (!date.isValid) return 'Start date must be a valid date';
+                    const tomorrow = DateTime.now().plus({ days: 1 }).startOf('day');
+                    if (date < tomorrow) return 'Start date must be tomorrow or later';
+                    return undefined;
+                  },
+                ]),
+              onChangeAsync: async ({ value }) =>
+                runValidators(value, [
+                  required('Start date is required'),
+                  (v) => {
+                    if (typeof v !== 'string') return 'Start date must be a valid date';
+                    const date = DateTime.fromFormat(v, DATE_FORMAT);
+                    if (!date.isValid) return 'Start date must be a valid date';
+                    const tomorrow = DateTime.now().plus({ days: 1 }).startOf('day');
+                    if (date < tomorrow) return 'Start date must be tomorrow or later';
+                    return undefined;
+                  },
+                ]),
+            }}
+          >
+            {(field) => (
+              <div className="form-field">
+                <DatePicker
+                  datePickerType="single"
+                  dateFormat="Y/m/d"
+                  allowInput
+                  minDate={DateTime.now().plus({ days: 1 }).toFormat(DATE_FORMAT)}
+                  onChange={handleStartDateChange}
+                  value={
+                    field.state.value
+                      ? [DateTime.fromFormat(field.state.value, DATE_FORMAT).toJSDate()]
+                      : []
+                  }
+                >
+                  <DatePickerInput
+                    id="start-date-picker"
+                    data-testid="start-date-picker"
+                    labelText="Start date"
+                    placeholder="yyyy/mm/dd"
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                      field.handleChange(event.target.value)
+                    }
+                    onBlur={field.handleBlur}
+                    invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
+                    invalidText={field.state.meta.errors[0] ?? undefined}
+                  />
+                </DatePicker>
+              </div>
+            )}
+          </form.Field>
+        ) : null}
 
-              // Detect the file type from sheet names
-              const detectedType = upperSheets.some((sheet) => sheet.includes('COAST'))
-                ? 'COASTAL'
-                : upperSheets.some((sheet) => sheet.includes('INTERIOR'))
-                  ? 'INTERIOR'
-                  : null;
+        {!isReviewing ? (
+          <FileUploadInput
+            accept=".xlsx"
+            maxFileSizeBytes={2 * 1024 * 1024}
+            processor={processor}
+            validator={async (file: File) => {
+              try {
+                const reader = new ExcelReader();
+                const sheets = await reader.listSheets(file);
+                const upperSheets = sheets.map((s) => s.trim().toUpperCase());
 
-              if (detectedType) {
-                // Check for area/file type mismatch before format validation
-                const currentArea = form.getFieldValue('area');
-                if (currentArea !== detectedType) {
-                  resetUploadedTableData(currentArea);
-                  const areaLabel = currentArea === 'INTERIOR' ? 'Interior' : 'Coast';
-                  const fileTypeLabel = detectedType === 'COASTAL' ? 'Coast' : 'Interior';
-                  return [
-                    `Area mismatch: "${areaLabel}" is selected, but the uploaded file is a "${fileTypeLabel}" spreadsheet. ` +
-                      `Please select "${fileTypeLabel}" as the area or upload a "${areaLabel}" spreadsheet instead.`,
-                  ];
+                // Detect the file type from sheet names
+                const detectedType = upperSheets.some((sheet) => sheet.includes('COAST'))
+                  ? 'COASTAL'
+                  : upperSheets.some((sheet) => sheet.includes('INTERIOR'))
+                    ? 'INTERIOR'
+                    : null;
+
+                if (detectedType) {
+                  // Check for area/file type mismatch before format validation
+                  const currentArea = form.getFieldValue('area');
+                  if (currentArea !== detectedType) {
+                    resetUploadedTableData(currentArea);
+                    const areaLabel = currentArea === 'INTERIOR' ? 'Interior' : 'Coast';
+                    const fileTypeLabel = detectedType === 'COASTAL' ? 'Coast' : 'Interior';
+                    return [
+                      `Area mismatch: "${areaLabel}" is selected, but the uploaded file is a "${fileTypeLabel}" spreadsheet. ` +
+                        `Please select "${fileTypeLabel}" as the area or upload a "${areaLabel}" spreadsheet instead.`,
+                    ];
+                  }
+
+                  // Area matches — proceed with format validation
+                  const validationErrors =
+                    detectedType === 'COASTAL'
+                      ? await coastValidator(file)
+                      : await interiorValidator(file);
+
+                  if (validationErrors.length > 0) {
+                    resetUploadedTableData(currentArea);
+                  }
+
+                  return validationErrors;
                 }
 
-                // Area matches — proceed with format validation
-                const validationErrors =
-                  detectedType === 'COASTAL'
-                    ? await coastValidator(file)
-                    : await interiorValidator(file);
-
-                if (validationErrors.length > 0) {
-                  resetUploadedTableData(currentArea);
-                }
-
-                return validationErrors;
+                resetUploadedTableData(form.getFieldValue('area'));
+                return [
+                  'Could not detect spreadsheet format. Expected a sheet named "Interior" or "Coast".',
+                ];
+              } catch (e) {
+                resetUploadedTableData(form.getFieldValue('area'));
+                return [(e as Error).message];
               }
-
-              resetUploadedTableData(form.getFieldValue('area'));
-              return [
-                'Could not detect spreadsheet format. Expected a sheet named "Interior" or "Coast".',
-              ];
-            } catch (e) {
-              resetUploadedTableData(form.getFieldValue('area'));
-              return [(e as Error).message];
-            }
-          }}
-          onProcessed={handleFileChange}
-          externalErrors={fileErrors}
-        />
+            }}
+            onProcessed={handleFileChange}
+            externalErrors={fileErrors}
+          />
+        ) : (
+          <DistrictVolumeReviewTable data={form.state.values.tableData} />
+        )}
 
         {submitError && (
           <div className="form-field--error" role="alert" data-testid="submit-error">
@@ -371,21 +466,28 @@ const DistrictVolumeTableUpload: FC = () => {
         <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
           {([canSubmit, isSubmitting]) => (
             <div className="button-group">
-              <Button
-                kind="secondary"
-                type="button"
-                onClick={handleCancel}
-                data-testid="cancel-button"
-              >
-                Cancel
-              </Button>
+              {isReviewing ? (
+                <Button kind="secondary" type="button" onClick={handleBackToUpload}>
+                  Back
+                </Button>
+              ) : (
+                <Button
+                  kind="secondary"
+                  type="button"
+                  onClick={handleCancel}
+                  data-testid="cancel-button"
+                >
+                  Cancel
+                </Button>
+              )}
               <Button
                 kind="primary"
+                type="button"
                 onClick={handleSubmit}
                 disabled={!canSubmit || createMutation.isPending || isSubmitting}
                 data-testid="upload-table-button"
               >
-                Upload table
+                {isReviewing ? 'Save' : 'Upload table'}
               </Button>
             </div>
           )}

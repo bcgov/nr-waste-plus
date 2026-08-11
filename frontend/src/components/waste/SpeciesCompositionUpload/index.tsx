@@ -4,6 +4,8 @@ import { useNavigate } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
 import { useCallback, useState, type FC } from 'react';
 
+import SpeciesCompositionReviewTable from './SpeciesCompositionReviewTable';
+
 import type {
   SpeciesCompositionCreate,
   SpeciesCompositionData,
@@ -50,6 +52,7 @@ const SpeciesCompositionUpload: FC = () => {
 
   const [fileErrors, setFileErrors] = useState<string[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isReviewing, setIsReviewing] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -61,6 +64,12 @@ const SpeciesCompositionUpload: FC = () => {
       if (!data.rows || data.rows.length === 0) {
         throw new Error('Please upload a valid species composition spreadsheet file');
       }
+
+      if (!isReviewing) {
+        setIsReviewing(true);
+        return;
+      }
+
       const createPayload: SpeciesCompositionCreate = {
         area: 'INTERIOR',
         startDate: value.startDate,
@@ -112,6 +121,11 @@ const SpeciesCompositionUpload: FC = () => {
     navigateInTree(navigate, '/configuration/species-composition');
   }, [navigate]);
 
+  const handleBackToUpload = useCallback(() => {
+    setSubmitError(null);
+    setIsReviewing(false);
+  }, []);
+
   const tableData = form.state.values.tableData;
   const hasRows = tableData.rows.length > 0;
 
@@ -130,49 +144,58 @@ const SpeciesCompositionUpload: FC = () => {
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          form.handleSubmit();
+          handleSubmit();
         }}
       >
-        <form.Field name="startDate">
-          {(field) => (
-            <div className="form-field">
-              <DatePicker
-                datePickerType="single"
-                dateFormat="Y/m/d"
-                allowInput
-                minDate={DateTime.now().plus({ days: 1 }).toFormat(DATE_FORMAT)}
-                onChange={([selected]) => {
-                  if (selected) {
-                    field.handleChange(DateTime.fromJSDate(selected).toFormat(DATE_FORMAT));
-                  }
-                }}
-                value={
-                  field.state.value
-                    ? [DateTime.fromFormat(field.state.value, DATE_FORMAT).toJSDate()]
-                    : []
-                }
-              >
-                <DatePickerInput
-                  id="start-date-picker"
-                  data-testid="start-date-picker"
-                  labelText="Set start date"
-                  placeholder="mm/dd/yyyy"
-                  invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
-                  invalidText={field.state.meta.errors[0] ?? undefined}
-                />
-              </DatePicker>
-            </div>
-          )}
-        </form.Field>
+        {isReviewing ? (
+          <SpeciesCompositionReviewTable
+            rows={tableData.rows}
+            data-testid="species-composition-review-table"
+          />
+        ) : (
+          <>
+            <form.Field name="startDate">
+              {(field) => (
+                <div className="form-field">
+                  <DatePicker
+                    datePickerType="single"
+                    dateFormat="Y/m/d"
+                    allowInput
+                    minDate={DateTime.now().plus({ days: 1 }).toFormat(DATE_FORMAT)}
+                    onChange={([selected]) => {
+                      if (selected) {
+                        field.handleChange(DateTime.fromJSDate(selected).toFormat(DATE_FORMAT));
+                      }
+                    }}
+                    value={
+                      field.state.value
+                        ? [DateTime.fromFormat(field.state.value, DATE_FORMAT).toJSDate()]
+                        : []
+                    }
+                  >
+                    <DatePickerInput
+                      id="start-date-picker"
+                      data-testid="start-date-picker"
+                      labelText="Set start date"
+                      placeholder="mm/dd/yyyy"
+                      invalid={field.state.meta.isTouched && !!field.state.meta.errors.length}
+                      invalidText={field.state.meta.errors[0] ?? undefined}
+                    />
+                  </DatePicker>
+                </div>
+              )}
+            </form.Field>
 
-        <FileUploadInput
-          accept=".xls,.xlsx"
-          maxFileSizeBytes={2 * 1024 * 1024}
-          processor={processor}
-          validator={speciesCompositionValidator}
-          onProcessed={handleFileChange}
-          externalErrors={fileErrors}
-        />
+            <FileUploadInput
+              accept=".xls,.xlsx"
+              maxFileSizeBytes={2 * 1024 * 1024}
+              processor={processor}
+              validator={speciesCompositionValidator}
+              onProcessed={handleFileChange}
+              externalErrors={fileErrors}
+            />
+          </>
+        )}
 
         {submitError && (
           <div className="form-field--error" role="alert" data-testid="submit-error">
@@ -183,21 +206,28 @@ const SpeciesCompositionUpload: FC = () => {
         <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
           {([canSubmit, isSubmitting]) => (
             <div className="button-group">
-              <Button
-                kind="secondary"
-                type="button"
-                onClick={handleCancel}
-                data-testid="cancel-button"
-              >
-                Cancel
-              </Button>
+              {isReviewing ? (
+                <Button kind="secondary" type="button" onClick={handleBackToUpload}>
+                  Back
+                </Button>
+              ) : (
+                <Button
+                  kind="secondary"
+                  type="button"
+                  onClick={handleCancel}
+                  data-testid="cancel-button"
+                >
+                  Cancel
+                </Button>
+              )}
               <Button
                 kind="primary"
+                type="button"
                 onClick={handleSubmit}
                 disabled={!canSubmit || createMutation.isPending || isSubmitting || !hasRows}
                 data-testid="upload-table-button"
               >
-                Upload table
+                {isReviewing ? 'Save' : 'Upload table'}
               </Button>
             </div>
           )}

@@ -121,4 +121,16 @@ describe('SpeciesCompositionDetailView', () => {
     const matrix = screen.getByTestId('species-composition-matrix');
     expect(matrix.getAttribute('data-rows-count')).toBe('1');
   });
+
+  it('should render an empty matrix when table data is malformed', () => {
+    const data = createDetailData({
+      tableData: null,
+    } as unknown as Partial<SpeciesCompositionDetail>);
+
+    render(<SpeciesCompositionDetailView data={data} />);
+
+    expect(screen.getByTestId('species-composition-matrix').getAttribute('data-rows-count')).toBe(
+      '0',
+    );
+  });
 });

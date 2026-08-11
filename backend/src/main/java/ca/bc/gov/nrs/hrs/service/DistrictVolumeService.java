@@ -6,6 +6,7 @@ import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeListItemDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
+import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.ConfigType;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
 import ca.bc.gov.nrs.hrs.mapper.DistrictVolumeMapper;
@@ -68,11 +69,14 @@ public class DistrictVolumeService {
         areaOptional
             .map(areaStr -> {
               Area areaEnum = Area.valueOf(areaStr.toUpperCase());
-              return districtVolumeRepository.findByArea(
+              return districtVolumeRepository.findAllByConfigTypeAndArea(
+                  ConfigType.DISTRICT_VOLUME,
                   areaEnum,
                   pageable);
             })
-            .orElseGet(() -> districtVolumeRepository.findAll(pageable));
+            .orElseGet(() -> districtVolumeRepository.findAllByConfigType(
+                ConfigType.DISTRICT_VOLUME,
+                pageable));
 
     return entities.map(DistrictVolumeMapper::toListItemDto);
   }
@@ -88,7 +92,7 @@ public class DistrictVolumeService {
   public DistrictVolumeDetailDto getDistrictVolumeById(Long id) {
 
     DistrictVolumeEntity entity =
-        districtVolumeRepository.findById(id)
+        districtVolumeRepository.findByIdAndConfigType(id, ConfigType.DISTRICT_VOLUME)
             .orElseThrow(
                 () -> new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
@@ -118,7 +122,10 @@ public class DistrictVolumeService {
     LocalDate currentDate = LocalDate.now();
 
     for (Area area : List.of(Area.INTERIOR, Area.COASTAL)) {
-      districtVolumeRepository.findActiveByArea(area, currentDate)
+      districtVolumeRepository.findActiveByConfigTypeAndArea(
+              ConfigType.DISTRICT_VOLUME,
+              area,
+              currentDate)
           .stream()
           .findFirst()
           .filter(entity -> containsDistrict(entity.getTableData(), districtCode))
@@ -154,7 +161,10 @@ public class DistrictVolumeService {
     LocalDate currentDate = LocalDate.now();
 
     for (Area area : List.of(Area.INTERIOR, Area.COASTAL)) {
-      districtVolumeRepository.findActiveByArea(area, currentDate)
+      districtVolumeRepository.findActiveByConfigTypeAndArea(
+              ConfigType.DISTRICT_VOLUME,
+              area,
+              currentDate)
           .stream()
           .findFirst()
           .ifPresent(entity -> {
@@ -225,7 +235,9 @@ public class DistrictVolumeService {
 
     List<DistrictVolumeEntity> openEntries =
         districtVolumeRepository
-            .findByAreaAndEndDateIsNullOrderByStartDateDesc(areaEnum);
+            .findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+                ConfigType.DISTRICT_VOLUME,
+                areaEnum);
 
     if (openEntries.size() > 1) {
       throw new ResponseStatusException(

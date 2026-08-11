@@ -15,6 +15,47 @@ import * as inTreePaths from '@/routes/inTreePaths';
 
 vi.mock('@/config/react-query/hooks');
 
+vi.mock('@carbon/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@carbon/react')>();
+  return {
+    ...actual,
+    DatePicker: ({ children, onChange }: any) => (
+      <div>
+        {children}
+        <button
+          type="button"
+          data-testid="mock-species-date"
+          onClick={() => onChange([new Date(2026, 7, 13)])}
+        >
+          Select date
+        </button>
+        <button type="button" data-testid="mock-no-species-date" onClick={() => onChange([])}>
+          Clear date
+        </button>
+        <button
+          type="button"
+          data-testid="mock-species-no-selection"
+          onClick={() => onChange([undefined])}
+        >
+          No selection
+        </button>
+      </div>
+    ),
+    DatePickerInput: ({
+      id,
+      labelText,
+      invalid: _invalid,
+      invalidText: _invalidText,
+      ...props
+    }: any) => (
+      <label htmlFor={id}>
+        {labelText}
+        <input id={id} {...props} />
+      </label>
+    ),
+  };
+});
+
 const mockMutateAsync = vi.fn();
 const mockUseSpeciesCompositionCreateMutation = vi.mocked(
   hooks.useSpeciesCompositionCreateMutation,
@@ -249,6 +290,59 @@ describe('SpeciesCompositionUpload', () => {
   });
 
   describe('form submission', () => {
+    it('should show validation error when submitting without rows', async () => {
+      await renderWithAppAsync(<SpeciesCompositionUpload />);
+
+      // Invoke the form action directly through the enabled-state-independent native submit.
+      fireEvent.submit(screen.getByTestId('species-composition-upload-form'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('submit-error').textContent).toContain(
+          'Please upload a valid species composition spreadsheet file',
+        );
+      });
+    });
+
+    it('should update the start date when a date is selected', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<SpeciesCompositionUpload />);
+
+      await user.click(screen.getByTestId('mock-species-date'));
+      expect(screen.getByTestId('start-date-picker')).toBeTruthy();
+    });
+
+    it('should leave the start date unchanged when the date picker is cleared', async () => {
+      await renderWithAppAsync(<SpeciesCompositionUpload />);
+      await userEvent.click(screen.getByTestId('mock-no-species-date'));
+
+      expect(screen.getByTestId('start-date-picker')).toBeTruthy();
+    });
+
+    it('should ignore a date picker event without a selection', async () => {
+      await renderWithAppAsync(<SpeciesCompositionUpload />);
+      await userEvent.click(screen.getByTestId('mock-species-no-selection'));
+
+      expect(screen.getByTestId('start-date-picker')).toBeTruthy();
+    });
+
+    it('should review parsed data before mutating and save only after confirmation', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<SpeciesCompositionUpload />);
+      await user.upload(screen.getByTestId('mock-file-input'), new File(['test'], 'test.xlsx'));
+
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      expect(mockMutateAsync).not.toHaveBeenCalled();
+      expect(screen.getByTestId('species-composition-review-table')).toBeTruthy();
+
+      await user.click(screen.getByRole('button', { name: 'Back' }));
+      expect(screen.getByTestId('mock-file-input')).toBeTruthy();
+      expect(mockMutateAsync).not.toHaveBeenCalled();
+
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
+      await waitFor(() => expect(mockMutateAsync).toHaveBeenCalledTimes(1));
+    });
+
     it('should call mutateAsync with tableData on valid submission', async () => {
       const user = userEvent.setup();
       await renderWithAppAsync(<SpeciesCompositionUpload />);
@@ -270,6 +364,7 @@ describe('SpeciesCompositionUpload', () => {
 
       // Click the Upload table button (calls handleSubmit)
       await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(mockMutateAsync).toHaveBeenCalledWith(
@@ -312,6 +407,7 @@ describe('SpeciesCompositionUpload', () => {
       });
 
       await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(screen.getByTestId('submit-error')).toBeTruthy();
@@ -340,6 +436,7 @@ describe('SpeciesCompositionUpload', () => {
       });
 
       await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(screen.getByTestId('submit-error')).toBeTruthy();
@@ -369,6 +466,7 @@ describe('SpeciesCompositionUpload', () => {
 
       // First submission — fails
       await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(screen.getByTestId('submit-error')).toBeTruthy();
@@ -376,7 +474,7 @@ describe('SpeciesCompositionUpload', () => {
 
       // Second submission — should clear error before attempt
       mockMutateAsync.mockResolvedValue(undefined);
-      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(screen.queryByTestId('submit-error')).toBeNull();
@@ -418,6 +516,8 @@ describe('SpeciesCompositionUpload', () => {
 
       // Trigger native form submission (simulates pressing Enter)
       fireEvent.submit(screen.getByTestId('species-composition-upload-form'));
+      expect(await screen.findByRole('button', { name: 'Save' })).toBeTruthy();
+      await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(mockMutateAsync).toHaveBeenCalled();

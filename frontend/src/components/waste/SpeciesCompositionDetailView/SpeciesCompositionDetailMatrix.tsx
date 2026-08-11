@@ -7,13 +7,16 @@ import type {
   IdentifiableContent,
 } from '@/components/Form/TableResource/types';
 import type { NestedKeyOf } from '@/services/pagination.types';
-import type { CodeDescriptionDto } from '@/services/search.types';
 import type { SpeciesCompositionRow, SpeciesKey } from '@/services/speciesComposition.types';
 
 import TooltipTag from '@/components/core/Tags/TooltipTag';
 import TableResource from '@/components/Form/TableResource';
 import { useDistrictOptionsQuery } from '@/config/react-query/hooks';
-import { SPECIES_DESCRIPTIONS, SPECIES_LABELS } from '@/services/speciesComposition.types';
+import {
+  SPECIES_DESCRIPTIONS,
+  SPECIES_LABELS,
+  speciesCompositionRowSchema,
+} from '@/services/speciesComposition.types';
 
 /**
  * Props for the {@link SpeciesCompositionDetailMatrix} component.
@@ -42,21 +45,27 @@ const SpeciesCompositionDetailMatrix: FC<SpeciesCompositionDetailMatrixProps> = 
     [districtOptions],
   );
 
-  const content: PageableResponse<SpeciesCompositionRow> = useMemo(
-    () => ({
-      content: rows.map((row) => ({
+  const content: PageableResponse<SpeciesCompositionRow> = useMemo(() => {
+    // API responses are untrusted at this boundary. Drop malformed rows rather
+    // than allowing one bad district/species value to crash the whole table.
+    const validRows = rows.flatMap((row) => {
+      const result = speciesCompositionRowSchema.safeParse(row);
+      return result.success ? [result.data] : [];
+    });
+
+    return {
+      content: validRows.map((row) => ({
         ...row,
-        id: row.district.code,
+        id: row.district.code ?? `unknown-${validRows.indexOf(row)}`,
       })) as IdentifiableContent<SpeciesCompositionRow>[],
       page: {
-        size: rows.length,
+        size: validRows.length,
         number: 0,
-        totalElements: rows.length,
+        totalElements: validRows.length,
         totalPages: 1,
       },
-    }),
-    [rows],
-  );
+    };
+  }, [rows]);
 
   const headers: TableHeaderType<SpeciesCompositionRow>[] = useMemo(() => {
     const speciesColumns: TableHeaderType<SpeciesCompositionRow>[] = (
@@ -74,11 +83,21 @@ const SpeciesCompositionDetailMatrix: FC<SpeciesCompositionDetailMatrixProps> = 
         header: 'District',
         selected: true,
         renderAs: (value) => {
-          const district = value as CodeDescriptionDto;
-          const description = districtMap.get(district.code) ?? district.description;
+          const result = speciesCompositionRowSchema.shape.district.safeParse(value);
+          if (
+            !result.success ||
+            typeof result.data.code !== 'string' ||
+            result.data.code.length === 0
+          ) {
+            return <span>-</span>;
+          }
+
+          const district = result.data;
+          const code = district.code as string;
+          const description = districtMap.get(code) ?? district.description ?? code;
           return (
             <TooltipTag tooltip={description} align="right">
-              <span>{district.code}</span>
+              <span>{code}</span>
             </TooltipTag>
           );
         },
