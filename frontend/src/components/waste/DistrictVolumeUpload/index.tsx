@@ -24,8 +24,10 @@ import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 import FileUploadInput from '@/components/Form/FileUploadInput';
 import DistrictVolumeDetailTabs from '@/components/waste/DistrictVolumeDetail/DistrictVolumeDetailTabs';
 import UploadReviewActions from '@/components/waste/UploadReviewActions';
-import { useDistrictOptionsQuery } from '@/config/react-query/hooks';
-import { useDistrictVolumeTableCreateMutation } from '@/config/react-query/hooks';
+import {
+  useDistrictOptionsQuery,
+  useDistrictVolumeTableCreateMutation,
+} from '@/config/react-query/hooks';
 import { navigateInTree } from '@/routes/inTreePaths';
 import { DistrictVolumeProcessor } from '@/services/districtvolumes/processors/districtVolumeProcessor';
 import { coastValidator } from '@/services/districtvolumes/validators/coastValidator';
