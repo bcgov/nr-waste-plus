@@ -279,6 +279,11 @@ const DistrictVolumeTableUpload: FC = () => {
     navigateInTree(navigate, '/configuration/district-volume-tables');
   }, [navigate]);
 
+  const hasUploadedData =
+    form.state.values.tableData.type === 'INTERIOR'
+      ? form.state.values.tableData.zones.length > 0
+      : form.state.values.tableData.sections.length > 0;
+
   return (
     <Column
       max={4}
@@ -486,6 +491,7 @@ const DistrictVolumeTableUpload: FC = () => {
                 onClick={handleSubmit}
                 disabled={!canSubmit || createMutation.isPending || isSubmitting}
                 data-testid="upload-table-button"
+                data-upload-ready={hasUploadedData ? 'true' : 'false'}
               >
                 {isReviewing ? 'Save' : 'Upload table'}
               </Button>

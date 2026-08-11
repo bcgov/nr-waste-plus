@@ -31,6 +31,19 @@ async function uploadFile(page: import('@playwright/test').Page, buffer: Buffer)
   });
 }
 
+async function reviewAndSave(page: import('@playwright/test').Page): Promise<void> {
+  const uploadButton = page.getByTestId('upload-table-button');
+  const saveButton = page.getByRole('button', { name: 'Save' });
+  await uploadButton.click();
+  try {
+    await expect(saveButton).toBeVisible({ timeout: 2_000 });
+  } catch {
+    if (await uploadButton.isVisible()) await uploadButton.click();
+  }
+  await expect(saveButton).toBeVisible({ timeout: 10_000 });
+  await saveButton.click();
+}
+
 /**
  * Calculates tomorrow's date formatted as yyyy/mm/dd for the Carbon date picker.
  */
@@ -347,7 +360,9 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       await expect(fileItem).toBeVisible({ timeout: 10_000 });
 
       // Wait for file processing to complete (status changes from 'uploading' to 'edit')
-      await expect(page.getByText(/Uploading/)).toHaveCount(0, { timeout: 15_000 });
+      await expect(page.getByRole('button', { name: /Uploading file/ })).toHaveCount(0, {
+        timeout: 15_000,
+      });
 
       // Step 2: Fill in the start date (must be tomorrow)
       const dateInput = page.getByLabel('Start date');
@@ -356,8 +371,14 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       await page.keyboard.press('Enter');
 
       // Step 3: Wait for button to be enabled then click
-      await expect(page.getByTestId('upload-table-button')).toBeEnabled({ timeout: 10_000 });
-      await page.getByTestId('upload-table-button').click();
+      await expect(page.getByTestId('upload-table-button')).toHaveAttribute(
+        'data-upload-ready',
+        'true',
+        {
+          timeout: 10_000,
+        },
+      );
+      await reviewAndSave(page);
 
       // Step 4: Verify navigation to the details page
       await expect(page).toHaveURL(/\/configuration\/district-volume-tables\/42/, {
@@ -393,7 +414,9 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       await expect(fileItem).toBeVisible({ timeout: 10_000 });
 
       // Wait for file processing to complete (status changes from 'uploading' to 'edit')
-      await expect(page.getByText(/Uploading/)).toHaveCount(0, { timeout: 15_000 });
+      await expect(page.getByRole('button', { name: /Uploading file/ })).toHaveCount(0, {
+        timeout: 15_000,
+      });
 
       // Step 2: Fill in the start date (must be tomorrow)
       const dateInput = page.getByLabel('Start date');
@@ -402,8 +425,14 @@ test.describe('District Volume Table Upload Page - E2E', () => {
       await page.keyboard.press('Enter');
 
       // Step 3: Wait for button to be enabled then click
-      await expect(page.getByTestId('upload-table-button')).toBeEnabled({ timeout: 10_000 });
-      await page.getByTestId('upload-table-button').click();
+      await expect(page.getByTestId('upload-table-button')).toHaveAttribute(
+        'data-upload-ready',
+        'true',
+        {
+          timeout: 10_000,
+        },
+      );
+      await reviewAndSave(page);
 
       // Step 4: Verify navigation to the details page
       await expect(page).toHaveURL(/\/configuration\/district-volume-tables\/42/, {
