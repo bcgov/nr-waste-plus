@@ -4,7 +4,8 @@
 @use '@carbon/type' as *;
 
 .species-composition-upload {
-  &__content {
+  &__content,
+  &__review {
     form {
       display: flex;
       flex-direction: column;

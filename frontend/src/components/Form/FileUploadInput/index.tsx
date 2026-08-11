@@ -303,22 +303,18 @@ function FileUploadInput<T>({
         const isProcessing = processingUuids.has(uuid);
         const isInvalid = !!errors?.length;
         return (
-          <div
+          <FileUploaderItem
             key={uuid}
-            className={isInvalid ? 'file-upload-item--invalid' : undefined}
+            className={`file-upload-item ${isInvalid ? 'file-upload-item--invalid' : ''}`}
             data-testid="file-upload-item"
             data-processing={isProcessing ? 'true' : 'false'}
-          >
-            <FileUploaderItem
-              className={`file-upload-item ${isInvalid ? 'file-upload-item--invalid' : ''}`}
-              uuid={uuid}
-              name={file.name}
-              status={isProcessing ? 'uploading' : 'edit'}
-              invalid={isInvalid}
-              errorSubject={errors?.join('; ')}
-              onDelete={handleDelete}
-            />
-          </div>
+            uuid={uuid}
+            name={file.name}
+            status={isProcessing ? 'uploading' : 'edit'}
+            invalid={isInvalid}
+            errorSubject={errors?.join('; ')}
+            onDelete={handleDelete}
+          />
         );
       })}
       {allComponentErrors.length > 0 && (

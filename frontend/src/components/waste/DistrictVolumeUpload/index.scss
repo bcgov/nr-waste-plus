@@ -4,18 +4,18 @@
 @use '@carbon/react/scss/colors' as *;
 
 .district-volume-upload {
-
-  &-column__content {
+  &-column__content,
+  &-column__review {
     form {
       display: flex;
       flex-direction: column;
       margin-top: $spacing-08;
       gap: $spacing-08;
 
-      @include breakpoint-down(md) {      
+      @include breakpoint-down(md) {
         margin-top: $spacing-01;
         padding: $spacing-05 $spacing-07;
-        flex-shrink: 0;      
+        flex-shrink: 0;
       }
 
       .button-group {
@@ -32,5 +32,4 @@
   &-submitting-text {
     margin-left: $spacing-02;
   }
-
 }

@@ -131,15 +131,7 @@ const SpeciesCompositionUpload: FC = () => {
   const hasRows = tableData.rows.length > 0;
 
   return (
-    <Column
-      max={4}
-      xlg={4}
-      lg={4}
-      md={4}
-      sm={4}
-      className="species-composition-upload__content"
-      data-testid="species-composition-upload-column"
-    >
+    <>
       <form
         data-testid="species-composition-upload-form"
         onSubmit={(e) => {
@@ -149,12 +141,28 @@ const SpeciesCompositionUpload: FC = () => {
         }}
       >
         {isReviewing ? (
-          <SpeciesCompositionReviewTable
-            rows={tableData.rows}
-            data-testid="species-composition-review-table"
-          />
+          <Column
+            lg={16}
+            md={8}
+            sm={4}
+            className="species-composition-upload__review"
+            data-testid="species-composition-upload-column"
+          >
+            <SpeciesCompositionReviewTable
+              rows={tableData.rows}
+              data-testid="species-composition-review-table"
+            />
+          </Column>
         ) : (
-          <>
+          <Column
+            max={4}
+            xlg={4}
+            lg={4}
+            md={4}
+            sm={4}
+            className="species-composition-upload__content"
+            data-testid="species-composition-upload-column"
+          >
             <form.Field name="startDate">
               {(field) => (
                 <div className="form-field">
@@ -195,7 +203,7 @@ const SpeciesCompositionUpload: FC = () => {
               onProcessed={handleFileChange}
               externalErrors={fileErrors}
             />
-          </>
+          </Column>
         )}
 
         {submitError && (
@@ -219,7 +227,7 @@ const SpeciesCompositionUpload: FC = () => {
           )}
         </form.Subscribe>
       </form>
-    </Column>
+    </>
   );
 };
 
