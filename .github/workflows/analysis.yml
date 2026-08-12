@@ -250,13 +250,54 @@ jobs:
           name: sbom-legacy
           path: java/legacy
       - name: Submit SBOMs to Dependency Graph
-        uses: evryfs/sbom-dependency-submission-action@4466eb923772acc3bd54081f8e2a0ef601d2f28a # v0.0.14
-        with:
-          sbom-files: |
-            node/cypress/sbom-cypress.json
-            node/frontend/sbom-frontend.json
-            java/backend/application.cdx.json
-            java/legacy/application.cdx.json
+        run: |
+          # Use official dependency-submission-toolkit directly (fixes evryfs action bug: .values() on array,
+          # and avoids deprecated node16 runtime). Replicates action's map() logic with array-safe tools parsing.
+          npm install --global @github/dependency-submission-toolkit@1.2.7 @cyclonedx/cyclonedx-library@1.8.0
+          node << 'NODE_EOF'
+          const fs = require('fs');
+          const path = require('path');
+          const github = require('@actions/github');
+          const { Snapshot, submitSnapshot, BuildTarget, PackageCache } = require('@github/dependency-submission-toolkit');
+
+          const sbomFiles = [
+            'node/cypress/sbom-cypress.json',
+            'node/frontend/sbom-frontend.json',
+            'java/backend/application.cdx.json',
+            'java/legacy/application.cdx.json'
+          ];
+
+          async function process(file) {
+            const raw = fs.readFileSync(file, 'utf8');
+            const sbom = JSON.parse(raw);
+
+            // FIX: metadata.tools is an array in CycloneDX JSON (not Set/.values())
+            const tools = Array.isArray(sbom.metadata?.tools) ? sbom.metadata.tools : [];
+            const detectors = tools.map(tool => ({
+              name: tool.name || 'unknown',
+              version: tool.version || 'unknown',
+              url: (tool.externalReferences && tool.externalReferences[0] && tool.externalReferences[0].url) ? tool.externalReferences[0].url : 'https://'
+            }));
+            const detector = detectors.pop() || { name: 'sbom-submission', version: '1.0.0', url: 'https://github.com/' };
+
+            const snapshot = new Snapshot(detector, github.context);
+            const manifestName = (sbom.metadata?.component?.name) ||
+              (sbom.metadata?.component?.swid?.version ? sbom.metadata.component.swid.version : '') ||
+              (sbom.metadata?.component?.version ? sbom.metadata.component.version : '') ||
+              path.basename(file, '.json');
+            const buildTarget = new BuildTarget(manifestName);
+            snapshot.addManifest(buildTarget);
+
+            await submitSnapshot(snapshot, github.context);
+            console.log('Submitted snapshot for ' + file);
+          }
+
+          (async () => {
+            for (const f of sbomFiles) {
+              try { await process(f); } catch (e) { console.error('Failed on ' + f + ': ' + e.message); process.exit(1); }
+            }
+          })();
+          NODE_EOF
 
   # ==========================================================================
   # WARNING: This job acts as the required merge gate for this workflow.
