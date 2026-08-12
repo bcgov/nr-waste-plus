@@ -134,6 +134,16 @@ vi.mock('@/components/Form/FileUploadInput', () => ({
   ),
 }));
 
+// Mock the review table so the submit-flow tests do not render the heavy
+// 19-column Carbon matrix (TableResource) on every review cycle — that render
+// takes seconds under V8 coverage and blows past the 15s CI test timeout.
+// The matrix rendering itself is covered by SpeciesCompositionDetailMatrix tests.
+vi.mock('./SpeciesCompositionReviewTable', () => ({
+  default: ({ 'data-testid': testId }: { 'data-testid'?: string }) => (
+    <div data-testid={testId}>review table mock</div>
+  ),
+}));
+
 // ============================================================================
 // Helpers
 // ============================================================================
@@ -326,30 +336,59 @@ describe('SpeciesCompositionUpload', () => {
     });
 
     it('should review parsed data before mutating and save only after confirmation', async () => {
-      const user = userEvent.setup();
-      await renderWithAppAsync(<SpeciesCompositionUpload />);
-      await user.upload(screen.getByTestId('mock-file-input'), new File(['test'], 'test.xlsx'));
+      // Fix 6b: sync act() + findBy flush under V8 coverage —
+      // `renderWithAppAsync` hangs under V8 coverage instrumentation.
+      // See wiki/kb/frontend/testing-library-act-warnings.md Fix 6b.
+      // eslint-disable-next-line testing-library/no-unnecessary-act
+      await act(() => {
+        renderWithApp(<SpeciesCompositionUpload />);
+      });
+      await screen.findByTestId('mock-file-input');
 
-      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      await userEvent.upload(
+        screen.getByTestId('mock-file-input'),
+        new File(['test'], 'test.xlsx'),
+      );
+
+      await waitFor(() => {
+        expect((screen.getByTestId('upload-table-button') as HTMLButtonElement).disabled).toBe(
+          false,
+        );
+      });
+
+      // Fix 6a: fireEvent.click instead of userEvent.click on Carbon
+      // buttons — userEvent.click hangs under V8 coverage on CI.
+      // See wiki/kb/frontend/testing-library-act-warnings.md Fix 6a.
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Upload table' }));
       expect(mockMutateAsync).not.toHaveBeenCalled();
-      expect(screen.getByTestId('species-composition-review-table')).toBeTruthy();
+      expect(await screen.findByTestId('species-composition-review-table')).toBeTruthy();
 
-      await user.click(screen.getByRole('button', { name: 'Back' }));
-      expect(screen.getByTestId('mock-file-input')).toBeTruthy();
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+      await screen.findByTestId('mock-file-input');
       expect(mockMutateAsync).not.toHaveBeenCalled();
 
-      await user.click(screen.getByRole('button', { name: 'Upload table' }));
-      await user.click(screen.getByRole('button', { name: 'Save' }));
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Upload table' }));
+      await screen.findByRole('button', { name: 'Save' });
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
       await waitFor(() => expect(mockMutateAsync).toHaveBeenCalledTimes(1));
     });
 
     it('should call mutateAsync with tableData on valid submission', async () => {
-      const user = userEvent.setup();
-      await renderWithAppAsync(<SpeciesCompositionUpload />);
+      // Fix 6b: sync act() + findBy flush under V8 coverage.
+      // eslint-disable-next-line testing-library/no-unnecessary-act
+      await act(() => {
+        renderWithApp(<SpeciesCompositionUpload />);
+      });
+      await screen.findByTestId('mock-file-input');
 
       // Upload a file first to populate data
       const fileInput = screen.getByTestId('mock-file-input');
-      await user.upload(
+      await userEvent.upload(
         fileInput,
         new File(['test'], 'test.xlsx', {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -363,8 +402,11 @@ describe('SpeciesCompositionUpload', () => {
       });
 
       // Click the Upload table button (calls handleSubmit)
-      await user.click(screen.getByRole('button', { name: 'Upload table' }));
-      await user.click(screen.getByRole('button', { name: 'Save' }));
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Upload table' }));
+      await screen.findByRole('button', { name: 'Save' });
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(mockMutateAsync).toHaveBeenCalledWith(
@@ -386,14 +428,18 @@ describe('SpeciesCompositionUpload', () => {
     });
 
     it('should show submit error when mutation throws an Error', async () => {
-      const user = userEvent.setup();
       mockMutateAsync.mockRejectedValue(new Error('API failure'));
 
-      await renderWithAppAsync(<SpeciesCompositionUpload />);
+      // Fix 6b: sync act() + findBy flush under V8 coverage.
+      // eslint-disable-next-line testing-library/no-unnecessary-act
+      await act(() => {
+        renderWithApp(<SpeciesCompositionUpload />);
+      });
+      await screen.findByTestId('mock-file-input');
 
       // Upload data to enable submit
       const fileInput = screen.getByTestId('mock-file-input');
-      await user.upload(
+      await userEvent.upload(
         fileInput,
         new File(['test'], 'test.xlsx', {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -406,8 +452,11 @@ describe('SpeciesCompositionUpload', () => {
         );
       });
 
-      await user.click(screen.getByRole('button', { name: 'Upload table' }));
-      await user.click(screen.getByRole('button', { name: 'Save' }));
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Upload table' }));
+      await screen.findByRole('button', { name: 'Save' });
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(screen.getByTestId('submit-error')).toBeTruthy();
@@ -416,13 +465,17 @@ describe('SpeciesCompositionUpload', () => {
     });
 
     it('should show generic submit error when mutation throws a non-Error', async () => {
-      const user = userEvent.setup();
       mockMutateAsync.mockRejectedValue('unknown error');
 
-      await renderWithAppAsync(<SpeciesCompositionUpload />);
+      // Fix 6b: sync act() + findBy flush under V8 coverage.
+      // eslint-disable-next-line testing-library/no-unnecessary-act
+      await act(() => {
+        renderWithApp(<SpeciesCompositionUpload />);
+      });
+      await screen.findByTestId('mock-file-input');
 
       const fileInput = screen.getByTestId('mock-file-input');
-      await user.upload(
+      await userEvent.upload(
         fileInput,
         new File(['test'], 'test.xlsx', {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -435,8 +488,11 @@ describe('SpeciesCompositionUpload', () => {
         );
       });
 
-      await user.click(screen.getByRole('button', { name: 'Upload table' }));
-      await user.click(screen.getByRole('button', { name: 'Save' }));
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Upload table' }));
+      await screen.findByRole('button', { name: 'Save' });
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(screen.getByTestId('submit-error')).toBeTruthy();
@@ -445,13 +501,17 @@ describe('SpeciesCompositionUpload', () => {
     });
 
     it('should clear previous submit error on new submission attempt', async () => {
-      const user = userEvent.setup();
       mockMutateAsync.mockRejectedValueOnce(new Error('First failure'));
 
-      await renderWithAppAsync(<SpeciesCompositionUpload />);
+      // Fix 6b: sync act() + findBy flush under V8 coverage.
+      // eslint-disable-next-line testing-library/no-unnecessary-act
+      await act(() => {
+        renderWithApp(<SpeciesCompositionUpload />);
+      });
+      await screen.findByTestId('mock-file-input');
 
       const fileInput = screen.getByTestId('mock-file-input');
-      await user.upload(
+      await userEvent.upload(
         fileInput,
         new File(['test'], 'test.xlsx', {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -465,8 +525,11 @@ describe('SpeciesCompositionUpload', () => {
       });
 
       // First submission — fails
-      await user.click(screen.getByRole('button', { name: 'Upload table' }));
-      await user.click(screen.getByRole('button', { name: 'Save' }));
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Upload table' }));
+      await screen.findByRole('button', { name: 'Save' });
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(screen.getByTestId('submit-error')).toBeTruthy();
@@ -474,7 +537,8 @@ describe('SpeciesCompositionUpload', () => {
 
       // Second submission — should clear error before attempt
       mockMutateAsync.mockResolvedValue(undefined);
-      await user.click(screen.getByRole('button', { name: 'Save' }));
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(screen.queryByTestId('submit-error')).toBeNull();
