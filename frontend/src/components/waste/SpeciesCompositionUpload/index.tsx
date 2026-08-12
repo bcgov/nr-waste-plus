@@ -12,7 +12,7 @@ import type {
 } from '@/services/speciesComposition.types';
 
 import FileUploadInput from '@/components/Form/FileUploadInput';
-import UploadReviewActions from '@/components/waste/UploadReviewActions';
+import UploadFormActions from '@/components/waste/UploadFormActions';
 import { useSpeciesCompositionCreateMutation } from '@/config/react-query/hooks';
 import { navigateInTree } from '@/routes/inTreePaths';
 import { SpeciesCompositionProcessor } from '@/services/speciescomposition/processors/speciesCompositionProcessor';
@@ -208,20 +208,15 @@ const SpeciesCompositionUpload: FC = () => {
               </>
             )}
           </Grid>
-          <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-            {([canSubmit, isSubmitting]) => (
-              <UploadReviewActions
-                isReviewing={isReviewing}
-                canSubmit={canSubmit}
-                isSubmitting={isSubmitting}
-                isMutationPending={createMutation.isPending}
-                hasData={hasRows}
-                onSubmit={handleSubmit}
-                onBack={handleBackToUpload}
-                onCancel={handleCancel}
-              />
-            )}
-          </form.Subscribe>
+          <UploadFormActions
+            form={form}
+            isReviewing={isReviewing}
+            isMutationPending={createMutation.isPending}
+            hasData={hasRows}
+            onSubmit={handleSubmit}
+            onBack={handleBackToUpload}
+            onCancel={handleCancel}
+          />
         </form>
       </Column>
 

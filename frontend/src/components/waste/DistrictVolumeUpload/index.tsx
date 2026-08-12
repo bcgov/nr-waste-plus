@@ -9,9 +9,8 @@ import {
 import { useForm } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
-import { useCallback, useState, type FC } from 'react';
+import { useCallback, useState, type FC, type ReactNode } from 'react';
 
-import type { TableHeaderType } from '@/components/Form/TableResource/types';
 import type {
   CoastData,
   CoastDistrictRow,
@@ -23,7 +22,7 @@ import type {
 import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 import FileUploadInput from '@/components/Form/FileUploadInput';
 import DistrictVolumeDetailTabs from '@/components/waste/DistrictVolumeDetail/DistrictVolumeDetailTabs';
-import UploadReviewActions from '@/components/waste/UploadReviewActions';
+import UploadFormActions from '@/components/waste/UploadFormActions';
 import {
   useDistrictOptionsQuery,
   useDistrictVolumeTableCreateMutation,
@@ -44,6 +43,16 @@ const DATE_FORMAT = 'yyyy-MM-dd' as const;
 /** Singleton processor for district volume file parsing. */
 const processor = new DistrictVolumeProcessor();
 
+const precisionNumberColumn = <T extends object, K extends keyof T & string>(
+  key: K,
+  header: string,
+): { key: K; header: string; selected: true; renderAs: (value: string | number) => ReactNode } => ({
+  key,
+  header,
+  selected: true,
+  renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
+});
+
 interface DistrictVolumeReviewTableProps {
   /** Parsed district volume data to display. */
   readonly data: TableData;
@@ -59,75 +68,44 @@ const DistrictVolumeReviewTable: FC<DistrictVolumeReviewTableProps> = ({ data })
     const code = typeof value === 'string' ? value : '';
     return <span title={districtMap.get(code) ?? code}>{code}</span>;
   };
-  const headers: TableHeaderType<InteriorDistrictRow>[] = [
-    {
-      key: 'code',
-      header: 'District',
-      selected: true,
-      renderAs: renderDistrict,
-    },
-    {
-      key: 'avoidableSawlog',
-      header: 'Avoidable sawlog',
-      selected: true,
-      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
-    },
-    {
-      key: 'avoidableGrade4',
-      header: 'Avoidable Grade 4',
-      selected: true,
-      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
-    },
-    {
-      key: 'unavoidableGrade4',
-      header: 'Unavoidable Grade 4',
-      selected: true,
-      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
-    },
-    {
-      key: 'total',
-      header: 'Total',
-      selected: true,
-      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
-    },
+  const districtColumn = {
+    key: 'code' as const,
+    header: 'District',
+    selected: true as const,
+    renderAs: renderDistrict,
+  };
+  const headers = [
+    districtColumn,
+    precisionNumberColumn<InteriorDistrictRow, 'avoidableSawlog'>(
+      'avoidableSawlog',
+      'Avoidable sawlog',
+    ),
+    precisionNumberColumn<InteriorDistrictRow, 'avoidableGrade4'>(
+      'avoidableGrade4',
+      'Avoidable Grade 4',
+    ),
+    precisionNumberColumn<InteriorDistrictRow, 'unavoidableGrade4'>(
+      'unavoidableGrade4',
+      'Unavoidable Grade 4',
+    ),
+    precisionNumberColumn<InteriorDistrictRow, 'total'>('total', 'Total'),
   ];
-  const coastHeaders: TableHeaderType<CoastDistrictRow>[] = [
-    {
-      key: 'code',
-      header: 'District',
-      selected: true,
-      renderAs: renderDistrict,
-    },
-    {
-      key: 'avoidableSawlog',
-      header: 'Avoidable sawlog',
-      selected: true,
-      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
-    },
-    {
-      key: 'avoidableHembalGradeU',
-      header: 'Avoidable Hembal Grade U',
-      selected: true,
-      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
-    },
-    {
-      key: 'avoidableGradeY',
-      header: 'Avoidable Grade Y',
-      selected: true,
-      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
-    },
-    {
-      key: 'unavoidable',
-      header: 'Unavoidable',
-      selected: true,
-      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
-    },
-    {
-      key: 'total',
-      header: 'Total',
-      selected: true,
-      renderAs: (value) => <PrecisionNumberTag value={value} precision={3} />,
-    },
+  const coastHeaders = [
+    districtColumn,
+    precisionNumberColumn<CoastDistrictRow, 'avoidableSawlog'>(
+      'avoidableSawlog',
+      'Avoidable sawlog',
+    ),
+    precisionNumberColumn<CoastDistrictRow, 'avoidableHembalGradeU'>(
+      'avoidableHembalGradeU',
+      'Avoidable Hembal Grade U',
+    ),
+    precisionNumberColumn<CoastDistrictRow, 'avoidableGradeY'>(
+      'avoidableGradeY',
+      'Avoidable Grade Y',
+    ),
+    precisionNumberColumn<CoastDistrictRow, 'unavoidable'>('unavoidable', 'Unavoidable'),
+    precisionNumberColumn<CoastDistrictRow, 'total'>('total', 'Total'),
   ];
 
   return (
@@ -514,20 +492,15 @@ const DistrictVolumeTableUpload: FC = () => {
               </>
             )}
           </Grid>
-          <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-            {([canSubmit, isSubmitting]) => (
-              <UploadReviewActions
-                isReviewing={isReviewing}
-                canSubmit={canSubmit}
-                isSubmitting={isSubmitting}
-                isMutationPending={createMutation.isPending}
-                onSubmit={handleSubmit}
-                onBack={handleBackToUpload}
-                onCancel={handleCancel}
-                uploadReady={hasUploadedData ? 'true' : 'false'}
-              />
-            )}
-          </form.Subscribe>
+          <UploadFormActions
+            form={form}
+            isReviewing={isReviewing}
+            isMutationPending={createMutation.isPending}
+            onSubmit={handleSubmit}
+            onBack={handleBackToUpload}
+            onCancel={handleCancel}
+            uploadReady={hasUploadedData ? 'true' : 'false'}
+          />
         </form>
       </Column>
 
