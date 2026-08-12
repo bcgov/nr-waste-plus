@@ -1,5 +1,6 @@
 import { Login } from '@carbon/icons-react';
 import { Button, Column, Grid } from '@carbon/react';
+import { useEffect } from 'react';
 
 import type { BreakpointType } from '@/hooks/useBreakpoint/types';
 import type { FC } from 'react';
@@ -9,6 +10,22 @@ import { useTheme } from '@/context/theme/useTheme';
 import useBreakpoint from '@/hooks/useBreakpoint';
 
 import './index.scss';
+
+/**
+ * Preload hints scoped to the Landing route. Injected imperatively into
+ * `document.head` on mount and removed on unmount so other routes never
+ * trigger the "preloaded but not used" browser warning. Re-applied when the
+ * theme changes so the logo preload matches the `<img>` actually rendered.
+ *
+ * The `landing.webp` hero is a static asset; the logo is theme-conditional
+ * (`g100` → `bc-gov-logo-rev.svg`, otherwise `bc-gov-logo.svg`), so the
+ * preload `href` tracks the same theme value as the image src.
+ */
+const LANDING_PRELOAD_HREF = '/img/landing.webp';
+const LOGO_PRELOAD_HREF_BY_THEME: Record<string, string> = {
+  g100: '/img/bc-gov-logo-rev.svg',
+  default: '/img/bc-gov-logo.svg',
+};
 
 /**
  * Displays the public landing page and authentication entry points.
@@ -38,6 +55,52 @@ const LandingPage: FC = () => {
    * Determines whether the login buttons should share a single row.
    */
   const isBtnSingleRow = breakpoint === 'max' || breakpoint === 'xlg' || breakpoint === 'md';
+
+  /**
+   * Logo URL matching the current theme. Mirrors the `src` of the logo `<img>`
+   * below so the preload hint always targets the asset that will actually be
+   * rendered (otherwise the browser would fetch a different theme variant and
+   * re-emit the same "preloaded but not used" warning).
+   */
+  const logoSrc =
+    theme === 'g100' ? LOGO_PRELOAD_HREF_BY_THEME.g100 : LOGO_PRELOAD_HREF_BY_THEME.default;
+
+  /**
+   * Inject `<link rel="preload">` hints for the Landing page above-the-fold
+   * images into `document.head` on mount, and remove them on unmount. The
+   * hints are scoped to this route only — other routes never emit them, so the
+   * browser's "preloaded but not used within N seconds" warning is suppressed
+   * app-wide except on Landing, where the corresponding `<img>` elements
+   * consume the preloaded URLs during the initial render.
+   *
+   * Re-runs when `logoSrc` changes (theme switch) so the preload target
+   * matches the rendered `<img>`.
+   */
+  useEffect(() => {
+    const links: HTMLLinkElement[] = [];
+
+    const addLink = (href: string, type: string, as: 'image', fetchpriority?: 'high') => {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = as;
+      link.type = type;
+      link.href = href;
+      if (fetchpriority) {
+        link.fetchPriority = fetchpriority;
+      }
+      document.head.appendChild(link);
+      links.push(link);
+    };
+
+    addLink(logoSrc, 'image/svg+xml', 'image');
+    addLink(LANDING_PRELOAD_HREF, 'image/webp', 'image', 'high');
+
+    return () => {
+      for (const link of links) {
+        link.remove();
+      }
+    };
+  }, [logoSrc]);
 
   return (
     <div className="landing-grid-container">
