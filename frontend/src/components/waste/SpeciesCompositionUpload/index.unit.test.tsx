@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import SpeciesCompositionUpload from './index';
 
 import * as hooks from '@/config/react-query/hooks';
-import { renderWithAppAsync } from '@/config/tests/renderWithApp';
+import { renderWithApp, renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as inTreePaths from '@/routes/inTreePaths';
 
 // ============================================================================
@@ -497,7 +497,15 @@ describe('SpeciesCompositionUpload', () => {
 
   describe('native form submission (onSubmit handler)', () => {
     it('should handle native form submit event', async () => {
-      await renderWithAppAsync(<SpeciesCompositionUpload />);
+      // Fix 6b: sync act() + findByText flush under V8 coverage —
+      // `renderWithAppAsync` hangs under V8 coverage instrumentation.
+      // See wiki/kb/frontend/testing-library-act-warnings.md Fix 6b.
+      // eslint-disable-next-line testing-library/no-unnecessary-act
+      await act(() => {
+        renderWithApp(<SpeciesCompositionUpload />);
+      });
+      // Drain deferred router/form work via findBy (waitFor-backed).
+      await screen.findByTestId('mock-file-input');
 
       // Upload data first
       const fileInput = screen.getByTestId('mock-file-input');
@@ -517,7 +525,11 @@ describe('SpeciesCompositionUpload', () => {
       // Trigger native form submission (simulates pressing Enter)
       fireEvent.submit(screen.getByTestId('species-composition-upload-form'));
       expect(await screen.findByRole('button', { name: 'Save' })).toBeTruthy();
-      await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+      // Fix 6a: fireEvent.click instead of userEvent.click on Carbon
+      // components — userEvent.click hangs under V8 coverage on CI.
+      // See wiki/kb/frontend/testing-library-act-warnings.md Fix 6a.
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(mockMutateAsync).toHaveBeenCalled();
