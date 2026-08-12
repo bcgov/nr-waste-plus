@@ -1,0 +1,13 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/theme' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+@use '@carbon/react/scss/colors' as *;
+
+.district-volume-upload {
+  &-column__banner {
+    @include breakpoint-down(md) {
+      padding: $spacing-02 $spacing-04;
+      flex-shrink: 0;
+    }
+  }
+}

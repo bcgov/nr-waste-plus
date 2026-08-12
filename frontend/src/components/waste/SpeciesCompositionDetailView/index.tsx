@@ -3,11 +3,13 @@ import { type FC } from 'react';
 
 import SpeciesCompositionDetailMatrix from './SpeciesCompositionDetailMatrix';
 
-import type { SpeciesCompositionDetail } from '@/services/speciesComposition.types';
-
 import PageNotification from '@/components/core/PageNotification';
 import DateTag from '@/components/core/Tags/DateTag';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
+import {
+  speciesCompositionDataSchema,
+  type SpeciesCompositionDetail,
+} from '@/services/speciesComposition.types';
 
 /**
  * Props for the {@link SpeciesCompositionDetailView} component.
@@ -27,6 +29,8 @@ interface SpeciesCompositionDetailViewProps {
  */
 
 const SpeciesCompositionDetailView: FC<SpeciesCompositionDetailViewProps> = ({ data }) => {
+  const tableData = speciesCompositionDataSchema.safeParse(data?.tableData);
+
   return (
     <>
       {/* Metadata header */}
@@ -42,7 +46,7 @@ const SpeciesCompositionDetailView: FC<SpeciesCompositionDetailViewProps> = ({ d
       </div>
 
       {/* Matrix table */}
-      <SpeciesCompositionDetailMatrix rows={data.tableData.rows} />
+      <SpeciesCompositionDetailMatrix rows={tableData.success ? tableData.data.rows : []} />
     </>
   );
 };

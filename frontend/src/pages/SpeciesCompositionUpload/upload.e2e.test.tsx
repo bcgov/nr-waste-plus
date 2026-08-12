@@ -399,6 +399,10 @@ test.describe('Species Composition Upload Page - E2E', () => {
       // Step 2: Wait for button to be enabled then click
       await expect(page.getByTestId('upload-table-button')).toBeEnabled({ timeout: 10_000 });
       await page.getByTestId('upload-table-button').click();
+      await expect(page.getByTestId('species-composition-matrix')).toBeVisible();
+      await expect(page.getByRole('columnheader', { name: 'District' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Save' })).toBeVisible();
+      await page.getByRole('button', { name: 'Save' }).click();
 
       // Step 3: Verify navigation to the details page
       await expect(page).toHaveURL(/\/configuration\/species-composition\/42/, {
@@ -448,6 +452,8 @@ test.describe('Species Composition Upload Page - E2E', () => {
       // Click upload
       await expect(page.getByTestId('upload-table-button')).toBeEnabled({ timeout: 10_000 });
       await page.getByTestId('upload-table-button').click();
+      await expect(page.getByRole('button', { name: 'Save' })).toBeVisible();
+      await page.getByRole('button', { name: 'Save' }).click();
 
       // Should show an error notification (Carbon toast or inline error)
       // The mutation error handler should display a notification

@@ -5,7 +5,6 @@
 .species-composition-upload-column__notification {
   display: flex;
   flex-direction: column;
-  margin-top: $spacing-08;
   gap: $spacing-08;
 
   @include breakpoint-down(md) {

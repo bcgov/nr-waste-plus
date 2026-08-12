@@ -98,7 +98,7 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
     PageRequest pageable = PageRequest.of(0, 10);
 
-    when(districtVolumeRepository.findAll(pageable))
+    when(districtVolumeRepository.findAllByConfigType(ConfigType.DISTRICT_VOLUME, pageable))
         .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
     var result =
@@ -108,6 +108,8 @@ class DistrictVolumeServiceTest {
     assertThat(result.getTotalElements()).isEqualTo(1);
     assertThat(result.getContent()).hasSize(1);
     assertThat(result.getContent().get(0).area()).isEqualTo("INTERIOR");
+    verify(districtVolumeRepository).findAllByConfigType(ConfigType.DISTRICT_VOLUME, pageable);
+    verify(districtVolumeRepository, never()).findAll(pageable);
   }
 
   @Test
@@ -118,7 +120,10 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
     PageRequest pageable = PageRequest.of(0, 10);
 
-    when(districtVolumeRepository.findByArea(Area.INTERIOR, pageable))
+    when(districtVolumeRepository.findAllByConfigTypeAndArea(
+            ConfigType.DISTRICT_VOLUME,
+            Area.INTERIOR,
+            pageable))
         .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
     var result =
@@ -129,6 +134,11 @@ class DistrictVolumeServiceTest {
     assertThat(result).isNotNull();
     assertThat(result.getTotalElements()).isEqualTo(1);
     assertThat(result.getContent().get(0).area()).isEqualTo("INTERIOR");
+    verify(districtVolumeRepository).findAllByConfigTypeAndArea(
+        ConfigType.DISTRICT_VOLUME,
+        Area.INTERIOR,
+        pageable);
+    verify(districtVolumeRepository, never()).findByArea(Area.INTERIOR, pageable);
   }
 
   @Test
@@ -138,7 +148,7 @@ class DistrictVolumeServiceTest {
 
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
 
-    when(districtVolumeRepository.findById(1L))
+    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.DISTRICT_VOLUME))
         .thenReturn(Optional.of(entity));
 
     DistrictVolumeDetailDto result =
@@ -154,13 +164,29 @@ class DistrictVolumeServiceTest {
       "getDistrictVolumeById — should throw 404 when entity not found")
   void getDistrictVolumeById_throws404_whenNotFound() {
 
-    when(districtVolumeRepository.findById(99L))
+    when(districtVolumeRepository.findByIdAndConfigType(99L, ConfigType.DISTRICT_VOLUME))
         .thenReturn(Optional.empty());
 
     assertThatThrownBy(
           () -> districtVolumeService.getDistrictVolumeById(99L))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("District volume record not found");
+  }
+
+  @Test
+  @DisplayName(
+      "getDistrictVolumeById — should reject a record with another config type")
+  void getDistrictVolumeById_throws404_whenConfigTypeDoesNotMatch() {
+
+    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.DISTRICT_VOLUME))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(
+          () -> districtVolumeService.getDistrictVolumeById(1L))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("District volume record not found");
+
+    verify(districtVolumeRepository, never()).findById(1L);
   }
 
   @Test
@@ -344,7 +370,9 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity savedEntity = buildEntity(Area.INTERIOR);
     savedEntity.setTableLevelFactor(new BigDecimal("1.150"));
 
-    when(districtVolumeRepository.findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.INTERIOR))
+    when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.DISTRICT_VOLUME,
+            Area.INTERIOR))
         .thenReturn(Collections.emptyList());
     when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
         .thenReturn(savedEntity);
@@ -390,7 +418,9 @@ class DistrictVolumeServiceTest {
     savedEntity.setEndDate(null);
     savedEntity.setTableLevelFactor(new BigDecimal("1.150"));
 
-    when(districtVolumeRepository.findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.INTERIOR))
+    when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.DISTRICT_VOLUME,
+            Area.INTERIOR))
         .thenReturn(List.of(existingOpenEntry));
     when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
         .thenReturn(existingOpenEntry, savedEntity);
@@ -403,7 +433,10 @@ class DistrictVolumeServiceTest {
     ArgumentCaptor<DistrictVolumeEntity> saveCaptor =
         ArgumentCaptor.forClass(DistrictVolumeEntity.class);
 
-    verify(districtVolumeRepository).findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.INTERIOR);
+    verify(districtVolumeRepository)
+        .findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.DISTRICT_VOLUME,
+            Area.INTERIOR);
     verify(districtVolumeRepository, org.mockito.Mockito.times(2)).save(saveCaptor.capture());
 
     List<DistrictVolumeEntity> savedEntities = saveCaptor.getAllValues();
@@ -448,7 +481,9 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity existingOpenEntry = buildEntity(Area.INTERIOR);
     existingOpenEntry.setStartDate(existingStartDate);
 
-    when(districtVolumeRepository.findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.INTERIOR))
+    when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.DISTRICT_VOLUME,
+            Area.INTERIOR))
         .thenReturn(List.of(existingOpenEntry));
 
     assertThatThrownBy(
@@ -486,7 +521,9 @@ class DistrictVolumeServiceTest {
     olderOpenEntry.setId(2L);
     olderOpenEntry.setStartDate(LocalDate.of(2026, Month.JANUARY, 1));
 
-    when(districtVolumeRepository.findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.INTERIOR))
+    when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.DISTRICT_VOLUME,
+            Area.INTERIOR))
         .thenReturn(List.of(newestOpenEntry, olderOpenEntry));
 
     assertThatThrownBy(
@@ -522,7 +559,9 @@ class DistrictVolumeServiceTest {
     savedEntity.setTableLevelFactor(new BigDecimal("1.200"));
     savedEntity.setHeliMultiplier(new BigDecimal("1.500"));
 
-    when(districtVolumeRepository.findByAreaAndEndDateIsNullOrderByStartDateDesc(Area.COASTAL))
+    when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.DISTRICT_VOLUME,
+            Area.COASTAL))
         .thenReturn(Collections.emptyList());
     when(districtVolumeRepository.save(
             any(DistrictVolumeEntity.class)))
@@ -594,7 +633,7 @@ class DistrictVolumeServiceTest {
 
     assertThat(result).isEmpty();
     verify(districtVolumeRepository, never())
-        .findActiveByArea(any(), any());
+        .findActiveByConfigTypeAndArea(any(), any(), any());
   }
 
   @Test
@@ -607,10 +646,12 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity coastalEntity =
         buildEntityWithDistricts(Area.COASTAL, "DND");
 
-    when(districtVolumeRepository.findActiveByArea(eq(Area.INTERIOR), any()))
-        .thenReturn(List.of(interiorEntity));
-    when(districtVolumeRepository.findActiveByArea(eq(Area.COASTAL), any()))
-        .thenReturn(List.of(coastalEntity));
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.INTERIOR), any()))
+        .thenReturn(Optional.of(interiorEntity));
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.COASTAL), any()))
+        .thenReturn(Optional.of(coastalEntity));
 
     var result = districtVolumeService.getAreasForDistrictCode("DND");
 
@@ -625,10 +666,12 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity interiorEntity =
         buildEntityWithDistricts(Area.INTERIOR, "DND");
 
-    when(districtVolumeRepository.findActiveByArea(eq(Area.INTERIOR), any()))
-        .thenReturn(List.of(interiorEntity));
-    when(districtVolumeRepository.findActiveByArea(eq(Area.COASTAL), any()))
-        .thenReturn(List.of());
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.INTERIOR), any()))
+        .thenReturn(Optional.of(interiorEntity));
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.COASTAL), any()))
+        .thenReturn(Optional.empty());
 
     var result = districtVolumeService.getAreasForDistrictCode("DND");
 
@@ -643,10 +686,12 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity coastalEntity =
         buildEntityWithDistricts(Area.COASTAL, "DND");
 
-    when(districtVolumeRepository.findActiveByArea(eq(Area.INTERIOR), any()))
-        .thenReturn(List.of());
-    when(districtVolumeRepository.findActiveByArea(eq(Area.COASTAL), any()))
-        .thenReturn(List.of(coastalEntity));
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.INTERIOR), any()))
+        .thenReturn(Optional.empty());
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.COASTAL), any()))
+        .thenReturn(Optional.of(coastalEntity));
 
     var result = districtVolumeService.getAreasForDistrictCode("DND");
 
@@ -664,10 +709,12 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity coastalEntity =
         buildEntityWithDistricts(Area.COASTAL, "OTHER");
 
-    when(districtVolumeRepository.findActiveByArea(eq(Area.INTERIOR), any()))
-        .thenReturn(List.of(interiorEntity));
-    when(districtVolumeRepository.findActiveByArea(eq(Area.COASTAL), any()))
-        .thenReturn(List.of(coastalEntity));
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.INTERIOR), any()))
+        .thenReturn(Optional.of(interiorEntity));
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.COASTAL), any()))
+        .thenReturn(Optional.of(coastalEntity));
 
     var result = districtVolumeService.getAreasForDistrictCode("DND");
 
@@ -679,10 +726,12 @@ class DistrictVolumeServiceTest {
       "getAreasForDistrictCode — should return empty list when no active config exists")
   void getAreasForDistrictCode_returnsEmptyList_whenNoActiveConfig() {
 
-    when(districtVolumeRepository.findActiveByArea(eq(Area.INTERIOR), any()))
-        .thenReturn(List.of());
-    when(districtVolumeRepository.findActiveByArea(eq(Area.COASTAL), any()))
-        .thenReturn(List.of());
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.INTERIOR), any()))
+        .thenReturn(Optional.empty());
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.COASTAL), any()))
+        .thenReturn(Optional.empty());
 
     var result = districtVolumeService.getAreasForDistrictCode("DND");
 
@@ -700,7 +749,7 @@ class DistrictVolumeServiceTest {
 
     assertThat(result).isEmpty();
     verify(districtVolumeRepository, never())
-        .findActiveByArea(any(), any());
+        .findActiveByConfigTypeAndArea(any(), any(), any());
   }
 
   @Test
@@ -712,7 +761,7 @@ class DistrictVolumeServiceTest {
 
     assertThat(result).isEmpty();
     verify(districtVolumeRepository, never())
-        .findActiveByArea(any(), any());
+        .findActiveByConfigTypeAndArea(any(), any(), any());
   }
 
   @Test
@@ -725,10 +774,12 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity coastalEntity =
         buildEntityWithDistricts(Area.COASTAL, "DND", "DFO");
 
-    when(districtVolumeRepository.findActiveByArea(eq(Area.INTERIOR), any()))
-        .thenReturn(List.of(interiorEntity));
-    when(districtVolumeRepository.findActiveByArea(eq(Area.COASTAL), any()))
-        .thenReturn(List.of(coastalEntity));
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.INTERIOR), any()))
+        .thenReturn(Optional.of(interiorEntity));
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.COASTAL), any()))
+        .thenReturn(Optional.of(coastalEntity));
 
     var result =
         districtVolumeService.getAreasForMultipleDistricts(
@@ -747,10 +798,12 @@ class DistrictVolumeServiceTest {
           + "active config exists")
   void getAreasForMultipleDistricts_returnsEmptyLists_whenNoActiveConfig() {
 
-    when(districtVolumeRepository.findActiveByArea(eq(Area.INTERIOR), any()))
-        .thenReturn(List.of());
-    when(districtVolumeRepository.findActiveByArea(eq(Area.COASTAL), any()))
-        .thenReturn(List.of());
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.INTERIOR), any()))
+        .thenReturn(Optional.empty());
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.COASTAL), any()))
+        .thenReturn(Optional.empty());
 
     var result =
         districtVolumeService.getAreasForMultipleDistricts(
@@ -770,10 +823,12 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity coastalEntity =
         buildEntityWithDistricts(Area.COASTAL, "DND");
 
-    when(districtVolumeRepository.findActiveByArea(eq(Area.INTERIOR), any()))
-        .thenReturn(List.of());
-    when(districtVolumeRepository.findActiveByArea(eq(Area.COASTAL), any()))
-        .thenReturn(List.of(coastalEntity));
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.INTERIOR), any()))
+        .thenReturn(Optional.empty());
+    when(districtVolumeRepository.findActiveByConfigTypeAndArea(
+            eq(ConfigType.DISTRICT_VOLUME), eq(Area.COASTAL), any()))
+        .thenReturn(Optional.of(coastalEntity));
 
     var result =
         districtVolumeService.getAreasForMultipleDistricts(List.of("dnd"));

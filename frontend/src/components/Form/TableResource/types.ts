@@ -81,6 +81,9 @@ export function getHeaderId<T>(header: TableHeaderType<T>): string {
 
 export function renderCell<T>(row: T, header: TableHeaderType<T, NestedKeyOf<T>>): React.ReactNode {
   const value = getValueByPath(row, header.key);
+  if (value == null) {
+    return '-';
+  }
   if (header.renderAs) {
     return header.renderAs(value);
   }

@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import SpeciesCompositionUpload from './index';
 
 import * as hooks from '@/config/react-query/hooks';
-import { renderWithAppAsync } from '@/config/tests/renderWithApp';
+import { renderWithApp, renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as inTreePaths from '@/routes/inTreePaths';
 
 // ============================================================================
@@ -14,6 +14,47 @@ import * as inTreePaths from '@/routes/inTreePaths';
 // ============================================================================
 
 vi.mock('@/config/react-query/hooks');
+
+vi.mock('@carbon/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@carbon/react')>();
+  return {
+    ...actual,
+    DatePicker: ({ children, onChange }: any) => (
+      <div>
+        {children}
+        <button
+          type="button"
+          data-testid="mock-species-date"
+          onClick={() => onChange([new Date(2026, 7, 13)])}
+        >
+          Select date
+        </button>
+        <button type="button" data-testid="mock-no-species-date" onClick={() => onChange([])}>
+          Clear date
+        </button>
+        <button
+          type="button"
+          data-testid="mock-species-no-selection"
+          onClick={() => onChange([undefined])}
+        >
+          No selection
+        </button>
+      </div>
+    ),
+    DatePickerInput: ({
+      id,
+      labelText,
+      invalid: _invalid,
+      invalidText: _invalidText,
+      ...props
+    }: any) => (
+      <label htmlFor={id}>
+        {labelText}
+        <input id={id} {...props} />
+      </label>
+    ),
+  };
+});
 
 const mockMutateAsync = vi.fn();
 const mockUseSpeciesCompositionCreateMutation = vi.mocked(
@@ -90,6 +131,16 @@ vi.mock('@/components/Form/FileUploadInput', () => ({
         </div>
       ))}
     </div>
+  ),
+}));
+
+// Mock the review table so the submit-flow tests do not render the heavy
+// 19-column Carbon matrix (TableResource) on every review cycle — that render
+// takes seconds under V8 coverage and blows past the 15s CI test timeout.
+// The matrix rendering itself is covered by SpeciesCompositionDetailMatrix tests.
+vi.mock('./SpeciesCompositionReviewTable', () => ({
+  default: ({ 'data-testid': testId }: { 'data-testid'?: string }) => (
+    <div data-testid={testId}>review table mock</div>
   ),
 }));
 
@@ -249,13 +300,95 @@ describe('SpeciesCompositionUpload', () => {
   });
 
   describe('form submission', () => {
-    it('should call mutateAsync with tableData on valid submission', async () => {
+    it('should show validation error when submitting without rows', async () => {
+      await renderWithAppAsync(<SpeciesCompositionUpload />);
+
+      // Invoke the form action directly through the enabled-state-independent native submit.
+      fireEvent.submit(screen.getByTestId('species-composition-upload-form'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('submit-error').textContent).toContain(
+          'Please upload a valid species composition spreadsheet file',
+        );
+      });
+    });
+
+    it('should update the start date when a date is selected', async () => {
       const user = userEvent.setup();
       await renderWithAppAsync(<SpeciesCompositionUpload />);
 
+      await user.click(screen.getByTestId('mock-species-date'));
+      expect(screen.getByTestId('start-date-picker')).toBeTruthy();
+    });
+
+    it('should leave the start date unchanged when the date picker is cleared', async () => {
+      await renderWithAppAsync(<SpeciesCompositionUpload />);
+      await userEvent.click(screen.getByTestId('mock-no-species-date'));
+
+      expect(screen.getByTestId('start-date-picker')).toBeTruthy();
+    });
+
+    it('should ignore a date picker event without a selection', async () => {
+      await renderWithAppAsync(<SpeciesCompositionUpload />);
+      await userEvent.click(screen.getByTestId('mock-species-no-selection'));
+
+      expect(screen.getByTestId('start-date-picker')).toBeTruthy();
+    });
+
+    it('should review parsed data before mutating and save only after confirmation', async () => {
+      // Fix 6b: sync act() + findBy flush under V8 coverage —
+      // `renderWithAppAsync` hangs under V8 coverage instrumentation.
+      // See wiki/kb/frontend/testing-library-act-warnings.md Fix 6b.
+      // eslint-disable-next-line testing-library/no-unnecessary-act
+      await act(() => {
+        renderWithApp(<SpeciesCompositionUpload />);
+      });
+      await screen.findByTestId('mock-file-input');
+
+      await userEvent.upload(
+        screen.getByTestId('mock-file-input'),
+        new File(['test'], 'test.xlsx'),
+      );
+
+      await waitFor(() => {
+        expect((screen.getByTestId('upload-table-button') as HTMLButtonElement).disabled).toBe(
+          false,
+        );
+      });
+
+      // Fix 6a: fireEvent.click instead of userEvent.click on Carbon
+      // buttons — userEvent.click hangs under V8 coverage on CI.
+      // See wiki/kb/frontend/testing-library-act-warnings.md Fix 6a.
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Upload table' }));
+      expect(mockMutateAsync).not.toHaveBeenCalled();
+      expect(await screen.findByTestId('species-composition-review-table')).toBeTruthy();
+
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+      await screen.findByTestId('mock-file-input');
+      expect(mockMutateAsync).not.toHaveBeenCalled();
+
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Upload table' }));
+      await screen.findByRole('button', { name: 'Save' });
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+      await waitFor(() => expect(mockMutateAsync).toHaveBeenCalledTimes(1));
+    });
+
+    it('should call mutateAsync with tableData on valid submission', async () => {
+      // Fix 6b: sync act() + findBy flush under V8 coverage.
+      // eslint-disable-next-line testing-library/no-unnecessary-act
+      await act(() => {
+        renderWithApp(<SpeciesCompositionUpload />);
+      });
+      await screen.findByTestId('mock-file-input');
+
       // Upload a file first to populate data
       const fileInput = screen.getByTestId('mock-file-input');
-      await user.upload(
+      await userEvent.upload(
         fileInput,
         new File(['test'], 'test.xlsx', {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -269,7 +402,11 @@ describe('SpeciesCompositionUpload', () => {
       });
 
       // Click the Upload table button (calls handleSubmit)
-      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Upload table' }));
+      await screen.findByRole('button', { name: 'Save' });
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(mockMutateAsync).toHaveBeenCalledWith(
@@ -291,14 +428,18 @@ describe('SpeciesCompositionUpload', () => {
     });
 
     it('should show submit error when mutation throws an Error', async () => {
-      const user = userEvent.setup();
       mockMutateAsync.mockRejectedValue(new Error('API failure'));
 
-      await renderWithAppAsync(<SpeciesCompositionUpload />);
+      // Fix 6b: sync act() + findBy flush under V8 coverage.
+      // eslint-disable-next-line testing-library/no-unnecessary-act
+      await act(() => {
+        renderWithApp(<SpeciesCompositionUpload />);
+      });
+      await screen.findByTestId('mock-file-input');
 
       // Upload data to enable submit
       const fileInput = screen.getByTestId('mock-file-input');
-      await user.upload(
+      await userEvent.upload(
         fileInput,
         new File(['test'], 'test.xlsx', {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -311,7 +452,11 @@ describe('SpeciesCompositionUpload', () => {
         );
       });
 
-      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Upload table' }));
+      await screen.findByRole('button', { name: 'Save' });
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(screen.getByTestId('submit-error')).toBeTruthy();
@@ -320,13 +465,17 @@ describe('SpeciesCompositionUpload', () => {
     });
 
     it('should show generic submit error when mutation throws a non-Error', async () => {
-      const user = userEvent.setup();
       mockMutateAsync.mockRejectedValue('unknown error');
 
-      await renderWithAppAsync(<SpeciesCompositionUpload />);
+      // Fix 6b: sync act() + findBy flush under V8 coverage.
+      // eslint-disable-next-line testing-library/no-unnecessary-act
+      await act(() => {
+        renderWithApp(<SpeciesCompositionUpload />);
+      });
+      await screen.findByTestId('mock-file-input');
 
       const fileInput = screen.getByTestId('mock-file-input');
-      await user.upload(
+      await userEvent.upload(
         fileInput,
         new File(['test'], 'test.xlsx', {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -339,7 +488,11 @@ describe('SpeciesCompositionUpload', () => {
         );
       });
 
-      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Upload table' }));
+      await screen.findByRole('button', { name: 'Save' });
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(screen.getByTestId('submit-error')).toBeTruthy();
@@ -348,13 +501,17 @@ describe('SpeciesCompositionUpload', () => {
     });
 
     it('should clear previous submit error on new submission attempt', async () => {
-      const user = userEvent.setup();
       mockMutateAsync.mockRejectedValueOnce(new Error('First failure'));
 
-      await renderWithAppAsync(<SpeciesCompositionUpload />);
+      // Fix 6b: sync act() + findBy flush under V8 coverage.
+      // eslint-disable-next-line testing-library/no-unnecessary-act
+      await act(() => {
+        renderWithApp(<SpeciesCompositionUpload />);
+      });
+      await screen.findByTestId('mock-file-input');
 
       const fileInput = screen.getByTestId('mock-file-input');
-      await user.upload(
+      await userEvent.upload(
         fileInput,
         new File(['test'], 'test.xlsx', {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -368,7 +525,11 @@ describe('SpeciesCompositionUpload', () => {
       });
 
       // First submission — fails
-      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Upload table' }));
+      await screen.findByRole('button', { name: 'Save' });
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(screen.getByTestId('submit-error')).toBeTruthy();
@@ -376,7 +537,8 @@ describe('SpeciesCompositionUpload', () => {
 
       // Second submission — should clear error before attempt
       mockMutateAsync.mockResolvedValue(undefined);
-      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(screen.queryByTestId('submit-error')).toBeNull();
@@ -399,7 +561,15 @@ describe('SpeciesCompositionUpload', () => {
 
   describe('native form submission (onSubmit handler)', () => {
     it('should handle native form submit event', async () => {
-      await renderWithAppAsync(<SpeciesCompositionUpload />);
+      // Fix 6b: sync act() + findByText flush under V8 coverage —
+      // `renderWithAppAsync` hangs under V8 coverage instrumentation.
+      // See wiki/kb/frontend/testing-library-act-warnings.md Fix 6b.
+      // eslint-disable-next-line testing-library/no-unnecessary-act
+      await act(() => {
+        renderWithApp(<SpeciesCompositionUpload />);
+      });
+      // Drain deferred router/form work via findBy (waitFor-backed).
+      await screen.findByTestId('mock-file-input');
 
       // Upload data first
       const fileInput = screen.getByTestId('mock-file-input');
@@ -418,6 +588,12 @@ describe('SpeciesCompositionUpload', () => {
 
       // Trigger native form submission (simulates pressing Enter)
       fireEvent.submit(screen.getByTestId('species-composition-upload-form'));
+      expect(await screen.findByRole('button', { name: 'Save' })).toBeTruthy();
+      // Fix 6a: fireEvent.click instead of userEvent.click on Carbon
+      // components — userEvent.click hangs under V8 coverage on CI.
+      // See wiki/kb/frontend/testing-library-act-warnings.md Fix 6a.
+      // eslint-disable-next-line testing-library/prefer-user-event
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(mockMutateAsync).toHaveBeenCalled();

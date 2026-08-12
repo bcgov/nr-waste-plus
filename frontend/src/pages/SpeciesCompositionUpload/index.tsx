@@ -23,7 +23,10 @@ const SpeciesCompositionUploadPage: FC = () => {
         <PageTitle
           title="Upload new species composition table"
           subtitle="Load .xls or .xlsx file to calculate volumes by species when HBS mark monthly billing history report is not available"
-          breadCrumbs={[{ name: 'Configuration', path: '/configuration' }]}
+          breadCrumbs={[
+            { name: 'Configuration', path: '/configuration' },
+            { name: 'Species composition', path: '/configuration/species-composition' },
+          ]}
         />
       </Column>
 

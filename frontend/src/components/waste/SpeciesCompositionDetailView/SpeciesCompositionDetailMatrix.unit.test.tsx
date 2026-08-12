@@ -145,6 +145,27 @@ describe('SpeciesCompositionDetailMatrix', () => {
     expect(getMockCallArgs().content.content).toHaveLength(2);
   });
 
+  it('should omit malformed rows while preserving valid rows', () => {
+    const validRow = createTableData().rows[0];
+    const malformedRows = [
+      validRow,
+      { district: null, species: validRow.species },
+      { district: validRow.district, species: { AL: 'not-a-number' } },
+      { district: validRow.district, species: null },
+    ];
+
+    render(
+      <SpeciesCompositionDetailMatrix
+        rows={
+          malformedRows as unknown as Parameters<typeof SpeciesCompositionDetailMatrix>[0]['rows']
+        }
+      />,
+    );
+
+    expect(getMockCallArgs().content.content).toHaveLength(1);
+    expect(getMockCallArgs().content.content[0]).toMatchObject({ id: 'DCC' });
+  });
+
   it('should fetch district options via useDistrictOptionsQuery', () => {
     const tableData = createTableData();
     render(<SpeciesCompositionDetailMatrix rows={tableData.rows} />);
@@ -164,6 +185,33 @@ describe('SpeciesCompositionDetailMatrix', () => {
 
     const result = districtHeader?.renderAs?.({ code: 'DCC', description: 'Cariboo-Chilcotin' });
     expect(result).toBeTruthy();
+  });
+
+  it('should render a safe fallback for malformed district render values', () => {
+    render(<SpeciesCompositionDetailMatrix rows={createTableData().rows} />);
+
+    const districtHeader = getMockCallArgs().headers.find((h) => h.key === 'district');
+    const result = districtHeader?.renderAs?.(null);
+
+    expect(result).toBeTruthy();
+  });
+
+  it('should use fallback identifiers and descriptions when optional values are absent', () => {
+    const tableData = createTableData();
+    const rowWithNullCode = {
+      ...tableData.rows[0],
+      district: { code: null, description: null },
+    };
+    render(<SpeciesCompositionDetailMatrix rows={[...tableData.rows, rowWithNullCode]} />);
+
+    const { headers } = getMockCallArgs();
+    const districtHeader = headers.find((h) => h.key === 'district');
+    expect(
+      districtHeader?.renderAs?.({ code: 'UNKNOWN', description: 'Unknown district' }),
+    ).toBeTruthy();
+    expect(districtHeader?.renderAs?.({ code: 'UNKNOWN', description: null })).toBeTruthy();
+    expect(getMockCallArgs().content.content).toHaveLength(3);
+    expect(getMockCallArgs().content.content[2]).toMatchObject({ id: 'unknown-2' });
   });
 
   it('should pass numeric species columns without renderAs', () => {

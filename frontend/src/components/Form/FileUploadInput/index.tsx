@@ -1,6 +1,7 @@
 import { FileUploaderDropContainer, FileUploaderItem, FormItem } from '@carbon/react';
 import prettyBytes from 'pretty-bytes';
-import { type SyntheticEvent, useEffect, useId, useState } from 'react';
+import { type SyntheticEvent, useId, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 import { type FileProcessor } from './fileProcessor';
 
@@ -138,16 +139,6 @@ function FileUploadInput<T>({
 
   const fmt = (bytes: number) => prettyBytes(bytes, { maximumFractionDigits: 1 });
 
-  // Emit whenever processedData changes. Decoupled from the async handler to
-  // avoid stale-closure race conditions when batches are added concurrently.
-  // The size===0 guard prevents a spurious empty emission on the initial render.
-  // NOTE: onProcessed must be stable (useCallback) in the parent, otherwise
-  // this effect fires on every render.
-  useEffect(() => {
-    if (processedData.size === 0) return;
-    onProcessed(Array.from(processedData.values()).flat());
-  }, [processedData, onProcessed]);
-
   const handleAddFiles = async (
     _evt: SyntheticEvent<HTMLElement>,
     { addedFiles }: { addedFiles: File[] },
@@ -252,12 +243,19 @@ function FileUploadInput<T>({
       return next;
     });
 
+    const hasSuccessfulResult = entryResults.some(({ data }) => data !== null);
+    const newlyProcessedData = entryResults.flatMap(({ data }) => data ?? []);
+    if (hasSuccessfulResult) {
+      flushSync(() => {
+        onProcessed([...processedData.values()].flat().concat(newlyProcessedData));
+      });
+    }
+
     setProcessingUuids((prev) => {
       const next = new Set(prev);
       for (const { uuid } of entryResults) next.delete(uuid);
       return next;
     });
-    // Emission handled by the useEffect above.
   };
 
   const handleDelete = (_evt: SyntheticEvent, { uuid }: { uuid: string }) => {
@@ -272,7 +270,6 @@ function FileUploadInput<T>({
       next.delete(uuid);
       return next;
     });
-
     setComponentErrors([]);
     // Delete is a synchronous, non-concurrent operation; emit directly so an
     // empty result is reported even when processedData reaches size 0 (the
@@ -307,9 +304,10 @@ function FileUploadInput<T>({
         const isInvalid = !!errors?.length;
         return (
           <FileUploaderItem
+            key={uuid}
             className={`file-upload-item ${isInvalid ? 'file-upload-item--invalid' : ''}`}
             data-testid="file-upload-item"
-            key={uuid}
+            data-processing={isProcessing ? 'true' : 'false'}
             uuid={uuid}
             name={file.name}
             status={isProcessing ? 'uploading' : 'edit'}

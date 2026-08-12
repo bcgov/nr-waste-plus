@@ -38,10 +38,14 @@ import './index.scss';
 const DistrictVolumeTableUploadPage: FC = () => {
   return (
     <>
-      <Column lg={16} md={8} sm={4} className="create-ru-column__banner">
+      <Column lg={16} md={8} sm={4} className="district-volume-upload-column__banner">
         <PageTitle
           title="Upload new volumes table"
           subtitle="Load .xlsx file to calculate waste volumes when district averages waste assessment is used"
+          breadCrumbs={[
+            { name: 'Configuration', path: '/configuration' },
+            { name: 'District average volumes', path: '/configuration/district-volume-tables' },
+          ]}
         />
       </Column>
 
@@ -49,8 +53,8 @@ const DistrictVolumeTableUploadPage: FC = () => {
         lg={16}
         md={8}
         sm={4}
-        className="create-ru-column__notification"
-        data-testid="create-ru-column__notification"
+        className="district-volume-upload-column__notification"
+        data-testid="district-volume-upload-column__notification"
       >
         <PageNotification eventTarget="upload-table" />
       </Column>

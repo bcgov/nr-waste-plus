@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -22,12 +22,14 @@ import * as inTreePaths from '@/routes/inTreePaths';
  * - `mockTableData` controls what FileUploadInput's onProcessed receives
  * - `coastValidator` / `interiorValidator` intercept format-validation calls
  */
-const { mockListSheets, mockTableData, coastValidator, interiorValidator } = vi.hoisted(() => ({
-  mockListSheets: vi.fn().mockResolvedValue(['Interior']),
-  mockTableData: { current: null as unknown },
-  coastValidator: vi.fn().mockResolvedValue([] as string[]),
-  interiorValidator: vi.fn().mockResolvedValue([] as string[]),
-}));
+const { mockListSheets, mockTableData, coastValidator, interiorValidator, bypassValidation } =
+  vi.hoisted(() => ({
+    mockListSheets: vi.fn().mockResolvedValue(['Interior']),
+    mockTableData: { current: null as unknown },
+    coastValidator: vi.fn().mockResolvedValue([] as string[]),
+    interiorValidator: vi.fn().mockResolvedValue([] as string[]),
+    bypassValidation: { current: false },
+  }));
 
 // Mock ExcelReader so the validator doesn't need real .xlsx files
 // Must use a regular function (not arrow) so `new ExcelReader()` works as a constructor.
@@ -47,6 +49,69 @@ vi.mock('@/services/districtvolumes/validators/interiorValidator', () => ({
 }));
 
 vi.mock('@/config/react-query/hooks');
+
+vi.mock('@carbon/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@carbon/react')>();
+  return {
+    ...actual,
+    DatePicker: ({ children, onChange }: any) => (
+      <div>
+        {children}
+        <button
+          type="button"
+          data-testid="mock-valid-date"
+          onClick={() => onChange([new Date(2026, 7, 13)])}
+        >
+          Valid date
+        </button>
+        <button
+          type="button"
+          data-testid="mock-invalid-date"
+          onClick={() => onChange([new Date(2026, 7, 11)])}
+        >
+          Invalid date
+        </button>
+        <button type="button" data-testid="mock-empty-date" onClick={() => onChange([])}>
+          Clear date
+        </button>
+      </div>
+    ),
+    DatePickerInput: ({
+      id,
+      labelText,
+      invalid: _invalid,
+      invalidText: _invalidText,
+      ...props
+    }: any) => (
+      <>
+        <label htmlFor={id}>
+          {labelText}
+          <input id={id} {...props} />
+        </label>
+        <button
+          type="button"
+          data-testid="mock-invalid-text"
+          onClick={() => {
+            props.onChange?.({ target: { value: 'not-a-date' } });
+            props.onBlur?.();
+          }}
+        >
+          Invalid text
+        </button>
+        <button
+          type="button"
+          data-testid="mock-past-text"
+          onClick={() => {
+            props.onChange?.({ target: { value: '2020-01-01' } });
+            props.onBlur?.();
+          }}
+        >
+          Past text
+        </button>
+      </>
+    ),
+  };
+});
 
 const mockMutateAsync = vi.fn();
 const mockUseDistrictVolumeTableCreateMutation = vi.mocked(
@@ -85,14 +150,18 @@ vi.mock('@/components/Form/FileUploadInput', () => ({
         data-testid="mock-file-input"
         onChange={async (e) => {
           if (e.target.files?.[0]) {
-            if (validator) {
+            if (validator && !bypassValidation.current) {
               const errors = await validator(e.target.files[0]);
               if (errors && errors.length > 0) {
                 return;
               }
             }
 
-            onProcessed([mockTableData.current] as TableData[]);
+            onProcessed(
+              Array.isArray(mockTableData.current)
+                ? (mockTableData.current as TableData[])
+                : [mockTableData.current as TableData],
+            );
           }
         }}
       />
@@ -131,6 +200,7 @@ describe('DistrictVolumeTableUpload', () => {
     mockUseDistrictVolumeTableCreateMutation.mockReturnValue(createDefaultMutationReturn());
     // Restore hoisted mock defaults
     mockListSheets.mockResolvedValue(['Interior']);
+    bypassValidation.current = false;
     mockTableData.current = {
       type: 'INTERIOR' as const,
       zones: [{ name: 'Dry belt', districts: [] }],
@@ -208,6 +278,25 @@ describe('DistrictVolumeTableUpload', () => {
   });
 
   describe('form submission', () => {
+    it('should review parsed data before mutating and save only after confirmation', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+      await user.upload(screen.getByTestId('mock-file-input'), new File(['test'], 'interior.xlsx'));
+
+      expect(await screen.findByRole('button', { name: 'Upload table' })).toBeTruthy();
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      expect(mockMutateAsync).not.toHaveBeenCalled();
+      expect(screen.getByTestId('district-volume-review-table')).toBeTruthy();
+
+      await user.click(screen.getByRole('button', { name: 'Back' }));
+      expect(screen.getByTestId('mock-file-input')).toBeTruthy();
+      expect(mockMutateAsync).not.toHaveBeenCalled();
+
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
+      await waitFor(() => expect(mockMutateAsync).toHaveBeenCalledTimes(1));
+    });
+
     it('should show error when form validation fails and submission is attempted', async () => {
       const user = userEvent.setup();
       await renderWithAppAsync(<DistrictVolumeTableUpload />);
@@ -425,6 +514,19 @@ describe('DistrictVolumeTableUpload', () => {
   });
 
   describe('file upload processing (handleFileChange)', () => {
+    it('should ignore empty or undefined processed results', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+
+      mockTableData.current = [];
+      await user.upload(screen.getByTestId('mock-file-input'), new File(['test'], 'empty.xlsx'));
+      expect(screen.getByRole('button', { name: 'Upload table' })).toBeTruthy();
+
+      mockTableData.current = undefined;
+      await user.upload(screen.getByTestId('mock-file-input'), new File(['test'], 'missing.xlsx'));
+      expect(screen.getByRole('button', { name: 'Upload table' })).toBeTruthy();
+    });
+
     it('should update area to COASTAL and set heliMultiplier when a Coast-file result is processed', async () => {
       const user = userEvent.setup();
       await renderWithAppAsync(<DistrictVolumeTableUpload />);
@@ -453,6 +555,166 @@ describe('DistrictVolumeTableUpload', () => {
       await waitFor(() => {
         expect((screen.getByLabelText('Coast') as HTMLInputElement).checked).toBe(true);
       });
+    });
+
+    it('should reject processed data when it does not match the selected area', async () => {
+      const user = userEvent.setup();
+      mockTableData.current = {
+        type: 'COASTAL',
+        sections: [{ name: 'Mature', districts: [] }],
+        formulas: {},
+      } as unknown;
+
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+      await user.upload(screen.getByTestId('mock-file-input'), new File(['test'], 'coast.xlsx'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('file-error').textContent).toContain('Area mismatch');
+      });
+      expect((screen.getByLabelText('Interior') as HTMLInputElement).checked).toBe(true);
+    });
+
+    it('should submit through the native form handler while uploading', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+      await user.upload(screen.getByTestId('mock-file-input'), new File(['test'], 'interior.xlsx'));
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Upload table' })).toBeTruthy();
+        expect(
+          (screen.getByRole('button', { name: 'Upload table' }) as HTMLButtonElement).disabled,
+        ).toBe(false);
+      });
+      fireEvent.submit(screen.getByTestId('district-volume-upload-form'));
+
+      await screen.findByRole('button', { name: 'Save' });
+    });
+
+    it('should display all review fields when optional values are absent', async () => {
+      const user = userEvent.setup();
+      mockTableData.current = {
+        type: 'INTERIOR',
+        zones: [{ name: 'Dry belt', districts: [{ code: 'DCC', avoidableSawlog: 1, total: 1 }] }],
+        formulas: {},
+      } as unknown;
+
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+      await user.upload(screen.getByTestId('mock-file-input'), new File(['test'], 'interior.xlsx'));
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+
+      expect(screen.getByTestId('district-volume-review-table')).toBeTruthy();
+    });
+
+    it('should render coastal rows when optional values are absent', async () => {
+      const user = userEvent.setup();
+      mockTableData.current = {
+        type: 'COASTAL',
+        sections: [{ name: 'Mature', districts: [{ code: 'DCC', avoidableSawlog: 1, total: 1 }] }],
+        formulas: {},
+      } as unknown;
+      mockListSheets.mockResolvedValue(['Coast Districts']);
+
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+      await user.click(screen.getByLabelText('Coast'));
+      await waitFor(() =>
+        expect((screen.getByLabelText('Coast') as HTMLInputElement).checked).toBe(true),
+      );
+      await user.upload(screen.getByTestId('mock-file-input'), new File(['test'], 'coast.xlsx'));
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+
+      expect(screen.getByText('Mature')).toBeTruthy();
+      expect(screen.getByText('DCC')).toBeTruthy();
+    });
+
+    it('should render a valid selected start date', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+
+      await user.click(screen.getByTestId('mock-valid-date'));
+      expect(screen.getByTestId('start-date-picker')).toBeTruthy();
+    });
+
+    it('should show the opposite area mismatch when Coast is selected', async () => {
+      const user = userEvent.setup();
+      bypassValidation.current = true;
+      mockTableData.current = {
+        type: 'INTERIOR',
+        zones: [],
+        formulas: {},
+      } as unknown;
+
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+      await user.click(screen.getByRole('radio', { name: 'Coast' }));
+      await waitFor(() =>
+        expect((screen.getByRole('radio', { name: 'Coast' }) as HTMLInputElement).checked).toBe(
+          true,
+        ),
+      );
+      await user.upload(screen.getByTestId('mock-file-input'), new File(['test'], 'interior.xlsx'));
+
+      await waitFor(() => expect(screen.getByTestId('file-error').textContent).toContain('Coast'));
+    });
+
+    it('should render populated interior review rows and values', async () => {
+      const user = userEvent.setup();
+      mockTableData.current = {
+        type: 'INTERIOR',
+        zones: [
+          {
+            name: 'Dry belt',
+            districts: [
+              {
+                code: 'DCC',
+                avoidableSawlog: 1,
+                avoidableGrade4: 2,
+                unavoidableGrade4: 3,
+                total: 6,
+              },
+            ],
+          },
+        ],
+        formulas: {},
+      } as unknown;
+
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+      await user.upload(screen.getByTestId('mock-file-input'), new File(['test'], 'interior.xlsx'));
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+
+      expect(screen.getByText('Dry belt')).toBeTruthy();
+      expect(screen.getByText('DCC')).toBeTruthy();
+      expect(screen.getByText('6.000')).toBeTruthy();
+    });
+
+    it('should render populated coastal review rows and values', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+      await user.click(screen.getByLabelText('Coast'));
+      mockTableData.current = {
+        type: 'COASTAL',
+        sections: [
+          {
+            name: 'Mature',
+            districts: [
+              {
+                code: 'DCC',
+                avoidableSawlog: 1,
+                avoidableHembalGradeU: 2,
+                avoidableGradeY: 3,
+                unavoidable: 4,
+                total: 10,
+              },
+            ],
+          },
+        ],
+        formulas: {},
+      } as unknown;
+      mockListSheets.mockResolvedValue(['Coast Districts']);
+
+      await user.upload(screen.getByTestId('mock-file-input'), new File(['test'], 'coast.xlsx'));
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+
+      expect(screen.getByText('Mature')).toBeTruthy();
+      expect(screen.getByText('10.000')).toBeTruthy();
     });
   });
 
@@ -490,6 +752,7 @@ describe('DistrictVolumeTableUpload', () => {
       // 3. Submit the form by clicking the Upload table button after the async
       // validation cycle resolves.
       await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
         expect(mockMutateAsync).toHaveBeenCalledWith(
@@ -501,6 +764,66 @@ describe('DistrictVolumeTableUpload', () => {
       });
     });
 
+    it('should show the coastal validation error when no coastal data is uploaded', async () => {
+      const user = userEvent.setup();
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+      await user.click(screen.getByRole('radio', { name: 'Coast' }));
+      await waitFor(() =>
+        expect((screen.getByRole('radio', { name: 'Coast' }) as HTMLInputElement).checked).toBe(
+          true,
+        ),
+      );
+      mockTableData.current = { type: 'COASTAL', sections: [], formulas: {} };
+      mockListSheets.mockResolvedValue(['Coast Districts']);
+      await user.upload(screen.getByTestId('mock-file-input'), new File(['test'], 'coast.xlsx'));
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+
+      await waitFor(() =>
+        expect(screen.getByTestId('submit-error').textContent).toContain('Coast'),
+      );
+    });
+
+    it('should show a generic error when the district mutation rejects with a non-Error', async () => {
+      const user = userEvent.setup();
+      mockMutateAsync.mockRejectedValue('failure');
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+      await user.upload(screen.getByTestId('mock-file-input'), new File(['test'], 'interior.xlsx'));
+      await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
+
+      await waitFor(() =>
+        expect(screen.getByTestId('submit-error').textContent).toBe('Submission failed'),
+      );
+    });
+
+    it('should reset data when matching-area validation returns errors', async () => {
+      const user = userEvent.setup();
+      interiorValidator.mockResolvedValue(['Invalid rows']);
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+      await user.upload(screen.getByTestId('mock-file-input'), new File(['test'], 'interior.xlsx'));
+
+      expect(
+        (screen.getByRole('button', { name: 'Upload table' }) as HTMLButtonElement).disabled,
+      ).toBe(false);
+    });
+
+    it('should report both invalid and cleared start dates', async () => {
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+      await screen.findByTestId('mock-valid-date');
+      await userEvent.click(screen.getByTestId('mock-invalid-date'));
+      expect((screen.getByTestId('start-date-picker') as HTMLInputElement).value).toBe('');
+      await userEvent.click(screen.getByTestId('mock-empty-date'));
+      expect((screen.getByTestId('start-date-picker') as HTMLInputElement).value).toBe('');
+      await userEvent.click(screen.getByTestId('mock-valid-date'));
+      expect(screen.getByTestId('start-date-picker')).toBeTruthy();
+    });
+
+    it('should validate manually entered invalid and past start dates', async () => {
+      await renderWithAppAsync(<DistrictVolumeTableUpload />);
+      await userEvent.click(screen.getByTestId('mock-invalid-text'));
+      await userEvent.click(screen.getByTestId('mock-past-text'));
+    });
+
     it('should display a submit error when the mutation fails', async () => {
       const user = userEvent.setup();
       await renderWithAppAsync(<DistrictVolumeTableUpload />);
@@ -508,8 +831,10 @@ describe('DistrictVolumeTableUpload', () => {
       // Make mutateAsync reject on submission
       mockMutateAsync.mockRejectedValue(new Error('API failure'));
 
-      // Click submit — form validation fails (no file uploaded)
+      // Upload a valid file, then confirm the review before exercising mutation failure.
+      await user.upload(screen.getByTestId('mock-file-input'), new File(['test'], 'interior.xlsx'));
       await user.click(screen.getByRole('button', { name: 'Upload table' }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
 
       // The submit error should appear
       await waitFor(() => {
