@@ -37,6 +37,7 @@ Feature: Reporting Unit Details
 
   @loginAsBCeID
   Scenario: Legacy Data tag is displayed when the reporting unit has no grade
+    Given the reporting unit API for "36828" returns no grade
     Given I visit "/reporting-units/36828"
     Then I can read "Legacy data"
     And I can read "Grades"
@@ -82,6 +83,7 @@ Feature: Reporting Unit Details
 
   @loginAsBCeID
   Scenario: Navigating from search shows the Legacy Data tag for an RU with no grade
+    Given the reporting unit API for "36828" returns no grade
     Given I visit "/search"
     When I type "36828" into the "Search" input
     Then I search
