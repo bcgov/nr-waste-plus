@@ -57,10 +57,11 @@ const LandingPage: FC = () => {
   const isBtnSingleRow = breakpoint === 'max' || breakpoint === 'xlg' || breakpoint === 'md';
 
   /**
-   * Logo URL matching the current theme. Mirrors the `src` of the logo `<img>`
-   * below so the preload hint always targets the asset that will actually be
-   * rendered (otherwise the browser would fetch a different theme variant and
-   * re-emit the same "preloaded but not used" warning).
+   /**
+    * Logo URL matching the current theme. Keep this in sync with the logo `<img>`
+    * `src` below so the preload hint always targets the asset that will actually
+    * be rendered.
+    */
    */
   const logoSrc =
     theme === 'g100' ? LOGO_PRELOAD_HREF_BY_THEME.g100 : LOGO_PRELOAD_HREF_BY_THEME.default;
