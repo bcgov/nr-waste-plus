@@ -237,8 +237,9 @@ describe('DistrictVolumeTableDetailPage', () => {
       isError: false,
     } as ReturnType<typeof useDistrictVolumeTableDetailQuery>);
 
+    const user = userEvent.setup();
     render(<DistrictVolumeTableDetailPage />);
-    await userEvent.click(screen.getByRole('button', { name: 'Back' }));
+    await user.click(screen.getByRole('button', { name: 'Back' }));
 
     expect(mockNavigate).toHaveBeenCalledWith({
       to: '/configuration/district-volume-tables',
