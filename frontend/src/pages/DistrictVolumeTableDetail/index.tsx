@@ -58,6 +58,21 @@ const DistrictVolumeTableDetailPage: FC = () => {
         <Column lg={16} md={8} sm={4} className="district-volume-detail-column__notification">
           <PageNotification eventTarget="district-volume-detail" />
         </Column>
+        <Column
+          lg={16}
+          md={8}
+          sm={4}
+          className="district-volume-detail-column__actions"
+          data-testid="district-volume-detail-actions"
+        >
+          <Button
+            kind="secondary"
+            onClick={() => navigateInTree(navigate, '/configuration/district-volume-tables')}
+            renderIcon={ArrowLeft}
+          >
+            Back
+          </Button>
+        </Column>
       </>
     );
   }
@@ -72,20 +87,27 @@ const DistrictVolumeTableDetailPage: FC = () => {
             { name: 'Configuration', path: '/configuration' },
             { name: 'District average volumes', path: '/configuration/district-volume-tables' },
           ]}
-        >
-          <Button
-            kind="ghost"
-            onClick={() => navigateInTree(navigate, '/configuration/district-volume-tables')}
-            renderIcon={ArrowLeft}
-          >
-            Back
-          </Button>
-        </PageTitle>
+        />
       </Column>
       <Column lg={16} md={8} sm={4} className="district-volume-detail-column__notification">
         <PageNotification eventTarget="district-volume-detail" />
       </Column>
       <DistrictVolumeDetailView data={data} />
+      <Column
+        lg={16}
+        md={8}
+        sm={4}
+        className="district-volume-detail-column__actions"
+        data-testid="district-volume-detail-actions"
+      >
+        <Button
+          kind="secondary"
+          onClick={() => navigateInTree(navigate, '/configuration/district-volume-tables')}
+          renderIcon={ArrowLeft}
+        >
+          Back
+        </Button>
+      </Column>
     </>
   );
 };

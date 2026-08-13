@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -239,10 +239,22 @@ describe('DistrictVolumeTableDetailPage', () => {
 
     const user = userEvent.setup();
     render(<DistrictVolumeTableDetailPage />);
-    await user.click(screen.getByRole('button', { name: 'Back' }));
+
+    const backButton = screen.getByRole('button', { name: 'Back' });
+    await user.click(backButton);
 
     expect(mockNavigate).toHaveBeenCalledWith({
       to: '/configuration/district-volume-tables',
     });
+
+    // The Back button is placed at the bottom of the page, not in the page title.
+    expect(
+      within(screen.getByTestId('page-title')).queryByRole('button', { name: 'Back' }),
+    ).toBeNull();
+    expect(
+      within(screen.getByTestId('district-volume-detail-actions')).getByRole('button', {
+        name: 'Back',
+      }),
+    ).toBeTruthy();
   });
 });

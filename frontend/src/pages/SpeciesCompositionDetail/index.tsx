@@ -53,18 +53,25 @@ const SpeciesCompositionDetailPage: FC = () => {
               { name: 'Configuration', path: '/configuration' },
               { name: 'Species composition', path: '/configuration/species-composition' },
             ]}
-          >
-            <Button
-              kind="ghost"
-              onClick={() => navigateInTree(navigate, '/configuration/species-composition')}
-              renderIcon={ArrowLeft}
-            >
-              Back
-            </Button>
-          </PageTitle>
+          />
         </Column>
         <Column lg={16} md={8} sm={4} className="species-composition-detail-column__notification">
           <PageNotification eventTarget="species-composition-detail" />
+        </Column>
+        <Column
+          lg={16}
+          md={8}
+          sm={4}
+          className="species-composition-detail-column__actions"
+          data-testid="species-composition-detail-actions"
+        >
+          <Button
+            kind="secondary"
+            onClick={() => navigateInTree(navigate, '/configuration/species-composition')}
+            renderIcon={ArrowLeft}
+          >
+            Back
+          </Button>
         </Column>
       </>
     );
@@ -80,20 +87,27 @@ const SpeciesCompositionDetailPage: FC = () => {
             { name: 'Configuration', path: '/configuration' },
             { name: 'Species composition', path: '/configuration/species-composition' },
           ]}
-        >
-          <Button
-            kind="ghost"
-            onClick={() => navigateInTree(navigate, '/configuration/species-composition')}
-            renderIcon={ArrowLeft}
-          >
-            Back
-          </Button>
-        </PageTitle>
+        />
       </Column>
       <Column lg={16} md={8} sm={4} className="species-composition-detail-column__notification">
         <PageNotification eventTarget="species-composition-detail" />
       </Column>
       <SpeciesCompositionDetailView data={data} />
+      <Column
+        lg={16}
+        md={8}
+        sm={4}
+        className="species-composition-detail-column__actions"
+        data-testid="species-composition-detail-actions"
+      >
+        <Button
+          kind="secondary"
+          onClick={() => navigateInTree(navigate, '/configuration/species-composition')}
+          renderIcon={ArrowLeft}
+        >
+          Back
+        </Button>
+      </Column>
     </>
   );
 };

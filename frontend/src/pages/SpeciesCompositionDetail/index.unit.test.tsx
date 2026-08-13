@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from '@tanstack/react-router';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { type ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -223,9 +223,20 @@ describe('SpeciesCompositionDetailPage', () => {
     const user = userEvent.setup();
     render(<SpeciesCompositionDetailPage />);
 
-    await user.click(screen.getByRole('button', { name: 'Back' }));
+    const backButton = screen.getByRole('button', { name: 'Back' });
+    await user.click(backButton);
 
     expect(mockNavigate).toHaveBeenCalledWith({ to: '/configuration/species-composition' });
+
+    // The Back button is placed at the bottom of the page, not in the page title.
+    expect(
+      within(screen.getByTestId('page-title')).queryByRole('button', { name: 'Back' }),
+    ).toBeNull();
+    expect(
+      within(screen.getByTestId('species-composition-detail-actions')).getByRole('button', {
+        name: 'Back',
+      }),
+    ).toBeTruthy();
   });
 
   it('passes the numeric id derived from route params to the query hook', () => {
