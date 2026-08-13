@@ -1,5 +1,6 @@
-import { Column } from '@carbon/react';
-import { useParams } from '@tanstack/react-router';
+import { ArrowLeft } from '@carbon/icons-react';
+import { Button, Column } from '@carbon/react';
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { type FC } from 'react';
 
 import PageNotification from '@/components/core/PageNotification';
@@ -7,6 +8,7 @@ import PageTitle from '@/components/core/PageTitle';
 import SpeciesCompositionDetailView from '@/components/waste/SpeciesCompositionDetailView';
 import SpeciesCompositionDetailSkeleton from '@/components/waste/SpeciesCompositionDetailView/SpeciesCompositionDetailSkeleton';
 import { useSpeciesCompositionDetailQuery } from '@/config/react-query/hooks';
+import { navigateInTree } from '@/routes/inTreePaths';
 
 import './index.scss';
 
@@ -24,6 +26,7 @@ import './index.scss';
  * @returns The Species Composition Detail page.
  */
 const SpeciesCompositionDetailPage: FC = () => {
+  const navigate = useNavigate();
   const params = useParams({ strict: false });
   const id = Number(params.id);
 
@@ -44,8 +47,8 @@ const SpeciesCompositionDetailPage: FC = () => {
       <>
         <Column lg={16} md={8} sm={4} className="species-composition-detail-column__banner">
           <PageTitle
-            title={isError || !data ? 'Species composition not found' : 'Species composition table'}
-            subtitle={isError || !data ? undefined : 'View species composition table details'}
+            title="Species composition not found"
+            subtitle={undefined}
             breadCrumbs={[
               { name: 'Configuration', path: '/configuration' },
               { name: 'Species composition', path: '/configuration/species-composition' },
@@ -54,6 +57,21 @@ const SpeciesCompositionDetailPage: FC = () => {
         </Column>
         <Column lg={16} md={8} sm={4} className="species-composition-detail-column__notification">
           <PageNotification eventTarget="species-composition-detail" />
+        </Column>
+        <Column
+          lg={16}
+          md={8}
+          sm={4}
+          className="species-composition-detail-column__actions"
+          data-testid="species-composition-detail-actions"
+        >
+          <Button
+            kind="secondary"
+            onClick={() => navigateInTree(navigate, '/configuration/species-composition')}
+            renderIcon={ArrowLeft}
+          >
+            Back
+          </Button>
         </Column>
       </>
     );
@@ -75,6 +93,21 @@ const SpeciesCompositionDetailPage: FC = () => {
         <PageNotification eventTarget="species-composition-detail" />
       </Column>
       <SpeciesCompositionDetailView data={data} />
+      <Column
+        lg={16}
+        md={8}
+        sm={4}
+        className="species-composition-detail-column__actions"
+        data-testid="species-composition-detail-actions"
+      >
+        <Button
+          kind="secondary"
+          onClick={() => navigateInTree(navigate, '/configuration/species-composition')}
+          renderIcon={ArrowLeft}
+        >
+          Back
+        </Button>
+      </Column>
     </>
   );
 };

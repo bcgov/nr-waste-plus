@@ -1,4 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { useNavigate } from '@tanstack/react-router';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import DistrictVolumeTableDetailPage from './index';
@@ -13,6 +15,7 @@ import { useDistrictVolumeTableDetailQuery } from '@/config/react-query/hooks';
 
 vi.mock('@tanstack/react-router', () => ({
   useParams: vi.fn().mockReturnValue({ id: '1' }),
+  useNavigate: vi.fn(),
 }));
 
 vi.mock('@/config/react-query/hooks', () => ({
@@ -36,10 +39,12 @@ vi.mock('@/components/core/PageTitle', () => ({
     title,
     subtitle,
     breadCrumbs,
+    children,
   }: {
     title: string;
     subtitle?: string;
     breadCrumbs?: Array<{ name: string; path: string }>;
+    children?: React.ReactNode;
   }) => (
     <div data-testid="page-title">
       <span data-testid="page-title-text">{title}</span>
@@ -49,6 +54,7 @@ vi.mock('@/components/core/PageTitle', () => ({
           {crumb.name}
         </a>
       ))}
+      {children}
     </div>
   ),
 }));
@@ -84,8 +90,11 @@ const createData = (area: 'INTERIOR' | 'COASTAL', id = 1): DistrictVolumeDetail 
 // ============================================================================
 
 describe('DistrictVolumeTableDetailPage', () => {
+  const mockNavigate = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
   });
 
   it('should render DistrictVolumeDetailSkeleton when isLoading is true', () => {
@@ -131,6 +140,23 @@ describe('DistrictVolumeTableDetailPage', () => {
       'District Volume Table not found',
     );
     expect(screen.queryByTestId('district-volume-detail-view')).toBeNull();
+  });
+
+  it('should navigate back from the error state', async () => {
+    vi.mocked(useDistrictVolumeTableDetailQuery).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+    } as ReturnType<typeof useDistrictVolumeTableDetailQuery>);
+
+    const user = userEvent.setup();
+    render(<DistrictVolumeTableDetailPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/configuration/district-volume-tables',
+    });
   });
 
   it('should render page title with normalized Interior data and DistrictVolumeDetailView', () => {
@@ -218,5 +244,48 @@ describe('DistrictVolumeTableDetailPage', () => {
     expect(screen.getByTestId('breadcrumb-District average volumes').getAttribute('href')).toBe(
       '/configuration/district-volume-tables',
     );
+  });
+
+  it('should pass the numeric route id and notification target to the query hook', () => {
+    vi.mocked(useDistrictVolumeTableDetailQuery).mockReturnValue({
+      data: null,
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof useDistrictVolumeTableDetailQuery>);
+
+    render(<DistrictVolumeTableDetailPage />);
+
+    expect(useDistrictVolumeTableDetailQuery).toHaveBeenCalledWith(1, {
+      notificationTarget: 'district-volume-detail',
+    });
+  });
+
+  it('should render a Back button that navigates to the district volume list', async () => {
+    const data = createData('INTERIOR');
+    vi.mocked(useDistrictVolumeTableDetailQuery).mockReturnValue({
+      data,
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof useDistrictVolumeTableDetailQuery>);
+
+    const user = userEvent.setup();
+    render(<DistrictVolumeTableDetailPage />);
+
+    const backButton = screen.getByRole('button', { name: 'Back' });
+    await user.click(backButton);
+
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/configuration/district-volume-tables',
+    });
+
+    // The Back button is placed at the bottom of the page, not in the page title.
+    expect(
+      within(screen.getByTestId('page-title')).queryByRole('button', { name: 'Back' }),
+    ).toBeNull();
+    expect(
+      within(screen.getByTestId('district-volume-detail-actions')).getByRole('button', {
+        name: 'Back',
+      }),
+    ).toBeTruthy();
   });
 });
