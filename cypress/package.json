@@ -56,7 +56,7 @@
   "overrides": {
     "@babel/plugin-transform-modules-systemjs@<=7.29.3": "7.29.4",
     "fast-uri@<=3.1.4": "3.1.5",
-    "postcss@<8.5.18": "8.5.18",
+    "postcss@<8.5.23": "8.5.26",
     "picomatch@^4.0.0": "^4.0.4",
     "serialize-javascript": "^7.0.5",
     "lodash@^4.0.0": "^4.18.1",
