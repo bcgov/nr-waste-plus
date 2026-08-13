@@ -39,7 +39,7 @@ jobs:
             target: https://nr-waste-plus-test-frontend.apps.silver.devops.gov.bc.ca
     steps:
       - name: ZAP baseline scan
-        uses: zaproxy/action-baseline@a9a2caf103181f67a06fad3f0d4f5fe8562016b2 # v0.11.0
+        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
         with:
           artifact_name: "zap-${{ matrix.name }}"
           allow_issue_writing: false
