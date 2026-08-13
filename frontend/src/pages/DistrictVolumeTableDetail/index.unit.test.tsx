@@ -142,6 +142,23 @@ describe('DistrictVolumeTableDetailPage', () => {
     expect(screen.queryByTestId('district-volume-detail-view')).toBeNull();
   });
 
+  it('should navigate back from the error state', async () => {
+    vi.mocked(useDistrictVolumeTableDetailQuery).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+    } as ReturnType<typeof useDistrictVolumeTableDetailQuery>);
+
+    const user = userEvent.setup();
+    render(<DistrictVolumeTableDetailPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/configuration/district-volume-tables',
+    });
+  });
+
   it('should render page title with normalized Interior data and DistrictVolumeDetailView', () => {
     const data = createData('INTERIOR', 1);
     vi.mocked(useDistrictVolumeTableDetailQuery).mockReturnValue({
@@ -227,6 +244,20 @@ describe('DistrictVolumeTableDetailPage', () => {
     expect(screen.getByTestId('breadcrumb-District average volumes').getAttribute('href')).toBe(
       '/configuration/district-volume-tables',
     );
+  });
+
+  it('should pass the numeric route id and notification target to the query hook', () => {
+    vi.mocked(useDistrictVolumeTableDetailQuery).mockReturnValue({
+      data: null,
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof useDistrictVolumeTableDetailQuery>);
+
+    render(<DistrictVolumeTableDetailPage />);
+
+    expect(useDistrictVolumeTableDetailQuery).toHaveBeenCalledWith(1, {
+      notificationTarget: 'district-volume-detail',
+    });
   });
 
   it('should render a Back button that navigates to the district volume list', async () => {

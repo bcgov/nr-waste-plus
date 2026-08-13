@@ -163,6 +163,21 @@ describe('SpeciesCompositionDetailPage', () => {
     expect(screen.queryByTestId('species-composition-detail-view')).toBeNull();
   });
 
+  it('should navigate back from the error state', async () => {
+    vi.mocked(useSpeciesCompositionDetailQuery).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+    } as ReturnType<typeof useSpeciesCompositionDetailQuery>);
+
+    const user = userEvent.setup();
+    render(<SpeciesCompositionDetailPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+
+    expect(mockNavigate).toHaveBeenCalledWith({ to: '/configuration/species-composition' });
+  });
+
   it('should render page title with data and SpeciesCompositionDetailView', () => {
     const data = createData(42);
     vi.mocked(useSpeciesCompositionDetailQuery).mockReturnValue({

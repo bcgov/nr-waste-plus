@@ -47,8 +47,8 @@ const SpeciesCompositionDetailPage: FC = () => {
       <>
         <Column lg={16} md={8} sm={4} className="species-composition-detail-column__banner">
           <PageTitle
-            title={isError || !data ? 'Species composition not found' : 'Species composition table'}
-            subtitle={isError || !data ? undefined : 'View species composition table details'}
+            title="Species composition not found"
+            subtitle={undefined}
             breadCrumbs={[
               { name: 'Configuration', path: '/configuration' },
               { name: 'Species composition', path: '/configuration/species-composition' },
