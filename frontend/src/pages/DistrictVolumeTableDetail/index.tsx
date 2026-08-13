@@ -1,5 +1,6 @@
-import { Column } from '@carbon/react';
-import { useParams } from '@tanstack/react-router';
+import { ArrowLeft } from '@carbon/icons-react';
+import { Button, Column } from '@carbon/react';
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { type FC } from 'react';
 
 import PageNotification from '@/components/core/PageNotification';
@@ -7,6 +8,7 @@ import PageTitle from '@/components/core/PageTitle';
 import DistrictVolumeDetailView from '@/components/waste/DistrictVolumeDetail';
 import DistrictVolumeDetailSkeleton from '@/components/waste/DistrictVolumeDetail/DistrictVolumeDetailSkeleton';
 import { useDistrictVolumeTableDetailQuery } from '@/config/react-query/hooks';
+import { navigateInTree } from '@/routes/inTreePaths';
 
 import './index.scss';
 
@@ -24,6 +26,7 @@ import './index.scss';
  * @returns The District Volume Table Detail page.
  */
 const DistrictVolumeTableDetailPage: FC = () => {
+  const navigate = useNavigate();
   const params = useParams({ strict: false });
   const id = Number(params.id);
 
@@ -69,7 +72,15 @@ const DistrictVolumeTableDetailPage: FC = () => {
             { name: 'Configuration', path: '/configuration' },
             { name: 'District average volumes', path: '/configuration/district-volume-tables' },
           ]}
-        />
+        >
+          <Button
+            kind="ghost"
+            onClick={() => navigateInTree(navigate, '/configuration/district-volume-tables')}
+            renderIcon={ArrowLeft}
+          >
+            Back
+          </Button>
+        </PageTitle>
       </Column>
       <Column lg={16} md={8} sm={4} className="district-volume-detail-column__notification">
         <PageNotification eventTarget="district-volume-detail" />

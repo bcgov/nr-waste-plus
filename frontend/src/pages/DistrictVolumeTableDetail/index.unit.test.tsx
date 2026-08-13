@@ -1,4 +1,6 @@
+import { useNavigate } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import DistrictVolumeTableDetailPage from './index';
@@ -13,6 +15,7 @@ import { useDistrictVolumeTableDetailQuery } from '@/config/react-query/hooks';
 
 vi.mock('@tanstack/react-router', () => ({
   useParams: vi.fn().mockReturnValue({ id: '1' }),
+  useNavigate: vi.fn(),
 }));
 
 vi.mock('@/config/react-query/hooks', () => ({
@@ -36,10 +39,12 @@ vi.mock('@/components/core/PageTitle', () => ({
     title,
     subtitle,
     breadCrumbs,
+    children,
   }: {
     title: string;
     subtitle?: string;
     breadCrumbs?: Array<{ name: string; path: string }>;
+    children?: React.ReactNode;
   }) => (
     <div data-testid="page-title">
       <span data-testid="page-title-text">{title}</span>
@@ -49,6 +54,7 @@ vi.mock('@/components/core/PageTitle', () => ({
           {crumb.name}
         </a>
       ))}
+      {children}
     </div>
   ),
 }));
@@ -84,8 +90,11 @@ const createData = (area: 'INTERIOR' | 'COASTAL', id = 1): DistrictVolumeDetail 
 // ============================================================================
 
 describe('DistrictVolumeTableDetailPage', () => {
+  const mockNavigate = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
   });
 
   it('should render DistrictVolumeDetailSkeleton when isLoading is true', () => {
@@ -218,5 +227,21 @@ describe('DistrictVolumeTableDetailPage', () => {
     expect(screen.getByTestId('breadcrumb-District average volumes').getAttribute('href')).toBe(
       '/configuration/district-volume-tables',
     );
+  });
+
+  it('should render a Back button that navigates to the district volume list', async () => {
+    const data = createData('INTERIOR');
+    vi.mocked(useDistrictVolumeTableDetailQuery).mockReturnValue({
+      data,
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof useDistrictVolumeTableDetailQuery>);
+
+    render(<DistrictVolumeTableDetailPage />);
+    await userEvent.click(screen.getByRole('button', { name: 'Back' }));
+
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/configuration/district-volume-tables',
+    });
   });
 });
