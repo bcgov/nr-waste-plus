@@ -1,5 +1,6 @@
-import { Column } from '@carbon/react';
-import { useParams } from '@tanstack/react-router';
+import { ArrowLeft } from '@carbon/icons-react';
+import { Button, Column } from '@carbon/react';
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { type FC } from 'react';
 
 import PageNotification from '@/components/core/PageNotification';
@@ -7,6 +8,7 @@ import PageTitle from '@/components/core/PageTitle';
 import SpeciesCompositionDetailView from '@/components/waste/SpeciesCompositionDetailView';
 import SpeciesCompositionDetailSkeleton from '@/components/waste/SpeciesCompositionDetailView/SpeciesCompositionDetailSkeleton';
 import { useSpeciesCompositionDetailQuery } from '@/config/react-query/hooks';
+import { navigateInTree } from '@/routes/inTreePaths';
 
 import './index.scss';
 
@@ -24,6 +26,7 @@ import './index.scss';
  * @returns The Species Composition Detail page.
  */
 const SpeciesCompositionDetailPage: FC = () => {
+  const navigate = useNavigate();
   const params = useParams({ strict: false });
   const id = Number(params.id);
 
@@ -50,7 +53,15 @@ const SpeciesCompositionDetailPage: FC = () => {
               { name: 'Configuration', path: '/configuration' },
               { name: 'Species composition', path: '/configuration/species-composition' },
             ]}
-          />
+          >
+            <Button
+              kind="ghost"
+              onClick={() => navigateInTree(navigate, '/configuration/species-composition')}
+              renderIcon={ArrowLeft}
+            >
+              Back
+            </Button>
+          </PageTitle>
         </Column>
         <Column lg={16} md={8} sm={4} className="species-composition-detail-column__notification">
           <PageNotification eventTarget="species-composition-detail" />
@@ -69,7 +80,15 @@ const SpeciesCompositionDetailPage: FC = () => {
             { name: 'Configuration', path: '/configuration' },
             { name: 'Species composition', path: '/configuration/species-composition' },
           ]}
-        />
+        >
+          <Button
+            kind="ghost"
+            onClick={() => navigateInTree(navigate, '/configuration/species-composition')}
+            renderIcon={ArrowLeft}
+          >
+            Back
+          </Button>
+        </PageTitle>
       </Column>
       <Column lg={16} md={8} sm={4} className="species-composition-detail-column__notification">
         <PageNotification eventTarget="species-composition-detail" />

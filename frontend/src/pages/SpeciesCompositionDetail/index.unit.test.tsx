@@ -1,5 +1,7 @@
-import { useParams } from '@tanstack/react-router';
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { type ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import SpeciesCompositionDetailPage from './index';
@@ -13,6 +15,7 @@ import { useSpeciesCompositionDetailQuery } from '@/config/react-query/hooks';
 // ============================================================================
 
 vi.mock('@tanstack/react-router', () => ({
+  useNavigate: vi.fn(),
   useParams: vi.fn().mockReturnValue({ id: '42' }),
 }));
 
@@ -37,10 +40,12 @@ vi.mock('@/components/core/PageTitle', () => ({
     title,
     subtitle,
     breadCrumbs,
+    children,
   }: {
     title: string;
     subtitle?: string;
     breadCrumbs?: Array<{ name: string; path: string }>;
+    children?: ReactNode;
   }) => (
     <div data-testid="page-title">
       <span data-testid="page-title-text">{title}</span>
@@ -50,6 +55,7 @@ vi.mock('@/components/core/PageTitle', () => ({
           {crumb.name}
         </a>
       ))}
+      {children}
     </div>
   ),
 }));
@@ -109,8 +115,11 @@ const createData = (id = 42): SpeciesCompositionDetail =>
 // ============================================================================
 
 describe('SpeciesCompositionDetailPage', () => {
+  const mockNavigate = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
   });
 
   it('should render SpeciesCompositionDetailSkeleton when isLoading is true', () => {
@@ -202,6 +211,21 @@ describe('SpeciesCompositionDetailPage', () => {
     expect(screen.getByTestId('breadcrumb-Species composition').getAttribute('href')).toBe(
       '/configuration/species-composition',
     );
+  });
+
+  it('should render a Back button that navigates to the species composition list', async () => {
+    vi.mocked(useSpeciesCompositionDetailQuery).mockReturnValue({
+      data: createData(),
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof useSpeciesCompositionDetailQuery>);
+
+    const user = userEvent.setup();
+    render(<SpeciesCompositionDetailPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+
+    expect(mockNavigate).toHaveBeenCalledWith({ to: '/configuration/species-composition' });
   });
 
   it('passes the numeric id derived from route params to the query hook', () => {
