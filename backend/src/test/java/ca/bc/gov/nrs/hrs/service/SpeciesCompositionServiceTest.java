@@ -88,7 +88,7 @@ class SpeciesCompositionServiceTest {
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
     PageRequest pageable = PageRequest.of(0, 10);
 
-    when(districtVolumeRepository.findAllByConfigType(
+    when(districtVolumeRepository.findAllLiveByConfigType(
             ConfigType.SPECIES_COMPOSITION, pageable))
         .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
@@ -109,7 +109,7 @@ class SpeciesCompositionServiceTest {
     DistrictVolumeEntity entity = buildEntity(Area.COASTAL);
     PageRequest pageable = PageRequest.of(0, 10);
 
-    when(districtVolumeRepository.findAllByConfigTypeAndArea(
+    when(districtVolumeRepository.findAllLiveByConfigTypeAndArea(
             ConfigType.SPECIES_COMPOSITION, Area.COASTAL, pageable))
         .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
