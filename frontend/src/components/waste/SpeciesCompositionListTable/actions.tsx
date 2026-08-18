@@ -1,9 +1,7 @@
 import { useListTableRowActions } from '../useListTableRowActions';
 
 import type { SpeciesCompositionListItem } from '@/services/speciesComposition.types';
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-
-import { isFutureDated } from '@/utils/businessDate';
+import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types';
 
 type SpeciesCompositionRow = PageableResponse<SpeciesCompositionListItem>['content'][number];
 

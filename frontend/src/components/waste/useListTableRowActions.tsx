@@ -34,7 +34,8 @@ export const useListTableRowActions = <TRow extends { id: string | number }>(
           label: 'See details',
           icon: <TableShortcut />,
           onClick: (selectedRow) => {
-            navigateInTree(navigate, config.routePath.replace('{id}', String(selectedRow.id)));
+            const path = config.routePath.replace('{id}', String(selectedRow.id));
+            navigateInTree(navigate, path as any);
           },
         },
       ];
