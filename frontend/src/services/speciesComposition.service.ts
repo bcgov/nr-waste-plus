@@ -86,4 +86,25 @@ export class SpeciesCompositionService extends HttpClient {
       ...(meta === undefined ? {} : { meta }),
     });
   }
+
+  /**
+   * Soft-deletes a future-dated species composition configuration.
+   *
+   * Only entries whose start date is strictly after the current business date
+   * can be deleted; deleting a future entry reopens its predecessor. The
+   * backend is authoritative for this rule and rejects non-future entries
+   * with a 422, missing or hidden entries with a 404, and temporal conflicts
+   * with a 409.
+   *
+   * @param id The species composition configuration ID.
+   * @param meta Optional request metadata.
+   * @returns A promise that resolves when the delete completes (204 No Content).
+   */
+  deleteSpeciesComposition(id: number, meta?: Record<string, unknown>): CancelablePromise<void> {
+    return this.doRequest<void>(this.config, {
+      method: 'DELETE',
+      url: `/api/configuration/species-compositions/${id}`,
+      ...(meta === undefined ? {} : { meta }),
+    });
+  }
 }

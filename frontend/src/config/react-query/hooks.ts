@@ -707,6 +707,64 @@ export const useDistrictVolumeTableCreateMutation = (
 };
 
 /**
+ * Soft-deletes a future-dated district volume configuration.
+ *
+ * Only entries whose start date is strictly after the current business date
+ * can be deleted; the backend is authoritative for this rule and surfaces
+ * RFC 7807 problem-detail errors (404, 409, 422, 403) through the shared
+ * notification middleware.
+ *
+ * On error, dispatches an inline notification to `notificationTarget` (when
+ * supplied) using the problem-details payload from the backend when available.
+ *
+ * @param options - Optional TanStack Query mutation overrides plus:
+ *   - `notificationTarget`: Optional target for inline error notifications.
+ *   - `onSuccess`: Optional callback invoked after the delete completes (allows caller to refresh the list).
+ * @returns The TanStack Query mutation result for deleting a district volume table.
+ *
+ * @example
+ * ```tsx
+ * const mutation = useDistrictVolumeTableDeleteMutation({
+ *   notificationTarget: 'district-volume-list',
+ *   onSuccess: () => refetch(),
+ * });
+ *
+ * mutation.mutate(42);
+ * ```
+ */
+export const useDistrictVolumeTableDeleteMutation = (
+  options?: Omit<
+    UseMutationOptions<void, Error, number>,
+    'mutationKey' | 'mutationFn' | 'onSuccess'
+  > &
+    QueryNotificationOptions & {
+      /** Called after the district volume table is deleted. */
+      onSuccess?: () => void;
+    },
+) => {
+  const { notificationTarget, onSuccess, ...mutationOptions } = options ?? {};
+
+  const mutation = useMutation({
+    mutationKey: ['district-volume', 'delete'],
+    mutationFn: (id) => API.districtVolume.deleteDistrictVolume(id),
+    onSuccess: () => {
+      onSuccess?.();
+    },
+    ...mutationOptions,
+  });
+
+  useEffect(() => {
+    if (!notificationTarget || !mutation.isError || !mutation.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(mutation.error, notificationTarget);
+  }, [notificationTarget, mutation.error, mutation.isError]);
+
+  return mutation;
+};
+
+/**
  * Fetches the detailed information for a specific species composition configuration by its ID.
  *
  * On error, dispatches an inline notification to `notificationTarget` (when supplied).
@@ -840,6 +898,64 @@ export const useSpeciesCompositionCreateMutation = (
     mutationFn: (body) => API.speciesComposition.createSpeciesComposition(body),
     onSuccess: (data) => {
       onSuccess?.(data);
+    },
+    ...mutationOptions,
+  });
+
+  useEffect(() => {
+    if (!notificationTarget || !mutation.isError || !mutation.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(mutation.error, notificationTarget);
+  }, [notificationTarget, mutation.error, mutation.isError]);
+
+  return mutation;
+};
+
+/**
+ * Soft-deletes a future-dated species composition configuration.
+ *
+ * Only entries whose start date is strictly after the current business date
+ * can be deleted; the backend is authoritative for this rule and surfaces
+ * RFC 7807 problem-detail errors (404, 409, 422, 403) through the shared
+ * notification middleware.
+ *
+ * On error, dispatches an inline notification to `notificationTarget` (when
+ * supplied) using the problem-details payload from the backend when available.
+ *
+ * @param options - Optional TanStack Query mutation overrides plus:
+ *   - `notificationTarget`: Optional target for inline error notifications.
+ *   - `onSuccess`: Optional callback invoked after the delete completes (allows caller to refresh the list).
+ * @returns The TanStack Query mutation result for deleting a species composition configuration.
+ *
+ * @example
+ * ```tsx
+ * const mutation = useSpeciesCompositionDeleteMutation({
+ *   notificationTarget: 'species-composition-list',
+ *   onSuccess: () => refetch(),
+ * });
+ *
+ * mutation.mutate(42);
+ * ```
+ */
+export const useSpeciesCompositionDeleteMutation = (
+  options?: Omit<
+    UseMutationOptions<void, Error, number>,
+    'mutationKey' | 'mutationFn' | 'onSuccess'
+  > &
+    QueryNotificationOptions & {
+      /** Called after the species composition configuration is deleted. */
+      onSuccess?: () => void;
+    },
+) => {
+  const { notificationTarget, onSuccess, ...mutationOptions } = options ?? {};
+
+  const mutation = useMutation({
+    mutationKey: ['species-composition', 'delete'],
+    mutationFn: (id) => API.speciesComposition.deleteSpeciesComposition(id),
+    onSuccess: () => {
+      onSuccess?.();
     },
     ...mutationOptions,
   });

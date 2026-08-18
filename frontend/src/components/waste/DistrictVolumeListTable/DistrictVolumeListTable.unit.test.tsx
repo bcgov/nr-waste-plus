@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { act } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import DistrictVolumeListTable from './index';
@@ -8,13 +9,42 @@ import DistrictVolumeListTable from './index';
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { DistrictVolumeListItem } from '@/services/districtvolumes.types';
 
-import { renderCell } from '@/components/Form/TableResource/types';
+import { renderCell, resolveTableRowActionValue } from '@/components/Form/TableResource/types';
 import * as hooks from '@/config/react-query/hooks';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
+import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler';
 
 vi.mock('@/config/react-query/hooks');
 
+vi.mock('@/hooks/useNotificationEvents/eventHandler', () => ({
+  sendEvent: vi.fn(),
+  sendToastEvent: vi.fn(),
+  sendInlineEvent: vi.fn(),
+}));
+
+const { latestConfirmHandler } = vi.hoisted(() => ({
+  latestConfirmHandler: { current: undefined as (() => void) | undefined },
+}));
+
+vi.mock('@/components/waste/ConfigurationDeleteConfirmModal', () => ({
+  default: ({ open, configurationType, isDeleting, onConfirm, onClose }: any) => {
+    latestConfirmHandler.current = onConfirm;
+    return open ? (
+      <div data-testid="delete-confirm-modal">
+        <span>{configurationType}</span>
+        <button disabled={isDeleting} onClick={onConfirm}>
+          Confirm delete
+        </button>
+        <button onClick={onClose}>Cancel</button>
+      </div>
+    ) : null;
+  },
+}));
+
 const mockUseDistrictVolumeListQuery = vi.mocked(hooks.useDistrictVolumeListQuery);
+const mockUseDistrictVolumeTableDeleteMutation = vi.mocked(
+  hooks.useDistrictVolumeTableDeleteMutation,
+);
 
 // Mock TableResource to avoid slow Carbon component rendering
 vi.mock('@/components/Form/TableResource', () => ({
@@ -62,7 +92,7 @@ vi.mock('@/components/Form/TableResource', () => ({
                   <td>
                     {getRowActions(row).map((action: any) => (
                       <button key={action.id} onClick={() => action.onClick(row)}>
-                        {typeof action.label === 'string' ? action.label : 'Action'}
+                        {resolveTableRowActionValue(action.label, row)}
                       </button>
                     ))}
                   </td>
@@ -165,9 +195,29 @@ const mockMultiPageData: PageableResponse<DistrictVolumeListItem> = {
   page: { number: 0, size: 10, totalElements: 25, totalPages: 3 },
 };
 
+const mockFutureData: PageableResponse<DistrictVolumeListItem> = {
+  content: [
+    {
+      id: 3,
+      area: 'INTERIOR',
+      startDate: '2026-09-01',
+      endDate: null,
+      uploadedBy: 'admin@gov.bc.ca',
+      dateOfUpload: '2026-08-01T10:00:00',
+    },
+  ],
+  page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
+};
+
 describe('DistrictVolumeListTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseDistrictVolumeTableDeleteMutation.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      isError: false,
+      error: null,
+    } as any);
   });
 
   describe('initial rendering', () => {
@@ -407,6 +457,230 @@ describe('DistrictVolumeListTable', () => {
       await screen.findByTestId('district-volume-list');
       const seeDetailsButtons = screen.getAllByText('See details');
       expect(seeDetailsButtons).toHaveLength(mockData.content.length);
+    });
+
+    it('exposes a Delete action only for future-dated rows', async () => {
+      mockUseDistrictVolumeListQuery.mockReturnValue({
+        data: mockFutureData,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch: vi.fn(),
+      } as any);
+      await renderWithAppAsync(<DistrictVolumeListTable />);
+
+      await screen.findByTestId('district-volume-list');
+      screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      expect(screen.queryByText('Delete district volume starting 2025-01-01')).toBeNull();
+    });
+
+    it('does not render a Delete action for current or past rows', async () => {
+      mockUseDistrictVolumeListQuery.mockReturnValue({
+        data: mockData,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch: vi.fn(),
+      } as any);
+      await renderWithAppAsync(<DistrictVolumeListTable />);
+
+      await screen.findByTestId('district-volume-list');
+      expect(screen.queryByText(/Delete district volume starting/)).toBeNull();
+    });
+  });
+
+  describe('deletion flow', () => {
+    it('opens the confirmation modal when Delete is picked', async () => {
+      mockUseDistrictVolumeListQuery.mockReturnValue({
+        data: mockFutureData,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch: vi.fn(),
+      } as any);
+      await renderWithAppAsync(<DistrictVolumeListTable />);
+
+      await screen.findByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' }),
+      );
+
+      expect(screen.getByTestId('delete-confirm-modal')).toBeTruthy();
+      screen.getByText('district volume');
+    });
+
+    it('confirms deletion by calling the mutation with the row id', async () => {
+      const mutate = vi.fn();
+      mockUseDistrictVolumeTableDeleteMutation.mockReturnValue({
+        mutate,
+        isPending: false,
+        isError: false,
+        error: null,
+      } as any);
+      mockUseDistrictVolumeListQuery.mockReturnValue({
+        data: mockFutureData,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch: vi.fn(),
+      } as any);
+      await renderWithAppAsync(<DistrictVolumeListTable />);
+
+      await screen.findByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' }),
+      );
+      await userEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
+
+      expect(mutate).toHaveBeenCalledWith(3);
+    });
+
+    it('keeps the confirm button disabled while the deletion is pending', async () => {
+      mockUseDistrictVolumeTableDeleteMutation.mockReturnValue({
+        mutate: vi.fn(),
+        isPending: true,
+        isError: false,
+        error: null,
+      } as any);
+      mockUseDistrictVolumeListQuery.mockReturnValue({
+        data: mockFutureData,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch: vi.fn(),
+      } as any);
+      await renderWithAppAsync(<DistrictVolumeListTable />);
+
+      await screen.findByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' }),
+      );
+
+      expect(
+        (screen.getByRole('button', { name: 'Confirm delete' }) as HTMLButtonElement).disabled,
+      ).toBe(true);
+    });
+
+    it('cancelling leaves the data untouched and closes the modal', async () => {
+      const mutate = vi.fn();
+      mockUseDistrictVolumeTableDeleteMutation.mockReturnValue({
+        mutate,
+        isPending: false,
+        isError: false,
+        error: null,
+      } as any);
+      mockUseDistrictVolumeListQuery.mockReturnValue({
+        data: mockFutureData,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch: vi.fn(),
+      } as any);
+      await renderWithAppAsync(<DistrictVolumeListTable />);
+
+      await screen.findByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' }),
+      );
+      await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+      expect(mutate).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('delete-confirm-modal')).toBeNull();
+      screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+    });
+
+    it('refreshes the list and shows a success toast after a successful delete', async () => {
+      const refetch = vi.fn();
+      let capturedOnSuccess: (() => void) | undefined;
+      mockUseDistrictVolumeTableDeleteMutation.mockImplementation((options) => {
+        capturedOnSuccess = options?.onSuccess;
+        return { mutate: vi.fn(), isPending: false, isError: false, error: null } as any;
+      });
+      mockUseDistrictVolumeListQuery.mockReturnValue({
+        data: mockFutureData,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch,
+      } as any);
+      await renderWithAppAsync(<DistrictVolumeListTable />);
+
+      await screen.findByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' }),
+      );
+      await userEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
+
+      await act(async () => {
+        capturedOnSuccess?.();
+      });
+
+      expect(refetch).toHaveBeenCalled();
+      expect(sendToastEvent).toHaveBeenCalledWith({
+        title: 'District volume deleted',
+        description: 'The district volume configuration was deleted.',
+        eventType: 'success',
+      });
+      expect(screen.queryByTestId('delete-confirm-modal')).toBeNull();
+    });
+
+    it('keeps the row visible and shows no success toast when the delete fails', async () => {
+      mockUseDistrictVolumeTableDeleteMutation.mockReturnValue({
+        mutate: vi.fn(),
+        isPending: false,
+        isError: true,
+        error: new Error('Unprocessable Entity'),
+      } as any);
+      mockUseDistrictVolumeListQuery.mockReturnValue({
+        data: mockFutureData,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch: vi.fn(),
+      } as any);
+      await renderWithAppAsync(<DistrictVolumeListTable />);
+
+      await screen.findByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' }),
+      );
+      await userEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
+
+      screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      expect(sendToastEvent).not.toHaveBeenCalled();
+    });
+
+    it('no-ops a stale confirm once the row has been cleared', async () => {
+      const mutate = vi.fn();
+      mockUseDistrictVolumeTableDeleteMutation.mockReturnValue({
+        mutate,
+        isPending: false,
+        isError: false,
+        error: null,
+      } as any);
+      mockUseDistrictVolumeListQuery.mockReturnValue({
+        data: mockFutureData,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch: vi.fn(),
+      } as any);
+      await renderWithAppAsync(<DistrictVolumeListTable />);
+
+      await screen.findByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' }),
+      );
+      // Close the modal so the confirm handler now closes over a cleared row.
+      await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+      expect(screen.queryByTestId('delete-confirm-modal')).toBeNull();
+
+      // Simulate a stale/racing confirm arriving after the row was cleared.
+      act(() => {
+        latestConfirmHandler.current?.();
+      });
+
+      expect(mutate).not.toHaveBeenCalled();
     });
   });
 });
