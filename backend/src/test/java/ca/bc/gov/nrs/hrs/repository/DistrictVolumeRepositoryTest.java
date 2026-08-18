@@ -22,7 +22,7 @@ public class DistrictVolumeRepositoryTest
   private DistrictVolumeRepository repository;
 
   @Test
-  void findTopByConfigTypeAndAreaOrderByStartDateDesc_returnsNewestForArea() {
+  void findTop1ByConfigTypeAndAreaOrderByStartDateDesc_returnsNewestForArea() {
 
     // Ensure auditing picks up a principal so NOT NULL audit columns are populated
     JwtAuthenticationToken token = new JwtAuthenticationToken(
@@ -47,7 +47,7 @@ public class DistrictVolumeRepositoryTest
     repository.save(first);
     repository.save(second);
 
-    var opt = repository.findTopByConfigTypeAndAreaOrderByStartDateDesc(
+    var opt = repository.findTop1ByConfigTypeAndAreaOrderByStartDateDesc(
         ConfigType.DISTRICT_VOLUME, Area.INTERIOR);
 
     assertThat(opt).isPresent();
