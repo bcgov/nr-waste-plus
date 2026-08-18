@@ -23,6 +23,7 @@ jobs:
     with:
       cleanup: label
       packages: backend database frontend legacy
+      remove_pvc: data-${{ github.event.repository.name }}-${{ github.event.number }}-database-0
 
   remove-tools:
     name: Remove database and user
