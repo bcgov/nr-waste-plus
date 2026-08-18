@@ -731,3 +731,22 @@ div:has(.#{variables.$bcgov-prefix}--header) ~ .#{variables.$bcgov-prefix}--cont
 .#{variables.$bcgov-prefix}--popover-caret {
   z-index: 8500;
 }
+
+/* Carbon's ComposedModal close control also receives the primary button class.
+ * Keep the modal-specific transparent close-button treatment in the cascade. */
+.#{variables.$bcgov-prefix}--modal-close.#{variables.$bcgov-prefix}--btn--primary {
+  background-color: transparent;
+  color: var(--cds-icon-primary);
+}
+
+.#{variables.$bcgov-prefix}--modal-close.#{variables.$bcgov-prefix}--btn--primary:hover {
+  background-color: var(--cds-layer-hover);
+}
+
+/* Carbon's generic button-set cap overrides the modal footer's fluid buttons
+ * when component styles are loaded in the current order. */
+.#{variables.$bcgov-prefix}--modal-container
+  .#{variables.$bcgov-prefix}--modal-footer
+  .#{variables.$bcgov-prefix}--btn {
+  max-inline-size: none;
+}
