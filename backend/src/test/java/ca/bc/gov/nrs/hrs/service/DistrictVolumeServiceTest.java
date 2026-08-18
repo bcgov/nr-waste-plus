@@ -98,7 +98,7 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
     PageRequest pageable = PageRequest.of(0, 10);
 
-    when(districtVolumeRepository.findAllByConfigType(ConfigType.DISTRICT_VOLUME, pageable))
+    when(districtVolumeRepository.findAllLiveByConfigType(ConfigType.DISTRICT_VOLUME, pageable))
         .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
     var result =
@@ -108,7 +108,7 @@ class DistrictVolumeServiceTest {
     assertThat(result.getTotalElements()).isEqualTo(1);
     assertThat(result.getContent()).hasSize(1);
     assertThat(result.getContent().get(0).area()).isEqualTo("INTERIOR");
-    verify(districtVolumeRepository).findAllByConfigType(ConfigType.DISTRICT_VOLUME, pageable);
+    verify(districtVolumeRepository).findAllLiveByConfigType(ConfigType.DISTRICT_VOLUME, pageable);
     verify(districtVolumeRepository, never()).findAll(pageable);
   }
 
@@ -120,7 +120,7 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
     PageRequest pageable = PageRequest.of(0, 10);
 
-    when(districtVolumeRepository.findAllByConfigTypeAndArea(
+    when(districtVolumeRepository.findAllLiveByConfigTypeAndArea(
             ConfigType.DISTRICT_VOLUME,
             Area.INTERIOR,
             pageable))
@@ -134,7 +134,7 @@ class DistrictVolumeServiceTest {
     assertThat(result).isNotNull();
     assertThat(result.getTotalElements()).isEqualTo(1);
     assertThat(result.getContent().get(0).area()).isEqualTo("INTERIOR");
-    verify(districtVolumeRepository).findAllByConfigTypeAndArea(
+    verify(districtVolumeRepository).findAllLiveByConfigTypeAndArea(
         ConfigType.DISTRICT_VOLUME,
         Area.INTERIOR,
         pageable);

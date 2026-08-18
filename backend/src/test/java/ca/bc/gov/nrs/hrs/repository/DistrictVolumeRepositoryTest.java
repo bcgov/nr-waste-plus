@@ -79,7 +79,7 @@ public class DistrictVolumeRepositoryTest
     repository.save(districtVolume);
     repository.save(speciesComposition);
 
-    var result = repository.findAllByConfigType(
+    var result = repository.findAllLiveByConfigType(
         ConfigType.SPECIES_COMPOSITION,
         PageRequest.of(0, 10));
 
