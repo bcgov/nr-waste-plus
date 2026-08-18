@@ -69,12 +69,12 @@ public class DistrictVolumeService {
         areaOptional
             .map(areaStr -> {
               Area areaEnum = Area.valueOf(areaStr.toUpperCase());
-              return districtVolumeRepository.findAllByConfigTypeAndArea(
+              return districtVolumeRepository.findAllLiveByConfigTypeAndArea(
                   ConfigType.DISTRICT_VOLUME,
                   areaEnum,
                   pageable);
             })
-            .orElseGet(() -> districtVolumeRepository.findAllByConfigType(
+            .orElseGet(() -> districtVolumeRepository.findAllLiveByConfigType(
                 ConfigType.DISTRICT_VOLUME,
                 pageable));
 
@@ -356,6 +356,30 @@ public class DistrictVolumeService {
           HttpStatus.BAD_REQUEST,
           "Invalid or missing table data payload structure.");
     }
+  }
+
+  /**
+   * Soft-deletes a district volume configuration record.
+   *
+   * <p>Marks the record as deleted (sets deleted = true) instead of removing it from the database.
+   * This preserves audit history and allows for potential recovery.</p>
+   *
+   * @param user the user performing the deletion (for audit trail)
+   * @param id the unique identifier of the record to delete
+   * @throws ResponseStatusException with HTTP 404 if the record is not found or already deleted
+   */
+  @Transactional
+  public void deleteDistrictVolume(String user, Long id) {
+    DistrictVolumeEntity entity = districtVolumeRepository
+        .findByIdAndConfigType(id, ConfigType.DISTRICT_VOLUME)
+        .filter(e -> !e.isDeleted())
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "District volume record not found: " + id));
+
+    entity.setDeleted(true);
+    districtVolumeRepository.save(entity);
+    log.info("Soft-deleted district volume {} by user {}", id, user);
   }
 
 }
