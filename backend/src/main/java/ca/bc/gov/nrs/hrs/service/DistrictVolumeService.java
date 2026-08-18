@@ -334,25 +334,32 @@ public class DistrictVolumeService {
   private void validateAreaPayloadConsistency(
       Area areaEnum, DistrictVolumeCreateDto createDto) {
 
-    switch (createDto.tableData()) {
+    if (createDto.tableData() == null) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Invalid or missing table data payload structure.");
+    }
 
-      case InteriorDataDto _ when areaEnum != Area.INTERIOR -> throw new ResponseStatusException(
+    if (createDto.tableData() instanceof InteriorDataDto
+        && areaEnum != Area.INTERIOR) {
+      throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Area mismatch: Expected INTERIOR data layout.");
+    }
 
-      case CoastDataDto _ when areaEnum != Area.COASTAL -> throw new ResponseStatusException(
+    if (createDto.tableData() instanceof CoastDataDto
+        && areaEnum != Area.COASTAL) {
+      throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Area mismatch: Expected COASTAL data layout.");
+    }
 
-      case InteriorDataDto _ -> {
-        // Valid structural combination; do nothing and allow processing to continue.
-      }
-
-      case CoastDataDto _ -> {
-        // Valid structural combination; do nothing and allow processing to continue.
-      }
-
-      case null, default -> throw new ResponseStatusException(
+    if (createDto.tableData() instanceof InteriorDataDto) {
+      // Valid structural combination; do nothing and allow processing to continue.
+    } else if (createDto.tableData() instanceof CoastDataDto) {
+      // Valid structural combination; do nothing and allow processing to continue.
+    } else {
+      throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Invalid or missing table data payload structure.");
     }
