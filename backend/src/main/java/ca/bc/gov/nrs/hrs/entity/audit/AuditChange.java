@@ -77,7 +77,7 @@ public class AuditChange {
     }
     try {
       return JSON_MAPPER.readTree(value);
-    } catch (JsonProcessingException | RuntimeException exception) {
+    } catch (JsonProcessingException exception) {
       throw new IllegalArgumentException("Audit snapshot must be valid JSON", exception);
     }
   }
