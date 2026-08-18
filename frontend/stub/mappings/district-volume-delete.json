@@ -1,0 +1,56 @@
+{
+  "mappings": [
+    {
+      "name": "Delete future district volume — success",
+      "priority": 1,
+      "request": {
+        "urlPathPattern": "/api/configuration/district-average-volumes/6",
+        "method": "DELETE"
+      },
+      "scenarioName": "district-volume-delete",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "deleted",
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "Delete district volume — already deleted",
+      "priority": 1,
+      "request": {
+        "urlPathPattern": "/api/configuration/district-average-volumes/6",
+        "method": "DELETE"
+      },
+      "scenarioName": "district-volume-delete",
+      "requiredScenarioState": "deleted",
+      "response": {
+        "status": 404,
+        "headers": { "Content-Type": "application/problem+json" },
+        "jsonBody": {
+          "type": "about:blank",
+          "title": "Not Found",
+          "status": 404,
+          "detail": "District average volume configuration entry 6 was not found."
+        }
+      }
+    },
+    {
+      "name": "Delete district volume — not future-dated",
+      "priority": 5,
+      "request": {
+        "urlPathPattern": "/api/configuration/district-average-volumes/[0-9]+",
+        "method": "DELETE"
+      },
+      "response": {
+        "status": 422,
+        "headers": { "Content-Type": "application/problem+json" },
+        "jsonBody": {
+          "type": "about:blank",
+          "title": "Unprocessable Entity",
+          "status": 422,
+          "detail": "Configuration entry is not future-dated and cannot be deleted."
+        }
+      }
+    }
+  ]
+}

@@ -39,20 +39,12 @@
       "endDate": "2026-06-01",
       "uploadedBy": "bwong@gov.bc.ca",
       "dateOfUpload": "2025-05-10T10:00:00Z"
-    },
-    {
-      "id": 6,
-      "area": "INTERIOR",
-      "startDate": "2026-09-01",
-      "endDate": null,
-      "uploadedBy": "jsmith@gov.bc.ca",
-      "dateOfUpload": "2026-08-10T09:00:00Z"
     }
   ],
   "page": {
     "number": 0,
     "size": 10,
-    "totalElements": 6,
+    "totalElements": 5,
     "totalPages": 1
   }
 }
