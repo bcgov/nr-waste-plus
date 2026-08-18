@@ -1,10 +1,8 @@
-import { TableShortcut, TrashCan } from '@carbon/icons-react';
-import { useNavigate } from '@tanstack/react-router';
+import { useListTableRowActions } from '../useListTableRowActions';
 
-import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types';
 import type { SpeciesCompositionListItem } from '@/services/speciesComposition.types';
+import type { PageableResponse } from '@/components/Form/TableResource/types';
 
-import { navigateInTree } from '@/routes/inTreePaths';
 import { isFutureDated } from '@/utils/businessDate';
 
 type SpeciesCompositionRow = PageableResponse<SpeciesCompositionListItem>['content'][number];
@@ -24,31 +22,10 @@ type SpeciesCompositionRow = PageableResponse<SpeciesCompositionListItem>['conte
 export const useSpeciesCompositionListRowActions = (
   onDeleteClick: (row: SpeciesCompositionRow) => void,
 ): ((row: SpeciesCompositionRow) => TableRowAction<SpeciesCompositionListItem>[]) => {
-  const navigate = useNavigate();
-
-  return (row: SpeciesCompositionRow): TableRowAction<SpeciesCompositionListItem>[] => {
-    const actions: TableRowAction<SpeciesCompositionListItem>[] = [
-      {
-        id: 'view-details',
-        label: 'See details',
-        icon: <TableShortcut />,
-        onClick: (selectedRow) => {
-          navigateInTree(navigate, `/configuration/species-composition/${selectedRow.id}`);
-        },
-      },
-    ];
-
-    if (isFutureDated(row.startDate)) {
-      actions.push({
-        id: 'delete',
-        label: (selectedRow) => `Delete species composition starting ${selectedRow.startDate}`,
-        icon: <TrashCan />,
-        onClick: (selectedRow) => {
-          onDeleteClick(selectedRow);
-        },
-      });
-    }
-
-    return actions;
-  };
+  return useListTableRowActions<SpeciesCompositionRow>({
+    configType: 'species composition',
+    routePath: '/configuration/species-composition/{id}',
+    onDeleteClick,
+    getStartDate: (row) => row.startDate,
+  });
 };

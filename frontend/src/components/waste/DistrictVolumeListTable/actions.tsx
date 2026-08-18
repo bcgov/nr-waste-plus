@@ -1,10 +1,8 @@
-import { TableShortcut, TrashCan } from '@carbon/icons-react';
-import { useNavigate } from '@tanstack/react-router';
+import { useListTableRowActions } from '../useListTableRowActions';
 
-import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types';
 import type { DistrictVolumeListItem } from '@/services/districtvolumes.types';
+import type { PageableResponse } from '@/components/Form/TableResource/types';
 
-import { navigateInTree } from '@/routes/inTreePaths';
 import { isFutureDated } from '@/utils/businessDate';
 
 type DistrictVolumeRow = PageableResponse<DistrictVolumeListItem>['content'][number];
@@ -24,31 +22,10 @@ type DistrictVolumeRow = PageableResponse<DistrictVolumeListItem>['content'][num
 export const useDistrictVolumeListRowActions = (
   onDeleteClick: (row: DistrictVolumeRow) => void,
 ): ((row: DistrictVolumeRow) => TableRowAction<DistrictVolumeListItem>[]) => {
-  const navigate = useNavigate();
-
-  return (row: DistrictVolumeRow): TableRowAction<DistrictVolumeListItem>[] => {
-    const actions: TableRowAction<DistrictVolumeListItem>[] = [
-      {
-        id: 'view-details',
-        label: 'See details',
-        icon: <TableShortcut />,
-        onClick: (selectedRow) => {
-          navigateInTree(navigate, `/configuration/district-volume-tables/${selectedRow.id}`);
-        },
-      },
-    ];
-
-    if (isFutureDated(row.startDate)) {
-      actions.push({
-        id: 'delete',
-        label: (selectedRow) => `Delete district volume starting ${selectedRow.startDate}`,
-        icon: <TrashCan />,
-        onClick: (selectedRow) => {
-          onDeleteClick(selectedRow);
-        },
-      });
-    }
-
-    return actions;
-  };
+  return useListTableRowActions<DistrictVolumeRow>({
+    configType: 'district volume',
+    routePath: '/configuration/district-volume-tables/{id}',
+    onDeleteClick,
+    getStartDate: (row) => row.startDate,
+  });
 };
