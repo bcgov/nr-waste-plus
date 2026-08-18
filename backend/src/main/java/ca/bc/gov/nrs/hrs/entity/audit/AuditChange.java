@@ -1,13 +1,14 @@
 package ca.bc.gov.nrs.hrs.entity.audit;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -76,7 +77,7 @@ public class AuditChange {
     }
     try {
       return JSON_MAPPER.readTree(value);
-    } catch (RuntimeException exception) {
+    } catch (JsonProcessingException | RuntimeException exception) {
       throw new IllegalArgumentException("Audit snapshot must be valid JSON", exception);
     }
   }
