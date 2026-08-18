@@ -38,7 +38,7 @@ public class JwtRoleAuthorizationManagerFactory {
    */
   public AuthorizationManager<RequestAuthorizationContext> gotRoleMatching(
       Predicate<String> matcher) {
-    return (_, _) ->
+    return (ignoredAuthentication, ignoredContext) ->
         new AuthorizationDecision(roleChecker.hasRoleMatching(matcher));
   }
 
@@ -71,7 +71,7 @@ public class JwtRoleAuthorizationManagerFactory {
    */
   public AuthorizationManager<RequestAuthorizationContext> gotRole(
       String role) {
-    return (_, _) ->
+    return (ignoredAuthentication, ignoredContext) ->
         new AuthorizationDecision(roleChecker.hasRole(role));
   }
 
@@ -86,7 +86,7 @@ public class JwtRoleAuthorizationManagerFactory {
   public AuthorizationManager<RequestAuthorizationContext> gotAbstractRole(
       String rolePrefix,
       Function<HttpServletRequest, String> clientIdExtractor) {
-    return (_, context) ->
+    return (ignoredAuthentication, context) ->
         new AuthorizationDecision(
             roleChecker.hasAbstractRole(
                 rolePrefix,
@@ -102,7 +102,7 @@ public class JwtRoleAuthorizationManagerFactory {
    */
   public AuthorizationManager<RequestAuthorizationContext> gotIdp(
       String provider) {
-    return (_, _) ->
+    return (ignoredAuthentication, ignoredContext) ->
         new AuthorizationDecision(roleChecker.hasIdpProvider(provider));
   }
 
@@ -115,7 +115,7 @@ public class JwtRoleAuthorizationManagerFactory {
    */
   public AuthorizationManager<RequestAuthorizationContext> gotIdp(
       IdentityProvider provider) {
-    return (_, _) ->
+    return (ignoredAuthentication, ignoredContext) ->
         new AuthorizationDecision(roleChecker.hasIdpProvider(provider));
   }
 }

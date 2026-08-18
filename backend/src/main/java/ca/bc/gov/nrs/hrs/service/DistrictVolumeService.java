@@ -129,7 +129,7 @@ public class DistrictVolumeService {
           .stream()
           .findFirst()
           .filter(entity -> containsDistrict(entity.getTableData(), districtCode))
-          .ifPresent(_ -> matchedAreas.add(area.name()));
+          .ifPresent(ignoredEntity -> matchedAreas.add(area.name()));
     }
 
     return matchedAreas;
