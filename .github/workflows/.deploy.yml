@@ -110,7 +110,7 @@ jobs:
         name: [database, frontend, backend, legacy]
         include:
           - name: database
-            overwrite: true
+            overwrite: false
           - name: frontend
             overwrite: true
             parameters:
