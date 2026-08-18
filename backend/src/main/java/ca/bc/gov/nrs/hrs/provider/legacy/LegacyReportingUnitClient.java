@@ -257,7 +257,7 @@ public class LegacyReportingUnitClient {
         .retrieve()
         .onStatus(
             status -> status.value() == 404,
-            (_, _) -> {
+             (ignoredRequest, ignoredResponse) -> {
               log.warn(
                   "Reporting unit {} not found in legacy API (status 404)",
                   reportingUnitId);
@@ -294,7 +294,7 @@ public class LegacyReportingUnitClient {
         .retrieve()
         .onStatus(
             HttpStatusCode::isError,
-            (_, res) -> {
+             (ignoredRequest, res) -> {
               log.error(
                   "Legacy API returned status {} for create reporting unit",
                   res.getStatusCode());
