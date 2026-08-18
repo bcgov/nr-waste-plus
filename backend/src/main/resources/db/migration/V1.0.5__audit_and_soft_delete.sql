@@ -8,7 +8,9 @@ CREATE TABLE IF NOT EXISTS hrs.audit_event (
     id BIGSERIAL PRIMARY KEY,
     action VARCHAR(32) NOT NULL,
     changed_by VARCHAR(128) NOT NULL,
-    changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    reason VARCHAR(500),
+    correlation_id VARCHAR(128)
 );
 
 COMMENT ON TABLE hrs.audit_event IS 'Immutable audit event grouping one temporal mutation operation.';
@@ -110,8 +112,10 @@ BEGIN
         )
     END;
 
-    INSERT INTO hrs.audit_event(action, changed_by)
-    VALUES (operation, actor)
+    INSERT INTO hrs.audit_event(action, changed_by, reason, correlation_id)
+    VALUES (operation, actor,
+        COALESCE(NULLIF(new_image ->> 'reason', ''), old_image ->> 'reason'),
+        COALESCE(NULLIF(new_image ->> 'correlation_id', ''), old_image ->> 'correlation_id'))
     RETURNING id INTO event_id;
 
     INSERT INTO hrs.audit_change(
