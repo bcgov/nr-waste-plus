@@ -85,4 +85,7 @@ public class DistrictVolumeEntity {
   @LastModifiedBy
   @Column(name = "updated_by", nullable = false, length = 128)
   private String updatedBy;
+
+  @Column(name = "deleted", nullable = false)
+  private boolean deleted = false;
 }
