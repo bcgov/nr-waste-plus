@@ -1310,4 +1310,208 @@ describe('react-query hooks', () => {
       expect(sendEvent).not.toHaveBeenCalled();
     });
   });
+
+  describe('useDistrictVolumeTableDeleteMutation', () => {
+    it('should call deleteDistrictVolume with the id on mutate', async () => {
+      const { result } = renderHook(() => useDistrictVolumeTableDeleteMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        await result.current.mutateAsync(42);
+      });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(API.districtVolume.deleteDistrictVolume).toHaveBeenCalledWith(42);
+    });
+
+    it('should invoke onSuccess callback after delete completes', async () => {
+      const onSuccessMock = vi.fn();
+      const { result } = renderHook(
+        () => useDistrictVolumeTableDeleteMutation({ onSuccess: onSuccessMock }),
+        { wrapper: createWrapper() },
+      );
+
+      await act(async () => {
+        await result.current.mutateAsync(42);
+      });
+
+      expect(onSuccessMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle mutation errors without throwing', async () => {
+      const mockError = new Error('Delete failed');
+      vi.mocked(API.districtVolume.deleteDistrictVolume).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(() => useDistrictVolumeTableDeleteMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync(42);
+        } catch (_e) {
+          // Error is expected and caught
+        }
+      });
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+    });
+
+    it('should support notificationTarget for problem-detail errors', async () => {
+      const mockError = new Error('Delete failed');
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Entry is not future-dated',
+        title: 'Unprocessable Entity',
+      };
+      vi.mocked(API.districtVolume.deleteDistrictVolume).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(
+        () =>
+          useDistrictVolumeTableDeleteMutation({
+            notificationTarget: 'district-volume-list',
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync(42);
+        } catch (_e) {
+          // expected
+        }
+      });
+
+      await waitFor(() => expect(sendEvent).toHaveBeenCalled());
+      expect(sendEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: 'error',
+          eventTarget: 'district-volume-list',
+          description: 'Entry is not future-dated',
+        }),
+      );
+    });
+
+    it('should not dispatch notification when notificationTarget is omitted', async () => {
+      const mockError = new Error('Delete failed');
+      vi.mocked(API.districtVolume.deleteDistrictVolume).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(() => useDistrictVolumeTableDeleteMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync(42);
+        } catch (_e) {
+          // expected
+        }
+      });
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(sendEvent).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('useSpeciesCompositionDeleteMutation', () => {
+    it('should call deleteSpeciesComposition with the id on mutate', async () => {
+      const { result } = renderHook(() => useSpeciesCompositionDeleteMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        await result.current.mutateAsync(42);
+      });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(API.speciesComposition.deleteSpeciesComposition).toHaveBeenCalledWith(42);
+    });
+
+    it('should invoke onSuccess callback after delete completes', async () => {
+      const onSuccessMock = vi.fn();
+      const { result } = renderHook(
+        () => useSpeciesCompositionDeleteMutation({ onSuccess: onSuccessMock }),
+        { wrapper: createWrapper() },
+      );
+
+      await act(async () => {
+        await result.current.mutateAsync(42);
+      });
+
+      expect(onSuccessMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle mutation errors without throwing', async () => {
+      const mockError = new Error('Delete failed');
+      vi.mocked(API.speciesComposition.deleteSpeciesComposition).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(() => useSpeciesCompositionDeleteMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync(42);
+        } catch (_e) {
+          // Error is expected and caught
+        }
+      });
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+    });
+
+    it('should support notificationTarget for problem-detail errors', async () => {
+      const mockError = new Error('Delete failed');
+      (mockError as unknown as { body: { detail: string; title: string } }).body = {
+        detail: 'Entry is not future-dated',
+        title: 'Unprocessable Entity',
+      };
+      vi.mocked(API.speciesComposition.deleteSpeciesComposition).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(
+        () =>
+          useSpeciesCompositionDeleteMutation({
+            notificationTarget: 'species-composition-list',
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync(42);
+        } catch (_e) {
+          // expected
+        }
+      });
+
+      await waitFor(() => expect(sendEvent).toHaveBeenCalled());
+      expect(sendEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: 'error',
+          eventTarget: 'species-composition-list',
+          description: 'Entry is not future-dated',
+        }),
+      );
+    });
+
+    it('should not dispatch notification when notificationTarget is omitted', async () => {
+      const mockError = new Error('Delete failed');
+      vi.mocked(API.speciesComposition.deleteSpeciesComposition).mockRejectedValueOnce(mockError);
+
+      const { result } = renderHook(() => useSpeciesCompositionDeleteMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync(42);
+        } catch (_e) {
+          // expected
+        }
+      });
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(sendEvent).not.toHaveBeenCalled();
+    });
+  });
 });

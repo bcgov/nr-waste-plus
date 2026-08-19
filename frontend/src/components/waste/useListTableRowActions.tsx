@@ -21,7 +21,9 @@ interface UseListTableRowActionsConfig<TRow> {
  * Shared hook for list table row actions (view details, delete).
  * Eliminates duplication between DistrictVolumeListTable and SpeciesCompositionListTable.
  */
-export const useListTableRowActions = <TRow extends { id: string | number }>(
+export const useListTableRowActions = <
+  TRow extends { id: string | number; endDate?: string | null },
+>(
   config: UseListTableRowActionsConfig<TRow>,
 ) => {
   const navigate = useNavigate();
@@ -40,7 +42,7 @@ export const useListTableRowActions = <TRow extends { id: string | number }>(
         },
       ];
 
-      if (isFutureDated(config.getStartDate(row))) {
+      if (isFutureDated(config.getStartDate(row)) && !row.endDate) {
         actions.push({
           id: 'delete',
           label: (selectedRow) =>
