@@ -470,8 +470,8 @@ describe('DistrictVolumeListTable', () => {
       await renderWithAppAsync(<DistrictVolumeListTable />);
 
       await screen.findByTestId('district-volume-list');
-      screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' });
-      expect(screen.queryByText('Delete district volume starting 2025-01-01')).toBeNull();
+      // Delete button should be visible for future-dated rows
+      screen.getByRole('button', { name: 'Delete district average volume entry' });
     });
 
     it('does not render a Delete action for current or past rows', async () => {
@@ -485,7 +485,9 @@ describe('DistrictVolumeListTable', () => {
       await renderWithAppAsync(<DistrictVolumeListTable />);
 
       await screen.findByTestId('district-volume-list');
-      expect(screen.queryByText(/Delete district volume starting/)).toBeNull();
+      expect(
+        screen.queryByRole('button', { name: 'Delete district average volume entry' }),
+      ).toBeNull();
     });
   });
 
@@ -500,9 +502,9 @@ describe('DistrictVolumeListTable', () => {
       } as any);
       await renderWithAppAsync(<DistrictVolumeListTable />);
 
-      await screen.findByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      await screen.findByRole('button', { name: 'Delete district average volume entry' });
       await userEvent.click(
-        screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' }),
+        screen.getByRole('button', { name: 'Delete district average volume entry' }),
       );
 
       expect(screen.getByTestId('delete-confirm-modal')).toBeTruthy();
@@ -526,9 +528,9 @@ describe('DistrictVolumeListTable', () => {
       } as any);
       await renderWithAppAsync(<DistrictVolumeListTable />);
 
-      await screen.findByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      await screen.findByRole('button', { name: 'Delete district average volume entry' });
       await userEvent.click(
-        screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' }),
+        screen.getByRole('button', { name: 'Delete district average volume entry' }),
       );
       await userEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
 
@@ -551,9 +553,9 @@ describe('DistrictVolumeListTable', () => {
       } as any);
       await renderWithAppAsync(<DistrictVolumeListTable />);
 
-      await screen.findByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      await screen.findByRole('button', { name: 'Delete district average volume entry' });
       await userEvent.click(
-        screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' }),
+        screen.getByRole('button', { name: 'Delete district average volume entry' }),
       );
 
       expect(
@@ -578,15 +580,15 @@ describe('DistrictVolumeListTable', () => {
       } as any);
       await renderWithAppAsync(<DistrictVolumeListTable />);
 
-      await screen.findByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      await screen.findByRole('button', { name: 'Delete district average volume entry' });
       await userEvent.click(
-        screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' }),
+        screen.getByRole('button', { name: 'Delete district average volume entry' }),
       );
       await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
       expect(mutate).not.toHaveBeenCalled();
       expect(screen.queryByTestId('delete-confirm-modal')).toBeNull();
-      screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      screen.getByRole('button', { name: 'Delete district average volume entry' });
     });
 
     it('refreshes the list and shows a success toast after a successful delete', async () => {
@@ -605,9 +607,9 @@ describe('DistrictVolumeListTable', () => {
       } as any);
       await renderWithAppAsync(<DistrictVolumeListTable />);
 
-      await screen.findByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      await screen.findByRole('button', { name: 'Delete district average volume entry' });
       await userEvent.click(
-        screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' }),
+        screen.getByRole('button', { name: 'Delete district average volume entry' }),
       );
       await userEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
 
@@ -640,13 +642,13 @@ describe('DistrictVolumeListTable', () => {
       } as any);
       await renderWithAppAsync(<DistrictVolumeListTable />);
 
-      await screen.findByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      await screen.findByRole('button', { name: 'Delete district average volume entry' });
       await userEvent.click(
-        screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' }),
+        screen.getByRole('button', { name: 'Delete district average volume entry' }),
       );
       await userEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
 
-      screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      screen.getByRole('button', { name: 'Delete district average volume entry' });
       expect(sendToastEvent).not.toHaveBeenCalled();
     });
 
@@ -667,9 +669,9 @@ describe('DistrictVolumeListTable', () => {
       } as any);
       await renderWithAppAsync(<DistrictVolumeListTable />);
 
-      await screen.findByRole('button', { name: 'Delete district volume starting 2026-09-01' });
+      await screen.findByRole('button', { name: 'Delete district average volume entry' });
       await userEvent.click(
-        screen.getByRole('button', { name: 'Delete district volume starting 2026-09-01' }),
+        screen.getByRole('button', { name: 'Delete district average volume entry' }),
       );
       // Close the modal so the confirm handler now closes over a cleared row.
       await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));

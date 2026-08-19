@@ -114,7 +114,7 @@ describe('useSpeciesCompositionListRowActions', () => {
       const actions = result.current(row);
 
       expect(resolveTableRowActionValue(actions[1].label, row)).toBe(
-        'Delete species composition starting 2026-09-01',
+        'Delete species composition entry',
       );
     });
 

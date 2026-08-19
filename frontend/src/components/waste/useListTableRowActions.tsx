@@ -13,8 +13,10 @@ interface UseListTableRowActionsConfig<TRow> {
   routePath: string;
   /** Callback invoked when user clicks delete */
   onDeleteClick: (row: TRow) => void;
-  /** Function to get the start date from a row for the delete label */
+  /** Function to get the start date from a row for the delete guard */
   getStartDate: (row: TRow) => string;
+  /** Custom label for the delete action (e.g., "district average volume entry") */
+  deleteActionLabel: string;
 }
 
 /**
@@ -45,8 +47,7 @@ export const useListTableRowActions = <
       if (isFutureDated(config.getStartDate(row)) && !row.endDate) {
         actions.push({
           id: 'delete',
-          label: (selectedRow) =>
-            `Delete ${config.configType} starting ${config.getStartDate(selectedRow)}`,
+          label: `Delete ${config.deleteActionLabel}`,
           icon: <TrashCan />,
           onClick: (selectedRow) => {
             config.onDeleteClick(selectedRow);
