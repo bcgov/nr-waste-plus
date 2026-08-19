@@ -580,6 +580,57 @@ class DistrictVolumeServiceTest {
         .isEqualTo(new BigDecimal("1.500"));
   }
 
+  @Test
+  @DisplayName(
+      "deleteDistrictVolume — should soft-delete the record when found and not deleted")
+  void deleteDistrictVolume_softDeletes_whenFound() {
+
+    DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
+
+    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.DISTRICT_VOLUME))
+        .thenReturn(Optional.of(entity));
+
+    districtVolumeService.deleteDistrictVolume("TEST_USER", 1L);
+
+    assertThat(entity.isDeleted()).isTrue();
+    verify(districtVolumeRepository).save(entity);
+  }
+
+  @Test
+  @DisplayName(
+      "deleteDistrictVolume — should throw 404 when record is not found")
+  void deleteDistrictVolume_throws404_whenNotFound() {
+
+    when(districtVolumeRepository.findByIdAndConfigType(99L, ConfigType.DISTRICT_VOLUME))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(
+          () -> districtVolumeService.deleteDistrictVolume("TEST_USER", 99L))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("District volume record not found");
+
+    verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
+  }
+
+  @Test
+  @DisplayName(
+      "deleteDistrictVolume — should throw 404 when record is already deleted")
+  void deleteDistrictVolume_throws404_whenAlreadyDeleted() {
+
+    DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
+    entity.setDeleted(true);
+
+    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.DISTRICT_VOLUME))
+        .thenReturn(Optional.of(entity));
+
+    assertThatThrownBy(
+          () -> districtVolumeService.deleteDistrictVolume("TEST_USER", 1L))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("District volume record not found");
+
+    verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
+  }
+
   // ---- helper methods ----
 
   private DistrictVolumeEntity buildEntityWithDistricts(

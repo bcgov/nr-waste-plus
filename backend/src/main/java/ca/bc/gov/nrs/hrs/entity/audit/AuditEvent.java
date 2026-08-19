@@ -1,13 +1,20 @@
 package ca.bc.gov.nrs.hrs.entity.audit;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Instant;
+import lombok.Getter;
 
 /**
  * Immutable audit event grouping one temporal mutation operation.
  */
 @Entity
 @Table(name = "audit_event", schema = "hrs")
+@Getter
 public class AuditEvent {
 
   @Id
@@ -31,6 +38,14 @@ public class AuditEvent {
 
   protected AuditEvent() {}
 
+  /**
+   * Creates an audit event for one mutation operation.
+   *
+   * @param action the mutation action
+   * @param changedBy the user who performed the mutation
+   * @param reason the reason for the mutation
+   * @param correlationId a correlation id linking related audit events
+   */
   public AuditEvent(String action, String changedBy, String reason, String correlationId) {
     this.action = action;
     this.changedBy = changedBy;
@@ -38,11 +53,4 @@ public class AuditEvent {
     this.reason = reason;
     this.correlationId = correlationId;
   }
-
-  public Long getId() { return id; }
-  public String getAction() { return action; }
-  public String getChangedBy() { return changedBy; }
-  public Instant getChangedAt() { return changedAt; }
-  public String getReason() { return reason; }
-  public String getCorrelationId() { return correlationId; }
 }

@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -18,6 +19,7 @@ import org.hibernate.type.SqlTypes;
  */
 @Entity
 @Table(name = "audit_change", schema = "hrs")
+@Getter
 public class AuditChange {
 
   private static final JsonMapper JSON_MAPPER = JsonMapper.builder().build();
@@ -51,8 +53,19 @@ public class AuditChange {
 
   protected AuditChange() {}
 
-  public AuditChange(Long eventId, String entityType, Long entityId,
-       String action, String previousValues, String currentValues, String[] changedColumns) {
+  /**
+   * Creates an audit change capturing the before and after state of one row.
+   *
+   * @param eventId the owning audit event id
+   * @param entityType the audited entity type
+   * @param entityId the audited entity id
+   * @param action the mutation action
+   * @param previousValues the prior row state as JSON
+   * @param currentValues the new row state as JSON
+   * @param changedColumns the columns that changed
+   */
+  public AuditChange(Long eventId, String entityType, Long entityId, String action,
+       String previousValues, String currentValues, String[] changedColumns) {
     this.eventId = eventId;
     this.entityType = entityType;
     this.entityId = entityId;
@@ -62,14 +75,14 @@ public class AuditChange {
     this.changedColumns = changedColumns != null ? changedColumns : new String[0];
   }
 
-  public Long getId() { return id; }
-  public Long getEventId() { return eventId; }
-  public String getEntityType() { return entityType; }
-  public Long getEntityId() { return entityId; }
-  public String getAction() { return action; }
-  public JsonNode getPreviousValues() { return previousValues; }
-  public JsonNode getCurrentValues() { return currentValues; }
-  public String[] getChangedColumns() { return changedColumns != null ? changedColumns.clone() : new String[0]; }
+  /**
+   * Defensive copy of the changed columns, or an empty array when none recorded.
+   *
+   * @return a fresh array of changed columns, or an empty array when none recorded
+   */
+  public String[] getChangedColumns() {
+    return changedColumns != null ? changedColumns.clone() : new String[0];
+  }
 
   private static JsonNode parseJson(String value) {
     if (value == null) {

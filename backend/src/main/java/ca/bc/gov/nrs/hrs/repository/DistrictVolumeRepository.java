@@ -101,8 +101,7 @@ public interface DistrictVolumeRepository
       @Param("area") Area area);
 
   /**
-   * Finds all live open-ended entries for the specified config type and area, ordered by most recent
-   * start date first.
+   * Finds all live open-ended entries for the config type and area.
    *
    * @param configType config type filter
    * @param area area filter

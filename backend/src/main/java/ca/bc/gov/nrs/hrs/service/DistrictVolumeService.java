@@ -334,12 +334,6 @@ public class DistrictVolumeService {
   private void validateAreaPayloadConsistency(
       Area areaEnum, DistrictVolumeCreateDto createDto) {
 
-    if (createDto.tableData() == null) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Invalid or missing table data payload structure.");
-    }
-
     if (createDto.tableData() instanceof InteriorDataDto
         && areaEnum != Area.INTERIOR) {
       throw new ResponseStatusException(

@@ -193,12 +193,6 @@ public class SpeciesCompositionService {
   private void validateAreaPayloadConsistency(
       Area areaEnum, DistrictVolumeCreateDto createDto) {
 
-    if (createDto.tableData() == null) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Invalid or missing table data payload structure.");
-    }
-
     if (createDto.tableData() instanceof InteriorDataDto
         && areaEnum != Area.INTERIOR) {
       throw new ResponseStatusException(
@@ -213,8 +207,15 @@ public class SpeciesCompositionService {
           "Area mismatch: Expected COASTAL data layout.");
     }
 
-    if (createDto.tableData() instanceof SpeciesCompositionTableDataDto) {
-      // Species composition data is area-agnostic; valid for any area type.
+    if (createDto.tableData() instanceof InteriorDataDto
+        || createDto.tableData() instanceof CoastDataDto
+        || createDto.tableData() instanceof SpeciesCompositionTableDataDto) {
+      // All table data layouts are valid for species composition; the area
+      // mismatch checks above guard the Interior/Coastal layouts.
+    } else {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Invalid or missing table data payload structure.");
     }
   }
 }
