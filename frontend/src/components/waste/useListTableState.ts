@@ -65,5 +65,5 @@ export const useListTableState = <TData extends PageableData>({
     executeSearch(currentPage, pageSize);
   };
 
-  return { data, isLoading, isFetching, isError, handlePageChange, handleSort, pageSize };
+  return { data, isLoading, isFetching, isError, refetch, handlePageChange, handleSort, pageSize };
 };

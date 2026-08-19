@@ -88,7 +88,7 @@ class SpeciesCompositionServiceTest {
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
     PageRequest pageable = PageRequest.of(0, 10);
 
-    when(districtVolumeRepository.findAllByConfigType(
+    when(districtVolumeRepository.findAllLiveByConfigType(
             ConfigType.SPECIES_COMPOSITION, pageable))
         .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
@@ -109,7 +109,7 @@ class SpeciesCompositionServiceTest {
     DistrictVolumeEntity entity = buildEntity(Area.COASTAL);
     PageRequest pageable = PageRequest.of(0, 10);
 
-    when(districtVolumeRepository.findAllByConfigTypeAndArea(
+    when(districtVolumeRepository.findAllLiveByConfigTypeAndArea(
             ConfigType.SPECIES_COMPOSITION, Area.COASTAL, pageable))
         .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
@@ -601,5 +601,56 @@ class SpeciesCompositionServiceTest {
         .isEqualTo(new BigDecimal("1.200"));
     assertThat(result.heliMultiplier())
         .isEqualTo(new BigDecimal("1.500"));
+  }
+
+  @Test
+  @DisplayName(
+      "deleteSpeciesComposition — should soft-delete the record when found and not deleted")
+  void deleteSpeciesComposition_softDeletes_whenFound() {
+
+    DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
+
+    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.SPECIES_COMPOSITION))
+        .thenReturn(Optional.of(entity));
+
+    speciesCompositionService.deleteSpeciesComposition("TEST_USER", 1L);
+
+    assertThat(entity.isDeleted()).isTrue();
+    verify(districtVolumeRepository).save(entity);
+  }
+
+  @Test
+  @DisplayName(
+      "deleteSpeciesComposition — should throw 404 when record is not found")
+  void deleteSpeciesComposition_throws404_whenNotFound() {
+
+    when(districtVolumeRepository.findByIdAndConfigType(99L, ConfigType.SPECIES_COMPOSITION))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(
+          () -> speciesCompositionService.deleteSpeciesComposition("TEST_USER", 99L))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("Species composition record not found");
+
+    verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
+  }
+
+  @Test
+  @DisplayName(
+      "deleteSpeciesComposition — should throw 404 when record is already deleted")
+  void deleteSpeciesComposition_throws404_whenAlreadyDeleted() {
+
+    DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
+    entity.setDeleted(true);
+
+    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.SPECIES_COMPOSITION))
+        .thenReturn(Optional.of(entity));
+
+    assertThatThrownBy(
+          () -> speciesCompositionService.deleteSpeciesComposition("TEST_USER", 1L))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("Species composition record not found");
+
+    verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
   }
 }

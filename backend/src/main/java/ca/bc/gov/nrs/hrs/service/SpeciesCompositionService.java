@@ -50,19 +50,19 @@ public class SpeciesCompositionService {
   public Page<DistrictVolumeListItemDto> getSpeciesCompositions(
       Optional<String> areaOptional,
       Pageable pageable) {
-    log.debug("Fetching species composition list, areaFilter: {}, pageable: {}", 
+    log.debug("Fetching species composition list, areaFilter: {}, pageable: {}",
         areaOptional.orElse("None"), pageable);
 
     Page<DistrictVolumeEntity> entities =
         areaOptional
             .map(areaStr -> {
               Area areaEnum = Area.valueOf(areaStr.toUpperCase());
-              return districtVolumeRepository.findAllByConfigTypeAndArea(
+              return districtVolumeRepository.findAllLiveByConfigTypeAndArea(
                   ConfigType.SPECIES_COMPOSITION,
                   areaEnum,
                   pageable);
             })
-            .orElseGet(() -> districtVolumeRepository.findAllByConfigType(
+            .orElseGet(() -> districtVolumeRepository.findAllLiveByConfigType(
                 ConfigType.SPECIES_COMPOSITION, pageable));
 
     return entities.map(DistrictVolumeMapper::toListItemDto);
@@ -148,7 +148,7 @@ public class SpeciesCompositionService {
             "Start date must be after the most recent existing start date ("
                 + previousEntry.getStartDate() + ").");
       }
-      
+
       // Close the existing open-ended row
       previousEntry.setEndDate(createDto.startDate().minusDays(1));
       districtVolumeRepository.save(previousEntry);
@@ -166,32 +166,54 @@ public class SpeciesCompositionService {
     return DistrictVolumeMapper.toDetailDto(saved);
   }
 
+  /**
+   * Soft-deletes a species composition configuration record.
+   *
+   * <p>Marks the record as deleted (sets deleted = true) instead of removing it from the database.
+   * This preserves audit history and allows for potential recovery.</p>
+   *
+   * @param user the user performing the deletion (for audit trail)
+   * @param id the unique identifier of the record to delete
+   * @throws ResponseStatusException with HTTP 404 if the record is not found or already deleted
+   */
+  @Transactional
+  public void deleteSpeciesComposition(String user, Long id) {
+    DistrictVolumeEntity entity = districtVolumeRepository
+        .findByIdAndConfigType(id, ConfigType.SPECIES_COMPOSITION)
+        .filter(e -> !e.isDeleted())
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "Species composition record not found: " + id));
+
+    entity.setDeleted(true);
+    districtVolumeRepository.save(entity);
+    log.info("Soft-deleted species composition {} by user {}", id, user);
+  }
+
   private void validateAreaPayloadConsistency(
       Area areaEnum, DistrictVolumeCreateDto createDto) {
 
-    switch (createDto.tableData()) {
-
-      case InteriorDataDto _ when areaEnum != Area.INTERIOR -> throw new ResponseStatusException(
+    if (createDto.tableData() instanceof InteriorDataDto
+        && areaEnum != Area.INTERIOR) {
+      throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Area mismatch: Expected INTERIOR data layout.");
+    }
 
-      case CoastDataDto _ when areaEnum != Area.COASTAL -> throw new ResponseStatusException(
+    if (createDto.tableData() instanceof CoastDataDto
+        && areaEnum != Area.COASTAL) {
+      throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Area mismatch: Expected COASTAL data layout.");
+    }
 
-      case InteriorDataDto _ -> {
-        // Valid structural combination; do nothing and allow processing to continue.
-      }
-
-      case CoastDataDto _ -> {
-        // Valid structural combination; do nothing and allow processing to continue.
-      }
-
-      case SpeciesCompositionTableDataDto _ -> {
-        // Species composition data is area-agnostic; valid for any area type.
-      }
-
-      case null, default -> throw new ResponseStatusException(
+    if (createDto.tableData() instanceof InteriorDataDto
+        || createDto.tableData() instanceof CoastDataDto
+        || createDto.tableData() instanceof SpeciesCompositionTableDataDto) {
+      // All table data layouts are valid for species composition; the area
+      // mismatch checks above guard the Interior/Coastal layouts.
+    } else {
+      throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Invalid or missing table data payload structure.");
     }

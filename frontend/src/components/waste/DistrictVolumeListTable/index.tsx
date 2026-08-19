@@ -1,4 +1,5 @@
 import { Column } from '@carbon/react';
+import { useState } from 'react';
 
 import { useListTableState } from '../useListTableState';
 
@@ -10,7 +11,12 @@ import type { DistrictVolumeListItem } from '@/services/districtvolumes.types';
 import type { FC } from 'react';
 
 import TableResource from '@/components/Form/TableResource';
-import { useDistrictVolumeListQuery } from '@/config/react-query/hooks';
+import ConfigurationDeleteConfirmModal from '@/components/waste/ConfigurationDeleteConfirmModal';
+import {
+  useDistrictVolumeListQuery,
+  useDistrictVolumeTableDeleteMutation,
+} from '@/config/react-query/hooks';
+import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler';
 
 import './index.scss';
 
@@ -20,16 +26,32 @@ import './index.scss';
  * Manages its own pagination, sorting, and data-fetching state, delegating
  * rendering to {@link TableResource}. The query is configured with
  * `enabled: false` and `staleTime: Infinity` so every search is explicit
- * and results are never served from cache.
+ * and results are never served from cache. Future-dated rows expose a delete
+ * action that opens a confirmation modal; a successful deletion refreshes the
+ * list and notifies the user.
  *
  * @returns The district volume list table view.
  */
 const DistrictVolumeListTable: FC = () => {
-  const getRowActions = useDistrictVolumeListRowActions();
+  const [rowToDelete, setRowToDelete] = useState<DistrictVolumeListItem | null>(null);
 
-  const { data, isLoading, isFetching, isError, handlePageChange, handleSort } = useListTableState({
-    queryHook: useDistrictVolumeListQuery,
+  const { data, isLoading, isFetching, isError, refetch, handlePageChange, handleSort } =
+    useListTableState({ queryHook: useDistrictVolumeListQuery });
+
+  const deleteMutation = useDistrictVolumeTableDeleteMutation({
+    notificationTarget: 'district-volume-list',
+    onSuccess: () => {
+      setRowToDelete(null);
+      refetch();
+      sendToastEvent({
+        title: 'District volume deleted',
+        description: 'The district volume configuration was deleted.',
+        eventType: 'success',
+      });
+    },
   });
+
+  const getRowActions = useDistrictVolumeListRowActions(setRowToDelete);
 
   return (
     <Column lg={16} md={8} sm={4} className="configuration-column__content">
@@ -44,6 +66,18 @@ const DistrictVolumeListTable: FC = () => {
         displayRange
         displayToolbar
         getRowActions={getRowActions}
+      />
+      <ConfigurationDeleteConfirmModal
+        open={rowToDelete !== null}
+        configurationType="district volume"
+        startDate={rowToDelete?.startDate ?? ''}
+        isDeleting={deleteMutation.isPending}
+        onConfirm={() => {
+          if (rowToDelete) {
+            deleteMutation.mutate(rowToDelete.id);
+          }
+        }}
+        onClose={() => setRowToDelete(null)}
       />
     </Column>
   );

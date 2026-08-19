@@ -3,12 +3,26 @@
     {
       "name": "List district volumes",
       "request": {
-        "urlPattern": "/api/configuration/district-average-volumes",
+        "urlPathPattern": "/api/configuration/district-average-volumes",
         "method": "GET"
       },
       "response": {
         "status": 200,
         "bodyFileName": "district-average-volumes/list.json"
+      }
+    },
+    {
+      "name": "List district volumes (after future entry deleted)",
+      "priority": 1,
+      "request": {
+        "urlPathPattern": "/api/configuration/district-average-volumes",
+        "method": "GET"
+      },
+      "scenarioName": "district-volume-delete",
+      "requiredScenarioState": "deleted",
+      "response": {
+        "status": 200,
+        "bodyFileName": "district-average-volumes/list-after-delete.json"
       }
     }
   ]

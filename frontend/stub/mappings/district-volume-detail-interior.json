@@ -10,6 +10,17 @@
         "status": 200,
         "bodyFileName": "district-average-volumes/interior-detail.json"
       }
+    },
+    {
+      "name": "Get future Interior district volume detail",
+      "request": {
+        "urlPattern": "/api/configuration/district-average-volumes/6",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "district-average-volumes/interior-detail.json"
+      }
     }
   ]
 }

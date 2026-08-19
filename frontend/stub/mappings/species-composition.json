@@ -1,0 +1,92 @@
+{
+  "mappings": [
+    {
+      "name": "List species compositions",
+      "request": {
+        "urlPathPattern": "/api/configuration/species-compositions",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "species-composition/list.json"
+      }
+    },
+    {
+      "name": "List species compositions (after future entry deleted)",
+      "priority": 1,
+      "request": {
+        "urlPathPattern": "/api/configuration/species-compositions",
+        "method": "GET"
+      },
+      "scenarioName": "species-composition-delete",
+      "requiredScenarioState": "deleted",
+      "response": {
+        "status": 200,
+        "bodyFileName": "species-composition/list-after-delete.json"
+      }
+    },
+    {
+      "name": "Get species composition detail",
+      "request": {
+        "urlPathPattern": "/api/configuration/species-compositions/[0-9]+",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "species-composition/detail.json"
+      }
+    },
+    {
+      "name": "Delete future species composition — success",
+      "priority": 1,
+      "request": {
+        "urlPathPattern": "/api/configuration/species-compositions/3",
+        "method": "DELETE"
+      },
+      "scenarioName": "species-composition-delete",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "deleted",
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "Delete species composition — already deleted",
+      "priority": 1,
+      "request": {
+        "urlPathPattern": "/api/configuration/species-compositions/3",
+        "method": "DELETE"
+      },
+      "scenarioName": "species-composition-delete",
+      "requiredScenarioState": "deleted",
+      "response": {
+        "status": 404,
+        "headers": { "Content-Type": "application/problem+json" },
+        "jsonBody": {
+          "type": "about:blank",
+          "title": "Not Found",
+          "status": 404,
+          "detail": "Species composition configuration entry 3 was not found."
+        }
+      }
+    },
+    {
+      "name": "Delete species composition — not future-dated",
+      "priority": 5,
+      "request": {
+        "urlPathPattern": "/api/configuration/species-compositions/[0-9]+",
+        "method": "DELETE"
+      },
+      "response": {
+        "status": 422,
+        "headers": { "Content-Type": "application/problem+json" },
+        "jsonBody": {
+          "type": "about:blank",
+          "title": "Unprocessable Entity",
+          "status": 422,
+          "detail": "Configuration entry is not future-dated and cannot be deleted."
+        }
+      }
+    }
+  ]
+}

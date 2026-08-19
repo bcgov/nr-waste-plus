@@ -332,4 +332,42 @@ describe('SpeciesCompositionService', () => {
       await expect(service.getSpeciesCompositionById(999)).rejects.toThrow('Not Found');
     });
   });
+
+  describe('deleteSpeciesComposition', () => {
+    it('should call API with correct ID and DELETE method', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue(undefined);
+
+      await service.deleteSpeciesComposition(42);
+
+      expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+        method: 'DELETE',
+        url: '/api/configuration/species-compositions/42',
+      });
+    });
+
+    it('should include meta when provided', async () => {
+      const meta = { notificationTarget: 'species-composition-list' };
+      (service as any).doRequest = vi.fn().mockResolvedValue(undefined);
+
+      await service.deleteSpeciesComposition(42, meta);
+
+      const callArgs = (service as any).doRequest.mock.calls[0][1];
+      expect(callArgs.meta).toEqual(meta);
+    });
+
+    it('should not include meta when not provided', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue(undefined);
+
+      await service.deleteSpeciesComposition(42);
+
+      const callArgs = (service as any).doRequest.mock.calls[0][1];
+      expect(callArgs.meta).toBeUndefined();
+    });
+
+    it('should propagate network errors', async () => {
+      (service as any).doRequest = vi.fn().mockRejectedValue(new Error('Network Error'));
+
+      await expect(service.deleteSpeciesComposition(42)).rejects.toThrow('Network Error');
+    });
+  });
 });

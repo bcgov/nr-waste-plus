@@ -98,7 +98,7 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
     PageRequest pageable = PageRequest.of(0, 10);
 
-    when(districtVolumeRepository.findAllByConfigType(ConfigType.DISTRICT_VOLUME, pageable))
+    when(districtVolumeRepository.findAllLiveByConfigType(ConfigType.DISTRICT_VOLUME, pageable))
         .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
     var result =
@@ -108,7 +108,7 @@ class DistrictVolumeServiceTest {
     assertThat(result.getTotalElements()).isEqualTo(1);
     assertThat(result.getContent()).hasSize(1);
     assertThat(result.getContent().get(0).area()).isEqualTo("INTERIOR");
-    verify(districtVolumeRepository).findAllByConfigType(ConfigType.DISTRICT_VOLUME, pageable);
+    verify(districtVolumeRepository).findAllLiveByConfigType(ConfigType.DISTRICT_VOLUME, pageable);
     verify(districtVolumeRepository, never()).findAll(pageable);
   }
 
@@ -120,7 +120,7 @@ class DistrictVolumeServiceTest {
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
     PageRequest pageable = PageRequest.of(0, 10);
 
-    when(districtVolumeRepository.findAllByConfigTypeAndArea(
+    when(districtVolumeRepository.findAllLiveByConfigTypeAndArea(
             ConfigType.DISTRICT_VOLUME,
             Area.INTERIOR,
             pageable))
@@ -134,7 +134,7 @@ class DistrictVolumeServiceTest {
     assertThat(result).isNotNull();
     assertThat(result.getTotalElements()).isEqualTo(1);
     assertThat(result.getContent().get(0).area()).isEqualTo("INTERIOR");
-    verify(districtVolumeRepository).findAllByConfigTypeAndArea(
+    verify(districtVolumeRepository).findAllLiveByConfigTypeAndArea(
         ConfigType.DISTRICT_VOLUME,
         Area.INTERIOR,
         pageable);
@@ -578,6 +578,57 @@ class DistrictVolumeServiceTest {
         .isEqualTo(new BigDecimal("1.200"));
     assertThat(result.heliMultiplier())
         .isEqualTo(new BigDecimal("1.500"));
+  }
+
+  @Test
+  @DisplayName(
+      "deleteDistrictVolume — should soft-delete the record when found and not deleted")
+  void deleteDistrictVolume_softDeletes_whenFound() {
+
+    DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
+
+    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.DISTRICT_VOLUME))
+        .thenReturn(Optional.of(entity));
+
+    districtVolumeService.deleteDistrictVolume("TEST_USER", 1L);
+
+    assertThat(entity.isDeleted()).isTrue();
+    verify(districtVolumeRepository).save(entity);
+  }
+
+  @Test
+  @DisplayName(
+      "deleteDistrictVolume — should throw 404 when record is not found")
+  void deleteDistrictVolume_throws404_whenNotFound() {
+
+    when(districtVolumeRepository.findByIdAndConfigType(99L, ConfigType.DISTRICT_VOLUME))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(
+          () -> districtVolumeService.deleteDistrictVolume("TEST_USER", 99L))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("District volume record not found");
+
+    verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
+  }
+
+  @Test
+  @DisplayName(
+      "deleteDistrictVolume — should throw 404 when record is already deleted")
+  void deleteDistrictVolume_throws404_whenAlreadyDeleted() {
+
+    DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
+    entity.setDeleted(true);
+
+    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.DISTRICT_VOLUME))
+        .thenReturn(Optional.of(entity));
+
+    assertThatThrownBy(
+          () -> districtVolumeService.deleteDistrictVolume("TEST_USER", 1L))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("District volume record not found");
+
+    verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
   }
 
   // ---- helper methods ----

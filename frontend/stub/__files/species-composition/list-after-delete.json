@@ -13,19 +13,12 @@
       "endDate": "2026-06-01",
       "uploadedBy": "alopez@gov.bc.ca",
       "dateOfUpload": "2025-05-10T09:00:00Z"
-    },
-    {
-      "id": 3,
-      "startDate": "2026-09-01",
-      "endDate": null,
-      "uploadedBy": "jsmith@gov.bc.ca",
-      "dateOfUpload": "2026-08-10T09:00:00Z"
     }
   ],
   "page": {
     "number": 0,
     "size": 10,
-    "totalElements": 3,
+    "totalElements": 2,
     "totalPages": 1
   }
 }

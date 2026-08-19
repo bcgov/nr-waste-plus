@@ -383,4 +383,42 @@ describe('DistrictVolumeService', () => {
       await expect(service.getDistrictVolumeTableDetail(999)).rejects.toThrow('Not Found');
     });
   });
+
+  describe('deleteDistrictVolume', () => {
+    it('should call API with correct ID and DELETE method', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue(undefined);
+
+      await service.deleteDistrictVolume(42);
+
+      expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+        method: 'DELETE',
+        url: '/api/configuration/district-average-volumes/42',
+      });
+    });
+
+    it('should include meta when provided', async () => {
+      const meta = { notificationTarget: 'district-volume-list' };
+      (service as any).doRequest = vi.fn().mockResolvedValue(undefined);
+
+      await service.deleteDistrictVolume(42, meta);
+
+      const callArgs = (service as any).doRequest.mock.calls[0][1];
+      expect(callArgs.meta).toEqual(meta);
+    });
+
+    it('should not include meta when not provided', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue(undefined);
+
+      await service.deleteDistrictVolume(42);
+
+      const callArgs = (service as any).doRequest.mock.calls[0][1];
+      expect(callArgs.meta).toBeUndefined();
+    });
+
+    it('should propagate network errors', async () => {
+      (service as any).doRequest = vi.fn().mockRejectedValue(new Error('Network Error'));
+
+      await expect(service.deleteDistrictVolume(42)).rejects.toThrow('Network Error');
+    });
+  });
 });

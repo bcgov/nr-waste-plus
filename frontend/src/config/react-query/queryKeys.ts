@@ -104,11 +104,13 @@ export const queryKeys = {
       ['district-volume', 'list', params, notificationTarget] as const,
     create: () => ['district-volume', 'create'] as const,
     detail: (id: number) => ['district-volume', 'detail', id] as const,
+    delete: (id: number) => ['district-volume', 'delete', id] as const,
   },
   speciesComposition: {
     list: (params: SpeciesCompositionQueryParams, notificationTarget?: string) =>
       ['species-composition', 'list', params, notificationTarget] as const,
     create: () => ['species-composition', 'create'] as const,
     detail: (id: number) => ['species-composition', 'detail', id] as const,
+    delete: (id: number) => ['species-composition', 'delete', id] as const,
   },
 } as const;
