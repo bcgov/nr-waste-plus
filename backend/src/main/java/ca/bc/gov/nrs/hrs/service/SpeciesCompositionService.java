@@ -200,7 +200,7 @@ public class SpeciesCompositionService {
    * @param id the unique identifier of the record to delete
    * @throws ResponseStatusException with HTTP 404 if the record is not found or already deleted
    * @throws ResponseStatusException with HTTP 422 if the record is not a
- *     future-start or not open-ended
+   *     future-start or not open-ended.
    */
   @Transactional(isolation = Isolation.SERIALIZABLE)
   public void deleteSpeciesComposition(String user, Long id) {
@@ -214,7 +214,7 @@ public class SpeciesCompositionService {
     if (entity.getStartDate() == null || !entity.getStartDate().isAfter(LocalDate.now())) {
       throw new ResponseStatusException(
           HttpStatus.UNPROCESSABLE_CONTENT,
-          "Only future configurations can be deleted.");
+          "Only future-start configurations can be deleted.");
     }
 
     if (entity.getEndDate() != null) {

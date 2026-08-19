@@ -393,7 +393,7 @@ public class DistrictVolumeService {
    * @param id the unique identifier of the record to delete
    * @throws ResponseStatusException with HTTP 404 if the record is not found or already deleted
    * @throws ResponseStatusException with HTTP 422 if the record is not a
- *     future-start or not open-ended
+   *     future-start or not open-ended.
    */
   @Transactional(isolation = Isolation.SERIALIZABLE)
   public void deleteDistrictVolume(String user, Long id) {
@@ -404,7 +404,7 @@ public class DistrictVolumeService {
             HttpStatus.NOT_FOUND,
             "District volume record not found: " + id));
 
-    if (!entity.getStartDate().isAfter(LocalDate.now())) {
+    if (entity.getStartDate() == null || !entity.getStartDate().isAfter(LocalDate.now())) {
       throw new ResponseStatusException(
           HttpStatus.UNPROCESSABLE_CONTENT,
           "Only future-start configurations can be deleted.");
