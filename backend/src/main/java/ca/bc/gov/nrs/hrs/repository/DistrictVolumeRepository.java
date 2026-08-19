@@ -34,13 +34,10 @@ public interface DistrictVolumeRepository
       @Param("configType") ConfigType configType, @Param("area") Area area);
 
   /**
-   * Finds the most recent live entry for the specified config type and area (with LIMIT 1).
+   * Finds the single most recent live entry for the specified config type and area.
    */
-  @Query("SELECT d FROM DistrictVolumeEntity d "
-      + "WHERE d.configType = :configType AND d.area = :area "
-      + "AND d.deleted = FALSE ORDER BY d.startDate DESC LIMIT 1")
-  Optional<DistrictVolumeEntity> findTop1ByConfigTypeAndAreaOrderByStartDateDesc(
-      @Param("configType") ConfigType configType, @Param("area") Area area);
+  Optional<DistrictVolumeEntity> findTop1ByConfigTypeAndAreaAndDeletedFalseOrderByStartDateDesc(
+      ConfigType configType, Area area);
 
   /**
    * Retrieves a paginated list of live records filtered by area (Warning: mixes ConfigTypes).
