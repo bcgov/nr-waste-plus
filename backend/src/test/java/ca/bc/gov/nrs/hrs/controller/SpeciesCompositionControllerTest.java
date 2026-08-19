@@ -2,7 +2,11 @@ package ca.bc.gov.nrs.hrs.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -359,4 +363,87 @@ class SpeciesCompositionControllerTest {
                 .content(objectMapper.writeValueAsString(invalidDto)))
         .andExpect(status().isBadRequest());
   }
-}
+
+  @Test
+  @DisplayName(
+      "DELETE /{id} — Should return 204 No Content when record exists and is future-start open-ended")
+  @WithMockJwt(value = "jakethedog")
+  void deleteSpeciesComposition_returns204_whenRecordExistsAndIsFutureOpenEnded()
+      throws Exception {
+
+    doNothing().when(speciesCompositionService)
+        .deleteSpeciesComposition(eq("IDIR\\jakethedog"), eq(42L));
+
+    mockMvc.perform(
+            delete("/api/configuration/species-compositions/42")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNoContent());
+
+    verify(speciesCompositionService)
+        .deleteSpeciesComposition(eq("IDIR\\jakethedog"), eq(42L));
+  }
+
+  @Test
+  @DisplayName(
+      "DELETE /{id} — Should return 404 Not Found when record does not exist")
+  @WithMockJwt(value = "jakethedog")
+  void deleteSpeciesComposition_returns404_whenNotFound() throws Exception {
+
+    doThrow(new ResponseStatusException(
+        HttpStatus.NOT_FOUND,
+        "Species composition record not found: 99"))
+        .when(speciesCompositionService)
+        .deleteSpeciesComposition(eq("IDIR\\jakethedog"), eq(99L));
+
+    mockMvc.perform(
+            delete("/api/configuration/species-compositions/99")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound());
+
+    verify(speciesCompositionService)
+        .deleteSpeciesComposition(eq("IDIR\\jakethedog"), eq(99L));
+  }
+
+  @Test
+  @DisplayName(
+      "DELETE /{id} — Should return 422 Unprocessable Content when record is not future-start")
+  @WithMockJwt(value = "jakethedog")
+  void deleteSpeciesComposition_returns422_whenNotFutureStart() throws Exception {
+
+    doThrow(new ResponseStatusException(
+        HttpStatus.UNPROCESSABLE_CONTENT,
+        "Only future-start configurations can be deleted."))
+        .when(speciesCompositionService)
+        .deleteSpeciesComposition(eq("IDIR\\jakethedog"), eq(42L));
+
+    mockMvc.perform(
+            delete("/api/configuration/species-compositions/42")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isUnprocessableEntity());
+
+    verify(speciesCompositionService)
+        .deleteSpeciesComposition(eq("IDIR\\jakethedog"), eq(42L));
+  }
+
+  @Test
+  @DisplayName(
+      "DELETE /{id} — Should return 422 Unprocessable Content when record is not open-ended")
+  @WithMockJwt(value = "jakethedog")
+  void deleteSpeciesComposition_returns422_whenNotOpenEnded() throws Exception {
+
+    doThrow(new ResponseStatusException(
+        HttpStatus.UNPROCESSABLE_CONTENT,
+        "Only open-ended future configurations can be deleted."))
+        .when(speciesCompositionService)
+        .deleteSpeciesComposition(eq("IDIR\\jakethedog"), eq(42L));
+
+    mockMvc.perform(
+            delete("/api/configuration/species-compositions/42")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isUnprocessableEntity());
+
+    verify(speciesCompositionService)
+        .deleteSpeciesComposition(eq("IDIR\\jakethedog"), eq(42L));
+  }
+
+  }
