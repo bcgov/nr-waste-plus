@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.hrs.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -601,6 +603,197 @@ class SpeciesCompositionServiceTest {
         .isEqualTo(new BigDecimal("1.200"));
     assertThat(result.heliMultiplier())
         .isEqualTo(new BigDecimal("1.500"));
+  }
+
+  @Test
+  @DisplayName(
+      "createSpeciesComposition — should insert between existing rows and close predecessor, set endDate on new entity")
+  void createSpeciesComposition_insertsBetweenRows_setsEndDateOnNewAndClosesPredecessor() {
+
+    CoastDataDto coastData = new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
+        "COASTAL",
+        LocalDate.of(2027, Month.JULY, 15),
+        new BigDecimal("1.200"),
+        new BigDecimal("1.500"),
+        coastData);
+
+    // Successor: row starting Aug 1, 2027
+    DistrictVolumeEntity successor = buildEntity(Area.COASTAL);
+    successor.setId(2L);
+    successor.setStartDate(LocalDate.of(2027, Month.AUGUST, 1));
+    successor.setEndDate(null);
+
+    // Predecessor: row starting Jan 1, 2027
+    DistrictVolumeEntity predecessor = buildEntity(Area.COASTAL);
+    predecessor.setId(1L);
+    predecessor.setStartDate(LocalDate.of(2027, Month.JANUARY, 1));
+    predecessor.setEndDate(null);
+
+    when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.SPECIES_COMPOSITION, Area.COASTAL))
+        .thenReturn(Collections.singletonList(predecessor));
+
+    when(districtVolumeRepository.findFirstLiveAfter(
+            eq(ConfigType.SPECIES_COMPOSITION),
+            eq(Area.COASTAL),
+            eq(LocalDate.of(2027, Month.JULY, 15)),
+            any(PageRequest.class)))
+        .thenReturn(List.of(successor));
+
+    when(districtVolumeRepository.findFirstLiveBefore(
+            eq(ConfigType.SPECIES_COMPOSITION),
+            eq(Area.COASTAL),
+            eq(LocalDate.of(2027, Month.JULY, 15)),
+            any(PageRequest.class)))
+        .thenReturn(List.of(predecessor));
+
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    DistrictVolumeDetailDto result = speciesCompositionService.createSpeciesComposition(
+        "TEST_USER", createDto);
+
+    assertThat(result.startDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 15));
+    assertThat(result.endDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 31)); // successor start - 1 day
+
+    // Verify predecessor was closed
+    verify(districtVolumeRepository).save(argThat(e ->
+        e.getEndDate() != null && e.getEndDate().equals(LocalDate.of(2027, Month.JULY, 14))));
+
+    // Verify new entity was saved as open-ended (endDate = null)
+    verify(districtVolumeRepository).save(argThat(e ->
+        e.getEndDate() == null));
+  }
+
+  @Test
+  @DisplayName(
+      "createSpeciesComposition — should insert after all rows when no successor exists")
+  void createSpeciesComposition_insertsAfterAllRows_whenNoSuccessor() {
+
+    CoastDataDto coastData = new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
+        "COASTAL",
+        LocalDate.of(2027, Month.JULY, 15),
+        new BigDecimal("1.200"),
+        new BigDecimal("1.500"),
+        coastData);
+
+    // Open-ended predecessor
+    DistrictVolumeEntity predecessor = buildEntity(Area.COASTAL);
+    predecessor.setId(1L);
+    predecessor.setStartDate(LocalDate.of(2027, Month.JANUARY, 1));
+    predecessor.setEndDate(null);
+
+    when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.SPECIES_COMPOSITION, Area.COASTAL))
+        .thenReturn(Collections.singletonList(predecessor));
+
+    when(districtVolumeRepository.findFirstLiveAfter(
+            eq(ConfigType.SPECIES_COMPOSITION),
+            eq(Area.COASTAL),
+            eq(LocalDate.of(2027, Month.JULY, 15)),
+            any(PageRequest.class)))
+        .thenReturn(Collections.emptyList());
+
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    DistrictVolumeDetailDto result = speciesCompositionService.createSpeciesComposition(
+        "TEST_USER", createDto);
+
+    assertThat(result.startDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 15));
+    assertThat(result.endDate()).isNull(); // No successor = open-ended
+
+    // Verify predecessor was closed
+    verify(districtVolumeRepository).save(argThat(e ->
+        e.getEndDate() != null && e.getEndDate().equals(LocalDate.of(2027, Month.JULY, 14))));
+
+    // Verify new entity was saved as open-ended (endDate = null)
+    verify(districtVolumeRepository).save(argThat(e ->
+        e.getEndDate() == null));
+  }
+
+  @Test
+  @DisplayName(
+      "createSpeciesComposition — should insert before all rows when no predecessor exists")
+  void createSpeciesComposition_insertsBeforeAllRows_whenNoPredecessor() {
+
+    CoastDataDto coastData = new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
+        "COASTAL",
+        LocalDate.of(2027, Month.JULY, 15),
+        new BigDecimal("1.200"),
+        new BigDecimal("1.500"),
+        coastData);
+
+    // Successor exists (starts Aug 1)
+    DistrictVolumeEntity successor = buildEntity(Area.COASTAL);
+    successor.setId(1L);
+    successor.setStartDate(LocalDate.of(2027, Month.AUGUST, 1));
+    successor.setEndDate(null);
+
+    when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.SPECIES_COMPOSITION, Area.COASTAL))
+        .thenReturn(Collections.emptyList());
+
+    when(districtVolumeRepository.findFirstLiveAfter(
+            eq(ConfigType.SPECIES_COMPOSITION),
+            eq(Area.COASTAL),
+            eq(LocalDate.of(2027, Month.JULY, 15)),
+            any(PageRequest.class)))
+        .thenReturn(List.of(successor));
+
+    when(districtVolumeRepository.findFirstLiveBefore(
+            eq(ConfigType.SPECIES_COMPOSITION),
+            eq(Area.COASTAL),
+            eq(LocalDate.of(2027, Month.JULY, 15)),
+            any(PageRequest.class)))
+        .thenReturn(Collections.emptyList());
+
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    DistrictVolumeDetailDto result = speciesCompositionService.createSpeciesComposition(
+        "TEST_USER", createDto);
+
+    assertThat(result.startDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 15));
+    // successor starts Aug 1, so endDate = July 31
+    assertThat(result.endDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 31));
+
+    // No predecessor to close - only the new entity is saved (with endDate != null)
+    verify(districtVolumeRepository, times(1)).save(any(DistrictVolumeEntity.class));
+  }
+
+  @Test
+  @DisplayName(
+      "createSpeciesComposition — should create open-ended when no existing rows")
+  void createSpeciesComposition_createsOpenEnded_whenNoExistingRows() {
+
+    CoastDataDto coastData = new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
+        "COASTAL",
+        LocalDate.of(2027, Month.JULY, 15),
+        new BigDecimal("1.200"),
+        new BigDecimal("1.500"),
+        coastData);
+
+    when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.SPECIES_COMPOSITION, Area.COASTAL))
+        .thenReturn(Collections.emptyList());
+
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    DistrictVolumeDetailDto result = speciesCompositionService.createSpeciesComposition(
+        "TEST_USER", createDto);
+
+    assertThat(result.startDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 15));
+    assertThat(result.endDate()).isNull(); // Open-ended
   }
 
   @Test
