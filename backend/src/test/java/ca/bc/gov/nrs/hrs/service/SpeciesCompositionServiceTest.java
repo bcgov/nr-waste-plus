@@ -848,4 +848,97 @@ class SpeciesCompositionServiceTest {
 
     verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
   }
+
+  @Test
+  @DisplayName(
+      "deleteSpeciesComposition — should throw 422 when record start date is not in the future")
+  void deleteSpeciesComposition_throws422_whenNotFutureStart() {
+
+    DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
+    entity.setStartDate(LocalDate.now().minusDays(1));
+    entity.setEndDate(null);
+
+    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.SPECIES_COMPOSITION))
+        .thenReturn(Optional.of(entity));
+
+    assertThatThrownBy(
+          () -> speciesCompositionService.deleteSpeciesComposition("TEST_USER", 1L))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("Only future-start configurations can be deleted.");
+
+    verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
+  }
+
+  @Test
+  @DisplayName(
+      "deleteSpeciesComposition — should throw 422 when record start date is null")
+  void deleteSpeciesComposition_throws422_whenStartDateNull() {
+
+    DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
+    entity.setStartDate(null);
+    entity.setEndDate(null);
+
+    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.SPECIES_COMPOSITION))
+        .thenReturn(Optional.of(entity));
+
+    assertThatThrownBy(
+          () -> speciesCompositionService.deleteSpeciesComposition("TEST_USER", 1L))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("Only future-start configurations can be deleted.");
+
+    verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
+  }
+
+  @Test
+  @DisplayName(
+      "deleteSpeciesComposition — should throw 422 when record is not open-ended")
+  void deleteSpeciesComposition_throws422_whenNotOpenEnded() {
+
+    DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
+    entity.setStartDate(LocalDate.now().plusYears(1));
+    entity.setEndDate(LocalDate.now().plusDays(10));
+
+    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.SPECIES_COMPOSITION))
+        .thenReturn(Optional.of(entity));
+
+    assertThatThrownBy(
+          () -> speciesCompositionService.deleteSpeciesComposition("TEST_USER", 1L))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("Only open-ended future configurations can be deleted.");
+
+    verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
+  }
+
+  @Test
+  @DisplayName(
+      "deleteSpeciesComposition — should reopen predecessor when deleting open-ended record")
+  void deleteSpeciesComposition_reopensPredecessor_whenOpenEndedDeleted() {
+
+    DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
+    entity.setId(2L);
+    entity.setStartDate(LocalDate.now().plusYears(1));
+    entity.setEndDate(null);
+
+    DistrictVolumeEntity predecessor = buildEntity(Area.INTERIOR);
+    predecessor.setId(1L);
+    predecessor.setStartDate(LocalDate.now().plusMonths(6));
+    predecessor.setEndDate(null);
+
+    when(districtVolumeRepository.findByIdAndConfigType(2L, ConfigType.SPECIES_COMPOSITION))
+        .thenReturn(Optional.of(entity));
+    when(districtVolumeRepository.findFirstLiveBefore(
+            eq(ConfigType.SPECIES_COMPOSITION),
+            eq(Area.INTERIOR),
+            eq(entity.getStartDate()),
+            any(PageRequest.class)))
+        .thenReturn(List.of(predecessor));
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    speciesCompositionService.deleteSpeciesComposition("TEST_USER", 2L);
+
+    assertThat(entity.isDeleted()).isTrue();
+    verify(districtVolumeRepository).save(argThat(e ->
+        e.getId() == 1L && e.getEndDate() == null));
+  }
 }
