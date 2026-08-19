@@ -662,9 +662,9 @@ class SpeciesCompositionServiceTest {
     verify(districtVolumeRepository).save(argThat(e ->
         e.getEndDate() != null && e.getEndDate().equals(LocalDate.of(2027, Month.JULY, 14))));
 
-    // Verify new entity was saved as open-ended (endDate = null)
+    // Verify new entity was saved with endDate = successor.startDate - 1 day = July 31
     verify(districtVolumeRepository).save(argThat(e ->
-        e.getEndDate() == null));
+        e.getEndDate() != null && e.getEndDate().equals(LocalDate.of(2027, Month.JULY, 31))));
   }
 
   @Test
