@@ -146,6 +146,10 @@ describe('queryKeys', () => {
     it('should build detail key', () => {
       expect(queryKeys.districtVolume.detail(42)).toEqual(['district-volume', 'detail', 42]);
     });
+
+    it('should build delete key', () => {
+      expect(queryKeys.districtVolume.delete(42)).toEqual(['district-volume', 'delete', 42]);
+    });
   });
 
   describe('speciesComposition', () => {
@@ -169,6 +173,14 @@ describe('queryKeys', () => {
       expect(queryKeys.speciesComposition.detail(42)).toEqual([
         'species-composition',
         'detail',
+        42,
+      ]);
+    });
+
+    it('should build delete key', () => {
+      expect(queryKeys.speciesComposition.delete(42)).toEqual([
+        'species-composition',
+        'delete',
         42,
       ]);
     });

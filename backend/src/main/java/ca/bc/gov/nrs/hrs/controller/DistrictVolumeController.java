@@ -13,11 +13,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -48,7 +50,8 @@ public class DistrictVolumeController {
   @GetMapping
   public ResponseEntity<Page<DistrictVolumeListItemDto>> getDistrictVolumes(
       @RequestParam(required = false) String area,
-      @PageableDefault(size = 10) Pageable pageable) {
+      @PageableDefault(size = 10, sort = "startDate",
+          direction = Direction.DESC) Pageable pageable) {
 
     if (area != null && !area.equalsIgnoreCase("INTERIOR") && !area.equalsIgnoreCase("COASTAL")) {
       throw new ResponseStatusException(
@@ -107,5 +110,24 @@ public class DistrictVolumeController {
                 + createdVolume.id());
 
     return ResponseEntity.created(location).build();
+  }
+
+  /**
+   * Deletes a district volume configuration.
+   *
+   * <p>Soft-deletes the specified district volume configuration. Only future-start,
+   * open-ended configurations can be deleted.</p>
+   *
+   * @param jwt the authenticated user's JWT
+   * @param id the district volume configuration identifier
+   * @return a {@link ResponseEntity} with status {@code 204 No Content}
+   */
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deleteDistrictVolume(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable Long id) {
+    districtVolumeService.deleteDistrictVolume(
+        JwtPrincipalUtil.getUserId(jwt), id);
+    return ResponseEntity.noContent().build();
   }
 }

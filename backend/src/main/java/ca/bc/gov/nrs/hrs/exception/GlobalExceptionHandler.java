@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -215,6 +216,35 @@ public class GlobalExceptionHandler {
     ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
     problem.setTitle("Internal Server Error");
     problem.setDetail("An unexpected error occurred. Please contact support if this persists.");
+    problem.setInstance(URI.create(request.getRequestURI()));
+
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(problem);
+  }
+
+  /**
+   * Handles failures caused by multiple records matching a query that expects
+   * one record.
+   *
+   * <p>The underlying exception details remain in the server log, while the
+   * response explains that the failure is a data consistency problem without
+   * exposing database or implementation details to the caller.</p>
+   *
+   * @param ex the cardinality exception
+   * @param request the current HTTP servlet request
+   * @return a 500 RFC 7807 response with a safe data consistency detail
+   */
+  @ExceptionHandler(IncorrectResultSizeDataAccessException.class)
+  public ResponseEntity<ProblemDetail> handleIncorrectResultSize(
+      IncorrectResultSizeDataAccessException ex, HttpServletRequest request) {
+    log.error("Multiple records matched a unique-result query: {}", ex.getMessage(), ex);
+
+    ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+    problem.setTitle("Data Consistency Error");
+    problem.setDetail(
+        "Multiple active records were found where one record was expected. "
+            + "Please contact support to resolve the configuration data.");
     problem.setInstance(URI.create(request.getRequestURI()));
 
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

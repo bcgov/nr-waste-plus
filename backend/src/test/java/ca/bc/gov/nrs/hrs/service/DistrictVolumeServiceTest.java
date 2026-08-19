@@ -586,6 +586,8 @@ class DistrictVolumeServiceTest {
   void deleteDistrictVolume_softDeletes_whenFound() {
 
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
+    entity.setStartDate(LocalDate.now().plusYears(1));
+    entity.setEndDate(null);
 
     when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.DISTRICT_VOLUME))
         .thenReturn(Optional.of(entity));

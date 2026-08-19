@@ -609,6 +609,8 @@ class SpeciesCompositionServiceTest {
   void deleteSpeciesComposition_softDeletes_whenFound() {
 
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
+    entity.setStartDate(LocalDate.now().plusYears(1));
+    entity.setEndDate(null);
 
     when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.SPECIES_COMPOSITION))
         .thenReturn(Optional.of(entity));
