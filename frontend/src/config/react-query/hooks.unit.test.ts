@@ -9,6 +9,7 @@ import {
   useDistrictOptionsQuery,
   useDistrictVolumeListQuery,
   useDistrictVolumeTableCreateMutation,
+  useDistrictVolumeTableDeleteMutation,
   useForestClientsByNumbersQuery,
   useMyForestClientsQuery,
   useReportingUnitCreateMutation,
@@ -19,6 +20,7 @@ import {
   useSpeciesCompositionListQuery,
   useSpeciesCompositionDetailQuery,
   useSpeciesCompositionCreateMutation,
+  useSpeciesCompositionDeleteMutation,
 } from './hooks';
 import { queryKeys } from './queryKeys';
 
@@ -73,6 +75,7 @@ vi.mock('@/services/APIs', () => ({
         zones: [],
       }),
       createDistrictVolumeTable: vi.fn().mockResolvedValue(444),
+      deleteDistrictVolume: vi.fn().mockResolvedValue(undefined),
     },
     speciesComposition: {
       listSpeciesCompositions: vi.fn().mockResolvedValue({
@@ -96,6 +99,7 @@ vi.mock('@/services/APIs', () => ({
         tableData: { rows: [] },
       }),
       createSpeciesComposition: vi.fn().mockResolvedValue(555),
+      deleteSpeciesComposition: vi.fn().mockResolvedValue(undefined),
     },
   },
 }));
