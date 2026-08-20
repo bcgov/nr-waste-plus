@@ -73,8 +73,8 @@
     "brace-expansion@>=2.0.0 <2.1.4": "2.1.4"
   },
   "allowScripts": {
-    "cypress@15.18.0": true,
-    "esbuild@0.28.1": true,
+    "cypress@15.20.1": true,
+    "esbuild@0.28.2": true,
     "fsevents@2.3.3": true
   }
 }
