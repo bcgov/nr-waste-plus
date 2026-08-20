@@ -316,17 +316,15 @@ jobs:
   results:
     name: Analysis Results
     needs:
-      [
-        tests-java,
-        tests-frontend,
-        tests-frontend-ex,
-        trivy,
-        cve-lite,
-        npm-audit,
-        sbom-node,
-        sbom-java,
-        sbom-submit,
-      ]
+      - tests-java
+      - tests-frontend
+      - tests-frontend-ex
+      - trivy
+      - cve-lite
+      - npm-audit
+      - sbom-node
+      - sbom-java
+      - sbom-submit
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 1
