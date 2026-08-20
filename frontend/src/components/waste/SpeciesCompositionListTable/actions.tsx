@@ -25,5 +25,6 @@ export const useSpeciesCompositionListRowActions = (
     routePath: '/configuration/species-composition/{id}',
     onDeleteClick,
     getStartDate: (row) => row.startDate,
+    deleteActionLabel: 'species composition entry',
   });
 };

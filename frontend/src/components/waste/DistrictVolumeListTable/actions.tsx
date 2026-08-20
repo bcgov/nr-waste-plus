@@ -25,5 +25,6 @@ export const useDistrictVolumeListRowActions = (
     routePath: '/configuration/district-volume-tables/{id}',
     onDeleteClick,
     getStartDate: (row) => row.startDate,
+    deleteActionLabel: 'district average volume entry',
   });
 };

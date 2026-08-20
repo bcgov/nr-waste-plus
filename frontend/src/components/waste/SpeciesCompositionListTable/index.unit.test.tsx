@@ -521,8 +521,10 @@ describe('SpeciesCompositionListTable', () => {
       await renderWithAppAsync(<SpeciesCompositionListTable />);
 
       await screen.findByTestId('species-composition-list');
-      screen.getByRole('button', { name: 'Delete species composition starting 2026-09-01' });
-      expect(screen.queryByText('Delete species composition starting 2025-01-01')).toBeNull();
+      // Delete button should be visible for future-dated rows
+      screen.getByRole('button', { name: 'Delete species composition entry' });
+      // The text should also be present
+      screen.getByText('Delete species composition entry');
     });
 
     it('does not render a Delete action for current or past rows', async () => {
@@ -536,7 +538,7 @@ describe('SpeciesCompositionListTable', () => {
       await renderWithAppAsync(<SpeciesCompositionListTable />);
 
       await screen.findByTestId('species-composition-list');
-      expect(screen.queryByText(/Delete species composition starting/)).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Delete species composition entry' })).toBeNull();
     });
   });
 
@@ -552,10 +554,10 @@ describe('SpeciesCompositionListTable', () => {
       await renderWithAppAsync(<SpeciesCompositionListTable />);
 
       await screen.findByRole('button', {
-        name: 'Delete species composition starting 2026-09-01',
+        name: 'Delete species composition entry',
       });
       await userEvent.click(
-        screen.getByRole('button', { name: 'Delete species composition starting 2026-09-01' }),
+        screen.getByRole('button', { name: 'Delete species composition entry' }),
       );
 
       expect(screen.getByTestId('delete-confirm-modal')).toBeTruthy();
@@ -580,10 +582,10 @@ describe('SpeciesCompositionListTable', () => {
       await renderWithAppAsync(<SpeciesCompositionListTable />);
 
       await screen.findByRole('button', {
-        name: 'Delete species composition starting 2026-09-01',
+        name: 'Delete species composition entry',
       });
       await userEvent.click(
-        screen.getByRole('button', { name: 'Delete species composition starting 2026-09-01' }),
+        screen.getByRole('button', { name: 'Delete species composition entry' }),
       );
       await userEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
 
@@ -607,10 +609,10 @@ describe('SpeciesCompositionListTable', () => {
       await renderWithAppAsync(<SpeciesCompositionListTable />);
 
       await screen.findByRole('button', {
-        name: 'Delete species composition starting 2026-09-01',
+        name: 'Delete species composition entry',
       });
       await userEvent.click(
-        screen.getByRole('button', { name: 'Delete species composition starting 2026-09-01' }),
+        screen.getByRole('button', { name: 'Delete species composition entry' }),
       );
 
       expect(
@@ -636,16 +638,16 @@ describe('SpeciesCompositionListTable', () => {
       await renderWithAppAsync(<SpeciesCompositionListTable />);
 
       await screen.findByRole('button', {
-        name: 'Delete species composition starting 2026-09-01',
+        name: 'Delete species composition entry',
       });
       await userEvent.click(
-        screen.getByRole('button', { name: 'Delete species composition starting 2026-09-01' }),
+        screen.getByRole('button', { name: 'Delete species composition entry' }),
       );
       await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
       expect(mutate).not.toHaveBeenCalled();
       expect(screen.queryByTestId('delete-confirm-modal')).toBeNull();
-      screen.getByRole('button', { name: 'Delete species composition starting 2026-09-01' });
+      screen.getByRole('button', { name: 'Delete species composition entry' });
     });
 
     it('refreshes the list and shows a success toast after a successful delete', async () => {
@@ -665,10 +667,10 @@ describe('SpeciesCompositionListTable', () => {
       await renderWithAppAsync(<SpeciesCompositionListTable />);
 
       await screen.findByRole('button', {
-        name: 'Delete species composition starting 2026-09-01',
+        name: 'Delete species composition entry',
       });
       await userEvent.click(
-        screen.getByRole('button', { name: 'Delete species composition starting 2026-09-01' }),
+        screen.getByRole('button', { name: 'Delete species composition entry' }),
       );
       await userEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
 
@@ -702,14 +704,14 @@ describe('SpeciesCompositionListTable', () => {
       await renderWithAppAsync(<SpeciesCompositionListTable />);
 
       await screen.findByRole('button', {
-        name: 'Delete species composition starting 2026-09-01',
+        name: 'Delete species composition entry',
       });
       await userEvent.click(
-        screen.getByRole('button', { name: 'Delete species composition starting 2026-09-01' }),
+        screen.getByRole('button', { name: 'Delete species composition entry' }),
       );
       await userEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
 
-      screen.getByRole('button', { name: 'Delete species composition starting 2026-09-01' });
+      screen.getByRole('button', { name: 'Delete species composition entry' });
       expect(sendToastEvent).not.toHaveBeenCalled();
     });
 
@@ -731,10 +733,10 @@ describe('SpeciesCompositionListTable', () => {
       await renderWithAppAsync(<SpeciesCompositionListTable />);
 
       await screen.findByRole('button', {
-        name: 'Delete species composition starting 2026-09-01',
+        name: 'Delete species composition entry',
       });
       await userEvent.click(
-        screen.getByRole('button', { name: 'Delete species composition starting 2026-09-01' }),
+        screen.getByRole('button', { name: 'Delete species composition entry' }),
       );
       // Close the modal so the confirm handler now closes over a cleared row.
       await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));

@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -582,10 +584,199 @@ class DistrictVolumeServiceTest {
 
   @Test
   @DisplayName(
+      "createDistrictVolume — should insert between existing rows and close predecessor, set endDate on new entity")
+  void createDistrictVolume_insertsBetweenRows_setsEndDateOnNewAndClosesPredecessor() {
+
+    CoastDataDto coastData = new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
+        "COASTAL",
+        LocalDate.of(2027, Month.JULY, 15),
+        new BigDecimal("1.200"),
+        new BigDecimal("1.500"),
+        coastData);
+
+    // Successor: row starting Aug 1, 2027
+    DistrictVolumeEntity successor = buildEntity(Area.COASTAL);
+    successor.setId(2L);
+    successor.setStartDate(LocalDate.of(2027, Month.AUGUST, 1));
+    successor.setEndDate(null);
+
+    // Predecessor: row starting Jan 1, 2027
+    DistrictVolumeEntity predecessor = buildEntity(Area.COASTAL);
+    predecessor.setId(1L);
+    predecessor.setStartDate(LocalDate.of(2027, Month.JANUARY, 1));
+    predecessor.setEndDate(null);
+
+    when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.DISTRICT_VOLUME, Area.COASTAL))
+        .thenReturn(Collections.singletonList(predecessor));
+
+    when(districtVolumeRepository.findFirstLiveAfter(
+            eq(ConfigType.DISTRICT_VOLUME),
+            eq(Area.COASTAL),
+            eq(LocalDate.of(2027, Month.JULY, 15)),
+            any(PageRequest.class)))
+        .thenReturn(List.of(successor));
+
+    when(districtVolumeRepository.findFirstLiveBefore(
+            eq(ConfigType.DISTRICT_VOLUME),
+            eq(Area.COASTAL),
+            eq(LocalDate.of(2027, Month.JULY, 15)),
+            any(PageRequest.class)))
+        .thenReturn(List.of(predecessor));
+
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    DistrictVolumeDetailDto result = districtVolumeService.createDistrictVolume(
+        "TEST_USER", createDto);
+
+    assertThat(result.startDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 15));
+    assertThat(result.endDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 31)); // successor start - 1 day
+
+    // Verify predecessor was closed
+    verify(districtVolumeRepository).save(argThat(e ->
+        e.getEndDate().equals(LocalDate.of(2027, Month.JULY, 14))));
+  }
+
+  @Test
+  @DisplayName(
+      "createDistrictVolume — should insert after all rows when no successor exists")
+  void createDistrictVolume_insertsAfterAllRows_whenNoSuccessor() {
+
+    InteriorDataDto interiorData = new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
+        "INTERIOR",
+        LocalDate.of(2027, Month.JULY, 15),
+        new BigDecimal("1.200"),
+        null,
+        interiorData);
+
+    // Open-ended predecessor
+    DistrictVolumeEntity predecessor = buildEntity(Area.INTERIOR);
+    predecessor.setId(1L);
+    predecessor.setStartDate(LocalDate.of(2027, Month.JANUARY, 1));
+    predecessor.setEndDate(null);
+
+    when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.DISTRICT_VOLUME, Area.INTERIOR))
+        .thenReturn(Collections.singletonList(predecessor));
+
+    when(districtVolumeRepository.findFirstLiveAfter(
+            eq(ConfigType.DISTRICT_VOLUME),
+            eq(Area.INTERIOR),
+            eq(LocalDate.of(2027, Month.JULY, 15)),
+            any(PageRequest.class)))
+        .thenReturn(Collections.emptyList());
+
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    DistrictVolumeDetailDto result = districtVolumeService.createDistrictVolume(
+        "TEST_USER", createDto);
+
+    assertThat(result.startDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 15));
+    assertThat(result.endDate()).isNull(); // No successor = open-ended
+
+    // Verify predecessor was closed
+    verify(districtVolumeRepository).save(argThat(e ->
+        e.getEndDate() != null && e.getEndDate().equals(LocalDate.of(2027, Month.JULY, 14))));
+
+    // Verify new entity was saved as open-ended (endDate = null)
+    verify(districtVolumeRepository).save(argThat(e ->
+        e.getEndDate() == null));
+  }
+
+  @Test
+  @DisplayName(
+      "createDistrictVolume — should insert before all rows when no predecessor exists")
+  void createDistrictVolume_insertsBeforeAllRows_whenNoPredecessor() {
+
+    InteriorDataDto interiorData = new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
+        "INTERIOR",
+        LocalDate.of(2027, Month.JANUARY, 15),
+        new BigDecimal("1.200"),
+        null,
+        interiorData);
+
+    // Successor exists (starts Jan 1)
+    DistrictVolumeEntity successor = buildEntity(Area.INTERIOR);
+    successor.setId(1L);
+    successor.setStartDate(LocalDate.of(2027, Month.JANUARY, 1));
+    successor.setEndDate(null);
+
+    when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.DISTRICT_VOLUME, Area.INTERIOR))
+        .thenReturn(Collections.emptyList());
+
+    when(districtVolumeRepository.findFirstLiveAfter(
+            eq(ConfigType.DISTRICT_VOLUME),
+            eq(Area.INTERIOR),
+            eq(LocalDate.of(2027, Month.JANUARY, 15)),
+            any(PageRequest.class)))
+        .thenReturn(List.of(successor));
+
+    when(districtVolumeRepository.findFirstLiveBefore(
+            eq(ConfigType.DISTRICT_VOLUME),
+            eq(Area.INTERIOR),
+            eq(LocalDate.of(2027, Month.JANUARY, 15)),
+            any(PageRequest.class)))
+        .thenReturn(Collections.emptyList());
+
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    DistrictVolumeDetailDto result = districtVolumeService.createDistrictVolume(
+        "TEST_USER", createDto);
+
+    assertThat(result.startDate()).isEqualTo(LocalDate.of(2027, Month.JANUARY, 15));
+    // successor starts Jan 1, so endDate = Dec 31, 2026
+    assertThat(result.endDate()).isEqualTo(LocalDate.of(2026, Month.DECEMBER, 31));
+
+    // No predecessor to close — only the new entity is saved (with endDate != null)
+    verify(districtVolumeRepository, times(1)).save(any(DistrictVolumeEntity.class));
+  }
+
+  @Test
+  @DisplayName(
+      "createDistrictVolume — should create open-ended when no existing rows")
+  void createDistrictVolume_createsOpenEnded_whenNoExistingRows() {
+
+    InteriorDataDto interiorData = new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
+
+    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
+        "INTERIOR",
+        LocalDate.of(2027, Month.JANUARY, 15),
+        new BigDecimal("1.200"),
+        null,
+        interiorData);
+
+    when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.DISTRICT_VOLUME, Area.INTERIOR))
+        .thenReturn(Collections.emptyList());
+
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    DistrictVolumeDetailDto result = districtVolumeService.createDistrictVolume(
+        "TEST_USER", createDto);
+
+    assertThat(result.startDate()).isEqualTo(LocalDate.of(2027, Month.JANUARY, 15));
+    assertThat(result.endDate()).isNull(); // Open-ended
+  }
+
+  @Test
+  @DisplayName(
       "deleteDistrictVolume — should soft-delete the record when found and not deleted")
   void deleteDistrictVolume_softDeletes_whenFound() {
 
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
+    entity.setStartDate(LocalDate.now().plusYears(1));
+    entity.setEndDate(null);
 
     when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.DISTRICT_VOLUME))
         .thenReturn(Optional.of(entity));

@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -246,8 +247,27 @@ public class DistrictVolumeService {
               + areaEnum + ". Resolve the duplicates before creating a new configuration.");
     }
 
-    if (!openEntries.isEmpty()) {
-      DistrictVolumeEntity previousEntry = openEntries.getFirst();
+    List<DistrictVolumeEntity> successorEntries = districtVolumeRepository.findFirstLiveAfter(
+        ConfigType.DISTRICT_VOLUME,
+        areaEnum,
+        createDto.startDate(),
+        PageRequest.of(0, 1));
+    DistrictVolumeEntity successor = successorEntries.isEmpty()
+        ? null
+        : successorEntries.getFirst();
+    DistrictVolumeEntity previousEntry;
+    if (successor != null) {
+      List<DistrictVolumeEntity> previousEntries = districtVolumeRepository.findFirstLiveBefore(
+          ConfigType.DISTRICT_VOLUME,
+          areaEnum,
+          createDto.startDate(),
+          PageRequest.of(0, 1));
+      previousEntry = previousEntries.isEmpty() ? null : previousEntries.getFirst();
+    } else {
+      previousEntry = openEntries.isEmpty() ? null : openEntries.getFirst();
+    }
+
+    if (previousEntry != null) {
 
       if (!createDto.startDate().isAfter(previousEntry.getStartDate())) {
         throw new ResponseStatusException(
@@ -264,6 +284,7 @@ public class DistrictVolumeService {
 
     entity.setArea(areaEnum);
     entity.setStartDate(createDto.startDate());
+    entity.setEndDate(successor == null ? null : successor.getStartDate().minusDays(1));
     entity.setTableLevelFactor(createDto.tableLevelFactor());
     entity.setHeliMultiplier(createDto.heliMultiplier());
     entity.setCreatedBy(user);
@@ -365,11 +386,16 @@ public class DistrictVolumeService {
    * <p>Marks the record as deleted (sets deleted = true) instead of removing it from the database.
    * This preserves audit history and allows for potential recovery.</p>
    *
+   * <p>Only future-start, open-ended configurations can be deleted. When deleted, the predecessor
+   * (if any) is reopened by setting its end date to the deleted record's end date.</p>
+   *
    * @param user the user performing the deletion (for audit trail)
    * @param id the unique identifier of the record to delete
    * @throws ResponseStatusException with HTTP 404 if the record is not found or already deleted
+   * @throws ResponseStatusException with HTTP 422 if the record is not a
+   *     future-start or not open-ended.
    */
-  @Transactional
+  @Transactional(isolation = Isolation.SERIALIZABLE)
   public void deleteDistrictVolume(String user, Long id) {
     DistrictVolumeEntity entity = districtVolumeRepository
         .findByIdAndConfigType(id, ConfigType.DISTRICT_VOLUME)
@@ -377,6 +403,29 @@ public class DistrictVolumeService {
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND,
             "District volume record not found: " + id));
+
+    if (entity.getStartDate() == null || !entity.getStartDate().isAfter(LocalDate.now())) {
+      throw new ResponseStatusException(
+          HttpStatus.UNPROCESSABLE_CONTENT,
+          "Only future-start configurations can be deleted.");
+    }
+
+    if (entity.getEndDate() != null) {
+      throw new ResponseStatusException(
+          HttpStatus.UNPROCESSABLE_CONTENT,
+          "Only open-ended future configurations can be deleted.");
+    }
+
+    List<DistrictVolumeEntity> previousEntries = districtVolumeRepository.findFirstLiveBefore(
+        ConfigType.DISTRICT_VOLUME,
+        entity.getArea(),
+        entity.getStartDate(),
+        PageRequest.of(0, 1));
+    if (!previousEntries.isEmpty()) {
+      DistrictVolumeEntity predecessor = previousEntries.getFirst();
+      predecessor.setEndDate(entity.getEndDate());
+      districtVolumeRepository.save(predecessor);
+    }
 
     entity.setDeleted(true);
     districtVolumeRepository.save(entity);

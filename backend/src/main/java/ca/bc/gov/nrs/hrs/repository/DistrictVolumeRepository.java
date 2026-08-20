@@ -137,7 +137,8 @@ public interface DistrictVolumeRepository
   List<DistrictVolumeEntity> findFirstLiveAfter(
       @Param("configType") ConfigType configType,
       @Param("area") Area area,
-      @Param("startDate") LocalDate startDate);
+      @Param("startDate") LocalDate startDate,
+      Pageable pageable);
 
   /**
    * Finds the most recent live row before the supplied start date.
@@ -149,5 +150,6 @@ public interface DistrictVolumeRepository
   List<DistrictVolumeEntity> findFirstLiveBefore(
       @Param("configType") ConfigType configType,
       @Param("area") Area area,
-      @Param("startDate") LocalDate startDate);
+      @Param("startDate") LocalDate startDate,
+      Pageable pageable);
 }

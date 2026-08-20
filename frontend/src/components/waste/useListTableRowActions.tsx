@@ -13,15 +13,19 @@ interface UseListTableRowActionsConfig<TRow> {
   routePath: string;
   /** Callback invoked when user clicks delete */
   onDeleteClick: (row: TRow) => void;
-  /** Function to get the start date from a row for the delete label */
+  /** Function to get the start date from a row for the delete guard */
   getStartDate: (row: TRow) => string;
+  /** Custom label for the delete action (e.g., "district average volume entry") */
+  deleteActionLabel: string;
 }
 
 /**
  * Shared hook for list table row actions (view details, delete).
  * Eliminates duplication between DistrictVolumeListTable and SpeciesCompositionListTable.
  */
-export const useListTableRowActions = <TRow extends { id: string | number }>(
+export const useListTableRowActions = <
+  TRow extends { id: string | number; endDate?: string | null },
+>(
   config: UseListTableRowActionsConfig<TRow>,
 ) => {
   const navigate = useNavigate();
@@ -40,11 +44,10 @@ export const useListTableRowActions = <TRow extends { id: string | number }>(
         },
       ];
 
-      if (isFutureDated(config.getStartDate(row))) {
+      if (isFutureDated(config.getStartDate(row)) && !row.endDate) {
         actions.push({
           id: 'delete',
-          label: (selectedRow) =>
-            `Delete ${config.configType} starting ${config.getStartDate(selectedRow)}`,
+          label: `Delete ${config.deleteActionLabel}`,
           icon: <TrashCan />,
           onClick: (selectedRow) => {
             config.onDeleteClick(selectedRow);
