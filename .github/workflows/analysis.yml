@@ -255,7 +255,7 @@ jobs:
         run: |
           # Use official dependency-submission-toolkit directly (fixes evryfs action bug: .values() on array,
           # avoids deprecated node16 runtime). Handles both array and .components forms of metadata.tools.
-          npm install --global @github/dependency-submission-toolkit@1.2.7 @cyclonedx/cyclonedx-library@1.8.0
+          npm install --global @actions/github@7.0.2 @github/dependency-submission-toolkit@1.2.7 @cyclonedx/cyclonedx-library@1.8.0
           node --input-type=module << 'NODE_EOF'
           import fs from 'fs';
           import path from 'path';
@@ -315,7 +315,16 @@ jobs:
   # ==========================================================================
   results:
     name: Analysis Results
-    needs: [tests-java, tests-frontend, tests-frontend-ex, trivy, cve-lite, npm-audit, sbom-node, sbom-java, sbom-submit]
+    needs:
+      - tests-java
+      - tests-frontend
+      - tests-frontend-ex
+      - trivy
+      - cve-lite
+      - npm-audit
+      - sbom-node
+      - sbom-java
+      - sbom-submit
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 1
