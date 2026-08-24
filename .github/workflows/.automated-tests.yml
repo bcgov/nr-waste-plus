@@ -23,15 +23,6 @@ jobs:
         with:
           node-version: 24
 
-      - name: Cache cypress node_modules
-        uses: actions/cache@v6
-        with:
-          path: cypress/node_modules
-          key: cypress-node_modules-b3v1-${{ hashFiles('cypress/package-lock.json') }}
-          restore-keys: |
-            cypress-node_modules-b3v1-
-            cypress-node_modules-
-
       - name: Cache Cypress binary
         uses: actions/cache@v6
         with:
@@ -40,13 +31,36 @@ jobs:
           restore-keys: |
             cypress-binary-${{ runner.os }}-${{ runner.arch }}-
 
-      - name: Install cypress dependencies
+      - name: Install Cypress dependencies
         working-directory: cypress
-        run: npm install --prefer-offline --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Install Cypress binary
         working-directory: cypress
         run: npx cypress install
+
+      - name: Wait for frontend deployment
+        env:
+          FRONTEND_URL: https://${{ inputs.url }}
+        run: |
+          set -euo pipefail
+
+          max_attempts=30
+          for attempt in $(seq 1 "${max_attempts}"); do
+            if response=$(curl --fail --silent --show-error --location --max-time 10 "$FRONTEND_URL/"); then
+              if [[ "$response" == *'id="root"'* ]]; then
+                echo "Frontend is ready on attempt ${attempt}."
+                exit 0
+              fi
+                echo "Frontend responded without the application root on attempt ${attempt}."
+            else
+              echo "Frontend readiness check failed on attempt ${attempt}."
+            fi
+            sleep 10
+          done
+
+          echo "Frontend did not become ready after ${max_attempts} attempts: ${FRONTEND_URL}"
+          exit 1
 
       - name: Run Cypress End-to-End
         uses: cypress-io/github-action@v7.4.2
@@ -56,7 +70,7 @@ jobs:
           install: false
         env:
           CYPRESS_baseUrl: https://${{ inputs.url }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CYPRESS_idir_password: ${{ secrets.IDIR_UAT_PASSWORD }}
           CYPRESS_idir_username: ${{ secrets.IDIR_UAT_USERNAME }}
           MOCHAWESOME_REPORT: true
@@ -72,7 +86,7 @@ jobs:
       - name: Add summary to GitHub Action
         working-directory: cypress
         if: always()
-        run: cat summary.md >> $GITHUB_STEP_SUMMARY
+        run: cat summary.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Persist Cypress RunResult and flaky summary
         if: always()
@@ -90,20 +104,20 @@ jobs:
         run: |
           if [ -d "cypress/cypress/screenshots" ] && [ "$(ls -A cypress/cypress/screenshots)" ]; then
             echo "Screenshots folder is not empty, uploading artifacts."
-            echo "screenshots=true" >> $GITHUB_OUTPUT
+            echo "screenshots=true" >> "$GITHUB_OUTPUT"
 
           else
             echo "Screenshots folder is empty or does not exist."
-            echo "screenshots=false" >> $GITHUB_OUTPUT
+            echo "screenshots=false" >> "$GITHUB_OUTPUT"
           fi
 
           if [ -d "cypress/cypress/videos" ] && [ "$(ls -A cypress/cypress/videos)" ]; then
             echo "Videos folder is not empty, uploading artifacts."
-            echo "videos=true" >> $GITHUB_OUTPUT
+            echo "videos=true" >> "$GITHUB_OUTPUT"
 
           else
             echo "Videos folder is empty or does not exist."
-            echo "videos=false" >> $GITHUB_OUTPUT
+            echo "videos=false" >> "$GITHUB_OUTPUT"
           fi
         id: check_artifacts
 

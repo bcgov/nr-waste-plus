@@ -50,15 +50,29 @@ export const useWasteSearchFilters = (
 
   useSyncFiltersToSearchParams(filters, setFilters, { transforms: clientNumbersTransform });
 
+  // Synchronously propagate to parent so WasteSearchTable's plainFilters is fresh
+  // when the user immediately clicks Search. The existing useEffect still handles
+  // URL-hydration and preference-sync paths that mutate `filters` via setFilters
+  // directly (bypassing these handlers).
+  const syncSetFilters = (
+    updater: (prev: ReportingUnitSearchParametersViewDto) => ReportingUnitSearchParametersViewDto,
+  ) => {
+    setFilters((prev) => {
+      const next = updater(prev);
+      onChange(removeEmpty(next));
+      return next;
+    });
+  };
+
   const handleStringChange =
     (key: keyof ReportingUnitSearchParametersViewDto) => (value: string) => {
-      setFilters((prev) => ({ ...prev, [key]: value }));
+      syncSetFilters((prev) => ({ ...prev, [key]: value }));
     };
 
   const handleActiveMultiSelectChange =
     (key: keyof ReportingUnitSearchParametersViewDto) =>
     (changes: { selectedItems: CodeDescriptionDto[] }): void => {
-      setFilters((prev) => ({
+      syncSetFilters((prev) => ({
         ...prev,
         [key]: changes.selectedItems.map((item) => item.code),
       }));
@@ -68,7 +82,7 @@ export const useWasteSearchFilters = (
     key: K,
   ): ((value: ReportingUnitSearchParametersViewDto[K]) => void) => {
     return (value: ReportingUnitSearchParametersViewDto[K]) => {
-      setFilters((prev) => ({ ...prev, [key]: value }));
+      syncSetFilters((prev) => ({ ...prev, [key]: value }));
     };
   };
 
@@ -77,13 +91,13 @@ export const useWasteSearchFilters = (
     value,
   ) => {
     if (!value) {
-      setFilters((prev) => {
+      syncSetFilters((prev) => {
         const newFilters = { ...prev };
         delete newFilters[key];
         return newFilters;
       });
     } else {
-      setFilters((prev) => ({
+      syncSetFilters((prev) => ({
         ...prev,
         [key]: (prev[key] as string[]).filter((item) => item !== value),
       }));

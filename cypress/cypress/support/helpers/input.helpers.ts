@@ -37,6 +37,7 @@ export const selectFromFilterableDropdown = (label: string, option: string) => {
   cy.get(`input[placeholder="${label}"]`, { timeout: 10000 })
     .should("be.visible")
     .should("not.be.disabled")
+    .click()
     .type(option);
 
   cy.get(`input[placeholder="${label}"]`)
@@ -57,6 +58,36 @@ export const selectFromFilterableDropdown = (label: string, option: string) => {
  * 4. Generic fallback: label text near an input
  */
 export const findInputByLabel = (labelText: string) => {
+  // Fast path: Waste Search main input is Carbon <Search id="main-search"> with no
+  // conventional <label for=...>. Pinning avoids the generic contains("label")
+  // walk which races the search debounce and occasionally resolves the wrong input.
+  if (labelText === "Search") {
+    return cy.get("body").then(($body) => {
+      const pinned = $body.find("#main-search");
+      if (pinned.length) return cy.get("#main-search");
+      // fallback to generic lookup below
+      return cy.document().then(() =>
+        cy.contains("label", labelText).then(($label) => {
+          const id = $label.attr("for");
+          if (id) return cy.get(`#${id}`);
+          const carbonContainer = $label.closest(
+            ".cds--form-item, .cds--search, .cds--text-input, div",
+          );
+          if (carbonContainer.length) {
+            const input = carbonContainer.find("input, textarea");
+            if (input.length) return cy.wrap(input.first());
+          }
+          return cy
+            .contains(labelText)
+            .parentsUntil("form")
+            .parent()
+            .find("input, textarea")
+            .first();
+        }),
+      );
+    });
+  }
+
   // Synchronous check to decide which strategy to use
   return cy.document().then((doc) => {
     // Case 1-3: Label-based lookup

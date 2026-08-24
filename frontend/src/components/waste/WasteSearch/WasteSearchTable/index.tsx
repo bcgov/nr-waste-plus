@@ -61,13 +61,9 @@ const WasteSearchTable: FC = () => {
    */
   const executeSearch = (pageOverride?: number, pageSizeOverride?: number) => {
     clearEvents('waste-search');
-    const cleanedFilters = removeEmpty(plainFilters);
     setCurrentPage(pageOverride ?? currentPage);
     setPageSize(pageSizeOverride ?? pageSize);
-    if (Object.keys(cleanedFilters).length > 0) {
-      // Increment trigger to signal that state has settled and we should fetch.
-      // This explicit pattern avoids the implicit timing contract of setTimeout,
-      // ensuring the effect fires after React's synchronous state flush completes.
+    if (Object.keys(removeEmpty(plainFilters)).length > 0) {
       setSearchTrigger((n) => n + 1);
     }
   };
