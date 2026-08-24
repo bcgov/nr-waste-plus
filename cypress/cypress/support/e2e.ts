@@ -23,6 +23,15 @@ const recordDiagnostic = (kind: string, message: string) => {
   pageDiagnostics.push({ kind, message });
 };
 
+const redactUrl = (url: string): string => {
+  try {
+    const parsed = new URL(url, currentPage?.location.origin ?? "http://localhost");
+    return `${parsed.origin}${parsed.pathname}`;
+  } catch {
+    return url.split("?")[0].split("#")[0];
+  }
+};
+
 const getPageState = () => {
   if (!currentPage) {
     return { url: "unavailable" };
@@ -33,11 +42,11 @@ const getPageState = () => {
   )[0] as PerformanceNavigationTiming | undefined;
 
   return {
-    url: currentPage.location.href,
+    url: redactUrl(currentPage.location.href),
     readyState: currentPage.document.readyState,
     title: currentPage.document.title,
     bodyTextLength: currentPage.document.body?.innerText.length ?? 0,
-    bodyHtml: currentPage.document.body?.innerHTML.slice(0, 2000) ?? "",
+    bodyHtmlLength: currentPage.document.body?.innerHTML.length ?? 0,
     resourceCount: currentPage.performance.getEntriesByType("resource").length,
     navigation: navigation
       ? {
@@ -87,12 +96,22 @@ Cypress.on("window:before:load", (win) => {
 });
 
 beforeEach(() => {
+  pageDiagnostics = [];
+
   cy.intercept({ url: "**", middleware: true }, (request) => {
+    // Do not consume /api/search requests here so named aliases like
+    // @searchReportingUnits can deterministically capture them. The http
+    // diagnostic is noise for search anyway and would otherwise compete
+    // with the alias wait in button.steps.ts.
+    if (request.url.includes("/api/search")) {
+      return request.continue();
+    }
+
     request.on("response", (response) => {
       if (response.statusCode >= 400) {
         recordDiagnostic(
           "http",
-          `${response.statusCode} ${request.method} ${request.url}`,
+          `${response.statusCode} ${request.method} ${redactUrl(request.url)}`,
         );
       }
     });
