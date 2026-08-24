@@ -5,10 +5,13 @@ When('I click on the {string} button', (name: string) => {
   buttonClick(name);
 });
 
-When('I search', function () {  
-  cy.intercept('GET',  `**/api/search/**`).as('submit');  
+When('I search', function () {
+  // Intercept the actual reporting-units search endpoint that the table triggers via
+  // useSearchReportingUnitsQuery. Registering before the click guarantees the alias
+  // captures the request even when React state settles synchronously.
+  cy.intercept('GET', '**/api/search/reporting-units*').as('searchReportingUnits');
   Step(this, 'I click on the "Search" button');
-  cy.wait('@submit',{ timeout: 60 * 1000 });
+  cy.wait('@searchReportingUnits', { timeout: 60 * 1000 });
 });
 
 
