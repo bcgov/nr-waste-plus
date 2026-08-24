@@ -18,7 +18,6 @@ import { useSearchReportingUnitsQuery } from '@/config/react-query/hooks';
 import { featureFlags } from '@/env';
 import useNotificationEvents from '@/hooks/useNotificationEvents';
 import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
-import { removeEmpty } from '@/services/utils';
 
 import './index.scss';
 
@@ -61,15 +60,15 @@ const WasteSearchTable: FC = () => {
    */
   const executeSearch = (pageOverride?: number, pageSizeOverride?: number) => {
     clearEvents('waste-search');
-    const cleanedFilters = removeEmpty(plainFilters);
     setCurrentPage(pageOverride ?? currentPage);
     setPageSize(pageSizeOverride ?? pageSize);
-    if (Object.keys(cleanedFilters).length > 0) {
-      // Increment trigger to signal that state has settled and we should fetch.
-      // This explicit pattern avoids the implicit timing contract of setTimeout,
-      // ensuring the effect fires after React's synchronous state flush completes.
-      setSearchTrigger((n) => n + 1);
-    }
+    // Always trigger — the query serialises `plainFilters` which may be empty on
+    // first click due to the child→parent useEffect race. The backend handles
+    // empty filters (unfiltered page). Guarding here was what surfaced as
+    // `cy.wait('@searchReportingUnits')` never firing for RU 500 / DCC / etc.
+    // Filtering correctness is still ensured by the synchronous propagation in
+    // useWasteSearchFilters + the Cypress URL barrier.
+    setSearchTrigger((n) => n + 1);
   };
 
   const getRowActions = useWasteSearchRowActions({

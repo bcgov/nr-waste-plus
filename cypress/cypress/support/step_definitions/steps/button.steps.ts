@@ -6,6 +6,31 @@ When('I click on the {string} button', (name: string) => {
 });
 
 When('I search', function () {
+  // The search table reads `plainFilters` from parent state which lags one render
+  // behind WasteSearchFilters' internal state (child setFilters -> useEffect
+  // onChange -> parent setFilters). Typing then immediately clicking Search can
+  // therefore see stale (empty) filters and either send no request or an
+  // unfiltered one. `useWasteSearchFilters` now propagates synchronously but we
+  // also gate on URL sync as an observable barrier: useSyncFiltersToSearchParams
+  // navigates to `?mainSearchTerm=...&district=...` shortly after filters settle.
+  // Poll window.location for "?" up to 4s; fall through regardless because
+  // WasteSearchTable.executeSearch now always triggers (empty-filter fallback).
+  cy.window({ log: false }).then(
+    { timeout: 8000 },
+    (win) =>
+      new Cypress.Promise<void>((resolve) => {
+        const deadline = Date.now() + 4000;
+        const poll = () => {
+          if (win.location.href.includes('?') || Date.now() > deadline) {
+            resolve();
+          } else {
+            setTimeout(poll, 100);
+          }
+        };
+        poll();
+      }),
+  );
+
   // Intercept the actual reporting-units search endpoint that the table triggers via
   // useSearchReportingUnitsQuery. Registering before the click guarantees the alias
   // captures the request even when React state settles synchronously.
