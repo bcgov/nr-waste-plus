@@ -25,7 +25,10 @@ const recordDiagnostic = (kind: string, message: string) => {
 
 const redactUrl = (url: string): string => {
   try {
-    const parsed = new URL(url, currentPage?.location.origin ?? "http://localhost");
+    const parsed = new URL(
+      url,
+      currentPage?.location.origin ?? "http://localhost",
+    );
     return `${parsed.origin}${parsed.pathname}`;
   } catch {
     return url.split("?")[0].split("#")[0];
@@ -98,15 +101,10 @@ Cypress.on("window:before:load", (win) => {
 beforeEach(() => {
   pageDiagnostics = [];
 
-  cy.intercept({ url: "**", middleware: true }, (request) => {
-    // Do not consume /api/search requests here so named aliases like
-    // @searchReportingUnits can deterministically capture them. The http
-    // diagnostic is noise for search anyway and would otherwise compete
-    // with the alias wait in button.steps.ts.
-    if (request.url.includes("/api/search")) {
-      return request.continue();
-    }
-
+  // Keep diagnostics as a non-middleware observer. Cypress evaluates
+  // non-middleware routes in reverse definition order, so a route registered
+  // by a step after this hook can capture its request alias first.
+  cy.intercept({ url: "**" }, (request) => {
     request.on("response", (response) => {
       if (response.statusCode >= 400) {
         recordDiagnostic(
