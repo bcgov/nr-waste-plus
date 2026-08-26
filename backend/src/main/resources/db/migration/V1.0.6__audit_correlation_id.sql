@@ -1,11 +1,19 @@
 -- SPIKE — audit correlation ID via session GUC (B3 trace propagation)
 -- Populate hrs.audit_event.correlation_id from the transaction-local
 -- app.correlation_id setting. The audit trigger remains otherwise unchanged.
+-- Canonical column width is VARCHAR(128): V1.0.5 already created it as such,
+-- so the ADD COLUMN below is a no-op kept for self-documentation; the trigger
+-- variable and every consumer must use 128 as well (B3/W3C trace ids are 32
+-- hex chars, but full traceparent values can reach ~55).
 
 ALTER TABLE hrs.audit_event
-    ADD COLUMN IF NOT EXISTS correlation_id VARCHAR(64);
+    ADD COLUMN IF NOT EXISTS correlation_id VARCHAR(128);
 
 COMMENT ON COLUMN hrs.audit_event.correlation_id IS 'B3 trace correlation ID captured via app.correlation_id GUC; NULL when unset.';
+
+CREATE INDEX IF NOT EXISTS idx_audit_event_correlation_time
+    ON hrs.audit_event (correlation_id, changed_at DESC)
+    WHERE correlation_id IS NOT NULL;
 
 CREATE OR REPLACE FUNCTION hrs.audit_district_volume_change()
 RETURNS TRIGGER
@@ -19,7 +27,7 @@ DECLARE
     old_row JSONB;
     new_row JSONB;
     actor VARCHAR(128);
-    corr_id VARCHAR(64);
+    corr_id VARCHAR(128);
     operation VARCHAR(32);
     entity_kind VARCHAR(64);
     changed TEXT[];
@@ -43,10 +51,12 @@ BEGIN
                     ELSE new_image ->> 'updated_by' END, ''),
         NULLIF(CASE WHEN TG_OP = 'DELETE' THEN old_image ->> 'created_by'
                     ELSE new_image ->> 'created_by' END, ''),
-        current_user
+        session_user
     );
 
-    corr_id := current_setting('app.correlation_id', true);
+    -- NULLIF guards against an empty-string GUC, which current_setting would
+    -- otherwise surface as '' rather than SQL NULL.
+    corr_id := NULLIF(current_setting('app.correlation_id', true), '');
 
     operation := CASE
         WHEN TG_OP = 'INSERT' THEN 'CREATE'
@@ -68,10 +78,10 @@ BEGIN
         )
     END;
 
-    INSERT INTO hrs.audit_event(action, changed_by, reason, correlation_id)
-    VALUES (operation, actor,
-        COALESCE(NULLIF(new_image ->> 'reason', ''), old_image ->> 'reason'),
-        corr_id)
+    -- reason is intentionally omitted: district_volume has no such column, so
+    -- any extraction here would always yield NULL. Revisit when a source exists.
+    INSERT INTO hrs.audit_event(action, changed_by, correlation_id)
+    VALUES (operation, actor, corr_id)
     RETURNING id INTO event_id;
 
     INSERT INTO hrs.audit_change(
@@ -91,4 +101,4 @@ END;
 $$;
 
 COMMENT ON FUNCTION hrs.audit_district_volume_change() IS
-'Writes complete OLD and NEW row-image audit records for all district_volume mutations. The actor comes from row audit columns and falls back to current_user. The correlation_id comes from current_setting(''app.correlation_id'', true) and is NULL when unset.';
+'Writes complete OLD and NEW row-image audit records for all district_volume mutations. The actor comes from row audit columns and falls back to session_user (current_user inside SECURITY DEFINER resolves to the function owner, not the caller). The correlation_id comes from current_setting(''app.correlation_id'', true) and is NULL when unset.';

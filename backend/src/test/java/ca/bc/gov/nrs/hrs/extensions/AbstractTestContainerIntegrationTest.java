@@ -5,6 +5,7 @@ import static ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory.cre
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.micrometer.tracing.test.autoconfigure.AutoConfigureTracing;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -15,6 +16,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @Testcontainers
 @ExtendWith({SpringExtension.class})
+@AutoConfigureTracing
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public abstract class AbstractTestContainerIntegrationTest {
 

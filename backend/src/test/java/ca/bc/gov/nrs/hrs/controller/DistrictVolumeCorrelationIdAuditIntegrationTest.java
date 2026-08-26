@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +41,21 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest
   @Autowired
   private MockMvc mockMvc;
 
+  @Autowired
+  private org.springframework.transaction.support.TransactionTemplate transactionTemplate;
+
+  @BeforeEach
+  @AfterEach
+  void resetAuditFixture() {
+    // Wipe only the audit tables this test asserts on. hrs.district_volume must NOT be wiped:
+    // it holds Flyway-seeded reference rows other test classes rely on, and the POST below is
+    // kept collision-free because spike entities in CorrelationIdAuditIntegrationTest use
+    // closed date ranges. auto-commit is disabled pool-wide, so this must run inside a real
+    // committing transaction or Hikari rolls it back on connection return.
+    transactionTemplate.executeWithoutResult(
+        status -> jdbcTemplate.update("TRUNCATE hrs.audit_change, hrs.audit_event"));
+  }
+
   @Test
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   @DisplayName("POST propagates the supplied B3 trace ID to the audit event")
@@ -56,12 +73,48 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest
                 .content(
                     """
                     {
-                      "area": "INTERIOR",
+                      "area": "COASTAL",
                       "startDate": "2099-01-01",
-                      "tableLevelFactor": 1.000,
+                      "tableLevelFactor": 0.400,
+                      "heliMultiplier": 3.470,
                       "tableData": {
-                        "type": "INTERIOR",
-                        "zones": [],
+                        "type": "COASTAL",
+                        "sections": [
+                          {
+                            "name": "Mature",
+                            "districts": [
+                              {
+                                "code": "DCK",
+                                "avoidableSawlog": 2.345,
+                                "avoidableHembalGradeU": 1.234,
+                                "avoidableGradeY": 0.567,
+                                "unavoidable": 0.123,
+                                "total": 4.269
+                              },
+                              {
+                                "code": "DCR",
+                                "avoidableSawlog": 2.456,
+                                "avoidableHembalGradeU": 1.345,
+                                "avoidableGradeY": 0.678,
+                                "unavoidable": 0.234,
+                                "total": 4.713
+                              }
+                            ]
+                          },
+                          {
+                            "name": "Immature",
+                            "districts": [
+                              {
+                                "code": "DNI",
+                                "avoidableSawlog": 1.234,
+                                "avoidableHembalGradeU": 0.567,
+                                "avoidableGradeY": 0.234,
+                                "unavoidable": 0.089,
+                                "total": 2.124
+                              }
+                            ]
+                          }
+                        ],
                         "formulas": {}
                       }
                     }

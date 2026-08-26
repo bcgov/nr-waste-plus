@@ -9,32 +9,17 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.repository.AuditChangeRepository;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
-import io.micrometer.tracing.Baggage;
-import io.micrometer.tracing.CurrentTraceContext;
-import io.micrometer.tracing.Link;
-import io.micrometer.tracing.ScopedSpan;
 import io.micrometer.tracing.Span;
-import io.micrometer.tracing.SpanCustomizer;
-import io.micrometer.tracing.TraceContext;
 import io.micrometer.tracing.Tracer;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -57,18 +42,15 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
  * <p>SecurityContext is populated per mutation (see {@link
  * ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepositoryTest} pattern) so auditing never hits
  * the {@code created_by} / {@code updated_by} NOT NULL constraint.
+ *
+ * <p>Uses the real Micrometer Tracing {@link Tracer} (Brave) provided by
+ * {@link org.springframework.boot.micrometer.tracing.test.autoconfigure.AutoConfigureTracing}
+ * on {@link AbstractTestContainerIntegrationTest} — spans created via
+ * {@code nextSpan()} carry genuine 128-bit trace ids, exercising production propagation
+ * semantics rather than a hand-rolled double.
  */
 @DisplayName("Spike §6 | correlation_id audit trigger integration")
 class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegrationTest {
-
-  @TestConfiguration
-  static class TestTracerConfig {
-    @Bean
-    @Primary
-    Tracer tracer() {
-      return new ThreadLocalTracer();
-    }
-  }
 
   @Autowired private Tracer tracer;
 
@@ -79,117 +61,21 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
   @Autowired private JdbcTemplate jdbcTemplate;
   @Autowired private org.springframework.transaction.support.TransactionTemplate transactionTemplate;
 
+  @BeforeEach
   @AfterEach
-  void clearSecurityContext() {
+  void resetAuditFixture() {
+    // The integration-test container database is shared by every test class in the suite, so
+    // wipe only the audit tables these tests assert on — keeps max-id logic deterministic.
+    // hrs.district_volume must NOT be wiped here: it holds Flyway-seeded reference rows that
+    // other test classes (e.g. ReportingUnitControllerIntegrationTest grade validation) rely on.
+    // Duplicate-open-entry collisions are avoided instead by giving spike entities closed
+    // date ranges (see newEntity).
+    // auto-commit is disabled pool-wide, so fixture maintenance must run inside a real
+    // committing transaction — a bare jdbcTemplate write would be rolled back when Hikari
+    // reclaims the connection.
+    transactionTemplate.executeWithoutResult(
+        status -> jdbcTemplate.update("TRUNCATE hrs.audit_change, hrs.audit_event"));
     SecurityContextHolder.clearContext();
-  }
-
-  /** Thread-local Tracer that creates fresh spans per nextSpan() and tracks current span. */
-  static class ThreadLocalTracer implements Tracer {
-    private final ThreadLocal<Span> current = new ThreadLocal<>();
-
-    @Override public Span nextSpan() { return new TestSpan(); }
-    @Override public Span nextSpan(Span parent) { return new TestSpan(); }
-    @Override public Span currentSpan() { Span s = current.get(); return s != null ? s : Span.NOOP; }
-    @Override public Tracer.SpanInScope withSpan(Span span) {
-      Span prev = current.get();
-      if (span != null) current.set(span);
-      else current.remove();
-      return () -> {
-        if (prev == null) current.remove();
-        else current.set(prev);
-      };
-    }
-    @Override public ScopedSpan startScopedSpan(String name) { Span s = nextSpan().name(name).start(); return new TestScopedSpan(s); }
-    @Override public Span.Builder spanBuilder() { return new TestSpanBuilder(); }
-    @Override public TraceContext.Builder traceContextBuilder() { return new TestTraceContextBuilder(); }
-    @Override public CurrentTraceContext currentTraceContext() { return new TestCurrentTraceContext(); }
-    @Override public SpanCustomizer currentSpanCustomizer() { return SpanCustomizer.NOOP; }
-    @Override public Map<String, String> getAllBaggage() { return Collections.emptyMap(); }
-    @Override public Baggage getBaggage(String key) { return null; }
-    @Override public Baggage getBaggage(TraceContext ctx, String key) { return null; }
-    @Override public Baggage createBaggage(String key) { return null; }
-    @Override public Baggage createBaggage(String key, String value) { return null; }
-
-    static final class TestSpan implements Span {
-      private final String traceId = UUID.randomUUID().toString().replace("-", "");
-      private final String spanId = UUID.randomUUID().toString().replace("-", "");
-      private final TraceContext ctx = new TestTraceContext(traceId, spanId);
-      @Override public boolean isNoop() { return false; }
-      @Override public TraceContext context() { return ctx; }
-      @Override public Span start() { return this; }
-      @Override public Span name(String name) { return this; }
-      @Override public Span event(String name) { return this; }
-      @Override public Span event(String name, long duration, TimeUnit unit) { return this; }
-      @Override public Span tag(String key, String value) { return this; }
-      @Override public Span error(Throwable t) { return this; }
-      @Override public Span remoteServiceName(String name) { return this; }
-      @Override public Span remoteIpAndPort(String ip, int port) { return this; }
-      @Override public void end() {}
-      @Override public void end(long duration, TimeUnit unit) {}
-      @Override public void abandon() {}
-    }
-
-    static final class TestTraceContext implements TraceContext {
-      private final String traceId; private final String spanId;
-      TestTraceContext(String traceId, String spanId) { this.traceId = traceId; this.spanId = spanId; }
-      @Override public String traceId() { return traceId; }
-      @Override public String spanId() { return spanId; }
-      @Override public String parentId() { return null; }
-      @Override public Boolean sampled() { return Boolean.TRUE; }
-    }
-
-    static final class TestScopedSpan implements ScopedSpan {
-      private final Span span;
-      TestScopedSpan(Span span) { this.span = span; }
-      @Override public boolean isNoop() { return span.isNoop(); }
-      @Override public TraceContext context() { return span.context(); }
-      @Override public ScopedSpan name(String name) { span.name(name); return this; }
-      @Override public ScopedSpan tag(String key, String value) { span.tag(key, value); return this; }
-      @Override public ScopedSpan event(String name) { span.event(name); return this; }
-      @Override public ScopedSpan error(Throwable t) { span.error(t); return this; }
-      @Override public void end() { span.end(); }
-    }
-
-    static final class TestSpanBuilder implements Span.Builder {
-      @Override public Span.Builder setParent(TraceContext parent) { return this; }
-      @Override public Span.Builder setNoParent() { return this; }
-      @Override public Span.Builder name(String name) { return this; }
-      @Override public Span.Builder event(String name) { return this; }
-      @Override public Span.Builder tag(String key, String value) { return this; }
-      @Override public Span.Builder tag(String key, long value) { return this; }
-      @Override public Span.Builder tag(String key, double value) { return this; }
-      @Override public Span.Builder tag(String key, boolean value) { return this; }
-      @Override public Span.Builder tagOfStrings(String key, List<String> values) { return this; }
-      @Override public Span.Builder tagOfLongs(String key, List<Long> values) { return this; }
-      @Override public Span.Builder tagOfDoubles(String key, List<Double> values) { return this; }
-      @Override public Span.Builder tagOfBooleans(String key, List<Boolean> values) { return this; }
-      @Override public Span.Builder error(Throwable t) { return this; }
-      @Override public Span.Builder kind(Span.Kind kind) { return this; }
-      @Override public Span.Builder remoteServiceName(String remoteServiceName) { return this; }
-      @Override public Span.Builder remoteIpAndPort(String ip, int port) { return this; }
-      @Override public Span.Builder startTimestamp(long timestamp, TimeUnit unit) { return this; }
-      @Override public Span.Builder addLink(Link link) { return this; }
-      @Override public Span start() { return new TestSpan(); }
-    }
-
-    static final class TestTraceContextBuilder implements TraceContext.Builder {
-      @Override public TraceContext.Builder traceId(String traceId) { return this; }
-      @Override public TraceContext.Builder spanId(String spanId) { return this; }
-      @Override public TraceContext.Builder parentId(String parentId) { return this; }
-      @Override public TraceContext.Builder sampled(Boolean sampled) { return this; }
-      @Override public TraceContext build() { return new TestTraceContext(UUID.randomUUID().toString().replace("-",""), UUID.randomUUID().toString().replace("-","")); }
-    }
-
-    static final class TestCurrentTraceContext implements CurrentTraceContext {
-      @Override public TraceContext context() { return TraceContext.NOOP; }
-      @Override public Scope newScope(TraceContext ctx) { throw new UnsupportedOperationException(); }
-      @Override public Scope maybeScope(TraceContext ctx) { throw new UnsupportedOperationException(); }
-      @Override public <C> Callable<C> wrap(Callable<C> c) { return c; }
-      @Override public Runnable wrap(Runnable r) { return r; }
-      @Override public Executor wrap(Executor e) { return e; }
-      @Override public ExecutorService wrap(ExecutorService e) { return e; }
-    }
   }
 
   // ---- §6.1 happy path -----------------------------------------------------
@@ -261,18 +147,24 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
 
     long beforeMaxEventId = maxAuditEventId();
     LocalDate startDate = LocalDate.now().plusDays(nextStartOffset());
-    int rows =
-        jdbcTemplate.update(
-            "INSERT INTO hrs.district_volume "
-                + "(area, start_date, table_data, table_level_factor, created_by, updated_by, config_type, deleted) "
-                + "VALUES (?, ?, ?::jsonb, ?, ?, ?, ?, FALSE)",
-            Area.INTERIOR.name(),
-            java.sql.Date.valueOf(startDate),
-            "{}",
-            new BigDecimal("1.000"),
-            "raw-sql-user",
-            "raw-sql-user",
-            ConfigType.DISTRICT_VOLUME.name());
+    // With pool-wide auto-commit disabled, a bare jdbcTemplate write would sit in an implicit
+    // transaction that Hikari rolls back on connection return. Run it in an explicit committing
+    // transaction; JdbcTemplate still bypasses Hibernate's ConnectionProvider, so the deferred
+    // correlation binding never applies and the trigger must record a NULL correlation_id.
+    Integer rows =
+        transactionTemplate.execute(
+            status ->
+                jdbcTemplate.update(
+                    "INSERT INTO hrs.district_volume "
+                        + "(area, start_date, table_data, table_level_factor, created_by, updated_by, config_type, deleted) "
+                        + "VALUES (?, ?, ?::jsonb, ?, ?, ?, ?, FALSE)",
+                    Area.INTERIOR.name(),
+                    java.sql.Date.valueOf(startDate),
+                    "{}",
+                    new BigDecimal("1.000"),
+                    "raw-sql-user",
+                    "raw-sql-user",
+                    ConfigType.DISTRICT_VOLUME.name()));
 
     assertThat(rows).isOne();
 
@@ -282,7 +174,7 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
             jdbcTemplate.queryForObject(
                 "SELECT correlation_id FROM hrs.audit_event WHERE id = ?", String.class, latestEventId))
         .as("raw JdbcTemplate write must bypass the Hibernate provider")
-        .isEmpty();
+        .isNullOrEmpty();
     assertThat(
             jdbcTemplate.queryForObject(
                 "SELECT action FROM hrs.audit_event WHERE id = ?", String.class, latestEventId))
@@ -423,7 +315,7 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     assertThat(eventNull).isGreaterThan(eventA);
     assertThat(corrNull)
         .as("second tx with no span must not set app.correlation_id even if Hikari reused the same physical connection")
-        .isEmpty();
+        .isNullOrEmpty();
     assertAuditChangeExistsForEvent(eventNull);
 
     // Transaction 3: with span B (distinct) -> expect traceId B, not A or NULL bleed
@@ -456,7 +348,7 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     assertThat(
             jdbcTemplate.queryForObject(
                 "SELECT correlation_id FROM hrs.audit_event WHERE id = ?", String.class, eventNull))
-        .isEmpty();
+        .isNullOrEmpty();
     assertThat(
             jdbcTemplate.queryForObject(
                 "SELECT correlation_id FROM hrs.audit_event WHERE id = ?", String.class, eventB))
@@ -475,7 +367,12 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setArea(area);
     entity.setConfigType(ConfigType.DISTRICT_VOLUME);
-    entity.setStartDate(LocalDate.now().plusDays(nextStartOffset()));
+    LocalDate startDate = LocalDate.now().plusDays(nextStartOffset());
+    entity.setStartDate(startDate);
+    // Closed one-day range: open-ended entries would overlap each other and any open entry
+    // created via the API (duplicate-open-entry validation returns 409), and wiping the table
+    // is not an option because it holds seeded reference data for other tests.
+    entity.setEndDate(startDate.plusDays(1));
     // Minimal valid TableData — matches DistrictVolumeRepositoryTest construction.
     entity.setTableData(new TableData(null, null, null, Map.of()));
     entity.setTableLevelFactor(new BigDecimal("1.000"));
