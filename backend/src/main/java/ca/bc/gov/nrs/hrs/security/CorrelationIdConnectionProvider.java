@@ -84,12 +84,16 @@ public class CorrelationIdConnectionProvider implements ConnectionProvider, Conf
 
   @Override
   public void configure(Map<String, Object> properties) {
-    ((Configurable) delegate).configure(properties);
+    if (delegate instanceof Configurable configurable) {
+      configurable.configure(properties);
+    }
   }
 
   @Override
   public void stop() {
-    ((Stoppable) delegate).stop();
+    if (delegate instanceof Stoppable stoppable) {
+      stoppable.stop();
+    }
   }
 
   @Override
