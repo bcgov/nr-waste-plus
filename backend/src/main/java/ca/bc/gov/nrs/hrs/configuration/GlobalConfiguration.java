@@ -33,8 +33,14 @@ import ca.bc.gov.nrs.hrs.exception.UnretriableException;
 import ca.bc.gov.nrs.hrs.exception.UserNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.forwarders.B3HeaderForwarder;
 import ca.bc.gov.nrs.hrs.provider.forwarders.JwtForwarderRequestInitializer;
+import ca.bc.gov.nrs.hrs.security.CorrelationIdConnectionProvider;
+import io.micrometer.tracing.Tracer;
+import javax.sql.DataSource;
+import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
@@ -198,4 +204,33 @@ public class GlobalConfiguration {
   public GlobalExceptionHandler globalExceptionHandler() {
     return new GlobalExceptionHandler();
   }
+
+  /**
+   * Customizes Hibernate properties to wrap the pooled {@link DataSource} in a
+   * {@link CorrelationIdConnectionProvider} that sets {@code app.correlation_id}
+   * transaction-scoped via {@code set_config(..., true)} from the current B3 span.
+   *
+   * <p>The delegate is a {@link DatasourceConnectionProviderImpl} bound to the
+   * Hikari {@link DataSource}; {@link JdbcSettings#CONNECTION_PROVIDER} is set to the
+   * decorating provider so every {@code getConnection()} propagates the trace id with
+   * {@code SELECT set_config('app.correlation_id', ?, true)} (is_local = true).</p>
+   *
+   * @param dataSource the Hikari pooled data source
+   * @param tracer Micrometer tracer providing the current span
+   * @return a customizer that registers the decorating connection provider
+   */
+  @Bean
+  @SuppressWarnings({"deprecation", "removal"})
+  public HibernatePropertiesCustomizer correlationIdConnectionProviderCustomizer(
+      DataSource dataSource, Tracer tracer) {
+    return hibernateProperties -> {
+      DatasourceConnectionProviderImpl delegate = new DatasourceConnectionProviderImpl();
+      delegate.setDataSource(dataSource);
+      CorrelationIdConnectionProvider provider = new CorrelationIdConnectionProvider(
+          delegate, tracer);
+      provider.configure(hibernateProperties);
+      hibernateProperties.put(JdbcSettings.CONNECTION_PROVIDER, provider);
+    };
+  }
+
 }

@@ -39,6 +39,7 @@ spring:
       jdbcUrl: ${spring.datasource.url}
       username: ${spring.datasource.username}
       password: ${spring.datasource.password}
+      auto-commit: false
       connectionTimeout: 30000 # 30 seconds
       idleTimeout: 60000 # 1 minute
       maxLifetime: 180000 # 3 minutes
