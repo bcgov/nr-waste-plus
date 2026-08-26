@@ -121,7 +121,7 @@ public class CorrelationIdConnectionProvider implements ConnectionProvider, Conf
    * first statement-producing call, inside the transaction already configured by the
    * caller. Every other operation is forwarded verbatim.
    */
-  private final class DeferredCorrelationIdConnection implements Connection {
+  private static final class DeferredCorrelationIdConnection implements Connection {
 
     private final Connection target;
     private final String traceId;
