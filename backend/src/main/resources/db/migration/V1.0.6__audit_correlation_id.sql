@@ -1,4 +1,4 @@
--- SPIKE — audit correlation ID via session GUC (B3 trace propagation)
+-- SPIKE — audit correlation ID via transaction-local GUC (B3 trace propagation)
 -- Populate hrs.audit_event.correlation_id from the transaction-local
 -- app.correlation_id setting. The audit trigger remains otherwise unchanged.
 -- Canonical column width is VARCHAR(128): V1.0.5 already created it as such,
