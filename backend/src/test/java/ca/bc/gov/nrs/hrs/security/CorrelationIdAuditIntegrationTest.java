@@ -355,6 +355,50 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
         .isEqualTo(traceIdB);
   }
 
+  // ---- §6.6 trigger uses current_setting(..., true) (missing_ok) -------------
+
+  /**
+   * §6.6 — Explicit acceptance check (issue #1257) that the audit trigger reads the
+   * correlation-id GUC with the {@code missing_ok} flag, so {@code current_setting}
+   * does not throw when the GUC was never set for that transaction. Without it, every
+   * non-traced write path would fail. This verifies the deployed trigger definition
+   * directly rather than inferring it from the no-span behaviour alone.
+   */
+  @Test
+  @DisplayName("§6.6 trigger reads app.correlation_id with missing_ok flag (no-span writes must not throw)")
+  void triggerUsesMissingOkCurrentSetting() {
+    // 1) The deployed trigger function must use the two-argument current_setting(..., true)
+    //    form — the literal acceptance criterion from issue #1257.
+    String functionDef =
+        jdbcTemplate.queryForObject(
+            "SELECT pg_get_functiondef('hrs.audit_district_volume_change'::regproc)", String.class);
+    assertThat(functionDef)
+        .as("trigger must read the GUC with missing_ok so an unset GUC does not throw")
+        .contains("current_setting('app.correlation_id', true)");
+
+    // 2) Behavioural guarantee: a no-span write (GUC never set) still succeeds and records
+    //    NULL correlation_id — i.e. the trigger did not raise on the unset setting.
+    assertThat(tracer.currentSpan())
+        .satisfiesAnyOf(span -> assertThat(span).isNull(), span -> assertThat(span.isNoop()).isTrue());
+    setSecurityContext();
+
+    long beforeMaxEventId = maxAuditEventId();
+    DistrictVolumeEntity entity = newEntity(Area.INTERIOR);
+    transactionTemplate.execute(status -> {
+      districtVolumeRepository.saveAndFlush(entity);
+      return null;
+    });
+
+    Long latestEventId = maxAuditEventId();
+    assertThat(latestEventId).isGreaterThan(beforeMaxEventId);
+    assertThat(
+            jdbcTemplate.queryForObject(
+                "SELECT correlation_id FROM hrs.audit_event WHERE id = ?", String.class, latestEventId))
+        .as("no-span write must record NULL correlation_id without throwing")
+        .isNullOrEmpty();
+    assertAuditChangeExistsForEvent(latestEventId);
+  }
+
   // ---- helpers --------------------------------------------------------------
 
   private void setSecurityContext() {
