@@ -226,7 +226,8 @@ public class GlobalConfiguration {
     return hibernateProperties -> {
       DatasourceConnectionProviderImpl delegate = new DatasourceConnectionProviderImpl();
       delegate.setDataSource(dataSource);
-      CorrelationIdConnectionProvider provider = new CorrelationIdConnectionProvider(delegate, tracer);
+      CorrelationIdConnectionProvider provider = new CorrelationIdConnectionProvider(
+          delegate, tracer);
       provider.configure(hibernateProperties);
       hibernateProperties.put(JdbcSettings.CONNECTION_PROVIDER, provider);
     };
