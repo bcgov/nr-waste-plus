@@ -22,9 +22,11 @@ CREATE TABLE IF NOT EXISTS hrs.status_event (
 );
 
 CREATE INDEX IF NOT EXISTS idx_status_event_reporting_unit_time
-    ON hrs.status_event (reporting_unit_id, id DESC);
+    ON hrs.status_event (reporting_unit_id, created_at DESC, id DESC)
+    WHERE reporting_unit_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_status_event_block_time
-    ON hrs.status_event (block_id, id DESC);
+    ON hrs.status_event (block_id, created_at DESC, id DESC)
+    WHERE block_id IS NOT NULL;
 
 DO $$
 BEGIN
