@@ -38,17 +38,26 @@ Then("the {string} input should be focused", (label: string) => {
 // Tabs forward (real keyboard events, not a programmatic .focus() call) until the
 // target selector receives focus, or fails once maxAttempts is exhausted. This proves
 // the control is actually reachable via keyboard Tab order, not merely focusable.
+//
+// Note: `document.activeElement` here would refer to the Cypress runner's own
+// top-level document, not the document of the application under test (which is
+// rendered inside an iframe) - it would never match. `cy.document()` resolves the
+// application-under-test's document instead. `cy.focused()` is avoided because it
+// throws immediately if nothing currently has focus (e.g. mid-transition), which
+// would abort the retry loop instead of allowing it to keep tabbing.
 const tabUntilFocused = (selector: string, maxAttempts: number): void => {
   cy.get(selector)
     .first()
     .then(($el) => {
-      if (document.activeElement === $el.get(0)) {
-        return;
-      }
-      if (maxAttempts <= 0) {
-        throw new Error(`Could not reach "${selector}" via keyboard Tab navigation.`);
-      }
-      cy.realPress("Tab").then(() => tabUntilFocused(selector, maxAttempts - 1));
+      cy.document().then((doc) => {
+        if (doc.activeElement === $el.get(0)) {
+          return;
+        }
+        if (maxAttempts <= 0) {
+          throw new Error(`Could not reach "${selector}" via keyboard Tab navigation.`);
+        }
+        cy.realPress("Tab").then(() => tabUntilFocused(selector, maxAttempts - 1));
+      });
     });
 };
 
