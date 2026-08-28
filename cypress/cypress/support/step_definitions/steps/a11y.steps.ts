@@ -35,6 +35,53 @@ Then("the {string} input should be focused", (label: string) => {
   findInputElement(label).should("have.focus");
 });
 
+// Tabs forward (real keyboard events, not a programmatic .focus() call) until the
+// target selector receives focus, or fails once maxAttempts is exhausted. This proves
+// the control is actually reachable via keyboard Tab order, not merely focusable.
+//
+// Note: `document.activeElement` here would refer to the Cypress runner's own
+// top-level document, not the document of the application under test (which is
+// rendered inside an iframe) - it would never match. `cy.document()` resolves the
+// application-under-test's document instead. `cy.focused()` is avoided because it
+// throws immediately if nothing currently has focus (e.g. mid-transition), which
+// would abort the retry loop instead of allowing it to keep tabbing.
+const tabUntilFocused = (selector: string, maxAttempts: number): void => {
+  cy.get(selector)
+    .first()
+    .then(($el) => {
+      cy.document().then((doc) => {
+        if (doc.activeElement === $el.get(0)) {
+          return;
+        }
+        if (maxAttempts <= 0) {
+          throw new Error(`Could not reach "${selector}" via keyboard Tab navigation.`);
+        }
+        cy.realPress("Tab").then(() => tabUntilFocused(selector, maxAttempts - 1));
+      });
+    });
+};
+
+Then("the clients page controls should be keyboard focusable", () => {
+  const selectors = [
+    '[data-testid="side-nav-link-Waste search"]',
+    '[data-testid="side-nav-link-Create reporting unit"]',
+    '[data-testid="side-nav-link-help"]',
+    '[data-testid="main-search"]',
+    '[data-testid="search-button-other"]:visible',
+  ];
+  const maxTabsPerControl = 30;
+
+  cy.get("body").then(($body) => {
+    $body.get(0).focus();
+  });
+
+  selectors.forEach((selector) => {
+    cy.get(selector).first().should("be.visible");
+    tabUntilFocused(selector, maxTabsPerControl);
+    cy.get(selector).first().should("have.focus");
+  });
+});
+
 Then("the page should have at least one ARIA live region", () => {
   cy.get(liveRegionSelectors).should("have.length.greaterThan", 0);
 });
