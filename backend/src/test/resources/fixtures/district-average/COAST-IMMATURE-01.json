@@ -1,0 +1,37 @@
+{
+  "caseId": "COAST-IMMATURE-01",
+  "area": "COASTAL",
+  "workbookReference": "Coast Table Layout + Manual p37 Table 3-5 Coast Immature benchmark 10",
+  "inputs": {
+    "districtCode": "DCC",
+    "netWasteAreaHa": 6.0,
+    "tableLevelFactor": 1.0,
+    "has_dispersed_retention": false,
+    "dispersedRetentionPct": 0.0,
+    "heli_logging": false,
+    "species": [
+      {
+        "code": "CW",
+        "grade": "U",
+        "volumeM3": 450.0
+      },
+      {
+        "code": "HW",
+        "grade": "U",
+        "volumeM3": 550.0
+      }
+    ],
+    "benchmark": {
+      "zone": "Coast Immature",
+      "valueM3PerHa": 10,
+      "source": "Manual p37 Table 3-5 Coast Immature benchmark"
+    }
+  },
+  "expected": {
+    "unroundedTotalM3": 60.0,
+    "roundedTotalM3": 60.0,
+    "residualAllocation": []
+  },
+  "maturity": "Immature",
+  "benchmarkZone": "Immature"
+}

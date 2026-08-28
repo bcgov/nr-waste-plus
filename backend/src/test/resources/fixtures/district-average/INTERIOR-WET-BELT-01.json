@@ -1,0 +1,41 @@
+{
+  "caseId": "INTERIOR-WET-BELT-01",
+  "area": "INTERIOR",
+  "workbookReference": "Provincial v1.1 workbook, Waste Volume Generator (Interior) Wet belt Manual p38 Table 3-6 \u2014 with tableLevelFactor from hrs.district_volume",
+  "inputs": {
+    "districtCode": "DKM",
+    "netWasteAreaHa": 8.0,
+    "tableLevelFactor": 1.25,
+    "has_dispersed_retention": false,
+    "dispersedRetentionPct": 0.0,
+    "heli_logging": false,
+    "species": [
+      {
+        "code": "BL",
+        "grade": "U",
+        "volumeM3": 200.0
+      },
+      {
+        "code": "PLI",
+        "grade": "U",
+        "volumeM3": 500.0
+      },
+      {
+        "code": "SX",
+        "grade": "U",
+        "volumeM3": 300.0
+      }
+    ],
+    "benchmark": {
+      "zone": "Wet belt",
+      "valueM3PerHa": 20,
+      "source": "Manual p38 Table 3-6 Wet belt benchmark"
+    }
+  },
+  "expected": {
+    "unroundedTotalM3": 679.9,
+    "roundedTotalM3": 679.9,
+    "residualAllocation": []
+  },
+  "benchmarkZone": "Wet belt"
+}
