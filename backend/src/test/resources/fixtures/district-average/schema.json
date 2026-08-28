@@ -34,13 +34,21 @@
     "workbookReference": {
       "type": "string",
       "minLength": 15,
-      "pattern": "Manual p|Provincial|Coast",
+      "pattern": "^(?=.*(Provincial v1\\.1 workbook|Coast Table Layout))(?=.*Manual p(37|38|52|53|54)(-\\d+)?).+$",
       "description": "Minimal human-readable citation naming the workbook and relevant manual page/table."
     },
     "inputs": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["districtCode", "netWasteAreaHa", "species"],
+      "required": [
+        "districtCode",
+        "netWasteAreaHa",
+        "tableLevelFactor",
+        "has_dispersed_retention",
+        "heli_logging",
+        "species",
+        "benchmark"
+      ],
       "properties": {
         "districtCode": { "type": "string", "pattern": "^D[A-Z]{2}$" },
         "netWasteAreaHa": { "type": "number", "exclusiveMinimum": 0 },
@@ -72,10 +80,15 @@
         },
         "benchmark": {
           "type": "object",
+          "additionalProperties": false,
+          "required": ["zone", "valueM3PerHa", "source"],
           "properties": {
-            "zone": { "type": "string" },
-            "valueM3PerHa": { "type": "number" },
-            "source": { "type": "string" }
+            "zone": { "type": "string", "minLength": 1 },
+            "valueM3PerHa": { "type": "number", "exclusiveMinimum": 0 },
+            "source": {
+              "type": "string",
+              "pattern": "^(?=.*Manual p(37|38|52|53|54)(-\\d+)?).+$"
+            }
           }
         }
       }
@@ -105,8 +118,46 @@
   },
   "allOf": [
     {
-      "if": { "properties": { "area": { "const": "COASTAL" } } },
+      "if": {
+        "required": ["area"],
+        "properties": { "area": { "const": "COASTAL" } }
+      },
       "then": { "required": ["maturity"] }
+    },
+    {
+      "if": {
+        "properties": {
+          "inputs": {
+            "required": ["has_dispersed_retention"],
+            "properties": { "has_dispersed_retention": { "const": true } }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "inputs": { "required": ["dispersedRetentionPct"] }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "inputs": {
+            "required": ["heli_logging"],
+            "properties": { "heli_logging": { "const": true } }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "inputs": {
+            "required": ["heli_multiplier"],
+            "properties": {
+              "heli_multiplier": { "type": "number", "exclusiveMinimum": 0 }
+            }
+          }
+        }
+      }
     }
   ]
 }

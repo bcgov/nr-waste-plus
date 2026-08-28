@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,9 +43,10 @@ class DistrictAverageParityFixtureTest {
       "DKM|COASTAL|Coast Mature Heli", new BigDecimal("0.9514285714285714285714285714"));
 
   @Test
-  void fixturesAreExplicitlyDiscoveredAndConformToSchema() throws IOException {
+  void fixturesAreExplicitlyDiscoveredAndMatchFixtureContract() throws IOException {
     JsonNode schema = readFixture(SCHEMA_NAME);
-    assertThat(schema.path("$schema").asText()).isEqualTo("http://json-schema.org/draft-07/schema#");
+    assertThat(schema.path("$schema").asText())
+        .isEqualTo("http://json-schema.org/draft-07/schema#");
     assertThat(schema.path("additionalProperties").asBoolean()).isFalse();
 
     for (String name : FIXTURE_NAMES) {
@@ -52,8 +54,15 @@ class DistrictAverageParityFixtureTest {
       assertFixtureAgainstSchema(fixture, schema, name);
       assertThat(fixture.path("caseId").asText()).isNotBlank();
       assertThat(fixture.path("area").asText()).isIn("INTERIOR", "COASTAL");
+      if (fixture.path("area").asText().equals("COASTAL")) {
+        assertThat(fixture.path("maturity").asText()).isIn("Immature", "Mature");
+      }
       assertThat(fixture.path("workbookReference").asText())
-          .matches(".*(Provincial|Manual|Coast) p?[0-9].*");
+          .matches(
+              "(?s)^(?=.*(Provincial v1\\.1 workbook|Coast Table Layout))"
+                  + "(?=.*Manual p(37|38|52|53|54)(?:-\\d+)?).+$");
+      assertThat(fixture.path("inputs").path("benchmark").path("source").asText())
+          .matches("(?s)^.*Manual p(37|38|52|53|54)(?:-\\d+)?.*$");
       assertThat(fixture.path("expected").has("trace")).isFalse();
       assertThat(fixture.path("expected").has("formula")).isFalse();
       assertThat(fixture.path("inputs").has("cell")).isFalse();
@@ -69,7 +78,9 @@ class DistrictAverageParityFixtureTest {
       JsonNode fixture = readFixture(name);
       BigDecimal calculated = referenceTotal(fixture);
       JsonNode expected = fixture.get("expected");
-      assertThat(calculated).as(name).isEqualByComparingTo(decimal(expected.get("unroundedTotalM3")));
+      assertThat(calculated)
+          .as(name)
+          .isEqualByComparingTo(decimal(expected.get("unroundedTotalM3")));
       assertThat(calculated.setScale(DISPLAY_SCALE, ROUNDING))
           .isEqualByComparingTo(decimal(expected.get("roundedTotalM3")));
     }
@@ -88,11 +99,16 @@ class DistrictAverageParityFixtureTest {
       Map<String, BigDecimal> residuals = residuals(fixture);
 
       byGrade.forEach((grade, gradeSpecies) -> {
-        BigDecimal gradeTotal = total.multiply(gradeSpecies.stream()
-            .map(node -> decimal(node.get("volumeM3"))).reduce(BigDecimal.ZERO, BigDecimal::add))
-            .divide(allVolume, CALCULATION_SCALE, ROUNDING).setScale(DISPLAY_SCALE, ROUNDING);
-        BigDecimal roundedSpecies = gradeSpecies.stream().map(node -> roundedSpeciesValue(
-            total, decimal(node.get("volumeM3")), allVolume)).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal gradeTotal = total.multiply(
+            gradeSpecies.stream()
+                .map(node -> decimal(node.get("volumeM3")))
+                .reduce(BigDecimal.ZERO, BigDecimal::add))
+            .divide(allVolume, CALCULATION_SCALE, ROUNDING)
+            .setScale(DISPLAY_SCALE, ROUNDING);
+        BigDecimal roundedSpecies = gradeSpecies.stream()
+            .map(node -> roundedSpeciesValue(
+                total, decimal(node.get("volumeM3")), allVolume))
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal residual = residuals.getOrDefault(grade, BigDecimal.ZERO);
         assertThat(roundedSpecies.add(residual)).as("grade %s in %s", grade, name)
             .isEqualByComparingTo(gradeTotal);
@@ -106,28 +122,37 @@ class DistrictAverageParityFixtureTest {
         JsonNode selected = gradeSpecies.stream()
             .filter(speciesNode -> code.equals(speciesNode.path("code").asText()))
             .findFirst().orElseThrow();
-        assertThat(selected).isNotNull();
         assertThat(decimal(node.get("residualM3")).remainder(ZERO_TICK))
             .isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(code).isEqualTo(selectResidualSpecies(gradeSpecies).path("code").asText());
       });
+      assertThat(fixture.path("expected").path("residualAllocation").valueStream()
+          .map(node -> node.path("grade").asText("U")).distinct().count())
+          .isEqualTo(fixture.path("expected").path("residualAllocation").size());
+      assertThat(residuals(fixture).keySet()).allMatch(byGrade::containsKey);
     }
   }
 
   @Test
   void speciesAtOrBelowOneThousandthBecomeZeroUsingHalfUp() {
-    assertThat(zeroSmallSpecies(new BigDecimal("0.0004"))).isEqualByComparingTo(BigDecimal.ZERO);
-    assertThat(zeroSmallSpecies(new BigDecimal("0.0005"))).isEqualByComparingTo(BigDecimal.ZERO);
-    assertThat(zeroSmallSpecies(new BigDecimal("0.0010"))).isEqualByComparingTo(BigDecimal.ZERO);
-    assertThat(zeroSmallSpecies(new BigDecimal("0.0014"))).isEqualByComparingTo(BigDecimal.ZERO);
-    assertThat(zeroSmallSpecies(new BigDecimal("0.0015"))).isEqualByComparingTo(new BigDecimal("0.002"));
+    assertThat(zeroSmallSpecies(new BigDecimal("0.0004")))
+        .isEqualByComparingTo(BigDecimal.ZERO);
+    assertThat(zeroSmallSpecies(new BigDecimal("0.0005")))
+        .isEqualByComparingTo(BigDecimal.ZERO);
+    assertThat(zeroSmallSpecies(new BigDecimal("0.0010")))
+        .isEqualByComparingTo(BigDecimal.ZERO);
+    assertThat(zeroSmallSpecies(new BigDecimal("0.0014")))
+        .isEqualByComparingTo(BigDecimal.ZERO);
+    assertThat(zeroSmallSpecies(new BigDecimal("0.0015")))
+        .isEqualByComparingTo(new BigDecimal("0.002"));
   }
 
   @Test
   void equalMaximumSpeciesUseCodeAsDeterministicTieBreaker() {
-    JsonNode selected = selectResidualSpecies(List.of(
-        JSON_MAPPER.createObjectNode().put("code", "ZZ").put("volumeM3", 10),
-        JSON_MAPPER.createObjectNode().put("code", "AA").put("volumeM3", 10)));
+    JsonNode selected = selectResidualSpecies(
+        List.of(
+            JSON_MAPPER.createObjectNode().put("code", "ZZ").put("volumeM3", 10),
+            JSON_MAPPER.createObjectNode().put("code", "AA").put("volumeM3", 10)));
     assertThat(selected.path("code").asText()).isEqualTo("AA");
   }
 
@@ -144,34 +169,41 @@ class DistrictAverageParityFixtureTest {
         .multiply(factor);
     if (inputs.path("has_dispersed_retention").asBoolean()) {
       total = total.multiply(BigDecimal.ONE.subtract(decimal(inputs.path("dispersedRetentionPct"))
-          .divide(new BigDecimal("100"), CALCULATION_SCALE, ROUNDING)));
+          .divide(new BigDecimal("100"))));
     }
     if (inputs.path("heli_logging").asBoolean()) {
       total = total.multiply(decimal(inputs.path("heli_multiplier")));
     }
-    return total.setScale(3, ROUNDING);
+    return total.setScale(CALCULATION_SCALE, ROUNDING);
   }
 
-  private static BigDecimal roundedSpeciesValue(BigDecimal total, BigDecimal volume, BigDecimal allVolume) {
-    return zeroSmallSpecies(total.multiply(volume).divide(allVolume, CALCULATION_SCALE, ROUNDING)
-        .setScale(DISPLAY_SCALE, ROUNDING));
+  private static BigDecimal roundedSpeciesValue(
+      BigDecimal total, BigDecimal volume, BigDecimal allVolume) {
+    return zeroSmallSpecies(
+        total.multiply(volume).divide(allVolume, CALCULATION_SCALE, ROUNDING)
+            .setScale(DISPLAY_SCALE, ROUNDING));
   }
 
   private static BigDecimal zeroSmallSpecies(BigDecimal value) {
     BigDecimal rounded = value.setScale(DISPLAY_SCALE, ROUNDING);
-    return rounded.compareTo(ZERO_TICK) <= 0 ? BigDecimal.ZERO.setScale(DISPLAY_SCALE) : rounded;
+    return rounded.compareTo(ZERO_TICK) <= 0
+        ? BigDecimal.ZERO.setScale(DISPLAY_SCALE)
+        : rounded;
   }
 
   private static Map<String, BigDecimal> residuals(JsonNode fixture) {
-    Map<String, BigDecimal> result = new java.util.HashMap<>();
+    Map<String, BigDecimal> result = new HashMap<>();
     fixture.path("expected").path("residualAllocation").forEach(node ->
-        result.merge(node.path("grade").asText("U"), decimal(node.get("residualM3")), BigDecimal::add));
+        result.merge(
+            node.path("grade").asText("U"), decimal(node.get("residualM3")), BigDecimal::add));
     return result;
   }
 
   private static JsonNode selectResidualSpecies(List<JsonNode> species) {
-    return species.stream().max(Comparator.comparing((JsonNode node) -> decimal(node.get("volumeM3")))
-        .thenComparing(node -> node.path("code").asText(), Comparator.reverseOrder())).orElseThrow();
+    return species.stream()
+        .max(Comparator.comparing((JsonNode node) -> decimal(node.get("volumeM3")))
+            .thenComparing(node -> node.path("code").asText(), Comparator.reverseOrder()))
+        .orElseThrow();
   }
 
   private static List<JsonNode> nodes(JsonNode array) {
@@ -182,9 +214,53 @@ class DistrictAverageParityFixtureTest {
 
   private static void assertFixtureAgainstSchema(JsonNode fixture, JsonNode schema, String name) {
     assertObjectMatchesSchema(fixture, schema, name);
-    assertObjectMatchesSchema(fixture.path("inputs"), schema.path("properties").path("inputs"), name);
-    assertObjectMatchesSchema(fixture.path("expected"), schema.path("properties").path("expected"), name);
+    assertObjectMatchesSchema(
+        fixture.path("inputs"), schema.path("properties").path("inputs"), name);
+    assertObjectMatchesSchema(
+        fixture.path("expected"), schema.path("properties").path("expected"), name);
     assertThat(fixture.path("inputs").path("species").isArray()).as(name).isTrue();
+    JsonNode inputs = fixture.path("inputs");
+    assertThat(inputs.path("districtCode").asText()).matches("D[A-Z]{2}");
+    assertThat(inputs.path("netWasteAreaHa").isNumber()).isTrue();
+    assertThat(inputs.path("netWasteAreaHa").decimalValue()).isPositive();
+    assertThat(inputs.path("tableLevelFactor").isNumber()).isTrue();
+    assertThat(inputs.path("tableLevelFactor").decimalValue()).isPositive();
+    assertThat(inputs.path("benchmark").path("zone").asText()).isNotBlank();
+    assertThat(inputs.path("benchmark").path("valueM3PerHa").isNumber()).isTrue();
+    assertThat(inputs.path("benchmark").path("valueM3PerHa").decimalValue()).isPositive();
+    assertThat(inputs.path("benchmark").path("source").asText())
+        .matches("(?s)^.*Manual p(37|38|52|53|54)(?:-\\d+)?.*$");
+    assertThat(inputs.path("has_dispersed_retention").isBoolean()).isTrue();
+    assertThat(inputs.path("heli_logging").isBoolean()).isTrue();
+    if (inputs.path("has_dispersed_retention").asBoolean()) {
+      assertThat(inputs.path("dispersedRetentionPct").isNumber()).isTrue();
+      assertThat(inputs.path("dispersedRetentionPct").decimalValue())
+          .isBetween(BigDecimal.ZERO, new BigDecimal("100"));
+    }
+    if (inputs.path("heli_logging").asBoolean()) {
+      assertThat(inputs.path("heli_multiplier").isNumber()).isTrue();
+      assertThat(inputs.path("heli_multiplier").decimalValue()).isPositive();
+    } else {
+      assertThat(inputs.path("heli_multiplier").isMissingNode()
+          || inputs.path("heli_multiplier").isNull()).isTrue();
+    }
+    inputs.path("species").forEach(species -> {
+      assertThat(species.path("code").asText()).hasSizeGreaterThanOrEqualTo(2);
+      assertThat(species.path("grade").asText()).isNotBlank();
+      assertThat(species.path("volumeM3").isNumber()).isTrue();
+      assertThat(species.path("volumeM3").decimalValue()).isNotNegative();
+    });
+    JsonNode expected = fixture.path("expected");
+    assertThat(expected.path("unroundedTotalM3").isNumber()).isTrue();
+    assertThat(expected.path("roundedTotalM3").isNumber()).isTrue();
+    expected.path("residualAllocation").forEach(allocation -> {
+      assertThat(allocation.path("species").asText()).isNotBlank();
+      assertThat(allocation.path("grade").asText()).isNotBlank();
+      assertThat(allocation.path("residualM3").isNumber()).isTrue();
+      assertThat(decimal(allocation.get("residualM3")).remainder(ZERO_TICK))
+          .isEqualByComparingTo(BigDecimal.ZERO);
+    });
+    assertThat(expected.path("residualAllocation").isArray()).isTrue();
   }
 
   private static void assertObjectMatchesSchema(JsonNode value, JsonNode schema, String name) {
@@ -203,7 +279,8 @@ class DistrictAverageParityFixtureTest {
   }
 
   private static JsonNode readFixture(String name) throws IOException {
-    try (InputStream stream = DistrictAverageParityFixtureTest.class.getResourceAsStream(FIXTURE_PATH + name)) {
+    try (InputStream stream = DistrictAverageParityFixtureTest.class
+        .getResourceAsStream(FIXTURE_PATH + name)) {
       assertThat(stream).as("fixture %s", name).isNotNull();
       return JSON_MAPPER.readTree(stream);
     }
