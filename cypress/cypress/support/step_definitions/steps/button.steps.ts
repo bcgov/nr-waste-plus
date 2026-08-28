@@ -1,8 +1,16 @@
-import { When, Step } from "@badeball/cypress-cucumber-preprocessor";
+import { When, Then, Step } from "@badeball/cypress-cucumber-preprocessor";
 import { findButton } from "../../helpers";
 
 When("I click on the {string} button", (name: string) => {
   buttonClick(name);
+});
+
+When("I click on the {string} link", (name: string) => {
+  buttonClick(name);
+});
+
+Then("the profile settings button should show {string}", (name: string) => {
+  findButton("Profile settings").should("contain.text", name);
 });
 
 When("I search", function () {

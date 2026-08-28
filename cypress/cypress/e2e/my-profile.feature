@@ -15,3 +15,26 @@ Feature: My profile
     Then I can read "My Profile"
     When I click on the "Close" button
     Then I cannot see "My Profile"
+
+  @loginAsBCeID
+  Scenario: Selected client appears at the top of the profile panel
+    Given I visit "/clients"
+    When I click on the "Profile settings" button
+    Then I can read "My Profile"
+    When I click on the "TOLKO INDUSTRIES LTD." button
+    Then the profile settings button should show "TOLKO INDUSTRIES LTD."
+    When I click on the "Select none" button
+    Then I can read "Select none"
+
+  @loginAsBCeID
+  Scenario: Selected client is used as the search parameter
+    Given I visit "/clients"
+    When I click on the "Profile settings" button
+    When I click on the "TOLKO INDUSTRIES LTD." button
+    When I click on the "Profile settings" button
+    And I click on the "Waste search" link
+    Then the current URL should include "clientNumbers=00147603"
+    When I click on the "My clients" link
+    And I click on the "Profile settings" button
+    When I click on the "Select none" button
+    Then I can read "Select none"
