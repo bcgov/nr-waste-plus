@@ -35,6 +35,23 @@ Then("the {string} input should be focused", (label: string) => {
   findInputElement(label).should("have.focus");
 });
 
+// Tabs forward (real keyboard events, not a programmatic .focus() call) until the
+// target selector receives focus, or fails once maxAttempts is exhausted. This proves
+// the control is actually reachable via keyboard Tab order, not merely focusable.
+const tabUntilFocused = (selector: string, maxAttempts: number): void => {
+  cy.get(selector)
+    .first()
+    .then(($el) => {
+      if (document.activeElement === $el.get(0)) {
+        return;
+      }
+      if (maxAttempts <= 0) {
+        throw new Error(`Could not reach "${selector}" via keyboard Tab navigation.`);
+      }
+      cy.realPress("Tab").then(() => tabUntilFocused(selector, maxAttempts - 1));
+    });
+};
+
 Then("the clients page controls should be keyboard focusable", () => {
   const selectors = [
     '[data-testid="side-nav-link-Waste search"]',
@@ -43,9 +60,16 @@ Then("the clients page controls should be keyboard focusable", () => {
     '[data-testid="main-search"]',
     '[data-testid="search-button-other"]:visible',
   ];
+  const maxTabsPerControl = 30;
+
+  cy.get("body").then(($body) => {
+    $body.get(0).focus();
+  });
 
   selectors.forEach((selector) => {
-    cy.get(selector).first().should("be.visible").focus().should("have.focus");
+    cy.get(selector).first().should("be.visible");
+    tabUntilFocused(selector, maxTabsPerControl);
+    cy.get(selector).first().should("have.focus");
   });
 });
 
