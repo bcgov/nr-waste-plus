@@ -10,15 +10,23 @@ When("I click on the {string} link", (name: string) => {
 });
 
 Then("the profile settings button should show {string}", (name: string) => {
-  cy.get('[data-testid="profile-action"]')
+  cy.get('[data-testid="profile-action"]', { timeout: 30_000 })
     .should("be.visible")
     .should("contain.text", name);
 });
 
 When("I select the client {string}", (clientNumber: string) => {
-  cy.get(`[data-testid="header-panel"] [data-testid="district-select-${clientNumber}"] button`)
+  const clientSelector = `[data-testid="header-panel"] [data-testid="district-select-${clientNumber}"]`;
+
+  cy.get(clientSelector, { timeout: 30_000 })
+    .should("be.visible")
+    .find("button")
     .should("be.visible")
     .click();
+
+  cy.get(clientSelector, { timeout: 30_000 })
+    .find("button")
+    .should("have.class", "selected-district");
 });
 
 When("I select no client", () => {

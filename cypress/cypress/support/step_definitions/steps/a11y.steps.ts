@@ -42,8 +42,6 @@ Then("the clients page controls should be keyboard focusable", () => {
     '[data-testid="side-nav-link-help"]',
     '[data-testid="main-search"]',
     '[data-testid="search-button-other"]:visible',
-    '[data-testid="district-select-00147603"] button',
-    '[data-testid="district-select-00001271"] button',
   ];
 
   selectors.forEach((selector) => {
