@@ -12,6 +12,7 @@ DECLARE
     old_image JSONB;
     new_image JSONB;
     actor VARCHAR(128);
+    corr_id VARCHAR(128);
     operation VARCHAR(32);
     changed TEXT[];
     audit_entity_id BIGINT;
@@ -23,8 +24,12 @@ BEGIN
     actor := COALESCE(
         NULLIF(new_image ->> 'updated_by', ''),
         NULLIF(old_image ->> 'updated_by', ''),
-        current_user
+        session_user
     );
+
+    -- current_setting(..., true) returns NULL when the transaction-local GUC is
+    -- unset; NULLIF also keeps an explicitly empty setting out of the audit row.
+    corr_id := NULLIF(current_setting('app.correlation_id', true), '');
 
     operation := CASE
         WHEN TG_OP = 'INSERT' THEN 'CREATE'
@@ -57,8 +62,8 @@ BEGIN
         )
     END;
 
-    INSERT INTO hrs.audit_event (action, changed_by)
-    VALUES (operation, actor)
+    INSERT INTO hrs.audit_event (action, changed_by, correlation_id)
+    VALUES (operation, actor, corr_id)
     RETURNING id INTO audit_event_id;
 
     INSERT INTO hrs.audit_change (
