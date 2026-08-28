@@ -29,7 +29,10 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPOSITORY: ${{ github.repository }}
         run: |
+          set -euo pipefail
+
           schema_changed=false
+          changed_files="$(gh api --paginate "repos/${REPOSITORY}/pulls/${PR_NUMBER}/files?per_page=100" --jq '.[].filename')"
           while IFS= read -r filename; do
             case "$filename" in
               backend/src/main/resources/db/migration/*)
@@ -37,7 +40,7 @@ jobs:
                 break
                 ;;
             esac
-          done < <(gh api --paginate "repos/${REPOSITORY}/pulls/${PR_NUMBER}/files?per_page=100" --jq '.[].filename')
+          done <<< "$changed_files"
 
           echo "schema_changed=$schema_changed" >> "$GITHUB_OUTPUT"
 
