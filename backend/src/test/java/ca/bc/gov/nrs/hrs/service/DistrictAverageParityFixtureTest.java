@@ -119,7 +119,7 @@ class DistrictAverageParityFixtureTest {
         String code = node.path("species").asText();
         List<JsonNode> gradeSpecies = byGrade.get(grade);
         assertThat(gradeSpecies).isNotNull();
-        JsonNode selected = gradeSpecies.stream()
+        gradeSpecies.stream()
             .filter(speciesNode -> code.equals(speciesNode.path("code").asText()))
             .findFirst().orElseThrow();
         assertThat(decimal(node.get("residualM3")).remainder(ZERO_TICK))
