@@ -1,6 +1,6 @@
 Feature: User experience quality
 
-  @chromeOnly
+  @chromeOnly @loginAsBCeID
   Scenario: UX quality baseline
-    Given I visit "/"
+    Given I visit "/search"
     Then the UX quality score should be acceptable

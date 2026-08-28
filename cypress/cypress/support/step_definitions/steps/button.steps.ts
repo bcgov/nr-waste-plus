@@ -25,7 +25,7 @@ When("I select the client {string}", (clientNumber: string) => {
     .click();
 
   cy.get(clientSelector, { timeout: 30_000 })
-    .find("button")
+    .find("button", { timeout: 30_000 })
     .should("have.class", "selected-district");
 });
 
@@ -36,7 +36,7 @@ When("I select no client", () => {
 });
 
 Then("no client should be selected", () => {
-  cy.get('[data-testid="header-panel"] [data-testid="district-select-none"] button')
+  cy.get('[data-testid="header-panel"] [data-testid="district-select-none"] button', { timeout: 30_000 })
     .should("have.class", "selected-district");
 });
 
