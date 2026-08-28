@@ -3,6 +3,6 @@ Feature: Theme toggle
   @loginAsBCeID
   Scenario: Toggle from light mode to dark mode
     Given I visit "/clients"
-    Then I can read "Switch to dark mode"
-    When I click on the "Switch to dark mode" button
-    Then I can read "Switch to light mode"
+    Then the theme toggle should offer "dark" mode
+    When I click on the theme toggle
+    Then the theme toggle should offer "light" mode
