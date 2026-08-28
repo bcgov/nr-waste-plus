@@ -52,12 +52,13 @@ describe('withPublicOnly', () => {
     screen.getByTestId('public-page');
   });
 
-  it('should render null when auth is loading', async () => {
+  it('should render a loading indicator when auth is loading', async () => {
     mockIsLoggedIn = false;
     mockIsLoading = true;
     const Wrapped = withPublicOnly(PublicPage);
     render(<Wrapped />);
     expect(screen.queryByTestId('public-page')).toBeNull();
+    screen.getByTestId('loading');
   });
 
   it('should render null when user is logged in', async () => {
