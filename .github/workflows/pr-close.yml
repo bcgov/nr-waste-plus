@@ -12,6 +12,48 @@ concurrency:
 permissions: {}
 
 jobs:
+  schema-spy-check:
+    name: Check Schema Changes
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      schema_changed: ${{ steps.changed-files.outputs.schema_changed }}
+    steps:
+      - name: Check changed files
+        id: changed-files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          schema_changed=false
+          while IFS= read -r filename; do
+            case "$filename" in
+              backend/src/main/resources/db/migration/*)
+                schema_changed=true
+                break
+                ;;
+            esac
+          done < <(gh api --paginate "repos/${REPOSITORY}/pulls/${PR_NUMBER}/files?per_page=100" --jq '.[].filename')
+
+          echo "schema_changed=$schema_changed" >> "$GITHUB_OUTPUT"
+
+  schema-spy:
+    name: SchemaSpy Documentation
+    needs: schema-spy-check
+    if: needs.schema-spy-check.outputs.schema_changed == 'true'
+    permissions:
+      contents: write
+      pages: write
+    uses: bcgov/quickstart-openshift-helpers/.github/workflows/.schema-spy.yml@a11ad3d1b9288fb40757c4314a62eb86ff227931 # v1.2.1
+    with:
+      flyway_locations: 'filesystem:./backend/src/main/resources/db/migration'
+      flyway_schema: 'hrs'
+      schemaspy_schema: 'hrs'
+
   cleanup:
     name: Cleanup and Images
     uses: bcgov/quickstart-openshift-helpers/.github/workflows/.pr-close.yml@a11ad3d1b9288fb40757c4314a62eb86ff227931 # v1.2.1
