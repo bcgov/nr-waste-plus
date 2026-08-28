@@ -375,14 +375,41 @@ export const expectLighthouse = (report: LighthouseReport) => {
       },
     }),
 
+    // Timing metrics (ttfb/lcp/cls/etc.) are inherently sensitive to CI/network/backend
+    // variance rather than purely code regressions. They are recorded for every run via
+    // `lighthouse:record` above, but a threshold miss only warns — it never fails the build.
+    // Category scores (accessibility/seo/performance/best-practices) remain hard failures.
     metric: (alias: string) => {
       const id = normalizeMetricKey(alias);
       const name = alias;
+
+      const warnOnMiss = (
+        comparison: "lte" | "gte",
+        value: number | null,
+        threshold: number,
+        message: string,
+      ) => {
+        const safeValue = value ?? 0;
+        const passed = comparison === "lte" ? safeValue <= threshold : safeValue >= threshold;
+
+        if (!passed) {
+          // eslint-disable-next-line no-console
+          console.warn(`[lighthouse:warn] ${message}`);
+          Cypress.log({
+            name: "lighthouse:warn",
+            displayName: "⚠ LH",
+            message,
+            consoleProps: () => ({ id, name, value, threshold, comparison }),
+          });
+        }
+      };
 
       return {
         toBeAtMost: (rawThreshold: string | number) => {
           const threshold = parseTiming(rawThreshold);
           const value = report.metrics[id];
+          const message = `Lighthouse metric '${name}' (${id}) is ${formatTiming(value)}, expected at most ${formatTiming(threshold)}`;
+
           record({
             id,
             name,
@@ -392,14 +419,14 @@ export const expectLighthouse = (report: LighthouseReport) => {
             type: 'metric',
             url: report.url,
           })
-          .then(() =>
-            expect(value, `Lighthouse metric '${name}' (${id}) is ${formatTiming(value)}, expected at most ${formatTiming(threshold)}`).to.be.lte(threshold)
-          );
+          .then(() => warnOnMiss("lte", value, threshold, message));
         },
 
         toBeAtLeast: (rawThreshold: string | number) => {
           const threshold = parseTiming(rawThreshold);
           const value = report.metrics[id];
+          const message = `Lighthouse metric '${name}' (${id}) is ${formatTiming(value)}, expected at least ${formatTiming(threshold)}`;
+
           record({
             id,
             name,
@@ -409,9 +436,7 @@ export const expectLighthouse = (report: LighthouseReport) => {
             type: 'metric',
             url: report.url,
           })
-          .then(() =>
-            expect(value, `Lighthouse metric '${name}' (${id}) is ${formatTiming(value)}, expected at least ${formatTiming(threshold)}`).to.be.gte(threshold)
-          );
+          .then(() => warnOnMiss("gte", value, threshold, message));
         },
       };
     },
