@@ -1,0 +1,36 @@
+{
+  "caseId": "INTERIOR-DRY-BELT-01",
+  "area": "INTERIOR",
+  "workbookReference": "Provincial v1.1 workbook, Waste Volume Generator (Interior) \u2014 derived from district matrix, benchmark Dry belt Manual p38 Table 3-6",
+  "inputs": {
+    "districtCode": "DCC",
+    "netWasteAreaHa": 10.0,
+    "tableLevelFactor": 1.0,
+    "has_dispersed_retention": false,
+    "dispersedRetentionPct": 0.0,
+    "heli_logging": false,
+    "species": [
+      {
+        "code": "PLI",
+        "grade": "U",
+        "volumeM3": 600.0
+      },
+      {
+        "code": "SX",
+        "grade": "U",
+        "volumeM3": 400.0
+      }
+    ],
+    "benchmark": {
+      "zone": "Dry belt",
+      "valueM3PerHa": 4,
+      "source": "Manual p38 Table 3-6 Dry belt benchmark"
+    }
+  },
+  "expected": {
+    "unroundedTotalM3": 91.7,
+    "roundedTotalM3": 91.7,
+    "residualAllocation": []
+  },
+  "benchmarkZone": "Dry belt"
+}

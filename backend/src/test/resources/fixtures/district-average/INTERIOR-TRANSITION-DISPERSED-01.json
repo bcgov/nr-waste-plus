@@ -1,0 +1,36 @@
+{
+  "caseId": "INTERIOR-TRANSITION-DISPERSED-01",
+  "area": "INTERIOR",
+  "workbookReference": "Provincial v1.1 workbook, Interior WAA + Manual p53 Table 4-2 dispersed \u226550% factor 40% \u2014 derived from district matrix",
+  "inputs": {
+    "districtCode": "DCS",
+    "netWasteAreaHa": 5.5,
+    "tableLevelFactor": 1.0,
+    "has_dispersed_retention": true,
+    "dispersedRetentionPct": 60.0,
+    "heli_logging": false,
+    "species": [
+      {
+        "code": "PLI",
+        "grade": "U",
+        "volumeM3": 700.0
+      },
+      {
+        "code": "SX",
+        "grade": "U",
+        "volumeM3": 300.0
+      }
+    ],
+    "benchmark": {
+      "zone": "Transition",
+      "valueM3PerHa": 10,
+      "source": "Manual p38 Table 3-6 Transition benchmark, Manual p53 Table 4-2 dispersed factor"
+    }
+  },
+  "expected": {
+    "unroundedTotalM3": 82.368,
+    "roundedTotalM3": 82.368,
+    "residualAllocation": []
+  },
+  "benchmarkZone": "Transition zone"
+}
