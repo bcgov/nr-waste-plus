@@ -10,8 +10,7 @@ ALTER TABLE hrs.district_average_block
     ADD COLUMN IF NOT EXISTS primary_logging_complete_date DATE,
     ADD COLUMN IF NOT EXISTS heli_logging BOOLEAN,
     ADD COLUMN IF NOT EXISTS cable_yarding_area_ha NUMERIC(12,3),
-    ADD COLUMN IF NOT EXISTS skyline_logging_area_ha NUMERIC(12,3),
-    ADD COLUMN IF NOT EXISTS applicable_criteria INTEGER[];
+    ADD COLUMN IF NOT EXISTS skyline_logging_area_ha NUMERIC(12,3);
 
 ALTER TABLE hrs.block_mark
     ADD COLUMN IF NOT EXISTS forest_file_id VARCHAR(128),
@@ -75,7 +74,6 @@ COMMENT ON COLUMN hrs.district_average_block.primary_logging_complete_date IS 'D
 COMMENT ON COLUMN hrs.district_average_block.heli_logging IS 'Whether helicopter logging applies to the submission block.';
 COMMENT ON COLUMN hrs.district_average_block.cable_yarding_area_ha IS 'Area harvested using cable yarding, in hectares.';
 COMMENT ON COLUMN hrs.district_average_block.skyline_logging_area_ha IS 'Area harvested using skyline logging, in hectares.';
-COMMENT ON COLUMN hrs.district_average_block.applicable_criteria IS 'Eligibility criteria applicable to the submission block.';
 COMMENT ON COLUMN hrs.district_average_block.coast_ground_based_area_ha IS 'Coast ground-based logging area, in hectares; exposed as groundBasedAreaHa for Coast blocks.';
 
 COMMENT ON COLUMN hrs.block_mark.forest_file_id IS 'Forest file identifier associated with the mark.';
