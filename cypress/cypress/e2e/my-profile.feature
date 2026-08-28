@@ -33,7 +33,7 @@ Feature: My profile
     When I click on the "TOLKO INDUSTRIES LTD." button
     When I click on the "Profile settings" button
     And I click on the "Waste search" link
-    Then the current URL should include "clientNumbers=00147603"
+    Then the client filter for "00147603" should be visible
     When I click on the "My clients" link
     And I click on the "Profile settings" button
     When I click on the "Select none" button

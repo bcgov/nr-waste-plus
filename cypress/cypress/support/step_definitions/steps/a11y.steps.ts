@@ -35,6 +35,22 @@ Then("the {string} input should be focused", (label: string) => {
   findInputElement(label).should("have.focus");
 });
 
+Then("the clients page controls should be keyboard focusable", () => {
+  const selectors = [
+    '[data-testid="side-nav-link-Waste search"]',
+    '[data-testid="side-nav-link-Create reporting unit"]',
+    '[data-testid="side-nav-link-Need Help?"]',
+    '[data-testid="main-search"]',
+    '[data-testid="search-button-other"]:visible',
+    '[data-testid="district-select-00147603"] button',
+    '[data-testid="district-select-00001271"] button',
+  ];
+
+  selectors.forEach((selector) => {
+    cy.get(selector).first().should("be.visible").focus().should("have.focus");
+  });
+});
+
 Then("the page should have at least one ARIA live region", () => {
   cy.get(liveRegionSelectors).should("have.length.greaterThan", 0);
 });

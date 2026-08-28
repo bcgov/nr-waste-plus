@@ -7,8 +7,8 @@ Given("I visit {string}", (url: string) => {
   cy.visit(url);
 });
 
-Then("the current URL should include {string}", (value: string) => {
-  cy.url().should("include", value);
+Then("the client filter for {string} should be visible", (clientNumber: string) => {
+  cy.get(`[data-testid="dt-clientNumbers-${clientNumber}"]`).should("be.visible");
 });
 
 Given(
