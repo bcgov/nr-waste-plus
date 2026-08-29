@@ -476,12 +476,12 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td>outbox_event_status_ck</td>
-                                    <td>((status)::text &#61; ANY ((ARRAY[&#39;PENDING&#39;::character varying, &#39;IN_FLIGHT&#39;::character varying, &#39;RETRYING&#39;::character varying, &#39;CONFIRMED&#39;::character varying, &#39;RECONCILIATION_REQUIRED&#39;::character varying, &#39;PERMANENT_FAILURE&#39;::character varying])::text[]))</td>
-                                </tr>
-                                <tr>
                                     <td>outbox_event_attempt_count_ck</td>
                                     <td>(attempt_count &gt;&#61; 0)</td>
+                                </tr>
+                                <tr>
+                                    <td>outbox_event_status_ck</td>
+                                    <td>((status)::text &#61; ANY ((ARRAY[&#39;PENDING&#39;::character varying, &#39;IN_FLIGHT&#39;::character varying, &#39;RETRYING&#39;::character varying, &#39;CONFIRMED&#39;::character varying, &#39;RECONCILIATION_REQUIRED&#39;::character varying, &#39;PERMANENT_FAILURE&#39;::character varying])::text[]))</td>
                                 </tr>
                                 </tbody>
                             </table>
