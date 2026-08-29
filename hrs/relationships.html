@@ -77,10 +77,65 @@
                 </section>
                 <!-- Main content -->
                 <section class="content">
-                    <div class="alert alert-danger alert-dismissible">
-                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                        <h4><i class="icon fa fa-ban"></i> Missed Relationships!</h4>
-                        <p>No relationships were detected in the schema.</p>
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <i class="fa fa-code-fork"></i>
+                            <h3 class="box-title">Diagrams</h3>
+                        </div>
+                        <div class="box-body">
+                            <div class="nav-tabs-custom">
+                                <!-- Tabs within a box -->
+                                <h5>By default only columns that are primary keys, foreign keys or indexes are shown.</h5>
+                                <ul class="nav nav-tabs pull-left ui-sortable-handle">
+                                    <li class="active"><a href="#compactDegreeImg-chart" data-toggle="tab" aria-expanded="true">Compact</a></li>
+                                    <li class=""><a href="#largeDegreeImg-chart" data-toggle="tab" aria-expanded="true">Large</a></li>
+                                </ul>
+                                <div class="tab-content no-padding">
+                                    <div class="chart tab-pane active" id="compactDegreeImg-chart" style="position: relative; overflow-x:auto;">
+                                        <map id="compactRelationshipsDiagram" name="compactRelationshipsDiagram">
+<area shape="rect" id="node1" href="tables/audit_event.html" target="_top" title="audit_event" alt="" coords="554,1676,727,1881">
+<area shape="rect" id="node2" href="tables/block_calculation_snapshot.html" target="_top" title="block_calculation_snapshot" alt="" coords="492,1231,789,1436">
+<area shape="rect" id="node6" href="tables/block.html" target="_top" title="block" alt="" coords="253,539,438,685">
+<area shape="rect" id="node11" href="tables/district_volume.html" target="_top" title="district_volume" alt="" coords="244,1385,447,1620">
+<area shape="rect" id="node3" href="tables/reporting_unit.html" target="_top" title="reporting_unit" alt="" coords="5,429,200,635">
+<area shape="rect" id="node4" href="tables/block_mark.html" target="_top" title="block_mark" alt="" coords="547,1008,735,1213">
+<area shape="rect" id="node5" href="tables/block_area_segment.html" target="_top" title="block_area_segment" alt="" coords="835,844,1076,1020">
+<area shape="rect" id="node7" href="tables/block_submitter.html" target="_top" title="block_submitter" alt="" coords="536,309,745,456">
+<area shape="rect" id="node8" href="tables/block_attachment.html" target="_top" title="block_attachment" alt="" coords="529,509,753,656">
+<area shape="rect" id="node9" href="tables/block_comment.html" target="_top" title="block_comment" alt="" coords="853,5,1058,181">
+<area shape="rect" id="node14" href="tables/status_event.html" target="_top" title="status_event" alt="" coords="548,87,733,292">
+<area shape="rect" id="node10" href="tables/district_average_block.html" target="_top" title="district_average_block" alt="" coords="491,673,791,791">
+<area shape="rect" id="node12" href="tables/block_requirement.html" target="_top" title="block_requirement" alt="" coords="840,412,1071,617">
+<area shape="rect" id="node13" href="tables/audit_change.html" target="_top" title="audit_change" alt="" coords="860,1647,1051,1852">
+<area shape="rect" id="node15" href="tables/block_sponsor.html" target="_top" title="block_sponsor" alt="" coords="545,844,737,991">
+<area shape="rect" id="node16" href="tables/district_volume_formula.html" target="_top" title="district_volume_formula" alt="" coords="504,1453,777,1659">
+</map>
+                                        <a name='diagram'><img id="compactDegreeImg" src="diagrams/summary/relationships.real.compact.png" usemap="#compactRelationshipsDiagram" class="diagram" border="0" align="left"></a>
+                                    </div>
+                                    <div class="chart tab-pane " id="largeDegreeImg-chart" style="position: relative; overflow-x:auto;">
+                                        <map id="largeRelationshipsDiagram" name="largeRelationshipsDiagram">
+<area shape="rect" id="node1" href="tables/audit_event.html" target="_top" title="audit_event" alt="" coords="554,4185,727,4425">
+<area shape="rect" id="node2" href="tables/block_calculation_snapshot.html" target="_top" title="block_calculation_snapshot" alt="" coords="492,3289,789,3764">
+<area shape="rect" id="node6" href="tables/block.html" target="_top" title="block" alt="" coords="253,1080,438,1467">
+<area shape="rect" id="node11" href="tables/district_volume.html" target="_top" title="district_volume" alt="" coords="244,3579,447,4053">
+<area shape="rect" id="node3" href="tables/reporting_unit.html" target="_top" title="reporting_unit" alt="" coords="5,843,200,1200">
+<area shape="rect" id="node4" href="tables/block_mark.html" target="_top" title="block_mark" alt="" coords="547,2768,735,3272">
+<area shape="rect" id="node5" href="tables/block_area_segment.html" target="_top" title="block_area_segment" alt="" coords="835,2293,1076,2768">
+<area shape="rect" id="node7" href="tables/block_submitter.html" target="_top" title="block_submitter" alt="" coords="536,493,745,997">
+<area shape="rect" id="node8" href="tables/block_attachment.html" target="_top" title="block_attachment" alt="" coords="529,1051,753,1467">
+<area shape="rect" id="node9" href="tables/block_comment.html" target="_top" title="block_comment" alt="" coords="853,5,1058,363">
+<area shape="rect" id="node14" href="tables/status_event.html" target="_top" title="status_event" alt="" coords="548,119,733,476">
+<area shape="rect" id="node10" href="tables/district_average_block.html" target="_top" title="district_average_block" alt="" coords="491,1484,791,2193">
+<area shape="rect" id="node12" href="tables/block_requirement.html" target="_top" title="block_requirement" alt="" coords="840,925,1071,1312">
+<area shape="rect" id="node13" href="tables/audit_change.html" target="_top" title="audit_change" alt="" coords="860,4156,1051,4455">
+<area shape="rect" id="node15" href="tables/block_sponsor.html" target="_top" title="block_sponsor" alt="" coords="545,2247,737,2751">
+<area shape="rect" id="node16" href="tables/district_volume_formula.html" target="_top" title="district_volume_formula" alt="" coords="504,3781,777,4168">
+</map>
+                                        <a name='diagram'><img id="largeDegreeImg" src="diagrams/summary/relationships.real.large.png" usemap="#largeRelationshipsDiagram" class="diagram" border="0" align="left"></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div><!-- /.box-body -->
                     </div>
                 </section>
             </div>

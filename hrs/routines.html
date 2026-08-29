@@ -102,6 +102,24 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <tr>
+                                        <td><a href="routines/audit_district_volume_change___3efb569.html">audit_district_volume_change()</a></td>
+                                        <td>FUNCTION</td>
+                                        <td>plpgsql</td>
+                                        <td>false</td>
+                                        <td>trigger</td>
+                                        <td>DEFINER</td>
+                                        <td><p>Writes complete OLD and NEW row-image audit records for all district_volume mutations. The actor comes from row audit columns and falls back to session_user (current_user inside SECURITY DEFINER resolves to the function owner, not the caller). The correlation_id comes from current_setting(&lsquo;app.correlation_id&rsquo;, true) and is NULL when unset.</p></td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href="routines/audit_row_change___1130035a.html">audit_row_change()</a></td>
+                                        <td>FUNCTION</td>
+                                        <td>plpgsql</td>
+                                        <td>false</td>
+                                        <td>trigger</td>
+                                        <td>DEFINER</td>
+                                        <td><p>Writes one generic full-row audit event/change pair per row mutation. Entity type is the table name; soft deletion is identified from deleted=false to deleted=true.</p></td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>

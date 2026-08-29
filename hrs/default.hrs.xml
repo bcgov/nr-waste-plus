@@ -1,5 +1,442 @@
-<?xml version="1.0" encoding="UTF-8"?><database name="default" schema="hrs" type="PostgreSQL - 16.4 (Debian 16.4-1.pgdg110+2)">
+<?xml version="1.0" encoding="UTF-8"?><database name="default" schema="hrs" type="PostgreSQL - 17.0 (Debian 17.0-1.pgdg110+1)">
+   <sequences>
+      <sequence increment="1" name="audit_change_id_seq" startValue="1"/>
+      <sequence increment="1" name="audit_event_id_seq" startValue="1"/>
+      <sequence increment="1" name="block_area_segment_id_seq" startValue="1"/>
+      <sequence increment="1" name="block_attachment_id_seq" startValue="1"/>
+      <sequence increment="1" name="block_calculation_snapshot_id_seq" startValue="1"/>
+      <sequence increment="1" name="block_comment_id_seq" startValue="1"/>
+      <sequence increment="1" name="block_id_seq" startValue="1"/>
+      <sequence increment="1" name="block_mark_id_seq" startValue="1"/>
+      <sequence increment="1" name="block_requirement_id_seq" startValue="1"/>
+      <sequence increment="1" name="block_sponsor_id_seq" startValue="1"/>
+      <sequence increment="1" name="block_submitter_id_seq" startValue="1"/>
+      <sequence increment="1" name="district_volume_formula_id_seq" startValue="1"/>
+      <sequence increment="1" name="district_volume_id_seq" startValue="1"/>
+      <sequence increment="1" name="idempotency_record_id_seq" startValue="1"/>
+      <sequence increment="1" name="lifecycle_setting_id_seq" startValue="1"/>
+      <sequence increment="1" name="outbox_event_id_seq" startValue="1"/>
+      <sequence increment="1" name="reporting_unit_id_seq" startValue="1"/>
+      <sequence increment="1" name="status_event_id_seq" startValue="1"/>
+   </sequences>
    <tables>
+      <table name="audit_change" remarks="Append-only per-row audit change with JSONB snapshot. No FK on entity_id (polymorphic audit)." schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.audit_change_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="event_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="audit_change_event_id_fkey" implied="false" onDeleteCascade="false" schema="hrs" table="audit_event"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="entity_type" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="entity_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="action" nullable="false" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="previous_values" nullable="true" remarks="Full snapshot before mutation as JSONB" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="current_values" nullable="true" remarks="Full snapshot after mutation as JSONB" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="'{}'::text[]" digits="0" id="7" name="changed_columns" nullable="false" remarks="" size="2147483647" type="_text" typeCode="2003"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="audit_change_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_audit_change_entity_lookup" unique="false">
+            <column ascending="true" name="entity_type"/>
+            <column ascending="true" name="entity_id"/>
+            <column ascending="false" name="id"/>
+         </index>
+         <index name="idx_audit_change_entity_type_id" unique="false">
+            <column ascending="true" name="entity_type"/>
+            <column ascending="false" name="id"/>
+         </index>
+         <index name="idx_audit_change_event_id" unique="false">
+            <column ascending="true" name="event_id"/>
+         </index>
+      </table>
+      <table name="audit_event" remarks="Immutable audit event grouping one temporal mutation operation." schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.audit_event_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="event_id" foreignKey="audit_change_event_id_fkey" implied="false" onDeleteCascade="false" schema="hrs" table="audit_change"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="action" nullable="false" remarks="CREATE, UPDATE, SOFT_DELETE, DELETE" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="changed_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="3" name="changed_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="reason" nullable="true" remarks="" size="500" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="correlation_id" nullable="true" remarks="B3 trace correlation ID captured via app.correlation_id GUC; NULL when unset." size="128" type="varchar" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="audit_event_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_audit_event_changed_by_time" unique="false">
+            <column ascending="true" name="changed_by"/>
+            <column ascending="false" name="changed_at"/>
+         </index>
+         <index name="idx_audit_event_correlation_time" unique="false">
+            <column ascending="true" name="correlation_id"/>
+            <column ascending="false" name="changed_at"/>
+         </index>
+      </table>
+      <table name="block" remarks="Submission block belonging to a reporting unit." schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.block_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="block_id" foreignKey="fk_block_area_segment_block" implied="false" onDeleteCascade="false" schema="hrs" table="block_area_segment"/>
+            <child column="block_id" foreignKey="fk_block_attachment_block" implied="false" onDeleteCascade="false" schema="hrs" table="block_attachment"/>
+            <child column="block_id" foreignKey="fk_block_calculation_snapshot_block" implied="false" onDeleteCascade="false" schema="hrs" table="block_calculation_snapshot"/>
+            <child column="block_id" foreignKey="fk_block_comment_block" implied="false" onDeleteCascade="false" schema="hrs" table="block_comment"/>
+            <child column="block_id" foreignKey="fk_block_mark_block" implied="false" onDeleteCascade="false" schema="hrs" table="block_mark"/>
+            <child column="block_id" foreignKey="fk_block_requirement_block" implied="false" onDeleteCascade="false" schema="hrs" table="block_requirement"/>
+            <child column="block_id" foreignKey="fk_block_sponsor_block" implied="false" onDeleteCascade="false" schema="hrs" table="block_sponsor"/>
+            <child column="block_id" foreignKey="fk_block_submitter_block" implied="false" onDeleteCascade="false" schema="hrs" table="block_submitter"/>
+            <child column="block_id" foreignKey="fk_district_average_block_block" implied="false" onDeleteCascade="false" schema="hrs" table="district_average_block"/>
+            <child column="block_id" foreignKey="fk_status_event_block" implied="false" onDeleteCascade="false" schema="hrs" table="status_event"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="reporting_unit_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_block_reporting_unit" implied="false" onDeleteCascade="false" schema="hrs" table="reporting_unit"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="block_type" nullable="false" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="true" digits="0" id="3" name="is_draft" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="plc_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="1" digits="0" id="5" name="revision" nullable="false" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="8" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="9" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="10" name="deleted" nullable="false" remarks="Soft-delete flag; live uniqueness indexes exclude deleted rows." size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="block_pk" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_block_reporting_unit_id" unique="false">
+            <column ascending="true" name="reporting_unit_id"/>
+         </index>
+         <index name="uq_block_one_da_per_ru" unique="true">
+            <column ascending="true" name="reporting_unit_id"/>
+         </index>
+      </table>
+      <table name="block_area_segment" remarks="Area and road segments used by a submission block." schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.block_area_segment_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="block_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_block_area_segment_block" implied="false" onDeleteCascade="false" schema="hrs" table="block"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="source" nullable="false" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="3" id="3" name="area_ha" nullable="true" remarks="" size="12" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="3" id="4" name="road_length_m" nullable="true" remarks="" size="12" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="3" id="5" name="road_width_m" nullable="true" remarks="" size="12" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="8" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="9" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="10" name="deleted" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="block_mark_id" nullable="true" remarks="Optional mark associated with this area segment." size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_block_area_segment_block_mark" implied="false" onDeleteCascade="false" schema="hrs" table="block_mark"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="3" id="12" name="starting_area_ha" nullable="true" remarks="Starting area for the segment, in hectares." size="12" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="3" id="13" name="net_waste_area_ha" nullable="true" remarks="Calculated net waste area for the segment, in hectares." size="12" type="numeric" typeCode="2"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="block_area_segment_pk" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_block_area_segment_block_id" unique="false">
+            <column ascending="true" name="block_id"/>
+         </index>
+         <index name="idx_block_area_segment_block_mark_id" unique="false">
+            <column ascending="true" name="block_mark_id"/>
+         </index>
+      </table>
+      <table name="block_attachment" remarks="Evidence attachment metadata; object content is stored outside PostgreSQL." schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.block_attachment_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="linked_attachment_id" foreignKey="fk_block_requirement_attachment" implied="false" onDeleteCascade="false" schema="hrs" table="block_requirement"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="block_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_block_attachment_block" implied="false" onDeleteCascade="false" schema="hrs" table="block"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="object_key" nullable="false" remarks="" size="512" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="file_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="content_type" nullable="true" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="file_size_bytes" nullable="true" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="scan_status" nullable="false" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="9" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="10" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="11" name="deleted" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="block_attachment_pk" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_block_attachment_block_id" unique="false">
+            <column ascending="true" name="block_id"/>
+         </index>
+      </table>
+      <table name="block_calculation_snapshot" remarks="Append-only calculation inputs and outputs pinned to a district-volume configuration." schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.block_calculation_snapshot_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="block_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_block_calculation_snapshot_block" implied="false" onDeleteCascade="false" schema="hrs" table="block"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="district_volume_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_block_calculation_snapshot_district_volume" implied="false" onDeleteCascade="false" schema="hrs" table="district_volume"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="hbs_window_start" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="hbs_window_end" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="inputs" nullable="false" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="outputs" nullable="false" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="9" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="10" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="11" name="calculated_at" nullable="true" remarks="Timestamp at which the calculation snapshot was produced." size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="rounding_policy" nullable="true" remarks="Rounding policy used to produce the snapshot outputs." size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="warnings" nullable="true" remarks="Non-fatal warnings produced during calculation." size="2147483647" type="jsonb" typeCode="1111"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="block_calculation_snapshot_pk" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_block_calculation_snapshot_block_id" unique="false">
+            <column ascending="true" name="block_id"/>
+            <column ascending="false" name="id"/>
+         </index>
+         <index name="idx_block_calculation_snapshot_district_volume_id" unique="false">
+            <column ascending="true" name="district_volume_id"/>
+         </index>
+         <index name="idx_block_calculation_snapshot_latest" unique="false">
+            <column ascending="true" name="block_id"/>
+            <column ascending="false" name="calculated_at"/>
+            <column ascending="false" name="id"/>
+         </index>
+      </table>
+      <table name="block_comment" remarks="Submission block comments, including status-event context." schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.block_comment_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="block_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_block_comment_block" implied="false" onDeleteCascade="false" schema="hrs" table="block"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="context" nullable="false" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="comment" nullable="false" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="status_event_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_block_comment_status_event" implied="false" onDeleteCascade="false" schema="hrs" table="status_event"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="7" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="8" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="9" name="deleted" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="block_comment_pk" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_block_comment_block_id" unique="false">
+            <column ascending="true" name="block_id"/>
+         </index>
+         <index name="idx_block_comment_status_event_id" unique="false">
+            <column ascending="true" name="status_event_id"/>
+         </index>
+      </table>
+      <table name="block_mark" remarks="Typed forest and road marks associated with a submission block." schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.block_mark_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="block_mark_id" foreignKey="fk_block_area_segment_block_mark" implied="false" onDeleteCascade="false" schema="hrs" table="block_area_segment"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="block_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_block_mark_block" implied="false" onDeleteCascade="false" schema="hrs" table="block"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="mark_type" nullable="false" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="sequence_no" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="mark" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="validation_status" nullable="true" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="8" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="9" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="10" name="deleted" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="forest_file_id" nullable="true" remarks="Forest file identifier associated with the mark." size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="timber_mark" nullable="true" remarks="Timber mark identifier." size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="cutting_permit_id" nullable="true" remarks="Cutting permit identifier." size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="cut_block_id" nullable="true" remarks="Cut block identifier." size="128" type="varchar" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="block_mark_pk" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_block_mark_block_id" unique="false">
+            <column ascending="true" name="block_id"/>
+         </index>
+         <index name="uq_block_mark_live_type_sequence" unique="true">
+            <column ascending="true" name="block_id"/>
+            <column ascending="true" name="mark_type"/>
+            <column ascending="true" name="sequence_no"/>
+         </index>
+         <checkConstraint constraint="(((mark_type)::text &lt;&gt; 'SECONDARY'::text) OR ((sequence_no &gt;= 1) AND (sequence_no &lt;= 5)))" name="block_mark_sequence_ck"/>
+      </table>
+      <table name="block_requirement" remarks="Requirement responses and optional evidence links for a submission block." schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.block_requirement_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="block_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_block_requirement_block" implied="false" onDeleteCascade="false" schema="hrs" table="block"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="requirement_code" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="answered_yes" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="response" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="linked_attachment_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_block_requirement_attachment" implied="false" onDeleteCascade="false" schema="hrs" table="block_attachment"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="8" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="9" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="10" name="deleted" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="block_requirement_pk" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="uq_block_requirement_live" unique="true">
+            <column ascending="true" name="block_id"/>
+            <column ascending="true" name="requirement_code"/>
+         </index>
+      </table>
+      <table name="block_sponsor" remarks="" schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.block_sponsor_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="block_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_block_sponsor_block" implied="false" onDeleteCascade="false" schema="hrs" table="block"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="sponsor_id" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="sponsor_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="6" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="7" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="8" name="deleted" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="first_name" nullable="true" remarks="Sponsor first name." size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="last_name" nullable="true" remarks="Sponsor last name." size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="designation" nullable="true" remarks="Sponsor professional designation." size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="licence_no" nullable="true" remarks="Sponsor licence number." size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="email" nullable="true" remarks="Sponsor email address." size="320" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="phone" nullable="true" remarks="Sponsor phone number." size="64" type="varchar" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="block_sponsor_pk" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_block_sponsor_block_id" unique="false">
+            <column ascending="true" name="block_id"/>
+         </index>
+      </table>
+      <table name="block_submitter" remarks="" schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.block_submitter_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="block_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_block_submitter_block" implied="false" onDeleteCascade="false" schema="hrs" table="block"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="submitter_id" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="submitter_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="6" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="7" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="8" name="deleted" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="first_name" nullable="true" remarks="Submitter first name." size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="last_name" nullable="true" remarks="Submitter last name." size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="designation" nullable="true" remarks="Submitter professional designation." size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="licence_no" nullable="true" remarks="Submitter licence number." size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="email" nullable="true" remarks="Submitter email address." size="320" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="phone" nullable="true" remarks="Submitter phone number." size="64" type="varchar" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="block_submitter_pk" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_block_submitter_block_id" unique="false">
+            <column ascending="true" name="block_id"/>
+         </index>
+      </table>
+      <table name="district_average_block" remarks="District Average-specific block extension." schema="hrs" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="block_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_district_average_block_block" implied="false" onDeleteCascade="false" schema="hrs" table="block"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="benchmark_zone" nullable="true" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="maturity" nullable="true" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="3" name="retention_percentage" nullable="true" remarks="" size="5" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="criteria" nullable="true" remarks="" size="10" type="_int4" typeCode="2003"/>
+         <column autoUpdated="false" defaultValue="null" digits="3" id="5" name="coast_ground_based_area_ha" nullable="true" remarks="Coast ground-based logging area, in hectares; exposed as groundBasedAreaHa for Coast blocks." size="12" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="3" id="6" name="coast_helicopter_area_ha" nullable="true" remarks="" size="12" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="1" digits="0" id="7" name="revision" nullable="false" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="10" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="11" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="12" name="deleted" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="harvest_status_code" nullable="true" remarks="Harvest status code supplied for the submission block." size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="bec_zone" nullable="true" remarks="Biogeoclimatic ecosystem classification zone for Interior blocks." size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="bec_subvariant" nullable="true" remarks="Biogeoclimatic ecosystem classification subvariant for Interior blocks." size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="16" name="has_dispersed_retention" nullable="true" remarks="Whether dispersed retention applies to the submission block." size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="17" name="dispersed_retention_pct" nullable="true" remarks="Dispersed retention percentage when dispersed retention applies." size="5" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="18" name="primary_logging_complete_date" nullable="true" remarks="Date primary logging was completed." size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="19" name="heli_logging" nullable="true" remarks="Whether helicopter logging applies to the submission block." size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="3" id="20" name="cable_yarding_area_ha" nullable="true" remarks="Area harvested using cable yarding, in hectares." size="12" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="3" id="21" name="skyline_logging_area_ha" nullable="true" remarks="Area harvested using skyline logging, in hectares." size="12" type="numeric" typeCode="2"/>
+         <primaryKey column="block_id" sequenceNumberInPK="1"/>
+         <index name="district_average_block_pk" unique="true">
+            <column ascending="true" name="block_id"/>
+         </index>
+      </table>
+      <table name="district_volume" remarks="This table stores district waste volume data used to estimate waste volume on blocks." schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.district_volume_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="district_volume_id" foreignKey="fk_block_calculation_snapshot_district_volume" implied="false" onDeleteCascade="false" schema="hrs" table="block_calculation_snapshot"/>
+            <child column="district_volume_id" foreignKey="fk_district_volume_formula_district_volume" implied="false" onDeleteCascade="false" schema="hrs" table="district_volume_formula"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="area" nullable="false" remarks="Geographic area associated with the waste policy used for calculating district volume averages.&#10;Currently, two areas are supported: INTERIOR (North Interior and South Interior) and COASTAL (Coast)." size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="start_date" nullable="false" remarks="The date from which this district volume record is used to calculate waste volume for blocks submitted on or after this date." size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="end_date" nullable="true" remarks="The end date until which this district volume record is used to calculate waste volume for blocks." size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="4" name="date_of_upload" nullable="false" remarks="The timestamp when the spreadsheet file (CSV or Excel) was uploaded." size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="table_data" nullable="false" remarks="JSON representation of the spreadsheet data uploaded by the user (CSV or Excel)." size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="3" id="6" name="table_level_factor" nullable="false" remarks="Weighted average of district volumes. Applies to both INTERIOR and COASTAL areas." size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="3" id="7" name="heli_multiplier" nullable="true" remarks="A multiplier factor used to calculate waste volume for helicopter-harvested cut blocks.&#10;This currently applies to COASTAL areas only, but it is expected to be applied to INTERIOR areas in the future.&#10;For now, the INTERIOR multiplier is set to 1." size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="8" name="created_at" nullable="false" remarks="The timestamp when the record was created." size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="created_by" nullable="false" remarks="The user or service account that created the record." size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="10" name="updated_at" nullable="false" remarks="The timestamp when the record was last updated." size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="updated_by" nullable="false" remarks="The user or service account that last updated the record." size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'DISTRICT_VOLUME'::character varying" digits="0" id="12" name="config_type" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="13" name="deleted" nullable="false" remarks="Whether the configuration row is soft-deleted; live queries must filter deleted = FALSE." size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="district_volume_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_district_volume_area_start_date" unique="false">
+            <column ascending="true" name="area"/>
+            <column ascending="false" name="start_date"/>
+         </index>
+         <index name="idx_district_volume_config_type" unique="false">
+            <column ascending="true" name="config_type"/>
+         </index>
+         <index name="idx_district_volume_config_type_area_start" unique="false">
+            <column ascending="true" name="config_type"/>
+            <column ascending="true" name="area"/>
+            <column ascending="true" name="start_date"/>
+         </index>
+         <index name="idx_district_volume_data_gin" unique="false">
+            <column ascending="true" name="table_data"/>
+         </index>
+         <index name="idx_district_volume_live_config_area_start" unique="false">
+            <column ascending="true" name="config_type"/>
+            <column ascending="true" name="area"/>
+            <column ascending="true" name="start_date"/>
+         </index>
+         <checkConstraint constraint="((area)::text = ANY ((ARRAY['INTERIOR'::character varying, 'COASTAL'::character varying])::text[]))" name="chk_area"/>
+      </table>
+      <table name="district_volume_formula" remarks="Administrator-managed formula definitions associated with a district-volume version." schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.district_volume_formula_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="district_volume_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_district_volume_formula_district_volume" implied="false" onDeleteCascade="false" schema="hrs" table="district_volume"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="formula_key" nullable="false" remarks="Stable namespaced formula identifier, such as config.*, submission.*, species.*, or hbs.*." size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="expression" nullable="false" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'{}'::jsonb" digits="0" id="4" name="declared_variables" nullable="false" remarks="JSON object containing the variables declared by the formula." size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="'[]'::jsonb" digits="0" id="5" name="validation_errors" nullable="false" remarks="JSON array of formula validation errors; an empty array means no recorded errors." size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="0" digits="0" id="6" name="sort_order" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="7" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="9" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="district_volume_formula_pk" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="district_volume_formula_key_uq" unique="true">
+            <column ascending="true" name="district_volume_id"/>
+            <column ascending="true" name="formula_key"/>
+         </index>
+         <index name="idx_district_volume_formula_district_volume_id" unique="false">
+            <column ascending="true" name="district_volume_id"/>
+            <column ascending="true" name="sort_order"/>
+            <column ascending="true" name="id"/>
+         </index>
+         <checkConstraint constraint="(sort_order &gt;= 0)" name="district_volume_formula_sort_order_ck"/>
+      </table>
       <table name="flyway_schema_history" remarks="" schema="hrs" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="installed_rank" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="version" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
@@ -19,6 +456,172 @@
             <column ascending="true" name="success"/>
          </index>
       </table>
+      <table name="idempotency_record" remarks="Request fingerprints and completed responses used to make retried commands idempotent." schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.idempotency_record_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="idempotency_key" nullable="false" remarks="" size="256" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="request_fingerprint" nullable="false" remarks="Digest of the request payload and operation contract." size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'IN_PROGRESS'::character varying" digits="0" id="3" name="status" nullable="false" remarks="Request lifecycle state: IN_PROGRESS while the mutation is executing, or COMPLETED when its response is stored." size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="response_status" nullable="true" remarks="HTTP status code stored with the completed response snapshot for exact retry replay." size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="response_snapshot" nullable="true" remarks="JSONB representation of the completed response returned for exact retry replay." size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="6" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="8" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="idempotency_record_pk" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idempotency_record_key_uq" unique="true">
+            <column ascending="true" name="idempotency_key"/>
+         </index>
+         <checkConstraint constraint="((status)::text = ANY ((ARRAY['IN_PROGRESS'::character varying, 'COMPLETED'::character varying])::text[]))" name="idempotency_record_status_ck"/>
+      </table>
+      <table name="lifecycle_setting" remarks="Configurable lifecycle timing values stored as key/value settings." schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.lifecycle_setting_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="setting_key" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="setting_value" nullable="false" remarks="" size="256" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="3" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="5" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="lifecycle_setting_pk" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="lifecycle_setting_key_uq" unique="true">
+            <column ascending="true" name="setting_key"/>
+         </index>
+      </table>
+      <table name="outbox_event" remarks="Transactional outbox events pending reliable delivery and reconciliation." schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.outbox_event_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="event_id" nullable="false" remarks="Stable UUID used to identify this event across delivery attempts." size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="aggregate_type" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="aggregate_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="event_type" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="payload" nullable="false" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="'PENDING'::character varying" digits="0" id="6" name="status" nullable="false" remarks="Delivery state: PENDING, IN_FLIGHT, RETRYING, CONFIRMED, RECONCILIATION_REQUIRED, or PERMANENT_FAILURE." size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="0" digits="0" id="7" name="attempt_count" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="'[]'::jsonb" digits="0" id="8" name="attempt_history" nullable="false" remarks="JSONB array containing the timestamp, outcome, and error summary for each delivery attempt." size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="9" name="next_retry_at" nullable="false" remarks="Earliest time at which a pending or retrying event may be leased." size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="10" name="locked_until" nullable="true" remarks="End of the current relay lease; an expired lease may be acquired by another worker." size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="locked_by" nullable="true" remarks="Identifier of the relay worker holding the current lease." size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="12" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="14" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="outbox_event_pk" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_outbox_actionable" unique="false">
+            <column ascending="true" name="next_retry_at"/>
+         </index>
+         <index name="idx_outbox_lease" unique="false">
+            <column ascending="true" name="locked_until"/>
+         </index>
+         <index name="outbox_event_event_uq" unique="true">
+            <column ascending="true" name="event_id"/>
+         </index>
+         <checkConstraint constraint="(attempt_count &gt;= 0)" name="outbox_event_attempt_count_ck"/>
+         <checkConstraint constraint="((status)::text = ANY ((ARRAY['PENDING'::character varying, 'IN_FLIGHT'::character varying, 'RETRYING'::character varying, 'CONFIRMED'::character varying, 'RECONCILIATION_REQUIRED'::character varying, 'PERMANENT_FAILURE'::character varying])::text[]))" name="outbox_event_status_ck"/>
+      </table>
+      <table name="reporting_unit" remarks="Locally-owned reporting unit for a District Average submission." schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.reporting_unit_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="reporting_unit_id" foreignKey="fk_block_reporting_unit" implied="false" onDeleteCascade="false" schema="hrs" table="block"/>
+            <child column="reporting_unit_id" foreignKey="fk_status_event_reporting_unit" implied="false" onDeleteCascade="false" schema="hrs" table="status_event"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="client_number" nullable="false" remarks="" size="8" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="client_locn_code" nullable="false" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="org_unit_no" nullable="false" remarks="" size="3" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="1" digits="0" id="4" name="revision" nullable="false" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="7" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="8" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="9" name="deleted" nullable="false" remarks="Soft-delete flag; live uniqueness indexes exclude deleted rows." size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="reporting_unit_pk" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="uq_reporting_unit_client_district" unique="true">
+            <column ascending="true" name="client_number"/>
+            <column ascending="true" name="client_locn_code"/>
+            <column ascending="true" name="org_unit_no"/>
+         </index>
+      </table>
+      <table name="status_event" remarks="Append-only lifecycle events for reporting units and blocks." schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.status_event_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="status_event_id" foreignKey="fk_block_comment_status_event" implied="false" onDeleteCascade="false" schema="hrs" table="block_comment"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="reporting_unit_id" nullable="true" remarks="Set for a reporting-unit event; exactly one status-event subject is required." size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_status_event_reporting_unit" implied="false" onDeleteCascade="false" schema="hrs" table="reporting_unit"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="block_id" nullable="true" remarks="Set for a block event; exactly one status-event subject is required." size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_status_event_block" implied="false" onDeleteCascade="false" schema="hrs" table="block"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="status" nullable="false" remarks="Service-validated lifecycle status; no database vocabulary check is imposed yet." size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="event_type" nullable="false" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="details" nullable="true" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="8" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="9" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="status_event_pk" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_status_event_block_time" unique="false">
+            <column ascending="true" name="block_id"/>
+            <column ascending="false" name="created_at"/>
+            <column ascending="false" name="id"/>
+         </index>
+         <index name="idx_status_event_reporting_unit_time" unique="false">
+            <column ascending="true" name="reporting_unit_id"/>
+            <column ascending="false" name="created_at"/>
+            <column ascending="false" name="id"/>
+         </index>
+         <checkConstraint constraint="((reporting_unit_id IS NOT NULL) &lt;&gt; (block_id IS NOT NULL))" name="status_event_subject_ck"/>
+      </table>
+      <table name="user_bookmarks" remarks="Table to store user bookmarked reporting units.&#10;Users can bookmark multiple reporting units.&#10;Each reporting unit can be bookmarked by multiple users.&#10;Bookmarked reporting units are also used as reference for the offline mode." schema="hrs" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="user_id" nullable="false" remarks="Unique identifier for the user" size="60" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="reporting_unit_id" nullable="false" remarks="Unique identifier for the reporting unit that the user has bookmarked.&#10;This is a foreign key referencing the reporting unit in the oracle database." size="19" type="int8" typeCode="-5"/>
+         <primaryKey column="user_id" sequenceNumberInPK="1"/>
+         <primaryKey column="reporting_unit_id" sequenceNumberInPK="2"/>
+         <index name="user_bookmarks_pk" unique="true">
+            <column ascending="true" name="user_id"/>
+            <column ascending="true" name="reporting_unit_id"/>
+         </index>
+         <index name="idx_user_bookmarks_reporting_unit_id" unique="false">
+            <column ascending="true" name="reporting_unit_id"/>
+         </index>
+      </table>
+      <table name="user_identity" remarks="Cached Cognito user identity attributes, used to avoid repeated userInfo calls" schema="hrs" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="sub" nullable="false" remarks="Cognito subject identifier — unique, immutable UUID for the user" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="email" nullable="true" remarks="User email address as returned by Cognito userInfo" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="name" nullable="true" remarks="User full display name as returned by Cognito userInfo" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="given_name" nullable="true" remarks="User given (first) name as returned by Cognito userInfo" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="family_name" nullable="true" remarks="User family (last) name as returned by Cognito userInfo" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="idp_name" nullable="true" remarks="Identity provider name from custom:idp_name (e.g. idir, bceidbusiness)" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="idp_user_id" nullable="true" remarks="User identifier within the identity provider from custom:idp_user_id" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="idp_username" nullable="true" remarks="Username within the identity provider from custom:idp_username" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="idp_display_name" nullable="true" remarks="Display name from the identity provider from custom:idp_display_name" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="idp_business_id" nullable="true" remarks="BCeID business identifier from custom:idp_business_id; null for IDIR users" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'{}'::jsonb" digits="0" id="10" name="raw_attributes" nullable="false" remarks="Full raw attribute map returned by Cognito userInfo, stored for future use" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="11" name="last_synced_at" nullable="false" remarks="Timestamp of the last successful sync with Cognito; used for staleness checks" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="sub" sequenceNumberInPK="1"/>
+         <index name="user_identity_pk" unique="true">
+            <column ascending="true" name="sub"/>
+         </index>
+         <index name="idx_user_identity_email" unique="false">
+            <column ascending="true" name="email"/>
+         </index>
+         <index name="idx_user_identity_idp_name" unique="false">
+            <column ascending="true" name="idp_name"/>
+         </index>
+         <index name="idx_user_identity_raw_attributes_gin" unique="false">
+            <column ascending="true" name="raw_attributes"/>
+         </index>
+      </table>
       <table name="user_preferences" remarks="Table to store user preferences in JSON format" schema="hrs" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="user_id" nullable="false" remarks="Unique identifier for the user" size="60" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="'{}'::jsonb" digits="0" id="1" name="preferences" nullable="false" remarks="User preferences stored in JSON format" size="2147483647" type="jsonb" typeCode="1111"/>
@@ -30,4 +633,164 @@
          </index>
       </table>
    </tables>
+   <routines>
+      <routine dataAccess="MODIFIES" deterministic="false" name="audit_district_volume_change()" returnType="trigger" securityType="DEFINER" type="FUNCTION">
+         <comment><![CDATA[Writes complete OLD and NEW row-image audit records for all district_volume mutations. The actor comes from row audit columns and falls back to session_user (current_user inside SECURITY DEFINER resolves to the function owner, not the caller). The correlation_id comes from current_setting('app.correlation_id', true) and is NULL when unset.]]></comment>
+         <definition language="plpgsql"><![CDATA[DECLARE
+    old_image JSONB;
+    new_image JSONB;
+    old_row JSONB;
+    new_row JSONB;
+    actor VARCHAR(128);
+    corr_id VARCHAR(128);
+    operation VARCHAR(32);
+    entity_kind VARCHAR(64);
+    changed TEXT[];
+    event_id BIGINT;
+    row_id BIGINT;
+BEGIN
+    old_row := CASE WHEN TG_OP IN ('UPDATE', 'DELETE') THEN to_jsonb(OLD) END;
+    new_row := CASE WHEN TG_OP IN ('INSERT', 'UPDATE') THEN to_jsonb(NEW) END;
+    old_image := old_row;
+    new_image := new_row;
+    row_id := COALESCE((new_image ->> 'id')::BIGINT, (old_image ->> 'id')::BIGINT);
+    entity_kind := CASE
+        WHEN COALESCE(new_image ->> 'config_type', old_image ->> 'config_type')
+            = 'SPECIES_COMPOSITION' THEN 'SPECIES_COMPOSITION'
+        ELSE 'DISTRICT_VOLUME'
+    END;
+
+    actor := COALESCE(
+        NULLIF(CASE WHEN TG_OP = 'INSERT' THEN new_image ->> 'created_by'
+                    WHEN TG_OP = 'DELETE' THEN old_image ->> 'updated_by'
+                    ELSE new_image ->> 'updated_by' END, ''),
+        NULLIF(CASE WHEN TG_OP = 'DELETE' THEN old_image ->> 'created_by'
+                    ELSE new_image ->> 'created_by' END, ''),
+        session_user
+    );
+
+    -- NULLIF guards against an empty-string GUC, which current_setting would
+    -- otherwise surface as '' rather than SQL NULL.
+    corr_id := NULLIF(current_setting('app.correlation_id', true), '');
+
+    operation := CASE
+        WHEN TG_OP = 'INSERT' THEN 'CREATE'
+        WHEN TG_OP = 'DELETE' THEN 'DELETE'
+        WHEN OLD.deleted = FALSE AND NEW.deleted = TRUE THEN 'SOFT_DELETE'
+        ELSE 'UPDATE'
+    END;
+
+    changed := CASE
+        WHEN TG_OP = 'INSERT' THEN ARRAY(SELECT jsonb_object_keys(new_image) ORDER BY 1)
+        WHEN TG_OP = 'DELETE' THEN ARRAY(SELECT jsonb_object_keys(old_image) ORDER BY 1)
+        ELSE ARRAY(
+            SELECT key
+            FROM (
+                SELECT jsonb_object_keys(old_image || new_image) AS key
+            ) keys
+            WHERE old_image -> key IS DISTINCT FROM new_image -> key
+            ORDER BY key
+        )
+    END;
+
+    -- reason is intentionally omitted: district_volume has no such column, so
+    -- any extraction here would always yield NULL. Revisit when a source exists.
+    INSERT INTO hrs.audit_event(action, changed_by, correlation_id)
+    VALUES (operation, actor, corr_id)
+    RETURNING id INTO event_id;
+
+    INSERT INTO hrs.audit_change(
+        event_id, entity_type, entity_id, action,
+        previous_values, current_values, changed_columns
+    )
+    VALUES (
+        event_id, entity_kind, row_id, operation,
+        old_image, new_image, COALESCE(changed, ARRAY[]::TEXT[])
+    );
+
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    END IF;
+    RETURN NEW;
+END;]]></definition>
+         <parameters>
+            <parameter mode="IN"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="false" name="audit_row_change()" returnType="trigger" securityType="DEFINER" type="FUNCTION">
+         <comment><![CDATA[Writes one generic full-row audit event/change pair per row mutation. Entity type is the table name; soft deletion is identified from deleted=false to deleted=true.]]></comment>
+         <definition language="plpgsql"><![CDATA[DECLARE
+    old_image JSONB;
+    new_image JSONB;
+    actor VARCHAR(128);
+    corr_id VARCHAR(128);
+    operation VARCHAR(32);
+    changed TEXT[];
+    audit_entity_id BIGINT;
+    audit_event_id BIGINT;
+BEGIN
+    old_image := CASE WHEN TG_OP IN ('UPDATE', 'DELETE') THEN to_jsonb(OLD) END;
+    new_image := CASE WHEN TG_OP IN ('INSERT', 'UPDATE') THEN to_jsonb(NEW) END;
+
+    actor := COALESCE(
+        NULLIF(new_image ->> 'updated_by', ''),
+        NULLIF(old_image ->> 'updated_by', ''),
+        session_user
+    );
+
+    -- current_setting(..., true) returns NULL when the transaction-local GUC is
+    -- unset; NULLIF also keeps an explicitly empty setting out of the audit row.
+    corr_id := NULLIF(current_setting('app.correlation_id', true), '');
+
+    operation := CASE
+        WHEN TG_OP = 'INSERT' THEN 'CREATE'
+        WHEN TG_OP = 'DELETE' THEN 'DELETE'
+        WHEN COALESCE(old_image ->> 'deleted', 'false') = 'false'
+             AND COALESCE(new_image ->> 'deleted', 'false') = 'true'
+            THEN 'SOFT_DELETE'
+        ELSE 'UPDATE'
+    END;
+
+    audit_entity_id := NULLIF(COALESCE(new_image, old_image) ->> 'id', '')::BIGINT;
+    IF audit_entity_id IS NULL THEN
+        audit_entity_id := NULLIF(COALESCE(new_image, old_image) ->> 'block_id', '')::BIGINT;
+    END IF;
+    IF audit_entity_id IS NULL THEN
+        audit_entity_id := NULLIF(COALESCE(new_image, old_image) ->> 'district_volume_id', '')::BIGINT;
+    END IF;
+    IF audit_entity_id IS NULL THEN
+        audit_entity_id := NULLIF(COALESCE(new_image, old_image) ->> 'reporting_unit_id', '')::BIGINT;
+    END IF;
+
+    changed := CASE
+        WHEN TG_OP = 'INSERT' THEN ARRAY(SELECT jsonb_object_keys(new_image) ORDER BY 1)
+        WHEN TG_OP = 'DELETE' THEN ARRAY(SELECT jsonb_object_keys(old_image) ORDER BY 1)
+        ELSE ARRAY(
+            SELECT key
+            FROM jsonb_object_keys(old_image || new_image) AS keys(key)
+            WHERE old_image -> key IS DISTINCT FROM new_image -> key
+            ORDER BY key
+        )
+    END;
+
+    INSERT INTO hrs.audit_event (action, changed_by, correlation_id)
+    VALUES (operation, actor, corr_id)
+    RETURNING id INTO audit_event_id;
+
+    INSERT INTO hrs.audit_change (
+        event_id, entity_type, entity_id, action,
+        previous_values, current_values, changed_columns
+    )
+    VALUES (
+        audit_event_id, TG_TABLE_NAME, audit_entity_id, operation,
+        old_image, new_image, COALESCE(changed, ARRAY[]::TEXT[])
+    );
+
+    RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+END;]]></definition>
+         <parameters>
+            <parameter mode="IN"/>
+         </parameters>
+      </routine>
+   </routines>
 </database>
