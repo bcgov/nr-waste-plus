@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.mapper.block;
 import ca.bc.gov.nrs.hrs.dto.block.StatusEventDto;
 import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 
@@ -15,5 +16,6 @@ public interface StatusEventMapper {
   StatusEventDto toDto(StatusEventEntity entity);
 
   /** Converts a DTO to a new entity. */
+  @Mapping(target = "id", ignore = true)
   StatusEventEntity toEntity(StatusEventDto dto);
 }

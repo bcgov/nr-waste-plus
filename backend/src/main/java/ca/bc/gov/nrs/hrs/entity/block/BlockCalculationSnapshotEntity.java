@@ -94,18 +94,6 @@ public class BlockCalculationSnapshotEntity {
     return warnings;
   }
 
-  /** Creates an append-only snapshot with its required calculation payload. */
-  public BlockCalculationSnapshotEntity(
-      Long blockId,
-      Long districtVolumeId,
-      JsonNode inputs,
-      JsonNode outputs) {
-    this.blockId = blockId;
-    this.districtVolumeId = districtVolumeId;
-    this.inputs = inputs;
-    this.outputs = outputs;
-  }
-
   /** Creates a complete immutable snapshot for persistence. */
   public BlockCalculationSnapshotEntity(
       Long blockId,
