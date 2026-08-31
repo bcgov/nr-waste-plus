@@ -193,6 +193,28 @@ public class GlobalExceptionHandler {
   }
 
   /**
+   * Handles a missing, malformed, or stale conditional request validator.
+   *
+   * @param ex the conditional request failure
+   * @param request the current HTTP servlet request
+   * @return a 412 RFC 9457 response
+   */
+  @ExceptionHandler(ConditionalRequestException.class)
+  public ResponseEntity<ProblemDetail> handleConditionalRequestException(
+      ConditionalRequestException ex, HttpServletRequest request) {
+    log.warn("Conditional request precondition failed: {}", ex.getReason());
+
+    ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.PRECONDITION_FAILED);
+    problem.setTitle("Precondition Failed");
+    problem.setDetail(ex.getReason());
+    problem.setInstance(URI.create(request.getRequestURI()));
+
+    return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(problem);
+  }
+
+  /**
    * Handle {@link ResponseStatusException} which carries an HTTP status and
    * optional reason.
    *
