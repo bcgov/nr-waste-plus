@@ -1,8 +1,10 @@
 package ca.bc.gov.nrs.hrs.entity.reliability;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -27,6 +29,43 @@ class ReliabilityEntityMappingTest {
         .getType()).isEqualTo(JsonNode.class);
     assertThat(OutboxEventEntity.class.getDeclaredField("nextRetryAt")
         .getType()).isEqualTo(Instant.class);
+  }
+
+  @Test
+  @DisplayName("defaults attempt history but requires an explicit payload")
+  void shouldDefaultAttemptHistoryAndRequirePayload_whenUsingNoArgsConstructor() {
+    OutboxEventEntity entity = new OutboxEventEntity();
+
+    assertThat(entity.getAttemptHistory())
+        .isEqualTo(JsonNodeFactory.instance.arrayNode());
+    assertThatThrownBy(entity::validateRequiredJsonFields)
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Outbox event payload must be provided");
+  }
+
+  @Test
+  @DisplayName("preserves all-args JSON values and rejects explicitly null required fields")
+  void shouldPreserveAllArgsValuesAndRejectNulls_whenConstructedWithAllArgs() {
+    JsonNode payload = JsonNodeFactory.instance.objectNode().put("kind", "test");
+    JsonNode attemptHistory = JsonNodeFactory.instance.arrayNode().add("attempted");
+    OutboxEventEntity entity = new OutboxEventEntity(
+        null, null, null, null, null, payload, null, null, attemptHistory, null, null, null,
+        null, null, null, null);
+
+    assertThat(entity.getPayload()).isSameAs(payload);
+    assertThat(entity.getAttemptHistory()).isSameAs(attemptHistory);
+    entity.validateRequiredJsonFields();
+
+    entity.setPayload(null);
+    assertThatThrownBy(entity::validateRequiredJsonFields)
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Outbox event payload must be provided");
+
+    entity.setPayload(payload);
+    entity.setAttemptHistory(null);
+    assertThatThrownBy(entity::validateRequiredJsonFields)
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Outbox event attempt history must be provided");
   }
 
   @Test
