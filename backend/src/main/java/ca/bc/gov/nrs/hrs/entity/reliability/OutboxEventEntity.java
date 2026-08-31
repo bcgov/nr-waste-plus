@@ -13,7 +13,11 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -23,62 +27,21 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-/** Transactional event waiting for reliable delivery. */
+/**
+ * Transactional event waiting for reliable delivery. Attempt history defaults to an empty JSON
+ * array, while payload must be supplied explicitly; required JSON fields are validated before
+ * persistence.
+ */
 @Entity
 @Table(name = "outbox_event", schema = "hrs")
 @EntityListeners(AuditingEntityListener.class)
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"payload", "attemptHistory"})
 public class OutboxEventEntity {
-
-  /** Creates an empty entity for JPA and incremental construction. */
-  public OutboxEventEntity() {
-    // Required by JPA; attemptHistory uses its field initializer.
-  }
-
-  /** Creates an entity with all persisted values. */
-  public OutboxEventEntity(
-      Long id, UUID eventId, String aggregateType, Long aggregateId, String eventType,
-      JsonNode payload, String status, Integer attemptCount, JsonNode attemptHistory,
-      Instant nextRetryAt, Instant lockedUntil, String lockedBy, String createdBy, String updatedBy,
-      Instant createdAt, Instant updatedAt) {
-    this.id = id;
-    this.eventId = eventId;
-    this.aggregateType = aggregateType;
-    this.aggregateId = aggregateId;
-    this.eventType = eventType;
-    this.payload = payload;
-    this.status = status;
-    this.attemptCount = attemptCount;
-    this.attemptHistory = attemptHistory;
-    this.nextRetryAt = nextRetryAt;
-    this.lockedUntil = lockedUntil;
-    this.lockedBy = lockedBy;
-    this.createdBy = createdBy;
-    this.updatedBy = updatedBy;
-    this.createdAt = createdAt;
-    this.updatedAt = updatedAt;
-  }
-
-  /** Returns the event payload. */
-  public JsonNode getPayload() {
-    return payload;
-  }
-
-  /** Sets the event payload. */
-  public void setPayload(JsonNode payload) {
-    this.payload = payload;
-  }
-
-  /** Returns the delivery attempt history. */
-  public JsonNode getAttemptHistory() {
-    return attemptHistory;
-  }
-
-  /** Sets the delivery attempt history. */
-  public void setAttemptHistory(JsonNode attemptHistory) {
-    this.attemptHistory = attemptHistory;
-  }
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
