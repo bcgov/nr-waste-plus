@@ -2,26 +2,18 @@ package ca.bc.gov.nrs.hrs.mapper.block;
 
 import ca.bc.gov.nrs.hrs.dto.block.StatusEventDto;
 import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
 
 /** Maps status-event persistence objects. */
-public final class StatusEventMapper {
-  private StatusEventMapper() {}
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
+    unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface StatusEventMapper {
 
   /** Converts an entity to a persistence DTO. */
-  public static StatusEventDto toDto(StatusEventEntity entity) {
-    return new StatusEventDto(entity.getId(), entity.getReportingUnitId(), entity.getBlockId(),
-        entity.getStatus(), entity.getEventType(), entity.getDetails());
-  }
+  StatusEventDto toDto(StatusEventEntity entity);
 
   /** Converts a DTO to a new entity. */
-  public static StatusEventEntity toEntity(StatusEventDto dto) {
-    var entity = new StatusEventEntity();
-    entity.setId(dto.id());
-    entity.setReportingUnitId(dto.reportingUnitId());
-    entity.setBlockId(dto.blockId());
-    entity.setStatus(dto.status());
-    entity.setEventType(dto.eventType());
-    entity.setDetails(dto.details());
-    return entity;
-  }
+  StatusEventEntity toEntity(StatusEventDto dto);
 }

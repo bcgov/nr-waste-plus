@@ -2,34 +2,17 @@ package ca.bc.gov.nrs.hrs.mapper.block;
 
 import ca.bc.gov.nrs.hrs.dto.block.BlockCalculationSnapshotDto;
 import ca.bc.gov.nrs.hrs.entity.block.BlockCalculationSnapshotEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
 
 /** Maps calculation snapshot persistence objects. */
-public final class BlockCalculationSnapshotMapper {
-  private BlockCalculationSnapshotMapper() {}
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
+    unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface BlockCalculationSnapshotMapper {
 
   /** Converts an entity to a persistence DTO. */
-  public static BlockCalculationSnapshotDto toDto(BlockCalculationSnapshotEntity entity) {
-    return new BlockCalculationSnapshotDto(entity.getId(), entity.getBlockId(),
-        entity.getDistrictVolumeId(), entity.getHbsWindowStart(), entity.getHbsWindowEnd(),
-        entity.getInputs(), entity.getOutputs(), entity.getCalculatedAt(),
-        entity.getRoundingPolicy(), entity.getWarnings());
-  }
+  BlockCalculationSnapshotDto toDto(BlockCalculationSnapshotEntity entity);
 
   /** Converts a complete DTO to a new immutable snapshot entity. */
-  public static BlockCalculationSnapshotEntity toEntity(BlockCalculationSnapshotDto dto) {
-    return new BlockCalculationSnapshotEntity(
-        dto.blockId(),
-        dto.districtVolumeId(),
-        dto.hbsWindowStart(),
-        dto.hbsWindowEnd(),
-        dto.inputs(),
-        dto.outputs(),
-        dto.calculatedAt(),
-        dto.roundingPolicy(),
-        dto.warnings(),
-        null,
-        null,
-        null,
-        null);
-  }
 }

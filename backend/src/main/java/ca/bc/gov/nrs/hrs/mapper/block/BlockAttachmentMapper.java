@@ -2,28 +2,18 @@ package ca.bc.gov.nrs.hrs.mapper.block;
 
 import ca.bc.gov.nrs.hrs.dto.block.BlockAttachmentDto;
 import ca.bc.gov.nrs.hrs.entity.block.BlockAttachmentEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
 
 /** Maps block-attachment persistence objects. */
-public final class BlockAttachmentMapper {
-  private BlockAttachmentMapper() {}
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
+    unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface BlockAttachmentMapper {
 
   /** Converts an entity to a persistence DTO. */
-  public static BlockAttachmentDto toDto(BlockAttachmentEntity entity) {
-    return new BlockAttachmentDto(entity.getId(), entity.getBlockId(), entity.getObjectKey(),
-        entity.getFileName(), entity.getContentType(), entity.getFileSizeBytes(),
-        entity.getScanStatus());
-  }
+  BlockAttachmentDto toDto(BlockAttachmentEntity entity);
 
   /** Converts a DTO to a new entity. */
-  public static BlockAttachmentEntity toEntity(BlockAttachmentDto dto) {
-    var entity = new BlockAttachmentEntity();
-    entity.setId(dto.id());
-    entity.setBlockId(dto.blockId());
-    entity.setObjectKey(dto.objectKey());
-    entity.setFileName(dto.fileName());
-    entity.setContentType(dto.contentType());
-    entity.setFileSizeBytes(dto.fileSizeBytes());
-    entity.setScanStatus(dto.scanStatus());
-    return entity;
-  }
+  BlockAttachmentEntity toEntity(BlockAttachmentDto dto);
 }
