@@ -1,0 +1,227 @@
+{
+  "contractVersion": "1.0",
+  "namespaces": ["da", "sc", "submission", "hbs", "fta"],
+  "diagnosticCodes": [
+    "SYNTAX_ERROR",
+    "UNKNOWN_VARIABLE",
+    "CYCLE_DETECTED",
+    "UNSUPPORTED_FUNCTION",
+    "EXCESSIVE_COMPLEXITY",
+    "DIVISION_BY_ZERO",
+    "TYPE_ERROR"
+  ],
+  "rounding": {
+    "scale": 3,
+    "mode": "HALF_UP",
+    "examples": ["0.0004", "0.0005", "1.2345"]
+  },
+  "cases": [
+    {
+      "id": "valid-arithmetic-precedence",
+      "expression": "1 + 2 * 3",
+      "mode": "MATHEMATICAL",
+      "variables": {},
+      "expected": {
+        "status": "VALID",
+        "ast": {
+          "kind": "binary",
+          "operator": "+",
+          "left": { "kind": "literal", "value": "1" },
+          "right": {
+            "kind": "binary",
+            "operator": "*",
+            "left": { "kind": "literal", "value": "2" },
+            "right": { "kind": "literal", "value": "3" }
+          }
+        }
+      }
+    },
+    {
+      "id": "valid-all-approved-namespaces",
+      "expression": "da.rate + sc.mix + submission.area + hbs.factor + fta.adjustment",
+      "mode": "MATHEMATICAL",
+      "variables": {
+        "da.rate": "1",
+        "sc.mix": "2",
+        "submission.area": "3",
+        "hbs.factor": "4",
+        "fta.adjustment": "5"
+      },
+      "expected": { "status": "VALID" }
+    },
+    {
+      "id": "valid-decimal-and-unary",
+      "expression": "-(.5 + 2.00)",
+      "mode": "MATHEMATICAL",
+      "variables": {},
+      "expected": { "status": "VALID" }
+    },
+    {
+      "id": "valid-if-case-insensitive",
+      "expression": "iF(da.rate >= 2, 10, 20)",
+      "mode": "CONDITIONAL",
+      "variables": { "da.rate": "2" },
+      "expected": {
+        "status": "VALID",
+        "ast": {
+          "kind": "if",
+          "condition": { "kind": "binary", "operator": ">=" },
+          "trueBranch": { "kind": "literal", "value": "10" },
+          "falseBranch": { "kind": "literal", "value": "20" }
+        }
+      }
+    },
+    {
+      "id": "valid-if-nested",
+      "expression": "IF(da.rate >= 2, 10, IF(sc.value == 1, 3, 4))",
+      "mode": "CONDITIONAL",
+      "variables": { "da.rate": "1", "sc.value": "1" },
+      "expected": { "status": "VALID" }
+    },
+    {
+      "id": "invalid-retired-namespace",
+      "expression": "config.rate + species.mix",
+      "mode": "MATHEMATICAL",
+      "variables": {},
+      "expected": {
+        "status": "INVALID",
+        "errors": [
+          { "code": "UNKNOWN_VARIABLE" },
+          { "code": "UNKNOWN_VARIABLE" }
+        ]
+      }
+    },
+    {
+      "id": "invalid-malformed-number",
+      "expression": "12..34",
+      "mode": "MATHEMATICAL",
+      "variables": {},
+      "expected": {
+        "status": "INVALID",
+        "errors": [{ "code": "SYNTAX_ERROR", "startOffset": 0, "endOffset": 6 }]
+      }
+    },
+    {
+      "id": "invalid-unsupported-function",
+      "expression": "MAX(1, 2)",
+      "mode": "MATHEMATICAL",
+      "variables": {},
+      "expected": {
+        "status": "INVALID",
+        "errors": [
+          { "code": "UNSUPPORTED_FUNCTION", "startOffset": 0, "endOffset": 3 }
+        ]
+      }
+    },
+    {
+      "id": "invalid-unknown-variable",
+      "expression": "da.missing + 1",
+      "mode": "MATHEMATICAL",
+      "variables": {},
+      "expected": {
+        "status": "INVALID",
+        "errors": [
+          { "code": "UNKNOWN_VARIABLE", "startOffset": 0, "endOffset": 11 }
+        ]
+      }
+    },
+    {
+      "id": "invalid-static-division-by-zero",
+      "expression": "10 / (2 - 2)",
+      "mode": "MATHEMATICAL",
+      "variables": {},
+      "expected": {
+        "status": "INVALID",
+        "errors": [
+          { "code": "DIVISION_BY_ZERO", "startOffset": 6, "endOffset": 11 }
+        ]
+      }
+    },
+    {
+      "id": "invalid-unused-if-branch",
+      "expression": "IF(da.rate >= 2, 1, broken.value)",
+      "mode": "CONDITIONAL",
+      "variables": { "da.rate": "2" },
+      "expected": {
+        "status": "INVALID",
+        "errors": [{ "code": "UNKNOWN_VARIABLE" }]
+      }
+    },
+    {
+      "id": "invalid-if-condition-type",
+      "expression": "IF(da.rate, 1, 2)",
+      "mode": "CONDITIONAL",
+      "variables": { "da.rate": "1" },
+      "expected": { "status": "INVALID", "errors": [{ "code": "TYPE_ERROR" }] }
+    },
+    {
+      "id": "invalid-comparison-in-arithmetic-mode",
+      "expression": "1 < 2",
+      "mode": "MATHEMATICAL",
+      "variables": {},
+      "expected": {
+        "status": "INVALID",
+        "errors": [{ "code": "SYNTAX_ERROR" }]
+      }
+    },
+    {
+      "id": "invalid-cycle-and-duplicate",
+      "definitions": [
+        { "key": "a", "expression": "b + 1" },
+        { "key": "b", "expression": "a + 1" },
+        { "key": "a", "expression": "1" }
+      ],
+      "mode": "MATHEMATICAL",
+      "variables": {},
+      "expected": {
+        "status": "INVALID",
+        "errors": [
+          { "code": "SYNTAX_ERROR" },
+          { "code": "CYCLE_DETECTED" },
+          { "code": "CYCLE_DETECTED" }
+        ]
+      }
+    },
+    {
+      "id": "pending-missing-value",
+      "expression": "da.rate + 1",
+      "mode": "MATHEMATICAL",
+      "variables": {},
+      "expected": {
+        "status": "PENDING_EVALUATOR",
+        "reason": "missing or null runtime values must not be coerced"
+      }
+    },
+    {
+      "id": "pending-null-value",
+      "expression": "submission.area / da.denominator",
+      "mode": "MATHEMATICAL",
+      "variables": { "submission.area": "10" },
+      "expected": {
+        "status": "PENDING_EVALUATOR",
+        "reason": "null values and runtime division by zero require evaluator semantics"
+      }
+    },
+    {
+      "id": "pending-external-source-failure",
+      "expression": "hbs.factor + fta.adjustment",
+      "mode": "MATHEMATICAL",
+      "variables": {},
+      "expected": {
+        "status": "PENDING_EVALUATOR",
+        "reason": "external-source failures must remain explicit"
+      }
+    },
+    {
+      "id": "pending-rounding-boundaries",
+      "expression": "da.value",
+      "mode": "MATHEMATICAL",
+      "variables": { "da.value": "0.0004" },
+      "expected": {
+        "status": "PENDING_EVALUATOR",
+        "reason": "runtime result rounds to three decimal places using HALF_UP; evaluator not in scope",
+        "roundingInputs": ["0.0004", "0.0005", "1.2345"]
+      }
+    }
+  ]
+}
