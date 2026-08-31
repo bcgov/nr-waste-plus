@@ -40,8 +40,6 @@ public final class FormulaValidator {
       }
     };
     Map<String, BigDecimal> known = new HashMap<>(request.knownVariables());
-    known.putAll(nodes.keySet().stream().collect(java.util.stream.Collectors.toMap(key -> key,
-        key -> BigDecimal.ONE)));
     for (String key : nodes.keySet().stream().sorted().toList()) {
       validateNode(nodes.get(key), known, definitions.keySet(), errors);
     }
@@ -53,7 +51,7 @@ public final class FormulaValidator {
       Set<String> formulaKeys,
       List<FormulaValidationError> errors) {
     return switch (node) {
-      case LiteralNode literal -> ValueType.NUMERIC;
+      case LiteralNode ignored -> ValueType.NUMERIC;
       case VariableReferenceNode variable -> {
         int dot = variable.name().indexOf('.');
         String namespace = dot < 0 ? variable.name() : variable.name().substring(0, dot);

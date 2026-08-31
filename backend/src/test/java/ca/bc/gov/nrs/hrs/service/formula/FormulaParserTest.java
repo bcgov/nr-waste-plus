@@ -98,10 +98,19 @@ class FormulaParserTest {
         .isInstanceOf(FormulaParseException.class);
     assertThatThrownBy(() -> PARSER.parse("."))
         .isInstanceOf(FormulaParseException.class)
-        .extracting(exception -> ((FormulaParseException) exception).error().message())
-        .isEqualTo("Malformed number");
+        .extracting(exception -> ((FormulaParseException) exception).error())
+        .isEqualTo(new FormulaValidationError(
+            FormulaValidationError.Code.SYNTAX_ERROR, "Malformed number", 0, 1));
+    assertThatThrownBy(() -> PARSER.parse("12..34"))
+        .isInstanceOf(FormulaParseException.class)
+        .extracting(exception -> ((FormulaParseException) exception).error())
+        .isEqualTo(new FormulaValidationError(
+            FormulaValidationError.Code.SYNTAX_ERROR, "Malformed number", 0, 6));
     assertThatThrownBy(() -> PARSER.parse("1.2.3"))
-        .isInstanceOf(FormulaParseException.class);
+        .isInstanceOf(FormulaParseException.class)
+        .extracting(exception -> ((FormulaParseException) exception).error())
+        .isEqualTo(new FormulaValidationError(
+            FormulaValidationError.Code.SYNTAX_ERROR, "Malformed number", 0, 5));
     assertThatThrownBy(() -> PARSER.parse("1 2"))
         .isInstanceOf(FormulaParseException.class);
   }
@@ -134,6 +143,16 @@ class FormulaParserTest {
     assertThat(outer.endOffset()).isEqualTo(42);
     assertThat(outer.condition()).isInstanceOf(BinaryOperationNode.class);
     assertThat(outer.valueIfFalse()).isInstanceOf(IfNode.class);
+  }
+
+  @Test
+  void should_enforce_maximum_depth_for_nested_if_expressions() {
+    FormulaParser parser = new FormulaParser(new FormulaParser.Options(5, 200));
+
+    assertThatThrownBy(() -> parser.parse("IF(1 < 2, 3, IF(4 < 5, 6, 7))"))
+        .isInstanceOf(FormulaParseException.class)
+        .extracting(exception -> ((FormulaParseException) exception).error().code())
+        .isEqualTo(FormulaValidationError.Code.EXCESSIVE_COMPLEXITY);
   }
 
   @Test

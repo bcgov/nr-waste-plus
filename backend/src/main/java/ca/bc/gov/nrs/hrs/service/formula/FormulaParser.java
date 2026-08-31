@@ -117,7 +117,7 @@ public final class FormulaParser {
         return number();
       }
       if (Character.isLetter(source.charAt(position)) || source.charAt(position) == '_') {
-        return identifier();
+        return identifier(depth);
       }
       fail(FormulaValidationError.Code.SYNTAX_ERROR, "Expected a number, identifier, or '('");
       return null;
@@ -126,30 +126,26 @@ public final class FormulaParser {
     private FormulaNode number() {
       final int start = position;
       boolean digits = false;
-      while (!atEnd() && Character.isDigit(source.charAt(position))) {
-        digits = true;
-        position++;
-      }
-      if (!atEnd() && source.charAt(position) == '.') {
-        position++;
-        while (!atEnd() && Character.isDigit(source.charAt(position))) {
+      while (!atEnd() && (Character.isDigit(source.charAt(position))
+          || source.charAt(position) == '.')) {
+        if (Character.isDigit(source.charAt(position))) {
           digits = true;
-          position++;
         }
+        position++;
       }
       if (!digits) {
-        fail(FormulaValidationError.Code.SYNTAX_ERROR, "Malformed number");
+        failAt(FormulaValidationError.Code.SYNTAX_ERROR, "Malformed number", start, position);
       }
       String value = source.substring(start, position);
       try {
         return new LiteralNode(new BigDecimal(value), start, position);
       } catch (NumberFormatException exception) {
-        fail(FormulaValidationError.Code.SYNTAX_ERROR, "Malformed number");
+        failAt(FormulaValidationError.Code.SYNTAX_ERROR, "Malformed number", start, position);
         return null;
       }
     }
 
-    private FormulaNode identifier() {
+    private FormulaNode identifier(int depth) {
       position++;
       int start = position - 1;
       while (!atEnd() && (Character.isLetterOrDigit(source.charAt(position))
@@ -160,7 +156,7 @@ public final class FormulaParser {
       skipWhitespace();
       if (peek('(')) {
         if ("IF".equals(name)) {
-          return ifExpression(start);
+          return ifExpression(start, depth);
         }
         failAt(FormulaValidationError.Code.UNSUPPORTED_FUNCTION,
             "Function calls are not supported", start, position);
@@ -168,13 +164,13 @@ public final class FormulaParser {
       return new VariableReferenceNode(name, start, position);
     }
 
-    private FormulaNode ifExpression(int start) {
+    private FormulaNode ifExpression(int start, int depth) {
       position++;
-      final FormulaNode condition = binaryExpression(1, 0, true);
+      final FormulaNode condition = binaryExpression(depth + 1, 0, true);
       requireComma();
-      final FormulaNode valueIfTrue = binaryExpression(1, 0, false);
+      final FormulaNode valueIfTrue = binaryExpression(depth + 1, 0, false);
       requireComma();
-      final FormulaNode valueIfFalse = binaryExpression(1, 0, false);
+      final FormulaNode valueIfFalse = binaryExpression(depth + 1, 0, false);
       skipWhitespace();
       if (!peek(')')) {
         fail(FormulaValidationError.Code.SYNTAX_ERROR, "Expected ')' after IF arguments");

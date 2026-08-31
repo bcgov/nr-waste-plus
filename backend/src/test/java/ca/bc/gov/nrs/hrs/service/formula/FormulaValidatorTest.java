@@ -178,6 +178,15 @@ class FormulaValidatorTest {
     assertThat(errors).isEmpty();
   }
 
+  @Test
+  void should_not_treat_formula_key_references_as_constants() {
+    List<FormulaValidationError> errors = VALIDATOR.validate(request(
+        List.of(new FormulaDefinition("base", "0"),
+            new FormulaDefinition("total", "10 / base")), Map.of()));
+
+    assertThat(errors).isEmpty();
+  }
+
   private FormulaValidationRequest request(List<FormulaDefinition> definitions,
       Map<String, BigDecimal> variables) {
     return new FormulaValidationRequest(definitions, variables, FormulaParseMode.CONDITIONAL);
