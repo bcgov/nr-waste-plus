@@ -2,12 +2,11 @@ package ca.bc.gov.nrs.hrs.repository.reliability;
 
 import ca.bc.gov.nrs.hrs.entity.reliability.IdempotencyRecordEntity;
 import java.util.Optional;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.repository.Repository;
 
 /** Minimal repository surface for request idempotency records. */
-@Repository
-public interface IdempotencyRecordRepository extends CrudRepository<IdempotencyRecordEntity, Long> {
+@org.springframework.stereotype.Repository
+public interface IdempotencyRecordRepository extends Repository<IdempotencyRecordEntity, Long> {
 
   IdempotencyRecordEntity save(IdempotencyRecordEntity entity);
 
