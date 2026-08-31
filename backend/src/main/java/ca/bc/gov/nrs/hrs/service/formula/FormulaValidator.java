@@ -24,26 +24,30 @@ public final class FormulaValidator {
   public List<FormulaValidationError> validate(FormulaValidationRequest request) {
     Map<String, FormulaDefinition> definitions = new HashMap<>();
     List<FormulaValidationError> errors = new ArrayList<>();
-    for (FormulaDefinition definition : request.formulas()) {
+    Map<String, List<FormulaNode>> parsedNodes = new HashMap<>();
+    Map<String, FormulaNode> canonicalNodes = new HashMap<>();
+    for (FormulaDefinition definition : request.formulas().stream()
+        .sorted(Comparator.comparing(FormulaDefinition::formulaKey)).toList()) {
       if (definitions.putIfAbsent(definition.formulaKey(), definition) != null) {
         errors.add(error(FormulaValidationError.Code.SYNTAX_ERROR,
             "Duplicate formula key: " + definition.formulaKey(), 0, 0));
       }
-    }
-    Map<String, FormulaNode> nodes = new HashMap<>();
-    for (FormulaDefinition definition : request.formulas().stream()
-        .sorted(Comparator.comparing(FormulaDefinition::formulaKey)).toList()) {
       try {
-        nodes.put(definition.formulaKey(), parser.parse(definition.expression(), request.mode()));
+        FormulaNode node = parser.parse(definition.expression(), request.mode());
+        parsedNodes.computeIfAbsent(definition.formulaKey(), ignored -> new ArrayList<>())
+            .add(node);
+        canonicalNodes.putIfAbsent(definition.formulaKey(), node);
       } catch (FormulaParseException exception) {
         errors.add(exception.error());
       }
-    };
-    Map<String, BigDecimal> known = new HashMap<>(request.knownVariables());
-    for (String key : nodes.keySet().stream().sorted().toList()) {
-      validateNode(nodes.get(key), known, definitions.keySet(), errors);
     }
-    errors.addAll(findCycles(nodes));
+    Map<String, BigDecimal> known = new HashMap<>(request.knownVariables());
+    for (String key : parsedNodes.keySet().stream().sorted().toList()) {
+      for (FormulaNode node : parsedNodes.get(key)) {
+        validateNode(node, known, definitions.keySet(), errors);
+      }
+    }
+    errors.addAll(findCycles(canonicalNodes));
     return List.copyOf(errors);
   }
 

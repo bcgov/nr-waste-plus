@@ -3,6 +3,10 @@ package ca.bc.gov.nrs.hrs.service.formula;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +70,19 @@ class FormulaValidatorTest {
   }
 
   @Test
+  void should_accept_if_with_any_letter_case_and_reject_other_functions() {
+    for (String functionName : new String[] {"IF", "if", "If", "iF"}) {
+      assertThat(VALIDATOR.validate(request(
+          List.of(new FormulaDefinition("total", functionName + "(1 < 2, 10, 20)")),
+          Map.of()))).isEmpty();
+    }
+    assertThat(VALIDATOR.validate(request(
+        List.of(new FormulaDefinition("total", "MAX(1, 2)")), Map.of())))
+        .extracting(FormulaValidationError::code)
+        .containsExactly(FormulaValidationError.Code.UNSUPPORTED_FUNCTION);
+  }
+
+  @Test
   void should_validate_unused_if_branch_and_allow_if_in_math_mode() {
     List<FormulaValidationError> errors = VALIDATOR.validate(new FormulaValidationRequest(
         List.of(new FormulaDefinition("total", "IF(da.rate >= 2, 1, broken.value) * 2")),
@@ -105,6 +122,39 @@ class FormulaValidatorTest {
     assertThat(errors).extracting(FormulaValidationError::code)
         .containsExactly(FormulaValidationError.Code.SYNTAX_ERROR,
             FormulaValidationError.Code.SYNTAX_ERROR);
+  }
+
+  @Test
+  void should_validate_duplicate_definitions_without_overwriting_the_canonical_node() {
+    List<FormulaValidationError> errors = VALIDATOR.validate(request(
+        List.of(new FormulaDefinition("cycle", "cycle + 1"),
+            new FormulaDefinition("cycle", "1 +"),
+            new FormulaDefinition("typed", "IF(1, 1, 2)"),
+            new FormulaDefinition("typed", "IF(1 < 2, 1, 2)")), Map.of()));
+
+    assertThat(errors).extracting(FormulaValidationError::code)
+        .containsExactly(FormulaValidationError.Code.SYNTAX_ERROR,
+            FormulaValidationError.Code.SYNTAX_ERROR,
+            FormulaValidationError.Code.SYNTAX_ERROR,
+            FormulaValidationError.Code.TYPE_ERROR,
+            FormulaValidationError.Code.CYCLE_DETECTED);
+  }
+
+  @Test
+  void should_preserve_formula_diagnostic_when_serialized() throws Exception {
+    FormulaValidationError original = new FormulaValidationError(
+        FormulaValidationError.Code.SYNTAX_ERROR, "broken", 4, 8);
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    try (ObjectOutputStream output = new ObjectOutputStream(bytes)) {
+      output.writeObject(new FormulaParseException(original));
+    }
+
+    FormulaParseException restored;
+    try (ObjectInputStream input = new ObjectInputStream(
+        new ByteArrayInputStream(bytes.toByteArray()))) {
+      restored = (FormulaParseException) input.readObject();
+    }
+    assertThat(restored.error()).isEqualTo(original);
   }
 
   @Test

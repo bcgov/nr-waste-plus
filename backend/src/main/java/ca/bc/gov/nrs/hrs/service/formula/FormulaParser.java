@@ -155,7 +155,7 @@ public final class FormulaParser {
       String name = source.substring(start, position);
       skipWhitespace();
       if (peek('(')) {
-        if ("IF".equals(name)) {
+        if ("IF".equalsIgnoreCase(name)) {
           return ifExpression(start, depth);
         }
         failAt(FormulaValidationError.Code.UNSUPPORTED_FUNCTION,

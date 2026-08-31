@@ -36,7 +36,7 @@ class FormulaParserTest {
 
   @Test
   void should_parse_comparisons_only_in_conditional_mode() {
-     FormulaNode node = PARSER.parse("da.rate >= 2", FormulaParseMode.CONDITIONAL);
+    FormulaNode node = PARSER.parse("da.rate >= 2", FormulaParseMode.CONDITIONAL);
 
     assertThat(((BinaryOperationNode) node).operator())
         .isEqualTo(BinaryOperator.GREATER_THAN_OR_EQUAL);
@@ -143,6 +143,14 @@ class FormulaParserTest {
     assertThat(outer.endOffset()).isEqualTo(42);
     assertThat(outer.condition()).isInstanceOf(BinaryOperationNode.class);
     assertThat(outer.valueIfFalse()).isInstanceOf(IfNode.class);
+  }
+
+  @Test
+  void should_parse_if_function_without_case_sensitivity() {
+    for (String functionName : new String[] {"IF", "if", "If", "iF"}) {
+      assertThat(PARSER.parse(functionName + "(1 < 2, 3, 4)"))
+          .isInstanceOf(IfNode.class);
+    }
   }
 
   @Test

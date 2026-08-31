@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.hrs.service.formula;
 /** Thrown when source text cannot be parsed as an approved formula. */
 public final class FormulaParseException extends IllegalArgumentException {
 
+  private static final long serialVersionUID = 1L;
+
   private final FormulaValidationError error;
 
   /** Creates a parse exception containing its Monaco-compatible diagnostic. */
