@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.Month;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -54,14 +55,15 @@ class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @Test
   void generatedMapperBeans_shouldMapEntityAndDtoValues() {
-    var createDto = new BlockCreateDto(42L, "DA", true, LocalDate.of(2026, 8, 31));
+    var createDto = new BlockCreateDto(42L, "DA", true,
+        LocalDate.of(2026, Month.AUGUST, 31));
 
     BlockEntity entity = blockMapper.toEntity(createDto);
 
     assertThat(entity.getReportingUnitId()).isEqualTo(42L);
     assertThat(entity.getBlockType()).isEqualTo("DA");
     assertThat(entity.isDraft()).isTrue();
-    assertThat(entity.getPlcDate()).isEqualTo(LocalDate.of(2026, 8, 31));
+    assertThat(entity.getPlcDate()).isEqualTo(LocalDate.of(2026, Month.AUGUST, 31));
   }
 
   @Test
@@ -120,8 +122,9 @@ class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {
     assertThat(event).isInstanceOf(StatusEventEntity.class);
     assertThat(statusEventMapper.toDto(event)).isNotNull();
     var objectMapper = new ObjectMapper();
-    var snapshot = new BlockCalculationSnapshotEntity(2L, 3L, LocalDate.of(2026, 1, 1),
-        LocalDate.of(2026, 12, 31), objectMapper.createObjectNode(),
+    var snapshot = new BlockCalculationSnapshotEntity(2L, 3L,
+        LocalDate.of(2026, Month.JANUARY, 1),
+        LocalDate.of(2026, Month.DECEMBER, 31), objectMapper.createObjectNode(),
         objectMapper.createObjectNode(),
         Instant.parse("2026-01-01T00:00:00Z"), "HALF_UP", objectMapper.createArrayNode(), "actor",
         "actor", Instant.parse("2026-01-01T00:00:00Z"), Instant.parse("2026-01-01T00:00:00Z"));

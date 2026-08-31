@@ -95,6 +95,7 @@ public class BlockCalculationSnapshotEntity {
   }
 
   /** Creates a complete immutable snapshot for persistence. */
+  @SuppressWarnings("java:S107") // Complete persistence construction requires every mapped field.
   public BlockCalculationSnapshotEntity(
       Long blockId,
       Long districtVolumeId,

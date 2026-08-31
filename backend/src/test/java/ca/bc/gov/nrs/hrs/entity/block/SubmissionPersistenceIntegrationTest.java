@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +57,7 @@ class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrat
     block.setReportingUnitId(savedUnit.getId());
     block.setBlockType("DISTRICT_AVERAGE");
     block.setDraft(false);
-    block.setPlcDate(LocalDate.of(2025, 6, 1));
+    block.setPlcDate(LocalDate.of(2025, Month.JUNE, 1));
     audit(block);
     BlockEntity savedBlock = blockRepository.saveAndFlush(block);
 
@@ -142,8 +143,8 @@ class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrat
     var outputs = mapper.readTree("{\"total\":9.125}");
     var warnings = mapper.readTree("[\"rounded\"]");
     BlockCalculationSnapshotEntity snapshot = new BlockCalculationSnapshotEntity(
-        savedBlock.getId(), districtVolumeId(), LocalDate.of(2025, 1, 1),
-        LocalDate.of(2025, 12, 31), inputs, outputs, NOW, "HALF_UP", warnings,
+        savedBlock.getId(), districtVolumeId(), LocalDate.of(2025, Month.JANUARY, 1),
+        LocalDate.of(2025, Month.DECEMBER, 31), inputs, outputs, NOW, "HALF_UP", warnings,
         ACTOR, ACTOR, NOW, NOW);
     snapshotRepository.save(snapshot);
 
@@ -254,8 +255,4 @@ class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrat
     entity.setUpdatedAt(NOW);
   }
 
-  private Long statusEventCount() {
-    return jdbcTemplate.queryForObject(
-        "SELECT count(*) FROM hrs.status_event", Long.class);
-  }
 }
