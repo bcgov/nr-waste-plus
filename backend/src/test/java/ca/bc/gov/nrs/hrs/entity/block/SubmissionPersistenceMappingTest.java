@@ -5,8 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Version;
-import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.ArrayList;
 import org.junit.jupiter.api.Test;
 
 /** Contract tests for the submission persistence model's structural rules. */
@@ -30,7 +31,7 @@ class SubmissionPersistenceMappingTest {
   void submissionTypesAreEntitiesWithoutEnumPersistence() {
     for (Class<?> entity : ENTITIES) {
       assertThat(entity.isAnnotationPresent(Entity.class)).isTrue();
-      assertThat(entity.getDeclaredMethods()).noneMatch(this::isEnumMapping);
+      assertThat(allFields(entity)).noneMatch(this::isEnumMapping);
     }
   }
 
@@ -49,8 +50,16 @@ class SubmissionPersistenceMappingTest {
         .noneMatch(method -> method.getName().startsWith("set"));
   }
 
-  private boolean isEnumMapping(Method method) {
-    return method.isAnnotationPresent(Enumerated.class);
+  private boolean isEnumMapping(Field field) {
+    return field.isAnnotationPresent(Enumerated.class);
+  }
+
+  private Field[] allFields(Class<?> type) {
+    var fields = new ArrayList<Field>();
+    for (Class<?> current = type; current != null; current = current.getSuperclass()) {
+      fields.addAll(Arrays.asList(current.getDeclaredFields()));
+    }
+    return fields.toArray(Field[]::new);
   }
 
   private int versionCount(Class<?> type) {
