@@ -12,7 +12,7 @@ COPY .mvn/ ./.mvn
 RUN ./mvnw -Pnative package -DskipTests -Dskip.unit.tests=true -Dspring-boot.run.profiles=prod
 
 ### Deployer
-FROM gcr.io/distroless/java-base:nonroot
+FROM gcr.io/distroless/java21-debian12:nonroot
 ARG PORT=9090
 
 # Copy
