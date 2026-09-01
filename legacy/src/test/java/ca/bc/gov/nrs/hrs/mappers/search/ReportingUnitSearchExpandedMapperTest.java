@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.SearchExpandedSecondaryDto;
 import ca.bc.gov.nrs.hrs.entity.search.ReportingUnitSearchExpandedProjection;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,9 +18,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import tools.jackson.databind.json.JsonMapper;
 
 @DisplayName("Unit Test | ReportingUnitSearchExpandedMapper")
-@SpringBootTest(classes = {ReportingUnitSearchExpandedMapperImpl.class, ObjectMapper.class})
+@SpringBootTest(classes = {ReportingUnitSearchExpandedMapperImpl.class, JsonMapper.class})
 @ActiveProfiles("default")
 class ReportingUnitSearchExpandedMapperTest {
 
