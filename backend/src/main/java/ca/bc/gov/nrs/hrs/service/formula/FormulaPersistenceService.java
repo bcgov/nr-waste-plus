@@ -22,7 +22,6 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class FormulaPersistenceService {
 
-  private static final JsonNode EMPTY_ERRORS = JsonNodeFactory.instance.arrayNode();
   private final DistrictVolumeFormulaRepository formulaRepository;
   private final DistrictVolumeRepository districtVolumeRepository;
 
@@ -33,7 +32,8 @@ public class FormulaPersistenceService {
     Objects.requireNonNull(targetStartDate, "targetStartDate");
     return formulaRepository.findForPriorVersion(area, targetStartDate).stream()
         .map(formula -> new FormulaDraft(formula.getFormulaKey(), formula.getExpression(),
-            formula.getDeclaredVariables(), EMPTY_ERRORS, formula.getSortOrder()))
+            formula.getDeclaredVariables(), JsonNodeFactory.instance.arrayNode(),
+            formula.getSortOrder()))
         .toList();
   }
 

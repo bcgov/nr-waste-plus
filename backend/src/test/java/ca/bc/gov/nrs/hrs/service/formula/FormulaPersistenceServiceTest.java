@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.anyList;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
@@ -53,6 +54,25 @@ class FormulaPersistenceServiceTest {
       assertThat(draft.sortOrder()).isEqualTo(4);
     });
     verify(formulaRepository, never()).saveAll(org.mockito.ArgumentMatchers.any());
+  }
+
+  @Test
+  void carryForwardGivesEachDraftIndependentValidationErrors() {
+    DistrictVolumeFormulaEntity first = formula("config.first", 0);
+    DistrictVolumeFormulaEntity second = formula("config.second", 1);
+    when(formulaRepository.findForPriorVersion(Area.INTERIOR, LocalDate.of(2099, 1, 1)))
+        .thenReturn(List.of(first, second));
+
+    List<FormulaPersistenceService.FormulaDraft> result =
+        service.carryForward(Area.INTERIOR, LocalDate.of(2099, 1, 1));
+
+    ArrayNode firstErrors = (ArrayNode) result.get(0).validationErrors();
+    ArrayNode secondErrors = (ArrayNode) result.get(1).validationErrors();
+    firstErrors.add("new error");
+
+    assertThat(firstErrors).containsExactly(JsonNodeFactory.instance.textNode("new error"));
+    assertThat(secondErrors).isEmpty();
+    assertThat(firstErrors).isNotSameAs(secondErrors);
   }
 
   @Test
@@ -155,6 +175,16 @@ class FormulaPersistenceServiceTest {
     return new FormulaPersistenceService.FormulaDraft(key, "1",
         JsonNodeFactory.instance.objectNode().put("value", 1),
         JsonNodeFactory.instance.arrayNode(), order);
+  }
+
+  private DistrictVolumeFormulaEntity formula(String key, int order) {
+    DistrictVolumeFormulaEntity formula = new DistrictVolumeFormulaEntity();
+    formula.setFormulaKey(key);
+    formula.setExpression("1");
+    formula.setDeclaredVariables(JsonNodeFactory.instance.objectNode());
+    formula.setValidationErrors(JsonNodeFactory.instance.arrayNode().add("old"));
+    formula.setSortOrder(order);
+    return formula;
   }
 
   private DistrictVolumeEntity version(Long id, LocalDate start, LocalDate end) {
