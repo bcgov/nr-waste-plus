@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b tsconfig.app.json && vite build",
     "lint": "eslint ./src --ext .ts,.tsx",
     "stub": "dotenv -- wiremock --enable-stub-cors --global-response-templating --port 8080 --https-port 8181 --root-dir ./stub --verbose --permitted-system-keys=\"VITE_USER_POOLS_WEB_CLIENT_ID\"",
     "stub:login": "dotenv -- wiremock --enable-stub-cors --global-response-templating --port 8180 --https-port 8181 --root-dir ./stub --verbose --permitted-system-keys=\"VITE_USER_POOLS_WEB_CLIENT_ID\"",

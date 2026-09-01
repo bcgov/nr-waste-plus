@@ -153,6 +153,7 @@ public final class FormulaParser {
         position++;
       }
       String name = source.substring(start, position);
+      int tokenEnd = position;
       skipWhitespace();
       if (peek('(')) {
         if ("IF".equalsIgnoreCase(name)) {
@@ -161,7 +162,7 @@ public final class FormulaParser {
         failAt(FormulaValidationError.Code.UNSUPPORTED_FUNCTION,
             "Function calls are not supported", start, position);
       }
-      return new VariableReferenceNode(name, start, position);
+      return new VariableReferenceNode(name, start, tokenEnd);
     }
 
     private FormulaNode ifExpression(int start, int depth) {
