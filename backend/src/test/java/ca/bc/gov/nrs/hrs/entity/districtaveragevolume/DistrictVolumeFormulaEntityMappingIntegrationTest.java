@@ -23,8 +23,8 @@ class DistrictVolumeFormulaEntityMappingIntegrationTest extends AbstractTestCont
 
   @Test
   void jsonbRoundTripAndPriorVersionOrdering() {
-    DistrictVolumeEntity previous = volume(LocalDate.of(2026, 1, 1));
-    DistrictVolumeEntity current = volume(LocalDate.of(2026, 3, 1));
+    DistrictVolumeEntity previous = volume(LocalDate.of(2020, 1, 1));
+    DistrictVolumeEntity current = volume(LocalDate.of(2020, 3, 1));
     districtVolumeRepository.saveAllAndFlush(List.of(previous, current));
 
     DistrictVolumeFormulaEntity formula = new DistrictVolumeFormulaEntity();
@@ -47,7 +47,7 @@ class DistrictVolumeFormulaEntityMappingIntegrationTest extends AbstractTestCont
 
   @Test
   void jsonbRoundTripPreservesDiagnosticContent() {
-    DistrictVolumeEntity volume = volume(LocalDate.of(2026, 5, 1));
+    DistrictVolumeEntity volume = volume(LocalDate.of(2020, 5, 1));
     districtVolumeRepository.saveAndFlush(volume);
     DistrictVolumeFormulaEntity formula = new DistrictVolumeFormulaEntity();
     formula.setDistrictVolume(volume);
@@ -77,7 +77,7 @@ class DistrictVolumeFormulaEntityMappingIntegrationTest extends AbstractTestCont
 
   @Test
   void databaseRejectsNegativeSortOrder() {
-    DistrictVolumeEntity volume = volume(LocalDate.of(2026, 6, 1));
+    DistrictVolumeEntity volume = volume(LocalDate.of(2020, 6, 1));
     districtVolumeRepository.saveAndFlush(volume);
     DistrictVolumeFormulaEntity formula = new DistrictVolumeFormulaEntity();
     formula.setDistrictVolume(volume);
@@ -91,7 +91,7 @@ class DistrictVolumeFormulaEntityMappingIntegrationTest extends AbstractTestCont
 
   @Test
   void databaseRejectsDuplicateFormulaKeyForOneVersion() {
-    DistrictVolumeEntity volume = volume(LocalDate.of(2026, 7, 1));
+    DistrictVolumeEntity volume = volume(LocalDate.of(2020, 7, 1));
     districtVolumeRepository.saveAndFlush(volume);
     DistrictVolumeFormulaEntity first = formula(volume, "config.duplicate", 0);
     formulaRepository.saveAndFlush(first);
@@ -122,6 +122,7 @@ class DistrictVolumeFormulaEntityMappingIntegrationTest extends AbstractTestCont
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setArea(Area.INTERIOR);
     entity.setStartDate(startDate);
+    entity.setEndDate(startDate.plusDays(1));
     entity.setTableData(new TableData(List.of(), null, null, java.util.Map.of()));
     entity.setTableLevelFactor(new BigDecimal("1.000"));
     return entity;
