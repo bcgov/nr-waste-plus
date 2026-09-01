@@ -47,6 +47,15 @@ class FormulaParserTest {
   }
 
   @Test
+  void should_exclude_trailing_whitespace_from_variable_offsets() {
+    FormulaNode node = PARSER.parse("da.rate  + 1");
+
+    assertThat(((BinaryOperationNode) node).left())
+        .extracting(FormulaNode::startOffset, FormulaNode::endOffset)
+        .containsExactly(0, 7);
+  }
+
+  @Test
   void should_reject_calls_and_malformed_tokens_with_offsets() {
     assertThatThrownBy(() -> PARSER.parse("sqrt(4)"))
         .isInstanceOf(FormulaParseException.class)
