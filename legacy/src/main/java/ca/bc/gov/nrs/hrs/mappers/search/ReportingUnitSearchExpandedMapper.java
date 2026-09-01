@@ -5,8 +5,6 @@ import ca.bc.gov.nrs.hrs.dto.search.SearchExpandedSecondaryDto;
 import ca.bc.gov.nrs.hrs.entity.search.ReportingUnitSearchExpandedProjection;
 import ca.bc.gov.nrs.hrs.mappers.AbstractSingleMapper;
 import ca.bc.gov.nrs.hrs.mappers.MapperConstants;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.mapstruct.Mapper;
@@ -14,6 +12,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * MapStruct mapper for converting between ReportingUnitSearchExpandedProjection and
