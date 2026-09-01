@@ -86,8 +86,8 @@
       "expected": {
         "status": "INVALID",
         "errors": [
-          { "code": "UNKNOWN_VARIABLE" },
-          { "code": "UNKNOWN_VARIABLE" }
+          { "code": "UNKNOWN_VARIABLE", "startOffset": 0, "endOffset": 11 },
+          { "code": "UNKNOWN_VARIABLE", "startOffset": 14, "endOffset": 25 }
         ]
       }
     },
@@ -121,7 +121,7 @@
       "expected": {
         "status": "INVALID",
         "errors": [
-          { "code": "UNKNOWN_VARIABLE", "startOffset": 0, "endOffset": 11 }
+          { "code": "UNKNOWN_VARIABLE", "startOffset": 0, "endOffset": 10 }
         ]
       }
     },

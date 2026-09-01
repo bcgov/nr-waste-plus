@@ -8,6 +8,8 @@ type Expected = {
   reason?: string;
 };
 
+const allowedStatuses = ['VALID', 'INVALID', 'PENDING_EVALUATOR'] as const;
+
 describe('formula conformance fixture', () => {
   it('contains executable backend cases and explicit evaluator boundaries', () => {
     expect(fixture.contractVersion).toBe('1.0');
@@ -30,12 +32,15 @@ describe('formula conformance fixture', () => {
       const expected = testCase.expected as Expected;
       expect(testCase.id).toMatch(/^[a-z0-9-]+$/);
       expect(testCase.mode).toMatch(/^(MATHEMATICAL|CONDITIONAL)$/);
+      expect(testCase.expression ?? testCase.definitions).toBeTruthy();
+      expect(expected.status).toBeDefined();
+      expect(allowedStatuses).toContain(expected.status);
       if (expected.status === 'PENDING_EVALUATOR') {
         pending += 1;
-        expect(expected.reason).toBeTruthy();
+        expect(expected.reason).toEqual(expect.any(String));
+        expect(expected.reason?.trim()).not.toBe('');
       } else {
         executable += 1;
-        expect(testCase.expression ?? testCase.definitions).toBeTruthy();
         if (expected.status === 'INVALID') {
           expect(expected.errors?.length).toBeGreaterThan(0);
           for (const error of expected.errors ?? []) {
