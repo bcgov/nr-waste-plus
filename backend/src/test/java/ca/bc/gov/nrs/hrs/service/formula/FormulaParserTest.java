@@ -35,6 +35,15 @@ class FormulaParserTest {
   }
 
   @Test
+  void should_parse_literal_boundaries_and_preserve_literal_value() {
+    assertThat(PARSER.parse("0")).isInstanceOf(LiteralNode.class);
+    assertThat(((LiteralNode) PARSER.parse(".125")).value())
+        .isEqualByComparingTo(new BigDecimal("0.125"));
+    assertThat(((LiteralNode) PARSER.parse("999999999999999999999.000")).value())
+        .isEqualByComparingTo(new BigDecimal("999999999999999999999.000"));
+  }
+
+  @Test
   void should_parse_comparisons_only_in_conditional_mode() {
     FormulaNode node = PARSER.parse("da.rate >= 2", FormulaParseMode.CONDITIONAL);
 
@@ -133,6 +142,20 @@ class FormulaParserTest {
   }
 
   @Test
+  void should_build_expected_precedence_tree_for_comparison_and_arithmetic() {
+    BinaryOperationNode comparison =
+        (BinaryOperationNode) PARSER.parse("1 + 2 * 3 >= 7", FormulaParseMode.CONDITIONAL);
+
+    assertThat(comparison.operator()).isEqualTo(BinaryOperator.GREATER_THAN_OR_EQUAL);
+    assertThat(comparison.left()).isInstanceOf(BinaryOperationNode.class);
+    BinaryOperationNode addition = (BinaryOperationNode) comparison.left();
+    assertThat(addition.operator()).isEqualTo(BinaryOperator.ADD);
+    assertThat(addition.right()).isInstanceOf(BinaryOperationNode.class);
+    assertThat(((BinaryOperationNode) addition.right()).operator())
+        .isEqualTo(BinaryOperator.MULTIPLY);
+  }
+
+  @Test
   void should_reject_remaining_unsupported_syntax() {
     for (String expression : new String[] {"1 % 2", "1 ^ 2", "1 && 2", "1 = 2", "1;2"}) {
       assertThatThrownBy(() -> PARSER.parse(expression, FormulaParseMode.CONDITIONAL))
@@ -180,6 +203,22 @@ class FormulaParserTest {
       assertThatThrownBy(() -> PARSER.parse(expression))
           .isInstanceOf(FormulaParseException.class);
     }
+  }
+
+  @Test
+  void should_report_if_argument_and_function_diagnostic_spans() {
+    assertThatThrownBy(() -> PARSER.parse("IF(1 < 2 3, 4)"))
+        .isInstanceOf(FormulaParseException.class)
+        .extracting(exception -> ((FormulaParseException) exception).error())
+        .isEqualTo(new FormulaValidationError(
+            FormulaValidationError.Code.SYNTAX_ERROR,
+            "Expected ',' between IF arguments", 9, 10));
+    assertThatThrownBy(() -> PARSER.parse("MAX(1, 2)"))
+        .isInstanceOf(FormulaParseException.class)
+        .extracting(exception -> ((FormulaParseException) exception).error())
+        .isEqualTo(new FormulaValidationError(
+            FormulaValidationError.Code.UNSUPPORTED_FUNCTION,
+            "Function calls are not supported", 0, 3));
   }
 
   @Test
