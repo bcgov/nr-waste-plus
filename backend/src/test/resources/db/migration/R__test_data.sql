@@ -9,15 +9,29 @@ ON CONFLICT (user_id) DO UPDATE SET
 -- DKM must appear in both an active INTERIOR record and an active COASTAL record so
 -- that DistrictVolumeService.getAreasForDistrictCode("DKM") returns a list of size 2,
 -- triggering the grade-required validation (HTTP 400) when gradeCode is absent.
--- The Testcontainers database is shared by all integration-test classes. Remove only these
--- identified fixture rows before reseeding so repeatable migration execution cannot accumulate
--- duplicate active records for the same area. Closing rather than deleting preserves any
--- foreign-key references created by another integration test.
+-- The Testcontainers database is shared by all integration-test classes. Close the rows owned by
+-- this fixture before reseeding so repeatable migration execution cannot accumulate duplicate
+-- active records for the same area. Closing rather than deleting preserves foreign-key references
+-- from formula and calculation-snapshot tests. The legacy predicate is retained for rows created
+-- before the stable fixture discriminator was added.
 UPDATE hrs.district_volume
 SET end_date = '2019-12-31',
     updated_at = NOW(),
-    updated_by = 'test-seed'
+    updated_by = 'test-seed:reporting-unit-dkm-v1'
 WHERE created_by = 'test-seed'
+  AND start_date = '2020-01-01'
+  AND end_date IS NULL
+  AND area IN ('INTERIOR', 'COASTAL')
+  AND (
+      table_data @> '{"zones":[{"districts":[{"district":{"code":"DKM"}}]}]}'::JSONB
+      OR table_data @> '{"sections":[{"districts":[{"district":{"code":"DKM"}}]}]}'::JSONB
+  );
+
+UPDATE hrs.district_volume
+SET end_date = '2019-12-31',
+    updated_at = NOW(),
+    updated_by = 'test-seed:reporting-unit-dkm-v1'
+WHERE created_by = 'test-seed:reporting-unit-dkm-v1'
   AND start_date = '2020-01-01'
   AND end_date IS NULL
   AND area IN ('INTERIOR', 'COASTAL');
@@ -50,9 +64,9 @@ VALUES
         1.000,
         NULL,
         NOW(),
-        'test-seed',
+        'test-seed:reporting-unit-dkm-v1',
         NOW(),
-        'test-seed'
+        'test-seed:reporting-unit-dkm-v1'
     ),
     (
         'COASTAL',
@@ -79,7 +93,7 @@ VALUES
         2.000,
         1.200,
         NOW(),
-        'test-seed',
+        'test-seed:reporting-unit-dkm-v1',
         NOW(),
-        'test-seed'
+        'test-seed:reporting-unit-dkm-v1'
     );
