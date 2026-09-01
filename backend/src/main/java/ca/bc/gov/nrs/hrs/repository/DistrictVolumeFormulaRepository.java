@@ -15,11 +15,11 @@ public interface DistrictVolumeFormulaRepository
   @Query("""
       select f from DistrictVolumeFormulaEntity f
       join fetch f.districtVolume d
-      where d.area = :area and d.configType = 'DISTRICT_VOLUME'
+      where d.area = :area and d.configType = DISTRICT_VOLUME
         and d.deleted = false and d.startDate < :startDate
         and d.startDate = (
           select max(previous.startDate) from DistrictVolumeEntity previous
-          where previous.area = :area and previous.configType = 'DISTRICT_VOLUME'
+          where previous.area = :area and previous.configType = DISTRICT_VOLUME
             and previous.deleted = false and previous.startDate < :startDate)
       order by f.sortOrder asc, f.id asc
       """)
