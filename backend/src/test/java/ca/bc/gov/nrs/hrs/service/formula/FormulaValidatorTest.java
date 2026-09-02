@@ -57,6 +57,21 @@ class FormulaValidatorTest {
   }
 
   @Test
+  void should_report_unknown_namespace_using_only_identifier_span() {
+    String expression = "da.rate + config.rate";
+    List<FormulaValidationError> errors = VALIDATOR.validate(request(
+        List.of(new FormulaDefinition("total", expression)),
+        Map.of("da.rate", BigDecimal.ONE)));
+
+    assertThat(errors).singleElement().satisfies(error -> {
+      assertThat(error.code()).isEqualTo(FormulaValidationError.Code.UNKNOWN_VARIABLE);
+      assertThat(error.message()).isEqualTo("Unknown variable: config.rate");
+      assertThat(error.startOffset()).isEqualTo(expression.indexOf("config.rate"));
+      assertThat(error.endOffset()).isEqualTo(expression.length());
+    });
+  }
+
+  @Test
   void should_type_check_if_and_validate_both_branches() {
     assertThat(VALIDATOR.validate(request(
         List.of(new FormulaDefinition("total", "IF(da.rate >= 2, 10, sc.value + 1)")),
@@ -100,6 +115,18 @@ class FormulaValidatorTest {
 
     assertThat(errors).extracting(FormulaValidationError::code)
         .containsExactly(FormulaValidationError.Code.DIVISION_BY_ZERO);
+  }
+
+  @Test
+  void should_report_constant_zero_for_nested_unary_and_parenthesized_denominator() {
+    List<FormulaValidationError> errors = VALIDATOR.validate(request(
+        List.of(new FormulaDefinition("total", "10 / -(0)")), Map.of()));
+
+    assertThat(errors).singleElement().satisfies(error -> {
+      assertThat(error.code()).isEqualTo(FormulaValidationError.Code.DIVISION_BY_ZERO);
+      assertThat(error.startOffset()).isEqualTo(5);
+      assertThat(error.endOffset()).isEqualTo(8);
+    });
   }
 
   @Test
@@ -187,6 +214,22 @@ class FormulaValidatorTest {
         .isInstanceOf(NullPointerException.class);
     assertThatThrownBy(() -> VALIDATOR.validate(null))
         .isInstanceOf(NullPointerException.class);
+  }
+
+  @Test
+  void should_defensively_copy_validation_request_collections() {
+    List<FormulaDefinition> definitions = new java.util.ArrayList<>(List.of(
+        new FormulaDefinition("total", "1")));
+    Map<String, BigDecimal> variables = new java.util.HashMap<>();
+    variables.put("da.rate", BigDecimal.ONE);
+    FormulaValidationRequest request = new FormulaValidationRequest(
+        definitions, variables, FormulaParseMode.MATHEMATICAL);
+
+    definitions.clear();
+    variables.clear();
+
+    assertThat(request.formulas()).hasSize(1);
+    assertThat(request.knownVariables()).containsEntry("da.rate", BigDecimal.ONE);
   }
 
   @Test
