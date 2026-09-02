@@ -1,46 +1,55 @@
 package ca.bc.gov.nrs.hrs.entity.districtaveragevolume;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-/**
- * Represents a single district row within a district volume table.
- *
- * <p>The fields applicable to a row depend on the area:
- *
- * <ul>
- *   <li><strong>Interior</strong>: {@code avoidableGrade4} and
- *       {@code unavoidableGrade4}
- *   <li><strong>Coast</strong>: {@code avoidableHembalGradeU},
- *       {@code avoidableGradeY}, and {@code unavoidable}
- *   <li><strong>Common</strong>: {@code district}, {@code avoidableSawlog},
- *       and {@code total}
- * </ul>
- *
- * @param district district code and description
- * @param avoidableSawlog avoidable sawlog volume
- * @param avoidableGrade4 avoidable Grade 4 volume (interior only)
- * @param unavoidableGrade4 unavoidable Grade 4 volume (interior only)
- * @param avoidableHembalGradeU avoidable HemBal Grade U volume (coast only)
- * @param avoidableGradeY avoidable Grade Y volume (coast only)
- * @param unavoidable unavoidable volume (coast only)
- * @param total total volume for the district row
- */
+/** A district row with standard values and preserved arbitrary JSON fields. */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record DistrictRow(
-    CodeDescriptionDto district,
-    BigDecimal avoidableSawlog,
+public class DistrictRow {
+  private final CodeDescriptionDto district;
+  private final BigDecimal avoidableSawlog;
+  private final BigDecimal avoidableGrade4;
+  private final BigDecimal unavoidableGrade4;
+  private final BigDecimal avoidableHembalGradeU;
+  private final BigDecimal avoidableGradeY;
+  private final BigDecimal unavoidable;
+  private final BigDecimal total;
+  private final Map<String, Object> additionalProperties = new LinkedHashMap<>();
 
-    // Interior-only
-    BigDecimal avoidableGrade4,
-    BigDecimal unavoidableGrade4,
+  /** Creates a district row from the standard application fields. */
+  public DistrictRow(CodeDescriptionDto district, BigDecimal avoidableSawlog,
+      BigDecimal avoidableGrade4, BigDecimal unavoidableGrade4,
+      BigDecimal avoidableHembalGradeU, BigDecimal avoidableGradeY,
+      BigDecimal unavoidable, BigDecimal total) {
+    this.district = district;
+    this.avoidableSawlog = avoidableSawlog;
+    this.avoidableGrade4 = avoidableGrade4;
+    this.unavoidableGrade4 = unavoidableGrade4;
+    this.avoidableHembalGradeU = avoidableHembalGradeU;
+    this.avoidableGradeY = avoidableGradeY;
+    this.unavoidable = unavoidable;
+    this.total = total;
+  }
 
-    // Coast-only
-    BigDecimal avoidableHembalGradeU,
-    BigDecimal avoidableGradeY,
-    BigDecimal unavoidable,
+  public CodeDescriptionDto district() { return district; }
+  public BigDecimal avoidableSawlog() { return avoidableSawlog; }
+  public BigDecimal avoidableGrade4() { return avoidableGrade4; }
+  public BigDecimal unavoidableGrade4() { return unavoidableGrade4; }
+  public BigDecimal avoidableHembalGradeU() { return avoidableHembalGradeU; }
+  public BigDecimal avoidableGradeY() { return avoidableGradeY; }
+  public BigDecimal unavoidable() { return unavoidable; }
+  public BigDecimal total() { return total; }
 
-    // Common
-    BigDecimal total
-) {}
+  /** Preserves fields not known by the current application model. */
+  @JsonAnySetter
+  public void addProperty(String name, Object value) { additionalProperties.put(name, value); }
+
+  /** Exposes preserved arbitrary fields to JSON conversion. */
+  @JsonAnyGetter
+  public Map<String, Object> additionalProperties() { return additionalProperties; }
+}

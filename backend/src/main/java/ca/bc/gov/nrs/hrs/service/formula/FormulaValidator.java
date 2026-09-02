@@ -67,7 +67,8 @@ public final class FormulaValidator {
           errors.add(error(FormulaValidationError.Code.UNKNOWN_VARIABLE,
               "Unknown variable: " + variable.name(), variable.startOffset(),
               variable.endOffset()));
-        } else if (!known.containsKey(variable.name())) {
+        } else if (!(namespace.equals("da") || namespace.equals("sc"))
+            && !known.containsKey(variable.name())) {
           errors.add(error(FormulaValidationError.Code.UNKNOWN_VARIABLE,
               "Unknown variable: " + variable.name(), variable.startOffset(),
               variable.endOffset()));

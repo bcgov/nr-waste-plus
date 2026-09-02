@@ -1,0 +1,23 @@
+{
+  "mappings": [
+    {
+      "name": "Get district volume formulas",
+      "request": {
+        "urlPattern": "/api/configuration/formulas/2026-11-03/COASTAL",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "districtVolumeId": 42,
+          "area": "INTERIOR",
+          "status": "ACTIVE",
+          "formulas": []
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    }
+  ]
+}

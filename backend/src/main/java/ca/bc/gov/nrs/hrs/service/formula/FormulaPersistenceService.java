@@ -17,15 +17,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Owns formula drafts and the validated, atomic persistence boundary. */
+/** Preserves the legacy formula persistence contract used by district-volume workflows. */
 @Service
 @RequiredArgsConstructor
 public class FormulaPersistenceService {
-
   private final DistrictVolumeFormulaRepository formulaRepository;
   private final DistrictVolumeRepository districtVolumeRepository;
 
-  /** Returns an unsaved copy of formulas from the prior live version in the requested area. */
+  /** Returns identity-free formulas carried forward from the preceding version. */
   @Transactional(readOnly = true)
   public List<FormulaDraft> carryForward(Area area, LocalDate targetStartDate) {
     Objects.requireNonNull(area, "area");
@@ -37,17 +36,20 @@ public class FormulaPersistenceService {
         .toList();
   }
 
-  /** Persists every formula in a validated batch, or none when diagnostics are present. */
+  /** Persists validated legacy rows for an editable district-volume version. */
   @Transactional
-  public List<DistrictVolumeFormulaEntity> saveValidated(
-      Long districtVolumeId, List<FormulaDraft> drafts) {
+  public List<DistrictVolumeFormulaEntity> saveValidated(Long districtVolumeId,
+      List<FormulaDraft> drafts) {
     Objects.requireNonNull(districtVolumeId, "districtVolumeId");
     Objects.requireNonNull(drafts, "drafts");
-    DistrictVolumeEntity districtVolume = districtVolumeRepository
+    DistrictVolumeEntity volume = districtVolumeRepository
         .findByIdAndConfigType(districtVolumeId, ConfigType.DISTRICT_VOLUME)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "District volume record not found: " + districtVolumeId));
-    if (isActive(districtVolume)) {
+    LocalDate today = LocalDate.now();
+    if (!volume.isDeleted() && volume.getStartDate() != null
+        && !volume.getStartDate().isAfter(today)
+        && (volume.getEndDate() == null || !volume.getEndDate().isBefore(today))) {
       throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT,
           "Active formula configuration is read-only.");
     }
@@ -56,32 +58,21 @@ public class FormulaPersistenceService {
           "Formula validation errors must be resolved before saving.");
     }
     List<DistrictVolumeFormulaEntity> entities = drafts.stream().map(draft -> {
-      DistrictVolumeFormulaEntity entity = new DistrictVolumeFormulaEntity();
-      entity.setDistrictVolume(districtVolume);
-      entity.setFormulaKey(draft.formulaKey());
-      entity.setExpression(draft.expression());
-      entity.setDeclaredVariables(draft.declaredVariables());
-      entity.setValidationErrors(draft.validationErrors());
-      entity.setSortOrder(draft.sortOrder());
-      return entity;
+      DistrictVolumeFormulaEntity formula = new DistrictVolumeFormulaEntity();
+      formula.setDistrictVolume(volume);
+      formula.setFormulaKey(draft.formulaKey());
+      formula.setExpression(draft.expression());
+      formula.setDeclaredVariables(draft.declaredVariables());
+      formula.setValidationErrors(draft.validationErrors());
+      formula.setSortOrder(draft.sortOrder());
+      return formula;
     }).toList();
     return formulaRepository.saveAll(entities);
   }
 
-  private boolean isActive(DistrictVolumeEntity entity) {
-    LocalDate today = LocalDate.now();
-    return !entity.isDeleted() && entity.getStartDate() != null
-        && !entity.getStartDate().isAfter(today)
-        && (entity.getEndDate() == null || !entity.getEndDate().isBefore(today));
-  }
-
-  /** The editable, deliberately identity-free representation used during formula review. */
-  public record FormulaDraft(
-      String formulaKey,
-      String expression,
-      JsonNode declaredVariables,
-      JsonNode validationErrors,
-      int sortOrder) {
+  /** Identity-free formula input used by the existing district-volume workflow. */
+  public record FormulaDraft(String formulaKey, String expression, JsonNode declaredVariables,
+      JsonNode validationErrors, int sortOrder) {
     public FormulaDraft {
       Objects.requireNonNull(formulaKey, "formulaKey");
       Objects.requireNonNull(expression, "expression");
