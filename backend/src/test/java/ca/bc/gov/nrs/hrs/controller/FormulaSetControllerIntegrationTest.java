@@ -183,7 +183,7 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void updateReturnsOkWithUpdatedFormulas() throws Exception {
     String location = createFormulaSet();
-    Long id = Long.parseLong(location.substring(location.lastIndexOf('/') + 1));
+    long id = Long.parseLong(location.substring(location.lastIndexOf('/') + 1));
 
     Map<String, Object> body = Map.of(
         "area", "COASTAL",
