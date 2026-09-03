@@ -97,7 +97,7 @@ public class FormulaSetService {
 
   /** Reads the set effective for a submission date and selected area. */
   @Transactional(Transactional.TxType.SUPPORTS)
-  public FormulaSetResponse effective(LocalDate date, Area area, String district) {
+  public FormulaSetResponse effective(LocalDate date, Area area) {
     FormulaSetEntity set = setRepository.findEffective(area, date)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "No formula set is effective for the requested date and area."));

@@ -47,6 +47,6 @@ public class FormulaSetController {
   @GetMapping("/{date}/{area}/{district}")
   public FormulaSetResponse effective(@PathVariable LocalDate date, @PathVariable Area area,
       @PathVariable String district) {
-    return service.effective(date, area, district);
+    return service.effective(date, area);
   }
 }

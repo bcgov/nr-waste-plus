@@ -73,7 +73,7 @@ class FormulaSetServiceTest {
     when(rowRepository.findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(2L))
         .thenReturn(List.of(row));
 
-    assertThat(service.effective(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI")
+    assertThat(service.effective(LocalDate.of(2026, 11, 3), Area.COASTAL)
         .formulas()).singleElement().extracting(FormulaItemDto::formulaKey)
         .isEqualTo("da.anything");
   }

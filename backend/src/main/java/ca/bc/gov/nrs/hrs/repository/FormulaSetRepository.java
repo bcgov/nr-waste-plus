@@ -26,11 +26,6 @@ public interface FormulaSetRepository extends JpaRepository<FormulaSetEntity, Lo
   List<FormulaSetEntity> findFutureOverlapping(@Param("area") Area area,
       @Param("date") LocalDate date);
 
-  /** Finds non-deleted sets whose interval contains the proposed start date. */
-  @Query("select f from FormulaSetEntity f where f.area = :area and f.deleted = false "
-      + "and f.startDate > CURRENT_DATE and f.startDate <= :date "
-      + "and (f.endDate is null or f.endDate >= :date)")
-  List<FormulaSetEntity> findOverlapping(@Param("area") Area area, @Param("date") LocalDate date);
   @Query("select f from FormulaSetEntity f where f.area = :area and f.deleted = false "
       + "and f.endDate is null and f.startDate < :date order by f.startDate desc")
   List<FormulaSetEntity> findPredecessors(@Param("area") Area area, @Param("date") LocalDate date);

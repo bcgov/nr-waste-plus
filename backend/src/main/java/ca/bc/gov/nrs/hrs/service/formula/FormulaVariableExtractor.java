@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.service.formula;
 
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -13,6 +14,7 @@ public final class FormulaVariableExtractor {
 
   /** Returns distinct canonical namespace paths from an expression. */
   public static Set<String> extract(String expression, FormulaParseMode mode) {
+    Objects.requireNonNull(mode, "mode must not be null");
     Set<String> variables = new LinkedHashSet<>();
     var matcher = VARIABLE.matcher(expression);
     while (matcher.find()) {
