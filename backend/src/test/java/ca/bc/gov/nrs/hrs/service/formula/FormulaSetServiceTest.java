@@ -69,6 +69,7 @@ class FormulaSetServiceTest {
     when(setRepository.findEffective(Area.COASTAL, LocalDate.of(2026, 11, 3)))
         .thenReturn(Optional.of(set));
     FormulaSetRowEntity row = new FormulaSetRowEntity();
+    row.setFormulaKey("da.anything");
     when(rowRepository.findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(2L))
         .thenReturn(List.of(row));
 
@@ -106,7 +107,7 @@ class FormulaSetServiceTest {
   }
 
   private FormulaSetRequest request(String key, String expression) {
-    return new FormulaSetRequest(Area.COASTAL, LocalDate.now().plusDays(10),
+    return new FormulaSetRequest(Area.COASTAL, LocalDate.now().plusDays(5),
         List.of(new FormulaItemDto(key, expression, 0)));
   }
 

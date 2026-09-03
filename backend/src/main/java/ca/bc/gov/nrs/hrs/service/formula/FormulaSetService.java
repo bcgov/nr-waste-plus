@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -137,9 +137,12 @@ public class FormulaSetService {
       row.setValidationErrors(JsonNodeFactory.instance.arrayNode());
       changed.add(row);
     }
-    byKey.values().forEach(row -> row.setDeleted(true));
+    List<FormulaSetRowEntity> deleted = new ArrayList<>(byKey.values());
+    deleted.forEach(row -> row.setDeleted(true));
     rowRepository.saveAll(changed);
-    rowRepository.saveAll(byKey.values());
+    if (!deleted.isEmpty()) {
+      rowRepository.saveAll(deleted);
+    }
   }
 
   private void validateExpressions(FormulaSetRequest request) {

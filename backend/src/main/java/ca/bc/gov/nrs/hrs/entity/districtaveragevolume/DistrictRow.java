@@ -3,7 +3,9 @@ package ca.bc.gov.nrs.hrs.entity.districtaveragevolume;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -22,10 +24,15 @@ public class DistrictRow {
   private final Map<String, Object> additionalProperties = new LinkedHashMap<>();
 
   /** Creates a district row from the standard application fields. */
-  public DistrictRow(CodeDescriptionDto district, BigDecimal avoidableSawlog,
-      BigDecimal avoidableGrade4, BigDecimal unavoidableGrade4,
-      BigDecimal avoidableHembalGradeU, BigDecimal avoidableGradeY,
-      BigDecimal unavoidable, BigDecimal total) {
+  @JsonCreator
+  public DistrictRow(@JsonProperty("district") CodeDescriptionDto district,
+      @JsonProperty("avoidableSawlog") BigDecimal avoidableSawlog,
+      @JsonProperty("avoidableGrade4") BigDecimal avoidableGrade4,
+      @JsonProperty("unavoidableGrade4") BigDecimal unavoidableGrade4,
+      @JsonProperty("avoidableHembalGradeU") BigDecimal avoidableHembalGradeU,
+      @JsonProperty("avoidableGradeY") BigDecimal avoidableGradeY,
+      @JsonProperty("unavoidable") BigDecimal unavoidable,
+      @JsonProperty("total") BigDecimal total) {
     this.district = district;
     this.avoidableSawlog = avoidableSawlog;
     this.avoidableGrade4 = avoidableGrade4;
@@ -36,13 +43,28 @@ public class DistrictRow {
     this.total = total;
   }
 
+  @JsonProperty("district")
   public CodeDescriptionDto district() { return district; }
+
+  @JsonProperty("avoidableSawlog")
   public BigDecimal avoidableSawlog() { return avoidableSawlog; }
+
+  @JsonProperty("avoidableGrade4")
   public BigDecimal avoidableGrade4() { return avoidableGrade4; }
+
+  @JsonProperty("unavoidableGrade4")
   public BigDecimal unavoidableGrade4() { return unavoidableGrade4; }
+
+  @JsonProperty("avoidableHembalGradeU")
   public BigDecimal avoidableHembalGradeU() { return avoidableHembalGradeU; }
+
+  @JsonProperty("avoidableGradeY")
   public BigDecimal avoidableGradeY() { return avoidableGradeY; }
+
+  @JsonProperty("unavoidable")
   public BigDecimal unavoidable() { return unavoidable; }
+
+  @JsonProperty("total")
   public BigDecimal total() { return total; }
 
   /** Preserves fields not known by the current application model. */
