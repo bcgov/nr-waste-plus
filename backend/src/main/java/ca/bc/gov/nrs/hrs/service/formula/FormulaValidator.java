@@ -63,12 +63,8 @@ public final class FormulaValidator {
           yield ValueType.NUMERIC;
         }
         if (dot < 1 || dot == variable.name().length() - 1
-            || !NAMESPACES.contains(namespace)) {
-          errors.add(error(FormulaValidationError.Code.UNKNOWN_VARIABLE,
-              "Unknown variable: " + variable.name(), variable.startOffset(),
-              variable.endOffset()));
-        } else if (!(namespace.equals("da") || namespace.equals("sc"))
-            && !known.containsKey(variable.name())) {
+            || !NAMESPACES.contains(namespace)
+            || !known.containsKey(variable.name())) {
           errors.add(error(FormulaValidationError.Code.UNKNOWN_VARIABLE,
               "Unknown variable: " + variable.name(), variable.startOffset(),
               variable.endOffset()));
