@@ -226,7 +226,7 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void deleteReturns204() throws Exception {
     String location = createFormulaSet();
-    Long id = Long.parseLong(location.substring(location.lastIndexOf('/') + 1));
+    long id = Long.parseLong(location.substring(location.lastIndexOf('/') + 1));
 
     mockMvc.perform(delete("/api/configuration/formulas/" + id)
             .with(SecurityMockMvcRequestPostProcessors.csrf()))
