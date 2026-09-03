@@ -156,8 +156,9 @@ public class FormulaSetService {
     if (request.formulas().stream().map(FormulaItemDto::formulaKey).distinct().count()
         != request.formulas().size()) throw conflict("Formula keys must be unique.");
   }
-  private FormulaSetEntity load(Long id) { return setRepository.findById(id).orElseThrow(
-      () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Formula set not found: " + id)); }
+  private FormulaSetEntity load(Long id) { return setRepository.findById(id)
+      .filter(e -> !e.isDeleted())
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Formula set not found: " + id)); }
   private boolean semanticallyEqual(List<FormulaSetRowEntity> rows, List<FormulaItemDto> items) {
     return rows.size() == items.size() && rows.stream().allMatch(row -> items.stream().anyMatch(item ->
         row.getFormulaKey().equals(item.formulaKey()) && row.getExpression().equals(item.expression())

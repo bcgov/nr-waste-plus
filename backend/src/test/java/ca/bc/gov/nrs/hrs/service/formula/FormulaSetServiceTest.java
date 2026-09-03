@@ -296,6 +296,28 @@ class FormulaSetServiceTest {
         .hasMessageContaining("open-ended");
   }
 
+  @DisplayName("Delete Rejects Already Deleted Set")
+  @Test
+  void deleteRejectsAlreadyDeletedSet() {
+    FormulaSetEntity deleted = futureSet(1L, null);
+    deleted.setDeleted(true);
+    when(setRepository.findById(1L)).thenReturn(Optional.of(deleted));
+
+    assertThatThrownBy(() -> service.delete(1L))
+        .hasMessageContaining("not found");
+  }
+
+  @DisplayName("Update Rejects Deleted Set")
+  @Test
+  void updateRejectsDeletedSet() {
+    FormulaSetEntity deleted = futureSet(1L, null);
+    deleted.setDeleted(true);
+    when(setRepository.findById(1L)).thenReturn(Optional.of(deleted));
+
+    assertThatThrownBy(() -> service.update(1L, request("da.x", "1")))
+        .hasMessageContaining("not found");
+  }
+
   @DisplayName("Effective Rejects Not Found")
   @Test
   void effectiveRejectsNotFound() {
