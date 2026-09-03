@@ -23,12 +23,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Unit Test | Formula Set Service")
 class FormulaSetServiceTest {
   @Mock private FormulaSetRepository setRepository;
   @Mock private FormulaSetRowRepository rowRepository;
   @Mock private FormulaValidationService validationService;
   @InjectMocks private FormulaSetService service;
 
+  @DisplayName("Update Changes Rows Without Calling Physical Delete")
   @Test
   void updateChangesRowsWithoutCallingPhysicalDelete() {
     FormulaSetEntity set = futureSet(1L, null);
@@ -43,6 +45,7 @@ class FormulaSetServiceTest {
     verify(rowRepository).saveAll(any());
   }
 
+  @DisplayName("Update Reuses Soft Deleted Row When Formula Key Is Reintroduced")
   @Test
   void updateReusesSoftDeletedRowWhenFormulaKeyIsReintroduced() {
     FormulaSetEntity set = futureSet(6L, null);
@@ -63,6 +66,7 @@ class FormulaSetServiceTest {
     verify(rowRepository).saveAll(any());
   }
 
+  @DisplayName("Effective Reads Date And Area And Returns Definitions")
   @Test
   void effectiveReadsDateAndAreaAndReturnsDefinitions() {
     FormulaSetEntity set = futureSet(2L, null);
@@ -78,6 +82,7 @@ class FormulaSetServiceTest {
         .isEqualTo("da.anything");
   }
 
+  @DisplayName("Invalid Expression Does Not Persist Rows")
   @Test
   void invalidExpressionDoesNotPersistRows() {
     FormulaSetEntity set = futureSet(3L, null);
@@ -90,6 +95,7 @@ class FormulaSetServiceTest {
     verify(rowRepository, org.mockito.Mockito.never()).saveAll(any());
   }
 
+  @DisplayName("Delete Soft Deletes And Reopens Predecessor")
   @Test
   void deleteSoftDeletesAndReopensPredecessor() {
     FormulaSetEntity set = futureSet(4L, null);

@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /** PostgreSQL round-trip and repository contract tests for submission persistence. */
+@DisplayName("Integrated Test | Submission Persistence")
 class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrationTest {
   private static final String ACTOR = "submission-test";
   private static final Instant NOW = Instant.parse("2026-01-01T00:00:00Z");
@@ -44,6 +45,7 @@ class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrat
   @Autowired private StatusEventRepository statusEventRepository;
   @Autowired private JdbcTemplate jdbcTemplate;
 
+  @DisplayName("Persists And Reads Submission Rows And Json Payloads")
   @Test
   void persistsAndReadsSubmissionRowsAndJsonPayloads() throws Exception {
     ReportingUnitEntity reportingUnit = new ReportingUnitEntity();

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Unit tests for {@link AuditEvent}.
  */
+@DisplayName("Unit Test | Audit Event")
 class AuditEventTest {
 
   @Test
@@ -26,6 +27,7 @@ class AuditEventTest {
     assertThat(event.getId()).isNull();
   }
 
+  @DisplayName("Constructor should Handle Null Reason And Correlation Id")
   @Test
   void constructor_shouldHandleNullReasonAndCorrelationId() {
     AuditEvent event = new AuditEvent("UPDATE", "test-user", null, null);
@@ -34,6 +36,7 @@ class AuditEventTest {
     assertThat(event.getCorrelationId()).isNull();
   }
 
+  @DisplayName("Getters should Return Correct Values")
   @Test
   void getters_shouldReturnCorrectValues() {
     AuditEvent event = new AuditEvent("DELETE", "user1", "reason1", "corr1");

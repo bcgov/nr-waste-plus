@@ -24,10 +24,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Unit Test | Formula Runtime Resolver")
 class FormulaRuntimeResolverTest {
   @Mock private DistrictVolumeRepository repository;
   @InjectMocks private FormulaRuntimeResolver resolver;
 
+  @DisplayName("Resolves Coast District Average Path")
   @Test
   void resolvesCoastDistrictAveragePath() {
     DistrictVolumeEntity volume = volume(ConfigType.DISTRICT_VOLUME, new TableData(null,
@@ -40,6 +42,7 @@ class FormulaRuntimeResolverTest {
         "da.mature.avoidableGradeY")).isEqualByComparingTo("11.530");
   }
 
+  @DisplayName("Resolves Species Path")
   @Test
   void resolvesSpeciesPath() {
     DistrictVolumeEntity volume = volume(ConfigType.SPECIES_COMPOSITION, new TableData(null, null,
@@ -52,6 +55,7 @@ class FormulaRuntimeResolverTest {
         .isEqualByComparingTo("0.000");
   }
 
+  @DisplayName("Rejects Missing Field Clearly")
   @Test
   void rejectsMissingFieldClearly() {
     DistrictVolumeEntity volume = volume(ConfigType.DISTRICT_VOLUME, new TableData(null,
@@ -63,6 +67,7 @@ class FormulaRuntimeResolverTest {
         "da.mature.avoidableGradeY")).hasMessageContaining("avoidableGradeY");
   }
 
+  @DisplayName("Resolves Numeric Field Not Known By The Domain Model")
   @Test
   void resolvesNumericFieldNotKnownByTheDomainModel() {
     DistrictRow row = row("DNI", null, null);

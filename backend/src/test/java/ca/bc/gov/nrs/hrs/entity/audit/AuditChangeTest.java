@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Unit tests for {@link AuditChange}.
  */
+@DisplayName("Unit Test | Audit Change")
 class AuditChangeTest {
 
   @Test
@@ -30,6 +31,7 @@ class AuditChangeTest {
     assertThat(change.getChangedColumns()).containsExactly("field1", "field2");
   }
 
+  @DisplayName("Constructor should Handle Null Json Values")
   @Test
   void constructor_shouldHandleNullJsonValues() {
     AuditChange change = new AuditChange(
@@ -39,6 +41,7 @@ class AuditChangeTest {
     assertThat(change.getCurrentValues()).isNull();
   }
 
+  @DisplayName("Constructor should Handle Null Changed Columns")
   @Test
   void constructor_shouldHandleNullChangedColumns() {
     AuditChange change = new AuditChange(
@@ -47,6 +50,7 @@ class AuditChangeTest {
     assertThat(change.getChangedColumns()).isEmpty();
   }
 
+  @DisplayName("Constructor should Return Cloned Changed Columns")
   @Test
   void constructor_shouldReturnClonedChangedColumns() {
     String[] original = {"field1", "field2"};
@@ -59,6 +63,7 @@ class AuditChangeTest {
     assertThat(original[0]).isEqualTo("field1");
   }
 
+  @DisplayName("Constructor should Throw On Invalid Json")
   @Test
   void constructor_shouldThrowOnInvalidJson() {
     assertThatThrownBy(() -> new AuditChange(
@@ -67,6 +72,7 @@ class AuditChangeTest {
         .hasMessageContaining("Audit snapshot must be valid JSON");
   }
 
+  @DisplayName("Getters should Return Correct Values")
   @Test
   void getters_shouldReturnCorrectValues() {
     AuditChange change = new AuditChange(
