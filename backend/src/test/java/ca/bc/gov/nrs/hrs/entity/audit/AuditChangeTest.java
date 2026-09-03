@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 /**
  * Unit tests for {@link AuditChange}.
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 class AuditChangeTest {
 
   @Test
+  @DisplayName("Constructor should Parse Valid Json Strings")
   void constructor_shouldParseValidJsonStrings() {
     String previousJson = "{\"field1\":\"value1\",\"field2\":123}";
     String currentJson = "{\"field1\":\"value2\",\"field2\":456}";

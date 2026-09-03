@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.entity.audit;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 /**
  * Unit tests for {@link AuditEvent}.
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 class AuditEventTest {
 
   @Test
+  @DisplayName("Constructor should Set All Fields")
   void constructor_shouldSetAllFields() {
     String action = "CREATE";
     String changedBy = "test-user";
