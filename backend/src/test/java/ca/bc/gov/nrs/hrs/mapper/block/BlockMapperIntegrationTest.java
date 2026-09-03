@@ -33,6 +33,7 @@ import java.time.LocalDate;
 import java.time.Month;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.DisplayName;
 
 @DisplayName("Integrated Test | Block Mapper")
 class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {

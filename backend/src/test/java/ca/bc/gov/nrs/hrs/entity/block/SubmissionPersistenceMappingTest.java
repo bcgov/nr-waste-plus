@@ -9,6 +9,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.ArrayList;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 /** Contract tests for the submission persistence model's structural rules. */
 @DisplayName("Unit Test | Submission Persistence Mapping")

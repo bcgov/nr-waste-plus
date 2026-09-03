@@ -14,13 +14,16 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.junit.jupiter.api.DisplayName;
 
 /** PostgreSQL mapping and predecessor-order integration coverage for formulas. */
 @WithMockJwt
+@DisplayName("Integrated Test | District Volume Formula Entity Mapping")
 class DistrictVolumeFormulaEntityMappingIntegrationTest extends AbstractTestContainerIntegrationTest {
   @Autowired private DistrictVolumeRepository districtVolumeRepository;
   @Autowired private DistrictVolumeFormulaRepository formulaRepository;
 
+  @DisplayName("Jsonb Round Trip And Prior Version Ordering")
   @Test
   void jsonbRoundTripAndPriorVersionOrdering() {
     DistrictVolumeEntity previous = volume(LocalDate.of(2020, 1, 1));
@@ -45,6 +48,7 @@ class DistrictVolumeFormulaEntityMappingIntegrationTest extends AbstractTestCont
     });
   }
 
+  @DisplayName("Jsonb Round Trip Preserves Diagnostic Content")
   @Test
   void jsonbRoundTripPreservesDiagnosticContent() {
     DistrictVolumeEntity volume = volume(LocalDate.of(2020, 5, 1));
@@ -75,6 +79,7 @@ class DistrictVolumeFormulaEntityMappingIntegrationTest extends AbstractTestCont
     });
   }
 
+  @DisplayName("Database Rejects Negative Sort Order")
   @Test
   void databaseRejectsNegativeSortOrder() {
     DistrictVolumeEntity volume = volume(LocalDate.of(2020, 6, 1));
@@ -89,6 +94,7 @@ class DistrictVolumeFormulaEntityMappingIntegrationTest extends AbstractTestCont
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
+  @DisplayName("Database Rejects Duplicate Formula Key For One Version")
   @Test
   void databaseRejectsDuplicateFormulaKeyForOneVersion() {
     DistrictVolumeEntity volume = volume(LocalDate.of(2020, 7, 1));
@@ -101,6 +107,7 @@ class DistrictVolumeFormulaEntityMappingIntegrationTest extends AbstractTestCont
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
+  @DisplayName("Database Rejects Formula Without District Volume")
   @Test
   void databaseRejectsFormulaWithoutDistrictVolume() {
     DistrictVolumeFormulaEntity formula = formula(null, "config.orphan", 0);

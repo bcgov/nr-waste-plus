@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
+import org.junit.jupiter.api.DisplayName;
 
 /** Tests the fixture contract with a deliberately separate, test-side reference calculation. */
 @DisplayName("Unit Test | District Average Parity Fixture")

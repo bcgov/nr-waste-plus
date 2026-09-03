@@ -24,6 +24,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.junit.jupiter.api.DisplayName;
 
 /** PostgreSQL round-trip and repository contract tests for submission persistence. */
 @DisplayName("Integrated Test | Submission Persistence")
