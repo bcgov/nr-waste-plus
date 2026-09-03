@@ -82,6 +82,148 @@ class FormulaRuntimeResolverTest {
         "da.mature.futureMetric")).isEqualByComparingTo("7.125");
   }
 
+  @DisplayName("Rejects Null Date")
+  @Test
+  void rejectsNullDate() {
+    assertThatThrownBy(() -> resolver.resolve(null, Area.COASTAL, "DNI", "da.mature.x"))
+        .isInstanceOf(NullPointerException.class);
+  }
+
+  @DisplayName("Rejects Null Area")
+  @Test
+  void rejectsNullArea() {
+    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), null, "DNI", "da.mature.x"))
+        .isInstanceOf(NullPointerException.class);
+  }
+
+  @DisplayName("Rejects Null District")
+  @Test
+  void rejectsNullDistrict() {
+    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, null, "da.mature.x"))
+        .hasMessageContaining("district");
+  }
+
+  @DisplayName("Rejects Blank District")
+  @Test
+  void rejectsBlankDistrict() {
+    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "  ", "da.mature.x"))
+        .hasMessageContaining("district");
+  }
+
+  @DisplayName("Rejects Null Path")
+  @Test
+  void rejectsNullPath() {
+    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", null))
+        .hasMessageContaining("variable path");
+  }
+
+  @DisplayName("Rejects Blank Path")
+  @Test
+  void rejectsBlankPath() {
+    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "  "))
+        .hasMessageContaining("variable path");
+  }
+
+  @DisplayName("Rejects Single Part Path")
+  @Test
+  void rejectsSinglePartPath() {
+    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "da"))
+        .hasMessageContaining("Invalid formula variable path");
+  }
+
+  @DisplayName("Rejects Unknown Namespace")
+  @Test
+  void rejectsUnknownNamespace() {
+    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "xx.field"))
+        .hasMessageContaining("namespace");
+  }
+
+  @DisplayName("Rejects Da Path With Wrong Segment Count")
+  @Test
+  void rejectsDaPathWithWrongSegmentCount() {
+    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "da.mature"))
+        .hasMessageContaining("da.<group>.<field>");
+  }
+
+  @DisplayName("Rejects Sc Path With Wrong Segment Count")
+  @Test
+  void rejectsScPathWithWrongSegmentCount() {
+    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "sc.AL.extra"))
+        .hasMessageContaining("sc.<species>");
+  }
+
+  @DisplayName("Rejects Da Group Not Found")
+  @Test
+  void rejectsDaGroupNotFound() {
+    DistrictVolumeEntity volume = volume(ConfigType.DISTRICT_VOLUME, new TableData(null,
+        List.of(new Section("Mature", List.of(row("DNI", null, new BigDecimal("1"))))), null,
+        Map.of()));
+    when(repository.findEffectiveByConfigTypeAndArea(ConfigType.DISTRICT_VOLUME, Area.COASTAL,
+        LocalDate.of(2026, 11, 3))).thenReturn(java.util.Optional.of(volume));
+
+    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI",
+        "da.nonexistent.field")).hasMessageContaining("Group");
+  }
+
+  @DisplayName("Rejects Da District Not In Group")
+  @Test
+  void rejectsDaDistrictNotInGroup() {
+    DistrictVolumeEntity volume = volume(ConfigType.DISTRICT_VOLUME, new TableData(null,
+        List.of(new Section("Mature", List.of(row("DNI", null, new BigDecimal("1"))))), null,
+        Map.of()));
+    when(repository.findEffectiveByConfigTypeAndArea(ConfigType.DISTRICT_VOLUME, Area.COASTAL,
+        LocalDate.of(2026, 11, 3))).thenReturn(java.util.Optional.of(volume));
+
+    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "XXX",
+        "da.mature.field")).hasMessageContaining("District");
+  }
+
+  @DisplayName("Rejects Sc District Not Found")
+  @Test
+  void rejectsScDistrictNotFound() {
+    DistrictVolumeEntity volume = volume(ConfigType.SPECIES_COMPOSITION, new TableData(null, null,
+        List.of(new SpeciesCompositionRow(new CodeDescriptionDto("DNI", "DNI"),
+            Map.of("AL", new BigDecimal("1")))), Map.of()));
+    when(repository.findEffectiveByConfigTypeAndArea(ConfigType.SPECIES_COMPOSITION, Area.COASTAL,
+        LocalDate.of(2026, 11, 3))).thenReturn(java.util.Optional.of(volume));
+
+    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "XXX",
+        "sc.AL")).hasMessageContaining("District");
+  }
+
+  @DisplayName("Rejects Sc Species Null Value")
+  @Test
+  void rejectsScSpeciesNullValue() {
+    DistrictVolumeEntity volume = volume(ConfigType.SPECIES_COMPOSITION, new TableData(null, null,
+        List.of(new SpeciesCompositionRow(new CodeDescriptionDto("DNI", "DNI"), Map.of())),
+        Map.of()));
+    when(repository.findEffectiveByConfigTypeAndArea(ConfigType.SPECIES_COMPOSITION, Area.COASTAL,
+        LocalDate.of(2026, 11, 3))).thenReturn(java.util.Optional.of(volume));
+
+    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI",
+        "sc.AL")).hasMessageContaining("Species");
+  }
+
+  @DisplayName("Rejects No Effective Da Configuration")
+  @Test
+  void rejectsNoEffectiveDaConfiguration() {
+    when(repository.findEffectiveByConfigTypeAndArea(ConfigType.DISTRICT_VOLUME, Area.COASTAL,
+        LocalDate.of(2026, 11, 3))).thenReturn(java.util.Optional.empty());
+
+    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI",
+        "da.mature.field")).hasMessageContaining("No");
+  }
+
+  @DisplayName("Rejects No Effective Sc Configuration")
+  @Test
+  void rejectsNoEffectiveScConfiguration() {
+    when(repository.findEffectiveByConfigTypeAndArea(ConfigType.SPECIES_COMPOSITION, Area.COASTAL,
+        LocalDate.of(2026, 11, 3))).thenReturn(java.util.Optional.empty());
+
+    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI",
+        "sc.AL")).hasMessageContaining("No");
+  }
+
   private DistrictVolumeEntity volume(ConfigType type, TableData data) {
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setConfigType(type);

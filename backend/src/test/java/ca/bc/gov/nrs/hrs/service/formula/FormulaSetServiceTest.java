@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.hrs.service.formula;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -111,6 +113,200 @@ class FormulaSetServiceTest {
     assertThat(predecessor.getEndDate()).isNull();
     verify(setRepository).save(set);
     verify(setRepository).save(predecessor);
+  }
+
+  @DisplayName("Create Rejects Past Date")
+  @Test
+  void createRejectsPastDate() {
+    FormulaSetRequest pastRequest = new FormulaSetRequest(Area.COASTAL,
+        LocalDate.now().minusDays(1),
+        List.of(new FormulaItemDto("da.x", "1", 0)));
+
+    assertThatThrownBy(() -> service.create(pastRequest))
+        .hasMessageContaining("future");
+  }
+
+  @DisplayName("Create Rejects Duplicate Open-Ended Future Set")
+  @Test
+  void createRejectsDuplicateOpenEndedFutureSet() {
+    FormulaSetEntity openEnded = futureSet(10L, null);
+    when(setRepository.findFuture(eq(Area.COASTAL), any(LocalDate.class)))
+        .thenReturn(List.of(openEnded));
+
+    assertThatThrownBy(() -> service.create(request("da.x", "1")))
+        .hasMessageContaining("open-ended");
+  }
+
+  @DisplayName("Create Rejects Overlapping Interval")
+  @Test
+  void createRejectsOverlappingInterval() {
+    when(setRepository.findFuture(eq(Area.COASTAL), any(LocalDate.class)))
+        .thenReturn(List.of());
+    when(validationService.validateForSave(any())).thenReturn(List.of());
+    when(setRepository.findFutureOverlapping(eq(Area.COASTAL), any(LocalDate.class)))
+        .thenReturn(List.of(futureSet(20L, null)));
+
+    assertThatThrownBy(() -> service.create(request("da.x", "1")))
+        .hasMessageContaining("overlaps");
+  }
+
+  @DisplayName("Create Closes Predecessor")
+  @Test
+  void createClosesPredecessor() {
+    FormulaSetEntity predecessor = futureSet(30L, null);
+    predecessor.setStartDate(LocalDate.now().plusDays(1));
+    when(setRepository.findFuture(eq(Area.COASTAL), any(LocalDate.class)))
+        .thenReturn(List.of());
+    when(validationService.validateForSave(any())).thenReturn(List.of());
+    when(setRepository.findFutureOverlapping(eq(Area.COASTAL), any(LocalDate.class)))
+        .thenReturn(List.of());
+    when(setRepository.findPredecessors(eq(Area.COASTAL), any(LocalDate.class)))
+        .thenReturn(List.of(predecessor));
+    when(setRepository.save(any(FormulaSetEntity.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+    when(rowRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.create(request("da.x", "1"));
+
+    assertThat(predecessor.getEndDate()).isNotNull();
+    verify(setRepository).save(predecessor);
+  }
+
+  @DisplayName("Create Happy Path")
+  @Test
+  void createHappyPath() {
+    when(setRepository.findFuture(eq(Area.COASTAL), any(LocalDate.class)))
+        .thenReturn(List.of());
+    when(validationService.validateForSave(any())).thenReturn(List.of());
+    when(setRepository.findFutureOverlapping(eq(Area.COASTAL), any(LocalDate.class)))
+        .thenReturn(List.of());
+    when(setRepository.findPredecessors(eq(Area.COASTAL), any(LocalDate.class)))
+        .thenReturn(List.of());
+    when(setRepository.save(any(FormulaSetEntity.class)))
+        .thenAnswer(invocation -> {
+          FormulaSetEntity e = invocation.getArgument(0);
+          e.setId(100L);
+          return e;
+        });
+    when(rowRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+    var response = service.create(request("da.x", "1"));
+
+    assertThat(response.id()).isEqualTo(100L);
+    assertThat(response.formulas()).hasSize(1);
+  }
+
+  @DisplayName("Update Rejects Not Found")
+  @Test
+  void updateRejectsNotFound() {
+    when(setRepository.findById(999L)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> service.update(999L, request("da.x", "1")))
+        .hasMessageContaining("not found");
+  }
+
+  @DisplayName("Update Rejects Historical Set")
+  @Test
+  void updateRejectsHistoricalSet() {
+    FormulaSetEntity historical = futureSet(1L, null);
+    historical.setStartDate(LocalDate.now().minusDays(5));
+    when(setRepository.findById(1L)).thenReturn(Optional.of(historical));
+
+    assertThatThrownBy(() -> service.update(1L, request("da.x", "1")))
+        .hasMessageContaining("read-only");
+  }
+
+  @DisplayName("Update Rejects Area Or Start Date Change")
+  @Test
+  void updateRejectsAreaOrStartDateChange() {
+    FormulaSetEntity set = futureSet(1L, null);
+    when(setRepository.findById(1L)).thenReturn(Optional.of(set));
+
+    FormulaSetRequest differentArea = new FormulaSetRequest(Area.INTERIOR,
+        set.getStartDate(),
+        List.of(new FormulaItemDto("da.x", "1", 0)));
+
+    assertThatThrownBy(() -> service.update(1L, differentArea))
+        .hasMessageContaining("cannot be changed");
+  }
+
+  @DisplayName("Update Returns Early When Semantically Equal")
+  @Test
+  void updateReturnsEarlyWhenSemanticallyEqual() {
+    FormulaSetEntity set = futureSet(1L, null);
+    FormulaSetRowEntity existing = new FormulaSetRowEntity();
+    existing.setFormulaKey("da.x");
+    existing.setExpression("1");
+    existing.setSortOrder(0);
+    when(setRepository.findById(1L)).thenReturn(Optional.of(set));
+    when(validationService.validateForSave(any())).thenReturn(List.of());
+    when(rowRepository.findByFormulaSetIdOrderBySortOrderAscIdAsc(1L))
+        .thenReturn(List.of(existing));
+
+    var response = service.update(1L, request("da.x", "1"));
+
+    assertThat(response.formulas()).hasSize(1);
+    verify(rowRepository, never()).saveAll(any());
+  }
+
+  @DisplayName("Delete Rejects Not Found")
+  @Test
+  void deleteRejectsNotFound() {
+    when(setRepository.findById(999L)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> service.delete(999L))
+        .hasMessageContaining("not found");
+  }
+
+  @DisplayName("Delete Rejects Historical Set")
+  @Test
+  void deleteRejectsHistoricalSet() {
+    FormulaSetEntity historical = futureSet(1L, null);
+    historical.setStartDate(LocalDate.now().minusDays(5));
+    when(setRepository.findById(1L)).thenReturn(Optional.of(historical));
+
+    assertThatThrownBy(() -> service.delete(1L))
+        .hasMessageContaining("open-ended");
+  }
+
+  @DisplayName("Delete Rejects Closed Set")
+  @Test
+  void deleteRejectsClosedSet() {
+    FormulaSetEntity closed = futureSet(1L, LocalDate.of(2026, 12, 31));
+    when(setRepository.findById(1L)).thenReturn(Optional.of(closed));
+
+    assertThatThrownBy(() -> service.delete(1L))
+        .hasMessageContaining("open-ended");
+  }
+
+  @DisplayName("Effective Rejects Not Found")
+  @Test
+  void effectiveRejectsNotFound() {
+    when(setRepository.findEffective(Area.COASTAL, LocalDate.of(2026, 11, 3)))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> service.effective(LocalDate.of(2026, 11, 3), Area.COASTAL))
+        .hasMessageContaining("No formula set");
+  }
+
+  @DisplayName("Validate Request Rejects Null Request")
+  @Test
+  void validateRequestRejectsNullRequest() {
+    assertThatThrownBy(() -> service.create(null))
+        .isInstanceOf(NullPointerException.class);
+  }
+
+  @DisplayName("Validate Request Rejects Duplicate Keys")
+  @Test
+  void validateRequestRejectsDuplicateKeys() {
+    FormulaSetRequest duplicateKeys = new FormulaSetRequest(Area.COASTAL,
+        LocalDate.now().plusDays(5),
+        List.of(
+            new FormulaItemDto("da.x", "1", 0),
+            new FormulaItemDto("da.x", "2", 1)));
+
+    assertThatThrownBy(() -> service.create(duplicateKeys))
+        .hasMessageContaining("unique");
   }
 
   private FormulaSetRequest request(String key, String expression) {
