@@ -57,16 +57,8 @@ public class FormulaPersistenceService {
       throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT,
           "Formula validation errors must be resolved before saving.");
     }
-    List<DistrictVolumeFormulaEntity> entities = drafts.stream().map(draft -> {
-      DistrictVolumeFormulaEntity formula = new DistrictVolumeFormulaEntity();
-      formula.setDistrictVolume(volume);
-      formula.setFormulaKey(draft.formulaKey());
-      formula.setExpression(draft.expression());
-      formula.setDeclaredVariables(draft.declaredVariables());
-      formula.setValidationErrors(draft.validationErrors());
-      formula.setSortOrder(draft.sortOrder());
-      return formula;
-    }).toList();
+    List<DistrictVolumeFormulaEntity> entities = drafts.stream()
+        .map(draft -> FormulaRowMapper.toLegacyRow(volume, draft)).toList();
     return formulaRepository.saveAll(entities);
   }
 

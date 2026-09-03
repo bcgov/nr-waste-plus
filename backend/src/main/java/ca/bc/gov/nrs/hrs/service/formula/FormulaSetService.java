@@ -8,7 +8,6 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.FormulaSetEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.FormulaSetRowEntity;
 import ca.bc.gov.nrs.hrs.repository.FormulaSetRepository;
 import ca.bc.gov.nrs.hrs.repository.FormulaSetRowRepository;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -107,14 +106,8 @@ public class FormulaSetService {
   }
 
   private FormulaSetResponse replaceRows(FormulaSetEntity set, FormulaSetRequest request) {
-    List<FormulaSetRowEntity> rows = request.formulas().stream().map(item -> {
-      FormulaSetRowEntity row = new FormulaSetRowEntity();
-      row.setFormulaSetId(set.getId()); row.setFormulaKey(item.formulaKey());
-      row.setExpression(item.expression()); row.setSortOrder(item.sortOrder());
-      row.setDeclaredVariables(JsonNodeFactory.instance.objectNode());
-      row.setValidationErrors(JsonNodeFactory.instance.arrayNode());
-      return row;
-    }).toList();
+    List<FormulaSetRowEntity> rows = request.formulas().stream()
+        .map(item -> FormulaRowMapper.toSetRow(set.getId(), item)).toList();
     return response(set, rowRepository.saveAll(rows));
   }
 
@@ -126,15 +119,16 @@ public class FormulaSetService {
     for (FormulaItemDto item : requested) {
       FormulaSetRowEntity row = byKey.remove(item.formulaKey());
       if (row == null) {
-        row = new FormulaSetRowEntity();
-        row.setFormulaSetId(formulaSetId);
-        row.setFormulaKey(item.formulaKey());
+        row = FormulaRowMapper.toSetRow(formulaSetId, item);
+      } else {
+        row.setExpression(item.expression());
+        row.setSortOrder(item.sortOrder());
+        row.setDeleted(false);
+        row.setDeclaredVariables(
+            com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.objectNode());
+        row.setValidationErrors(
+            com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.arrayNode());
       }
-      row.setExpression(item.expression());
-      row.setSortOrder(item.sortOrder());
-      row.setDeleted(false);
-      row.setDeclaredVariables(JsonNodeFactory.instance.objectNode());
-      row.setValidationErrors(JsonNodeFactory.instance.arrayNode());
       changed.add(row);
     }
     List<FormulaSetRowEntity> deleted = new ArrayList<>(byKey.values());
