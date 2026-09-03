@@ -29,4 +29,9 @@ public interface FormulaSetRepository extends JpaRepository<FormulaSetEntity, Lo
   @Query("select f from FormulaSetEntity f where f.area = :area and f.deleted = false "
       + "and f.endDate is null and f.startDate < :date order by f.startDate desc")
   List<FormulaSetEntity> findPredecessors(@Param("area") Area area, @Param("date") LocalDate date);
+
+  /** Finds the latest non-deleted predecessor regardless of end date, for reopening on delete. */
+  @Query("select f from FormulaSetEntity f where f.area = :area and f.deleted = false "
+      + "and f.startDate < :date order by f.startDate desc")
+  List<FormulaSetEntity> findPredecessorForReopen(@Param("area") Area area, @Param("date") LocalDate date);
 }

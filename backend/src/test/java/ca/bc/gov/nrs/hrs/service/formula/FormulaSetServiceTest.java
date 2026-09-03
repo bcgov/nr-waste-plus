@@ -104,10 +104,27 @@ class FormulaSetServiceTest {
     FormulaSetEntity set = futureSet(4L, null);
     FormulaSetEntity predecessor = futureSet(5L, LocalDate.of(2026, 12, 31));
     when(setRepository.findById(4L)).thenReturn(Optional.of(set));
-    when(setRepository.findPredecessors(Area.COASTAL, set.getStartDate()))
+    when(setRepository.findPredecessorForReopen(Area.COASTAL, set.getStartDate()))
         .thenReturn(List.of(predecessor));
 
     service.delete(4L);
+
+    assertThat(set.isDeleted()).isTrue();
+    assertThat(predecessor.getEndDate()).isNull();
+    verify(setRepository).save(set);
+    verify(setRepository).save(predecessor);
+  }
+
+  @DisplayName("Delete Reopens Predecessor Closed By Create")
+  @Test
+  void deleteReopensPredecessorClosedByCreate() {
+    FormulaSetEntity set = futureSet(7L, null);
+    FormulaSetEntity predecessor = futureSet(8L, LocalDate.of(2026, 11, 30));
+    when(setRepository.findById(7L)).thenReturn(Optional.of(set));
+    when(setRepository.findPredecessorForReopen(Area.COASTAL, set.getStartDate()))
+        .thenReturn(List.of(predecessor));
+
+    service.delete(7L);
 
     assertThat(set.isDeleted()).isTrue();
     assertThat(predecessor.getEndDate()).isNull();

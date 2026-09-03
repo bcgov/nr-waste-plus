@@ -90,7 +90,7 @@ public class FormulaSetService {
     }
     set.setDeleted(true);
     setRepository.save(set);
-    setRepository.findPredecessors(set.getArea(), set.getStartDate()).stream().findFirst()
+    setRepository.findPredecessorForReopen(set.getArea(), set.getStartDate()).stream().findFirst()
         .ifPresent(predecessor -> { predecessor.setEndDate(null); setRepository.save(predecessor); });
   }
 
