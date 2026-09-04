@@ -33,7 +33,9 @@ import java.time.LocalDate;
 import java.time.Month;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.DisplayName;
 
+@DisplayName("Integrated Test | Block Mapper")
 class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @Autowired
@@ -53,6 +55,7 @@ class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {
   @Autowired private StatusEventMapper statusEventMapper;
   @Autowired private BlockCalculationSnapshotMapper snapshotMapper;
 
+  @DisplayName("Generated Mapper Beans should Map Entity And Dto Values")
   @Test
   void generatedMapperBeans_shouldMapEntityAndDtoValues() {
     var createDto = new BlockCreateDto(42L, "DA", true,
@@ -66,6 +69,7 @@ class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {
     assertThat(entity.getPlcDate()).isEqualTo(LocalDate.of(2026, Month.AUGUST, 31));
   }
 
+  @DisplayName("Generated Mapper Beans should Map Null To Null")
   @Test
   void generatedMapperBeans_shouldMapNullToNull() {
     assertThat(blockMapper.toDetailDto(null)).isNull();
@@ -73,6 +77,7 @@ class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {
     assertThat(reportingUnitMapper.toEntity(null)).isNull();
   }
 
+  @DisplayName("Reporting Unit Mapper should Map Matching Properties")
   @Test
   void reportingUnitMapper_shouldMapMatchingProperties() {
     var entity = new ReportingUnitEntity();
@@ -87,6 +92,7 @@ class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {
     assertThat(dto).isEqualTo(new ReportingUnitDto(7L, "00001234", "LOC-1", "DCK", 3L));
   }
 
+  @DisplayName("Submission Mappers should Map Dto Values And Ignore Generated Status Id")
   @Test
   void submissionMappers_shouldMapDtoValuesAndIgnoreGeneratedStatusId() {
     BlockAreaSegmentEntity segment = blockAreaSegmentMapper.toEntity(new BlockAreaSegmentDto(1L,

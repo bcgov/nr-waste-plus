@@ -18,6 +18,7 @@ class FormulaValidatorTest {
   private static final FormulaValidator VALIDATOR =
       new FormulaValidator(new FormulaParser.Options(30, 200));
 
+  @DisplayName("Should accept known typed variables and reject unknowns")
   @Test
   void should_accept_known_typed_variables_and_reject_unknowns() {
     FormulaValidationRequest request = request(
@@ -34,6 +35,7 @@ class FormulaValidatorTest {
             FormulaValidationError.Code.UNKNOWN_VARIABLE);
   }
 
+  @DisplayName("Should report static division by zero")
   @Test
   void should_report_static_division_by_zero() {
     List<FormulaValidationError> errors = VALIDATOR.validate(request(
@@ -43,6 +45,7 @@ class FormulaValidatorTest {
         .containsExactly(FormulaValidationError.Code.DIVISION_BY_ZERO);
   }
 
+  @DisplayName("Should accept all approved namespaces and reject retired namespaces")
   @Test
   void should_accept_all_approved_namespaces_and_reject_retired_namespaces() {
     assertThat(VALIDATOR.validate(request(
@@ -56,6 +59,7 @@ class FormulaValidatorTest {
             FormulaValidationError.Code.UNKNOWN_VARIABLE);
   }
 
+  @DisplayName("Should report unknown namespace using only identifier span")
   @Test
   void should_report_unknown_namespace_using_only_identifier_span() {
     String expression = "da.rate + config.rate";
@@ -71,6 +75,7 @@ class FormulaValidatorTest {
     });
   }
 
+  @DisplayName("Should type check if and validate both branches")
   @Test
   void should_type_check_if_and_validate_both_branches() {
     assertThat(VALIDATOR.validate(request(
@@ -84,6 +89,7 @@ class FormulaValidatorTest {
             FormulaValidationError.Code.TYPE_ERROR);
   }
 
+  @DisplayName("Should accept if with any letter case and reject other functions")
   @Test
   void should_accept_if_with_any_letter_case_and_reject_other_functions() {
     for (String functionName : new String[] {"IF", "if", "If", "iF"}) {
@@ -97,6 +103,7 @@ class FormulaValidatorTest {
         .containsExactly(FormulaValidationError.Code.UNSUPPORTED_FUNCTION);
   }
 
+  @DisplayName("Should validate unused if branch and allow if in math mode")
   @Test
   void should_validate_unused_if_branch_and_allow_if_in_math_mode() {
     List<FormulaValidationError> errors = VALIDATOR.validate(new FormulaValidationRequest(
@@ -107,6 +114,7 @@ class FormulaValidatorTest {
         .containsExactly(FormulaValidationError.Code.UNKNOWN_VARIABLE);
   }
 
+  @DisplayName("Should report zero valued known variables")
   @Test
   void should_report_zero_valued_known_variables() {
     List<FormulaValidationError> errors = VALIDATOR.validate(request(
@@ -117,6 +125,7 @@ class FormulaValidatorTest {
         .containsExactly(FormulaValidationError.Code.DIVISION_BY_ZERO);
   }
 
+  @DisplayName("Should report constant zero for nested unary and parenthesized denominator")
   @Test
   void should_report_constant_zero_for_nested_unary_and_parenthesized_denominator() {
     List<FormulaValidationError> errors = VALIDATOR.validate(request(
@@ -129,6 +138,7 @@ class FormulaValidatorTest {
     });
   }
 
+  @DisplayName("Should detect self and disconnected cycles deterministically")
   @Test
   void should_detect_self_and_disconnected_cycles_deterministically() {
     List<FormulaValidationError> errors = VALIDATOR.validate(request(
@@ -140,6 +150,7 @@ class FormulaValidatorTest {
             "Formula dependency cycle detected at: b", "Formula dependency cycle detected at: z");
   }
 
+  @DisplayName("Should report duplicates and preserve parse errors")
   @Test
   void should_report_duplicates_and_preserve_parse_errors() {
     List<FormulaValidationError> errors = VALIDATOR.validate(request(
@@ -151,6 +162,7 @@ class FormulaValidatorTest {
             FormulaValidationError.Code.SYNTAX_ERROR);
   }
 
+  @DisplayName("Should validate duplicate definitions without overwriting the canonical node")
   @Test
   void should_validate_duplicate_definitions_without_overwriting_the_canonical_node() {
     List<FormulaValidationError> errors = VALIDATOR.validate(request(
@@ -167,6 +179,7 @@ class FormulaValidatorTest {
             FormulaValidationError.Code.CYCLE_DETECTED);
   }
 
+  @DisplayName("Should preserve formula diagnostic when serialized")
   @Test
   void should_preserve_formula_diagnostic_when_serialized() throws Exception {
     FormulaValidationError original = new FormulaValidationError(
@@ -184,6 +197,7 @@ class FormulaValidatorTest {
     assertThat(restored.error()).isEqualTo(original);
   }
 
+  @DisplayName("Should validate save facade")
   @Test
   void should_validate_save_facade() {
     FormulaValidationService service = new FormulaValidationService(
@@ -194,6 +208,7 @@ class FormulaValidatorTest {
         Map.of("hbs.factor", BigDecimal.ONE)))).isEmpty();
   }
 
+  @DisplayName("Should reject invalid definition and request inputs")
   @Test
   void should_reject_invalid_definition_and_request_inputs() {
     assertThatThrownBy(() -> new FormulaDefinition("", "1"))
@@ -216,6 +231,7 @@ class FormulaValidatorTest {
         .isInstanceOf(NullPointerException.class);
   }
 
+  @DisplayName("Should defensively copy validation request collections")
   @Test
   void should_defensively_copy_validation_request_collections() {
     List<FormulaDefinition> definitions = new java.util.ArrayList<>(List.of(
@@ -232,6 +248,7 @@ class FormulaValidatorTest {
     assertThat(request.knownVariables()).containsEntry("da.rate", BigDecimal.ONE);
   }
 
+  @DisplayName("Should handle constant unary arithmetic without division error")
   @Test
   void should_handle_constant_unary_arithmetic_without_division_error() {
     List<FormulaValidationError> errors = VALIDATOR.validate(request(
@@ -240,6 +257,7 @@ class FormulaValidatorTest {
     assertThat(errors).isEmpty();
   }
 
+  @DisplayName("Should cover constant multiplication and non constant division")
   @Test
   void should_cover_constant_multiplication_and_non_constant_division() {
     List<FormulaValidationError> errors = VALIDATOR.validate(request(
@@ -249,6 +267,7 @@ class FormulaValidatorTest {
     assertThat(errors).isEmpty();
   }
 
+  @DisplayName("Should not report cycle for revisited shared dependency")
   @Test
   void should_not_report_cycle_for_revisited_shared_dependency() {
     List<FormulaValidationError> errors = VALIDATOR.validate(request(
@@ -261,6 +280,7 @@ class FormulaValidatorTest {
     assertThat(errors).isEmpty();
   }
 
+  @DisplayName("Should resolve formula key dependencies without unknown variable errors")
   @Test
   void should_resolve_formula_key_dependencies_without_unknown_variable_errors() {
     List<FormulaValidationError> errors = VALIDATOR.validate(request(
@@ -271,6 +291,7 @@ class FormulaValidatorTest {
     assertThat(errors).isEmpty();
   }
 
+  @DisplayName("Should not treat formula key references as constants")
   @Test
   void should_not_treat_formula_key_references_as_constants() {
     List<FormulaValidationError> errors = VALIDATOR.validate(request(

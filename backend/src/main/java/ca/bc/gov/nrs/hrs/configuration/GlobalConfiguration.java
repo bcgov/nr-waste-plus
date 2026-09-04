@@ -34,6 +34,8 @@ import ca.bc.gov.nrs.hrs.exception.UserNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.forwarders.B3HeaderForwarder;
 import ca.bc.gov.nrs.hrs.provider.forwarders.JwtForwarderRequestInitializer;
 import ca.bc.gov.nrs.hrs.security.CorrelationIdConnectionProvider;
+import ca.bc.gov.nrs.hrs.service.formula.FormulaParser;
+import ca.bc.gov.nrs.hrs.service.formula.FormulaValidationService;
 import io.micrometer.tracing.Tracer;
 import javax.sql.DataSource;
 import org.hibernate.cfg.JdbcSettings;
@@ -193,6 +195,17 @@ public class GlobalConfiguration {
     return builder
         .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
         .build();
+  }
+
+  /**
+   * Exposes the non-annotated save-time formula validation facade as a
+   * Spring bean with explicit parser resource limits.
+   *
+   * @return configured {@link FormulaValidationService}
+   */
+  @Bean
+  public FormulaValidationService formulaValidationService() {
+    return new FormulaValidationService(new FormulaParser.Options(30, 200));
   }
 
   /**

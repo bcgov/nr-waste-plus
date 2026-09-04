@@ -3,13 +3,16 @@ package ca.bc.gov.nrs.hrs.entity.audit;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 /**
  * Unit tests for {@link AuditEvent}.
  */
+@DisplayName("Unit Test | Audit Event")
 class AuditEventTest {
 
   @Test
+  @DisplayName("Constructor should Set All Fields")
   void constructor_shouldSetAllFields() {
     String action = "CREATE";
     String changedBy = "test-user";
@@ -26,6 +29,7 @@ class AuditEventTest {
     assertThat(event.getId()).isNull();
   }
 
+  @DisplayName("Constructor should Handle Null Reason And Correlation Id")
   @Test
   void constructor_shouldHandleNullReasonAndCorrelationId() {
     AuditEvent event = new AuditEvent("UPDATE", "test-user", null, null);
@@ -34,6 +38,7 @@ class AuditEventTest {
     assertThat(event.getCorrelationId()).isNull();
   }
 
+  @DisplayName("Getters should Return Correct Values")
   @Test
   void getters_shouldReturnCorrectValues() {
     AuditEvent event = new AuditEvent("DELETE", "user1", "reason1", "corr1");

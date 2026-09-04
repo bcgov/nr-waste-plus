@@ -29,4 +29,5 @@ public interface DistrictVolumeFormulaRepository
 
   /** Finds formulas belonging to one district-volume version in stable display order. */
   List<DistrictVolumeFormulaEntity> findByDistrictVolumeIdOrderBySortOrderAscIdAsc(Long id);
+
 }

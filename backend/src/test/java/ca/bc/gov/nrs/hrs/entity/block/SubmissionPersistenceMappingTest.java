@@ -9,8 +9,10 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.ArrayList;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 /** Contract tests for the submission persistence model's structural rules. */
+@DisplayName("Unit Test | Submission Persistence Mapping")
 class SubmissionPersistenceMappingTest {
   private static final Class<?>[] ENTITIES = {
       ReportingUnitEntity.class,
@@ -27,6 +29,7 @@ class SubmissionPersistenceMappingTest {
       StatusEventEntity.class
   };
 
+  @DisplayName("Submission Types Are Entities Without Enum Persistence")
   @Test
   void submissionTypesAreEntitiesWithoutEnumPersistence() {
     for (Class<?> entity : ENTITIES) {
@@ -35,6 +38,7 @@ class SubmissionPersistenceMappingTest {
     }
   }
 
+  @DisplayName("Only Aggregate Roots Have Optimistic Locking")
   @Test
   void onlyAggregateRootsHaveOptimisticLocking() {
     assertThat(versionCount(ReportingUnitEntity.class)).isEqualTo(1);
@@ -44,6 +48,7 @@ class SubmissionPersistenceMappingTest {
     assertThat(versionCount(BlockCalculationSnapshotEntity.class)).isZero();
   }
 
+  @DisplayName("Calculation Snapshots Expose No Mutators")
   @Test
   void calculationSnapshotsExposeNoMutators() {
     assertThat(BlockCalculationSnapshotEntity.class.getDeclaredMethods())

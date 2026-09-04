@@ -13,8 +13,10 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.DisplayName;
 
 /** Executes the language-neutral formula contract against the authoritative backend validator. */
+@DisplayName("Unit Test | Formula Conformance Fixture")
 class FormulaConformanceFixtureTest {
   private static final ObjectMapper JSON = new ObjectMapper();
   private static final FormulaValidator VALIDATOR =
@@ -22,6 +24,7 @@ class FormulaConformanceFixtureTest {
   private static final Set<String> ALLOWED_STATUSES =
       Set.of("VALID", "INVALID", "PENDING_EVALUATOR");
 
+  @DisplayName("Should match shared fixture contract")
   @Test
   void should_match_shared_fixture_contract() throws IOException {
     JsonNode root = JSON.readTree(Files.readString(fixturePath()));

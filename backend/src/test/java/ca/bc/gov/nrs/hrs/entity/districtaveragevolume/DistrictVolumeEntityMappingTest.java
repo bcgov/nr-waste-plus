@@ -10,17 +10,20 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.DisplayName;
 
 /**
  * Integration test that verifies Hibernate/JPA mapping for DistrictVolumeEntity.
  */
 @WithMockJwt
+@DisplayName("Unit Test | District Volume Entity Mapping")
 public class DistrictVolumeEntityMappingTest
     extends AbstractTestContainerIntegrationTest {
 
   @Autowired
   private ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository repository;
 
+  @DisplayName("Persist And Read back Mapped Fields")
   @Test
   void persistAndRead_backMappedFields() {
 

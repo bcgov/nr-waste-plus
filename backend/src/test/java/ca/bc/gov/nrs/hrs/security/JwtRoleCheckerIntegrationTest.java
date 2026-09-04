@@ -21,18 +21,21 @@ class JwtRoleCheckerIntegrationTest extends AbstractTestContainerIntegrationTest
   @Autowired
   JwtRoleChecker checker;
 
+  @DisplayName("Test Has Concrete Role should Return True")
   @Test
   @WithMockJwt(cognitoGroups = {"Viewer"})
   void testHasConcreteRole_shouldReturnTrue() {
     assertTrue(checker.hasConcreteRole("Viewer"));
   }
 
+  @DisplayName("Test Has Abstract Role should Return True")
   @Test
   @WithMockJwt(cognitoGroups = {"Approver_12345678"})
   void testHasAbstractRole_shouldReturnTrue() {
     assertTrue(checker.hasAbstractRole("Approver", "12345678"));
   }
 
+  @DisplayName("Test Has Role should Match Prefix")
   @Test
   @WithMockJwt(cognitoGroups = {"Approver_12345678"})
   void testHasRole_shouldMatchPrefix() {
@@ -41,12 +44,14 @@ class JwtRoleCheckerIntegrationTest extends AbstractTestContainerIntegrationTest
     assertFalse(checker.hasRole("Viewer"));
   }
 
+  @DisplayName("Test Has Idp Provider should Match")
   @Test
   @WithMockJwt(idp = "idir")
   void testHasIdpProvider_shouldMatch() {
     assertTrue(checker.hasIdpProvider("idir"));
   }
 
+  @DisplayName("Test Has Role Matching should Return False When Unauthenticated")
   @Test
   void testHasRoleMatching_shouldReturnFalseWhenUnauthenticated() {
     // Clear the context to simulate no authentication
@@ -58,6 +63,7 @@ class JwtRoleCheckerIntegrationTest extends AbstractTestContainerIntegrationTest
     assertFalse(result);
   }
 
+  @DisplayName("Test Get Jwt should Throw Exception When Principal Is Not Jwt")
   @Test
   void testGetJwt_shouldThrowExceptionWhenPrincipalIsNotJwt() {
     Authentication auth = mock(Authentication.class);

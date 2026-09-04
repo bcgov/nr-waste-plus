@@ -15,8 +15,10 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
+import org.junit.jupiter.api.DisplayName;
 
 /** Tests the fixture contract with a deliberately separate, test-side reference calculation. */
+@DisplayName("Unit Test | District Average Parity Fixture")
 class DistrictAverageParityFixtureTest {
 
   private static final String FIXTURE_PATH = "/fixtures/district-average/";
@@ -42,6 +44,7 @@ class DistrictAverageParityFixtureTest {
       "DKM|COASTAL|Coast Mature", new BigDecimal("5.154"),
       "DKM|COASTAL|Coast Mature Heli", new BigDecimal("0.9514285714285714285714285714"));
 
+  @DisplayName("Fixtures Are Explicitly Discovered And Match Fixture Contract")
   @Test
   void fixturesAreExplicitlyDiscoveredAndMatchFixtureContract() throws IOException {
     JsonNode schema = readFixture(SCHEMA_NAME);
@@ -72,6 +75,7 @@ class DistrictAverageParityFixtureTest {
     }
   }
 
+  @DisplayName("District Totals Are Independently Derived From Supported Inputs")
   @Test
   void districtTotalsAreIndependentlyDerivedFromSupportedInputs() throws IOException {
     for (String name : FIXTURE_NAMES) {
@@ -86,6 +90,7 @@ class DistrictAverageParityFixtureTest {
     }
   }
 
+  @DisplayName("Residuals Conserve Each Grade After Applying To Rounded Species Values")
   @Test
   void residualsConserveEachGradeAfterApplyingToRoundedSpeciesValues() throws IOException {
     for (String name : FIXTURE_NAMES) {
@@ -133,6 +138,7 @@ class DistrictAverageParityFixtureTest {
     }
   }
 
+  @DisplayName("Species At Or Below One Thousandth Become Zero Using Half Up")
   @Test
   void speciesAtOrBelowOneThousandthBecomeZeroUsingHalfUp() {
     assertThat(zeroSmallSpecies(new BigDecimal("0.0004")))
@@ -147,6 +153,7 @@ class DistrictAverageParityFixtureTest {
         .isEqualByComparingTo(new BigDecimal("0.002"));
   }
 
+  @DisplayName("Equal Maximum Species Use Code As Deterministic Tie Breaker")
   @Test
   void equalMaximumSpeciesUseCodeAsDeterministicTieBreaker() {
     JsonNode selected = selectResidualSpecies(

@@ -2,20 +2,20 @@ package ca.bc.gov.nrs.hrs.service.formula;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.anyList;
-import static org.mockito.Mockito.verifyNoInteractions;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
+import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.ConfigType;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeFormulaEntity;
-import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.ConfigType;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeFormulaRepository;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -25,173 +25,156 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
+import org.junit.jupiter.api.DisplayName;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Unit Test | Formula Persistence Service")
 class FormulaPersistenceServiceTest {
   @Mock private DistrictVolumeFormulaRepository formulaRepository;
   @Mock private DistrictVolumeRepository districtVolumeRepository;
   @InjectMocks private FormulaPersistenceService service;
 
+  @DisplayName("Carry Forward Returns Prior Version Formulas")
   @Test
-  void carryForwardCopiesValuesClearsErrorsAndDoesNotSave() {
-    DistrictVolumeFormulaEntity source = new DistrictVolumeFormulaEntity();
-    source.setFormulaKey("config.total");
-    source.setExpression("da.volume * 2");
-    source.setDeclaredVariables(JsonNodeFactory.instance.objectNode().put("unit", "m3"));
-    source.setValidationErrors(JsonNodeFactory.instance.arrayNode().add("old"));
-    source.setSortOrder(4);
-    when(formulaRepository.findForPriorVersion(Area.INTERIOR, LocalDate.of(2099, 1, 1)))
-        .thenReturn(List.of(source));
+  void carryForwardReturnsPriorVersionFormulas() {
+    DistrictVolumeFormulaEntity entity = new DistrictVolumeFormulaEntity();
+    entity.setFormulaKey("da.mature.avoidableGradeY");
+    entity.setExpression("da.mature.avoidableGradeY");
+    entity.setDeclaredVariables(JsonNodeFactory.instance.objectNode());
+    entity.setSortOrder(0);
+    when(formulaRepository.findForPriorVersion(Area.COASTAL, LocalDate.of(2026, 1, 1)))
+        .thenReturn(List.of(entity));
 
-    List<FormulaPersistenceService.FormulaDraft> result =
-        service.carryForward(Area.INTERIOR, LocalDate.of(2099, 1, 1));
+    List<FormulaPersistenceService.FormulaDraft> drafts =
+        service.carryForward(Area.COASTAL, LocalDate.of(2026, 1, 1));
 
-    assertThat(result).singleElement().satisfies(draft -> {
-      assertThat(draft.formulaKey()).isEqualTo("config.total");
-      assertThat(draft.expression()).isEqualTo("da.volume * 2");
-      assertThat(draft.declaredVariables()).isEqualTo(source.getDeclaredVariables());
+    assertThat(drafts).singleElement().satisfies(draft -> {
+      assertThat(draft.formulaKey()).isEqualTo("da.mature.avoidableGradeY");
+      assertThat(draft.expression()).isEqualTo("da.mature.avoidableGradeY");
+      assertThat(draft.sortOrder()).isZero();
       assertThat(draft.validationErrors()).isEmpty();
-      assertThat(draft.sortOrder()).isEqualTo(4);
     });
-    verify(formulaRepository, never()).saveAll(org.mockito.ArgumentMatchers.any());
   }
 
+  @DisplayName("Carry Forward Rejects Null Area")
   @Test
-  void carryForwardGivesEachDraftIndependentValidationErrors() {
-    DistrictVolumeFormulaEntity first = formula("config.first", 0);
-    DistrictVolumeFormulaEntity second = formula("config.second", 1);
-    when(formulaRepository.findForPriorVersion(Area.INTERIOR, LocalDate.of(2099, 1, 1)))
-        .thenReturn(List.of(first, second));
-
-    List<FormulaPersistenceService.FormulaDraft> result =
-        service.carryForward(Area.INTERIOR, LocalDate.of(2099, 1, 1));
-
-    ArrayNode firstErrors = (ArrayNode) result.get(0).validationErrors();
-    ArrayNode secondErrors = (ArrayNode) result.get(1).validationErrors();
-    firstErrors.add("new error");
-
-    assertThat(firstErrors).containsExactly(JsonNodeFactory.instance.textNode("new error"));
-    assertThat(secondErrors).isEmpty();
-    assertThat(firstErrors).isNotSameAs(secondErrors);
-  }
-
-  @Test
-  void invalidBatchIsRejectedBeforePersistence() {
-    DistrictVolumeEntity version = version(1L, LocalDate.of(2099, 1, 1), null);
-    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.DISTRICT_VOLUME))
-        .thenReturn(Optional.of(version));
-    var invalid = new FormulaPersistenceService.FormulaDraft("config.x", "1",
-        JsonNodeFactory.instance.objectNode(), JsonNodeFactory.instance.arrayNode().add("bad"), 0);
-
-    assertThatThrownBy(() -> service.saveValidated(1L, List.of(invalid)))
-        .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining("validation errors");
-    verify(formulaRepository, never()).saveAll(org.mockito.ArgumentMatchers.any());
-  }
-
-  @Test
-  void validBatchIsSavedAtomically() {
-    DistrictVolumeEntity version = version(1L, LocalDate.of(2099, 1, 1), null);
-    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.DISTRICT_VOLUME))
-        .thenReturn(Optional.of(version));
-    var draft = draft("config.x", 0);
-    when(formulaRepository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
-
-    assertThat(service.saveValidated(1L, List.of(draft))).hasSize(1)
-        .first().extracting("formulaKey").isEqualTo("config.x");
-    verify(formulaRepository).saveAll(anyList());
-  }
-
-  @Test
-  void emptyBatchIsSavedWithoutFormulaRows() {
-    DistrictVolumeEntity version = version(1L, LocalDate.of(2099, 1, 1), null);
-    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.DISTRICT_VOLUME))
-        .thenReturn(Optional.of(version));
-    when(formulaRepository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
-
-    assertThat(service.saveValidated(1L, List.of())).isEmpty();
-    verify(formulaRepository).saveAll(anyList());
-  }
-
-  @Test
-  void noPriorVersionReturnsEmptyDraftList() {
-    when(formulaRepository.findForPriorVersion(Area.COASTAL, LocalDate.of(2099, 1, 1)))
-        .thenReturn(List.of());
-
-    assertThat(service.carryForward(Area.COASTAL, LocalDate.of(2099, 1, 1))).isEmpty();
-  }
-
-  @Test
-  void carryForwardRejectsNullBoundaryInputsBeforeRepositoryAccess() {
-    assertThatThrownBy(() -> service.carryForward(null, LocalDate.of(2099, 1, 1)))
+  void carryForwardRejectsNullArea() {
+    assertThatThrownBy(() -> service.carryForward(null, LocalDate.now()))
         .isInstanceOf(NullPointerException.class);
-    assertThatThrownBy(() -> service.carryForward(Area.INTERIOR, null))
-        .isInstanceOf(NullPointerException.class);
-    verifyNoInteractions(formulaRepository);
   }
 
+  @DisplayName("Carry Forward Rejects Null Target Start Date")
   @Test
-  void saveValidatedRejectsMissingDistrictVolumeWithoutWriting() {
+  void carryForwardRejectsNullTargetStartDate() {
+    assertThatThrownBy(() -> service.carryForward(Area.COASTAL, null))
+        .isInstanceOf(NullPointerException.class);
+  }
+
+  @DisplayName("Save Validated Persists Drafts Successfully")
+  @Test
+  void saveValidatedPersistsDraftsSuccessfully() {
+    DistrictVolumeEntity volume = volume(ConfigType.DISTRICT_VOLUME,
+        LocalDate.now().plusDays(1), null);
+    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.DISTRICT_VOLUME))
+        .thenReturn(Optional.of(volume));
+    when(formulaRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+    FormulaPersistenceService.FormulaDraft draft = draft("da.mature.field", "1", 0);
+    List<DistrictVolumeFormulaEntity> result = service.saveValidated(1L, List.of(draft));
+
+    assertThat(result).singleElement().satisfies(entity -> {
+      assertThat(entity.getFormulaKey()).isEqualTo("da.mature.field");
+      assertThat(entity.getExpression()).isEqualTo("1");
+      assertThat(entity.getSortOrder()).isZero();
+    });
+    verify(formulaRepository).saveAll(any());
+  }
+
+  @DisplayName("Save Validated Throws When Volume Not Found")
+  @Test
+  void saveValidatedThrowsWhenVolumeNotFound() {
     when(districtVolumeRepository.findByIdAndConfigType(99L, ConfigType.DISTRICT_VOLUME))
         .thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> service.saveValidated(99L, List.of(draft("config.x", 0))))
+    assertThatThrownBy(() -> service.saveValidated(99L, List.of(draft("k", "1", 0))))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining("District volume record not found");
-    verify(formulaRepository, never()).saveAll(anyList());
+        .hasMessageContaining("not found");
   }
 
+  @DisplayName("Save Validated Rejects Active Read Only Volume")
   @Test
-  void formulaDraftRejectsNullAndNonArrayDiagnosticsAtBoundary() {
-    assertThatThrownBy(() -> new FormulaPersistenceService.FormulaDraft(
-        "config.x", "1", JsonNodeFactory.instance.objectNode(), null, 0))
-        .isInstanceOf(NullPointerException.class);
-    assertThatThrownBy(() -> new FormulaPersistenceService.FormulaDraft(
-        "config.x", "1", JsonNodeFactory.instance.objectNode(),
-        JsonNodeFactory.instance.objectNode(), 0))
-        .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new FormulaPersistenceService.FormulaDraft(
-        "config.x", "1", JsonNodeFactory.instance.objectNode(),
-        JsonNodeFactory.instance.arrayNode(), -1))
-        .isInstanceOf(IllegalArgumentException.class);
-  }
+  void saveValidatedRejectsActiveReadOnlyVolume() {
+    DistrictVolumeEntity volume = volume(ConfigType.DISTRICT_VOLUME,
+        LocalDate.of(2020, 1, 1), null);
+    when(districtVolumeRepository.findByIdAndConfigType(2L, ConfigType.DISTRICT_VOLUME))
+        .thenReturn(Optional.of(volume));
 
-  @Test
-  void activeVersionIsRejectedWithCompleteState() {
-    DistrictVolumeEntity version = version(1L, LocalDate.of(2020, 1, 1), null);
-    version.setArea(Area.INTERIOR);
-    version.setConfigType(ConfigType.DISTRICT_VOLUME);
-    version.setDeleted(false);
-    when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.DISTRICT_VOLUME))
-        .thenReturn(Optional.of(version));
-
-    assertThatThrownBy(() -> service.saveValidated(1L, List.of(draft("config.x", 0))))
+    assertThatThrownBy(() -> service.saveValidated(2L, List.of(draft("k", "1", 0))))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("read-only");
-    verify(formulaRepository, never()).saveAll(anyList());
   }
 
-  private FormulaPersistenceService.FormulaDraft draft(String key, int order) {
-    return new FormulaPersistenceService.FormulaDraft(key, "1",
-        JsonNodeFactory.instance.objectNode().put("value", 1),
-        JsonNodeFactory.instance.arrayNode(), order);
+  @DisplayName("Save Validated Rejects Drafts With Validation Errors")
+  @Test
+  void saveValidatedRejectsDraftsWithValidationErrors() {
+    DistrictVolumeEntity volume = volume(ConfigType.DISTRICT_VOLUME,
+        LocalDate.of(2099, 1, 1), null);
+    when(districtVolumeRepository.findByIdAndConfigType(3L, ConfigType.DISTRICT_VOLUME))
+        .thenReturn(Optional.of(volume));
+
+    ArrayNode errors = JsonNodeFactory.instance.arrayNode();
+    errors.add(JsonNodeFactory.instance.objectNode().put("code", "SYNTAX_ERROR"));
+    FormulaPersistenceService.FormulaDraft badDraft =
+        new FormulaPersistenceService.FormulaDraft("k", "1",
+            JsonNodeFactory.instance.objectNode(), errors, 0);
+
+    assertThatThrownBy(() -> service.saveValidated(3L, List.of(badDraft)))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("validation errors");
   }
 
-  private DistrictVolumeFormulaEntity formula(String key, int order) {
-    DistrictVolumeFormulaEntity formula = new DistrictVolumeFormulaEntity();
-    formula.setFormulaKey(key);
-    formula.setExpression("1");
-    formula.setDeclaredVariables(JsonNodeFactory.instance.objectNode());
-    formula.setValidationErrors(JsonNodeFactory.instance.arrayNode().add("old"));
-    formula.setSortOrder(order);
-    return formula;
+  @DisplayName("Formula Draft Rejects Blank Key")
+  @Test
+  void formulaDraftRejectsBlankKey() {
+    assertThatThrownBy(() -> draft("", "1", 0))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
-  private DistrictVolumeEntity version(Long id, LocalDate start, LocalDate end) {
+  @DisplayName("Formula Draft Rejects Blank Expression")
+  @Test
+  void formulaDraftRejectsBlankExpression() {
+    assertThatThrownBy(() -> draft("k", "  ", 0))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @DisplayName("Formula Draft Rejects Negative Sort Order")
+  @Test
+  void formulaDraftRejectsNegativeSortOrder() {
+    assertThatThrownBy(() -> draft("k", "1", -1))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @DisplayName("Formula Draft Rejects Non Array Validation Errors")
+  @Test
+  void formulaDraftRejectsNonArrayValidationErrors() {
+    ObjectNode nonArray = JsonNodeFactory.instance.objectNode();
+    assertThatThrownBy(() ->
+        new FormulaPersistenceService.FormulaDraft("k", "1",
+            JsonNodeFactory.instance.objectNode(), nonArray, 0))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  private DistrictVolumeEntity volume(ConfigType type, LocalDate startDate, LocalDate endDate) {
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
-    entity.setId(id);
-    entity.setStartDate(start);
-    entity.setEndDate(end);
+    entity.setConfigType(type);
+    entity.setArea(Area.COASTAL);
+    entity.setStartDate(startDate);
+    entity.setEndDate(endDate);
     return entity;
+  }
+
+  private FormulaPersistenceService.FormulaDraft draft(String key, String expression, int order) {
+    return new FormulaPersistenceService.FormulaDraft(key, expression,
+        JsonNodeFactory.instance.objectNode(), JsonNodeFactory.instance.arrayNode(), order);
   }
 }

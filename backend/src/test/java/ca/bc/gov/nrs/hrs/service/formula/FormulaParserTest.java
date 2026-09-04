@@ -7,11 +7,12 @@ import java.math.BigDecimal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("Formula parser")
+@DisplayName("Unit Test | Formula parser")
 class FormulaParserTest {
   private static final FormulaParser PARSER =
       new FormulaParser(new FormulaParser.Options(20, 100));
 
+  @DisplayName("Should parse precedence and offsets")
   @Test
   void should_parse_precedence_and_offsets() {
     FormulaNode node = PARSER.parse(" 1 + 2 * 3 ");
@@ -24,6 +25,7 @@ class FormulaParserTest {
     assertThat(addition.right()).isInstanceOf(BinaryOperationNode.class);
   }
 
+  @DisplayName("Should parse decimal unary and parentheses")
   @Test
   void should_parse_decimal_unary_and_parentheses() {
     FormulaNode node = PARSER.parse("-(.5 + 2.00)", FormulaParseMode.CONDITIONAL);
@@ -34,6 +36,7 @@ class FormulaParserTest {
     assertThat(((LiteralNode) binary.left()).value()).isEqualByComparingTo(new BigDecimal(".5"));
   }
 
+  @DisplayName("Should parse literal boundaries and preserve literal value")
   @Test
   void should_parse_literal_boundaries_and_preserve_literal_value() {
     assertThat(PARSER.parse("0")).isInstanceOf(LiteralNode.class);
@@ -43,6 +46,7 @@ class FormulaParserTest {
         .isEqualByComparingTo(new BigDecimal("999999999999999999999.000"));
   }
 
+  @DisplayName("Should parse comparisons only in conditional mode")
   @Test
   void should_parse_comparisons_only_in_conditional_mode() {
     FormulaNode node = PARSER.parse("da.rate >= 2", FormulaParseMode.CONDITIONAL);
@@ -55,6 +59,7 @@ class FormulaParserTest {
         .isEqualTo(FormulaValidationError.Code.SYNTAX_ERROR);
   }
 
+  @DisplayName("Should exclude trailing whitespace from variable offsets")
   @Test
   void should_exclude_trailing_whitespace_from_variable_offsets() {
     FormulaNode node = PARSER.parse("da.rate  + 1");
@@ -64,6 +69,7 @@ class FormulaParserTest {
         .containsExactly(0, 7);
   }
 
+  @DisplayName("Should reject calls and malformed tokens with offsets")
   @Test
   void should_reject_calls_and_malformed_tokens_with_offsets() {
     assertThatThrownBy(() -> PARSER.parse("sqrt(4)"))
@@ -82,6 +88,7 @@ class FormulaParserTest {
         .isEqualTo("Unexpected token");
   }
 
+  @DisplayName("Should reject limits and unclosed parentheses")
   @Test
   void should_reject_limits_and_unclosed_parentheses() {
     assertThatThrownBy(() -> new FormulaParser(new FormulaParser.Options(2, 100)).parse("(((1)))"))
@@ -98,6 +105,7 @@ class FormulaParserTest {
         .isEqualTo("Expected ')'");
   }
 
+  @DisplayName("Should reject invalid limits and null inputs")
   @Test
   void should_reject_invalid_limits_and_null_inputs() {
     assertThatThrownBy(() -> new FormulaParser.Options(0, 1))
@@ -110,6 +118,7 @@ class FormulaParserTest {
         .isInstanceOf(NullPointerException.class);
   }
 
+  @DisplayName("Should reject empty and malformed numbers")
   @Test
   void should_reject_empty_and_malformed_numbers() {
     assertThatThrownBy(() -> PARSER.parse("   "))
@@ -133,6 +142,7 @@ class FormulaParserTest {
         .isInstanceOf(FormulaParseException.class);
   }
 
+  @DisplayName("Should parse all binary operators in conditional mode")
   @Test
   void should_parse_all_binary_operators_in_conditional_mode() {
     for (String operator : new String[] {"+", "-", "*", "/", "<", "<=", ">", ">=", "==", "!="}) {
@@ -141,6 +151,7 @@ class FormulaParserTest {
     }
   }
 
+  @DisplayName("Should build expected precedence tree for comparison and arithmetic")
   @Test
   void should_build_expected_precedence_tree_for_comparison_and_arithmetic() {
     BinaryOperationNode comparison =
@@ -155,6 +166,7 @@ class FormulaParserTest {
         .isEqualTo(BinaryOperator.MULTIPLY);
   }
 
+  @DisplayName("Should reject remaining unsupported syntax")
   @Test
   void should_reject_remaining_unsupported_syntax() {
     for (String expression : new String[] {"1 % 2", "1 ^ 2", "1 && 2", "1 = 2", "1;2"}) {
@@ -165,6 +177,7 @@ class FormulaParserTest {
     }
   }
 
+  @DisplayName("Should parse if with nested if and offsets")
   @Test
   void should_parse_if_with_nested_if_and_offsets() {
     FormulaNode node = PARSER.parse("IF(da.rate >= 2, 10, IF(sc.CW == 1, 3, 4))");
@@ -177,6 +190,7 @@ class FormulaParserTest {
     assertThat(outer.valueIfFalse()).isInstanceOf(IfNode.class);
   }
 
+  @DisplayName("Should parse if function without case sensitivity")
   @Test
   void should_parse_if_function_without_case_sensitivity() {
     for (String functionName : new String[] {"IF", "if", "If", "iF"}) {
@@ -185,6 +199,7 @@ class FormulaParserTest {
     }
   }
 
+  @DisplayName("Should enforce maximum depth for nested if expressions")
   @Test
   void should_enforce_maximum_depth_for_nested_if_expressions() {
     FormulaParser parser = new FormulaParser(new FormulaParser.Options(5, 200));
@@ -195,6 +210,7 @@ class FormulaParserTest {
         .isEqualTo(FormulaValidationError.Code.EXCESSIVE_COMPLEXITY);
   }
 
+  @DisplayName("Should reject malformed if and unsupported functions")
   @Test
   void should_reject_malformed_if_and_unsupported_functions() {
     for (String expression : new String[] {
@@ -205,6 +221,7 @@ class FormulaParserTest {
     }
   }
 
+  @DisplayName("Should report if argument and function diagnostic spans")
   @Test
   void should_report_if_argument_and_function_diagnostic_spans() {
     assertThatThrownBy(() -> PARSER.parse("IF(1 < 2 3, 4)"))
@@ -221,6 +238,7 @@ class FormulaParserTest {
             "Function calls are not supported", 0, 3));
   }
 
+  @DisplayName("Should report missing operands and invalid primary tokens")
   @Test
   void should_report_missing_operands_and_invalid_primary_tokens() {
     assertThatThrownBy(() -> PARSER.parse("1 +"))
@@ -237,6 +255,7 @@ class FormulaParserTest {
         .isEqualTo("Expected a number, identifier, or '('");
   }
 
+  @DisplayName("Should expose unary operator symbols in the ast")
   @Test
   void should_expose_unary_operator_symbols_in_the_ast() {
     UnaryOperationNode plus = (UnaryOperationNode) PARSER.parse("+1");

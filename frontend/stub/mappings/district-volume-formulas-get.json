@@ -1,0 +1,25 @@
+{
+  "mappings": [
+    {
+      "name": "Get district volume formulas",
+      "request": {
+        "urlPattern": "/api/configuration/formulas/2026-11-03/COASTAL/DNI",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "id": 42,
+          "area": "COASTAL",
+          "startDate": "2026-11-03",
+          "endDate": null,
+          "deleted": false,
+          "formulas": []
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    }
+  ]
+}
