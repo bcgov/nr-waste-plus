@@ -13,6 +13,8 @@
       <sequence increment="1" name="block_submitter_id_seq" startValue="1"/>
       <sequence increment="1" name="district_volume_formula_id_seq" startValue="1"/>
       <sequence increment="1" name="district_volume_id_seq" startValue="1"/>
+      <sequence increment="1" name="formula_set_id_seq" startValue="1"/>
+      <sequence increment="1" name="formula_set_row_id_seq" startValue="1"/>
       <sequence increment="1" name="idempotency_record_id_seq" startValue="1"/>
       <sequence increment="1" name="lifecycle_setting_id_seq" startValue="1"/>
       <sequence increment="1" name="outbox_event_id_seq" startValue="1"/>
@@ -455,6 +457,59 @@
          <index name="flyway_schema_history_s_idx" unique="false">
             <column ascending="true" name="success"/>
          </index>
+      </table>
+      <table name="formula_set" remarks="" schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.formula_set_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="formula_set_id" foreignKey="formula_set_row_formula_set_id_fkey" implied="false" onDeleteCascade="false" schema="hrs" table="formula_set_row"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="area" nullable="false" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="start_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="end_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="4" name="deleted" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="5" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="7" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="formula_set_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="formula_set_effective_ix" unique="false">
+            <column ascending="true" name="area"/>
+            <column ascending="true" name="start_date"/>
+            <column ascending="true" name="end_date"/>
+         </index>
+         <checkConstraint constraint="((end_date IS NULL) OR (end_date &gt;= start_date))" name="formula_set_dates_ck"/>
+      </table>
+      <table name="formula_set_row" remarks="" schema="hrs" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('hrs.formula_set_row_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="formula_set_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="formula_set_row_formula_set_id_fkey" implied="false" onDeleteCascade="false" schema="hrs" table="formula_set"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="formula_key" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="expression" nullable="false" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'{}'::jsonb" digits="0" id="4" name="declared_variables" nullable="false" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="'[]'::jsonb" digits="0" id="5" name="validation_errors" nullable="false" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="0" digits="0" id="6" name="sort_order" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="7" name="deleted" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="8" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="created_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="10" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="updated_by" nullable="false" remarks="" size="128" type="varchar" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="formula_set_row_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="formula_set_row_key_uq" unique="true">
+            <column ascending="true" name="formula_set_id"/>
+            <column ascending="true" name="formula_key"/>
+         </index>
+         <index name="formula_set_row_set_ix" unique="false">
+            <column ascending="true" name="formula_set_id"/>
+            <column ascending="true" name="sort_order"/>
+            <column ascending="true" name="id"/>
+         </index>
+         <checkConstraint constraint="(sort_order &gt;= 0)" name="formula_set_row_order_ck"/>
       </table>
       <table name="idempotency_record" remarks="Request fingerprints and completed responses used to make retried commands idempotent." schema="hrs" type="TABLE">
          <column autoUpdated="true" defaultValue="nextval('hrs.idempotency_record_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>

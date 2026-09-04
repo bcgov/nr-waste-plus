@@ -1,6 +1,7 @@
 district_volume
 reporting_unit
 audit_event
+formula_set
 block
 block_attachment
 block_mark
@@ -10,6 +11,7 @@ block_sponsor
 block_submitter
 district_average_block
 district_volume_formula
+formula_set_row
 block_area_segment
 block_calculation_snapshot
 block_comment

@@ -9,6 +9,7 @@ block_requirement
 block_comment
 block_calculation_snapshot
 block_area_segment
+formula_set_row
 district_volume_formula
 district_average_block
 block_submitter
@@ -18,6 +19,7 @@ status_event
 block_mark
 block_attachment
 block
+formula_set
 audit_event
 reporting_unit
 district_volume
