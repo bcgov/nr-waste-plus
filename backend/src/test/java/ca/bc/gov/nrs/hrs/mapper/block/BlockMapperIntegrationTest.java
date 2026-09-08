@@ -15,7 +15,6 @@ import ca.bc.gov.nrs.hrs.dto.block.ReportingUnitDto;
 import ca.bc.gov.nrs.hrs.dto.block.StatusEventDto;
 import ca.bc.gov.nrs.hrs.entity.block.BlockAreaSegmentEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockAttachmentEntity;
-import ca.bc.gov.nrs.hrs.entity.block.BlockCalculationSnapshotEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockCommentEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockMarkEntity;
@@ -26,9 +25,7 @@ import ca.bc.gov.nrs.hrs.entity.block.DistrictAverageBlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Month;
 import org.junit.jupiter.api.Test;
@@ -53,7 +50,7 @@ class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {
   @Autowired private BlockSubmitterMapper blockSubmitterMapper;
   @Autowired private DistrictAverageBlockMapper districtAverageBlockMapper;
   @Autowired private StatusEventMapper statusEventMapper;
-  @Autowired private BlockCalculationSnapshotMapper snapshotMapper;
+
 
   @DisplayName("Generated Mapper Beans should Map Entity And Dto Values")
   @Test
@@ -127,13 +124,5 @@ class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {
         "SUBMITTED", "CREATED", null));
     assertThat(event).isInstanceOf(StatusEventEntity.class);
     assertThat(statusEventMapper.toDto(event)).isNotNull();
-    var objectMapper = new ObjectMapper();
-    var snapshot = new BlockCalculationSnapshotEntity(2L, 3L,
-        LocalDate.of(2026, Month.JANUARY, 1),
-        LocalDate.of(2026, Month.DECEMBER, 31), objectMapper.createObjectNode(),
-        objectMapper.createObjectNode(),
-        Instant.parse("2026-01-01T00:00:00Z"), "HALF_UP", objectMapper.createArrayNode(), "actor",
-        "actor", Instant.parse("2026-01-01T00:00:00Z"), Instant.parse("2026-01-01T00:00:00Z"));
-    assertThat(snapshotMapper.toDto(snapshot)).isNotNull();
   }
 }

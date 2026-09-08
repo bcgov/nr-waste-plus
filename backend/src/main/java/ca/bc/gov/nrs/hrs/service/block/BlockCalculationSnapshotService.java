@@ -1,50 +1,71 @@
 package ca.bc.gov.nrs.hrs.service.block;
 
-import ca.bc.gov.nrs.hrs.dto.block.BlockCalculationSnapshotDto;
-import ca.bc.gov.nrs.hrs.mapper.block.BlockCalculationSnapshotMapper;
+import ca.bc.gov.nrs.hrs.dto.block.BlockCalculationDto;
+import ca.bc.gov.nrs.hrs.entity.block.BlockCalculationSnapshotEntity;
 import ca.bc.gov.nrs.hrs.repository.block.BlockCalculationSnapshotRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-/** Read-only service for immutable calculation snapshots. */
+/** Thin read service for block calculation snapshots. */
 @Service
 @RequiredArgsConstructor
 public class BlockCalculationSnapshotService {
+
   private final BlockCalculationSnapshotRepository repository;
-  private final BlockCalculationSnapshotMapper mapper;
 
   /**
-   * Returns all snapshots for a block, ordered by calculatedAt descending.
+   * Returns the latest calculation snapshot for the given block, or empty if none exists.
    *
    * @param blockId the block identifier
-   * @return snapshots in newest-first order
+   * @return optional containing the mapped DTO, or empty
    */
-  public List<BlockCalculationSnapshotDto> findByBlockId(Long blockId) {
-    return repository.findByBlockIdOrderByCalculatedAtDesc(blockId).stream()
-        .map(mapper::toDto)
-        .toList();
-  }
-
-  /**
-   * Returns a specific snapshot by identifier.
-   *
-   * @param snapshotId the snapshot identifier
-   * @return the snapshot if found
-   */
-  public Optional<BlockCalculationSnapshotDto> findById(Long snapshotId) {
-    return repository.findById(snapshotId).map(mapper::toDto);
-  }
-
-  /**
-   * Returns the most recent snapshot for a block.
-   *
-   * @param blockId the block identifier
-   * @return the latest snapshot if any exist
-   */
-  public Optional<BlockCalculationSnapshotDto> findLatestByBlockId(Long blockId) {
+  public Optional<BlockCalculationDto> findLatest(Long blockId) {
     return repository.findTopByBlockIdOrderByCalculatedAtDesc(blockId)
-        .map(mapper::toDto);
+        .map(this::toDto);
+  }
+
+  private BlockCalculationDto toDto(BlockCalculationSnapshotEntity entity) {
+    JsonNode outputsNode = entity.getOutputs();
+    BigDecimal grandTotal = sumOutputValues(outputsNode);
+
+    BlockCalculationDto.Outputs outputs = new BlockCalculationDto.Outputs(
+        List.of(), // perMark — empty until mark-level resolution is available
+        grandTotal);
+
+    List<Object> warnings = new ArrayList<>();
+    JsonNode warningsNode = entity.getWarnings();
+    if (warningsNode != null && warningsNode.isArray()) {
+      warningsNode.forEach(w -> warnings.add(w));
+    }
+
+    return new BlockCalculationDto(
+        entity.getBlockId(),
+        entity.getDistrictVolumeId(),
+        entity.getCalculatedAt(),
+        entity.getRoundingPolicy(),
+        outputs,
+        warnings);
+  }
+
+  private BigDecimal sumOutputValues(JsonNode outputsNode) {
+    if (outputsNode == null || outputsNode.isNull()) {
+      return BigDecimal.ZERO;
+    }
+    BigDecimal total = BigDecimal.ZERO;
+    var fields = outputsNode.fields();
+    while (fields.hasNext()) {
+      Map.Entry<String, JsonNode> entry = fields.next();
+      JsonNode val = entry.getValue();
+      if (val.isNumber()) {
+        total = total.add(val.decimalValue());
+      }
+    }
+    return total;
   }
 }
