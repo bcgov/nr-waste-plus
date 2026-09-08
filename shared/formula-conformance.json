@@ -190,6 +190,10 @@
       "expected": {
         "status": "PENDING_EVALUATOR",
         "reason": "missing or null runtime values must not be coerced"
+      },
+      "evaluation": {
+        "status": "EVALUATION_ERROR",
+        "expectedMessageContains": "Missing variable: da.rate"
       }
     },
     {
@@ -200,16 +204,24 @@
       "expected": {
         "status": "PENDING_EVALUATOR",
         "reason": "null values and runtime division by zero require evaluator semantics"
+      },
+      "evaluation": {
+        "status": "EVALUATION_ERROR",
+        "expectedMessageContains": "Missing variable: da.denominator"
       }
     },
     {
       "id": "pending-external-source-failure",
       "expression": "hbs.factor + fta.adjustment",
       "mode": "MATHEMATICAL",
-      "variables": {},
+      "variables": { "hbs.factor": "0", "fta.adjustment": "0" },
       "expected": {
         "status": "PENDING_EVALUATOR",
         "reason": "external-source failures must remain explicit"
+      },
+      "evaluation": {
+        "status": "VALID",
+        "expectedResult": "0.000"
       }
     },
     {
@@ -221,6 +233,10 @@
         "status": "PENDING_EVALUATOR",
         "reason": "runtime result rounds to three decimal places using HALF_UP; evaluator not in scope",
         "roundingInputs": ["0.0004", "0.0005", "1.2345"]
+      },
+      "evaluation": {
+        "status": "VALID",
+        "expectedResult": "0.000"
       }
     }
   ]

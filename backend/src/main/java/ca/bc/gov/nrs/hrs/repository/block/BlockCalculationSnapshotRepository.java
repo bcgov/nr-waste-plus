@@ -11,4 +11,7 @@ public interface BlockCalculationSnapshotRepository
   BlockCalculationSnapshotEntity save(BlockCalculationSnapshotEntity entity);
 
   java.util.Optional<BlockCalculationSnapshotEntity> findById(Long id);
+
+  /** Returns all snapshots for a block, newest first. */
+  java.util.List<BlockCalculationSnapshotEntity> findByBlockIdOrderByCalculatedAtDesc(Long blockId);
 }

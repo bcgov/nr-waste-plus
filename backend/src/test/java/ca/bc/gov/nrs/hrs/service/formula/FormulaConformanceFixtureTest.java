@@ -56,6 +56,10 @@ class FormulaConformanceFixtureTest {
           new FormulaParser(new FormulaParser.Options(30, 200))
               .parse(definition.expression(), mode);
         }
+        // Evaluate cases that carry an 'evaluation' expectation.
+        if (fixture.has("evaluation")) {
+          assertEvaluation(fixture, definitions, mode);
+        }
         continue;
       }
       Map<String, BigDecimal> variables = JSON.convertValue(fixture.path("variables"),
@@ -131,6 +135,30 @@ class FormulaConformanceFixtureTest {
       assertAstNode(ifNode.condition(), expected.path("condition"));
       assertAstNode(ifNode.valueIfTrue(), expected.path("trueBranch"));
       assertAstNode(ifNode.valueIfFalse(), expected.path("falseBranch"));
+    }
+  }
+
+  private static void assertEvaluation(
+      JsonNode fixture, List<FormulaDefinition> definitions, FormulaParseMode mode) {
+    JsonNode eval = fixture.path("evaluation");
+    String evalStatus = eval.path("status").asText();
+    Map<String, BigDecimal> variables = JSON.convertValue(fixture.path("variables"),
+        JSON.getTypeFactory().constructMapType(Map.class, String.class, BigDecimal.class));
+
+    if ("EVALUATION_ERROR".equals(evalStatus)) {
+      assertThat(definitions).hasSize(1);
+      FormulaNode ast = new FormulaParser(new FormulaParser.Options(30, 200))
+          .parse(definitions.get(0).expression(), mode);
+      org.assertj.core.api.Assertions.assertThatThrownBy(
+          () -> FormulaEvaluator.evaluate(ast, variables))
+          .isInstanceOf(FormulaEvaluationException.class)
+          .hasMessageContaining(eval.path("expectedMessageContains").asText());
+    } else if ("VALID".equals(evalStatus)) {
+      assertThat(definitions).hasSize(1);
+      FormulaNode ast = new FormulaParser(new FormulaParser.Options(30, 200))
+          .parse(definitions.get(0).expression(), mode);
+      BigDecimal result = FormulaEvaluator.evaluate(ast, variables);
+      assertThat(result).isEqualByComparingTo(eval.path("expectedResult").asText());
     }
   }
 
