@@ -28,7 +28,7 @@ ALTER TABLE hrs.formula_set_row DROP CONSTRAINT IF EXISTS formula_set_row_formul
 ALTER TABLE hrs.formula_set_row DROP CONSTRAINT IF EXISTS fk_formula_set_row_formula_set;
 
 -- ============================================================================
--- Phase 2: PK renames (id -> table_name_id) — all 21 tables
+-- Phase 2: PK renames (id -> table_name_id) — tables with an id primary key column
 -- ============================================================================
 
 DO $$
