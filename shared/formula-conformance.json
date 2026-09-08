@@ -217,7 +217,7 @@
       "variables": { "hbs.factor": "0", "fta.adjustment": "0" },
       "expected": {
         "status": "PENDING_EVALUATOR",
-        "reason": "external-source failures must remain explicit"
+        "reason": "hbs and fta are no-ops returning zero until external APIs are integrated"
       },
       "evaluation": {
         "status": "VALID",

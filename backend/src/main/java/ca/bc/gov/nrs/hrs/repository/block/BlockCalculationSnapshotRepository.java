@@ -14,4 +14,8 @@ public interface BlockCalculationSnapshotRepository
 
   /** Returns all snapshots for a block, newest first. */
   java.util.List<BlockCalculationSnapshotEntity> findByBlockIdOrderByCalculatedAtDesc(Long blockId);
+
+  /** Returns the most recent snapshot for a block, or empty if none exist. */
+  java.util.Optional<BlockCalculationSnapshotEntity> findTopByBlockIdOrderByCalculatedAtDesc(
+      Long blockId);
 }

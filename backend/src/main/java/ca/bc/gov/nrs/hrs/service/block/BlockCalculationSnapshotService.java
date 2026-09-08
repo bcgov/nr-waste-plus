@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.hrs.service.block;
 
 import ca.bc.gov.nrs.hrs.dto.block.BlockCalculationSnapshotDto;
-import ca.bc.gov.nrs.hrs.entity.block.BlockCalculationSnapshotEntity;
 import ca.bc.gov.nrs.hrs.mapper.block.BlockCalculationSnapshotMapper;
 import ca.bc.gov.nrs.hrs.repository.block.BlockCalculationSnapshotRepository;
 import java.util.List;
@@ -45,10 +44,7 @@ public class BlockCalculationSnapshotService {
    * @return the latest snapshot if any exist
    */
   public Optional<BlockCalculationSnapshotDto> findLatestByBlockId(Long blockId) {
-    List<BlockCalculationSnapshotEntity> snapshots =
-        repository.findByBlockIdOrderByCalculatedAtDesc(blockId);
-    return snapshots.isEmpty()
-        ? Optional.empty()
-        : Optional.of(mapper.toDto(snapshots.getFirst()));
+    return repository.findTopByBlockIdOrderByCalculatedAtDesc(blockId)
+        .map(mapper::toDto);
   }
 }

@@ -159,6 +159,9 @@ class FormulaConformanceFixtureTest {
           .parse(definitions.get(0).expression(), mode);
       BigDecimal result = FormulaEvaluator.evaluate(ast, variables);
       assertThat(result).isEqualByComparingTo(eval.path("expectedResult").asText());
+    } else {
+      throw new AssertionError("Unknown evaluation status: " + evalStatus
+          + " in fixture case " + fixture.path("id").asText());
     }
   }
 

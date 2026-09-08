@@ -107,7 +107,7 @@ public class ApiAuthorizationCustomizer
         .access(
             roleCheck.gotRoleMatching(Role.SUBMITTER, Role.AREA, Role.DISTRICT, Role.ADMIN))
 
-        .requestMatchers("/api/blocks/**")
+        .requestMatchers(HttpMethod.GET, "/api/blocks/**")
         .authenticated()
 
         .requestMatchers(HttpMethod.GET, "/api/configuration/formulas/**")

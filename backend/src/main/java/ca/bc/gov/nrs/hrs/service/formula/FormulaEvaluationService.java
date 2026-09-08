@@ -88,7 +88,7 @@ public class FormulaEvaluationService {
     ObjectNode outputsJson = MAPPER.createObjectNode();
     outputs.forEach((key, value) -> outputsJson.put(key, value));
 
-    JsonNode warningsJson = warningsArray.isEmpty() ? null : warningsArray;
+    Instant now = Instant.now();
 
     BlockCalculationSnapshotEntity snapshot = new BlockCalculationSnapshotEntity(
         blockId,
@@ -97,16 +97,16 @@ public class FormulaEvaluationService {
         null, // hbsWindowEnd — not yet available
         inputsJson,
         outputsJson,
-        Instant.now(),
+        now,
         ROUNDING_POLICY,
-        warningsJson,
+        warningsArray,
         user,
         user,
-        Instant.now(),
-        Instant.now());
+        now,
+        now);
     snapshotRepository.save(snapshot);
 
-    return new FormulaEvaluationResult(outputs, inputsJson, warningsJson);
+    return new FormulaEvaluationResult(outputs, inputsJson, warningsArray);
   }
 
   private Map<String, BigDecimal> buildVariables(
@@ -124,7 +124,7 @@ public class FormulaEvaluationService {
       try {
         BigDecimal value = switch (namespace) {
           case "da", "sc" -> runtimeResolver.resolve(date, area, district, path);
-          case "submission" -> resolveSubmission(path);
+          case "submission" -> resolveSubmission();
           case "hbs", "fta" -> BigDecimal.ZERO;
           default -> throw new FormulaEvaluationException(
               "Unknown namespace '" + namespace + "' in variable " + path);
@@ -149,10 +149,9 @@ public class FormulaEvaluationService {
    * Resolves a submission namespace variable. Currently a placeholder returning zero until
    * submission domain data is integrated.
    *
-   * @param path namespace-qualified path (e.g. "submission.area")
    * @return resolved value (currently always zero)
    */
-  private BigDecimal resolveSubmission(String path) {
+  private BigDecimal resolveSubmission() {
     // TODO: resolve from block/submission entity data when submission domain is integrated
     return BigDecimal.ZERO;
   }
