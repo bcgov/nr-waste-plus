@@ -90,14 +90,6 @@ public class DistrictAverageBlockEntity {
   @Column(name = "is_heli_logging", nullable = false)
   private Boolean heliLogging = Boolean.FALSE;
 
-  public void setHasDispersedRetention(Boolean hasDispersedRetention) {
-    this.hasDispersedRetention = Boolean.TRUE.equals(hasDispersedRetention);
-  }
-
-  public void setHeliLogging(Boolean heliLogging) {
-    this.heliLogging = Boolean.TRUE.equals(heliLogging);
-  }
-
   @Column(precision = 12, scale = 3)
   private BigDecimal cableYardingAreaHa;
 
