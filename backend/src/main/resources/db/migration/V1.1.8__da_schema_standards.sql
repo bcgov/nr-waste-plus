@@ -153,8 +153,38 @@ END $$;
 -- Phase 5: TEXT -> VARCHAR conversions (2 columns)
 -- ============================================================================
 
-ALTER TABLE hrs.block_requirement ALTER COLUMN response TYPE VARCHAR(4000);
-ALTER TABLE hrs.district_volume_formula ALTER COLUMN expression TYPE VARCHAR(4000);
+DO $$
+DECLARE
+    offending_req_count INT;
+    offending_form_count INT;
+    max_req_len INT;
+    max_form_len INT;
+BEGIN
+    -- Pre-check: Verify no existing rows exceed 4000 characters in block_requirement.response
+    SELECT COUNT(*), COALESCE(MAX(LENGTH(response)), 0)
+    INTO offending_req_count, max_req_len
+    FROM hrs.block_requirement
+    WHERE LENGTH(response) > 4000;
+
+    IF offending_req_count > 0 THEN
+        RAISE EXCEPTION 'Migration V1.1.8 aborted: hrs.block_requirement contains % row(s) where response exceeds 4000 characters (max length: %). Please clean up or truncate data before applying this migration.',
+            offending_req_count, max_req_len;
+    END IF;
+
+    -- Pre-check: Verify no existing rows exceed 4000 characters in district_volume_formula.expression
+    SELECT COUNT(*), COALESCE(MAX(LENGTH(expression)), 0)
+    INTO offending_form_count, max_form_len
+    FROM hrs.district_volume_formula
+    WHERE LENGTH(expression) > 4000;
+
+    IF offending_form_count > 0 THEN
+        RAISE EXCEPTION 'Migration V1.1.8 aborted: hrs.district_volume_formula contains % row(s) where expression exceeds 4000 characters (max length: %). Please clean up or truncate data before applying this migration.',
+            offending_form_count, max_form_len;
+    END IF;
+
+    ALTER TABLE hrs.block_requirement ALTER COLUMN response TYPE VARCHAR(4000);
+    ALTER TABLE hrs.district_volume_formula ALTER COLUMN expression TYPE VARCHAR(4000);
+END $$;
 
 -- ============================================================================
 -- Phase 6: NOT NULL constraints (6 columns)
