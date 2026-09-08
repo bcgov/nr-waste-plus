@@ -36,6 +36,7 @@ public class BlockCommentEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "block_comment_id")
   @EqualsAndHashCode.Include
   private Long id;
 
@@ -66,6 +67,6 @@ public class BlockCommentEntity {
   @Column(nullable = false)
   private Instant updatedAt;
 
-  @Column(nullable = false)
+  @Column(name = "is_deleted", nullable = false)
   private boolean deleted;
 }

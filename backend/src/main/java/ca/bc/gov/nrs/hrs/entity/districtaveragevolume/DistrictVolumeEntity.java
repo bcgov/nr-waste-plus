@@ -40,6 +40,7 @@ public class DistrictVolumeEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "district_volume_id")
   private Long id;
 
   @Enumerated(EnumType.STRING)
@@ -86,6 +87,6 @@ public class DistrictVolumeEntity {
   @Column(name = "updated_by", nullable = false, length = 128)
   private String updatedBy;
 
-  @Column(name = "deleted", nullable = false)
+  @Column(name = "is_deleted", nullable = false)
   private boolean deleted = false;
 }

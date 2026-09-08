@@ -38,6 +38,7 @@ public class DistrictVolumeFormulaEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "district_volume_formula_id")
   @EqualsAndHashCode.Include
   private Long id;
 
@@ -48,7 +49,7 @@ public class DistrictVolumeFormulaEntity {
   @Column(name = "formula_key", nullable = false, length = 128)
   private String formulaKey;
 
-  @Column(nullable = false, columnDefinition = "text")
+  @Column(nullable = false, length = 4000)
   private String expression;
 
   @JdbcTypeCode(SqlTypes.JSON)

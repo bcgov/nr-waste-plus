@@ -19,6 +19,7 @@ public class AuditEvent {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "audit_event_id")
   private Long id;
 
   @Column(nullable = false, length = 32)

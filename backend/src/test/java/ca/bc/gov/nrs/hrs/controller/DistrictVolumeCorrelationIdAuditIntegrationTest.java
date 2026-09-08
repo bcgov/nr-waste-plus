@@ -124,10 +124,10 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest
 
     Long eventId = jdbcTemplate.queryForObject(
         """
-        SELECT id
+        SELECT audit_event_id
         FROM hrs.audit_event
-        WHERE id > ? AND action = 'CREATE'
-        ORDER BY id DESC
+        WHERE audit_event_id > ? AND action = 'CREATE'
+        ORDER BY audit_event_id DESC
         LIMIT 1
         """,
         Long.class,
@@ -135,7 +135,7 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest
 
     assertThat(eventId).isNotNull();
     assertThat(jdbcTemplate.queryForObject(
-            "SELECT correlation_id FROM hrs.audit_event WHERE id = ?", String.class, eventId))
+            "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?", String.class, eventId))
         .isEqualTo(TRACE_ID);
     assertThat(jdbcTemplate.queryForObject(
             "SELECT COUNT(*) FROM hrs.audit_change WHERE event_id = ?", Integer.class, eventId))
@@ -143,7 +143,7 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest
   }
 
   private long maxAuditEventId() {
-    Long maxId = jdbcTemplate.queryForObject("SELECT MAX(id) FROM hrs.audit_event", Long.class);
+    Long maxId = jdbcTemplate.queryForObject("SELECT MAX(audit_event_id) FROM hrs.audit_event", Long.class);
     return maxId == null ? 0L : maxId;
   }
 }

@@ -29,7 +29,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Setter
 @NoArgsConstructor
 public class FormulaSetRowEntity {
-  @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "formula_set_row_id")
+  private Long id;
   @Column(name = "formula_set_id", nullable = false) private Long formulaSetId;
   @Column(name = "formula_key", nullable = false, length = 128) private String formulaKey;
   @Column(nullable = false, columnDefinition = "text") private String expression;
@@ -40,7 +43,7 @@ public class FormulaSetRowEntity {
   @Column(name = "validation_errors", nullable = false, columnDefinition = "jsonb")
   private JsonNode validationErrors = JsonNodeFactory.instance.arrayNode();
   @Column(name = "sort_order", nullable = false) private int sortOrder;
-  @Column(nullable = false) private boolean deleted;
+  @Column(name = "is_deleted", nullable = false) private boolean deleted;
   @CreatedDate @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
   @CreatedBy @Column(name = "created_by", nullable = false, updatable = false, length = 128)

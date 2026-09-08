@@ -152,7 +152,7 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
             status ->
                 jdbcTemplate.update(
                     "INSERT INTO hrs.district_volume "
-                        + "(area, start_date, end_date, table_data, table_level_factor, created_by, updated_by, config_type, deleted) "
+                        + "(area, start_date, end_date, table_data, table_level_factor, created_by, updated_by, config_type, is_deleted) "
                         + "VALUES (?, ?, ?, ?::jsonb, ?, ?, ?, ?, FALSE)",
                     Area.INTERIOR.name(),
                     java.sql.Date.valueOf(HISTORICAL_START_DATE),
@@ -169,12 +169,12 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     assertThat(latestEventId).isGreaterThan(beforeMaxEventId);
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT correlation_id FROM hrs.audit_event WHERE id = ?", String.class, latestEventId))
+                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?", String.class, latestEventId))
         .as("raw JdbcTemplate write must bypass the Hibernate provider")
         .isNullOrEmpty();
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT action FROM hrs.audit_event WHERE id = ?", String.class, latestEventId))
+                "SELECT action FROM hrs.audit_event WHERE audit_event_id = ?", String.class, latestEventId))
         .isEqualTo("CREATE");
     assertAuditChangeExistsForEvent(latestEventId);
   }
@@ -227,10 +227,10 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     // Prove each audit row captured its own correct id — no cross-contamination.
     String fetchedCorr1 =
         jdbcTemplate.queryForObject(
-            "SELECT correlation_id FROM hrs.audit_event WHERE id = ?", String.class, eventId1);
+            "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?", String.class, eventId1);
     String fetchedCorr2 =
         jdbcTemplate.queryForObject(
-            "SELECT correlation_id FROM hrs.audit_event WHERE id = ?", String.class, eventId2);
+            "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?", String.class, eventId2);
     assertThat(fetchedCorr1).isEqualTo(traceId1);
     assertThat(fetchedCorr2).isEqualTo(traceId2);
     assertThat(fetchedCorr1).isNotEqualTo(fetchedCorr2);
@@ -340,15 +340,15 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     // Final cross-check via direct id lookup to rule out LIMIT 1 ordering flakiness
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT correlation_id FROM hrs.audit_event WHERE id = ?", String.class, eventA))
+                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?", String.class, eventA))
         .isEqualTo(traceIdA);
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT correlation_id FROM hrs.audit_event WHERE id = ?", String.class, eventNull))
+                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?", String.class, eventNull))
         .isNullOrEmpty();
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT correlation_id FROM hrs.audit_event WHERE id = ?", String.class, eventB))
+                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?", String.class, eventB))
         .isEqualTo(traceIdB);
   }
 
@@ -390,7 +390,7 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     assertThat(latestEventId).isGreaterThan(beforeMaxEventId);
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT correlation_id FROM hrs.audit_event WHERE id = ?", String.class, latestEventId))
+                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?", String.class, latestEventId))
         .as("no-span write must record NULL correlation_id without throwing")
         .isNullOrEmpty();
     assertAuditChangeExistsForEvent(latestEventId);
@@ -423,7 +423,7 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
   private static final LocalDate HISTORICAL_END_DATE = LocalDate.of(2020, 1, 2);
 
   private Long maxAuditEventId() {
-    Long max = jdbcTemplate.queryForObject("SELECT MAX(id) FROM hrs.audit_event", Long.class);
+    Long max = jdbcTemplate.queryForObject("SELECT MAX(audit_event_id) FROM hrs.audit_event", Long.class);
     return max != null ? max : 0L;
   }
 
@@ -431,7 +431,7 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     // Returns NULL as Java null when the column IS NULL (queryForObject with String.class does that).
     // Use a list query to distinguish "no rows" from "null value".
     return jdbcTemplate.queryForObject(
-        "SELECT correlation_id FROM hrs.audit_event ORDER BY id DESC LIMIT 1", String.class);
+        "SELECT correlation_id FROM hrs.audit_event ORDER BY audit_event_id DESC LIMIT 1", String.class);
   }
 
   private void assertAuditChangeExistsForEvent(Long eventId) {

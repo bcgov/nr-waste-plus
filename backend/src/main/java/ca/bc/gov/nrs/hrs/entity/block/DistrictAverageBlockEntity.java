@@ -79,6 +79,7 @@ public class DistrictAverageBlockEntity {
   @Column(length = 32)
   private String becSubvariant;
 
+  @Column(name = "has_dispersed_retention", nullable = false)
   private Boolean hasDispersedRetention;
 
   @Column(precision = 5, scale = 2)
@@ -86,6 +87,7 @@ public class DistrictAverageBlockEntity {
 
   private LocalDate primaryLoggingCompleteDate;
 
+  @Column(name = "is_heli_logging", nullable = false)
   private Boolean heliLogging;
 
   @Column(precision = 12, scale = 3)
@@ -113,6 +115,6 @@ public class DistrictAverageBlockEntity {
   @Column(nullable = false)
   private Instant updatedAt;
 
-  @Column(nullable = false)
+  @Column(name = "is_deleted", nullable = false)
   private boolean deleted;
 }
