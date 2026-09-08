@@ -13,7 +13,7 @@ public record BlockCalculationDto(
     Instant calculatedAt,
     String roundingPolicy,
     Outputs outputs,
-    List<Object> warnings) {
+    List<BlockCalculationWarning> warnings) {
 
   /** Calculation outputs container. */
   public record Outputs(List<PerMark> perMark, BigDecimal grandTotalM3) {}

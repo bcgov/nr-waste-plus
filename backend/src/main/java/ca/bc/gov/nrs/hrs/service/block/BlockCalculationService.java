@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.service.block;
 
 import ca.bc.gov.nrs.hrs.dto.block.BlockCalculationDto;
+import ca.bc.gov.nrs.hrs.dto.block.BlockCalculationWarning;
 import ca.bc.gov.nrs.hrs.entity.block.BlockCalculationSnapshotEntity;
 import ca.bc.gov.nrs.hrs.repository.block.BlockCalculationSnapshotRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Service;
 /** Thin read service for block calculation snapshots. */
 @Service
 @RequiredArgsConstructor
-public class BlockCalculationSnapshotService {
+public class BlockCalculationService {
 
   private final BlockCalculationSnapshotRepository repository;
 
@@ -38,10 +39,18 @@ public class BlockCalculationSnapshotService {
         List.of(), // perMark — empty until mark-level resolution is available
         grandTotal);
 
-    List<Object> warnings = new ArrayList<>();
+    List<BlockCalculationWarning> warnings = new ArrayList<>();
     JsonNode warningsNode = entity.getWarnings();
     if (warningsNode != null && warningsNode.isArray()) {
-      warningsNode.forEach(w -> warnings.add(w));
+      warningsNode.forEach(w -> {
+        if (w.isTextual()) {
+          warnings.add(new BlockCalculationWarning(w.asText(), null));
+        } else if (w.isObject()) {
+          String code = w.has("code") ? w.get("code").asText() : null;
+          String message = w.has("message") ? w.get("message").asText() : null;
+          warnings.add(new BlockCalculationWarning(code, message));
+        }
+      });
     }
 
     return new BlockCalculationDto(

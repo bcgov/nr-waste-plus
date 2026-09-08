@@ -28,8 +28,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc(print = SYSTEM_OUT)
-@DisplayName("Integrated Test | Block Calculation Snapshot Controller")
-class BlockCalculationSnapshotControllerIntegrationTest
+@DisplayName("Integrated Test | Block Calculation Controller")
+class BlockCalculationControllerIntegrationTest
     extends AbstractTestContainerIntegrationTest {
 
   private static final String ACTOR = "ctrl-test";
@@ -98,7 +98,8 @@ class BlockCalculationSnapshotControllerIntegrationTest
             new BigDecimal("45.750").doubleValue()))
         .andExpect(jsonPath("$.outputs.perMark").isArray())
         .andExpect(jsonPath("$.outputs.perMark").isEmpty())
-        .andExpect(jsonPath("$.warnings").isArray());
+        .andExpect(jsonPath("$.warnings").isArray())
+        .andExpect(jsonPath("$.warnings").isEmpty());
   }
 
   @Test

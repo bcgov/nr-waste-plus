@@ -1,7 +1,7 @@
 package ca.bc.gov.nrs.hrs.controller;
 
 import ca.bc.gov.nrs.hrs.dto.block.BlockCalculationDto;
-import ca.bc.gov.nrs.hrs.service.block.BlockCalculationSnapshotService;
+import ca.bc.gov.nrs.hrs.service.block.BlockCalculationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/blocks/{blockId}/calculation")
 @RequiredArgsConstructor
-public class BlockCalculationSnapshotController {
+public class BlockCalculationController {
 
-  private final BlockCalculationSnapshotService service;
+  private final BlockCalculationService service;
 
   /**
    * Returns the latest calculation snapshot for the given block.
