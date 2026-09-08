@@ -80,7 +80,7 @@ public class DistrictAverageBlockEntity {
   private String becSubvariant;
 
   @Column(name = "has_dispersed_retention", nullable = false)
-  private Boolean hasDispersedRetention;
+  private Boolean hasDispersedRetention = Boolean.FALSE;
 
   @Column(precision = 5, scale = 2)
   private BigDecimal dispersedRetentionPct;
@@ -88,7 +88,15 @@ public class DistrictAverageBlockEntity {
   private LocalDate primaryLoggingCompleteDate;
 
   @Column(name = "is_heli_logging", nullable = false)
-  private Boolean heliLogging;
+  private Boolean heliLogging = Boolean.FALSE;
+
+  public void setHasDispersedRetention(Boolean hasDispersedRetention) {
+    this.hasDispersedRetention = Boolean.TRUE.equals(hasDispersedRetention);
+  }
+
+  public void setHeliLogging(Boolean heliLogging) {
+    this.heliLogging = Boolean.TRUE.equals(heliLogging);
+  }
 
   @Column(precision = 12, scale = 3)
   private BigDecimal cableYardingAreaHa;
