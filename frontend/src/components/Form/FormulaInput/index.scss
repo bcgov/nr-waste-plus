@@ -263,4 +263,18 @@
     100% { opacity: 0.5; }
   }
 }
+
+// Visually hidden but accessible to screen readers.
+// Used for text cues that supplement colour-only distinctions.
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 \ No newline at end of file

@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 import ColorTag, { type CarbonColors } from '@/components/core/Tags/ColorTag';
 
 /** Props for rendering a variable group panel within the formula input. */
@@ -22,24 +24,26 @@ interface VariablePanelProps {
  * @returns The variable group UI, or `null` when there are no entries to show.
  */
 const VariablePanel: React.FC<VariablePanelProps> = ({ label, entries, tagType, usedSet }) => {
+  const labelId = useId();
+
   if (entries.length === 0) return null;
 
   return (
     <div className="formula-input__variable-group">
-      <p className="formula-input__section-label">{label}</p>
-      <ul className="formula-input__tags">
+      <p id={labelId} className="formula-input__section-label">
+        {label}
+      </p>
+      <ul className="formula-input__tags" aria-labelledby={labelId}>
         {entries.map(([name, value]) => {
           const isUsed = usedSet.has(name);
 
           return (
             <li key={name}>
+              <span className="sr-only">{isUsed ? 'Used in formula' : 'Available'}</span>
               <ColorTag
                 value={{ code: name, description: String(value) }}
-                colorType={isUsed ? tagType : 'gray'}
-                tooltipLabel={isUsed ? 'Used in current formula' : 'Available but not used'}
-                contentMode="code-equals-description"
-                textCaseMode="preserve"
-                className={`formula-input__tag ${isUsed ? 'formula-input__tag--used' : ''}`}
+                colorMap={{ [name]: isUsed ? tagType : 'gray' }}
+                showTooltip
               />
             </li>
           );

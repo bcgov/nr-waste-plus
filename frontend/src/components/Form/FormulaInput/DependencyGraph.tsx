@@ -102,27 +102,20 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({
   if (usedVariables.length === 0) return null;
 
   return (
-    <section className="formula-input__section" aria-label="Dependency graph">
+    <section className="formula-input__section" role="region" aria-label="Dependency graph">
       <p id={labelId} className="formula-input__section-label">
         Variables used in formula
       </p>
       <ul className="formula-input__tags" aria-labelledby={labelId}>
         {usedVariables.map((name) => {
-          const { color, label } = resolveVariableClassification(
-            name,
-            fixedParamNames,
-            dynamicParamNames,
-          );
+          const { color } = resolveVariableClassification(name, fixedParamNames, dynamicParamNames);
 
           return (
             <li key={name}>
               <ColorTag
                 value={{ code: name, description: String(mergedScope[name] ?? 'N/A') }}
-                colorType={color}
-                tooltipLabel={`This variable is ${label}.`}
-                contentMode="code-equals-description"
-                textCaseMode="preserve"
-                className="formula-input__tag formula-input__tag--used"
+                colorMap={{ [name]: color }}
+                showTooltip
               />
             </li>
           );

@@ -214,8 +214,6 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
       renderLineHighlight: 'none' as const,
       contextmenu: false,
       padding: { top: 10, bottom: 10 },
-      // Accessibility
-      ariaLabel: 'Formula expression',
     }),
     [readOnly],
   );
@@ -248,7 +246,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <section className="formula-input" aria-label={ariaLabel}>
+    <section className="formula-input" role="region" aria-label={ariaLabel}>
       {/* ── Monaco Editor ──────────────────────────────────────────────────── */}
       <div
         className={[
@@ -276,6 +274,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
             loading={
               <div
                 className="formula-input__editor-skeleton"
+                role="status"
                 aria-busy="true"
                 aria-label="Loading formula editor"
                 style={{ height: `${MIN_EDITOR_HEIGHT}px` }}
@@ -285,18 +284,22 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
         </div>
 
         {/* ── Validation helper text (always shown when error or warning present) ── */}
-        {(isError || precisionWarning) && (
+        {isError && (
           <div
             id={`${id}-helper-text`}
-            className={[
-              'cds--form__helper-text',
-              'formula-input__helper-text',
-              isError ? 'formula-input__helper-text--error' : 'formula-input__helper-text--warning',
-            ].join(' ')}
+            className="cds--form__helper-text formula-input__helper-text formula-input__helper-text--error"
             role="alert"
-            aria-live="polite"
           >
-            {isError ? (result.error?.message ?? 'Invalid formula') : precisionWarning}
+            {result.error?.message ?? 'Invalid formula'}
+          </div>
+        )}
+        {!isError && precisionWarning && (
+          <div
+            id={`${id}-helper-text`}
+            className="cds--form__helper-text formula-input__helper-text formula-input__helper-text--warning"
+            role="status"
+          >
+            {precisionWarning}
           </div>
         )}
       </div>
