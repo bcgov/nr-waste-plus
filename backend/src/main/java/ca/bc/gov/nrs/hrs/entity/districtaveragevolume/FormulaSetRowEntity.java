@@ -33,22 +33,43 @@ public class FormulaSetRowEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "formula_set_row_id")
   private Long id;
-  @Column(name = "formula_set_id", nullable = false) private Long formulaSetId;
-  @Column(name = "formula_key", nullable = false, length = 128) private String formulaKey;
-  @Column(nullable = false, length = 4000) private String expression;
+
+  @Column(name = "formula_set_id", nullable = false)
+  private Long formulaSetId;
+
+  @Column(name = "formula_key", nullable = false, length = 128)
+  private String formulaKey;
+
+  @Column(nullable = false, length = 4000)
+  private String expression;
+
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "declared_variables", nullable = false, columnDefinition = "jsonb")
   private JsonNode declaredVariables = JsonNodeFactory.instance.objectNode();
+
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "validation_errors", nullable = false, columnDefinition = "jsonb")
   private JsonNode validationErrors = JsonNodeFactory.instance.arrayNode();
-  @Column(name = "sort_order", nullable = false) private int sortOrder;
-  @Column(name = "is_deleted", nullable = false) private boolean deleted;
-  @CreatedDate @Column(name = "created_at", nullable = false, updatable = false)
+
+  @Column(name = "sort_order", nullable = false)
+  private int sortOrder;
+
+  @Column(name = "is_deleted", nullable = false)
+  private boolean deleted;
+
+  @CreatedDate
+  @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
-  @CreatedBy @Column(name = "created_by", nullable = false, updatable = false, length = 128)
+
+  @CreatedBy
+  @Column(name = "created_by", nullable = false, updatable = false, length = 128)
   private String createdBy;
-  @LastModifiedDate @Column(name = "updated_at", nullable = false) private LocalDateTime updatedAt;
-  @LastModifiedBy @Column(name = "updated_by", nullable = false, length = 128)
+
+  @LastModifiedDate
+  @Column(name = "updated_at", nullable = false)
+  private LocalDateTime updatedAt;
+
+  @LastModifiedBy
+  @Column(name = "updated_by", nullable = false, length = 128)
   private String updatedBy;
 }
