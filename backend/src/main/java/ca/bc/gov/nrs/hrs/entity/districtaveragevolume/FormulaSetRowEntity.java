@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.entity.districtaveragevolume;
 
+import ca.bc.gov.nrs.hrs.entity.SoftDeletableAuditableEntity;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.persistence.Column;
@@ -9,16 +10,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Formula expression belonging to an independently versioned formula set. */
@@ -28,7 +24,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @Setter
 @NoArgsConstructor
-public class FormulaSetRowEntity {
+public class FormulaSetRowEntity extends SoftDeletableAuditableEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "formula_set_row_id")
@@ -53,23 +49,4 @@ public class FormulaSetRowEntity {
 
   @Column(name = "sort_order", nullable = false)
   private int sortOrder;
-
-  @Column(name = "is_deleted", nullable = false)
-  private boolean deleted;
-
-  @CreatedDate
-  @Column(name = "created_at", nullable = false, updatable = false)
-  private LocalDateTime createdAt;
-
-  @CreatedBy
-  @Column(name = "created_by", nullable = false, updatable = false, length = 128)
-  private String createdBy;
-
-  @LastModifiedDate
-  @Column(name = "updated_at", nullable = false)
-  private LocalDateTime updatedAt;
-
-  @LastModifiedBy
-  @Column(name = "updated_by", nullable = false, length = 128)
-  private String updatedBy;
 }
