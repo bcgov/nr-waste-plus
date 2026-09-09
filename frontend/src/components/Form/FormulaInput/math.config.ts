@@ -24,6 +24,27 @@ export const math: MathJsInstance = create(all, {
  */
 export const mathDouble: MathJsInstance = create(all, { number: 'number' });
 
+// ─── Custom Functions ──────────────────────────────────────────────────────────
+
+/**
+ * Register `if(condition, trueValue, falseValue)` as a custom mathjs function.
+ * Matches the exp4j `if` registration on the backend. Uses eager evaluation
+ * (all branches evaluated) which is acceptable for the gate spike — production
+ * use should implement short-circuit evaluation.
+ */
+math.import(
+  {
+    if: (condition: unknown, trueValue: unknown, falseValue: unknown) => {
+      const cond =
+        typeof condition === 'object' && condition !== null && 'toNumber' in condition
+          ? (condition as { toNumber(): number }).toNumber()
+          : Number(condition);
+      return cond ? trueValue : falseValue;
+    },
+  },
+  { override: false },
+);
+
 // ─── Math Builtins Registry ───────────────────────────────────────────────────
 
 /**
@@ -82,6 +103,8 @@ const MATH_BUILTINS = new Set<string>([
   'false',
   'null',
   'undefined',
+  // Custom functions
+  'if',
 ]);
 
 /**
