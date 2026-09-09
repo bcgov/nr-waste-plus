@@ -82,9 +82,16 @@ BEGIN
 
     IF EXISTS (
         SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'hrs' AND table_name = 'district_average_block' AND column_name = 'block_id'
+    ) THEN
+        ALTER TABLE hrs.district_average_block RENAME COLUMN block_id TO district_average_block_id;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
         WHERE table_schema = 'hrs' AND table_name = 'district_average_block' AND column_name = 'dab_id'
     ) THEN
-        ALTER TABLE hrs.district_average_block RENAME COLUMN dab_id TO block_id;
+        ALTER TABLE hrs.district_average_block RENAME COLUMN dab_id TO district_average_block_id;
     END IF;
 
     IF EXISTS (
@@ -214,7 +221,7 @@ ALTER TABLE hrs.block
 
 ALTER TABLE hrs.district_average_block
     ADD CONSTRAINT fk_district_average_block_block
-    FOREIGN KEY (block_id) REFERENCES hrs.block(block_id);
+    FOREIGN KEY (district_average_block_id) REFERENCES hrs.block(block_id);
 
 ALTER TABLE hrs.block_mark
     ADD CONSTRAINT fk_block_mark_block
@@ -319,7 +326,7 @@ COMMENT ON COLUMN hrs.block.updated_at IS 'Timestamp when this block was last up
 COMMENT ON COLUMN hrs.block.is_deleted IS 'Soft-delete flag; live uniqueness indexes exclude deleted rows.';
 
 COMMENT ON TABLE hrs.district_average_block IS 'District Average-specific block extension.';
-COMMENT ON COLUMN hrs.district_average_block.block_id IS 'Primary key and foreign key referencing the parent block.';
+COMMENT ON COLUMN hrs.district_average_block.district_average_block_id IS 'Primary key and foreign key referencing the parent block.';
 COMMENT ON COLUMN hrs.district_average_block.benchmark_zone IS 'Benchmark pricing zone.';
 COMMENT ON COLUMN hrs.district_average_block.maturity IS 'Timber maturity: MATURE or IMMATURE.';
 COMMENT ON COLUMN hrs.district_average_block.retention_percentage IS 'Stand retention percentage.';

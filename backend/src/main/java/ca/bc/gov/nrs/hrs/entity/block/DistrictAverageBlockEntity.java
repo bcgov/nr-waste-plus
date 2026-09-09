@@ -42,13 +42,13 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 public class DistrictAverageBlockEntity {
 
   @Id
-  @Column(name = "block_id")
+  @Column(name = "district_average_block_id")
   @EqualsAndHashCode.Include
   private Long blockId;
 
   @MapsId
   @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "block_id")
+  @JoinColumn(name = "district_average_block_id")
   private BlockEntity block;
 
   @Column(length = 32)
