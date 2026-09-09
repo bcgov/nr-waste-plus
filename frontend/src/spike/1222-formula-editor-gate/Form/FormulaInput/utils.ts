@@ -157,14 +157,17 @@ export function evaluateFormula(
 
 /**
  * Formats a BigNumber for display.
- * Strips trailing zeros after the decimal point for readability while
- * preserving all significant digits.
+ * Rounds to 3 decimal places using HALF_UP (mathjs `round` default)
+ * per ADR gate verdict condition #4, then strips trailing zeros.
  *
- * @example formatResult(math.bignumber('3.140000')) → '3.14'
+ * @example formatResult(math.bignumber('3.1456')) → '3.146'
+ * @example formatResult(math.bignumber('3.1400')) → '3.14'
+ * @example formatResult(math.bignumber('3.0000')) → '3'
  */
 function formatResult(value: BigNumber): string {
-  // toSignificantDigits keeps 14 digits; enough for billing, avoids noise
-  const str = value.toSignificantDigits(14).toFixed();
+  // math.round with BigNumber mode uses HALF_UP — matches the ADR requirement.
+  const rounded = math.round(value, 3) as BigNumber;
+  const str = rounded.toFixed();
   return str.includes('.') ? str.replace(/\.?0+$/, '') : str;
 }
 

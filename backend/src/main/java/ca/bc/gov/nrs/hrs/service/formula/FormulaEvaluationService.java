@@ -76,10 +76,7 @@ public class FormulaEvaluationService {
 
     for (FormulaSetRowEntity row : rows) {
       try {
-        FormulaNode ast = parseExpression(row.getExpression());
-        BigDecimal result = isMathFunctionExpression(row.getExpression())
-            ? FormulaEvaluatorExp4j.evaluate(row.getExpression(), variables)
-            : FormulaEvaluator.evaluate(ast, variables);
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate(row.getExpression(), variables);
         outputs.put(row.getFormulaKey(), result);
       } catch (FormulaEvaluationException ex) {
         throw new FormulaEvaluationException(
@@ -145,11 +142,6 @@ public class FormulaEvaluationService {
     return variables;
   }
 
-  private FormulaNode parseExpression(String expression) {
-    FormulaParser parser = new FormulaParser(new FormulaParser.Options(20, 100));
-    return parser.parse(expression, FormulaParseMode.CONDITIONAL);
-  }
-
   /**
    * Resolves a submission namespace variable. Currently a placeholder returning zero until
    * submission domain data is integrated.
@@ -161,14 +153,4 @@ public class FormulaEvaluationService {
     return BigDecimal.ZERO;
   }
 
-  private boolean isMathFunctionExpression(String expression) {
-    if (expression == null) return false;
-    String lower = expression.toLowerCase();
-    return lower.contains("sqrt(") || lower.contains("sin(") || lower.contains("cos(") 
-        || lower.contains("tan(") || lower.contains("asin(") || lower.contains("acos(")
-        || lower.contains("atan(") || lower.contains("log(") || lower.contains("ln(")
-        || lower.contains("exp(") || lower.contains("abs(") || lower.contains("ceil(")
-        || lower.contains("floor(") || lower.contains("pow(") || lower.contains("max(")
-        || lower.contains("min(");
-  }
 }
