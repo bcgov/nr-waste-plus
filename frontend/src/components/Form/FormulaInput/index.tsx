@@ -22,8 +22,8 @@ import VariablePanel from './VariablePanel';
 import type { OnMount } from '@monaco-editor/react';
 
 import './index.scss';
-import ReadonlyInput from '../../ReadonlyInput/ReadonlyInput';
-import { useTheme } from '../../../context/theme/useTheme';
+import ReadonlyInput from '@/components/Form/ReadonlyInput';
+import { useTheme } from '@/context/theme/useTheme';
 
 /** BC Sans is the project's primary typeface — update here if the design token changes. */
 const EDITOR_FONT_FAMILY = '"BC Sans", monospace';
