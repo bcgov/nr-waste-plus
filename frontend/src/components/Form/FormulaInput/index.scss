@@ -63,6 +63,14 @@
     // (fast-01 = 70 ms) without animating layout properties.
     transition: border-color $duration-fast-01 motion(standard, expressive);
 
+    // Monaco can initially measure its host at the editor's fallback width
+    // before the Carbon field has completed layout. Keep the embedded editor
+    // aligned with the host so keyboard input and hit testing use the field.
+    > .monaco-editor {
+      inline-size: 100% !important;
+      block-size: 100% !important;
+    }
+
     &:focus-within {
       border-color: $focus;
       // 2 px outline at -2 px offset draws inside the border box, matching
@@ -258,9 +266,15 @@
   // Pulse keyframes: fade between 50 % and full opacity to signal activity
   // without implying progress (which an indeterminate pulse should not do).
   @keyframes skeleton {
-    0%   { opacity: 0.5; }
-    50%  { opacity: 1; }
-    100% { opacity: 0.5; }
+    0% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0.5;
+    }
   }
 }
 
@@ -277,4 +291,3 @@
   white-space: nowrap;
   border: 0;
 }
-\ No newline at end of file

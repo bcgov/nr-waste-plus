@@ -198,6 +198,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
       lineDecorationsWidth: 0,
       lineNumbersMinChars: 0,
       // Layout
+      automaticLayout: true,
       minimap: { enabled: false },
       scrollBeyondLastLine: false,
       wordWrap: 'off' as const,
@@ -312,7 +313,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
           {/* ── Evaluated result ────────────────────────────────────────────── */}
           <div className="formula-input__result">
             <ReadonlyInput id={`${id}-evaluated-result`} label="Evaluated result">
-              {resultDisplayValue}
+              <output aria-label="Evaluated result">{resultDisplayValue}</output>
             </ReadonlyInput>
           </div>
         </>

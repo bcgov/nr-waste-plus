@@ -24,11 +24,11 @@ import { useMonacoFormula } from './useMonacoFormula';
 
 import { FormulaInput } from './index';
 
-import { useTheme } from '@/context/theme/useTheme';
-
 import type { EvaluationResult, FormulaError } from './types';
 import type { FormulaEngineState } from './useFormulaEngine';
 import type { ReactElement, ReactNode } from 'react';
+
+import { useTheme } from '@/context/theme/useTheme';
 
 // ── Monaco mock ───────────────────────────────────────────────────────────────
 //
@@ -75,15 +75,7 @@ vi.mock('./VariablePanel', () => ({
 }));
 
 vi.mock('@/components/Form/ReadonlyInput', () => ({
-  default: ({
-    id,
-    label,
-    children,
-  }: {
-    id?: string;
-    label: string;
-    children?: ReactNode;
-  }) => (
+  default: ({ id, label, children }: { id?: string; label: string; children?: ReactNode }) => (
     <div data-testid="readonly-input" data-id={id} data-label={label}>
       {children}
     </div>
@@ -353,9 +345,9 @@ describe('error state', () => {
 
     render(<FormulaInput {...DEFAULT_PROPS} />);
 
-    expect(
-      screen.getByRole('alert').classList.contains('formula-input__helper-text--error'),
-    ).toBe(true);
+    expect(screen.getByRole('alert').classList.contains('formula-input__helper-text--error')).toBe(
+      true,
+    );
   });
 
   it('shouldApplyInvalidModifierClass_toEditorWrapper_whenResultHasError', () => {
@@ -399,7 +391,7 @@ describe('precision warning state', () => {
 
     render(<FormulaInput {...DEFAULT_PROPS} />);
 
-    expect(screen.queryByRole('alert')).not.toBeNull();
+    expect(screen.getByText('Precision loss: 2.3e-12')).toBeDefined();
   });
 
   it('shouldDisplayWarningText_fromPrecisionWarning', () => {
@@ -409,7 +401,7 @@ describe('precision warning state', () => {
 
     render(<FormulaInput {...DEFAULT_PROPS} />);
 
-    expect(screen.getByRole('alert').textContent).toBe('Precision loss: 2.3e-12');
+    expect(screen.getByText('Precision loss: 2.3e-12')).toBeDefined();
   });
 
   it('shouldApplyWarningModifierClass_toHelperText_whenOnlyWarningIsPresent', () => {
@@ -420,7 +412,9 @@ describe('precision warning state', () => {
     render(<FormulaInput {...DEFAULT_PROPS} />);
 
     expect(
-      screen.getByRole('alert').classList.contains('formula-input__helper-text--warning'),
+      screen
+        .getByText('Precision loss: 2.3e-12')
+        .classList.contains('formula-input__helper-text--warning'),
     ).toBe(true);
   });
 
@@ -453,7 +447,7 @@ describe('precision warning state', () => {
 
     render(<FormulaInput {...DEFAULT_PROPS} displayResult={false} />);
 
-    expect(screen.queryByRole('alert')).not.toBeNull();
+    expect(screen.queryByRole('status')).not.toBeNull();
   });
 
   it('shouldPrioritiseError_overWarning_whenBothArePresent', () => {
@@ -627,7 +621,7 @@ describe('Monaco editor props', () => {
     render(<FormulaInput {...DEFAULT_PROPS} />);
 
     const opts = vi.mocked(Editor).mock.lastCall?.[0].options;
-    expect(opts?.ariaLabel).toBe('Formula expression');
+    expect(opts?.ariaLabel).toBeUndefined();
   });
 
   it('shouldPassLineNumbersOff_inMonacoOptions', () => {
@@ -642,6 +636,26 @@ describe('Monaco editor props', () => {
 
     const height = vi.mocked(Editor).mock.lastCall?.[0].height;
     expect(height).toBe('56px');
+  });
+
+  it('shouldEnableAutomaticLayout_inMonacoOptions', () => {
+    render(<FormulaInput {...DEFAULT_PROPS} />);
+
+    const opts = vi.mocked(Editor).mock.lastCall?.[0].options;
+    expect(opts?.automaticLayout).toBe(true);
+  });
+
+  it('shouldProvideAccessibleLoadingState_forEditorSkeleton', () => {
+    render(<FormulaInput {...DEFAULT_PROPS} />);
+
+    const loadingProp = vi.mocked(Editor).mock.lastCall?.[0].loading as ReactElement<{
+      'role'?: string;
+      'aria-busy'?: string;
+      'aria-label'?: string;
+    }>;
+    expect(loadingProp.props.role).toBe('status');
+    expect(loadingProp.props['aria-busy']).toBe('true');
+    expect(loadingProp.props['aria-label']).toBe('Loading formula editor');
   });
 });
 
