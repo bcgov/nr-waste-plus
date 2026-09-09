@@ -313,7 +313,7 @@ COMMENT ON COLUMN hrs.reporting_unit.created_at IS 'Timestamp when this reportin
 COMMENT ON COLUMN hrs.reporting_unit.updated_at IS 'Timestamp when this reporting unit was last updated.';
 COMMENT ON COLUMN hrs.reporting_unit.is_deleted IS 'Soft-delete flag; live uniqueness indexes exclude deleted rows.';
 
-COMMENT ON TABLE hrs.block IS 'Submission block belonging to a reporting unit.';
+COMMENT ON TABLE hrs.block IS 'Submission block belonging to a reporting unit. Equivalent to a "cut block" in legacy/FTA terminology — renamed for consistency with app-wide usage.';
 COMMENT ON COLUMN hrs.block.block_id IS 'Unique identifier for the submission block.';
 COMMENT ON COLUMN hrs.block.reporting_unit_id IS 'Foreign key referencing the parent reporting unit.';
 COMMENT ON COLUMN hrs.block.block_type IS 'Block category, e.g. DISTRICT_AVERAGE.';
@@ -350,7 +350,7 @@ COMMENT ON COLUMN hrs.district_average_block.created_at IS 'Timestamp when this 
 COMMENT ON COLUMN hrs.district_average_block.updated_at IS 'Timestamp when this DA extension was last updated.';
 COMMENT ON COLUMN hrs.district_average_block.is_deleted IS 'Soft-delete flag.';
 
-COMMENT ON TABLE hrs.block_mark IS 'Typed forest and road marks associated with a submission block.';
+COMMENT ON TABLE hrs.block_mark IS 'Typed forest and road marks associated with a submission block. "Block mark" is equivalent to "timber mark" in legacy/FTA terminology — renamed for consistency with app-wide usage.';
 COMMENT ON COLUMN hrs.block_mark.block_mark_id IS 'Unique identifier for the block mark.';
 COMMENT ON COLUMN hrs.block_mark.block_id IS 'Foreign key referencing the parent block.';
 COMMENT ON COLUMN hrs.block_mark.mark_type IS 'Mark type: PRIMARY or SECONDARY.';
@@ -401,11 +401,11 @@ COMMENT ON TABLE hrs.block_submitter IS 'Submitter endorsement details for a blo
 COMMENT ON COLUMN hrs.block_submitter.block_submitter_id IS 'Unique identifier for the submitter endorsement record.';
 COMMENT ON COLUMN hrs.block_submitter.block_id IS 'Foreign key referencing the parent block.';
 COMMENT ON COLUMN hrs.block_submitter.submitter_id IS 'Business identifier of the submitter.';
-COMMENT ON COLUMN hrs.block_submitter.submitter_name IS 'Full name of the submitter.';
-COMMENT ON COLUMN hrs.block_submitter.first_name IS 'Submitter first name.';
-COMMENT ON COLUMN hrs.block_submitter.last_name IS 'Submitter last name.';
+COMMENT ON COLUMN hrs.block_submitter.submitter_name IS 'Read-only display name from the identity provider (BCeID/IDIR), captured at submission time.';
+COMMENT ON COLUMN hrs.block_submitter.first_name IS 'Submitter first name, entered on the endorsement form (added V1.1.3). Distinct from submitter_name, which is IDP-sourced.';
+COMMENT ON COLUMN hrs.block_submitter.last_name IS 'Submitter last name, entered on the endorsement form (added V1.1.3). Distinct from submitter_name, which is IDP-sourced.';
 COMMENT ON COLUMN hrs.block_submitter.designation IS 'Submitter professional designation.';
-COMMENT ON COLUMN hrs.block_submitter.licence_no IS 'Submitter professional licence number.';
+COMMENT ON COLUMN hrs.block_submitter.licence_no IS 'Professional forester licence number (RPF/RFT designation) — not a general business licence.';
 COMMENT ON COLUMN hrs.block_submitter.email IS 'Submitter email address.';
 COMMENT ON COLUMN hrs.block_submitter.phone IS 'Submitter telephone number.';
 COMMENT ON COLUMN hrs.block_submitter.created_by IS 'Audit actor that created this submitter record.';
@@ -418,11 +418,11 @@ COMMENT ON TABLE hrs.block_sponsor IS 'Sponsor endorsement details for a block.'
 COMMENT ON COLUMN hrs.block_sponsor.block_sponsor_id IS 'Unique identifier for the sponsor endorsement record.';
 COMMENT ON COLUMN hrs.block_sponsor.block_id IS 'Foreign key referencing the parent block.';
 COMMENT ON COLUMN hrs.block_sponsor.sponsor_id IS 'Business identifier of the sponsor.';
-COMMENT ON COLUMN hrs.block_sponsor.sponsor_name IS 'Full name of the sponsor.';
-COMMENT ON COLUMN hrs.block_sponsor.first_name IS 'Sponsor first name.';
-COMMENT ON COLUMN hrs.block_sponsor.last_name IS 'Sponsor last name.';
+COMMENT ON COLUMN hrs.block_sponsor.sponsor_name IS 'Read-only display name from the identity provider (BCeID/IDIR), captured at submission time.';
+COMMENT ON COLUMN hrs.block_sponsor.first_name IS 'Sponsor first name, entered on the endorsement form (added V1.1.3). Distinct from sponsor_name, which is IDP-sourced.';
+COMMENT ON COLUMN hrs.block_sponsor.last_name IS 'Sponsor last name, entered on the endorsement form (added V1.1.3). Distinct from sponsor_name, which is IDP-sourced.';
 COMMENT ON COLUMN hrs.block_sponsor.designation IS 'Sponsor professional designation.';
-COMMENT ON COLUMN hrs.block_sponsor.licence_no IS 'Sponsor professional licence number.';
+COMMENT ON COLUMN hrs.block_sponsor.licence_no IS 'Professional forester licence number (RPF/RFT designation) — not a general business licence.';
 COMMENT ON COLUMN hrs.block_sponsor.email IS 'Sponsor email address.';
 COMMENT ON COLUMN hrs.block_sponsor.phone IS 'Sponsor telephone number.';
 COMMENT ON COLUMN hrs.block_sponsor.created_by IS 'Audit actor that created this sponsor record.';
@@ -447,7 +447,7 @@ COMMENT ON COLUMN hrs.block_requirement.is_deleted IS 'Soft-delete flag.';
 COMMENT ON TABLE hrs.block_comment IS 'Submission block comments, including status-event context.';
 COMMENT ON COLUMN hrs.block_comment.block_comment_id IS 'Unique identifier for the comment.';
 COMMENT ON COLUMN hrs.block_comment.block_id IS 'Foreign key referencing the parent block.';
-COMMENT ON COLUMN hrs.block_comment.context IS 'Functional context in which the comment was entered.';
+COMMENT ON COLUMN hrs.block_comment.context IS 'Comment type: GENERAL (standalone block comment), SUBMISSION (endorsement-tab comment), or accompanies a lifecycle transition when status_event_id is populated.';
 COMMENT ON COLUMN hrs.block_comment.comment IS 'Body text of the comment (max 4000 chars).';
 COMMENT ON COLUMN hrs.block_comment.status_event_id IS 'Optional foreign key referencing the triggering status event.';
 COMMENT ON COLUMN hrs.block_comment.created_by IS 'Audit actor that created this comment.';
