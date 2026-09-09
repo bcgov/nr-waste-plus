@@ -32,15 +32,33 @@ public class FormulaSetEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "formula_set_id")
   private Long id;
-  @Enumerated(EnumType.STRING) @Column(nullable = false, length = 10) private Area area;
-  @Column(name = "start_date", nullable = false) private LocalDate startDate;
-  @Column(name = "end_date") private LocalDate endDate;
-  @Column(name = "is_deleted", nullable = false) private boolean deleted;
-  @CreatedDate @Column(name = "created_at", nullable = false, updatable = false)
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 10)
+  private Area area;
+
+  @Column(name = "start_date", nullable = false)
+  private LocalDate startDate;
+
+  @Column(name = "end_date")
+  private LocalDate endDate;
+
+  @Column(name = "is_deleted", nullable = false)
+  private boolean deleted;
+
+  @CreatedDate
+  @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
-  @CreatedBy @Column(name = "created_by", nullable = false, updatable = false, length = 128)
+
+  @CreatedBy
+  @Column(name = "created_by", nullable = false, updatable = false, length = 128)
   private String createdBy;
-  @LastModifiedDate @Column(name = "updated_at", nullable = false) private LocalDateTime updatedAt;
-  @LastModifiedBy @Column(name = "updated_by", nullable = false, length = 128)
+
+  @LastModifiedDate
+  @Column(name = "updated_at", nullable = false)
+  private LocalDateTime updatedAt;
+
+  @LastModifiedBy
+  @Column(name = "updated_by", nullable = false, length = 128)
   private String updatedBy;
 }
