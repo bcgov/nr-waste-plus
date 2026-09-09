@@ -68,44 +68,17 @@ BEGIN
 END $$;
 
 -- ============================================================================
--- Phase 3: Ensure FK column names are descriptive and non-abbreviated
+-- Phase 3: PK/FK alignment for district_average_block
 -- ============================================================================
 
 DO $$
 BEGIN
-    IF EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_schema = 'hrs' AND table_name = 'block' AND column_name = 'ru_id'
-    ) THEN
-        ALTER TABLE hrs.block RENAME COLUMN ru_id TO reporting_unit_id;
-    END IF;
-
+    -- Rename PK/FK in district_average_block to follow the {table_name}_id standard
     IF EXISTS (
         SELECT 1 FROM information_schema.columns
         WHERE table_schema = 'hrs' AND table_name = 'district_average_block' AND column_name = 'block_id'
     ) THEN
         ALTER TABLE hrs.district_average_block RENAME COLUMN block_id TO district_average_block_id;
-    END IF;
-
-    IF EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_schema = 'hrs' AND table_name = 'district_average_block' AND column_name = 'dab_id'
-    ) THEN
-        ALTER TABLE hrs.district_average_block RENAME COLUMN dab_id TO district_average_block_id;
-    END IF;
-
-    IF EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_schema = 'hrs' AND table_name = 'block_area_segment' AND column_name = 'bm_id'
-    ) THEN
-        ALTER TABLE hrs.block_area_segment RENAME COLUMN bm_id TO block_mark_id;
-    END IF;
-
-    IF EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_schema = 'hrs' AND table_name = 'block_calculation_snapshot' AND column_name = 'dv_id'
-    ) THEN
-        ALTER TABLE hrs.block_calculation_snapshot RENAME COLUMN dv_id TO district_volume_id;
     END IF;
 END $$;
 
@@ -621,7 +594,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_reporting_unit_client_district
     WHERE is_deleted = FALSE;
 
 DROP INDEX IF EXISTS hrs.idx_block_reporting_unit_id;
-DROP INDEX IF EXISTS hrs.idx_block_ru_id;
 CREATE INDEX IF NOT EXISTS idx_block_reporting_unit_id
     ON hrs.block (reporting_unit_id);
 
@@ -636,7 +608,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_block_mark_live_type_sequence
     WHERE is_deleted = FALSE;
 
 DROP INDEX IF EXISTS hrs.idx_block_area_segment_block_mark_id;
-DROP INDEX IF EXISTS hrs.idx_block_area_segment_bm_id;
 CREATE INDEX IF NOT EXISTS idx_block_area_segment_block_mark_id
     ON hrs.block_area_segment (block_mark_id);
 
@@ -646,7 +617,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_block_requirement_live
     WHERE is_deleted = FALSE;
 
 DROP INDEX IF EXISTS hrs.idx_block_calculation_snapshot_district_volume_id;
-DROP INDEX IF EXISTS hrs.idx_block_calculation_snapshot_dv_id;
 CREATE INDEX IF NOT EXISTS idx_block_calculation_snapshot_district_volume_id
     ON hrs.block_calculation_snapshot (district_volume_id);
 
