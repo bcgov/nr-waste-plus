@@ -46,7 +46,7 @@ public class BlockCommentEntity {
   @Column(nullable = false, length = 32)
   private String context;
 
-  @Column(nullable = false, columnDefinition = "text")
+  @Column(nullable = false, length = 4000)
   private String comment;
 
   private Long statusEventId;

@@ -157,15 +157,19 @@ BEGIN
 END $$;
 
 -- ============================================================================
--- Phase 5: TEXT -> VARCHAR conversions (2 columns)
+-- Phase 5: TEXT -> VARCHAR conversions (4 columns)
 -- ============================================================================
 
 DO $$
 DECLARE
     offending_req_count INT;
     offending_form_count INT;
+    offending_comment_count INT;
+    offending_fs_row_count INT;
     max_req_len INT;
     max_form_len INT;
+    max_comment_len INT;
+    max_fs_row_len INT;
 BEGIN
     -- Pre-check: Verify no existing rows exceed 4000 characters in block_requirement.response
     SELECT COUNT(*), COALESCE(MAX(LENGTH(response)), 0)
@@ -189,8 +193,32 @@ BEGIN
             offending_form_count, max_form_len;
     END IF;
 
+    -- Pre-check: Verify no existing rows exceed 4000 characters in block_comment.comment
+    SELECT COUNT(*), COALESCE(MAX(LENGTH(comment)), 0)
+    INTO offending_comment_count, max_comment_len
+    FROM hrs.block_comment
+    WHERE LENGTH(comment) > 4000;
+
+    IF offending_comment_count > 0 THEN
+        RAISE EXCEPTION 'Migration V1.1.8 aborted: hrs.block_comment contains % row(s) where comment exceeds 4000 characters (max length: %). Please clean up or truncate data before applying this migration.',
+            offending_comment_count, max_comment_len;
+    END IF;
+
+    -- Pre-check: Verify no existing rows exceed 4000 characters in formula_set_row.expression
+    SELECT COUNT(*), COALESCE(MAX(LENGTH(expression)), 0)
+    INTO offending_fs_row_count, max_fs_row_len
+    FROM hrs.formula_set_row
+    WHERE LENGTH(expression) > 4000;
+
+    IF offending_fs_row_count > 0 THEN
+        RAISE EXCEPTION 'Migration V1.1.8 aborted: hrs.formula_set_row contains % row(s) where expression exceeds 4000 characters (max length: %). Please clean up or truncate data before applying this migration.',
+            offending_fs_row_count, max_fs_row_len;
+    END IF;
+
     ALTER TABLE hrs.block_requirement ALTER COLUMN response TYPE VARCHAR(4000);
     ALTER TABLE hrs.district_volume_formula ALTER COLUMN expression TYPE VARCHAR(4000);
+    ALTER TABLE hrs.block_comment ALTER COLUMN comment TYPE VARCHAR(4000);
+    ALTER TABLE hrs.formula_set_row ALTER COLUMN expression TYPE VARCHAR(4000);
 END $$;
 
 -- ============================================================================
@@ -447,7 +475,7 @@ COMMENT ON TABLE hrs.block_comment IS 'Submission block comments, including stat
 COMMENT ON COLUMN hrs.block_comment.block_comment_id IS 'Unique identifier for the comment.';
 COMMENT ON COLUMN hrs.block_comment.block_id IS 'Foreign key referencing the parent block.';
 COMMENT ON COLUMN hrs.block_comment.context IS 'Functional context in which the comment was entered.';
-COMMENT ON COLUMN hrs.block_comment.comment IS 'Body text of the comment.';
+COMMENT ON COLUMN hrs.block_comment.comment IS 'Body text of the comment (max 4000 chars).';
 COMMENT ON COLUMN hrs.block_comment.status_event_id IS 'Optional foreign key referencing the triggering status event.';
 COMMENT ON COLUMN hrs.block_comment.created_by IS 'Audit actor that created this comment.';
 COMMENT ON COLUMN hrs.block_comment.updated_by IS 'Audit actor that last updated this comment.';
@@ -568,7 +596,7 @@ COMMENT ON TABLE hrs.formula_set_row IS 'Formula expressions belonging to an ind
 COMMENT ON COLUMN hrs.formula_set_row.formula_set_row_id IS 'Unique identifier for the formula set row.';
 COMMENT ON COLUMN hrs.formula_set_row.formula_set_id IS 'Foreign key referencing the parent formula set.';
 COMMENT ON COLUMN hrs.formula_set_row.formula_key IS 'Namespaced formula identifier.';
-COMMENT ON COLUMN hrs.formula_set_row.expression IS 'Mathematical formula expression.';
+COMMENT ON COLUMN hrs.formula_set_row.expression IS 'Mathematical formula expression (max 4000 chars).';
 COMMENT ON COLUMN hrs.formula_set_row.declared_variables IS 'JSON object of declared variable bindings.';
 COMMENT ON COLUMN hrs.formula_set_row.validation_errors IS 'JSON array of syntax/reference errors.';
 COMMENT ON COLUMN hrs.formula_set_row.sort_order IS 'Display and evaluation sort order index.';

@@ -35,7 +35,7 @@ public class FormulaSetRowEntity {
   private Long id;
   @Column(name = "formula_set_id", nullable = false) private Long formulaSetId;
   @Column(name = "formula_key", nullable = false, length = 128) private String formulaKey;
-  @Column(nullable = false, columnDefinition = "text") private String expression;
+  @Column(nullable = false, length = 4000) private String expression;
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "declared_variables", nullable = false, columnDefinition = "jsonb")
   private JsonNode declaredVariables = JsonNodeFactory.instance.objectNode();
