@@ -36,6 +36,7 @@ public class BlockRequirementEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "block_requirement_id")
   @EqualsAndHashCode.Include
   private Long id;
 
@@ -45,9 +46,10 @@ public class BlockRequirementEntity {
   @Column(name = "requirement_code", nullable = false, length = 64)
   private String requirementCode;
 
+  @Column(name = "is_answered_yes")
   private Boolean answeredYes;
 
-  @Column(columnDefinition = "text")
+  @Column(length = 4000)
   private String response;
 
   private Long linkedAttachmentId;
@@ -68,6 +70,6 @@ public class BlockRequirementEntity {
   @Column(nullable = false)
   private Instant updatedAt;
 
-  @Column(nullable = false)
+  @Column(name = "is_deleted", nullable = false)
   private boolean deleted;
 }

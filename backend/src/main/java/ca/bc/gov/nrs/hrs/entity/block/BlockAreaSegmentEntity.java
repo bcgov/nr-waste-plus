@@ -37,6 +37,7 @@ public class BlockAreaSegmentEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "block_area_segment_id")
   @EqualsAndHashCode.Include
   private Long id;
 
@@ -55,6 +56,7 @@ public class BlockAreaSegmentEntity {
   @Column(name = "road_width_m", precision = 12, scale = 3)
   private BigDecimal roadWidthM;
 
+  @Column(name = "block_mark_id")
   private Long blockMarkId;
 
   @Column(precision = 12, scale = 3)
@@ -79,6 +81,6 @@ public class BlockAreaSegmentEntity {
   @Column(nullable = false)
   private Instant updatedAt;
 
-  @Column(nullable = false)
+  @Column(name = "is_deleted", nullable = false)
   private boolean deleted;
 }
