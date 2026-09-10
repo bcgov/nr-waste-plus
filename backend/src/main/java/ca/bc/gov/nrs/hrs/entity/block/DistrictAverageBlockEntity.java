@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.entity.block;
 
+import ca.bc.gov.nrs.hrs.entity.SoftDeletableAuditableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -10,10 +11,8 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
-import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,10 +20,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
@@ -35,11 +30,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = "block")
-public class DistrictAverageBlockEntity {
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+@ToString(callSuper = true, exclude = "block")
+public class DistrictAverageBlockEntity extends SoftDeletableAuditableEntity {
 
   @Id
   @Column(name = "district_average_block_id")
@@ -98,23 +92,4 @@ public class DistrictAverageBlockEntity {
 
   @Column(nullable = false)
   private Long revision;
-
-  @CreatedBy
-  @Column(nullable = false, length = 128)
-  private String createdBy;
-
-  @LastModifiedBy
-  @Column(nullable = false, length = 128)
-  private String updatedBy;
-
-  @CreatedDate
-  @Column(nullable = false)
-  private Instant createdAt;
-
-  @LastModifiedDate
-  @Column(nullable = false)
-  private Instant updatedAt;
-
-  @Column(name = "is_deleted", nullable = false)
-  private boolean deleted;
 }

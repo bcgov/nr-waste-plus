@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.entity.districtaveragevolume;
 
+import ca.bc.gov.nrs.hrs.entity.AuditableEntity;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.persistence.Column;
@@ -11,7 +12,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.Instant;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,10 +19,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** A normalized administrator-managed formula associated with one table version. */
@@ -32,9 +28,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = "districtVolume")
-public class DistrictVolumeFormulaEntity {
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+@ToString(callSuper = true, exclude = "districtVolume")
+public class DistrictVolumeFormulaEntity extends AuditableEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -62,20 +58,4 @@ public class DistrictVolumeFormulaEntity {
 
   @Column(name = "sort_order", nullable = false)
   private int sortOrder;
-
-  @CreatedDate
-  @Column(nullable = false, updatable = false)
-  private Instant createdAt;
-
-  @CreatedBy
-  @Column(nullable = false, updatable = false, length = 128)
-  private String createdBy;
-
-  @LastModifiedDate
-  @Column(nullable = false)
-  private Instant updatedAt;
-
-  @LastModifiedBy
-  @Column(nullable = false, length = 128)
-  private String updatedBy;
 }

@@ -1,0 +1,293 @@
+// FormulaInput — Component stylesheet
+//
+// BEM root: `.formula-input`
+//
+// Layout hierarchy:
+//   .formula-input                         Root flex column container
+//   ├── .formula-input__editor-label       <label> element above the Monaco wrapper
+//   ├── .formula-input__editor-wrapper     Outer container; carries validation-state modifiers
+//   │   ├── .formula-input__editor         Carbon TextInput-alike: border + focus ring
+//   │   └── .formula-input__editor-skeleton  Pulsing placeholder shown while Monaco loads
+//   ├── .formula-input__helper-text        Validation message (error or precision warning)
+//   ├── .formula-input__result             ReadonlyInput slot for the evaluated formula value
+//   ├── .formula-input__section            Wrapper for the dependency graph + variable panels
+//   └── .formula-input__variables          Variable-group list (fixed params + dynamic params)
+//
+// State modifiers — applied to `.formula-input__editor-wrapper` by the component:
+//   --invalid   Red border; mirrors Carbon TextInput `invalid` state
+//   --warning   Amber border; mirrors Carbon TextInput `warn` state
+//
+// Imported Carbon partials:
+//   spacing — $spacing-02 … $spacing-05 (logical spacing scale)
+//   type    — type-style() mixin for label-01 and helper-text-01
+//   motion  — $duration-fast-01, $duration-slow-02, motion() easing helper
+//   theme   — all $field-*, $border-*, $focus, $text-*, $support-*, $highlight tokens
+
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/type' as *;
+@use '@carbon/react/scss/motion' as *;
+@use '@carbon/react/scss/theme' as *;
+
+// ─── Root Container ────────────────────────────────────────────────────────────
+
+.formula-input {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-05;
+  inline-size: 100%;
+
+  // ── Editor Wrapper ───────────────────────────────────────────────────────────
+  //
+  // We wrap Monaco in a container styled like a Carbon TextInput so the editor
+  // visually blends with the rest of the form. Focus outline is applied to the
+  // wrapper (not the inner canvas) to keep it accessible.
+
+  &__editor-wrapper {
+    position: relative;
+    inline-size: 100%;
+  }
+
+  &__editor-label {
+    @include type-style('label-01');
+    display: block;
+    color: $text-secondary;
+    margin-block-end: $spacing-02;
+  }
+
+  &__editor {
+    // The Monaco container sits inside this div. We give it a Carbon field
+    // appearance: field background, strong border, focus ring.
+    border: 1px solid $border-strong-01;
+    background-color: $field-01;
+    // Transition only `border-color` so that the focus ring change feels snappy
+    // (fast-01 = 70 ms) without animating layout properties.
+    transition: border-color $duration-fast-01 motion(standard, expressive);
+
+    // Monaco can initially measure its host at the editor's fallback width
+    // before the Carbon field has completed layout. Keep the embedded editor
+    // aligned with the host so keyboard input and hit testing use the field.
+    > .monaco-editor {
+      inline-size: 100% !important;
+      block-size: 100% !important;
+    }
+
+    &:focus-within {
+      border-color: $focus;
+      // 2 px outline at -2 px offset draws inside the border box, matching
+      // Carbon's TextInput focus style exactly.
+      outline: 2px solid $focus;
+      outline-offset: -2px;
+    }
+
+    // Monaco renders its own DOM subtree and sets inline `background-color`
+    // styles that override any external CSS. `!important` is the only reliable
+    // mechanism to align these internal elements with Carbon's $field-01 token.
+    .monaco-editor,
+    .monaco-editor-background,
+    .monaco-editor .margin {
+      background-color: $field-01 !important;
+    }
+
+    // Keep the cursor visible on all Carbon themes by tying it to $text-primary
+    // rather than Monaco's built-in colour, which is theme-unaware.
+    .monaco-editor .cursor {
+      background-color: $text-primary !important;
+      border-color: $text-primary !important;
+    }
+
+    // Use Carbon's dedicated $highlight token for text selections instead of
+    // Monaco's default blue, so it respects all Carbon theme variants.
+    .monaco-editor .selected-text {
+      background-color: $highlight !important;
+    }
+  }
+
+  // ── Inline Decorations ────────────────────────────────────────────────────────
+  //
+  // These classes are injected into Monaco's DOM by our `after` decoration option.
+  // They appear after the last character of the formula and are not selectable.
+
+  .formula-inline-result {
+    // Muted success colour — deliberately not $text-primary so the evaluation
+    // ghost text doesn't compete visually with the formula the user is editing.
+    color: $text-helper;
+    font-style: italic;
+    font-family: inherit;
+    // These decorations are purely informational and must never accept events
+    // or become part of a text selection.
+    pointer-events: none;
+    user-select: none;
+    // Slightly transparent so the result feels like a hint, not active content.
+    opacity: 0.8;
+  }
+
+  .formula-inline-error {
+    // Carbon's $support-error token for all error-state text.
+    color: $support-error;
+    font-style: italic;
+    font-family: inherit;
+    pointer-events: none;
+    user-select: none;
+    // Slightly more opaque than the result decoration (0.85 vs 0.80) because
+    // errors warrant higher contrast — users need to notice them quickly.
+    opacity: 0.85;
+  }
+
+  // ── Result Field ──────────────────────────────────────────────────────────────
+
+  &__result {
+    // The ReadonlyInput wraps a Carbon TextInput in readOnly mode.
+    // We override the background so it's visually distinct from the editable field.
+    .cds--text-input-wrapper input[readonly] {
+      background-color: $field-02;
+      color: $text-primary;
+      cursor: default;
+    }
+  }
+
+  // ── Sections (dependency graph + variable panels) ─────────────────────────────
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-02;
+  }
+
+  &__section-label {
+    @include type-style('label-01');
+    color: $text-secondary;
+    margin: 0;
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-02;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__tag {
+    transition: opacity $duration-fast-01 motion(standard, expressive);
+
+    // Variables not referenced in the current formula are dimmed to visually
+    // indicate they play no part in the result. 0.55 keeps them readable while
+    // clearly distinguishing them from active (1.0 opacity) variables.
+    &:not(&--used) {
+      opacity: 0.55;
+    }
+
+    // Active variables (present in the parsed formula) render at full opacity.
+    &--used {
+      opacity: 1;
+    }
+  }
+
+  // ── Variable Groups ───────────────────────────────────────────────────────────
+
+  &__variables {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-04;
+  }
+
+  &__variable-group {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-02;
+  }
+
+  // ── Editor State Modifiers ──────────────────────────────────────────────────
+  //
+  // Applied to the editor wrapper when the formula is invalid (red) or has a
+  // precision warning (yellow), mirroring Carbon's TextInput invalid/warning.
+
+  &__editor-wrapper--invalid &__editor {
+    border-color: $support-error;
+
+    &:focus-within {
+      border-color: $support-error;
+      outline-color: $support-error;
+    }
+  }
+
+  &__editor-wrapper--warning &__editor {
+    border-color: $support-warning;
+
+    &:focus-within {
+      border-color: $support-warning;
+      outline-color: $support-warning;
+    }
+  }
+
+  // ── Validation Helper Text ────────────────────────────────────────────────────
+  //
+  // Displayed below the editor when an error or precision warning is present.
+  // Mirrors Carbon's `.cds--form__helper-text` pattern used by TextInput.
+  // The element carries `role="alert" aria-live="polite"` in the JSX so screen
+  // readers announce the message when it appears or changes.
+
+  &__helper-text {
+    @include type-style('helper-text-01');
+    margin-block-start: $spacing-02;
+
+    &--error {
+      // $support-error satisfies Carbon's 4.5:1 contrast requirement on both
+      // $background (white theme) and $background-inverse (g100 theme).
+      color: $support-error;
+    }
+
+    &--warning {
+      // $support-warning (#f1c21b amber) fails WCAG AA on light backgrounds and
+      // Carbon has no $text-warning token. Carbon's own form components leave
+      // warning helper text at $text-primary — the border and icon communicate
+      // the warning state; the message text stays fully readable on all themes.
+      color: $text-primary;
+    }
+  }
+
+  // ── Editor Skeleton (Monaco loading state) ────────────────────────────────────
+  //
+  // Rendered via Monaco's `loading` prop while the editor bundle is fetching.
+  // Matches Carbon's own skeleton animation timing so it looks native alongside
+  // other Carbon skeleton components on the same page.
+
+  &__editor-skeleton {
+    background-color: $skeleton-background;
+    // `inline-size` is the logical-property equivalent of `width`, supporting
+    // RTL layouts automatically without a direction-specific override.
+    inline-size: 100%;
+    // $duration-slow-02 (400 ms) matches Carbon's skeleton pulse rhythm.
+    animation: skeleton $duration-slow-02 ease-in-out infinite;
+  }
+
+  // Pulse keyframes: fade between 50 % and full opacity to signal activity
+  // without implying progress (which an indeterminate pulse should not do).
+  @keyframes skeleton {
+    0% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0.5;
+    }
+  }
+}
+
+// Visually hidden but accessible to screen readers.
+// Used for text cues that supplement colour-only distinctions.
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
