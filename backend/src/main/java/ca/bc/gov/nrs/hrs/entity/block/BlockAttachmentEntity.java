@@ -36,6 +36,7 @@ public class BlockAttachmentEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "block_attachment_id")
   @EqualsAndHashCode.Include
   private Long id;
 
@@ -72,6 +73,6 @@ public class BlockAttachmentEntity {
   @Column(nullable = false)
   private Instant updatedAt;
 
-  @Column(nullable = false)
+  @Column(name = "is_deleted", nullable = false)
   private boolean deleted;
 }

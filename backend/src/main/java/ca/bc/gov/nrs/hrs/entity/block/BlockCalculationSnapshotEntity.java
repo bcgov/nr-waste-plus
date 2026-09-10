@@ -38,6 +38,7 @@ public class BlockCalculationSnapshotEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "block_calculation_snapshot_id")
   @EqualsAndHashCode.Include
   private Long id;
 

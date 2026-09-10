@@ -36,6 +36,7 @@ public class BlockSponsorEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "block_sponsor_id")
   @EqualsAndHashCode.Include
   private Long id;
 
@@ -48,10 +49,10 @@ public class BlockSponsorEntity {
   @Column(name = "sponsor_name", length = 255)
   private String sponsorName;
 
-  @Column(name = "first_name", length = 128)
+  @Column(name = "first_name", nullable = false, length = 128)
   private String firstName;
 
-  @Column(name = "last_name", length = 128)
+  @Column(name = "last_name", nullable = false, length = 128)
   private String lastName;
 
   @Column(length = 128)
@@ -82,6 +83,6 @@ public class BlockSponsorEntity {
   @Column(nullable = false)
   private Instant updatedAt;
 
-  @Column(nullable = false)
+  @Column(name = "is_deleted", nullable = false)
   private boolean deleted;
 }
