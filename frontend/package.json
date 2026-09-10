@@ -70,7 +70,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.0",
-    "@vitest/coverage-v8": "^4.1.0",
+    "@vitest/coverage-v8": "^5.0.0",
     "@vitest/eslint-plugin": "^1.6.20",
     "axe-core": "^4.11.1",
     "axe-playwright": "^2.2.2",
@@ -95,7 +95,7 @@
     "v8-to-istanbul": "^9.3.0",
     "vite": "^8.0.0",
     "vite-plugin-pwa": "^1.2.0",
-    "vitest": "^4.1.0",
+    "vitest": "^5.0.0",
     "wiremock": "^3.13.2"
   },
   "engines": {
