@@ -36,6 +36,7 @@ public class BlockMarkEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "block_mark_id")
   @EqualsAndHashCode.Include
   private Long id;
 
@@ -82,6 +83,6 @@ public class BlockMarkEntity {
   @Column(nullable = false)
   private Instant updatedAt;
 
-  @Column(nullable = false)
+  @Column(name = "is_deleted", nullable = false)
   private boolean deleted;
 }

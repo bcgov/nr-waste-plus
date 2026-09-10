@@ -37,6 +37,7 @@ public class IdempotencyRecordEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "idempotency_record_id")
   @EqualsAndHashCode.Include
   private Long id;
 

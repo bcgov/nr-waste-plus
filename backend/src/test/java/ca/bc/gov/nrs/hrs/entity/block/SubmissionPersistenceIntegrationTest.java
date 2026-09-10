@@ -70,6 +70,8 @@ class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrat
     extension.setRetentionPercentage(new BigDecimal("12.50"));
     extension.setCriteria(List.of(1, 2));
     extension.setHarvestStatusCode("ACTIVE");
+    extension.setHasDispersedRetention(false);
+    extension.setHeliLogging(false);
     extension.setRevision(1L);
     audit(extension);
     districtAverageBlockRepository.saveAndFlush(extension);
@@ -129,6 +131,7 @@ class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrat
     submitter.setBlockId(savedBlock.getId());
     submitter.setSubmitterId("submitter-1");
     submitter.setFirstName("Test");
+    submitter.setLastName("User");
     submitter.setEmail("test@example.com");
     audit(submitter);
     blockSubmitterRepository.saveAndFlush(submitter);
@@ -136,6 +139,8 @@ class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrat
     BlockSponsorEntity sponsor = new BlockSponsorEntity();
     sponsor.setBlockId(savedBlock.getId());
     sponsor.setSponsorId("sponsor-1");
+    sponsor.setFirstName("Test");
+    sponsor.setLastName("Sponsor");
     sponsor.setDesignation("RPF");
     sponsor.setPhone("555-0100");
     audit(sponsor);
@@ -185,7 +190,7 @@ class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrat
 
   private Long districtVolumeId() {
     return jdbcTemplate.queryForObject(
-        "SELECT id FROM hrs.district_volume ORDER BY id LIMIT 1", Long.class);
+        "SELECT district_volume_id FROM hrs.district_volume ORDER BY district_volume_id LIMIT 1", Long.class);
   }
 
   private void audit(ReportingUnitEntity entity) {

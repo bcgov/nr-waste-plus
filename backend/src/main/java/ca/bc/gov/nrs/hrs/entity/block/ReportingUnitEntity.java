@@ -37,6 +37,7 @@ public class ReportingUnitEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "reporting_unit_id")
   @EqualsAndHashCode.Include
   private Long id;
 
@@ -69,6 +70,6 @@ public class ReportingUnitEntity {
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt;
 
-  @Column(nullable = false)
+  @Column(name = "is_deleted", nullable = false)
   private boolean deleted;
 }

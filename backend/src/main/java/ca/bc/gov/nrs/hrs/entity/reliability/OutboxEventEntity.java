@@ -45,6 +45,7 @@ public class OutboxEventEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "outbox_event_id")
   @EqualsAndHashCode.Include
   private Long id;
 
