@@ -6,26 +6,17 @@ import DependencyGraph, { resolveVariableClassification } from './DependencyGrap
 vi.mock('@/components/core/Tags/ColorTag', () => ({
   default: ({
     value,
-    colorType,
-    tooltipLabel,
-    contentMode,
-    textCaseMode,
-    className,
+    colorMap,
+    showTooltip,
   }: {
     value: { code: string; description: string };
-    colorType: string;
-    tooltipLabel: string;
-    contentMode: string;
-    textCaseMode: string;
-    className: string;
+    colorMap: Record<string, string>;
+    showTooltip?: boolean;
   }) => (
     <span
       data-testid={`color-tag-${value.code}`}
-      data-color-type={colorType}
-      data-tooltip-label={tooltipLabel}
-      data-content-mode={contentMode}
-      data-text-case-mode={textCaseMode}
-      data-class-name={className}
+      data-color-map={JSON.stringify(colorMap)}
+      data-show-tooltip={String(showTooltip)}
     >
       {`${value.code}=${value.description}`}
     </span>
@@ -52,7 +43,11 @@ describe('resolveVariableClassification', () => {
   });
 
   it('shouldPreferFixed_whenNameIsInBothSets', () => {
-    const result = resolveVariableClassification('overlap', new Set(['overlap']), new Set(['overlap']));
+    const result = resolveVariableClassification(
+      'overlap',
+      new Set(['overlap']),
+      new Set(['overlap']),
+    );
     expect(result.color).toBe('blue');
     expect(result.label).toBe('fixed');
   });
@@ -123,8 +118,8 @@ describe('DependencyGraph', () => {
     );
 
     const tag = screen.getByTestId('color-tag-taxRate');
-    expect(tag.dataset.colorType).toBe('blue');
-    expect(tag.dataset.tooltipLabel).toBe('This variable is fixed.');
+    expect(JSON.parse(tag.dataset.colorMap!)).toEqual({ taxRate: 'blue' });
+    expect(tag.dataset.showTooltip).toBe('true');
     expect(tag.textContent).toBe('taxRate=12.5');
   });
 
@@ -139,8 +134,8 @@ describe('DependencyGraph', () => {
     );
 
     const tag = screen.getByTestId('color-tag-hours');
-    expect(tag.dataset.colorType).toBe('teal');
-    expect(tag.dataset.tooltipLabel).toBe('This variable is dynamic.');
+    expect(JSON.parse(tag.dataset.colorMap!)).toEqual({ hours: 'teal' });
+    expect(tag.dataset.showTooltip).toBe('true');
     expect(tag.textContent).toBe('hours=8');
   });
 
@@ -155,8 +150,8 @@ describe('DependencyGraph', () => {
     );
 
     const tag = screen.getByTestId('color-tag-someVar');
-    expect(tag.dataset.colorType).toBe('green');
-    expect(tag.dataset.tooltipLabel).toBe('This variable is not classified.');
+    expect(JSON.parse(tag.dataset.colorMap!)).toEqual({ someVar: 'green' });
+    expect(tag.dataset.showTooltip).toBe('true');
     expect(tag.textContent).toBe('someVar=99');
   });
 
@@ -171,8 +166,8 @@ describe('DependencyGraph', () => {
     );
 
     const tag = screen.getByTestId('color-tag-overlap');
-    expect(tag.dataset.colorType).toBe('blue');
-    expect(tag.dataset.tooltipLabel).toBe('This variable is fixed.');
+    expect(JSON.parse(tag.dataset.colorMap!)).toEqual({ overlap: 'blue' });
+    expect(tag.dataset.showTooltip).toBe('true');
   });
 
   it('shouldShowNA_whenVariableIsAbsentFromMergedScope', () => {
@@ -215,9 +210,11 @@ describe('DependencyGraph', () => {
     );
 
     const tag = screen.getByTestId('color-tag-rate');
-    expect(tag.dataset.contentMode).toBe('code-equals-description');
-    expect(tag.dataset.textCaseMode).toBe('preserve');
-    expect(tag.dataset.className).toContain('formula-input__tag');
-    expect(tag.dataset.className).toContain('formula-input__tag--used');
+    const li = tag.closest('li');
+    expect(JSON.parse(tag.dataset.colorMap!)).toEqual({ rate: 'blue' });
+    expect(tag.dataset.showTooltip).toBe('true');
+    expect(li).not.toBeNull();
+    expect(li!.className).toContain('formula-input__tag');
+    expect(li!.className).toContain('formula-input__tag--used');
   });
 });

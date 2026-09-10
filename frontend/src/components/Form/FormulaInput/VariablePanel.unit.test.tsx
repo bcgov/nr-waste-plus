@@ -6,26 +6,17 @@ import VariablePanel from './VariablePanel';
 vi.mock('@/components/core/Tags/ColorTag', () => ({
   default: ({
     value,
-    colorType,
-    tooltipLabel,
-    contentMode,
-    textCaseMode,
-    className,
+    colorMap,
+    showTooltip,
   }: {
     value: { code: string; description: string };
-    colorType: string;
-    tooltipLabel: string;
-    contentMode: string;
-    textCaseMode: string;
-    className: string;
+    colorMap: Record<string, string>;
+    showTooltip?: boolean;
   }) => (
     <span
       data-testid={`color-tag-${value.code}`}
-      data-color-type={colorType}
-      data-tooltip-label={tooltipLabel}
-      data-content-mode={contentMode}
-      data-text-case-mode={textCaseMode}
-      data-class-name={className}
+      data-color-map={JSON.stringify(colorMap)}
+      data-show-tooltip={String(showTooltip)}
     >
       {`${value.code}=${value.description}`}
     </span>
@@ -78,19 +69,19 @@ describe('VariablePanel', () => {
     );
 
     const usedTag = screen.getByTestId('color-tag-hours');
-    expect(usedTag.dataset.colorType).toBe('teal');
-    expect(usedTag.dataset.tooltipLabel).toBe('Used in current formula');
-    expect(usedTag.dataset.contentMode).toBe('code-equals-description');
-    expect(usedTag.dataset.textCaseMode).toBe('preserve');
-    expect(usedTag.dataset.className).toContain('formula-input__tag');
-    expect(usedTag.dataset.className).toContain('formula-input__tag--used');
+    expect(JSON.parse(usedTag.dataset.colorMap!)).toEqual({ hours: 'teal' });
+    expect(usedTag.dataset.showTooltip).toBe('true');
+    const usedLi = usedTag.closest('li');
+    expect(usedLi).not.toBeNull();
+    expect(usedLi!.className).toContain('formula-input__tag');
+    expect(usedLi!.className).toContain('formula-input__tag--used');
 
     const unusedTag = screen.getByTestId('color-tag-rate');
-    expect(unusedTag.dataset.colorType).toBe('gray');
-    expect(unusedTag.dataset.tooltipLabel).toBe('Available but not used');
-    expect(unusedTag.dataset.contentMode).toBe('code-equals-description');
-    expect(unusedTag.dataset.textCaseMode).toBe('preserve');
-    expect(unusedTag.dataset.className).toContain('formula-input__tag');
-    expect(unusedTag.dataset.className).not.toContain('formula-input__tag--used');
+    expect(JSON.parse(unusedTag.dataset.colorMap!)).toEqual({ rate: 'gray' });
+    expect(unusedTag.dataset.showTooltip).toBe('true');
+    const unusedLi = unusedTag.closest('li');
+    expect(unusedLi).not.toBeNull();
+    expect(unusedLi!.className).toContain('formula-input__tag');
+    expect(unusedLi!.className).not.toContain('formula-input__tag--used');
   });
 });
