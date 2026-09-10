@@ -2,7 +2,6 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 
 import {
   buildDependencyGraph,
-  checkDoublePrecisionDrift,
   evaluateFormula,
   extractVariables,
   isFormulaError,
@@ -140,43 +139,6 @@ describe('FormulaInput utils', () => {
     });
   });
 
-  describe('checkDoublePrecisionDrift', () => {
-    it('shouldReturnNoDrift_whenDoubleResultIsNotFinite', () => {
-      const raw = math.bignumber(1);
-      const result = checkDoublePrecisionDrift(raw, '1 / 0', {}, 1e-9);
-      expect(result).toEqual({ hasDrift: false, driftAmount: '0' });
-    });
-
-    it('shouldUseAbsoluteDiff_whenRawResultIsZero', () => {
-      const raw = math.bignumber(0);
-      const noDrift = checkDoublePrecisionDrift(raw, '0', {}, 1e-9);
-      expect(noDrift).toEqual({ hasDrift: false, driftAmount: '0' });
-
-      const hasDrift = checkDoublePrecisionDrift(raw, '1e-6', {}, 1e-9);
-      expect(hasDrift.hasDrift).toBe(true);
-      expect(hasDrift.driftAmount).not.toBe('0');
-    });
-
-    it('shouldReportRelativeDrift_whenDifferenceExceedsEpsilon', () => {
-      const raw = math.bignumber('0.3');
-      const result = checkDoublePrecisionDrift(raw, '0.1 + 0.2', {}, 1e-20);
-      expect(result.hasDrift).toBe(true);
-      expect(result.driftAmount).not.toBe('0');
-    });
-
-    it('shouldReturnNoDrift_whenDifferenceIsWithinEpsilon', () => {
-      const raw = math.bignumber('0.3');
-      const result = checkDoublePrecisionDrift(raw, '0.1 + 0.2', {}, 1e-3);
-      expect(result).toEqual({ hasDrift: false, driftAmount: '0' });
-    });
-
-    it('shouldReturnNoDrift_whenDoubleEvaluationThrows', () => {
-      const raw = math.bignumber(10);
-      const result = checkDoublePrecisionDrift(raw, '(', {});
-      expect(result).toEqual({ hasDrift: false, driftAmount: '0' });
-    });
-  });
-
   describe('buildDependencyGraph', () => {
     it('shouldReturnEmptyGraph_whenFormulaCannotBeParsed', () => {
       expect(buildDependencyGraph('a + ', { a: 1 })).toEqual({ formula: [] });
@@ -224,16 +186,19 @@ describe('FormulaInput utils', () => {
       },
     ];
 
-    it.each(cases)('shouldHumanizeSpecificRawMessage_whenParserThrows ($raw)', ({ raw, expected }) => {
-      vi.spyOn(math, 'parse').mockImplementation(() => {
-        throw { message: raw, char: 1 };
-      });
+    it.each(cases)(
+      'shouldHumanizeSpecificRawMessage_whenParserThrows ($raw)',
+      ({ raw, expected }) => {
+        vi.spyOn(math, 'parse').mockImplementation(() => {
+          throw { message: raw, char: 1 };
+        });
 
-      const result = parseFormula('x');
-      expect(isFormulaError(result)).toBe(true);
-      if (isFormulaError(result)) {
-        expect(result.message).toContain(expected);
-      }
-    });
+        const result = parseFormula('x');
+        expect(isFormulaError(result)).toBe(true);
+        if (isFormulaError(result)) {
+          expect(result.message).toContain(expected);
+        }
+      },
+    );
   });
 });

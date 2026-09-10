@@ -16,14 +16,6 @@ export const math: MathJsInstance = create(all, {
   precision: 64,
 });
 
-/**
- * A secondary mathjs instance in plain `number` mode.
- * Used exclusively for precision-drift detection — simulating how a Java
- * backend using exp4j (which internally uses double) would evaluate the
- * same formula.
- */
-export const mathDouble: MathJsInstance = create(all, { number: 'number' });
-
 // ─── Custom Functions ──────────────────────────────────────────────────────────
 
 /**

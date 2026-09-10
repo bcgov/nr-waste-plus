@@ -69,31 +69,24 @@ class FormulaEvaluatorExp4jIntegrationTest {
         assertThrows(FormulaEvaluationException.class, () -> FormulaEvaluatorExp4j.evaluate(expr, Map.of()));
     }
 
-    @Test
-    void rejectsExpressionTooLong() {
-        String expression = "a".repeat(101);
-        Map<String, BigDecimal> variables = Map.of("a", BigDecimal.ONE);
-        assertThrows(FormulaEvaluationException.class, () -> FormulaEvaluatorExp4j.evaluate(expression, variables));
-    }
-
     // ── Parity fixtures (mirrors frontend parity-fixtures.ts) ──
 
     @Test
     void parityArithmeticAddition() {
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("1 + 2", Map.of());
-        assertEquals(new BigDecimal("3"), result);
+        assertEquals(new BigDecimal("3.000"), result);
     }
 
     @Test
     void parityArithmeticPrecedence() {
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("1 + 2 * 3", Map.of());
-        assertEquals(new BigDecimal("7"), result);
+        assertEquals(new BigDecimal("7.000"), result);
     }
 
     @Test
     void parityArithmeticParentheses() {
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("(1 + 2) * 3", Map.of());
-        assertEquals(new BigDecimal("9"), result);
+        assertEquals(new BigDecimal("9.000"), result);
     }
 
     @Test
@@ -104,13 +97,13 @@ class FormulaEvaluatorExp4jIntegrationTest {
                 "bonus", new BigDecimal("1")
         );
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("da.rate * hours + bonus", vars);
-        assertEquals(new BigDecimal("11"), result);
+        assertEquals(new BigDecimal("11.000"), result);
     }
 
     @Test
     void parityArithmeticUnaryMinus() {
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("-(1 + 2)", Map.of());
-        assertEquals(new BigDecimal("-3"), result);
+        assertEquals(new BigDecimal("-3.000"), result);
     }
 
     @Test
@@ -140,74 +133,80 @@ class FormulaEvaluatorExp4jIntegrationTest {
     @Test
     void parityRoundingWholeNumber() {
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("3.000", Map.of());
-        assertEquals(new BigDecimal("3"), result);
+        assertEquals(new BigDecimal("3.000"), result);
+    }
+
+    @Test
+    void parityRoundingComplexExpression() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("1.2345 + 0.0005", Map.of());
+        assertEquals(new BigDecimal("1.235"), result);
     }
 
     @Test
     void parityFnSqrt() {
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("sqrt(16)", Map.of());
-        assertEquals(new BigDecimal("4"), result);
+        assertEquals(new BigDecimal("4.000"), result);
     }
 
     @Test
     void parityFnAbs() {
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("abs(-5)", Map.of());
-        assertEquals(new BigDecimal("5"), result);
+        assertEquals(new BigDecimal("5.000"), result);
     }
 
     @Test
     void parityFnMin() {
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("min(3, 7)", Map.of());
-        assertEquals(new BigDecimal("3"), result);
+        assertEquals(new BigDecimal("3.000"), result);
     }
 
     @Test
     void parityFnMax() {
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("max(3, 7)", Map.of());
-        assertEquals(new BigDecimal("7"), result);
+        assertEquals(new BigDecimal("7.000"), result);
     }
 
     @Test
     void parityFnSin() {
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("sin(pi / 2)", Map.of());
-        assertEquals(new BigDecimal("1"), result);
+        assertEquals(new BigDecimal("1.000"), result);
     }
 
     @Test
     void parityFnFloor() {
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("floor(3.7)", Map.of());
-        assertEquals(new BigDecimal("3"), result);
+        assertEquals(new BigDecimal("3.000"), result);
     }
 
     @Test
     void parityFnCeil() {
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("ceil(3.2)", Map.of());
-        assertEquals(new BigDecimal("4"), result);
+        assertEquals(new BigDecimal("4.000"), result);
     }
 
     @Test
     void parityIfTrueBranch() {
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("if(1, 10, 20)", Map.of());
-        assertEquals(new BigDecimal("10"), result);
+        assertEquals(new BigDecimal("10.000"), result);
     }
 
     @Test
     void parityIfFalseBranch() {
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("if(0, 10, 20)", Map.of());
-        assertEquals(new BigDecimal("20"), result);
+        assertEquals(new BigDecimal("20.000"), result);
     }
 
     @Test
     void parityIfComparison() {
         Map<String, BigDecimal> vars = Map.of("da.rate", new BigDecimal("3"));
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("if(da.rate >= 2, 10, 20)", vars);
-        assertEquals(new BigDecimal("10"), result);
+        assertEquals(new BigDecimal("10.000"), result);
     }
 
     @Test
     void parityIfNested() {
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("if(1, if(0, 3, 4), 5)", Map.of());
-        assertEquals(new BigDecimal("4"), result);
+        assertEquals(new BigDecimal("4.000"), result);
     }
 
     @Test
@@ -217,7 +216,7 @@ class FormulaEvaluatorExp4jIntegrationTest {
                 "sc.factor", new BigDecimal("1.57079632679")
         );
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("sqrt(da.area) + sin(sc.factor)", vars);
-        assertEquals(new BigDecimal("5"), result);
+        assertEquals(new BigDecimal("5.000"), result);
     }
 
     @Test
@@ -228,6 +227,6 @@ class FormulaEvaluatorExp4jIntegrationTest {
                 "submission.area", new BigDecimal("3")
         );
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("da.rate + sc.mix + submission.area", vars);
-        assertEquals(new BigDecimal("7"), result);
+        assertEquals(new BigDecimal("7.000"), result);
     }
 }

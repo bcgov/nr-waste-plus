@@ -45,17 +45,8 @@ export interface EvaluationResult {
   error: FormulaError | null;
   /**
    * The raw BigNumber result before formatting.
-   * Use this for precision-drift detection via `checkDoublePrecisionDrift`.
    */
   raw: BigNumber | null;
-}
-
-/** Result of a precision drift check. */
-export interface DriftCheckResult {
-  /** True when the BigNumber and double results differ by more than `epsilon`. */
-  hasDrift: boolean;
-  /** Human-readable relative difference, e.g. "2.3e-12". */
-  driftAmount: string;
 }
 
 // ─── Dependency Graph ─────────────────────────────────────────────────────────

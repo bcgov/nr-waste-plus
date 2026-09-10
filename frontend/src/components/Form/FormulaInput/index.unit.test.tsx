@@ -98,7 +98,6 @@ function makeEngineState(overrides: Partial<FormulaEngineState> = {}): FormulaEn
     formula: 'rate * hours',
     result: SUCCESS_RESULT,
     usedVariables: ['rate', 'hours'],
-    precisionWarning: null,
     mergedScope: { rate: 10, hours: 8 },
     setFormula: mockSetFormula,
     ...overrides,
@@ -360,9 +359,7 @@ describe('error state', () => {
   });
 
   it('shouldNotApplyWarningModifierClass_toEditorWrapper_whenResultHasError', () => {
-    vi.mocked(useFormulaEngine).mockReturnValue(
-      makeEngineState({ result: ERROR_RESULT, precisionWarning: 'drift detected' }),
-    );
+    vi.mocked(useFormulaEngine).mockReturnValue(makeEngineState({ result: ERROR_RESULT }));
 
     render(<FormulaInput {...DEFAULT_PROPS} />);
 
@@ -382,87 +379,6 @@ describe('error state', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Precision warning state — helper text and wrapper modifier class
 // ─────────────────────────────────────────────────────────────────────────────
-
-describe('precision warning state', () => {
-  it('shouldRenderHelperText_whenPrecisionWarningIsPresent', () => {
-    vi.mocked(useFormulaEngine).mockReturnValue(
-      makeEngineState({ precisionWarning: 'Precision loss: 2.3e-12' }),
-    );
-
-    render(<FormulaInput {...DEFAULT_PROPS} />);
-
-    expect(screen.getByText('Precision loss: 2.3e-12')).toBeDefined();
-  });
-
-  it('shouldDisplayWarningText_fromPrecisionWarning', () => {
-    vi.mocked(useFormulaEngine).mockReturnValue(
-      makeEngineState({ precisionWarning: 'Precision loss: 2.3e-12' }),
-    );
-
-    render(<FormulaInput {...DEFAULT_PROPS} />);
-
-    expect(screen.getByText('Precision loss: 2.3e-12')).toBeDefined();
-  });
-
-  it('shouldApplyWarningModifierClass_toHelperText_whenOnlyWarningIsPresent', () => {
-    vi.mocked(useFormulaEngine).mockReturnValue(
-      makeEngineState({ precisionWarning: 'Precision loss: 2.3e-12' }),
-    );
-
-    render(<FormulaInput {...DEFAULT_PROPS} />);
-
-    expect(
-      screen
-        .getByText('Precision loss: 2.3e-12')
-        .classList.contains('formula-input__helper-text--warning'),
-    ).toBe(true);
-  });
-
-  it('shouldApplyWarningModifierClass_toEditorWrapper_whenOnlyWarningIsPresent', () => {
-    vi.mocked(useFormulaEngine).mockReturnValue(
-      makeEngineState({ precisionWarning: 'Precision loss: 2.3e-12' }),
-    );
-
-    render(<FormulaInput {...DEFAULT_PROPS} />);
-
-    const wrapper = screen.getByTestId('monaco-editor').closest('.formula-input__editor-wrapper');
-    expect(wrapper?.classList.contains('formula-input__editor-wrapper--warning')).toBe(true);
-  });
-
-  it('shouldNotApplyInvalidModifierClass_toEditorWrapper_whenOnlyWarningIsPresent', () => {
-    vi.mocked(useFormulaEngine).mockReturnValue(
-      makeEngineState({ precisionWarning: 'Precision loss: 2.3e-12' }),
-    );
-
-    render(<FormulaInput {...DEFAULT_PROPS} />);
-
-    const wrapper = screen.getByTestId('monaco-editor').closest('.formula-input__editor-wrapper');
-    expect(wrapper?.classList.contains('formula-input__editor-wrapper--invalid')).toBe(false);
-  });
-
-  it('shouldShowWarningHelperText_evenWhenDisplayResultIsFalse', () => {
-    vi.mocked(useFormulaEngine).mockReturnValue(
-      makeEngineState({ precisionWarning: 'Precision loss: 2.3e-12' }),
-    );
-
-    render(<FormulaInput {...DEFAULT_PROPS} displayResult={false} />);
-
-    expect(screen.queryByRole('status')).not.toBeNull();
-  });
-
-  it('shouldPrioritiseError_overWarning_whenBothArePresent', () => {
-    vi.mocked(useFormulaEngine).mockReturnValue(
-      makeEngineState({ result: ERROR_RESULT, precisionWarning: 'Precision loss: 2.3e-12' }),
-    );
-
-    render(<FormulaInput {...DEFAULT_PROPS} />);
-
-    const alert = screen.getByRole('alert');
-    expect(alert.textContent).toBe('Undefined variable: x');
-    expect(alert.classList.contains('formula-input__helper-text--error')).toBe(true);
-    expect(alert.classList.contains('formula-input__helper-text--warning')).toBe(false);
-  });
-});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // readOnly prop

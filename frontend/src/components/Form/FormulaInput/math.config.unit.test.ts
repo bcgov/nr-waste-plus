@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { math, mathDouble, isMathBuiltin } from './math.config';
+import { math, isMathBuiltin } from './math.config';
 
 describe('math.config', () => {
   describe('math instance', () => {
@@ -36,32 +36,6 @@ describe('math.config', () => {
       const result = math.evaluate('123456789012345678901234567890');
       // BigNumber preserves full precision, not truncated like JavaScript number
       expect(result.toString()).toContain('1.234567890123456789');
-    });
-  });
-
-  describe('mathDouble instance', () => {
-    it('should be a MathJsInstance', () => {
-      expect(mathDouble).toBeDefined();
-      expect(typeof mathDouble.evaluate).toBe('function');
-    });
-
-    it('should use regular number precision (exhibits floating-point issues)', () => {
-      const result = mathDouble.evaluate('0.1 + 0.2');
-      // Regular floating-point arithmetic loses precision
-      expect(parseFloat(result.toString())).toBeCloseTo(0.3, 15);
-    });
-
-    it('should differ from BigNumber precision for problematic values', () => {
-      const bigResult = math.evaluate('0.1 + 0.2');
-      const doubleResult = mathDouble.evaluate('0.1 + 0.2');
-
-      expect(bigResult.toString()).toBe('0.3');
-      expect(parseFloat(doubleResult.toString())).not.toEqual(0.3);
-    });
-
-    it('should handle trigonometric functions with plain numbers', () => {
-      const result = mathDouble.evaluate('sin(0)');
-      expect(result).toEqual(0);
     });
   });
 
@@ -262,11 +236,6 @@ describe('math.config', () => {
     it('math should support BigNumber type', () => {
       const result = math.evaluate('1 / 3');
       expect(result.type).toBe('BigNumber');
-    });
-
-    it('mathDouble should support number type', () => {
-      const result = mathDouble.evaluate('1 / 3');
-      expect(typeof result).toBe('number');
     });
 
     it('math should have 64-digit precision', () => {

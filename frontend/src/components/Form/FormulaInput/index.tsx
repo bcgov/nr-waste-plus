@@ -157,8 +157,12 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
   const [editorHeight, setEditorHeight] = useState(MIN_EDITOR_HEIGHT);
 
   // ── Business logic ──────────────────────────────────────────────────────────
-  const { formula, result, usedVariables, precisionWarning, mergedScope, setFormula } =
-    useFormulaEngine({ fixedParams, dynamicParams, initialFormula, onChange });
+  const { formula, result, usedVariables, mergedScope, setFormula } = useFormulaEngine({
+    fixedParams,
+    dynamicParams,
+    initialFormula,
+    onChange,
+  });
 
   // ── Monaco configuration ────────────────────────────────────────────────────
   const { theme } = useTheme();
@@ -253,7 +257,6 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
         className={[
           'formula-input__editor-wrapper',
           isError && 'formula-input__editor-wrapper--invalid',
-          !isError && precisionWarning && 'formula-input__editor-wrapper--warning',
         ]
           .filter(Boolean)
           .join(' ')}
@@ -284,7 +287,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
           />
         </div>
 
-        {/* ── Validation helper text (always shown when error or warning present) ── */}
+        {/* ── Validation helper text (always shown when error present) ── */}
         {isError && (
           <div
             id={`${id}-helper-text`}
@@ -292,15 +295,6 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
             role="alert"
           >
             {result.error?.message ?? 'Invalid formula'}
-          </div>
-        )}
-        {!isError && precisionWarning && (
-          <div
-            id={`${id}-helper-text`}
-            className="cds--form__helper-text formula-input__helper-text formula-input__helper-text--warning"
-            role="status"
-          >
-            {precisionWarning}
           </div>
         )}
       </div>

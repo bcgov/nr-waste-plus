@@ -12,13 +12,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 
-import {
-  evaluateFormula,
-  extractVariables,
-  parseFormula,
-  isFormulaError,
-  checkDoublePrecisionDrift,
-} from './utils';
+import { evaluateFormula, extractVariables, parseFormula, isFormulaError } from './utils';
 
 import type { EvaluationResult } from './types';
 
@@ -62,11 +56,6 @@ export interface FormulaEngineState {
    * `result` without an additional parse of the formula string.
    */
   usedVariables: string[];
-  /**
-   * Non-null when the BigNumber result differs from a JS-double result by more
-   * than the precision threshold. Signals a potential backend disagreement.
-   */
-  precisionWarning: string | null;
   /**
    * The merged variable scope (dynamic → fixed, so fixed wins on collision).
    * Exposed so the editor can populate completions and hover docs.
@@ -146,27 +135,10 @@ export function useFormulaEngine({
     return extractVariables(parsedAst);
   }, [parsedAst]);
 
-  // ── Precision drift warning ────────────────────────────────────────────────
-  // Compares the BigNumber result with what a Java double-based evaluator
-  // (exp4j) would produce. Non-null means the backend may disagree.
-  const precisionWarning = useMemo<string | null>(() => {
-    if (!result.raw) return null;
-    const { hasDrift, driftAmount } = checkDoublePrecisionDrift(result.raw, formula, mergedScope);
-    if (hasDrift) {
-      return (
-        `Precision warning: this formula's result may differ from the backend ` +
-        `by approximately ${driftAmount} (frontend uses 64-bit BigNumber; ` +
-        `backend uses exp4j with IEEE 754 double). Verify the formula on the backend before saving.`
-      );
-    }
-    return null;
-  }, [result.raw, formula, mergedScope]);
-
   return {
     formula,
     result,
     usedVariables,
-    precisionWarning,
     mergedScope,
     setFormula,
   };

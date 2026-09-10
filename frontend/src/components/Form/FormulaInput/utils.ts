@@ -11,9 +11,9 @@
  *    `math.config.ts`; shared types in `types.ts`.
  */
 
-import { math, mathDouble, isMathBuiltin } from './math.config';
+import { math, isMathBuiltin } from './math.config';
 
-import type { FormulaError, EvaluationResult, DriftCheckResult, DependencyGraph } from './types';
+import type { FormulaError, EvaluationResult, DependencyGraph } from './types';
 import type { MathNode, BigNumber } from 'mathjs';
 
 // Re-export everything so existing consumers of './utils' continue to work
@@ -24,7 +24,6 @@ export type {
   TokenType,
   PositionedToken,
   EvaluationResult,
-  DriftCheckResult,
   DependencyGraph,
 } from './types';
 export { tokenizeFormula } from './tokenizer';
@@ -169,66 +168,6 @@ function formatResult(value: BigNumber): string {
   const rounded = math.round(value, 3) as BigNumber;
   const str = rounded.toFixed();
   return str.includes('.') ? str.replace(/\.?0+$/, '') : str;
-}
-
-// ─── Precision Drift Detection ────────────────────────────────────────────────
-
-/**
- * Detects whether the BigNumber result (`raw`) differs from the same formula
- * evaluated with plain JavaScript `number` (IEEE 754 double — the same
- * precision that Java's `exp4j` uses internally).
- *
- * A non-trivial drift value means the Java backend may produce a different
- * answer. Surface this as a warning in the UI so the formula author can
- * decide whether the discrepancy is acceptable.
- *
- * This function uses mathjs in `number` mode (not `new Function`) so it
- * is injection-safe.
- *
- * @param raw      - BigNumber result from the primary evaluation
- * @param formula  - Original formula string
- * @param scope    - Variable scope (plain numbers)
- * @param epsilon  - Relative tolerance threshold (default 1e-9)
- */
-export function checkDoublePrecisionDrift(
-  raw: BigNumber,
-  formula: string,
-  scope: Record<string, number>,
-  epsilon = 1e-9,
-): DriftCheckResult {
-  try {
-    // Evaluate with double precision — mirrors what exp4j does on the backend
-    const doubleResult = mathDouble.evaluate(formula, scope) as number;
-
-    if (!Number.isFinite(doubleResult)) {
-      return { hasDrift: false, driftAmount: '0' };
-    }
-
-    const bigDouble = math.bignumber(doubleResult);
-    const rawAbs = math.abs(raw) as BigNumber;
-
-    // Avoid division by zero when the result is zero
-    if (rawAbs.isZero()) {
-      const absDiff = math.abs(math.subtract(raw, bigDouble) as BigNumber) as BigNumber;
-      const hasDrift = absDiff.greaterThan(epsilon);
-      return {
-        hasDrift,
-        driftAmount: hasDrift ? absDiff.toExponential(4) : '0',
-      };
-    }
-
-    const diff = math.abs(math.subtract(raw, bigDouble) as BigNumber) as BigNumber;
-    const relDiff = math.divide(diff, rawAbs) as BigNumber;
-    const hasDrift = relDiff.greaterThan(epsilon);
-
-    return {
-      hasDrift,
-      driftAmount: hasDrift ? relDiff.toExponential(4) : '0',
-    };
-  } catch {
-    // If double evaluation throws (e.g. parse error), skip the check
-    return { hasDrift: false, driftAmount: '0' };
-  }
 }
 
 // ─── Dependency Graph ─────────────────────────────────────────────────────────
