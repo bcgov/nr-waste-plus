@@ -122,7 +122,7 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="id">id</span></td>
+                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="block_requirement_id">block_requirement_id</span></td>
                                     <td>bigserial</td>
                                     <td>19</td>
                                     <td title=''></td>
@@ -136,7 +136,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Unique identifier for the requirement response.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="block_id">block_id</span></td>
@@ -152,13 +152,13 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="block_requirement.block_id references block.id via fk_block_requirement_block"><a href='block.html'>block</a><span class='relatedKey'>.id</span></td>
+                                                <td title="block_requirement.block_id references block.block_id via fk_block_requirement_block"><a href='block.html'>block</a><span class='relatedKey'>.block_id</span></td>
                                                 <td class="constraint detail">fk_block_requirement_block</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Foreign key referencing the parent block.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="requirement_code">requirement_code</span></td>
@@ -175,10 +175,10 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Stable requirement code.</p></td>
                                 </tr>
                                 <tr>
-                                    <td><span id="answered_yes">answered_yes</span></td>
+                                    <td><span id="is_answered_yes">is_answered_yes</span></td>
                                     <td>bool</td>
                                     <td>1</td>
                                     <td title='nullable'>√</td>
@@ -192,12 +192,12 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Whether the requirement question was answered affirmatively.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="response">response</span></td>
-                                    <td>text</td>
-                                    <td>2147483647</td>
+                                    <td>varchar</td>
+                                    <td>4000</td>
                                     <td title='nullable'>√</td>
                                     <td title=''></td>
                                     <td>null</td>
@@ -209,7 +209,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Textual requirement response explanation (max 4000 chars).</p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="linked_attachment_id">linked_attachment_id</span></td>
@@ -225,13 +225,13 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="block_requirement.linked_attachment_id references block_attachment.id via fk_block_requirement_attachment"><a href='block_attachment.html'>block_attachment</a><span class='relatedKey'>.id</span></td>
+                                                <td title="block_requirement.linked_attachment_id references block_attachment.block_attachment_id via fk_block_requirement_attachment"><a href='block_attachment.html'>block_attachment</a><span class='relatedKey'>.block_attachment_id</span></td>
                                                 <td class="constraint detail">fk_block_requirement_attachment</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Optional foreign key referencing an evidence attachment.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_by">created_by</span></td>
@@ -248,7 +248,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Audit actor that created this requirement response.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_by">updated_by</span></td>
@@ -265,7 +265,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Audit actor that last updated this requirement response.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_at">created_at</span></td>
@@ -282,7 +282,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when this requirement response was created.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_at">updated_at</span></td>
@@ -299,10 +299,10 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when this requirement response was last updated.</p></td>
                                 </tr>
                                 <tr>
-                                    <td><span id="deleted">deleted</span></td>
+                                    <td><span id="is_deleted">is_deleted</span></td>
                                     <td>bool</td>
                                     <td>1</td>
                                     <td title=''></td>
@@ -316,7 +316,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Soft-delete flag.</p></td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -352,7 +352,7 @@
                                     <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey'></i> block_requirement_pk</td>
                                     <td>Primary key</td>
                                     <td><span title='Ascending'>Asc</span></td>
-                                    <td>id</td>
+                                    <td>block_requirement_id</td>
                                 </tr>
                                 <tr>
                                     <td class='uniqueKey' title='Unique Key'><i class='icon ion-key iconkey'></i> uq_block_requirement_live</td>

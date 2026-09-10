@@ -84,7 +84,7 @@
                             </div>
                         </div><!-- /.box-header -->
                         <div class="box-body clearfix">
-                            <p>Submission block belonging to a reporting unit.</p>
+                            <p>Submission block belonging to a reporting unit. Equivalent to a &ldquo;cut block&rdquo; in legacy/FTA terminology — renamed for consistency with app-wide usage.</p>
                         </div><!-- /.box-body -->
                     </div>
                 </section>
@@ -122,7 +122,7 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="id">id</span></td>
+                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="block_id">block_id</span></td>
                                     <td>bigserial</td>
                                     <td>19</td>
                                     <td title=''></td>
@@ -131,52 +131,52 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="block_area_segment.block_id references block.id via fk_block_area_segment_block"><a href='block_area_segment.html'>block_area_segment</a><span class='relatedKey'>.block_id</span></td>
+                                                <td title="block_area_segment.block_id references block.block_id via fk_block_area_segment_block"><a href='block_area_segment.html'>block_area_segment</a><span class='relatedKey'>.block_id</span></td>
                                                 <td class="constraint detail">fk_block_area_segment_block</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                             <tr>
-                                                <td title="block_attachment.block_id references block.id via fk_block_attachment_block"><a href='block_attachment.html'>block_attachment</a><span class='relatedKey'>.block_id</span></td>
+                                                <td title="block_attachment.block_id references block.block_id via fk_block_attachment_block"><a href='block_attachment.html'>block_attachment</a><span class='relatedKey'>.block_id</span></td>
                                                 <td class="constraint detail">fk_block_attachment_block</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                             <tr>
-                                                <td title="block_calculation_snapshot.block_id references block.id via fk_block_calculation_snapshot_block"><a href='block_calculation_snapshot.html'>block_calculation_snapshot</a><span class='relatedKey'>.block_id</span></td>
+                                                <td title="block_calculation_snapshot.block_id references block.block_id via fk_block_calculation_snapshot_block"><a href='block_calculation_snapshot.html'>block_calculation_snapshot</a><span class='relatedKey'>.block_id</span></td>
                                                 <td class="constraint detail">fk_block_calculation_snapshot_block</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                             <tr>
-                                                <td title="block_comment.block_id references block.id via fk_block_comment_block"><a href='block_comment.html'>block_comment</a><span class='relatedKey'>.block_id</span></td>
+                                                <td title="block_comment.block_id references block.block_id via fk_block_comment_block"><a href='block_comment.html'>block_comment</a><span class='relatedKey'>.block_id</span></td>
                                                 <td class="constraint detail">fk_block_comment_block</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                             <tr>
-                                                <td title="block_mark.block_id references block.id via fk_block_mark_block"><a href='block_mark.html'>block_mark</a><span class='relatedKey'>.block_id</span></td>
+                                                <td title="block_mark.block_id references block.block_id via fk_block_mark_block"><a href='block_mark.html'>block_mark</a><span class='relatedKey'>.block_id</span></td>
                                                 <td class="constraint detail">fk_block_mark_block</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                             <tr>
-                                                <td title="block_requirement.block_id references block.id via fk_block_requirement_block"><a href='block_requirement.html'>block_requirement</a><span class='relatedKey'>.block_id</span></td>
+                                                <td title="block_requirement.block_id references block.block_id via fk_block_requirement_block"><a href='block_requirement.html'>block_requirement</a><span class='relatedKey'>.block_id</span></td>
                                                 <td class="constraint detail">fk_block_requirement_block</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                             <tr>
-                                                <td title="block_sponsor.block_id references block.id via fk_block_sponsor_block"><a href='block_sponsor.html'>block_sponsor</a><span class='relatedKey'>.block_id</span></td>
+                                                <td title="block_sponsor.block_id references block.block_id via fk_block_sponsor_block"><a href='block_sponsor.html'>block_sponsor</a><span class='relatedKey'>.block_id</span></td>
                                                 <td class="constraint detail">fk_block_sponsor_block</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                             <tr>
-                                                <td title="block_submitter.block_id references block.id via fk_block_submitter_block"><a href='block_submitter.html'>block_submitter</a><span class='relatedKey'>.block_id</span></td>
+                                                <td title="block_submitter.block_id references block.block_id via fk_block_submitter_block"><a href='block_submitter.html'>block_submitter</a><span class='relatedKey'>.block_id</span></td>
                                                 <td class="constraint detail">fk_block_submitter_block</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                             <tr>
-                                                <td title="district_average_block.block_id references block.id via fk_district_average_block_block"><a href='district_average_block.html'>district_average_block</a><span class='relatedKey'>.block_id</span></td>
+                                                <td title="district_average_block.district_average_block_id references block.block_id via fk_district_average_block_block"><a href='district_average_block.html'>district_average_block</a><span class='relatedKey'>.district_average_block_id</span></td>
                                                 <td class="constraint detail">fk_district_average_block_block</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                             <tr>
-                                                <td title="status_event.block_id references block.id via fk_status_event_block"><a href='status_event.html'>status_event</a><span class='relatedKey'>.block_id</span></td>
+                                                <td title="status_event.block_id references block.block_id via fk_status_event_block"><a href='status_event.html'>status_event</a><span class='relatedKey'>.block_id</span></td>
                                                 <td class="constraint detail">fk_status_event_block</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
@@ -186,7 +186,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Unique identifier for the submission block.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="reporting_unit_id">reporting_unit_id</span></td>
@@ -202,13 +202,13 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="block.reporting_unit_id references reporting_unit.id via fk_block_reporting_unit"><a href='reporting_unit.html'>reporting_unit</a><span class='relatedKey'>.id</span></td>
+                                                <td title="block.reporting_unit_id references reporting_unit.reporting_unit_id via fk_block_reporting_unit"><a href='reporting_unit.html'>reporting_unit</a><span class='relatedKey'>.reporting_unit_id</span></td>
                                                 <td class="constraint detail">fk_block_reporting_unit</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Foreign key referencing the parent reporting unit.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="block_type">block_type</span></td>
@@ -225,7 +225,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Block category, e.g. DISTRICT_AVERAGE.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="is_draft">is_draft</span></td>
@@ -242,7 +242,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Whether this block is still an uncommitted draft.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="plc_date">plc_date</span></td>
@@ -259,7 +259,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Primary logging complete date.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="revision">revision</span></td>
@@ -276,7 +276,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Optimistic locking revision counter.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_by">created_by</span></td>
@@ -293,7 +293,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Audit actor that created this block.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_by">updated_by</span></td>
@@ -310,7 +310,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Audit actor that last updated this block.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_at">created_at</span></td>
@@ -327,7 +327,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when this block was created.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_at">updated_at</span></td>
@@ -344,10 +344,10 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when this block was last updated.</p></td>
                                 </tr>
                                 <tr>
-                                    <td><span id="deleted">deleted</span></td>
+                                    <td><span id="is_deleted">is_deleted</span></td>
                                     <td>bool</td>
                                     <td>1</td>
                                     <td title=''></td>
@@ -397,7 +397,7 @@
                                     <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey'></i> block_pk</td>
                                     <td>Primary key</td>
                                     <td><span title='Ascending'>Asc</span></td>
-                                    <td>id</td>
+                                    <td>block_id</td>
                                 </tr>
                                 <tr>
                                     <td title='Indexed'>idx_block_reporting_unit_id</td>

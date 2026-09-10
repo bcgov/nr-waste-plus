@@ -122,7 +122,7 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="id">id</span></td>
+                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="outbox_event_id">outbox_event_id</span></td>
                                     <td>bigserial</td>
                                     <td>19</td>
                                     <td title=''></td>
@@ -136,7 +136,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Unique identifier for the outbox event record.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="event_id">event_id</span></td>
@@ -153,7 +153,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Stable UUID used to identify this event across delivery attempts.</p></td>
+                                    <td><p>Stable UUID identifying this event across delivery attempts.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="aggregate_type">aggregate_type</span></td>
@@ -170,7 +170,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Domain aggregate type, e.g. SUBMISSION.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="aggregate_id">aggregate_id</span></td>
@@ -187,7 +187,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Identifier of the owning aggregate.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="event_type">event_type</span></td>
@@ -204,7 +204,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Domain event type name.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="payload">payload</span></td>
@@ -221,7 +221,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Serialized event payload as JSONB.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="status">status</span></td>
@@ -238,7 +238,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Delivery state: PENDING, IN_FLIGHT, RETRYING, CONFIRMED, RECONCILIATION_REQUIRED, or PERMANENT_FAILURE.</p></td>
+                                    <td><p>Delivery state: PENDING, IN_FLIGHT, RETRYING, CONFIRMED, etc.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="attempt_count">attempt_count</span></td>
@@ -255,7 +255,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Number of transmission attempts performed.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="attempt_history">attempt_history</span></td>
@@ -272,7 +272,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>JSONB array containing the timestamp, outcome, and error summary for each delivery attempt.</p></td>
+                                    <td><p>JSON array of delivery attempts with outcome timestamps.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="next_retry_at">next_retry_at</span></td>
@@ -289,7 +289,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Earliest time at which a pending or retrying event may be leased.</p></td>
+                                    <td><p>Earliest timestamp for next delivery retry.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="locked_until">locked_until</span></td>
@@ -306,7 +306,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>End of the current relay lease; an expired lease may be acquired by another worker.</p></td>
+                                    <td><p>Lease expiration timestamp for in-flight processing.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="locked_by">locked_by</span></td>
@@ -323,7 +323,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Identifier of the relay worker holding the current lease.</p></td>
+                                    <td><p>Worker node identifier holding the lease.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_at">created_at</span></td>
@@ -340,7 +340,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when the event was enqueued.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_by">created_by</span></td>
@@ -357,7 +357,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Actor that enqueued the outbox event.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_at">updated_at</span></td>
@@ -374,7 +374,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when the outbox record was last modified.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_by">updated_by</span></td>
@@ -391,7 +391,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Actor that last updated the outbox event.</p></td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -427,7 +427,7 @@
                                     <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey'></i> outbox_event_pk</td>
                                     <td>Primary key</td>
                                     <td><span title='Ascending'>Asc</span></td>
-                                    <td>id</td>
+                                    <td>outbox_event_id</td>
                                 </tr>
                                 <tr>
                                     <td title='Indexed'>idx_outbox_actionable</td>
@@ -505,7 +505,7 @@
                                 <div class="tab-content no-padding">
                                     <div class="chart tab-pane active" id="oneDegreeImg-chart" style="position: relative; overflow-x:auto;">
                                         <map id="oneDegreeRelationshipsDiagram" name="oneDegreeRelationshipsDiagram">
-<area shape="rect" id="node1" href="outbox_event.html" target="_top" title="outbox_event" alt="" coords="5,5,325,544">
+<area shape="rect" id="node1" href="outbox_event.html" target="_top" title="outbox_event" alt="" coords="5,5,327,544">
 </map>
                                         <a name='diagram'><img id="oneDegreeImg" src="../diagrams/tables/outbox_event.1degree.png" usemap="#oneDegreeRelationshipsDiagram" class="diagram" border="0" align="left"></a>
                                     </div>

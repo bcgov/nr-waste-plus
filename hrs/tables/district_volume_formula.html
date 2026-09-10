@@ -122,7 +122,7 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="id">id</span></td>
+                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="district_volume_formula_id">district_volume_formula_id</span></td>
                                     <td>bigserial</td>
                                     <td>19</td>
                                     <td title=''></td>
@@ -136,7 +136,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Unique identifier for the formula row.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="district_volume_id">district_volume_id</span></td>
@@ -152,13 +152,13 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="district_volume_formula.district_volume_id references district_volume.id via fk_district_volume_formula_district_volume"><a href='district_volume.html'>district_volume</a><span class='relatedKey'>.id</span></td>
+                                                <td title="district_volume_formula.district_volume_id references district_volume.district_volume_id via fk_district_volume_formula_district_volume"><a href='district_volume.html'>district_volume</a><span class='relatedKey'>.district_volume_id</span></td>
                                                 <td class="constraint detail">fk_district_volume_formula_district_volume</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Foreign key referencing the associated district volume version.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="formula_key">formula_key</span></td>
@@ -175,12 +175,12 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Stable namespaced formula identifier, such as config.<em>, submission.</em>, species.<em>, or hbs.</em>.</p></td>
+                                    <td><p>Namespaced formula identifier.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="expression">expression</span></td>
-                                    <td>text</td>
-                                    <td>2147483647</td>
+                                    <td>varchar</td>
+                                    <td>4000</td>
                                     <td title=''></td>
                                     <td title=''></td>
                                     <td>null</td>
@@ -192,7 +192,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Mathematical formula expression (max 4000 chars).</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="declared_variables">declared_variables</span></td>
@@ -209,7 +209,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>JSON object containing the variables declared by the formula.</p></td>
+                                    <td><p>JSON object defining input variables.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="validation_errors">validation_errors</span></td>
@@ -226,7 +226,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>JSON array of formula validation errors; an empty array means no recorded errors.</p></td>
+                                    <td><p>JSON array of formula validation issues.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="sort_order">sort_order</span></td>
@@ -243,7 +243,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Display and evaluation sort order index.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_at">created_at</span></td>
@@ -260,7 +260,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when the formula was created.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_by">created_by</span></td>
@@ -277,7 +277,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Actor that created the formula.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_at">updated_at</span></td>
@@ -294,7 +294,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when the formula was last modified.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_by">updated_by</span></td>
@@ -311,7 +311,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Actor that last modified the formula.</p></td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -347,7 +347,7 @@
                                     <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey'></i> district_volume_formula_pk</td>
                                     <td>Primary key</td>
                                     <td><span title='Ascending'>Asc</span></td>
-                                    <td>id</td>
+                                    <td>district_volume_formula_id</td>
                                 </tr>
                                 <tr>
                                     <td class='uniqueKey' title='Unique Key'><i class='icon ion-key iconkey'></i> district_volume_formula_key_uq</td>
@@ -359,7 +359,7 @@
                                     <td title='Indexed'>idx_district_volume_formula_district_volume_id</td>
                                     <td>Performance</td>
                                     <td><span title='Ascending'>Asc</span>/<span title='Ascending'>Asc</span>/<span title='Ascending'>Asc</span></td>
-                                    <td>district_volume_id + sort_order + id</td>
+                                    <td>district_volume_id + sort_order + district_volume_formula_id</td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -416,16 +416,16 @@
                                 <div class="tab-content no-padding">
                                     <div class="chart tab-pane active" id="oneDegreeImg-chart" style="position: relative; overflow-x:auto;">
                                         <map id="oneDegreeRelationshipsDiagram" name="oneDegreeRelationshipsDiagram">
-<area shape="rect" id="node1" href="district_volume_formula.html" target="_top" title="district_volume_formula" alt="" coords="252,5,637,397">
+<area shape="rect" id="node1" href="district_volume_formula.html" target="_top" title="district_volume_formula" alt="" coords="252,5,659,397">
 <area shape="rect" id="node2" href="district_volume.html" target="_top" title="district_volume" alt="" coords="5,37,208,272">
 </map>
                                         <a name='diagram'><img id="oneDegreeImg" src="../diagrams/tables/district_volume_formula.1degree.png" usemap="#oneDegreeRelationshipsDiagram" class="diagram" border="0" align="left"></a>
                                     </div>
                                     <div class="chart tab-pane " id="twodegreesDegreeImg-chart" style="position: relative; overflow-x:auto;">
                                         <map id="twoDegreesRelationshipsDiagram" name="twoDegreesRelationshipsDiagram">
-<area shape="rect" id="node1" href="block_calculation_snapshot.html" target="_top" title="block_calculation_snapshot" alt="" coords="296,5,593,93">
+<area shape="rect" id="node1" href="block_calculation_snapshot.html" target="_top" title="block_calculation_snapshot" alt="" coords="307,5,604,93">
 <area shape="rect" id="node2" href="district_volume.html" target="_top" title="district_volume" alt="" coords="5,73,208,308">
-<area shape="rect" id="node3" href="district_volume_formula.html" target="_top" title="district_volume_formula" alt="" coords="252,111,637,503">
+<area shape="rect" id="node3" href="district_volume_formula.html" target="_top" title="district_volume_formula" alt="" coords="252,111,659,503">
 </map>
                                         <a name='diagram'><img id="twodegreesDegreeImg" src="../diagrams/tables/district_volume_formula.2degrees.png" usemap="#twoDegreesRelationshipsDiagram" class="diagram" border="0" align="left"></a>
                                     </div>

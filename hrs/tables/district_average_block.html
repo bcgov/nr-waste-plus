@@ -122,7 +122,7 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="block_id">block_id</span></td>
+                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="district_average_block_id">district_average_block_id</span></td>
                                     <td>int8</td>
                                     <td>19</td>
                                     <td title=''></td>
@@ -135,13 +135,13 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="district_average_block.block_id references block.id via fk_district_average_block_block"><a href='block.html'>block</a><span class='relatedKey'>.id</span></td>
+                                                <td title="district_average_block.district_average_block_id references block.block_id via fk_district_average_block_block"><a href='block.html'>block</a><span class='relatedKey'>.block_id</span></td>
                                                 <td class="constraint detail">fk_district_average_block_block</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Primary key and foreign key referencing the parent block.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="benchmark_zone">benchmark_zone</span></td>
@@ -158,7 +158,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Benchmark pricing zone.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="maturity">maturity</span></td>
@@ -175,7 +175,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timber maturity: MATURE or IMMATURE.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="retention_percentage">retention_percentage</span></td>
@@ -192,7 +192,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Stand retention percentage.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="criteria">criteria</span></td>
@@ -209,7 +209,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Integer array of applicable District Average qualifying criteria.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="coast_ground_based_area_ha">coast_ground_based_area_ha</span></td>
@@ -226,7 +226,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Coast ground-based logging area, in hectares; exposed as groundBasedAreaHa for Coast blocks.</p></td>
+                                    <td><p>Coast ground-based logging area in hectares.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="coast_helicopter_area_ha">coast_helicopter_area_ha</span></td>
@@ -243,7 +243,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Coast helicopter logging area in hectares.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="revision">revision</span></td>
@@ -260,7 +260,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Optimistic locking revision counter.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_by">created_by</span></td>
@@ -277,7 +277,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Audit actor that created this DA extension.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_by">updated_by</span></td>
@@ -294,7 +294,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Audit actor that last updated this DA extension.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_at">created_at</span></td>
@@ -311,7 +311,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when this DA extension was created.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_at">updated_at</span></td>
@@ -328,10 +328,10 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when this DA extension was last updated.</p></td>
                                 </tr>
                                 <tr>
-                                    <td><span id="deleted">deleted</span></td>
+                                    <td><span id="is_deleted">is_deleted</span></td>
                                     <td>bool</td>
                                     <td>1</td>
                                     <td title=''></td>
@@ -345,7 +345,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Soft-delete flag.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="harvest_status_code">harvest_status_code</span></td>
@@ -402,7 +402,7 @@
                                     <td><span id="has_dispersed_retention">has_dispersed_retention</span></td>
                                     <td>bool</td>
                                     <td>1</td>
-                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
                                     <td title=''></td>
                                     <td>null</td>
                                     <td>
@@ -450,10 +450,10 @@
                                     <td><p>Date primary logging was completed.</p></td>
                                 </tr>
                                 <tr>
-                                    <td><span id="heli_logging">heli_logging</span></td>
+                                    <td><span id="is_heli_logging">is_heli_logging</span></td>
                                     <td>bool</td>
                                     <td>1</td>
-                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
                                     <td title=''></td>
                                     <td>null</td>
                                     <td>
@@ -481,7 +481,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Area harvested using cable yarding, in hectares.</p></td>
+                                    <td><p>Area harvested using cable yarding in hectares.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="skyline_logging_area_ha">skyline_logging_area_ha</span></td>
@@ -498,7 +498,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Area harvested using skyline logging, in hectares.</p></td>
+                                    <td><p>Area harvested using skyline logging in hectares.</p></td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -534,7 +534,7 @@
                                     <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey'></i> district_average_block_pk</td>
                                     <td>Primary key</td>
                                     <td><span title='Ascending'>Asc</span></td>
-                                    <td>block_id</td>
+                                    <td>district_average_block_id</td>
                                 </tr>
                                 </tbody>
                             </table>

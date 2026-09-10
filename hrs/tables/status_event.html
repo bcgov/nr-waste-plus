@@ -122,7 +122,7 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="id">id</span></td>
+                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="status_event_id">status_event_id</span></td>
                                     <td>bigserial</td>
                                     <td>19</td>
                                     <td title=''></td>
@@ -131,7 +131,7 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="block_comment.status_event_id references status_event.id via fk_block_comment_status_event"><a href='block_comment.html'>block_comment</a><span class='relatedKey'>.status_event_id</span></td>
+                                                <td title="block_comment.status_event_id references status_event.status_event_id via fk_block_comment_status_event"><a href='block_comment.html'>block_comment</a><span class='relatedKey'>.status_event_id</span></td>
                                                 <td class="constraint detail">fk_block_comment_status_event</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
@@ -141,7 +141,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Unique identifier for the status event.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="reporting_unit_id">reporting_unit_id</span></td>
@@ -157,13 +157,13 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="status_event.reporting_unit_id references reporting_unit.id via fk_status_event_reporting_unit"><a href='reporting_unit.html'>reporting_unit</a><span class='relatedKey'>.id</span></td>
+                                                <td title="status_event.reporting_unit_id references reporting_unit.reporting_unit_id via fk_status_event_reporting_unit"><a href='reporting_unit.html'>reporting_unit</a><span class='relatedKey'>.reporting_unit_id</span></td>
                                                 <td class="constraint detail">fk_status_event_reporting_unit</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                         </table>
                                     </td>
-                                    <td><p>Set for a reporting-unit event; exactly one status-event subject is required.</p></td>
+                                    <td><p>Foreign key referencing the target reporting unit, if applicable.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="block_id">block_id</span></td>
@@ -179,13 +179,13 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="status_event.block_id references block.id via fk_status_event_block"><a href='block.html'>block</a><span class='relatedKey'>.id</span></td>
+                                                <td title="status_event.block_id references block.block_id via fk_status_event_block"><a href='block.html'>block</a><span class='relatedKey'>.block_id</span></td>
                                                 <td class="constraint detail">fk_status_event_block</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                         </table>
                                     </td>
-                                    <td><p>Set for a block event; exactly one status-event subject is required.</p></td>
+                                    <td><p>Foreign key referencing the target block, if applicable.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="status">status</span></td>
@@ -202,7 +202,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Service-validated lifecycle status; no database vocabulary check is imposed yet.</p></td>
+                                    <td><p>Lifecycle status, e.g. DRAFT or SUBMITTED.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="event_type">event_type</span></td>
@@ -219,7 +219,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Action event type, e.g. SUBMISSION_CREATED.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="details">details</span></td>
@@ -236,7 +236,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>JSON payload containing event metadata.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_by">created_by</span></td>
@@ -253,7 +253,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Audit actor that generated the event.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_by">updated_by</span></td>
@@ -270,7 +270,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Audit actor that last updated the event record.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="created_at">created_at</span></td>
@@ -287,7 +287,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when the status event was created.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_at">updated_at</span></td>
@@ -304,7 +304,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when the status event was last updated.</p></td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -340,19 +340,19 @@
                                     <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey'></i> status_event_pk</td>
                                     <td>Primary key</td>
                                     <td><span title='Ascending'>Asc</span></td>
-                                    <td>id</td>
+                                    <td>status_event_id</td>
                                 </tr>
                                 <tr>
                                     <td title='Indexed'>idx_status_event_block_time</td>
                                     <td>Performance</td>
                                     <td><span title='Ascending'>Asc</span>/<span title='Descending'>Desc</span>/<span title='Descending'>Desc</span></td>
-                                    <td>block_id + created_at + id</td>
+                                    <td>block_id + created_at + status_event_id</td>
                                 </tr>
                                 <tr>
                                     <td title='Indexed'>idx_status_event_reporting_unit_time</td>
                                     <td>Performance</td>
                                     <td><span title='Ascending'>Asc</span>/<span title='Descending'>Desc</span>/<span title='Descending'>Desc</span></td>
-                                    <td>reporting_unit_id + created_at + id</td>
+                                    <td>reporting_unit_id + created_at + status_event_id</td>
                                 </tr>
                                 </tbody>
                             </table>

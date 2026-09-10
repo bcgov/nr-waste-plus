@@ -84,7 +84,7 @@
                             </div>
                         </div><!-- /.box-header -->
                         <div class="box-body clearfix">
-                            <p>Typed forest and road marks associated with a submission block.</p>
+                            <p>Typed forest and road marks associated with a submission block. &ldquo;Block mark&rdquo; is equivalent to &ldquo;timber mark&rdquo; in legacy/FTA terminology — renamed for consistency with app-wide usage.</p>
                         </div><!-- /.box-body -->
                     </div>
                 </section>
@@ -122,7 +122,7 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="id">id</span></td>
+                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="block_mark_id">block_mark_id</span></td>
                                     <td>bigserial</td>
                                     <td>19</td>
                                     <td title=''></td>
@@ -131,7 +131,7 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="block_area_segment.block_mark_id references block_mark.id via fk_block_area_segment_block_mark"><a href='block_area_segment.html'>block_area_segment</a><span class='relatedKey'>.block_mark_id</span></td>
+                                                <td title="block_area_segment.block_mark_id references block_mark.block_mark_id via fk_block_area_segment_block_mark"><a href='block_area_segment.html'>block_area_segment</a><span class='relatedKey'>.block_mark_id</span></td>
                                                 <td class="constraint detail">fk_block_area_segment_block_mark</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
@@ -141,7 +141,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Unique identifier for the block mark.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="block_id">block_id</span></td>
@@ -157,13 +157,13 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="block_mark.block_id references block.id via fk_block_mark_block"><a href='block.html'>block</a><span class='relatedKey'>.id</span></td>
+                                                <td title="block_mark.block_id references block.block_id via fk_block_mark_block"><a href='block.html'>block</a><span class='relatedKey'>.block_id</span></td>
                                                 <td class="constraint detail">fk_block_mark_block</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Foreign key referencing the parent block.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="mark_type">mark_type</span></td>
@@ -180,7 +180,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Mark type: PRIMARY or SECONDARY.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="sequence_no">sequence_no</span></td>
@@ -197,7 +197,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Sequential order number for secondary marks.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="mark">mark</span></td>
@@ -214,7 +214,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timber mark or identifier string.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="validation_status">validation_status</span></td>
@@ -231,7 +231,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>External mark validation state.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_by">created_by</span></td>
@@ -248,7 +248,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Audit actor that created this mark.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_by">updated_by</span></td>
@@ -265,7 +265,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Audit actor that last updated this mark.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_at">created_at</span></td>
@@ -282,7 +282,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when this mark was created.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_at">updated_at</span></td>
@@ -299,10 +299,10 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when this mark was last updated.</p></td>
                                 </tr>
                                 <tr>
-                                    <td><span id="deleted">deleted</span></td>
+                                    <td><span id="is_deleted">is_deleted</span></td>
                                     <td>bool</td>
                                     <td>1</td>
                                     <td title=''></td>
@@ -316,7 +316,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Soft-delete flag.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="forest_file_id">forest_file_id</span></td>
@@ -420,7 +420,7 @@
                                     <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey'></i> block_mark_pk</td>
                                     <td>Primary key</td>
                                     <td><span title='Ascending'>Asc</span></td>
-                                    <td>id</td>
+                                    <td>block_mark_id</td>
                                 </tr>
                                 <tr>
                                     <td title='Indexed'>idx_block_mark_block_id</td>

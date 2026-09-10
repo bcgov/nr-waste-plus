@@ -122,7 +122,7 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="id">id</span></td>
+                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="audit_change_id">audit_change_id</span></td>
                                     <td>bigserial</td>
                                     <td>19</td>
                                     <td title=''></td>
@@ -136,7 +136,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Unique identifier for the individual row audit record.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="event_id">event_id</span></td>
@@ -152,13 +152,13 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="audit_change.event_id references audit_event.id via audit_change_event_id_fkey"><a href='audit_event.html'>audit_event</a><span class='relatedKey'>.id</span></td>
-                                                <td class="constraint detail">audit_change_event_id_fkey</td>
+                                                <td title="audit_change.event_id references audit_event.audit_event_id via fk_audit_change_event"><a href='audit_event.html'>audit_event</a><span class='relatedKey'>.audit_event_id</span></td>
+                                                <td class="constraint detail">fk_audit_change_event</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Foreign key referencing the owning audit event.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="entity_type">entity_type</span></td>
@@ -175,7 +175,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Target database table name.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="entity_id">entity_id</span></td>
@@ -192,7 +192,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Primary key value of the mutated row.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="action">action</span></td>
@@ -209,7 +209,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Mutation action: CREATE, UPDATE, SOFT_DELETE, DELETE.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="previous_values">previous_values</span></td>
@@ -226,7 +226,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Full snapshot before mutation as JSONB</p></td>
+                                    <td><p>Full snapshot before mutation as JSONB.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="current_values">current_values</span></td>
@@ -243,7 +243,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Full snapshot after mutation as JSONB</p></td>
+                                    <td><p>Full snapshot after mutation as JSONB.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="changed_columns">changed_columns</span></td>
@@ -260,7 +260,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Array of column names that changed.</p></td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -296,19 +296,19 @@
                                     <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey'></i> audit_change_pkey</td>
                                     <td>Primary key</td>
                                     <td><span title='Ascending'>Asc</span></td>
-                                    <td>id</td>
+                                    <td>audit_change_id</td>
                                 </tr>
                                 <tr>
                                     <td title='Indexed'>idx_audit_change_entity_lookup</td>
                                     <td>Performance</td>
                                     <td><span title='Ascending'>Asc</span>/<span title='Ascending'>Asc</span>/<span title='Descending'>Desc</span></td>
-                                    <td>entity_type + entity_id + id</td>
+                                    <td>entity_type + entity_id + audit_change_id</td>
                                 </tr>
                                 <tr>
                                     <td title='Indexed'>idx_audit_change_entity_type_id</td>
                                     <td>Performance</td>
                                     <td><span title='Ascending'>Asc</span>/<span title='Descending'>Desc</span></td>
-                                    <td>entity_type + id</td>
+                                    <td>entity_type + audit_change_id</td>
                                 </tr>
                                 <tr>
                                     <td title='Indexed'>idx_audit_change_event_id</td>

@@ -122,7 +122,7 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="id">id</span></td>
+                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="block_comment_id">block_comment_id</span></td>
                                     <td>bigserial</td>
                                     <td>19</td>
                                     <td title=''></td>
@@ -136,7 +136,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Unique identifier for the comment.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="block_id">block_id</span></td>
@@ -152,13 +152,13 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="block_comment.block_id references block.id via fk_block_comment_block"><a href='block.html'>block</a><span class='relatedKey'>.id</span></td>
+                                                <td title="block_comment.block_id references block.block_id via fk_block_comment_block"><a href='block.html'>block</a><span class='relatedKey'>.block_id</span></td>
                                                 <td class="constraint detail">fk_block_comment_block</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Foreign key referencing the parent block.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="context">context</span></td>
@@ -175,12 +175,12 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Comment type: GENERAL (standalone block comment), SUBMISSION (endorsement-tab comment), or accompanies a lifecycle transition when status_event_id is populated.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="comment">comment</span></td>
-                                    <td>text</td>
-                                    <td>2147483647</td>
+                                    <td>varchar</td>
+                                    <td>4000</td>
                                     <td title=''></td>
                                     <td title=''></td>
                                     <td>null</td>
@@ -192,7 +192,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Body text of the comment (max 4000 chars).</p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="status_event_id">status_event_id</span></td>
@@ -208,13 +208,13 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="block_comment.status_event_id references status_event.id via fk_block_comment_status_event"><a href='status_event.html'>status_event</a><span class='relatedKey'>.id</span></td>
+                                                <td title="block_comment.status_event_id references status_event.status_event_id via fk_block_comment_status_event"><a href='status_event.html'>status_event</a><span class='relatedKey'>.status_event_id</span></td>
                                                 <td class="constraint detail">fk_block_comment_status_event</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Optional foreign key referencing the triggering status event.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_by">created_by</span></td>
@@ -231,7 +231,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Audit actor that created this comment.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_by">updated_by</span></td>
@@ -248,7 +248,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Audit actor that last updated this comment.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_at">created_at</span></td>
@@ -265,7 +265,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when this comment was created.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_at">updated_at</span></td>
@@ -282,10 +282,10 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when this comment was last updated.</p></td>
                                 </tr>
                                 <tr>
-                                    <td><span id="deleted">deleted</span></td>
+                                    <td><span id="is_deleted">is_deleted</span></td>
                                     <td>bool</td>
                                     <td>1</td>
                                     <td title=''></td>
@@ -299,7 +299,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Soft-delete flag.</p></td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -335,7 +335,7 @@
                                     <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey'></i> block_comment_pk</td>
                                     <td>Primary key</td>
                                     <td><span title='Ascending'>Asc</span></td>
-                                    <td>id</td>
+                                    <td>block_comment_id</td>
                                 </tr>
                                 <tr>
                                     <td title='Indexed'>idx_block_comment_block_id</td>
@@ -372,7 +372,7 @@
                                 <div class="tab-content no-padding">
                                     <div class="chart tab-pane active" id="oneDegreeImg-chart" style="position: relative; overflow-x:auto;">
                                         <map id="oneDegreeRelationshipsDiagram" name="oneDegreeRelationshipsDiagram">
-<area shape="rect" id="node1" href="block_comment.html" target="_top" title="block_comment" alt="" coords="464,5,777,368">
+<area shape="rect" id="node1" href="block_comment.html" target="_top" title="block_comment" alt="" coords="464,5,799,368">
 <area shape="rect" id="node2" href="block.html" target="_top" title="block" alt="" coords="5,111,191,257">
 <area shape="rect" id="node3" href="status_event.html" target="_top" title="status_event" alt="" coords="235,121,420,327">
 </map>
@@ -382,14 +382,14 @@
                                         <map id="twoDegreesRelationshipsDiagram" name="twoDegreesRelationshipsDiagram">
 <area shape="rect" id="node1" href="block.html" target="_top" title="block" alt="" coords="244,371,367,459">
 <area shape="rect" id="node2" href="reporting_unit.html" target="_top" title="reporting_unit" alt="" coords="5,483,200,571">
-<area shape="rect" id="node3" href="block_area_segment.html" target="_top" title="block_area_segment" alt="" coords="788,18,1029,106">
-<area shape="rect" id="node4" href="block_mark.html" target="_top" title="block_mark" alt="" coords="473,54,645,142">
+<area shape="rect" id="node3" href="block_area_segment.html" target="_top" title="block_area_segment" alt="" coords="799,17,1040,105">
+<area shape="rect" id="node4" href="block_mark.html" target="_top" title="block_mark" alt="" coords="473,53,645,141">
 <area shape="rect" id="node5" href="block_attachment.html" target="_top" title="block_attachment" alt="" coords="447,159,671,247">
 <area shape="rect" id="node6" href="block_calculation_snapshot.html" target="_top" title="block_calculation_snapshot" alt="" coords="411,264,708,352">
-<area shape="rect" id="node7" href="block_comment.html" target="_top" title="block_comment" alt="" coords="752,483,1065,846">
-<area shape="rect" id="node8" href="status_event.html" target="_top" title="status_event" alt="" coords="469,758,650,846">
-<area shape="rect" id="node9" href="block_requirement.html" target="_top" title="block_requirement" alt="" coords="793,210,1024,298">
-<area shape="rect" id="node10" href="block_sponsor.html" target="_top" title="block_sponsor" alt="" coords="463,442,655,530">
+<area shape="rect" id="node7" href="block_comment.html" target="_top" title="block_comment" alt="" coords="752,483,1087,845">
+<area shape="rect" id="node8" href="status_event.html" target="_top" title="status_event" alt="" coords="469,757,650,845">
+<area shape="rect" id="node9" href="block_requirement.html" target="_top" title="block_requirement" alt="" coords="804,209,1035,297">
+<area shape="rect" id="node10" href="block_sponsor.html" target="_top" title="block_sponsor" alt="" coords="463,441,655,529">
 <area shape="rect" id="node11" href="block_submitter.html" target="_top" title="block_submitter" alt="" coords="455,547,664,635">
 <area shape="rect" id="node12" href="district_average_block.html" target="_top" title="district_average_block" alt="" coords="431,652,687,740">
 </map>

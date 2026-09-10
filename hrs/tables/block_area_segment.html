@@ -122,7 +122,7 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="id">id</span></td>
+                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="block_area_segment_id">block_area_segment_id</span></td>
                                     <td>bigserial</td>
                                     <td>19</td>
                                     <td title=''></td>
@@ -136,7 +136,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Unique identifier for the area segment.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="block_id">block_id</span></td>
@@ -152,13 +152,13 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="block_area_segment.block_id references block.id via fk_block_area_segment_block"><a href='block.html'>block</a><span class='relatedKey'>.id</span></td>
+                                                <td title="block_area_segment.block_id references block.block_id via fk_block_area_segment_block"><a href='block.html'>block</a><span class='relatedKey'>.block_id</span></td>
                                                 <td class="constraint detail">fk_block_area_segment_block</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Foreign key referencing the parent block.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="source">source</span></td>
@@ -175,7 +175,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Segment derivation source: e.g. MANUAL or FTA.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="area_ha">area_ha</span></td>
@@ -192,7 +192,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Segment area in hectares.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="road_length_m">road_length_m</span></td>
@@ -209,7 +209,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Road length in meters.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="road_width_m">road_width_m</span></td>
@@ -226,7 +226,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Road width in meters.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_by">created_by</span></td>
@@ -243,7 +243,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Audit actor that created this segment.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_by">updated_by</span></td>
@@ -260,7 +260,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Audit actor that last updated this segment.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_at">created_at</span></td>
@@ -277,7 +277,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when this segment was created.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="updated_at">updated_at</span></td>
@@ -294,10 +294,10 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Timestamp when this segment was last updated.</p></td>
                                 </tr>
                                 <tr>
-                                    <td><span id="deleted">deleted</span></td>
+                                    <td><span id="is_deleted">is_deleted</span></td>
                                     <td>bool</td>
                                     <td>1</td>
                                     <td title=''></td>
@@ -311,7 +311,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td></td>
+                                    <td><p>Soft-delete flag.</p></td>
                                 </tr>
                                 <tr>
                                     <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="block_mark_id">block_mark_id</span></td>
@@ -327,13 +327,13 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="block_area_segment.block_mark_id references block_mark.id via fk_block_area_segment_block_mark"><a href='block_mark.html'>block_mark</a><span class='relatedKey'>.id</span></td>
+                                                <td title="block_area_segment.block_mark_id references block_mark.block_mark_id via fk_block_area_segment_block_mark"><a href='block_mark.html'>block_mark</a><span class='relatedKey'>.block_mark_id</span></td>
                                                 <td class="constraint detail">fk_block_area_segment_block_mark</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                         </table>
                                     </td>
-                                    <td><p>Optional mark associated with this area segment.</p></td>
+                                    <td><p>Optional foreign key referencing the associated block mark.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="starting_area_ha">starting_area_ha</span></td>
@@ -350,7 +350,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Starting area for the segment, in hectares.</p></td>
+                                    <td><p>Starting area for the segment in hectares.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="net_waste_area_ha">net_waste_area_ha</span></td>
@@ -367,7 +367,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Calculated net waste area for the segment, in hectares.</p></td>
+                                    <td><p>Calculated net waste area for the segment in hectares.</p></td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -403,7 +403,7 @@
                                     <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey'></i> block_area_segment_pk</td>
                                     <td>Primary key</td>
                                     <td><span title='Ascending'>Asc</span></td>
-                                    <td>id</td>
+                                    <td>block_area_segment_id</td>
                                 </tr>
                                 <tr>
                                     <td title='Indexed'>idx_block_area_segment_block_id</td>
@@ -440,7 +440,7 @@
                                 <div class="tab-content no-padding">
                                     <div class="chart tab-pane active" id="oneDegreeImg-chart" style="position: relative; overflow-x:auto;">
                                         <map id="oneDegreeRelationshipsDiagram" name="oneDegreeRelationshipsDiagram">
-<area shape="rect" id="node1" href="block_area_segment.html" target="_top" title="block_area_segment" alt="" coords="467,5,816,485">
+<area shape="rect" id="node1" href="block_area_segment.html" target="_top" title="block_area_segment" alt="" coords="467,5,837,485">
 <area shape="rect" id="node2" href="block.html" target="_top" title="block" alt="" coords="5,199,191,345">
 <area shape="rect" id="node3" href="block_mark.html" target="_top" title="block_mark" alt="" coords="235,276,423,481">
 </map>
@@ -450,13 +450,13 @@
                                         <map id="twoDegreesRelationshipsDiagram" name="twoDegreesRelationshipsDiagram">
 <area shape="rect" id="node1" href="block.html" target="_top" title="block" alt="" coords="244,400,367,488">
 <area shape="rect" id="node2" href="reporting_unit.html" target="_top" title="reporting_unit" alt="" coords="5,319,200,407">
-<area shape="rect" id="node3" href="block_area_segment.html" target="_top" title="block_area_segment" alt="" coords="752,111,1101,591">
+<area shape="rect" id="node3" href="block_area_segment.html" target="_top" title="block_area_segment" alt="" coords="752,111,1123,591">
 <area shape="rect" id="node4" href="block_mark.html" target="_top" title="block_mark" alt="" coords="473,329,645,417">
 <area shape="rect" id="node5" href="block_attachment.html" target="_top" title="block_attachment" alt="" coords="447,471,671,559">
 <area shape="rect" id="node6" href="block_calculation_snapshot.html" target="_top" title="block_calculation_snapshot" alt="" coords="411,576,708,664">
-<area shape="rect" id="node7" href="block_comment.html" target="_top" title="block_comment" alt="" coords="824,5,1029,93">
+<area shape="rect" id="node7" href="block_comment.html" target="_top" title="block_comment" alt="" coords="835,5,1040,93">
 <area shape="rect" id="node8" href="status_event.html" target="_top" title="status_event" alt="" coords="469,152,650,240">
-<area shape="rect" id="node9" href="block_requirement.html" target="_top" title="block_requirement" alt="" coords="811,608,1042,696">
+<area shape="rect" id="node9" href="block_requirement.html" target="_top" title="block_requirement" alt="" coords="822,608,1053,696">
 <area shape="rect" id="node10" href="block_sponsor.html" target="_top" title="block_sponsor" alt="" coords="463,681,655,769">
 <area shape="rect" id="node11" href="block_submitter.html" target="_top" title="block_submitter" alt="" coords="455,787,664,875">
 <area shape="rect" id="node12" href="district_average_block.html" target="_top" title="district_average_block" alt="" coords="431,892,687,980">

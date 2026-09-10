@@ -78,7 +78,7 @@
                         <div class="col-md-12">
                             <div class="callout callout-info">
                                 <h4>SchemaSpy Analysis of default.hrs</h4>
-                                <p>Generated on Sat Sep 05 11:11 GMT 2026</p>
+                                <p>Generated on Thu Sep 10 15:09 GMT 2026</p>
                             </div>
                         </div>
                     </div>
@@ -239,7 +239,7 @@
                                         <td class="detail" align="right">15</td>
                                         <td class="detail" align="right">-1</td>
                                         <td class="detail" align="right">Table</td>
-                                        <td class="comment detail" style="display: table-cell;"><p>Typed forest and road marks associated with a submission block.</p></td>
+                                        <td class="comment detail" style="display: table-cell;"><p>Typed forest and road marks associated with a submission block. &ldquo;Block mark&rdquo; is equivalent to &ldquo;timber mark&rdquo; in legacy/FTA terminology — renamed for consistency with app-wide usage.</p></td>
                                     </tr>
                                     <tr class="tbl even" valign="top">
                                         <td class="detail"><a href="tables/user_preferences.html">user_preferences</a></td>
@@ -284,7 +284,7 @@
                                         <td class="detail" align="right">14</td>
                                         <td class="detail" align="right">-1</td>
                                         <td class="detail" align="right">Table</td>
-                                        <td class="comment detail" style="display: table-cell;"><p>This table stores district waste volume data used to estimate waste volume on blocks.</p></td>
+                                        <td class="comment detail" style="display: table-cell;"><p>Stores district waste volume and species composition data used to estimate waste volume on blocks.</p></td>
                                     </tr>
                                     <tr class="tbl even" valign="top">
                                         <td class="detail"><a href="tables/lifecycle_setting.html">lifecycle_setting</a></td>
@@ -305,6 +305,15 @@
                                         <td class="comment detail" style="display: table-cell;"><p>Append-only lifecycle events for reporting units and blocks.</p></td>
                                     </tr>
                                     <tr class="tbl even" valign="top">
+                                        <td class="detail"><a href="tables/block.html">block</a></td>
+                                        <td class="detail" align="right">10</td>
+                                        <td class="detail" align="right">1</td>
+                                        <td class="detail" align="right">11</td>
+                                        <td class="detail" align="right">-1</td>
+                                        <td class="detail" align="right">Table</td>
+                                        <td class="comment detail" style="display: table-cell;"><p>Submission block belonging to a reporting unit. Equivalent to a &ldquo;cut block&rdquo; in legacy/FTA terminology — renamed for consistency with app-wide usage.</p></td>
+                                    </tr>
+                                    <tr class="tbl even" valign="top">
                                         <td class="detail"><a href="tables/block_area_segment.html">block_area_segment</a></td>
                                         <td class="detail" align="right">0</td>
                                         <td class="detail" align="right">2</td>
@@ -312,15 +321,6 @@
                                         <td class="detail" align="right">-1</td>
                                         <td class="detail" align="right">Table</td>
                                         <td class="comment detail" style="display: table-cell;"><p>Area and road segments used by a submission block.</p></td>
-                                    </tr>
-                                    <tr class="tbl even" valign="top">
-                                        <td class="detail"><a href="tables/block.html">block</a></td>
-                                        <td class="detail" align="right">10</td>
-                                        <td class="detail" align="right">1</td>
-                                        <td class="detail" align="right">11</td>
-                                        <td class="detail" align="right">-1</td>
-                                        <td class="detail" align="right">Table</td>
-                                        <td class="comment detail" style="display: table-cell;"><p>Submission block belonging to a reporting unit.</p></td>
                                     </tr>
                                     <tr class="tbl even" valign="top">
                                         <td class="detail"><a href="tables/user_bookmarks.html">user_bookmarks</a></td>
@@ -338,7 +338,7 @@
                                         <td class="detail" align="right">15</td>
                                         <td class="detail" align="right">-1</td>
                                         <td class="detail" align="right">Table</td>
-                                        <td class="comment detail" style="display: table-cell;"></td>
+                                        <td class="comment detail" style="display: table-cell;"><p>Submitter endorsement details for a block.</p></td>
                                     </tr>
                                     <tr class="tbl even" valign="top">
                                         <td class="detail"><a href="tables/block_attachment.html">block_attachment</a></td>
@@ -356,7 +356,7 @@
                                         <td class="detail" align="right">9</td>
                                         <td class="detail" align="right">-1</td>
                                         <td class="detail" align="right">Table</td>
-                                        <td class="comment detail" style="display: table-cell;"></td>
+                                        <td class="comment detail" style="display: table-cell;"><p>Independently versioned, date-effective formula configuration sets.</p></td>
                                     </tr>
                                     <tr class="tbl even" valign="top">
                                         <td class="detail"><a href="tables/block_comment.html">block_comment</a></td>
@@ -392,7 +392,7 @@
                                         <td class="detail" align="right">12</td>
                                         <td class="detail" align="right">-1</td>
                                         <td class="detail" align="right">Table</td>
-                                        <td class="comment detail" style="display: table-cell;"></td>
+                                        <td class="comment detail" style="display: table-cell;"><p>Formula expressions belonging to an independently versioned formula set.</p></td>
                                     </tr>
                                     <tr class="tbl even" valign="top">
                                         <td class="detail"><a href="tables/audit_change.html">audit_change</a></td>
@@ -410,7 +410,7 @@
                                         <td class="detail" align="right">15</td>
                                         <td class="detail" align="right">-1</td>
                                         <td class="detail" align="right">Table</td>
-                                        <td class="comment detail" style="display: table-cell;"></td>
+                                        <td class="comment detail" style="display: table-cell;"><p>Sponsor endorsement details for a block.</p></td>
                                     </tr>
                                     <tr class="tbl even" valign="top">
                                         <td class="detail"><a href="tables/district_volume_formula.html">district_volume_formula</a></td>
