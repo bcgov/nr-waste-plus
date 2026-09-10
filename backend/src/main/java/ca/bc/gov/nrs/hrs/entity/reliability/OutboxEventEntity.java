@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.entity.reliability;
 
+import ca.bc.gov.nrs.hrs.entity.AuditableEntity;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.persistence.Column;
@@ -13,7 +14,6 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,10 +21,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
@@ -37,11 +33,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"payload", "attemptHistory"})
-public class OutboxEventEntity {
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+@ToString(callSuper = true, exclude = {"payload", "attemptHistory"})
+public class OutboxEventEntity extends AuditableEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -83,22 +78,6 @@ public class OutboxEventEntity {
 
   @Column(name = "locked_by", length = 128)
   private String lockedBy;
-
-  @CreatedBy
-  @Column(nullable = false, length = 128)
-  private String createdBy;
-
-  @LastModifiedBy
-  @Column(nullable = false, length = 128)
-  private String updatedBy;
-
-  @CreatedDate
-  @Column(nullable = false)
-  private Instant createdAt;
-
-  @LastModifiedDate
-  @Column(nullable = false)
-  private Instant updatedAt;
 
   /** Validates JSON fields that are non-nullable in the V1.1.4 schema. */
   @PrePersist

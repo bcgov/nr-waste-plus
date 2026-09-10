@@ -44,13 +44,13 @@ class ReliabilityEntityMappingTest {
   }
 
   @Test
-  @DisplayName("preserves all-args JSON values and rejects explicitly null required fields")
-  void shouldPreserveAllArgsValuesAndRejectNulls_whenConstructedWithAllArgs() {
+  @DisplayName("preserves setter-assigned JSON values and rejects explicitly null required fields")
+  void shouldPreserveSetValuesAndRejectNulls_whenUsingSetters() {
     JsonNode payload = JsonNodeFactory.instance.objectNode().put("kind", "test");
     JsonNode attemptHistory = JsonNodeFactory.instance.arrayNode().add("attempted");
-    OutboxEventEntity entity = new OutboxEventEntity(
-        null, null, null, null, null, payload, null, null, attemptHistory, null, null, null,
-        null, null, null, null);
+    OutboxEventEntity entity = new OutboxEventEntity();
+    entity.setPayload(payload);
+    entity.setAttemptHistory(attemptHistory);
 
     assertThat(entity.getPayload()).isSameAs(payload);
     assertThat(entity.getAttemptHistory()).isSameAs(attemptHistory);
