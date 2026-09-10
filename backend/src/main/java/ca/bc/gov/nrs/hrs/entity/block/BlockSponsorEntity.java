@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.entity.block;
 
+import ca.bc.gov.nrs.hrs.entity.SoftDeletableAuditableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -7,17 +8,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.Instant;
-import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
@@ -28,11 +23,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString
-public class BlockSponsorEntity {
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+@ToString(callSuper = true)
+public class BlockSponsorEntity extends SoftDeletableAuditableEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -66,23 +60,4 @@ public class BlockSponsorEntity {
 
   @Column(length = 64)
   private String phone;
-
-  @CreatedBy
-  @Column(nullable = false, length = 128)
-  private String createdBy;
-
-  @LastModifiedBy
-  @Column(nullable = false, length = 128)
-  private String updatedBy;
-
-  @CreatedDate
-  @Column(nullable = false)
-  private Instant createdAt;
-
-  @LastModifiedDate
-  @Column(nullable = false)
-  private Instant updatedAt;
-
-  @Column(name = "is_deleted", nullable = false)
-  private boolean deleted;
 }

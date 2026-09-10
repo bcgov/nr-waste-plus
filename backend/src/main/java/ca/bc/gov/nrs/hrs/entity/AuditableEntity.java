@@ -2,7 +2,7 @@ package ca.bc.gov.nrs.hrs.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,7 +22,7 @@ public abstract class AuditableEntity {
 
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
-  private LocalDateTime createdAt;
+  private Instant createdAt;
 
   @CreatedBy
   @Column(name = "created_by", nullable = false, updatable = false, length = 128)
@@ -30,7 +30,7 @@ public abstract class AuditableEntity {
 
   @LastModifiedDate
   @Column(name = "updated_at", nullable = false)
-  private LocalDateTime updatedAt;
+  private Instant updatedAt;
 
   @LastModifiedBy
   @Column(name = "updated_by", nullable = false, length = 128)
