@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.hrs.service.formula;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,8 +15,8 @@ import ca.bc.gov.nrs.hrs.repository.FormulaSetRowRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockCalculationSnapshotRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,7 +35,7 @@ class FormulaEvaluationServiceTest {
   @Mock private FormulaSetRowRepository rowRepository;
   @InjectMocks private FormulaEvaluationService service;
 
-  private static final LocalDate DATE = LocalDate.of(2025, 7, 1);
+  private static final LocalDate DATE = LocalDate.of(2025, Month.JULY, 1);
   private static final String DISTRICT = "DCC";
   private static final String USER = "test-user";
 

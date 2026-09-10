@@ -12,11 +12,11 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeFormulaEntity;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeFormulaRepository;
 import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -42,11 +42,11 @@ class FormulaPersistenceServiceTest {
     entity.setExpression("da.mature.avoidableGradeY");
     entity.setDeclaredVariables(JsonNodeFactory.instance.objectNode());
     entity.setSortOrder(0);
-    when(formulaRepository.findForPriorVersion(Area.COASTAL, LocalDate.of(2026, 1, 1)))
+    when(formulaRepository.findForPriorVersion(Area.COASTAL, LocalDate.of(2026, Month.JANUARY, 1)))
         .thenReturn(List.of(entity));
 
     List<FormulaPersistenceService.FormulaDraft> drafts =
-        service.carryForward(Area.COASTAL, LocalDate.of(2026, 1, 1));
+        service.carryForward(Area.COASTAL, LocalDate.of(2026, Month.JANUARY, 1));
 
     assertThat(drafts).singleElement().satisfies(draft -> {
       assertThat(draft.formulaKey()).isEqualTo("da.mature.avoidableGradeY");
@@ -105,7 +105,7 @@ class FormulaPersistenceServiceTest {
   @Test
   void saveValidatedRejectsActiveReadOnlyVolume() {
     DistrictVolumeEntity volume = volume(ConfigType.DISTRICT_VOLUME,
-        LocalDate.of(2020, 1, 1), null);
+        LocalDate.of(2020, Month.JANUARY, 1), null);
     when(districtVolumeRepository.findByIdAndConfigType(2L, ConfigType.DISTRICT_VOLUME))
         .thenReturn(Optional.of(volume));
 
@@ -118,7 +118,7 @@ class FormulaPersistenceServiceTest {
   @Test
   void saveValidatedRejectsDraftsWithValidationErrors() {
     DistrictVolumeEntity volume = volume(ConfigType.DISTRICT_VOLUME,
-        LocalDate.of(2099, 1, 1), null);
+        LocalDate.of(2099, Month.JANUARY, 1), null);
     when(districtVolumeRepository.findByIdAndConfigType(3L, ConfigType.DISTRICT_VOLUME))
         .thenReturn(Optional.of(volume));
 
