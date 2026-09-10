@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { type FC, useId } from 'react';
 
 import ColorTag, { type CarbonColors } from '@/components/core/Tags/ColorTag';
 
@@ -23,7 +23,7 @@ interface VariablePanelProps {
  * @param props - Component configuration containing the group label, variable entries, and usage state.
  * @returns The variable group UI, or `null` when there are no entries to show.
  */
-const VariablePanel: React.FC<VariablePanelProps> = ({ label, entries, tagType, usedSet }) => {
+const VariablePanel: FC<VariablePanelProps> = ({ label, entries, tagType, usedSet }) => {
   const labelId = useId();
 
   if (entries.length === 0) return null;
@@ -38,7 +38,11 @@ const VariablePanel: React.FC<VariablePanelProps> = ({ label, entries, tagType, 
           const isUsed = usedSet.has(name);
 
           return (
-            <li key={name}>
+            <li
+              key={name}
+              className={`formula-input__tag${isUsed ? ' formula-input__tag--used' : ''}`}
+              data-className={`formula-input__tag${isUsed ? ' formula-input__tag--used' : ''}`}
+            >
               <span className="sr-only">{isUsed ? 'Used in formula' : 'Available'}</span>
               <ColorTag
                 value={{ code: name, description: String(value) }}

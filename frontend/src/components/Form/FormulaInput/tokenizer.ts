@@ -56,7 +56,7 @@ function tokenizeOperator(formula: string, i: number): PositionedToken | null {
 
 /** Tokenizes a single punctuation character at `i`. Returns null if no match. */
 function tokenizePunctuation(formula: string, i: number): PositionedToken | null {
-  if (!/[(),]/.test(formula[i])) return null;
+  if (!/[(),.]/.test(formula[i])) return null;
   return { type: 'punctuation', value: formula[i], startIndex: i, endIndex: i + 1 };
 }
 

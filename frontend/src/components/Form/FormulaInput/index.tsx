@@ -142,7 +142,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
   ariaLabel = 'Formula editor',
   fixedParams,
   dynamicParams,
-  initialFormula = 'basePrice / 10.32 * sqrt(area) + totoro', //TODO: This is just a test value, the real default should be '' or something equally innocuous
+  initialFormula = '',
   onChange,
   displayResult = true,
   displayDependencyGraph = true,

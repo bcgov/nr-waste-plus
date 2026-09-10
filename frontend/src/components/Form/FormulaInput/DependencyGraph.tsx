@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { type FC, useId } from 'react';
 
 import ColorTag, { type CarbonColors } from '@/components/core/Tags/ColorTag';
 
@@ -91,7 +91,7 @@ export function resolveVariableClassification(
  * />
  * ```
  */
-const DependencyGraph: React.FC<DependencyGraphProps> = ({
+const DependencyGraph: FC<DependencyGraphProps> = ({
   usedVariables,
   mergedScope,
   fixedParamNames,
@@ -111,7 +111,11 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({
           const { color } = resolveVariableClassification(name, fixedParamNames, dynamicParamNames);
 
           return (
-            <li key={name}>
+            <li
+              key={name}
+              className="formula-input__tag formula-input__tag--used"
+              data-className="formula-input__tag formula-input__tag--used"
+            >
               <ColorTag
                 value={{ code: name, description: String(mergedScope[name] ?? 'N/A') }}
                 colorMap={{ [name]: color }}
