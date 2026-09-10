@@ -27,7 +27,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 @DisplayName("Unit Test | JwtPrincipalUtil")
-@SuppressWarnings("deprecation")
 class JwtPrincipalUtilTest {
 
   @ParameterizedTest(name = "For custom:idp_name {0} → JwtAuthenticationToken: {1}, Jwt: {2}")

@@ -16,7 +16,6 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.FormulaSetRowEntity;
 import ca.bc.gov.nrs.hrs.repository.FormulaSetRepository;
 import ca.bc.gov.nrs.hrs.repository.FormulaSetRowRepository;
 import java.time.LocalDate;
-import java.time.Month;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -74,14 +73,14 @@ class FormulaSetServiceTest {
   @Test
   void effectiveReadsDateAndAreaAndReturnsDefinitions() {
     FormulaSetEntity set = futureSet(2L, null);
-    when(setRepository.findEffective(Area.COASTAL, LocalDate.of(2026, Month.NOVEMBER, 3)))
+    when(setRepository.findEffective(Area.COASTAL, LocalDate.of(2026, 11, 3)))
         .thenReturn(Optional.of(set));
     FormulaSetRowEntity row = new FormulaSetRowEntity();
     row.setFormulaKey("da.anything");
     when(rowRepository.findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(2L))
         .thenReturn(List.of(row));
 
-    assertThat(service.effective(LocalDate.of(2026, Month.NOVEMBER, 3), Area.COASTAL)
+    assertThat(service.effective(LocalDate.of(2026, 11, 3), Area.COASTAL)
         .formulas()).singleElement().extracting(FormulaItemDto::formulaKey)
         .isEqualTo("da.anything");
   }
@@ -103,7 +102,7 @@ class FormulaSetServiceTest {
   @Test
   void deleteSoftDeletesAndReopensPredecessor() {
     FormulaSetEntity set = futureSet(4L, null);
-    FormulaSetEntity predecessor = futureSet(5L, LocalDate.of(2026, Month.DECEMBER, 31));
+    FormulaSetEntity predecessor = futureSet(5L, LocalDate.of(2026, 12, 31));
     when(setRepository.findById(4L)).thenReturn(Optional.of(set));
     when(setRepository.findPredecessorForReopen(Area.COASTAL, set.getStartDate()))
         .thenReturn(List.of(predecessor));
@@ -120,7 +119,7 @@ class FormulaSetServiceTest {
   @Test
   void deleteReopensPredecessorClosedByCreate() {
     FormulaSetEntity set = futureSet(7L, null);
-    FormulaSetEntity predecessor = futureSet(8L, LocalDate.of(2026, Month.NOVEMBER, 30));
+    FormulaSetEntity predecessor = futureSet(8L, LocalDate.of(2026, 11, 30));
     when(setRepository.findById(7L)).thenReturn(Optional.of(set));
     when(setRepository.findPredecessorForReopen(Area.COASTAL, set.getStartDate()))
         .thenReturn(List.of(predecessor));
@@ -290,7 +289,7 @@ class FormulaSetServiceTest {
   @DisplayName("Delete Rejects Closed Set")
   @Test
   void deleteRejectsClosedSet() {
-    FormulaSetEntity closed = futureSet(1L, LocalDate.of(2026, Month.DECEMBER, 31));
+    FormulaSetEntity closed = futureSet(1L, LocalDate.of(2026, 12, 31));
     when(setRepository.findById(1L)).thenReturn(Optional.of(closed));
 
     assertThatThrownBy(() -> service.delete(1L))
@@ -322,10 +321,10 @@ class FormulaSetServiceTest {
   @DisplayName("Effective Rejects Not Found")
   @Test
   void effectiveRejectsNotFound() {
-    when(setRepository.findEffective(Area.COASTAL, LocalDate.of(2026, Month.NOVEMBER, 3)))
+    when(setRepository.findEffective(Area.COASTAL, LocalDate.of(2026, 11, 3)))
         .thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> service.effective(LocalDate.of(2026, Month.NOVEMBER, 3), Area.COASTAL))
+    assertThatThrownBy(() -> service.effective(LocalDate.of(2026, 11, 3), Area.COASTAL))
         .hasMessageContaining("No formula set");
   }
 

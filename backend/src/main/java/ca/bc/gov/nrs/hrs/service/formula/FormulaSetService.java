@@ -11,7 +11,6 @@ import ca.bc.gov.nrs.hrs.repository.FormulaSetRowRepository;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,7 +33,7 @@ public class FormulaSetService {
   @Transactional
   public FormulaSetResponse create(FormulaSetRequest request) {
     validateRequest(request);
-    LocalDate today = LocalDate.now(ZoneId.of("UTC"));
+    LocalDate today = LocalDate.now();
     if (!request.startDate().isAfter(today)) {
       throw conflict("Formula sets can only be created in the future.");
     }
@@ -65,7 +64,7 @@ public class FormulaSetService {
   public FormulaSetResponse update(Long id, FormulaSetRequest request) {
     validateRequest(request);
     FormulaSetEntity set = load(id);
-    if (!set.getStartDate().isAfter(LocalDate.now(ZoneId.of("UTC")))) {
+    if (!set.getStartDate().isAfter(LocalDate.now())) {
       throw conflict("Effective and historical formula sets are read-only.");
     }
     if (!Objects.equals(set.getArea(), request.area())
@@ -87,7 +86,7 @@ public class FormulaSetService {
   @Transactional
   public void delete(Long id) {
     FormulaSetEntity set = load(id);
-    if (!set.getStartDate().isAfter(LocalDate.now(ZoneId.of("UTC"))) || set.getEndDate() != null) {
+    if (!set.getStartDate().isAfter(LocalDate.now()) || set.getEndDate() != null) {
       throw conflict("Only a future open-ended formula set can be deleted.");
     }
     set.setDeleted(true);
