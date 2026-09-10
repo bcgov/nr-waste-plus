@@ -1,11 +1,13 @@
 package ca.bc.gov.nrs.hrs.service.formula;
 
-/**
- * Thrown when formula parsing or evaluation fails.
- */
-public class FormulaEvaluationException extends RuntimeException {
+/** Domain failure during formula evaluation (missing data, type errors, division by zero). */
+public final class FormulaEvaluationException extends RuntimeException {
 
-  public FormulaEvaluationException(String message) {
+  FormulaEvaluationException(String message) {
     super(message);
+  }
+
+  FormulaEvaluationException(String message, Throwable cause) {
+    super(message, cause);
   }
 }

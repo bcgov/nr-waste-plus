@@ -1,0 +1,43 @@
+{
+  "caseId": "COAST-MATURE-HELI-01",
+  "area": "COASTAL",
+  "workbookReference": "Coast Table Layout + Manual p37 Table 3-5 Helicopter Mature 35 + hrs.district_volume.heli_multiplier (Coast-only)",
+  "inputs": {
+    "districtCode": "DKM",
+    "netWasteAreaHa": 7.2,
+    "tableLevelFactor": 1.0,
+    "has_dispersed_retention": false,
+    "dispersedRetentionPct": 0.0,
+    "heli_logging": true,
+    "heli_multiplier": 1.35,
+    "species": [
+      {
+        "code": "CW",
+        "grade": "U",
+        "volumeM3": 350.0
+      },
+      {
+        "code": "HW",
+        "grade": "U",
+        "volumeM3": 400.0
+      },
+      {
+        "code": "YP",
+        "grade": "U",
+        "volumeM3": 250.0
+      }
+    ],
+    "benchmark": {
+      "zone": "Coast Mature Heli",
+      "valueM3PerHa": 35,
+      "source": "Manual p37 Table 3-5 Coast Helicopter Mature benchmark"
+    }
+  },
+  "expected": {
+    "unroundedTotalM3": 323.676,
+    "roundedTotalM3": 323.676,
+    "residualAllocation": []
+  },
+  "maturity": "Mature",
+  "benchmarkZone": "Mature"
+}

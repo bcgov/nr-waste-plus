@@ -47,7 +47,7 @@ vi.stubGlobal(
   ),
 );
 
-// Suppress flatpickr locale errors in test output
+// Suppress flatpickr locale errors and jsdom scrollTo warnings in test output
 let originalStderrWrite: typeof process.stderr.write;
 beforeAll(() => {
   originalStderrWrite = process.stderr.write.bind(process.stderr);
@@ -56,9 +56,11 @@ beforeAll(() => {
     const chunk = args[0];
     const message = typeof chunk === 'string' ? chunk : chunk.toString();
 
-    // Filter out flatpickr locale errors
-    if (message.includes('flatpickr: invalid locale')) {
-      // Suppress this error from stderr
+    // Filter out flatpickr locale errors and jsdom scrollTo warnings
+    if (
+      message.includes('flatpickr: invalid locale') ||
+      message.includes("Not implemented: Window's scrollTo()")
+    ) {
       const callback = args.at(-1);
       if (typeof callback === 'function') {
         callback();
@@ -73,8 +75,32 @@ beforeAll(() => {
   }) as typeof process.stderr.write;
 });
 
+// Suppress Carbon feature-flag informational messages in test output
+// These are @carbon/feature-flags v1.6.0 messages about flags that will default
+// to enabled in Carbon v12 (enable-v12-dynamic-floating-styles,
+// enable-focus-wrap-without-sentinels, enable-v12-overflowmenu).
+// The package uses console.info, so we suppress that method.
+let originalConsoleInfo: typeof console.info;
+const CARBON_FEATURE_FLAG_PATTERNS = [
+  'enable-v12-dynamic-floating-styles',
+  'enable-focus-wrap-without-sentinels',
+  'enable-v12-overflowmenu',
+];
+beforeAll(() => {
+  originalConsoleInfo = console.info.bind(console);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  console.info = ((...args: any[]): void => {
+    const message = args.map((a) => (typeof a === 'string' ? a : String(a))).join(' ');
+    if (CARBON_FEATURE_FLAG_PATTERNS.some((p) => message.includes(p))) {
+      return;
+    }
+    originalConsoleInfo(...args);
+  }) as typeof console.info;
+});
+
 afterAll(() => {
   process.stderr.write = originalStderrWrite;
+  console.info = originalConsoleInfo;
 });
 
 class MockResizeObserver {
@@ -166,3 +192,4 @@ Object.defineProperty(global.SVGElement.prototype, 'createSVGMatrix', {
 });
 
 window.HTMLElement.prototype.scrollIntoView = function () {};
+window.scrollTo = function () {};

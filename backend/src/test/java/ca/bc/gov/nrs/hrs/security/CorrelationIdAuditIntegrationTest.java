@@ -14,7 +14,6 @@ import io.micrometer.tracing.Tracer;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -53,8 +52,6 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @Autowired private Tracer tracer;
-
-  private static final AtomicLong START_DATE_OFFSET = new AtomicLong(100);
 
   @Autowired private DistrictVolumeRepository districtVolumeRepository;
   @Autowired private AuditChangeRepository auditChangeRepository;
@@ -146,7 +143,6 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
         .satisfiesAnyOf(span -> assertThat(span).isNull(), span -> assertThat(span.isNoop()).isTrue());
 
     long beforeMaxEventId = maxAuditEventId();
-    LocalDate startDate = LocalDate.now().plusDays(nextStartOffset());
     // With pool-wide auto-commit disabled, a bare jdbcTemplate write would sit in an implicit
     // transaction that Hikari rolls back on connection return. Run it in an explicit committing
     // transaction; JdbcTemplate still bypasses Hibernate's ConnectionProvider, so the deferred
@@ -156,10 +152,11 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
             status ->
                 jdbcTemplate.update(
                     "INSERT INTO hrs.district_volume "
-                        + "(area, start_date, table_data, table_level_factor, created_by, updated_by, config_type, deleted) "
-                        + "VALUES (?, ?, ?::jsonb, ?, ?, ?, ?, FALSE)",
+                        + "(area, start_date, end_date, table_data, table_level_factor, created_by, updated_by, config_type, deleted) "
+                        + "VALUES (?, ?, ?, ?::jsonb, ?, ?, ?, ?, FALSE)",
                     Area.INTERIOR.name(),
-                    java.sql.Date.valueOf(startDate),
+                    java.sql.Date.valueOf(HISTORICAL_START_DATE),
+                    java.sql.Date.valueOf(HISTORICAL_END_DATE),
                     "{}",
                     new BigDecimal("1.000"),
                     "raw-sql-user",
@@ -411,21 +408,19 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setArea(area);
     entity.setConfigType(ConfigType.DISTRICT_VOLUME);
-    LocalDate startDate = LocalDate.now().plusDays(nextStartOffset());
-    entity.setStartDate(startDate);
-    // Closed one-day range: open-ended entries would overlap each other and any open entry
-    // created via the API (duplicate-open-entry validation returns 409), and wiping the table
-    // is not an option because it holds seeded reference data for other tests.
-    entity.setEndDate(startDate.plusDays(1));
+    // Keep audit-only rows outside every current active lookup. The shared static container is
+    // reused by later tests, so future closed ranges could become active when those tests query
+    // their effective dates. A deterministic historical interval cannot overlap current data.
+    entity.setStartDate(HISTORICAL_START_DATE);
+    entity.setEndDate(HISTORICAL_END_DATE);
     // Minimal valid TableData — matches DistrictVolumeRepositoryTest construction.
     entity.setTableData(new TableData(null, null, null, Map.of()));
     entity.setTableLevelFactor(new BigDecimal("1.000"));
     return entity;
   }
 
-  private long nextStartOffset() {
-    return START_DATE_OFFSET.getAndIncrement();
-  }
+  private static final LocalDate HISTORICAL_START_DATE = LocalDate.of(2020, 1, 1);
+  private static final LocalDate HISTORICAL_END_DATE = LocalDate.of(2020, 1, 2);
 
   private Long maxAuditEventId() {
     Long max = jdbcTemplate.queryForObject("SELECT MAX(id) FROM hrs.audit_event", Long.class);

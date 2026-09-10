@@ -1,0 +1,31 @@
+{
+  "caseId": "INTERIOR-RESIDUAL-OVER-ALLOC-01",
+  "area": "INTERIOR",
+  "benchmarkZone": "Dry belt",
+  "workbookReference": "Provincial v1.1 workbook + Manual p38 Table 3-6 Dry belt benchmark",
+  "inputs": {
+    "districtCode": "DCC",
+    "netWasteAreaHa": 1.0,
+    "tableLevelFactor": 1.0,
+    "has_dispersed_retention": false,
+    "dispersedRetentionPct": 0.0,
+    "heli_logging": false,
+    "species": [
+      { "code": "PLI", "grade": "U", "volumeM3": 101.0 },
+      { "code": "CW", "grade": "U", "volumeM3": 2.0 },
+      { "code": "SX", "grade": "U", "volumeM3": 897.0 }
+    ],
+    "benchmark": {
+      "zone": "Dry belt",
+      "valueM3PerHa": 4,
+      "source": "Manual p38 Table 3-6 Dry belt benchmark"
+    }
+  },
+  "expected": {
+    "unroundedTotalM3": 9.17,
+    "roundedTotalM3": 9.17,
+    "residualAllocation": [
+      { "species": "SX", "grade": "U", "residualM3": 0.001 }
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 ### Builder
 # Use GraalVM Native Image with Java 21 (LTS) to satisfy connectivity with Oracle DB
-FROM ghcr.io/graalvm/native-image-community:21 AS build
+FROM ghcr.io/graalvm/native-image-community:25.0.2 AS build
 
 # Copy
 WORKDIR /app
@@ -12,7 +12,7 @@ COPY .mvn/ ./.mvn
 RUN ./mvnw -Pnative package -DskipTests -Dskip.unit.tests=true -Dspring-boot.run.profiles=prod
 
 ### Deployer
-FROM gcr.io/distroless/java-base:nonroot
+FROM gcr.io/distroless/java21-debian12:nonroot
 ARG PORT=9090
 
 # Copy

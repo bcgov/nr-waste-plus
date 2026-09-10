@@ -10,17 +10,20 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.DisplayName;
 
 /**
  * Integration test that verifies Hibernate/JPA mapping for DistrictVolumeEntity.
  */
 @WithMockJwt
+@DisplayName("Unit Test | District Volume Entity Mapping")
 public class DistrictVolumeEntityMappingTest
     extends AbstractTestContainerIntegrationTest {
 
   @Autowired
   private ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository repository;
 
+  @DisplayName("Persist And Read back Mapped Fields")
   @Test
   void persistAndRead_backMappedFields() {
 
@@ -41,7 +44,11 @@ public class DistrictVolumeEntityMappingTest
 
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setArea(Area.INTERIOR);
-    entity.setStartDate(LocalDate.of(2026, 1, 1));
+    // Deterministic historical closed interval: prevents this row from ever
+    // matching the production active-configuration lookup in the shared
+    // static Testcontainers database used across the whole test JVM.
+    entity.setStartDate(LocalDate.of(2020, 1, 1));
+    entity.setEndDate(LocalDate.of(2020, 1, 2));
     entity.setTableData(tableData);
     entity.setTableLevelFactor(new BigDecimal("1.234").setScale(3));
     entity.setHeliMultiplier(null);

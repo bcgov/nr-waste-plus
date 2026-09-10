@@ -41,11 +41,6 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.OracleDialect
-  http:
-    encoding:
-      charset: UTF-8
-      enabled: true
-      force: true
     log:
       slf4j:
         whitelisted-mdc-keys:
@@ -68,7 +63,7 @@ management:
         prometheus: metrics
       base-path: /actuator
       exposure:
-        include: health,info,metrics,otlp,tracing,httptrace,prometheus
+        include: health,info,metrics,otlp,tracing,httpexchanges,prometheus
   httpexchanges:
     recording:
       include: principal,request-headers,response-headers,cookie-headers,time-taken,authorization-header,remote-address,session-id
@@ -83,7 +78,8 @@ management:
       zone: ${APP_ZONE:local}
       name: ${spring.application.name}
   tracing:
-    enabled: true
+    export:
+      enabled: true
     propagation:
       type: B3
     sampling:

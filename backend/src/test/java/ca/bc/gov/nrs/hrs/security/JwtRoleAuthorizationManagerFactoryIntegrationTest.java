@@ -37,6 +37,7 @@ class JwtRoleAuthorizationManagerFactoryIntegrationTest {
     context = new RequestAuthorizationContext(request);
   }
 
+  @DisplayName("Test Got Role Matching should Delegate To Checker")
   @Test
   void testGotRoleMatching_shouldDelegateToChecker() {
     Predicate<String> matcher = role -> role.equalsIgnoreCase("Viewer");
@@ -50,6 +51,7 @@ class JwtRoleAuthorizationManagerFactoryIntegrationTest {
     verify(roleChecker).hasRoleMatching(matcher);
   }
 
+  @DisplayName("Test Got Role should Delegate To Checker")
   @Test
   void testGotRole_shouldDelegateToChecker() {
     when(roleChecker.hasRole("Viewer")).thenReturn(true);
@@ -62,6 +64,7 @@ class JwtRoleAuthorizationManagerFactoryIntegrationTest {
     verify(roleChecker).hasRole("Viewer");
   }
 
+  @DisplayName("Test Got Abstract Role should Extract Client Id And Delegate")
   @Test
   void testGotAbstractRole_shouldExtractClientIdAndDelegate() {
     when(request.getHeader("X-Client-Id")).thenReturn("12345678");
@@ -77,6 +80,7 @@ class JwtRoleAuthorizationManagerFactoryIntegrationTest {
     verify(roleChecker).hasAbstractRole("Approver", "12345678");
   }
 
+  @DisplayName("Test Got Idp should Delegate To Checker With String")
   @Test
   void testGotIdp_shouldDelegateToCheckerWithString() {
     when(roleChecker.hasIdpProvider("idir")).thenReturn(true);
@@ -89,6 +93,7 @@ class JwtRoleAuthorizationManagerFactoryIntegrationTest {
     verify(roleChecker).hasIdpProvider("idir");
   }
 
+  @DisplayName("Test Got Idp should Delegate To Checker With Identity Provider")
   @Test
   void testGotIdp_shouldDelegateToCheckerWithIdentityProvider() {
     IdentityProvider provider = IdentityProvider.IDIR;

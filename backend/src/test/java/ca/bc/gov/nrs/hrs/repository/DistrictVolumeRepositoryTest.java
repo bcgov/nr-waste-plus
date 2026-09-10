@@ -14,13 +14,16 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.junit.jupiter.api.DisplayName;
 
+@DisplayName("Unit Test | District Volume Repository")
 public class DistrictVolumeRepositoryTest
     extends AbstractTestContainerIntegrationTest {
 
   @Autowired
   private DistrictVolumeRepository repository;
 
+  @DisplayName("Find Top1 By Config Type And Area And Deleted False Order By Start Date Desc returns Newest For Area")
   @Test
   void findTop1ByConfigTypeAndAreaAndDeletedFalseOrderByStartDateDesc_returnsNewestForArea() {
 
@@ -54,6 +57,7 @@ public class DistrictVolumeRepositoryTest
     assertThat(opt.get().getStartDate()).isEqualTo(second.getStartDate());
   }
 
+  @DisplayName("Find All By Config Type returns Only Matching Config Type")
   @Test
   void findAllByConfigType_returnsOnlyMatchingConfigType() {
 
@@ -89,6 +93,7 @@ public class DistrictVolumeRepositoryTest
             entity -> entity.getConfigType() == ConfigType.SPECIES_COMPOSITION);
   }
 
+  @DisplayName("Find By Id And Config Type returns Empty when Config Type Does Not Match")
   @Test
   void findByIdAndConfigType_returnsEmpty_whenConfigTypeDoesNotMatch() {
 

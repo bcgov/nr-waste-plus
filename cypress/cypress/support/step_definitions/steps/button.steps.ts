@@ -1,8 +1,61 @@
-import { When, Step } from "@badeball/cypress-cucumber-preprocessor";
+import { When, Then, Step } from "@badeball/cypress-cucumber-preprocessor";
 import { findButton } from "../../helpers";
 
 When("I click on the {string} button", (name: string) => {
   buttonClick(name);
+});
+
+When("I click on the {string} link", (name: string) => {
+  buttonClick(name);
+});
+
+Then("the profile settings button should show {string}", (name: string) => {
+  cy.get('[data-testid="profile-action"]', { timeout: 30_000 })
+    .should("be.visible")
+    .should("contain.text", name);
+});
+
+When("I select the client {string}", (clientNumber: string) => {
+  const clientSelector = `[data-testid="header-panel"] [data-testid="district-select-${clientNumber}"]`;
+
+  cy.get(clientSelector, { timeout: 30_000 })
+    .should("be.visible")
+    .find("button")
+    .should("be.visible")
+    .click();
+
+  cy.get(clientSelector, { timeout: 30_000 })
+    .find("button", { timeout: 30_000 })
+    .should("have.class", "selected-district");
+});
+
+When("I select no client", () => {
+  cy.get('[data-testid="header-panel"] [data-testid="district-select-none"] button')
+    .should("be.visible")
+    .click();
+});
+
+Then("no client should be selected", () => {
+  cy.get('[data-testid="header-panel"] [data-testid="district-select-none"] button', { timeout: 30_000 })
+    .should("have.class", "selected-district");
+});
+
+When("I close the profile panel", () => {
+  cy.get('[data-testid="profile-action"]')
+    .should("be.visible")
+    .click();
+});
+
+When("I click on the theme toggle", () => {
+  cy.get('[data-testid="theme-toggle"]')
+    .should("be.visible")
+    .click();
+});
+
+Then("the theme toggle should offer {string} mode", (mode: string) => {
+  cy.get('[data-testid="theme-toggle"]')
+    .should("be.visible")
+    .and("have.attr", "aria-label", `Switch to ${mode} mode`);
 });
 
 When("I search", function () {

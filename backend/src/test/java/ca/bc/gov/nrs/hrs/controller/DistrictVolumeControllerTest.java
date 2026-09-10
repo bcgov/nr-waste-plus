@@ -57,6 +57,7 @@ import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Unit Test | District Volume Controller")
 class DistrictVolumeControllerTest {
 
   private MockMvc mockMvc;

@@ -116,21 +116,20 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * Handle {@link MethodArgumentNotValidException} thrown when {@code @Valid}
-   * annotated controller method arguments fail validation.
+   * Handle {@link ConstraintViolationException} typically raised by
+   * validation on constructor or method parameters (for example when using
+   * {@code @Validated} on beans).
    *
-   * <p>Extracts field validation error messages and returns an HTTP 400 Bad
-   * Request with an {@link ProblemDetail} body (application/problem+json).
-   * The ProblemDetail.title is set to "Validation Failed" and the detail
-   * contains a semicolon-delimited list of field error messages (or a
-   * generic message when none are present).</p>
+   * <p>Builds a semicolon-delimited string of constraint violations where
+   * each entry contains the property path and the violation message. Returns
+   * HTTP 400 Bad Request with an {@link ProblemDetail} (application/problem+json)
+   * containing the combined detail.</p>
    *
-   * @param ex the validation exception containing binding errors
-   * @param request the current {@link HttpServletRequest} used to populate the
+   * @param ex the constraint violation exception
+   * @param request the current {@link HttpServletRequest} used to set the
    *        ProblemDetail instance URI
    * @return a 400 {@link ResponseEntity} containing a {@link ProblemDetail}
    */
-
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<ProblemDetail> handleConstraintViolation(
       ConstraintViolationException ex, HttpServletRequest request) {
@@ -151,21 +150,20 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * Handle {@link ConstraintViolationException} typically raised by
-   * validation on constructor or method parameters (for example when using
-   * {@code @Validated} on beans).
+   * Handle {@link ResponseStatusException} which carries an HTTP status and
+   * optional reason.
    *
-   * <p>Builds a semicolon-delimited string of constraint violations where
-   * each entry contains the property path and the violation message. Returns
-   * HTTP 400 Bad Request with an {@link ProblemDetail} (application/problem+json)
-   * containing the combined detail.</p>
+   * <p>This handler resolves the appropriate title from the HTTP status
+   * reason phrase (falling back to the status token) and sets the ProblemDetail
+   * status to the exception's status. The ProblemDetail.detail is populated
+   * from {@link ResponseStatusException#getReason()} when available or the
+   * exception message otherwise.</p>
    *
-   * @param ex the constraint violation exception
-   * @param request the current {@link HttpServletRequest} used to set the
+   * @param ex the ResponseStatusException thrown by controllers or services
+   * @param request the current {@link HttpServletRequest} used to populate the
    *        ProblemDetail instance URI
-   * @return a 400 {@link ResponseEntity} containing a {@link ProblemDetail}
+   * @return a {@link ResponseEntity} whose status matches the exception status
    */
-
   @ExceptionHandler(ResponseStatusException.class)
   public ResponseEntity<ProblemDetail> handleResponseStatusException(
       ResponseStatusException ex, HttpServletRequest request) {
@@ -193,21 +191,35 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * Handle {@link ResponseStatusException} which carries an HTTP status and
-   * optional reason.
+   * Handles a missing, malformed, or stale conditional request validator.
    *
-   * <p>This handler resolves the appropriate title from the HTTP status
-   * reason phrase (falling back to the status token) and sets the ProblemDetail
-   * status to the exception's status. The ProblemDetail.detail is populated
-   * from {@link ResponseStatusException#getReason()} when available or the
-   * exception message otherwise.</p>
+   * @param ex the conditional request failure
+   * @param request the current HTTP servlet request
+   * @return a 412 RFC 9457 response
+   */
+  @ExceptionHandler(ConditionalRequestException.class)
+  public ResponseEntity<ProblemDetail> handleConditionalRequestException(
+      ConditionalRequestException ex, HttpServletRequest request) {
+    log.warn("Conditional request precondition failed: {}", ex.getReason());
+
+    ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.PRECONDITION_FAILED);
+    problem.setTitle("Precondition Failed");
+    problem.setDetail(ex.getReason());
+    problem.setInstance(URI.create(request.getRequestURI()));
+
+    return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(problem);
+  }
+
+  /**
+   * Handles an unexpected exception without exposing implementation details.
    *
-   * @param ex the ResponseStatusException thrown by controllers or services
+   * @param ex the unexpected exception
    * @param request the current {@link HttpServletRequest} used to populate the
    *        ProblemDetail instance URI
-   * @return a {@link ResponseEntity} whose status matches the exception status
+   * @return a 500 {@link ResponseEntity} containing a safe {@link ProblemDetail}
    */
-
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ProblemDetail> handleGenericException(
       Exception ex, HttpServletRequest request) {

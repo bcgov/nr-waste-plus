@@ -87,11 +87,11 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     retryRegistry.retry("apiRetry", retry);
   }
 
+  @DisplayName("Should Return 201 when Create Succeeds")
   @Test
   @WithMockJwt(
       cognitoGroups = {"WASTE_PLUS_ADMIN"}
   )
-  @DisplayName("shouldReturn201_whenCreateSucceeds")
   void shouldReturn201_whenCreateSucceeds() throws Exception {
     // Legacy search: no existing reporting units
     legacyApiStub.stubFor(
@@ -125,11 +125,11 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .andExpect(status().isCreated());
   }
 
+  @DisplayName("Should Return 400 when Grade Missing For DKM")
   @Test
   @WithMockJwt(
       cognitoGroups = {"WASTE_PLUS_ADMIN"}
   )
-  @DisplayName("shouldReturn400_whenGradeMissingForDKM")
   void shouldReturn400_whenGradeMissingForDKM() throws Exception {
     // Legacy search: no existing reporting units
     legacyApiStub.stubFor(
@@ -153,11 +153,11 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .andExpect(status().isBadRequest());
   }
 
+  @DisplayName("Should Return 409 when Reporting Unit Duplicate")
   @Test
   @WithMockJwt(
       cognitoGroups = {"WASTE_PLUS_ADMIN"}
   )
-  @DisplayName("shouldReturn409_whenReportingUnitDuplicate")
   void shouldReturn409_whenReportingUnitDuplicate() throws Exception {
     // Legacy search: returns an existing RU (totalElements > 0)
     legacyApiStub.stubFor(
@@ -182,7 +182,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
   @Test
   @WithMockJwt
-  @DisplayName("shouldReturnReportingUnitDetails_whenBothApisSucceed")
+  @DisplayName("Should Return Reporting Unit Details when Both APIs Succeed")
   void shouldReturnReportingUnitDetails_whenBothApisSucceed() throws Exception {
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/reporting-units/12345"))
@@ -211,7 +211,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
   @Test
   @WithMockJwt
-  @DisplayName("shouldReturn404_whenForestClientNotFound")
+  @DisplayName("Should Return 404 when Forest Client Not Found")
   void shouldReturn404_whenForestClientNotFound() throws Exception {
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/reporting-units/12345"))
@@ -232,7 +232,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
   @Test
   @WithMockJwt
-  @DisplayName("shouldReturn404_whenReportingUnitDetailsFeatureFlagIsDisabled")
+  @DisplayName("Should Return 404 when Reporting Unit Details Feature Flag Is Disabled")
   void shouldReturn404_whenReportingUnitDetailsFeatureFlagIsDisabled()
       throws Exception {
     doReturn(false)
@@ -253,7 +253,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
       idp = "bceidbusiness",
       cognitoGroups = {"WASTE_PLUS_VIEWER_00012797"}
   )
-  @DisplayName("shouldReturn200_whenBceidUserHasMatchingClientRole")
+  @DisplayName("Should Return 200 when Bceid User Has Matching Client Role")
   void shouldReturn200_whenBceidUserHasMatchingClientRole() throws Exception {
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/reporting-units/12345"))
@@ -281,7 +281,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
       idp = "bceidbusiness",
       cognitoGroups = {"WASTE_PLUS_SUBMITTER_99999999"}
   )
-  @DisplayName("shouldReturn403_whenBceidUserHasNoMatchingClientRole")
+  @DisplayName("Should Return 403 when Bceid User Has No Matching Client Role")
   void shouldReturn403_whenBceidUserHasNoMatchingClientRole() throws Exception {
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/reporting-units/12345"))

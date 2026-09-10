@@ -1,10 +1,14 @@
-import { Given } from "@badeball/cypress-cucumber-preprocessor";
+import { Given, Then } from "@badeball/cypress-cucumber-preprocessor";
 
 Given("I visit {string}", (url: string) => {
   // Content assertions remain responsible for waiting on React Query rendering. Cypress
   // already waits for the document load event, so adding a second load listener here cannot
   // help when the document itself fails to load.
   cy.visit(url);
+});
+
+Then("the client filter for {string} should be visible", (clientNumber: string) => {
+  cy.get(`[data-testid="dt-clientNumbers-${clientNumber}"]`).should("be.visible");
 });
 
 Given(

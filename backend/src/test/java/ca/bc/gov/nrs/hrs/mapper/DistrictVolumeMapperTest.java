@@ -29,6 +29,7 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@DisplayName("Unit Test | District Volume Mapper")
 class DistrictVolumeMapperTest {
 
   private static final LocalDateTime MOCK_UPLOAD_TIME = 

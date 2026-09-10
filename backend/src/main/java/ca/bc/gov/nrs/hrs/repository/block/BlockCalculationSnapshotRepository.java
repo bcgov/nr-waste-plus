@@ -1,0 +1,21 @@
+package ca.bc.gov.nrs.hrs.repository.block;
+
+import ca.bc.gov.nrs.hrs.entity.block.BlockCalculationSnapshotEntity;
+import org.springframework.stereotype.Repository;
+
+/** Read/create repository for append-only calculation snapshots. */
+@Repository
+public interface BlockCalculationSnapshotRepository
+    extends org.springframework.data.repository.Repository<BlockCalculationSnapshotEntity, Long> {
+
+  BlockCalculationSnapshotEntity save(BlockCalculationSnapshotEntity entity);
+
+  java.util.Optional<BlockCalculationSnapshotEntity> findById(Long id);
+
+  /** Returns all snapshots for a block, newest first. */
+  java.util.List<BlockCalculationSnapshotEntity> findByBlockIdOrderByCalculatedAtDesc(Long blockId);
+
+  /** Returns the most recent snapshot for a block, or empty if none exist. */
+  java.util.Optional<BlockCalculationSnapshotEntity> findTopByBlockIdOrderByCalculatedAtDesc(
+      Long blockId);
+}

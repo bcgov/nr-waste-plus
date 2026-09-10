@@ -599,12 +599,12 @@ describe('styling classes', () => {
 
 describe('component initialization', () => {
   it('initializes without errors', async () => {
-    expect(() => renderComponent()).not.toThrow();
+    await renderComponent();
   });
 
   it('sets up form with initial null values', async () => {
     await renderComponent();
-    const form = screen.getByRole('form', { name: /create reporting unit/i });
+    const form = screen.getByTestId('create-ru-form');
     expect(form).not.toBeNull();
   });
 });

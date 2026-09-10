@@ -1,0 +1,31 @@
+{
+  "caseId": "INTERIOR-TRANSITION-RESIDUAL-01",
+  "area": "INTERIOR",
+  "benchmarkZone": "Transition zone",
+  "workbookReference": "Provincial v1.1 workbook + Manual p38 Table 3-6 Transition and p53-54 dispersed reduction",
+  "inputs": {
+    "districtCode": "DCS",
+    "netWasteAreaHa": 5.5,
+    "tableLevelFactor": 1.0,
+    "has_dispersed_retention": true,
+    "dispersedRetentionPct": 60.0,
+    "heli_logging": false,
+    "species": [
+      { "code": "PLI", "grade": "U", "volumeM3": 101.0 },
+      { "code": "CW", "grade": "U", "volumeM3": 4.0 },
+      { "code": "SX", "grade": "U", "volumeM3": 895.0 }
+    ],
+    "benchmark": {
+      "zone": "Transition",
+      "valueM3PerHa": 10,
+      "source": "Manual p38 Table 3-6 Transition benchmark; Manual p53-54 dispersed reduction"
+    }
+  },
+  "expected": {
+    "unroundedTotalM3": 82.368,
+    "roundedTotalM3": 82.368,
+    "residualAllocation": [
+      { "species": "SX", "grade": "U", "residualM3": 0.001 }
+    ]
+  }
+}

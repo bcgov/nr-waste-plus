@@ -74,6 +74,17 @@ public interface DistrictVolumeRepository
       @Param("area") Area area,
       @Param("currentDate") LocalDate currentDate);
 
+  /** Finds the configuration effective on a historical or future date. */
+  @Query("SELECT d FROM DistrictVolumeEntity d "
+      + "WHERE d.configType = :configType AND d.area = :area "
+      + "AND d.deleted = FALSE AND d.startDate <= :effectiveDate "
+      + "AND (d.endDate IS NULL OR d.endDate >= :effectiveDate) "
+      + "ORDER BY d.startDate DESC")
+  Optional<DistrictVolumeEntity> findEffectiveByConfigTypeAndArea(
+      @Param("configType") ConfigType configType,
+      @Param("area") Area area,
+      @Param("effectiveDate") LocalDate effectiveDate);
+
   /**
    * Retrieves the currently active live record for the specified area (Warning: mixes ConfigTypes).
    */

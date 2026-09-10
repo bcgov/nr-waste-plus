@@ -18,6 +18,7 @@ const LayoutHeaderGlobalBar: FC = () => {
   return (
     <HeaderGlobalBar>
       <HeaderGlobalAction
+        data-testid="theme-toggle"
         aria-label={`Switch to ${theme === 'g100' ? 'light' : 'dark'} mode`}
         tooltipAlignment="end"
       >
@@ -25,6 +26,7 @@ const LayoutHeaderGlobalBar: FC = () => {
       </HeaderGlobalAction>
 
       <HeaderGlobalAction
+        data-testid="profile-action"
         aria-label="Profile settings"
         tooltipAlignment="end"
         onClick={toggleHeaderPanel}

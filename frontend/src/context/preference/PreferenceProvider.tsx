@@ -1,7 +1,7 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import isEqual from 'lodash/isEqual';
 import mergeWith from 'lodash/mergeWith';
-import { type FC, useCallback, useEffect, useMemo } from 'react';
+import { type FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { PreferenceContext, type PreferenceProviderProps } from './PreferenceContext';
 import { type UserPreference } from './types';
@@ -16,7 +16,21 @@ export const PreferenceProvider: FC<PreferenceProviderProps> = ({ children }) =>
     enabled: false,
   });
 
+  // Tracks the latest locally-known preference state, kept in sync synchronously on
+  // every `updatePreferences` call, so rapid successive updates always merge on top
+  // of each other instead of the possibly-stale cached query `data` (which may not
+  // yet reflect an earlier save that hasn't finished its round trip).
+  const latestKnownPreference = useRef<UserPreference | undefined>(data);
+  useEffect(() => {
+    latestKnownPreference.current = data;
+  }, [data]);
+
   const { mutate, isPending } = useMutation({
+    // Mutations sharing a `scope.id` are queued by TanStack Query and run strictly
+    // one at a time, in call order. The backend replaces the complete preferences
+    // object on save, so without this an older in-flight save resolving after a
+    // newer one could silently overwrite the newer selection server-side.
+    scope: { id: 'user-preference-save' },
     mutationFn: saveUserPreference,
     onSuccess: () => refetch(),
     onError: (error: Error) => {
@@ -34,17 +48,24 @@ export const PreferenceProvider: FC<PreferenceProviderProps> = ({ children }) =>
         }
       };
 
-      // Merge existing data with new preference using customizer
-      const updatedPreferences = mergeWith({}, data, preference, customizer) as UserPreference;
+      // Merge against the latest known state, which is always kept up to date
+      // regardless of whether a save is currently in flight, so rapid successive
+      // updates always build on top of each other instead of the possibly-stale
+      // cached query `data`.
+      const base = latestKnownPreference.current ?? data;
+      const updatedPreferences = mergeWith({}, base, preference, customizer) as UserPreference;
 
-      // Check if preference actually contains changes compared to existing data
-      const hasChanges = !isEqual(updatedPreferences, data);
+      // Check if preference actually contains changes compared to the state we're
+      // about to build on
+      const hasChanges = !isEqual(updatedPreferences, base);
 
       // Skip when there are no changes and no mutation is already in flight
       // (the isPending check prevents stale cached data from blocking a rapid toggle-back)
       if (!isPending && !hasChanges) {
         return;
       }
+
+      latestKnownPreference.current = updatedPreferences;
       mutate(updatedPreferences);
     },
     [mutate, isPending, data],

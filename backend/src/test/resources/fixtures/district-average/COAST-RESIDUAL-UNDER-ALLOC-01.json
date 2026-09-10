@@ -1,0 +1,32 @@
+{
+  "caseId": "COAST-RESIDUAL-UNDER-ALLOC-01",
+  "area": "COASTAL",
+  "benchmarkZone": "Mature",
+  "maturity": "Mature",
+  "workbookReference": "Provincial v1.1 workbook + Manual p37 Table 3-5 Coast mature benchmark",
+  "inputs": {
+    "districtCode": "DKM",
+    "netWasteAreaHa": 1.0,
+    "tableLevelFactor": 1.0,
+    "has_dispersed_retention": false,
+    "dispersedRetentionPct": 0.0,
+    "heli_logging": false,
+    "species": [
+      { "code": "PLI", "grade": "U", "volumeM3": 101.0 },
+      { "code": "CW", "grade": "U", "volumeM3": 1.0 },
+      { "code": "HW", "grade": "U", "volumeM3": 898.0 }
+    ],
+    "benchmark": {
+      "zone": "Coast Mature",
+      "valueM3PerHa": 10,
+      "source": "Manual p37 Table 3-5 Coast mature benchmark"
+    }
+  },
+  "expected": {
+    "unroundedTotalM3": 51.54,
+    "roundedTotalM3": 51.54,
+    "residualAllocation": [
+      { "species": "HW", "grade": "U", "residualM3": -0.001 }
+    ]
+  }
+}

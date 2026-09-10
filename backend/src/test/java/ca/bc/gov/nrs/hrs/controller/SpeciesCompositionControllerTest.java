@@ -58,6 +58,7 @@ import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Unit Test | Species Composition Controller")
 class SpeciesCompositionControllerTest {
 
   private MockMvc mockMvc;

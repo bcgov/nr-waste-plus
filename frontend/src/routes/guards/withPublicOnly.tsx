@@ -1,3 +1,4 @@
+import { Loading } from '@carbon/react';
 import { useNavigate } from '@tanstack/react-router';
 import { useLayoutEffect, type ComponentType } from 'react';
 
@@ -7,9 +8,12 @@ import { navigateInTree } from '@/routes/inTreePaths';
 /**
  * HOC guard: redirects authenticated users away from public-only pages.
  *
- * While the auth context is resolving (`isLoading`), renders `null` to avoid
- * a flash of public content. Once resolved, authenticated users are immediately
- * redirected to `/dashboard` via a `useLayoutEffect`.
+ * While the auth context is resolving (`isLoading`), renders a labelled
+ * {@link Loading} indicator (matching the pattern used by the root route's
+ * pending/not-found components) instead of `null`, so the page always has
+ * accessible, auditable content rather than a blank paint. Once resolved,
+ * authenticated users are immediately redirected to `/dashboard` via a
+ * `useLayoutEffect`.
  *
  * Typical usage: wrap the landing page and login page components so that
  * returning authenticated users are not shown the public entry screens.
@@ -28,7 +32,8 @@ export function withPublicOnly<P extends object>(Component: ComponentType<P>): C
       }
     }, [isLoading, isLoggedIn, navigate]);
 
-    if (isLoading || isLoggedIn) return null;
+    if (isLoading) return <Loading data-testid="loading" withOverlay />;
+    if (isLoggedIn) return null;
     return <Component {...props} />;
   }
 

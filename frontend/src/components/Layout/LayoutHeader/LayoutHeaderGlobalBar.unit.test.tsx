@@ -8,7 +8,7 @@ import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 
 vi.mock('@/components/Layout/ThemeToggle', () => ({
   __esModule: true,
-  default: () => <div data-testid="theme-toggle" />,
+  default: () => <div data-testid="theme-toggle-content" />,
 }));
 
 const mockToggleHeaderPanel = vi.fn();
@@ -26,6 +26,7 @@ describe('LayoutHeaderGlobalBar', () => {
   it('renders ThemeToggle and user avatar', async () => {
     await renderWithProviders();
     screen.getByTestId('theme-toggle');
+    screen.getByTestId('theme-toggle-content');
     screen.getByLabelText('Profile settings');
     screen.getByLabelText('Switch to dark mode');
   });
