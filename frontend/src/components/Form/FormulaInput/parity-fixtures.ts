@@ -17,158 +17,58 @@ export interface ParityFixture {
   expected: string;
 }
 
+function fixture(
+  id: string,
+  expression: string,
+  expected: string,
+  scope: Record<string, number> = {},
+): ParityFixture {
+  return { id, expression, scope, expected };
+}
+
 export const PARITY_FIXTURES: ParityFixture[] = [
   // ── Basic arithmetic ──
-  {
-    id: 'arithmetic-addition',
-    expression: '1 + 2',
-    scope: {},
-    expected: '3',
-  },
-  {
-    id: 'arithmetic-precedence',
-    expression: '1 + 2 * 3',
-    scope: {},
-    expected: '7',
-  },
-  {
-    id: 'arithmetic-parentheses',
-    expression: '(1 + 2) * 3',
-    scope: {},
-    expected: '9',
-  },
-  {
-    id: 'arithmetic-variables',
-    expression: 'da.rate * hours + bonus',
-    scope: { 'da.rate': 2.5, 'hours': 4, 'bonus': 1 },
-    expected: '11',
-  },
-  {
-    id: 'arithmetic-unary-minus',
-    expression: '-(1 + 2)',
-    scope: {},
-    expected: '-3',
-  },
+  fixture('arithmetic-addition', '1 + 2', '3'),
+  fixture('arithmetic-precedence', '1 + 2 * 3', '7'),
+  fixture('arithmetic-parentheses', '(1 + 2) * 3', '9'),
+  fixture('arithmetic-variables', 'da.rate * hours + bonus', '11', {
+    'da.rate': 2.5,
+    'hours': 4,
+    'bonus': 1,
+  }),
+  fixture('arithmetic-unary-minus', '-(1 + 2)', '-3'),
 
   // ── Rounding boundaries (HALF_UP to 3 decimals) ──
-  {
-    id: 'rounding-half-up-at-5',
-    expression: '1.2345',
-    scope: {},
-    expected: '1.235',
-  },
-  {
-    id: 'rounding-below-5',
-    expression: '1.2344',
-    scope: {},
-    expected: '1.234',
-  },
-  {
-    id: 'rounding-at-midpoint',
-    expression: '1.2335',
-    scope: {},
-    expected: '1.234',
-  },
-  {
-    id: 'rounding-exact-3-decimals',
-    expression: '1.234',
-    scope: {},
-    expected: '1.234',
-  },
-  {
-    id: 'rounding-whole-number',
-    expression: '3.000',
-    scope: {},
-    expected: '3',
-  },
-  {
-    id: 'rounding-complex-expression',
-    expression: '1.2345 + 0.0005',
-    scope: {},
-    expected: '1.235',
-  },
+  fixture('rounding-half-up-at-5', '1.2345', '1.235'),
+  fixture('rounding-below-5', '1.2344', '1.234'),
+  fixture('rounding-at-midpoint', '1.2335', '1.234'),
+  fixture('rounding-exact-3-decimals', '1.234', '1.234'),
+  fixture('rounding-whole-number', '3.000', '3'),
+  fixture('rounding-complex-expression', '1.2345 + 0.0005', '1.235'),
 
   // ── Built-in functions ──
-  {
-    id: 'fn-sqrt',
-    expression: 'sqrt(16)',
-    scope: {},
-    expected: '4',
-  },
-  {
-    id: 'fn-abs',
-    expression: 'abs(-5)',
-    scope: {},
-    expected: '5',
-  },
-  {
-    id: 'fn-min',
-    expression: 'min(3, 7)',
-    scope: {},
-    expected: '3',
-  },
-  {
-    id: 'fn-max',
-    expression: 'max(3, 7)',
-    scope: {},
-    expected: '7',
-  },
-  {
-    id: 'fn-sin',
-    expression: 'sin(pi / 2)',
-    scope: {},
-    expected: '1',
-  },
-  {
-    id: 'fn-floor',
-    expression: 'floor(3.7)',
-    scope: {},
-    expected: '3',
-  },
-  {
-    id: 'fn-ceil',
-    expression: 'ceil(3.2)',
-    scope: {},
-    expected: '4',
-  },
+  fixture('fn-sqrt', 'sqrt(16)', '4'),
+  fixture('fn-abs', 'abs(-5)', '5'),
+  fixture('fn-min', 'min(3, 7)', '3'),
+  fixture('fn-max', 'max(3, 7)', '7'),
+  fixture('fn-sin', 'sin(pi / 2)', '1'),
+  fixture('fn-floor', 'floor(3.7)', '3'),
+  fixture('fn-ceil', 'ceil(3.2)', '4'),
 
   // ── Conditional (if function) ──
-  {
-    id: 'if-true-branch',
-    expression: 'if(1, 10, 20)',
-    scope: {},
-    expected: '10',
-  },
-  {
-    id: 'if-false-branch',
-    expression: 'if(0, 10, 20)',
-    scope: {},
-    expected: '20',
-  },
-  {
-    id: 'if-comparison',
-    expression: 'if(da.rate >= 2, 10, 20)',
-    scope: { 'da.rate': 3 },
-    expected: '10',
-  },
-  {
-    id: 'if-nested',
-    expression: 'if(1, if(0, 3, 4), 5)',
-    scope: {},
-    expected: '4',
-  },
+  fixture('if-true-branch', 'if(1, 10, 20)', '10'),
+  fixture('if-false-branch', 'if(0, 10, 20)', '20'),
+  fixture('if-comparison', 'if(da.rate >= 2, 10, 20)', '10', { 'da.rate': 3 }),
+  fixture('if-nested', 'if(1, if(0, 3, 4), 5)', '4'),
 
   // ── Mixed expressions ──
-  {
-    id: 'mixed-trig-and-variables',
-    expression: 'sqrt(da.area) + sin(sc.factor)',
-    scope: { 'da.area': 16, 'sc.factor': 1.57079632679 },
-    expected: '5',
-  },
-  {
-    id: 'mixed-namespace-variables',
-    expression: 'da.rate + sc.mix + submission.area',
-    scope: { 'da.rate': 1.5, 'sc.mix': 2.5, 'submission.area': 3 },
-    expected: '7',
-  },
+  fixture('mixed-trig-and-variables', 'sqrt(da.area) + sin(sc.factor)', '5', {
+    'da.area': 16,
+    'sc.factor': 1.57079632679,
+  }),
+  fixture('mixed-namespace-variables', 'da.rate + sc.mix + submission.area', '7', {
+    'da.rate': 1.5,
+    'sc.mix': 2.5,
+    'submission.area': 3,
+  }),
 ];
