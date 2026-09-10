@@ -144,6 +144,19 @@ export interface UseMonacoFormulaReturn {
   onMount: (editor: MonacoEditorNS.IStandaloneCodeEditor, monaco: Monaco) => void;
 }
 
+// ─── Singleton Provider Registry ─────────────────────────────────────────────
+
+/**
+ * Reference-counted singleton for global Monaco providers (language, tokens,
+ * completions, hover). Providers are registered once when the first
+ * FormulaInput mounts and disposed only when the last one unmounts.
+ *
+ * This prevents the bug where unmounting one FormulaInput instance disposes
+ * providers still needed by other mounted instances.
+ */
+let providerRefCount = 0;
+let sharedDisposables: IDisposable[] = [];
+
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 /**
@@ -151,7 +164,9 @@ export interface UseMonacoFormulaReturn {
  *
  * Registers the `formula` language, its Carbon-aligned themes, completion
  * providers, hover tooltips, error markers, and inline result decorations.
- * All Monaco registrations are tracked and disposed on unmount.
+ * Global providers (language, tokens, completions, hover) are reference-counted
+ * and shared across all FormulaInput instances — they are only disposed when
+ * the last instance unmounts.
  *
  * Theme changes (via {@link UseMonacoFormulaOptions.theme}) are reflected
  * immediately in the editor without re-mounting.
@@ -174,12 +189,15 @@ export function useMonacoFormula({
 }: UseMonacoFormulaOptions): UseMonacoFormulaReturn {
   const monacoRef = useRef<Monaco | null>(null);
   const editorRef = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null);
-  const disposablesRef = useRef<IDisposable[]>([]);
+  const instanceDisposablesRef = useRef<IDisposable[]>([]);
   const decorationsRef = useRef<MonacoEditorNS.IEditorDecorationsCollection | null>(null);
 
   /**
    * Mutable ref for variables — providers close over this ref, not the
    * prop value, so they always read the latest state without re-registering.
+   *
+   * All instances share the same ref so that the singleton providers read
+   * the latest variables from whichever instance last updated.
    */
   const variablesRef = useRef<Record<string, number>>(allVariables);
   useEffect(() => {
@@ -256,7 +274,8 @@ export function useMonacoFormula({
 
   /**
    * Registers the "formula" language and AST-driven token provider.
-   * Guarded against double-registration in StrictMode.
+   * Guarded against double-registration in StrictMode and via the
+   * singleton ref-count (only the first instance registers globally).
    */
   const registerLanguage = useCallback((monaco: Monaco) => {
     const alreadyRegistered = monaco.languages
@@ -270,7 +289,8 @@ export function useMonacoFormula({
     // ── Token provider (AST-driven) ────────────────────────────────────────
     // We use a manual ITokensProvider (not Monarch) so that our AST-aware
     // `tokenizeFormula` function drives classification, not regex rules.
-    disposablesRef.current.push(
+    // Push to sharedDisposables — this is a global provider shared across instances.
+    sharedDisposables.push(
       monaco.languages.setTokensProvider(FORMULA_LANGUAGE_ID, {
         getInitialState: () => new FormulaTokenState(),
         tokenize: (line: string) => {
@@ -293,9 +313,10 @@ export function useMonacoFormula({
   /**
    * Provides variable names (with current values) and mathjs built-in snippets
    * as completion suggestions. Triggered on identifier characters.
+   * Pushes to sharedDisposables — global provider shared across instances.
    */
   const registerCompletions = useCallback((monaco: Monaco) => {
-    disposablesRef.current.push(
+    sharedDisposables.push(
       monaco.languages.registerCompletionItemProvider(FORMULA_LANGUAGE_ID, {
         triggerCharacters: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'.split(''),
         provideCompletionItems(model: MonacoEditorNS.ITextModel, position: Position) {
@@ -344,9 +365,10 @@ export function useMonacoFormula({
   /**
    * When the user hovers over a variable name, shows its current value.
    * When hovering a mathjs built-in, shows a brief description.
+   * Pushes to sharedDisposables — global provider shared across instances.
    */
   const registerHover = useCallback((monaco: Monaco) => {
-    disposablesRef.current.push(
+    sharedDisposables.push(
       monaco.languages.registerHoverProvider(FORMULA_LANGUAGE_ID, {
         provideHover(model: MonacoEditorNS.ITextModel, position: Position) {
           const word = model.getWordAtPosition(position);
@@ -520,6 +542,8 @@ export function useMonacoFormula({
   /**
    * Called once by `<Editor onMount={onMount} />`.
    * Wires up all Monaco capabilities and applies the initial state.
+   * Global providers (language, tokens, completions, hover) are only
+   * registered once via the singleton ref-count.
    */
   const onMount = useCallback(
     (editor: MonacoEditorNS.IStandaloneCodeEditor, monaco: Monaco) => {
@@ -527,9 +551,14 @@ export function useMonacoFormula({
       editorRef.current = editor;
 
       defineThemes(monaco);
-      registerLanguage(monaco);
-      registerCompletions(monaco);
-      registerHover(monaco);
+
+      // Only register global providers on the first instance
+      if (providerRefCount === 0) {
+        registerLanguage(monaco);
+        registerCompletions(monaco);
+        registerHover(monaco);
+      }
+      providerRefCount += 1;
 
       monaco.editor.setTheme(CARBON_TO_MONACO_THEME(themeRef.current));
 
@@ -570,8 +599,18 @@ export function useMonacoFormula({
 
   useEffect(() => {
     return () => {
-      disposablesRef.current.forEach((d) => d.dispose());
-      disposablesRef.current = [];
+      // Dispose per-instance disposables (markers, decorations)
+      instanceDisposablesRef.current.forEach((d: IDisposable) => d.dispose());
+      instanceDisposablesRef.current = [];
+
+      // Decrement the singleton ref-count; only dispose shared providers
+      // (language, tokens, completions, hover) when the last instance unmounts.
+      providerRefCount -= 1;
+      if (providerRefCount <= 0) {
+        providerRefCount = 0;
+        sharedDisposables.forEach((d: IDisposable) => d.dispose());
+        sharedDisposables = [];
+      }
     };
   }, []);
 
