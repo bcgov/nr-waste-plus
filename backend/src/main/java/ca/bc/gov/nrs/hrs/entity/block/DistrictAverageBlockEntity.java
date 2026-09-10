@@ -42,13 +42,13 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 public class DistrictAverageBlockEntity {
 
   @Id
-  @Column(name = "block_id")
+  @Column(name = "district_average_block_id")
   @EqualsAndHashCode.Include
   private Long blockId;
 
   @MapsId
   @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "block_id")
+  @JoinColumn(name = "district_average_block_id")
   private BlockEntity block;
 
   @Column(length = 32)
@@ -79,14 +79,16 @@ public class DistrictAverageBlockEntity {
   @Column(length = 32)
   private String becSubvariant;
 
-  private Boolean hasDispersedRetention;
+  @Column(name = "has_dispersed_retention", nullable = false)
+  private Boolean hasDispersedRetention = Boolean.FALSE;
 
   @Column(precision = 5, scale = 2)
   private BigDecimal dispersedRetentionPct;
 
   private LocalDate primaryLoggingCompleteDate;
 
-  private Boolean heliLogging;
+  @Column(name = "is_heli_logging", nullable = false)
+  private Boolean heliLogging = Boolean.FALSE;
 
   @Column(precision = 12, scale = 3)
   private BigDecimal cableYardingAreaHa;
@@ -113,6 +115,6 @@ public class DistrictAverageBlockEntity {
   @Column(nullable = false)
   private Instant updatedAt;
 
-  @Column(nullable = false)
+  @Column(name = "is_deleted", nullable = false)
   private boolean deleted;
 }

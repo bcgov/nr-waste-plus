@@ -39,6 +39,7 @@ public class StatusEventEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "status_event_id")
   @EqualsAndHashCode.Include
   private Long id;
 

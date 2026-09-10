@@ -54,7 +54,7 @@ class BlockCalculationSnapshotIntegrationTest extends AbstractTestContainerInteg
     blockId = savedBlock.getId();
 
     districtVolumeId = jdbcTemplate.queryForObject(
-        "SELECT id FROM hrs.district_volume ORDER BY id LIMIT 1", Long.class);
+        "SELECT district_volume_id FROM hrs.district_volume ORDER BY district_volume_id LIMIT 1", Long.class);
   }
 
   @DisplayName("Saves and retrieves snapshot by id with JSONB round-trip")
