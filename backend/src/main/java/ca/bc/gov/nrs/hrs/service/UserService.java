@@ -127,26 +127,12 @@ public class UserService {
         .ifPresent(bookmarkRepository::deleteById);
   }
 
-  /**
-   * Returns the user's bookmarked reporting unit IDs that are in the given list.
-   *
-   * <p>If the provided list is empty, returns all bookmarks for the user.
-   * Otherwise, returns only bookmarks whose reporting unit ID is in the list.</p>
-   *
-   * @param userId          the user's identifier
-   * @param reportingUnitIds the list of reporting unit IDs to filter by
-   * @return list of bookmarked reporting unit IDs matching the criteria
-   */
   @NewSpan
-  public List<Long> getUserBookmarksInList(
-      String userId, List<Long> reportingUnitIds)
-  {
+  public List<Long> getUserBookmarksInList(String userId, List<Long> reportingUnitIds) {
     List<UserBookmarkEntity> bookmarkEntities =
-        (CollectionUtils.isEmpty(reportingUnitIds))
-            ? bookmarkRepository.findByUserId(userId)
-            : bookmarkRepository
-                .findByUserIdAndReportingUnitIdIn(
-                    userId, reportingUnitIds);
+      (CollectionUtils.isEmpty(reportingUnitIds))
+          ? bookmarkRepository.findByUserId(userId)
+          : bookmarkRepository.findByUserIdAndReportingUnitIdIn(userId, reportingUnitIds);
 
     return bookmarkEntities
         .stream()

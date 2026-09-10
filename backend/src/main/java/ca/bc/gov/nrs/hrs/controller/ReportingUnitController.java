@@ -18,13 +18,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * REST controller exposing Reporting Unit detail endpoints.
@@ -108,9 +108,9 @@ public class ReportingUnitController {
   /**
    * Create a new Reporting Unit.
    *
-   * <p>Creates a reporting unit in the legacy system and returns HTTP 201 (Created)
+   * Creates a reporting unit in the legacy system and returns HTTP 201 (Created)
    * with a Location header pointing to the frontend resource (/reporting-units/{id}).
-   * Per API contract, this endpoint does not return a response body.</p>
+   * Per API contract, this endpoint does not return a response body.
    *
    * @param request the create reporting unit request
    * @return ResponseEntity with HTTP 201 (Created) and Location header; response body is empty

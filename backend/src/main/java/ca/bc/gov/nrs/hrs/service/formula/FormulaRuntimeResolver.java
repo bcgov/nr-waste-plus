@@ -20,8 +20,6 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @RequiredArgsConstructor
 public class FormulaRuntimeResolver {
-  private static final String MISSING_FOR_PATH = "' is missing for ";
-
   private final DistrictVolumeRepository districtVolumeRepository;
 
   /** Resolves a runtime variable for a submission date, area, and district. */
@@ -51,7 +49,9 @@ public class FormulaRuntimeResolver {
     DistrictVolumeEntity entity = find(date, area, ConfigType.DISTRICT_VOLUME, path);
     TableData data = entity.getTableData();
     String requestedGroup = parts[1].toLowerCase(java.util.Locale.ROOT);
-    JsonNode row = findGroupRow(data, groupCollectionForArea(area), requestedGroup, district, path);
+    JsonNode row = area == Area.COASTAL
+        ? findGroupRow(data, "sections", requestedGroup, district, path)
+        : findGroupRow(data, "zones", requestedGroup, district, path);
     return scale(numberAt(row, parts[2], path));
   }
 
@@ -65,7 +65,7 @@ public class FormulaRuntimeResolver {
         .filter(candidate -> candidate.district() != null
             && district.equalsIgnoreCase(candidate.district().code()))
         .findFirst().orElseThrow(() -> failure("District '" + district
-            + MISSING_FOR_PATH + path + "."));
+            + "' is missing for " + path + "."));
     BigDecimal value = row.species() == null ? null : row.species().get(parts[1]);
     if (value == null) {
       throw failure("Species '" + parts[1] + "' is missing for district '" + district + "'.");
@@ -78,50 +78,33 @@ public class FormulaRuntimeResolver {
         .orElseThrow(() -> failure("No " + type + " configuration is effective for " + path + "."));
   }
 
-  private String groupCollectionForArea(Area area) {
-    return area == Area.COASTAL ? "sections" : "zones";
-  }
-
   private JsonNode findGroupRow(TableData data, String groupCollection, String group,
       String district, String path) {
-    JsonNode groups = groupsArray(data, groupCollection, path);
-    return findGroup(groups, group, district, path);
-  }
-
-  private JsonNode groupsArray(TableData data, String groupCollection, String path) {
     JsonNode root = JsonNodeFactoryHolder.toTree(data);
     JsonNode groups = root.get(groupCollection);
     if (groups == null || !groups.isArray()) {
       throw failure("No " + groupCollection + " are available for " + path + ".");
     }
-    return groups;
-  }
-
-  private JsonNode findGroup(JsonNode groups, String group, String district, String path) {
     for (JsonNode candidate : groups) {
       if (normalize(candidate.path("name").asText()).equals(group)) {
-        return findDistrict(candidate, district, path);
-      }
-    }
-    throw failure("Group '" + group + MISSING_FOR_PATH + path + ".");
-  }
-
-  private JsonNode findDistrict(JsonNode groupCandidate, String district, String path) {
-    JsonNode districts = groupCandidate.get("districts");
-    if (districts != null && districts.isArray()) {
-      for (JsonNode row : districts) {
-        if (district.equalsIgnoreCase(row.path("district").path("code").asText())) {
-          return row;
+        JsonNode districts = candidate.get("districts");
+        if (districts != null && districts.isArray()) {
+          for (JsonNode row : districts) {
+            if (district.equalsIgnoreCase(row.path("district").path("code").asText())) {
+              return row;
+            }
+          }
         }
+        throw failure("District '" + district + "' is missing for " + path + ".");
       }
     }
-    throw failure("District '" + district + MISSING_FOR_PATH + path + ".");
+    throw failure("Group '" + group + "' is missing for " + path + ".");
   }
 
   private BigDecimal numberAt(JsonNode row, String field, String path) {
     JsonNode value = row.get(field);
     if (value == null || !value.isNumber()) {
-      throw failure("Numeric field '" + field + MISSING_FOR_PATH + path + ".");
+      throw failure("Numeric field '" + field + "' is missing for " + path + ".");
     }
     return value.decimalValue();
   }
@@ -133,10 +116,7 @@ public class FormulaRuntimeResolver {
     return label.replaceAll("[^A-Za-z0-9]", "").toLowerCase(java.util.Locale.ROOT);
   }
 
-  private BigDecimal scale(BigDecimal value)
-  {
-    return value.setScale(3, RoundingMode.HALF_UP);
-  }
+  private BigDecimal scale(BigDecimal value) { return value.setScale(3, RoundingMode.HALF_UP); }
 
   private ResponseStatusException failure(String message) {
     return new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, message);

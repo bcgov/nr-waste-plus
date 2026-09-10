@@ -14,10 +14,7 @@ public interface FormulaSetRepository extends JpaRepository<FormulaSetEntity, Lo
   @Query("select f from FormulaSetEntity f where f.area = :area and f.deleted = false "
       + "and f.startDate <= :date and (f.endDate is null or f.endDate >= :date) "
       + "order by f.startDate desc")
-  Optional<FormulaSetEntity> findEffective(
-      @Param("area") Area area,
-      @Param("date") LocalDate date);
-
+  Optional<FormulaSetEntity> findEffective(@Param("area") Area area, @Param("date") LocalDate date);
   @Query("select f from FormulaSetEntity f where f.area = :area and f.deleted = false "
       + "and f.startDate > :today order by f.startDate")
   List<FormulaSetEntity> findFuture(@Param("area") Area area, @Param("today") LocalDate today);
@@ -36,7 +33,5 @@ public interface FormulaSetRepository extends JpaRepository<FormulaSetEntity, Lo
   /** Finds the latest non-deleted predecessor regardless of end date, for reopening on delete. */
   @Query("select f from FormulaSetEntity f where f.area = :area and f.deleted = false "
       + "and f.startDate < :date order by f.startDate desc")
-  List<FormulaSetEntity> findPredecessorForReopen(
-      @Param("area") Area area,
-      @Param("date") LocalDate date);
+  List<FormulaSetEntity> findPredecessorForReopen(@Param("area") Area area, @Param("date") LocalDate date);
 }

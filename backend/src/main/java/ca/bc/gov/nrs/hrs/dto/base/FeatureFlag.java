@@ -47,9 +47,8 @@ public enum FeatureFlag {
 
   /**
    * Controls whether the reporting unit bookmark feature is enabled.
-   *
    * <p>When enabled, users can bookmark a reporting unit, and see their bookmarked values as
-   * part of the search result.</p>
+   * part of the search result</p>
    */
   BOOKMARK_REPORTING_UNIT_ENABLED("bookmark-ru-enabled"),
 

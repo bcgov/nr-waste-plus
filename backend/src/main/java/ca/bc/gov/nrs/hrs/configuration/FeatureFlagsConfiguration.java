@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component;
  * if (featureFlags.isEnabled("multi-address")) { … }
  * }</pre>
  *
- * <p>Flags that are not defined default to {@code false} (disabled).</p>
+ * Flags that are not defined default to {@code false} (disabled).
  *
  * @since 1.0.0
  */
@@ -64,24 +64,11 @@ public class FeatureFlagsConfiguration {
   @Builder.Default
   private Map<String, Counter> evaluationCounters = new ConcurrentHashMap<>();
 
+  @Autowired(required = false)
   private MeterRegistry meterRegistry;
 
+  @Autowired(required = false)
   private Environment environment;
-
-  /**
-   * Creates a FeatureFlagsConfiguration with the specified dependencies.
-   *
-   * @param meterRegistry optional meter registry for metrics
-   * @param environment   optional Spring environment for profile detection
-   */
-  @Autowired
-  public FeatureFlagsConfiguration(
-      MeterRegistry meterRegistry,
-      Environment environment)
-  {
-    this.meterRegistry = meterRegistry;
-    this.environment = environment;
-  }
 
   /**
    * Returns whether the given feature flag is enabled.

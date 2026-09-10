@@ -69,6 +69,7 @@ public class FormulaEvaluationService {
 
     Map<String, BigDecimal> variables = buildVariables(rows, date, area, district);
     Map<String, BigDecimal> outputs = new LinkedHashMap<>();
+    ArrayNode warningsArray = MAPPER.createArrayNode();
 
     for (FormulaSetRowEntity row : rows) {
       try {
@@ -81,12 +82,11 @@ public class FormulaEvaluationService {
       }
     }
 
-    ArrayNode warningsArray = MAPPER.createArrayNode();
     ObjectNode inputsJson = MAPPER.createObjectNode();
-    variables.forEach(inputsJson::put);
+    variables.forEach((key, value) -> inputsJson.put(key, value));
 
     ObjectNode outputsJson = MAPPER.createObjectNode();
-    outputs.forEach(outputsJson::put);
+    outputs.forEach((key, value) -> outputsJson.put(key, value));
 
     Instant now = Instant.now();
 
