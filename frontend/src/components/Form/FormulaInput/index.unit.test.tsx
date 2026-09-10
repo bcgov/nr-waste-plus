@@ -144,11 +144,11 @@ describe('structure and accessibility', () => {
     expect(screen.getByText('Formula')).toBeDefined();
   });
 
-  it('shouldRenderLabelAsLabelElement_notAParagraph', () => {
+  it('shouldRenderLabelAsSpan_notLabel', () => {
     render(<FormulaInput {...DEFAULT_PROPS} />);
 
     const label = screen.getByText('Formula');
-    expect(label.tagName).toBe('LABEL');
+    expect(label.tagName).toBe('SPAN');
   });
 
   it('shouldRenderMonacoEditorWrapper', () => {
@@ -520,10 +520,19 @@ describe('Monaco editor props', () => {
   it('shouldPassLoadingSkeletonWithAriaBusy_toMonacoLoadingProp', () => {
     render(<FormulaInput {...DEFAULT_PROPS} />);
 
-    const loadingProp = vi.mocked(Editor).mock.lastCall?.[0].loading as ReactElement;
-    const loadingProps = loadingProp.props as Record<string, string>;
-    expect(loadingProps['aria-busy']).toBe('true');
-    expect(loadingProps['aria-label']).toBe('Loading formula editor');
+    const loadingProp = vi.mocked(Editor).mock.lastCall?.[0].loading as ReactElement<{
+      'aria-busy'?: string;
+      'children'?: React.ReactNode;
+    }>;
+    expect(loadingProp.props['aria-busy']).toBe('true');
+    expect(loadingProp.props.children).toEqual(
+      expect.objectContaining({
+        props: expect.objectContaining({
+          className: 'cds--sr-only',
+          children: 'Loading formula editor',
+        }),
+      }),
+    );
   });
 
   it('shouldPassMinimapDisabled_inMonacoOptions', () => {
@@ -567,11 +576,18 @@ describe('Monaco editor props', () => {
     const loadingProp = vi.mocked(Editor).mock.lastCall?.[0].loading as ReactElement<{
       'role'?: string;
       'aria-busy'?: string;
-      'aria-label'?: string;
+      'children'?: React.ReactNode;
     }>;
     expect(loadingProp.props.role).toBe('status');
     expect(loadingProp.props['aria-busy']).toBe('true');
-    expect(loadingProp.props['aria-label']).toBe('Loading formula editor');
+    expect(loadingProp.props.children).toEqual(
+      expect.objectContaining({
+        props: expect.objectContaining({
+          className: 'cds--sr-only',
+          children: 'Loading formula editor',
+        }),
+      }),
+    );
   });
 });
 

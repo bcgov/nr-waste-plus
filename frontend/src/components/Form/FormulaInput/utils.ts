@@ -170,6 +170,49 @@ function validateFunctionCalls(node: MathNode): FormulaError | null {
 }
 
 /**
+ * Validates a formula string and returns either the validated AST or an error.
+ * Extracted from `evaluateFormula` to reduce cognitive complexity.
+ */
+function validateFormulaInput(
+  formula: string,
+  ast: MathNode | undefined,
+  scope: Record<string, number>,
+): { ok: true; ast: MathNode } | { ok: false; error: FormulaError } {
+  if (!formula.trim()) {
+    return { ok: false, error: { message: 'Formula is empty.' } };
+  }
+
+  const parseResult = ast ?? parseFormula(formula);
+  if (isFormulaError(parseResult)) {
+    return { ok: false, error: parseResult };
+  }
+
+  const fnError = validateFunctionCalls(parseResult);
+  if (fnError) {
+    return { ok: false, error: fnError };
+  }
+
+  const usedVars = extractVariables(parseResult);
+  const missing = usedVars.filter((v) => !(v in scope));
+  if (missing.length > 0) {
+    const label = missing.length === 1 ? 'variable' : 'variables';
+    return {
+      ok: false,
+      error: {
+        message: `Missing ${label}: ${missing.join(', ')}. Add ${missing.length === 1 ? 'it' : 'them'} to the parameter list.`,
+        token: missing[0],
+      },
+    };
+  }
+
+  return { ok: true, ast: parseResult };
+}
+
+/** Error message for non-finite results. */
+const NONFINITE_ERROR =
+  'The result is infinite. Check for division by zero or exponents of very large numbers.';
+
+/**
  * Safely evaluates `formula` against the given variable `scope`.
  *
  * ### Safety
@@ -194,37 +237,9 @@ export function evaluateFormula(
   scope: Record<string, number>,
   ast?: MathNode,
 ): EvaluationResult {
-  if (!formula.trim()) {
-    return { value: null, error: { message: 'Formula is empty.' }, raw: null };
-  }
-
-  // Use a pre-parsed AST when provided (avoids a redundant parse in callers
-  // that already hold the AST, such as useFormulaEngine).
-  const parseResult = ast ?? parseFormula(formula);
-  if (isFormulaError(parseResult)) {
-    return { value: null, error: parseResult, raw: null };
-  }
-
-  // Validate function calls against allowlist (before variable check, since
-  // disallowed function names would otherwise leak into the variable list)
-  const fnError = validateFunctionCalls(parseResult);
-  if (fnError) {
-    return { value: null, error: fnError, raw: null };
-  }
-
-  // Validate that every variable in the formula is provided in scope
-  const usedVars = extractVariables(parseResult);
-  const missing = usedVars.filter((v) => !(v in scope));
-  if (missing.length > 0) {
-    const label = missing.length === 1 ? 'variable' : 'variables';
-    return {
-      value: null,
-      error: {
-        message: `Missing ${label}: ${missing.join(', ')}. Add ${missing.length === 1 ? 'it' : 'them'} to the parameter list.`,
-        token: missing[0],
-      },
-      raw: null,
-    };
+  const validation = validateFormulaInput(formula, ast, scope);
+  if (!validation.ok) {
+    return { value: null, error: validation.error, raw: null };
   }
 
   try {
@@ -235,17 +250,14 @@ export function evaluateFormula(
     }
 
     // Use compiled AST to avoid re-parsing the formula string
-    const result = parseResult.compile().evaluate(bigScope);
+    const result = validation.ast.compile().evaluate(bigScope);
 
-    // mathjs can return BigNumber, number, or other types
     if (result === null || result === undefined) {
       return { value: null, error: { message: 'Formula produced no value.' }, raw: null };
     }
 
-    // Duck-type check for BigNumber
     if (typeof result === 'object' && 'isBigNumber' in result && result.isBigNumber) {
       const raw = result as unknown as BigNumber;
-      // BigNumber division by zero produces Infinity — treat as an error
       if (!raw.isFinite()) {
         return {
           value: null,
@@ -259,17 +271,9 @@ export function evaluateFormula(
       return { value: formatResult(raw), error: null, raw };
     }
 
-    // Plain number fallback (shouldn't occur in BigNumber mode, but be safe)
     if (typeof result === 'number') {
       if (!Number.isFinite(result)) {
-        return {
-          value: null,
-          error: {
-            message:
-              'The result is infinite. Check for division by zero or exponents of very large numbers.',
-          },
-          raw: null,
-        };
+        return { value: null, error: { message: NONFINITE_ERROR }, raw: null };
       }
       const raw = math.bignumber(result);
       return { value: formatResult(raw), error: null, raw };
@@ -294,7 +298,7 @@ function formatResult(value: BigNumber): string {
   // math.round with BigNumber mode uses HALF_UP — matches the ADR requirement.
   const rounded = math.round(value, 3) as BigNumber;
   const str = rounded.toFixed();
-  return str.includes('.') ? str.replace(/\.?0+$/, '') : str;
+  return str.includes('.') ? str.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '') : str;
 }
 
 // ─── Dependency Graph ─────────────────────────────────────────────────────────
@@ -382,7 +386,7 @@ function humanizeErrorMessage(raw: string, _formula: string): string {
     return 'The result is infinite. Check for division by zero or exponents of very large numbers.';
   }
   // Strip internal stack context but keep the original message as a fallback
-  return raw.replace(/\s+at\s+.+$/s, '').trim() || 'An unknown error occurred in the formula.';
+  return raw.replace(/\s+at\s+[\s\S]*$/, '').trim() || 'An unknown error occurred in the formula.';
 }
 
 /**

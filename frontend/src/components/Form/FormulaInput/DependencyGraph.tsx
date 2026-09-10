@@ -102,7 +102,7 @@ const DependencyGraph: FC<DependencyGraphProps> = ({
   if (usedVariables.length === 0) return null;
 
   return (
-    <section className="formula-input__section" role="region" aria-label="Dependency graph">
+    <section className="formula-input__section" aria-label="Dependency graph">
       <p id={labelId} className="formula-input__section-label">
         Variables used in formula
       </p>

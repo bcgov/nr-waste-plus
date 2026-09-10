@@ -251,7 +251,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <section className="formula-input" role="region" aria-label={ariaLabel}>
+    <section className="formula-input" aria-label={ariaLabel}>
       {/* ── Monaco Editor ──────────────────────────────────────────────────── */}
       <div
         className={[
@@ -261,11 +261,11 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
           .filter(Boolean)
           .join(' ')}
       >
-        {/* The <label> id is used via aria-labelledby on the Monaco wrapper div below.
-            htmlFor cannot target Monaco's auto-generated internal textarea id. */}
-        <label id={`${id}-formula-label`} className="cds--label formula-input__editor-label">
+        {/* The <span> id is used via aria-labelledby on the Monaco wrapper div below.
+            A <label> cannot be used because Monaco's auto-generated textarea id is unpredictable. */}
+        <span id={`${id}-formula-label`} className="cds--label formula-input__editor-label">
           Formula
-        </label>
+        </span>
         <div aria-labelledby={`${id}-formula-label`}>
           <Editor
             className="cds--text-area formula-input__editor"
@@ -280,9 +280,10 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
                 className="formula-input__editor-skeleton"
                 role="status"
                 aria-busy="true"
-                aria-label="Loading formula editor"
                 style={{ height: `${MIN_EDITOR_HEIGHT}px` }}
-              />
+              >
+                <span className="cds--sr-only">Loading formula editor</span>
+              </div>
             }
           />
         </div>
