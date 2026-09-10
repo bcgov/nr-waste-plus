@@ -110,32 +110,59 @@ describe('FormulaInput utils', () => {
     });
 
     it('shouldReturnNoValueError_whenEvaluatorReturnsNullish', () => {
-      vi.spyOn(math, 'evaluate').mockReturnValueOnce(null as never);
+      const ast = parseFormula('a + 1');
+      if (isFormulaError(ast)) return;
+      vi.spyOn(ast, 'compile').mockReturnValue({ evaluate: () => null } as never);
 
-      const result = evaluateFormula('a + 1', { a: 1 });
+      const result = evaluateFormula('a + 1', { a: 1 }, ast);
       expect(result.value).toBeNull();
       expect(result.raw).toBeNull();
       expect(result.error?.message).toBe('Formula produced no value.');
     });
 
     it('shouldHandleNumberFallback_whenEvaluatorReturnsNumber', () => {
-      vi.spyOn(math, 'evaluate').mockReturnValueOnce(7 as never);
+      const ast = parseFormula('a + 1');
+      if (isFormulaError(ast)) return;
+      vi.spyOn(ast, 'compile').mockReturnValue({ evaluate: () => 7 } as never);
 
-      const result = evaluateFormula('a + 1', { a: 1 });
+      const result = evaluateFormula('a + 1', { a: 1 }, ast);
       expect(result.error).toBeNull();
       expect(result.value).toBe('7');
       expect(result.raw).not.toBeNull();
     });
 
     it('shouldReturnHumanizedError_whenEvaluationThrows', () => {
-      vi.spyOn(math, 'evaluate').mockImplementation(() => {
-        throw new Error('Division by zero');
-      });
+      const ast = parseFormula('a / b');
+      if (isFormulaError(ast)) return;
+      vi.spyOn(ast, 'compile').mockReturnValue({
+        evaluate: () => {
+          throw new Error('Division by zero');
+        },
+      } as never);
 
-      const result = evaluateFormula('a / b', { a: 1, b: 0 });
+      const result = evaluateFormula('a / b', { a: 1, b: 0 }, ast);
       expect(result.value).toBeNull();
       expect(result.raw).toBeNull();
       expect(result.error?.message).toContain('Division by zero');
+    });
+
+    it('shouldReturnInfinityError_whenBigNumberDivisionByZero', () => {
+      const result = evaluateFormula('a / b', { a: 1, b: 0 });
+      expect(result.value).toBeNull();
+      expect(result.error?.message).toContain('Division by zero');
+    });
+
+    it('shouldRejectDisallowedFunction_whenFunctionNotInAllowlist', () => {
+      // `det` is a mathjs function but not in our allowlist
+      const result = evaluateFormula('det(a)', { a: 1 });
+      expect(result.value).toBeNull();
+      expect(result.error?.message).toContain('not allowed');
+    });
+
+    it('shouldAllowBuiltinFunction_whenFunctionInAllowlist', () => {
+      const result = evaluateFormula('sqrt(a)', { a: 9 });
+      expect(result.error).toBeNull();
+      expect(result.value).toBe('3');
     });
   });
 

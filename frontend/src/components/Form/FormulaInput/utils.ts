@@ -67,11 +67,107 @@ export function extractVariables(node: MathNode): string[] {
     if (sym.type === 'SymbolNode' && !isMathBuiltin(sym.name)) {
       vars.add(sym.name);
     }
+    // Handle namespace accessors like da.rate — extract the root object name
+    if (sym.type === 'AccessorNode') {
+      const object = (sym as unknown as { object: MathNode }).object;
+      if (
+        object?.type === 'SymbolNode' &&
+        !isMathBuiltin((object as unknown as { name: string }).name)
+      ) {
+        vars.add((object as unknown as { name: string }).name);
+      }
+    }
+    // Handle indexed access like arr[0] — extract the array name
+    if (sym.type === 'IndexNode') {
+      const object = (sym as unknown as { object: MathNode }).object;
+      if (
+        object?.type === 'SymbolNode' &&
+        !isMathBuiltin((object as unknown as { name: string }).name)
+      ) {
+        vars.add((object as unknown as { name: string }).name);
+      }
+    }
   });
   return Array.from(vars);
 }
 
 // ─── Evaluation ───────────────────────────────────────────────────────────────
+
+/**
+ * Allowed function names that may appear in formulas.
+ * Any function call not in this list is rejected before evaluation to prevent
+ * injection of unexpected operations.
+ */
+const ALLOWED_FUNCTIONS = new Set<string>([
+  // Trigonometry
+  'sin',
+  'cos',
+  'tan',
+  'asin',
+  'acos',
+  'atan',
+  'atan2',
+  'sinh',
+  'cosh',
+  'tanh',
+  'asinh',
+  'acosh',
+  'atanh',
+  // Exponents / logarithms
+  'sqrt',
+  'cbrt',
+  'exp',
+  'log',
+  'log2',
+  'log10',
+  'pow',
+  // Rounding
+  'abs',
+  'ceil',
+  'floor',
+  'round',
+  'sign',
+  // Aggregates
+  'min',
+  'max',
+  'sum',
+  'mean',
+  'median',
+  'mod',
+  // Custom
+  'if',
+]);
+
+/**
+ * Walks the AST and collects every function call name.
+ * Returns an array of `{ name, position }` for error reporting.
+ */
+function collectFunctionCalls(node: MathNode): Array<{ name: string; position?: number }> {
+  const calls: Array<{ name: string; position?: number }> = [];
+  node.traverse((n: MathNode) => {
+    const fn = n as unknown as { type: string; name: string; begin?: number };
+    if (fn.type === 'FunctionNode') {
+      calls.push({ name: fn.name, position: fn.begin });
+    }
+  });
+  return calls;
+}
+
+/**
+ * Validates that every function call in the AST is in the allowlist.
+ * Returns a FormulaError if any disallowed function is found, or null if valid.
+ */
+function validateFunctionCalls(node: MathNode): FormulaError | null {
+  const calls = collectFunctionCalls(node);
+  for (const { name } of calls) {
+    if (!ALLOWED_FUNCTIONS.has(name)) {
+      return {
+        message: `Function "${name}" is not allowed. Use only standard math functions (sqrt, abs, min, max, etc.).`,
+      };
+    }
+  }
+  return null;
+}
 
 /**
  * Safely evaluates `formula` against the given variable `scope`.
@@ -81,6 +177,8 @@ export function extractVariables(node: MathNode): string[] {
  *   globals, so formula strings cannot exfiltrate data or execute arbitrary code.
  * - Variable names are validated against the scope before evaluation, so an
  *   undefined variable never reaches the evaluator.
+ * - Function calls are validated against an allowlist before evaluation, so
+ *   disallowed functions are rejected upfront.
  * - The formula is parsed before evaluation; a parse error is returned as a
  *   typed `FormulaError` rather than a thrown exception.
  *
@@ -107,6 +205,13 @@ export function evaluateFormula(
     return { value: null, error: parseResult, raw: null };
   }
 
+  // Validate function calls against allowlist (before variable check, since
+  // disallowed function names would otherwise leak into the variable list)
+  const fnError = validateFunctionCalls(parseResult);
+  if (fnError) {
+    return { value: null, error: fnError, raw: null };
+  }
+
   // Validate that every variable in the formula is provided in scope
   const usedVars = extractVariables(parseResult);
   const missing = usedVars.filter((v) => !(v in scope));
@@ -129,7 +234,8 @@ export function evaluateFormula(
       bigScope[key] = math.bignumber(val);
     }
 
-    const result = math.evaluate(formula, bigScope);
+    // Use compiled AST to avoid re-parsing the formula string
+    const result = parseResult.compile().evaluate(bigScope);
 
     // mathjs can return BigNumber, number, or other types
     if (result === null || result === undefined) {
@@ -139,11 +245,32 @@ export function evaluateFormula(
     // Duck-type check for BigNumber
     if (typeof result === 'object' && 'isBigNumber' in result && result.isBigNumber) {
       const raw = result as unknown as BigNumber;
+      // BigNumber division by zero produces Infinity — treat as an error
+      if (!raw.isFinite()) {
+        return {
+          value: null,
+          error: {
+            message:
+              'Division by zero: the denominator evaluates to 0. Add a guard or change the formula.',
+          },
+          raw,
+        };
+      }
       return { value: formatResult(raw), error: null, raw };
     }
 
     // Plain number fallback (shouldn't occur in BigNumber mode, but be safe)
     if (typeof result === 'number') {
+      if (!Number.isFinite(result)) {
+        return {
+          value: null,
+          error: {
+            message:
+              'The result is infinite. Check for division by zero or exponents of very large numbers.',
+          },
+          raw: null,
+        };
+      }
       const raw = math.bignumber(result);
       return { value: formatResult(raw), error: null, raw };
     }
