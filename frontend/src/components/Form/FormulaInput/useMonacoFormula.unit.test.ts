@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import {
   useMonacoFormula,
@@ -70,10 +70,7 @@ const defaultOptions = (): UseMonacoFormulaOptions => ({
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /** Mounts the hook, fires onMount with mock instances, and returns everything. */
-const mountHook = (
-  options: Partial<UseMonacoFormulaOptions> = {},
-  formula = '',
-) => {
+const mountHook = (options: Partial<UseMonacoFormulaOptions> = {}, formula = '') => {
   const monaco = makeMockMonaco();
   const model = makeMockModel(formula);
   const editor = makeMockEditor(model);
