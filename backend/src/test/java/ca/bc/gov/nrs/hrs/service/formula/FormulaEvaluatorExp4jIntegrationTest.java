@@ -229,4 +229,164 @@ class FormulaEvaluatorExp4jIntegrationTest {
         BigDecimal result = FormulaEvaluatorExp4j.evaluate("da.rate + sc.mix + submission.area", vars);
         assertEquals(new BigDecimal("7.000"), result);
     }
+
+    // ── Input validation ──
+
+    @Test
+    void rejectsNullExpression() {
+        assertThrows(FormulaEvaluationException.class,
+                () -> FormulaEvaluatorExp4j.evaluate(null, Map.of()));
+    }
+
+    @Test
+    void rejectsBlankExpression() {
+        assertThrows(FormulaEvaluationException.class,
+                () -> FormulaEvaluatorExp4j.evaluate("", Map.of()));
+    }
+
+    @Test
+    void rejectsWhitespaceExpression() {
+        assertThrows(FormulaEvaluationException.class,
+                () -> FormulaEvaluatorExp4j.evaluate("   ", Map.of()));
+    }
+
+    // ── Comparison operators (true and false paths) ──
+
+    @Test
+    void evaluatesGreaterThanTrue() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("3 > 2", Map.of());
+        assertEquals(new BigDecimal("1.000"), result);
+    }
+
+    @Test
+    void evaluatesGreaterThanFalse() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("2 > 3", Map.of());
+        assertEquals(new BigDecimal("0.000"), result);
+    }
+
+    @Test
+    void evaluatesLessThanTrue() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("2 < 3", Map.of());
+        assertEquals(new BigDecimal("1.000"), result);
+    }
+
+    @Test
+    void evaluatesLessThanFalse() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("3 < 2", Map.of());
+        assertEquals(new BigDecimal("0.000"), result);
+    }
+
+    @Test
+    void evaluatesGreaterThanOrEqualTrue() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("3 >= 2", Map.of());
+        assertEquals(new BigDecimal("1.000"), result);
+    }
+
+    @Test
+    void evaluatesGreaterThanOrEqualEqual() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("3 >= 3", Map.of());
+        assertEquals(new BigDecimal("1.000"), result);
+    }
+
+    @Test
+    void evaluatesGreaterThanOrEqualFalse() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("1 >= 2", Map.of());
+        assertEquals(new BigDecimal("0.000"), result);
+    }
+
+    @Test
+    void evaluatesLessThanOrEqualTrue() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("2 <= 3", Map.of());
+        assertEquals(new BigDecimal("1.000"), result);
+    }
+
+    @Test
+    void evaluatesLessThanOrEqualEqual() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("3 <= 3", Map.of());
+        assertEquals(new BigDecimal("1.000"), result);
+    }
+
+    @Test
+    void evaluatesLessThanOrEqualFalse() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("3 <= 2", Map.of());
+        assertEquals(new BigDecimal("0.000"), result);
+    }
+
+    @Test
+    void evaluatesEqualsTrue() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("3 == 3", Map.of());
+        assertEquals(new BigDecimal("1.000"), result);
+    }
+
+    @Test
+    void evaluatesEqualsFalse() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("3 == 4", Map.of());
+        assertEquals(new BigDecimal("0.000"), result);
+    }
+
+    @Test
+    void evaluatesNotEqualsTrue() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("3 != 4", Map.of());
+        assertEquals(new BigDecimal("1.000"), result);
+    }
+
+    @Test
+    void evaluatesNotEqualsFalse() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("3 != 3", Map.of());
+        assertEquals(new BigDecimal("0.000"), result);
+    }
+
+    // ── NaN and Infinite results ──
+
+    @Test
+    void rejectsNanResult() {
+        assertThrows(FormulaEvaluationException.class,
+                () -> FormulaEvaluatorExp4j.evaluate("asin(2)", Map.of()));
+    }
+
+    @Test
+    void rejectsInfiniteResult() {
+        assertThrows(FormulaEvaluationException.class,
+                () -> FormulaEvaluatorExp4j.evaluate("exp(1000)", Map.of()));
+    }
+
+    // ── IF function edge cases ──
+
+    @Test
+    void evaluatesIfWithNegativeArgument() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("if(-1, 10, 20)", Map.of());
+        assertEquals(new BigDecimal("10.000"), result);
+    }
+
+    // ── Additional function coverage ──
+
+    @Test
+    void evaluatesCos() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("cos(0)", Map.of());
+        assertEquals(new BigDecimal("1.000"), result);
+    }
+
+    @Test
+    void evaluatesTan() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("tan(0)", Map.of());
+        assertEquals(new BigDecimal("0.000"), result);
+    }
+
+    @Test
+    void evaluatesLn() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("ln(1)", Map.of());
+        assertEquals(new BigDecimal("0.000"), result);
+    }
+
+    @Test
+    void evaluatesExpFunction() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("exp(0)", Map.of());
+        assertEquals(new BigDecimal("1.000"), result);
+    }
+
+    @Test
+    void evaluatesPow() {
+        BigDecimal result = FormulaEvaluatorExp4j.evaluate("pow(2, 3)", Map.of());
+        assertEquals(new BigDecimal("8.000"), result);
+    }
 }
