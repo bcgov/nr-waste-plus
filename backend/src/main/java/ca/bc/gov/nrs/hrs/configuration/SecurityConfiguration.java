@@ -66,7 +66,7 @@ public class SecurityConfiguration {
       ApiAuthorizationCustomizer apiCustomizer,
       Oauth2SecurityCustomizer oauth2Customizer,
       UserIdentityHydrationFilter hydrationFilter
-  ) throws Exception {
+  ) throws Exception { // NOSONAR — Spring Security mandates generic Exception
     http
         .headers(headersCustomizer)
         .csrf(csrfCustomizer)

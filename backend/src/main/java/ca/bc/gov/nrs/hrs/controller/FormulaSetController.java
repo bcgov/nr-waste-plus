@@ -24,6 +24,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class FormulaSetController {
   private final FormulaSetService service;
+
+  /**
+   * Creates a new formula set from the provided request.
+   *
+   * @param request the formula set request containing area, start date, and formulas
+   * @return the created formula set response with HTTP 201 status
+   */
   @PostMapping
   public ResponseEntity<FormulaSetResponse> create(
       @Valid @RequestBody FormulaSetRequest request) {

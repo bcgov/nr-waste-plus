@@ -49,13 +49,14 @@ import org.hibernate.service.spi.Stoppable;
  * <p>GraalVM-safe: no reflection, no proxies, no runtime bytecode. All dependencies are
  * constructor-injected; delegate lifecycle methods are forwarded verbatim.</p>
  */
-public class CorrelationIdConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
+public class CorrelationIdConnectionProvider
+    implements ConnectionProvider, Configurable, Stoppable {
 
   private static final String BIND_CORRELATION_ID =
       "SELECT set_config('app.correlation_id', ?, true)";
 
   private final ConnectionProvider delegate;
-  private final Tracer tracer;
+  private final transient Tracer tracer;
 
   /**
    * Creates a decorating provider.
@@ -76,9 +77,6 @@ public class CorrelationIdConnectionProvider implements ConnectionProvider, Conf
       return connection;
     }
     String traceId = span.context().traceId();
-    if (traceId == null || traceId.isBlank()) {
-      return connection;
-    }
     return new DeferredCorrelationIdConnection(connection, traceId);
   }
 

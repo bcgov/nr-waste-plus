@@ -17,7 +17,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
  */
 public class UserIdentityAuthentication extends JwtAuthenticationToken {
 
-  private final UserIdentityEntity identity;
+  private final transient UserIdentityEntity identity;
 
   /**
    * Construct a hydrated authentication token.
@@ -42,5 +42,21 @@ public class UserIdentityAuthentication extends JwtAuthenticationToken {
    */
   public UserIdentityEntity getIdentity() {
     return identity;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (!(obj instanceof UserIdentityAuthentication other)) {
+      return false;
+    }
+    return super.equals(other) && java.util.Objects.equals(this.identity, other.identity);
+  }
+
+  @Override
+  public int hashCode() {
+    return java.util.Objects.hash(super.hashCode(), identity);
   }
 }

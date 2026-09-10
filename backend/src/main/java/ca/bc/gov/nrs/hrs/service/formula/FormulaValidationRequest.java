@@ -14,6 +14,6 @@ public record FormulaValidationRequest(
   public FormulaValidationRequest {
     formulas = List.copyOf(Objects.requireNonNull(formulas, "formulas"));
     knownVariables = Map.copyOf(Objects.requireNonNull(knownVariables, "knownVariables"));
-    mode = Objects.requireNonNull(mode, "mode");
+    Objects.requireNonNull(mode, "mode");
   }
 }

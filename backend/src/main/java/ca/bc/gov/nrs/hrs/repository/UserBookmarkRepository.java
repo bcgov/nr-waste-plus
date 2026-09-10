@@ -7,6 +7,12 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Repository for accessing user bookmark entities.
+ *
+ * <p>Extends {@link PagingAndSortingRepository} and {@link CrudRepository} to
+ * provide basic CRUD operations for {@link UserBookmarkEntity} instances.</p>
+ */
 @Repository
 public interface UserBookmarkRepository
     extends PagingAndSortingRepository<UserBookmarkEntity, UserBookmarkEntityId>,

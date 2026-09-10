@@ -158,8 +158,6 @@ public class ReportingUnitService {
             new ForestClientNotFoundException(request.clientNumber()));
 
     // Create reporting unit via legacy API
-    Long createdId = legacyApiProvider.createReportingUnit(request);
-
-    return createdId;
+    return legacyApiProvider.createReportingUnit(request);
   }
 }

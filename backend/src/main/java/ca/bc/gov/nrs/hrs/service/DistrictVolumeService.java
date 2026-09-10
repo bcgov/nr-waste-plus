@@ -209,30 +209,10 @@ public class DistrictVolumeService {
   public DistrictVolumeDetailDto createDistrictVolume(
       String user, DistrictVolumeCreateDto createDto) {
 
-    Area areaEnum = EnumUtils.getEnumIgnoreCase(
-        Area.class,
-        createDto.area());
-
-    if (areaEnum == null) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Invalid area: " + createDto.area()
-              + ". Must be INTERIOR or COASTAL.");
-    }
-
+    Area areaEnum = validateAndResolveArea(createDto.area());
     validateAreaPayloadConsistency(areaEnum, createDto);
-
-    if (areaEnum == Area.COASTAL && createDto.heliMultiplier() == null) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Missing helicopter multiplier configuration required when area is COASTAL.");
-    }
-
-    if (!createDto.startDate().isAfter(LocalDate.now())) {
-      throw new ResponseStatusException(
-          HttpStatus.UNPROCESSABLE_CONTENT,
-          "Start date must be strictly after today.");
-    }
+    validateCoastalHelicopterMultiplier(areaEnum, createDto);
+    validateStartDateAfterToday(createDto.startDate());
 
     List<DistrictVolumeEntity> openEntries =
         districtVolumeRepository
@@ -247,55 +227,23 @@ public class DistrictVolumeService {
               + areaEnum + ". Resolve the duplicates before creating a new configuration.");
     }
 
-    List<DistrictVolumeEntity> successorEntries = districtVolumeRepository.findFirstLiveAfter(
-        ConfigType.DISTRICT_VOLUME,
-        areaEnum,
-        createDto.startDate(),
-        PageRequest.of(0, 1));
-    DistrictVolumeEntity successor = successorEntries.isEmpty()
-        ? null
-        : successorEntries.getFirst();
-    DistrictVolumeEntity previousEntry;
-    if (successor != null) {
-      List<DistrictVolumeEntity> previousEntries = districtVolumeRepository.findFirstLiveBefore(
-          ConfigType.DISTRICT_VOLUME,
-          areaEnum,
-          createDto.startDate(),
-          PageRequest.of(0, 1));
-      previousEntry = previousEntries.isEmpty() ? null : previousEntries.getFirst();
-    } else {
-      previousEntry = openEntries.isEmpty() ? null : openEntries.getFirst();
-    }
+    DistrictVolumeEntity successor = findSuccessor(areaEnum, createDto.startDate());
+    DistrictVolumeEntity previousEntry = findPreviousEntry(areaEnum, createDto.startDate(),
+        successor, openEntries);
 
     if (previousEntry != null) {
-
       if (!createDto.startDate().isAfter(previousEntry.getStartDate())) {
         throw new ResponseStatusException(
             HttpStatus.UNPROCESSABLE_CONTENT,
             "Start date must be after the most recent existing start date ("
                 + previousEntry.getStartDate() + ").");
       }
-
       previousEntry.setEndDate(createDto.startDate().minusDays(1));
       districtVolumeRepository.save(previousEntry);
     }
 
-    DistrictVolumeEntity entity = new DistrictVolumeEntity();
-
-    entity.setArea(areaEnum);
-    entity.setStartDate(createDto.startDate());
-    entity.setEndDate(successor == null ? null : successor.getStartDate().minusDays(1));
-    entity.setTableLevelFactor(createDto.tableLevelFactor());
-    entity.setHeliMultiplier(createDto.heliMultiplier());
-    entity.setCreatedBy(user);
-
-    entity.setTableData(
-        DistrictVolumeMapper.toEntityTableData(
-            createDto.tableData()));
-
-    DistrictVolumeEntity savedEntity =
-        districtVolumeRepository.save(entity);
-
+    DistrictVolumeEntity entity = buildNewEntity(areaEnum, createDto, successor, user);
+    DistrictVolumeEntity savedEntity = districtVolumeRepository.save(entity);
     return DistrictVolumeMapper.toDetailDto(savedEntity);
   }
 
@@ -378,6 +326,61 @@ public class DistrictVolumeService {
           HttpStatus.BAD_REQUEST,
           "Invalid or missing table data payload structure.");
     }
+  }
+
+  private Area validateAndResolveArea(String areaName) {
+    Area areaEnum = EnumUtils.getEnumIgnoreCase(Area.class, areaName);
+    if (areaEnum == null) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Invalid area: " + areaName + ". Must be INTERIOR or COASTAL.");
+    }
+    return areaEnum;
+  }
+
+  private void validateCoastalHelicopterMultiplier(Area areaEnum, DistrictVolumeCreateDto createDto) {
+    if (areaEnum == Area.COASTAL && createDto.heliMultiplier() == null) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Missing helicopter multiplier configuration required when area is COASTAL.");
+    }
+  }
+
+  private void validateStartDateAfterToday(LocalDate startDate) {
+    if (!startDate.isAfter(LocalDate.now())) {
+      throw new ResponseStatusException(
+          HttpStatus.UNPROCESSABLE_CONTENT,
+          "Start date must be strictly after today.");
+    }
+  }
+
+  private DistrictVolumeEntity findSuccessor(Area areaEnum, LocalDate startDate) {
+    List<DistrictVolumeEntity> successorEntries = districtVolumeRepository.findFirstLiveAfter(
+        ConfigType.DISTRICT_VOLUME, areaEnum, startDate, PageRequest.of(0, 1));
+    return successorEntries.isEmpty() ? null : successorEntries.getFirst();
+  }
+
+  private DistrictVolumeEntity findPreviousEntry(Area areaEnum, LocalDate startDate,
+      DistrictVolumeEntity successor, List<DistrictVolumeEntity> openEntries) {
+    if (successor != null) {
+      List<DistrictVolumeEntity> previousEntries = districtVolumeRepository.findFirstLiveBefore(
+          ConfigType.DISTRICT_VOLUME, areaEnum, startDate, PageRequest.of(0, 1));
+      return previousEntries.isEmpty() ? null : previousEntries.getFirst();
+    }
+    return openEntries.isEmpty() ? null : openEntries.getFirst();
+  }
+
+  private DistrictVolumeEntity buildNewEntity(Area areaEnum, DistrictVolumeCreateDto createDto,
+      DistrictVolumeEntity successor, String user) {
+    DistrictVolumeEntity entity = new DistrictVolumeEntity();
+    entity.setArea(areaEnum);
+    entity.setStartDate(createDto.startDate());
+    entity.setEndDate(successor == null ? null : successor.getStartDate().minusDays(1));
+    entity.setTableLevelFactor(createDto.tableLevelFactor());
+    entity.setHeliMultiplier(createDto.heliMultiplier());
+    entity.setCreatedBy(user);
+    entity.setTableData(DistrictVolumeMapper.toEntityTableData(createDto.tableData()));
+    return entity;
   }
 
   /**

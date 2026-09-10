@@ -56,20 +56,11 @@ public final class FormulaValidator {
       List<FormulaValidationError> errors) {
     return switch (node) {
       case LiteralNode ignored -> ValueType.NUMERIC;
-      case VariableReferenceNode variable -> {
-        int dot = variable.name().indexOf('.');
-        String namespace = dot < 0 ? variable.name() : variable.name().substring(0, dot);
-        if (formulaKeys.contains(variable.name())) {
+      case VariableReferenceNode(String name, int startOffset, int endOffset) -> {
+        if (formulaKeys.contains(name)) {
           yield ValueType.NUMERIC;
         }
-        if (dot < 1 || dot == variable.name().length() - 1
-            || !NAMESPACES.contains(namespace)
-            || !known.containsKey(variable.name())) {
-          errors.add(error(FormulaValidationError.Code.UNKNOWN_VARIABLE,
-              "Unknown variable: " + variable.name(), variable.startOffset(),
-              variable.endOffset()));
-        }
-        yield ValueType.NUMERIC;
+        yield validateVariableReference(name, startOffset, endOffset, known, errors);
       }
       case UnaryOperationNode unary -> {
         ValueType operandType = validateNode(unary.operand(), known, formulaKeys, errors);
@@ -119,6 +110,19 @@ public final class FormulaValidator {
   private void addTypeError(String message, FormulaNode node, List<FormulaValidationError> errors) {
     errors.add(error(FormulaValidationError.Code.TYPE_ERROR, message,
         node.startOffset(), node.endOffset()));
+  }
+
+  private ValueType validateVariableReference(String name, int startOffset, int endOffset,
+      Map<String, BigDecimal> known, List<FormulaValidationError> errors) {
+    int dot = name.indexOf('.');
+    String namespace = dot < 0 ? name : name.substring(0, dot);
+    if (dot < 1 || dot == name.length() - 1
+        || !NAMESPACES.contains(namespace)
+        || !known.containsKey(name)) {
+      errors.add(error(FormulaValidationError.Code.UNKNOWN_VARIABLE,
+          "Unknown variable: " + name, startOffset, endOffset));
+    }
+    return ValueType.NUMERIC;
   }
 
   private boolean isZero(FormulaNode node, Map<String, BigDecimal> known) {
@@ -196,7 +200,7 @@ public final class FormulaValidator {
         collectNames(binary.left(), names);
         collectNames(binary.right(), names);
       }
-      case LiteralNode ignored -> { }
+      case LiteralNode ignored -> { /* No names to collect from literals */ }
       case IfNode ifNode -> {
         collectNames(ifNode.condition(), names);
         collectNames(ifNode.valueIfTrue(), names);

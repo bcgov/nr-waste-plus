@@ -44,34 +44,64 @@ public class DistrictRow {
   }
 
   @JsonProperty("district")
-  public CodeDescriptionDto district() { return district; }
+  public CodeDescriptionDto district()
+  {
+    return district;
+  }
 
   @JsonProperty("avoidableSawlog")
-  public BigDecimal avoidableSawlog() { return avoidableSawlog; }
+  public BigDecimal avoidableSawlog()
+  {
+    return avoidableSawlog;
+  }
 
   @JsonProperty("avoidableGrade4")
-  public BigDecimal avoidableGrade4() { return avoidableGrade4; }
+  public BigDecimal avoidableGrade4()
+  {
+    return avoidableGrade4;
+  }
 
   @JsonProperty("unavoidableGrade4")
-  public BigDecimal unavoidableGrade4() { return unavoidableGrade4; }
+  public BigDecimal unavoidableGrade4()
+  {
+    return unavoidableGrade4;
+  }
 
   @JsonProperty("avoidableHembalGradeU")
-  public BigDecimal avoidableHembalGradeU() { return avoidableHembalGradeU; }
+  public BigDecimal avoidableHembalGradeU()
+  {
+    return avoidableHembalGradeU;
+  }
 
   @JsonProperty("avoidableGradeY")
-  public BigDecimal avoidableGradeY() { return avoidableGradeY; }
+  public BigDecimal avoidableGradeY()
+  {
+    return avoidableGradeY;
+  }
 
   @JsonProperty("unavoidable")
-  public BigDecimal unavoidable() { return unavoidable; }
+  public BigDecimal unavoidable()
+  {
+    return unavoidable;
+  }
 
   @JsonProperty("total")
-  public BigDecimal total() { return total; }
+  public BigDecimal total()
+  {
+    return total;
+  }
 
   /** Preserves fields not known by the current application model. */
   @JsonAnySetter
-  public void addProperty(String name, Object value) { additionalProperties.put(name, value); }
+  public void addProperty(String name, Object value)
+  {
+    additionalProperties.put(name, value);
+  }
 
   /** Exposes preserved arbitrary fields to JSON conversion. */
   @JsonAnyGetter
-  public Map<String, Object> additionalProperties() { return additionalProperties; }
+  public Map<String, Object> additionalProperties()
+  {
+    return additionalProperties;
+  }
 }
