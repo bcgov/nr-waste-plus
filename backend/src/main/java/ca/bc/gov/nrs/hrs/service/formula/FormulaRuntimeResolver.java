@@ -20,6 +20,8 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @RequiredArgsConstructor
 public class FormulaRuntimeResolver {
+  private static final String IS_MISSING_FOR = "' is missing for ";
+
   private final DistrictVolumeRepository districtVolumeRepository;
 
   /** Resolves a runtime variable for a submission date, area, and district. */
@@ -69,7 +71,7 @@ public class FormulaRuntimeResolver {
                     candidate.district() != null
                         && district.equalsIgnoreCase(candidate.district().code()))
             .findFirst()
-            .orElseThrow(() -> failure("District '" + district + "' is missing for " + path + "."));
+            .orElseThrow(() -> failure("District '" + district + IS_MISSING_FOR + path + "."));
     BigDecimal value = row.species() == null ? null : row.species().get(parts[1]);
     if (value == null) {
       throw failure("Species '" + parts[1] + "' is missing for district '" + district + "'.");
@@ -100,16 +102,16 @@ public class FormulaRuntimeResolver {
             }
           }
         }
-        throw failure("District '" + district + "' is missing for " + path + ".");
+        throw failure("District '" + district + IS_MISSING_FOR + path + ".");
       }
     }
-    throw failure("Group '" + group + "' is missing for " + path + ".");
+    throw failure("Group '" + group + IS_MISSING_FOR + path + ".");
   }
 
   private BigDecimal numberAt(JsonNode row, String field, String path) {
     JsonNode value = row.get(field);
     if (value == null || !value.isNumber()) {
-      throw failure("Numeric field '" + field + "' is missing for " + path + ".");
+      throw failure("Numeric field '" + field + IS_MISSING_FOR + path + ".");
     }
     return value.decimalValue();
   }
