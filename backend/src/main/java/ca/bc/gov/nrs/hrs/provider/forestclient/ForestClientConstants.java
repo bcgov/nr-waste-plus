@@ -9,10 +9,8 @@ import lombok.NoArgsConstructor;
 /**
  * Constants for ForestClient provider fallback responses.
  *
- * <p>
- * Centralizes empty/static return values used by fallback methods so they can
- * be reused and tested more easily.
- * </p>
+ * <p>Centralizes empty/static return values used by fallback methods so they can be reused and
+ * tested more easily.
  */
 @SuppressWarnings("unused")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -21,4 +19,3 @@ public final class ForestClientConstants {
   public static final List<ForestClientDto> EMPTY_FOREST_CLIENT_LIST = List.of();
   public static final List<ForestClientLocationDto> EMPTY_FOREST_CLIENT_LOCATION_LIST = List.of();
 }
-

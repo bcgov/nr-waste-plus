@@ -15,9 +15,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-/**
- * Typed mark associated with a submission block.
- */
+/** Typed mark associated with a submission block. */
 @Entity
 @Table(name = "block_mark", schema = "hrs")
 @EntityListeners(AuditingEntityListener.class)

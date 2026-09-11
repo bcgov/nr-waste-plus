@@ -1,9 +1,9 @@
 package ca.bc.gov.nrs.hrs.provider.legacy;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.serviceUnavailable;
 import static com.github.tomakehurst.wiremock.client.WireMock.unauthorized;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
@@ -14,11 +14,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import ca.bc.gov.nrs.hrs.TestConstants;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
-import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
@@ -88,10 +88,7 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
         new CreateReportingUnitRequestDto("00012797", "DND", "S01", null);
 
     // Legacy returns a numeric id in the body
-    clientApiStub.stubFor(
-        post(urlPathEqualTo("/api/reporting-units"))
-            .willReturn(okJson("333"))
-    );
+    clientApiStub.stubFor(post(urlPathEqualTo("/api/reporting-units")).willReturn(okJson("333")));
 
     Long id = legacyReportingUnitClient.createReportingUnit(request);
     assertNotNull(id);
@@ -105,32 +102,25 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
         new CreateReportingUnitRequestDto("00012797", "DND", "S01", null);
 
     clientApiStub.stubFor(
-        post(urlPathEqualTo("/api/reporting-units"))
-            .willReturn(serviceUnavailable())
-    );
+        post(urlPathEqualTo("/api/reporting-units")).willReturn(serviceUnavailable()));
 
-    var ex = assertThrows(
-        ca.bc.gov.nrs.hrs.exception.UnretriableException.class,
-        () -> legacyReportingUnitClient.createReportingUnit(request));
+    var ex =
+        assertThrows(
+            ca.bc.gov.nrs.hrs.exception.UnretriableException.class,
+            () -> legacyReportingUnitClient.createReportingUnit(request));
 
     assertEquals(503, ex.getStatusCode().value());
   }
 
   @ParameterizedTest
-  @CsvSource({
-      "jake, jake|jakelyn|jakesh",
-      "finn, ''",
-      "lemongrab, lemongrabber|lemon"
-  })
+  @CsvSource({"jake, jake|jakelyn|jakesh", "finn, ''", "lemongrab, lemongrabber|lemon"})
   @DisplayName("Search reporting unit users")
   void shouldSearchForRuUsers(String userId, String roles) {
     List<String> expected = Arrays.asList(roles.split("\\|"));
     String json = mapper.writeValueAsString(expected);
 
     clientApiStub.stubFor(
-        get(urlPathEqualTo("/api/search/reporting-units-users"))
-            .willReturn(okJson(json))
-    );
+        get(urlPathEqualTo("/api/search/reporting-units-users")).willReturn(okJson(json)));
 
     assertEquals(expected, legacyReportingUnitClient.searchReportingUnitUsers(userId));
   }
@@ -142,16 +132,12 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
       ReportingUnitSearchParametersDto filters,
       Pageable pageable,
       ResponseDefinitionBuilder stubResponse,
-      long size
-  ) {
+      long size) {
     clientApiStub.stubFor(
-        get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(stubResponse));
+        get(urlPathEqualTo("/api/search/reporting-units")).willReturn(stubResponse));
 
-    Page<ReportingUnitSearchResultDto> result = legacyReportingUnitClient.searchReportingUnit(
-        filters,
-        pageable
-    );
+    Page<ReportingUnitSearchResultDto> result =
+        legacyReportingUnitClient.searchReportingUnit(filters, pageable);
     assertNotNull(result);
     assertEquals(size, result.getTotalElements());
     assertEquals(size == 0, result.getContent().isEmpty());
@@ -164,12 +150,10 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
       Long ruId,
       Long wasteAssessmentAreaId,
       ResponseDefinitionBuilder stubResponse,
-      ReportingUnitSearchExpandedDto expectedDto
-  ) {
+      ReportingUnitSearchExpandedDto expectedDto) {
     clientApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units/ex/" + ruId + "/" + wasteAssessmentAreaId))
-            .willReturn(stubResponse)
-    );
+            .willReturn(stubResponse));
 
     var value = legacyReportingUnitClient.getSearchExpanded(ruId, wasteAssessmentAreaId);
     assertNotNull(value);
@@ -208,111 +192,121 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
   @Test
   @DisplayName("shouldThrowNotFoundGenericException_whenReportingUnitDetailsNotFound")
   void shouldThrowNotFoundGenericException_whenReportingUnitDetailsNotFound() {
-    clientApiStub.stubFor(
-        get(urlPathEqualTo("/api/reporting-units/99999"))
-            .willReturn(notFound()));
+    clientApiStub.stubFor(get(urlPathEqualTo("/api/reporting-units/99999")).willReturn(notFound()));
 
-    NotFoundGenericException ex = assertThrows(
-        NotFoundGenericException.class,
-        () -> legacyReportingUnitClient.getReportingUnitDetails(99999L)
-    );
+    NotFoundGenericException ex =
+        assertThrows(
+            NotFoundGenericException.class,
+            () -> legacyReportingUnitClient.getReportingUnitDetails(99999L));
     assertEquals(404, ex.getStatusCode().value());
   }
 
   private static Stream<Arguments> expandedDetailsArguments() {
-    ReportingUnitSearchExpandedDto fullDto = new ReportingUnitSearchExpandedDto(
-        201L,
-        "LIC123",
-        "CP01",
-        "TMK456",
-        true,
-        false,
-        new CodeDescriptionDto("APP", "Approved"),
-        List.of(),
-        12.5,
-        12.0,
-        "submitter1",
-        null,
-        "Some comments",
-        3L,
-        0L);
-    ReportingUnitSearchExpandedDto emptyDto = new ReportingUnitSearchExpandedDto(
-        202L,
-        null,
-        null,
-        null,
-        false,
-        false,
-        new CodeDescriptionDto("APP", "Approved"),
-        List.of(),
-        0.0,
-        0.0,
-        null,
-        null,
-        null,
-        0L,
-        0L);
-    ReportingUnitSearchExpandedDto fallbackDto = new ReportingUnitSearchExpandedDto(
-        203L,
-        null,
-        null,
-        null,
-        false,
-        false,
-        new CodeDescriptionDto("APP", "Approved"),
-        List.of(),
-        0.0,
-        0.0,
-        null,
-        null,
-        null,
-        0L,
-        0L);
-    ReportingUnitSearchExpandedDto nullDto = new ReportingUnitSearchExpandedDto(
-        null,
-        null,
-        null,
-        null,
-        false,
-        false,
-        new CodeDescriptionDto("APP", "Approved"),
-        List.of(),
-        0.0,
-        0.0,
-        null,
-        null,
-        null,
-        0L,
-        0L);
-    ReportingUnitSearchExpandedDto negativeDto = new ReportingUnitSearchExpandedDto(
-        -2L,
-        null,
-        null,
-        null,
-        false,
-        false,
-        new CodeDescriptionDto("APP", "Approved"),
-        List.of(),
-        0.0,
-        0.0,
-        null,
-        null,
-        null,
-        0L,
-        0L);
+    ReportingUnitSearchExpandedDto fullDto =
+        new ReportingUnitSearchExpandedDto(
+            201L,
+            "LIC123",
+            "CP01",
+            "TMK456",
+            true,
+            false,
+            new CodeDescriptionDto("APP", "Approved"),
+            List.of(),
+            12.5,
+            12.0,
+            "submitter1",
+            null,
+            "Some comments",
+            3L,
+            0L);
+    ReportingUnitSearchExpandedDto emptyDto =
+        new ReportingUnitSearchExpandedDto(
+            202L,
+            null,
+            null,
+            null,
+            false,
+            false,
+            new CodeDescriptionDto("APP", "Approved"),
+            List.of(),
+            0.0,
+            0.0,
+            null,
+            null,
+            null,
+            0L,
+            0L);
+    ReportingUnitSearchExpandedDto fallbackDto =
+        new ReportingUnitSearchExpandedDto(
+            203L,
+            null,
+            null,
+            null,
+            false,
+            false,
+            new CodeDescriptionDto("APP", "Approved"),
+            List.of(),
+            0.0,
+            0.0,
+            null,
+            null,
+            null,
+            0L,
+            0L);
+    ReportingUnitSearchExpandedDto nullDto =
+        new ReportingUnitSearchExpandedDto(
+            null,
+            null,
+            null,
+            null,
+            false,
+            false,
+            new CodeDescriptionDto("APP", "Approved"),
+            List.of(),
+            0.0,
+            0.0,
+            null,
+            null,
+            null,
+            0L,
+            0L);
+    ReportingUnitSearchExpandedDto negativeDto =
+        new ReportingUnitSearchExpandedDto(
+            -2L,
+            null,
+            null,
+            null,
+            false,
+            false,
+            new CodeDescriptionDto("APP", "Approved"),
+            List.of(),
+            0.0,
+            0.0,
+            null,
+            null,
+            null,
+            0L,
+            0L);
 
     return Stream.of(
-        Arguments.argumentSet("101: Full details", 101L, 201L, okJson(TestConstants.EXPANDED_101),
-            fullDto),
-        Arguments.argumentSet("102: Empty details", 102L, 202L, okJson(TestConstants.EXPANDED_102),
-            emptyDto),
-        Arguments.argumentSet("103: Service unavailable", 103L, 203L, serviceUnavailable(),
-            fallbackDto),
-        Arguments.argumentSet("null: get me null, even if it should not", null, null,
-            okJson(TestConstants.EXPANDED_NULL), nullDto),
-        Arguments.argumentSet("-1: negative is a thing these days", -1L, -2L,
-            okJson(TestConstants.EXPANDED_NEGATIVE), negativeDto)
-    );
+        Arguments.argumentSet(
+            "101: Full details", 101L, 201L, okJson(TestConstants.EXPANDED_101), fullDto),
+        Arguments.argumentSet(
+            "102: Empty details", 102L, 202L, okJson(TestConstants.EXPANDED_102), emptyDto),
+        Arguments.argumentSet(
+            "103: Service unavailable", 103L, 203L, serviceUnavailable(), fallbackDto),
+        Arguments.argumentSet(
+            "null: get me null, even if it should not",
+            null,
+            null,
+            okJson(TestConstants.EXPANDED_NULL),
+            nullDto),
+        Arguments.argumentSet(
+            "-1: negative is a thing these days",
+            -1L,
+            -2L,
+            okJson(TestConstants.EXPANDED_NEGATIVE),
+            negativeDto));
   }
 
   private static Stream<Arguments> searchReportingUnit() {
@@ -322,51 +316,42 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
             ReportingUnitSearchParametersDto.builder().build(),
             PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE),
-            1L
-        ),
+            1L),
         Arguments.argumentSet(
             "Search with no results",
             ReportingUnitSearchParametersDto.builder().build(),
             PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE),
-            0L
-        ),
+            0L),
         Arguments.argumentSet(
             "Circuit breaker for unavailable",
             ReportingUnitSearchParametersDto.builder().build(),
             PageRequest.of(1, 10),
             serviceUnavailable(),
-            0L
-        ),
+            0L),
         Arguments.argumentSet(
             "Circuit breaker for not found",
             ReportingUnitSearchParametersDto.builder().build(),
             PageRequest.of(1, 10),
             notFound(),
-            0L
-        ),
+            0L),
         Arguments.argumentSet(
             "Circuit breaker for unauthorized",
             ReportingUnitSearchParametersDto.builder().build(),
             PageRequest.of(1, 10),
             unauthorized(),
-            0L
-        ),
+            0L),
         Arguments.argumentSet(
             "Search with no results object",
             ReportingUnitSearchParametersDto.builder().build(),
             PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.EMPTY_JSON),
-            0L
-        ),
+            0L),
         Arguments.argumentSet(
             "Search with no results page",
             ReportingUnitSearchParametersDto.builder().build(),
             PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.EMPTY_PAGED_NOPAGE),
-            0L
-        )
-    );
+            0L));
   }
 }
-

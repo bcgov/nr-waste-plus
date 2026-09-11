@@ -5,5 +5,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 /** Formula-set representation returned by the API. */
-public record FormulaSetResponse(Long id, Area area, LocalDate startDate, LocalDate endDate,
-    boolean deleted, List<FormulaItemDto> formulas) {}
+public record FormulaSetResponse(
+    Long id,
+    Area area,
+    LocalDate startDate,
+    LocalDate endDate,
+    boolean deleted,
+    List<FormulaItemDto> formulas) {}

@@ -90,21 +90,17 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
   @MethodSource("fetchClientByNumber")
   @DisplayName("Fetch client by number happy path should succeed")
   void fetchClientByNumber_shouldSucceed(
-      String clientNumber,
-      ResponseDefinitionBuilder stubResponse,
-      HttpStatusCode statusCode
-  ) throws Exception {
+      String clientNumber, ResponseDefinitionBuilder stubResponse, HttpStatusCode statusCode)
+      throws Exception {
     clientApiStub.stubFor(
         get(urlPathEqualTo("/clients/findByClientNumber/" + clientNumber))
             .willReturn(stubResponse));
 
-    ResultActions response = mockMvc
-        .perform(
-            MockMvcRequestBuilders
-                .get("/api/forest-clients/{clientNumber}", clientNumber)
+    ResultActions response =
+        mockMvc.perform(
+            MockMvcRequestBuilders.get("/api/forest-clients/{clientNumber}", clientNumber)
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .accept(MediaType.APPLICATION_JSON)
-        );
+                .accept(MediaType.APPLICATION_JSON));
 
     if (statusCode.is2xxSuccessful()) {
       response
@@ -121,32 +117,25 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
     } else {
       response.andExpect(MockMvcResultMatchers.status().is(statusCode.value()));
     }
-
   }
 
   @ParameterizedTest
   @MethodSource("searchClients")
   @DisplayName("Search clients by name, acronym, or number should succeed")
   void fetchClientByName_shouldSucceed(
-      int page,
-      int size,
-      String value,
-      ResponseDefinitionBuilder stub,
-      long expectedSize
-  ) throws Exception {
+      int page, int size, String value, ResponseDefinitionBuilder stub, long expectedSize)
+      throws Exception {
 
     clientApiStub.stubFor(get(urlPathEqualTo("/clients/search/by")).willReturn(stub));
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders
-                .get("/api/forest-clients/byNameAcronymNumber")
+            MockMvcRequestBuilders.get("/api/forest-clients/byNameAcronymNumber")
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .param("page", String.valueOf(page))
                 .param("size", String.valueOf(size))
                 .param("value", value)
-                .accept(MediaType.APPLICATION_JSON)
-        )
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(MockMvcResultMatchers.status().isOk())
         .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath("$.length()").value(expectedSize))
@@ -157,23 +146,18 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
   @MethodSource("fetchClientByNumberList")
   @DisplayName("Fetch client by number list happy path should succeed")
   void fetchByClientNumberList_shouldSucceed(
-      String clientNumber,
-      ResponseDefinitionBuilder stubResponse,
-      HttpStatusCode statusCode
-  ) throws Exception {
-    clientApiStub.stubFor(
-        get(urlPathEqualTo("/clients/search"))
-            .willReturn(stubResponse));
+      String clientNumber, ResponseDefinitionBuilder stubResponse, HttpStatusCode statusCode)
+      throws Exception {
+    clientApiStub.stubFor(get(urlPathEqualTo("/clients/search")).willReturn(stubResponse));
 
-    ResultActions response = mockMvc
-        .perform(
-            MockMvcRequestBuilders
-                .get("/api/forest-clients/searchByNumbers")
-                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .param("values", clientNumber)
-                .accept(MediaType.APPLICATION_JSON)
-        )
-        .andExpect(MockMvcResultMatchers.status().isOk());
+    ResultActions response =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get("/api/forest-clients/searchByNumbers")
+                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .param("values", clientNumber)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isOk());
 
     if (statusCode.is2xxSuccessful()) {
       response
@@ -187,7 +171,6 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
           .andExpect(jsonPath("$.[0].acronym").value("MOF"))
           .andReturn();
     }
-
   }
 
   @ParameterizedTest
@@ -195,37 +178,29 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
   @DisplayName("Fetch my client")
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {
-          "WASTE_PLUS_SUBMITTER_00010004",
-          "WASTE_PLUS_SUBMITTER_00012797"
-      }
-  )
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00010004", "WASTE_PLUS_SUBMITTER_00012797"})
   void fetchMyClientsWithValue(
       String value,
       ResponseDefinitionBuilder apiStub,
       ResponseDefinitionBuilder legacyStub,
-      boolean hasResults
-  ) throws Exception {
-    clientApiStub.stubFor(
-        get(urlPathEqualTo("/clients/search"))
-            .willReturn(apiStub));
+      boolean hasResults)
+      throws Exception {
+    clientApiStub.stubFor(get(urlPathEqualTo("/clients/search")).willReturn(apiStub));
 
     legacyApiStub.stubFor(
-        get(urlPathEqualTo("/api/search/my-forest-clients"))
-            .willReturn(legacyStub));
+        get(urlPathEqualTo("/api/search/my-forest-clients")).willReturn(legacyStub));
 
-    var requestBuilder = MockMvcRequestBuilders
-        .get("/api/forest-clients/clients")
-        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-        .accept(MediaType.APPLICATION_JSON);
+    var requestBuilder =
+        MockMvcRequestBuilders.get("/api/forest-clients/clients")
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .accept(MediaType.APPLICATION_JSON);
 
     if (StringUtils.isNotBlank(value)) {
       requestBuilder = requestBuilder.queryParam("value", value);
     }
 
-    ResultActions response = mockMvc
-        .perform(requestBuilder)
-        .andExpect(MockMvcResultMatchers.status().isOk());
+    ResultActions response =
+        mockMvc.perform(requestBuilder).andExpect(MockMvcResultMatchers.status().isOk());
 
     if (hasResults) {
       response
@@ -236,7 +211,6 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
     } else {
       response.andExpect(jsonPath("$.content").isEmpty());
     }
-
   }
 
   private static Stream<Arguments> fetchMyClients() {
@@ -246,37 +220,31 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
             null,
             okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST),
             okJson(ForestClientApiProviderTestConstants.MY_FOREST_CLIENTS_LEGACY),
-            true
-        ),
+            true),
         Arguments.argumentSet(
             "With arguments, with return",
             "forest",
             okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST),
             okJson(ForestClientApiProviderTestConstants.MY_FOREST_CLIENTS_LEGACY),
-            true
-        ),
+            true),
         Arguments.argumentSet(
             "With arguments, no return",
             "kelp",
             okJson("[]"),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE),
-            false
-        ),
+            false),
         Arguments.argumentSet(
             "With return but no page",
             null,
             okJson("[]"),
             okJson(ForestClientApiProviderTestConstants.EMPTY_PAGED_NOPAGE),
-            false
-        ),
+            false),
         Arguments.argumentSet(
             "With empty return",
             null,
             okJson("[]"),
             okJson(ForestClientApiProviderTestConstants.EMPTY_JSON),
-            false
-        )
-    );
+            false));
   }
 
   private static Stream<Arguments> fetchClientByNumber() {
@@ -285,33 +253,15 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
             "Happy path",
             "00012797",
             okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE),
-            HttpStatusCode.valueOf(200)
-        ),
+            HttpStatusCode.valueOf(200)),
         Arguments.argumentSet(
-            "Not found breaker",
-            "00012898",
-            notFound(),
-            HttpStatusCode.valueOf(404)
-        ),
+            "Not found breaker", "00012898", notFound(), HttpStatusCode.valueOf(404)),
         Arguments.argumentSet(
-            "Unavailable breaker",
-            "00012898",
-            serviceUnavailable(),
-            HttpStatusCode.valueOf(404)
-        ),
+            "Unavailable breaker", "00012898", serviceUnavailable(), HttpStatusCode.valueOf(404)),
         Arguments.argumentSet(
-            "Rate limiter breaker",
-            "00012898",
-            status(429),
-            HttpStatusCode.valueOf(404)
-        ),
+            "Rate limiter breaker", "00012898", status(429), HttpStatusCode.valueOf(404)),
         Arguments.argumentSet(
-            "Bad request breaker",
-            "00012898",
-            badRequest(),
-            HttpStatusCode.valueOf(404)
-        )
-    );
+            "Bad request breaker", "00012898", badRequest(), HttpStatusCode.valueOf(404)));
   }
 
   private static Stream<Arguments> fetchClientByNumberList() {
@@ -320,45 +270,20 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
             "Happy path",
             "00012797",
             okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST),
-            HttpStatusCode.valueOf(200)
-        ),
+            HttpStatusCode.valueOf(200)),
         Arguments.argumentSet(
-            "Not found breaker",
-            "00012898",
-            notFound(),
-            HttpStatusCode.valueOf(404)
-        ),
+            "Not found breaker", "00012898", notFound(), HttpStatusCode.valueOf(404)),
         Arguments.argumentSet(
-            "Unavailable breaker",
-            "00012898",
-            serviceUnavailable(),
-            HttpStatusCode.valueOf(404)
-        ),
+            "Unavailable breaker", "00012898", serviceUnavailable(), HttpStatusCode.valueOf(404)),
         Arguments.argumentSet(
-            "Rate limiter breaker",
-            "00012898",
-            status(429),
-            HttpStatusCode.valueOf(404)
-        ),
+            "Rate limiter breaker", "00012898", status(429), HttpStatusCode.valueOf(404)),
         Arguments.argumentSet(
-            "Bad request breaker",
-            "00012898",
-            badRequest(),
-            HttpStatusCode.valueOf(404)
-        )
-    );
+            "Bad request breaker", "00012898", badRequest(), HttpStatusCode.valueOf(404)));
   }
 
   private static Stream<Arguments> searchClients() {
     return Stream.of(
-        Arguments.argumentSet(
-            "Circuit Breaker",
-            0,
-            10,
-            "COMPANY",
-            serviceUnavailable(),
-            0
-        ),
+        Arguments.argumentSet("Circuit Breaker", 0, 10, "COMPANY", serviceUnavailable(), 0),
         Arguments.argumentSet(
             "India",
             0,
@@ -366,8 +291,7 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
             "INDIA",
             okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST)
                 .withHeader(X_TOTAL_COUNT, "1"),
-            1
-        ),
+            1),
         Arguments.argumentSet(
             "Sample BC",
             0,
@@ -375,8 +299,7 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
             "SAMPLIBC",
             okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST)
                 .withHeader(X_TOTAL_COUNT, "1"),
-            1
-        ),
+            1),
         Arguments.argumentSet(
             "Client number",
             0,
@@ -384,8 +307,7 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
             "00000001",
             okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST)
                 .withHeader(X_TOTAL_COUNT, "1"),
-            1
-        ),
+            1),
         Arguments.argumentSet(
             "Client number simple",
             0,
@@ -393,9 +315,6 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
             "1",
             okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST)
                 .withHeader(X_TOTAL_COUNT, "1"),
-            1
-        )
-    );
+            1));
   }
-
 }

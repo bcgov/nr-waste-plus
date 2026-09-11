@@ -48,16 +48,9 @@ import org.springframework.web.server.ResponseStatusException;
 class DistrictVolumeServiceTest {
 
   private static final LocalDateTime MOCK_UPLOAD_TIME =
-      LocalDateTime.of(
-          2026,
-          Month.JANUARY,
-          1,
-          12,
-          0,
-          0);
+      LocalDateTime.of(2026, Month.JANUARY, 1, 12, 0, 0);
 
-  private static final LocalDate MOCK_START_DATE =
-      LocalDate.of(2026, Month.FEBRUARY, 1);
+  private static final LocalDate MOCK_START_DATE = LocalDate.of(2026, Month.FEBRUARY, 1);
 
   @Mock
   private DistrictVolumeRepository districtVolumeRepository;
@@ -76,16 +69,8 @@ class DistrictVolumeServiceTest {
 
     TableData tableData =
         area == Area.INTERIOR
-            ? new TableData(
-                Collections.emptyList(),
-                null,
-                null,
-                Collections.emptyMap())
-            : new TableData(
-                null,
-                Collections.emptyList(),
-                null,
-                Collections.emptyMap());
+            ? new TableData(Collections.emptyList(), null, null, Collections.emptyMap())
+            : new TableData(null, Collections.emptyList(), null, Collections.emptyMap());
 
     entity.setTableData(tableData);
     return entity;
@@ -93,8 +78,7 @@ class DistrictVolumeServiceTest {
 
   @Test
   @DisplayName(
-      "getDistrictVolumes — should return mapped page from repository "
-          + "when no filter provided")
+      "getDistrictVolumes — should return mapped page from repository " + "when no filter provided")
   void getDistrictVolumes_returnsMappedPage() {
 
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
@@ -103,8 +87,7 @@ class DistrictVolumeServiceTest {
     when(districtVolumeRepository.findAllLiveByConfigType(ConfigType.DISTRICT_VOLUME, pageable))
         .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
-    var result =
-        districtVolumeService.getDistrictVolumes(Optional.empty(), pageable);
+    var result = districtVolumeService.getDistrictVolumes(Optional.empty(), pageable);
 
     assertThat(result).isNotNull();
     assertThat(result.getTotalElements()).isEqualTo(1);
@@ -115,37 +98,28 @@ class DistrictVolumeServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "getDistrictVolumes — should return filtered page when area filter is provided")
+  @DisplayName("getDistrictVolumes — should return filtered page when area filter is provided")
   void getDistrictVolumes_returnsFilteredPage_whenAreaProvided() {
 
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
     PageRequest pageable = PageRequest.of(0, 10);
 
     when(districtVolumeRepository.findAllLiveByConfigTypeAndArea(
-            ConfigType.DISTRICT_VOLUME,
-            Area.INTERIOR,
-            pageable))
+            ConfigType.DISTRICT_VOLUME, Area.INTERIOR, pageable))
         .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
-    var result =
-        districtVolumeService.getDistrictVolumes(
-            Optional.of("INTERIOR"),
-            pageable);
+    var result = districtVolumeService.getDistrictVolumes(Optional.of("INTERIOR"), pageable);
 
     assertThat(result).isNotNull();
     assertThat(result.getTotalElements()).isEqualTo(1);
     assertThat(result.getContent().get(0).area()).isEqualTo("INTERIOR");
-    verify(districtVolumeRepository).findAllLiveByConfigTypeAndArea(
-        ConfigType.DISTRICT_VOLUME,
-        Area.INTERIOR,
-        pageable);
+    verify(districtVolumeRepository)
+        .findAllLiveByConfigTypeAndArea(ConfigType.DISTRICT_VOLUME, Area.INTERIOR, pageable);
     verify(districtVolumeRepository, never()).findByArea(Area.INTERIOR, pageable);
   }
 
   @Test
-  @DisplayName(
-      "getDistrictVolumeById — should return detail DTO when entity found")
+  @DisplayName("getDistrictVolumeById — should return detail DTO when entity found")
   void getDistrictVolumeById_returnsDetailDto_whenFound() {
 
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
@@ -153,8 +127,7 @@ class DistrictVolumeServiceTest {
     when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.DISTRICT_VOLUME))
         .thenReturn(Optional.of(entity));
 
-    DistrictVolumeDetailDto result =
-        districtVolumeService.getDistrictVolumeById(1L);
+    DistrictVolumeDetailDto result = districtVolumeService.getDistrictVolumeById(1L);
 
     assertThat(result).isNotNull();
     assertThat(result.id()).isEqualTo(1L);
@@ -162,29 +135,25 @@ class DistrictVolumeServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "getDistrictVolumeById — should throw 404 when entity not found")
+  @DisplayName("getDistrictVolumeById — should throw 404 when entity not found")
   void getDistrictVolumeById_throws404_whenNotFound() {
 
     when(districtVolumeRepository.findByIdAndConfigType(99L, ConfigType.DISTRICT_VOLUME))
         .thenReturn(Optional.empty());
 
-    assertThatThrownBy(
-          () -> districtVolumeService.getDistrictVolumeById(99L))
+    assertThatThrownBy(() -> districtVolumeService.getDistrictVolumeById(99L))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("District volume record not found");
   }
 
   @Test
-  @DisplayName(
-      "getDistrictVolumeById — should reject a record with another config type")
+  @DisplayName("getDistrictVolumeById — should reject a record with another config type")
   void getDistrictVolumeById_throws404_whenConfigTypeDoesNotMatch() {
 
     when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.DISTRICT_VOLUME))
         .thenReturn(Optional.empty());
 
-    assertThatThrownBy(
-          () -> districtVolumeService.getDistrictVolumeById(1L))
+    assertThatThrownBy(() -> districtVolumeService.getDistrictVolumeById(1L))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("District volume record not found");
 
@@ -193,14 +162,11 @@ class DistrictVolumeServiceTest {
 
   @Test
   @DisplayName(
-      "createDistrictVolume — should throw 400 when InteriorDataDto used "
-          + "with area=COASTAL")
+      "createDistrictVolume — should throw 400 when InteriorDataDto used " + "with area=COASTAL")
   void createDistrictVolume_throws400_whenInteriorDataWithCoastalArea() {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
     DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
@@ -210,79 +176,49 @@ class DistrictVolumeServiceTest {
             new BigDecimal("1.500"),
             interiorData);
 
-    assertThatThrownBy(
-          () -> districtVolumeService.createDistrictVolume(
-              "TEST_USER",
-              createDto))
+    assertThatThrownBy(() -> districtVolumeService.createDistrictVolume("TEST_USER", createDto))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining(
-            "Area mismatch: Expected INTERIOR data layout.");
+        .hasMessageContaining("Area mismatch: Expected INTERIOR data layout.");
   }
 
   @Test
   @DisplayName(
-      "createDistrictVolume — should throw 400 when CoastDataDto used "
-          + "with area=INTERIOR")
+      "createDistrictVolume — should throw 400 when CoastDataDto used " + "with area=INTERIOR")
   void createDistrictVolume_throws400_whenCoastalDataWithInteriorArea() {
 
-    CoastDataDto coastData =
-        new CoastDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+    CoastDataDto coastData = new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
 
     DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
-            "INTERIOR",
-            MOCK_START_DATE,
-            new BigDecimal("1.000"),
-            null,
-            coastData);
+            "INTERIOR", MOCK_START_DATE, new BigDecimal("1.000"), null, coastData);
 
-    assertThatThrownBy(
-          () -> districtVolumeService.createDistrictVolume(
-              "TEST_USER",
-              createDto))
+    assertThatThrownBy(() -> districtVolumeService.createDistrictVolume("TEST_USER", createDto))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining(
-            "Area mismatch: Expected COASTAL data layout.");
+        .hasMessageContaining("Area mismatch: Expected COASTAL data layout.");
   }
 
   @Test
   @DisplayName(
-      "createDistrictVolume — should throw 400 when CoastDataDto has no "
-          + "heliMultiplier")
+      "createDistrictVolume — should throw 400 when CoastDataDto has no " + "heliMultiplier")
   void createDistrictVolume_throws400_whenCoastalDataMissingHeliMultiplier() {
 
-    CoastDataDto coastData =
-        new CoastDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+    CoastDataDto coastData = new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
 
     DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
-            "COASTAL",
-            MOCK_START_DATE,
-            new BigDecimal("1.000"),
-            null,
-            coastData);
+            "COASTAL", MOCK_START_DATE, new BigDecimal("1.000"), null, coastData);
 
-    assertThatThrownBy(
-          () -> districtVolumeService.createDistrictVolume(
-              "TEST_USER",
-              createDto))
+    assertThatThrownBy(() -> districtVolumeService.createDistrictVolume("TEST_USER", createDto))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Missing helicopter multiplier");
   }
 
   @Test
-  @DisplayName(
-      "createDistrictVolume — should throw 400 when area string is unrecognized")
+  @DisplayName("createDistrictVolume — should throw 400 when area string is unrecognized")
   void createDistrictVolume_throws400_whenAreaIsInvalid() {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
     DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
@@ -292,46 +228,30 @@ class DistrictVolumeServiceTest {
             null,
             interiorData);
 
-    assertThatThrownBy(
-          () -> districtVolumeService.createDistrictVolume(
-              "TEST_USER",
-              createDto))
+    assertThatThrownBy(() -> districtVolumeService.createDistrictVolume("TEST_USER", createDto))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining(
-            "Invalid area: UNKNOWN_AREA. Must be INTERIOR or COASTAL.");
+        .hasMessageContaining("Invalid area: UNKNOWN_AREA. Must be INTERIOR or COASTAL.");
   }
 
   @Test
-  @DisplayName(
-      "createDistrictVolume — should throw 400 when tableData payload is missing")
+  @DisplayName("createDistrictVolume — should throw 400 when tableData payload is missing")
   void createDistrictVolume_throws400_whenTableDataIsNull() {
 
     DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
-            "INTERIOR",
-            LocalDate.of(9999, Month.JANUARY, 1),
-            new BigDecimal("1.000"),
-            null,
-            null);
+            "INTERIOR", LocalDate.of(9999, Month.JANUARY, 1), new BigDecimal("1.000"), null, null);
 
-    assertThatThrownBy(
-          () -> districtVolumeService.createDistrictVolume(
-              "TEST_USER",
-              createDto))
+    assertThatThrownBy(() -> districtVolumeService.createDistrictVolume("TEST_USER", createDto))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining(
-            "Invalid or missing table data payload structure.");
+        .hasMessageContaining("Invalid or missing table data payload structure.");
   }
 
   @Test
-  @DisplayName(
-      "createDistrictVolume — should throw 422 when start date is in the past")
+  @DisplayName("createDistrictVolume — should throw 422 when start date is in the past")
   void createDistrictVolume_throws422_whenStartDateIsInPast() {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
     DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
@@ -341,27 +261,20 @@ class DistrictVolumeServiceTest {
             null,
             interiorData);
 
-    assertThatThrownBy(
-          () -> districtVolumeService.createDistrictVolume(
-              "TEST_USER",
-              createDto))
+    assertThatThrownBy(() -> districtVolumeService.createDistrictVolume("TEST_USER", createDto))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining(
-            "Start date must be strictly after today.");
+        .hasMessageContaining("Start date must be strictly after today.");
   }
 
   @Test
   @DisplayName(
-      "createDistrictVolume — should save and return mapped DTO for "
-          + "valid INTERIOR payload")
+      "createDistrictVolume — should save and return mapped DTO for " + "valid INTERIOR payload")
   void createDistrictVolume_returnsMappedDto_whenInteriorIsValid() {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
-    DistrictVolumeCreateDto createDto =
+    final DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
             "INTERIOR",
             LocalDate.of(9999, Month.JANUARY, 1),
@@ -373,21 +286,16 @@ class DistrictVolumeServiceTest {
     savedEntity.setTableLevelFactor(new BigDecimal("1.150"));
 
     when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
-            ConfigType.DISTRICT_VOLUME,
-            Area.INTERIOR))
+            ConfigType.DISTRICT_VOLUME, Area.INTERIOR))
         .thenReturn(Collections.emptyList());
-    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
-        .thenReturn(savedEntity);
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class))).thenReturn(savedEntity);
 
     DistrictVolumeDetailDto result =
-        districtVolumeService.createDistrictVolume(
-            "TEST_USER",
-            createDto);
+        districtVolumeService.createDistrictVolume("TEST_USER", createDto);
 
     assertThat(result).isNotNull();
     assertThat(result.area()).isEqualTo("INTERIOR");
-    assertThat(result.tableLevelFactor())
-        .isEqualTo(new BigDecimal("1.150"));
+    assertThat(result.tableLevelFactor()).isEqualTo(new BigDecimal("1.150"));
   }
 
   @Test
@@ -396,19 +304,13 @@ class DistrictVolumeServiceTest {
   void createDistrictVolume_closesExistingOpenEndedRow_beforeSavingNewRow() {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
     LocalDate newStartDate = LocalDate.of(9999, Month.JANUARY, 1);
 
-    DistrictVolumeCreateDto createDto =
+    final DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
-            "INTERIOR",
-            newStartDate,
-            new BigDecimal("1.150"),
-            null,
-            interiorData);
+            "INTERIOR", newStartDate, new BigDecimal("1.150"), null, interiorData);
 
     DistrictVolumeEntity existingOpenEntry = buildEntity(Area.INTERIOR);
     existingOpenEntry.setStartDate(LocalDate.of(2026, Month.JANUARY, 1));
@@ -421,40 +323,33 @@ class DistrictVolumeServiceTest {
     savedEntity.setTableLevelFactor(new BigDecimal("1.150"));
 
     when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
-            ConfigType.DISTRICT_VOLUME,
-            Area.INTERIOR))
+            ConfigType.DISTRICT_VOLUME, Area.INTERIOR))
         .thenReturn(List.of(existingOpenEntry));
     when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
         .thenReturn(existingOpenEntry, savedEntity);
 
     DistrictVolumeDetailDto result =
-        districtVolumeService.createDistrictVolume(
-            "TEST_USER",
-            createDto);
+        districtVolumeService.createDistrictVolume("TEST_USER", createDto);
 
     ArgumentCaptor<DistrictVolumeEntity> saveCaptor =
         ArgumentCaptor.forClass(DistrictVolumeEntity.class);
 
     verify(districtVolumeRepository)
         .findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
-            ConfigType.DISTRICT_VOLUME,
-            Area.INTERIOR);
+            ConfigType.DISTRICT_VOLUME, Area.INTERIOR);
     verify(districtVolumeRepository, org.mockito.Mockito.times(2)).save(saveCaptor.capture());
 
     List<DistrictVolumeEntity> savedEntities = saveCaptor.getAllValues();
 
     assertThat(savedEntities.get(0)).isSameAs(existingOpenEntry);
-    assertThat(savedEntities.get(0).getEndDate())
-        .isEqualTo(newStartDate.minusDays(1));
+    assertThat(savedEntities.get(0).getEndDate()).isEqualTo(newStartDate.minusDays(1));
 
     assertThat(savedEntities.get(1).getArea()).isEqualTo(Area.INTERIOR);
     assertThat(savedEntities.get(1).getStartDate()).isEqualTo(newStartDate);
     assertThat(savedEntities.get(1).getEndDate()).isNull();
     assertThat(savedEntities.get(1).getCreatedBy()).isEqualTo("TEST_USER");
-    assertThat(savedEntities.get(1).getConfigType())
-        .isEqualTo(ConfigType.DISTRICT_VOLUME);
-    assertThat(savedEntities.get(1).getTableLevelFactor())
-        .isEqualTo(new BigDecimal("1.150"));
+    assertThat(savedEntities.get(1).getConfigType()).isEqualTo(ConfigType.DISTRICT_VOLUME);
+    assertThat(savedEntities.get(1).getTableLevelFactor()).isEqualTo(new BigDecimal("1.150"));
 
     assertThat(result.id()).isEqualTo(2L);
     assertThat(result.startDate()).isEqualTo(newStartDate);
@@ -466,32 +361,22 @@ class DistrictVolumeServiceTest {
   void createDistrictVolume_throws422_whenStartDateNotAfterExistingOpenEndedRow() {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
     LocalDate existingStartDate = LocalDate.now().plusDays(5);
 
     DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
-            "INTERIOR",
-            existingStartDate,
-            new BigDecimal("1.150"),
-            null,
-            interiorData);
+            "INTERIOR", existingStartDate, new BigDecimal("1.150"), null, interiorData);
 
     DistrictVolumeEntity existingOpenEntry = buildEntity(Area.INTERIOR);
     existingOpenEntry.setStartDate(existingStartDate);
 
     when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
-            ConfigType.DISTRICT_VOLUME,
-            Area.INTERIOR))
+            ConfigType.DISTRICT_VOLUME, Area.INTERIOR))
         .thenReturn(List.of(existingOpenEntry));
 
-    assertThatThrownBy(
-          () -> districtVolumeService.createDistrictVolume(
-              "TEST_USER",
-              createDto))
+    assertThatThrownBy(() -> districtVolumeService.createDistrictVolume("TEST_USER", createDto))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Start date must be after the most recent existing start date");
 
@@ -504,11 +389,9 @@ class DistrictVolumeServiceTest {
   void createDistrictVolume_throws409_whenMultipleOpenEndedRowsExist() {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
-    DistrictVolumeCreateDto createDto =
+    final DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
             "INTERIOR",
             LocalDate.of(9999, Month.JANUARY, 1),
@@ -524,14 +407,10 @@ class DistrictVolumeServiceTest {
     olderOpenEntry.setStartDate(LocalDate.of(2026, Month.JANUARY, 1));
 
     when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
-            ConfigType.DISTRICT_VOLUME,
-            Area.INTERIOR))
+            ConfigType.DISTRICT_VOLUME, Area.INTERIOR))
         .thenReturn(List.of(newestOpenEntry, olderOpenEntry));
 
-    assertThatThrownBy(
-          () -> districtVolumeService.createDistrictVolume(
-              "TEST_USER",
-              createDto))
+    assertThatThrownBy(() -> districtVolumeService.createDistrictVolume("TEST_USER", createDto))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining(
             "multiple open-ended district volume records exist for area INTERIOR");
@@ -540,16 +419,12 @@ class DistrictVolumeServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "createDistrictVolume — should save and return mapped DTO for valid COASTAL payload")
+  @DisplayName("createDistrictVolume — should save and return mapped DTO for valid COASTAL payload")
   void createDistrictVolume_returnsMappedDto_whenCoastalIsValid() {
 
-    CoastDataDto coastData =
-        new CoastDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+    CoastDataDto coastData = new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
 
-    DistrictVolumeCreateDto createDto =
+    final DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
             "COASTAL",
             LocalDate.of(9999, Month.JANUARY, 1),
@@ -562,39 +437,34 @@ class DistrictVolumeServiceTest {
     savedEntity.setHeliMultiplier(new BigDecimal("1.500"));
 
     when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
-            ConfigType.DISTRICT_VOLUME,
-            Area.COASTAL))
+            ConfigType.DISTRICT_VOLUME, Area.COASTAL))
         .thenReturn(Collections.emptyList());
-    when(districtVolumeRepository.save(
-            any(DistrictVolumeEntity.class)))
-        .thenReturn(savedEntity);
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class))).thenReturn(savedEntity);
 
     DistrictVolumeDetailDto result =
-        districtVolumeService.createDistrictVolume(
-            "TEST_USER",
-            createDto);
+        districtVolumeService.createDistrictVolume("TEST_USER", createDto);
 
     assertThat(result).isNotNull();
     assertThat(result.area()).isEqualTo("COASTAL");
-    assertThat(result.tableLevelFactor())
-        .isEqualTo(new BigDecimal("1.200"));
-    assertThat(result.heliMultiplier())
-        .isEqualTo(new BigDecimal("1.500"));
+    assertThat(result.tableLevelFactor()).isEqualTo(new BigDecimal("1.200"));
+    assertThat(result.heliMultiplier()).isEqualTo(new BigDecimal("1.500"));
   }
 
   @Test
   @DisplayName(
-      "createDistrictVolume — should insert between existing rows and close predecessor, set endDate on new entity")
+      "createDistrictVolume — should insert between existing rows and close predecessor, set"
+          + " endDate on new entity")
   void createDistrictVolume_insertsBetweenRows_setsEndDateOnNewAndClosesPredecessor() {
 
     CoastDataDto coastData = new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
 
-    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
-        "COASTAL",
-        LocalDate.of(2027, Month.JULY, 15),
-        new BigDecimal("1.200"),
-        new BigDecimal("1.500"),
-        coastData);
+    final DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "COASTAL",
+            LocalDate.of(2027, Month.JULY, 15),
+            new BigDecimal("1.200"),
+            new BigDecimal("1.500"),
+            coastData);
 
     // Successor: row starting Aug 1, 2027
     DistrictVolumeEntity successor = buildEntity(Area.COASTAL);
@@ -629,30 +499,32 @@ class DistrictVolumeServiceTest {
     when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    DistrictVolumeDetailDto result = districtVolumeService.createDistrictVolume(
-        "TEST_USER", createDto);
+    DistrictVolumeDetailDto result =
+        districtVolumeService.createDistrictVolume("TEST_USER", createDto);
 
     assertThat(result.startDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 15));
-    assertThat(result.endDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 31)); // successor start - 1 day
+    assertThat(result.endDate())
+        .isEqualTo(LocalDate.of(2027, Month.JULY, 31)); // successor start - 1 day
 
     // Verify predecessor was closed
-    verify(districtVolumeRepository).save(argThat(e ->
-        e.getEndDate().equals(LocalDate.of(2027, Month.JULY, 14))));
+    verify(districtVolumeRepository)
+        .save(argThat(e -> e.getEndDate().equals(LocalDate.of(2027, Month.JULY, 14))));
   }
 
   @Test
-  @DisplayName(
-      "createDistrictVolume — should insert after all rows when no successor exists")
+  @DisplayName("createDistrictVolume — should insert after all rows when no successor exists")
   void createDistrictVolume_insertsAfterAllRows_whenNoSuccessor() {
 
-    InteriorDataDto interiorData = new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
+    InteriorDataDto interiorData =
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
-    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
-        "INTERIOR",
-        LocalDate.of(2027, Month.JULY, 15),
-        new BigDecimal("1.200"),
-        null,
-        interiorData);
+    final DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "INTERIOR",
+            LocalDate.of(2027, Month.JULY, 15),
+            new BigDecimal("1.200"),
+            null,
+            interiorData);
 
     // Open-ended predecessor
     DistrictVolumeEntity predecessor = buildEntity(Area.INTERIOR);
@@ -674,34 +546,38 @@ class DistrictVolumeServiceTest {
     when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    DistrictVolumeDetailDto result = districtVolumeService.createDistrictVolume(
-        "TEST_USER", createDto);
+    DistrictVolumeDetailDto result =
+        districtVolumeService.createDistrictVolume("TEST_USER", createDto);
 
     assertThat(result.startDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 15));
     assertThat(result.endDate()).isNull(); // No successor = open-ended
 
     // Verify predecessor was closed
-    verify(districtVolumeRepository).save(argThat(e ->
-        e.getEndDate() != null && e.getEndDate().equals(LocalDate.of(2027, Month.JULY, 14))));
+    verify(districtVolumeRepository)
+        .save(
+            argThat(
+                e ->
+                    e.getEndDate() != null
+                        && e.getEndDate().equals(LocalDate.of(2027, Month.JULY, 14))));
 
     // Verify new entity was saved as open-ended (endDate = null)
-    verify(districtVolumeRepository).save(argThat(e ->
-        e.getEndDate() == null));
+    verify(districtVolumeRepository).save(argThat(e -> e.getEndDate() == null));
   }
 
   @Test
-  @DisplayName(
-      "createDistrictVolume — should insert before all rows when no predecessor exists")
+  @DisplayName("createDistrictVolume — should insert before all rows when no predecessor exists")
   void createDistrictVolume_insertsBeforeAllRows_whenNoPredecessor() {
 
-    InteriorDataDto interiorData = new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
+    InteriorDataDto interiorData =
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
-    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
-        "INTERIOR",
-        LocalDate.of(2027, Month.JANUARY, 15),
-        new BigDecimal("1.200"),
-        null,
-        interiorData);
+    final DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "INTERIOR",
+            LocalDate.of(2027, Month.JANUARY, 15),
+            new BigDecimal("1.200"),
+            null,
+            interiorData);
 
     // Successor exists (starts Jan 1)
     DistrictVolumeEntity successor = buildEntity(Area.INTERIOR);
@@ -730,8 +606,8 @@ class DistrictVolumeServiceTest {
     when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    DistrictVolumeDetailDto result = districtVolumeService.createDistrictVolume(
-        "TEST_USER", createDto);
+    DistrictVolumeDetailDto result =
+        districtVolumeService.createDistrictVolume("TEST_USER", createDto);
 
     assertThat(result.startDate()).isEqualTo(LocalDate.of(2027, Month.JANUARY, 15));
     // successor starts Jan 1, so endDate = Dec 31, 2026
@@ -742,18 +618,19 @@ class DistrictVolumeServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "createDistrictVolume — should create open-ended when no existing rows")
+  @DisplayName("createDistrictVolume — should create open-ended when no existing rows")
   void createDistrictVolume_createsOpenEnded_whenNoExistingRows() {
 
-    InteriorDataDto interiorData = new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
+    InteriorDataDto interiorData =
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
-    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
-        "INTERIOR",
-        LocalDate.of(2027, Month.JANUARY, 15),
-        new BigDecimal("1.200"),
-        null,
-        interiorData);
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "INTERIOR",
+            LocalDate.of(2027, Month.JANUARY, 15),
+            new BigDecimal("1.200"),
+            null,
+            interiorData);
 
     when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
             ConfigType.DISTRICT_VOLUME, Area.INTERIOR))
@@ -762,16 +639,15 @@ class DistrictVolumeServiceTest {
     when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    DistrictVolumeDetailDto result = districtVolumeService.createDistrictVolume(
-        "TEST_USER", createDto);
+    DistrictVolumeDetailDto result =
+        districtVolumeService.createDistrictVolume("TEST_USER", createDto);
 
     assertThat(result.startDate()).isEqualTo(LocalDate.of(2027, Month.JANUARY, 15));
     assertThat(result.endDate()).isNull(); // Open-ended
   }
 
   @Test
-  @DisplayName(
-      "deleteDistrictVolume — should soft-delete the record when found and not deleted")
+  @DisplayName("deleteDistrictVolume — should soft-delete the record when found and not deleted")
   void deleteDistrictVolume_softDeletes_whenFound() {
 
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
@@ -788,15 +664,13 @@ class DistrictVolumeServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "deleteDistrictVolume — should throw 404 when record is not found")
+  @DisplayName("deleteDistrictVolume — should throw 404 when record is not found")
   void deleteDistrictVolume_throws404_whenNotFound() {
 
     when(districtVolumeRepository.findByIdAndConfigType(99L, ConfigType.DISTRICT_VOLUME))
         .thenReturn(Optional.empty());
 
-    assertThatThrownBy(
-          () -> districtVolumeService.deleteDistrictVolume("TEST_USER", 99L))
+    assertThatThrownBy(() -> districtVolumeService.deleteDistrictVolume("TEST_USER", 99L))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("District volume record not found");
 
@@ -804,8 +678,7 @@ class DistrictVolumeServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "deleteDistrictVolume — should throw 404 when record is already deleted")
+  @DisplayName("deleteDistrictVolume — should throw 404 when record is already deleted")
   void deleteDistrictVolume_throws404_whenAlreadyDeleted() {
 
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
@@ -814,8 +687,7 @@ class DistrictVolumeServiceTest {
     when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.DISTRICT_VOLUME))
         .thenReturn(Optional.of(entity));
 
-    assertThatThrownBy(
-          () -> districtVolumeService.deleteDistrictVolume("TEST_USER", 1L))
+    assertThatThrownBy(() -> districtVolumeService.deleteDistrictVolume("TEST_USER", 1L))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("District volume record not found");
 
@@ -824,9 +696,7 @@ class DistrictVolumeServiceTest {
 
   // ---- helper methods ----
 
-  private DistrictVolumeEntity buildEntityWithDistricts(
-      Area area,
-      String... districtCodes) {
+  private DistrictVolumeEntity buildEntityWithDistricts(Area area, String... districtCodes) {
 
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setArea(area);
@@ -834,30 +704,31 @@ class DistrictVolumeServiceTest {
 
     List<DistrictRow> rows =
         Arrays.stream(districtCodes)
-            .map(code ->
-                new DistrictRow(
-                    new CodeDescriptionDto(code, code + " Description"),
-                    BigDecimal.TEN,   // avoidableSawlog
-                    null,             // avoidableGrade4
-                    null,             // unavoidableGrade4
-                    null,             // avoidableHembalGradeU
-                    null,             // avoidableGradeY
-                    null,             // unavoidable
-                    BigDecimal.TEN    // total
-                ))
+            .map(
+                code ->
+                    new DistrictRow(
+                        new CodeDescriptionDto(code, code + " Description"),
+                        BigDecimal.TEN, // avoidableSawlog
+                        null, // avoidableGrade4
+                        null, // unavoidableGrade4
+                        null, // avoidableHembalGradeU
+                        null, // avoidableGradeY
+                        null, // unavoidable
+                        BigDecimal.TEN // total
+                        ))
             .toList();
 
     TableData tableData =
         area == Area.INTERIOR
             ? new TableData(
                 List.of(new Zone("Zone 1", rows)),
-                null,   // sections
-                null,   // speciesRows
+                null, // sections
+                null, // speciesRows
                 Map.of())
             : new TableData(
-                null,   // zones
+                null, // zones
                 List.of(new Section("Section 1", rows)),
-                null,   // speciesRows
+                null, // speciesRows
                 Map.of());
 
     entity.setTableData(tableData);
@@ -867,26 +738,21 @@ class DistrictVolumeServiceTest {
   // ---- getAreasForDistrictCode tests ----
 
   @Test
-  @DisplayName(
-      "getAreasForDistrictCode — should return empty list when district code is blank")
+  @DisplayName("getAreasForDistrictCode — should return empty list when district code is blank")
   void getAreasForDistrictCode_returnsEmptyList_whenBlankInput() {
 
     var result = districtVolumeService.getAreasForDistrictCode(" ");
 
     assertThat(result).isEmpty();
-    verify(districtVolumeRepository, never())
-        .findActiveByConfigTypeAndArea(any(), any(), any());
+    verify(districtVolumeRepository, never()).findActiveByConfigTypeAndArea(any(), any(), any());
   }
 
   @Test
-  @DisplayName(
-      "getAreasForDistrictCode — should return both areas when district found in both")
+  @DisplayName("getAreasForDistrictCode — should return both areas when district found in both")
   void getAreasForDistrictCode_returnsBothAreas_whenFoundInBoth() {
 
-    DistrictVolumeEntity interiorEntity =
-        buildEntityWithDistricts(Area.INTERIOR, "DND");
-    DistrictVolumeEntity coastalEntity =
-        buildEntityWithDistricts(Area.COASTAL, "DND");
+    DistrictVolumeEntity interiorEntity = buildEntityWithDistricts(Area.INTERIOR, "DND");
+    DistrictVolumeEntity coastalEntity = buildEntityWithDistricts(Area.COASTAL, "DND");
 
     when(districtVolumeRepository.findActiveByConfigTypeAndArea(
             eq(ConfigType.DISTRICT_VOLUME), eq(Area.INTERIOR), any()))
@@ -905,8 +771,7 @@ class DistrictVolumeServiceTest {
       "getAreasForDistrictCode — should return only INTERIOR when district found only there")
   void getAreasForDistrictCode_returnsOnlyInterior_whenFoundOnlyInInterior() {
 
-    DistrictVolumeEntity interiorEntity =
-        buildEntityWithDistricts(Area.INTERIOR, "DND");
+    DistrictVolumeEntity interiorEntity = buildEntityWithDistricts(Area.INTERIOR, "DND");
 
     when(districtVolumeRepository.findActiveByConfigTypeAndArea(
             eq(ConfigType.DISTRICT_VOLUME), eq(Area.INTERIOR), any()))
@@ -925,8 +790,7 @@ class DistrictVolumeServiceTest {
       "getAreasForDistrictCode — should return only COASTAL when district found only there")
   void getAreasForDistrictCode_returnsOnlyCoastal_whenFoundOnlyInCoastal() {
 
-    DistrictVolumeEntity coastalEntity =
-        buildEntityWithDistricts(Area.COASTAL, "DND");
+    DistrictVolumeEntity coastalEntity = buildEntityWithDistricts(Area.COASTAL, "DND");
 
     when(districtVolumeRepository.findActiveByConfigTypeAndArea(
             eq(ConfigType.DISTRICT_VOLUME), eq(Area.INTERIOR), any()))
@@ -946,10 +810,8 @@ class DistrictVolumeServiceTest {
           + "not found in any active config")
   void getAreasForDistrictCode_returnsEmptyList_whenDistrictNotFound() {
 
-    DistrictVolumeEntity interiorEntity =
-        buildEntityWithDistricts(Area.INTERIOR, "OTHER");
-    DistrictVolumeEntity coastalEntity =
-        buildEntityWithDistricts(Area.COASTAL, "OTHER");
+    DistrictVolumeEntity interiorEntity = buildEntityWithDistricts(Area.INTERIOR, "OTHER");
+    DistrictVolumeEntity coastalEntity = buildEntityWithDistricts(Area.COASTAL, "OTHER");
 
     when(districtVolumeRepository.findActiveByConfigTypeAndArea(
             eq(ConfigType.DISTRICT_VOLUME), eq(Area.INTERIOR), any()))
@@ -964,8 +826,7 @@ class DistrictVolumeServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "getAreasForDistrictCode — should return empty list when no active config exists")
+  @DisplayName("getAreasForDistrictCode — should return empty list when no active config exists")
   void getAreasForDistrictCode_returnsEmptyList_whenNoActiveConfig() {
 
     when(districtVolumeRepository.findActiveByConfigTypeAndArea(
@@ -983,38 +844,31 @@ class DistrictVolumeServiceTest {
   // ---- getAreasForMultipleDistricts tests ----
 
   @Test
-  @DisplayName(
-      "getAreasForMultipleDistricts — should return empty map when input is null")
+  @DisplayName("getAreasForMultipleDistricts — should return empty map when input is null")
   void getAreasForMultipleDistricts_returnsEmptyMap_whenNullInput() {
 
     var result = districtVolumeService.getAreasForMultipleDistricts(null);
 
     assertThat(result).isEmpty();
-    verify(districtVolumeRepository, never())
-        .findActiveByConfigTypeAndArea(any(), any(), any());
+    verify(districtVolumeRepository, never()).findActiveByConfigTypeAndArea(any(), any(), any());
   }
 
   @Test
-  @DisplayName(
-      "getAreasForMultipleDistricts — should return empty map when input is empty")
+  @DisplayName("getAreasForMultipleDistricts — should return empty map when input is empty")
   void getAreasForMultipleDistricts_returnsEmptyMap_whenEmptyInput() {
 
     var result = districtVolumeService.getAreasForMultipleDistricts(List.of());
 
     assertThat(result).isEmpty();
-    verify(districtVolumeRepository, never())
-        .findActiveByConfigTypeAndArea(any(), any(), any());
+    verify(districtVolumeRepository, never()).findActiveByConfigTypeAndArea(any(), any(), any());
   }
 
   @Test
-  @DisplayName(
-      "getAreasForMultipleDistricts — should map multiple codes to correct areas")
+  @DisplayName("getAreasForMultipleDistricts — should map multiple codes to correct areas")
   void getAreasForMultipleDistricts_returnsCorrectMap_whenMixedMatches() {
 
-    DistrictVolumeEntity interiorEntity =
-        buildEntityWithDistricts(Area.INTERIOR, "DND", "DKM");
-    DistrictVolumeEntity coastalEntity =
-        buildEntityWithDistricts(Area.COASTAL, "DND", "DFO");
+    DistrictVolumeEntity interiorEntity = buildEntityWithDistricts(Area.INTERIOR, "DND", "DKM");
+    DistrictVolumeEntity coastalEntity = buildEntityWithDistricts(Area.COASTAL, "DND", "DFO");
 
     when(districtVolumeRepository.findActiveByConfigTypeAndArea(
             eq(ConfigType.DISTRICT_VOLUME), eq(Area.INTERIOR), any()))
@@ -1024,8 +878,7 @@ class DistrictVolumeServiceTest {
         .thenReturn(Optional.of(coastalEntity));
 
     var result =
-        districtVolumeService.getAreasForMultipleDistricts(
-            List.of("DND", "DKM", "DFO", "XYZ"));
+        districtVolumeService.getAreasForMultipleDistricts(List.of("DND", "DKM", "DFO", "XYZ"));
 
     assertThat(result).hasSize(4);
     assertThat(result.get("DND")).containsExactly("INTERIOR", "COASTAL");
@@ -1036,8 +889,7 @@ class DistrictVolumeServiceTest {
 
   @Test
   @DisplayName(
-      "getAreasForMultipleDistricts — should return empty lists when no "
-          + "active config exists")
+      "getAreasForMultipleDistricts — should return empty lists when no " + "active config exists")
   void getAreasForMultipleDistricts_returnsEmptyLists_whenNoActiveConfig() {
 
     when(districtVolumeRepository.findActiveByConfigTypeAndArea(
@@ -1047,9 +899,7 @@ class DistrictVolumeServiceTest {
             eq(ConfigType.DISTRICT_VOLUME), eq(Area.COASTAL), any()))
         .thenReturn(Optional.empty());
 
-    var result =
-        districtVolumeService.getAreasForMultipleDistricts(
-            List.of("DND", "DKM"));
+    var result = districtVolumeService.getAreasForMultipleDistricts(List.of("DND", "DKM"));
 
     assertThat(result).hasSize(2);
     assertThat(result.get("DND")).isEmpty();
@@ -1062,8 +912,7 @@ class DistrictVolumeServiceTest {
           + "overlap and case differs")
   void getAreasForMultipleDistricts_handlesCaseInsensitiveMatch() {
 
-    DistrictVolumeEntity coastalEntity =
-        buildEntityWithDistricts(Area.COASTAL, "DND");
+    DistrictVolumeEntity coastalEntity = buildEntityWithDistricts(Area.COASTAL, "DND");
 
     when(districtVolumeRepository.findActiveByConfigTypeAndArea(
             eq(ConfigType.DISTRICT_VOLUME), eq(Area.INTERIOR), any()))
@@ -1072,8 +921,7 @@ class DistrictVolumeServiceTest {
             eq(ConfigType.DISTRICT_VOLUME), eq(Area.COASTAL), any()))
         .thenReturn(Optional.of(coastalEntity));
 
-    var result =
-        districtVolumeService.getAreasForMultipleDistricts(List.of("dnd"));
+    var result = districtVolumeService.getAreasForMultipleDistricts(List.of("dnd"));
 
     assertThat(result.get("dnd")).containsExactly("COASTAL");
   }

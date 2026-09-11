@@ -25,9 +25,8 @@ import org.springframework.web.server.ResponseStatusException;
  * REST endpoints for user-specific operations such as reading and updating user preferences.
  *
  * <p>This controller exposes simple operations to get and persist a user's preferences. The
- * authenticated user's id is resolved from the provided JWT using
- * {@link JwtPrincipalUtil#getUserId(org.springframework.security.oauth2.jwt.Jwt)}.
- * </p>
+ * authenticated user's id is resolved from the provided JWT using {@link
+ * JwtPrincipalUtil#getUserId(org.springframework.security.oauth2.jwt.Jwt)}.
  */
 @RestController
 @RequestMapping("/api/users")
@@ -44,7 +43,6 @@ public class UserController {
    *
    * <p>The user's id is extracted from the provided JWT and used to fetch the preferences map from
    * {@link UserService#getUserPreferences(String)}.
-   * </p>
    *
    * @param jwt the authenticated user's JWT principal (injected by Spring)
    * @return a map of preference keys to values for the authenticated user
@@ -60,47 +58,41 @@ public class UserController {
    *
    * <p>The preferences provided in the request body are saved for the user identified by the JWT.
    * The method delegates to {@link UserService#saveUserPreferences(String, java.util.Map)}.
-   * </p>
    *
-   * @param jwt         the authenticated user's JWT principal (injected by Spring)
+   * @param jwt the authenticated user's JWT principal (injected by Spring)
    * @param preferences a map containing the preference keys and values to save
    */
   @PutMapping("/preferences")
   @ResponseStatus(HttpStatus.ACCEPTED)
   public void updatePreferences(
-      @AuthenticationPrincipal Jwt jwt,
-      @RequestBody Map<String, Object> preferences
-  ) {
+      @AuthenticationPrincipal Jwt jwt, @RequestBody Map<String, Object> preferences) {
     log.info("Updating preferences for user: {}", JwtPrincipalUtil.getUserId(jwt));
-    userService.saveUserPreferences(
-        JwtPrincipalUtil.getUserId(jwt),
-        preferences
-    );
+    userService.saveUserPreferences(JwtPrincipalUtil.getUserId(jwt), preferences);
   }
 
   /**
    * Bookmark a reporting unit for the authenticated user.
    *
-   * <p>Delegates to {@link UserService#addUserBookmark(String, Long)}. The operation is
-   * idempotent: bookmarking an already-bookmarked reporting unit is a safe no-op.</p>
+   * <p>Delegates to {@link UserService#addUserBookmark(String, Long)}. The operation is idempotent:
+   * bookmarking an already-bookmarked reporting unit is a safe no-op.
    *
-   * @param jwt             the authenticated user's JWT principal (injected by Spring)
+   * @param jwt the authenticated user's JWT principal (injected by Spring)
    * @param reportingUnitId the reporting unit to bookmark
    */
   @PutMapping("/bookmarks/{reportingUnitId}")
   @ResponseStatus(HttpStatus.ACCEPTED)
   public void addBookmarkedReportingUnit(
-      @AuthenticationPrincipal Jwt jwt,
-      @PathVariable Long reportingUnitId
-  ) {
+      @AuthenticationPrincipal Jwt jwt, @PathVariable Long reportingUnitId) {
 
     if (featureFlagsConfiguration.isEnabled(FeatureFlag.BOOKMARK_REPORTING_UNIT_ENABLED)) {
-      log.info("Adding bookmark for user: {} and reporting unit: {}",
-          JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
+      log.info(
+          "Adding bookmark for user: {} and reporting unit: {}",
+          JwtPrincipalUtil.getUserId(jwt),
+          reportingUnitId);
       userService.addUserBookmark(JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
     } else {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-          "The requested resource is not available");
+      throw new ResponseStatusException(
+          HttpStatus.NOT_FOUND, "The requested resource is not available");
     }
   }
 
@@ -108,24 +100,24 @@ public class UserController {
    * Remove a bookmarked reporting unit for the authenticated user.
    *
    * <p>Delegates to {@link UserService#deleteUserBookmark(String, Long)}. The operation is
-   * idempotent: removing a bookmark that does not exist is a safe no-op.</p>
+   * idempotent: removing a bookmark that does not exist is a safe no-op.
    *
-   * @param jwt             the authenticated user's JWT principal (injected by Spring)
+   * @param jwt the authenticated user's JWT principal (injected by Spring)
    * @param reportingUnitId the reporting unit to un-bookmark
    */
   @DeleteMapping("/bookmarks/{reportingUnitId}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void removeBookmarkedReportingUnit(
-      @AuthenticationPrincipal Jwt jwt,
-      @PathVariable Long reportingUnitId
-  ) {
+      @AuthenticationPrincipal Jwt jwt, @PathVariable Long reportingUnitId) {
     if (featureFlagsConfiguration.isEnabled(FeatureFlag.BOOKMARK_REPORTING_UNIT_ENABLED)) {
-      log.info("Removing bookmark for user: {} and reporting unit: {}",
-          JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
+      log.info(
+          "Removing bookmark for user: {} and reporting unit: {}",
+          JwtPrincipalUtil.getUserId(jwt),
+          reportingUnitId);
       userService.deleteUserBookmark(JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
     } else {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-          "The requested resource is not available");
+      throw new ResponseStatusException(
+          HttpStatus.NOT_FOUND, "The requested resource is not available");
     }
   }
 }

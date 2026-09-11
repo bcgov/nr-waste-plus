@@ -23,14 +23,13 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
  *
  * <p>{@code @SpringBootTest} deliberately supplies no-op reporting components unless
  * {@code @AutoConfigureTracing} enables tracing for tests. This test keeps the existing
- * authenticated MockMvc path while explicitly enabling the tracing components required to
- * exercise B3 extraction and audit correlation.
+ * authenticated MockMvc path while explicitly enabling the tracing components required to exercise
+ * B3 extraction and audit correlation.
  */
 @AutoConfigureMockMvc
 @AutoConfigureTracing
 @DisplayName("District volume web tracing and audit integration")
-class DistrictVolumeCorrelationIdAuditIntegrationTest
-    extends AbstractTestContainerIntegrationTest {
+class DistrictVolumeCorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   private static final String TRACE_ID = "0123456789abcdef0123456789abcdef";
   private static final String SPAN_ID = "0123456789abcdef";
@@ -64,8 +63,7 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders
-                .post("/api/configuration/district-average-volumes")
+            MockMvcRequestBuilders.post("/api/configuration/district-average-volumes")
                 .with(SecurityMockMvcRequestPostProcessors.csrf())
                 .header("X-B3-TraceId", TRACE_ID)
                 .header("X-B3-SpanId", SPAN_ID)
@@ -121,29 +119,34 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest
                     """))
         .andExpect(MockMvcResultMatchers.status().isCreated());
 
-
-    Long eventId = jdbcTemplate.queryForObject(
-        """
+    Long eventId =
+        jdbcTemplate.queryForObject(
+            """
         SELECT audit_event_id
         FROM hrs.audit_event
         WHERE audit_event_id > ? AND action = 'CREATE'
         ORDER BY audit_event_id DESC
         LIMIT 1
         """,
-        Long.class,
-        eventIdBefore);
+            Long.class,
+            eventIdBefore);
 
     assertThat(eventId).isNotNull();
-    assertThat(jdbcTemplate.queryForObject(
-            "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?", String.class, eventId))
+    assertThat(
+            jdbcTemplate.queryForObject(
+                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?",
+                String.class,
+                eventId))
         .isEqualTo(TRACE_ID);
-    assertThat(jdbcTemplate.queryForObject(
-            "SELECT COUNT(*) FROM hrs.audit_change WHERE event_id = ?", Integer.class, eventId))
+    assertThat(
+            jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM hrs.audit_change WHERE event_id = ?", Integer.class, eventId))
         .isPositive();
   }
 
   private long maxAuditEventId() {
-    Long maxId = jdbcTemplate.queryForObject("SELECT MAX(audit_event_id) FROM hrs.audit_event", Long.class);
+    Long maxId =
+        jdbcTemplate.queryForObject("SELECT MAX(audit_event_id) FROM hrs.audit_event", Long.class);
     return maxId == null ? 0L : maxId;
   }
 }

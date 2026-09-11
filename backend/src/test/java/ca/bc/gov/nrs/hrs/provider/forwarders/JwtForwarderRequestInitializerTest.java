@@ -40,13 +40,13 @@ class JwtForwarderRequestInitializerTest {
     @DisplayName("should add Authorization header with Bearer token")
     void shouldAddAuthorizationHeader() {
       String tokenValue = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.test.signature";
-      Jwt jwt = new Jwt(
-          tokenValue,
-          Instant.now(),
-          Instant.now().plusSeconds(300),
-          Map.of("alg", "RS256"),
-          Map.of("sub", "user123")
-      );
+      Jwt jwt =
+          new Jwt(
+              tokenValue,
+              Instant.now(),
+              Instant.now().plusSeconds(300),
+              Map.of("alg", "RS256"),
+              Map.of("sub", "user123"));
       JwtAuthenticationToken jwtAuth = new JwtAuthenticationToken(jwt, Collections.emptyList());
       SecurityContextHolder.getContext().setAuthentication(jwtAuth);
 
@@ -54,9 +54,7 @@ class JwtForwarderRequestInitializerTest {
       initializer.initialize(request);
 
       assertEquals(
-          "Bearer " + tokenValue,
-          request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION)
-      );
+          "Bearer " + tokenValue, request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION));
     }
   }
 
@@ -72,10 +70,7 @@ class JwtForwarderRequestInitializerTest {
       MockClientHttpRequest request = new MockClientHttpRequest();
       initializer.initialize(request);
 
-      assertEquals(
-          "Bearer null",
-          request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION)
-      );
+      assertEquals("Bearer null", request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION));
     }
   }
 
@@ -94,11 +89,7 @@ class JwtForwarderRequestInitializerTest {
       MockClientHttpRequest request = new MockClientHttpRequest();
       initializer.initialize(request);
 
-      assertEquals(
-          "Bearer null",
-          request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION)
-      );
+      assertEquals("Bearer null", request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION));
     }
   }
 }
-

@@ -11,9 +11,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 
-/**
- * Base mapped superclass providing standard audit tracking timestamps and user identifiers.
- */
+/** Base mapped superclass providing standard audit tracking timestamps and user identifiers. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -36,4 +34,3 @@ public abstract class AuditableEntity {
   @Column(name = "updated_by", nullable = false, length = 128)
   private String updatedBy;
 }
-

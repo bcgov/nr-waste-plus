@@ -5,11 +5,9 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 /**
  * Data Transfer Object representing the full details of a Reporting Unit.
  *
- * <p>Aggregates information from both the legacy API and the Forest Client API,
- * presenting a unified view of a reporting unit's identity, client association,
- * status, sampling method, and district.
- * </p>
- *
+ * <p>Aggregates information from both the legacy API and the Forest Client API, presenting a
+ * unified view of a reporting unit's identity, client association, status, sampling method, and
+ * district.
  * <!-- TODO(grade-configuration): The {@code grade} field has been removed from this contract
  *      because no data source can populate it yet.  It will be reinstated — as a
  *      {@link CodeDescriptionDto} parameter — once the grade-configuration feature branch
@@ -21,11 +19,11 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
  *           {@code ReportingUnitServiceTest}.
  * -->
  *
- * @param id           the unique identifier of the reporting unit
- * @param client       the client code and name associated with the reporting unit
+ * @param id the unique identifier of the reporting unit
+ * @param client the client code and name associated with the reporting unit
  * @param clientStatus the current status code and description of the associated client
- * @param sampling     the sampling method code and description for the reporting unit
- * @param district     the natural resource district code and description
+ * @param sampling the sampling method code and description for the reporting unit
+ * @param district the natural resource district code and description
  */
 public record ReportingUnitDetailsDto(
     Long id,
@@ -33,6 +31,4 @@ public record ReportingUnitDetailsDto(
     CodeDescriptionDto clientStatus,
     CodeDescriptionDto sampling,
     CodeDescriptionDto district,
-    CodeDescriptionDto grade
-) {
-}
+    CodeDescriptionDto grade) {}

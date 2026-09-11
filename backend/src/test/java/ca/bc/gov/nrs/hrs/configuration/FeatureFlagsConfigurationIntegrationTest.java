@@ -31,4 +31,3 @@ class FeatureFlagsConfigurationIntegrationTest extends AbstractTestContainerInte
     assertThat(featureFlagsConfiguration.isEnabled("non-existent-flag")).isFalse();
   }
 }
-

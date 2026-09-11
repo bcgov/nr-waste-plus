@@ -25,10 +25,14 @@ class BlockCalculationSnapshotIntegrationTest extends AbstractTestContainerInteg
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final Instant NOW = Instant.parse("2025-07-01T00:00:00Z");
 
-  @Autowired private ReportingUnitRepository reportingUnitRepository;
-  @Autowired private BlockRepository blockRepository;
-  @Autowired private BlockCalculationSnapshotRepository snapshotRepository;
-  @Autowired private JdbcTemplate jdbcTemplate;
+  @Autowired
+  private ReportingUnitRepository reportingUnitRepository;
+  @Autowired
+  private BlockRepository blockRepository;
+  @Autowired
+  private BlockCalculationSnapshotRepository snapshotRepository;
+  @Autowired
+  private JdbcTemplate jdbcTemplate;
 
   private Long blockId;
   private Long districtVolumeId;
@@ -53,8 +57,11 @@ class BlockCalculationSnapshotIntegrationTest extends AbstractTestContainerInteg
     BlockEntity savedBlock = blockRepository.saveAndFlush(block);
     blockId = savedBlock.getId();
 
-    districtVolumeId = jdbcTemplate.queryForObject(
-        "SELECT district_volume_id FROM hrs.district_volume ORDER BY district_volume_id LIMIT 1", Long.class);
+    districtVolumeId =
+        jdbcTemplate.queryForObject(
+            "SELECT district_volume_id FROM hrs.district_volume ORDER BY district_volume_id LIMIT"
+                + " 1",
+            Long.class);
   }
 
   @DisplayName("Saves and retrieves snapshot by id with JSONB round-trip")
@@ -65,11 +72,21 @@ class BlockCalculationSnapshotIntegrationTest extends AbstractTestContainerInteg
     var warnings = MAPPER.readTree("[\"rounding_applied\"]");
     Instant calculatedAt = Instant.parse("2025-07-01T10:00:00Z");
 
-    BlockCalculationSnapshotEntity snapshot = new BlockCalculationSnapshotEntity(
-        blockId, districtVolumeId,
-        LocalDate.of(2025, Month.JANUARY, 1), LocalDate.of(2025, Month.DECEMBER, 31),
-        inputs, outputs, calculatedAt, "HALF_UP", warnings,
-        ACTOR, ACTOR, calculatedAt, calculatedAt);
+    BlockCalculationSnapshotEntity snapshot =
+        new BlockCalculationSnapshotEntity(
+            blockId,
+            districtVolumeId,
+            LocalDate.of(2025, Month.JANUARY, 1),
+            LocalDate.of(2025, Month.DECEMBER, 31),
+            inputs,
+            outputs,
+            calculatedAt,
+            "HALF_UP",
+            warnings,
+            ACTOR,
+            ACTOR,
+            calculatedAt,
+            calculatedAt);
     BlockCalculationSnapshotEntity saved = snapshotRepository.save(snapshot);
 
     BlockCalculationSnapshotEntity found = snapshotRepository.findById(saved.getId()).orElseThrow();
@@ -91,29 +108,62 @@ class BlockCalculationSnapshotIntegrationTest extends AbstractTestContainerInteg
     var inputs1 = MAPPER.readTree("{\"da.x\":1}");
     var outputs1 = MAPPER.readTree("{\"config.a\":10}");
     Instant t1 = Instant.parse("2025-07-01T08:00:00Z");
-    BlockCalculationSnapshotEntity s1 = snapshotRepository.save(
-        new BlockCalculationSnapshotEntity(
-            blockId, districtVolumeId, windowStart, windowEnd,
-            inputs1, outputs1, t1, "HALF_UP", null,
-            ACTOR, ACTOR, t1, t1));
+    BlockCalculationSnapshotEntity s1 =
+        snapshotRepository.save(
+            new BlockCalculationSnapshotEntity(
+                blockId,
+                districtVolumeId,
+                windowStart,
+                windowEnd,
+                inputs1,
+                outputs1,
+                t1,
+                "HALF_UP",
+                null,
+                ACTOR,
+                ACTOR,
+                t1,
+                t1));
 
     var inputs2 = MAPPER.readTree("{\"da.x\":2}");
     var outputs2 = MAPPER.readTree("{\"config.a\":20}");
     Instant t2 = Instant.parse("2025-07-01T12:00:00Z");
-    BlockCalculationSnapshotEntity s2 = snapshotRepository.save(
-        new BlockCalculationSnapshotEntity(
-            blockId, districtVolumeId, windowStart, windowEnd,
-            inputs2, outputs2, t2, "HALF_UP", null,
-            ACTOR, ACTOR, t2, t2));
+    BlockCalculationSnapshotEntity s2 =
+        snapshotRepository.save(
+            new BlockCalculationSnapshotEntity(
+                blockId,
+                districtVolumeId,
+                windowStart,
+                windowEnd,
+                inputs2,
+                outputs2,
+                t2,
+                "HALF_UP",
+                null,
+                ACTOR,
+                ACTOR,
+                t2,
+                t2));
 
     var inputs3 = MAPPER.readTree("{\"da.x\":3}");
     var outputs3 = MAPPER.readTree("{\"config.a\":30}");
     Instant t3 = Instant.parse("2025-07-01T16:00:00Z");
-    BlockCalculationSnapshotEntity s3 = snapshotRepository.save(
-        new BlockCalculationSnapshotEntity(
-            blockId, districtVolumeId, windowStart, windowEnd,
-            inputs3, outputs3, t3, "HALF_UP", null,
-            ACTOR, ACTOR, t3, t3));
+    BlockCalculationSnapshotEntity s3 =
+        snapshotRepository.save(
+            new BlockCalculationSnapshotEntity(
+                blockId,
+                districtVolumeId,
+                windowStart,
+                windowEnd,
+                inputs3,
+                outputs3,
+                t3,
+                "HALF_UP",
+                null,
+                ACTOR,
+                ACTOR,
+                t3,
+                t3));
 
     List<BlockCalculationSnapshotEntity> results =
         snapshotRepository.findByBlockIdOrderByCalculatedAtDesc(blockId);
@@ -130,10 +180,21 @@ class BlockCalculationSnapshotIntegrationTest extends AbstractTestContainerInteg
     var inputs = MAPPER.readTree("{\"da.rate\":5}");
     var outputs = MAPPER.readTree("{\"config.total\":5.000}");
 
-    BlockCalculationSnapshotEntity snapshot = new BlockCalculationSnapshotEntity(
-        blockId, districtVolumeId, null, null,
-        inputs, outputs, NOW, "HALF_UP", null,
-        ACTOR, ACTOR, NOW, NOW);
+    BlockCalculationSnapshotEntity snapshot =
+        new BlockCalculationSnapshotEntity(
+            blockId,
+            districtVolumeId,
+            null,
+            null,
+            inputs,
+            outputs,
+            NOW,
+            "HALF_UP",
+            null,
+            ACTOR,
+            ACTOR,
+            NOW,
+            NOW);
     BlockCalculationSnapshotEntity saved = snapshotRepository.save(snapshot);
 
     BlockCalculationSnapshotEntity found = snapshotRepository.findById(saved.getId()).orElseThrow();

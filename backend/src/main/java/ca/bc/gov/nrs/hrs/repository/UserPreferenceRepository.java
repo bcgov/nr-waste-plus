@@ -2,25 +2,22 @@ package ca.bc.gov.nrs.hrs.repository;
 
 import ca.bc.gov.nrs.hrs.entity.users.UserPreferenceEntity;
 import java.util.Optional;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
-import org.jspecify.annotations.NonNull;
 
 /**
  * Repository for accessing user preference entities.
  *
- * <p>
- * Extends {@link PagingAndSortingRepository} and {@link CrudRepository} to
- * provide basic CRUD operations and paging/sorting capabilities for
- * {@link UserPreferenceEntity} instances. The repository uses the user's id
- * (String) as the primary key type.
- * </p>
+ * <p>Extends {@link PagingAndSortingRepository} and {@link CrudRepository} to provide basic CRUD
+ * operations and paging/sorting capabilities for {@link UserPreferenceEntity} instances. The
+ * repository uses the user's id (String) as the primary key type.
  */
 @Repository
-public interface UserPreferenceRepository extends
-    PagingAndSortingRepository<UserPreferenceEntity, String>,
-    CrudRepository<UserPreferenceEntity, String> {
+public interface UserPreferenceRepository
+    extends PagingAndSortingRepository<UserPreferenceEntity, String>,
+        CrudRepository<UserPreferenceEntity, String> {
 
   /**
    * Find a {@link UserPreferenceEntity} by its user id.
@@ -29,7 +26,5 @@ public interface UserPreferenceRepository extends
    * @return an {@link Optional} containing the entity if found
    */
   @Override
-  @NonNull
-  Optional<UserPreferenceEntity> findById(@NonNull String userId);
-
+  @NonNull Optional<UserPreferenceEntity> findById(@NonNull String userId);
 }

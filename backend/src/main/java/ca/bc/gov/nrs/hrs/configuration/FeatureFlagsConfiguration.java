@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component;
  * if (featureFlags.isEnabled("multi-address")) { … }
  * }</pre>
  *
- * Flags that are not defined default to {@code false} (disabled).
+ * <p>Flags that are not defined default to {@code false} (disabled).
  *
  * @since 1.0.0
  */
@@ -55,9 +55,7 @@ public class FeatureFlagsConfiguration {
 
   private static final String PRODUCTION_PROFILE = "production";
 
-  /**
-   * Map of feature flag names to their enabled/disabled state.
-   */
+  /** Map of feature flag names to their enabled/disabled state. */
   @Builder.Default
   private Map<String, Boolean> flags = Collections.emptyMap();
 
@@ -73,12 +71,11 @@ public class FeatureFlagsConfiguration {
   /**
    * Returns whether the given feature flag is enabled.
    *
-   * <p>Prefer {@link #isEnabled(FeatureFlag)} for production callers; this
-   * overload is retained for configuration-mechanism tests and framework use.
+   * <p>Prefer {@link #isEnabled(FeatureFlag)} for production callers; this overload is retained for
+   * configuration-mechanism tests and framework use.
    *
    * @param flag the flag name (must match the key in {@code features.flags.*})
-   * @return {@code true} if the flag exists and is set to {@code true};
-   *     {@code false} otherwise
+   * @return {@code true} if the flag exists and is set to {@code true}; {@code false} otherwise
    */
   public boolean isEnabled(String flag) {
     boolean enabled = Boolean.TRUE.equals(flags.get(flag));
@@ -89,22 +86,18 @@ public class FeatureFlagsConfiguration {
   /**
    * Returns whether the given feature flag is enabled.
    *
-   * <p>Prefer this overload over {@link #isEnabled(String)} — the
-   * {@link FeatureFlag} enum provides compile-time discoverability of all known
-   * flags and prevents silent typos.
+   * <p>Prefer this overload over {@link #isEnabled(String)} — the {@link FeatureFlag} enum provides
+   * compile-time discoverability of all known flags and prevents silent typos.
    *
    * @param flag the flag to evaluate
-   * @return {@code true} if the flag exists and is set to {@code true};
-   *     {@code false} otherwise
+   * @return {@code true} if the flag exists and is set to {@code true}; {@code false} otherwise
    * @see FeatureFlag
    */
   public boolean isEnabled(FeatureFlag flag) {
     return isEnabled(flag.getKey());
   }
 
-  /**
-   * Logs all configured feature flags at startup.
-   */
+  /** Logs all configured feature flags at startup. */
   @PostConstruct
   void logFlags() {
     if (flags == null || flags.isEmpty()) {
@@ -120,17 +113,14 @@ public class FeatureFlagsConfiguration {
           "Feature flags configured. total={}, enabled={}, disabled={}",
           flags.size(),
           enabledCount,
-          disabledCount
-      );
-      flags.forEach((name, enabled) ->
-          log.debug("Feature flag '{}' is {}", name, enabledState(enabled))
-      );
+          disabledCount);
+      flags.forEach(
+          (name, enabled) -> log.debug("Feature flag '{}' is {}", name, enabledState(enabled)));
       return;
     }
 
-    flags.forEach((name, enabled) ->
-        log.info("Feature flag '{}' is {}", name, enabledState(enabled))
-    );
+    flags.forEach(
+        (name, enabled) -> log.info("Feature flag '{}' is {}", name, enabledState(enabled)));
   }
 
   private String enabledState(Boolean enabled) {
@@ -146,13 +136,15 @@ public class FeatureFlagsConfiguration {
     String valueTag = Boolean.toString(enabled);
     String cacheKey = flagName + ':' + valueTag;
 
-    Counter counter = evaluationCounters.computeIfAbsent(cacheKey, ignored ->
-        Counter.builder(FEATURE_FLAG_EVALUATION_METRIC)
-            .description("Count of feature flag evaluations by flag and value")
-            .tag("flag", flagName)
-            .tag("value", valueTag)
-            .register(meterRegistry)
-    );
+    Counter counter =
+        evaluationCounters.computeIfAbsent(
+            cacheKey,
+            ignored ->
+                Counter.builder(FEATURE_FLAG_EVALUATION_METRIC)
+                    .description("Count of feature flag evaluations by flag and value")
+                    .tag("flag", flagName)
+                    .tag("value", valueTag)
+                    .register(meterRegistry));
     counter.increment();
   }
 
@@ -163,7 +155,6 @@ public class FeatureFlagsConfiguration {
 
     return Arrays.stream(environment.getActiveProfiles())
         .map(String::toLowerCase)
-        .anyMatch(
-            profile -> PROD_PROFILE.equals(profile) || PRODUCTION_PROFILE.equals(profile));
+        .anyMatch(profile -> PROD_PROFILE.equals(profile) || PRODUCTION_PROFILE.equals(profile));
   }
 }

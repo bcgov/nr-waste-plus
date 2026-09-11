@@ -22,9 +22,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-/**
- * District-average extension whose primary key is the block id.
- */
+/** District-average extension whose primary key is the block id. */
 @Entity
 @Table(name = "district_average_block", schema = "hrs")
 @EntityListeners(AuditingEntityListener.class)

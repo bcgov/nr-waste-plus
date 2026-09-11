@@ -8,12 +8,10 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * Exception for downstream failures that may be retried after a suggested
- * delay.
+ * Exception for downstream failures that may be retried after a suggested delay.
  *
- * <p>The exception can capture a {@code Retry-After} value—either a number of
- * seconds or an HTTP-date—and exposes it as an {@link Optional}{@code <Duration>}.
- * </p>
+ * <p>The exception can capture a {@code Retry-After} value—either a number of seconds or an
+ * HTTP-date—and exposes it as an {@link Optional}{@code <Duration>}.
  */
 public class RetriableException extends ResponseStatusException {
   private final Duration retryAfter;
@@ -21,8 +19,8 @@ public class RetriableException extends ResponseStatusException {
   /**
    * Constructor with retry-after value.
    *
-   * @param status     the HTTP status code
-   * @param value      the parameter value that caused the failure
+   * @param status the HTTP status code
+   * @param value the parameter value that caused the failure
    * @param retryAfter the retry-after header value
    */
   public RetriableException(HttpStatusCode status, String value, String retryAfter) {
@@ -31,16 +29,14 @@ public class RetriableException extends ResponseStatusException {
         String.format(
             "Request failed with status %s: cannot retrieve data with parameter %s, "
                 + "retry after %s",
-            status,
-            value,
-            retryAfter));
+            status, value, retryAfter));
     this.retryAfter = parseRetryAfter(retryAfter);
   }
 
   /**
    * Constructor without retry-after value.
    *
-   * @param status  the HTTP status code
+   * @param status the HTTP status code
    * @param message the exception message
    */
   public RetriableException(HttpStatusCode status, String message) {

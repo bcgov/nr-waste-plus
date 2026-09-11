@@ -8,5 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 /** Complete formula-set create/update payload. */
-public record FormulaSetRequest(@NotNull Area area, @NotNull LocalDate startDate,
+public record FormulaSetRequest(
+    @NotNull Area area,
+    @NotNull LocalDate startDate,
     @NotEmpty List<@Valid FormulaItemDto> formulas) {}

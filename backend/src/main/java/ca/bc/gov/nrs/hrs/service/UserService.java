@@ -21,10 +21,9 @@ import org.springframework.util.CollectionUtils;
 /**
  * Service responsible for reading and persisting user preference data.
  *
- * <p>Provides methods to retrieve a user's preferences as a {@link Map} and to
- * save updated preferences. Preferences are stored in the {@link UserPreferenceEntity} and accessed
- * via {@link UserPreferenceRepository}.
- * </p>
+ * <p>Provides methods to retrieve a user's preferences as a {@link Map} and to save updated
+ * preferences. Preferences are stored in the {@link UserPreferenceEntity} and accessed via {@link
+ * UserPreferenceRepository}.
  */
 @Slf4j
 @Service
@@ -39,7 +38,7 @@ public class UserService {
   /**
    * Retrieve preferences for a given user id.
    *
-   * <p>Returns an empty map when no preferences have been stored for the user.</p>
+   * <p>Returns an empty map when no preferences have been stored for the user.
    *
    * @param userId the id of the user to fetch preferences for
    * @return a map of preference keys to values (never null)
@@ -57,12 +56,10 @@ public class UserService {
   /**
    * Persist or update preferences for a given user.
    *
-   * <p>If a preferences record already exists for the user it will be updated
-   * with the provided values; otherwise a new {@link UserPreferenceEntity} will be created and
-   * saved.
-   * </p>
+   * <p>If a preferences record already exists for the user it will be updated with the provided
+   * values; otherwise a new {@link UserPreferenceEntity} will be created and saved.
    *
-   * @param userId      the id of the user
+   * @param userId the id of the user
    * @param preferences the preferences to save
    */
   @NewSpan
@@ -71,33 +68,32 @@ public class UserService {
 
     log.info("Saving preferences for user: {}", userId);
 
-    transactionTemplate.execute(status -> {
-      UserPreferenceEntity preferenceEntity =
-          preferenceRepository
-              .findById(userId)
-              .map(preference -> preference.withPreferences(preferences))
-              .orElse(
-                  UserPreferenceEntity
-                      .builder()
-                      .userId(userId)
-                      .preferences(preferences)
-                      .build()
-              );
+    transactionTemplate.execute(
+        status -> {
+          UserPreferenceEntity preferenceEntity =
+              preferenceRepository
+                  .findById(userId)
+                  .map(preference -> preference.withPreferences(preferences))
+                  .orElse(
+                      UserPreferenceEntity.builder()
+                          .userId(userId)
+                          .preferences(preferences)
+                          .build());
 
-      preferenceRepository.save(preferenceEntity);
-      return null;
-    });
+          preferenceRepository.save(preferenceEntity);
+          return null;
+        });
   }
 
   /**
    * Adds a bookmark for the given user and reporting unit.
    *
-   * <p>This method is idempotent: calling it multiple times with the same arguments
-   * has the same effect as calling it once. If the bookmark already exists, the
-   * {@code save} call becomes a no-op merge (no extra columns to update), so no
-   * separate existence check is needed and no race condition can occur.</p>
+   * <p>This method is idempotent: calling it multiple times with the same arguments has the same
+   * effect as calling it once. If the bookmark already exists, the {@code save} call becomes a
+   * no-op merge (no extra columns to update), so no separate existence check is needed and no race
+   * condition can occur.
    *
-   * @param userId          the user's identifier
+   * @param userId the user's identifier
    * @param reportingUnitId the reporting unit to bookmark
    */
   @NewSpan
@@ -110,33 +106,36 @@ public class UserService {
   /**
    * Removes a bookmark for the given user and reporting unit.
    *
-   * <p>This method is idempotent: calling it when the bookmark does not exist is a
-   * safe no-op. The existence check and the delete are wrapped in a single
-   * transaction to prevent a race condition between the two operations.</p>
+   * <p>This method is idempotent: calling it when the bookmark does not exist is a safe no-op. The
+   * existence check and the delete are wrapped in a single transaction to prevent a race condition
+   * between the two operations.
    *
-   * @param userId          the user's identifier
+   * @param userId the user's identifier
    * @param reportingUnitId the reporting unit to un-bookmark
    */
   @NewSpan
   @Transactional
   public void deleteUserBookmark(String userId, Long reportingUnitId) {
     log.info("Deleting bookmark for user: {} and reporting unit: {}", userId, reportingUnitId);
-    Optional
-        .of(new UserBookmarkEntityId(userId, reportingUnitId))
+    Optional.of(new UserBookmarkEntityId(userId, reportingUnitId))
         .filter(bookmarkRepository::existsById)
         .ifPresent(bookmarkRepository::deleteById);
   }
 
+  /**
+   * Retrieves bookmarked reporting unit IDs for a given user from a candidate list.
+   *
+   * @param userId the user identifier
+   * @param reportingUnitIds list of reporting unit IDs to filter by, or empty for all
+   * @return list of bookmarked reporting unit IDs
+   */
   @NewSpan
   public List<Long> getUserBookmarksInList(String userId, List<Long> reportingUnitIds) {
     List<UserBookmarkEntity> bookmarkEntities =
-      (CollectionUtils.isEmpty(reportingUnitIds))
-          ? bookmarkRepository.findByUserId(userId)
-          : bookmarkRepository.findByUserIdAndReportingUnitIdIn(userId, reportingUnitIds);
+        (CollectionUtils.isEmpty(reportingUnitIds))
+            ? bookmarkRepository.findByUserId(userId)
+            : bookmarkRepository.findByUserIdAndReportingUnitIdIn(userId, reportingUnitIds);
 
-    return bookmarkEntities
-        .stream()
-        .map(UserBookmarkEntity::getReportingUnitId)
-        .toList();
+    return bookmarkEntities.stream().map(UserBookmarkEntity::getReportingUnitId).toList();
   }
 }

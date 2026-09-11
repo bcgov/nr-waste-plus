@@ -10,10 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.DisplayName;
 
 /** Executes the language-neutral formula contract against the authoritative backend validator. */
 @DisplayName("Unit Test | Formula Conformance Fixture")
@@ -62,27 +62,31 @@ class FormulaConformanceFixtureTest {
         }
         continue;
       }
-      Map<String, BigDecimal> variables = JSON.convertValue(fixture.path("variables"),
-          JSON.getTypeFactory().constructMapType(Map.class, String.class, BigDecimal.class));
-      List<FormulaValidationError> errors = VALIDATOR.validate(new FormulaValidationRequest(
-          definitions, variables, mode));
-      assertThat(errors).as(fixture.path("id").asText())
+      Map<String, BigDecimal> variables =
+          JSON.convertValue(
+              fixture.path("variables"),
+              JSON.getTypeFactory().constructMapType(Map.class, String.class, BigDecimal.class));
+      List<FormulaValidationError> errors =
+          VALIDATOR.validate(new FormulaValidationRequest(definitions, variables, mode));
+      assertThat(errors)
+          .as(fixture.path("id").asText())
           .hasSameSizeAs(fixture.path("expected").path("errors"));
       for (int index = 0; index < errors.size(); index++) {
         JsonNode expected = fixture.path("expected").path("errors").get(index);
         assertThat(errors.get(index).code().name()).isEqualTo(expected.path("code").asText());
         if (expected.has("startOffset")) {
-          assertThat(errors.get(index).startOffset()).as(fixture.path("id").asText())
+          assertThat(errors.get(index).startOffset())
+              .as(fixture.path("id").asText())
               .isEqualTo(expected.path("startOffset").asInt());
-          assertThat(errors.get(index).endOffset()).as(fixture.path("id").asText())
+          assertThat(errors.get(index).endOffset())
+              .as(fixture.path("id").asText())
               .isEqualTo(expected.path("endOffset").asInt());
         }
       }
       if ("VALID".equals(status)) {
         assertThat(errors).isEmpty();
         if (fixture.path("expected").has("ast")) {
-          assertAst(definitions.get(0).expression(),
-              mode, fixture.path("expected").path("ast"));
+          assertAst(definitions.get(0).expression(), mode, fixture.path("expected").path("ast"));
         }
       }
     }
@@ -105,8 +109,9 @@ class FormulaConformanceFixtureTest {
         assertThat(definition.isObject()).isTrue();
         assertThat(definition.path("key").asText()).isNotBlank();
         assertThat(definition.path("expression").asText()).isNotBlank();
-        definitions.add(new FormulaDefinition(definition.path("key").asText(),
-            definition.path("expression").asText()));
+        definitions.add(
+            new FormulaDefinition(
+                definition.path("key").asText(), definition.path("expression").asText()));
       }
       return definitions;
     }
@@ -115,8 +120,8 @@ class FormulaConformanceFixtureTest {
   }
 
   private static void assertAst(String expression, FormulaParseMode mode, JsonNode expected) {
-    FormulaNode node = new FormulaParser(new FormulaParser.Options(30, 200)).parse(expression,
-        mode);
+    FormulaNode node =
+        new FormulaParser(new FormulaParser.Options(30, 200)).parse(expression, mode);
     assertAstNode(node, expected);
   }
 
@@ -142,27 +147,33 @@ class FormulaConformanceFixtureTest {
       JsonNode fixture, List<FormulaDefinition> definitions, FormulaParseMode mode) {
     JsonNode eval = fixture.path("evaluation");
     String evalStatus = eval.path("status").asText();
-    Map<String, BigDecimal> variables = JSON.convertValue(fixture.path("variables"),
-        JSON.getTypeFactory().constructMapType(Map.class, String.class, BigDecimal.class));
+    Map<String, BigDecimal> variables =
+        JSON.convertValue(
+            fixture.path("variables"),
+            JSON.getTypeFactory().constructMapType(Map.class, String.class, BigDecimal.class));
 
     if ("EVALUATION_ERROR".equals(evalStatus)) {
       assertThat(definitions).hasSize(1);
-      FormulaNode ast = new FormulaParser(new FormulaParser.Options(30, 200))
-          .parse(definitions.get(0).expression(), mode);
+      FormulaNode ast =
+          new FormulaParser(new FormulaParser.Options(30, 200))
+              .parse(definitions.get(0).expression(), mode);
       org.assertj.core.api.Assertions.assertThatThrownBy(
-          () -> FormulaEvaluator.evaluate(ast, variables))
+              () -> FormulaEvaluator.evaluate(ast, variables))
           .isInstanceOf(FormulaEvaluationException.class)
           .hasMessageContaining(eval.path("expectedMessageContains").asText());
     } else if ("VALID".equals(evalStatus)) {
       assertThat(definitions).hasSize(1);
-      FormulaNode ast = new FormulaParser(new FormulaParser.Options(30, 200))
-          .parse(definitions.get(0).expression(), mode);
+      FormulaNode ast =
+          new FormulaParser(new FormulaParser.Options(30, 200))
+              .parse(definitions.get(0).expression(), mode);
       BigDecimal result = FormulaEvaluator.evaluate(ast, variables);
       assertThat(result).isEqualByComparingTo(eval.path("expectedResult").asText());
     } else {
-      throw new AssertionError("Unknown evaluation status: " + evalStatus
-          + " in fixture case " + fixture.path("id").asText());
+      throw new AssertionError(
+          "Unknown evaluation status: "
+              + evalStatus
+              + " in fixture case "
+              + fixture.path("id").asText());
     }
   }
-
 }

@@ -36,36 +36,40 @@ public class FormulaRuntimeResolver {
     return switch (parts[0]) {
       case "da" -> resolveDistrictAverage(date, area, district, parts, path);
       case "sc" -> resolveSpeciesComposition(date, area, district, parts, path);
-      default -> throw failure("Runtime resolution is not available for namespace '"
-          + parts[0] + "'.");
+      default -> throw failure(
+          "Runtime resolution is not available for namespace '" + parts[0] + "'.");
     };
   }
 
-  private BigDecimal resolveDistrictAverage(LocalDate date, Area area, String district,
-      String[] parts, String path) {
+  private BigDecimal resolveDistrictAverage(
+      LocalDate date, Area area, String district, String[] parts, String path) {
     if (parts.length != 3) {
       throw failure("District-average path must be da.<group>.<field>: " + path);
     }
     DistrictVolumeEntity entity = find(date, area, ConfigType.DISTRICT_VOLUME, path);
     TableData data = entity.getTableData();
     String requestedGroup = parts[1].toLowerCase(java.util.Locale.ROOT);
-    JsonNode row = area == Area.COASTAL
-        ? findGroupRow(data, "sections", requestedGroup, district, path)
-        : findGroupRow(data, "zones", requestedGroup, district, path);
+    JsonNode row =
+        area == Area.COASTAL
+            ? findGroupRow(data, "sections", requestedGroup, district, path)
+            : findGroupRow(data, "zones", requestedGroup, district, path);
     return scale(numberAt(row, parts[2], path));
   }
 
-  private BigDecimal resolveSpeciesComposition(LocalDate date, Area area, String district,
-      String[] parts, String path) {
+  private BigDecimal resolveSpeciesComposition(
+      LocalDate date, Area area, String district, String[] parts, String path) {
     if (parts.length != 2) {
       throw failure("Species-composition path must be sc.<species>: " + path);
     }
     DistrictVolumeEntity entity = find(date, area, ConfigType.SPECIES_COMPOSITION, path);
-    SpeciesCompositionRow row = entity.getTableData().speciesRows().stream()
-        .filter(candidate -> candidate.district() != null
-            && district.equalsIgnoreCase(candidate.district().code()))
-        .findFirst().orElseThrow(() -> failure("District '" + district
-            + "' is missing for " + path + "."));
+    SpeciesCompositionRow row =
+        entity.getTableData().speciesRows().stream()
+            .filter(
+                candidate ->
+                    candidate.district() != null
+                        && district.equalsIgnoreCase(candidate.district().code()))
+            .findFirst()
+            .orElseThrow(() -> failure("District '" + district + "' is missing for " + path + "."));
     BigDecimal value = row.species() == null ? null : row.species().get(parts[1]);
     if (value == null) {
       throw failure("Species '" + parts[1] + "' is missing for district '" + district + "'.");
@@ -74,12 +78,13 @@ public class FormulaRuntimeResolver {
   }
 
   private DistrictVolumeEntity find(LocalDate date, Area area, ConfigType type, String path) {
-    return districtVolumeRepository.findEffectiveByConfigTypeAndArea(type, area, date)
+    return districtVolumeRepository
+        .findEffectiveByConfigTypeAndArea(type, area, date)
         .orElseThrow(() -> failure("No " + type + " configuration is effective for " + path + "."));
   }
 
-  private JsonNode findGroupRow(TableData data, String groupCollection, String group,
-      String district, String path) {
+  private JsonNode findGroupRow(
+      TableData data, String groupCollection, String group, String district, String path) {
     JsonNode root = JsonNodeFactoryHolder.toTree(data);
     JsonNode groups = root.get(groupCollection);
     if (groups == null || !groups.isArray()) {
@@ -116,7 +121,9 @@ public class FormulaRuntimeResolver {
     return label.replaceAll("[^A-Za-z0-9]", "").toLowerCase(java.util.Locale.ROOT);
   }
 
-  private BigDecimal scale(BigDecimal value) { return value.setScale(3, RoundingMode.HALF_UP); }
+  private BigDecimal scale(BigDecimal value) {
+    return value.setScale(3, RoundingMode.HALF_UP);
+  }
 
   private ResponseStatusException failure(String message) {
     return new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, message);

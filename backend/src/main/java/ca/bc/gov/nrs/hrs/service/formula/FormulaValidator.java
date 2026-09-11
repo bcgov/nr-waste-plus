@@ -26,15 +26,22 @@ public final class FormulaValidator {
     List<FormulaValidationError> errors = new ArrayList<>();
     Map<String, List<FormulaNode>> parsedNodes = new HashMap<>();
     Map<String, FormulaNode> canonicalNodes = new HashMap<>();
-    for (FormulaDefinition definition : request.formulas().stream()
-        .sorted(Comparator.comparing(FormulaDefinition::formulaKey)).toList()) {
+    for (FormulaDefinition definition :
+        request.formulas().stream()
+            .sorted(Comparator.comparing(FormulaDefinition::formulaKey))
+            .toList()) {
       if (definitions.putIfAbsent(definition.formulaKey(), definition) != null) {
-        errors.add(error(FormulaValidationError.Code.SYNTAX_ERROR,
-            "Duplicate formula key: " + definition.formulaKey(), 0, 0));
+        errors.add(
+            error(
+                FormulaValidationError.Code.SYNTAX_ERROR,
+                "Duplicate formula key: " + definition.formulaKey(),
+                0,
+                0));
       }
       try {
         FormulaNode node = parser.parse(definition.expression(), request.mode());
-        parsedNodes.computeIfAbsent(definition.formulaKey(), ignored -> new ArrayList<>())
+        parsedNodes
+            .computeIfAbsent(definition.formulaKey(), ignored -> new ArrayList<>())
             .add(node);
         canonicalNodes.putIfAbsent(definition.formulaKey(), node);
       } catch (FormulaParseException exception) {
@@ -51,7 +58,9 @@ public final class FormulaValidator {
     return List.copyOf(errors);
   }
 
-  private ValueType validateNode(FormulaNode node, Map<String, BigDecimal> known,
+  private ValueType validateNode(
+      FormulaNode node,
+      Map<String, BigDecimal> known,
       Set<String> formulaKeys,
       List<FormulaValidationError> errors) {
     return switch (node) {
@@ -62,12 +71,16 @@ public final class FormulaValidator {
         if (formulaKeys.contains(variable.name())) {
           yield ValueType.NUMERIC;
         }
-        if (dot < 1 || dot == variable.name().length() - 1
+        if (dot < 1
+            || dot == variable.name().length() - 1
             || !NAMESPACES.contains(namespace)
             || !known.containsKey(variable.name())) {
-          errors.add(error(FormulaValidationError.Code.UNKNOWN_VARIABLE,
-              "Unknown variable: " + variable.name(), variable.startOffset(),
-              variable.endOffset()));
+          errors.add(
+              error(
+                  FormulaValidationError.Code.UNKNOWN_VARIABLE,
+                  "Unknown variable: " + variable.name(),
+                  variable.startOffset(),
+                  variable.endOffset()));
         }
         yield ValueType.NUMERIC;
       }
@@ -91,8 +104,12 @@ public final class FormulaValidator {
           addTypeError("Arithmetic operators require numeric expressions", binary, errors);
         }
         if (binary.operator() == BinaryOperator.DIVIDE && isZero(binary.right(), known)) {
-          errors.add(error(FormulaValidationError.Code.DIVISION_BY_ZERO,
-              "Division by zero", binary.right().startOffset(), binary.right().endOffset()));
+          errors.add(
+              error(
+                  FormulaValidationError.Code.DIVISION_BY_ZERO,
+                  "Division by zero",
+                  binary.right().startOffset(),
+                  binary.right().endOffset()));
         }
         yield ValueType.NUMERIC;
       }
@@ -114,25 +131,29 @@ public final class FormulaValidator {
     };
   }
 
-  private enum ValueType { NUMERIC, BOOLEAN }
+  private enum ValueType {
+    NUMERIC,
+    BOOLEAN
+  }
 
   private void addTypeError(String message, FormulaNode node, List<FormulaValidationError> errors) {
-    errors.add(error(FormulaValidationError.Code.TYPE_ERROR, message,
-        node.startOffset(), node.endOffset()));
+    errors.add(
+        error(
+            FormulaValidationError.Code.TYPE_ERROR, message, node.startOffset(), node.endOffset()));
   }
 
   private boolean isZero(FormulaNode node, Map<String, BigDecimal> known) {
     return constantValue(node, known).map(value -> value.signum() == 0).orElse(false);
   }
 
-  private java.util.Optional<BigDecimal> constantValue(FormulaNode node,
-      Map<String, BigDecimal> known) {
+  private java.util.Optional<BigDecimal> constantValue(
+      FormulaNode node, Map<String, BigDecimal> known) {
     return switch (node) {
       case LiteralNode literal -> java.util.Optional.of(literal.value());
-      case VariableReferenceNode variable ->
-          java.util.Optional.ofNullable(known.get(variable.name()));
-      case UnaryOperationNode unary -> constantValue(unary.operand(), known).map(value ->
-          unary.operator() == UnaryOperator.MINUS ? value.negate() : value);
+      case VariableReferenceNode variable -> java.util.Optional.ofNullable(
+          known.get(variable.name()));
+      case UnaryOperationNode unary -> constantValue(unary.operand(), known)
+          .map(value -> unary.operator() == UnaryOperator.MINUS ? value.negate() : value);
       case BinaryOperationNode binary -> {
         java.util.Optional<BigDecimal> left = constantValue(binary.left(), known);
         java.util.Optional<BigDecimal> right = constantValue(binary.right(), known);
@@ -163,15 +184,22 @@ public final class FormulaValidator {
     List<FormulaValidationError> errors = new ArrayList<>();
     for (String key : keys.stream().sorted().toList()) {
       if (hasCycle(key, dependencies, new HashSet<>(), new ArrayDeque<>())) {
-        errors.add(error(FormulaValidationError.Code.CYCLE_DETECTED,
-            "Formula dependency cycle detected at: " + key, 0, 0));
+        errors.add(
+            error(
+                FormulaValidationError.Code.CYCLE_DETECTED,
+                "Formula dependency cycle detected at: " + key,
+                0,
+                0));
       }
     }
     return errors;
   }
 
-  private boolean hasCycle(String key, Map<String, Set<String>> dependencies,
-      Set<String> visited, ArrayDeque<String> path) {
+  private boolean hasCycle(
+      String key,
+      Map<String, Set<String>> dependencies,
+      Set<String> visited,
+      ArrayDeque<String> path) {
     if (path.contains(key)) {
       return true;
     }
@@ -196,7 +224,9 @@ public final class FormulaValidator {
         collectNames(binary.left(), names);
         collectNames(binary.right(), names);
       }
-      case LiteralNode ignored -> { }
+      case LiteralNode ignored -> {
+        // Literals do not introduce variable references.
+      }
       case IfNode ifNode -> {
         collectNames(ifNode.condition(), names);
         collectNames(ifNode.valueIfTrue(), names);
@@ -205,8 +235,8 @@ public final class FormulaValidator {
     }
   }
 
-  private FormulaValidationError error(FormulaValidationError.Code code, String message,
-      int start, int end) {
+  private FormulaValidationError error(
+      FormulaValidationError.Code code, String message, int start, int end) {
     return new FormulaValidationError(code, message, start, end);
   }
 }

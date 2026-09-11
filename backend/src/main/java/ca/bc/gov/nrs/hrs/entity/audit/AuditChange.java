@@ -13,10 +13,7 @@ import lombok.Getter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-/**
- * Per-row audit change with JSONB snapshots.
- * No foreign key on entity_id — polymorphic audit.
- */
+/** Per-row audit change with JSONB snapshots. No foreign key on entity_id — polymorphic audit. */
 @Entity
 @Table(name = "audit_change", schema = "hrs")
 @Getter
@@ -65,8 +62,14 @@ public class AuditChange {
    * @param currentValues the new row state as JSON
    * @param changedColumns the columns that changed
    */
-  public AuditChange(Long eventId, String entityType, Long entityId, String action,
-       String previousValues, String currentValues, String[] changedColumns) {
+  public AuditChange(
+      Long eventId,
+      String entityType,
+      Long entityId,
+      String action,
+      String previousValues,
+      String currentValues,
+      String[] changedColumns) {
     this.eventId = eventId;
     this.entityType = entityType;
     this.entityId = entityId;

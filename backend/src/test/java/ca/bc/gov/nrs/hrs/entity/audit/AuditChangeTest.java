@@ -3,12 +3,10 @@ package ca.bc.gov.nrs.hrs.entity.audit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for {@link AuditChange}.
- */
+/** Unit tests for {@link AuditChange}. */
 @DisplayName("Unit Test | Audit Change")
 class AuditChangeTest {
 
@@ -19,8 +17,9 @@ class AuditChangeTest {
     String currentJson = "{\"field1\":\"value2\",\"field2\":456}";
     String[] changedColumns = {"field1", "field2"};
 
-    AuditChange change = new AuditChange(
-        1L, "DISTRICT_VOLUME", 100L, "UPDATE", previousJson, currentJson, changedColumns);
+    AuditChange change =
+        new AuditChange(
+            1L, "DISTRICT_VOLUME", 100L, "UPDATE", previousJson, currentJson, changedColumns);
 
     assertThat(change.getEventId()).isEqualTo(1L);
     assertThat(change.getEntityType()).isEqualTo("DISTRICT_VOLUME");
@@ -36,8 +35,8 @@ class AuditChangeTest {
   @DisplayName("Constructor should Handle Null Json Values")
   @Test
   void constructor_shouldHandleNullJsonValues() {
-    AuditChange change = new AuditChange(
-        1L, "DISTRICT_VOLUME", 100L, "CREATE", null, null, new String[]{"field1"});
+    AuditChange change =
+        new AuditChange(1L, "DISTRICT_VOLUME", 100L, "CREATE", null, null, new String[] {"field1"});
 
     assertThat(change.getPreviousValues()).isNull();
     assertThat(change.getCurrentValues()).isNull();
@@ -46,8 +45,7 @@ class AuditChangeTest {
   @DisplayName("Constructor should Handle Null Changed Columns")
   @Test
   void constructor_shouldHandleNullChangedColumns() {
-    AuditChange change = new AuditChange(
-        1L, "DISTRICT_VOLUME", 100L, "CREATE", "{}", "{}", null);
+    AuditChange change = new AuditChange(1L, "DISTRICT_VOLUME", 100L, "CREATE", "{}", "{}", null);
 
     assertThat(change.getChangedColumns()).isEmpty();
   }
@@ -56,8 +54,8 @@ class AuditChangeTest {
   @Test
   void constructor_shouldReturnClonedChangedColumns() {
     String[] original = {"field1", "field2"};
-    AuditChange change = new AuditChange(
-        1L, "DISTRICT_VOLUME", 100L, "UPDATE", "{}", "{}", original);
+    AuditChange change =
+        new AuditChange(1L, "DISTRICT_VOLUME", 100L, "UPDATE", "{}", "{}", original);
 
     String[] returned = change.getChangedColumns();
     returned[0] = "modified";
@@ -68,8 +66,10 @@ class AuditChangeTest {
   @DisplayName("Constructor should Throw On Invalid Json")
   @Test
   void constructor_shouldThrowOnInvalidJson() {
-    assertThatThrownBy(() -> new AuditChange(
-        1L, "DISTRICT_VOLUME", 100L, "UPDATE", "invalid json", "{}", new String[]{}))
+    assertThatThrownBy(
+            () ->
+                new AuditChange(
+                    1L, "DISTRICT_VOLUME", 100L, "UPDATE", "invalid json", "{}", new String[] {}))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Audit snapshot must be valid JSON");
   }
@@ -77,8 +77,15 @@ class AuditChangeTest {
   @DisplayName("Getters should Return Correct Values")
   @Test
   void getters_shouldReturnCorrectValues() {
-    AuditChange change = new AuditChange(
-        2L, "SPECIES_COMPOSITION", 200L, "SOFT_DELETE", "{}", "{\"deleted\":true}", new String[]{"deleted"});
+    AuditChange change =
+        new AuditChange(
+            2L,
+            "SPECIES_COMPOSITION",
+            200L,
+            "SOFT_DELETE",
+            "{}",
+            "{\"deleted\":true}",
+            new String[] {"deleted"});
 
     assertThat(change.getEventId()).isEqualTo(2L);
     assertThat(change.getEntityType()).isEqualTo("SPECIES_COMPOSITION");

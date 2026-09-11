@@ -13,9 +13,7 @@ class ReportingUnitSearchParametersDtoTest {
   @Test
   @DisplayName("isEmpty should return false when bookmarked is true")
   void isEmpty_bookmarkedTrue_shouldReturnFalse() {
-    var dto = ReportingUnitSearchParametersDto.builder()
-        .bookmarked(true)
-        .build();
+    var dto = ReportingUnitSearchParametersDto.builder().bookmarked(true).build();
 
     assertThat(dto.isEmpty()).isFalse();
   }
@@ -31,14 +29,14 @@ class ReportingUnitSearchParametersDtoTest {
   @Test
   @DisplayName("toMultiMap should include reportingUnitIds when set")
   void toMultiMap_withReportingUnitIds_shouldIncludeThem() {
-    var dto = ReportingUnitSearchParametersDto.builder()
-        .reportingUnitIds(List.of(100L, 200L, 300L))
-        .build();
+    var dto =
+        ReportingUnitSearchParametersDto.builder()
+            .reportingUnitIds(List.of(100L, 200L, 300L))
+            .build();
 
     var multiMap = dto.toMultiMap(PageRequest.of(0, 10));
 
-    assertThat(multiMap.get("reportingUnitIds"))
-        .containsExactly("100", "200", "300");
+    assertThat(multiMap.get("reportingUnitIds")).containsExactly("100", "200", "300");
   }
 
   @Test
@@ -54,13 +52,10 @@ class ReportingUnitSearchParametersDtoTest {
   @Test
   @DisplayName("toMultiMap should not include reportingUnitIds when empty")
   void toMultiMap_withEmptyReportingUnitIds_shouldNotInclude() {
-    var dto = ReportingUnitSearchParametersDto.builder()
-        .reportingUnitIds(List.of())
-        .build();
+    var dto = ReportingUnitSearchParametersDto.builder().reportingUnitIds(List.of()).build();
 
     var multiMap = dto.toMultiMap(PageRequest.of(0, 10));
 
     assertThat(multiMap.get("reportingUnitIds")).isNull();
   }
 }
-

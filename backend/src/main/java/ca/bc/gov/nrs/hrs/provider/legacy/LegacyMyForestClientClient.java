@@ -19,17 +19,13 @@ import tools.jackson.databind.JsonNode;
 
 /**
  * Client responsible for legacy "my forest clients" search endpoints.
- * 
+ *
  * <p>This component handles all communication with the legacy API for searching forest clients
  * associated with a user. It implements resilience patterns via circuit breaker to gracefully
  * handle failures.
- * </p>
- * 
- * <p>Search operations are protected by circuit breakers with fallback methods that return
- * empty pages, ensuring the application continues functioning even when the legacy API
- * is unavailable.
- * </p>
  *
+ * <p>Search operations are protected by circuit breakers with fallback methods that return empty
+ * pages, ensuring the application continues functioning even when the legacy API is unavailable.
  */
 @Slf4j
 @Component
@@ -44,15 +40,13 @@ public class LegacyMyForestClientClient {
 
   /**
    * Constructs a new LegacyMyForestClientClient.
-   * 
+   *
    * @param legacyApi the qualified RestClient bean for the legacy API, must not be null
-   * @param pageMapper the mapper for converting paged JSON responses to typed lists,
-   *                   must not be null
+   * @param pageMapper the mapper for converting paged JSON responses to typed lists, must not be
+   *     null
    */
   LegacyMyForestClientClient(
-      @Qualifier("legacyApi") RestClient legacyApi,
-      LegacyPagedResponseMapper pageMapper
-  ) {
+      @Qualifier("legacyApi") RestClient legacyApi, LegacyPagedResponseMapper pageMapper) {
     this.restClient = legacyApi;
     this.pageMapper = pageMapper;
   }
@@ -60,28 +54,23 @@ public class LegacyMyForestClientClient {
   /**
    * Search "My Forest" clients in the legacy API with specified filter values and pagination.
    *
-   * <p>This method executes a paginated search against the legacy API endpoint
-   * {@code GET /api/search/my-forest-clients} with the provided filter values and
-   * pagination settings. The response is expected to be a paged JSON structure with a
-   * {@code content} field containing the results and a {@code page} field containing
-   * pagination metadata.
-   * </p>
+   * <p>This method executes a paginated search against the legacy API endpoint {@code GET
+   * /api/search/my-forest-clients} with the provided filter values and pagination settings. The
+   * response is expected to be a paged JSON structure with a {@code content} field containing the
+   * results and a {@code page} field containing pagination metadata.
    *
-   * <p>If the response is invalid or missing required fields, the method returns an empty page.
-   * If the total elements cannot be determined from the response metadata, it defaults to 0.
-   * </p>
+   * <p>If the response is invalid or missing required fields, the method returns an empty page. If
+   * the total elements cannot be determined from the response metadata, it defaults to 0.
    *
-   * <p>This method is protected by a circuit breaker that will invoke
-   * {@link #fallbackSearchMyClients(Set, Pageable, Throwable)} if the API call fails.
-   * </p>
+   * <p>This method is protected by a circuit breaker that will invoke {@link
+   * #fallbackSearchMyClients(Set, Pageable, Throwable)} if the API call fails.
    *
    * @param values the set of client values to search for; must not be null
    * @param pageable the pagination information (page number, size, sort order)
    * @return a {@link Page} of {@link MyForestClientSearchResultDto} containing search results;
-   *         never null, may be empty if no results found or API fails
-   * @throws org.springframework.web.client.RestClientException if there's an unrecoverable
-   *                                                           HTTP error
-   *
+   *     never null, may be empty if no results found or API fails
+   * @throws org.springframework.web.client.RestClientException if there's an unrecoverable HTTP
+   *     error
    * @see MyForestClientSearchResultDto
    * @see Pageable
    * @see LegacyPagedResponseMapper
@@ -89,32 +78,32 @@ public class LegacyMyForestClientClient {
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackSearchMyClients")
   @NewSpan
   public Page<MyForestClientSearchResultDto> searchMyClients(
-      Set<String> values,
-      Pageable pageable
-  ) {
-    log.info("Searching {} request to /api/search/my-forest-clients for values that match {}",
-        PROVIDER, values);
+      Set<String> values, Pageable pageable) {
+    log.info(
+        "Searching {} request to /api/search/my-forest-clients for values that match {}",
+        PROVIDER,
+        values);
 
-    JsonNode pagedResponse = restClient
-        .get()
-        .uri(uriBuilder -> uriBuilder
-            .path("/api/search/my-forest-clients")
-            .queryParam("values", values)
-            .queryParams(UriUtils.buildPageableQueryParam(pageable))
-            .build(Map.of())
-        )
-        .retrieve()
-        .body(JsonNode.class);
+    JsonNode pagedResponse =
+        restClient
+            .get()
+            .uri(
+                uriBuilder ->
+                    uriBuilder
+                        .path("/api/search/my-forest-clients")
+                        .queryParam("values", values)
+                        .queryParams(UriUtils.buildPageableQueryParam(pageable))
+                        .build(Map.of()))
+            .retrieve()
+            .body(JsonNode.class);
 
     if (pageMapper.isInvalidPage(pagedResponse)) {
       logFallbackError(null);
       return new PageImpl<>(LegacyApiConstants.MY_CLIENTS_LIST, pageable, 0);
     }
 
-    List<MyForestClientSearchResultDto> results = pageMapper.readContent(
-        pagedResponse,
-        MyForestClientSearchResultDto.class
-    );
+    List<MyForestClientSearchResultDto> results =
+        pageMapper.readContent(pagedResponse, MyForestClientSearchResultDto.class);
 
     long totalElements = 0L;
     try {
@@ -129,9 +118,8 @@ public class LegacyMyForestClientClient {
   /**
    * Fallback method invoked when "my forest clients" search fails.
    *
-   * <p>Returns an empty page to allow the application to continue
-   * when the legacy API is unavailable.
-   * </p>
+   * <p>Returns an empty page to allow the application to continue when the legacy API is
+   * unavailable.
    *
    * @param values the set of client values that were being searched
    * @param pageable the pagination settings that were requested
@@ -140,10 +128,7 @@ public class LegacyMyForestClientClient {
    */
   @SuppressWarnings("unused")
   private Page<MyForestClientSearchResultDto> fallbackSearchMyClients(
-      Set<String> values,
-      Pageable pageable,
-      Throwable throwable
-  ) {
+      Set<String> values, Pageable pageable, Throwable throwable) {
     logFallbackError(throwable);
     return new PageImpl<>(LegacyApiConstants.MY_CLIENTS_LIST, pageable, 0);
   }
@@ -153,7 +138,6 @@ public class LegacyMyForestClientClient {
    *
    * <p>This method standardizes error logging when circuit breaker fallbacks are triggered,
    * providing consistent error information for troubleshooting.
-   * </p>
    *
    * @param throwable the exception that occurred, may be null if reason is unknown
    */
@@ -161,5 +145,3 @@ public class LegacyMyForestClientClient {
     log.error(FALLBACK_ERROR, PROVIDER, throwable == null ? "unknown" : throwable.getMessage());
   }
 }
-
-

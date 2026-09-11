@@ -13,20 +13,23 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.test.context.support.WithSecurityContextFactory;
 
+/**
+ * Factory for building {@link SecurityContext} instances initialized with mock JWT tokens.
+ */
 public class WithMockJwtSecurityContextFactory implements WithSecurityContextFactory<WithMockJwt> {
 
   @Override
   public SecurityContext createSecurityContext(WithMockJwt annotation) {
-    Jwt jwt = createJwt(
-        annotation.value(),
-        Arrays.asList(annotation.cognitoGroups()),
-        annotation.idp(),
-        annotation.displayName(),
-        annotation.email()
-    );
+    Jwt jwt =
+        createJwt(
+            annotation.value(),
+            Arrays.asList(annotation.cognitoGroups()),
+            annotation.idp(),
+            annotation.displayName(),
+            annotation.email());
 
-    List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(
-        annotation.cognitoGroups());
+    List<GrantedAuthority> authorities =
+        AuthorityUtils.createAuthorityList(annotation.cognitoGroups());
     JwtAuthenticationToken token = new JwtAuthenticationToken(jwt, authorities);
 
     SecurityContext context = SecurityContextHolder.createEmptyContext();
@@ -35,35 +38,44 @@ public class WithMockJwtSecurityContextFactory implements WithSecurityContextFac
     return context;
   }
 
+  /**
+   * Creates a mock JWT token with given subject, Cognito groups, and IDP claims.
+   *
+   * @param value subject identifier
+   * @param cognitoGroups list of Cognito groups
+   * @param idp identity provider name
+   * @param displayName user display name
+   * @param email user email address
+   * @return a mock Jwt instance
+   */
   public static Jwt createJwt(
-      String value,
-      List<String> cognitoGroups,
-      String idp,
-      String displayName,
-      String email
-  ) {
+      String value, List<String> cognitoGroups, String idp, String displayName, String email) {
     Instant now = Instant.now();
 
-    return Jwt
-        .withTokenValue("token")
+    return Jwt.withTokenValue("token")
         .header("alg", "none")
         .header("typ", "JWT")
         .subject(value)
         .issuedAt(now)
         .expiresAt(now.plusSeconds(3600))
-        .claims(jwtClaims -> jwtClaims.putAll(
-            createClaims(value, cognitoGroups, idp, displayName, email))
-        )
+        .claims(
+            jwtClaims ->
+                jwtClaims.putAll(createClaims(value, cognitoGroups, idp, displayName, email)))
         .build();
   }
 
+  /**
+   * Creates standard claims map for mock authentication.
+   *
+   * @param value subject identifier
+   * @param cognitoGroups list of Cognito groups
+   * @param idp identity provider name
+   * @param displayName user display name
+   * @param email user email address
+   * @return map of claim keys and values
+   */
   public static Map<String, Object> createClaims(
-      String value,
-      List<String> cognitoGroups,
-      String idp,
-      String displayName,
-      String email
-  ) {
+      String value, List<String> cognitoGroups, String idp, String displayName, String email) {
     Map<String, Object> claims = new HashMap<>();
     claims.put("sub", value);
     claims.put("cognito:groups", cognitoGroups);

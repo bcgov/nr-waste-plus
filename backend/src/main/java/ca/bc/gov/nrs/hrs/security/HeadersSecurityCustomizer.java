@@ -17,104 +17,86 @@ import org.springframework.stereotype.Component;
 /**
  * Configuration for HTTP security headers applied to the application.
  *
- * <p>This customizer builds a Content-Security-Policy and other security
- * headers. The CSP differs between local and non-local environments to enable
- * development conveniences when needed.</p>
+ * <p>This customizer builds a Content-Security-Policy and other security headers. The CSP differs
+ * between local and non-local environments to enable development conveniences when needed.
  */
 @RequiredArgsConstructor
 @Component
-public class HeadersSecurityCustomizer
-    implements Customizer<HeadersConfigurer<HttpSecurity>> {
+public class HeadersSecurityCustomizer implements Customizer<HeadersConfigurer<HttpSecurity>> {
 
   @Value("${ca.bc.gov.nrs.self-uri}")
   String selfUri;
 
   /**
-   * The environment of the application, injected from application properties.
-   * Default value is "PROD".
+   * The environment of the application, injected from application properties. Default value is
+   * "PROD".
    */
   @Value("${ca.bc.gov.nrs.environment:PROD}")
   String environment;
 
-  private static final List<String> PERMISSIONS = List.of(
-      "geolocation",
-      "microphone",
-      "camera",
-      "speaker",
-      "usb",
-      "bluetooth",
-      "payment",
-      "interest-cohort"
-  );
+  private static final List<String> PERMISSIONS =
+      List.of(
+          "geolocation",
+          "microphone",
+          "camera",
+          "speaker",
+          "usb",
+          "bluetooth",
+          "payment",
+          "interest-cohort");
 
   @Override
   public void customize(HeadersConfigurer<HttpSecurity> headerSpec) {
     String policyDirectives;
 
     if (SecurityEnvironmentUtil.isLocalEnvironment(environment)) {
-      policyDirectives = String.join(
-          "; ",
-          "default-src 'self'",
-          "connect-src 'self' " + selfUri,
-          "script-src 'self' 'unsafe-inline'",
-          "style-src 'self' 'unsafe-inline'",
-          "img-src 'self' data:",
-          "object-src 'none'",
-          "base-uri 'none'",
-          "frame-ancestors 'none'",
-          "report-uri " + selfUri
-      );
+      policyDirectives =
+          String.join(
+              "; ",
+              "default-src 'self'",
+              "connect-src 'self' " + selfUri,
+              "script-src 'self' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data:",
+              "object-src 'none'",
+              "base-uri 'none'",
+              "frame-ancestors 'none'",
+              "report-uri " + selfUri);
     } else {
       String nonce = UUID.randomUUID().toString();
-      policyDirectives = String.join(
-          "; ",
-          "default-src 'none'",
-          "connect-src 'self' " + selfUri,
-          "script-src 'strict-dynamic' 'nonce-" + nonce + "' https:",
-          "object-src 'none'",
-          "base-uri 'none'",
-          "frame-ancestors 'none'",
-          "require-trusted-types-for 'script'",
-          "report-uri " + selfUri
-      );
+      policyDirectives =
+          String.join(
+              "; ",
+              "default-src 'none'",
+              "connect-src 'self' " + selfUri,
+              "script-src 'strict-dynamic' 'nonce-" + nonce + "' https:",
+              "object-src 'none'",
+              "base-uri 'none'",
+              "frame-ancestors 'none'",
+              "require-trusted-types-for 'script'",
+              "report-uri " + selfUri);
     }
 
     headerSpec
         .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
-        .contentSecurityPolicy(csp ->
-            csp.policyDirectives(policyDirectives))
-        .httpStrictTransportSecurity(hsts ->
-            hsts.maxAgeInSeconds(Duration.ofDays(30).getSeconds())
-                .includeSubDomains(true))
+        .contentSecurityPolicy(csp -> csp.policyDirectives(policyDirectives))
+        .httpStrictTransportSecurity(
+            hsts -> hsts.maxAgeInSeconds(Duration.ofDays(30).getSeconds()).includeSubDomains(true))
         .xssProtection(HeadersConfigurer.XXssConfig::disable)
         .contentTypeOptions(Customizer.withDefaults())
-        .referrerPolicy(referrer ->
-            referrer.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-        .addHeaderWriter(new StaticHeadersWriter(
-            "Permissions-Policy",
-            PERMISSIONS.stream()
-                .map(p -> String.format("%s=()", p))
-                .collect(Collectors.joining(", "))
-        ))
-        .addHeaderWriter(new StaticHeadersWriter(
-            "Cross-Origin-Opener-Policy",
-            "same-origin"
-        ))
-        .addHeaderWriter(new StaticHeadersWriter(
-            "Cross-Origin-Embedder-Policy",
-            "require-corp"
-        ))
-        .addHeaderWriter(new StaticHeadersWriter(
-            "Cross-Origin-Resource-Policy",
-            "same-origin"
-        ))
-        .addHeaderWriter(new StaticHeadersWriter(
-            "Cache-Control",
-            "no-store, no-cache, must-revalidate, max-age=0"
-        ))
-        .addHeaderWriter(new StaticHeadersWriter(
-            "Pragma",
-            "no-cache"
-        ));
+        .referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+        .addHeaderWriter(
+            new StaticHeadersWriter(
+                "Permissions-Policy",
+                PERMISSIONS.stream()
+                    .map(p -> String.format("%s=()", p))
+                    .collect(Collectors.joining(", "))))
+        .addHeaderWriter(new StaticHeadersWriter("Cross-Origin-Opener-Policy", "same-origin"))
+        .addHeaderWriter(new StaticHeadersWriter("Cross-Origin-Embedder-Policy", "require-corp"))
+        .addHeaderWriter(new StaticHeadersWriter("Cross-Origin-Resource-Policy", "same-origin"))
+        .addHeaderWriter(
+            new StaticHeadersWriter(
+                "Cache-Control", "no-store, no-cache, must-revalidate, max-age=0"))
+        .addHeaderWriter(new StaticHeadersWriter("Pragma", "no-cache"));
   }
 }

@@ -68,8 +68,7 @@ class SearchServiceTest {
         new CodeDescriptionDto("DND", "Nadina Natural Resource District"),
         new CodeDescriptionDto("DFT", "Draft"),
         LocalDateTime.of(2025, 8, 24, 9, 10, 28),
-        false
-    );
+        false);
   }
 
   @BeforeEach
@@ -81,9 +80,7 @@ class SearchServiceTest {
   @Test
   @DisplayName("Search should enrich results with bookmarked=true when RU is bookmarked")
   void search_shouldEnrichResultsWithBookmarkedTrue() {
-    var filters = ReportingUnitSearchParametersDto.builder()
-        .mainSearchTerm("36834")
-        .build();
+    var filters = ReportingUnitSearchParametersDto.builder().mainSearchTerm("36834").build();
 
     var result = createResult(36834L, "00010002");
     Page<ReportingUnitSearchResultDto> page = new PageImpl<>(List.of(result), PAGEABLE, 1);
@@ -92,10 +89,8 @@ class SearchServiceTest {
     when(forestClientService.getClientByNumber("00010002"))
         .thenReturn(
             Optional.of(
-                new ForestClientDto(
-                    "00010002", "WEST FRASER", null, null, null, null, null)));
-    when(userService.getUserBookmarksInList(USER_ID, List.of(36834L)))
-        .thenReturn(List.of(36834L));
+                new ForestClientDto("00010002", "WEST FRASER", null, null, null, null, null)));
+    when(userService.getUserBookmarksInList(USER_ID, List.of(36834L))).thenReturn(List.of(36834L));
 
     Page<ReportingUnitSearchResultDto> results = searchService.search(USER_ID, filters, PAGEABLE);
 
@@ -107,9 +102,7 @@ class SearchServiceTest {
   @Test
   @DisplayName("Search should enrich results with bookmarked=false when RU is not bookmarked")
   void search_shouldEnrichResultsWithBookmarkedFalse() {
-    var filters = ReportingUnitSearchParametersDto.builder()
-        .mainSearchTerm("36834")
-        .build();
+    var filters = ReportingUnitSearchParametersDto.builder().mainSearchTerm("36834").build();
 
     var result = createResult(36834L, "00010002");
     Page<ReportingUnitSearchResultDto> page = new PageImpl<>(List.of(result), PAGEABLE, 1);
@@ -118,10 +111,8 @@ class SearchServiceTest {
     when(forestClientService.getClientByNumber("00010002"))
         .thenReturn(
             Optional.of(
-                new ForestClientDto(
-                    "00010002", "WEST FRASER", null, null, null, null, null)));
-    when(userService.getUserBookmarksInList(USER_ID, List.of(36834L)))
-        .thenReturn(List.of());
+                new ForestClientDto("00010002", "WEST FRASER", null, null, null, null, null)));
+    when(userService.getUserBookmarksInList(USER_ID, List.of(36834L))).thenReturn(List.of());
 
     Page<ReportingUnitSearchResultDto> results = searchService.search(USER_ID, filters, PAGEABLE);
 
@@ -132,9 +123,7 @@ class SearchServiceTest {
   @Test
   @DisplayName("Search with bookmarked=true should fetch user bookmarks and set reportingUnitIds")
   void search_withBookmarkedTrue_shouldSetReportingUnitIds() {
-    var filters = ReportingUnitSearchParametersDto.builder()
-        .bookmarked(true)
-        .build();
+    var filters = ReportingUnitSearchParametersDto.builder().bookmarked(true).build();
 
     // User has bookmarks for RU 36834 and 12345
     when(userService.getUserBookmarksInList(USER_ID, List.of()))
@@ -147,10 +136,8 @@ class SearchServiceTest {
     when(forestClientService.getClientByNumber("00010002"))
         .thenReturn(
             Optional.of(
-                new ForestClientDto(
-                    "00010002", "WEST FRASER", null, null, null, null, null)));
-    when(userService.getUserBookmarksInList(USER_ID, List.of(36834L)))
-        .thenReturn(List.of(36834L));
+                new ForestClientDto("00010002", "WEST FRASER", null, null, null, null, null)));
+    when(userService.getUserBookmarksInList(USER_ID, List.of(36834L))).thenReturn(List.of(36834L));
 
     Page<ReportingUnitSearchResultDto> results = searchService.search(USER_ID, filters, PAGEABLE);
 
@@ -163,10 +150,11 @@ class SearchServiceTest {
   @Test
   @DisplayName("Search with bookmarked=false should not fetch user bookmarks for filtering")
   void search_withBookmarkedFalse_shouldNotFetchBookmarksForFiltering() {
-    var filters = ReportingUnitSearchParametersDto.builder()
-        .mainSearchTerm("36834")
-        .bookmarked(false)
-        .build();
+    var filters =
+        ReportingUnitSearchParametersDto.builder()
+            .mainSearchTerm("36834")
+            .bookmarked(false)
+            .build();
 
     Page<ReportingUnitSearchResultDto> page = new PageImpl<>(List.of(), PAGEABLE, 0);
 
@@ -182,9 +170,7 @@ class SearchServiceTest {
   @Test
   @DisplayName("Search with empty results should return empty page with no enrichment errors")
   void search_withEmptyResults_shouldReturnEmptyPage() {
-    var filters = ReportingUnitSearchParametersDto.builder()
-        .mainSearchTerm("99999")
-        .build();
+    var filters = ReportingUnitSearchParametersDto.builder().mainSearchTerm("99999").build();
 
     Page<ReportingUnitSearchResultDto> page = new PageImpl<>(List.of(), PAGEABLE, 0);
 
@@ -200,22 +186,18 @@ class SearchServiceTest {
   @Test
   @DisplayName("Search with multiple results should correctly flag only bookmarked ones")
   void search_withMultipleResults_shouldFlagOnlyBookmarked() {
-    var filters = ReportingUnitSearchParametersDto.builder()
-        .mainSearchTerm("test")
-        .build();
+    var filters = ReportingUnitSearchParametersDto.builder().mainSearchTerm("test").build();
 
     var result1 = createResult(36834L, "00010002");
     var result2 = createResult(12345L, "00010002");
-    Page<ReportingUnitSearchResultDto> page = new PageImpl<>(
-        List.of(result1, result2), PAGEABLE, 2
-    );
+    Page<ReportingUnitSearchResultDto> page =
+        new PageImpl<>(List.of(result1, result2), PAGEABLE, 2);
 
     when(legacyApiProvider.searchReportingUnit(any(), any())).thenReturn(page);
     when(forestClientService.getClientByNumber("00010002"))
         .thenReturn(
             Optional.of(
-                new ForestClientDto(
-                    "00010002", "WEST FRASER", null, null, null, null, null)));
+                new ForestClientDto("00010002", "WEST FRASER", null, null, null, null, null)));
     // Only RU 36834 is bookmarked
     when(userService.getUserBookmarksInList(USER_ID, List.of(36834L, 12345L)))
         .thenReturn(List.of(36834L));
@@ -227,4 +209,3 @@ class SearchServiceTest {
     assertThat(results.getContent().get(1).bookmarked()).isFalse();
   }
 }
-

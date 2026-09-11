@@ -5,13 +5,11 @@ import java.time.LocalDateTime;
 import lombok.With;
 
 /**
- * DTO representing a reporting unit search result returned by the search
- * endpoints.
+ * DTO representing a reporting unit search result returned by the search endpoints.
  *
- * <p>This immutable record contains summary information about a reporting unit
- * that is useful for search result listings: identifiers, human-readable
- * code/description pairs for related entities, status and last update time.
- * </p>
+ * <p>This immutable record contains summary information about a reporting unit that is useful for
+ * search result listings: identifiers, human-readable code/description pairs for related entities,
+ * status and last update time.
  *
  * @param id the unique identifier of the reporting unit
  * @param wasteAssessmentAreaId the block identifier (represents the wasteAssessmentAreaId)
@@ -38,6 +36,4 @@ public record ReportingUnitSearchResultDto(
     CodeDescriptionDto district,
     CodeDescriptionDto status,
     LocalDateTime lastUpdated,
-    boolean bookmarked
-) {
-}
+    boolean bookmarked) {}

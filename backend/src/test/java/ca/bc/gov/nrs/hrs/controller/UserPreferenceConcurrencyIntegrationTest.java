@@ -33,39 +33,51 @@ class UserPreferenceConcurrencyIntegrationTest extends AbstractTestContainerInte
     String preferencesJson1 = "{\"theme\": \"dark\"}";
     String preferencesJson2 = "{\"theme\": \"light\"}";
 
-    mockMvc.perform(put("/api/users/preferences")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(preferencesJson1)
-        .with(SecurityMockMvcRequestPostProcessors.csrf()))
+    mockMvc
+        .perform(
+            put("/api/users/preferences")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(preferencesJson1)
+                .with(SecurityMockMvcRequestPostProcessors.csrf()))
         .andExpect(status().isAccepted());
 
     ExecutorService executor = Executors.newFixedThreadPool(2);
 
-    CompletableFuture<Void> task1 = CompletableFuture.runAsync(() -> {
-      SecurityContextHolder.setContext(securityContext);
-      try {
-        mockMvc.perform(put("/api/users/preferences")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(preferencesJson1)
-            .with(SecurityMockMvcRequestPostProcessors.csrf()))
-            .andExpect(status().isAccepted());
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }, executor);
+    CompletableFuture<Void> task1 =
+        CompletableFuture.runAsync(
+            () -> {
+              SecurityContextHolder.setContext(securityContext);
+              try {
+                mockMvc
+                    .perform(
+                        put("/api/users/preferences")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(preferencesJson1)
+                            .with(SecurityMockMvcRequestPostProcessors.csrf()))
+                    .andExpect(status().isAccepted());
+              } catch (Exception e) {
+                throw new RuntimeException(e);
+              }
+            },
+            executor);
 
-    CompletableFuture<Void> task2 = CompletableFuture.runAsync(() -> {
-      SecurityContextHolder.setContext(securityContext);
-      try {
-        mockMvc.perform(put("/api/users/preferences")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(preferencesJson2)
-            .with(SecurityMockMvcRequestPostProcessors.csrf()))
-            .andExpect(status().isAccepted());
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }, executor);
+    CompletableFuture<Void> task2 =
+        CompletableFuture.runAsync(
+            () -> {
+              SecurityContextHolder.setContext(securityContext);
+              try {
+                mockMvc
+                    .perform(
+                        put("/api/users/preferences")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(preferencesJson2)
+                            .with(SecurityMockMvcRequestPostProcessors.csrf()))
+                    .andExpect(status().isAccepted());
+              } catch (Exception e) {
+                throw new RuntimeException(e);
+              }
+            },
+            executor);
 
     CompletableFuture.allOf(task1, task2).join();
     executor.shutdown();

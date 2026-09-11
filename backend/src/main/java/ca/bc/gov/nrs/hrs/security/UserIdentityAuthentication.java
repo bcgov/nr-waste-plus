@@ -7,13 +7,13 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 /**
- * Custom {@link JwtAuthenticationToken} that carries a fully hydrated
- * {@link UserIdentityEntity} alongside the original JWT.
+ * Custom {@link JwtAuthenticationToken} that carries a fully hydrated {@link UserIdentityEntity}
+ * alongside the original JWT.
  *
- * <p>Placed into the {@code SecurityContext} by {@link UserIdentityHydrationFilter}
- * for requests that trigger identity hydration. Because this class extends
- * {@link JwtAuthenticationToken}, all existing code that reads authorities,
- * the JWT, or the principal directly continues to work without modification.</p>
+ * <p>Placed into the {@code SecurityContext} by {@link UserIdentityHydrationFilter} for requests
+ * that trigger identity hydration. Because this class extends {@link JwtAuthenticationToken}, all
+ * existing code that reads authorities, the JWT, or the principal directly continues to work
+ * without modification.
  */
 public class UserIdentityAuthentication extends JwtAuthenticationToken {
 
@@ -22,15 +22,12 @@ public class UserIdentityAuthentication extends JwtAuthenticationToken {
   /**
    * Construct a hydrated authentication token.
    *
-   * @param jwt         the validated JWT from the current request
+   * @param jwt the validated JWT from the current request
    * @param authorities the granted authorities resolved for this user
-   * @param identity    the hydrated {@link UserIdentityEntity} for this user
+   * @param identity the hydrated {@link UserIdentityEntity} for this user
    */
   public UserIdentityAuthentication(
-      Jwt jwt,
-      Collection<? extends GrantedAuthority> authorities,
-      UserIdentityEntity identity
-  ) {
+      Jwt jwt, Collection<? extends GrantedAuthority> authorities, UserIdentityEntity identity) {
     super(jwt, authorities);
     this.identity = identity;
   }

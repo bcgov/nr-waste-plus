@@ -67,15 +67,12 @@ class ForestClientFetchClientIntegrationTest extends AbstractTestContainerIntegr
   @MethodSource("fetchClientByNumber")
   @DisplayName("Fetch client by number happy path should succeed")
   void fetchClientByNumber_shouldSucceed(
-      String clientNumber,
-      ResponseDefinitionBuilder stubResponse
-  ) {
+      String clientNumber, ResponseDefinitionBuilder stubResponse) {
     clientApiStub.stubFor(
         get(urlPathEqualTo("/clients/findByClientNumber/" + clientNumber))
             .willReturn(stubResponse));
 
-    Optional<ForestClientDto> clientDto =
-        forestClientFetchClient.fetchClientByNumber(clientNumber);
+    Optional<ForestClientDto> clientDto = forestClientFetchClient.fetchClientByNumber(clientNumber);
 
     if (clientDto.isPresent()) {
       ForestClientDto forestClient = clientDto.get();
@@ -83,9 +80,7 @@ class ForestClientFetchClientIntegrationTest extends AbstractTestContainerIntegr
       Assertions.assertEquals("MINISTRY OF FORESTS", forestClient.clientName());
       Assertions.assertNull(forestClient.legalFirstName());
       Assertions.assertNull(forestClient.legalMiddleName());
-      Assertions.assertEquals(
-          ForestClientStatusEnum.ACTIVE,
-          forestClient.clientStatusCode());
+      Assertions.assertEquals(ForestClientStatusEnum.ACTIVE, forestClient.clientStatusCode());
       Assertions.assertEquals(
           ForestClientTypeEnum.MINISTRY_OF_FORESTS_AND_RANGE, forestClient.clientTypeCode());
       Assertions.assertEquals("MOF", forestClient.acronym());
@@ -99,29 +94,10 @@ class ForestClientFetchClientIntegrationTest extends AbstractTestContainerIntegr
         Arguments.argumentSet(
             "Happy path",
             "00012797",
-            okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)
-        ),
-        Arguments.argumentSet(
-            "Not found breaker",
-            "00012898",
-            notFound()
-        ),
-        Arguments.argumentSet(
-            "Unavailable breaker",
-            "00012898",
-            serviceUnavailable()
-        ),
-        Arguments.argumentSet(
-            "Rate limiter breaker",
-            "00012898",
-            status(429)
-        ),
-        Arguments.argumentSet(
-            "Bad request breaker",
-            "00012898",
-            badRequest()
-        )
-    );
+            okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)),
+        Arguments.argumentSet("Not found breaker", "00012898", notFound()),
+        Arguments.argumentSet("Unavailable breaker", "00012898", serviceUnavailable()),
+        Arguments.argumentSet("Rate limiter breaker", "00012898", status(429)),
+        Arguments.argumentSet("Bad request breaker", "00012898", badRequest()));
   }
 }
-

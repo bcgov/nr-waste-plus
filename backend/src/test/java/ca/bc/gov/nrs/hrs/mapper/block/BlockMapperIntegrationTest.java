@@ -28,9 +28,9 @@ import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Month;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.junit.jupiter.api.DisplayName;
 
 @DisplayName("Integrated Test | Block Mapper")
 class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {
@@ -41,22 +41,29 @@ class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {
   @Autowired
   private ReportingUnitMapper reportingUnitMapper;
 
-  @Autowired private BlockAreaSegmentMapper blockAreaSegmentMapper;
-  @Autowired private BlockAttachmentMapper blockAttachmentMapper;
-  @Autowired private BlockCommentMapper blockCommentMapper;
-  @Autowired private BlockMarkMapper blockMarkMapper;
-  @Autowired private BlockRequirementMapper blockRequirementMapper;
-  @Autowired private BlockSponsorMapper blockSponsorMapper;
-  @Autowired private BlockSubmitterMapper blockSubmitterMapper;
-  @Autowired private DistrictAverageBlockMapper districtAverageBlockMapper;
-  @Autowired private StatusEventMapper statusEventMapper;
-
+  @Autowired
+  private BlockAreaSegmentMapper blockAreaSegmentMapper;
+  @Autowired
+  private BlockAttachmentMapper blockAttachmentMapper;
+  @Autowired
+  private BlockCommentMapper blockCommentMapper;
+  @Autowired
+  private BlockMarkMapper blockMarkMapper;
+  @Autowired
+  private BlockRequirementMapper blockRequirementMapper;
+  @Autowired
+  private BlockSponsorMapper blockSponsorMapper;
+  @Autowired
+  private BlockSubmitterMapper blockSubmitterMapper;
+  @Autowired
+  private DistrictAverageBlockMapper districtAverageBlockMapper;
+  @Autowired
+  private StatusEventMapper statusEventMapper;
 
   @DisplayName("Generated Mapper Beans should Map Entity And Dto Values")
   @Test
   void generatedMapperBeans_shouldMapEntityAndDtoValues() {
-    var createDto = new BlockCreateDto(42L, "DA", true,
-        LocalDate.of(2026, Month.AUGUST, 31));
+    var createDto = new BlockCreateDto(42L, "DA", true, LocalDate.of(2026, Month.AUGUST, 31));
 
     BlockEntity entity = blockMapper.toEntity(createDto);
 
@@ -92,36 +99,70 @@ class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {
   @DisplayName("Submission Mappers should Map Dto Values And Ignore Generated Status Id")
   @Test
   void submissionMappers_shouldMapDtoValuesAndIgnoreGeneratedStatusId() {
-    BlockAreaSegmentEntity segment = blockAreaSegmentMapper.toEntity(new BlockAreaSegmentDto(1L,
-        2L, "MANUAL", new BigDecimal("10.0"), new BigDecimal("20.0"), new BigDecimal("4.0"),
-        3L, new BigDecimal("11.0"), new BigDecimal("9.0")));
+    BlockAreaSegmentEntity segment =
+        blockAreaSegmentMapper.toEntity(
+            new BlockAreaSegmentDto(
+                1L,
+                2L,
+                "MANUAL",
+                new BigDecimal("10.0"),
+                new BigDecimal("20.0"),
+                new BigDecimal("4.0"),
+                3L,
+                new BigDecimal("11.0"),
+                new BigDecimal("9.0")));
     assertThat(blockAreaSegmentMapper.toDto(segment)).isNotNull();
-    BlockAttachmentEntity attachment = blockAttachmentMapper.toEntity(new BlockAttachmentDto(1L,
-        2L, "key", "file.pdf", "application/pdf", 12L, "CLEAN"));
+    BlockAttachmentEntity attachment =
+        blockAttachmentMapper.toEntity(
+            new BlockAttachmentDto(1L, 2L, "key", "file.pdf", "application/pdf", 12L, "CLEAN"));
     assertThat(blockAttachmentMapper.toDto(attachment)).isNotNull();
-    BlockCommentEntity comment = blockCommentMapper.toEntity(new BlockCommentDto(1L, 2L,
-        "SUBMISSION", "comment", 3L));
+    BlockCommentEntity comment =
+        blockCommentMapper.toEntity(new BlockCommentDto(1L, 2L, "SUBMISSION", "comment", 3L));
     assertThat(blockCommentMapper.toDto(comment)).isNotNull();
-    BlockMarkEntity mark = blockMarkMapper.toEntity(new BlockMarkDto(1L, 2L, "PRIMARY", 1,
-        "A123", "VALID", "R123", "TM123", "CP123", "CB123"));
+    BlockMarkEntity mark =
+        blockMarkMapper.toEntity(
+            new BlockMarkDto(
+                1L, 2L, "PRIMARY", 1, "A123", "VALID", "R123", "TM123", "CP123", "CB123"));
     assertThat(blockMarkMapper.toDto(mark)).isNotNull();
-    BlockRequirementEntity requirement = blockRequirementMapper.toEntity(new BlockRequirementDto(
-        1L, 2L, "REQ-1", true, "yes", 3L));
+    BlockRequirementEntity requirement =
+        blockRequirementMapper.toEntity(new BlockRequirementDto(1L, 2L, "REQ-1", true, "yes", 3L));
     assertThat(blockRequirementMapper.toDto(requirement)).isNotNull();
-    BlockSponsorEntity sponsor = blockSponsorMapper.toEntity(new BlockSponsorDto(1L, 2L,
-        "sponsor", "Sponsor",
-        "First", "Last", "RPF", "LIC-1", "sponsor@example.com", "555-0100"));
+    BlockSponsorEntity sponsor =
+        blockSponsorMapper.toEntity(
+            new BlockSponsorDto(
+                1L,
+                2L,
+                "sponsor",
+                "Sponsor",
+                "First",
+                "Last",
+                "RPF",
+                "LIC-1",
+                "sponsor@example.com",
+                "555-0100"));
     assertThat(blockSponsorMapper.toDto(sponsor)).isNotNull();
-    BlockSubmitterEntity submitter = blockSubmitterMapper.toEntity(new BlockSubmitterDto(1L, 2L,
-        "submitter",
-        "Submitter", "First", "Last", "RPF", "LIC-1", "submitter@example.com", "555-0101"));
+    BlockSubmitterEntity submitter =
+        blockSubmitterMapper.toEntity(
+            new BlockSubmitterDto(
+                1L,
+                2L,
+                "submitter",
+                "Submitter",
+                "First",
+                "Last",
+                "RPF",
+                "LIC-1",
+                "submitter@example.com",
+                "555-0101"));
     assertThat(blockSubmitterMapper.toDto(submitter)).isNotNull();
-    DistrictAverageBlockEntity averageBlock = districtAverageBlockMapper.toEntity(
-        new DistrictAverageBlockDto(2L, "DRY",
-        "MATURE", null, null, null, null, "ACTIVE", "BEC", "SV", true, null, null, null));
+    DistrictAverageBlockEntity averageBlock =
+        districtAverageBlockMapper.toEntity(
+            new DistrictAverageBlockDto(
+                2L, "DRY", "MATURE", null, null, null, null, "ACTIVE", "BEC", "SV", true, null,
+                null, null));
     assertThat(districtAverageBlockMapper.toDto(averageBlock)).isNotNull();
-    StatusEventEntity event = statusEventMapper.toEntity(new StatusEventDto(99L, 1L, 2L,
-        "SUBMITTED", "CREATED", null));
+    StatusEventEntity event =
+        statusEventMapper.toEntity(new StatusEventDto(99L, 1L, 2L, "SUBMITTED", "CREATED", null));
     assertThat(event).isInstanceOf(StatusEventEntity.class);
     assertThat(statusEventMapper.toDto(event)).isNotNull();
   }

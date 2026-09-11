@@ -7,7 +7,8 @@ import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 
 /** Maps reporting-unit persistence objects. */
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
+@Mapper(
+    componentModel = MappingConstants.ComponentModel.SPRING,
     unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ReportingUnitMapper {
 

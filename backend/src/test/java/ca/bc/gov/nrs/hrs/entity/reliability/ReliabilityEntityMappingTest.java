@@ -23,12 +23,16 @@ class ReliabilityEntityMappingTest {
     assertThat(OutboxEventEntity.class.getAnnotation(Table.class).name()).isEqualTo("outbox_event");
     assertThat(OutboxEventEntity.class.getAnnotation(Table.class).schema()).isEqualTo("hrs");
     assertThat(OutboxEventEntity.class.isAnnotationPresent(EntityListeners.class)).isTrue();
-    assertThat(OutboxEventEntity.class.getDeclaredField("eventId")
-        .getAnnotation(Column.class).unique()).isTrue();
-    assertThat(OutboxEventEntity.class.getDeclaredField("attemptHistory")
-        .getType()).isEqualTo(JsonNode.class);
-    assertThat(OutboxEventEntity.class.getDeclaredField("nextRetryAt")
-        .getType()).isEqualTo(Instant.class);
+    assertThat(
+            OutboxEventEntity.class
+                .getDeclaredField("eventId")
+                .getAnnotation(Column.class)
+                .unique())
+        .isTrue();
+    assertThat(OutboxEventEntity.class.getDeclaredField("attemptHistory").getType())
+        .isEqualTo(JsonNode.class);
+    assertThat(OutboxEventEntity.class.getDeclaredField("nextRetryAt").getType())
+        .isEqualTo(Instant.class);
   }
 
   @Test
@@ -36,8 +40,7 @@ class ReliabilityEntityMappingTest {
   void shouldDefaultAttemptHistoryAndRequirePayload_whenUsingNoArgsConstructor() {
     OutboxEventEntity entity = new OutboxEventEntity();
 
-    assertThat(entity.getAttemptHistory())
-        .isEqualTo(JsonNodeFactory.instance.arrayNode());
+    assertThat(entity.getAttemptHistory()).isEqualTo(JsonNodeFactory.instance.arrayNode());
     assertThatThrownBy(entity::validateRequiredJsonFields)
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Outbox event payload must be provided");
@@ -74,9 +77,13 @@ class ReliabilityEntityMappingTest {
     assertThat(IdempotencyRecordEntity.class.isAnnotationPresent(Entity.class)).isTrue();
     assertThat(IdempotencyRecordEntity.class.getAnnotation(Table.class).name())
         .isEqualTo("idempotency_record");
-    assertThat(IdempotencyRecordEntity.class.getDeclaredField("idempotencyKey")
-        .getAnnotation(Column.class).length()).isEqualTo(256);
-    assertThat(IdempotencyRecordEntity.class.getDeclaredField("responseSnapshot")
-        .getType()).isEqualTo(JsonNode.class);
+    assertThat(
+            IdempotencyRecordEntity.class
+                .getDeclaredField("idempotencyKey")
+                .getAnnotation(Column.class)
+                .length())
+        .isEqualTo(256);
+    assertThat(IdempotencyRecordEntity.class.getDeclaredField("responseSnapshot").getType())
+        .isEqualTo(JsonNode.class);
   }
 }

@@ -21,10 +21,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.junit.jupiter.api.DisplayName;
 
 /** PostgreSQL round-trip and repository contract tests for submission persistence. */
 @DisplayName("Integrated Test | Submission Persistence")
@@ -32,19 +32,32 @@ class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrat
   private static final String ACTOR = "submission-test";
   private static final Instant NOW = Instant.parse("2026-01-01T00:00:00Z");
 
-  @Autowired private ReportingUnitRepository reportingUnitRepository;
-  @Autowired private BlockRepository blockRepository;
-  @Autowired private DistrictAverageBlockRepository districtAverageBlockRepository;
-  @Autowired private BlockMarkRepository blockMarkRepository;
-  @Autowired private BlockAreaSegmentRepository blockAreaSegmentRepository;
-  @Autowired private BlockAttachmentRepository blockAttachmentRepository;
-  @Autowired private BlockSubmitterRepository blockSubmitterRepository;
-  @Autowired private BlockSponsorRepository blockSponsorRepository;
-  @Autowired private BlockRequirementRepository blockRequirementRepository;
-  @Autowired private BlockCommentRepository blockCommentRepository;
-  @Autowired private BlockCalculationSnapshotRepository snapshotRepository;
-  @Autowired private StatusEventRepository statusEventRepository;
-  @Autowired private JdbcTemplate jdbcTemplate;
+  @Autowired
+  private ReportingUnitRepository reportingUnitRepository;
+  @Autowired
+  private BlockRepository blockRepository;
+  @Autowired
+  private DistrictAverageBlockRepository districtAverageBlockRepository;
+  @Autowired
+  private BlockMarkRepository blockMarkRepository;
+  @Autowired
+  private BlockAreaSegmentRepository blockAreaSegmentRepository;
+  @Autowired
+  private BlockAttachmentRepository blockAttachmentRepository;
+  @Autowired
+  private BlockSubmitterRepository blockSubmitterRepository;
+  @Autowired
+  private BlockSponsorRepository blockSponsorRepository;
+  @Autowired
+  private BlockRequirementRepository blockRequirementRepository;
+  @Autowired
+  private BlockCommentRepository blockCommentRepository;
+  @Autowired
+  private BlockCalculationSnapshotRepository snapshotRepository;
+  @Autowired
+  private StatusEventRepository statusEventRepository;
+  @Autowired
+  private JdbcTemplate jdbcTemplate;
 
   @DisplayName("Persists And Reads Submission Rows And Json Payloads")
   @Test
@@ -150,10 +163,21 @@ class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrat
     var inputs = mapper.readTree("{\"area\":10.125}");
     var outputs = mapper.readTree("{\"total\":9.125}");
     var warnings = mapper.readTree("[\"rounded\"]");
-    BlockCalculationSnapshotEntity snapshot = new BlockCalculationSnapshotEntity(
-        savedBlock.getId(), districtVolumeId(), LocalDate.of(2025, Month.JANUARY, 1),
-        LocalDate.of(2025, Month.DECEMBER, 31), inputs, outputs, NOW, "HALF_UP", warnings,
-        ACTOR, ACTOR, NOW, NOW);
+    BlockCalculationSnapshotEntity snapshot =
+        new BlockCalculationSnapshotEntity(
+            savedBlock.getId(),
+            districtVolumeId(),
+            LocalDate.of(2025, Month.JANUARY, 1),
+            LocalDate.of(2025, Month.DECEMBER, 31),
+            inputs,
+            outputs,
+            NOW,
+            "HALF_UP",
+            warnings,
+            ACTOR,
+            ACTOR,
+            NOW,
+            NOW);
     snapshotRepository.save(snapshot);
 
     StatusEventEntity event = new StatusEventEntity();
@@ -170,13 +194,17 @@ class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrat
     assertThat(reportingUnitRepository.findById(savedUnit.getId())).isPresent();
     assertThat(blockRepository.findByReportingUnitIdAndDeletedFalse(savedUnit.getId()))
         .hasValueSatisfying(found -> assertThat(found.getId()).isEqualTo(savedBlock.getId()));
-    assertThat(districtAverageBlockRepository.findById(savedBlock.getId()).orElseThrow()
-        .getCriteria()).containsExactly(1, 2);
-    assertThat(blockMarkRepository.findByBlockIdAndMarkTypeOrderBySequenceNo(
-        savedBlock.getId(), "PRIMARY")).extracting(BlockMarkEntity::getMark)
+    assertThat(
+            districtAverageBlockRepository.findById(savedBlock.getId()).orElseThrow().getCriteria())
+        .containsExactly(1, 2);
+    assertThat(
+            blockMarkRepository.findByBlockIdAndMarkTypeOrderBySequenceNo(
+                savedBlock.getId(), "PRIMARY"))
+        .extracting(BlockMarkEntity::getMark)
         .containsExactly("A12345");
     assertThat(blockRequirementRepository.findByBlockIdAndDeletedFalse(savedBlock.getId()))
-        .extracting(BlockRequirementEntity::getRequirementCode).containsExactly("REQ-1");
+        .extracting(BlockRequirementEntity::getRequirementCode)
+        .containsExactly("REQ-1");
     assertThat(snapshotRepository.findById(snapshot.getId()).orElseThrow().getWarnings())
         .isEqualTo(warnings);
     assertThat(statusEventRepository.findById(savedEvent.getId()).orElseThrow().getDetails())
@@ -184,13 +212,13 @@ class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrat
 
     savedBlock.setDeleted(true);
     blockRepository.saveAndFlush(savedBlock);
-    assertThat(blockRepository.findByReportingUnitIdAndDeletedFalse(savedUnit.getId()))
-        .isEmpty();
+    assertThat(blockRepository.findByReportingUnitIdAndDeletedFalse(savedUnit.getId())).isEmpty();
   }
 
   private Long districtVolumeId() {
     return jdbcTemplate.queryForObject(
-        "SELECT district_volume_id FROM hrs.district_volume ORDER BY district_volume_id LIMIT 1", Long.class);
+        "SELECT district_volume_id FROM hrs.district_volume ORDER BY district_volume_id LIMIT 1",
+        Long.class);
   }
 
   private void audit(ReportingUnitEntity entity) {
@@ -262,5 +290,4 @@ class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrat
     entity.setCreatedAt(NOW);
     entity.setUpdatedAt(NOW);
   }
-
 }

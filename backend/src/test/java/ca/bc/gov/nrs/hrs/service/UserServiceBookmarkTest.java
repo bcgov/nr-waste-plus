@@ -38,8 +38,7 @@ class UserServiceBookmarkTest {
     var bookmark1 = new UserBookmarkEntity(USER_ID, 100L);
     var bookmark2 = new UserBookmarkEntity(USER_ID, 200L);
 
-    when(bookmarkRepository.findByUserId(USER_ID))
-        .thenReturn(List.of(bookmark1, bookmark2));
+    when(bookmarkRepository.findByUserId(USER_ID)).thenReturn(List.of(bookmark1, bookmark2));
 
     List<Long> result = userService.getUserBookmarksInList(USER_ID, List.of());
 
@@ -53,8 +52,7 @@ class UserServiceBookmarkTest {
   void getUserBookmarksInList_nullList_shouldFetchAll() {
     var bookmark1 = new UserBookmarkEntity(USER_ID, 100L);
 
-    when(bookmarkRepository.findByUserId(USER_ID))
-        .thenReturn(List.of(bookmark1));
+    when(bookmarkRepository.findByUserId(USER_ID)).thenReturn(List.of(bookmark1));
 
     List<Long> result = userService.getUserBookmarksInList(USER_ID, null);
 
@@ -83,8 +81,7 @@ class UserServiceBookmarkTest {
   @Test
   @DisplayName("getUserBookmarksInList should return empty when user has no bookmarks")
   void getUserBookmarksInList_noBookmarks_shouldReturnEmpty() {
-    when(bookmarkRepository.findByUserId(USER_ID))
-        .thenReturn(List.of());
+    when(bookmarkRepository.findByUserId(USER_ID)).thenReturn(List.of());
 
     List<Long> result = userService.getUserBookmarksInList(USER_ID, List.of());
 
@@ -104,4 +101,3 @@ class UserServiceBookmarkTest {
     assertThat(result).isEmpty();
   }
 }
-
