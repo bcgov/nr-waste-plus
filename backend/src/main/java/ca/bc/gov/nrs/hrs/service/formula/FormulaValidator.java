@@ -66,69 +66,97 @@ public final class FormulaValidator {
     return switch (node) {
       case LiteralNode ignored -> ValueType.NUMERIC;
       case VariableReferenceNode variable -> {
-        int dot = variable.name().indexOf('.');
-        String namespace = dot < 0 ? variable.name() : variable.name().substring(0, dot);
-        if (formulaKeys.contains(variable.name())) {
-          yield ValueType.NUMERIC;
-        }
-        if (dot < 1
-            || dot == variable.name().length() - 1
-            || !NAMESPACES.contains(namespace)
-            || !known.containsKey(variable.name())) {
-          errors.add(
-              error(
-                  FormulaValidationError.Code.UNKNOWN_VARIABLE,
-                  "Unknown variable: " + variable.name(),
-                  variable.startOffset(),
-                  variable.endOffset()));
-        }
+        validateVariableReference(variable, known, formulaKeys, errors);
         yield ValueType.NUMERIC;
       }
-      case UnaryOperationNode unary -> {
-        ValueType operandType = validateNode(unary.operand(), known, formulaKeys, errors);
-        if (operandType != ValueType.NUMERIC) {
-          addTypeError("Unary operators require a numeric expression", unary.operand(), errors);
-        }
-        yield ValueType.NUMERIC;
-      }
-      case BinaryOperationNode binary -> {
-        ValueType leftType = validateNode(binary.left(), known, formulaKeys, errors);
-        ValueType rightType = validateNode(binary.right(), known, formulaKeys, errors);
-        if (binary.operator().isComparison()) {
-          if (leftType != ValueType.NUMERIC || rightType != ValueType.NUMERIC) {
-            addTypeError("Comparisons require numeric expressions", binary, errors);
-          }
-          yield ValueType.BOOLEAN;
-        }
-        if (leftType != ValueType.NUMERIC || rightType != ValueType.NUMERIC) {
-          addTypeError("Arithmetic operators require numeric expressions", binary, errors);
-        }
-        if (binary.operator() == BinaryOperator.DIVIDE && isZero(binary.right(), known)) {
-          errors.add(
-              error(
-                  FormulaValidationError.Code.DIVISION_BY_ZERO,
-                  "Division by zero",
-                  binary.right().startOffset(),
-                  binary.right().endOffset()));
-        }
-        yield ValueType.NUMERIC;
-      }
-      case IfNode ifNode -> {
-        ValueType conditionType = validateNode(ifNode.condition(), known, formulaKeys, errors);
-        ValueType trueType = validateNode(ifNode.valueIfTrue(), known, formulaKeys, errors);
-        ValueType falseType = validateNode(ifNode.valueIfFalse(), known, formulaKeys, errors);
-        if (conditionType != ValueType.BOOLEAN) {
-          addTypeError("IF condition must be a boolean comparison", ifNode.condition(), errors);
-        }
-        if (trueType != ValueType.NUMERIC) {
-          addTypeError("IF true branch must be numeric", ifNode.valueIfTrue(), errors);
-        }
-        if (falseType != ValueType.NUMERIC) {
-          addTypeError("IF false branch must be numeric", ifNode.valueIfFalse(), errors);
-        }
-        yield ValueType.NUMERIC;
-      }
+      case UnaryOperationNode unary ->
+          validateUnaryOperation(unary, known, formulaKeys, errors);
+      case BinaryOperationNode binary ->
+          validateBinaryOperation(binary, known, formulaKeys, errors);
+      case IfNode ifNode -> validateIfNode(ifNode, known, formulaKeys, errors);
     };
+  }
+
+  private void validateVariableReference(
+      VariableReferenceNode variable,
+      Map<String, BigDecimal> known,
+      Set<String> formulaKeys,
+      List<FormulaValidationError> errors) {
+    if (formulaKeys.contains(variable.name())) {
+      return;
+    }
+    int dot = variable.name().indexOf('.');
+    String namespace = dot < 0 ? variable.name() : variable.name().substring(0, dot);
+    if (dot < 1
+        || dot == variable.name().length() - 1
+        || !NAMESPACES.contains(namespace)
+        || !known.containsKey(variable.name())) {
+      errors.add(
+          error(
+              FormulaValidationError.Code.UNKNOWN_VARIABLE,
+              "Unknown variable: " + variable.name(),
+              variable.startOffset(),
+              variable.endOffset()));
+    }
+  }
+
+  private ValueType validateUnaryOperation(
+      UnaryOperationNode unary,
+      Map<String, BigDecimal> known,
+      Set<String> formulaKeys,
+      List<FormulaValidationError> errors) {
+    ValueType operandType = validateNode(unary.operand(), known, formulaKeys, errors);
+    if (operandType != ValueType.NUMERIC) {
+      addTypeError("Unary operators require a numeric expression", unary.operand(), errors);
+    }
+    return ValueType.NUMERIC;
+  }
+
+  private ValueType validateBinaryOperation(
+      BinaryOperationNode binary,
+      Map<String, BigDecimal> known,
+      Set<String> formulaKeys,
+      List<FormulaValidationError> errors) {
+    ValueType leftType = validateNode(binary.left(), known, formulaKeys, errors);
+    ValueType rightType = validateNode(binary.right(), known, formulaKeys, errors);
+    if (binary.operator().isComparison()) {
+      if (leftType != ValueType.NUMERIC || rightType != ValueType.NUMERIC) {
+        addTypeError("Comparisons require numeric expressions", binary, errors);
+      }
+      return ValueType.BOOLEAN;
+    }
+    if (leftType != ValueType.NUMERIC || rightType != ValueType.NUMERIC) {
+      addTypeError("Arithmetic operators require numeric expressions", binary, errors);
+    }
+    if (binary.operator() == BinaryOperator.DIVIDE && isZero(binary.right(), known)) {
+      errors.add(
+          error(
+              FormulaValidationError.Code.DIVISION_BY_ZERO,
+              "Division by zero",
+              binary.right().startOffset(),
+              binary.right().endOffset()));
+    }
+    return ValueType.NUMERIC;
+  }
+
+  private ValueType validateIfNode(
+      IfNode ifNode,
+      Map<String, BigDecimal> known,
+      Set<String> formulaKeys,
+      List<FormulaValidationError> errors) {
+    ValueType conditionType = validateNode(ifNode.condition(), known, formulaKeys, errors);
+    ValueType trueType = validateNode(ifNode.valueIfTrue(), known, formulaKeys, errors);
+    ValueType falseType = validateNode(ifNode.valueIfFalse(), known, formulaKeys, errors);
+    if (conditionType != ValueType.BOOLEAN) {
+      addTypeError("IF condition must be a boolean comparison", ifNode.condition(), errors);
+    }
+    if (trueType != ValueType.NUMERIC) {
+      addTypeError("IF true branch must be numeric", ifNode.valueIfTrue(), errors);
+    }
+    if (falseType != ValueType.NUMERIC) {
+      addTypeError("IF false branch must be numeric", ifNode.valueIfFalse(), errors);
+    }
+    return ValueType.NUMERIC;
   }
 
   private enum ValueType {
