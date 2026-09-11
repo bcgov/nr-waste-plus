@@ -4,7 +4,6 @@ import ca.bc.gov.nrs.hrs.entity.block.BlockCalculationSnapshotEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.FormulaSetRowEntity;
 import ca.bc.gov.nrs.hrs.repository.block.BlockCalculationSnapshotRepository;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -36,12 +35,12 @@ public class FormulaEvaluationService {
   /**
    * Evaluates all formulas in the effective set and persists an immutable snapshot.
    *
-   * @param blockId          the submission block identifier
+   * @param blockId the submission block identifier
    * @param districtVolumeId the district volume configuration identifier
-   * @param date             submission effective date
-   * @param area             INTERIOR or COASTAL
-   * @param district         selected district code (e.g. "DCC")
-   * @param user             current authenticated user
+   * @param date submission effective date
+   * @param area INTERIOR or COASTAL
+   * @param district selected district code (e.g. "DCC")
+   * @param user current authenticated user
    * @return the evaluation result with outputs, inputs, and warnings
    * @throws FormulaEvaluationException if no formula set is effective, a variable cannot be
    *     resolved, or evaluation fails
@@ -55,21 +54,23 @@ public class FormulaEvaluationService {
       String district,
       String user) {
 
-    var setEntity = setRepository.findEffective(area, date)
-        .orElseThrow(() -> new FormulaEvaluationException(
-            "No formula set is effective for the requested date and area."));
+    var setEntity =
+        setRepository
+            .findEffective(area, date)
+            .orElseThrow(
+                () ->
+                    new FormulaEvaluationException(
+                        "No formula set is effective for the requested date and area."));
 
-    List<FormulaSetRowEntity> rows = rowRepository
-        .findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(setEntity.getId());
+    List<FormulaSetRowEntity> rows =
+        rowRepository.findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(setEntity.getId());
 
     if (rows.isEmpty()) {
-      throw new FormulaEvaluationException(
-          "The effective formula set contains no active rows.");
+      throw new FormulaEvaluationException("The effective formula set contains no active rows.");
     }
 
     Map<String, BigDecimal> variables = buildVariables(rows, date, area, district);
     Map<String, BigDecimal> outputs = new LinkedHashMap<>();
-    ArrayNode warningsArray = MAPPER.createArrayNode();
 
     for (FormulaSetRowEntity row : rows) {
       try {
@@ -88,22 +89,24 @@ public class FormulaEvaluationService {
     ObjectNode outputsJson = MAPPER.createObjectNode();
     outputs.forEach((key, value) -> outputsJson.put(key, value));
 
+    ArrayNode warningsArray = MAPPER.createArrayNode();
     Instant now = Instant.now();
 
-    BlockCalculationSnapshotEntity snapshot = new BlockCalculationSnapshotEntity(
-        blockId,
-        districtVolumeId,
-        null, // hbsWindowStart — not yet available
-        null, // hbsWindowEnd — not yet available
-        inputsJson,
-        outputsJson,
-        now,
-        ROUNDING_POLICY,
-        warningsArray,
-        user,
-        user,
-        now,
-        now);
+    BlockCalculationSnapshotEntity snapshot =
+        new BlockCalculationSnapshotEntity(
+            blockId,
+            districtVolumeId,
+            null, // hbsWindowStart — not yet available
+            null, // hbsWindowEnd — not yet available
+            inputsJson,
+            outputsJson,
+            now,
+            ROUNDING_POLICY,
+            warningsArray,
+            user,
+            user,
+            now,
+            now);
     snapshotRepository.save(snapshot);
 
     return new FormulaEvaluationResult(outputs, inputsJson, warningsArray);
@@ -114,21 +117,22 @@ public class FormulaEvaluationService {
 
     Set<String> allPaths = new java.util.LinkedHashSet<>();
     for (FormulaSetRowEntity row : rows) {
-      allPaths.addAll(FormulaVariableExtractor.extract(
-          row.getExpression(), FormulaParseMode.CONDITIONAL));
+      allPaths.addAll(
+          FormulaVariableExtractor.extract(row.getExpression(), FormulaParseMode.CONDITIONAL));
     }
 
     Map<String, BigDecimal> variables = new LinkedHashMap<>();
     for (String path : allPaths) {
       String namespace = path.substring(0, path.indexOf('.'));
       try {
-        BigDecimal value = switch (namespace) {
-          case "da", "sc" -> runtimeResolver.resolve(date, area, district, path);
-          case "submission" -> resolveSubmission();
-          case "hbs", "fta" -> BigDecimal.ZERO;
-          default -> throw new FormulaEvaluationException(
-              "Unknown namespace '" + namespace + "' in variable " + path);
-        };
+        BigDecimal value =
+            switch (namespace) {
+              case "da", "sc" -> runtimeResolver.resolve(date, area, district, path);
+              case "submission" -> resolveSubmission();
+              case "hbs", "fta" -> BigDecimal.ZERO;
+              default -> throw new FormulaEvaluationException(
+                  "Unknown namespace '" + namespace + "' in variable " + path);
+            };
         variables.put(path, value);
       } catch (FormulaEvaluationException ex) {
         throw ex;

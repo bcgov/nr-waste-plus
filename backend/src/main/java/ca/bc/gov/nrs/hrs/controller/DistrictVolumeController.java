@@ -29,9 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * REST controller for managing district average volume configurations.
- */
+/** REST controller for managing district average volume configurations. */
 @RestController
 @RequestMapping("/api/configuration/district-average-volumes")
 @RequiredArgsConstructor
@@ -43,21 +41,19 @@ public class DistrictVolumeController {
   /**
    * Retrieves a paginated list of district volume configurations.
    *
-   * @param area     optional area filter (must be INTERIOR or COASTAL)
+   * @param area optional area filter (must be INTERIOR or COASTAL)
    * @param pageable pagination and sorting information
    * @return page of district volume list items
    */
   @GetMapping
   public ResponseEntity<Page<DistrictVolumeListItemDto>> getDistrictVolumes(
       @RequestParam(required = false) String area,
-      @PageableDefault(size = 10, sort = "startDate",
-          direction = Direction.DESC) Pageable pageable) {
+      @PageableDefault(size = 10, sort = "startDate", direction = Direction.DESC)
+          Pageable pageable) {
 
     if (area != null && !area.equalsIgnoreCase("INTERIOR") && !area.equalsIgnoreCase("COASTAL")) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Invalid area parameter. Must be INTERIOR or COASTAL."
-      );
+          HttpStatus.BAD_REQUEST, "Invalid area parameter. Must be INTERIOR or COASTAL.");
     }
     Page<DistrictVolumeListItemDto> volumes =
         districtVolumeService.getDistrictVolumes(Optional.ofNullable(area), pageable);
@@ -72,11 +68,9 @@ public class DistrictVolumeController {
    * @return detailed district volume configuration
    */
   @GetMapping("/{id}")
-  public ResponseEntity<DistrictVolumeDetailDto> getDistrictVolumeById(
-      @PathVariable Long id) {
+  public ResponseEntity<DistrictVolumeDetailDto> getDistrictVolumeById(@PathVariable Long id) {
 
-    DistrictVolumeDetailDto volumeDetail =
-        districtVolumeService.getDistrictVolumeById(id);
+    DistrictVolumeDetailDto volumeDetail = districtVolumeService.getDistrictVolumeById(id);
 
     return ResponseEntity.ok(volumeDetail);
   }
@@ -84,30 +78,24 @@ public class DistrictVolumeController {
   /**
    * Creates a new district volume.
    *
-   * <p>Creates a district volume using the provided request payload and the
-   * authenticated user and returns a {@code 201 Created} response with the URI
-   * of the newly created resource in the {@code Location} header.
+   * <p>Creates a district volume using the provided request payload and the authenticated user and
+   * returns a {@code 201 Created} response with the URI of the newly created resource in the {@code
+   * Location} header.
    *
-   * @param jwt     the authenticated user's JWT
+   * @param jwt the authenticated user's JWT
    * @param request the district volume information to create
-   * @return a {@link ResponseEntity} with status {@code 201 Created} and the location of
-   *     the created district volume
+   * @return a {@link ResponseEntity} with status {@code 201 Created} and the location of the
+   *     created district volume
    */
   @PostMapping
   @Observed
   public ResponseEntity<Void> createDistrictVolume(
-      @AuthenticationPrincipal Jwt jwt,
-      @Valid @RequestBody DistrictVolumeCreateDto request) {
+      @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody DistrictVolumeCreateDto request) {
 
     DistrictVolumeDetailDto createdVolume =
-        districtVolumeService.createDistrictVolume(
-            JwtPrincipalUtil.getUserId(jwt),
-            request);
+        districtVolumeService.createDistrictVolume(JwtPrincipalUtil.getUserId(jwt), request);
 
-    URI location =
-        URI.create(
-            "/api/configuration/district-average-volumes/"
-                + createdVolume.id());
+    URI location = URI.create("/api/configuration/district-average-volumes/" + createdVolume.id());
 
     return ResponseEntity.created(location).build();
   }
@@ -115,8 +103,8 @@ public class DistrictVolumeController {
   /**
    * Deletes a district volume configuration.
    *
-   * <p>Soft-deletes the specified district volume configuration. Only future-start,
-   * open-ended configurations can be deleted.</p>
+   * <p>Soft-deletes the specified district volume configuration. Only future-start, open-ended
+   * configurations can be deleted.
    *
    * @param jwt the authenticated user's JWT
    * @param id the district volume configuration identifier
@@ -124,10 +112,8 @@ public class DistrictVolumeController {
    */
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteDistrictVolume(
-      @AuthenticationPrincipal Jwt jwt,
-      @PathVariable Long id) {
-    districtVolumeService.deleteDistrictVolume(
-        JwtPrincipalUtil.getUserId(jwt), id);
+      @AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+    districtVolumeService.deleteDistrictVolume(JwtPrincipalUtil.getUserId(jwt), id);
     return ResponseEntity.noContent().build();
   }
 }

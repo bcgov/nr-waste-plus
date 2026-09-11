@@ -14,19 +14,15 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 /**
- * Client that calls the Cognito {@code /oauth2/userInfo} endpoint to retrieve
- * identity attributes for the currently authenticated user.
+ * Client that calls the Cognito {@code /oauth2/userInfo} endpoint to retrieve identity attributes
+ * for the currently authenticated user.
  *
- * <p>Uses Spring's {@link RestClient} following the same provider pattern as
- * other API clients in the application. The Bearer access token from the
- * incoming request is forwarded as the {@code Authorization} header so
- * Cognito can resolve the user's identity.
- * </p>
+ * <p>Uses Spring's {@link RestClient} following the same provider pattern as other API clients in
+ * the application. The Bearer access token from the incoming request is forwarded as the {@code
+ * Authorization} header so Cognito can resolve the user's identity.
  *
- * <p>All errors are caught and logged; the method returns
- * {@link Optional#empty()} rather than propagating exceptions so callers
- * can apply safe fallback behaviour.
- * </p>
+ * <p>All errors are caught and logged; the method returns {@link Optional#empty()} rather than
+ * propagating exceptions so callers can apply safe fallback behaviour.
  */
 @Slf4j
 @Component
@@ -49,25 +45,24 @@ public class CognitoUserInfoClient {
   /**
    * Fetch user identity attributes from the Cognito userInfo endpoint.
    *
-   * <p>The supplied {@code accessToken} is forwarded as a Bearer token.
-   * On any error the method logs a warning and returns {@link Optional#empty()}.
-   * </p>
+   * <p>The supplied {@code accessToken} is forwarded as a Bearer token. On any error the method
+   * logs a warning and returns {@link Optional#empty()}.
    *
    * @param accessToken the raw OAuth2 access token value for the current request
-   * @return an {@link Optional} containing a {@link CognitoUserInfoResponse} when
-   *         the call succeeds, or empty on any failure
+   * @return an {@link Optional} containing a {@link CognitoUserInfoResponse} when the call
+   *     succeeds, or empty on any failure
    */
   @NewSpan
   public Optional<CognitoUserInfoResponse> fetchUserInfo(String accessToken) {
     log.debug("Calling {} endpoint to retrieve user identity", PROVIDER);
 
     try {
-      Map<String, Object> body = restClient
-          .get()
-          .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-          .retrieve()
-          .body(new ParameterizedTypeReference<>() {
-          });
+      Map<String, Object> body =
+          restClient
+              .get()
+              .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+              .retrieve()
+              .body(new ParameterizedTypeReference<>() {});
 
       if (body == null) {
         log.warn("{} returned an empty response body", PROVIDER);
@@ -84,12 +79,10 @@ public class CognitoUserInfoClient {
 
   @SuppressWarnings("unchecked")
   private CognitoUserInfoResponse mapResponse(Map<String, Object> body) {
-    List<String> groups = body.get("cognito:groups") instanceof List<?> rawList
-        ? rawList.stream()
-            .filter(String.class::isInstance)
-            .map(String.class::cast)
-            .toList()
-        : List.of();
+    List<String> groups =
+        body.get("cognito:groups") instanceof List<?> rawList
+            ? rawList.stream().filter(String.class::isInstance).map(String.class::cast).toList()
+            : List.of();
 
     return new CognitoUserInfoResponse(
         (String) body.get("sub"),
@@ -103,8 +96,6 @@ public class CognitoUserInfoClient {
         (String) body.get("custom:idp_display_name"),
         (String) body.get("custom:idp_business_id"),
         groups,
-        body
-    );
+        body);
   }
 }
-

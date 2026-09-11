@@ -30,47 +30,65 @@ public class FormulaPersistenceService {
     Objects.requireNonNull(area, "area");
     Objects.requireNonNull(targetStartDate, "targetStartDate");
     return formulaRepository.findForPriorVersion(area, targetStartDate).stream()
-        .map(formula -> new FormulaDraft(formula.getFormulaKey(), formula.getExpression(),
-            formula.getDeclaredVariables(), JsonNodeFactory.instance.arrayNode(),
-            formula.getSortOrder()))
+        .map(
+            formula ->
+                new FormulaDraft(
+                    formula.getFormulaKey(),
+                    formula.getExpression(),
+                    formula.getDeclaredVariables(),
+                    JsonNodeFactory.instance.arrayNode(),
+                    formula.getSortOrder()))
         .toList();
   }
 
   /** Persists validated legacy rows for an editable district-volume version. */
   @Transactional
-  public List<DistrictVolumeFormulaEntity> saveValidated(Long districtVolumeId,
-      List<FormulaDraft> drafts) {
+  public List<DistrictVolumeFormulaEntity> saveValidated(
+      Long districtVolumeId, List<FormulaDraft> drafts) {
     Objects.requireNonNull(districtVolumeId, "districtVolumeId");
     Objects.requireNonNull(drafts, "drafts");
-    DistrictVolumeEntity volume = districtVolumeRepository
-        .findByIdAndConfigType(districtVolumeId, ConfigType.DISTRICT_VOLUME)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-            "District volume record not found: " + districtVolumeId));
+    DistrictVolumeEntity volume =
+        districtVolumeRepository
+            .findByIdAndConfigType(districtVolumeId, ConfigType.DISTRICT_VOLUME)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "District volume record not found: " + districtVolumeId));
     LocalDate today = LocalDate.now();
-    if (!volume.isDeleted() && volume.getStartDate() != null
+    if (!volume.isDeleted()
+        && volume.getStartDate() != null
         && !volume.getStartDate().isAfter(today)
         && (volume.getEndDate() == null || !volume.getEndDate().isBefore(today))) {
-      throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT,
-          "Active formula configuration is read-only.");
+      throw new ResponseStatusException(
+          HttpStatus.UNPROCESSABLE_CONTENT, "Active formula configuration is read-only.");
     }
     if (drafts.stream().anyMatch(draft -> !draft.validationErrors().isEmpty())) {
-      throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT,
+      throw new ResponseStatusException(
+          HttpStatus.UNPROCESSABLE_CONTENT,
           "Formula validation errors must be resolved before saving.");
     }
-    List<DistrictVolumeFormulaEntity> entities = drafts.stream()
-        .map(draft -> FormulaRowMapper.toLegacyRow(volume, draft)).toList();
+    List<DistrictVolumeFormulaEntity> entities =
+        drafts.stream().map(draft -> FormulaRowMapper.toLegacyRow(volume, draft)).toList();
     return formulaRepository.saveAll(entities);
   }
 
   /** Identity-free formula input used by the existing district-volume workflow. */
-  public record FormulaDraft(String formulaKey, String expression, JsonNode declaredVariables,
-      JsonNode validationErrors, int sortOrder) {
+  public record FormulaDraft(
+      String formulaKey,
+      String expression,
+      JsonNode declaredVariables,
+      JsonNode validationErrors,
+      int sortOrder) {
+    /** Validates formula draft properties upon construction. */
     public FormulaDraft {
       Objects.requireNonNull(formulaKey, "formulaKey");
       Objects.requireNonNull(expression, "expression");
       Objects.requireNonNull(declaredVariables, "declaredVariables");
       Objects.requireNonNull(validationErrors, "validationErrors");
-      if (formulaKey.isBlank() || expression.isBlank() || sortOrder < 0
+      if (formulaKey.isBlank()
+          || expression.isBlank()
+          || sortOrder < 0
           || !validationErrors.isArray()) {
         throw new IllegalArgumentException("Invalid formula draft");
       }

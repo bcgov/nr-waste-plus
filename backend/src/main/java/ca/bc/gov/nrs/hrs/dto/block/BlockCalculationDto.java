@@ -19,8 +19,7 @@ public record BlockCalculationDto(
   public record Outputs(List<PerMark> perMark, BigDecimal grandTotalM3) {}
 
   /** Per-mark breakdown (populated when mark-level resolution is available). */
-  public record PerMark(
-      Integer markSequenceNo, List<Category> categories, BigDecimal totalM3) {}
+  public record PerMark(Integer markSequenceNo, List<Category> categories, BigDecimal totalM3) {}
 
   /** Individual category volume within a mark. */
   public record Category(String code, BigDecimal volumeM3) {}

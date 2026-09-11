@@ -3,10 +3,14 @@ package ca.bc.gov.nrs.hrs.provider.forestclient;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+/**
+ * Test constants for Forest Client API provider test responses.
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ForestClientApiProviderTestConstants {
 
-  public static final String TWO_LOCATIONS_LIST = """
+  public static final String TWO_LOCATIONS_LIST =
+      """
       [
         {
           "locationCode": "00",
@@ -18,7 +22,8 @@ public class ForestClientApiProviderTestConstants {
         }
       ]""";
 
-  public static final String ONE_BY_VALUE_LIST = """
+  public static final String ONE_BY_VALUE_LIST =
+      """
       [
         {
           "clientNumber": "00012797",
@@ -32,7 +37,8 @@ public class ForestClientApiProviderTestConstants {
       ]
       """;
 
-  public static final String CLIENTNUMBER_RESPONSE = """
+  public static final String CLIENTNUMBER_RESPONSE =
+      """
       {
         "clientNumber": "00012797",
         "clientName": "MINISTRY OF FORESTS",
@@ -44,7 +50,8 @@ public class ForestClientApiProviderTestConstants {
       }
       """;
 
-  public static final String DISTRICT_CODES_JSON = """
+  public static final String DISTRICT_CODES_JSON =
+      """
       [
         { "code": "DMH", "name": "100 Mile House Natural Resource District" },
         { "code": "DCC", "name": "Cariboo-Chilcotin Natural Resource District" },
@@ -72,7 +79,8 @@ public class ForestClientApiProviderTestConstants {
       ]
       """;
 
-  public static final String REPORTING_UNITS_SEARCH_RESPONSE = """
+  public static final String REPORTING_UNITS_SEARCH_RESPONSE =
+      """
       {
            "content": [
                {
@@ -111,7 +119,8 @@ public class ForestClientApiProviderTestConstants {
            }
        }""";
 
-  public static final String REPORTING_UNITS_EMPTY_SEARCH_RESPONSE = """
+  public static final String REPORTING_UNITS_EMPTY_SEARCH_RESPONSE =
+      """
       {
         "content": [],
         "page": {
@@ -122,7 +131,8 @@ public class ForestClientApiProviderTestConstants {
         }
       }""";
 
-  public static final String CLIENT_00010002 = """
+  public static final String CLIENT_00010002 =
+      """
       {
         "clientNumber": "00010002",
         "clientName": "WEST FRASER MILLS LTD",
@@ -133,7 +143,8 @@ public class ForestClientApiProviderTestConstants {
         "acronym": "WFM"
       }""";
 
-  public static final String CLIENT_LOCATION_00010002 = """
+  public static final String CLIENT_LOCATION_00010002 =
+      """
       [
         {
           "locationCode": "00",
@@ -145,7 +156,8 @@ public class ForestClientApiProviderTestConstants {
         }
       ]""";
 
-  public static final String MY_FOREST_CLIENTS_LEGACY = """
+  public static final String MY_FOREST_CLIENTS_LEGACY =
+      """
       {
         "content": [{
             "client": {
@@ -170,7 +182,8 @@ public class ForestClientApiProviderTestConstants {
         "content": []
       }""";
 
-  public static final String REPORTING_UNIT_EXPANDED_FULL = """
+  public static final String REPORTING_UNIT_EXPANDED_FULL =
+      """
       {
         "id": 101,
         "licenseNo": "LIC123",
@@ -184,7 +197,8 @@ public class ForestClientApiProviderTestConstants {
         "totalBlocks": 3
       }""";
 
-  public static final String REPORTING_UNIT_EXPANDED_MINIMAL = """
+  public static final String REPORTING_UNIT_EXPANDED_MINIMAL =
+      """
       {
         "id": 102,
         "exempted": false,
@@ -193,7 +207,8 @@ public class ForestClientApiProviderTestConstants {
         "totalBlocks": 0
       }""";
 
-  public static final String REPORTING_UNIT_EXPANDED_EMPTY = """
+  public static final String REPORTING_UNIT_EXPANDED_EMPTY =
+      """
       {
         "id": 203,
         "exempted": false,

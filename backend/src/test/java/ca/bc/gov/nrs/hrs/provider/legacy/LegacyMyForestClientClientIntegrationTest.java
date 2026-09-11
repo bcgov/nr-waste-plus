@@ -62,13 +62,10 @@ class LegacyMyForestClientClientIntegrationTest extends AbstractTestContainerInt
   void searchMyClients_shouldReturnPagedContent() {
     clientApiStub.stubFor(
         get(urlPathEqualTo("/api/search/my-forest-clients"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.MY_FOREST_CLIENTS_LEGACY))
-    );
+            .willReturn(okJson(ForestClientApiProviderTestConstants.MY_FOREST_CLIENTS_LEGACY)));
 
-    var result = legacyMyForestClientClient.searchMyClients(
-        Set.of("00012797"),
-        PageRequest.of(0, 10)
-    );
+    var result =
+        legacyMyForestClientClient.searchMyClients(Set.of("00012797"), PageRequest.of(0, 10));
 
     assertNotNull(result);
     assertEquals(1, result.getContent().size());
@@ -79,14 +76,10 @@ class LegacyMyForestClientClientIntegrationTest extends AbstractTestContainerInt
   @DisplayName("Search my forest clients should fallback when service unavailable")
   void searchMyClients_shouldFallbackWhenUnavailable() {
     clientApiStub.stubFor(
-        get(urlPathEqualTo("/api/search/my-forest-clients"))
-            .willReturn(serviceUnavailable())
-    );
+        get(urlPathEqualTo("/api/search/my-forest-clients")).willReturn(serviceUnavailable()));
 
-    var result = legacyMyForestClientClient.searchMyClients(
-        Set.of("00012797"),
-        PageRequest.of(0, 10)
-    );
+    var result =
+        legacyMyForestClientClient.searchMyClients(Set.of("00012797"), PageRequest.of(0, 10));
 
     assertNotNull(result);
     assertEquals(0, result.getContent().size());
@@ -97,16 +90,12 @@ class LegacyMyForestClientClientIntegrationTest extends AbstractTestContainerInt
   void searchMyClients_shouldReturnEmptyForInvalidPayload() {
     clientApiStub.stubFor(
         get(urlPathEqualTo("/api/search/my-forest-clients"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.EMPTY_JSON))
-    );
+            .willReturn(okJson(ForestClientApiProviderTestConstants.EMPTY_JSON)));
 
-    var result = legacyMyForestClientClient.searchMyClients(
-        Set.of("00012797"),
-        PageRequest.of(0, 10)
-    );
+    var result =
+        legacyMyForestClientClient.searchMyClients(Set.of("00012797"), PageRequest.of(0, 10));
 
     assertNotNull(result);
     assertEquals(0, result.getContent().size());
   }
 }
-

@@ -12,7 +12,8 @@ public interface DistrictVolumeFormulaRepository
     extends JpaRepository<DistrictVolumeFormulaEntity, Long> {
 
   /** Finds formulas from the latest live district-volume version before a target version. */
-  @Query("""
+  @Query(
+      """
       select f from DistrictVolumeFormulaEntity f
       join fetch f.districtVolume d
       where d.area = :area and d.configType = DISTRICT_VOLUME
@@ -29,5 +30,4 @@ public interface DistrictVolumeFormulaRepository
 
   /** Finds formulas belonging to one district-volume version in stable display order. */
   List<DistrictVolumeFormulaEntity> findByDistrictVolumeIdOrderBySortOrderAscIdAsc(Long id);
-
 }

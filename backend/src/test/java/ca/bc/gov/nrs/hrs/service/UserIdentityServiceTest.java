@@ -64,7 +64,7 @@ class UserIdentityServiceTest {
     when(cognitoClient.fetchUserInfo("token"))
         .thenReturn(Optional.of(sampleResponse("sub-from-user-info")));
     when(userIdentityPersistenceService.saveHydratedIdentity(
-        org.mockito.ArgumentMatchers.any(UserIdentityEntity.class)))
+            org.mockito.ArgumentMatchers.any(UserIdentityEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     Optional<UserIdentityEntity> result = service.getOrRefreshBySub("sub-from-jwt", "token");
@@ -115,8 +115,6 @@ class UserIdentityServiceTest {
         "Doe, John",
         null,
         java.util.List.of(),
-        Map.of("sub", sub)
-    );
+        Map.of("sub", sub));
   }
 }
-

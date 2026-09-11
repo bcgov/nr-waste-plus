@@ -29,10 +29,8 @@ import org.springframework.stereotype.Service;
 /**
  * Service responsible for searching reporting units and client-related data.
  *
- * <p>This service delegates to {@link LegacyApiProvider} for legacy reporting unit
- * queries and enriches results with client and location details obtained via
- * {@link ForestClientService}.
- * </p>
+ * <p>This service delegates to {@link LegacyApiProvider} for legacy reporting unit queries and
+ * enriches results with client and location details obtained via {@link ForestClientService}.
  */
 @Slf4j
 @Service
@@ -48,65 +46,57 @@ public class SearchService {
   /**
    * Search reporting units using the supplied filters and pageable settings.
    *
-   * <p>Results are enriched with client names and client location details by
-   * calling the Forest Client service.
-   * </p>
+   * <p>Results are enriched with client names and client location details by calling the Forest
+   * Client service.
    *
    * @param userId the current user
-   * @param filters  search filters
+   * @param filters search filters
    * @param pageable paging parameters
    * @return a page of {@link ReportingUnitSearchResultDto} enriched with client info
    */
   @NewSpan
   public Page<ReportingUnitSearchResultDto> search(
-      String userId,
-      ReportingUnitSearchParametersDto filters,
-      Pageable pageable
-  ) {
+      String userId, ReportingUnitSearchParametersDto filters, Pageable pageable) {
 
-    if (filters != null && filters.isBookmarked() && featureFlagsConfiguration.isEnabled(
-        FeatureFlag.BOOKMARK_REPORTING_UNIT_ENABLED)) {
+    if (filters != null
+        && filters.isBookmarked()
+        && featureFlagsConfiguration.isEnabled(FeatureFlag.BOOKMARK_REPORTING_UNIT_ENABLED)) {
       filters.setReportingUnitIds(userService.getUserBookmarksInList(userId, List.of()));
     }
 
-    //Search the legacy API for reporting units
+    // Search the legacy API for reporting units
     var result = legacyApiProvider.searchReportingUnit(filters, pageable);
 
-    //Build a map of clients and load details from Forest Client Service
+    // Build a map of clients and load details from Forest Client Service
     var clients =
-        result
-            .stream()
+        result.stream()
             .map(ReportingUnitSearchResultDto::client)
             .distinct()
-            .map(client ->
-                forestClientService
-                    .getClientByNumber(client.code())
-                    .map(forestClientDto -> client.withDescription(forestClientDto.name()))
-                    .orElse(client)
-            )
+            .map(
+                client ->
+                    forestClientService
+                        .getClientByNumber(client.code())
+                        .map(forestClientDto -> client.withDescription(forestClientDto.name()))
+                        .orElse(client))
             .collect(toMap(CodeDescriptionDto::code, client -> client));
 
-    var reportingUnitsInPage = result
-        .stream()
-        .map(ReportingUnitSearchResultDto::ruNumber)
-        .toList();
+    var reportingUnitsInPage = result.stream().map(ReportingUnitSearchResultDto::ruNumber).toList();
 
     var bookmarkedEntries =
         featureFlagsConfiguration.isEnabled(FeatureFlag.BOOKMARK_REPORTING_UNIT_ENABLED)
             ? userService.getUserBookmarksInList(userId, reportingUnitsInPage)
             : List.of();
 
-    //Enrich the results with client and location details
+    // Enrich the results with client and location details
     return result
-        .map(entry -> entry.withId(
-                String.format(
-                    "RU-%d-Block-%s-%d",
-                    entry.ruNumber(),
-                    Objects.toString(entry.wasteAssessmentAreaId(), "N/A"),
-                    entry.hashCode()
-                )
-            )
-        )
+        .map(
+            entry ->
+                entry.withId(
+                    String.format(
+                        "RU-%d-Block-%s-%d",
+                        entry.ruNumber(),
+                        Objects.toString(entry.wasteAssessmentAreaId(), "N/A"),
+                        entry.hashCode())))
         .map(entry -> entry.withClient(clients.get(entry.client().code())))
         .map(entry -> entry.withBookmarked(bookmarkedEntries.contains(entry.ruNumber())));
   }
@@ -114,14 +104,12 @@ public class SearchService {
   /**
    * Get expanded search details for a specific reporting unit and block.
    *
-   * @param ruId                  the reporting unit id
+   * @param ruId the reporting unit id
    * @param wasteAssessmentAreaId the waste assessment area ID
    * @return the expanded reporting unit search details
    */
   @NewSpan
-  public ReportingUnitSearchExpandedDto getSearchExpanded(
-      Long ruId, Long wasteAssessmentAreaId
-  ) {
+  public ReportingUnitSearchExpandedDto getSearchExpanded(Long ruId, Long wasteAssessmentAreaId) {
     log.info(
         "Loading expanded search for ruId: {}, wasteAssessmentAreaId: {}",
         ruId,
@@ -132,21 +120,18 @@ public class SearchService {
   /**
    * Look up the client number associated with a reporting unit.
    *
-   * <p>The client number is obtained from the legacy API and can be used for
-   * authorization checks (e.g. verifying that a BCeID caller is allowed to
-   * access the reporting unit that belongs to that client).
-   * </p>
+   * <p>The client number is obtained from the legacy API and can be used for authorization checks
+   * (e.g. verifying that a BCeID caller is allowed to access the reporting unit that belongs to
+   * that client).
    *
    * @param reportingUnitId the reporting unit id
    * @return the client number associated with the reporting unit
-   * @throws ca.bc.gov.nrs.hrs.exception.NotFoundGenericException if the reporting
-   *         unit is not found in the legacy system
+   * @throws ca.bc.gov.nrs.hrs.exception.NotFoundGenericException if the reporting unit is not found
+   *     in the legacy system
    */
   @NewSpan
   public String getClientNumberForReportingUnit(Long reportingUnitId) {
-    return legacyApiProvider
-        .getReportingUnitDetails(reportingUnitId)
-        .clientNumber();
+    return legacyApiProvider.getReportingUnitDetails(reportingUnitId).clientNumber();
   }
 
   /**
@@ -163,27 +148,25 @@ public class SearchService {
   /**
    * Search clients for a user's My Forest view.
    *
-   * <p>When a textual value is provided the method filters clients accordingly and
-   * may return an empty page if none match.
-   * </p>
+   * <p>When a textual value is provided the method filters clients accordingly and may return an
+   * empty page if none match.
    *
-   * @param pageable   paging parameters
-   * @param value      optional filter value
+   * @param pageable paging parameters
+   * @param value optional filter value
    * @param allClients list of clients to consider
    * @return a page of {@link MyForestClientSearchResultDto} enriched with client info
    */
   @NewSpan
   public Page<MyForestClientSearchResultDto> searchByMyForestClient(
-      Pageable pageable,
-      String value,
-      List<String> allClients
-  ) {
-    log.info("Loading my clients with filter: {}, pageable: {}, possible values: {}",
-        value, pageable, allClients);
+      Pageable pageable, String value, List<String> allClients) {
+    log.info(
+        "Loading my clients with filter: {}, pageable: {}, possible values: {}",
+        value,
+        pageable,
+        allClients);
     // #127 if we have a value to filter by, we need to load only those clients
-    Map<String, CodeDescriptionDto> response = StringUtils.isNotBlank(value)
-        ? mapClients(allClients, value)
-        : new HashMap<>();
+    Map<String, CodeDescriptionDto> response =
+        StringUtils.isNotBlank(value) ? mapClients(allClients, value) : new HashMap<>();
 
     if (StringUtils.isNotBlank(value)) {
       log.info("Filtering search by clients: {}", response.keySet());
@@ -193,36 +176,22 @@ public class SearchService {
       }
     }
 
-    Page<MyForestClientSearchResultDto> page = legacyApiProvider.searchMyClients(
-        response.keySet(),
-        pageable
-    );
+    Page<MyForestClientSearchResultDto> page =
+        legacyApiProvider.searchMyClients(response.keySet(), pageable);
 
-    List<String> clients = page
-        .stream()
-        .map(entry -> entry.client().code())
-        .toList();
+    List<String> clients = page.stream().map(entry -> entry.client().code()).toList();
 
     // #127 if we don't have a value to filter by, we need to load all clients in the page
     if (StringUtils.isBlank(value)) {
       response.putAll(mapClients(clients, null));
     }
 
-    return page
-        .map(entry -> entry.withClient(
-                response.getOrDefault(entry.client().code(), entry.client())
-            )
-        );
+    return page.map(
+        entry -> entry.withClient(response.getOrDefault(entry.client().code(), entry.client())));
   }
 
   private Map<String, CodeDescriptionDto> mapClients(List<String> clients, String value) {
-    return forestClientService.searchByClientNumbers(
-            0,
-            clients.size(),
-            clients,
-            value
-        )
-        .stream()
+    return forestClientService.searchByClientNumbers(0, clients.size(), clients, value).stream()
         .map(entry -> new CodeDescriptionDto(entry.clientNumber(), entry.name()))
         .collect(Collectors.toMap(CodeDescriptionDto::code, client -> client));
   }

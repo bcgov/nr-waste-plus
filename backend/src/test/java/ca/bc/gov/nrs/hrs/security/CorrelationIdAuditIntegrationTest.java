@@ -27,36 +27,40 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 /**
  * Spike §6 integration coverage for B3 correlation propagation to the audit trigger.
  *
- * <p>Exercises the {@link CorrelationIdConnectionProvider} + Postgres GUC
- * {@code app.correlation_id} + {@code hrs.audit_district_volume_change()} trigger chain
- * against the real Testcontainers PostgreSQL 17 database via
- * {@link AbstractTestContainerIntegrationTest}.
+ * <p>Exercises the {@link CorrelationIdConnectionProvider} + Postgres GUC {@code
+ * app.correlation_id} + {@code hrs.audit_district_volume_change()} trigger chain against the real
+ * Testcontainers PostgreSQL 17 database via {@link AbstractTestContainerIntegrationTest}.
  *
  * <p>All tests are intentionally <em>not</em> {@code @Transactional}: each mutation goes through
- * its own Spring {@code @Transactional} boundary (repository/service) and commits before the
- * audit is queried, so the transaction-scoped {@code set_config('app.correlation_id', ?, true)}
- * behaviour is observable. A class-level {@code @Transactional} would fold everything into the
- * test's outer transaction and hide leak/reuse bugs.
+ * its own Spring {@code @Transactional} boundary (repository/service) and commits before the audit
+ * is queried, so the transaction-scoped {@code set_config('app.correlation_id', ?, true)} behaviour
+ * is observable. A class-level {@code @Transactional} would fold everything into the test's outer
+ * transaction and hide leak/reuse bugs.
  *
  * <p>SecurityContext is populated per mutation (see {@link
- * ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepositoryTest} pattern) so auditing never hits
- * the {@code created_by} / {@code updated_by} NOT NULL constraint.
+ * ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepositoryTest} pattern) so auditing never hits the
+ * {@code created_by} / {@code updated_by} NOT NULL constraint.
  *
- * <p>Uses the real Micrometer Tracing {@link Tracer} (Brave) provided by
- * {@link org.springframework.boot.micrometer.tracing.test.autoconfigure.AutoConfigureTracing}
- * on {@link AbstractTestContainerIntegrationTest} — spans created via
- * {@code nextSpan()} carry genuine 128-bit trace ids, exercising production propagation
- * semantics rather than a hand-rolled double.
+ * <p>Uses the real Micrometer Tracing {@link Tracer} (Brave) provided by {@link
+ * org.springframework.boot.micrometer.tracing.test.autoconfigure.AutoConfigureTracing} on {@link
+ * AbstractTestContainerIntegrationTest} — spans created via {@code nextSpan()} carry genuine
+ * 128-bit trace ids, exercising production propagation semantics rather than a hand-rolled double.
  */
 @DisplayName("Spike §6 | correlation_id audit trigger integration")
 class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegrationTest {
 
-  @Autowired private Tracer tracer;
+  @Autowired
+  private Tracer tracer;
 
-  @Autowired private DistrictVolumeRepository districtVolumeRepository;
-  @Autowired private AuditChangeRepository auditChangeRepository;
-  @Autowired private JdbcTemplate jdbcTemplate;
-  @Autowired private org.springframework.transaction.support.TransactionTemplate transactionTemplate;
+  @Autowired
+  private DistrictVolumeRepository districtVolumeRepository;
+  @Autowired
+  private AuditChangeRepository auditChangeRepository;
+  @Autowired
+  private JdbcTemplate jdbcTemplate;
+
+  @Autowired
+  private org.springframework.transaction.support.TransactionTemplate transactionTemplate;
 
   @BeforeEach
   @AfterEach
@@ -78,7 +82,9 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
   // ---- §6.1 happy path -----------------------------------------------------
 
   @Test
-  @DisplayName("§6.1 happy path — active B3 span writes its traceId into audit_event.correlation_id and audit_change exists")
+  @DisplayName(
+      "§6.1 happy path — active B3 span writes its traceId into audit_event.correlation_id and"
+          + " audit_change exists")
   void happypath_withSpanWritesCorrelationId() {
     setSecurityContext();
 
@@ -89,8 +95,8 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
       assertThat(traceIdBefore).isNotBlank();
       assertThat(tracer.currentSpan()).isNotNull();
 
-      transactionTemplate.executeWithoutResult(status ->
-          districtVolumeRepository.saveAndFlush(newEntity(Area.INTERIOR)));
+      transactionTemplate.executeWithoutResult(
+          status -> districtVolumeRepository.saveAndFlush(newEntity(Area.INTERIOR)));
     } finally {
       span.end();
     }
@@ -109,14 +115,14 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
   // ---- §6.2 no-span ---------------------------------------------------------
 
   @Test
-  @DisplayName("§6.2 no-span — without an active span the mutation succeeds and correlation_id IS NULL")
+  @DisplayName(
+      "§6.2 no-span — without an active span the mutation succeeds and correlation_id IS NULL")
   void noSpanWritesNull() {
     // Prove we really are in the no-span condition before mutating.
     assertThat(tracer.currentSpan())
         .as("no span should be active before the noSpan test; previous test must have cleaned up")
         .satisfiesAnyOf(
-            span -> assertThat(span).isNull(),
-            span -> assertThat(span.isNoop()).isTrue());
+            span -> assertThat(span).isNull(), span -> assertThat(span.isNoop()).isTrue());
 
     setSecurityContext();
 
@@ -137,10 +143,13 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
   // ---- §6.3 raw SQL (bypass application provider) --------------------------
 
   @Test
-  @DisplayName("§6.3 raw SQL — direct JdbcTemplate INSERT bypasses Hibernate provider and records NULL correlation_id")
+  @DisplayName(
+      "§6.3 raw SQL — direct JdbcTemplate INSERT bypasses Hibernate provider and records NULL"
+          + " correlation_id")
   void rawSqlWriteHasNullCorrelation() {
     assertThat(tracer.currentSpan())
-        .satisfiesAnyOf(span -> assertThat(span).isNull(), span -> assertThat(span.isNoop()).isTrue());
+        .satisfiesAnyOf(
+            span -> assertThat(span).isNull(), span -> assertThat(span.isNoop()).isTrue());
 
     long beforeMaxEventId = maxAuditEventId();
     // With pool-wide auto-commit disabled, a bare jdbcTemplate write would sit in an implicit
@@ -151,9 +160,9 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
         transactionTemplate.execute(
             status ->
                 jdbcTemplate.update(
-                    "INSERT INTO hrs.district_volume "
-                        + "(area, start_date, end_date, table_data, table_level_factor, created_by, updated_by, config_type, is_deleted) "
-                        + "VALUES (?, ?, ?, ?::jsonb, ?, ?, ?, ?, FALSE)",
+                    "INSERT INTO hrs.district_volume (area, start_date, end_date, table_data,"
+                        + " table_level_factor, created_by, updated_by, config_type, is_deleted)"
+                        + " VALUES (?, ?, ?, ?::jsonb, ?, ?, ?, ?, FALSE)",
                     Area.INTERIOR.name(),
                     java.sql.Date.valueOf(HISTORICAL_START_DATE),
                     java.sql.Date.valueOf(HISTORICAL_END_DATE),
@@ -169,12 +178,16 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     assertThat(latestEventId).isGreaterThan(beforeMaxEventId);
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?", String.class, latestEventId))
+                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?",
+                String.class,
+                latestEventId))
         .as("raw JdbcTemplate write must bypass the Hibernate provider")
         .isNullOrEmpty();
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT action FROM hrs.audit_event WHERE audit_event_id = ?", String.class, latestEventId))
+                "SELECT action FROM hrs.audit_event WHERE audit_event_id = ?",
+                String.class,
+                latestEventId))
         .isEqualTo("CREATE");
     assertAuditChangeExistsForEvent(latestEventId);
   }
@@ -182,7 +195,9 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
   // ---- §6.4 multiple transactions, distinct IDs -----------------------------
 
   @Test
-  @DisplayName("§6.4 multiple transactions — two sequential commits with different traceIds get distinct correlation_ids")
+  @DisplayName(
+      "§6.4 multiple transactions — two sequential commits with different traceIds get distinct"
+          + " correlation_ids")
   void multipleTransactionsGetDistinctCorrelationIds() {
     setSecurityContext();
 
@@ -201,12 +216,15 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     assertThat(corr1).isEqualTo(traceId1);
     assertAuditChangeExistsForEvent(eventId1);
 
-    // Second transaction with span B — must be a different traceId to prove per-transaction binding.
+    // Second transaction with span B — must be a different traceId to prove per-transaction
+    // binding.
     Span span2 = tracer.nextSpan().name("test-multi-tx-2").start();
     String traceId2 = span2.context().traceId();
     assertThat(traceId2).isNotBlank();
-    // Brave may rarely reuse 64-bit traceIds, but nextSpan() with no parent always starts a new trace,
-    // so the two 128-bit ids should differ. If they collide, fail fast — test is not proving isolation.
+    // Brave may rarely reuse 64-bit traceIds, but nextSpan() with no parent always starts a new
+    // trace,
+    // so the two 128-bit ids should differ. If they collide, fail fast — test is not proving
+    // isolation.
     assertThat(traceId2).as("two independent traces must have distinct ids").isNotEqualTo(traceId1);
 
     DistrictVolumeEntity e2 = newEntity(Area.INTERIOR);
@@ -227,10 +245,14 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     // Prove each audit row captured its own correct id — no cross-contamination.
     String fetchedCorr1 =
         jdbcTemplate.queryForObject(
-            "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?", String.class, eventId1);
+            "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?",
+            String.class,
+            eventId1);
     String fetchedCorr2 =
         jdbcTemplate.queryForObject(
-            "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?", String.class, eventId2);
+            "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?",
+            String.class,
+            eventId2);
     assertThat(fetchedCorr1).isEqualTo(traceId1);
     assertThat(fetchedCorr2).isEqualTo(traceId2);
     assertThat(fetchedCorr1).isNotEqualTo(fetchedCorr2);
@@ -238,40 +260,40 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
 
   // ---- §6.5 connection reuse / no bleed -----------------------------------
 
-/**
- * §6.5 — Connection reuse / no bleed.
- *
- * <p><b>Why this test proves no bleed even on the same physical Hikari connection:</b>
- * {@link CorrelationIdConnectionProvider} binds the trace id via
- * {@code SELECT set_config('app.correlation_id', ?, true)} — the third argument {@code true}
- * means {@code is_local}, i.e. PostgreSQL marks the GUC as <em>local to the current
- * transaction</em> and discards it automatically on {@code COMMIT} / {@code ROLLBACK}
- * (see {@code src/main/resources/db/migration/V1.0.6__audit_correlation_id.sql} and the
- * Postgres {@code set_config} docs). Hibernate's default connection handling mode is
- * {@code DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION}: the JDBC {@code Connection}
- * is acquired at the first SQL statement inside the Spring {@code @Transactional} and
- * returned to the Hikari pool after the transaction commits. The same physical connection
- * may therefore be handed to the next transaction. Because the GUC is transaction-local,
- * the next transaction starts with {@code current_setting('app.correlation_id', true) == NULL}
- * even when the underlying socket is reused — no explicit {@code RESET} is required and
- * a previous trace id cannot leak.
- *
- * <p>If the provider had used {@code set_config(..., false)} (session-scoped), a trace id
- * would persist on the pooled connection after commit and bleed into the next request on
- * that connection. This test would then fail on the second assertion (no-span would see
- * the previous trace id).
- *
- * <p>Investigation: Hibernate handling mode is the ORM default and is <em>not</em> overridden
- * anywhere in {@code application.yml} or {@code GlobalConfiguration}, so
- * {@code DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION} applies. Explicitly proving
- * reuse of the <em>same physical connection</em> from Hikari would require instrumenting
- * the pool or unwrapping {@code HikariProxyConnection} and is brittle; instead we prove
- * the <em>semantic guarantee</em> (no bleed) which is the contract that matters. The
- * transaction-local semantics make physical-reuse equivalence explicit: even if reuse
- * happens, state does not bleed.
- */
+  /**
+   * §6.5 — Connection reuse / no bleed.
+   *
+   * <p><b>Why this test proves no bleed even on the same physical Hikari connection:</b> {@link
+   * CorrelationIdConnectionProvider} binds the trace id via {@code SELECT
+   * set_config('app.correlation_id', ?, true)} — the third argument {@code true} means {@code
+   * is_local}, i.e. PostgreSQL marks the GUC as <em>local to the current transaction</em> and
+   * discards it automatically on {@code COMMIT} / {@code ROLLBACK} (see {@code
+   * src/main/resources/db/migration/V1.0.6__audit_correlation_id.sql} and the Postgres {@code
+   * set_config} docs). Hibernate's default connection handling mode is {@code
+   * DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION}: the JDBC {@code Connection} is acquired at
+   * the first SQL statement inside the Spring {@code @Transactional} and returned to the Hikari
+   * pool after the transaction commits. The same physical connection may therefore be handed to the
+   * next transaction. Because the GUC is transaction-local, the next transaction starts with {@code
+   * current_setting('app.correlation_id', true) == NULL} even when the underlying socket is reused
+   * — no explicit {@code RESET} is required and a previous trace id cannot leak.
+   *
+   * <p>If the provider had used {@code set_config(..., false)} (session-scoped), a trace id would
+   * persist on the pooled connection after commit and bleed into the next request on that
+   * connection. This test would then fail on the second assertion (no-span would see the previous
+   * trace id).
+   *
+   * <p>Investigation: Hibernate handling mode is the ORM default and is <em>not</em> overridden
+   * anywhere in {@code application.yml} or {@code GlobalConfiguration}, so {@code
+   * DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION} applies. Explicitly proving reuse of the
+   * <em>same physical connection</em> from Hikari would require instrumenting the pool or
+   * unwrapping {@code HikariProxyConnection} and is brittle; instead we prove the <em>semantic
+   * guarantee</em> (no bleed) which is the contract that matters. The transaction-local semantics
+   * make physical-reuse equivalence explicit: even if reuse happens, state does not bleed.
+   */
   @Test
-  @DisplayName("§6.5 connection reuse — sequential transactions in same thread do not bleed correlation_id across pooled connections")
+  @DisplayName(
+      "§6.5 connection reuse — sequential transactions in same thread do not bleed correlation_id"
+          + " across pooled connections")
   void connectionReuse_noBleedAcrossSequentialTransactions() {
     setSecurityContext();
 
@@ -281,16 +303,19 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     assertThat(traceIdA).isNotBlank();
     DistrictVolumeEntity e1 = newEntity(Area.COASTAL);
     try (Tracer.SpanInScope ws = tracer.withSpan(spanA)) {
-      transactionTemplate.execute(status -> {
-        districtVolumeRepository.saveAndFlush(e1);
-        return null;
-      });
+      transactionTemplate.execute(
+          status -> {
+            districtVolumeRepository.saveAndFlush(e1);
+            return null;
+          });
     } finally {
       spanA.end();
     }
     String corrA = latestCorrelationId();
     Long eventA = maxAuditEventId();
-    assertThat(corrA).as("first reused-connection tx with span should persist its traceId").isEqualTo(traceIdA);
+    assertThat(corrA)
+        .as("first reused-connection tx with span should persist its traceId")
+        .isEqualTo(traceIdA);
     assertAuditChangeExistsForEvent(eventA);
 
     // Transaction 2: no span -> expect NULL even though the same physical Hikari connection
@@ -299,19 +324,23 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     setSecurityContext();
     // Ensure we are really out of any span before the no-span mutation.
     assertThat(tracer.currentSpan())
-        .satisfiesAnyOf(span -> assertThat(span).isNull(), span -> assertThat(span.isNoop()).isTrue());
+        .satisfiesAnyOf(
+            span -> assertThat(span).isNull(), span -> assertThat(span.isNoop()).isTrue());
 
     DistrictVolumeEntity e2 = newEntity(Area.COASTAL);
-    transactionTemplate.execute(status -> {
-      // No GUC set for this transaction (no span)
-      districtVolumeRepository.saveAndFlush(e2);
-      return null;
-    });
+    transactionTemplate.execute(
+        status -> {
+          // No GUC set for this transaction (no span)
+          districtVolumeRepository.saveAndFlush(e2);
+          return null;
+        });
     String corrNull = latestCorrelationId();
     Long eventNull = maxAuditEventId();
     assertThat(eventNull).isGreaterThan(eventA);
     assertThat(corrNull)
-        .as("second tx with no span must not set app.correlation_id even if Hikari reused the same physical connection")
+        .as(
+            "second tx with no span must not set app.correlation_id even if Hikari reused the same"
+                + " physical connection")
         .isNullOrEmpty();
     assertAuditChangeExistsForEvent(eventNull);
 
@@ -323,46 +352,56 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     DistrictVolumeEntity e3 = newEntity(Area.COASTAL);
     setSecurityContext();
     try (Tracer.SpanInScope ws = tracer.withSpan(spanB)) {
-      transactionTemplate.execute(status -> {
-        districtVolumeRepository.saveAndFlush(e3);
-        return null;
-      });
+      transactionTemplate.execute(
+          status -> {
+            districtVolumeRepository.saveAndFlush(e3);
+            return null;
+          });
     } finally {
       spanB.end();
     }
     String corrB = latestCorrelationId();
     Long eventB = maxAuditEventId();
     assertThat(eventB).isGreaterThan(eventNull);
-    assertThat(corrB).as("third tx with new span should persist its own traceId, not the previous null or A").isEqualTo(traceIdB);
+    assertThat(corrB)
+        .as("third tx with new span should persist its own traceId, not the previous null or A")
+        .isEqualTo(traceIdB);
     assertThat(corrB).isNotEqualTo(corrA);
     assertAuditChangeExistsForEvent(eventB);
 
     // Final cross-check via direct id lookup to rule out LIMIT 1 ordering flakiness
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?", String.class, eventA))
+                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?",
+                String.class,
+                eventA))
         .isEqualTo(traceIdA);
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?", String.class, eventNull))
+                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?",
+                String.class,
+                eventNull))
         .isNullOrEmpty();
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?", String.class, eventB))
+                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?",
+                String.class,
+                eventB))
         .isEqualTo(traceIdB);
   }
 
   // ---- §6.6 trigger uses current_setting(..., true) (missing_ok) -------------
 
   /**
-   * §6.6 — Explicit acceptance check (issue #1257) that the audit trigger reads the
-   * correlation-id GUC with the {@code missing_ok} flag, so {@code current_setting}
-   * does not throw when the GUC was never set for that transaction. Without it, every
-   * non-traced write path would fail. This verifies the deployed trigger definition
-   * directly rather than inferring it from the no-span behaviour alone.
+   * §6.6 — Explicit acceptance check (issue #1257) that the audit trigger reads the correlation-id
+   * GUC with the {@code missing_ok} flag, so {@code current_setting} does not throw when the GUC
+   * was never set for that transaction. Without it, every non-traced write path would fail. This
+   * verifies the deployed trigger definition directly rather than inferring it from the no-span
+   * behaviour alone.
    */
   @Test
-  @DisplayName("§6.6 trigger reads app.correlation_id with missing_ok flag (no-span writes must not throw)")
+  @DisplayName(
+      "§6.6 trigger reads app.correlation_id with missing_ok flag (no-span writes must not throw)")
   void triggerUsesMissingOkCurrentSetting() {
     // 1) The deployed trigger function must use the two-argument current_setting(..., true)
     //    form — the literal acceptance criterion from issue #1257.
@@ -376,21 +415,25 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     // 2) Behavioural guarantee: a no-span write (GUC never set) still succeeds and records
     //    NULL correlation_id — i.e. the trigger did not raise on the unset setting.
     assertThat(tracer.currentSpan())
-        .satisfiesAnyOf(span -> assertThat(span).isNull(), span -> assertThat(span.isNoop()).isTrue());
+        .satisfiesAnyOf(
+            span -> assertThat(span).isNull(), span -> assertThat(span.isNoop()).isTrue());
     setSecurityContext();
 
     long beforeMaxEventId = maxAuditEventId();
     DistrictVolumeEntity entity = newEntity(Area.INTERIOR);
-    transactionTemplate.execute(status -> {
-      districtVolumeRepository.saveAndFlush(entity);
-      return null;
-    });
+    transactionTemplate.execute(
+        status -> {
+          districtVolumeRepository.saveAndFlush(entity);
+          return null;
+        });
 
     Long latestEventId = maxAuditEventId();
     assertThat(latestEventId).isGreaterThan(beforeMaxEventId);
     assertThat(
             jdbcTemplate.queryForObject(
-                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?", String.class, latestEventId))
+                "SELECT correlation_id FROM hrs.audit_event WHERE audit_event_id = ?",
+                String.class,
+                latestEventId))
         .as("no-span write must record NULL correlation_id without throwing")
         .isNullOrEmpty();
     assertAuditChangeExistsForEvent(latestEventId);
@@ -423,15 +466,18 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
   private static final LocalDate HISTORICAL_END_DATE = LocalDate.of(2020, 1, 2);
 
   private Long maxAuditEventId() {
-    Long max = jdbcTemplate.queryForObject("SELECT MAX(audit_event_id) FROM hrs.audit_event", Long.class);
+    Long max =
+        jdbcTemplate.queryForObject("SELECT MAX(audit_event_id) FROM hrs.audit_event", Long.class);
     return max != null ? max : 0L;
   }
 
   private String latestCorrelationId() {
-    // Returns NULL as Java null when the column IS NULL (queryForObject with String.class does that).
+    // Returns NULL as Java null when the column IS NULL (queryForObject with String.class does
+    // that).
     // Use a list query to distinguish "no rows" from "null value".
     return jdbcTemplate.queryForObject(
-        "SELECT correlation_id FROM hrs.audit_event ORDER BY audit_event_id DESC LIMIT 1", String.class);
+        "SELECT correlation_id FROM hrs.audit_event ORDER BY audit_event_id DESC LIMIT 1",
+        String.class);
   }
 
   private void assertAuditChangeExistsForEvent(Long eventId) {
@@ -444,7 +490,8 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
         .isGreaterThan(0);
 
     // Also confirm via JPA repository to guard against native-query vs JPA visibility drift.
-    // AuditChangeRepository is a plain JpaRepository — findAll should see the same row after commit.
+    // AuditChangeRepository is a plain JpaRepository — findAll should see the same row after
+    // commit.
     // We do not assert count == 1 globally because other tests have inserted rows earlier in the
     // same container lifecycle; we only assert that *this* event is represented.
     long jpaCountForEvent =

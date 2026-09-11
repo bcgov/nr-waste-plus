@@ -19,16 +19,16 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-/**
- * Immutable calculation result captured for a block.
- */
+/** Immutable calculation result captured for a block. */
 @Entity
 @Table(name = "block_calculation_snapshot", schema = "hrs")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
-@ToString(callSuper = true, exclude = {"inputs", "outputs", "warnings"})
+@ToString(
+    callSuper = true,
+    exclude = {"inputs", "outputs", "warnings"})
 public class BlockCalculationSnapshotEntity extends AuditableEntity {
 
   @Id

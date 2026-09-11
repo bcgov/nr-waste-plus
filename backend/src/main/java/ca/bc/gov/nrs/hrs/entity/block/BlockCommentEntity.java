@@ -15,9 +15,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-/**
- * Comment associated with a submission block.
- */
+/** Comment associated with a submission block. */
 @Entity
 @Table(name = "block_comment", schema = "hrs")
 @EntityListeners(AuditingEntityListener.class)

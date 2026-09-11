@@ -6,11 +6,8 @@ import lombok.With;
 /**
  * This record represents a Forest Client Location object.
  *
- * <p>
- * It contains contact and addressing information for a single client
- * location together with metadata such as whether the location is expired or
- * trusted and the last returned-mail date.
- * </p>
+ * <p>It contains contact and addressing information for a single client location together with
+ * metadata such as whether the location is expired or trusted and the last returned-mail date.
  *
  * @param clientNumber the parent client number
  * @param locationCode the code identifying this location
@@ -54,7 +51,4 @@ public record ForestClientLocationDto(
     YesNoEnum expired,
     YesNoEnum trusted,
     LocalDate returnedMailDate,
-    String comment
-) {
-
-}
+    String comment) {}

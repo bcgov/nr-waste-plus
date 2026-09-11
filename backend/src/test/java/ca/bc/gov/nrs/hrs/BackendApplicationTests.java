@@ -23,20 +23,20 @@ class BackendApplicationTests extends AbstractTestContainerIntegrationTest {
     /* Is empty because we just wanna check if app load*/
   }
 
-
   @Test
   @DisplayName("Retry with backoff")
   void forestReadRetry_shouldHaveCustomIntervalFunction() {
     Retry retry = retryRegistry.retry("apiRetry");
     var intervalBiFunction = retry.getRetryConfig().getIntervalBiFunction();
 
-    long firstWait = intervalBiFunction.apply(1,
-        Either.left(new RetriableException(HttpStatusCode.valueOf(400), "Test")));
-    long secondWait = intervalBiFunction.apply(2,
-        Either.left(new RetriableException(HttpStatusCode.valueOf(400), "Test")));
+    long firstWait =
+        intervalBiFunction.apply(
+            1, Either.left(new RetriableException(HttpStatusCode.valueOf(400), "Test")));
+    long secondWait =
+        intervalBiFunction.apply(
+            2, Either.left(new RetriableException(HttpStatusCode.valueOf(400), "Test")));
 
-    assertThat(firstWait).isGreaterThan(0);    // 500
+    assertThat(firstWait).isGreaterThan(0); // 500
     assertThat(secondWait).isGreaterThan(firstWait); // 1000
   }
-
 }

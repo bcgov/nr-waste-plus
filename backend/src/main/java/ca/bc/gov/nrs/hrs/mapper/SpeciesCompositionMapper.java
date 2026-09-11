@@ -12,23 +12,23 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Utility mapper for converting between the shared configuration entity's TableData 
- * and Species Composition DTOs.
+ * Utility mapper for converting between the shared configuration entity's TableData and Species
+ * Composition DTOs.
  *
- * <p>As per the architectural design, Species Composition uses a single flat DTO
- * ({@link SpeciesCompositionDataDto}) containing a flat list of {@link SpeciesCompositionRow}.
- * The row record acts as both the API DTO and the JSONB persistence model.
+ * <p>As per the architectural design, Species Composition uses a single flat DTO ({@link
+ * SpeciesCompositionDataDto}) containing a flat list of {@link SpeciesCompositionRow}. The row
+ * record acts as both the API DTO and the JSONB persistence model.
  *
- * <p>Note: This mapper explicitly preserves the full {@link CodeDescriptionDto} 
- * (including the description field) as required by ticket #1052.
+ * <p>Note: This mapper explicitly preserves the full {@link CodeDescriptionDto} (including the
+ * description field) as required by ticket #1052.
  */
 public final class SpeciesCompositionMapper {
 
   private SpeciesCompositionMapper() {}
 
   /**
-   * Converts the DistrictVolumeEntity directly to the flat SpeciesCompositionDataDto,
-   * satisfying the service layer requirements.
+   * Converts the DistrictVolumeEntity directly to the flat SpeciesCompositionDataDto, satisfying
+   * the service layer requirements.
    *
    * @param entity source entity
    * @return flat SpeciesCompositionDataDto
@@ -51,9 +51,8 @@ public final class SpeciesCompositionMapper {
       return new SpeciesCompositionDataDto(Collections.emptyList());
     }
 
-    List<SpeciesCompositionRow> scaledRows = data.speciesRows().stream()
-        .map(SpeciesCompositionMapper::scaleRow)
-        .toList();
+    List<SpeciesCompositionRow> scaledRows =
+        data.speciesRows().stream().map(SpeciesCompositionMapper::scaleRow).toList();
 
     return new SpeciesCompositionDataDto(scaledRows);
   }
@@ -69,24 +68,23 @@ public final class SpeciesCompositionMapper {
       return new TableData(null, null, null, Map.of());
     }
 
-    List<SpeciesCompositionRow> scaledRows = dto.rows().stream()
-        .map(SpeciesCompositionMapper::scaleRow)
-        .toList();
+    List<SpeciesCompositionRow> scaledRows =
+        dto.rows().stream().map(SpeciesCompositionMapper::scaleRow).toList();
 
     return new TableData(
-        null,       // zones
-        null,       // sections
+        null, // zones
+        null, // sections
         scaledRows, // speciesRows
-        Map.of()    // formulas
-    );
+        Map.of() // formulas
+        );
   }
 
   /**
-   * Recreates the row to ensure all BigDecimals are strictly scaled to 3 decimal places.
-   * Explicitly passes through the full district object without stripping the description.
+   * Recreates the row to ensure all BigDecimals are strictly scaled to 3 decimal places. Explicitly
+   * passes through the full district object without stripping the description.
    *
-   * <p>Species values are scaled by iterating over the map, preserving all keys and
-   * only transforming non-null values.
+   * <p>Species values are scaled by iterating over the map, preserving all keys and only
+   * transforming non-null values.
    */
   private static SpeciesCompositionRow scaleRow(SpeciesCompositionRow row) {
     if (row == null) {

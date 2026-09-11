@@ -9,8 +9,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 /**
  * Shared entity-mapping logic for formula rows.
  *
- * <p>Eliminates duplicated field-setting boilerplate between
- * {@link FormulaSetService} and {@link FormulaPersistenceService}.
+ * <p>Eliminates duplicated field-setting boilerplate between {@link FormulaSetService} and {@link
+ * FormulaPersistenceService}.
  */
 final class FormulaRowMapper {
 
@@ -29,8 +29,8 @@ final class FormulaRowMapper {
   }
 
   /** Maps a draft to a new formula entity for a district-volume version. */
-  static DistrictVolumeFormulaEntity toLegacyRow(DistrictVolumeEntity volume,
-      FormulaPersistenceService.FormulaDraft draft) {
+  static DistrictVolumeFormulaEntity toLegacyRow(
+      DistrictVolumeEntity volume, FormulaPersistenceService.FormulaDraft draft) {
     DistrictVolumeFormulaEntity formula = new DistrictVolumeFormulaEntity();
     formula.setDistrictVolume(volume);
     formula.setFormulaKey(draft.formulaKey());

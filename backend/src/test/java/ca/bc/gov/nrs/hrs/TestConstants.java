@@ -3,10 +3,14 @@ package ca.bc.gov.nrs.hrs;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+/**
+ * Common test constants and fixture JSON strings.
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class TestConstants {
 
-  public static final String EXPANDED_101 = """
+  public static final String EXPANDED_101 =
+      """
       {
         "id": 201,
         "licenseNo": "LIC123",
@@ -19,7 +23,8 @@ public final class TestConstants {
         "comments": "Some comments",
         "totalBlocks": 3
       }""";
-  public static final String EXPANDED_102 = """
+  public static final String EXPANDED_102 =
+      """
       {
         "id": 202,
         "exempted": false,
@@ -27,7 +32,8 @@ public final class TestConstants {
         "netArea": 0.0,
         "totalBlocks": 0
       }""";
-  public static final String EXPANDED_NULL = """
+  public static final String EXPANDED_NULL =
+      """
       {
         "id": null,
         "exempted": false,
@@ -35,7 +41,8 @@ public final class TestConstants {
         "netArea": 0.0,
         "totalBlocks": 0
       }""";
-  public static final String EXPANDED_NEGATIVE = """
+  public static final String EXPANDED_NEGATIVE =
+      """
       {
         "id": -2,
         "exempted": false,
@@ -45,7 +52,8 @@ public final class TestConstants {
       }""";
 
   /** JSON response from the legacy API for {@code GET /api/reporting-units/{id}}. */
-  public static final String LEGACY_RU_DETAILS = """
+  public static final String LEGACY_RU_DETAILS =
+      """
       {
         "clientNumber": "00012797",
         "clientLocnCode": "00",

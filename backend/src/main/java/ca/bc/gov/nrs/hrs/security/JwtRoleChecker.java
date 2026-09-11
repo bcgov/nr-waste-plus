@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
  *
  * <p>Provides convenience methods used in {@code @PreAuthorize} annotations (for example:
  * {@code @auth.hasConcreteRole(@roles.VIEWER)}).
- * </p>
  */
 @Component
 public class JwtRoleChecker {
@@ -32,10 +31,10 @@ public class JwtRoleChecker {
   public boolean hasRole(String role) {
     String normalizedRole = role.toUpperCase(Locale.ROOT);
     return hasRoleMatching(
-        currentRole -> currentRole.equals(normalizedRole)
-            || currentRole.startsWith(normalizedRole + "_")
-            || currentRole.startsWith("WASTE_PLUS_" + normalizedRole + "_")
-    );
+        currentRole ->
+            currentRole.equals(normalizedRole)
+                || currentRole.startsWith(normalizedRole + "_")
+                || currentRole.startsWith("WASTE_PLUS_" + normalizedRole + "_"));
   }
 
   /**
@@ -53,13 +52,12 @@ public class JwtRoleChecker {
    * and client id (prefix_clientId).
    *
    * @param rolePrefix the role prefix (e.g. PLANNER)
-   * @param clientId   the client identifier to combine with the prefix
+   * @param clientId the client identifier to combine with the prefix
    * @return true if the principal has the combined abstract role
    */
   public boolean hasAbstractRole(String rolePrefix, String clientId) {
-    return hasRoleMatching(currentRole ->
-        currentRole.equalsIgnoreCase(rolePrefix + "_" + clientId)
-    );
+    return hasRoleMatching(
+        currentRole -> currentRole.equalsIgnoreCase(rolePrefix + "_" + clientId));
   }
 
   /**
@@ -75,9 +73,7 @@ public class JwtRoleChecker {
       return false;
     }
 
-    return authentication
-        .getAuthorities()
-        .stream()
+    return authentication.getAuthorities().stream()
         .map(GrantedAuthority::getAuthority)
         .map(String::toUpperCase)
         .anyMatch(matcher);
@@ -101,10 +97,7 @@ public class JwtRoleChecker {
    * @return true if it matches, false otherwise
    */
   public boolean hasIdpProvider(IdentityProvider identityProvider) {
-    return JwtPrincipalUtil
-        .getIdentityProvider(getJwt())
-        .equals(identityProvider);
-
+    return JwtPrincipalUtil.getIdentityProvider(getJwt()).equals(identityProvider);
   }
 
   private Jwt getJwt() {

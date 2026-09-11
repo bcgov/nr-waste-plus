@@ -35,7 +35,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Setter
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
-@ToString(callSuper = true, exclude = {"payload", "attemptHistory"})
+@ToString(
+    callSuper = true,
+    exclude = {"payload", "attemptHistory"})
 public class OutboxEventEntity extends AuditableEntity {
 
   @Id

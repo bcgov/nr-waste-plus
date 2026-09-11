@@ -25,7 +25,8 @@ public class BlockCalculationController {
    */
   @GetMapping
   public ResponseEntity<BlockCalculationDto> getLatest(@PathVariable Long blockId) {
-    return service.findLatest(blockId)
+    return service
+        .findLatest(blockId)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
   }

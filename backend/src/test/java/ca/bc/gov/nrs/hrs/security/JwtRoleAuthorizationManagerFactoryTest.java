@@ -134,12 +134,10 @@ class JwtRoleAuthorizationManagerFactoryTest {
       assertNotNull(builtPredicate);
 
       // The predicate upper-cases the input and checks startsWith against role name
-      assertTrue(builtPredicate.test("WASTE_PLUS_VIEWER"),
-          "Should match exact role name");
-      assertTrue(builtPredicate.test("waste_plus_viewer"),
-          "Should match case-insensitively");
-      assertTrue(builtPredicate.test("WASTE_PLUS_VIEWER_12345"),
-          "Should match role name as prefix");
+      assertTrue(builtPredicate.test("WASTE_PLUS_VIEWER"), "Should match exact role name");
+      assertTrue(builtPredicate.test("waste_plus_viewer"), "Should match case-insensitively");
+      assertTrue(
+          builtPredicate.test("WASTE_PLUS_VIEWER_12345"), "Should match role name as prefix");
     }
 
     @SuppressWarnings("unchecked")
@@ -154,10 +152,8 @@ class JwtRoleAuthorizationManagerFactoryTest {
       Predicate<String> builtPredicate = captor.getValue();
       assertNotNull(builtPredicate);
 
-      assertFalse(builtPredicate.test("WASTE_PLUS_ADMIN"),
-          "Should not match a different role");
-      assertFalse(builtPredicate.test("SOME_OTHER_ROLE"),
-          "Should not match unrelated role");
+      assertFalse(builtPredicate.test("WASTE_PLUS_ADMIN"), "Should not match a different role");
+      assertFalse(builtPredicate.test("SOME_OTHER_ROLE"), "Should not match unrelated role");
     }
 
     @SuppressWarnings("unchecked")
@@ -172,12 +168,10 @@ class JwtRoleAuthorizationManagerFactoryTest {
       Predicate<String> builtPredicate = captor.getValue();
       assertNotNull(builtPredicate);
 
-      assertTrue(builtPredicate.test("WASTE_PLUS_VIEWER"),
-          "Should match first role");
-      assertTrue(builtPredicate.test("WASTE_PLUS_ADMIN"),
-          "Should match second role");
-      assertFalse(builtPredicate.test("WASTE_PLUS_SUBMITTER"),
-          "Should not match role not in the list");
+      assertTrue(builtPredicate.test("WASTE_PLUS_VIEWER"), "Should match first role");
+      assertTrue(builtPredicate.test("WASTE_PLUS_ADMIN"), "Should match second role");
+      assertFalse(
+          builtPredicate.test("WASTE_PLUS_SUBMITTER"), "Should not match role not in the list");
     }
   }
 
@@ -347,11 +341,9 @@ class JwtRoleAuthorizationManagerFactoryTest {
         AuthorizationManager<RequestAuthorizationContext> manager = factory.gotIdp(provider);
         AuthorizationResult result = manager.authorize(() -> null, context);
 
-        assertTrue(result.isGranted(),
-            "Should grant access for provider " + provider.name());
+        assertTrue(result.isGranted(), "Should grant access for provider " + provider.name());
         verify(roleChecker).hasIdpProvider(provider);
       }
     }
   }
 }
-

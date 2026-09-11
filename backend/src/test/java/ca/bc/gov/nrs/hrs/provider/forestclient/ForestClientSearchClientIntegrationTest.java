@@ -62,12 +62,7 @@ class ForestClientSearchClientIntegrationTest extends AbstractTestContainerInteg
   @MethodSource("searchClients")
   @DisplayName("Search clients by name, acronym, or number should succeed")
   void fetchClientByName_shouldSucceed(
-      int page,
-      int size,
-      String value,
-      ResponseDefinitionBuilder stub,
-      long expectedSize
-  ) {
+      int page, int size, String value, ResponseDefinitionBuilder stub, long expectedSize) {
 
     clientApiStub.stubFor(get(urlPathEqualTo("/clients/search/by")).willReturn(stub));
 
@@ -79,12 +74,7 @@ class ForestClientSearchClientIntegrationTest extends AbstractTestContainerInteg
   @MethodSource("searchClients")
   @DisplayName("Search clients by list of ids")
   void shouldSearchClientsByIds(
-      int page,
-      int size,
-      String value,
-      ResponseDefinitionBuilder stub,
-      long expectedSize
-  ) {
+      int page, int size, String value, ResponseDefinitionBuilder stub, long expectedSize) {
 
     clientApiStub.stubFor(get(urlPathEqualTo("/clients/search")).willReturn(stub));
 
@@ -94,14 +84,7 @@ class ForestClientSearchClientIntegrationTest extends AbstractTestContainerInteg
 
   private static Stream<Arguments> searchClients() {
     return Stream.of(
-        Arguments.argumentSet(
-            "Circuit Breaker",
-            0,
-            10,
-            "COMPANY",
-            serviceUnavailable(),
-            0
-        ),
+        Arguments.argumentSet("Circuit Breaker", 0, 10, "COMPANY", serviceUnavailable(), 0),
         Arguments.argumentSet(
             "India",
             0,
@@ -109,8 +92,7 @@ class ForestClientSearchClientIntegrationTest extends AbstractTestContainerInteg
             "INDIA",
             okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST)
                 .withHeader(X_TOTAL_COUNT, "1"),
-            1
-        ),
+            1),
         Arguments.argumentSet(
             "Sample BC",
             0,
@@ -118,8 +100,7 @@ class ForestClientSearchClientIntegrationTest extends AbstractTestContainerInteg
             "SAMPLIBC",
             okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST)
                 .withHeader(X_TOTAL_COUNT, "1"),
-            1
-        ),
+            1),
         Arguments.argumentSet(
             "Client number",
             0,
@@ -127,8 +108,7 @@ class ForestClientSearchClientIntegrationTest extends AbstractTestContainerInteg
             "00000001",
             okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST)
                 .withHeader(X_TOTAL_COUNT, "1"),
-            1
-        ),
+            1),
         Arguments.argumentSet(
             "Client number simple",
             0,
@@ -136,9 +116,6 @@ class ForestClientSearchClientIntegrationTest extends AbstractTestContainerInteg
             "1",
             okJson(ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST)
                 .withHeader(X_TOTAL_COUNT, "1"),
-            1
-        )
-    );
+            1));
   }
 }
-

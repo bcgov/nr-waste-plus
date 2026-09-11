@@ -66,8 +66,7 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   @Test
   @DisplayName("Get districts happy Path should Succeed")
   void getDistricts_happyPath_shouldSucceed() throws Exception {
-    CodeDescriptionDto category = new CodeDescriptionDto("DCC",
-        "Cariboo-Chilcotin");
+    CodeDescriptionDto category = new CodeDescriptionDto("DCC", "Cariboo-Chilcotin");
 
     mockMvc
         .perform(
@@ -85,15 +84,15 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   @DisplayName("Get sampling happy Path should Succeed")
   void getSamplingOptions_happyPath_shouldSucceed() throws Exception {
     CodeDescriptionDto category = new CodeDescriptionDto("AGR", "Aggregate");
-    String samplingResponse = """
+    String samplingResponse =
+        """
         [{"code":"AGR","description":"Aggregate"},
          {"code":"BLK","description":"Cutblock"},
          {"code":"OCU","description":"Ocular"}]
         """;
 
     clientApiStub.stubFor(
-        WireMock.get(urlPathEqualTo("/api/codes/samplings"))
-            .willReturn(okJson(samplingResponse)));
+        WireMock.get(urlPathEqualTo("/api/codes/samplings")).willReturn(okJson(samplingResponse)));
 
     mockMvc
         .perform(
@@ -127,5 +126,4 @@ class CodesControllerIntegrationTest extends AbstractTestContainerIntegrationTes
         .andExpect(jsonPath("$[0].description").value(category.description()))
         .andReturn();
   }
-
 }

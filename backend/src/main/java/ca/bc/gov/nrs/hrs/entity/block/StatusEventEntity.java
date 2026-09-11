@@ -18,9 +18,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-/**
- * Append-only lifecycle event for a reporting unit or block.
- */
+/** Append-only lifecycle event for a reporting unit or block. */
 @Entity
 @Table(name = "status_event", schema = "hrs")
 @EntityListeners(AuditingEntityListener.class)

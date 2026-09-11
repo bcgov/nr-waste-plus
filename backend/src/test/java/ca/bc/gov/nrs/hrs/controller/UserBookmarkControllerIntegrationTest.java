@@ -16,23 +16,20 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 @AutoConfigureMockMvc(print = SYSTEM_OUT)
-@WithMockJwt(
-    value = "markbook"
-)
+@WithMockJwt(value = "markbook")
 @DisplayName("Integrated Test | User Bookmark Controller")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestExecutionListeners(
     value = TransactionalTestExecutionListener.class,
-    mergeMode = MERGE_WITH_DEFAULTS
-)
+    mergeMode = MERGE_WITH_DEFAULTS)
 @Transactional
 @Rollback(value = false)
 class UserBookmarkControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
@@ -102,6 +99,4 @@ class UserBookmarkControllerIntegrationTest extends AbstractTestContainerIntegra
         .andExpect(status().isNoContent())
         .andReturn();
   }
-
 }
-

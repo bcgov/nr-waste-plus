@@ -57,46 +57,46 @@ import tools.jackson.databind.json.JsonMapper.Builder;
 /**
  * Global Spring configuration for the application.
  *
- * <p>This configuration class registers several shared beans used across the application,
- * including REST clients for external services and a Jackson ObjectMapper. It also registers
- * reflection hints required for native image builds via {@code @RegisterReflectionForBinding}
- * and enables JPA auditing.</p>
+ * <p>This configuration class registers several shared beans used across the application, including
+ * REST clients for external services and a Jackson ObjectMapper. It also registers reflection hints
+ * required for native image builds via {@code @RegisterReflectionForBinding} and enables JPA
+ * auditing.
  *
  * @since 1.0.0
  */
 @Configuration
 @RegisterReflectionForBinding({
-    ForestClientAutocompleteResultDto.class,
-    ForestClientDto.class,
-    ForestClientLocationDto.class,
-    CodeDescriptionDto.class,
-    CodeNameDto.class,
-    UserPreferenceEntity.class,
-    UserIdentityEntity.class,
-    ForestClientNotFoundException.class,
-    NotFoundGenericException.class,
-    RequestException.class,
-    RetriableException.class,
-    TooManyRequestsException.class,
-    UnretriableException.class,
-    UserNotFoundException.class,
-    ReportingUnitSearchResultDto.class,
-    ReportingUnitSearchParametersDto.class,
-    HttpSecurity.class,
-    ReportingUnitDetailsDto.class,
-    ReportingUnitLegacyDetailsDto.class,
-    DistrictVolumeCreateDto.class,
-    DistrictVolumeDetailDto.class,
-    DistrictVolumeListItemDto.class,
-    TableDataDto.class,
-    InteriorDataDto.class,
-    InteriorZoneDto.class,
-    InteriorDistrictRowDto.class,
-    CoastDataDto.class,
-    CoastSectionDto.class,
-    CoastDistrictRowDto.class,
-    SpeciesCompositionTableDataDto.class,
-    SpeciesCompositionRow.class
+  ForestClientAutocompleteResultDto.class,
+  ForestClientDto.class,
+  ForestClientLocationDto.class,
+  CodeDescriptionDto.class,
+  CodeNameDto.class,
+  UserPreferenceEntity.class,
+  UserIdentityEntity.class,
+  ForestClientNotFoundException.class,
+  NotFoundGenericException.class,
+  RequestException.class,
+  RetriableException.class,
+  TooManyRequestsException.class,
+  UnretriableException.class,
+  UserNotFoundException.class,
+  ReportingUnitSearchResultDto.class,
+  ReportingUnitSearchParametersDto.class,
+  HttpSecurity.class,
+  ReportingUnitDetailsDto.class,
+  ReportingUnitLegacyDetailsDto.class,
+  DistrictVolumeCreateDto.class,
+  DistrictVolumeDetailDto.class,
+  DistrictVolumeListItemDto.class,
+  TableDataDto.class,
+  InteriorDataDto.class,
+  InteriorZoneDto.class,
+  InteriorDistrictRowDto.class,
+  CoastDataDto.class,
+  CoastSectionDto.class,
+  CoastDistrictRowDto.class,
+  SpeciesCompositionTableDataDto.class,
+  SpeciesCompositionRow.class
 })
 @EnableJpaAuditing(auditorAwareRef = "databaseAuditor")
 public class GlobalConfiguration {
@@ -104,20 +104,16 @@ public class GlobalConfiguration {
   /**
    * Builds a {@link RestClient} configured to call the Cognito userInfo endpoint.
    *
-   * <p>The base URL is set to the configured Cognito userInfo URI from
-   * {@link HrsConfiguration}. B3 trace headers are forwarded to Cognito via
-   * the supplied {@link B3HeaderForwarder}. No default Authorization header is
-   * set here — each call supplies its own Bearer token.</p>
+   * <p>The base URL is set to the configured Cognito userInfo URI from {@link HrsConfiguration}. B3
+   * trace headers are forwarded to Cognito via the supplied {@link B3HeaderForwarder}. No default
+   * Authorization header is set here — each call supplies its own Bearer token.
    *
    * @param configuration application configuration providing the Cognito userInfo URI
-   * @param b3Header      request initializer that forwards B3 trace headers
+   * @param b3Header request initializer that forwards B3 trace headers
    * @return a configured {@link RestClient} for the Cognito userInfo endpoint
    */
   @Bean
-  public RestClient cognitoApi(
-      HrsConfiguration configuration,
-      B3HeaderForwarder b3Header
-  ) {
+  public RestClient cognitoApi(HrsConfiguration configuration, B3HeaderForwarder b3Header) {
     return RestClient.builder()
         .baseUrl(configuration.getCognito().getUserinfoUri())
         .requestInitializer(b3Header)
@@ -127,27 +123,22 @@ public class GlobalConfiguration {
   /**
    * Builds a {@link RestClient} configured to call the Forest Client API.
    *
-   * <p>The returned client is configured with the base URL and API key taken
-   * from the supplied {@link HrsConfiguration}. It sets the Content-Type to
-   * {@code application/json} and applies the provided {@link B3HeaderForwarder}
-   * as a request initializer so tracing headers are forwarded to the backend.</p>
+   * <p>The returned client is configured with the base URL and API key taken from the supplied
+   * {@link HrsConfiguration}. It sets the Content-Type to {@code application/json} and applies the
+   * provided {@link B3HeaderForwarder} as a request initializer so tracing headers are forwarded to
+   * the backend.
    *
-   * @param configuration application configuration that provides the target service
-   *                      address and API key
-   * @param b3Header      request initializer that forwards B3 trace headers
+   * @param configuration application configuration that provides the target service address and API
+   *     key
+   * @param b3Header request initializer that forwards B3 trace headers
    * @return a configured {@link RestClient} for the Forest Client API
    */
   @Bean
-  public RestClient forestClientApi(
-      HrsConfiguration configuration,
-      B3HeaderForwarder b3Header
-  ) {
+  public RestClient forestClientApi(HrsConfiguration configuration, B3HeaderForwarder b3Header) {
     return RestClient.builder()
         .baseUrl(configuration.getForestClientApi().getAddress())
-        .defaultHeader("X-API-KEY",
-            configuration.getForestClientApi().getKey())
-        .defaultHeader(HttpHeaders.CONTENT_TYPE,
-            MediaType.APPLICATION_JSON_VALUE)
+        .defaultHeader("X-API-KEY", configuration.getForestClientApi().getKey())
+        .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
         .requestInitializer(b3Header)
         .build();
   }
@@ -155,27 +146,24 @@ public class GlobalConfiguration {
   /**
    * Builds a {@link RestClient} configured to call legacy backend APIs.
    *
-   * <p>This client uses the legacy API base address from {@link HrsConfiguration}
-   * and sets the content type to {@code application/json}. It applies both the
-   * {@link JwtForwarderRequestInitializer} and the {@link B3HeaderForwarder} as
-   * request initializers so that JWT forwarding and tracing headers are propagated
-   * to legacy services.</p>
+   * <p>This client uses the legacy API base address from {@link HrsConfiguration} and sets the
+   * content type to {@code application/json}. It applies both the {@link
+   * JwtForwarderRequestInitializer} and the {@link B3HeaderForwarder} as request initializers so
+   * that JWT forwarding and tracing headers are propagated to legacy services.
    *
    * @param configuration application configuration that provides the legacy API address
-   * @param jwtForwarder  request initializer which forwards JWT credentials
-   * @param b3Header      request initializer that forwards B3 trace headers
+   * @param jwtForwarder request initializer which forwards JWT credentials
+   * @param b3Header request initializer that forwards B3 trace headers
    * @return a configured {@link RestClient} for legacy APIs
    */
   @Bean
   public RestClient legacyApi(
       HrsConfiguration configuration,
       JwtForwarderRequestInitializer jwtForwarder,
-      B3HeaderForwarder b3Header
-  ) {
+      B3HeaderForwarder b3Header) {
     return RestClient.builder()
         .baseUrl(configuration.getLegacyApi().getAddress())
-        .defaultHeader(HttpHeaders.CONTENT_TYPE,
-            MediaType.APPLICATION_JSON_VALUE)
+        .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
         .requestInitializer(jwtForwarder)
         .requestInitializer(b3Header)
         .build();
@@ -184,22 +172,20 @@ public class GlobalConfiguration {
   /**
    * Provides the application's Jackson {@link JsonMapper} instance.
    *
-   * <p>The {@link JsonMapper.Builder} is used to construct and configure the mapper
-   * according to any customizations applied elsewhere in the application context.</p>
+   * <p>The {@link JsonMapper.Builder} is used to construct and configure the mapper according to
+   * any customizations applied elsewhere in the application context.
    *
    * @param builder Jackson builder used to create the mapper
    * @return configured {@link JsonMapper}
    */
   @Bean
   public JsonMapper objectMapper(Builder builder) {
-    return builder
-        .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-        .build();
+    return builder.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS).build();
   }
 
   /**
-   * Exposes the non-annotated save-time formula validation facade as a
-   * Spring bean with explicit parser resource limits.
+   * Exposes the non-annotated save-time formula validation facade as a Spring bean with explicit
+   * parser resource limits.
    *
    * @return configured {@link FormulaValidationService}
    */
@@ -209,8 +195,8 @@ public class GlobalConfiguration {
   }
 
   /**
-   * Explicitly register the global exception handler so it's available even when
-   * component scanning is altered (for example in tests or native-image contexts).
+   * Explicitly register the global exception handler so it's available even when component scanning
+   * is altered (for example in tests or native-image contexts).
    */
   @Bean
   @ConditionalOnMissingBean(GlobalExceptionHandler.class)
@@ -219,14 +205,14 @@ public class GlobalConfiguration {
   }
 
   /**
-   * Customizes Hibernate properties to wrap the pooled {@link DataSource} in a
-   * {@link CorrelationIdConnectionProvider} that sets {@code app.correlation_id}
-   * transaction-scoped via {@code set_config(..., true)} from the current B3 span.
+   * Customizes Hibernate properties to wrap the pooled {@link DataSource} in a {@link
+   * CorrelationIdConnectionProvider} that sets {@code app.correlation_id} transaction-scoped via
+   * {@code set_config(..., true)} from the current B3 span.
    *
-   * <p>The delegate is a {@link DatasourceConnectionProviderImpl} bound to the
-   * Hikari {@link DataSource}; {@link JdbcSettings#CONNECTION_PROVIDER} is set to the
-   * decorating provider so every {@code getConnection()} propagates the trace id with
-   * {@code SELECT set_config('app.correlation_id', ?, true)} (is_local = true).</p>
+   * <p>The delegate is a {@link DatasourceConnectionProviderImpl} bound to the Hikari {@link
+   * DataSource}; {@link JdbcSettings#CONNECTION_PROVIDER} is set to the decorating provider so
+   * every {@code getConnection()} propagates the trace id with {@code SELECT
+   * set_config('app.correlation_id', ?, true)} (is_local = true).
    *
    * @param dataSource the Hikari pooled data source
    * @param tracer Micrometer tracer providing the current span
@@ -239,11 +225,10 @@ public class GlobalConfiguration {
     return hibernateProperties -> {
       DatasourceConnectionProviderImpl delegate = new DatasourceConnectionProviderImpl();
       delegate.setDataSource(dataSource);
-      CorrelationIdConnectionProvider provider = new CorrelationIdConnectionProvider(
-          delegate, tracer);
+      CorrelationIdConnectionProvider provider =
+          new CorrelationIdConnectionProvider(delegate, tracer);
       provider.configure(hibernateProperties);
       hibernateProperties.put(JdbcSettings.CONNECTION_PROVIDER, provider);
     };
   }
-
 }

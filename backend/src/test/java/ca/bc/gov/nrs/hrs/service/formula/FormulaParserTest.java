@@ -9,8 +9,7 @@ import org.junit.jupiter.api.Test;
 
 @DisplayName("Unit Test | Formula parser")
 class FormulaParserTest {
-  private static final FormulaParser PARSER =
-      new FormulaParser(new FormulaParser.Options(20, 100));
+  private static final FormulaParser PARSER = new FormulaParser(new FormulaParser.Options(20, 100));
 
   @DisplayName("Should parse precedence and offsets")
   @Test
@@ -75,9 +74,15 @@ class FormulaParserTest {
     assertThatThrownBy(() -> PARSER.parse("sqrt(4)"))
         .isInstanceOf(FormulaParseException.class)
         .extracting(exception -> ((FormulaParseException) exception).error())
-        .satisfies(error -> assertThat(error).isEqualTo(new FormulaValidationError(
-            FormulaValidationError.Code.UNSUPPORTED_FUNCTION,
-            "Function calls are not supported", 0, 4)));
+        .satisfies(
+            error ->
+                assertThat(error)
+                    .isEqualTo(
+                        new FormulaValidationError(
+                            FormulaValidationError.Code.UNSUPPORTED_FUNCTION,
+                            "Function calls are not supported",
+                            0,
+                            4)));
     assertThatThrownBy(() -> PARSER.parse("1 + @"))
         .isInstanceOf(FormulaParseException.class)
         .extracting(exception -> ((FormulaParseException) exception).error().startOffset())
@@ -112,34 +117,33 @@ class FormulaParserTest {
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new FormulaParser.Options(1, 0))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> PARSER.parse(null))
-        .isInstanceOf(NullPointerException.class);
-    assertThatThrownBy(() -> PARSER.parse("1", null))
-        .isInstanceOf(NullPointerException.class);
+    assertThatThrownBy(() -> PARSER.parse(null)).isInstanceOf(NullPointerException.class);
+    assertThatThrownBy(() -> PARSER.parse("1", null)).isInstanceOf(NullPointerException.class);
   }
 
   @DisplayName("Should reject empty and malformed numbers")
   @Test
   void should_reject_empty_and_malformed_numbers() {
-    assertThatThrownBy(() -> PARSER.parse("   "))
-        .isInstanceOf(FormulaParseException.class);
+    assertThatThrownBy(() -> PARSER.parse("   ")).isInstanceOf(FormulaParseException.class);
     assertThatThrownBy(() -> PARSER.parse("."))
         .isInstanceOf(FormulaParseException.class)
         .extracting(exception -> ((FormulaParseException) exception).error())
-        .isEqualTo(new FormulaValidationError(
-            FormulaValidationError.Code.SYNTAX_ERROR, "Malformed number", 0, 1));
+        .isEqualTo(
+            new FormulaValidationError(
+                FormulaValidationError.Code.SYNTAX_ERROR, "Malformed number", 0, 1));
     assertThatThrownBy(() -> PARSER.parse("12..34"))
         .isInstanceOf(FormulaParseException.class)
         .extracting(exception -> ((FormulaParseException) exception).error())
-        .isEqualTo(new FormulaValidationError(
-            FormulaValidationError.Code.SYNTAX_ERROR, "Malformed number", 0, 6));
+        .isEqualTo(
+            new FormulaValidationError(
+                FormulaValidationError.Code.SYNTAX_ERROR, "Malformed number", 0, 6));
     assertThatThrownBy(() -> PARSER.parse("1.2.3"))
         .isInstanceOf(FormulaParseException.class)
         .extracting(exception -> ((FormulaParseException) exception).error())
-        .isEqualTo(new FormulaValidationError(
-            FormulaValidationError.Code.SYNTAX_ERROR, "Malformed number", 0, 5));
-    assertThatThrownBy(() -> PARSER.parse("1 2"))
-        .isInstanceOf(FormulaParseException.class);
+        .isEqualTo(
+            new FormulaValidationError(
+                FormulaValidationError.Code.SYNTAX_ERROR, "Malformed number", 0, 5));
+    assertThatThrownBy(() -> PARSER.parse("1 2")).isInstanceOf(FormulaParseException.class);
   }
 
   @DisplayName("Should parse all binary operators in conditional mode")
@@ -194,8 +198,7 @@ class FormulaParserTest {
   @Test
   void should_parse_if_function_without_case_sensitivity() {
     for (String functionName : new String[] {"IF", "if", "If", "iF"}) {
-      assertThat(PARSER.parse(functionName + "(1 < 2, 3, 4)"))
-          .isInstanceOf(IfNode.class);
+      assertThat(PARSER.parse(functionName + "(1 < 2, 3, 4)")).isInstanceOf(IfNode.class);
     }
   }
 
@@ -213,11 +216,12 @@ class FormulaParserTest {
   @DisplayName("Should reject malformed if and unsupported functions")
   @Test
   void should_reject_malformed_if_and_unsupported_functions() {
-    for (String expression : new String[] {
-        "IF(1 < 2, 3)", "IF(1 < 2 3, 4)", "IF(1 < 2, 3, 4",
-        "IF(1 < 2, 3, 4, 5)", "IF(1 < 2, 3 4, 5)", "MAX(1, 2)"}) {
-      assertThatThrownBy(() -> PARSER.parse(expression))
-          .isInstanceOf(FormulaParseException.class);
+    for (String expression :
+        new String[] {
+          "IF(1 < 2, 3)", "IF(1 < 2 3, 4)", "IF(1 < 2, 3, 4",
+          "IF(1 < 2, 3, 4, 5)", "IF(1 < 2, 3 4, 5)", "MAX(1, 2)"
+        }) {
+      assertThatThrownBy(() -> PARSER.parse(expression)).isInstanceOf(FormulaParseException.class);
     }
   }
 
@@ -227,15 +231,21 @@ class FormulaParserTest {
     assertThatThrownBy(() -> PARSER.parse("IF(1 < 2 3, 4)"))
         .isInstanceOf(FormulaParseException.class)
         .extracting(exception -> ((FormulaParseException) exception).error())
-        .isEqualTo(new FormulaValidationError(
-            FormulaValidationError.Code.SYNTAX_ERROR,
-            "Expected ',' between IF arguments", 9, 10));
+        .isEqualTo(
+            new FormulaValidationError(
+                FormulaValidationError.Code.SYNTAX_ERROR,
+                "Expected ',' between IF arguments",
+                9,
+                10));
     assertThatThrownBy(() -> PARSER.parse("MAX(1, 2)"))
         .isInstanceOf(FormulaParseException.class)
         .extracting(exception -> ((FormulaParseException) exception).error())
-        .isEqualTo(new FormulaValidationError(
-            FormulaValidationError.Code.UNSUPPORTED_FUNCTION,
-            "Function calls are not supported", 0, 3));
+        .isEqualTo(
+            new FormulaValidationError(
+                FormulaValidationError.Code.UNSUPPORTED_FUNCTION,
+                "Function calls are not supported",
+                0,
+                3));
   }
 
   @DisplayName("Should report missing operands and invalid primary tokens")

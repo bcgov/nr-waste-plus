@@ -10,12 +10,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDataDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeCreateDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDataDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.SpeciesCompositionTableDataDto;
-import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.ConfigType;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
@@ -66,16 +66,8 @@ class SpeciesCompositionServiceTest {
 
     TableData tableData =
         area == Area.INTERIOR
-            ? new TableData(
-                Collections.emptyList(),
-                null,
-                null,
-                Collections.emptyMap())
-            : new TableData(
-                null,
-                Collections.emptyList(),
-                null,
-                Collections.emptyMap());
+            ? new TableData(Collections.emptyList(), null, null, Collections.emptyMap())
+            : new TableData(null, Collections.emptyList(), null, Collections.emptyMap());
 
     entity.setTableData(tableData);
     return entity;
@@ -90,12 +82,10 @@ class SpeciesCompositionServiceTest {
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
     PageRequest pageable = PageRequest.of(0, 10);
 
-    when(districtVolumeRepository.findAllLiveByConfigType(
-            ConfigType.SPECIES_COMPOSITION, pageable))
+    when(districtVolumeRepository.findAllLiveByConfigType(ConfigType.SPECIES_COMPOSITION, pageable))
         .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
-    var result =
-        speciesCompositionService.getSpeciesCompositions(Optional.empty(), pageable);
+    var result = speciesCompositionService.getSpeciesCompositions(Optional.empty(), pageable);
 
     assertThat(result).isNotNull();
     assertThat(result.getTotalElements()).isEqualTo(1);
@@ -104,8 +94,7 @@ class SpeciesCompositionServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "getSpeciesCompositions — should return filtered page when area filter is provided")
+  @DisplayName("getSpeciesCompositions — should return filtered page when area filter is provided")
   void getSpeciesCompositions_returnsFilteredPage_whenAreaProvided() {
 
     DistrictVolumeEntity entity = buildEntity(Area.COASTAL);
@@ -115,10 +104,7 @@ class SpeciesCompositionServiceTest {
             ConfigType.SPECIES_COMPOSITION, Area.COASTAL, pageable))
         .thenReturn(new PageImpl<>(List.of(entity), pageable, 1));
 
-    var result =
-        speciesCompositionService.getSpeciesCompositions(
-            Optional.of("COASTAL"),
-            pageable);
+    var result = speciesCompositionService.getSpeciesCompositions(Optional.of("COASTAL"), pageable);
 
     assertThat(result).isNotNull();
     assertThat(result.getTotalElements()).isEqualTo(1);
@@ -126,8 +112,7 @@ class SpeciesCompositionServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "getSpeciesCompositionById — should return detail DTO when entity found")
+  @DisplayName("getSpeciesCompositionById — should return detail DTO when entity found")
   void getSpeciesCompositionById_returnsDetailDto_whenFound() {
 
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
@@ -135,8 +120,7 @@ class SpeciesCompositionServiceTest {
     when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.SPECIES_COMPOSITION))
         .thenReturn(Optional.of(entity));
 
-    DistrictVolumeDetailDto result =
-        speciesCompositionService.getSpeciesCompositionById(1L);
+    DistrictVolumeDetailDto result = speciesCompositionService.getSpeciesCompositionById(1L);
 
     assertThat(result).isNotNull();
     assertThat(result.id()).isEqualTo(1L);
@@ -144,15 +128,13 @@ class SpeciesCompositionServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "getSpeciesCompositionById — should throw 404 when entity not found")
+  @DisplayName("getSpeciesCompositionById — should throw 404 when entity not found")
   void getSpeciesCompositionById_throws404_whenNotFound() {
 
     when(districtVolumeRepository.findByIdAndConfigType(99L, ConfigType.SPECIES_COMPOSITION))
         .thenReturn(Optional.empty());
 
-    assertThatThrownBy(
-          () -> speciesCompositionService.getSpeciesCompositionById(99L))
+    assertThatThrownBy(() -> speciesCompositionService.getSpeciesCompositionById(99L))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Species composition record not found");
   }
@@ -164,9 +146,7 @@ class SpeciesCompositionServiceTest {
   void createSpeciesComposition_throws400_whenInteriorDataWithCoastalArea() {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
     DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
@@ -177,51 +157,34 @@ class SpeciesCompositionServiceTest {
             interiorData);
 
     assertThatThrownBy(
-          () -> speciesCompositionService.createSpeciesComposition(
-              "TEST_USER",
-              createDto))
+            () -> speciesCompositionService.createSpeciesComposition("TEST_USER", createDto))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining(
-            "Area mismatch: Expected INTERIOR data layout.");
+        .hasMessageContaining("Area mismatch: Expected INTERIOR data layout.");
   }
 
   @Test
   @DisplayName(
-      "createSpeciesComposition — should throw 400 when CoastDataDto used "
-          + "with area=INTERIOR")
+      "createSpeciesComposition — should throw 400 when CoastDataDto used " + "with area=INTERIOR")
   void createSpeciesComposition_throws400_whenCoastalDataWithInteriorArea() {
 
-    CoastDataDto coastData =
-        new CoastDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+    CoastDataDto coastData = new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
 
     DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
-            "INTERIOR",
-            LocalDate.now().plusDays(10),
-            new BigDecimal("1.000"),
-            null,
-            coastData);
+            "INTERIOR", LocalDate.now().plusDays(10), new BigDecimal("1.000"), null, coastData);
 
     assertThatThrownBy(
-          () -> speciesCompositionService.createSpeciesComposition(
-              "TEST_USER",
-              createDto))
+            () -> speciesCompositionService.createSpeciesComposition("TEST_USER", createDto))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining(
-            "Area mismatch: Expected COASTAL data layout.");
+        .hasMessageContaining("Area mismatch: Expected COASTAL data layout.");
   }
 
   @Test
-  @DisplayName(
-      "createSpeciesComposition — should throw 400 when area string is unrecognized")
+  @DisplayName("createSpeciesComposition — should throw 400 when area string is unrecognized")
   void createSpeciesComposition_throws400_whenAreaIsInvalid() {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
     DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
@@ -232,45 +195,31 @@ class SpeciesCompositionServiceTest {
             interiorData);
 
     assertThatThrownBy(
-          () -> speciesCompositionService.createSpeciesComposition(
-              "TEST_USER",
-              createDto))
+            () -> speciesCompositionService.createSpeciesComposition("TEST_USER", createDto))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining(
-            "Invalid area: UNKNOWN_AREA. Must be INTERIOR or COASTAL.");
+        .hasMessageContaining("Invalid area: UNKNOWN_AREA. Must be INTERIOR or COASTAL.");
   }
 
   @Test
-  @DisplayName(
-      "createSpeciesComposition — should throw 400 when tableData payload is missing")
+  @DisplayName("createSpeciesComposition — should throw 400 when tableData payload is missing")
   void createSpeciesComposition_throws400_whenTableDataIsNull() {
 
     DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
-            "INTERIOR",
-            LocalDate.now().plusDays(10),
-            new BigDecimal("1.000"),
-            null,
-            null);
+            "INTERIOR", LocalDate.now().plusDays(10), new BigDecimal("1.000"), null, null);
 
     assertThatThrownBy(
-          () -> speciesCompositionService.createSpeciesComposition(
-              "TEST_USER",
-              createDto))
+            () -> speciesCompositionService.createSpeciesComposition("TEST_USER", createDto))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining(
-            "Invalid or missing table data payload structure.");
+        .hasMessageContaining("Invalid or missing table data payload structure.");
   }
 
   @Test
-  @DisplayName(
-      "createSpeciesComposition — should throw 422 when start date is in the past")
+  @DisplayName("createSpeciesComposition — should throw 422 when start date is in the past")
   void createSpeciesComposition_throws422_whenStartDateIsInPast() {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
     DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
@@ -281,12 +230,9 @@ class SpeciesCompositionServiceTest {
             interiorData);
 
     assertThatThrownBy(
-          () -> speciesCompositionService.createSpeciesComposition(
-              "TEST_USER",
-              createDto))
+            () -> speciesCompositionService.createSpeciesComposition("TEST_USER", createDto))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining(
-            "Start date must be strictly after today.");
+        .hasMessageContaining("Start date must be strictly after today.");
   }
 
   @Test
@@ -296,19 +242,13 @@ class SpeciesCompositionServiceTest {
   void createSpeciesComposition_returnsMappedDto_whenInteriorIsValid() {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
     LocalDate futureDate = LocalDate.now().plusDays(10);
 
-    DistrictVolumeCreateDto createDto =
+    final DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
-            "INTERIOR",
-            futureDate,
-            new BigDecimal("1.150"),
-            null,
-            interiorData);
+            "INTERIOR", futureDate, new BigDecimal("1.150"), null, interiorData);
 
     DistrictVolumeEntity savedEntity = buildEntity(Area.INTERIOR);
     savedEntity.setStartDate(futureDate);
@@ -317,39 +257,30 @@ class SpeciesCompositionServiceTest {
     when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
             ConfigType.SPECIES_COMPOSITION, Area.INTERIOR))
         .thenReturn(Collections.emptyList());
-    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
-        .thenReturn(savedEntity);
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class))).thenReturn(savedEntity);
 
     DistrictVolumeDetailDto result =
-        speciesCompositionService.createSpeciesComposition(
-            "TEST_USER",
-            createDto);
+        speciesCompositionService.createSpeciesComposition("TEST_USER", createDto);
 
     assertThat(result).isNotNull();
     assertThat(result.area()).isEqualTo("INTERIOR");
-    assertThat(result.tableLevelFactor())
-        .isEqualTo(new BigDecimal("1.150"));
+    assertThat(result.tableLevelFactor()).isEqualTo(new BigDecimal("1.150"));
   }
 
   @Test
   @DisplayName(
-      "createSpeciesComposition — should close the existing open-ended row before saving the new row")
+      "createSpeciesComposition — should close the existing open-ended row before saving the new"
+          + " row")
   void createSpeciesComposition_closesExistingOpenEndedRow_beforeSavingNewRow() {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
     LocalDate newStartDate = LocalDate.now().plusDays(20);
 
-    DistrictVolumeCreateDto createDto =
+    final DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
-            "INTERIOR",
-            newStartDate,
-            new BigDecimal("1.150"),
-            null,
-            interiorData);
+            "INTERIOR", newStartDate, new BigDecimal("1.150"), null, interiorData);
 
     DistrictVolumeEntity existingOpenEntry = buildEntity(Area.INTERIOR);
     existingOpenEntry.setStartDate(LocalDate.now().plusDays(5));
@@ -368,9 +299,7 @@ class SpeciesCompositionServiceTest {
         .thenReturn(existingOpenEntry, savedEntity);
 
     DistrictVolumeDetailDto result =
-        speciesCompositionService.createSpeciesComposition(
-            "TEST_USER",
-            createDto);
+        speciesCompositionService.createSpeciesComposition("TEST_USER", createDto);
 
     ArgumentCaptor<DistrictVolumeEntity> saveCaptor =
         ArgumentCaptor.forClass(DistrictVolumeEntity.class);
@@ -378,23 +307,19 @@ class SpeciesCompositionServiceTest {
     verify(districtVolumeRepository)
         .findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
             ConfigType.SPECIES_COMPOSITION, Area.INTERIOR);
-    verify(districtVolumeRepository, times(2))
-        .save(saveCaptor.capture());
+    verify(districtVolumeRepository, times(2)).save(saveCaptor.capture());
 
     List<DistrictVolumeEntity> savedEntities = saveCaptor.getAllValues();
 
     assertThat(savedEntities.get(0)).isSameAs(existingOpenEntry);
-    assertThat(savedEntities.get(0).getEndDate())
-        .isEqualTo(newStartDate.minusDays(1));
+    assertThat(savedEntities.get(0).getEndDate()).isEqualTo(newStartDate.minusDays(1));
 
     assertThat(savedEntities.get(1).getArea()).isEqualTo(Area.INTERIOR);
     assertThat(savedEntities.get(1).getStartDate()).isEqualTo(newStartDate);
     assertThat(savedEntities.get(1).getEndDate()).isNull();
     assertThat(savedEntities.get(1).getCreatedBy()).isEqualTo("TEST_USER");
-    assertThat(savedEntities.get(1).getConfigType())
-        .isEqualTo(ConfigType.SPECIES_COMPOSITION);
-    assertThat(savedEntities.get(1).getTableLevelFactor())
-        .isEqualTo(new BigDecimal("1.150"));
+    assertThat(savedEntities.get(1).getConfigType()).isEqualTo(ConfigType.SPECIES_COMPOSITION);
+    assertThat(savedEntities.get(1).getTableLevelFactor()).isEqualTo(new BigDecimal("1.150"));
 
     assertThat(result.id()).isEqualTo(2L);
     assertThat(result.startDate()).isEqualTo(newStartDate);
@@ -406,19 +331,13 @@ class SpeciesCompositionServiceTest {
   void createSpeciesComposition_throws422_whenStartDateNotAfterExistingOpenEndedRow() {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
     LocalDate existingStartDate = LocalDate.now().plusDays(5);
 
     DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
-            "INTERIOR",
-            existingStartDate,
-            new BigDecimal("1.150"),
-            null,
-            interiorData);
+            "INTERIOR", existingStartDate, new BigDecimal("1.150"), null, interiorData);
 
     DistrictVolumeEntity existingOpenEntry = buildEntity(Area.INTERIOR);
     existingOpenEntry.setStartDate(existingStartDate);
@@ -428,12 +347,9 @@ class SpeciesCompositionServiceTest {
         .thenReturn(List.of(existingOpenEntry));
 
     assertThatThrownBy(
-          () -> speciesCompositionService.createSpeciesComposition(
-              "TEST_USER",
-              createDto))
+            () -> speciesCompositionService.createSpeciesComposition("TEST_USER", createDto))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining(
-            "Start date must be after the most recent existing start date");
+        .hasMessageContaining("Start date must be after the most recent existing start date");
 
     verify(districtVolumeRepository, never()).save(any(DistrictVolumeEntity.class));
   }
@@ -444,17 +360,11 @@ class SpeciesCompositionServiceTest {
   void createSpeciesComposition_throws409_whenMultipleOpenEndedRowsExist() {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
-    DistrictVolumeCreateDto createDto =
+    final DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
-            "INTERIOR",
-            LocalDate.now().plusDays(30),
-            new BigDecimal("1.150"),
-            null,
-            interiorData);
+            "INTERIOR", LocalDate.now().plusDays(30), new BigDecimal("1.150"), null, interiorData);
 
     DistrictVolumeEntity newestOpenEntry = buildEntity(Area.INTERIOR);
     newestOpenEntry.setStartDate(LocalDate.now().plusDays(15));
@@ -468,9 +378,7 @@ class SpeciesCompositionServiceTest {
         .thenReturn(List.of(newestOpenEntry, olderOpenEntry));
 
     assertThatThrownBy(
-          () -> speciesCompositionService.createSpeciesComposition(
-              "TEST_USER",
-              createDto))
+            () -> speciesCompositionService.createSpeciesComposition("TEST_USER", createDto))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining(
             "multiple open-ended species composition records exist for area INTERIOR");
@@ -493,13 +401,9 @@ class SpeciesCompositionServiceTest {
 
     LocalDate futureDate = LocalDate.now().plusDays(10);
 
-    DistrictVolumeCreateDto createDto =
+    final DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
-            "INTERIOR",
-            futureDate,
-            new BigDecimal("1.000"),
-            null,
-            speciesData);
+            "INTERIOR", futureDate, new BigDecimal("1.000"), null, speciesData);
 
     DistrictVolumeEntity savedEntity = buildEntity(Area.INTERIOR);
     savedEntity.setStartDate(futureDate);
@@ -507,13 +411,10 @@ class SpeciesCompositionServiceTest {
     when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
             ConfigType.SPECIES_COMPOSITION, Area.INTERIOR))
         .thenReturn(Collections.emptyList());
-    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
-        .thenReturn(savedEntity);
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class))).thenReturn(savedEntity);
 
     DistrictVolumeDetailDto result =
-        speciesCompositionService.createSpeciesComposition(
-            "TEST_USER",
-            createDto);
+        speciesCompositionService.createSpeciesComposition("TEST_USER", createDto);
 
     assertThat(result).isNotNull();
     assertThat(result.area()).isEqualTo("INTERIOR");
@@ -534,13 +435,9 @@ class SpeciesCompositionServiceTest {
 
     LocalDate futureDate = LocalDate.now().plusDays(10);
 
-    DistrictVolumeCreateDto createDto =
+    final DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
-            "COASTAL",
-            futureDate,
-            new BigDecimal("1.000"),
-            null,
-            speciesData);
+            "COASTAL", futureDate, new BigDecimal("1.000"), null, speciesData);
 
     DistrictVolumeEntity savedEntity = buildEntity(Area.COASTAL);
     savedEntity.setStartDate(futureDate);
@@ -548,13 +445,10 @@ class SpeciesCompositionServiceTest {
     when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
             ConfigType.SPECIES_COMPOSITION, Area.COASTAL))
         .thenReturn(Collections.emptyList());
-    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
-        .thenReturn(savedEntity);
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class))).thenReturn(savedEntity);
 
     DistrictVolumeDetailDto result =
-        speciesCompositionService.createSpeciesComposition(
-            "TEST_USER",
-            createDto);
+        speciesCompositionService.createSpeciesComposition("TEST_USER", createDto);
 
     assertThat(result).isNotNull();
     assertThat(result.area()).isEqualTo("COASTAL");
@@ -565,20 +459,13 @@ class SpeciesCompositionServiceTest {
       "createSpeciesComposition — should save and return mapped DTO for valid COASTAL payload")
   void createSpeciesComposition_returnsMappedDto_whenCoastalIsValid() {
 
-    CoastDataDto coastData =
-        new CoastDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+    CoastDataDto coastData = new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
 
     LocalDate futureDate = LocalDate.now().plusDays(10);
 
-    DistrictVolumeCreateDto createDto =
+    final DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
-            "COASTAL",
-            futureDate,
-            new BigDecimal("1.200"),
-            new BigDecimal("1.500"),
-            coastData);
+            "COASTAL", futureDate, new BigDecimal("1.200"), new BigDecimal("1.500"), coastData);
 
     DistrictVolumeEntity savedEntity = buildEntity(Area.COASTAL);
     savedEntity.setStartDate(futureDate);
@@ -588,36 +475,32 @@ class SpeciesCompositionServiceTest {
     when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
             ConfigType.SPECIES_COMPOSITION, Area.COASTAL))
         .thenReturn(Collections.emptyList());
-    when(districtVolumeRepository.save(
-            any(DistrictVolumeEntity.class)))
-        .thenReturn(savedEntity);
+    when(districtVolumeRepository.save(any(DistrictVolumeEntity.class))).thenReturn(savedEntity);
 
     DistrictVolumeDetailDto result =
-        speciesCompositionService.createSpeciesComposition(
-            "TEST_USER",
-            createDto);
+        speciesCompositionService.createSpeciesComposition("TEST_USER", createDto);
 
     assertThat(result).isNotNull();
     assertThat(result.area()).isEqualTo("COASTAL");
-    assertThat(result.tableLevelFactor())
-        .isEqualTo(new BigDecimal("1.200"));
-    assertThat(result.heliMultiplier())
-        .isEqualTo(new BigDecimal("1.500"));
+    assertThat(result.tableLevelFactor()).isEqualTo(new BigDecimal("1.200"));
+    assertThat(result.heliMultiplier()).isEqualTo(new BigDecimal("1.500"));
   }
 
   @Test
   @DisplayName(
-      "createSpeciesComposition — should insert between existing rows and close predecessor, set endDate on new entity")
+      "createSpeciesComposition — should insert between existing rows and close predecessor, set"
+          + " endDate on new entity")
   void createSpeciesComposition_insertsBetweenRows_setsEndDateOnNewAndClosesPredecessor() {
 
     CoastDataDto coastData = new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
 
-    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
-        "COASTAL",
-        LocalDate.of(2027, Month.JULY, 15),
-        new BigDecimal("1.200"),
-        new BigDecimal("1.500"),
-        coastData);
+    final DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "COASTAL",
+            LocalDate.of(2027, Month.JULY, 15),
+            new BigDecimal("1.200"),
+            new BigDecimal("1.500"),
+            coastData);
 
     // Successor: row starting Aug 1, 2027
     DistrictVolumeEntity successor = buildEntity(Area.COASTAL);
@@ -652,34 +535,43 @@ class SpeciesCompositionServiceTest {
     when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    DistrictVolumeDetailDto result = speciesCompositionService.createSpeciesComposition(
-        "TEST_USER", createDto);
+    DistrictVolumeDetailDto result =
+        speciesCompositionService.createSpeciesComposition("TEST_USER", createDto);
 
     assertThat(result.startDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 15));
-    assertThat(result.endDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 31)); // successor start - 1 day
+    assertThat(result.endDate())
+        .isEqualTo(LocalDate.of(2027, Month.JULY, 31)); // successor start - 1 day
 
     // Verify predecessor was closed
-    verify(districtVolumeRepository).save(argThat(e ->
-        e.getEndDate() != null && e.getEndDate().equals(LocalDate.of(2027, Month.JULY, 14))));
+    verify(districtVolumeRepository)
+        .save(
+            argThat(
+                e ->
+                    e.getEndDate() != null
+                        && e.getEndDate().equals(LocalDate.of(2027, Month.JULY, 14))));
 
     // Verify new entity was saved with endDate = successor.startDate - 1 day = July 31
-    verify(districtVolumeRepository).save(argThat(e ->
-        e.getEndDate() != null && e.getEndDate().equals(LocalDate.of(2027, Month.JULY, 31))));
+    verify(districtVolumeRepository)
+        .save(
+            argThat(
+                e ->
+                    e.getEndDate() != null
+                        && e.getEndDate().equals(LocalDate.of(2027, Month.JULY, 31))));
   }
 
   @Test
-  @DisplayName(
-      "createSpeciesComposition — should insert after all rows when no successor exists")
+  @DisplayName("createSpeciesComposition — should insert after all rows when no successor exists")
   void createSpeciesComposition_insertsAfterAllRows_whenNoSuccessor() {
 
     CoastDataDto coastData = new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
 
-    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
-        "COASTAL",
-        LocalDate.of(2027, Month.JULY, 15),
-        new BigDecimal("1.200"),
-        new BigDecimal("1.500"),
-        coastData);
+    final DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "COASTAL",
+            LocalDate.of(2027, Month.JULY, 15),
+            new BigDecimal("1.200"),
+            new BigDecimal("1.500"),
+            coastData);
 
     // Open-ended predecessor
     DistrictVolumeEntity predecessor = buildEntity(Area.COASTAL);
@@ -701,19 +593,22 @@ class SpeciesCompositionServiceTest {
     when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    DistrictVolumeDetailDto result = speciesCompositionService.createSpeciesComposition(
-        "TEST_USER", createDto);
+    DistrictVolumeDetailDto result =
+        speciesCompositionService.createSpeciesComposition("TEST_USER", createDto);
 
     assertThat(result.startDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 15));
     assertThat(result.endDate()).isNull(); // No successor = open-ended
 
     // Verify predecessor was closed
-    verify(districtVolumeRepository).save(argThat(e ->
-        e.getEndDate() != null && e.getEndDate().equals(LocalDate.of(2027, Month.JULY, 14))));
+    verify(districtVolumeRepository)
+        .save(
+            argThat(
+                e ->
+                    e.getEndDate() != null
+                        && e.getEndDate().equals(LocalDate.of(2027, Month.JULY, 14))));
 
     // Verify new entity was saved as open-ended (endDate = null)
-    verify(districtVolumeRepository).save(argThat(e ->
-        e.getEndDate() == null));
+    verify(districtVolumeRepository).save(argThat(e -> e.getEndDate() == null));
   }
 
   @Test
@@ -723,12 +618,13 @@ class SpeciesCompositionServiceTest {
 
     CoastDataDto coastData = new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
 
-    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
-        "COASTAL",
-        LocalDate.of(2027, Month.JULY, 15),
-        new BigDecimal("1.200"),
-        new BigDecimal("1.500"),
-        coastData);
+    final DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "COASTAL",
+            LocalDate.of(2027, Month.JULY, 15),
+            new BigDecimal("1.200"),
+            new BigDecimal("1.500"),
+            coastData);
 
     // Successor exists (starts Aug 1)
     DistrictVolumeEntity successor = buildEntity(Area.COASTAL);
@@ -757,8 +653,8 @@ class SpeciesCompositionServiceTest {
     when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    DistrictVolumeDetailDto result = speciesCompositionService.createSpeciesComposition(
-        "TEST_USER", createDto);
+    DistrictVolumeDetailDto result =
+        speciesCompositionService.createSpeciesComposition("TEST_USER", createDto);
 
     assertThat(result.startDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 15));
     // successor starts Aug 1, so endDate = July 31
@@ -769,18 +665,18 @@ class SpeciesCompositionServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "createSpeciesComposition — should create open-ended when no existing rows")
+  @DisplayName("createSpeciesComposition — should create open-ended when no existing rows")
   void createSpeciesComposition_createsOpenEnded_whenNoExistingRows() {
 
     CoastDataDto coastData = new CoastDataDto(Collections.emptyList(), Collections.emptyMap());
 
-    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
-        "COASTAL",
-        LocalDate.of(2027, Month.JULY, 15),
-        new BigDecimal("1.200"),
-        new BigDecimal("1.500"),
-        coastData);
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "COASTAL",
+            LocalDate.of(2027, Month.JULY, 15),
+            new BigDecimal("1.200"),
+            new BigDecimal("1.500"),
+            coastData);
 
     when(districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
             ConfigType.SPECIES_COMPOSITION, Area.COASTAL))
@@ -789,8 +685,8 @@ class SpeciesCompositionServiceTest {
     when(districtVolumeRepository.save(any(DistrictVolumeEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    DistrictVolumeDetailDto result = speciesCompositionService.createSpeciesComposition(
-        "TEST_USER", createDto);
+    DistrictVolumeDetailDto result =
+        speciesCompositionService.createSpeciesComposition("TEST_USER", createDto);
 
     assertThat(result.startDate()).isEqualTo(LocalDate.of(2027, Month.JULY, 15));
     assertThat(result.endDate()).isNull(); // Open-ended
@@ -815,15 +711,13 @@ class SpeciesCompositionServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "deleteSpeciesComposition — should throw 404 when record is not found")
+  @DisplayName("deleteSpeciesComposition — should throw 404 when record is not found")
   void deleteSpeciesComposition_throws404_whenNotFound() {
 
     when(districtVolumeRepository.findByIdAndConfigType(99L, ConfigType.SPECIES_COMPOSITION))
         .thenReturn(Optional.empty());
 
-    assertThatThrownBy(
-          () -> speciesCompositionService.deleteSpeciesComposition("TEST_USER", 99L))
+    assertThatThrownBy(() -> speciesCompositionService.deleteSpeciesComposition("TEST_USER", 99L))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Species composition record not found");
 
@@ -831,8 +725,7 @@ class SpeciesCompositionServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "deleteSpeciesComposition — should throw 404 when record is already deleted")
+  @DisplayName("deleteSpeciesComposition — should throw 404 when record is already deleted")
   void deleteSpeciesComposition_throws404_whenAlreadyDeleted() {
 
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
@@ -841,8 +734,7 @@ class SpeciesCompositionServiceTest {
     when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.SPECIES_COMPOSITION))
         .thenReturn(Optional.of(entity));
 
-    assertThatThrownBy(
-          () -> speciesCompositionService.deleteSpeciesComposition("TEST_USER", 1L))
+    assertThatThrownBy(() -> speciesCompositionService.deleteSpeciesComposition("TEST_USER", 1L))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Species composition record not found");
 
@@ -861,8 +753,7 @@ class SpeciesCompositionServiceTest {
     when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.SPECIES_COMPOSITION))
         .thenReturn(Optional.of(entity));
 
-    assertThatThrownBy(
-          () -> speciesCompositionService.deleteSpeciesComposition("TEST_USER", 1L))
+    assertThatThrownBy(() -> speciesCompositionService.deleteSpeciesComposition("TEST_USER", 1L))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Only future-start configurations can be deleted.");
 
@@ -870,8 +761,7 @@ class SpeciesCompositionServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "deleteSpeciesComposition — should throw 422 when record start date is null")
+  @DisplayName("deleteSpeciesComposition — should throw 422 when record start date is null")
   void deleteSpeciesComposition_throws422_whenStartDateNull() {
 
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
@@ -881,8 +771,7 @@ class SpeciesCompositionServiceTest {
     when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.SPECIES_COMPOSITION))
         .thenReturn(Optional.of(entity));
 
-    assertThatThrownBy(
-          () -> speciesCompositionService.deleteSpeciesComposition("TEST_USER", 1L))
+    assertThatThrownBy(() -> speciesCompositionService.deleteSpeciesComposition("TEST_USER", 1L))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Only future-start configurations can be deleted.");
 
@@ -890,8 +779,7 @@ class SpeciesCompositionServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "deleteSpeciesComposition — should throw 422 when record is not open-ended")
+  @DisplayName("deleteSpeciesComposition — should throw 422 when record is not open-ended")
   void deleteSpeciesComposition_throws422_whenNotOpenEnded() {
 
     DistrictVolumeEntity entity = buildEntity(Area.INTERIOR);
@@ -901,8 +789,7 @@ class SpeciesCompositionServiceTest {
     when(districtVolumeRepository.findByIdAndConfigType(1L, ConfigType.SPECIES_COMPOSITION))
         .thenReturn(Optional.of(entity));
 
-    assertThatThrownBy(
-          () -> speciesCompositionService.deleteSpeciesComposition("TEST_USER", 1L))
+    assertThatThrownBy(() -> speciesCompositionService.deleteSpeciesComposition("TEST_USER", 1L))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Only open-ended future configurations can be deleted.");
 
@@ -938,7 +825,6 @@ class SpeciesCompositionServiceTest {
     speciesCompositionService.deleteSpeciesComposition("TEST_USER", 2L);
 
     assertThat(entity.isDeleted()).isTrue();
-    verify(districtVolumeRepository).save(argThat(e ->
-        e.getId() == 1L && e.getEndDate() == null));
+    verify(districtVolumeRepository).save(argThat(e -> e.getId() == 1L && e.getEndDate() == null));
   }
 }

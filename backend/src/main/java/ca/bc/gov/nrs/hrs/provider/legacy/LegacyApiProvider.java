@@ -18,18 +18,13 @@ import org.springframework.stereotype.Component;
 /**
  * Facade provider for calls to the legacy backend API.
  *
- * <p>This class keeps a stable API for service-layer callers while delegating to
- * smaller, capability-focused clients:
- * {@link LegacyCodesClient}, {@link LegacyReportingUnitClient}, and
+ * <p>This class keeps a stable API for service-layer callers while delegating to smaller,
+ * capability-focused clients: {@link LegacyCodesClient}, {@link LegacyReportingUnitClient}, and
  * {@link LegacyMyForestClientClient}.
- * </p>
  *
- * <p>The LegacyApiProvider acts as a single entry point for all legacy API operations,
- * abstracting away the complexity of multiple specialized client components. This facade
- * pattern ensures that service layer code remains decoupled from the underlying
- * implementation details of each client.
- * </p>
- *
+ * <p>The LegacyApiProvider acts as a single entry point for all legacy API operations, abstracting
+ * away the complexity of multiple specialized client components. This facade pattern ensures that
+ * service layer code remains decoupled from the underlying implementation details of each client.
  */
 @Component
 @Observed
@@ -42,13 +37,12 @@ public class LegacyApiProvider {
 
   /**
    * Retrieve district code list from the legacy API.
-   * 
-   * <p>Delegates to {@link LegacyCodesClient} to fetch a list of all available districts.
-   * If the legacy API is unavailable, returns default district codes.
-   * </p>
    *
-   * @return a list of {@link CodeDescriptionDto} containing district codes and descriptions;
-   *         never null, may return default districts if API call fails
+   * <p>Delegates to {@link LegacyCodesClient} to fetch a list of all available districts. If the
+   * legacy API is unavailable, returns default district codes.
+   *
+   * @return a list of {@link CodeDescriptionDto} containing district codes and descriptions; never
+   *     null, may return default districts if API call fails
    */
   public List<CodeDescriptionDto> getDistrictCodes() {
     return codesClient.getDistrictCodes();
@@ -56,13 +50,12 @@ public class LegacyApiProvider {
 
   /**
    * Retrieve sampling codes from the legacy API.
-   * 
-   * <p>Delegates to {@link LegacyCodesClient} to fetch a list of all available sampling codes.
-   * If the legacy API is unavailable, returns an empty list.
-   * </p>
    *
-   * @return a list of {@link CodeDescriptionDto} containing sampling codes and descriptions;
-   *         never null, may be empty if API call fails or no codes are available
+   * <p>Delegates to {@link LegacyCodesClient} to fetch a list of all available sampling codes. If
+   * the legacy API is unavailable, returns an empty list.
+   *
+   * @return a list of {@link CodeDescriptionDto} containing sampling codes and descriptions; never
+   *     null, may be empty if API call fails or no codes are available
    */
   public List<CodeDescriptionDto> getSamplingCodes() {
     return codesClient.getSamplingCodes();
@@ -70,13 +63,12 @@ public class LegacyApiProvider {
 
   /**
    * Retrieve status codes from the legacy API.
-   * 
-   * <p>Delegates to {@link LegacyCodesClient} to fetch a list of all available status codes
-   * for assessment areas. If the legacy API is unavailable, returns an empty list.
-   * </p>
    *
-   * @return a list of {@link CodeDescriptionDto} containing status codes and descriptions;
-   *         never null, may be empty if API call fails or no codes are available
+   * <p>Delegates to {@link LegacyCodesClient} to fetch a list of all available status codes for
+   * assessment areas. If the legacy API is unavailable, returns an empty list.
+   *
+   * @return a list of {@link CodeDescriptionDto} containing status codes and descriptions; never
+   *     null, may be empty if API call fails or no codes are available
    */
   public List<CodeDescriptionDto> getStatusCodes() {
     return codesClient.getStatusCodes();
@@ -85,24 +77,22 @@ public class LegacyApiProvider {
   /**
    * Search reporting units in the legacy API using provided filters and pageable information.
    *
-   * <p>The legacy API responds with a paged payload; the delegated client converts
-   * the content into a {@link Page} of {@link ReportingUnitSearchResultDto}.</p>
+   * <p>The legacy API responds with a paged payload; the delegated client converts the content into
+   * a {@link Page} of {@link ReportingUnitSearchResultDto}.
    *
-   * @param filters  search filters to apply
+   * @param filters search filters to apply
    * @param pageable pageable information to include in the request
    * @return a {@link Page} of {@link ReportingUnitSearchResultDto}
    */
   public Page<ReportingUnitSearchResultDto> searchReportingUnit(
-      ReportingUnitSearchParametersDto filters,
-      Pageable pageable
-  ) {
+      ReportingUnitSearchParametersDto filters, Pageable pageable) {
     return reportingUnitClient.searchReportingUnit(filters, pageable);
   }
 
   /**
    * Retrieve expanded search details for a specific reporting unit and waste assessment area.
    *
-   * @param ruId    the reporting unit ID
+   * @param ruId the reporting unit ID
    * @param wasteAssessmentAreaId the waste assessment area ID
    * @return a {@link ReportingUnitSearchExpandedDto} with expanded details
    */
@@ -113,7 +103,7 @@ public class LegacyApiProvider {
   /**
    * Search for reporting unit users that match a partial user id.
    *
-   * <p>Returns a list of user ids as strings.</p>
+   * <p>Returns a list of user ids as strings.
    *
    * @param userId the search term for user id
    * @return a list of matching user ids
@@ -127,29 +117,25 @@ public class LegacyApiProvider {
    *
    * <p>The legacy API returns a paged JSON structure; this method converts the content field into a
    * {@link Page} of {@link MyForestClientSearchResultDto}.
-   * </p>
    *
-   * @param values   the set of client values to search for
+   * @param values the set of client values to search for
    * @param pageable pageable information to include in the request
    * @return a {@link Page} of {@link MyForestClientSearchResultDto}
    */
   public Page<MyForestClientSearchResultDto> searchMyClients(
-      Set<String> values,
-      Pageable pageable
-  ) {
+      Set<String> values, Pageable pageable) {
     return myForestClientClient.searchMyClients(values, pageable);
   }
 
   /**
    * Retrieve detailed information for a specific reporting unit from the legacy API.
    *
-   * <p>Delegates to {@link LegacyReportingUnitClient} to fetch the reporting unit's
-   * client number, client location code, sampling method, and district information.
-   * </p>
+   * <p>Delegates to {@link LegacyReportingUnitClient} to fetch the reporting unit's client number,
+   * client location code, sampling method, and district information.
    *
    * @param reportingUnitId the unique identifier of the reporting unit to retrieve
-   * @return a {@link ReportingUnitLegacyDetailsDto} containing the reporting unit's
-   *         legacy details; never null
+   * @return a {@link ReportingUnitLegacyDetailsDto} containing the reporting unit's legacy details;
+   *     never null
    */
   public ReportingUnitLegacyDetailsDto getReportingUnitDetails(Long reportingUnitId) {
     return reportingUnitClient.getReportingUnitDetails(reportingUnitId);

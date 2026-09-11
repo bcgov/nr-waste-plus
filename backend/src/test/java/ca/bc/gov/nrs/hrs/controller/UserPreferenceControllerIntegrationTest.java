@@ -18,10 +18,10 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,8 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestExecutionListeners(
     value = TransactionalTestExecutionListener.class,
-    mergeMode = MERGE_WITH_DEFAULTS
-)
+    mergeMode = MERGE_WITH_DEFAULTS)
 @Transactional
 @Rollback(value = false)
 class UserPreferenceControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
@@ -59,7 +58,8 @@ class UserPreferenceControllerIntegrationTest extends AbstractTestContainerInteg
   @DisplayName("User set the preferences with some data")
   @Order(2)
   void userSetThePreferencesWithSomeData() throws Exception {
-    String preferencesJson = """
+    String preferencesJson =
+        """
         {
           "theme": "dark",
           "notifications": true,
@@ -93,5 +93,4 @@ class UserPreferenceControllerIntegrationTest extends AbstractTestContainerInteg
         .andExpect(jsonPath("$.itemsPerPage").value(20))
         .andReturn();
   }
-
 }

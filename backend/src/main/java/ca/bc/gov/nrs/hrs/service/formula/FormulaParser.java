@@ -33,8 +33,11 @@ public final class FormulaParser {
     Objects.requireNonNull(source, "source");
     Objects.requireNonNull(mode, "mode");
     if (source.length() > options.maximumExpressionLength()) {
-      throw error(FormulaValidationError.Code.EXCESSIVE_COMPLEXITY,
-          "Formula exceeds the maximum expression length", 0, source.length());
+      throw error(
+          FormulaValidationError.Code.EXCESSIVE_COMPLEXITY,
+          "Formula exceeds the maximum expression length",
+          0,
+          source.length());
     }
     Parser parser = new Parser(source, mode);
     FormulaNode result = parser.expression(0, mode == FormulaParseMode.CONDITIONAL);
@@ -45,8 +48,8 @@ public final class FormulaParser {
     return result;
   }
 
-  private FormulaParseException error(FormulaValidationError.Code code, String message,
-      int start, int end) {
+  private FormulaParseException error(
+      FormulaValidationError.Code code, String message, int start, int end) {
     return new FormulaParseException(new FormulaValidationError(code, message, start, end));
   }
 
@@ -65,13 +68,14 @@ public final class FormulaParser {
       return binaryExpression(depth, 0, allowComparison);
     }
 
-    private FormulaNode binaryExpression(int depth, int minimumPrecedence,
-        boolean allowComparison) {
+    private FormulaNode binaryExpression(
+        int depth, int minimumPrecedence, boolean allowComparison) {
       FormulaNode left = unaryExpression(depth + 1);
       while (true) {
         skipWhitespace();
         BinaryOperator operator = operatorAt(position);
-        if (operator == null || operator.precedence() < minimumPrecedence
+        if (operator == null
+            || operator.precedence() < minimumPrecedence
             || (!allowComparison && operator.isComparison())) {
           return left;
         }
@@ -88,8 +92,8 @@ public final class FormulaParser {
       skipWhitespace();
       if (peek('+') || peek('-')) {
         int start = position;
-        UnaryOperator operator = source.charAt(position++) == '+'
-            ? UnaryOperator.PLUS : UnaryOperator.MINUS;
+        UnaryOperator operator =
+            source.charAt(position++) == '+' ? UnaryOperator.PLUS : UnaryOperator.MINUS;
         FormulaNode operand = unaryExpression(depth + 1);
         return new UnaryOperationNode(operator, operand, start, operand.endOffset());
       }
@@ -104,8 +108,8 @@ public final class FormulaParser {
       }
       if (peek('(')) {
         position++;
-        final FormulaNode node = binaryExpression(depth + 1, 0,
-            mode == FormulaParseMode.CONDITIONAL);
+        final FormulaNode node =
+            binaryExpression(depth + 1, 0, mode == FormulaParseMode.CONDITIONAL);
         skipWhitespace();
         if (!peek(')')) {
           fail(FormulaValidationError.Code.SYNTAX_ERROR, "Expected ')'");
@@ -126,8 +130,8 @@ public final class FormulaParser {
     private FormulaNode number() {
       final int start = position;
       boolean digits = false;
-      while (!atEnd() && (Character.isDigit(source.charAt(position))
-          || source.charAt(position) == '.')) {
+      while (!atEnd()
+          && (Character.isDigit(source.charAt(position)) || source.charAt(position) == '.')) {
         if (Character.isDigit(source.charAt(position))) {
           digits = true;
         }
@@ -148,8 +152,10 @@ public final class FormulaParser {
     private FormulaNode identifier(int depth) {
       position++;
       int start = position - 1;
-      while (!atEnd() && (Character.isLetterOrDigit(source.charAt(position))
-          || source.charAt(position) == '_' || source.charAt(position) == '.')) {
+      while (!atEnd()
+          && (Character.isLetterOrDigit(source.charAt(position))
+              || source.charAt(position) == '_'
+              || source.charAt(position) == '.')) {
         position++;
       }
       String name = source.substring(start, position);
@@ -159,8 +165,11 @@ public final class FormulaParser {
         if ("IF".equalsIgnoreCase(name)) {
           return ifExpression(start, depth);
         }
-        failAt(FormulaValidationError.Code.UNSUPPORTED_FUNCTION,
-            "Function calls are not supported", start, position);
+        failAt(
+            FormulaValidationError.Code.UNSUPPORTED_FUNCTION,
+            "Function calls are not supported",
+            start,
+            position);
       }
       return new VariableReferenceNode(name, start, tokenEnd);
     }
@@ -189,18 +198,19 @@ public final class FormulaParser {
     }
 
     private BinaryOperator operatorAt(int offset) {
-      for (BinaryOperator candidate : new BinaryOperator[] {
-          BinaryOperator.LESS_THAN_OR_EQUAL,
-          BinaryOperator.GREATER_THAN_OR_EQUAL,
-          BinaryOperator.EQUAL,
-          BinaryOperator.NOT_EQUAL,
-          BinaryOperator.ADD,
-          BinaryOperator.SUBTRACT,
-          BinaryOperator.MULTIPLY,
-          BinaryOperator.DIVIDE,
-          BinaryOperator.LESS_THAN,
-          BinaryOperator.GREATER_THAN
-      }) {
+      for (BinaryOperator candidate :
+          new BinaryOperator[] {
+            BinaryOperator.LESS_THAN_OR_EQUAL,
+            BinaryOperator.GREATER_THAN_OR_EQUAL,
+            BinaryOperator.EQUAL,
+            BinaryOperator.NOT_EQUAL,
+            BinaryOperator.ADD,
+            BinaryOperator.SUBTRACT,
+            BinaryOperator.MULTIPLY,
+            BinaryOperator.DIVIDE,
+            BinaryOperator.LESS_THAN,
+            BinaryOperator.GREATER_THAN
+          }) {
         if (source.startsWith(candidate.symbol(), offset)) {
           return candidate;
         }
@@ -210,7 +220,8 @@ public final class FormulaParser {
 
     private void checkDepth(int depth) {
       if (depth > options.maximumAstDepth()) {
-        fail(FormulaValidationError.Code.EXCESSIVE_COMPLEXITY,
+        fail(
+            FormulaValidationError.Code.EXCESSIVE_COMPLEXITY,
             "Formula exceeds the maximum AST depth");
       }
     }
