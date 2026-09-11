@@ -21,6 +21,9 @@ export function useTableToolbar<T>(id: string, headers: TableHeaderType<T, Neste
   const [tableHeaders, setTableHeaders] = useState(headers);
   const tableHeadersRef = useRef<string[] | undefined>(undefined);
   const { userPreference, updatePreferences, isLoaded } = usePreference();
+  // Tracks whether the initial preference load has been applied. Persistence
+  // only fires after this point, preventing mount-time saves.
+  const initializedRef = useRef(false);
 
   // Apply the saved column selection once preferences have loaded. Until then we
   // keep the default `headers` so we never overwrite stored selections.
@@ -45,6 +48,7 @@ export function useTableToolbar<T>(id: string, headers: TableHeaderType<T, Neste
         selected: nextIds.includes(getHeaderId(header)),
       })),
     );
+    initializedRef.current = true;
   }, [id, headers, isLoaded, userPreference]);
 
   const onToggleHeader = (headerId: string) => {
@@ -70,13 +74,14 @@ export function useTableToolbar<T>(id: string, headers: TableHeaderType<T, Neste
     });
   };
 
-  // Persist the selection, but only after it has been initialized from
-  // preferences so we never overwrite stored selections with defaults.
-  // Never persist an empty column set — an empty saved set can be produced
-  // by stale defaults (e.g., when headers omitted `selected: true`) and
-  // would permanently hide all columns from tables without a toolbar.
+  // Persist the selection only after initialization and only when the user
+  // explicitly toggles a column. Skips mount-time changes entirely.
   useEffect(() => {
-    if (!tableHeadersRef.current || tableHeadersRef.current.length === 0) {
+    if (
+      !initializedRef.current ||
+      !tableHeadersRef.current ||
+      tableHeadersRef.current.length === 0
+    ) {
       return;
     }
     updatePreferences({ tableHeaders: { [id]: [...new Set(tableHeadersRef.current)] } });

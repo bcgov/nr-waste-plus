@@ -1,29 +1,31 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import isEqual from 'lodash/isEqual';
 import mergeWith from 'lodash/mergeWith';
-import { type FC, useCallback, useEffect, useMemo, useRef } from 'react';
+import { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { PreferenceContext, type PreferenceProviderProps } from './PreferenceContext';
 import { type UserPreference } from './types';
-import { initialValue, loadUserPreference, saveUserPreference } from './utils'; // initialValue used for fallback only
+import { initialValue, loadUserPreference, saveUserPreference } from './utils';
 
 import { queryKeys } from '@/config/react-query/queryKeys';
 
 export const PreferenceProvider: FC<PreferenceProviderProps> = ({ children }) => {
-  const { isFetched, data, refetch } = useQuery({
+  const { isFetched, data } = useQuery({
     queryKey: queryKeys.preference.userPreference(),
-    queryFn: async () => await loadUserPreference(),
-    enabled: false,
+    queryFn: loadUserPreference,
   });
 
-  // Tracks the latest locally-known preference state, kept in sync synchronously on
-  // every `updatePreferences` call, so rapid successive updates always merge on top
-  // of each other instead of the possibly-stale cached query `data` (which may not
-  // yet reflect an earlier save that hasn't finished its round trip).
-  const latestKnownPreference = useRef<UserPreference | undefined>(data);
+  // Ref tracks the latest preference for merge logic inside updatePreferences.
+  // Using a ref keeps updatePreferences stable (no recreation on every change),
+  // preventing render loops when effects depend on the callback.
+  const latestKnownRef = useRef<UserPreference | undefined>(data);
   useEffect(() => {
-    latestKnownPreference.current = data;
+    latestKnownRef.current = data;
   }, [data]);
+
+  // State drives the context value so consumers re-render when preferences change.
+  // Updated synchronously in updatePreferences for instant UI feedback.
+  const [livePreference, setLivePreference] = useState<UserPreference | undefined>(data);
 
   const { mutate, isPending } = useMutation({
     // Mutations sharing a `scope.id` are queued by TanStack Query and run strictly
@@ -32,7 +34,9 @@ export const PreferenceProvider: FC<PreferenceProviderProps> = ({ children }) =>
     // newer one could silently overwrite the newer selection server-side.
     scope: { id: 'user-preference-save' },
     mutationFn: saveUserPreference,
-    onSuccess: () => refetch(),
+    // No refetch after save — livePreference is updated synchronously in
+    // updatePreferences so the UI is immediately consistent. The next background
+    // refetch (stale time / window focus) will reconcile with the server.
     onError: (error: Error) => {
       console.error('Failed to save user preference:', error);
     },
@@ -48,11 +52,11 @@ export const PreferenceProvider: FC<PreferenceProviderProps> = ({ children }) =>
         }
       };
 
-      // Merge against the latest known state, which is always kept up to date
+      // Merge against the latest known state (ref), which is always kept up to date
       // regardless of whether a save is currently in flight, so rapid successive
       // updates always build on top of each other instead of the possibly-stale
       // cached query `data`.
-      const base = latestKnownPreference.current ?? data;
+      const base = latestKnownRef.current ?? data;
       const updatedPreferences = mergeWith({}, base, preference, customizer) as UserPreference;
 
       // Check if preference actually contains changes compared to the state we're
@@ -65,23 +69,21 @@ export const PreferenceProvider: FC<PreferenceProviderProps> = ({ children }) =>
         return;
       }
 
-      latestKnownPreference.current = updatedPreferences;
+      // Update ref (for merge logic) and state (for context consumers) synchronously
+      latestKnownRef.current = updatedPreferences;
+      setLivePreference(updatedPreferences);
       mutate(updatedPreferences);
     },
     [mutate, isPending, data],
   );
 
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
   const contextValue = useMemo(
     () => ({
-      userPreference: data ?? initialValue,
+      userPreference: livePreference ?? initialValue,
       updatePreferences,
       isLoaded: isFetched,
     }),
-    [data, updatePreferences, isFetched],
+    [livePreference, updatePreferences, isFetched],
   );
 
   return <PreferenceContext.Provider value={contextValue}>{children}</PreferenceContext.Provider>;
