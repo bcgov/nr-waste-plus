@@ -16,34 +16,27 @@ import org.springframework.stereotype.Repository;
 /**
  * Repository for managing {@link DistrictVolumeEntity} records.
  *
- * <p>Provides standard JPA operations together with custom queries used by
- * district volume and species composition business logic. All queries filter
- * out soft-deleted records (deleted = FALSE).
+ * <p>Provides standard JPA operations together with custom queries used by district volume and
+ * species composition business logic. All queries filter out soft-deleted records (deleted =
+ * FALSE).
  */
 @Repository
-public interface DistrictVolumeRepository
-    extends JpaRepository<DistrictVolumeEntity, Long> {
+public interface DistrictVolumeRepository extends JpaRepository<DistrictVolumeEntity, Long> {
 
-  /**
-   * Finds the most recent live entry for the specified config type and area.
-   */
-  @Query("SELECT d FROM DistrictVolumeEntity d "
-      + "WHERE d.configType = :configType AND d.area = :area "
-      + "AND d.deleted = FALSE ORDER BY d.startDate DESC")
+  /** Finds the most recent live entry for the specified config type and area. */
+  @Query(
+      "SELECT d FROM DistrictVolumeEntity d "
+          + "WHERE d.configType = :configType AND d.area = :area "
+          + "AND d.deleted = FALSE ORDER BY d.startDate DESC")
   Optional<DistrictVolumeEntity> findTopByConfigTypeAndAreaOrderByStartDateDesc(
       @Param("configType") ConfigType configType, @Param("area") Area area);
 
-  /**
-   * Finds the single most recent live entry for the specified config type and area.
-   */
+  /** Finds the single most recent live entry for the specified config type and area. */
   Optional<DistrictVolumeEntity> findTop1ByConfigTypeAndAreaAndDeletedFalseOrderByStartDateDesc(
       ConfigType configType, Area area);
 
-  /**
-   * Retrieves a paginated list of live records filtered by area (Warning: mixes ConfigTypes).
-   */
-  @Query("SELECT d FROM DistrictVolumeEntity d "
-      + "WHERE d.area = :area AND d.deleted = FALSE")
+  /** Retrieves a paginated list of live records filtered by area (Warning: mixes ConfigTypes). */
+  @Query("SELECT d FROM DistrictVolumeEntity d " + "WHERE d.area = :area AND d.deleted = FALSE")
   Page<DistrictVolumeEntity> findByArea(@Param("area") Area area, Pageable pageable);
 
   /**
@@ -54,16 +47,14 @@ public interface DistrictVolumeRepository
    * @param pageable pagination and sorting information
    * @return paginated list of matching live entities
    */
-  @Query("SELECT d FROM DistrictVolumeEntity d "
-      + "WHERE d.configType = :configType AND d.area = :area "
-      + "AND d.deleted = FALSE")
+  @Query(
+      "SELECT d FROM DistrictVolumeEntity d "
+          + "WHERE d.configType = :configType AND d.area = :area "
+          + "AND d.deleted = FALSE")
   Page<DistrictVolumeEntity> findAllLiveByConfigTypeAndArea(
-      @Param("configType") ConfigType configType, @Param("area") Area area,
-      Pageable pageable);
+      @Param("configType") ConfigType configType, @Param("area") Area area, Pageable pageable);
 
-  /**
-   * Retrieves the currently active live record for the specified config type and area.
-   */
+  /** Retrieves the currently active live record for the specified config type and area. */
   @Query(
       "SELECT d FROM DistrictVolumeEntity d "
           + "WHERE d.configType = :configType AND d.area = :area "
@@ -75,11 +66,12 @@ public interface DistrictVolumeRepository
       @Param("currentDate") LocalDate currentDate);
 
   /** Finds the configuration effective on a historical or future date. */
-  @Query("SELECT d FROM DistrictVolumeEntity d "
-      + "WHERE d.configType = :configType AND d.area = :area "
-      + "AND d.deleted = FALSE AND d.startDate <= :effectiveDate "
-      + "AND (d.endDate IS NULL OR d.endDate >= :effectiveDate) "
-      + "ORDER BY d.startDate DESC")
+  @Query(
+      "SELECT d FROM DistrictVolumeEntity d "
+          + "WHERE d.configType = :configType AND d.area = :area "
+          + "AND d.deleted = FALSE AND d.startDate <= :effectiveDate "
+          + "AND (d.endDate IS NULL OR d.endDate >= :effectiveDate) "
+          + "ORDER BY d.startDate DESC")
   Optional<DistrictVolumeEntity> findEffectiveByConfigTypeAndArea(
       @Param("configType") ConfigType configType,
       @Param("area") Area area,
@@ -96,15 +88,13 @@ public interface DistrictVolumeRepository
           + "AND (d.endDate IS NULL OR d.endDate >= :currentDate) "
           + "ORDER BY d.startDate DESC")
   List<DistrictVolumeEntity> findActiveByArea(
-      @Param("area") Area area,
-      @Param("currentDate") LocalDate currentDate);
+      @Param("area") Area area, @Param("currentDate") LocalDate currentDate);
 
-  /**
-   * Finds all live open-ended entries for the specified area (Warning: mixes ConfigTypes).
-   */
-  @Query("SELECT d FROM DistrictVolumeEntity d "
-      + "WHERE d.area = :area AND d.endDate IS NULL AND d.deleted = FALSE "
-      + "ORDER BY d.startDate DESC")
+  /** Finds all live open-ended entries for the specified area (Warning: mixes ConfigTypes). */
+  @Query(
+      "SELECT d FROM DistrictVolumeEntity d "
+          + "WHERE d.area = :area AND d.endDate IS NULL AND d.deleted = FALSE "
+          + "ORDER BY d.startDate DESC")
   List<DistrictVolumeEntity> findByAreaAndEndDateIsNullOrderByStartDateDesc(
       @Param("area") Area area);
 
@@ -115,49 +105,46 @@ public interface DistrictVolumeRepository
    * @param area area filter
    * @return ordered list of live open-ended entries
    */
-  @Query("SELECT d FROM DistrictVolumeEntity d "
-      + "WHERE d.configType = :configType AND d.area = :area "
-      + "AND d.endDate IS NULL AND d.deleted = FALSE "
-      + "ORDER BY d.startDate DESC")
+  @Query(
+      "SELECT d FROM DistrictVolumeEntity d "
+          + "WHERE d.configType = :configType AND d.area = :area "
+          + "AND d.endDate IS NULL AND d.deleted = FALSE "
+          + "ORDER BY d.startDate DESC")
   List<DistrictVolumeEntity> findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
       @Param("configType") ConfigType configType, @Param("area") Area area);
 
-  /**
-   * Retrieves a paginated list of live records filtered by config type.
-   */
-  @Query("SELECT d FROM DistrictVolumeEntity d "
-      + "WHERE d.configType = :configType AND d.deleted = FALSE")
+  /** Retrieves a paginated list of live records filtered by config type. */
+  @Query(
+      "SELECT d FROM DistrictVolumeEntity d "
+          + "WHERE d.configType = :configType AND d.deleted = FALSE")
   Page<DistrictVolumeEntity> findAllLiveByConfigType(
       @Param("configType") ConfigType configType, Pageable pageable);
 
-  /**
-   * Retrieves a single live record by id, scoped to the specified config type.
-   */
-  @Query("SELECT d FROM DistrictVolumeEntity d "
-      + "WHERE d.id = :id AND d.configType = :configType AND d.deleted = FALSE")
+  /** Retrieves a single live record by id, scoped to the specified config type. */
+  @Query(
+      "SELECT d FROM DistrictVolumeEntity d "
+          + "WHERE d.id = :id AND d.configType = :configType AND d.deleted = FALSE")
   Optional<DistrictVolumeEntity> findByIdAndConfigType(
       @Param("id") Long id, @Param("configType") ConfigType configType);
 
-  /**
-   * Finds the first live row after the supplied start date.
-   */
-  @Query("SELECT d FROM DistrictVolumeEntity d "
-      + "WHERE d.configType = :configType AND d.area = :area "
-      + "AND d.deleted = FALSE AND d.startDate > :startDate "
-      + "ORDER BY d.startDate ASC")
+  /** Finds the first live row after the supplied start date. */
+  @Query(
+      "SELECT d FROM DistrictVolumeEntity d "
+          + "WHERE d.configType = :configType AND d.area = :area "
+          + "AND d.deleted = FALSE AND d.startDate > :startDate "
+          + "ORDER BY d.startDate ASC")
   List<DistrictVolumeEntity> findFirstLiveAfter(
       @Param("configType") ConfigType configType,
       @Param("area") Area area,
       @Param("startDate") LocalDate startDate,
       Pageable pageable);
 
-  /**
-   * Finds the most recent live row before the supplied start date.
-   */
-  @Query("SELECT d FROM DistrictVolumeEntity d "
-      + "WHERE d.configType = :configType AND d.area = :area "
-      + "AND d.deleted = FALSE AND d.startDate < :startDate "
-      + "ORDER BY d.startDate DESC")
+  /** Finds the most recent live row before the supplied start date. */
+  @Query(
+      "SELECT d FROM DistrictVolumeEntity d "
+          + "WHERE d.configType = :configType AND d.area = :area "
+          + "AND d.deleted = FALSE AND d.startDate < :startDate "
+          + "ORDER BY d.startDate DESC")
   List<DistrictVolumeEntity> findFirstLiveBefore(
       @Param("configType") ConfigType configType,
       @Param("area") Area area,

@@ -6,8 +6,8 @@ import java.util.List;
 /**
  * DTO representing an expanded view of a reporting unit search result.
  *
- * <p>This immutable record contains detailed information about a reporting unit
- * that may be useful for detailed listings or reports.</p>
+ * <p>This immutable record contains detailed information about a reporting unit that may be useful
+ * for detailed listings or reports.
  *
  * @param id the unique identifier of the reporting unit
  * @param licenseNo the license number associated with the reporting unit
@@ -17,8 +17,8 @@ import java.util.List;
  * @param multiMark indicates if the reporting unit has multiple marks
  * @param netArea the net area of the reporting unit
  * @param submitter the submitter of the reporting unit
- * @param attachment an attachment associated with the reporting unit represented
- *                   as a {@link CodeDescriptionDto}
+ * @param attachment an attachment associated with the reporting unit represented as a {@link
+ *     CodeDescriptionDto}
  * @param comments any comments related to the reporting unit
  * @param totalBlocks the total number of blocks in the reporting unit
  */
@@ -37,8 +37,4 @@ public record ReportingUnitSearchExpandedDto(
     CodeDescriptionDto attachment,
     String comments,
     Long totalBlocks,
-    Long totalChildren
-) {
-
-}
-
+    Long totalChildren) {}

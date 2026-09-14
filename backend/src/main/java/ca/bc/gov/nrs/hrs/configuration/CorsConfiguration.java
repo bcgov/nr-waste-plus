@@ -14,17 +14,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 /**
  * Web MVC Cross-Origin Resource Sharing (CORS) configuration.
  *
- * <p>This configuration reads the frontend URL(s) and CORS policy from
- * {@link HrsConfiguration} and registers CORS mappings for application API endpoints and the
- * actuator endpoints.</p>
+ * <p>This configuration reads the frontend URL(s) and CORS policy from {@link HrsConfiguration} and
+ * registers CORS mappings for application API endpoints and the actuator endpoints.
  *
- * <p>Behavior summary:</p>
+ * <p>Behavior summary:
+ *
  * <ul>
- *   <li><b>/api/**</b> - allowed origins come from the configured frontend URL(s);
- *       allowed methods, headers, exposed headers, max age and credentials are
- *       taken from the configured CORS settings (credentials are allowed).</li>
- *   <li><b>/actuator/**</b> - allows any origin for GET requests and does not
- *       allow credentials.</li>
+ *   <li><b>/api/**</b> - allowed origins come from the configured frontend URL(s); allowed methods,
+ *       headers, exposed headers, max age and credentials are taken from the configured CORS
+ *       settings (credentials are allowed).
+ *   <li><b>/actuator/**</b> - allows any origin for GET requests and does not allow credentials.
  * </ul>
  *
  * @since 1.0.0
@@ -39,13 +38,12 @@ public class CorsConfiguration implements WebMvcConfigurer {
   /**
    * Configure CORS mappings used by Spring MVC.
    *
-   * <p>The method reads the frontend URL from {@code configuration.getFrontend().getUrl()}.
-   * If the URL contains commas it will be split into multiple allowed origins. The resulting list
-   * is applied to the {@code /api/**} mapping
-   * </p>
+   * <p>The method reads the frontend URL from {@code configuration.getFrontend().getUrl()}. If the
+   * URL contains commas it will be split into multiple allowed origins. The resulting list is
+   * applied to the {@code /api/**} mapping
    *
-   * <p>Note: actuator endpoints are registered separately to allow any origin
-   * for safe read-only GET access.</p>
+   * <p>Note: actuator endpoints are registered separately to allow any origin for safe read-only
+   * GET access.
    *
    * @param registry the {@link CorsRegistry} to configure; must not be null
    */
@@ -54,10 +52,10 @@ public class CorsConfiguration implements WebMvcConfigurer {
     var frontendConfig = configuration.getFrontend();
     var cors = frontendConfig.getCors();
     String frontendUrl = frontendConfig.getUrl();
-    Set<String> allowedOrigins = Optional
-        .ofNullable(frontendConfig.getCors().getOrigins())
-        .map(LinkedHashSet::new) // preserve order and remove duplicates
-        .orElse(new LinkedHashSet<>());
+    Set<String> allowedOrigins =
+        Optional.ofNullable(frontendConfig.getCors().getOrigins())
+            .map(LinkedHashSet::new) // preserve order and remove duplicates
+            .orElse(new LinkedHashSet<>());
 
     if (StringUtils.isNotBlank(frontendUrl)) {
       if (frontendUrl.contains(",")) {
@@ -78,7 +76,8 @@ public class CorsConfiguration implements WebMvcConfigurer {
         .maxAge(cors.getAge().getSeconds())
         .allowCredentials(true);
 
-    registry.addMapping("/actuator/**")
+    registry
+        .addMapping("/actuator/**")
         .allowedOrigins("*")
         .allowedMethods("GET")
         .allowedHeaders("*")

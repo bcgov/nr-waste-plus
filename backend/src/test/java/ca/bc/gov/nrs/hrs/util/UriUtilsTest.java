@@ -22,34 +22,21 @@ class UriUtilsTest {
   @DisplayName("building multi value map")
   void shouldBuildMultiValue(List<String> values, List<String> results) {
     MapAssert<String, List<String>> assertion =
-        assertThat(UriUtils.buildMultiValueQueryParam("test", values))
-            .isNotNull();
+        assertThat(UriUtils.buildMultiValueQueryParam("test", values)).isNotNull();
 
     if (results == null || results.isEmpty()) {
       assertion.isEmpty();
     } else {
-      assertion
-          .isNotEmpty()
-          .hasSize(1)
-          .hasFieldOrPropertyWithValue("test", results);
-
+      assertion.isNotEmpty().hasSize(1).hasFieldOrPropertyWithValue("test", results);
     }
-
   }
 
   @ParameterizedTest
   @MethodSource("buildPageableQueryParam")
   @DisplayName("building pageable map")
-  void shouldBuildPageable(
-      Pageable page,
-      boolean isEmpty,
-      int size,
-      int pageNumber,
-      String sort
-  ) {
+  void shouldBuildPageable(Pageable page, boolean isEmpty, int size, int pageNumber, String sort) {
     MapAssert<String, List<String>> assertion =
-        assertThat(UriUtils.buildPageableQueryParam(page))
-            .isNotNull();
+        assertThat(UriUtils.buildPageableQueryParam(page)).isNotNull();
 
     if (isEmpty) {
       assertion.isEmpty();
@@ -64,71 +51,33 @@ class UriUtilsTest {
         assertion.hasFieldOrPropertyWithValue("sort", List.of(sort));
       }
     }
-
   }
 
   private static Stream<Arguments> buildMultiValueQueryParam() {
-    return
-        Stream.of(
-            Arguments.argumentSet(
-                "Null values",
-                null,
-                List.of()
-            ),
-            Arguments.argumentSet(
-                "Empty values",
-                List.of(),
-                List.of()
-            ),
-            Arguments.argumentSet(
-                "Empty values on list",
-                List.of("james", "john", "", "don"),
-                List.of("james", "john", "don")
-            ),
-            Arguments.argumentSet(
-                "Values on list",
-                List.of("james", "john", "don"),
-                List.of("james", "john", "don")
-            )
-        );
+    return Stream.of(
+        Arguments.argumentSet("Null values", null, List.of()),
+        Arguments.argumentSet("Empty values", List.of(), List.of()),
+        Arguments.argumentSet(
+            "Empty values on list",
+            List.of("james", "john", "", "don"),
+            List.of("james", "john", "don")),
+        Arguments.argumentSet(
+            "Values on list", List.of("james", "john", "don"), List.of("james", "john", "don")));
   }
 
   private static Stream<Arguments> buildPageableQueryParam() {
-    return
-        Stream.of(
-            Arguments.argumentSet(
-                "Null values",
-                null,
-                true, 0, 0, ""
-            ),
-            Arguments.argumentSet(
-                "Empty values",
-                PageRequest.ofSize(10),
-                false, 10, 0, ""
-            ),
-            Arguments.argumentSet(
-                "No sort",
-                PageRequest.of(3, 12),
-                false, 12, 3, ""
-            ),
-            Arguments.argumentSet(
-                "Sort",
-                PageRequest.of(0, 10, Direction.DESC, "name"),
-                false,
-                10,
-                0,
-                "name,DESC"
-            ),
-            Arguments.argumentSet(
-                "Sort",
-                PageRequest.of(0, 10, Sort.by(Direction.DESC, "name")),
-                false,
-                10,
-                0,
-                "name,DESC"
-            )
-
-        );
+    return Stream.of(
+        Arguments.argumentSet("Null values", null, true, 0, 0, ""),
+        Arguments.argumentSet("Empty values", PageRequest.ofSize(10), false, 10, 0, ""),
+        Arguments.argumentSet("No sort", PageRequest.of(3, 12), false, 12, 3, ""),
+        Arguments.argumentSet(
+            "Sort", PageRequest.of(0, 10, Direction.DESC, "name"), false, 10, 0, "name,DESC"),
+        Arguments.argumentSet(
+            "Sort",
+            PageRequest.of(0, 10, Sort.by(Direction.DESC, "name")),
+            false,
+            10,
+            0,
+            "name,DESC"));
   }
-
 }

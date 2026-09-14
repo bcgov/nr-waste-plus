@@ -14,8 +14,8 @@ import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProvider;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
-import java.util.List;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,8 +49,8 @@ class ReportingUnitServiceTest {
 
   @BeforeEach
   void setUp() {
-    lenient().when(
-            districtVolumeService.getAreasForDistrictCode(anyString()))
+    lenient()
+        .when(districtVolumeService.getAreasForDistrictCode(anyString()))
         .thenReturn(List.of());
   }
 
@@ -59,8 +59,7 @@ class ReportingUnitServiceTest {
         clientNumber,
         "00",
         new CodeDescriptionDto("S01", "Sample Method One"),
-        new CodeDescriptionDto("DND", "Nadina Natural Resource District")
-    );
+        new CodeDescriptionDto("DND", "Nadina Natural Resource District"));
   }
 
   private ForestClientDto buildClientDto(String clientNumber) {
@@ -78,8 +77,7 @@ class ReportingUnitServiceTest {
     var legacyDetails = buildLegacyDetails(CLIENT_NUMBER);
     var clientDto = buildClientDto(CLIENT_NUMBER);
 
-    when(legacyApiProvider.getReportingUnitDetails(RU_ID))
-        .thenReturn(legacyDetails);
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyDetails);
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(clientDto));
 
@@ -90,10 +88,8 @@ class ReportingUnitServiceTest {
     assertThat(result).isNotNull();
     assertThat(result.id()).isEqualTo(RU_ID);
     assertThat(result.client().code()).isEqualTo(CLIENT_NUMBER);
-    assertThat(result.client().description())
-        .isEqualTo("MINISTRY OF FORESTS");
-    assertThat(result.clientStatus().code())
-        .isEqualTo(ForestClientStatusEnum.ACTIVE.getCode());
+    assertThat(result.client().description()).isEqualTo("MINISTRY OF FORESTS");
+    assertThat(result.clientStatus().code()).isEqualTo(ForestClientStatusEnum.ACTIVE.getCode());
     assertThat(result.clientStatus().description())
         .isEqualTo(ForestClientStatusEnum.ACTIVE.getDescription());
     assertThat(result.sampling()).isEqualTo(legacyDetails.sampling());
@@ -108,10 +104,8 @@ class ReportingUnitServiceTest {
     // Arrange
     var legacyDetails = buildLegacyDetails("00099999");
 
-    when(legacyApiProvider.getReportingUnitDetails(RU_ID))
-        .thenReturn(legacyDetails);
-    when(forestClientApiProvider.fetchClientByNumber("00099999"))
-        .thenReturn(Optional.empty());
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyDetails);
+    when(forestClientApiProvider.fetchClientByNumber("00099999")).thenReturn(Optional.empty());
 
     // Act & Assert
     assertThatThrownBy(() -> reportingUnitService.getReportingUnitDetails(RU_ID))
@@ -126,8 +120,7 @@ class ReportingUnitServiceTest {
     var legacyDetails = buildLegacyDetails(CLIENT_NUMBER);
     var clientDto = buildClientDto(CLIENT_NUMBER);
 
-    when(legacyApiProvider.getReportingUnitDetails(anotherRuId))
-        .thenReturn(legacyDetails);
+    when(legacyApiProvider.getReportingUnitDetails(anotherRuId)).thenReturn(legacyDetails);
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(clientDto));
 
@@ -144,20 +137,14 @@ class ReportingUnitServiceTest {
   void shouldPreserveSamplingAndDistrict_fromLegacyResponse() {
     // Arrange
     var customSampling = new CodeDescriptionDto("S99", "Custom Sampling");
-    var customDistrict =
-        new CodeDescriptionDto("DCK", "Chilliwack Natural Resource District");
+    var customDistrict = new CodeDescriptionDto("DCK", "Chilliwack Natural Resource District");
 
-    var legacyDetails = new ReportingUnitLegacyDetailsDto(
-        CLIENT_NUMBER,
-        "01",
-        customSampling,
-        customDistrict
-    );
+    var legacyDetails =
+        new ReportingUnitLegacyDetailsDto(CLIENT_NUMBER, "01", customSampling, customDistrict);
 
     var clientDto = buildClientDto(CLIENT_NUMBER);
 
-    when(legacyApiProvider.getReportingUnitDetails(RU_ID))
-        .thenReturn(legacyDetails);
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyDetails);
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(clientDto));
 
@@ -175,25 +162,17 @@ class ReportingUnitServiceTest {
     // Arrange
     var request =
         new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-            CLIENT_NUMBER,
-            "DND",
-            "AVG",
-            null
-        );
+            CLIENT_NUMBER, "DND", "AVG", null);
 
-    when(
-        legacyApiProvider.searchReportingUnit(
-            org.mockito.ArgumentMatchers.any(),
-            org.mockito.ArgumentMatchers.any()))
+    when(legacyApiProvider.searchReportingUnit(
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
         .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
 
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
-    when(districtVolumeService.getAreasForDistrictCode("DND"))
-        .thenReturn(List.of());
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of());
 
-    when(legacyApiProvider.createReportingUnit(request))
-        .thenReturn(333L);
+    when(legacyApiProvider.createReportingUnit(request)).thenReturn(333L);
 
     // Act
     var response = reportingUnitService.createReportingUnit(request);
@@ -205,20 +184,14 @@ class ReportingUnitServiceTest {
 
   @Test
   @DisplayName("shouldThrowBadRequest_whenGradeMissingForDKM")
-  void shouldThrowBadRequest_whenGradeMissingForDKM() {
+  void shouldThrowBadRequest_whenGradeMissingForDkm() {
     // Arrange
     var request =
         new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-            CLIENT_NUMBER,
-            "DKM",
-            "AVG",
-            null
-        );
+            CLIENT_NUMBER, "DKM", "AVG", null);
 
-    when(
-        legacyApiProvider.searchReportingUnit(
-            org.mockito.ArgumentMatchers.any(),
-            org.mockito.ArgumentMatchers.any()))
+    when(legacyApiProvider.searchReportingUnit(
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
         .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
 
     when(districtVolumeService.getAreasForDistrictCode("DKM"))
@@ -228,9 +201,9 @@ class ReportingUnitServiceTest {
     assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(
-            e -> assertThat(((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST)
-        );
+            e ->
+                assertThat(((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST));
   }
 
   @Test
@@ -239,25 +212,17 @@ class ReportingUnitServiceTest {
     // Arrange
     var request =
         new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-            CLIENT_NUMBER,
-            "DND",
-            "AVG",
-            null
-        );
+            CLIENT_NUMBER, "DND", "AVG", null);
 
-    when(
-        legacyApiProvider.searchReportingUnit(
-            org.mockito.ArgumentMatchers.any(),
-            org.mockito.ArgumentMatchers.any()))
+    when(legacyApiProvider.searchReportingUnit(
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
         .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
 
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
-    when(districtVolumeService.getAreasForDistrictCode("DND"))
-        .thenReturn(List.of("COASTAL"));
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
 
-    when(legacyApiProvider.createReportingUnit(request))
-        .thenReturn(333L);
+    when(legacyApiProvider.createReportingUnit(request)).thenReturn(333L);
 
     // Act
     var response = reportingUnitService.createReportingUnit(request);
@@ -272,11 +237,7 @@ class ReportingUnitServiceTest {
     // Arrange
     var request =
         new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-            CLIENT_NUMBER,
-            "DND",
-            "AVG",
-            null
-        );
+            CLIENT_NUMBER, "DND", "AVG", null);
 
     var existingResult =
         new ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto(
@@ -284,50 +245,29 @@ class ReportingUnitServiceTest {
             26L,
             "",
             36834L,
-            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(
-                CLIENT_NUMBER,
-                null
-            ),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(CLIENT_NUMBER, null),
             null,
             null,
             null,
             false,
             false,
-            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(
-                "S01",
-                "Sample"
-            ),
-            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(
-                "DND",
-                "Nadina"
-            ),
-            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(
-                "DFT",
-                "Draft"
-            ),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("S01", "Sample"),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DND", "Nadina"),
+            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DFT", "Draft"),
             LocalDateTime.now(),
-            false
-        );
+            false);
 
-    when(
-        legacyApiProvider.searchReportingUnit(
-            org.mockito.ArgumentMatchers.any(),
-            org.mockito.ArgumentMatchers.any()))
-        .thenReturn(
-            new PageImpl<>(
-                List.of(existingResult),
-                PageRequest.of(0, 1),
-                1
-            )
-        );
+    when(legacyApiProvider.searchReportingUnit(
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+        .thenReturn(new PageImpl<>(List.of(existingResult), PageRequest.of(0, 1), 1));
 
     // Act & Assert
     assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(
-            e -> assertThat(((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(org.springframework.http.HttpStatus.CONFLICT)
-        );
+            e ->
+                assertThat(((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(org.springframework.http.HttpStatus.CONFLICT));
   }
 
   @Test
@@ -336,11 +276,7 @@ class ReportingUnitServiceTest {
     // Arrange
     var request =
         new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-            CLIENT_NUMBER,
-            "DND",
-            "NOT_AVG",
-            null
-        );
+            CLIENT_NUMBER, "DND", "NOT_AVG", null);
 
     // Act & Assert
     assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
@@ -350,9 +286,7 @@ class ReportingUnitServiceTest {
               ResponseStatusException rse = (ResponseStatusException) e;
               assertThat(rse.getStatusCode())
                   .isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST);
-              assertThat(rse.getReason())
-                  .contains("Invalid samplingCode");
-            }
-        );
+              assertThat(rse.getReason()).contains("Invalid samplingCode");
+            });
   }
 }

@@ -19,8 +19,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 @AutoConfigureMockMvc(print = SYSTEM_OUT)
@@ -28,7 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
 
-  @Autowired private MockMvc mockMvc;
+  @Autowired
+  private MockMvc mockMvc;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
   // ─── POST ──────────────────────────────────────────────────────────────
@@ -37,17 +38,23 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   @DisplayName("Create returns 201 with location header")
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void createReturnsCreatedWithLocation() throws Exception {
-    Map<String, Object> body = Map.of(
-        "area", "COASTAL",
-        "startDate", LocalDate.now().plusDays(30).toString(),
-        "formulas", new Object[]{
-            Map.of("formulaKey", "da.mature.volume", "expression", "1 + 2", "sortOrder", 0)
-        });
+    Map<String, Object> body =
+        Map.of(
+            "area",
+            "COASTAL",
+            "startDate",
+            LocalDate.now().plusDays(30).toString(),
+            "formulas",
+            new Object[] {
+              Map.of("formulaKey", "da.mature.volume", "expression", "1 + 2", "sortOrder", 0)
+            });
 
-    mockMvc.perform(post("/api/configuration/formulas")
-            .with(SecurityMockMvcRequestPostProcessors.csrf())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body)))
+    mockMvc
+        .perform(
+            post("/api/configuration/formulas")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)))
         .andExpect(status().isCreated())
         .andExpect(header().exists("Location"))
         .andExpect(jsonPath("$.area").value("COASTAL"))
@@ -59,16 +66,19 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   @DisplayName("Create rejects missing area")
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void createRejectsMissingArea() throws Exception {
-    Map<String, Object> body = Map.of(
-        "startDate", LocalDate.now().plusDays(30).toString(),
-        "formulas", new Object[]{
-            Map.of("formulaKey", "da.x", "expression", "1", "sortOrder", 0)
-        });
+    Map<String, Object> body =
+        Map.of(
+            "startDate",
+            LocalDate.now().plusDays(30).toString(),
+            "formulas",
+            new Object[] {Map.of("formulaKey", "da.x", "expression", "1", "sortOrder", 0)});
 
-    mockMvc.perform(post("/api/configuration/formulas")
-            .with(SecurityMockMvcRequestPostProcessors.csrf())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body)))
+    mockMvc
+        .perform(
+            post("/api/configuration/formulas")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)))
         .andExpect(status().isBadRequest());
   }
 
@@ -76,16 +86,19 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   @DisplayName("Create rejects missing startDate")
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void createRejectsMissingStartDate() throws Exception {
-    Map<String, Object> body = Map.of(
-        "area", "COASTAL",
-        "formulas", new Object[]{
-            Map.of("formulaKey", "da.x", "expression", "1", "sortOrder", 0)
-        });
+    Map<String, Object> body =
+        Map.of(
+            "area",
+            "COASTAL",
+            "formulas",
+            new Object[] {Map.of("formulaKey", "da.x", "expression", "1", "sortOrder", 0)});
 
-    mockMvc.perform(post("/api/configuration/formulas")
-            .with(SecurityMockMvcRequestPostProcessors.csrf())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body)))
+    mockMvc
+        .perform(
+            post("/api/configuration/formulas")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)))
         .andExpect(status().isBadRequest());
   }
 
@@ -93,15 +106,21 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   @DisplayName("Create rejects empty formulas")
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void createRejectsEmptyFormulas() throws Exception {
-    Map<String, Object> body = Map.of(
-        "area", "COASTAL",
-        "startDate", LocalDate.now().plusDays(30).toString(),
-        "formulas", new Object[]{});
+    Map<String, Object> body =
+        Map.of(
+            "area",
+            "COASTAL",
+            "startDate",
+            LocalDate.now().plusDays(30).toString(),
+            "formulas",
+            new Object[] {});
 
-    mockMvc.perform(post("/api/configuration/formulas")
-            .with(SecurityMockMvcRequestPostProcessors.csrf())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body)))
+    mockMvc
+        .perform(
+            post("/api/configuration/formulas")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)))
         .andExpect(status().isBadRequest());
   }
 
@@ -109,17 +128,21 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   @DisplayName("Create rejects blank formula key")
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void createRejectsBlankFormulaKey() throws Exception {
-    Map<String, Object> body = Map.of(
-        "area", "COASTAL",
-        "startDate", LocalDate.now().plusDays(30).toString(),
-        "formulas", new Object[]{
-            Map.of("formulaKey", "", "expression", "1", "sortOrder", 0)
-        });
+    Map<String, Object> body =
+        Map.of(
+            "area",
+            "COASTAL",
+            "startDate",
+            LocalDate.now().plusDays(30).toString(),
+            "formulas",
+            new Object[] {Map.of("formulaKey", "", "expression", "1", "sortOrder", 0)});
 
-    mockMvc.perform(post("/api/configuration/formulas")
-            .with(SecurityMockMvcRequestPostProcessors.csrf())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body)))
+    mockMvc
+        .perform(
+            post("/api/configuration/formulas")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)))
         .andExpect(status().isBadRequest());
   }
 
@@ -127,34 +150,42 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   @DisplayName("Create rejects negative sort order")
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void createRejectsNegativeSortOrder() throws Exception {
-    Map<String, Object> body = Map.of(
-        "area", "COASTAL",
-        "startDate", LocalDate.now().plusDays(30).toString(),
-        "formulas", new Object[]{
-            Map.of("formulaKey", "da.x", "expression", "1", "sortOrder", -1)
-        });
+    Map<String, Object> body =
+        Map.of(
+            "area",
+            "COASTAL",
+            "startDate",
+            LocalDate.now().plusDays(30).toString(),
+            "formulas",
+            new Object[] {Map.of("formulaKey", "da.x", "expression", "1", "sortOrder", -1)});
 
-    mockMvc.perform(post("/api/configuration/formulas")
-            .with(SecurityMockMvcRequestPostProcessors.csrf())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body)))
+    mockMvc
+        .perform(
+            post("/api/configuration/formulas")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)))
         .andExpect(status().isBadRequest());
   }
 
   @Test
   @DisplayName("Create rejects unauthenticated request")
   void createRejectsUnauthenticated() throws Exception {
-    Map<String, Object> body = Map.of(
-        "area", "COASTAL",
-        "startDate", LocalDate.now().plusDays(30).toString(),
-        "formulas", new Object[]{
-            Map.of("formulaKey", "da.x", "expression", "1", "sortOrder", 0)
-        });
+    Map<String, Object> body =
+        Map.of(
+            "area",
+            "COASTAL",
+            "startDate",
+            LocalDate.now().plusDays(30).toString(),
+            "formulas",
+            new Object[] {Map.of("formulaKey", "da.x", "expression", "1", "sortOrder", 0)});
 
-    mockMvc.perform(post("/api/configuration/formulas")
-            .with(SecurityMockMvcRequestPostProcessors.csrf())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body)))
+    mockMvc
+        .perform(
+            post("/api/configuration/formulas")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)))
         .andExpect(status().isUnauthorized());
   }
 
@@ -162,17 +193,21 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   @DisplayName("Create rejects non-admin user")
   @WithMockJwt
   void createRejectsNonAdmin() throws Exception {
-    Map<String, Object> body = Map.of(
-        "area", "COASTAL",
-        "startDate", LocalDate.now().plusDays(30).toString(),
-        "formulas", new Object[]{
-            Map.of("formulaKey", "da.x", "expression", "1", "sortOrder", 0)
-        });
+    Map<String, Object> body =
+        Map.of(
+            "area",
+            "COASTAL",
+            "startDate",
+            LocalDate.now().plusDays(30).toString(),
+            "formulas",
+            new Object[] {Map.of("formulaKey", "da.x", "expression", "1", "sortOrder", 0)});
 
-    mockMvc.perform(post("/api/configuration/formulas")
-            .with(SecurityMockMvcRequestPostProcessors.csrf())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body)))
+    mockMvc
+        .perform(
+            post("/api/configuration/formulas")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)))
         .andExpect(status().isForbidden());
   }
 
@@ -185,17 +220,23 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
     String location = createFormulaSet();
     long id = Long.parseLong(location.substring(location.lastIndexOf('/') + 1));
 
-    Map<String, Object> body = Map.of(
-        "area", "COASTAL",
-        "startDate", LocalDate.now().plusDays(30).toString(),
-        "formulas", new Object[]{
-            Map.of("formulaKey", "da.mature.updated", "expression", "2 + 3", "sortOrder", 0)
-        });
+    Map<String, Object> body =
+        Map.of(
+            "area",
+            "COASTAL",
+            "startDate",
+            LocalDate.now().plusDays(30).toString(),
+            "formulas",
+            new Object[] {
+              Map.of("formulaKey", "da.mature.updated", "expression", "2 + 3", "sortOrder", 0)
+            });
 
-    mockMvc.perform(put("/api/configuration/formulas/" + id)
-            .with(SecurityMockMvcRequestPostProcessors.csrf())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body)))
+    mockMvc
+        .perform(
+            put("/api/configuration/formulas/" + id)
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.formulas[0].formulaKey").value("da.mature.updated"))
         .andExpect(jsonPath("$.formulas[0].expression").value("2 + 3"));
@@ -205,17 +246,21 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   @DisplayName("Update returns 404 for nonexistent set")
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void updateReturns404ForNonexistentSet() throws Exception {
-    Map<String, Object> body = Map.of(
-        "area", "COASTAL",
-        "startDate", LocalDate.now().plusDays(30).toString(),
-        "formulas", new Object[]{
-            Map.of("formulaKey", "da.x", "expression", "1", "sortOrder", 0)
-        });
+    Map<String, Object> body =
+        Map.of(
+            "area",
+            "COASTAL",
+            "startDate",
+            LocalDate.now().plusDays(30).toString(),
+            "formulas",
+            new Object[] {Map.of("formulaKey", "da.x", "expression", "1", "sortOrder", 0)});
 
-    mockMvc.perform(put("/api/configuration/formulas/999999")
-            .with(SecurityMockMvcRequestPostProcessors.csrf())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body)))
+    mockMvc
+        .perform(
+            put("/api/configuration/formulas/999999")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)))
         .andExpect(status().isNotFound());
   }
 
@@ -228,8 +273,10 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
     String location = createFormulaSet();
     long id = Long.parseLong(location.substring(location.lastIndexOf('/') + 1));
 
-    mockMvc.perform(delete("/api/configuration/formulas/" + id)
-            .with(SecurityMockMvcRequestPostProcessors.csrf()))
+    mockMvc
+        .perform(
+            delete("/api/configuration/formulas/" + id)
+                .with(SecurityMockMvcRequestPostProcessors.csrf()))
         .andExpect(status().isNoContent());
   }
 
@@ -237,16 +284,20 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   @DisplayName("Delete returns 404 for nonexistent set")
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void deleteReturns404ForNonexistentSet() throws Exception {
-    mockMvc.perform(delete("/api/configuration/formulas/999999")
-            .with(SecurityMockMvcRequestPostProcessors.csrf()))
+    mockMvc
+        .perform(
+            delete("/api/configuration/formulas/999999")
+                .with(SecurityMockMvcRequestPostProcessors.csrf()))
         .andExpect(status().isNotFound());
   }
 
   @Test
   @DisplayName("Delete rejects unauthenticated request")
   void deleteRejectsUnauthenticated() throws Exception {
-    mockMvc.perform(delete("/api/configuration/formulas/1")
-            .with(SecurityMockMvcRequestPostProcessors.csrf()))
+    mockMvc
+        .perform(
+            delete("/api/configuration/formulas/1")
+                .with(SecurityMockMvcRequestPostProcessors.csrf()))
         .andExpect(status().isUnauthorized());
   }
 
@@ -258,7 +309,8 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   void effectiveReturnsOk() throws Exception {
     createFormulaSet();
 
-    mockMvc.perform(get("/api/configuration/formulas/" + LocalDate.now().plusDays(31) + "/COASTAL"))
+    mockMvc
+        .perform(get("/api/configuration/formulas/" + LocalDate.now().plusDays(31) + "/COASTAL"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.area").value("COASTAL"))
         .andExpect(jsonPath("$.formulas.length()").value(1));
@@ -268,31 +320,39 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   @DisplayName("Effective returns 404 when no set found")
   @WithMockJwt
   void effectiveReturns404WhenNotFound() throws Exception {
-    mockMvc.perform(get("/api/configuration/formulas/2000-01-01/COASTAL"))
+    mockMvc
+        .perform(get("/api/configuration/formulas/2000-01-01/COASTAL"))
         .andExpect(status().isNotFound());
   }
 
   @Test
   @DisplayName("Effective rejects unauthenticated request")
   void effectiveRejectsUnauthenticated() throws Exception {
-    mockMvc.perform(get("/api/configuration/formulas/" + LocalDate.now().plusDays(30) + "/COASTAL"))
+    mockMvc
+        .perform(get("/api/configuration/formulas/" + LocalDate.now().plusDays(30) + "/COASTAL"))
         .andExpect(status().isUnauthorized());
   }
 
   // ─── Helpers ───────────────────────────────────────────────────────────
 
   private String createFormulaSet() throws Exception {
-    Map<String, Object> body = Map.of(
-        "area", "COASTAL",
-        "startDate", LocalDate.now().plusDays(30).toString(),
-        "formulas", new Object[]{
-            Map.of("formulaKey", "da.mature.volume", "expression", "1 + 2", "sortOrder", 0)
-        });
+    Map<String, Object> body =
+        Map.of(
+            "area",
+            "COASTAL",
+            "startDate",
+            LocalDate.now().plusDays(30).toString(),
+            "formulas",
+            new Object[] {
+              Map.of("formulaKey", "da.mature.volume", "expression", "1 + 2", "sortOrder", 0)
+            });
 
-    return mockMvc.perform(post("/api/configuration/formulas")
-            .with(SecurityMockMvcRequestPostProcessors.csrf())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body)))
+    return mockMvc
+        .perform(
+            post("/api/configuration/formulas")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)))
         .andReturn()
         .getResponse()
         .getHeader("Location");

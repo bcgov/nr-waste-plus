@@ -12,6 +12,7 @@ import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SY
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
@@ -89,9 +90,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
   @DisplayName("Should Return 201 when Create Succeeds")
   @Test
-  @WithMockJwt(
-      cognitoGroups = {"WASTE_PLUS_ADMIN"}
-  )
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void shouldReturn201_whenCreateSucceeds() throws Exception {
     // Legacy search: no existing reporting units
     legacyApiStub.stubFor(
@@ -106,31 +105,26 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
             .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
 
     // Legacy create returns new id as numeric JSON
-    legacyApiStub.stubFor(
-        post(urlPathEqualTo("/api/reporting-units"))
-            .willReturn(okJson("333")));
+    legacyApiStub.stubFor(post(urlPathEqualTo("/api/reporting-units")).willReturn(okJson("333")));
 
-    var requestJson = """
+    var requestJson =
+        """
         {"clientNumber":"00012797","districtCode":"DND","samplingCode":"AVG","gradeCode":null}
         """;
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders
-                .post("/api/reporting-units")
+            MockMvcRequestBuilders.post("/api/reporting-units")
                 .with(SecurityMockMvcRequestPostProcessors.csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson)
-        )
+                .content(requestJson))
         .andExpect(status().isCreated());
   }
 
   @DisplayName("Should Return 400 when Grade Missing For DKM")
   @Test
-  @WithMockJwt(
-      cognitoGroups = {"WASTE_PLUS_ADMIN"}
-  )
-  void shouldReturn400_whenGradeMissingForDKM() throws Exception {
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
+  void shouldReturn400_whenGradeMissingForDkm() throws Exception {
     // Legacy search: no existing reporting units
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
@@ -138,26 +132,23 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                 okJson(
                     ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
 
-    var requestJson = """
+    var requestJson =
+        """
         {"clientNumber":"00012797","districtCode":"DKM","samplingCode":"AVG"}
         """;
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders
-                .post("/api/reporting-units")
+            MockMvcRequestBuilders.post("/api/reporting-units")
                 .with(SecurityMockMvcRequestPostProcessors.csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson)
-        )
+                .content(requestJson))
         .andExpect(status().isBadRequest());
   }
 
   @DisplayName("Should Return 409 when Reporting Unit Duplicate")
   @Test
-  @WithMockJwt(
-      cognitoGroups = {"WASTE_PLUS_ADMIN"}
-  )
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void shouldReturn409_whenReportingUnitDuplicate() throws Exception {
     // Legacy search: returns an existing RU (totalElements > 0)
     legacyApiStub.stubFor(
@@ -165,18 +156,17 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
             .willReturn(
                 okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE)));
 
-    var requestJson = """
+    var requestJson =
+        """
         {"clientNumber":"00012797","districtCode":"DND","samplingCode":"AVG","gradeCode":null}
         """;
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders
-                .post("/api/reporting-units")
+            MockMvcRequestBuilders.post("/api/reporting-units")
                 .with(SecurityMockMvcRequestPostProcessors.csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson)
-        )
+                .content(requestJson))
         .andExpect(status().isConflict());
   }
 
@@ -185,8 +175,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @DisplayName("Should Return Reporting Unit Details when Both APIs Succeed")
   void shouldReturnReportingUnitDetails_whenBothApisSucceed() throws Exception {
     legacyApiStub.stubFor(
-        get(urlPathEqualTo("/api/reporting-units/12345"))
-            .willReturn(okJson(LEGACY_RU_DETAILS)));
+        get(urlPathEqualTo("/api/reporting-units/12345")).willReturn(okJson(LEGACY_RU_DETAILS)));
 
     clientApiStub.stubFor(
         get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
@@ -194,11 +183,9 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders
-                .get("/api/reporting-units/{id}", 12345L)
+            MockMvcRequestBuilders.get("/api/reporting-units/{id}", 12345L)
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .accept(MediaType.APPLICATION_JSON)
-        )
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath("$.id").value(12345))
@@ -214,50 +201,41 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @DisplayName("Should Return 404 when Forest Client Not Found")
   void shouldReturn404_whenForestClientNotFound() throws Exception {
     legacyApiStub.stubFor(
-        get(urlPathEqualTo("/api/reporting-units/12345"))
-            .willReturn(okJson(LEGACY_RU_DETAILS)));
+        get(urlPathEqualTo("/api/reporting-units/12345")).willReturn(okJson(LEGACY_RU_DETAILS)));
 
     clientApiStub.stubFor(
-        get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
-            .willReturn(notFound()));
+        get(urlPathEqualTo("/clients/findByClientNumber/00012797")).willReturn(notFound()));
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders
-                .get("/api/reporting-units/{id}", 12345L)
-                .accept(MediaType.APPLICATION_JSON)
-        )
+            MockMvcRequestBuilders.get("/api/reporting-units/{id}", 12345L)
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isNotFound());
   }
 
   @Test
   @WithMockJwt
   @DisplayName("Should Return 404 when Reporting Unit Details Feature Flag Is Disabled")
-  void shouldReturn404_whenReportingUnitDetailsFeatureFlagIsDisabled()
-      throws Exception {
+  void shouldReturn404_whenReportingUnitDetailsFeatureFlagIsDisabled() throws Exception {
     doReturn(false)
         .when(featureFlagsConfiguration)
         .isEnabled(FeatureFlag.REPORTING_UNIT_DETAILS_ENABLED);
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders
-                .get("/api/reporting-units/{id}", 12345L)
-                .accept(MediaType.APPLICATION_JSON)
-        )
+            MockMvcRequestBuilders.get("/api/reporting-units/{id}", 12345L)
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isNotFound());
   }
 
   @Test
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {"WASTE_PLUS_VIEWER_00012797"}
-  )
+      cognitoGroups = {"WASTE_PLUS_VIEWER_00012797"})
   @DisplayName("Should Return 200 when Bceid User Has Matching Client Role")
   void shouldReturn200_whenBceidUserHasMatchingClientRole() throws Exception {
     legacyApiStub.stubFor(
-        get(urlPathEqualTo("/api/reporting-units/12345"))
-            .willReturn(okJson(LEGACY_RU_DETAILS)));
+        get(urlPathEqualTo("/api/reporting-units/12345")).willReturn(okJson(LEGACY_RU_DETAILS)));
 
     clientApiStub.stubFor(
         get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
@@ -265,11 +243,9 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders
-                .get("/api/reporting-units/{id}", 12345L)
+            MockMvcRequestBuilders.get("/api/reporting-units/{id}", 12345L)
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .accept(MediaType.APPLICATION_JSON)
-        )
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath("$.id").value(12345))
@@ -279,13 +255,11 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @Test
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {"WASTE_PLUS_SUBMITTER_99999999"}
-  )
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_99999999"})
   @DisplayName("Should Return 403 when Bceid User Has No Matching Client Role")
   void shouldReturn403_whenBceidUserHasNoMatchingClientRole() throws Exception {
     legacyApiStub.stubFor(
-        get(urlPathEqualTo("/api/reporting-units/12345"))
-            .willReturn(okJson(LEGACY_RU_DETAILS)));
+        get(urlPathEqualTo("/api/reporting-units/12345")).willReturn(okJson(LEGACY_RU_DETAILS)));
 
     clientApiStub.stubFor(
         get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
@@ -293,10 +267,8 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders
-                .get("/api/reporting-units/{id}", 12345L)
-                .accept(MediaType.APPLICATION_JSON)
-        )
+            MockMvcRequestBuilders.get("/api/reporting-units/{id}", 12345L)
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isForbidden());
   }
 }

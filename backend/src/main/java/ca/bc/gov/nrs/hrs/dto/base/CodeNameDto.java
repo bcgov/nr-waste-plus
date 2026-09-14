@@ -5,18 +5,11 @@ import lombok.With;
 /**
  * Data Transfer Object pairing a code with a name.
  *
- * <p>
- * A compact immutable record used to transport a code and its display name
- * across service and controller boundaries.
- * </p>
+ * <p>A compact immutable record used to transport a code and its display name across service and
+ * controller boundaries.
  *
  * @param code the code value
  * @param name the display name for the code
  */
 @With
-public record CodeNameDto(
-    String code,
-    String name
-) {
-
-}
+public record CodeNameDto(String code, String name) {}

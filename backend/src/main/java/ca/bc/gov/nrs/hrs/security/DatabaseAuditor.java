@@ -11,15 +11,13 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
 /**
- * AuditorAware implementation that resolves the current user id from the
- * active JWT principal for Spring Data auditing.
+ * AuditorAware implementation that resolves the current user id from the active JWT principal for
+ * Spring Data auditing.
  *
- * When the JWT is an ID token the structured user id from
- * {@link JwtPrincipalUtil#getUserId(Jwt)} (e.g. {@code IDIR/username}) is used.
- * When the JWT is an access token those claims may be absent, so the auditor
- * falls back to the raw Cognito {@code sub} claim to ensure audit columns are
- * always populated.
- * </p>
+ * <p>When the JWT is an ID token the structured user id from {@link
+ * JwtPrincipalUtil#getUserId(Jwt)} (e.g. {@code IDIR/username}) is used. When the JWT is an access
+ * token those claims may be absent, so the auditor falls back to the raw Cognito {@code sub} claim
+ * to ensure audit columns are always populated.
  */
 @Component
 public class DatabaseAuditor implements AuditorAware<String> {
@@ -36,10 +34,10 @@ public class DatabaseAuditor implements AuditorAware<String> {
         .filter(Authentication::isAuthenticated)
         .map(Authentication::getPrincipal)
         .map(Jwt.class::cast)
-        .map(jwt -> {
-          String userId = JwtPrincipalUtil.getUserId(jwt);
-          return StringUtils.isNotBlank(userId) ? userId : jwt.getSubject();
-        });
+        .map(
+            jwt -> {
+              String userId = JwtPrincipalUtil.getUserId(jwt);
+              return StringUtils.isNotBlank(userId) ? userId : jwt.getSubject();
+            });
   }
 }
-

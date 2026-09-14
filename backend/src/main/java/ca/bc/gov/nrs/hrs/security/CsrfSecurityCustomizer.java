@@ -7,13 +7,10 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.stereotype.Component;
 
 /**
- * CSRF security customizer that configures token repository and CSRF handling
- * for the application.
+ * CSRF security customizer that configures token repository and CSRF handling for the application.
  *
- * <p>
- * The customizer uses a {@link CookieCsrfTokenRepository} to store the CSRF
- * token in a secure cookie so the client can retrieve it for request headers.
- * </p>
+ * <p>The customizer uses a {@link CookieCsrfTokenRepository} to store the CSRF token in a secure
+ * cookie so the client can retrieve it for request headers.
  */
 @Component
 public class CsrfSecurityCustomizer implements Customizer<CsrfConfigurer<HttpSecurity>> {
@@ -23,14 +20,14 @@ public class CsrfSecurityCustomizer implements Customizer<CsrfConfigurer<HttpSec
   @SuppressWarnings("java:S3330")
   @Override
   public void customize(CsrfConfigurer<HttpSecurity> csrfSpec) {
-    CookieCsrfTokenRepository repo =
-        CookieCsrfTokenRepository.withHttpOnlyFalse();
+    CookieCsrfTokenRepository repo = CookieCsrfTokenRepository.withHttpOnlyFalse();
 
-    repo.setCookieCustomizer(cookie -> {
-      cookie.sameSite("Lax");
-      cookie.secure(true);
-      cookie.path("/");
-    });
+    repo.setCookieCustomizer(
+        cookie -> {
+          cookie.sameSite("Lax");
+          cookie.secure(true);
+          cookie.path("/");
+        });
 
     csrfSpec.csrfTokenRepository(repo);
   }

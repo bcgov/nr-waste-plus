@@ -6,33 +6,28 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 /**
  * Polymorphic root interface for district volume table structures.
  *
- * <p>This interface represents the root of a sealed hierarchy used to model
- * area-specific table layouts for District Volume data.</p>
+ * <p>This interface represents the root of a sealed hierarchy used to model area-specific table
+ * layouts for District Volume data.
  *
- * <p>Jackson polymorphism is enabled via a "type" discriminator property,
- * allowing automatic serialization and deserialization of concrete implementations
- * based on their logical area type.</p>
+ * <p>Jackson polymorphism is enabled via a "type" discriminator property, allowing automatic
+ * serialization and deserialization of concrete implementations based on their logical area type.
  *
- * <p>Supported subtypes:</p>
+ * <p>Supported subtypes:
+ *
  * <ul>
- *   <li>{@link InteriorDataDto} mapped to "INTERIOR"</li>
- *   <li>{@link CoastDataDto} mapped to "COASTAL"</li>
- *   <li>{@link SpeciesCompositionTableDataDto} mapped to "SPECIES_COMPOSITION"</li>
+ *   <li>{@link InteriorDataDto} mapped to "INTERIOR"
+ *   <li>{@link CoastDataDto} mapped to "COASTAL"
+ *   <li>{@link SpeciesCompositionTableDataDto} mapped to "SPECIES_COMPOSITION"
  * </ul>
  *
- * <p>The sealed nature of this interface ensures compile-time exhaustiveness
- * when handling all possible table structures.</p>
+ * <p>The sealed nature of this interface ensures compile-time exhaustiveness when handling all
+ * possible table structures.
  */
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "type"
-)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = InteriorDataDto.class, name = "INTERIOR"),
-    @JsonSubTypes.Type(value = CoastDataDto.class, name = "COASTAL"),
-    @JsonSubTypes.Type(value = SpeciesCompositionTableDataDto.class, name = "SPECIES_COMPOSITION")
+  @JsonSubTypes.Type(value = InteriorDataDto.class, name = "INTERIOR"),
+  @JsonSubTypes.Type(value = CoastDataDto.class, name = "COASTAL"),
+  @JsonSubTypes.Type(value = SpeciesCompositionTableDataDto.class, name = "SPECIES_COMPOSITION")
 })
 public sealed interface TableDataDto
-    permits InteriorDataDto, CoastDataDto, SpeciesCompositionTableDataDto {
-}
+    permits InteriorDataDto, CoastDataDto, SpeciesCompositionTableDataDto {}

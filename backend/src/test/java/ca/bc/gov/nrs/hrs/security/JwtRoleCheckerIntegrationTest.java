@@ -77,6 +77,4 @@ class JwtRoleCheckerIntegrationTest extends AbstractTestContainerIntegrationTest
 
     assertThrows(IllegalStateException.class, () -> checker.hasIdpProvider("idir"));
   }
-
-
 }

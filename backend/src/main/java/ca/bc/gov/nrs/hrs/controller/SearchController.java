@@ -31,11 +31,10 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * Controller exposing search-related REST endpoints for reporting units.
  *
- * <p>Provides endpoints to search reporting units with filtering and paging,
- * and to search for users associated with reporting units. The controller consults the caller's JWT
- * to apply identity-provider-specific validation and scoping rules (for example to restrict BCEID
- * callers to their assigned clients).
- * </p>
+ * <p>Provides endpoints to search reporting units with filtering and paging, and to search for
+ * users associated with reporting units. The controller consults the caller's JWT to apply
+ * identity-provider-specific validation and scoping rules (for example to restrict BCEID callers to
+ * their assigned clients).
  */
 @RestController
 @RequestMapping("/api/search")
@@ -47,52 +46,43 @@ public class SearchController {
   private final SearchService service;
 
   /**
-   * Search for reporting units (waste entries) using the provided filters and pageable
-   * information.
+   * Search for reporting units (waste entries) using the provided filters and pageable information.
    *
-   * <p>For callers authenticated via BCeID (IdentityProvider.BUSINESS_BCEID), an
-   * additional validation is applied: if the {@code clientNumber} filter is specified it must be
-   * present in the caller's client roles. If not, an {@link InvalidSelectedValueException} is
-   * thrown.
-   * </p>
+   * <p>For callers authenticated via BCeID (IdentityProvider.BUSINESS_BCEID), an additional
+   * validation is applied: if the {@code clientNumber} filter is specified it must be present in
+   * the caller's client roles. If not, an {@link InvalidSelectedValueException} is thrown.
    *
-   * <p>NOTE: The existing inline comment {@code #128} that mentions BCeID
-   * behaviour is preserved here because the size adjustment and client-side filtering are
-   * implemented where appropriate in other endpoints.
-   * </p>
+   * <p>NOTE: The existing inline comment {@code #128} that mentions BCeID behaviour is preserved
+   * here because the size adjustment and client-side filtering are implemented where appropriate in
+   * other endpoints.
    *
-   * @param jwt      the JWT principal for the authenticated caller
-   * @param filters  the search filters (mapped from request parameters)
+   * @param jwt the JWT principal for the authenticated caller
+   * @param filters the search filters (mapped from request parameters)
    * @param pageable pageable information (page, size, sort)
    * @return a page of {@link ReportingUnitSearchResultDto} matching the provided filters
    * @throws InvalidSelectedValueException when a BCEID caller specifies a client number that is not
-   *                                       present in their assigned client roles
+   *     present in their assigned client roles
    */
   @GetMapping("/reporting-units")
   public Page<ReportingUnitSearchResultDto> searchWasteEntries(
       @AuthenticationPrincipal Jwt jwt,
       @ModelAttribute ReportingUnitSearchParametersDto filters,
-      @PageableDefault(sort = "lastUpdated", direction = Direction.DESC)
-      Pageable pageable
-  ) {
+      @PageableDefault(sort = "lastUpdated", direction = Direction.DESC) Pageable pageable) {
 
     if (filters == null || filters.isEmpty()) {
       return Page.empty(pageable);
     }
     // #128: BCeID should filter out on client side, we increase the size to get more results.
     if (IdentityProvider.BUSINESS_BCEID.equals(JwtPrincipalUtil.getIdentityProvider(jwt))
-        && (
-            !CollectionUtils.isEmpty(filters.getClientNumbers())
+        && (!CollectionUtils.isEmpty(filters.getClientNumbers())
             && !new HashSet<>(JwtPrincipalUtil.getClientFromRoles(jwt))
-                .containsAll(filters.getClientNumbers())
-        )) {
+                .containsAll(filters.getClientNumbers()))) {
       throw new InvalidSelectedValueException(
           "Selected client number " + filters.getClientNumbers() + " is not valid");
     }
 
     log.info("Searching waste entries with filters: {}, pageable: {}", filters, pageable);
     return service.search(JwtPrincipalUtil.getUserId(jwt), filters, pageable);
-
   }
 
   /**
@@ -102,24 +92,23 @@ public class SearchController {
    * For BCeID callers, the reporting unit's associated client number is compared against the
    * caller's assigned client roles. IDIR callers (government users) are permitted without
    * additional checks since they have system-level access.
-   * </p>
    *
-   * @param jwt             the JWT principal for the authenticated caller
+   * @param jwt the JWT principal for the authenticated caller
    * @param reportingUnitId the reporting unit ID
-   * @param wasteAssessmentAreaId         the waste assessment area ID
+   * @param wasteAssessmentAreaId the waste assessment area ID
    * @return the expanded search entry as a {@link ReportingUnitSearchExpandedDto}
-   * @throws org.springframework.web.server.ResponseStatusException with HTTP 403 when the user
-   *         is not authorized to access the specified reporting unit
+   * @throws org.springframework.web.server.ResponseStatusException with HTTP 403 when the user is
+   *     not authorized to access the specified reporting unit
    */
   @GetMapping("/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}")
   public ReportingUnitSearchExpandedDto getSearchExpandedEntry(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable Long reportingUnitId,
-      @PathVariable Long wasteAssessmentAreaId
-  ) {
-    log.info("Fetching expanded search entry for reporting unit ID: {} for: {}",
-        reportingUnitId, JwtPrincipalUtil.getUserId(jwt)
-    );
+      @PathVariable Long wasteAssessmentAreaId) {
+    log.info(
+        "Fetching expanded search entry for reporting unit ID: {} for: {}",
+        reportingUnitId,
+        JwtPrincipalUtil.getUserId(jwt));
 
     // Look up the reporting unit's client number to enforce client-scoped authorization
     String clientNumber = service.getClientNumberForReportingUnit(reportingUnitId);
@@ -129,8 +118,10 @@ public class SearchController {
       List<String> userClientNumbers = JwtPrincipalUtil.getClientFromRoles(jwt);
 
       if (!userClientNumbers.contains(clientNumber)) {
-        log.warn("SECURITY: BCeID user {} attempted unauthorized access to reporting unit {}",
-            JwtPrincipalUtil.getUserId(jwt), reportingUnitId);
+        log.warn(
+            "SECURITY: BCeID user {} attempted unauthorized access to reporting unit {}",
+            JwtPrincipalUtil.getUserId(jwt),
+            reportingUnitId);
         throw new ResponseStatusException(
             HttpStatus.FORBIDDEN,
             "User is not authorized to access reporting unit: " + reportingUnitId);
@@ -147,11 +138,8 @@ public class SearchController {
    * @return a list of user ids that match the provided value
    */
   @GetMapping("/reporting-units-users")
-  public List<String> searchReportingUnitUsers(
-      @RequestParam String userId
-  ) {
+  public List<String> searchReportingUnitUsers(@RequestParam String userId) {
     log.info("Searching for users that matches {}", userId);
     return service.searchReportingUnitUser(userId);
   }
-
 }

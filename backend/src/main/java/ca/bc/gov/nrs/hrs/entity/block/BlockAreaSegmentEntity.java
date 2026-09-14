@@ -16,9 +16,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-/**
- * Area or road segment used by a submission block.
- */
+/** Area or road segment used by a submission block. */
 @Entity
 @Table(name = "block_area_segment", schema = "hrs")
 @EntityListeners(AuditingEntityListener.class)

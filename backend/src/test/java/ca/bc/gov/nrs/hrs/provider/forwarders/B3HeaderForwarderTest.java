@@ -70,4 +70,3 @@ class B3HeaderForwarderTest {
     assertTrue(headers.isEmpty());
   }
 }
-

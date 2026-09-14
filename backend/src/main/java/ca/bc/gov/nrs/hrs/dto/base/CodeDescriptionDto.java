@@ -8,20 +8,16 @@ import lombok.With;
  *
  * <p>Represents an immutable record used throughout the application to transport a code and its
  * corresponding description. Optionally includes a list of configured geographic areas associated
- * with the code.</p>
+ * with the code.
  *
  * <ul>
- *   <li>{@code code} — the code value (e.g., district code, status code)</li>
- *   <li>{@code description} — the human-readable description for the code</li>
- *   <li>{@code areas} — optional list of configured geographic areas for the code</li>
+ *   <li>{@code code} — the code value (e.g., district code, status code)
+ *   <li>{@code description} — the human-readable description for the code
+ *   <li>{@code areas} — optional list of configured geographic areas for the code
  * </ul>
  */
 @With
-public record CodeDescriptionDto(
-    String code,
-    String description,
-    List<String> areas
-) {
+public record CodeDescriptionDto(String code, String description, List<String> areas) {
 
   /**
    * Convenience constructor that initializes areas to an empty list.

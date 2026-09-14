@@ -9,10 +9,7 @@ import lombok.NoArgsConstructor;
 /**
  * Composite identifier for {@link UserBookmarkEntity}.
  *
- * <p>
- * The fields and types must match the {@code @Id} fields declared in
- * {@link UserBookmarkEntity}.
- * </p>
+ * <p>The fields and types must match the {@code @Id} fields declared in {@link UserBookmarkEntity}.
  */
 @Data
 @NoArgsConstructor
@@ -25,4 +22,3 @@ public class UserBookmarkEntityId implements Serializable {
   private String userId;
   private Long reportingUnitId;
 }
-

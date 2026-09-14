@@ -24,26 +24,52 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class FormulaSetController {
   private final FormulaSetService service;
+
+  /**
+   * Creates a new formula set.
+   *
+   * @param request the formula set payload
+   * @return the created formula set response
+   */
   @PostMapping
-  public ResponseEntity<FormulaSetResponse> create(
-      @Valid @RequestBody FormulaSetRequest request) {
+  public ResponseEntity<FormulaSetResponse> create(@Valid @RequestBody FormulaSetRequest request) {
     FormulaSetResponse response = service.create(request);
     return ResponseEntity.created(URI.create("/api/configuration/formulas/" + response.id()))
         .body(response);
   }
 
+  /**
+   * Updates an existing formula set by id.
+   *
+   * @param id the formula set id
+   * @param request the updated formula set payload
+   * @return the updated formula set response
+   */
   @PutMapping("/{id}")
-  public FormulaSetResponse update(@PathVariable Long id,
-      @Valid @RequestBody FormulaSetRequest request) {
+  public FormulaSetResponse update(
+      @PathVariable Long id, @Valid @RequestBody FormulaSetRequest request) {
     return service.update(id, request);
   }
 
+  /**
+   * Deletes a formula set by id.
+   *
+   * @param id the formula set id
+   * @return empty response entity
+   */
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(@PathVariable Long id) {
     service.delete(id);
     return ResponseEntity.noContent().build();
   }
 
+  /**
+   * Retrieves the effective formula set for a given date and area.
+   *
+   * @param date the effective date
+   * @param area the area
+   * @return the effective formula set response
+   */
   @GetMapping("/{date}/{area}")
   public FormulaSetResponse effective(@PathVariable LocalDate date, @PathVariable Area area) {
     return service.effective(date, area);

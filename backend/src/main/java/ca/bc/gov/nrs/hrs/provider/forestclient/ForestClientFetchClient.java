@@ -15,9 +15,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-/**
- * Client responsible for fetching individual ForestClient records by number.
- */
+/** Client responsible for fetching individual ForestClient records by number. */
 @Slf4j
 @Component
 @Observed
@@ -34,11 +32,9 @@ public class ForestClientFetchClient {
   /**
    * Fetch a ForestClient by its number.
    *
-   * <p>Handles downstream response status codes mapping them to appropriate
-   * domain exceptions (404 -> {@link ForestClientNotFoundException}, 429 ->
-   * {@link TooManyRequestsException}, 4xx -> {@link UnretriableException}, 5xx ->
-   * {@link RetriableException}).
-   * </p>
+   * <p>Handles downstream response status codes mapping them to appropriate domain exceptions (404
+   * -> {@link ForestClientNotFoundException}, 429 -> {@link TooManyRequestsException}, 4xx ->
+   * {@link UnretriableException}, 5xx -> {@link RetriableException}).
    *
    * @param number the client number to search for
    * @return an {@link Optional} containing the {@link ForestClientDto} if found
@@ -54,44 +50,42 @@ public class ForestClientFetchClient {
             .get()
             .uri("/clients/findByClientNumber/{number}", number)
             .retrieve()
-            .onStatus(status -> status.value() == 404,
-                 (ignoredRequest, res) -> {
-                  log.error("Finished {} request - Client error: {}", PROVIDER,
-                      res.getStatusCode());
+            .onStatus(
+                status -> status.value() == 404,
+                (ignoredRequest, res) -> {
+                  log.error(
+                      "Finished {} request - Client error: {}", PROVIDER, res.getStatusCode());
                   throw new ForestClientNotFoundException(number);
-                }
-            )
-            .onStatus(status -> status.value() == 429,
-                 (ignoredRequest, res) -> {
+                })
+            .onStatus(
+                status -> status.value() == 429,
+                (ignoredRequest, res) -> {
                   log.warn("Rate limit hit when fetching {}, status 429", number);
                   String retryAfter = res.getHeaders().getFirst("Retry-After");
                   throw new TooManyRequestsException("Forest Client", retryAfter);
-                }
-            )
-            .onStatus(HttpStatusCode::is4xxClientError,
-                 (ignoredRequest, res) -> {
+                })
+            .onStatus(
+                HttpStatusCode::is4xxClientError,
+                (ignoredRequest, res) -> {
                   log.error("Unhandled 4xx error: {}", res.getStatusCode());
                   throw new UnretriableException(res.getStatusCode(), number);
-                }
-            )
-            .onStatus(HttpStatusCode::is5xxServerError,
-                 (ignoredRequest, res) -> {
-                  log.error("Finished {} request - Server error: {}", PROVIDER,
-                      res.getStatusCode());
+                })
+            .onStatus(
+                HttpStatusCode::is5xxServerError,
+                (ignoredRequest, res) -> {
+                  log.error(
+                      "Finished {} request - Server error: {}", PROVIDER, res.getStatusCode());
                   throw new RetriableException(res.getStatusCode(), res.getStatusText());
-                }
-            )
-            .body(ForestClientDto.class)
-    );
+                })
+            .body(ForestClientDto.class));
   }
 
   @SuppressWarnings("unused")
   private Optional<ForestClientDto> fetchClientByNumberFallBack(String number, Throwable ex) {
-    log.warn("Fallback for fetchClientByNumber for {} due to {}.",
+    log.warn(
+        "Fallback for fetchClientByNumber for {} due to {}.",
         PROVIDER,
-        ex == null ? "unknown" : ex.toString()
-    );
+        ex == null ? "unknown" : ex.toString());
     return Optional.empty();
   }
 }
-

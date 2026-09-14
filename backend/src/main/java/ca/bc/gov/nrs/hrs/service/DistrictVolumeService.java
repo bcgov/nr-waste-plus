@@ -35,9 +35,9 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * Service for managing district volume configurations.
  *
- * <p>Handles retrieval, creation, and validation of district volume records. Supports filtering
- * by geographic area (INTERIOR, COASTAL) and provides methods to determine which areas have
- * active configurations for a given district code.</p>
+ * <p>Handles retrieval, creation, and validation of district volume records. Supports filtering by
+ * geographic area (INTERIOR, COASTAL) and provides methods to determine which areas have active
+ * configurations for a given district code.
  */
 @Service
 @RequiredArgsConstructor
@@ -50,7 +50,7 @@ public class DistrictVolumeService {
    * Retrieves a paginated list of district volume records.
    *
    * <p>Optionally filters results by geographic area. If no area filter is provided, returns all
-   * district volume records.</p>
+   * district volume records.
    *
    * @param areaOptional optional area filter (INTERIOR or COASTAL); if empty, no filtering is
    *     applied
@@ -60,24 +60,25 @@ public class DistrictVolumeService {
   @Transactional(readOnly = true)
   @NewSpan
   public Page<DistrictVolumeListItemDto> getDistrictVolumes(
-      Optional<String> areaOptional,
-      Pageable pageable) {
+      Optional<String> areaOptional, Pageable pageable) {
 
-    log.debug("Listing existing district volumes with area filter: {} and page: {}",
-        areaOptional.orElse("None"), pageable);
+    log.debug(
+        "Listing existing district volumes with area filter: {} and page: {}",
+        areaOptional.orElse("None"),
+        pageable);
 
     Page<DistrictVolumeEntity> entities =
         areaOptional
-            .map(areaStr -> {
-              Area areaEnum = Area.valueOf(areaStr.toUpperCase());
-              return districtVolumeRepository.findAllLiveByConfigTypeAndArea(
-                  ConfigType.DISTRICT_VOLUME,
-                  areaEnum,
-                  pageable);
-            })
-            .orElseGet(() -> districtVolumeRepository.findAllLiveByConfigType(
-                ConfigType.DISTRICT_VOLUME,
-                pageable));
+            .map(
+                areaStr -> {
+                  Area areaEnum = Area.valueOf(areaStr.toUpperCase());
+                  return districtVolumeRepository.findAllLiveByConfigTypeAndArea(
+                      ConfigType.DISTRICT_VOLUME, areaEnum, pageable);
+                })
+            .orElseGet(
+                () ->
+                    districtVolumeRepository.findAllLiveByConfigType(
+                        ConfigType.DISTRICT_VOLUME, pageable));
 
     return entities.map(DistrictVolumeMapper::toListItemDto);
   }
@@ -93,11 +94,12 @@ public class DistrictVolumeService {
   public DistrictVolumeDetailDto getDistrictVolumeById(Long id) {
 
     DistrictVolumeEntity entity =
-        districtVolumeRepository.findByIdAndConfigType(id, ConfigType.DISTRICT_VOLUME)
+        districtVolumeRepository
+            .findByIdAndConfigType(id, ConfigType.DISTRICT_VOLUME)
             .orElseThrow(
-                () -> new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "District volume record not found"));
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "District volume record not found"));
 
     return DistrictVolumeMapper.toDetailDto(entity);
   }
@@ -106,7 +108,7 @@ public class DistrictVolumeService {
    * Returns the geographic areas that currently have active district-volume data for a district.
    *
    * <p>Checks both INTERIOR and COASTAL areas to determine which ones have active (non-expired)
-   * configurations containing the specified district code.</p>
+   * configurations containing the specified district code.
    *
    * @param districtCode the district code to search for (e.g., "DND", "DKM")
    * @return list of area names (INTERIOR, COASTAL) that have active data for the district; empty
@@ -123,10 +125,8 @@ public class DistrictVolumeService {
     LocalDate currentDate = LocalDate.now();
 
     for (Area area : List.of(Area.INTERIOR, Area.COASTAL)) {
-      districtVolumeRepository.findActiveByConfigTypeAndArea(
-              ConfigType.DISTRICT_VOLUME,
-              area,
-              currentDate)
+      districtVolumeRepository
+          .findActiveByConfigTypeAndArea(ConfigType.DISTRICT_VOLUME, area, currentDate)
           .stream()
           .findFirst()
           .filter(entity -> containsDistrict(entity.getTableData(), districtCode))
@@ -140,8 +140,8 @@ public class DistrictVolumeService {
    * Returns the geographic areas for multiple district codes in a single pass.
    *
    * <p>Fetches the active INTERIOR and COASTAL configurations once and checks all district codes
-   * against both, avoiding the N+1 query pattern that would result from calling
-   * {@link #getAreasForDistrictCode(String)} in a loop.</p>
+   * against both, avoiding the N+1 query pattern that would result from calling {@link
+   * #getAreasForDistrictCode(String)} in a loop.
    *
    * @param districtCodes the district codes to look up (null or empty returns an empty map)
    * @return map of district code to its list of area names (INTERIOR, COASTAL); each list is empty
@@ -162,19 +162,18 @@ public class DistrictVolumeService {
     LocalDate currentDate = LocalDate.now();
 
     for (Area area : List.of(Area.INTERIOR, Area.COASTAL)) {
-      districtVolumeRepository.findActiveByConfigTypeAndArea(
-              ConfigType.DISTRICT_VOLUME,
-              area,
-              currentDate)
+      districtVolumeRepository
+          .findActiveByConfigTypeAndArea(ConfigType.DISTRICT_VOLUME, area, currentDate)
           .stream()
           .findFirst()
-          .ifPresent(entity -> {
-            for (String districtCode : districtCodes) {
-              if (containsDistrict(entity.getTableData(), districtCode)) {
-                result.get(districtCode).add(area.name());
-              }
-            }
-          });
+          .ifPresent(
+              entity -> {
+                for (String districtCode : districtCodes) {
+                  if (containsDistrict(entity.getTableData(), districtCode)) {
+                    result.get(districtCode).add(area.name());
+                  }
+                }
+              });
     }
 
     return result;
@@ -184,15 +183,17 @@ public class DistrictVolumeService {
    * Creates a new district volume configuration record.
    *
    * <p>Performs comprehensive validation including:
+   *
    * <ul>
-   *   <li>Area enum validation</li>
-   *   <li>Payload structure consistency with the specified area</li>
-   *   <li>Helicopter multiplier requirement for COASTAL area</li>
-   *   <li>Start date must be strictly after today</li>
-   *   <li>No duplicate open-ended records for the area</li>
-   *   <li>Start date must be after the most recent existing start date</li>
+   *   <li>Area enum validation
+   *   <li>Payload structure consistency with the specified area
+   *   <li>Helicopter multiplier requirement for COASTAL area
+   *   <li>Start date must be strictly after today
+   *   <li>No duplicate open-ended records for the area
+   *   <li>Start date must be after the most recent existing start date
    * </ul>
-   * If a previous open-ended record exists, its end date is set to one day before the new start
+   *
+   * <p>If a previous open-ended record exists, its end date is set to one day before the new start
    * date.
    *
    * @param user the user creating the record (for audit trail)
@@ -200,8 +201,7 @@ public class DistrictVolumeService {
    * @return the newly created {@link DistrictVolumeDetailDto}
    * @throws ResponseStatusException with HTTP 400 if validation fails (invalid area, missing
    *     helicopter multiplier, invalid start date, payload mismatch)
-   * @throws ResponseStatusException with HTTP 409 if multiple open-ended records exist for the
-   *     area
+   * @throws ResponseStatusException with HTTP 409 if multiple open-ended records exist for the area
    * @throws ResponseStatusException with HTTP 422 if start date is not strictly after today or
    *     after the most recent existing start date
    */
@@ -209,15 +209,12 @@ public class DistrictVolumeService {
   public DistrictVolumeDetailDto createDistrictVolume(
       String user, DistrictVolumeCreateDto createDto) {
 
-    Area areaEnum = EnumUtils.getEnumIgnoreCase(
-        Area.class,
-        createDto.area());
+    Area areaEnum = EnumUtils.getEnumIgnoreCase(Area.class, createDto.area());
 
     if (areaEnum == null) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
-          "Invalid area: " + createDto.area()
-              + ". Must be INTERIOR or COASTAL.");
+          "Invalid area: " + createDto.area() + ". Must be INTERIOR or COASTAL.");
     }
 
     validateAreaPayloadConsistency(areaEnum, createDto);
@@ -230,38 +227,31 @@ public class DistrictVolumeService {
 
     if (!createDto.startDate().isAfter(LocalDate.now())) {
       throw new ResponseStatusException(
-          HttpStatus.UNPROCESSABLE_CONTENT,
-          "Start date must be strictly after today.");
+          HttpStatus.UNPROCESSABLE_CONTENT, "Start date must be strictly after today.");
     }
 
     List<DistrictVolumeEntity> openEntries =
-        districtVolumeRepository
-            .findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
-                ConfigType.DISTRICT_VOLUME,
-                areaEnum);
+        districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+            ConfigType.DISTRICT_VOLUME, areaEnum);
 
     if (openEntries.size() > 1) {
       throw new ResponseStatusException(
           HttpStatus.CONFLICT,
           "Data integrity issue: multiple open-ended district volume records exist for area "
-              + areaEnum + ". Resolve the duplicates before creating a new configuration.");
+              + areaEnum
+              + ". Resolve the duplicates before creating a new configuration.");
     }
 
-    List<DistrictVolumeEntity> successorEntries = districtVolumeRepository.findFirstLiveAfter(
-        ConfigType.DISTRICT_VOLUME,
-        areaEnum,
-        createDto.startDate(),
-        PageRequest.of(0, 1));
-    DistrictVolumeEntity successor = successorEntries.isEmpty()
-        ? null
-        : successorEntries.getFirst();
+    List<DistrictVolumeEntity> successorEntries =
+        districtVolumeRepository.findFirstLiveAfter(
+            ConfigType.DISTRICT_VOLUME, areaEnum, createDto.startDate(), PageRequest.of(0, 1));
+    DistrictVolumeEntity successor =
+        successorEntries.isEmpty() ? null : successorEntries.getFirst();
     DistrictVolumeEntity previousEntry;
     if (successor != null) {
-      List<DistrictVolumeEntity> previousEntries = districtVolumeRepository.findFirstLiveBefore(
-          ConfigType.DISTRICT_VOLUME,
-          areaEnum,
-          createDto.startDate(),
-          PageRequest.of(0, 1));
+      List<DistrictVolumeEntity> previousEntries =
+          districtVolumeRepository.findFirstLiveBefore(
+              ConfigType.DISTRICT_VOLUME, areaEnum, createDto.startDate(), PageRequest.of(0, 1));
       previousEntry = previousEntries.isEmpty() ? null : previousEntries.getFirst();
     } else {
       previousEntry = openEntries.isEmpty() ? null : openEntries.getFirst();
@@ -273,7 +263,8 @@ public class DistrictVolumeService {
         throw new ResponseStatusException(
             HttpStatus.UNPROCESSABLE_CONTENT,
             "Start date must be after the most recent existing start date ("
-                + previousEntry.getStartDate() + ").");
+                + previousEntry.getStartDate()
+                + ").");
       }
 
       previousEntry.setEndDate(createDto.startDate().minusDays(1));
@@ -289,12 +280,9 @@ public class DistrictVolumeService {
     entity.setHeliMultiplier(createDto.heliMultiplier());
     entity.setCreatedBy(user);
 
-    entity.setTableData(
-        DistrictVolumeMapper.toEntityTableData(
-            createDto.tableData()));
+    entity.setTableData(DistrictVolumeMapper.toEntityTableData(createDto.tableData()));
 
-    DistrictVolumeEntity savedEntity =
-        districtVolumeRepository.save(entity);
+    DistrictVolumeEntity savedEntity = districtVolumeRepository.save(entity);
 
     return DistrictVolumeMapper.toDetailDto(savedEntity);
   }
@@ -303,15 +291,13 @@ public class DistrictVolumeService {
    * Checks if the provided table data contains a district with the specified code.
    *
    * <p>Searches through zones or sections (depending on the table data structure) to find a
-   * matching district code. Comparison is case-insensitive.</p>
+   * matching district code. Comparison is case-insensitive.
    *
    * @param tableData the table data structure to search (may be null)
    * @param districtCode the district code to search for
    * @return true if the district code is found in the table data; false otherwise
    */
-  private boolean containsDistrict(
-      TableData tableData,
-      String districtCode) {
+  private boolean containsDistrict(TableData tableData, String districtCode) {
 
     if (tableData == null || StringUtils.isBlank(districtCode)) {
       return false;
@@ -320,12 +306,12 @@ public class DistrictVolumeService {
     String normalizedCode = districtCode.toUpperCase();
 
     if (tableData.sections() != null) {
-      boolean match = tableData.sections().stream()
-          .flatMap(section ->
-              section.districts() != null ? section.districts().stream()
-                  : Stream.empty())
-          .anyMatch(d -> normalizedCode.equals(
-              d.district().code().toUpperCase()));
+      boolean match =
+          tableData.sections().stream()
+              .flatMap(
+                  section ->
+                      section.districts() != null ? section.districts().stream() : Stream.empty())
+              .anyMatch(d -> normalizedCode.equals(d.district().code().toUpperCase()));
       if (match) {
         return true;
       }
@@ -333,10 +319,8 @@ public class DistrictVolumeService {
 
     if (tableData.zones() != null) {
       return tableData.zones().stream()
-          .flatMap(zone ->
-              zone.districts() != null ? zone.districts().stream() : Stream.empty())
-          .anyMatch(d -> normalizedCode.equals(
-              d.district().code().toUpperCase()));
+          .flatMap(zone -> zone.districts() != null ? zone.districts().stream() : Stream.empty())
+          .anyMatch(d -> normalizedCode.equals(d.district().code().toUpperCase()));
     }
 
     return false;
@@ -345,28 +329,23 @@ public class DistrictVolumeService {
   /**
    * Validates that the table data payload structure matches the specified area.
    *
-   * <p>Ensures that INTERIOR areas have InteriorDataDto and COASTAL areas have CoastDataDto.</p>
+   * <p>Ensures that INTERIOR areas have InteriorDataDto and COASTAL areas have CoastDataDto.
    *
    * @param areaEnum the geographic area (INTERIOR or COASTAL)
    * @param createDto the district volume creation request
-   * @throws ResponseStatusException with HTTP 400 if the payload structure does not match the
-   *     area or if the payload is null/invalid
+   * @throws ResponseStatusException with HTTP 400 if the payload structure does not match the area
+   *     or if the payload is null/invalid
    */
-  private void validateAreaPayloadConsistency(
-      Area areaEnum, DistrictVolumeCreateDto createDto) {
+  private void validateAreaPayloadConsistency(Area areaEnum, DistrictVolumeCreateDto createDto) {
 
-    if (createDto.tableData() instanceof InteriorDataDto
-        && areaEnum != Area.INTERIOR) {
+    if (createDto.tableData() instanceof InteriorDataDto && areaEnum != Area.INTERIOR) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Area mismatch: Expected INTERIOR data layout.");
+          HttpStatus.BAD_REQUEST, "Area mismatch: Expected INTERIOR data layout.");
     }
 
-    if (createDto.tableData() instanceof CoastDataDto
-        && areaEnum != Area.COASTAL) {
+    if (createDto.tableData() instanceof CoastDataDto && areaEnum != Area.COASTAL) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Area mismatch: Expected COASTAL data layout.");
+          HttpStatus.BAD_REQUEST, "Area mismatch: Expected COASTAL data layout.");
     }
 
     if (createDto.tableData() instanceof InteriorDataDto) {
@@ -375,8 +354,7 @@ public class DistrictVolumeService {
       // Valid structural combination; do nothing and allow processing to continue.
     } else {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Invalid or missing table data payload structure.");
+          HttpStatus.BAD_REQUEST, "Invalid or missing table data payload structure.");
     }
   }
 
@@ -384,30 +362,31 @@ public class DistrictVolumeService {
    * Soft-deletes a district volume configuration record.
    *
    * <p>Marks the record as deleted (sets deleted = true) instead of removing it from the database.
-   * This preserves audit history and allows for potential recovery.</p>
+   * This preserves audit history and allows for potential recovery.
    *
    * <p>Only future-start, open-ended configurations can be deleted. When deleted, the predecessor
-   * (if any) is reopened by setting its end date to the deleted record's end date.</p>
+   * (if any) is reopened by setting its end date to the deleted record's end date.
    *
    * @param user the user performing the deletion (for audit trail)
    * @param id the unique identifier of the record to delete
    * @throws ResponseStatusException with HTTP 404 if the record is not found or already deleted
-   * @throws ResponseStatusException with HTTP 422 if the record is not a
-   *     future-start or not open-ended.
+   * @throws ResponseStatusException with HTTP 422 if the record is not a future-start or not
+   *     open-ended.
    */
   @Transactional(isolation = Isolation.SERIALIZABLE)
   public void deleteDistrictVolume(String user, Long id) {
-    DistrictVolumeEntity entity = districtVolumeRepository
-        .findByIdAndConfigType(id, ConfigType.DISTRICT_VOLUME)
-        .filter(e -> !e.isDeleted())
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "District volume record not found: " + id));
+    DistrictVolumeEntity entity =
+        districtVolumeRepository
+            .findByIdAndConfigType(id, ConfigType.DISTRICT_VOLUME)
+            .filter(e -> !e.isDeleted())
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "District volume record not found: " + id));
 
     if (entity.getStartDate() == null || !entity.getStartDate().isAfter(LocalDate.now())) {
       throw new ResponseStatusException(
-          HttpStatus.UNPROCESSABLE_CONTENT,
-          "Only future-start configurations can be deleted.");
+          HttpStatus.UNPROCESSABLE_CONTENT, "Only future-start configurations can be deleted.");
     }
 
     if (entity.getEndDate() != null) {
@@ -416,11 +395,12 @@ public class DistrictVolumeService {
           "Only open-ended future configurations can be deleted.");
     }
 
-    List<DistrictVolumeEntity> previousEntries = districtVolumeRepository.findFirstLiveBefore(
-        ConfigType.DISTRICT_VOLUME,
-        entity.getArea(),
-        entity.getStartDate(),
-        PageRequest.of(0, 1));
+    List<DistrictVolumeEntity> previousEntries =
+        districtVolumeRepository.findFirstLiveBefore(
+            ConfigType.DISTRICT_VOLUME,
+            entity.getArea(),
+            entity.getStartDate(),
+            PageRequest.of(0, 1));
     if (!previousEntries.isEmpty()) {
       DistrictVolumeEntity predecessor = previousEntries.getFirst();
       predecessor.setEndDate(entity.getEndDate());
@@ -431,5 +411,4 @@ public class DistrictVolumeService {
     districtVolumeRepository.save(entity);
     log.info("Soft-deleted district volume {} by user {}", id, user);
   }
-
 }

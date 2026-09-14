@@ -10,10 +10,9 @@ import lombok.With;
 /**
  * This record represents a Forest Client object.
  *
- * <p>It models information about a forest client including identification,
- * legal person names and type/status codes. The {@link #name()} accessor resolves a display name
- * depending on whether the client represents an individual or an organization.
- * </p>
+ * <p>It models information about a forest client including identification, legal person names and
+ * type/status codes. The {@link #name()} accessor resolves a display name depending on whether the
+ * client represents an individual or an organization.
  */
 @Builder
 @With
@@ -24,16 +23,14 @@ public record ForestClientDto(
     String legalMiddleName,
     ForestClientStatusEnum clientStatusCode,
     ForestClientTypeEnum clientTypeCode,
-    String acronym
-) {
+    String acronym) {
 
   /**
    * Returns the name of the client.
    *
-   * <p>The value is resolved based on the client type: for individuals (type code 'I')
-   * it concatenates legal first, middle and last name parts; for other types it returns the
-   * clientName (company or organization name).
-   * </p>
+   * <p>The value is resolved based on the client type: for individuals (type code 'I') it
+   * concatenates legal first, middle and last name parts; for other types it returns the clientName
+   * (company or organization name).
    *
    * @return the resolved display name of the client
    */
@@ -48,5 +45,4 @@ public record ForestClientDto(
       return this.clientName;
     }
   }
-
 }

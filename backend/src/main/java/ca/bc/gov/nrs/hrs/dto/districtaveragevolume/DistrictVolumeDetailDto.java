@@ -8,15 +8,15 @@ import java.time.LocalDate;
 /**
  * Detailed representation of a District Volume configuration.
  *
- * <p>This DTO is used for full read operations and includes both metadata and
- * the complete polymorphic table structure.</p>
+ * <p>This DTO is used for full read operations and includes both metadata and the complete
+ * polymorphic table structure.
  *
- * <p>The {@code tableData} field is polymorphic and is serialized/deserialized
- * using a Jackson type discriminator (e.g. "type") to support multiple area-specific
- * layouts such as INTERIOR and COASTAL.</p>
+ * <p>The {@code tableData} field is polymorphic and is serialized/deserialized using a Jackson type
+ * discriminator (e.g. "type") to support multiple area-specific layouts such as INTERIOR and
+ * COASTAL.
  *
- * <p>The {@code heliMultiplier} field is only applicable for COASTAL configurations
- * and is excluded from JSON output when null.</p>
+ * <p>The {@code heliMultiplier} field is only applicable for COASTAL configurations and is excluded
+ * from JSON output when null.
  */
 public record DistrictVolumeDetailDto(
     Long id,
@@ -27,6 +27,5 @@ public record DistrictVolumeDetailDto(
     Instant dateOfUpload,
     BigDecimal tableLevelFactor,
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    BigDecimal heliMultiplier, // COASTAL only; suppressed from JSON when null
-    TableDataDto tableData
-) {}
+        BigDecimal heliMultiplier, // COASTAL only; suppressed from JSON when null
+    TableDataDto tableData) {}

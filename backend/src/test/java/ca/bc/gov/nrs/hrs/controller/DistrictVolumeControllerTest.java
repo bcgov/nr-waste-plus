@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeCreateDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeDetailDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.DistrictVolumeListItemDto;
@@ -63,8 +64,7 @@ class DistrictVolumeControllerTest {
   private MockMvc mockMvc;
   private JsonMapper objectMapper;
 
-  private static final Instant FIXED_DATE =
-      Instant.parse("2024-01-01T00:00:00Z");
+  private static final Instant FIXED_DATE = Instant.parse("2024-01-01T00:00:00Z");
 
   @Mock
   private DistrictVolumeService districtVolumeService;
@@ -73,22 +73,14 @@ class DistrictVolumeControllerTest {
   private DistrictVolumeController districtVolumeController;
 
   private static final LocalDateTime MOCK_UPLOAD_TIME =
-      LocalDateTime.of(
-          2026,
-          Month.JUNE,
-          11,
-          14,
-          0,
-          0);
+      LocalDateTime.of(2026, Month.JUNE, 11, 14, 0, 0);
 
   @BeforeEach
   void setUp() {
     JsonMapper mapper =
         JsonMapper.builder()
             .findAndAddModules()
-            .configure(
-                SerializationFeature.FAIL_ON_EMPTY_BEANS,
-                false)
+            .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
             .build();
 
     this.objectMapper = mapper;
@@ -100,8 +92,7 @@ class DistrictVolumeControllerTest {
                 new HandlerMethodArgumentResolver() {
                   @Override
                   public boolean supportsParameter(MethodParameter parameter) {
-                    return parameter.hasParameterAnnotation(
-                        AuthenticationPrincipal.class);
+                    return parameter.hasParameterAnnotation(AuthenticationPrincipal.class);
                   }
 
                   @Override
@@ -110,22 +101,16 @@ class DistrictVolumeControllerTest {
                       ModelAndViewContainer mavContainer,
                       NativeWebRequest webRequest,
                       WebDataBinderFactory binderFactory) {
-                    Authentication auth =
-                        SecurityContextHolder.getContext().getAuthentication();
+                    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
                     if (auth != null) {
                       return auth.getPrincipal();
                     }
                     // Fallback for standalone setup without SecurityContext
                     return WithMockJwtSecurityContextFactory.createJwt(
-                        "jakethedog",
-                        Collections.emptyList(),
-                        "idir",
-                        "Jake",
-                        "jake@test.ca");
+                        "jakethedog", Collections.emptyList(), "idir", "Jake", "jake@test.ca");
                   }
                 })
-            .setMessageConverters(
-                new JacksonJsonHttpMessageConverter(mapper))
+            .setMessageConverters(new JacksonJsonHttpMessageConverter(mapper))
             .build();
   }
 
@@ -146,31 +131,26 @@ class DistrictVolumeControllerTest {
 
     PageRequest pageRequest = PageRequest.of(0, 10);
 
-    PageImpl<DistrictVolumeListItemDto> page =
-        new PageImpl<>(List.of(listItem), pageRequest, 1);
+    PageImpl<DistrictVolumeListItemDto> page = new PageImpl<>(List.of(listItem), pageRequest, 1);
 
-    when(districtVolumeService.getDistrictVolumes(
-            eq(Optional.empty()),
-            any(Pageable.class)))
+    when(districtVolumeService.getDistrictVolumes(eq(Optional.empty()), any(Pageable.class)))
         .thenReturn(page);
 
-    mockMvc.perform(
+    mockMvc
+        .perform(
             get("/api/configuration/district-average-volumes")
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content[0].id").value(1L))
         .andExpect(jsonPath("$.content[0].area").value("INTERIOR"))
-        .andExpect(
-            jsonPath("$.content[0].uploadedBy")
-                .value("TEST_USER"));
+        .andExpect(jsonPath("$.content[0].uploadedBy").value("TEST_USER"));
   }
 
   @Test
   @DisplayName(
       "GET / — Should return 200 OK with filtered list items "
           + "when a valid area parameter is provided")
-  void getDistrictVolumes_returnsFilteredData_whenAreaIsValid()
-      throws Exception {
+  void getDistrictVolumes_returnsFilteredData_whenAreaIsValid() throws Exception {
 
     DistrictVolumeListItemDto listItem =
         new DistrictVolumeListItemDto(
@@ -183,31 +163,26 @@ class DistrictVolumeControllerTest {
 
     PageRequest pageRequest = PageRequest.of(0, 10);
 
-    PageImpl<DistrictVolumeListItemDto> page =
-        new PageImpl<>(List.of(listItem), pageRequest, 1);
+    PageImpl<DistrictVolumeListItemDto> page = new PageImpl<>(List.of(listItem), pageRequest, 1);
 
-    when(districtVolumeService.getDistrictVolumes(
-            eq(Optional.of("INTERIOR")),
-            any(Pageable.class)))
+    when(districtVolumeService.getDistrictVolumes(eq(Optional.of("INTERIOR")), any(Pageable.class)))
         .thenReturn(page);
 
-    mockMvc.perform(
+    mockMvc
+        .perform(
             get("/api/configuration/district-average-volumes")
                 .param("area", "INTERIOR")
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(
-            jsonPath("$.content[0].area")
-                .value("INTERIOR"));
+        .andExpect(jsonPath("$.content[0].area").value("INTERIOR"));
   }
 
   @Test
-  @DisplayName(
-      "GET / — Should return 400 Bad Request when area parameter is invalid")
-  void getDistrictVolumes_returns400_whenAreaIsInvalid()
-      throws Exception {
+  @DisplayName("GET / — Should return 400 Bad Request when area parameter is invalid")
+  void getDistrictVolumes_returns400_whenAreaIsInvalid() throws Exception {
 
-    mockMvc.perform(
+    mockMvc
+        .perform(
             get("/api/configuration/district-average-volumes")
                 .param("area", "INVALID_AREA")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -215,32 +190,25 @@ class DistrictVolumeControllerTest {
   }
 
   @Test
-  @DisplayName(
-      "GET / — Should return 401 Unauthorized when request lacks authentication")
-  void getDistrictVolumes_returns401_whenUnauthorized()
-      throws Exception {
+  @DisplayName("GET / — Should return 401 Unauthorized when request lacks authentication")
+  void getDistrictVolumes_returns401_whenUnauthorized() throws Exception {
 
     when(districtVolumeService.getDistrictVolumes(any(), any()))
-        .thenThrow(
-            new ResponseStatusException(
-                HttpStatus.UNAUTHORIZED,
-                "Unauthorized Access"));
+        .thenThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized Access"));
 
-    mockMvc.perform(
+    mockMvc
+        .perform(
             get("/api/configuration/district-average-volumes")
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isUnauthorized());
   }
 
   @Test
-  @DisplayName(
-      "GET /{id} — Should return 200 OK when configuration exists")
+  @DisplayName("GET /{id} — Should return 200 OK when configuration exists")
   void getDistrictVolumeById_returnsDetails() throws Exception {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
     DistrictVolumeDetailDto detailDto =
         new DistrictVolumeDetailDto(
@@ -254,55 +222,41 @@ class DistrictVolumeControllerTest {
             null,
             interiorData);
 
-    when(districtVolumeService.getDistrictVolumeById(1L))
-        .thenReturn(detailDto);
+    when(districtVolumeService.getDistrictVolumeById(1L)).thenReturn(detailDto);
 
-    mockMvc.perform(
+    mockMvc
+        .perform(
             get("/api/configuration/district-average-volumes/1")
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(1L))
         .andExpect(jsonPath("$.area").value("INTERIOR"))
-        .andExpect(
-            jsonPath("$.tableLevelFactor")
-                .value(1.150))
-        .andExpect(
-            jsonPath("$.uploadedBy")
-                .value("TEST_USER"));
+        .andExpect(jsonPath("$.tableLevelFactor").value(1.150))
+        .andExpect(jsonPath("$.uploadedBy").value("TEST_USER"));
   }
 
   @Test
-  @DisplayName(
-      "GET /{id} — Should return 404 Not Found when ID does not exist")
-  void getDistrictVolumeById_returns404_whenNotFound()
-      throws Exception {
+  @DisplayName("GET /{id} — Should return 404 Not Found when ID does not exist")
+  void getDistrictVolumeById_returns404_whenNotFound() throws Exception {
 
     when(districtVolumeService.getDistrictVolumeById(99L))
         .thenThrow(
-            new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "District volume record not found"));
+            new ResponseStatusException(HttpStatus.NOT_FOUND, "District volume record not found"));
 
-    mockMvc.perform(
+    mockMvc
+        .perform(
             get("/api/configuration/district-average-volumes/99")
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isNotFound());
   }
 
   @Test
-  @DisplayName(
-      "POST / — Should return 201 Created with Location header "
-          + "when payload is valid")
-  @WithMockJwt(
-      value = "jakethedog"
-  )
-  void createDistrictVolume_returns201AndLocationHeader()
-      throws Exception {
+  @DisplayName("POST / — Should return 201 Created with Location header " + "when payload is valid")
+  @WithMockJwt(value = "jakethedog")
+  void createDistrictVolume_returns201AndLocationHeader() throws Exception {
 
     InteriorDataDto interiorData =
-        new InteriorDataDto(
-            Collections.emptyList(),
-            Collections.emptyMap());
+        new InteriorDataDto(Collections.emptyList(), Collections.emptyMap());
 
     DistrictVolumeCreateDto createDto =
         new DistrictVolumeCreateDto(
@@ -325,39 +279,27 @@ class DistrictVolumeControllerTest {
             interiorData);
 
     when(districtVolumeService.createDistrictVolume(
-            eq("IDIR\\jakethedog"),
-            any(DistrictVolumeCreateDto.class)))
+            eq("IDIR\\jakethedog"), any(DistrictVolumeCreateDto.class)))
         .thenReturn(savedDetailDto);
 
-    mockMvc.perform(
+    mockMvc
+        .perform(
             post("/api/configuration/district-average-volumes")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createDto)))
         .andExpect(status().isCreated())
-        .andExpect(
-            header().string(
-                "Location",
-                "/api/configuration/district-average-volumes/42"));
+        .andExpect(header().string("Location", "/api/configuration/district-average-volumes/42"));
   }
 
   @Test
-  @DisplayName(
-      "POST / — Should return 400 Bad Request when validation constraints are violated")
-  @WithMockJwt(
-      value = "jakethedog"
-  )
-  void createDistrictVolume_returns400_whenRequiredFieldsAreNull()
-      throws Exception {
+  @DisplayName("POST / — Should return 400 Bad Request when validation constraints are violated")
+  @WithMockJwt(value = "jakethedog")
+  void createDistrictVolume_returns400_whenRequiredFieldsAreNull() throws Exception {
 
-    DistrictVolumeCreateDto invalidDto =
-        new DistrictVolumeCreateDto(
-            null,
-            null,
-            null,
-            null,
-            null);
+    DistrictVolumeCreateDto invalidDto = new DistrictVolumeCreateDto(null, null, null, null, null);
 
-    mockMvc.perform(
+    mockMvc
+        .perform(
             post("/api/configuration/district-average-volumes")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidDto)))
@@ -366,42 +308,40 @@ class DistrictVolumeControllerTest {
 
   @Test
   @DisplayName(
-      "DELETE /{id} — Should return 204 No Content when record exists and is future-start open-ended")
+      "DELETE /{id} — Should return 204 No Content when record exists and is future-start"
+          + " open-ended")
   @WithMockJwt(value = "jakethedog")
-  void deleteDistrictVolume_returns204_whenRecordExistsAndIsFutureOpenEnded()
-      throws Exception {
+  void deleteDistrictVolume_returns204_whenRecordExistsAndIsFutureOpenEnded() throws Exception {
 
-    doNothing().when(districtVolumeService)
-        .deleteDistrictVolume(eq("IDIR\\jakethedog"), eq(42L));
+    doNothing().when(districtVolumeService).deleteDistrictVolume(eq("IDIR\\jakethedog"), eq(42L));
 
-    mockMvc.perform(
+    mockMvc
+        .perform(
             delete("/api/configuration/district-average-volumes/42")
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isNoContent());
 
-    verify(districtVolumeService)
-        .deleteDistrictVolume(eq("IDIR\\jakethedog"), eq(42L));
+    verify(districtVolumeService).deleteDistrictVolume(eq("IDIR\\jakethedog"), eq(42L));
   }
 
   @Test
-  @DisplayName(
-      "DELETE /{id} — Should return 404 Not Found when record does not exist")
+  @DisplayName("DELETE /{id} — Should return 404 Not Found when record does not exist")
   @WithMockJwt(value = "jakethedog")
   void deleteDistrictVolume_returns404_whenNotFound() throws Exception {
 
-    doThrow(new ResponseStatusException(
-        HttpStatus.NOT_FOUND,
-        "District volume record not found: 99"))
+    doThrow(
+            new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "District volume record not found: 99"))
         .when(districtVolumeService)
         .deleteDistrictVolume(eq("IDIR\\jakethedog"), eq(99L));
 
-    mockMvc.perform(
+    mockMvc
+        .perform(
             delete("/api/configuration/district-average-volumes/99")
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isNotFound());
 
-    verify(districtVolumeService)
-        .deleteDistrictVolume(eq("IDIR\\jakethedog"), eq(99L));
+    verify(districtVolumeService).deleteDistrictVolume(eq("IDIR\\jakethedog"), eq(99L));
   }
 
   @Test
@@ -410,19 +350,20 @@ class DistrictVolumeControllerTest {
   @WithMockJwt(value = "jakethedog")
   void deleteDistrictVolume_returns422_whenNotFutureStart() throws Exception {
 
-    doThrow(new ResponseStatusException(
-        HttpStatus.UNPROCESSABLE_CONTENT,
-        "Only future-start configurations can be deleted."))
+    doThrow(
+            new ResponseStatusException(
+                HttpStatus.UNPROCESSABLE_CONTENT,
+                "Only future-start configurations can be deleted."))
         .when(districtVolumeService)
         .deleteDistrictVolume(eq("IDIR\\jakethedog"), eq(42L));
 
-    mockMvc.perform(
+    mockMvc
+        .perform(
             delete("/api/configuration/district-average-volumes/42")
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isUnprocessableEntity());
 
-    verify(districtVolumeService)
-        .deleteDistrictVolume(eq("IDIR\\jakethedog"), eq(42L));
+    verify(districtVolumeService).deleteDistrictVolume(eq("IDIR\\jakethedog"), eq(42L));
   }
 
   @Test
@@ -431,19 +372,19 @@ class DistrictVolumeControllerTest {
   @WithMockJwt(value = "jakethedog")
   void deleteDistrictVolume_returns422_whenNotOpenEnded() throws Exception {
 
-    doThrow(new ResponseStatusException(
-        HttpStatus.UNPROCESSABLE_CONTENT,
-        "Only open-ended future configurations can be deleted."))
+    doThrow(
+            new ResponseStatusException(
+                HttpStatus.UNPROCESSABLE_CONTENT,
+                "Only open-ended future configurations can be deleted."))
         .when(districtVolumeService)
         .deleteDistrictVolume(eq("IDIR\\jakethedog"), eq(42L));
 
-    mockMvc.perform(
+    mockMvc
+        .perform(
             delete("/api/configuration/district-average-volumes/42")
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isUnprocessableEntity());
 
-    verify(districtVolumeService)
-        .deleteDistrictVolume(eq("IDIR\\jakethedog"), eq(42L));
+    verify(districtVolumeService).deleteDistrictVolume(eq("IDIR\\jakethedog"), eq(42L));
   }
-
-  }
+}

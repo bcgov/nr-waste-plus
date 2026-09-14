@@ -40,11 +40,12 @@ class LegacyApiProviderTest {
   void shouldDelegateGetReportingUnitDetails_toReportingUnitClient() {
     // Arrange
     Long reportingUnitId = 12345L;
-    var expected = new ReportingUnitLegacyDetailsDto(
-        "00012797", "00",
-        new CodeDescriptionDto("S01", "Sample Method One"),
-        new CodeDescriptionDto("DND", "Nadina Natural Resource District")
-    );
+    var expected =
+        new ReportingUnitLegacyDetailsDto(
+            "00012797",
+            "00",
+            new CodeDescriptionDto("S01", "Sample Method One"),
+            new CodeDescriptionDto("DND", "Nadina Natural Resource District"));
 
     when(reportingUnitClient.getReportingUnitDetails(reportingUnitId)).thenReturn(expected);
 
@@ -134,4 +135,3 @@ class LegacyApiProviderTest {
     verify(reportingUnitClient).searchReportingUnitUsers("ja");
   }
 }
-

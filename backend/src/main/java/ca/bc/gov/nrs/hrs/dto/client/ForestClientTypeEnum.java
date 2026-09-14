@@ -7,10 +7,8 @@ import lombok.Getter;
 /**
  * Enum containing all forest client type codes and their descriptions.
  *
- * <p>
- * Each enum constant exposes a {@code code} and {@code description} and is
- * serialized as a JSON object due to {@link JsonFormat#shape()}.
- * </p>
+ * <p>Each enum constant exposes a {@code code} and {@code description} and is serialized as a JSON
+ * object due to {@link JsonFormat#shape()}.
  */
 @Getter
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)

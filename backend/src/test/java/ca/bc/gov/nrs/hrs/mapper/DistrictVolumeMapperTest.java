@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDataDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.CoastDistrictRowDto;
@@ -13,12 +14,12 @@ import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorDistrictRowDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.InteriorZoneDto;
 import ca.bc.gov.nrs.hrs.dto.districtaveragevolume.SpeciesCompositionTableDataDto;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
-import ca.bc.gov.nrs.hrs.entity.speciescomposition.SpeciesCompositionRow;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictRow;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Section;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Zone;
+import ca.bc.gov.nrs.hrs.entity.speciescomposition.SpeciesCompositionRow;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -32,7 +33,7 @@ import org.junit.jupiter.api.Test;
 @DisplayName("Unit Test | District Volume Mapper")
 class DistrictVolumeMapperTest {
 
-  private static final LocalDateTime MOCK_UPLOAD_TIME = 
+  private static final LocalDateTime MOCK_UPLOAD_TIME =
       LocalDateTime.of(2026, Month.JUNE, 1, 12, 0, 0);
 
   @Test
@@ -70,8 +71,7 @@ class DistrictVolumeMapperTest {
     entity.setCreatedBy("IDIR\\JSMITH");
     entity.setDateOfUpload(MOCK_UPLOAD_TIME);
 
-    TableData mockTableData =
-        new TableData(Collections.emptyList(), null, null, Map.of());
+    TableData mockTableData = new TableData(Collections.emptyList(), null, null, Map.of());
     entity.setTableData(mockTableData);
 
     // Act
@@ -96,8 +96,7 @@ class DistrictVolumeMapperTest {
     entity.setCreatedBy("IDIR\\JSMITH");
     entity.setDateOfUpload(MOCK_UPLOAD_TIME);
 
-    TableData mockTableData =
-        new TableData(null, Collections.emptyList(), null, Map.of());
+    TableData mockTableData = new TableData(null, Collections.emptyList(), null, Map.of());
     entity.setTableData(mockTableData);
 
     // Act
@@ -114,8 +113,7 @@ class DistrictVolumeMapperTest {
   @DisplayName("Should map Interior TableDataDto to Entity TableData")
   void testToEntityTableData_Interior() {
     // Arrange
-    InteriorDataDto interiorDto =
-        new InteriorDataDto(Collections.emptyList(), Map.of());
+    InteriorDataDto interiorDto = new InteriorDataDto(Collections.emptyList(), Map.of());
 
     // Act
     TableData tableData = DistrictVolumeMapper.toEntityTableData(interiorDto);
@@ -129,8 +127,7 @@ class DistrictVolumeMapperTest {
   @DisplayName("Should map Coastal TableDataDto to Entity TableData")
   void testToEntityTableData_Coastal() {
     // Arrange
-    CoastDataDto coastDto =
-        new CoastDataDto(Collections.emptyList(), Map.of());
+    CoastDataDto coastDto = new CoastDataDto(Collections.emptyList(), Map.of());
 
     // Act
     TableData tableData = DistrictVolumeMapper.toEntityTableData(coastDto);
@@ -145,14 +142,16 @@ class DistrictVolumeMapperTest {
   void testToDetailDto_Interior_withDistricts() {
 
     // Arrange
-    DistrictRow row = new DistrictRow(
-        new CodeDescriptionDto("DPG", "Prince George"),
-        new BigDecimal("10.5"),
-        new BigDecimal("2.0"),
-        new BigDecimal("1.0"),
-        null, null, null,
-        new BigDecimal("13.5")
-    );
+    DistrictRow row =
+        new DistrictRow(
+            new CodeDescriptionDto("DPG", "Prince George"),
+            new BigDecimal("10.5"),
+            new BigDecimal("2.0"),
+            new BigDecimal("1.0"),
+            null,
+            null,
+            null,
+            new BigDecimal("13.5"));
     Zone zone = new Zone("Dry belt", List.of(row));
     TableData tableData = new TableData(List.of(zone), null, null, Map.of());
 
@@ -187,15 +186,16 @@ class DistrictVolumeMapperTest {
   void testToDetailDto_Coastal_withDistricts() {
 
     // Arrange
-    DistrictRow row = new DistrictRow(
-        new CodeDescriptionDto("DCC", "Chilliwack"),
-        new BigDecimal("5.5"),
-        null, null,
-        new BigDecimal("1.2"),
-        new BigDecimal("0.8"),
-        new BigDecimal("0.5"),
-        new BigDecimal("8.0")
-    );
+    DistrictRow row =
+        new DistrictRow(
+            new CodeDescriptionDto("DCC", "Chilliwack"),
+            new BigDecimal("5.5"),
+            null,
+            null,
+            new BigDecimal("1.2"),
+            new BigDecimal("0.8"),
+            new BigDecimal("0.5"),
+            new BigDecimal("8.0"));
     Section section = new Section("Mature", List.of(row));
     TableData tableData = new TableData(null, List.of(section), null, Map.of());
 
@@ -232,15 +232,14 @@ class DistrictVolumeMapperTest {
   void testToEntity_Interior() {
 
     // Arrange
-    InteriorDataDto interiorDto =
-        new InteriorDataDto(Collections.emptyList(), Map.of());
-    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
-        "INTERIOR",
-        LocalDate.of(2027, Month.JANUARY, 1),
-        new BigDecimal("1.100"),
-        null,
-        interiorDto
-    );
+    InteriorDataDto interiorDto = new InteriorDataDto(Collections.emptyList(), Map.of());
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "INTERIOR",
+            LocalDate.of(2027, Month.JANUARY, 1),
+            new BigDecimal("1.100"),
+            null,
+            interiorDto);
 
     // Act
     DistrictVolumeEntity entity = DistrictVolumeMapper.toEntity(createDto);
@@ -259,15 +258,14 @@ class DistrictVolumeMapperTest {
   void testToEntity_Coastal_withHeliMultiplier() {
 
     // Arrange
-    CoastDataDto coastDto =
-        new CoastDataDto(Collections.emptyList(), Map.of());
-    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
-        "COASTAL",
-        LocalDate.of(2027, Month.JUNE, 1),
-        new BigDecimal("1.050"),
-        new BigDecimal("1.750"),
-        coastDto
-    );
+    CoastDataDto coastDto = new CoastDataDto(Collections.emptyList(), Map.of());
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "COASTAL",
+            LocalDate.of(2027, Month.JUNE, 1),
+            new BigDecimal("1.050"),
+            new BigDecimal("1.750"),
+            coastDto);
 
     // Act
     DistrictVolumeEntity entity = DistrictVolumeMapper.toEntity(createDto);
@@ -285,15 +283,10 @@ class DistrictVolumeMapperTest {
   void testToEntity_Coastal_nullHeliMultiplier() {
 
     // Arrange
-    CoastDataDto coastDto =
-        new CoastDataDto(Collections.emptyList(), Map.of());
-    DistrictVolumeCreateDto createDto = new DistrictVolumeCreateDto(
-        "COASTAL",
-        LocalDate.of(2027, Month.JUNE, 1),
-        new BigDecimal("1.000"),
-        null,
-        coastDto
-    );
+    CoastDataDto coastDto = new CoastDataDto(Collections.emptyList(), Map.of());
+    DistrictVolumeCreateDto createDto =
+        new DistrictVolumeCreateDto(
+            "COASTAL", LocalDate.of(2027, Month.JUNE, 1), new BigDecimal("1.000"), null, coastDto);
 
     // Act
     DistrictVolumeEntity entity = DistrictVolumeMapper.toEntity(createDto);
@@ -307,16 +300,15 @@ class DistrictVolumeMapperTest {
   void testToEntityTableData_Interior_withData() {
 
     // Arrange
-    InteriorDistrictRowDto rowDto = new InteriorDistrictRowDto(
-        "DPG",
-        new BigDecimal("10.0"),
-        new BigDecimal("2.0"),
-        new BigDecimal("1.0"),
-        new BigDecimal("13.0")
-    );
+    InteriorDistrictRowDto rowDto =
+        new InteriorDistrictRowDto(
+            "DPG",
+            new BigDecimal("10.0"),
+            new BigDecimal("2.0"),
+            new BigDecimal("1.0"),
+            new BigDecimal("13.0"));
     InteriorZoneDto zoneDto = new InteriorZoneDto("Wet belt", List.of(rowDto));
-    InteriorDataDto interiorDto =
-        new InteriorDataDto(List.of(zoneDto), Map.of());
+    InteriorDataDto interiorDto = new InteriorDataDto(List.of(zoneDto), Map.of());
 
     // Act
     TableData tableData = DistrictVolumeMapper.toEntityTableData(interiorDto);
@@ -335,17 +327,16 @@ class DistrictVolumeMapperTest {
   void testToEntityTableData_Coastal_withData() {
 
     // Arrange
-    CoastDistrictRowDto rowDto = new CoastDistrictRowDto(
-        "DCC",
-        new BigDecimal("5.0"),
-        new BigDecimal("1.0"),
-        new BigDecimal("0.5"),
-        new BigDecimal("0.3"),
-        new BigDecimal("6.8")
-    );
+    CoastDistrictRowDto rowDto =
+        new CoastDistrictRowDto(
+            "DCC",
+            new BigDecimal("5.0"),
+            new BigDecimal("1.0"),
+            new BigDecimal("0.5"),
+            new BigDecimal("0.3"),
+            new BigDecimal("6.8"));
     CoastSectionDto sectionDto = new CoastSectionDto("Immature", List.of(rowDto));
-    CoastDataDto coastDto =
-        new CoastDataDto(List.of(sectionDto), Map.of());
+    CoastDataDto coastDto = new CoastDataDto(List.of(sectionDto), Map.of());
 
     // Act
     TableData tableData = DistrictVolumeMapper.toEntityTableData(coastDto);
@@ -364,14 +355,17 @@ class DistrictVolumeMapperTest {
   void testToDetailDto_Interior_nullDistrictFields_scaleReturnsNull() {
 
     // Arrange — row with null numeric fields (only district code is set)
-    DistrictRow row = new DistrictRow(
-        new CodeDescriptionDto("DPG", null),
-        null, // avoidableSawlog
-        null, // avoidableGrade4
-        null, // unavoidableGrade4
-        null, null, null,
-        null  // total
-    );
+    DistrictRow row =
+        new DistrictRow(
+            new CodeDescriptionDto("DPG", null),
+            null, // avoidableSawlog
+            null, // avoidableGrade4
+            null, // unavoidableGrade4
+            null,
+            null,
+            null,
+            null // total
+            );
     Zone zone = new Zone("Dry belt", List.of(row));
     TableData tableData = new TableData(List.of(zone), null, null, Map.of());
 
@@ -397,7 +391,8 @@ class DistrictVolumeMapperTest {
 
   @Test
   @DisplayName(
-      "toEntityTableData — should map SpeciesCompositionTableDataDto rows to speciesRows via SpeciesCompositionMapper")
+      "toEntityTableData — should map SpeciesCompositionTableDataDto rows to speciesRows via"
+          + " SpeciesCompositionMapper")
   void toEntityTableData_mapsSpeciesCompositionRows_whenDtoIsSpeciesComposition() {
     // Arrange
     SpeciesCompositionTableDataDto dto =
@@ -420,9 +415,9 @@ class DistrictVolumeMapperTest {
       "toDetailDto — should return SpeciesCompositionTableDataDto when entity has speciesRows")
   void toDetailDto_returnsSpeciesCompositionDto_whenEntityHasSpeciesRows() {
     // Arrange
-    SpeciesCompositionRow row = new SpeciesCompositionRow(
-        new CodeDescriptionDto("DPG", "Prince George"),
-        Map.of("BA", new BigDecimal("10.000")));
+    SpeciesCompositionRow row =
+        new SpeciesCompositionRow(
+            new CodeDescriptionDto("DPG", "Prince George"), Map.of("BA", new BigDecimal("10.000")));
     TableData tableData = new TableData(null, null, List.of(row), Map.of());
 
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
@@ -446,7 +441,8 @@ class DistrictVolumeMapperTest {
 
   @Test
   @DisplayName(
-      "toDetailDto — should handle null tableData with INTERIOR area by returning empty InteriorDataDto")
+      "toDetailDto — should handle null tableData with INTERIOR area by returning empty"
+          + " InteriorDataDto")
   void toDetailDto_handlesNullTableData_withInteriorArea() {
     // Arrange — use empty zones list so toInteriorDto can iterate without NPE
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
@@ -467,7 +463,8 @@ class DistrictVolumeMapperTest {
 
   @Test
   @DisplayName(
-      "toDetailDto — should handle null tableData with COASTAL area by returning empty CoastDataDto")
+      "toDetailDto — should handle null tableData with COASTAL area by returning empty"
+          + " CoastDataDto")
   void toDetailDto_handlesNullTableData_withCoastalArea() {
     // Arrange — use empty sections list so toCoastDto can iterate without NPE
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
@@ -487,8 +484,7 @@ class DistrictVolumeMapperTest {
   }
 
   @Test
-  @DisplayName(
-      "toDetailDto — should handle null dateOfUpload without throwing NPE")
+  @DisplayName("toDetailDto — should handle null dateOfUpload without throwing NPE")
   void toDetailDto_handlesNullDateOfUpload() {
     // Arrange
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
@@ -508,8 +504,7 @@ class DistrictVolumeMapperTest {
   }
 
   @Test
-  @DisplayName(
-      "toDetailDto — should return empty InteriorDataDto when entity tableData is null")
+  @DisplayName("toDetailDto — should return empty InteriorDataDto when entity tableData is null")
   void toDetailDto_handlesNullTableData_Interior() {
     // Arrange — entity with null tableData (not set)
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
@@ -532,8 +527,7 @@ class DistrictVolumeMapperTest {
   }
 
   @Test
-  @DisplayName(
-      "toDetailDto — should return empty CoastDataDto when entity tableData is null")
+  @DisplayName("toDetailDto — should return empty CoastDataDto when entity tableData is null")
   void toDetailDto_handlesNullTableData_Coastal() {
     // Arrange — entity with null tableData (not set)
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
@@ -556,8 +550,7 @@ class DistrictVolumeMapperTest {
   }
 
   @Test
-  @DisplayName(
-      "toEntityTableData — should use empty map when InteriorDataDto has null formulas")
+  @DisplayName("toEntityTableData — should use empty map when InteriorDataDto has null formulas")
   void toEntityTableData_interior_nullFormulas() {
     // Arrange
     InteriorDataDto interiorDto = new InteriorDataDto(Collections.emptyList(), null);
@@ -571,8 +564,7 @@ class DistrictVolumeMapperTest {
   }
 
   @Test
-  @DisplayName(
-      "toEntityTableData — should use empty map when CoastDataDto has null formulas")
+  @DisplayName("toEntityTableData — should use empty map when CoastDataDto has null formulas")
   void toEntityTableData_coastal_nullFormulas() {
     // Arrange
     CoastDataDto coastDto = new CoastDataDto(Collections.emptyList(), null);

@@ -24,14 +24,15 @@ class BlockCalculationServiceTest {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  @Mock private BlockCalculationSnapshotRepository repository;
-  @InjectMocks private BlockCalculationService service;
+  @Mock
+  private BlockCalculationSnapshotRepository repository;
+  @InjectMocks
+  private BlockCalculationService service;
 
   @Test
   @DisplayName("Returns empty when no snapshot exists")
   void returnsEmptyWhenNoSnapshot() {
-    given(repository.findTopByBlockIdOrderByCalculatedAtDesc(999L))
-        .willReturn(Optional.empty());
+    given(repository.findTopByBlockIdOrderByCalculatedAtDesc(999L)).willReturn(Optional.empty());
 
     Optional<BlockCalculationDto> result = service.findLatest(999L);
 
@@ -41,12 +42,12 @@ class BlockCalculationServiceTest {
   @Test
   @DisplayName("Maps snapshot with null outputs to zero grand total")
   void mapsNullOutputsToZero() throws Exception {
-    BlockCalculationSnapshotEntity entity = snapshot(
-        MAPPER.readTree("{}"),         // outputs — null fields
-        MAPPER.createArrayNode());     // warnings — empty
+    BlockCalculationSnapshotEntity entity =
+        snapshot(
+            MAPPER.readTree("{}"), // outputs — null fields
+            MAPPER.createArrayNode()); // warnings — empty
 
-    given(repository.findTopByBlockIdOrderByCalculatedAtDesc(1L))
-        .willReturn(Optional.of(entity));
+    given(repository.findTopByBlockIdOrderByCalculatedAtDesc(1L)).willReturn(Optional.of(entity));
 
     BlockCalculationDto dto = service.findLatest(1L).orElseThrow();
 
@@ -57,11 +58,9 @@ class BlockCalculationServiceTest {
   @DisplayName("Maps textual warnings to typed warning records")
   void mapsTextualWarnings() throws Exception {
     JsonNode warnings = MAPPER.readTree("[\"rounding_applied\",\"data_missing\"]");
-    BlockCalculationSnapshotEntity entity = snapshot(
-        MAPPER.readTree("{\"da.x\":1}"), warnings);
+    BlockCalculationSnapshotEntity entity = snapshot(MAPPER.readTree("{\"da.x\":1}"), warnings);
 
-    given(repository.findTopByBlockIdOrderByCalculatedAtDesc(1L))
-        .willReturn(Optional.of(entity));
+    given(repository.findTopByBlockIdOrderByCalculatedAtDesc(1L)).willReturn(Optional.of(entity));
 
     BlockCalculationDto dto = service.findLatest(1L).orElseThrow();
 
@@ -74,13 +73,11 @@ class BlockCalculationServiceTest {
   @Test
   @DisplayName("Maps object warnings to typed warning records with code and message")
   void mapsObjectWarnings() throws Exception {
-    JsonNode warnings = MAPPER.readTree(
-        "[{\"code\":\"FTA_UNAVAILABLE\",\"message\":\"FTA service timeout\"}]");
-    BlockCalculationSnapshotEntity entity = snapshot(
-        MAPPER.readTree("{\"da.x\":1}"), warnings);
+    JsonNode warnings =
+        MAPPER.readTree("[{\"code\":\"FTA_UNAVAILABLE\",\"message\":\"FTA service timeout\"}]");
+    BlockCalculationSnapshotEntity entity = snapshot(MAPPER.readTree("{\"da.x\":1}"), warnings);
 
-    given(repository.findTopByBlockIdOrderByCalculatedAtDesc(1L))
-        .willReturn(Optional.of(entity));
+    given(repository.findTopByBlockIdOrderByCalculatedAtDesc(1L)).willReturn(Optional.of(entity));
 
     BlockCalculationDto dto = service.findLatest(1L).orElseThrow();
 
@@ -92,12 +89,11 @@ class BlockCalculationServiceTest {
   @Test
   @DisplayName("Sums only numeric output values")
   void sumsNumericOutputs() throws Exception {
-    JsonNode outputs = MAPPER.readTree(
-        "{\"da.mature.volume\":10.5,\"da.total\":20.0,\"da.label\":\"text\"}");
+    JsonNode outputs =
+        MAPPER.readTree("{\"da.mature.volume\":10.5,\"da.total\":20.0,\"da.label\":\"text\"}");
     BlockCalculationSnapshotEntity entity = snapshot(outputs, MAPPER.createArrayNode());
 
-    given(repository.findTopByBlockIdOrderByCalculatedAtDesc(1L))
-        .willReturn(Optional.of(entity));
+    given(repository.findTopByBlockIdOrderByCalculatedAtDesc(1L)).willReturn(Optional.of(entity));
 
     BlockCalculationDto dto = service.findLatest(1L).orElseThrow();
 
@@ -107,9 +103,18 @@ class BlockCalculationServiceTest {
   private BlockCalculationSnapshotEntity snapshot(JsonNode outputs, JsonNode warnings) {
     Instant now = Instant.parse("2025-07-01T00:00:00Z");
     return new BlockCalculationSnapshotEntity(
-        1L, 42L, null, null,
-        MAPPER.createObjectNode(), outputs,
-        now, "HALF_UP", warnings,
-        "test", "test", now, now);
+        1L,
+        42L,
+        null,
+        null,
+        MAPPER.createObjectNode(),
+        outputs,
+        now,
+        "HALF_UP",
+        warnings,
+        "test",
+        "test",
+        now,
+        now);
   }
 }

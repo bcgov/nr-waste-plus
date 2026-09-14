@@ -27,30 +27,31 @@ public class BlockCalculationService {
    * @return optional containing the mapped DTO, or empty
    */
   public Optional<BlockCalculationDto> findLatest(Long blockId) {
-    return repository.findTopByBlockIdOrderByCalculatedAtDesc(blockId)
-        .map(this::toDto);
+    return repository.findTopByBlockIdOrderByCalculatedAtDesc(blockId).map(this::toDto);
   }
 
   private BlockCalculationDto toDto(BlockCalculationSnapshotEntity entity) {
     JsonNode outputsNode = entity.getOutputs();
     BigDecimal grandTotal = sumOutputValues(outputsNode);
 
-    BlockCalculationDto.Outputs outputs = new BlockCalculationDto.Outputs(
-        List.of(), // perMark — empty until mark-level resolution is available
-        grandTotal);
+    BlockCalculationDto.Outputs outputs =
+        new BlockCalculationDto.Outputs(
+            List.of(), // perMark — empty until mark-level resolution is available
+            grandTotal);
 
     List<BlockCalculationWarning> warnings = new ArrayList<>();
     JsonNode warningsNode = entity.getWarnings();
     if (warningsNode != null && warningsNode.isArray()) {
-      warningsNode.forEach(w -> {
-        if (w.isTextual()) {
-          warnings.add(new BlockCalculationWarning(w.asText(), null));
-        } else if (w.isObject()) {
-          String code = w.has("code") ? w.get("code").asText() : null;
-          String message = w.has("message") ? w.get("message").asText() : null;
-          warnings.add(new BlockCalculationWarning(code, message));
-        }
-      });
+      warningsNode.forEach(
+          w -> {
+            if (w.isTextual()) {
+              warnings.add(new BlockCalculationWarning(w.asText(), null));
+            } else if (w.isObject()) {
+              String code = w.has("code") ? w.get("code").asText() : null;
+              String message = w.has("message") ? w.get("message").asText() : null;
+              warnings.add(new BlockCalculationWarning(code, message));
+            }
+          });
     }
 
     return new BlockCalculationDto(
