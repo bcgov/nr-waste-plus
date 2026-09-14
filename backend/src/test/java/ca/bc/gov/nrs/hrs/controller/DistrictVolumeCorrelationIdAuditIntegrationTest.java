@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
+import jakarta.persistence.EntityManagerFactory;
+import java.sql.Connection;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +20,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * Probes B3 extraction through the web test environment and the database audit trigger.
@@ -38,6 +42,12 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest extends AbstractTestContai
   private JdbcTemplate jdbcTemplate;
 
   @Autowired
+  private DataSource dataSource;
+
+  @Autowired
+  private EntityManagerFactory entityManagerFactory;
+
+  @Autowired
   private MockMvc mockMvc;
 
   @Autowired
@@ -49,8 +59,9 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest extends AbstractTestContai
     // Wipe only the audit tables this test asserts on. hrs.district_volume must NOT be wiped:
     // it holds Flyway-seeded reference rows other test classes rely on, and the POST below is
     // kept collision-free because spike entities in CorrelationIdAuditIntegrationTest use
-    // closed date ranges. auto-commit is disabled pool-wide, so this must run inside a real
-    // committing transaction or Hikari rolls it back on connection return.
+    // closed date ranges. Auto-commit is enabled (Hikari's default after removing
+    // auto-commit: false from application.yml), but fixture maintenance still runs inside an
+    // explicit committing transaction for clarity and to match the test mutation pattern.
     transactionTemplate.executeWithoutResult(
         status -> jdbcTemplate.update("TRUNCATE hrs.audit_change, hrs.audit_event"));
   }
@@ -118,6 +129,18 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest extends AbstractTestContai
                     }
                     """))
         .andExpect(MockMvcResultMatchers.status().isCreated());
+
+    try (Connection connection = dataSource.getConnection()) {
+      assertThat(connection.isAutoCommit())
+          .as("the shared Hikari pool must use its default auto-commit mode")
+          .isTrue();
+    }
+    assertThat(TransactionSynchronizationManager.isActualTransactionActive())
+        .as("the request transaction must be closed before the response is returned")
+        .isFalse();
+    assertThat(TransactionSynchronizationManager.hasResource(entityManagerFactory))
+        .as("open-in-view=false must not bind an EntityManager after the request")
+        .isFalse();
 
     Long eventId =
         jdbcTemplate.queryForObject(
