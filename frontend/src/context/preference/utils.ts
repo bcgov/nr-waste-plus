@@ -11,8 +11,9 @@ const loadUserPreference = async (): Promise<UserPreference> => {
   if (loadedPreferences && Object.keys(loadedPreferences).length > 0) {
     return loadedPreferences;
   }
-  // Fallback to initialValue if API returns nothing
-  return await saveUserPreference(initialValue);
+  // Return initialValue without saving — no side effects on read.
+  // The first user-initiated updatePreferences call will persist defaults.
+  return initialValue;
 };
 
 const saveUserPreference = async (preference: Partial<UserPreference>): Promise<UserPreference> => {

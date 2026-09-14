@@ -27,7 +27,11 @@ describe('queryKeys', () => {
 
   describe('preference', () => {
     it('should build userPreference key', () => {
-      expect(queryKeys.preference.userPreference()).toEqual(['preference', 'user']);
+      expect(queryKeys.preference.userPreference('user-1')).toEqual([
+        'preference',
+        'user',
+        'user-1',
+      ]);
     });
   });
 

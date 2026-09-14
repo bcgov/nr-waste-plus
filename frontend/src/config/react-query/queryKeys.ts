@@ -69,7 +69,7 @@ export const queryKeys = {
       ['codes', 'status-options', notificationTarget] as const,
   },
   preference: {
-    userPreference: () => ['preference', 'user'] as const,
+    userPreference: (userId?: string) => ['preference', 'user', userId] as const,
   },
   search: {
     reportingUnits: (params: ReportingUnitsQueryParams, notificationTarget?: string) =>
