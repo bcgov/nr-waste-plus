@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.CannotCreateTransactionException;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -231,6 +233,44 @@ public class GlobalExceptionHandler {
   }
 
   /**
+   * Handles failures while creating a transaction without exposing database or driver details.
+   *
+   * @param ex the transaction creation failure
+   * @param request the current HTTP servlet request
+   * @return a 503 {@link ResponseEntity} with a safe {@link ProblemDetail}
+   */
+  @ExceptionHandler(CannotCreateTransactionException.class)
+  public ResponseEntity<ProblemDetail> handleCannotCreateTransaction(
+      CannotCreateTransactionException ex, HttpServletRequest request) {
+    log.error("Unable to create transaction: {}", ex.getMessage(), ex);
+
+    return problemResponse(
+        HttpStatus.SERVICE_UNAVAILABLE,
+        "Service Unavailable",
+        "The service is temporarily unable to process the request. Please try again later.",
+        request);
+  }
+
+  /**
+   * Handles transaction completion failures without exposing database or driver details.
+   *
+   * @param ex the transaction system failure
+   * @param request the current HTTP servlet request
+   * @return a 500 {@link ResponseEntity} with a safe {@link ProblemDetail}
+   */
+  @ExceptionHandler(TransactionSystemException.class)
+  public ResponseEntity<ProblemDetail> handleTransactionSystemException(
+      TransactionSystemException ex, HttpServletRequest request) {
+    log.error("Transaction system failure: {}", ex.getMessage(), ex);
+
+    return problemResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "Transaction Failed",
+        "The request could not be completed. Please contact support if this persists.",
+        request);
+  }
+
+  /**
    * Handles failures caused by multiple records matching a query that expects one record.
    *
    * <p>The underlying exception details remain in the server log, while the response explains that
@@ -278,5 +318,17 @@ public class GlobalExceptionHandler {
         .map(Throwable::getMessage)
         .or(() -> Optional.ofNullable(ex.getMessage()))
         .orElse("A database constraint was violated.");
+  }
+
+  private ResponseEntity<ProblemDetail> problemResponse(
+      HttpStatus status, String title, String detail, HttpServletRequest request) {
+    ProblemDetail problem = ProblemDetail.forStatus(status);
+    problem.setTitle(title);
+    problem.setDetail(detail);
+    problem.setInstance(URI.create(request.getRequestURI()));
+
+    return ResponseEntity.status(status)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(problem);
   }
 }
