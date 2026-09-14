@@ -115,6 +115,7 @@ const TableResource = <T,>({
         return acc;
       }, {} as SortingKeys<T>),
   );
+  const sortStateRef = useRef(sortState);
   const [expandedRowComponent, setExpandedRowComponent] = useState<Map<string, ReactNode>>(
     new Map(),
   );
@@ -131,17 +132,14 @@ const TableResource = <T,>({
     if (headers.find((h) => h.key === key && !h.sortable)) {
       return;
     }
-    let sortingKeys: SortingKeys<T> = {} as SortingKeys<T>;
-
-    setSortState((prevState) => {
-      const current = prevState[key];
-      const next = current === 'NONE' ? 'ASC' : current === 'ASC' ? 'DESC' : 'NONE';
-      const currState = { ...prevState, [key]: next };
-      sortingKeys = Object.fromEntries(
-        Object.entries(currState).filter(([key, value]) => key && value !== 'NONE'),
-      ) as SortingKeys<T>;
-      return currState;
-    });
+    const current = sortStateRef.current[key];
+    const next = current === 'NONE' ? 'ASC' : current === 'ASC' ? 'DESC' : 'NONE';
+    const nextState = { ...sortStateRef.current, [key]: next };
+    sortStateRef.current = nextState;
+    setSortState(nextState);
+    const sortingKeys = Object.fromEntries(
+      Object.entries(nextState).filter(([sortKey, value]) => sortKey && value !== 'NONE'),
+    ) as SortingKeys<T>;
     if (onSortChange) {
       onSortChange(sortingKeys);
     }

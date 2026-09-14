@@ -71,9 +71,9 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
     // other test classes (e.g. ReportingUnitControllerIntegrationTest grade validation) rely on.
     // Duplicate-open-entry collisions are avoided instead by giving spike entities closed
     // date ranges (see newEntity).
-    // auto-commit is disabled pool-wide, so fixture maintenance must run inside a real
-    // committing transaction — a bare jdbcTemplate write would be rolled back when Hikari
-    // reclaims the connection.
+    // Auto-commit is enabled (Hikari default after removing auto-commit: false from
+    // application.yml), but fixture maintenance still runs inside an explicit committing
+    // transaction for clarity and to match the test mutation pattern.
     transactionTemplate.executeWithoutResult(
         status -> jdbcTemplate.update("TRUNCATE hrs.audit_change, hrs.audit_event"));
     SecurityContextHolder.clearContext();
@@ -152,25 +152,22 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
             span -> assertThat(span).isNull(), span -> assertThat(span.isNoop()).isTrue());
 
     long beforeMaxEventId = maxAuditEventId();
-    // With pool-wide auto-commit disabled, a bare jdbcTemplate write would sit in an implicit
-    // transaction that Hikari rolls back on connection return. Run it in an explicit committing
-    // transaction; JdbcTemplate still bypasses Hibernate's ConnectionProvider, so the deferred
-    // correlation binding never applies and the trigger must record a NULL correlation_id.
+    // Hikari's default auto-commit=true should commit this bare JdbcTemplate write when the
+    // statement completes. JdbcTemplate still bypasses Hibernate's ConnectionProvider, so the
+    // deferred correlation binding never applies and the trigger must record a NULL correlation_id.
     Integer rows =
-        transactionTemplate.execute(
-            status ->
-                jdbcTemplate.update(
-                    "INSERT INTO hrs.district_volume (area, start_date, end_date, table_data,"
-                        + " table_level_factor, created_by, updated_by, config_type, is_deleted)"
-                        + " VALUES (?, ?, ?, ?::jsonb, ?, ?, ?, ?, FALSE)",
-                    Area.INTERIOR.name(),
-                    java.sql.Date.valueOf(HISTORICAL_START_DATE),
-                    java.sql.Date.valueOf(HISTORICAL_END_DATE),
-                    "{}",
-                    new BigDecimal("1.000"),
-                    "raw-sql-user",
-                    "raw-sql-user",
-                    ConfigType.DISTRICT_VOLUME.name()));
+        jdbcTemplate.update(
+            "INSERT INTO hrs.district_volume (area, start_date, end_date, table_data,"
+                + " table_level_factor, created_by, updated_by, config_type, is_deleted)"
+                + " VALUES (?, ?, ?, ?::jsonb, ?, ?, ?, ?, FALSE)",
+            Area.INTERIOR.name(),
+            java.sql.Date.valueOf(HISTORICAL_START_DATE),
+            java.sql.Date.valueOf(HISTORICAL_END_DATE),
+            "{}",
+            new BigDecimal("1.000"),
+            "raw-sql-user",
+            "raw-sql-user",
+            ConfigType.DISTRICT_VOLUME.name());
 
     assertThat(rows).isOne();
 

@@ -164,6 +164,6 @@ public class HrsConfiguration {
      * with one of these values will be hydrated.
      */
     @Builder.Default
-    private List<String> paths = List.of("/api/users/preferences");
+    private List<String> paths = List.of();
   }
 }
