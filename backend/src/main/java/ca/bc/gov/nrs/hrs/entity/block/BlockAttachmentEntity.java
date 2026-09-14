@@ -44,8 +44,18 @@ public class BlockAttachmentEntity extends SoftDeletableAuditableEntity {
   @Column(name = "content_type", length = 128)
   private String contentType;
 
+  @Column(name = "file_size_bytes")
   private Long fileSizeBytes;
 
   @Column(name = "scan_status", nullable = false, length = 32)
   private String scanStatus;
+
+  @Column(name = "document_type", length = 64)
+  private String documentType;
+
+  @Column(name = "status", nullable = false, length = 32)
+  private String status;
+
+  @Column(name = "checksum", length = 128)
+  private String checksum;
 }
