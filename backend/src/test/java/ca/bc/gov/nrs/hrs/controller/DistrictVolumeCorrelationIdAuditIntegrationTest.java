@@ -131,7 +131,7 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest extends AbstractTestContai
         .andExpect(MockMvcResultMatchers.status().isCreated());
 
     try (Connection connection = dataSource.getConnection()) {
-      assertThat(connection.isAutoCommit())
+      assertThat(connection.getAutoCommit())
           .as("the shared Hikari pool must use its default auto-commit mode")
           .isTrue();
     }
