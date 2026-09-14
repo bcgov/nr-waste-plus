@@ -20,28 +20,26 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * Global exception handler that converts exceptions into RFC 7807 ProblemDetail
- * responses (application/problem+json).
+ * Global exception handler that converts exceptions into RFC 7807 ProblemDetail responses
+ * (application/problem+json).
  */
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
 
   /**
-   * Handle database constraint violations and convert them to an RFC 7807
-   * ProblemDetail response.
+   * Handle database constraint violations and convert them to an RFC 7807 ProblemDetail response.
    *
-   * <p>This method maps {@link DataIntegrityViolationException} to an HTTP
-   * 409 CONFLICT response. The response body is an {@link ProblemDetail}
-   * (content type application/problem+json) with a title of
-   * "Database Constraint Violation" and a detail message extracted from the
-   * most specific cause of the exception when available.</p>
+   * <p>This method maps {@link DataIntegrityViolationException} to an HTTP 409 CONFLICT response.
+   * The response body is an {@link ProblemDetail} (content type application/problem+json) with a
+   * title of "Database Constraint Violation" and a detail message extracted from the most specific
+   * cause of the exception when available.
    *
    * @param ex the caught {@link DataIntegrityViolationException}
-   * @param request the current {@link HttpServletRequest} (used to set the
-   *        ProblemDetail instance URI)
-   * @return a {@link ResponseEntity} containing a {@link ProblemDetail} with
-   *         status {@link org.springframework.http.HttpStatus#CONFLICT}
+   * @param request the current {@link HttpServletRequest} (used to set the ProblemDetail instance
+   *     URI)
+   * @return a {@link ResponseEntity} containing a {@link ProblemDetail} with status {@link
+   *     org.springframework.http.HttpStatus#CONFLICT}
    */
   @ExceptionHandler(DataIntegrityViolationException.class)
   public ResponseEntity<ProblemDetail> handleDataIntegrityViolation(
@@ -62,7 +60,7 @@ public class GlobalExceptionHandler {
    * Handle transaction serialization and similar concurrent modification failures.
    *
    * <p>This method maps {@link ConcurrencyFailureException} to an HTTP 409 CONFLICT response so
-   * callers can retry when another request modified the same logical record set concurrently.</p>
+   * callers can retry when another request modified the same logical record set concurrently.
    *
    * @param ex the caught {@link ConcurrencyFailureException}
    * @param request the current {@link HttpServletRequest}
@@ -75,8 +73,7 @@ public class GlobalExceptionHandler {
 
     ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
     problem.setTitle("Concurrent Update Conflict");
-    problem.setDetail(
-        "The resource was modified by another request. Please retry.");
+    problem.setDetail("The resource was modified by another request. Please retry.");
     problem.setInstance(URI.create(request.getRequestURI()));
 
     return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -85,12 +82,11 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * Handles {@link MethodArgumentNotValidException} exceptions thrown when
-   * request validation fails.
+   * Handles {@link MethodArgumentNotValidException} exceptions thrown when request validation
+   * fails.
    *
-   * <p>Collects all field validation error messages from the binding result
-   * and returns them as a single {@link ProblemDetail} response with
-   * HTTP 400 (Bad Request) status.</p>
+   * <p>Collects all field validation error messages from the binding result and returns them as a
+   * single {@link ProblemDetail} response with HTTP 400 (Bad Request) status.
    *
    * @param ex the validation exception containing binding and field errors
    * @param request the current HTTP servlet request
@@ -101,9 +97,10 @@ public class GlobalExceptionHandler {
       MethodArgumentNotValidException ex, HttpServletRequest request) {
     log.warn("Validation failed: {}", ex.getMessage());
 
-    var errors = ex.getBindingResult().getFieldErrors().stream()
-        .map(FieldError::getDefaultMessage)
-        .collect(Collectors.joining("; "));
+    var errors =
+        ex.getBindingResult().getFieldErrors().stream()
+            .map(FieldError::getDefaultMessage)
+            .collect(Collectors.joining("; "));
 
     ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
     problem.setTitle("Validation Failed");
@@ -116,18 +113,16 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * Handle {@link ConstraintViolationException} typically raised by
-   * validation on constructor or method parameters (for example when using
-   * {@code @Validated} on beans).
+   * Handle {@link ConstraintViolationException} typically raised by validation on constructor or
+   * method parameters (for example when using {@code @Validated} on beans).
    *
-   * <p>Builds a semicolon-delimited string of constraint violations where
-   * each entry contains the property path and the violation message. Returns
-   * HTTP 400 Bad Request with an {@link ProblemDetail} (application/problem+json)
-   * containing the combined detail.</p>
+   * <p>Builds a semicolon-delimited string of constraint violations where each entry contains the
+   * property path and the violation message. Returns HTTP 400 Bad Request with an {@link
+   * ProblemDetail} (application/problem+json) containing the combined detail.
    *
    * @param ex the constraint violation exception
-   * @param request the current {@link HttpServletRequest} used to set the
-   *        ProblemDetail instance URI
+   * @param request the current {@link HttpServletRequest} used to set the ProblemDetail instance
+   *     URI
    * @return a 400 {@link ResponseEntity} containing a {@link ProblemDetail}
    */
   @ExceptionHandler(ConstraintViolationException.class)
@@ -135,9 +130,10 @@ public class GlobalExceptionHandler {
       ConstraintViolationException ex, HttpServletRequest request) {
     log.warn("Constraint violations: {}", ex.getMessage());
 
-    String detail = ex.getConstraintViolations().stream()
-        .map(cv -> cv.getPropertyPath() + ": " + cv.getMessage())
-        .collect(Collectors.joining("; "));
+    String detail =
+        ex.getConstraintViolations().stream()
+            .map(cv -> cv.getPropertyPath() + ": " + cv.getMessage())
+            .collect(Collectors.joining("; "));
 
     ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
     problem.setTitle("Validation Error");
@@ -150,18 +146,16 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * Handle {@link ResponseStatusException} which carries an HTTP status and
-   * optional reason.
+   * Handle {@link ResponseStatusException} which carries an HTTP status and optional reason.
    *
-   * <p>This handler resolves the appropriate title from the HTTP status
-   * reason phrase (falling back to the status token) and sets the ProblemDetail
-   * status to the exception's status. The ProblemDetail.detail is populated
-   * from {@link ResponseStatusException#getReason()} when available or the
-   * exception message otherwise.</p>
+   * <p>This handler resolves the appropriate title from the HTTP status reason phrase (falling back
+   * to the status token) and sets the ProblemDetail status to the exception's status. The
+   * ProblemDetail.detail is populated from {@link ResponseStatusException#getReason()} when
+   * available or the exception message otherwise.
    *
    * @param ex the ResponseStatusException thrown by controllers or services
-   * @param request the current {@link HttpServletRequest} used to populate the
-   *        ProblemDetail instance URI
+   * @param request the current {@link HttpServletRequest} used to populate the ProblemDetail
+   *     instance URI
    * @return a {@link ResponseEntity} whose status matches the exception status
    */
   @ExceptionHandler(ResponseStatusException.class)
@@ -176,9 +170,10 @@ public class GlobalExceptionHandler {
       log.warn("ResponseStatusException: {}", ex.getMessage());
     }
 
-    String title = HttpStatus.resolve(status.value()) != null
-        ? HttpStatus.resolve(status.value()).getReasonPhrase()
-        : status.toString();
+    String title =
+        HttpStatus.resolve(status.value()) != null
+            ? HttpStatus.resolve(status.value()).getReasonPhrase()
+            : status.toString();
 
     ProblemDetail problem = ProblemDetail.forStatus(status);
     problem.setTitle(title);
@@ -216,8 +211,8 @@ public class GlobalExceptionHandler {
    * Handles an unexpected exception without exposing implementation details.
    *
    * @param ex the unexpected exception
-   * @param request the current {@link HttpServletRequest} used to populate the
-   *        ProblemDetail instance URI
+   * @param request the current {@link HttpServletRequest} used to populate the ProblemDetail
+   *     instance URI
    * @return a 500 {@link ResponseEntity} containing a safe {@link ProblemDetail}
    */
   @ExceptionHandler(Exception.class)
@@ -236,12 +231,11 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * Handles failures caused by multiple records matching a query that expects
-   * one record.
+   * Handles failures caused by multiple records matching a query that expects one record.
    *
-   * <p>The underlying exception details remain in the server log, while the
-   * response explains that the failure is a data consistency problem without
-   * exposing database or implementation details to the caller.</p>
+   * <p>The underlying exception details remain in the server log, while the response explains that
+   * the failure is a data consistency problem without exposing database or implementation details
+   * to the caller.
    *
    * @param ex the cardinality exception
    * @param request the current HTTP servlet request
@@ -265,31 +259,21 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * Extracts a user-friendly constraint violation message from a
-   * {@link DataIntegrityViolationException}.
+   * Extracts a user-friendly constraint violation message from a {@link
+   * DataIntegrityViolationException}.
    *
-   * <p>The extraction follows this hierarchy:</p>
+   * <p>The extraction follows this hierarchy:
    *
    * <ol>
-   *   <li>
-   *     The message from the most specific cause
-   *     (e.g., the underlying SQL exception).
-   *   </li>
-   *   <li>
-   *     The primary message of the
-   *     {@link DataIntegrityViolationException} itself.
-   *   </li>
-   *   <li>
-   *     A generic fallback message if no specific details are found.
-   *   </li>
+   *   <li>The message from the most specific cause (e.g., the underlying SQL exception).
+   *   <li>The primary message of the {@link DataIntegrityViolationException} itself.
+   *   <li>A generic fallback message if no specific details are found.
    * </ol>
    *
    * @param ex the {@link DataIntegrityViolationException} to process.
    * @return a {@link String} containing the most specific available error detail.
    */
-  private String extractConstraintMessage(
-      DataIntegrityViolationException ex
-  ) {
+  private String extractConstraintMessage(DataIntegrityViolationException ex) {
     return Optional.ofNullable(ex.getMostSpecificCause())
         .map(Throwable::getMessage)
         .or(() -> Optional.ofNullable(ex.getMessage()))

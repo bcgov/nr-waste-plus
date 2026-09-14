@@ -17,9 +17,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-/**
- * Submission block belonging to a reporting unit.
- */
+/** Submission block belonging to a reporting unit. */
 @Entity
 @Table(name = "block", schema = "hrs")
 @EntityListeners(AuditingEntityListener.class)

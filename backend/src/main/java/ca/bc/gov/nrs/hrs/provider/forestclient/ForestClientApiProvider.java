@@ -11,11 +11,8 @@ import org.springframework.stereotype.Component;
 /**
  * Facade provider for calls to the ForestClient API.
  *
- * <p>
- * This class keeps a stable API for service-layer callers while delegating to
- * smaller, capability-focused clients:
- * {@link ForestClientFetchClient} and {@link ForestClientSearchClient}.
- * </p>
+ * <p>This class keeps a stable API for service-layer callers while delegating to smaller,
+ * capability-focused clients: {@link ForestClientFetchClient} and {@link ForestClientSearchClient}.
  */
 @Component
 @Observed
@@ -38,8 +35,8 @@ public class ForestClientApiProvider {
   /**
    * Search client by name, acronym or number.
    *
-   * @param page  pagination page
-   * @param size  pagination size
+   * @param page pagination page
+   * @param size pagination size
    * @param value search value for name/acronym/number
    * @return a {@link Page} of {@link ForestClientDto}
    */
@@ -50,19 +47,14 @@ public class ForestClientApiProvider {
   /**
    * Search clients by a list of IDs with optional name filter.
    *
-   * @param page   Page number
-   * @param size   Number of items per page
+   * @param page Page number
+   * @param size Number of items per page
    * @param values List of client IDs to search
-   * @param name   Optional name filter
+   * @param name Optional name filter
    * @return List of matching ForestClientDto
    */
   public List<ForestClientDto> searchClientsByIds(
-      int page,
-      int size,
-      List<String> values,
-      String name
-  ) {
+      int page, int size, List<String> values, String name) {
     return searchClient.searchClientsByIds(page, size, values, name);
   }
 }
-

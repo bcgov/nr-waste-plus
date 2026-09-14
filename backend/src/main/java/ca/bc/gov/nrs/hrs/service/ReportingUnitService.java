@@ -22,9 +22,9 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * Service responsible for retrieving and enriching Reporting Unit details.
  *
- * <p>Fetches raw data from the legacy API and enriches it with client information from the
- * Forest Client API, combining both into a unified {@link ReportingUnitDetailsDto} response.
- * Handles creation of new reporting units with comprehensive validation.</p>
+ * <p>Fetches raw data from the legacy API and enriches it with client information from the Forest
+ * Client API, combining both into a unified {@link ReportingUnitDetailsDto} response. Handles
+ * creation of new reporting units with comprehensive validation.
  */
 @Slf4j
 @Service
@@ -39,9 +39,9 @@ public class ReportingUnitService {
   /**
    * Retrieves and enriches the full details of a reporting unit.
    *
-   * <p>Fetches the reporting unit's legacy data (client number, sampling, district) from the
-   * legacy API and enriches it with the client name and status from the Forest Client API.
-   * Determines the grade based on the number of configured areas for the district.
+   * <p>Fetches the reporting unit's legacy data (client number, sampling, district) from the legacy
+   * API and enriches it with the client name and status from the Forest Client API. Determines the
+   * grade based on the number of configured areas for the district.
    *
    * @param reportingUnitId the unique identifier of the reporting unit to retrieve (must not be
    *     null)
@@ -55,38 +55,29 @@ public class ReportingUnitService {
 
     log.info("Fetching reporting unit details for RU {}", reportingUnitId);
 
-    var legacyClient =
-        legacyApiProvider.getReportingUnitDetails(reportingUnitId);
+    var legacyClient = legacyApiProvider.getReportingUnitDetails(reportingUnitId);
 
     var clientInformation =
-        forestClientApiProvider.fetchClientByNumber(
-                legacyClient.clientNumber())
-            .orElseThrow(() ->
-                new ForestClientNotFoundException(
-                    legacyClient.clientNumber()
-                )
-            );
+        forestClientApiProvider
+            .fetchClientByNumber(legacyClient.clientNumber())
+            .orElseThrow(() -> new ForestClientNotFoundException(legacyClient.clientNumber()));
 
     var districtAreas =
         districtVolumeService.getAreasForDistrictCode(legacyClient.district().code());
-    var grade = districtAreas.size() == 1
-        ? new CodeDescriptionDto(districtAreas.getFirst(), districtAreas.getFirst())
-        : new CodeDescriptionDto(null, null);
+    var grade =
+        districtAreas.size() == 1
+            ? new CodeDescriptionDto(districtAreas.getFirst(), districtAreas.getFirst())
+            : new CodeDescriptionDto(null, null);
 
     return new ReportingUnitDetailsDto(
         reportingUnitId,
-        new CodeDescriptionDto(
-            clientInformation.clientNumber(),
-            clientInformation.name()
-        ),
+        new CodeDescriptionDto(clientInformation.clientNumber(), clientInformation.name()),
         new CodeDescriptionDto(
             clientInformation.clientStatusCode().getCode(),
-            clientInformation.clientStatusCode().getDescription()
-        ),
+            clientInformation.clientStatusCode().getDescription()),
         legacyClient.sampling(),
         legacyClient.district(),
-        grade
-    );
+        grade);
   }
 
   /**
@@ -95,27 +86,25 @@ public class ReportingUnitService {
    * <p>Performs the following validations and actions:
    *
    * <ul>
-   *   <li>Validates that only the {@code AVG} sampling code is supported.</li>
+   *   <li>Validates that only the {@code AVG} sampling code is supported.
    *   <li>Checks that a reporting unit with the same client number and district does not already
-   *       exist.</li>
-   *   <li>Validates that a grade code is provided when the district has multiple configured
-   *       areas.</li>
-   *   <li>Verifies that the client exists in the Forest Client API.</li>
-   *   <li>Creates the reporting unit through the legacy API.</li>
+   *       exist.
+   *   <li>Validates that a grade code is provided when the district has multiple configured areas.
+   *   <li>Verifies that the client exists in the Forest Client API.
+   *   <li>Creates the reporting unit through the legacy API.
    * </ul>
    *
-   * @param request the validated create request containing client, district, sampling, and
-   *     optional grade information
+   * @param request the validated create request containing client, district, sampling, and optional
+   *     grade information
    * @return the ID of the newly created reporting unit
    * @throws ForestClientNotFoundException if the client does not exist in the Forest Client API
-   * @throws ResponseStatusException with HTTP 400 if the sampling code is invalid, a grade code
-   *     is required but missing, or any required validation fails
-   * @throws ResponseStatusException with HTTP 409 if a duplicate reporting unit already exists
-   *     for the same client number and district
+   * @throws ResponseStatusException with HTTP 400 if the sampling code is invalid, a grade code is
+   *     required but missing, or any required validation fails
+   * @throws ResponseStatusException with HTTP 409 if a duplicate reporting unit already exists for
+   *     the same client number and district
    */
   @NewSpan
-  public Long createReportingUnit(
-      @Valid CreateReportingUnitRequestDto request) {
+  public Long createReportingUnit(@Valid CreateReportingUnitRequestDto request) {
 
     log.info("Creating reporting unit for client {}", request.clientNumber());
 
@@ -126,22 +115,20 @@ public class ReportingUnitService {
     }
 
     // Check for existing reporting unit with the same client number and district
-    var searchFilters = ReportingUnitSearchParametersDto.builder()
-        .clientNumbers(List.of(request.clientNumber()))
-        .district(List.of(request.districtCode()))
-        .build();
+    var searchFilters =
+        ReportingUnitSearchParametersDto.builder()
+            .clientNumbers(List.of(request.clientNumber()))
+            .district(List.of(request.districtCode()))
+            .build();
 
-    var existing = legacyApiProvider.searchReportingUnit(
-        searchFilters,
-        PageRequest.of(0, 1));
+    var existing = legacyApiProvider.searchReportingUnit(searchFilters, PageRequest.of(0, 1));
 
     if (existing != null && existing.getTotalElements() > 0) {
       throw new ResponseStatusException(
           HttpStatus.CONFLICT,
           String.format(
               "Reporting unit for client %s and district %s already exists!",
-              request.clientNumber(),
-              request.districtCode()));
+              request.clientNumber(), request.districtCode()));
     }
 
     var districtAreas = districtVolumeService.getAreasForDistrictCode(request.districtCode());
@@ -153,9 +140,9 @@ public class ReportingUnitService {
     }
 
     // Validate client exists via Forest Client API
-    forestClientApiProvider.fetchClientByNumber(request.clientNumber())
-        .orElseThrow(() ->
-            new ForestClientNotFoundException(request.clientNumber()));
+    forestClientApiProvider
+        .fetchClientByNumber(request.clientNumber())
+        .orElseThrow(() -> new ForestClientNotFoundException(request.clientNumber()));
 
     // Create reporting unit via legacy API
     Long createdId = legacyApiProvider.createReportingUnit(request);

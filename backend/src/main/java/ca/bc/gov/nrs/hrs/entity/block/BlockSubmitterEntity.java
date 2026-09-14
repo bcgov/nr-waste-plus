@@ -15,9 +15,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-/**
- * Submitter endorsement details for a block.
- */
+/** Submitter endorsement details for a block. */
 @Entity
 @Table(name = "block_submitter", schema = "hrs")
 @EntityListeners(AuditingEntityListener.class)

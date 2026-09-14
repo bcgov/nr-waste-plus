@@ -16,9 +16,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-/**
- * Locally owned reporting unit for a district-average submission.
- */
+/** Locally owned reporting unit for a district-average submission. */
 @Entity
 @Table(name = "reporting_unit", schema = "hrs")
 @EntityListeners(AuditingEntityListener.class)

@@ -29,8 +29,8 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * Service for managing species composition records.
  *
- * <p>Provides operations for listing, retrieving, and creating species
- * composition records, including validation and business rule enforcement.
+ * <p>Provides operations for listing, retrieving, and creating species composition records,
+ * including validation and business rule enforcement.
  */
 @Service
 @RequiredArgsConstructor
@@ -40,31 +40,32 @@ public class SpeciesCompositionService {
   private final DistrictVolumeRepository districtVolumeRepository;
 
   /**
-   * Retrieves a paginated list of species composition records, optionally
-   * filtered by area.
+   * Retrieves a paginated list of species composition records, optionally filtered by area.
    *
    * @param areaOptional optional area filter
-   * @param pageable     pagination and sorting information
+   * @param pageable pagination and sorting information
    * @return paginated list of species composition list item DTOs
    */
   @Transactional(readOnly = true)
   public Page<DistrictVolumeListItemDto> getSpeciesCompositions(
-      Optional<String> areaOptional,
-      Pageable pageable) {
-    log.debug("Fetching species composition list, areaFilter: {}, pageable: {}",
-        areaOptional.orElse("None"), pageable);
+      Optional<String> areaOptional, Pageable pageable) {
+    log.debug(
+        "Fetching species composition list, areaFilter: {}, pageable: {}",
+        areaOptional.orElse("None"),
+        pageable);
 
     Page<DistrictVolumeEntity> entities =
         areaOptional
-            .map(areaStr -> {
-              Area areaEnum = Area.valueOf(areaStr.toUpperCase());
-              return districtVolumeRepository.findAllLiveByConfigTypeAndArea(
-                  ConfigType.SPECIES_COMPOSITION,
-                  areaEnum,
-                  pageable);
-            })
-            .orElseGet(() -> districtVolumeRepository.findAllLiveByConfigType(
-                ConfigType.SPECIES_COMPOSITION, pageable));
+            .map(
+                areaStr -> {
+                  Area areaEnum = Area.valueOf(areaStr.toUpperCase());
+                  return districtVolumeRepository.findAllLiveByConfigTypeAndArea(
+                      ConfigType.SPECIES_COMPOSITION, areaEnum, pageable);
+                })
+            .orElseGet(
+                () ->
+                    districtVolumeRepository.findAllLiveByConfigType(
+                        ConfigType.SPECIES_COMPOSITION, pageable));
 
     return entities.map(DistrictVolumeMapper::toListItemDto);
   }
@@ -74,17 +75,20 @@ public class SpeciesCompositionService {
    *
    * @param id the record identifier
    * @return the species composition detail DTO
-   * @throws org.springframework.web.server.ResponseStatusException with
-   *         {@code NOT_FOUND} if no record exists for the given ID
+   * @throws org.springframework.web.server.ResponseStatusException with {@code NOT_FOUND} if no
+   *     record exists for the given ID
    */
   @Transactional(readOnly = true)
   public DistrictVolumeDetailDto getSpeciesCompositionById(Long id) {
     log.debug("Fetching species composition detail for ID: {}", id);
-    DistrictVolumeEntity entity = districtVolumeRepository
-        .findByIdAndConfigType(id, ConfigType.SPECIES_COMPOSITION)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "Species composition record not found for id: " + id));
+    DistrictVolumeEntity entity =
+        districtVolumeRepository
+            .findByIdAndConfigType(id, ConfigType.SPECIES_COMPOSITION)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Species composition record not found for id: " + id));
 
     return DistrictVolumeMapper.toDetailDto(entity);
   }
@@ -92,27 +96,22 @@ public class SpeciesCompositionService {
   /**
    * Creates a new species composition record.
    *
-   * <p>Validates payload consistency with the specified area, ensures the
-   * start date is in the future and chronologically after any existing
-   * open-ended records, closes any currently open-ended record, and
-   * persists the new entry.
+   * <p>Validates payload consistency with the specified area, ensures the start date is in the
+   * future and chronologically after any existing open-ended records, closes any currently
+   * open-ended record, and persists the new entry.
    *
    * @param currentUser the authenticated user creating the record
-   * @param createDto   the creation payload
+   * @param createDto the creation payload
    * @return the persisted species composition detail DTO
-   * @throws org.springframework.web.server.ResponseStatusException with
-   *         {@code BAD_REQUEST}, {@code CONFLICT}, or
-   *         {@code UNPROCESSABLE_CONTENT} on validation failures
+   * @throws org.springframework.web.server.ResponseStatusException with {@code BAD_REQUEST}, {@code
+   *     CONFLICT}, or {@code UNPROCESSABLE_CONTENT} on validation failures
    */
   @Transactional(isolation = Isolation.SERIALIZABLE)
   public DistrictVolumeDetailDto createSpeciesComposition(
-      String currentUser,
-      DistrictVolumeCreateDto createDto) {
+      String currentUser, DistrictVolumeCreateDto createDto) {
     log.debug("Creating new species composition record for area: {}", createDto.area());
 
-    Area areaEnum = EnumUtils.getEnumIgnoreCase(
-        Area.class,
-        createDto.area());
+    Area areaEnum = EnumUtils.getEnumIgnoreCase(Area.class, createDto.area());
 
     if (areaEnum == null) {
       throw new ResponseStatusException(
@@ -124,37 +123,35 @@ public class SpeciesCompositionService {
 
     if (!createDto.startDate().isAfter(LocalDate.now())) {
       throw new ResponseStatusException(
-          HttpStatus.UNPROCESSABLE_CONTENT,
-          "Start date must be strictly after today.");
+          HttpStatus.UNPROCESSABLE_CONTENT, "Start date must be strictly after today.");
     }
 
     // Fetch existing open-ended rows for this configuration type and area
-    List<DistrictVolumeEntity> openRows = districtVolumeRepository
-        .findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
+    List<DistrictVolumeEntity> openRows =
+        districtVolumeRepository.findByConfigTypeAndAreaAndEndDateIsNullOrderByStartDateDesc(
             ConfigType.SPECIES_COMPOSITION, areaEnum);
 
     if (openRows.size() > 1) {
       throw new ResponseStatusException(
           HttpStatus.CONFLICT,
           "Data integrity issue: multiple open-ended species composition records exist for area "
-              + areaEnum + ". Resolve the duplicates before creating a new configuration.");
+              + areaEnum
+              + ". Resolve the duplicates before creating a new configuration.");
     }
 
-    List<DistrictVolumeEntity> successorEntries = districtVolumeRepository.findFirstLiveAfter(
-        ConfigType.SPECIES_COMPOSITION,
-        areaEnum,
-        createDto.startDate(),
-        PageRequest.of(0, 1));
-    DistrictVolumeEntity successor = successorEntries.isEmpty()
-        ? null
-        : successorEntries.getFirst();
+    List<DistrictVolumeEntity> successorEntries =
+        districtVolumeRepository.findFirstLiveAfter(
+            ConfigType.SPECIES_COMPOSITION, areaEnum, createDto.startDate(), PageRequest.of(0, 1));
+    DistrictVolumeEntity successor =
+        successorEntries.isEmpty() ? null : successorEntries.getFirst();
     DistrictVolumeEntity previousEntry;
     if (successor != null) {
-      List<DistrictVolumeEntity> previousEntries = districtVolumeRepository.findFirstLiveBefore(
-          ConfigType.SPECIES_COMPOSITION,
-          areaEnum,
-          createDto.startDate(),
-          PageRequest.of(0, 1));
+      List<DistrictVolumeEntity> previousEntries =
+          districtVolumeRepository.findFirstLiveBefore(
+              ConfigType.SPECIES_COMPOSITION,
+              areaEnum,
+              createDto.startDate(),
+              PageRequest.of(0, 1));
       previousEntry = previousEntries.isEmpty() ? null : previousEntries.getFirst();
     } else {
       previousEntry = openRows.isEmpty() ? null : openRows.getFirst();
@@ -166,14 +163,17 @@ public class SpeciesCompositionService {
         throw new ResponseStatusException(
             HttpStatus.UNPROCESSABLE_CONTENT,
             "Start date must be after the most recent existing start date ("
-                + previousEntry.getStartDate() + ").");
+                + previousEntry.getStartDate()
+                + ").");
       }
 
       // Close the existing open-ended row
       previousEntry.setEndDate(createDto.startDate().minusDays(1));
       districtVolumeRepository.save(previousEntry);
-      log.info("Closed existing open-ended species composition ID {} with end date {}",
-          previousEntry.getId(), previousEntry.getEndDate());
+      log.info(
+          "Closed existing open-ended species composition ID {} with end date {}",
+          previousEntry.getId(),
+          previousEntry.getEndDate());
     }
 
     DistrictVolumeEntity newEntity = DistrictVolumeMapper.toEntity(createDto);
@@ -191,30 +191,31 @@ public class SpeciesCompositionService {
    * Soft-deletes a species composition configuration record.
    *
    * <p>Marks the record as deleted (sets deleted = true) instead of removing it from the database.
-   * This preserves audit history and allows for potential recovery.</p>
+   * This preserves audit history and allows for potential recovery.
    *
    * <p>Only future-start, open-ended configurations can be deleted. When deleted, the predecessor
-   * (if any) is reopened by setting its end date to the deleted record's end date.</p>
+   * (if any) is reopened by setting its end date to the deleted record's end date.
    *
    * @param user the user performing the deletion (for audit trail)
    * @param id the unique identifier of the record to delete
    * @throws ResponseStatusException with HTTP 404 if the record is not found or already deleted
-   * @throws ResponseStatusException with HTTP 422 if the record is not a
-   *     future-start or not open-ended.
+   * @throws ResponseStatusException with HTTP 422 if the record is not a future-start or not
+   *     open-ended.
    */
   @Transactional(isolation = Isolation.SERIALIZABLE)
   public void deleteSpeciesComposition(String user, Long id) {
-    DistrictVolumeEntity entity = districtVolumeRepository
-        .findByIdAndConfigType(id, ConfigType.SPECIES_COMPOSITION)
-        .filter(e -> !e.isDeleted())
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "Species composition record not found: " + id));
+    DistrictVolumeEntity entity =
+        districtVolumeRepository
+            .findByIdAndConfigType(id, ConfigType.SPECIES_COMPOSITION)
+            .filter(e -> !e.isDeleted())
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Species composition record not found: " + id));
 
     if (entity.getStartDate() == null || !entity.getStartDate().isAfter(LocalDate.now())) {
       throw new ResponseStatusException(
-          HttpStatus.UNPROCESSABLE_CONTENT,
-          "Only future-start configurations can be deleted.");
+          HttpStatus.UNPROCESSABLE_CONTENT, "Only future-start configurations can be deleted.");
     }
 
     if (entity.getEndDate() != null) {
@@ -223,11 +224,12 @@ public class SpeciesCompositionService {
           "Only open-ended future configurations can be deleted.");
     }
 
-    List<DistrictVolumeEntity> previousEntries = districtVolumeRepository.findFirstLiveBefore(
-        ConfigType.SPECIES_COMPOSITION,
-        entity.getArea(),
-        entity.getStartDate(),
-        PageRequest.of(0, 1));
+    List<DistrictVolumeEntity> previousEntries =
+        districtVolumeRepository.findFirstLiveBefore(
+            ConfigType.SPECIES_COMPOSITION,
+            entity.getArea(),
+            entity.getStartDate(),
+            PageRequest.of(0, 1));
     if (!previousEntries.isEmpty()) {
       DistrictVolumeEntity predecessor = previousEntries.getFirst();
       predecessor.setEndDate(entity.getEndDate());
@@ -239,21 +241,16 @@ public class SpeciesCompositionService {
     log.info("Soft-deleted species composition {} by user {}", id, user);
   }
 
-  private void validateAreaPayloadConsistency(
-      Area areaEnum, DistrictVolumeCreateDto createDto) {
+  private void validateAreaPayloadConsistency(Area areaEnum, DistrictVolumeCreateDto createDto) {
 
-    if (createDto.tableData() instanceof InteriorDataDto
-        && areaEnum != Area.INTERIOR) {
+    if (createDto.tableData() instanceof InteriorDataDto && areaEnum != Area.INTERIOR) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Area mismatch: Expected INTERIOR data layout.");
+          HttpStatus.BAD_REQUEST, "Area mismatch: Expected INTERIOR data layout.");
     }
 
-    if (createDto.tableData() instanceof CoastDataDto
-        && areaEnum != Area.COASTAL) {
+    if (createDto.tableData() instanceof CoastDataDto && areaEnum != Area.COASTAL) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Area mismatch: Expected COASTAL data layout.");
+          HttpStatus.BAD_REQUEST, "Area mismatch: Expected COASTAL data layout.");
     }
 
     if (createDto.tableData() instanceof InteriorDataDto
@@ -263,8 +260,7 @@ public class SpeciesCompositionService {
       // mismatch checks above guard the Interior/Coastal layouts.
     } else {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Invalid or missing table data payload structure.");
+          HttpStatus.BAD_REQUEST, "Invalid or missing table data payload structure.");
     }
   }
 }

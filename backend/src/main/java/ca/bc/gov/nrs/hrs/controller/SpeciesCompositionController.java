@@ -29,9 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * REST controller for managing species composition configurations.
- */
+/** REST controller for managing species composition configurations. */
 @RestController
 @RequestMapping("/api/configuration/species-compositions")
 @RequiredArgsConstructor
@@ -43,23 +41,21 @@ public class SpeciesCompositionController {
   /**
    * Retrieves a paginated list of species composition configurations.
    *
-   * @param area     optional area filter (must be INTERIOR or COASTAL)
+   * @param area optional area filter (must be INTERIOR or COASTAL)
    * @param pageable pagination and sorting information
    * @return page of species composition list items
    */
   @GetMapping
   public ResponseEntity<Page<DistrictVolumeListItemDto>> getSpeciesCompositions(
       @RequestParam(required = false) String area,
-      @PageableDefault(size = 10, sort = "startDate",
-          direction = Direction.DESC) Pageable pageable) {
+      @PageableDefault(size = 10, sort = "startDate", direction = Direction.DESC)
+          Pageable pageable) {
 
     if (area != null && !area.equalsIgnoreCase("INTERIOR") && !area.equalsIgnoreCase("COASTAL")) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Invalid area parameter. Must be INTERIOR or COASTAL."
-      );
+          HttpStatus.BAD_REQUEST, "Invalid area parameter. Must be INTERIOR or COASTAL.");
     }
-    
+
     Page<DistrictVolumeListItemDto> configurations =
         speciesCompositionService.getSpeciesCompositions(Optional.ofNullable(area), pageable);
 
@@ -73,11 +69,9 @@ public class SpeciesCompositionController {
    * @return detailed species composition configuration
    */
   @GetMapping("/{id}")
-  public ResponseEntity<DistrictVolumeDetailDto> getSpeciesCompositionById(
-      @PathVariable Long id) {
+  public ResponseEntity<DistrictVolumeDetailDto> getSpeciesCompositionById(@PathVariable Long id) {
 
-    DistrictVolumeDetailDto detail =
-        speciesCompositionService.getSpeciesCompositionById(id);
+    DistrictVolumeDetailDto detail = speciesCompositionService.getSpeciesCompositionById(id);
 
     return ResponseEntity.ok(detail);
   }
@@ -85,30 +79,25 @@ public class SpeciesCompositionController {
   /**
    * Creates a new species composition configuration.
    *
-   * <p>Creates a species composition using the provided request payload and the
-   * authenticated user and returns a {@code 201 Created} response with the URI
-   * of the newly created resource in the {@code Location} header.
+   * <p>Creates a species composition using the provided request payload and the authenticated user
+   * and returns a {@code 201 Created} response with the URI of the newly created resource in the
+   * {@code Location} header.
    *
-   * @param jwt     the authenticated user's JWT
+   * @param jwt the authenticated user's JWT
    * @param request the species composition information to create
-   * @return a {@link ResponseEntity} with status {@code 201 Created} and the location of
-   *     the created species composition
+   * @return a {@link ResponseEntity} with status {@code 201 Created} and the location of the
+   *     created species composition
    */
   @PostMapping
   @Observed
   public ResponseEntity<Void> createSpeciesComposition(
-      @AuthenticationPrincipal Jwt jwt,
-      @Valid @RequestBody DistrictVolumeCreateDto request) {
+      @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody DistrictVolumeCreateDto request) {
 
     DistrictVolumeDetailDto createdConfig =
         speciesCompositionService.createSpeciesComposition(
-            JwtPrincipalUtil.getUserId(jwt),
-            request);
+            JwtPrincipalUtil.getUserId(jwt), request);
 
-    URI location =
-        URI.create(
-            "/api/configuration/species-compositions/"
-                + createdConfig.id());
+    URI location = URI.create("/api/configuration/species-compositions/" + createdConfig.id());
 
     return ResponseEntity.created(location).build();
   }
@@ -116,8 +105,8 @@ public class SpeciesCompositionController {
   /**
    * Deletes a species composition configuration.
    *
-   * <p>Soft-deletes the specified species composition configuration. Only future-start,
-   * open-ended configurations can be deleted.</p>
+   * <p>Soft-deletes the specified species composition configuration. Only future-start, open-ended
+   * configurations can be deleted.
    *
    * @param jwt the authenticated user's JWT
    * @param id the species composition configuration identifier
@@ -125,10 +114,8 @@ public class SpeciesCompositionController {
    */
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteSpeciesComposition(
-      @AuthenticationPrincipal Jwt jwt,
-      @PathVariable Long id) {
-    speciesCompositionService.deleteSpeciesComposition(
-        JwtPrincipalUtil.getUserId(jwt), id);
+      @AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+    speciesCompositionService.deleteSpeciesComposition(JwtPrincipalUtil.getUserId(jwt), id);
     return ResponseEntity.noContent().build();
   }
 }

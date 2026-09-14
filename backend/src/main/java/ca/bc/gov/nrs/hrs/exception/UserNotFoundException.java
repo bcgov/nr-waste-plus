@@ -7,16 +7,13 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * Exception thrown when a user record cannot be found.
  *
- * <p>When thrown from a controller this results in an HTTP 404 (Not Found)
- * response due to the {@link ResponseStatus} annotation.
- * </p>
+ * <p>When thrown from a controller this results in an HTTP 404 (Not Found) response due to the
+ * {@link ResponseStatus} annotation.
  */
 @ResponseStatus(value = HttpStatus.NOT_FOUND)
 public class UserNotFoundException extends ResponseStatusException {
 
-  /**
-   * Instantiates a new UserNotFoundException with a standard message.
-   */
+  /** Instantiates a new UserNotFoundException with a standard message. */
   public UserNotFoundException() {
     super(HttpStatus.NOT_FOUND, "User not registered!");
   }

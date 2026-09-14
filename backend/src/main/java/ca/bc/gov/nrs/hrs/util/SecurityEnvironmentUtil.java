@@ -6,18 +6,16 @@ import lombok.NoArgsConstructor;
 /**
  * Utility methods to identify the running environment of the application.
  *
- * <p>
- * Used to determine whether the application is running in a local
- * environment (for example to relax Content-Security-Policy directives).
- * </p>
+ * <p>Used to determine whether the application is running in a local environment (for example to
+ * relax Content-Security-Policy directives).
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SecurityEnvironmentUtil {
   private static final String LOCAL_ENVIRONMENT = "local";
 
   /**
-   * Return true when the provided environment string indicates a local
-   * environment (case-insensitive comparison against "local").
+   * Return true when the provided environment string indicates a local environment
+   * (case-insensitive comparison against "local").
    *
    * @param environment environment string to test
    * @return true when the environment equals "local"

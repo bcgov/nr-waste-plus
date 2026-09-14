@@ -74,12 +74,10 @@ class LegacyCodesClientIntegrationTest extends AbstractTestContainerIntegrationT
   void shouldFallbackDistrictCodesWhenUnavailable() {
 
     clientApiStub.stubFor(
-        get(urlPathEqualTo("/api/codes/districts"))
-            .willReturn(serviceUnavailable()));
+        get(urlPathEqualTo("/api/codes/districts")).willReturn(serviceUnavailable()));
 
     assertNotNull(legacyCodesClient.getDistrictCodes());
     assertFalse(legacyCodesClient.getDistrictCodes().isEmpty());
     assertEquals(23, legacyCodesClient.getDistrictCodes().size());
   }
 }
-

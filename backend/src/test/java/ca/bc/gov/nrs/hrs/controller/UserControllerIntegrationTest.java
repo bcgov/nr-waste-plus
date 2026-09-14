@@ -18,23 +18,20 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 @AutoConfigureMockMvc(print = SYSTEM_OUT)
-@WithMockJwt(
-    value = "jakethedog"
-)
+@WithMockJwt(value = "jakethedog")
 @DisplayName("Integrated Test | User Controller")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestExecutionListeners(
     value = TransactionalTestExecutionListener.class,
-    mergeMode = MERGE_WITH_DEFAULTS
-)
+    mergeMode = MERGE_WITH_DEFAULTS)
 @Transactional
 @Rollback(value = false)
 class UserControllerIntegrationTest extends AbstractTestContainerIntegrationTest {
@@ -61,7 +58,8 @@ class UserControllerIntegrationTest extends AbstractTestContainerIntegrationTest
   @DisplayName("User set the preferences with some data")
   @Order(2)
   void userSetThePreferencesWithSomeData() throws Exception {
-    String preferencesJson = """
+    String preferencesJson =
+        """
         {
           "theme": "dark",
           "notifications": true,
@@ -95,5 +93,4 @@ class UserControllerIntegrationTest extends AbstractTestContainerIntegrationTest
         .andExpect(jsonPath("$.itemsPerPage").value(20))
         .andReturn();
   }
-
 }

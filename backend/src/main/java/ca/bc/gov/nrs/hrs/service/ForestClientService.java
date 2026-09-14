@@ -13,13 +13,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 /**
- * Service containing helpers that interact with the Forest Client API via
- * {@link ForestClientApiProvider}.
+ * Service containing helpers that interact with the Forest Client API via {@link
+ * ForestClientApiProvider}.
  *
- * <p>Provides convenience methods used by controllers to fetch client details,
- * locations and to perform searches. Input normalization (client number
- * formatting) is applied where needed.
- * </p>
+ * <p>Provides convenience methods used by controllers to fetch client details, locations and to
+ * perform searches. Input normalization (client number formatting) is applied where needed.
  */
 @Slf4j
 @Service
@@ -55,26 +53,19 @@ public class ForestClientService {
    */
   @NewSpan
   public List<ForestClientAutocompleteResultDto> searchClients(
-      int page,
-      int size,
-      String value,
-      List<String> clients
-  ) {
-    log.info("Searching forest client by {} as name, acronym or number with page {} and size {}",
-        value, page, size);
-    return forestClientApiProvider
-        .searchClients(page, size, value)
-        .stream()
+      int page, int size, String value, List<String> clients) {
+    log.info(
+        "Searching forest client by {} as name, acronym or number with page {} and size {}",
+        value,
+        page,
+        size);
+    return forestClientApiProvider.searchClients(page, size, value).stream()
         // #128 filter out clients if list is provided
-        .filter(client ->
-                clients.isEmpty() || clients.contains(client.clientNumber())
-            )
-        .map(client -> new ForestClientAutocompleteResultDto(
-                client.clientNumber(),
-                client.name(),
-                client.acronym()
-            )
-        )
+        .filter(client -> clients.isEmpty() || clients.contains(client.clientNumber()))
+        .map(
+            client ->
+                new ForestClientAutocompleteResultDto(
+                    client.clientNumber(), client.name(), client.acronym()))
         .toList();
   }
 
@@ -89,11 +80,7 @@ public class ForestClientService {
    */
   @NewSpan
   public List<ForestClientDto> searchByClientNumbers(
-      int page,
-      int size,
-      List<String> values,
-      String name
-  ) {
+      int page, int size, List<String> values, String name) {
     log.info("Searching forest client by ids {}, page: {}, size: {}", values, page, size);
     return forestClientApiProvider.searchClientsByIds(page, size, values, name);
   }

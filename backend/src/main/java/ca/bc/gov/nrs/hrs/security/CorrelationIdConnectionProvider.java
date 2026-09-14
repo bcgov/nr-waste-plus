@@ -26,30 +26,29 @@ import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 
 /**
- * Hibernate {@link ConnectionProvider} decorator that injects the current B3 trace id
- * into the PostgreSQL transaction via {@code app.correlation_id} GUC.
+ * Hibernate {@link ConnectionProvider} decorator that injects the current B3 trace id into the
+ * PostgreSQL transaction via {@code app.correlation_id} GUC.
  *
- * <p>When a Micrometer {@link Span} is active, {@link #getConnection()} wraps the pooled
- * JDBC connection in {@link DeferredCorrelationIdConnection}, which binds the trace id
- * lazily — immediately before the <em>first</em> statement execution rather than at
- * acquisition time. This ordering matters: Hibernate acquires the connection
- * <em>before</em> applying the caller's isolation level, so binding eagerly would open
- * the PostgreSQL transaction block first and make any subsequent
- * {@code SET TRANSACTION ISOLATION LEVEL ...} fail with <em>"Cannot change transaction
- * isolation level in the middle of a transaction"</em>. Deferring the
- * {@code SELECT set_config('app.correlation_id', ?, true)} keeps it inside whatever
- * transaction Spring/Hibernate has established, including
- * {@code Isolation.SERIALIZABLE} paths.</p>
+ * <p>When a Micrometer {@link Span} is active, {@link #getConnection()} wraps the pooled JDBC
+ * connection in {@link DeferredCorrelationIdConnection}, which binds the trace id lazily —
+ * immediately before the <em>first</em> statement execution rather than at acquisition time. This
+ * ordering matters: Hibernate acquires the connection <em>before</em> applying the caller's
+ * isolation level, so binding eagerly would open the PostgreSQL transaction block first and make
+ * any subsequent {@code SET TRANSACTION ISOLATION LEVEL ...} fail with <em>"Cannot change
+ * transaction isolation level in the middle of a transaction"</em>. Deferring the {@code SELECT
+ * set_config('app.correlation_id', ?, true)} keeps it inside whatever transaction Spring/Hibernate
+ * has established, including {@code Isolation.SERIALIZABLE} paths.
  *
- * <p>The third argument {@code true} marks the setting local to the current transaction,
- * so PostgreSQL discards it on commit/rollback and no reset bookkeeping is required.
- * When no span is present the raw connection is returned unchanged and
- * {@code current_setting('app.correlation_id', true)} stays {@code NULL}.</p>
+ * <p>The third argument {@code true} marks the setting local to the current transaction, so
+ * PostgreSQL discards it on commit/rollback and no reset bookkeeping is required. When no span is
+ * present the raw connection is returned unchanged and {@code current_setting('app.correlation_id',
+ * true)} stays {@code NULL}.
  *
  * <p>GraalVM-safe: no reflection, no proxies, no runtime bytecode. All dependencies are
- * constructor-injected; delegate lifecycle methods are forwarded verbatim.</p>
+ * constructor-injected; delegate lifecycle methods are forwarded verbatim.
  */
-public class CorrelationIdConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
+public class CorrelationIdConnectionProvider
+    implements ConnectionProvider, Configurable, Stoppable {
 
   private static final String BIND_CORRELATION_ID =
       "SELECT set_config('app.correlation_id', ?, true)";
@@ -117,9 +116,9 @@ public class CorrelationIdConnectionProvider implements ConnectionProvider, Conf
   }
 
   /**
-   * JDBC {@link Connection} wrapper that binds the correlation id just-in-time, on the
-   * first statement-producing call, inside the transaction already configured by the
-   * caller. Every other operation is forwarded verbatim.
+   * JDBC {@link Connection} wrapper that binds the correlation id just-in-time, on the first
+   * statement-producing call, inside the transaction already configured by the caller. Every other
+   * operation is forwarded verbatim.
    */
   private static final class DeferredCorrelationIdConnection implements Connection {
 
@@ -158,8 +157,8 @@ public class CorrelationIdConnectionProvider implements ConnectionProvider, Conf
     }
 
     @Override
-    public Statement createStatement(int resultSetType, int resultSetConcurrency,
-        int resultSetHoldability) throws SQLException {
+    public Statement createStatement(
+        int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
       bindOnce();
       return target.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
     }
@@ -171,18 +170,19 @@ public class CorrelationIdConnectionProvider implements ConnectionProvider, Conf
     }
 
     @Override
-    public PreparedStatement prepareStatement(String sql, int resultSetType,
-        int resultSetConcurrency) throws SQLException {
+    public PreparedStatement prepareStatement(
+        String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
       bindOnce();
       return target.prepareStatement(sql, resultSetType, resultSetConcurrency);
     }
 
     @Override
-    public PreparedStatement prepareStatement(String sql, int resultSetType,
-        int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+    public PreparedStatement prepareStatement(
+        String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
+        throws SQLException {
       bindOnce();
-      return target.prepareStatement(sql, resultSetType, resultSetConcurrency,
-          resultSetHoldability);
+      return target.prepareStatement(
+          sql, resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 
     @Override
@@ -193,8 +193,7 @@ public class CorrelationIdConnectionProvider implements ConnectionProvider, Conf
     }
 
     @Override
-    public PreparedStatement prepareStatement(String sql, int[] columnIndexes)
-        throws SQLException {
+    public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException {
       bindOnce();
       return target.prepareStatement(sql, columnIndexes);
     }
@@ -213,15 +212,16 @@ public class CorrelationIdConnectionProvider implements ConnectionProvider, Conf
     }
 
     @Override
-    public CallableStatement prepareCall(String sql, int resultSetType,
-        int resultSetConcurrency) throws SQLException {
+    public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency)
+        throws SQLException {
       bindOnce();
       return target.prepareCall(sql, resultSetType, resultSetConcurrency);
     }
 
     @Override
-    public CallableStatement prepareCall(String sql, int resultSetType,
-        int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+    public CallableStatement prepareCall(
+        String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
+        throws SQLException {
       bindOnce();
       return target.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
     }
@@ -429,14 +429,13 @@ public class CorrelationIdConnectionProvider implements ConnectionProvider, Conf
     }
 
     @Override
-    public boolean setShardingKeyIfValid(ShardingKey shardingKey, ShardingKey superShardingKey,
-        int timeout) throws SQLException {
+    public boolean setShardingKeyIfValid(
+        ShardingKey shardingKey, ShardingKey superShardingKey, int timeout) throws SQLException {
       return target.setShardingKeyIfValid(shardingKey, superShardingKey, timeout);
     }
 
     @Override
-    public boolean setShardingKeyIfValid(ShardingKey shardingKey, int timeout)
-        throws SQLException {
+    public boolean setShardingKeyIfValid(ShardingKey shardingKey, int timeout) throws SQLException {
       return target.setShardingKeyIfValid(shardingKey, timeout);
     }
 

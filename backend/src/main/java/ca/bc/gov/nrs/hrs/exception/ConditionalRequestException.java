@@ -10,7 +10,8 @@ public class ConditionalRequestException extends ResponseStatusException {
 
   /** Creates a precondition failure for a missing, malformed, or stale validator. */
   public ConditionalRequestException() {
-    super(HttpStatus.PRECONDITION_FAILED,
+    super(
+        HttpStatus.PRECONDITION_FAILED,
         "The If-Match header is required and must match the current resource revision.");
   }
 }

@@ -72,7 +72,6 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
           .configureStaticDsl(true)
           .build();
 
-
   @Autowired
   private MockMvc mockMvc;
   @Autowired
@@ -103,17 +102,14 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
       ReportingUnitSearchParametersDto filters,
       Pageable pageable,
       ResponseDefinitionBuilder stubResponse,
-      long size
-  ) throws Exception {
+      long size)
+      throws Exception {
     legacyApiStub.stubFor(
-        WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(stubResponse)
-    );
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units")).willReturn(stubResponse));
 
     clientApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/clients/findByClientNumber/00010002"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002))
-    );
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002)));
 
     mockMvc
         .perform(
@@ -136,22 +132,21 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
       String clientNumber,
       ResponseDefinitionBuilder stubResponse,
       String expectedJsonPath,
-      Object expectedValue
-  ) throws Exception {
+      Object expectedValue)
+      throws Exception {
     legacyApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/api/reporting-units/" + ruId))
             .willReturn(
-                okJson("""
+                okJson(
+                    """
                     {"clientNumber": "%s", "clientLocnCode": "00"}
-                    """.formatted(clientNumber))
-            )
-    );
+                    """
+                        .formatted(clientNumber))));
     legacyApiStub.stubFor(
         WireMock.get(
                 urlPathEqualTo(
                     "/api/search/reporting-units/ex/" + ruId + "/" + wasteAssessmentAreaId))
-            .willReturn(stubResponse)
-    );
+            .willReturn(stubResponse));
 
     mockMvc
         .perform(
@@ -169,29 +164,27 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
   @DisplayName("Get Expanded Details for Reporting Unit with BCeID user")
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {"Viewer_00010002"}
-  )
+      cognitoGroups = {"Viewer_00010002"})
   void shouldGetExpandedDetails_bceid(
       Long ruId,
       Long wasteAssessmentAreaId,
       String ruClientNumber,
       ResponseDefinitionBuilder stubResponse,
-      int expectedStatus
-  ) throws Exception {
+      int expectedStatus)
+      throws Exception {
     legacyApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/api/reporting-units/" + ruId))
             .willReturn(
-                okJson("""
+                okJson(
+                    """
                     {"clientNumber": "%s", "clientLocnCode": "00"}
-                    """.formatted(ruClientNumber))
-            )
-    );
+                    """
+                        .formatted(ruClientNumber))));
     legacyApiStub.stubFor(
         WireMock.get(
                 urlPathEqualTo(
                     "/api/search/reporting-units/ex/" + ruId + "/" + wasteAssessmentAreaId))
-            .willReturn(stubResponse)
-    );
+            .willReturn(stubResponse));
 
     mockMvc
         .perform(
@@ -206,32 +199,29 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
   @DisplayName("Search Reporting Unit with BCeID user")
   @WithMockJwt(
       idp = "bceidbusiness",
-      cognitoGroups = {"Viewer_00010002"}
-  )
+      cognitoGroups = {"Viewer_00010002"})
   void searchReportingUnit_bceid_shouldValidateClientNumbers(
       ReportingUnitSearchParametersDto filters,
       Pageable pageable,
       ResponseDefinitionBuilder stubResponse,
       int expectedStatus,
-      long size
-  ) throws Exception {
+      long size)
+      throws Exception {
     legacyApiStub.stubFor(
-        WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(stubResponse)
-    );
+        WireMock.get(urlPathEqualTo("/api/search/reporting-units")).willReturn(stubResponse));
 
     clientApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/clients/findByClientNumber/00010002"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002))
-    );
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002)));
 
-    var result = mockMvc
-        .perform(
-            get("/api/search/reporting-units")
-                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .queryParams(filters.toMultiMap(pageable))
-                .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().is(expectedStatus));
+    var result =
+        mockMvc
+            .perform(
+                get("/api/search/reporting-units")
+                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .queryParams(filters.toMultiMap(pageable))
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().is(expectedStatus));
 
     if (expectedStatus == 200) {
       result
@@ -245,8 +235,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
   void searchReportingUnitUsers_shouldSucceed() throws Exception {
     legacyApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/api/search/reporting-units-users"))
-            .willReturn(okJson("[\"TESTUSER\"]"))
-    );
+            .willReturn(okJson("[\"TESTUSER\"]")));
 
     mockMvc
         .perform(
@@ -272,8 +261,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE),
             200,
-            1L
-        ),
+            1L),
         Arguments.argumentSet(
             "BCeID with invalid client number not in roles",
             ReportingUnitSearchParametersDto.builder()
@@ -283,18 +271,14 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE),
             403,
-            0L
-        ),
+            0L),
         Arguments.argumentSet(
             "BCeID with no client numbers filter",
-            ReportingUnitSearchParametersDto.builder()
-                .mainSearchTerm("36834")
-                .build(),
+            ReportingUnitSearchParametersDto.builder().mainSearchTerm("36834").build(),
             PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE),
             200,
-            1L
-        ),
+            1L),
         Arguments.argumentSet(
             "BCeID with partially valid client numbers",
             ReportingUnitSearchParametersDto.builder()
@@ -304,9 +288,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE),
             403,
-            0L
-        )
-    );
+            0L));
   }
 
   private static Stream<Arguments> searchReportingUnitExpanded() {
@@ -318,8 +300,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             "00010002",
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNIT_EXPANDED_FULL),
             "$.id",
-            101
-        ),
+            101),
         Arguments.argumentSet(
             "Get expanded with minimal details",
             102L,
@@ -327,8 +308,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             "00010002",
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNIT_EXPANDED_MINIMAL),
             "$.id",
-            102
-        ),
+            102),
         Arguments.argumentSet(
             "Get expanded with empty response (fallback)",
             103L,
@@ -336,8 +316,7 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             "00010002",
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNIT_EXPANDED_EMPTY),
             "$.id",
-            203
-        ),
+            203),
         Arguments.argumentSet(
             "Service unavailable triggers fallback",
             104L,
@@ -345,27 +324,11 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             "00010002",
             serviceUnavailable(),
             "$.id",
-            204
-        ),
+            204),
         Arguments.argumentSet(
-            "Not found triggers fallback",
-            105L,
-            205L,
-            "00010002",
-            notFound(),
-            "$.id",
-            205
-        ),
+            "Not found triggers fallback", 105L, 205L, "00010002", notFound(), "$.id", 205),
         Arguments.argumentSet(
-            "Unauthorized triggers fallback",
-            106L,
-            206L,
-            "00010002",
-            unauthorized(),
-            "$.id",
-            206
-        )
-    );
+            "Unauthorized triggers fallback", 106L, 206L, "00010002", unauthorized(), "$.id", 206));
   }
 
   private static Stream<Arguments> searchReportingUnitExpandedBceid() {
@@ -376,17 +339,14 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             301L,
             "00010002",
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNIT_EXPANDED_FULL),
-            200
-        ),
+            200),
         Arguments.argumentSet(
             "BCeID with non-matching client number",
             202L,
             302L,
             "99999999",
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNIT_EXPANDED_MINIMAL),
-            403
-        )
-    );
+            403));
   }
 
   private static Stream<Arguments> searchReportingUnit() {
@@ -396,44 +356,37 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
             ReportingUnitSearchParametersDto.builder().build(),
             PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE),
-            0L
-        ),
+            0L),
         Arguments.argumentSet(
             "Search with results and 36834 as filter ",
             ReportingUnitSearchParametersDto.builder().mainSearchTerm("36834").build(),
             PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE),
-            1L
-        ),
+            1L),
         Arguments.argumentSet(
             "Search with no results",
             ReportingUnitSearchParametersDto.builder().build(),
             PageRequest.of(0, 10),
             okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE),
-            0L
-        ),
+            0L),
         Arguments.argumentSet(
             "Circuit breaker for unavailable",
             ReportingUnitSearchParametersDto.builder().build(),
             PageRequest.of(1, 10),
             serviceUnavailable(),
-            0L
-        ),
+            0L),
         Arguments.argumentSet(
             "Circuit breaker for not found",
             ReportingUnitSearchParametersDto.builder().build(),
             PageRequest.of(1, 10),
             notFound(),
-            0L
-        ),
+            0L),
         Arguments.argumentSet(
             "Circuit breaker for unauthorized",
             ReportingUnitSearchParametersDto.builder().build(),
             PageRequest.of(1, 10),
             unauthorized(),
-            0L
-        )
-    );
+            0L));
   }
 
   @Test
@@ -451,13 +404,11 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
     legacyApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
             .willReturn(
-                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE))
-    );
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE)));
 
     clientApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/clients/findByClientNumber/00010002"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002))
-    );
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002)));
 
     mockMvc
         .perform(
@@ -481,8 +432,8 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
     legacyApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
             .willReturn(
-                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE))
-    );
+                okJson(
+                    ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
 
     mockMvc
         .perform(
@@ -504,13 +455,11 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
     legacyApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
             .willReturn(
-                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE))
-    );
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE)));
 
     clientApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/clients/findByClientNumber/00010002"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002))
-    );
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002)));
 
     mockMvc
         .perform(
@@ -542,13 +491,11 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
     legacyApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
             .willReturn(
-                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE))
-    );
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE)));
 
     clientApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/clients/findByClientNumber/00010002"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002))
-    );
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENT_00010002)));
 
     mockMvc
         .perform(
@@ -564,5 +511,4 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
         .andExpect(jsonPath("$.content[0].bookmarked").value(true))
         .andReturn();
   }
-
 }

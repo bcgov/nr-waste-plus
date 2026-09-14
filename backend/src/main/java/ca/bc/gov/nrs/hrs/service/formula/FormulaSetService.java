@@ -45,8 +45,10 @@ public class FormulaSetService {
     if (!setRepository.findFutureOverlapping(request.area(), request.startDate()).isEmpty()) {
       throw conflict("The formula-set interval overlaps an existing future set.");
     }
-    FormulaSetEntity predecessor = setRepository.findPredecessors(request.area(), request.startDate())
-        .stream().findFirst().orElse(null);
+    FormulaSetEntity predecessor =
+        setRepository.findPredecessors(request.area(), request.startDate()).stream()
+            .findFirst()
+            .orElse(null);
     if (predecessor != null) {
       predecessor.setEndDate(request.startDate().minusDays(1));
       setRepository.save(predecessor);
@@ -71,14 +73,14 @@ public class FormulaSetService {
       throw conflict("Formula-set area and startDate cannot be changed.");
     }
     validateExpressions(request);
-    List<FormulaSetRowEntity> existing = rowRepository
-        .findByFormulaSetIdOrderBySortOrderAscIdAsc(id);
+    List<FormulaSetRowEntity> existing =
+        rowRepository.findByFormulaSetIdOrderBySortOrderAscIdAsc(id);
     if (semanticallyEqual(existing, request.formulas())) {
       return response(set, existing);
     }
     replaceRowsInPlace(id, existing, request.formulas());
-    return response(set,
-        rowRepository.findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(id));
+    return response(
+        set, rowRepository.findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(id));
   }
 
   /** Soft-deletes the future open-ended set and reopens its predecessor. */
@@ -90,29 +92,41 @@ public class FormulaSetService {
     }
     set.setDeleted(true);
     setRepository.save(set);
-    setRepository.findPredecessorForReopen(set.getArea(), set.getStartDate()).stream().findFirst()
-        .ifPresent(predecessor -> { predecessor.setEndDate(null); setRepository.save(predecessor); });
+    setRepository.findPredecessorForReopen(set.getArea(), set.getStartDate()).stream()
+        .findFirst()
+        .ifPresent(
+            predecessor -> {
+              predecessor.setEndDate(null);
+              setRepository.save(predecessor);
+            });
   }
 
   /** Reads the set effective for a submission date and selected area. */
   @Transactional(Transactional.TxType.SUPPORTS)
   public FormulaSetResponse effective(LocalDate date, Area area) {
-    FormulaSetEntity set = setRepository.findEffective(area, date)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-            "No formula set is effective for the requested date and area."));
-    List<FormulaSetRowEntity> rows = rowRepository
-        .findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(set.getId());
+    FormulaSetEntity set =
+        setRepository
+            .findEffective(area, date)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "No formula set is effective for the requested date and area."));
+    List<FormulaSetRowEntity> rows =
+        rowRepository.findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(set.getId());
     return response(set, rows);
   }
 
   private FormulaSetResponse replaceRows(FormulaSetEntity set, FormulaSetRequest request) {
-    List<FormulaSetRowEntity> rows = request.formulas().stream()
-        .map(item -> FormulaRowMapper.toSetRow(set.getId(), item)).toList();
+    List<FormulaSetRowEntity> rows =
+        request.formulas().stream()
+            .map(item -> FormulaRowMapper.toSetRow(set.getId(), item))
+            .toList();
     return response(set, rowRepository.saveAll(rows));
   }
 
-  private void replaceRowsInPlace(Long formulaSetId, List<FormulaSetRowEntity> existing,
-      List<FormulaItemDto> requested) {
+  private void replaceRowsInPlace(
+      Long formulaSetId, List<FormulaSetRowEntity> existing, List<FormulaItemDto> requested) {
     Map<String, FormulaSetRowEntity> byKey = new java.util.LinkedHashMap<>();
     existing.forEach(row -> byKey.put(row.getFormulaKey(), row));
     List<FormulaSetRowEntity> changed = new java.util.ArrayList<>();
@@ -140,35 +154,71 @@ public class FormulaSetService {
   }
 
   private void validateExpressions(FormulaSetRequest request) {
-    List<FormulaDefinition> definitions = request.formulas().stream()
-        .map(item -> new FormulaDefinition(item.formulaKey(), item.expression())).toList();
+    List<FormulaDefinition> definitions =
+        request.formulas().stream()
+            .map(item -> new FormulaDefinition(item.formulaKey(), item.expression()))
+            .toList();
     HashMap<String, BigDecimal> knownVariables = new HashMap<>();
-    request.formulas().forEach(item -> FormulaVariableExtractor
-        .extract(item.expression(), FormulaParseMode.MATHEMATICAL)
-        .forEach(variable -> knownVariables.put(variable, BigDecimal.ONE)));
-    List<FormulaValidationError> errors = validationService.validateForSave(
-        new FormulaValidationRequest(definitions, knownVariables, FormulaParseMode.MATHEMATICAL));
-    if (!errors.isEmpty()) throw conflict(errors.toString());
+    request
+        .formulas()
+        .forEach(
+            item ->
+                FormulaVariableExtractor.extract(item.expression(), FormulaParseMode.MATHEMATICAL)
+                    .forEach(variable -> knownVariables.put(variable, BigDecimal.ONE)));
+    List<FormulaValidationError> errors =
+        validationService.validateForSave(
+            new FormulaValidationRequest(
+                definitions, knownVariables, FormulaParseMode.MATHEMATICAL));
+    if (!errors.isEmpty()) {
+      throw conflict(errors.toString());
+    }
   }
 
   private void validateRequest(FormulaSetRequest request) {
     Objects.requireNonNull(request, "request");
     if (request.formulas().stream().map(FormulaItemDto::formulaKey).distinct().count()
-        != request.formulas().size()) throw conflict("Formula keys must be unique.");
+        != request.formulas().size()) {
+      throw conflict("Formula keys must be unique.");
+    }
   }
-  private FormulaSetEntity load(Long id) { return setRepository.findById(id)
-      .filter(e -> !e.isDeleted())
-      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Formula set not found: " + id)); }
+
+  private FormulaSetEntity load(Long id) {
+    return setRepository
+        .findById(id)
+        .filter(e -> !e.isDeleted())
+        .orElseThrow(
+            () ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Formula set not found: " + id));
+  }
+
   private boolean semanticallyEqual(List<FormulaSetRowEntity> rows, List<FormulaItemDto> items) {
-    return rows.size() == items.size() && rows.stream().allMatch(row -> items.stream().anyMatch(item ->
-        row.getFormulaKey().equals(item.formulaKey()) && row.getExpression().equals(item.expression())
-            && row.getSortOrder() == item.sortOrder()));
+    return rows.size() == items.size()
+        && rows.stream()
+            .allMatch(
+                row ->
+                    items.stream()
+                        .anyMatch(
+                            item ->
+                                row.getFormulaKey().equals(item.formulaKey())
+                                    && row.getExpression().equals(item.expression())
+                                    && row.getSortOrder() == item.sortOrder()));
   }
+
   private FormulaSetResponse response(FormulaSetEntity set, List<FormulaSetRowEntity> rows) {
-    return new FormulaSetResponse(set.getId(), set.getArea(), set.getStartDate(), set.getEndDate(),
-        set.isDeleted(), rows.stream().map(row -> new FormulaItemDto(row.getFormulaKey(),
-            row.getExpression(), row.getSortOrder())).toList());
+    return new FormulaSetResponse(
+        set.getId(),
+        set.getArea(),
+        set.getStartDate(),
+        set.getEndDate(),
+        set.isDeleted(),
+        rows.stream()
+            .map(
+                row ->
+                    new FormulaItemDto(
+                        row.getFormulaKey(), row.getExpression(), row.getSortOrder()))
+            .toList());
   }
+
   private ResponseStatusException conflict(String message) {
     return new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, message);
   }

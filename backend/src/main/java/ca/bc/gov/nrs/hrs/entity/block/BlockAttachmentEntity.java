@@ -15,9 +15,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-/**
- * Evidence attachment metadata for a block.
- */
+/** Evidence attachment metadata for a block. */
 @Entity
 @Table(name = "block_attachment", schema = "hrs")
 @EntityListeners(AuditingEntityListener.class)

@@ -15,14 +15,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
- * Service responsible for hydrating user identity data from Cognito's
- * {@code /oauth2/userInfo} endpoint and optionally persisting it.
+ * Service responsible for hydrating user identity data from Cognito's {@code /oauth2/userInfo}
+ * endpoint and optionally persisting it.
  *
- * <p>Hydration always calls Cognito on each request so identity attributes are
- * current at request time. Database persistence is controlled by
- * {@link FeatureFlag#USER_IDENTITY_PERSISTENCE_ENABLED} to support privacy-first
- * rollout: when disabled, no user identity data is written to or read from the
- * local database.</p>
+ * <p>Hydration always calls Cognito on each request so identity attributes are current at request
+ * time. Database persistence is controlled by {@link FeatureFlag#USER_IDENTITY_PERSISTENCE_ENABLED}
+ * to support privacy-first rollout: when disabled, no user identity data is written to or read from
+ * the local database.
  */
 @Slf4j
 @Service
@@ -38,9 +37,9 @@ public class UserIdentityService {
   /**
    * Hydrate identity from Cognito for the given user on every call.
    *
-   * <p>If {@link FeatureFlag#USER_IDENTITY_PERSISTENCE_ENABLED} is enabled,
-   * the hydrated entity is also saved and the persisted instance is returned.
-   * When disabled, the hydrated entity is returned without persistence.</p>
+   * <p>If {@link FeatureFlag#USER_IDENTITY_PERSISTENCE_ENABLED} is enabled, the hydrated entity is
+   * also saved and the persisted instance is returned. When disabled, the hydrated entity is
+   * returned without persistence.
    *
    * @param sub the Cognito subject identifier from the access token
    * @param accessToken the raw access token forwarded to Cognito userInfo
@@ -48,16 +47,14 @@ public class UserIdentityService {
    */
   @NewSpan
   public Optional<UserIdentityEntity> getOrRefreshBySub(String sub, String accessToken) {
-    return cognitoClient.fetchUserInfo(accessToken)
-        .map(info -> maybePersist(toEntity(sub, info)));
+    return cognitoClient.fetchUserInfo(accessToken).map(info -> maybePersist(toEntity(sub, info)));
   }
 
   /**
    * Retrieve a previously persisted identity for async workflows.
    *
-   * <p>When persistence is disabled via
-   * {@link FeatureFlag#USER_IDENTITY_PERSISTENCE_ENABLED}, this method returns
-   * {@link Optional#empty()} by design.</p>
+   * <p>When persistence is disabled via {@link FeatureFlag#USER_IDENTITY_PERSISTENCE_ENABLED}, this
+   * method returns {@link Optional#empty()} by design.
    *
    * @param sub the Cognito subject identifier
    * @return optional persisted entity if persistence is enabled and record exists

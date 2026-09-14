@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.hrs.service.formula;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -17,7 +16,6 @@ import ca.bc.gov.nrs.hrs.repository.block.BlockCalculationSnapshotRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,11 +28,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Unit Test | Formula Evaluation Service")
 class FormulaEvaluationServiceTest {
-  @Mock private FormulaRuntimeResolver runtimeResolver;
-  @Mock private BlockCalculationSnapshotRepository snapshotRepository;
-  @Mock private FormulaSetRepository setRepository;
-  @Mock private FormulaSetRowRepository rowRepository;
-  @InjectMocks private FormulaEvaluationService service;
+  @Mock
+  private FormulaRuntimeResolver runtimeResolver;
+  @Mock
+  private BlockCalculationSnapshotRepository snapshotRepository;
+  @Mock
+  private FormulaSetRepository setRepository;
+  @Mock
+  private FormulaSetRowRepository rowRepository;
+  @InjectMocks
+  private FormulaEvaluationService service;
 
   private static final LocalDate DATE = LocalDate.of(2025, 7, 1);
   private static final String DISTRICT = "DCC";
@@ -51,16 +54,17 @@ class FormulaEvaluationServiceTest {
         .thenReturn(List.of(row));
     when(runtimeResolver.resolve(DATE, Area.COASTAL, DISTRICT, "da.mature.total"))
         .thenReturn(new BigDecimal("11.530"));
-    when(snapshotRepository.save(any())).thenAnswer(invocation -> {
-      BlockCalculationSnapshotEntity e = invocation.getArgument(0);
-      return e;
-    });
+    when(snapshotRepository.save(any()))
+        .thenAnswer(
+            invocation -> {
+              BlockCalculationSnapshotEntity e = invocation.getArgument(0);
+              return e;
+            });
 
-    FormulaEvaluationResult result = service.evaluate(
-        100L, 200L, DATE, Area.COASTAL, DISTRICT, USER);
+    FormulaEvaluationResult result =
+        service.evaluate(100L, 200L, DATE, Area.COASTAL, DISTRICT, USER);
 
-    assertThat(result.outputs()).containsEntry("config.total",
-        new BigDecimal("11.530"));
+    assertThat(result.outputs()).containsEntry("config.total", new BigDecimal("11.530"));
 
     ArgumentCaptor<BlockCalculationSnapshotEntity> captor =
         ArgumentCaptor.forClass(BlockCalculationSnapshotEntity.class);
@@ -78,8 +82,7 @@ class FormulaEvaluationServiceTest {
   void should_throw_when_no_formula_set_effective() {
     when(setRepository.findEffective(Area.COASTAL, DATE)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> service.evaluate(
-        100L, 200L, DATE, Area.COASTAL, DISTRICT, USER))
+    assertThatThrownBy(() -> service.evaluate(100L, 200L, DATE, Area.COASTAL, DISTRICT, USER))
         .isInstanceOf(FormulaEvaluationException.class)
         .hasMessageContaining("No formula set is effective");
   }
@@ -92,8 +95,7 @@ class FormulaEvaluationServiceTest {
     when(rowRepository.findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(1L))
         .thenReturn(List.of());
 
-    assertThatThrownBy(() -> service.evaluate(
-        100L, 200L, DATE, Area.COASTAL, DISTRICT, USER))
+    assertThatThrownBy(() -> service.evaluate(100L, 200L, DATE, Area.COASTAL, DISTRICT, USER))
         .isInstanceOf(FormulaEvaluationException.class)
         .hasMessageContaining("no active rows");
   }
@@ -108,12 +110,12 @@ class FormulaEvaluationServiceTest {
     when(rowRepository.findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(1L))
         .thenReturn(List.of(row));
     when(runtimeResolver.resolve(DATE, Area.COASTAL, DISTRICT, "da.mature.total"))
-        .thenThrow(new org.springframework.web.server.ResponseStatusException(
-            org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT,
-            "District 'DCC' is missing for da.mature.total."));
+        .thenThrow(
+            new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT,
+                "District 'DCC' is missing for da.mature.total."));
 
-    assertThatThrownBy(() -> service.evaluate(
-        100L, 200L, DATE, Area.COASTAL, DISTRICT, USER))
+    assertThatThrownBy(() -> service.evaluate(100L, 200L, DATE, Area.COASTAL, DISTRICT, USER))
         .isInstanceOf(FormulaEvaluationException.class)
         .hasMessageContaining("Failed to resolve variable da.mature.total");
   }
@@ -129,11 +131,10 @@ class FormulaEvaluationServiceTest {
         .thenReturn(List.of(row));
     when(snapshotRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-    FormulaEvaluationResult result = service.evaluate(
-        100L, 200L, DATE, Area.COASTAL, DISTRICT, USER);
+    FormulaEvaluationResult result =
+        service.evaluate(100L, 200L, DATE, Area.COASTAL, DISTRICT, USER);
 
-    assertThat(result.outputs().get("config.total"))
-        .isEqualByComparingTo(BigDecimal.ZERO);
+    assertThat(result.outputs().get("config.total")).isEqualByComparingTo(BigDecimal.ZERO);
   }
 
   @DisplayName("Should resolve submission as zero (placeholder)")
@@ -147,11 +148,10 @@ class FormulaEvaluationServiceTest {
         .thenReturn(List.of(row));
     when(snapshotRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-    FormulaEvaluationResult result = service.evaluate(
-        100L, 200L, DATE, Area.COASTAL, DISTRICT, USER);
+    FormulaEvaluationResult result =
+        service.evaluate(100L, 200L, DATE, Area.COASTAL, DISTRICT, USER);
 
-    assertThat(result.outputs().get("config.total"))
-        .isEqualByComparingTo(BigDecimal.ZERO);
+    assertThat(result.outputs().get("config.total")).isEqualByComparingTo(BigDecimal.ZERO);
   }
 
   @DisplayName("Should evaluate multiple formulas in sort order")
@@ -168,8 +168,8 @@ class FormulaEvaluationServiceTest {
         .thenReturn(new BigDecimal("4"));
     when(snapshotRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-    FormulaEvaluationResult result = service.evaluate(
-        100L, 200L, DATE, Area.COASTAL, DISTRICT, USER);
+    FormulaEvaluationResult result =
+        service.evaluate(100L, 200L, DATE, Area.COASTAL, DISTRICT, USER);
 
     assertThat(result.outputs()).hasSize(2);
     assertThat(result.outputs()).containsEntry("config.a", new BigDecimal("3.000"));

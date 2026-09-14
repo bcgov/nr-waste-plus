@@ -21,11 +21,10 @@ import org.springframework.util.MultiValueMap;
 /**
  * Search parameters for reporting unit searches.
  *
- * <p>Contains the set of filter values that can be applied when searching for
- * reporting units. Some getters are overridden (via Lombok 'With') to provide a convenient
- * immutable-style builder; lists may be null or empty and the helper method
- * {@link #toMultiMap(Pageable)} converts the populated fields into request query parameters.
- * </p>
+ * <p>Contains the set of filter values that can be applied when searching for reporting units. Some
+ * getters are overridden (via Lombok 'With') to provide a convenient immutable-style builder; lists
+ * may be null or empty and the helper method {@link #toMultiMap(Pageable)} converts the populated
+ * fields into request query parameters.
  */
 @Data
 @NoArgsConstructor
@@ -42,10 +41,13 @@ public class ReportingUnitSearchParametersDto {
   private boolean multiMark;
   private boolean bookmarked;
   private String requestUserId;
+
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private LocalDate updateDateStart;
+
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private LocalDate updateDateEnd;
+
   private String licenseeId;
   private String cuttingPermitId;
   private String timberMark;
@@ -54,8 +56,8 @@ public class ReportingUnitSearchParametersDto {
 
   /**
    * Convert the populated search parameters into a {@link MultiValueMap} of query parameters
-   * suitable for building a request URL. Only non-empty fields are included. The provided
-   * {@code page} will be translated into paging parameters and appended.
+   * suitable for building a request URL. Only non-empty fields are included. The provided {@code
+   * page} will be translated into paging parameters and appended.
    *
    * @param page the pageable to include in the produced query parameters; may be null
    * @return a {@link MultiValueMap} containing non-empty query parameters
@@ -103,8 +105,8 @@ public class ReportingUnitSearchParametersDto {
     multiValueMap.add("multiMark", BooleanUtils.toStringTrueFalse(multiMark));
 
     if (updateDateStart != null) {
-      multiValueMap.add("updateDateStart", updateDateStart.format(DateTimeFormatter.ISO_LOCAL_DATE)
-      );
+      multiValueMap.add(
+          "updateDateStart", updateDateStart.format(DateTimeFormatter.ISO_LOCAL_DATE));
     }
 
     if (updateDateEnd != null) {
@@ -137,18 +139,18 @@ public class ReportingUnitSearchParametersDto {
    */
   public boolean isEmpty() {
     return StringUtils.isBlank(mainSearchTerm)
-           && CollectionUtils.isEmpty(district)
-           && CollectionUtils.isEmpty(sampling)
-           && CollectionUtils.isEmpty(status)
-           && !requestByMe
-           && !multiMark
-           && !bookmarked
-           && StringUtils.isBlank(requestUserId)
-           && updateDateStart == null
-           && updateDateEnd == null
-           && StringUtils.isBlank(licenseeId)
-           && StringUtils.isBlank(cuttingPermitId)
-           && StringUtils.isBlank(timberMark)
-           && CollectionUtils.isEmpty(clientNumbers);
+        && CollectionUtils.isEmpty(district)
+        && CollectionUtils.isEmpty(sampling)
+        && CollectionUtils.isEmpty(status)
+        && !requestByMe
+        && !multiMark
+        && !bookmarked
+        && StringUtils.isBlank(requestUserId)
+        && updateDateStart == null
+        && updateDateEnd == null
+        && StringUtils.isBlank(licenseeId)
+        && StringUtils.isBlank(cuttingPermitId)
+        && StringUtils.isBlank(timberMark)
+        && CollectionUtils.isEmpty(clientNumbers);
   }
 }

@@ -56,7 +56,8 @@ class FormulaRowMapperTest {
     declaredVars.put("da.x", 1);
     ArrayNode validationErrors = JsonNodeFactory.instance.arrayNode();
     FormulaPersistenceService.FormulaDraft draft =
-        new FormulaPersistenceService.FormulaDraft("sc.AL", "3.14", declaredVars, validationErrors, 2);
+        new FormulaPersistenceService.FormulaDraft(
+            "sc.AL", "3.14", declaredVars, validationErrors, 2);
 
     DistrictVolumeFormulaEntity formula = FormulaRowMapper.toLegacyRow(volume, draft);
 

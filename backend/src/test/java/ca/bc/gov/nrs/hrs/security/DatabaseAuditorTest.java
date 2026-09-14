@@ -27,14 +27,16 @@ class DatabaseAuditorTest {
   @Test
   @DisplayName("returns structured user id when ID token claims are present")
   void shouldReturnStructuredUserIdWhenClaimsPresent() {
-    Jwt jwt = jwt(Map.of(
-        "sub", "sub-123",
-        "custom:idp_name", "idir",
-        "custom:idp_username", "jdoe",
-        "custom:idp_user_id", "jdoe-id"
-    ));
-    SecurityContextHolder.getContext().setAuthentication(
-        new JwtAuthenticationToken(jwt, AuthorityUtils.createAuthorityList("ROLE_USER")));
+    Jwt jwt =
+        jwt(
+            Map.of(
+                "sub", "sub-123",
+                "custom:idp_name", "idir",
+                "custom:idp_username", "jdoe",
+                "custom:idp_user_id", "jdoe-id"));
+    SecurityContextHolder.getContext()
+        .setAuthentication(
+            new JwtAuthenticationToken(jwt, AuthorityUtils.createAuthorityList("ROLE_USER")));
 
     Optional<String> auditor = databaseAuditor.getCurrentAuditor();
 
@@ -45,8 +47,9 @@ class DatabaseAuditorTest {
   @DisplayName("falls back to sub when custom idp claims are absent")
   void shouldFallbackToSubWhenIdpClaimsMissing() {
     Jwt jwt = jwt(Map.of("sub", "sub-from-access-token"));
-    SecurityContextHolder.getContext().setAuthentication(
-        new JwtAuthenticationToken(jwt, AuthorityUtils.createAuthorityList("ROLE_USER")));
+    SecurityContextHolder.getContext()
+        .setAuthentication(
+            new JwtAuthenticationToken(jwt, AuthorityUtils.createAuthorityList("ROLE_USER")));
 
     Optional<String> auditor = databaseAuditor.getCurrentAuditor();
 
@@ -66,8 +69,8 @@ class DatabaseAuditorTest {
   @Test
   @DisplayName("returns empty when authentication is not authenticated")
   void shouldReturnEmptyWhenNotAuthenticated() {
-    TestingAuthenticationToken authentication = new TestingAuthenticationToken("principal",
-        "credentials");
+    TestingAuthenticationToken authentication =
+        new TestingAuthenticationToken("principal", "credentials");
     authentication.setAuthenticated(false);
     SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -85,4 +88,3 @@ class DatabaseAuditorTest {
         .build();
   }
 }
-

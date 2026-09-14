@@ -18,18 +18,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * Servlet filter that hydrates the Spring Security context with a persisted
- * {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity} for configured paths.
+ * Servlet filter that hydrates the Spring Security context with a persisted {@link
+ * ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity} for configured paths.
  *
- * <p>Runs after JWT validation. For matching paths it extracts the Cognito
- * {@code sub} and access token, delegates to {@link UserIdentityService} to
- * retrieve or refresh the identity from Cognito (optionally persisting it),
- * and replaces the principal with a {@link UserIdentityAuthentication}. If
- * lookup fails the original principal is preserved so the request proceeds
- * normally.</p>
+ * <p>Runs after JWT validation. For matching paths it extracts the Cognito {@code sub} and access
+ * token, delegates to {@link UserIdentityService} to retrieve or refresh the identity from Cognito
+ * (optionally persisting it), and replaces the principal with a {@link UserIdentityAuthentication}.
+ * If lookup fails the original principal is preserved so the request proceeds normally.
  *
- * <p>Hydrated paths are configurable via
- * {@code ca.bc.gov.nrs.hydration.paths} in {@code application.yml}.</p>
+ * <p>Hydrated paths are configurable via {@code ca.bc.gov.nrs.hydration.paths} in {@code
+ * application.yml}.
  */
 @Slf4j
 @Component
@@ -50,8 +48,8 @@ public class UserIdentityHydrationFilter extends OncePerRequestFilter {
   protected void doFilterInternal(
       @NonNull HttpServletRequest request,
       @NonNull HttpServletResponse response,
-      @NonNull FilterChain chain
-  ) throws IOException, ServletException {
+      @NonNull FilterChain chain)
+      throws IOException, ServletException {
 
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
@@ -59,19 +57,17 @@ public class UserIdentityHydrationFilter extends OncePerRequestFilter {
       String sub = jwtAuth.getToken().getSubject();
       String accessToken = jwtAuth.getToken().getTokenValue();
 
-      userIdentityService.getOrRefreshBySub(sub, accessToken)
+      userIdentityService
+          .getOrRefreshBySub(sub, accessToken)
           .ifPresentOrElse(
               identity -> {
                 log.debug("Identity hydrated for sub={}", sub);
-                UserIdentityAuthentication enriched = new UserIdentityAuthentication(
-                    jwtAuth.getToken(),
-                    jwtAuth.getAuthorities(),
-                    identity
-                );
+                UserIdentityAuthentication enriched =
+                    new UserIdentityAuthentication(
+                        jwtAuth.getToken(), jwtAuth.getAuthorities(), identity);
                 SecurityContextHolder.getContext().setAuthentication(enriched);
               },
-              () -> log.warn("Could not hydrate identity for sub={}, proceeding without it", sub)
-          );
+              () -> log.warn("Could not hydrate identity for sub={}, proceeding without it", sub));
     }
 
     chain.doFilter(request, response);

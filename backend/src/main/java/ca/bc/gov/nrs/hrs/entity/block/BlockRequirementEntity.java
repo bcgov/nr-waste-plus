@@ -15,9 +15,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-/**
- * Requirement response and optional evidence link.
- */
+/** Requirement response and optional evidence link. */
 @Entity
 @Table(name = "block_requirement", schema = "hrs")
 @EntityListeners(AuditingEntityListener.class)

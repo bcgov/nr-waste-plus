@@ -11,46 +11,65 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictRow;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Section;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
-import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import ca.bc.gov.nrs.hrs.entity.speciescomposition.SpeciesCompositionRow;
+import ca.bc.gov.nrs.hrs.repository.DistrictVolumeRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.DisplayName;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Unit Test | Formula Runtime Resolver")
 class FormulaRuntimeResolverTest {
-  @Mock private DistrictVolumeRepository repository;
-  @InjectMocks private FormulaRuntimeResolver resolver;
+  @Mock
+  private DistrictVolumeRepository repository;
+  @InjectMocks
+  private FormulaRuntimeResolver resolver;
 
   @DisplayName("Resolves Coast District Average Path")
   @Test
   void resolvesCoastDistrictAveragePath() {
-    DistrictVolumeEntity volume = volume(ConfigType.DISTRICT_VOLUME, new TableData(null,
-        List.of(new Section("Mature", List.of(row("DNI", null, new BigDecimal("11.530"))))), null,
-        Map.of()));
-    when(repository.findEffectiveByConfigTypeAndArea(ConfigType.DISTRICT_VOLUME, Area.COASTAL,
-        LocalDate.of(2026, 11, 3))).thenReturn(java.util.Optional.of(volume));
+    DistrictVolumeEntity volume =
+        volume(
+            ConfigType.DISTRICT_VOLUME,
+            new TableData(
+                null,
+                List.of(new Section("Mature", List.of(row("DNI", null, new BigDecimal("11.530"))))),
+                null,
+                Map.of()));
+    when(repository.findEffectiveByConfigTypeAndArea(
+            ConfigType.DISTRICT_VOLUME, Area.COASTAL, LocalDate.of(2026, 11, 3)))
+        .thenReturn(java.util.Optional.of(volume));
 
-    assertThat(resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI",
-        "da.mature.avoidableGradeY")).isEqualByComparingTo("11.530");
+    assertThat(
+            resolver.resolve(
+                LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "da.mature.avoidableGradeY"))
+        .isEqualByComparingTo("11.530");
   }
 
   @DisplayName("Resolves Species Path")
   @Test
   void resolvesSpeciesPath() {
-    DistrictVolumeEntity volume = volume(ConfigType.SPECIES_COMPOSITION, new TableData(null, null,
-        List.of(new SpeciesCompositionRow(new CodeDescriptionDto("DNI", "DNI"),
-            Map.of("AL", new BigDecimal("0.000")))), Map.of()));
-    when(repository.findEffectiveByConfigTypeAndArea(ConfigType.SPECIES_COMPOSITION, Area.COASTAL,
-        LocalDate.of(2026, 11, 3))).thenReturn(java.util.Optional.of(volume));
+    DistrictVolumeEntity volume =
+        volume(
+            ConfigType.SPECIES_COMPOSITION,
+            new TableData(
+                null,
+                null,
+                List.of(
+                    new SpeciesCompositionRow(
+                        new CodeDescriptionDto("DNI", "DNI"),
+                        Map.of("AL", new BigDecimal("0.000")))),
+                Map.of()));
+    when(repository.findEffectiveByConfigTypeAndArea(
+            ConfigType.SPECIES_COMPOSITION, Area.COASTAL, LocalDate.of(2026, 11, 3)))
+        .thenReturn(java.util.Optional.of(volume));
 
     assertThat(resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "sc.AL"))
         .isEqualByComparingTo("0.000");
@@ -59,13 +78,23 @@ class FormulaRuntimeResolverTest {
   @DisplayName("Rejects Missing Field Clearly")
   @Test
   void rejectsMissingFieldClearly() {
-    DistrictVolumeEntity volume = volume(ConfigType.DISTRICT_VOLUME, new TableData(null,
-        List.of(new Section("Mature", List.of(row("DNI", null, null)))), null, Map.of()));
-    when(repository.findEffectiveByConfigTypeAndArea(ConfigType.DISTRICT_VOLUME, Area.COASTAL,
-        LocalDate.of(2026, 11, 3))).thenReturn(java.util.Optional.of(volume));
+    DistrictVolumeEntity volume =
+        volume(
+            ConfigType.DISTRICT_VOLUME,
+            new TableData(
+                null,
+                List.of(new Section("Mature", List.of(row("DNI", null, null)))),
+                null,
+                Map.of()));
+    when(repository.findEffectiveByConfigTypeAndArea(
+            ConfigType.DISTRICT_VOLUME, Area.COASTAL, LocalDate.of(2026, 11, 3)))
+        .thenReturn(java.util.Optional.of(volume));
 
-    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI",
-        "da.mature.avoidableGradeY")).hasMessageContaining("avoidableGradeY");
+    assertThatThrownBy(
+            () ->
+                resolver.resolve(
+                    LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "da.mature.avoidableGradeY"))
+        .hasMessageContaining("avoidableGradeY");
   }
 
   @DisplayName("Resolves Numeric Field Not Known By The Domain Model")
@@ -73,13 +102,18 @@ class FormulaRuntimeResolverTest {
   void resolvesNumericFieldNotKnownByTheDomainModel() {
     DistrictRow row = row("DNI", null, null);
     row.addProperty("futureMetric", new BigDecimal("7.125"));
-    DistrictVolumeEntity volume = volume(ConfigType.DISTRICT_VOLUME, new TableData(null,
-        List.of(new Section("Mature", List.of(row))), null, Map.of()));
-    when(repository.findEffectiveByConfigTypeAndArea(ConfigType.DISTRICT_VOLUME, Area.COASTAL,
-        LocalDate.of(2026, 11, 3))).thenReturn(java.util.Optional.of(volume));
+    DistrictVolumeEntity volume =
+        volume(
+            ConfigType.DISTRICT_VOLUME,
+            new TableData(null, List.of(new Section("Mature", List.of(row))), null, Map.of()));
+    when(repository.findEffectiveByConfigTypeAndArea(
+            ConfigType.DISTRICT_VOLUME, Area.COASTAL, LocalDate.of(2026, 11, 3)))
+        .thenReturn(java.util.Optional.of(volume));
 
-    assertThat(resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI",
-        "da.mature.futureMetric")).isEqualByComparingTo("7.125");
+    assertThat(
+            resolver.resolve(
+                LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "da.mature.futureMetric"))
+        .isEqualByComparingTo("7.125");
   }
 
   @DisplayName("Rejects Null Date")
@@ -92,21 +126,24 @@ class FormulaRuntimeResolverTest {
   @DisplayName("Rejects Null Area")
   @Test
   void rejectsNullArea() {
-    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), null, "DNI", "da.mature.x"))
+    assertThatThrownBy(
+            () -> resolver.resolve(LocalDate.of(2026, 11, 3), null, "DNI", "da.mature.x"))
         .isInstanceOf(NullPointerException.class);
   }
 
   @DisplayName("Rejects Null District")
   @Test
   void rejectsNullDistrict() {
-    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, null, "da.mature.x"))
+    assertThatThrownBy(
+            () -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, null, "da.mature.x"))
         .hasMessageContaining("district");
   }
 
   @DisplayName("Rejects Blank District")
   @Test
   void rejectsBlankDistrict() {
-    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "  ", "da.mature.x"))
+    assertThatThrownBy(
+            () -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "  ", "da.mature.x"))
         .hasMessageContaining("district");
   }
 
@@ -134,94 +171,135 @@ class FormulaRuntimeResolverTest {
   @DisplayName("Rejects Unknown Namespace")
   @Test
   void rejectsUnknownNamespace() {
-    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "xx.field"))
+    assertThatThrownBy(
+            () -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "xx.field"))
         .hasMessageContaining("namespace");
   }
 
   @DisplayName("Rejects Da Path With Wrong Segment Count")
   @Test
   void rejectsDaPathWithWrongSegmentCount() {
-    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "da.mature"))
+    assertThatThrownBy(
+            () -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "da.mature"))
         .hasMessageContaining("da.<group>.<field>");
   }
 
   @DisplayName("Rejects Sc Path With Wrong Segment Count")
   @Test
   void rejectsScPathWithWrongSegmentCount() {
-    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "sc.AL.extra"))
+    assertThatThrownBy(
+            () -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "sc.AL.extra"))
         .hasMessageContaining("sc.<species>");
   }
 
   @DisplayName("Rejects Da Group Not Found")
   @Test
   void rejectsDaGroupNotFound() {
-    DistrictVolumeEntity volume = volume(ConfigType.DISTRICT_VOLUME, new TableData(null,
-        List.of(new Section("Mature", List.of(row("DNI", null, new BigDecimal("1"))))), null,
-        Map.of()));
-    when(repository.findEffectiveByConfigTypeAndArea(ConfigType.DISTRICT_VOLUME, Area.COASTAL,
-        LocalDate.of(2026, 11, 3))).thenReturn(java.util.Optional.of(volume));
+    DistrictVolumeEntity volume =
+        volume(
+            ConfigType.DISTRICT_VOLUME,
+            new TableData(
+                null,
+                List.of(new Section("Mature", List.of(row("DNI", null, new BigDecimal("1"))))),
+                null,
+                Map.of()));
+    when(repository.findEffectiveByConfigTypeAndArea(
+            ConfigType.DISTRICT_VOLUME, Area.COASTAL, LocalDate.of(2026, 11, 3)))
+        .thenReturn(java.util.Optional.of(volume));
 
-    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI",
-        "da.nonexistent.field")).hasMessageContaining("Group");
+    assertThatThrownBy(
+            () ->
+                resolver.resolve(
+                    LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "da.nonexistent.field"))
+        .hasMessageContaining("Group");
   }
 
   @DisplayName("Rejects Da District Not In Group")
   @Test
   void rejectsDaDistrictNotInGroup() {
-    DistrictVolumeEntity volume = volume(ConfigType.DISTRICT_VOLUME, new TableData(null,
-        List.of(new Section("Mature", List.of(row("DNI", null, new BigDecimal("1"))))), null,
-        Map.of()));
-    when(repository.findEffectiveByConfigTypeAndArea(ConfigType.DISTRICT_VOLUME, Area.COASTAL,
-        LocalDate.of(2026, 11, 3))).thenReturn(java.util.Optional.of(volume));
+    DistrictVolumeEntity volume =
+        volume(
+            ConfigType.DISTRICT_VOLUME,
+            new TableData(
+                null,
+                List.of(new Section("Mature", List.of(row("DNI", null, new BigDecimal("1"))))),
+                null,
+                Map.of()));
+    when(repository.findEffectiveByConfigTypeAndArea(
+            ConfigType.DISTRICT_VOLUME, Area.COASTAL, LocalDate.of(2026, 11, 3)))
+        .thenReturn(java.util.Optional.of(volume));
 
-    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "XXX",
-        "da.mature.field")).hasMessageContaining("District");
+    assertThatThrownBy(
+            () ->
+                resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "XXX", "da.mature.field"))
+        .hasMessageContaining("District");
   }
 
   @DisplayName("Rejects Sc District Not Found")
   @Test
   void rejectsScDistrictNotFound() {
-    DistrictVolumeEntity volume = volume(ConfigType.SPECIES_COMPOSITION, new TableData(null, null,
-        List.of(new SpeciesCompositionRow(new CodeDescriptionDto("DNI", "DNI"),
-            Map.of("AL", new BigDecimal("1")))), Map.of()));
-    when(repository.findEffectiveByConfigTypeAndArea(ConfigType.SPECIES_COMPOSITION, Area.COASTAL,
-        LocalDate.of(2026, 11, 3))).thenReturn(java.util.Optional.of(volume));
+    DistrictVolumeEntity volume =
+        volume(
+            ConfigType.SPECIES_COMPOSITION,
+            new TableData(
+                null,
+                null,
+                List.of(
+                    new SpeciesCompositionRow(
+                        new CodeDescriptionDto("DNI", "DNI"), Map.of("AL", new BigDecimal("1")))),
+                Map.of()));
+    when(repository.findEffectiveByConfigTypeAndArea(
+            ConfigType.SPECIES_COMPOSITION, Area.COASTAL, LocalDate.of(2026, 11, 3)))
+        .thenReturn(java.util.Optional.of(volume));
 
-    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "XXX",
-        "sc.AL")).hasMessageContaining("District");
+    assertThatThrownBy(
+            () -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "XXX", "sc.AL"))
+        .hasMessageContaining("District");
   }
 
   @DisplayName("Rejects Sc Species Null Value")
   @Test
   void rejectsScSpeciesNullValue() {
-    DistrictVolumeEntity volume = volume(ConfigType.SPECIES_COMPOSITION, new TableData(null, null,
-        List.of(new SpeciesCompositionRow(new CodeDescriptionDto("DNI", "DNI"), Map.of())),
-        Map.of()));
-    when(repository.findEffectiveByConfigTypeAndArea(ConfigType.SPECIES_COMPOSITION, Area.COASTAL,
-        LocalDate.of(2026, 11, 3))).thenReturn(java.util.Optional.of(volume));
+    DistrictVolumeEntity volume =
+        volume(
+            ConfigType.SPECIES_COMPOSITION,
+            new TableData(
+                null,
+                null,
+                List.of(new SpeciesCompositionRow(new CodeDescriptionDto("DNI", "DNI"), Map.of())),
+                Map.of()));
+    when(repository.findEffectiveByConfigTypeAndArea(
+            ConfigType.SPECIES_COMPOSITION, Area.COASTAL, LocalDate.of(2026, 11, 3)))
+        .thenReturn(java.util.Optional.of(volume));
 
-    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI",
-        "sc.AL")).hasMessageContaining("Species");
+    assertThatThrownBy(
+            () -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "sc.AL"))
+        .hasMessageContaining("Species");
   }
 
   @DisplayName("Rejects No Effective Da Configuration")
   @Test
   void rejectsNoEffectiveDaConfiguration() {
-    when(repository.findEffectiveByConfigTypeAndArea(ConfigType.DISTRICT_VOLUME, Area.COASTAL,
-        LocalDate.of(2026, 11, 3))).thenReturn(java.util.Optional.empty());
+    when(repository.findEffectiveByConfigTypeAndArea(
+            ConfigType.DISTRICT_VOLUME, Area.COASTAL, LocalDate.of(2026, 11, 3)))
+        .thenReturn(java.util.Optional.empty());
 
-    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI",
-        "da.mature.field")).hasMessageContaining("No");
+    assertThatThrownBy(
+            () ->
+                resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "da.mature.field"))
+        .hasMessageContaining("No");
   }
 
   @DisplayName("Rejects No Effective Sc Configuration")
   @Test
   void rejectsNoEffectiveScConfiguration() {
-    when(repository.findEffectiveByConfigTypeAndArea(ConfigType.SPECIES_COMPOSITION, Area.COASTAL,
-        LocalDate.of(2026, 11, 3))).thenReturn(java.util.Optional.empty());
+    when(repository.findEffectiveByConfigTypeAndArea(
+            ConfigType.SPECIES_COMPOSITION, Area.COASTAL, LocalDate.of(2026, 11, 3)))
+        .thenReturn(java.util.Optional.empty());
 
-    assertThatThrownBy(() -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI",
-        "sc.AL")).hasMessageContaining("No");
+    assertThatThrownBy(
+            () -> resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "sc.AL"))
+        .hasMessageContaining("No");
   }
 
   private DistrictVolumeEntity volume(ConfigType type, TableData data) {
@@ -233,7 +311,7 @@ class FormulaRuntimeResolverTest {
   }
 
   private DistrictRow row(String district, BigDecimal sawlog, BigDecimal gradeY) {
-    return new DistrictRow(new CodeDescriptionDto(district, district), sawlog, null, null, null,
-        gradeY, null, gradeY);
+    return new DistrictRow(
+        new CodeDescriptionDto(district, district), sawlog, null, null, null, gradeY, null, gradeY);
   }
 }

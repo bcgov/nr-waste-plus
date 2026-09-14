@@ -13,10 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * REST controller that exposes code lists used by the frontend.
  *
- * <p>Endpoints are exposed under {@code /api/codes} and return collections of
- * {@link CodeDescriptionDto} for various code types (districts, sampling, and
- * assessment area statuses). Implementation methods delegate to
- * {@link CodesService} and emit basic access logs.</p>
+ * <p>Endpoints are exposed under {@code /api/codes} and return collections of {@link
+ * CodeDescriptionDto} for various code types (districts, sampling, and assessment area statuses).
+ * Implementation methods delegate to {@link CodesService} and emit basic access logs.
  *
  * @since 1.0.0
  */
@@ -32,8 +31,8 @@ public class CodesController {
   /**
    * Retrieve district codes.
    *
-   * <p>Returns a list of {@link CodeDescriptionDto} representing district codes
-   * available to the application.</p>
+   * <p>Returns a list of {@link CodeDescriptionDto} representing district codes available to the
+   * application.
    *
    * @return list of district code descriptions
    */
@@ -46,8 +45,8 @@ public class CodesController {
   /**
    * Retrieve sampling codes.
    *
-   * <p>Returns a list of {@link CodeDescriptionDto} representing sampling
-   * categories or types used by the application.</p>
+   * <p>Returns a list of {@link CodeDescriptionDto} representing sampling categories or types used
+   * by the application.
    *
    * @return list of sampling code descriptions
    */
@@ -60,8 +59,7 @@ public class CodesController {
   /**
    * Retrieve assessment area status codes.
    *
-   * <p>Returns a list of {@link CodeDescriptionDto} representing possible
-   * assessment area statuses.</p>
+   * <p>Returns a list of {@link CodeDescriptionDto} representing possible assessment area statuses.
    *
    * @return list of assessment area status code descriptions
    */
@@ -70,5 +68,4 @@ public class CodesController {
     log.info("Listing all status codes");
     return service.getStatusCodes();
   }
-
 }

@@ -14,6 +14,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
+/**
+ * Base class for integration tests running against a Testcontainers PostgreSQL instance.
+ */
 @Testcontainers
 @ExtendWith({SpringExtension.class})
 @AutoConfigureTracing
@@ -39,12 +42,6 @@ public abstract class AbstractTestContainerIntegrationTest {
     registry.add("spring.datasource.hikari.password", postgres::getPassword);
   }
 
-  public final Jwt jwt = createJwt(
-      "test",
-      List.of("Admin"),
-      "idir",
-      "Test, Automated WLRS:EX",
-      "test@test.ca"
-  );
-
+  public final Jwt jwt =
+      createJwt("test", List.of("Admin"), "idir", "Test, Automated WLRS:EX", "test@test.ca");
 }

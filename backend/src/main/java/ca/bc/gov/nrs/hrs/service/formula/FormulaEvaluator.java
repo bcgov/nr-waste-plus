@@ -7,10 +7,10 @@ import java.util.Map;
 /**
  * Pure AST-walking evaluator for the formula language.
  *
- * <p>This class is intentionally free of Spring annotations and DI. It evaluates a parsed
- * {@link FormulaNode} against a pre-resolved variable map, producing a {@link BigDecimal} result.
- * All arithmetic uses BigDecimal semantics; intermediate results use scale&nbsp;12 and the final
- * output is rounded to scale&nbsp;3 with {@link RoundingMode#HALF_UP}.
+ * <p>This class is intentionally free of Spring annotations and DI. It evaluates a parsed {@link
+ * FormulaNode} against a pre-resolved variable map, producing a {@link BigDecimal} result. All
+ * arithmetic uses BigDecimal semantics; intermediate results use scale&nbsp;12 and the final output
+ * is rounded to scale&nbsp;3 with {@link RoundingMode#HALF_UP}.
  */
 public final class FormulaEvaluator {
 
@@ -28,11 +28,11 @@ public final class FormulaEvaluator {
   /**
    * Evaluates the given AST against the resolved variable map.
    *
-   * @param ast       the parsed formula tree
+   * @param ast the parsed formula tree
    * @param variables pre-resolved namespace-qualified variable values
    * @return the computed result rounded to 3 decimal places (HALF_UP)
-   * @throws FormulaEvaluationException if a variable is missing, a type is wrong,
-   *     or division by zero is encountered at runtime
+   * @throws FormulaEvaluationException if a variable is missing, a type is wrong, or division by
+   *     zero is encountered at runtime
    */
   public static BigDecimal evaluate(FormulaNode ast, Map<String, BigDecimal> variables) {
     return evaluateNode(ast, variables).setScale(OUTPUT_SCALE, RoundingMode.HALF_UP);
@@ -48,18 +48,17 @@ public final class FormulaEvaluator {
     };
   }
 
-  private static BigDecimal resolveVariable(VariableReferenceNode variable,
-      Map<String, BigDecimal> variables) {
+  private static BigDecimal resolveVariable(
+      VariableReferenceNode variable, Map<String, BigDecimal> variables) {
     BigDecimal value = variables.get(variable.name());
     if (value == null) {
-      throw new FormulaEvaluationException(
-          "Missing variable: " + variable.name());
+      throw new FormulaEvaluationException("Missing variable: " + variable.name());
     }
     return value;
   }
 
-  private static BigDecimal evaluateUnary(UnaryOperationNode unary,
-      Map<String, BigDecimal> variables) {
+  private static BigDecimal evaluateUnary(
+      UnaryOperationNode unary, Map<String, BigDecimal> variables) {
     BigDecimal operand = evaluateNode(unary.operand(), variables);
     return switch (unary.operator()) {
       case PLUS -> operand;
@@ -67,8 +66,8 @@ public final class FormulaEvaluator {
     };
   }
 
-  private static BigDecimal evaluateBinary(BinaryOperationNode binary,
-      Map<String, BigDecimal> variables) {
+  private static BigDecimal evaluateBinary(
+      BinaryOperationNode binary, Map<String, BigDecimal> variables) {
     BigDecimal left = evaluateNode(binary.left(), variables);
     BigDecimal right = evaluateNode(binary.right(), variables);
     return switch (binary.operator()) {
@@ -87,8 +86,7 @@ public final class FormulaEvaluator {
 
   private static BigDecimal divide(BigDecimal left, BigDecimal right) {
     if (right.signum() == 0) {
-      throw new FormulaEvaluationException(
-          "Division by zero");
+      throw new FormulaEvaluationException("Division by zero");
     }
     return left.divide(right, INTERMEDIATE_SCALE, RoundingMode.HALF_UP);
   }

@@ -26,21 +26,20 @@ import tools.jackson.databind.JsonNode;
 /**
  * Client responsible for legacy reporting-unit search endpoints.
  *
- * <p>This component handles all communication with legacy API reporting unit search
- * endpoints, including paginated searches, expanded search details, and user lookups.
- * It implements resilience patterns via circuit breaker to gracefully handle failures.
+ * <p>This component handles all communication with legacy API reporting unit search endpoints,
+ * including paginated searches, expanded search details, and user lookups. It implements resilience
+ * patterns via circuit breaker to gracefully handle failures.
  *
- * <p>All search operations are protected by circuit breakers with fallback methods that
- * return empty or default results, ensuring the application continues functioning even
- * when the legacy API is unavailable.
+ * <p>All search operations are protected by circuit breakers with fallback methods that return
+ * empty or default results, ensuring the application continues functioning even when the legacy API
+ * is unavailable.
  */
 @Slf4j
 @Component
 @Observed
 public class LegacyReportingUnitClient {
 
-  static final String FALLBACK_ERROR =
-      "Error occurred while fetching data from {}: {}";
+  static final String FALLBACK_ERROR = "Error occurred while fetching data from {}: {}";
 
   private static final String PROVIDER = "Legacy API";
 
@@ -51,53 +50,45 @@ public class LegacyReportingUnitClient {
    * Constructs a new LegacyReportingUnitClient.
    *
    * @param legacyApi the qualified RestClient bean for the legacy API, must not be null
-   * @param pageMapper the mapper for converting paged JSON responses to typed lists,
-   *     must not be null
+   * @param pageMapper the mapper for converting paged JSON responses to typed lists, must not be
+   *     null
    */
   LegacyReportingUnitClient(
-      @Qualifier("legacyApi") RestClient legacyApi,
-      LegacyPagedResponseMapper pageMapper) {
+      @Qualifier("legacyApi") RestClient legacyApi, LegacyPagedResponseMapper pageMapper) {
     this.restClient = legacyApi;
     this.pageMapper = pageMapper;
   }
 
   /**
-   * Search reporting units in the legacy API using provided filters and pageable
-   * information.
+   * Search reporting units in the legacy API using provided filters and pageable information.
    *
-   * <p>This method executes a paginated search against the legacy API endpoint
-   * {@code GET /api/search/reporting-units} with the provided filter parameters and
-   * pagination settings. The response is expected to be a paged JSON structure with a
-   * {@code content} field containing the results and a {@code page} field containing
-   * pagination metadata.
+   * <p>This method executes a paginated search against the legacy API endpoint {@code GET
+   * /api/search/reporting-units} with the provided filter parameters and pagination settings. The
+   * response is expected to be a paged JSON structure with a {@code content} field containing the
+   * results and a {@code page} field containing pagination metadata.
    *
-   * <p>If the response is invalid or missing required fields, the method returns an
-   * empty page. If the total elements cannot be determined from the response metadata,
-   * it defaults to 0.
+   * <p>If the response is invalid or missing required fields, the method returns an empty page. If
+   * the total elements cannot be determined from the response metadata, it defaults to 0.
    *
-   * <p>This method is protected by a circuit breaker that will invoke
-   * {@link #fallbackEmptySearchReportingUnit(
-   * ReportingUnitSearchParametersDto, Pageable, Throwable)}
-   * if the API call fails.
+   * <p>This method is protected by a circuit breaker that will invoke {@link
+   * #fallbackEmptySearchReportingUnit( ReportingUnitSearchParametersDto, Pageable, Throwable)} if
+   * the API call fails.
    *
-   * @param filters the search filter parameters to apply; may include various reporting
-   *     unit criteria
+   * @param filters the search filter parameters to apply; may include various reporting unit
+   *     criteria
    * @param pageable the pagination information (page number, size, sort order)
-   * @return a {@link Page} of {@link ReportingUnitSearchResultDto} containing search
-   *     results; never null, may be empty if no results found or API fails
-   * @throws org.springframework.web.client.RestClientException if there's an
-   *     unrecoverable HTTP error
+   * @return a {@link Page} of {@link ReportingUnitSearchResultDto} containing search results; never
+   *     null, may be empty if no results found or API fails
+   * @throws org.springframework.web.client.RestClientException if there's an unrecoverable HTTP
+   *     error
    * @see ReportingUnitSearchParametersDto
    * @see Pageable
    * @see LegacyPagedResponseMapper
    */
-  @CircuitBreaker(
-      name = "breaker",
-      fallbackMethod = "fallbackEmptySearchReportingUnit")
+  @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptySearchReportingUnit")
   @NewSpan
   public Page<ReportingUnitSearchResultDto> searchReportingUnit(
-      ReportingUnitSearchParametersDto filters,
-      Pageable pageable) {
+      ReportingUnitSearchParametersDto filters, Pageable pageable) {
 
     JsonNode pagedResponse =
         restClient
@@ -117,9 +108,7 @@ public class LegacyReportingUnitClient {
     }
 
     List<ReportingUnitSearchResultDto> results =
-        pageMapper.readContent(
-            pagedResponse,
-            ReportingUnitSearchResultDto.class);
+        pageMapper.readContent(pagedResponse, ReportingUnitSearchResultDto.class);
 
     long totalElements = 0L;
     try {
@@ -132,32 +121,27 @@ public class LegacyReportingUnitClient {
   }
 
   /**
-   * Retrieve expanded search details for a specific reporting unit and waste
-   * assessment area.
+   * Retrieve expanded search details for a specific reporting unit and waste assessment area.
    *
-   * <p>This method retrieves detailed information about a specific reporting unit in
-   * the context of a waste assessment area. The query is made to the legacy API
-   * endpoint:
-   * {@code GET /api/search/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}}
+   * <p>This method retrieves detailed information about a specific reporting unit in the context of
+   * a waste assessment area. The query is made to the legacy API endpoint: {@code GET
+   * /api/search/reporting-units/ex/{reportingUnitId}/{wasteAssessmentAreaId}}
    *
-   * <p>The returned object contains comprehensive details including assessment area
-   * information, coordinates, status, and associated lists. This method is protected
-   * by a circuit breaker that will invoke
-   * {@link #fallbackSearchExpand(Long, Long, Throwable)} if the API fails.
+   * <p>The returned object contains comprehensive details including assessment area information,
+   * coordinates, status, and associated lists. This method is protected by a circuit breaker that
+   * will invoke {@link #fallbackSearchExpand(Long, Long, Throwable)} if the API fails.
    *
    * @param ruId the reporting unit ID; must not be null
    * @param wasteAssessmentAreaId the waste assessment area ID; must not be null
-   * @return a {@link ReportingUnitSearchExpandedDto} containing expanded search
-   *     details; never null, returns a default empty object if API fails
-   * @throws org.springframework.web.client.RestClientException if there's an
-   *     unrecoverable HTTP error
+   * @return a {@link ReportingUnitSearchExpandedDto} containing expanded search details; never
+   *     null, returns a default empty object if API fails
+   * @throws org.springframework.web.client.RestClientException if there's an unrecoverable HTTP
+   *     error
    * @see ReportingUnitSearchExpandedDto
    */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackSearchExpand")
   @NewSpan
-  public ReportingUnitSearchExpandedDto getSearchExpanded(
-      Long ruId,
-      Long wasteAssessmentAreaId) {
+  public ReportingUnitSearchExpandedDto getSearchExpanded(Long ruId, Long wasteAssessmentAreaId) {
 
     return restClient
         .get()
@@ -178,25 +162,24 @@ public class LegacyReportingUnitClient {
   /**
    * Search for reporting unit users that match a partial user ID.
    *
-   * <p>This method queries the legacy API endpoint
-   * {@code GET /api/search/reporting-units-users} to find users whose ID matches or
-   * contains the provided search term. The response is a list of user IDs as strings.
+   * <p>This method queries the legacy API endpoint {@code GET /api/search/reporting-units-users} to
+   * find users whose ID matches or contains the provided search term. The response is a list of
+   * user IDs as strings.
    *
-   * <p>This method is protected by a circuit breaker that will invoke
-   * {@link #fallbackEmptyUsersList(String, Throwable)} if the API call fails.
+   * <p>This method is protected by a circuit breaker that will invoke {@link
+   * #fallbackEmptyUsersList(String, Throwable)} if the API call fails.
    *
    * @param userId the search term for user ID matching; used for partial matching
-   * @return a list of user IDs as strings that match the search criteria; never null,
-   *     returns empty list if no matches found or API fails
-   * @throws org.springframework.web.client.RestClientException if there's an
-   *     unrecoverable HTTP error
+   * @return a list of user IDs as strings that match the search criteria; never null, returns empty
+   *     list if no matches found or API fails
+   * @throws org.springframework.web.client.RestClientException if there's an unrecoverable HTTP
+   *     error
    */
   @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyUsersList")
   @NewSpan
   public List<String> searchReportingUnitUsers(String userId) {
     log.info(
-        "Searching {} request to /api/search/reporting-units-users "
-            + "for user that matches {}",
+        "Searching {} request to /api/search/reporting-units-users " + "for user that matches {}",
         PROVIDER,
         userId);
 
@@ -215,37 +198,31 @@ public class LegacyReportingUnitClient {
   /**
    * Retrieve legacy details for a specific reporting unit from the legacy API.
    *
-   * <p>Makes a {@code GET} request to {@code /api/reporting-units/{reportingUnitId}}
-   * and deserializes the response into a {@link ReportingUnitLegacyDetailsDto}.
-   * </p>
+   * <p>Makes a {@code GET} request to {@code /api/reporting-units/{reportingUnitId}} and
+   * deserializes the response into a {@link ReportingUnitLegacyDetailsDto}.
    *
-   * <p>A 404 response from the legacy service — which indicates either that the reporting unit
-   * does not exist or that the BCeID user is scoped out — is translated into a
-   * {@link NotFoundGenericException} before {@code body(...)} is reached, so that callers
-   * receive an HTTP 404 rather than a 500.
-   * </p>
+   * <p>A 404 response from the legacy service — which indicates either that the reporting unit does
+   * not exist or that the BCeID user is scoped out — is translated into a {@link
+   * NotFoundGenericException} before {@code body(...)} is reached, so that callers receive an HTTP
+   * 404 rather than a 500.
    *
-   * <p>This method intentionally has no circuit breaker: expected client-side outcomes such as
-   * 404s must not count as breaker failures and must not open the shared breaker used by other
-   * legacy calls.
-   * </p>
+   * <p>This method intentionally has no circuit breaker: expected client-side outcomes such as 404s
+   * must not count as breaker failures and must not open the shared breaker used by other legacy
+   * calls.
    *
-   * @param reportingUnitId the unique identifier of the reporting unit to retrieve;
-   *                        must not be null
-   * @return a {@link ReportingUnitLegacyDetailsDto} containing the reporting unit's
-   *         client number, location code, sampling method, and district; never null
-   * @throws NotFoundGenericException if the legacy service returns 404 (reporting unit not found
-   *         or BCeID user scoped out)
-   * @throws org.springframework.web.client.RestClientException if there is an
-   *         unrecoverable HTTP error or the response cannot be deserialized
+   * @param reportingUnitId the unique identifier of the reporting unit to retrieve; must not be
+   *     null
+   * @return a {@link ReportingUnitLegacyDetailsDto} containing the reporting unit's client number,
+   *     location code, sampling method, and district; never null
+   * @throws NotFoundGenericException if the legacy service returns 404 (reporting unit not found or
+   *     BCeID user scoped out)
+   * @throws org.springframework.web.client.RestClientException if there is an unrecoverable HTTP
+   *     error or the response cannot be deserialized
    */
   @NewSpan
-  public ReportingUnitLegacyDetailsDto getReportingUnitDetails(
-      Long reportingUnitId) {
+  public ReportingUnitLegacyDetailsDto getReportingUnitDetails(Long reportingUnitId) {
 
-    log.info(
-        "Retrieving reporting unit details for RU {}",
-        reportingUnitId);
+    log.info("Retrieving reporting unit details for RU {}", reportingUnitId);
 
     return restClient
         .get()
@@ -258,12 +235,8 @@ public class LegacyReportingUnitClient {
         .onStatus(
             status -> status.value() == 404,
             (ignoredRequest, ignoredResponse) -> {
-              log.warn(
-                  "Reporting unit {} not found in legacy API (status 404)",
-                  reportingUnitId);
-              throw new NotFoundGenericException(
-                  "Reporting unit",
-                  String.valueOf(reportingUnitId));
+              log.warn("Reporting unit {} not found in legacy API (status 404)", reportingUnitId);
+              throw new NotFoundGenericException("Reporting unit", String.valueOf(reportingUnitId));
             })
         .body(ReportingUnitLegacyDetailsDto.class);
   }
@@ -271,20 +244,18 @@ public class LegacyReportingUnitClient {
   /**
    * Creates a reporting unit in the legacy API.
    *
-   * Sends a POST request to {@code /api/reporting-units} with the provided
-   * {@link CreateReportingUnitRequestDto}. The legacy API is expected to return
-   * the identifier of the newly created reporting unit as a numeric value.
+   * <p>Sends a POST request to {@code /api/reporting-units} with the provided {@link
+   * CreateReportingUnitRequestDto}. The legacy API is expected to return the identifier of the
+   * newly created reporting unit as a numeric value.
    *
    * @param request the create request DTO
    * @return the id of the newly created reporting unit
    */
   @NewSpan
-  public Long createReportingUnit(
-      CreateReportingUnitRequestDto request) {
+  public Long createReportingUnit(CreateReportingUnitRequestDto request) {
 
     log.info(
-        "Posting create reporting unit request to legacy API "
-            + "for client {}",
+        "Posting create reporting unit request to legacy API " + "for client {}",
         request.clientNumber());
 
     return restClient
@@ -296,26 +267,20 @@ public class LegacyReportingUnitClient {
             HttpStatusCode::isError,
             (ignoredRequest, res) -> {
               log.error(
-                  "Legacy API returned status {} for create reporting unit",
-                  res.getStatusCode());
+                  "Legacy API returned status {} for create reporting unit", res.getStatusCode());
 
-              throw new UnretriableException(
-                  res.getStatusCode(),
-                  request.clientNumber());
+              throw new UnretriableException(res.getStatusCode(), request.clientNumber());
             })
         .body(Long.class);
   }
 
   ReportingUnitSearchExpandedDto fallbackSearchExpand(
-      Long ruId,
-      Long wasteAssessmentAreaId,
-      Throwable throwable) {
+      Long ruId, Long wasteAssessmentAreaId, Throwable throwable) {
 
     logFallbackError(throwable);
 
     log.error(
-        "Returning empty expanded search result for RU: {}, "
-            + "Waste Assessment Area: {}",
+        "Returning empty expanded search result for RU: {}, " + "Waste Assessment Area: {}",
         ruId,
         wasteAssessmentAreaId);
 
@@ -338,31 +303,22 @@ public class LegacyReportingUnitClient {
   }
 
   @SuppressWarnings("unused")
-  private List<String> fallbackEmptyUsersList(
-      String userId,
-      Throwable throwable) {
+  private List<String> fallbackEmptyUsersList(String userId, Throwable throwable) {
 
     logFallbackError(throwable);
-    log.error(
-        "Returning empty users list for userId: {}",
-        userId);
+    log.error("Returning empty users list for userId: {}", userId);
     return LegacyApiConstants.EMPTY_STRING_LIST;
   }
 
   @SuppressWarnings("unused")
   private Page<ReportingUnitSearchResultDto> fallbackEmptySearchReportingUnit(
-      ReportingUnitSearchParametersDto filters,
-      Pageable pageable,
-      Throwable throwable) {
+      ReportingUnitSearchParametersDto filters, Pageable pageable, Throwable throwable) {
 
     logFallbackError(throwable);
     return new PageImpl<>(LegacyApiConstants.RU_SEARCH_LIST, pageable, 0);
   }
 
   private void logFallbackError(Throwable throwable) {
-    log.error(
-        FALLBACK_ERROR,
-        PROVIDER,
-        throwable == null ? "unknown" : throwable.getMessage());
+    log.error(FALLBACK_ERROR, PROVIDER, throwable == null ? "unknown" : throwable.getMessage());
   }
 }

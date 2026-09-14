@@ -31,30 +31,29 @@ class JwtPrincipalUtilTest {
 
   @ParameterizedTest(name = "For custom:idp_name {0} → JwtAuthenticationToken: {1}, Jwt: {2}")
   @CsvSource({
-      "ca.bc.gov.flnr.fam.dev, BCSC, BCSC",
-      "idir, IDIR, IDIR",
-      "bceidbusiness, BCEIDBUSINESS, BCEIDBUSINESS",
-      "'', '', ''"
+    "ca.bc.gov.flnr.fam.dev, BCSC, BCSC",
+    "idir, IDIR, IDIR",
+    "bceidbusiness, BCEIDBUSINESS, BCEIDBUSINESS",
+    "'', '', ''"
   })
   @DisplayName("get provider")
   void shouldGetProvider(String idpName, String expectedTokenValue, String expectedJwtValue) {
     Map<String, Object> claims = Map.of("custom:idp_name", idpName);
 
     assertEquals(
-        expectedTokenValue,
-        JwtPrincipalUtil.getProvider(createJwtAuthenticationToken(claims)));
+        expectedTokenValue, JwtPrincipalUtil.getProvider(createJwtAuthenticationToken(claims)));
     assertEquals(expectedJwtValue, JwtPrincipalUtil.getProvider(createJwt(claims)));
   }
 
   @ParameterizedTest(name = "For custom:idp_username {0} and custom:idp_name {1} userId is {2}")
   @CsvSource({
-      "username, userid, ca.bc.gov.flnr.fam.dev, BCSC\\username",
-      "username, userid, idir, IDIR\\username",
-      "username, userid, bceidbusiness, BCEIDBUSINESS\\username",
-      "'', userid, ca.bc.gov.flnr.fam.dev, BCSC\\userid",
-      "'', userid, idir, IDIR\\userid",
-      "'', userid, bceidbusiness, BCEIDBUSINESS\\userid",
-      "'', '','', ''"
+    "username, userid, ca.bc.gov.flnr.fam.dev, BCSC\\username",
+    "username, userid, idir, IDIR\\username",
+    "username, userid, bceidbusiness, BCEIDBUSINESS\\username",
+    "'', userid, ca.bc.gov.flnr.fam.dev, BCSC\\userid",
+    "'', userid, idir, IDIR\\userid",
+    "'', userid, bceidbusiness, BCEIDBUSINESS\\userid",
+    "'', '','', ''"
   })
   @DisplayName("get userId returns userId prefixed with provider when userId is not blank")
   void shouldGetUserId(String idpUsername, String idpUserId, String idpName, String expected) {
@@ -64,51 +63,43 @@ class JwtPrincipalUtilTest {
             "custom:idp_user_id", idpUserId,
             "custom:idp_name", idpName);
 
-    assertEquals(
-        expected, JwtPrincipalUtil.getUserId(createJwtAuthenticationToken(claims)));
+    assertEquals(expected, JwtPrincipalUtil.getUserId(createJwtAuthenticationToken(claims)));
     assertEquals(expected, JwtPrincipalUtil.getUserId(createJwt(claims)));
   }
 
   @ParameterizedTest(
       name = "For custom:idp_username {0} and custom:idp_name {1} idp_username is {2}")
   @CsvSource({
-      "username, userid, ca.bc.gov.flnr.fam.dev, username",
-      "username, userid, idir, username",
-      "username, userid, bceidbusiness, username",
-      "'', userid, ca.bc.gov.flnr.fam.dev, userid",
-      "'', userid, idir, userid",
-      "'', userid, bceidbusiness, userid",
-      "'', '','', ''"
+    "username, userid, ca.bc.gov.flnr.fam.dev, username",
+    "username, userid, idir, username",
+    "username, userid, bceidbusiness, username",
+    "'', userid, ca.bc.gov.flnr.fam.dev, userid",
+    "'', userid, idir, userid",
+    "'', userid, bceidbusiness, userid",
+    "'', '','', ''"
   })
   @DisplayName("get idpUserName returns userId prefixed with provider when userId is not blank")
-  void shouldGetIdpUsername(
-      String idpUsername,
-      String idpUserId,
-      String idpName,
-      String expected) {
+  void shouldGetIdpUsername(String idpUsername, String idpUserId, String idpName, String expected) {
     Map<String, Object> claims =
         Map.of(
             "custom:idp_username", idpUsername,
             "custom:idp_user_id", idpUserId,
             "custom:idp_name", idpName);
 
-    assertEquals(
-        expected,
-        JwtPrincipalUtil.getIdpUsername(createJwtAuthenticationToken(claims)));
+    assertEquals(expected, JwtPrincipalUtil.getIdpUsername(createJwtAuthenticationToken(claims)));
     assertEquals(expected, JwtPrincipalUtil.getIdpUsername(createJwt(claims)));
   }
 
-  @ParameterizedTest(
-      name = "For custom:idp_username {0} and custom:idp_name {1} provider is {2}")
+  @ParameterizedTest(name = "For custom:idp_username {0} and custom:idp_name {1} provider is {2}")
   @CsvSource({
-      "username, userid, ca.bc.gov.flnr.fam.dev, BCSC",
-      "username, userid, idir, IDIR",
-      "username, userid, bceidbusiness, BUSINESS_BCEID",
-      "'', '','', ''"
+    "username, userid, ca.bc.gov.flnr.fam.dev, BCSC",
+    "username, userid, idir, IDIR",
+    "username, userid, bceidbusiness, BUSINESS_BCEID",
+    "'', '','', ''"
   })
   @DisplayName("get userId returns userId prefixed with provider when userId is not blank")
-  void shouldGetIdentityProvider(String idpUsername, String idpUserId, String idpName,
-      String expected) {
+  void shouldGetIdentityProvider(
+      String idpUsername, String idpUserId, String idpName, String expected) {
     Map<String, Object> claims =
         Map.of(
             "custom:idp_username", idpUsername,
@@ -118,18 +109,17 @@ class JwtPrincipalUtilTest {
     if (StringUtils.isBlank(expected)) {
       assertThrows(
           NoSuchElementException.class,
-          () -> JwtPrincipalUtil.getIdentityProvider(
-              createJwtAuthenticationToken(claims)));
+          () -> JwtPrincipalUtil.getIdentityProvider(createJwtAuthenticationToken(claims)));
       assertThrows(
           NoSuchElementException.class,
-          () -> JwtPrincipalUtil.getIdentityProvider(createJwt(claims))
-      );
+          () -> JwtPrincipalUtil.getIdentityProvider(createJwt(claims)));
     } else {
 
       assertEquals(
           IdentityProvider.valueOf(expected),
           JwtPrincipalUtil.getIdentityProvider(createJwtAuthenticationToken(claims)));
-      assertEquals(IdentityProvider.valueOf(expected),
+      assertEquals(
+          IdentityProvider.valueOf(expected),
           JwtPrincipalUtil.getIdentityProvider(createJwt(claims)));
     }
   }
@@ -140,8 +130,7 @@ class JwtPrincipalUtilTest {
   void shouldGetBusinessId(String value) {
     Map<String, Object> claims = Map.of("custom:idp_business_id", value);
 
-    assertEquals(
-        value, JwtPrincipalUtil.getBusinessId(createJwtAuthenticationToken(claims)));
+    assertEquals(value, JwtPrincipalUtil.getBusinessId(createJwtAuthenticationToken(claims)));
     assertEquals(value, JwtPrincipalUtil.getBusinessId(createJwt(claims)));
   }
 
@@ -151,9 +140,7 @@ class JwtPrincipalUtilTest {
   void shouldGetBusinessName(String value) {
     Map<String, Object> claims = Map.of("custom:idp_business_name", value);
 
-    assertEquals(
-        value,
-        JwtPrincipalUtil.getBusinessName(createJwtAuthenticationToken(claims)));
+    assertEquals(value, JwtPrincipalUtil.getBusinessName(createJwtAuthenticationToken(claims)));
     assertEquals(value, JwtPrincipalUtil.getBusinessName(createJwt(claims)));
   }
 
@@ -163,25 +150,24 @@ class JwtPrincipalUtilTest {
   void shouldGetEmail(String value) {
     Map<String, Object> claims = Map.of("email", value);
 
-    assertEquals(
-        value, JwtPrincipalUtil.getEmail(createJwtAuthenticationToken(claims)));
+    assertEquals(value, JwtPrincipalUtil.getEmail(createJwtAuthenticationToken(claims)));
     assertEquals(value, JwtPrincipalUtil.getEmail(createJwt(claims)));
   }
 
   @ParameterizedTest(
       name =
           "For given_name {0} family_name {1} custom:idp_display_name {2} custom:idp_name {3}"
-          + " fullname is {4}")
+              + " fullname is {4}")
   @CsvSource({
-      "John, Wick, '',  ca.bc.gov.flnr.fam.dev, John Wick",
-      "John, Wick, '',  idir, John Wick",
-      "'', '', 'John Wick',  bceidbusiness, John Wick",
-      "'', '', 'John Valeus Wick',  bceidbusiness, John Valeus Wick",
-      "'', '', 'Wick, John WLRS:EX',  idir, John Wick",
-      "'', '', 'da Silva, Anderson WLRS:EX',  idir, Anderson Silva",
-      "'', '', 'Wick, John V WLRS:EX',  idir, John Wick",
-      "'', '', '',  bceidbusiness, ''",
-      "'', '', '', '', ''"
+    "John, Wick, '',  ca.bc.gov.flnr.fam.dev, John Wick",
+    "John, Wick, '',  idir, John Wick",
+    "'', '', 'John Wick',  bceidbusiness, John Wick",
+    "'', '', 'John Valeus Wick',  bceidbusiness, John Valeus Wick",
+    "'', '', 'Wick, John WLRS:EX',  idir, John Wick",
+    "'', '', 'da Silva, Anderson WLRS:EX',  idir, Anderson Silva",
+    "'', '', 'Wick, John V WLRS:EX',  idir, John Wick",
+    "'', '', '',  bceidbusiness, ''",
+    "'', '', '', '', ''"
   })
   @DisplayName("get name")
   void shouldGetName(
@@ -193,25 +179,24 @@ class JwtPrincipalUtilTest {
             "custom:idp_name", idpName,
             "custom:idp_display_name", displayName);
 
-    assertEquals(
-        expected, JwtPrincipalUtil.getName(createJwtAuthenticationToken(claims)));
+    assertEquals(expected, JwtPrincipalUtil.getName(createJwtAuthenticationToken(claims)));
     assertEquals(expected, JwtPrincipalUtil.getName(createJwt(claims)));
   }
 
   @ParameterizedTest(
       name =
           "For given_name {0} family_name {1} custom:idp_display_name {2} custom:idp_name {3}"
-          + " last name is {4}")
+              + " last name is {4}")
   @CsvSource({
-      "John, Wick, '',  ca.bc.gov.flnr.fam.dev, Wick",
-      "John, Wick, '',  idir, Wick",
-      "'', '', 'John Wick',  bceidbusiness, Wick",
-      "'', '', 'John Valeus Wick',  bceidbusiness, Valeus Wick",
-      "'', '', 'Wick, John WLRS:EX',  idir, Wick",
-      "'', '', 'da Silva, Anderson WLRS:EX',  idir, Silva",
-      "'', '', 'Wick, John V WLRS:EX',  idir, Wick",
-      "'', '', '',  bceidbusiness, ''",
-      "'', '', '', '', ''"
+    "John, Wick, '',  ca.bc.gov.flnr.fam.dev, Wick",
+    "John, Wick, '',  idir, Wick",
+    "'', '', 'John Wick',  bceidbusiness, Wick",
+    "'', '', 'John Valeus Wick',  bceidbusiness, Valeus Wick",
+    "'', '', 'Wick, John WLRS:EX',  idir, Wick",
+    "'', '', 'da Silva, Anderson WLRS:EX',  idir, Silva",
+    "'', '', 'Wick, John V WLRS:EX',  idir, Wick",
+    "'', '', '',  bceidbusiness, ''",
+    "'', '', '', '', ''"
   })
   @DisplayName("get last name")
   void shouldGetLastName(
@@ -223,25 +208,24 @@ class JwtPrincipalUtilTest {
             "custom:idp_name", idpName,
             "custom:idp_display_name", displayName);
 
-    assertEquals(
-        expected, JwtPrincipalUtil.getLastName(createJwtAuthenticationToken(claims)));
+    assertEquals(expected, JwtPrincipalUtil.getLastName(createJwtAuthenticationToken(claims)));
     assertEquals(expected, JwtPrincipalUtil.getLastName(createJwt(claims)));
   }
 
   @ParameterizedTest(
       name =
           "For given_name {0} family_name {1} custom:idp_display_name {2} custom:idp_name {3}"
-          + " first name is {4}")
+              + " first name is {4}")
   @CsvSource({
-      "John, Wick, '',  ca.bc.gov.flnr.fam.dev, John",
-      "John, Wick, '',  idir, John",
-      "'', '', 'John Wick',  bceidbusiness, John",
-      "'', '', 'John Valeus Wick',  bceidbusiness, John",
-      "'', '', 'Wick, John WLRS:EX',  idir, John",
-      "'', '', 'da Silva, Anderson WLRS:EX',  idir, Anderson",
-      "'', '', 'Wick, John V WLRS:EX',  idir, John",
-      "'', '', '',  bceidbusiness, ''",
-      "'', '', '', '', ''"
+    "John, Wick, '',  ca.bc.gov.flnr.fam.dev, John",
+    "John, Wick, '',  idir, John",
+    "'', '', 'John Wick',  bceidbusiness, John",
+    "'', '', 'John Valeus Wick',  bceidbusiness, John",
+    "'', '', 'Wick, John WLRS:EX',  idir, John",
+    "'', '', 'da Silva, Anderson WLRS:EX',  idir, Anderson",
+    "'', '', 'Wick, John V WLRS:EX',  idir, John",
+    "'', '', '',  bceidbusiness, ''",
+    "'', '', '', '', ''"
   })
   @DisplayName("get first name")
   void shouldGetFirstName(
@@ -253,25 +237,24 @@ class JwtPrincipalUtilTest {
             "custom:idp_name", idpName,
             "custom:idp_display_name", displayName);
 
-    assertEquals(expected,
-        JwtPrincipalUtil.getFirstName(createJwtAuthenticationToken(claims)));
+    assertEquals(expected, JwtPrincipalUtil.getFirstName(createJwtAuthenticationToken(claims)));
     assertEquals(expected, JwtPrincipalUtil.getFirstName(createJwt(claims)));
   }
 
   @ParameterizedTest(
       name =
           "For given_name {0} family_name {1} custom:idp_display_name {2} custom:idp_name {3}"
-          + " first name is {4}")
+              + " first name is {4}")
   @CsvSource({
-      "John, Wick, '',  ca.bc.gov.flnr.fam.dev, ''",
-      "John, Wick, '',  idir,  ''",
-      "'', '', 'John Wick',  bceidbusiness, John Wick",
-      "'', '', 'John Valeus Wick',  bceidbusiness, John Valeus Wick",
-      "'', '', 'Wick, John WLRS:EX',  idir, 'Wick, John WLRS:EX'",
-      "'', '', 'da Silva, Anderson WLRS:EX',  idir, 'da Silva, Anderson WLRS:EX'",
-      "'', '', 'Wick, John V WLRS:EX',  idir, 'Wick, John V WLRS:EX'",
-      "'', '', '',  bceidbusiness, ''",
-      "'', '', '', '', ''"
+    "John, Wick, '',  ca.bc.gov.flnr.fam.dev, ''",
+    "John, Wick, '',  idir,  ''",
+    "'', '', 'John Wick',  bceidbusiness, John Wick",
+    "'', '', 'John Valeus Wick',  bceidbusiness, John Valeus Wick",
+    "'', '', 'Wick, John WLRS:EX',  idir, 'Wick, John WLRS:EX'",
+    "'', '', 'da Silva, Anderson WLRS:EX',  idir, 'da Silva, Anderson WLRS:EX'",
+    "'', '', 'Wick, John V WLRS:EX',  idir, 'Wick, John V WLRS:EX'",
+    "'', '', '',  bceidbusiness, ''",
+    "'', '', '', '', ''"
   })
   @DisplayName("get display name")
   void shouldGetDisplayName(
@@ -283,8 +266,7 @@ class JwtPrincipalUtilTest {
             "custom:idp_name", idpName,
             "custom:idp_display_name", displayName);
 
-    assertEquals(expected,
-        JwtPrincipalUtil.getDisplayName(createJwtAuthenticationToken(claims)));
+    assertEquals(expected, JwtPrincipalUtil.getDisplayName(createJwtAuthenticationToken(claims)));
     assertEquals(expected, JwtPrincipalUtil.getDisplayName(createJwt(claims)));
   }
 
@@ -294,31 +276,18 @@ class JwtPrincipalUtilTest {
 
     Map<String, Object> claims =
         Map.of(
-            "cognito:groups", List.of(
-                "Viewer_00010040",
-                "Submitter_00012120",
-                "Admin",
-                "District"
-            )
-        );
+            "cognito:groups",
+            List.of("Viewer_00010040", "Submitter_00012120", "Admin", "District"));
 
-    Map<Role, List<String>> result = Map.of(
-        Role.VIEWER, List.of("00010040"),
-        Role.SUBMITTER, List.of("00012120"),
-        Role.ADMIN, List.of(),
-        Role.DISTRICT, List.of()
-    );
+    Map<Role, List<String>> result =
+        Map.of(
+            Role.VIEWER, List.of("00010040"),
+            Role.SUBMITTER, List.of("00012120"),
+            Role.ADMIN, List.of(),
+            Role.DISTRICT, List.of());
 
-    assertEquals(result,
-        JwtPrincipalUtil.getRoles(
-            createJwtAuthenticationToken(claims)
-        )
-    );
-    assertEquals(result,
-        JwtPrincipalUtil.getRoles(
-            createJwt(claims)
-        )
-    );
+    assertEquals(result, JwtPrincipalUtil.getRoles(createJwtAuthenticationToken(claims)));
+    assertEquals(result, JwtPrincipalUtil.getRoles(createJwt(claims)));
   }
 
   @ParameterizedTest
@@ -326,16 +295,12 @@ class JwtPrincipalUtilTest {
   @DisplayName("Parse client numbers")
   void shouldGetClients(Map<String, Object> claims, List<String> result) {
     if (result.isEmpty()) {
-      assertThat(
-          JwtPrincipalUtil.getClientFromRoles(createJwtAuthenticationToken(claims))
-      ).isEmpty();
+      assertThat(JwtPrincipalUtil.getClientFromRoles(createJwtAuthenticationToken(claims)))
+          .isEmpty();
 
-      assertThat(JwtPrincipalUtil.getClientFromRoles(createJwt(claims))
-      ).isEmpty();
+      assertThat(JwtPrincipalUtil.getClientFromRoles(createJwt(claims))).isEmpty();
     } else {
-      assertThat(
-          JwtPrincipalUtil.getClientFromRoles(createJwtAuthenticationToken(claims))
-      )
+      assertThat(JwtPrincipalUtil.getClientFromRoles(createJwtAuthenticationToken(claims)))
           .isNotNull()
           .isNotEmpty()
           .hasSize(result.size())
@@ -354,11 +319,7 @@ class JwtPrincipalUtilTest {
   @DisplayName("has concrete role?")
   void shouldCheckConcreteRole(Map<String, Object> claims, Role role, boolean result) {
     assertEquals(
-        result,
-        JwtPrincipalUtil.hasConcreteRole(
-            createJwtAuthenticationToken(claims),
-            role)
-    );
+        result, JwtPrincipalUtil.hasConcreteRole(createJwtAuthenticationToken(claims), role));
 
     assertEquals(result, JwtPrincipalUtil.hasConcreteRole(createJwt(claims), role));
   }
@@ -367,30 +328,15 @@ class JwtPrincipalUtilTest {
   @MethodSource("abstractRoles")
   @DisplayName("has abstract role?")
   void shouldCheckAbstractRole(
-      Map<String, Object> claims,
-      Role role,
-      String client,
-      boolean result
-  ) {
-    assertEquals(result,
-        JwtPrincipalUtil.hasAbstractRole(
-            createJwtAuthenticationToken(claims),
-            role,
-            client
-        )
-    );
+      Map<String, Object> claims, Role role, String client, boolean result) {
+    assertEquals(
+        result,
+        JwtPrincipalUtil.hasAbstractRole(createJwtAuthenticationToken(claims), role, client));
 
-    assertEquals(result,
-        JwtPrincipalUtil.hasAbstractRole(
-            createJwt(claims),
-            role,
-            client
-        )
-    );
+    assertEquals(result, JwtPrincipalUtil.hasAbstractRole(createJwt(claims), role, client));
   }
 
-  private JwtAuthenticationToken createJwtAuthenticationToken(
-      Map<String, Object> attributes) {
+  private JwtAuthenticationToken createJwtAuthenticationToken(Map<String, Object> attributes) {
     return new JwtAuthenticationToken(createJwt(attributes), List.of());
   }
 
@@ -408,9 +354,7 @@ class JwtPrincipalUtilTest {
   @MethodSource("provideGroupsTestData")
   void shouldGetGroups(Map<String, Object> tokenAttributes, Set<String> expectedGroups) {
     JwtAuthenticationToken jwtAuthenticationToken =
-        tokenAttributes == null
-            ? null
-            : createJwtAuthenticationToken(tokenAttributes);
+        tokenAttributes == null ? null : createJwtAuthenticationToken(tokenAttributes);
 
     Set<String> actualGroups = JwtPrincipalUtil.getGroups(jwtAuthenticationToken);
 
@@ -419,9 +363,7 @@ class JwtPrincipalUtilTest {
 
   private static Stream<Arguments> provideGroupsTestData() {
     return Stream.of(
-        Arguments.of(
-            Map.of("cognito:groups", List.of("CLIENT_ADMIN")),
-            Set.of("CLIENT_ADMIN")),
+        Arguments.of(Map.of("cognito:groups", List.of("CLIENT_ADMIN")), Set.of("CLIENT_ADMIN")),
         Arguments.of(Map.of("cognito:groups", List.of()), Set.of()),
         Arguments.of(
             new HashMap<>() {
@@ -435,168 +377,86 @@ class JwtPrincipalUtilTest {
   }
 
   private static Stream<Arguments> concreteRoles() {
-    return
-        Stream.of(
-            Arguments.argumentSet(
-                "Concrete role I have",
-                Map.of(
-                    "cognito:groups", List.of(
-                        "Viewer_00012120",
-                        "Submitter_00012120",
-                        "Area",
-                        "Admin"
-                    )
-                ),
-                Role.AREA,
-                true
-            ),
-            Arguments.argumentSet(
-                "Concrete role I don't have",
-                Map.of(
-                    "cognito:groups", List.of(
-                        "Submitter_00012120",
-                        "Area",
-                        "Admin"
-                    )
-                ),
-                Role.DISTRICT,
-                false
-            ),
-            Arguments.argumentSet(
-                "Abstract role I have",
-                Map.of(
-                    "cognito:groups", List.of(
-                        "Viewer_00000111",
-                        "Submitter_00012120",
-                        "Area",
-                        "Admin"
-                    )
-                ),
-                Role.VIEWER,
-                false
-            ),
-            Arguments.argumentSet(
-                "Abstract role I don't have",
-                Map.of(
-                    "cognito:groups", List.of(
-                        "Viewer_00010040",
-                        "District"
-                    )
-                ),
-                Role.SUBMITTER,
-                false
-            )
-        );
+    return Stream.of(
+        Arguments.argumentSet(
+            "Concrete role I have",
+            Map.of(
+                "cognito:groups",
+                List.of("Viewer_00012120", "Submitter_00012120", "Area", "Admin")),
+            Role.AREA,
+            true),
+        Arguments.argumentSet(
+            "Concrete role I don't have",
+            Map.of("cognito:groups", List.of("Submitter_00012120", "Area", "Admin")),
+            Role.DISTRICT,
+            false),
+        Arguments.argumentSet(
+            "Abstract role I have",
+            Map.of(
+                "cognito:groups",
+                List.of("Viewer_00000111", "Submitter_00012120", "Area", "Admin")),
+            Role.VIEWER,
+            false),
+        Arguments.argumentSet(
+            "Abstract role I don't have",
+            Map.of("cognito:groups", List.of("Viewer_00010040", "District")),
+            Role.SUBMITTER,
+            false));
   }
 
   private static Stream<Arguments> abstractRoles() {
-    return
-        Stream.of(
-            Arguments.argumentSet(
-                "Concrete role I have for client 00012120",
-                Map.of(
-                    "cognito:groups", List.of(
-                        "Viewer_00012120",
-                        "Submitter_00012120",
-                        "Approver_00010040",
-                        "Admin"
-                    )
-                ),
-                Role.ADMIN,
-                "00012120",
-                false
-            ),
-            Arguments.argumentSet(
-                "Concrete role I don't have for client 00012120",
-                Map.of(
-                    "cognito:groups", List.of(
-                        "Submitter_00012120",
-                        "District",
-                        "Admin"
-                    )
-                ),
-                Role.DISTRICT,
-                "00012120",
-                false
-            ),
-            Arguments.argumentSet(
-                "Abstract role I have for client 00000111",
-                Map.of(
-                    "cognito:groups", List.of(
-                        "Viewer_00000111",
-                        "Submitter_00012120",
-                        "Approver_00010040",
-                        "Admin"
-                    )
-                ),
-                Role.VIEWER,
-                "00000111",
-                true
-            ),
-            Arguments.argumentSet(
-                "Abstract role I don't have for client 00000111",
-                Map.of(
-                    "cognito:groups", List.of(
-                        "Submitter_00012120",
-                        "Approver_00010040"
-                    )
-                ),
-                Role.VIEWER,
-                "00000111",
-                false
-            ),
-            Arguments.argumentSet(
-                "Abstract role I have for client 00000112 that I don't have",
-                Map.of(
-                    "cognito:groups", List.of(
-                        "Viewer_00000111",
-                        "Submitter_00012120",
-                        "Approver_00010040",
-                        "Admin"
-                    )
-                ),
-                Role.VIEWER,
-                "00000112",
-                false
-            )
-        );
+    return Stream.of(
+        Arguments.argumentSet(
+            "Concrete role I have for client 00012120",
+            Map.of(
+                "cognito:groups",
+                List.of("Viewer_00012120", "Submitter_00012120", "Approver_00010040", "Admin")),
+            Role.ADMIN,
+            "00012120",
+            false),
+        Arguments.argumentSet(
+            "Concrete role I don't have for client 00012120",
+            Map.of("cognito:groups", List.of("Submitter_00012120", "District", "Admin")),
+            Role.DISTRICT,
+            "00012120",
+            false),
+        Arguments.argumentSet(
+            "Abstract role I have for client 00000111",
+            Map.of(
+                "cognito:groups",
+                List.of("Viewer_00000111", "Submitter_00012120", "Approver_00010040", "Admin")),
+            Role.VIEWER,
+            "00000111",
+            true),
+        Arguments.argumentSet(
+            "Abstract role I don't have for client 00000111",
+            Map.of("cognito:groups", List.of("Submitter_00012120", "Approver_00010040")),
+            Role.VIEWER,
+            "00000111",
+            false),
+        Arguments.argumentSet(
+            "Abstract role I have for client 00000112 that I don't have",
+            Map.of(
+                "cognito:groups",
+                List.of("Viewer_00000111", "Submitter_00012120", "Approver_00010040", "Admin")),
+            Role.VIEWER,
+            "00000112",
+            false));
   }
 
   private static Stream<Arguments> clients() {
-    return
-        Stream.of(
-            Arguments.argumentSet(
-                "Only concrete roles",
-                Map.of(
-                    "cognito:groups", List.of(
-                        "District"
-                    )
-                ),
-                List.of()
-            ),
-            Arguments.argumentSet(
-                "Abstract with clients in all",
-                Map.of(
-                    "cognito:groups", List.of(
-                        "Submitter_00012120",
-                        "Viewer_00010040",
-                        "Viewer_00000111"
-                    )
-                ),
-                List.of("00010040", "00012120", "00000111")
-            ),
-            Arguments.argumentSet(
-                "Abstract with clients in some",
-                Map.of(
-                    "cognito:groups", List.of(
-                        "Submitter_00012120",
-                        "Viewer",
-                        "Submitter_00000111"
-                    )
-                ),
-                List.of("00012120", "00000111")
-            )
-
-        );
+    return Stream.of(
+        Arguments.argumentSet(
+            "Only concrete roles", Map.of("cognito:groups", List.of("District")), List.of()),
+        Arguments.argumentSet(
+            "Abstract with clients in all",
+            Map.of(
+                "cognito:groups",
+                List.of("Submitter_00012120", "Viewer_00010040", "Viewer_00000111")),
+            List.of("00010040", "00012120", "00000111")),
+        Arguments.argumentSet(
+            "Abstract with clients in some",
+            Map.of("cognito:groups", List.of("Submitter_00012120", "Viewer", "Submitter_00000111")),
+            List.of("00012120", "00000111")));
   }
 }

@@ -12,7 +12,8 @@ class FormulaVariableExtractorTest {
   @DisplayName("Extracts district-average variable")
   @Test
   void extractsDistrictAverageVariable() {
-    var result = FormulaVariableExtractor.extract("da.mature.volume", FormulaParseMode.MATHEMATICAL);
+    var result =
+        FormulaVariableExtractor.extract("da.mature.volume", FormulaParseMode.MATHEMATICAL);
     assertThat(result).containsExactly("da.mature.volume");
   }
 
@@ -47,16 +48,17 @@ class FormulaVariableExtractorTest {
   @DisplayName("Deduplicates repeated variables")
   @Test
   void deduplicatesRepeatedVariables() {
-    var result = FormulaVariableExtractor.extract(
-        "da.mature.volume + da.mature.volume", FormulaParseMode.MATHEMATICAL);
+    var result =
+        FormulaVariableExtractor.extract(
+            "da.mature.volume + da.mature.volume", FormulaParseMode.MATHEMATICAL);
     assertThat(result).containsExactly("da.mature.volume");
   }
 
   @DisplayName("Ignores non-namespace tokens")
   @Test
   void ignoresNonNamespaceTokens() {
-    var result = FormulaVariableExtractor.extract(
-        "total + da.mature.volume", FormulaParseMode.MATHEMATICAL);
+    var result =
+        FormulaVariableExtractor.extract("total + da.mature.volume", FormulaParseMode.MATHEMATICAL);
     assertThat(result).containsExactly("da.mature.volume");
   }
 
@@ -70,16 +72,16 @@ class FormulaVariableExtractorTest {
   @DisplayName("Extracts multiple variables from expression")
   @Test
   void extractsMultipleVariablesFromExpression() {
-    var result = FormulaVariableExtractor.extract(
-        "sc.AL + da.mature.volume", FormulaParseMode.MATHEMATICAL);
+    var result =
+        FormulaVariableExtractor.extract("sc.AL + da.mature.volume", FormulaParseMode.MATHEMATICAL);
     assertThat(result).containsExactlyInAnyOrder("sc.AL", "da.mature.volume");
   }
 
   @DisplayName("Extracts multi-segment paths")
   @Test
   void extractsMultiSegmentPaths() {
-    var result = FormulaVariableExtractor.extract(
-        "da.group.field.subfield", FormulaParseMode.MATHEMATICAL);
+    var result =
+        FormulaVariableExtractor.extract("da.group.field.subfield", FormulaParseMode.MATHEMATICAL);
     assertThat(result).containsExactly("da.group.field.subfield");
   }
 

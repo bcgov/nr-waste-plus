@@ -8,19 +8,18 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport;
 /**
  * Main Spring Boot application bootstrap for the HRS backend.
  *
- * <p>This class serves as the application's entry point and enables a couple of
- * framework features via annotations:</p>
+ * <p>This class serves as the application's entry point and enables a couple of framework features
+ * via annotations:
  *
  * <ul>
- *   <li>AspectJ auto-proxying ({@link EnableAspectJAutoProxy}) to support AOP-based
- *       concerns such as logging or transactions.</li>
- *   <li>Spring Data web support ({@link EnableSpringDataWebSupport}) configured to
- *       serialize page responses via DTOs.</li>
+ *   <li>AspectJ auto-proxying ({@link EnableAspectJAutoProxy}) to support AOP-based concerns such
+ *       as logging or transactions.
+ *   <li>Spring Data web support ({@link EnableSpringDataWebSupport}) configured to serialize page
+ *       responses via DTOs.
  * </ul>
  *
- * <p>
- * The class intentionally contains only the {@code main} method so that component
- * scanning starts from this package.</p>
+ * <p>The class intentionally contains only the {@code main} method so that component scanning
+ * starts from this package.
  *
  * @since 1.0.0
  */
@@ -33,13 +32,12 @@ public class BackendApplication {
   /**
    * Application entry point.
    *
-   * <p>Bootstraps the Spring application context by delegating to
-   * {@link SpringApplication#run(Class, String[]) SpringApplication.run}.
+   * <p>Bootstraps the Spring application context by delegating to {@link
+   * SpringApplication#run(Class, String[]) SpringApplication.run}.
    *
    * @param args command line arguments passed to the application (may be empty)
    */
   public static void main(String[] args) {
     SpringApplication.run(BackendApplication.class, args);
   }
-
 }

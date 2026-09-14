@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.Area;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.ConfigType;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.DistrictVolumeEntity;
@@ -8,29 +9,32 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.TableData;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.junit.jupiter.api.DisplayName;
 
+/**
+ * Integration tests for {@link DistrictVolumeRepository}.
+ */
 @DisplayName("Unit Test | District Volume Repository")
-public class DistrictVolumeRepositoryTest
-    extends AbstractTestContainerIntegrationTest {
+public class DistrictVolumeRepositoryTest extends AbstractTestContainerIntegrationTest {
 
   @Autowired
   private DistrictVolumeRepository repository;
 
-  @DisplayName("Find Top1 By Config Type And Area And Deleted False Order By Start Date Desc returns Newest For Area")
+  @DisplayName(
+      "Find Top1 By Config Type And Area And Deleted False Order By Start Date Desc returns Newest"
+          + " For Area")
   @Test
   void findTop1ByConfigTypeAndAreaAndDeletedFalseOrderByStartDateDesc_returnsNewestForArea() {
 
     // Ensure auditing picks up a principal so NOT NULL audit columns are populated
-    JwtAuthenticationToken token = new JwtAuthenticationToken(
-        this.jwt,
-        AuthorityUtils.createAuthorityList());
+    JwtAuthenticationToken token =
+        new JwtAuthenticationToken(this.jwt, AuthorityUtils.createAuthorityList());
     SecurityContextHolder.getContext().setAuthentication(token);
 
     DistrictVolumeEntity first = new DistrictVolumeEntity();
@@ -50,8 +54,9 @@ public class DistrictVolumeRepositoryTest
     repository.save(first);
     repository.save(second);
 
-    var opt = repository.findTop1ByConfigTypeAndAreaAndDeletedFalseOrderByStartDateDesc(
-        ConfigType.DISTRICT_VOLUME, Area.INTERIOR);
+    var opt =
+        repository.findTop1ByConfigTypeAndAreaAndDeletedFalseOrderByStartDateDesc(
+            ConfigType.DISTRICT_VOLUME, Area.INTERIOR);
 
     assertThat(opt).isPresent();
     assertThat(opt.get().getStartDate()).isEqualTo(second.getStartDate());
@@ -61,9 +66,8 @@ public class DistrictVolumeRepositoryTest
   @Test
   void findAllByConfigType_returnsOnlyMatchingConfigType() {
 
-    JwtAuthenticationToken token = new JwtAuthenticationToken(
-        this.jwt,
-        AuthorityUtils.createAuthorityList());
+    JwtAuthenticationToken token =
+        new JwtAuthenticationToken(this.jwt, AuthorityUtils.createAuthorityList());
     SecurityContextHolder.getContext().setAuthentication(token);
 
     DistrictVolumeEntity districtVolume = new DistrictVolumeEntity();
@@ -83,23 +87,20 @@ public class DistrictVolumeRepositoryTest
     repository.save(districtVolume);
     repository.save(speciesComposition);
 
-    var result = repository.findAllLiveByConfigType(
-        ConfigType.SPECIES_COMPOSITION,
-        PageRequest.of(0, 10));
+    var result =
+        repository.findAllLiveByConfigType(ConfigType.SPECIES_COMPOSITION, PageRequest.of(0, 10));
 
     assertThat(result.getContent())
         .hasSize(1)
-        .allMatch(
-            entity -> entity.getConfigType() == ConfigType.SPECIES_COMPOSITION);
+        .allMatch(entity -> entity.getConfigType() == ConfigType.SPECIES_COMPOSITION);
   }
 
   @DisplayName("Find By Id And Config Type returns Empty when Config Type Does Not Match")
   @Test
   void findByIdAndConfigType_returnsEmpty_whenConfigTypeDoesNotMatch() {
 
-    JwtAuthenticationToken token = new JwtAuthenticationToken(
-        this.jwt,
-        AuthorityUtils.createAuthorityList());
+    JwtAuthenticationToken token =
+        new JwtAuthenticationToken(this.jwt, AuthorityUtils.createAuthorityList());
     SecurityContextHolder.getContext().setAuthentication(token);
 
     DistrictVolumeEntity districtVolume = new DistrictVolumeEntity();
@@ -111,16 +112,10 @@ public class DistrictVolumeRepositoryTest
 
     DistrictVolumeEntity saved = repository.save(districtVolume);
 
-    assertThat(
-        repository.findByIdAndConfigType(
-            saved.getId(),
-            ConfigType.DISTRICT_VOLUME))
+    assertThat(repository.findByIdAndConfigType(saved.getId(), ConfigType.DISTRICT_VOLUME))
         .isPresent();
 
-    assertThat(
-        repository.findByIdAndConfigType(
-            saved.getId(),
-            ConfigType.SPECIES_COMPOSITION))
+    assertThat(repository.findByIdAndConfigType(saved.getId(), ConfigType.SPECIES_COMPOSITION))
         .isEmpty();
   }
 }

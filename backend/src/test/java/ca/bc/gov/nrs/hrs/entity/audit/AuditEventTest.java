@@ -2,12 +2,10 @@ package ca.bc.gov.nrs.hrs.entity.audit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for {@link AuditEvent}.
- */
+/** Unit tests for {@link AuditEvent}. */
 @DisplayName("Unit Test | Audit Event")
 class AuditEventTest {
 

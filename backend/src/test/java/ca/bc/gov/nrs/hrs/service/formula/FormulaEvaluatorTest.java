@@ -10,8 +10,7 @@ import org.junit.jupiter.api.Test;
 
 @DisplayName("Unit Test | Formula evaluator")
 class FormulaEvaluatorTest {
-  private static final FormulaParser PARSER =
-      new FormulaParser(new FormulaParser.Options(20, 100));
+  private static final FormulaParser PARSER = new FormulaParser(new FormulaParser.Options(20, 100));
 
   @DisplayName("Should evaluate a literal value")
   @Test
@@ -28,8 +27,8 @@ class FormulaEvaluatorTest {
   void should_resolve_variable() {
     FormulaNode ast = PARSER.parse("da.mature.total");
 
-    BigDecimal result = FormulaEvaluator.evaluate(ast,
-        Map.of("da.mature.total", new BigDecimal("11.530")));
+    BigDecimal result =
+        FormulaEvaluator.evaluate(ast, Map.of("da.mature.total", new BigDecimal("11.530")));
 
     assertThat(result).isEqualByComparingTo(new BigDecimal("11.530"));
   }
@@ -49,9 +48,12 @@ class FormulaEvaluatorTest {
   void should_evaluate_addition() {
     FormulaNode ast = PARSER.parse("da.rate + sc.mix");
 
-    BigDecimal result = FormulaEvaluator.evaluate(ast, Map.of(
-        "da.rate", new BigDecimal("2.5"),
-        "sc.mix", new BigDecimal("0.3")));
+    BigDecimal result =
+        FormulaEvaluator.evaluate(
+            ast,
+            Map.of(
+                "da.rate", new BigDecimal("2.5"),
+                "sc.mix", new BigDecimal("0.3")));
 
     assertThat(result).isEqualByComparingTo(new BigDecimal("2.800"));
   }
@@ -61,9 +63,12 @@ class FormulaEvaluatorTest {
   void should_evaluate_subtraction() {
     FormulaNode ast = PARSER.parse("da.a - da.b");
 
-    BigDecimal result = FormulaEvaluator.evaluate(ast, Map.of(
-        "da.a", new BigDecimal("10"),
-        "da.b", new BigDecimal("3")));
+    BigDecimal result =
+        FormulaEvaluator.evaluate(
+            ast,
+            Map.of(
+                "da.a", new BigDecimal("10"),
+                "da.b", new BigDecimal("3")));
 
     assertThat(result).isEqualByComparingTo(new BigDecimal("7.000"));
   }
@@ -73,9 +78,12 @@ class FormulaEvaluatorTest {
   void should_evaluate_multiplication() {
     FormulaNode ast = PARSER.parse("da.a * da.b");
 
-    BigDecimal result = FormulaEvaluator.evaluate(ast, Map.of(
-        "da.a", new BigDecimal("2.5"),
-        "da.b", new BigDecimal("4")));
+    BigDecimal result =
+        FormulaEvaluator.evaluate(
+            ast,
+            Map.of(
+                "da.a", new BigDecimal("2.5"),
+                "da.b", new BigDecimal("4")));
 
     assertThat(result).isEqualByComparingTo(new BigDecimal("10.000"));
   }
@@ -85,9 +93,12 @@ class FormulaEvaluatorTest {
   void should_evaluate_division() {
     FormulaNode ast = PARSER.parse("da.a / da.b");
 
-    BigDecimal result = FormulaEvaluator.evaluate(ast, Map.of(
-        "da.a", new BigDecimal("10"),
-        "da.b", new BigDecimal("3")));
+    BigDecimal result =
+        FormulaEvaluator.evaluate(
+            ast,
+            Map.of(
+                "da.a", new BigDecimal("10"),
+                "da.b", new BigDecimal("3")));
 
     assertThat(result).isEqualByComparingTo(new BigDecimal("3.333"));
   }
@@ -97,9 +108,10 @@ class FormulaEvaluatorTest {
   void should_throw_on_runtime_division_by_zero() {
     FormulaNode ast = PARSER.parse("da.rate / da.zero");
 
-    assertThatThrownBy(() -> FormulaEvaluator.evaluate(ast, Map.of(
-        "da.rate", new BigDecimal("10"),
-        "da.zero", BigDecimal.ZERO)))
+    assertThatThrownBy(
+            () ->
+                FormulaEvaluator.evaluate(
+                    ast, Map.of("da.rate", new BigDecimal("10"), "da.zero", BigDecimal.ZERO)))
         .isInstanceOf(FormulaEvaluationException.class)
         .hasMessageContaining("Division by zero");
   }
@@ -139,8 +151,7 @@ class FormulaEvaluatorTest {
   void should_evaluate_if_true() {
     FormulaNode ast = PARSER.parse("IF(da.rate >= 2, 10, 20)", FormulaParseMode.CONDITIONAL);
 
-    BigDecimal result = FormulaEvaluator.evaluate(ast,
-        Map.of("da.rate", new BigDecimal("3")));
+    BigDecimal result = FormulaEvaluator.evaluate(ast, Map.of("da.rate", new BigDecimal("3")));
 
     assertThat(result).isEqualByComparingTo(new BigDecimal("10.000"));
   }
@@ -150,8 +161,7 @@ class FormulaEvaluatorTest {
   void should_evaluate_if_false() {
     FormulaNode ast = PARSER.parse("IF(da.rate >= 2, 10, 20)", FormulaParseMode.CONDITIONAL);
 
-    BigDecimal result = FormulaEvaluator.evaluate(ast,
-        Map.of("da.rate", new BigDecimal("1")));
+    BigDecimal result = FormulaEvaluator.evaluate(ast, Map.of("da.rate", new BigDecimal("1")));
 
     assertThat(result).isEqualByComparingTo(new BigDecimal("20.000"));
   }
@@ -161,8 +171,7 @@ class FormulaEvaluatorTest {
   void should_evaluate_case_insensitive_if() {
     FormulaNode ast = PARSER.parse("iF(da.rate >= 2, 10, 20)", FormulaParseMode.CONDITIONAL);
 
-    BigDecimal result = FormulaEvaluator.evaluate(ast,
-        Map.of("da.rate", new BigDecimal("5")));
+    BigDecimal result = FormulaEvaluator.evaluate(ast, Map.of("da.rate", new BigDecimal("5")));
 
     assertThat(result).isEqualByComparingTo(new BigDecimal("10.000"));
   }
@@ -170,13 +179,15 @@ class FormulaEvaluatorTest {
   @DisplayName("Should evaluate nested IF")
   @Test
   void should_evaluate_nested_if() {
-    FormulaNode ast = PARSER.parse(
-        "IF(da.rate >= 2, 10, IF(sc.value == 1, 3, 4))",
-        FormulaParseMode.CONDITIONAL);
+    FormulaNode ast =
+        PARSER.parse("IF(da.rate >= 2, 10, IF(sc.value == 1, 3, 4))", FormulaParseMode.CONDITIONAL);
 
-    BigDecimal result = FormulaEvaluator.evaluate(ast, Map.of(
-        "da.rate", new BigDecimal("1"),
-        "sc.value", new BigDecimal("1")));
+    BigDecimal result =
+        FormulaEvaluator.evaluate(
+            ast,
+            Map.of(
+                "da.rate", new BigDecimal("1"),
+                "sc.value", new BigDecimal("1")));
 
     assertThat(result).isEqualByComparingTo(new BigDecimal("3.000"));
   }

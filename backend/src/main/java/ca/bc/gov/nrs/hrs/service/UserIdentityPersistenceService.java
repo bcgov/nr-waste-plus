@@ -9,9 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Persistence boundary for user identity writes.
  *
- * <p>Keeps database transactions scoped only to repository save operations so
- * upstream network calls can run outside any open transaction.
- * </p>
+ * <p>Keeps database transactions scoped only to repository save operations so upstream network
+ * calls can run outside any open transaction.
  */
 @Service
 @RequiredArgsConstructor
@@ -30,4 +29,3 @@ public class UserIdentityPersistenceService {
     return repository.save(hydratedIdentity);
   }
 }
-

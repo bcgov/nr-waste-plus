@@ -21,41 +21,68 @@ class FormulaValidatorTest {
   @DisplayName("Should accept known typed variables and reject unknowns")
   @Test
   void should_accept_known_typed_variables_and_reject_unknowns() {
-    FormulaValidationRequest request = request(
-         List.of(new FormulaDefinition("total", "da.rate * submission.area + sc.CW")),
-         Map.of("da.rate", BigDecimal.ONE, "submission.area", BigDecimal.TEN,
-             "sc.CW", BigDecimal.ONE));
+    FormulaValidationRequest request =
+        request(
+            List.of(new FormulaDefinition("total", "da.rate * submission.area + sc.CW")),
+            Map.of(
+                "da.rate",
+                BigDecimal.ONE,
+                "submission.area",
+                BigDecimal.TEN,
+                "sc.CW",
+                BigDecimal.ONE));
 
     assertThat(VALIDATOR.validate(request)).isEmpty();
-    assertThat(VALIDATOR.validate(request(
-         List.of(new FormulaDefinition("total", "outside.value + da.missing")),
-        Map.of()))
-    ).extracting(FormulaValidationError::code)
-        .containsExactly(FormulaValidationError.Code.UNKNOWN_VARIABLE,
+    assertThat(
+            VALIDATOR.validate(
+                request(
+                    List.of(new FormulaDefinition("total", "outside.value + da.missing")),
+                    Map.of())))
+        .extracting(FormulaValidationError::code)
+        .containsExactly(
+            FormulaValidationError.Code.UNKNOWN_VARIABLE,
             FormulaValidationError.Code.UNKNOWN_VARIABLE);
   }
 
   @DisplayName("Should report static division by zero")
   @Test
   void should_report_static_division_by_zero() {
-    List<FormulaValidationError> errors = VALIDATOR.validate(request(
-        List.of(new FormulaDefinition("total", "10 / (2 - 2)")), Map.of()));
+    List<FormulaValidationError> errors =
+        VALIDATOR.validate(
+            request(List.of(new FormulaDefinition("total", "10 / (2 - 2)")), Map.of()));
 
-    assertThat(errors).extracting(FormulaValidationError::code)
+    assertThat(errors)
+        .extracting(FormulaValidationError::code)
         .containsExactly(FormulaValidationError.Code.DIVISION_BY_ZERO);
   }
 
   @DisplayName("Should accept all approved namespaces and reject retired namespaces")
   @Test
   void should_accept_all_approved_namespaces_and_reject_retired_namespaces() {
-    assertThat(VALIDATOR.validate(request(
-        List.of(new FormulaDefinition("total", "da.a + sc.b + submission.c + hbs.d + fta.e")),
-        Map.of("da.a", BigDecimal.ONE, "sc.b", BigDecimal.ONE, "submission.c", BigDecimal.ONE,
-            "hbs.d", BigDecimal.ONE, "fta.e", BigDecimal.ONE)))).isEmpty();
-    assertThat(VALIDATOR.validate(request(
-        List.of(new FormulaDefinition("total", "config.a + species.b")), Map.of())))
+    assertThat(
+            VALIDATOR.validate(
+                request(
+                    List.of(
+                        new FormulaDefinition(
+                            "total", "da.a + sc.b + submission.c + hbs.d + fta.e")),
+                    Map.of(
+                        "da.a",
+                        BigDecimal.ONE,
+                        "sc.b",
+                        BigDecimal.ONE,
+                        "submission.c",
+                        BigDecimal.ONE,
+                        "hbs.d",
+                        BigDecimal.ONE,
+                        "fta.e",
+                        BigDecimal.ONE))))
+        .isEmpty();
+    assertThat(
+            VALIDATOR.validate(
+                request(List.of(new FormulaDefinition("total", "config.a + species.b")), Map.of())))
         .extracting(FormulaValidationError::code)
-        .containsExactly(FormulaValidationError.Code.UNKNOWN_VARIABLE,
+        .containsExactly(
+            FormulaValidationError.Code.UNKNOWN_VARIABLE,
             FormulaValidationError.Code.UNKNOWN_VARIABLE);
   }
 
@@ -63,42 +90,57 @@ class FormulaValidatorTest {
   @Test
   void should_report_unknown_namespace_using_only_identifier_span() {
     String expression = "da.rate + config.rate";
-    List<FormulaValidationError> errors = VALIDATOR.validate(request(
-        List.of(new FormulaDefinition("total", expression)),
-        Map.of("da.rate", BigDecimal.ONE)));
+    List<FormulaValidationError> errors =
+        VALIDATOR.validate(
+            request(
+                List.of(new FormulaDefinition("total", expression)),
+                Map.of("da.rate", BigDecimal.ONE)));
 
-    assertThat(errors).singleElement().satisfies(error -> {
-      assertThat(error.code()).isEqualTo(FormulaValidationError.Code.UNKNOWN_VARIABLE);
-      assertThat(error.message()).isEqualTo("Unknown variable: config.rate");
-      assertThat(error.startOffset()).isEqualTo(expression.indexOf("config.rate"));
-      assertThat(error.endOffset()).isEqualTo(expression.length());
-    });
+    assertThat(errors)
+        .singleElement()
+        .satisfies(
+            error -> {
+              assertThat(error.code()).isEqualTo(FormulaValidationError.Code.UNKNOWN_VARIABLE);
+              assertThat(error.message()).isEqualTo("Unknown variable: config.rate");
+              assertThat(error.startOffset()).isEqualTo(expression.indexOf("config.rate"));
+              assertThat(error.endOffset()).isEqualTo(expression.length());
+            });
   }
 
   @DisplayName("Should type check if and validate both branches")
   @Test
   void should_type_check_if_and_validate_both_branches() {
-    assertThat(VALIDATOR.validate(request(
-        List.of(new FormulaDefinition("total", "IF(da.rate >= 2, 10, sc.value + 1)")),
-        Map.of("da.rate", BigDecimal.ONE, "sc.value", BigDecimal.ONE)))).isEmpty();
-    List<FormulaValidationError> errors = VALIDATOR.validate(request(
-        List.of(new FormulaDefinition("total", "IF(da.rate, 10, broken.value)")),
-        Map.of("da.rate", BigDecimal.ONE)));
-    assertThat(errors).extracting(FormulaValidationError::code)
-        .containsExactly(FormulaValidationError.Code.UNKNOWN_VARIABLE,
-            FormulaValidationError.Code.TYPE_ERROR);
+    assertThat(
+            VALIDATOR.validate(
+                request(
+                    List.of(new FormulaDefinition("total", "IF(da.rate >= 2, 10, sc.value + 1)")),
+                    Map.of("da.rate", BigDecimal.ONE, "sc.value", BigDecimal.ONE))))
+        .isEmpty();
+    List<FormulaValidationError> errors =
+        VALIDATOR.validate(
+            request(
+                List.of(new FormulaDefinition("total", "IF(da.rate, 10, broken.value)")),
+                Map.of("da.rate", BigDecimal.ONE)));
+    assertThat(errors)
+        .extracting(FormulaValidationError::code)
+        .containsExactly(
+            FormulaValidationError.Code.UNKNOWN_VARIABLE, FormulaValidationError.Code.TYPE_ERROR);
   }
 
   @DisplayName("Should accept if with any letter case and reject other functions")
   @Test
   void should_accept_if_with_any_letter_case_and_reject_other_functions() {
     for (String functionName : new String[] {"IF", "if", "If", "iF"}) {
-      assertThat(VALIDATOR.validate(request(
-          List.of(new FormulaDefinition("total", functionName + "(1 < 2, 10, 20)")),
-          Map.of()))).isEmpty();
+      assertThat(
+              VALIDATOR.validate(
+                  request(
+                      List.of(new FormulaDefinition("total", functionName + "(1 < 2, 10, 20)")),
+                      Map.of())))
+          .isEmpty();
     }
-    assertThat(VALIDATOR.validate(request(
-        List.of(new FormulaDefinition("total", "MAX(1, 2)")), Map.of())))
+    assertThat(
+            VALIDATOR.validate(
+                request(List.of(new FormulaDefinition("total", "MAX(1, 2)")), Map.of())))
         .extracting(FormulaValidationError::code)
         .containsExactly(FormulaValidationError.Code.UNSUPPORTED_FUNCTION);
   }
@@ -106,73 +148,104 @@ class FormulaValidatorTest {
   @DisplayName("Should validate unused if branch and allow if in math mode")
   @Test
   void should_validate_unused_if_branch_and_allow_if_in_math_mode() {
-    List<FormulaValidationError> errors = VALIDATOR.validate(new FormulaValidationRequest(
-        List.of(new FormulaDefinition("total", "IF(da.rate >= 2, 1, broken.value) * 2")),
-        Map.of("da.rate", BigDecimal.ONE), FormulaParseMode.MATHEMATICAL));
+    List<FormulaValidationError> errors =
+        VALIDATOR.validate(
+            new FormulaValidationRequest(
+                List.of(new FormulaDefinition("total", "IF(da.rate >= 2, 1, broken.value) * 2")),
+                Map.of("da.rate", BigDecimal.ONE),
+                FormulaParseMode.MATHEMATICAL));
 
-    assertThat(errors).extracting(FormulaValidationError::code)
+    assertThat(errors)
+        .extracting(FormulaValidationError::code)
         .containsExactly(FormulaValidationError.Code.UNKNOWN_VARIABLE);
   }
 
   @DisplayName("Should report zero valued known variables")
   @Test
   void should_report_zero_valued_known_variables() {
-    List<FormulaValidationError> errors = VALIDATOR.validate(request(
-         List.of(new FormulaDefinition("total", "10 / da.denominator")),
-         Map.of("da.denominator", BigDecimal.ZERO)));
+    List<FormulaValidationError> errors =
+        VALIDATOR.validate(
+            request(
+                List.of(new FormulaDefinition("total", "10 / da.denominator")),
+                Map.of("da.denominator", BigDecimal.ZERO)));
 
-    assertThat(errors).extracting(FormulaValidationError::code)
+    assertThat(errors)
+        .extracting(FormulaValidationError::code)
         .containsExactly(FormulaValidationError.Code.DIVISION_BY_ZERO);
   }
 
   @DisplayName("Should report constant zero for nested unary and parenthesized denominator")
   @Test
   void should_report_constant_zero_for_nested_unary_and_parenthesized_denominator() {
-    List<FormulaValidationError> errors = VALIDATOR.validate(request(
-        List.of(new FormulaDefinition("total", "10 / -(0)")), Map.of()));
+    List<FormulaValidationError> errors =
+        VALIDATOR.validate(request(List.of(new FormulaDefinition("total", "10 / -(0)")), Map.of()));
 
-    assertThat(errors).singleElement().satisfies(error -> {
-      assertThat(error.code()).isEqualTo(FormulaValidationError.Code.DIVISION_BY_ZERO);
-      assertThat(error.startOffset()).isEqualTo(5);
-      assertThat(error.endOffset()).isEqualTo(8);
-    });
+    assertThat(errors)
+        .singleElement()
+        .satisfies(
+            error -> {
+              assertThat(error.code()).isEqualTo(FormulaValidationError.Code.DIVISION_BY_ZERO);
+              assertThat(error.startOffset()).isEqualTo(5);
+              assertThat(error.endOffset()).isEqualTo(8);
+            });
   }
 
   @DisplayName("Should detect self and disconnected cycles deterministically")
   @Test
   void should_detect_self_and_disconnected_cycles_deterministically() {
-    List<FormulaValidationError> errors = VALIDATOR.validate(request(
-        List.of(new FormulaDefinition("z", "z + 1"), new FormulaDefinition("a", "b + 1"),
-            new FormulaDefinition("b", "a + 1"), new FormulaDefinition("safe", "1")), Map.of()));
+    List<FormulaValidationError> errors =
+        VALIDATOR.validate(
+            request(
+                List.of(
+                    new FormulaDefinition("z", "z + 1"),
+                    new FormulaDefinition("a", "b + 1"),
+                    new FormulaDefinition("b", "a + 1"),
+                    new FormulaDefinition("safe", "1")),
+                Map.of()));
 
-    assertThat(errors).extracting(FormulaValidationError::message)
-        .containsExactly("Formula dependency cycle detected at: a",
-            "Formula dependency cycle detected at: b", "Formula dependency cycle detected at: z");
+    assertThat(errors)
+        .extracting(FormulaValidationError::message)
+        .containsExactly(
+            "Formula dependency cycle detected at: a",
+            "Formula dependency cycle detected at: b",
+            "Formula dependency cycle detected at: z");
   }
 
   @DisplayName("Should report duplicates and preserve parse errors")
   @Test
   void should_report_duplicates_and_preserve_parse_errors() {
-    List<FormulaValidationError> errors = VALIDATOR.validate(request(
-        List.of(new FormulaDefinition("same", "1"), new FormulaDefinition("same", "2"),
-            new FormulaDefinition("broken", "1 +")), Map.of()));
+    List<FormulaValidationError> errors =
+        VALIDATOR.validate(
+            request(
+                List.of(
+                    new FormulaDefinition("same", "1"),
+                    new FormulaDefinition("same", "2"),
+                    new FormulaDefinition("broken", "1 +")),
+                Map.of()));
 
-    assertThat(errors).extracting(FormulaValidationError::code)
-        .containsExactly(FormulaValidationError.Code.SYNTAX_ERROR,
-            FormulaValidationError.Code.SYNTAX_ERROR);
+    assertThat(errors)
+        .extracting(FormulaValidationError::code)
+        .containsExactly(
+            FormulaValidationError.Code.SYNTAX_ERROR, FormulaValidationError.Code.SYNTAX_ERROR);
   }
 
   @DisplayName("Should validate duplicate definitions without overwriting the canonical node")
   @Test
   void should_validate_duplicate_definitions_without_overwriting_the_canonical_node() {
-    List<FormulaValidationError> errors = VALIDATOR.validate(request(
-        List.of(new FormulaDefinition("cycle", "cycle + 1"),
-            new FormulaDefinition("cycle", "1 +"),
-            new FormulaDefinition("typed", "IF(1, 1, 2)"),
-            new FormulaDefinition("typed", "IF(1 < 2, 1, 2)")), Map.of()));
+    List<FormulaValidationError> errors =
+        VALIDATOR.validate(
+            request(
+                List.of(
+                    new FormulaDefinition("cycle", "cycle + 1"),
+                    new FormulaDefinition("cycle", "1 +"),
+                    new FormulaDefinition("typed", "IF(1, 1, 2)"),
+                    new FormulaDefinition("typed", "IF(1 < 2, 1, 2)")),
+                Map.of()));
 
-    assertThat(errors).extracting(FormulaValidationError::code)
-        .containsExactly(FormulaValidationError.Code.SYNTAX_ERROR,
+    assertThat(errors)
+        .extracting(FormulaValidationError::code)
+        .containsExactly(
+            FormulaValidationError.Code.SYNTAX_ERROR,
             FormulaValidationError.Code.SYNTAX_ERROR,
             FormulaValidationError.Code.SYNTAX_ERROR,
             FormulaValidationError.Code.TYPE_ERROR,
@@ -182,16 +255,16 @@ class FormulaValidatorTest {
   @DisplayName("Should preserve formula diagnostic when serialized")
   @Test
   void should_preserve_formula_diagnostic_when_serialized() throws Exception {
-    FormulaValidationError original = new FormulaValidationError(
-        FormulaValidationError.Code.SYNTAX_ERROR, "broken", 4, 8);
+    FormulaValidationError original =
+        new FormulaValidationError(FormulaValidationError.Code.SYNTAX_ERROR, "broken", 4, 8);
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     try (ObjectOutputStream output = new ObjectOutputStream(bytes)) {
       output.writeObject(new FormulaParseException(original));
     }
 
     FormulaParseException restored;
-    try (ObjectInputStream input = new ObjectInputStream(
-        new ByteArrayInputStream(bytes.toByteArray()))) {
+    try (ObjectInputStream input =
+        new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {
       restored = (FormulaParseException) input.readObject();
     }
     assertThat(restored.error()).isEqualTo(original);
@@ -200,12 +273,15 @@ class FormulaValidatorTest {
   @DisplayName("Should validate save facade")
   @Test
   void should_validate_save_facade() {
-    FormulaValidationService service = new FormulaValidationService(
-        new FormulaParser.Options(10, 100));
+    FormulaValidationService service =
+        new FormulaValidationService(new FormulaParser.Options(10, 100));
 
-    assertThat(service.validateForSave(request(
-        List.of(new FormulaDefinition("x", "hbs.factor + 1")),
-        Map.of("hbs.factor", BigDecimal.ONE)))).isEmpty();
+    assertThat(
+            service.validateForSave(
+                request(
+                    List.of(new FormulaDefinition("x", "hbs.factor + 1")),
+                    Map.of("hbs.factor", BigDecimal.ONE))))
+        .isEmpty();
   }
 
   @DisplayName("Should reject invalid definition and request inputs")
@@ -215,31 +291,29 @@ class FormulaValidatorTest {
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new FormulaDefinition("x", " "))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new FormulaValidationRequest(
-        null, Map.of(), FormulaParseMode.MATHEMATICAL))
+    assertThatThrownBy(
+            () -> new FormulaValidationRequest(null, Map.of(), FormulaParseMode.MATHEMATICAL))
         .isInstanceOf(NullPointerException.class);
-    assertThatThrownBy(() -> new FormulaValidationRequest(
-        List.of(), null, FormulaParseMode.MATHEMATICAL))
+    assertThatThrownBy(
+            () -> new FormulaValidationRequest(List.of(), null, FormulaParseMode.MATHEMATICAL))
         .isInstanceOf(NullPointerException.class);
     assertThatThrownBy(() -> new FormulaValidationRequest(List.of(), Map.of(), null))
         .isInstanceOf(NullPointerException.class);
-    assertThatThrownBy(() -> new FormulaValidator(null))
-        .isInstanceOf(NullPointerException.class);
+    assertThatThrownBy(() -> new FormulaValidator(null)).isInstanceOf(NullPointerException.class);
     assertThatThrownBy(() -> new FormulaValidationService(null))
         .isInstanceOf(NullPointerException.class);
-    assertThatThrownBy(() -> VALIDATOR.validate(null))
-        .isInstanceOf(NullPointerException.class);
+    assertThatThrownBy(() -> VALIDATOR.validate(null)).isInstanceOf(NullPointerException.class);
   }
 
   @DisplayName("Should defensively copy validation request collections")
   @Test
   void should_defensively_copy_validation_request_collections() {
-    List<FormulaDefinition> definitions = new java.util.ArrayList<>(List.of(
-        new FormulaDefinition("total", "1")));
+    List<FormulaDefinition> definitions =
+        new java.util.ArrayList<>(List.of(new FormulaDefinition("total", "1")));
     Map<String, BigDecimal> variables = new java.util.HashMap<>();
     variables.put("da.rate", BigDecimal.ONE);
-    FormulaValidationRequest request = new FormulaValidationRequest(
-        definitions, variables, FormulaParseMode.MATHEMATICAL);
+    FormulaValidationRequest request =
+        new FormulaValidationRequest(definitions, variables, FormulaParseMode.MATHEMATICAL);
 
     definitions.clear();
     variables.clear();
@@ -251,8 +325,9 @@ class FormulaValidatorTest {
   @DisplayName("Should handle constant unary arithmetic without division error")
   @Test
   void should_handle_constant_unary_arithmetic_without_division_error() {
-    List<FormulaValidationError> errors = VALIDATOR.validate(request(
-        List.of(new FormulaDefinition("total", "10 / -(2 + 3)")), Map.of()));
+    List<FormulaValidationError> errors =
+        VALIDATOR.validate(
+            request(List.of(new FormulaDefinition("total", "10 / -(2 + 3)")), Map.of()));
 
     assertThat(errors).isEmpty();
   }
@@ -260,9 +335,11 @@ class FormulaValidatorTest {
   @DisplayName("Should cover constant multiplication and non constant division")
   @Test
   void should_cover_constant_multiplication_and_non_constant_division() {
-    List<FormulaValidationError> errors = VALIDATOR.validate(request(
-         List.of(new FormulaDefinition("total", "(2 * 3) / da.denominator")),
-         Map.of("da.denominator", BigDecimal.ONE)));
+    List<FormulaValidationError> errors =
+        VALIDATOR.validate(
+            request(
+                List.of(new FormulaDefinition("total", "(2 * 3) / da.denominator")),
+                Map.of("da.denominator", BigDecimal.ONE)));
 
     assertThat(errors).isEmpty();
   }
@@ -270,12 +347,15 @@ class FormulaValidatorTest {
   @DisplayName("Should not report cycle for revisited shared dependency")
   @Test
   void should_not_report_cycle_for_revisited_shared_dependency() {
-    List<FormulaValidationError> errors = VALIDATOR.validate(request(
-         List.of(new FormulaDefinition("base", "da.rate"),
-            new FormulaDefinition("left", "base + 1"),
-            new FormulaDefinition("right", "base + 2"),
-             new FormulaDefinition("total", "left + right")),
-         Map.of("da.rate", BigDecimal.ONE)));
+    List<FormulaValidationError> errors =
+        VALIDATOR.validate(
+            request(
+                List.of(
+                    new FormulaDefinition("base", "da.rate"),
+                    new FormulaDefinition("left", "base + 1"),
+                    new FormulaDefinition("right", "base + 2"),
+                    new FormulaDefinition("total", "left + right")),
+                Map.of("da.rate", BigDecimal.ONE)));
 
     assertThat(errors).isEmpty();
   }
@@ -283,10 +363,13 @@ class FormulaValidatorTest {
   @DisplayName("Should resolve formula key dependencies without unknown variable errors")
   @Test
   void should_resolve_formula_key_dependencies_without_unknown_variable_errors() {
-    List<FormulaValidationError> errors = VALIDATOR.validate(request(
-         List.of(new FormulaDefinition("base", "da.rate"),
-             new FormulaDefinition("total", "base * 2")),
-         Map.of("da.rate", BigDecimal.ONE)));
+    List<FormulaValidationError> errors =
+        VALIDATOR.validate(
+            request(
+                List.of(
+                    new FormulaDefinition("base", "da.rate"),
+                    new FormulaDefinition("total", "base * 2")),
+                Map.of("da.rate", BigDecimal.ONE)));
 
     assertThat(errors).isEmpty();
   }
@@ -294,15 +377,19 @@ class FormulaValidatorTest {
   @DisplayName("Should not treat formula key references as constants")
   @Test
   void should_not_treat_formula_key_references_as_constants() {
-    List<FormulaValidationError> errors = VALIDATOR.validate(request(
-        List.of(new FormulaDefinition("base", "0"),
-            new FormulaDefinition("total", "10 / base")), Map.of()));
+    List<FormulaValidationError> errors =
+        VALIDATOR.validate(
+            request(
+                List.of(
+                    new FormulaDefinition("base", "0"),
+                    new FormulaDefinition("total", "10 / base")),
+                Map.of()));
 
     assertThat(errors).isEmpty();
   }
 
-  private FormulaValidationRequest request(List<FormulaDefinition> definitions,
-      Map<String, BigDecimal> variables) {
+  private FormulaValidationRequest request(
+      List<FormulaDefinition> definitions, Map<String, BigDecimal> variables) {
     return new FormulaValidationRequest(definitions, variables, FormulaParseMode.CONDITIONAL);
   }
 }

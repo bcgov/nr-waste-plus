@@ -23,9 +23,7 @@ import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-/**
- * Persistence entity for district average volume configurations.
- */
+/** Persistence entity for district average volume configurations. */
 @Entity
 @Table(name = "district_volume", schema = "hrs")
 @EntityListeners(AuditingEntityListener.class)
@@ -64,7 +62,7 @@ public class DistrictVolumeEntity extends SoftDeletableAuditableEntity {
 
   @Column(name = "heli_multiplier", precision = 10, scale = 3)
   private BigDecimal heliMultiplier;
-  
+
   @Enumerated(EnumType.STRING)
   @Column(name = "config_type", nullable = false, length = 50)
   private ConfigType configType = ConfigType.DISTRICT_VOLUME;

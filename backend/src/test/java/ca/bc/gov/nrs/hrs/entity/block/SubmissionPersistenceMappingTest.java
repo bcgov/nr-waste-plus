@@ -6,27 +6,27 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Version;
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.ArrayList;
-import org.junit.jupiter.api.Test;
+import java.util.Arrays;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 /** Contract tests for the submission persistence model's structural rules. */
 @DisplayName("Unit Test | Submission Persistence Mapping")
 class SubmissionPersistenceMappingTest {
   private static final Class<?>[] ENTITIES = {
-      ReportingUnitEntity.class,
-      BlockEntity.class,
-      DistrictAverageBlockEntity.class,
-      BlockMarkEntity.class,
-      BlockAreaSegmentEntity.class,
-      BlockAttachmentEntity.class,
-      BlockSubmitterEntity.class,
-      BlockSponsorEntity.class,
-      BlockRequirementEntity.class,
-      BlockCommentEntity.class,
-      BlockCalculationSnapshotEntity.class,
-      StatusEventEntity.class
+    ReportingUnitEntity.class,
+    BlockEntity.class,
+    DistrictAverageBlockEntity.class,
+    BlockMarkEntity.class,
+    BlockAreaSegmentEntity.class,
+    BlockAttachmentEntity.class,
+    BlockSubmitterEntity.class,
+    BlockSponsorEntity.class,
+    BlockRequirementEntity.class,
+    BlockCommentEntity.class,
+    BlockCalculationSnapshotEntity.class,
+    StatusEventEntity.class
   };
 
   @DisplayName("Submission Types Are Entities Without Enum Persistence")
@@ -68,8 +68,9 @@ class SubmissionPersistenceMappingTest {
   }
 
   private int versionCount(Class<?> type) {
-    return (int) Arrays.stream(type.getDeclaredFields())
-        .filter(field -> field.isAnnotationPresent(Version.class))
-        .count();
+    return (int)
+        Arrays.stream(type.getDeclaredFields())
+            .filter(field -> field.isAnnotationPresent(Version.class))
+            .count();
   }
 }
