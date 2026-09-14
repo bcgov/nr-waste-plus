@@ -269,11 +269,18 @@ test.describe('Profile menu', () => {
         `users/preferences-GET-${testInfo.project.metadata.userType}-1.json`,
       );
 
-      await chilliwackDistrict.click();
-
-      await page.waitForResponse(
+      // Register the response listener BEFORE clicking to avoid a race
+      // condition: the PUT response from the local mock arrives almost
+      // instantly, so a listener set up AFTER the click can miss it.
+      // (Our PreferenceProvider no longer triggers a GET refetch on
+      // mutation success, so there is only one response to catch.)
+      const preferenceResponse = page.waitForResponse(
         (response) => response.url().includes('users/preferences') && response.status() === 200,
       );
+
+      await chilliwackDistrict.click();
+
+      await preferenceResponse;
 
       await expect(profileButton.getByText('Chilliwack')).toBeVisible();
 
