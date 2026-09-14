@@ -1,31 +1,47 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import isEqual from 'lodash/isEqual';
 import mergeWith from 'lodash/mergeWith';
-import { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type FC, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+
+import { queryKeys } from '@/config/react-query/queryKeys';
+import { AuthContext } from '@/context/auth/AuthContext';
 
 import { PreferenceContext, type PreferenceProviderProps } from './PreferenceContext';
 import { type UserPreference } from './types';
 import { initialValue, loadUserPreference, saveUserPreference } from './utils';
 
-import { queryKeys } from '@/config/react-query/queryKeys';
-
 export const PreferenceProvider: FC<PreferenceProviderProps> = ({ children }) => {
+  const auth = useContext(AuthContext);
+  const user = auth?.user;
+  const isAuthLoading = auth?.isLoading ?? false;
+  const userId = user?.userName ?? user?.providerUsername;
   const { isFetched, data } = useQuery({
-    queryKey: queryKeys.preference.userPreference(),
+    queryKey: queryKeys.preference.userPreference(userId),
     queryFn: loadUserPreference,
+    enabled: auth ? !isAuthLoading && userId !== undefined : true,
   });
 
   // Ref tracks the latest preference for merge logic inside updatePreferences.
   // Using a ref keeps updatePreferences stable (no recreation on every change),
   // preventing render loops when effects depend on the callback.
-  const latestKnownRef = useRef<UserPreference | undefined>(data);
-  useEffect(() => {
-    latestKnownRef.current = data;
-  }, [data]);
-
+  const latestKnownRef = useRef<UserPreference | undefined>(undefined);
+  const hydratedUserRef = useRef<string | undefined | null>(null);
   // State drives the context value so consumers re-render when preferences change.
   // Updated synchronously in updatePreferences for instant UI feedback.
-  const [livePreference, setLivePreference] = useState<UserPreference | undefined>(data);
+  const [livePreference, setLivePreference] = useState<UserPreference | undefined>();
+
+  useEffect(() => {
+    if (hydratedUserRef.current !== userId) {
+      hydratedUserRef.current = userId;
+      latestKnownRef.current = data;
+      setLivePreference(data);
+      return;
+    }
+    if (data !== undefined && latestKnownRef.current === undefined) {
+      latestKnownRef.current = data;
+      setLivePreference(data);
+    }
+  }, [data, userId]);
 
   const { mutate, isPending } = useMutation({
     // Mutations sharing a `scope.id` are queued by TanStack Query and run strictly

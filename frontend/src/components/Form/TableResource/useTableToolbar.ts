@@ -21,10 +21,6 @@ export function useTableToolbar<T>(id: string, headers: TableHeaderType<T, Neste
   const [tableHeaders, setTableHeaders] = useState(headers);
   const tableHeadersRef = useRef<string[] | undefined>(undefined);
   const { userPreference, updatePreferences, isLoaded } = usePreference();
-  // Tracks whether the initial preference load has been applied. Persistence
-  // only fires after this point, preventing mount-time saves.
-  const initializedRef = useRef(false);
-
   // Apply the saved column selection once preferences have loaded. Until then we
   // keep the default `headers` so we never overwrite stored selections.
   useEffect(() => {
@@ -48,44 +44,33 @@ export function useTableToolbar<T>(id: string, headers: TableHeaderType<T, Neste
         selected: nextIds.includes(getHeaderId(header)),
       })),
     );
-    initializedRef.current = true;
   }, [id, headers, isLoaded, userPreference]);
 
   const onToggleHeader = (headerId: string) => {
-    setTableHeaders((prevHeaders) => {
-      const savedIds = tableHeadersRef.current
-        ? [...tableHeadersRef.current]
-        : prevHeaders.filter((header) => header.selected).map(getHeaderId);
-      const toggled = prevHeaders.find((header) => getHeaderId(header) === headerId);
-      if (!toggled) {
-        return prevHeaders;
-      }
-      const newSelected = !toggled.selected;
-      const idx = savedIds.indexOf(headerId);
-      if (idx > -1) {
-        savedIds.splice(idx, 1);
-      } else {
-        savedIds.push(headerId);
-      }
-      tableHeadersRef.current = savedIds;
-      return prevHeaders.map((header) =>
-        getHeaderId(header) === headerId ? { ...header, selected: newSelected } : header,
-      );
-    });
-  };
-
-  // Persist the selection only after initialization and only when the user
-  // explicitly toggles a column. Skips mount-time changes entirely.
-  useEffect(() => {
-    if (
-      !initializedRef.current ||
-      !tableHeadersRef.current ||
-      tableHeadersRef.current.length === 0
-    ) {
+    const toggled = tableHeaders.find((header) => getHeaderId(header) === headerId);
+    if (!toggled) {
       return;
     }
-    updatePreferences({ tableHeaders: { [id]: [...new Set(tableHeadersRef.current)] } });
-  }, [tableHeaders, id, updatePreferences]);
+    const savedIds = tableHeadersRef.current
+      ? [...tableHeadersRef.current]
+      : tableHeaders.filter((header) => header.selected).map(getHeaderId);
+    const idx = savedIds.indexOf(headerId);
+    if (idx > -1) {
+      savedIds.splice(idx, 1);
+    } else {
+      savedIds.push(headerId);
+    }
+    const nextIds = [...new Set(savedIds)];
+    tableHeadersRef.current = nextIds;
+    setTableHeaders((prevHeaders) =>
+      prevHeaders.map((header) =>
+        getHeaderId(header) === headerId ? { ...header, selected: !toggled.selected } : header,
+      ),
+    );
+    if (nextIds.length > 0) {
+      updatePreferences({ tableHeaders: { [id]: nextIds } });
+    }
+  };
 
   return { tableHeaders, onToggleHeader };
 }

@@ -12,6 +12,8 @@ import ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity;
 import ca.bc.gov.nrs.hrs.provider.cognito.CognitoUserInfoClient;
 import ca.bc.gov.nrs.hrs.provider.cognito.CognitoUserInfoResponse;
 import ca.bc.gov.nrs.hrs.repository.UserIdentityRepository;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -84,6 +86,54 @@ class UserIdentityServiceTest {
     verify(userIdentityPersistenceService)
         .saveHydratedIdentity(org.mockito.ArgumentMatchers.any(UserIdentityEntity.class));
     verify(repository).findById("sub-from-jwt");
+  }
+
+  @Test
+  @DisplayName("should return recent persisted identity without calling Cognito")
+  void shouldReturnRecentPersistedIdentityWithoutCallingCognito() {
+    UserIdentityEntity persisted = UserIdentityEntity.builder()
+        .sub("sub-from-jwt")
+        .lastSyncedAt(Instant.now().minus(Duration.ofMinutes(5)))
+        .build();
+    when(featureFlagsConfiguration.isEnabled(FeatureFlag.USER_IDENTITY_PERSISTENCE_ENABLED))
+        .thenReturn(true);
+    when(configuration.getCognito()).thenReturn(cognitoConfiguration);
+    when(cognitoConfiguration.getIdentityTtl()).thenReturn(Duration.ofHours(24));
+    when(repository.findById("sub-from-jwt")).thenReturn(Optional.of(persisted));
+
+    Optional<UserIdentityEntity> result = service.getOrRefreshBySub("sub-from-jwt", "token");
+
+    assertThat(result).contains(persisted);
+    verify(cognitoClient, never()).fetchUserInfo("token");
+    verify(userIdentityPersistenceService, never())
+        .saveHydratedIdentity(org.mockito.ArgumentMatchers.any(UserIdentityEntity.class));
+  }
+
+  @Test
+  @DisplayName("should refresh and save persisted identity when cache is expired")
+  void shouldRefreshAndSavePersistedIdentityWhenCacheIsExpired() {
+    UserIdentityEntity persisted = UserIdentityEntity.builder()
+        .sub("sub-from-jwt")
+        .lastSyncedAt(Instant.now().minus(Duration.ofHours(25)))
+        .build();
+    when(featureFlagsConfiguration.isEnabled(FeatureFlag.USER_IDENTITY_PERSISTENCE_ENABLED))
+        .thenReturn(true);
+    when(configuration.getCognito()).thenReturn(cognitoConfiguration);
+    when(cognitoConfiguration.getIdentityTtl()).thenReturn(Duration.ofHours(24));
+    when(repository.findById("sub-from-jwt")).thenReturn(Optional.of(persisted));
+    when(cognitoClient.fetchUserInfo("token"))
+        .thenReturn(Optional.of(sampleResponse("sub-from-user-info")));
+    when(userIdentityPersistenceService.saveHydratedIdentity(
+            org.mockito.ArgumentMatchers.any(UserIdentityEntity.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    Optional<UserIdentityEntity> result = service.getOrRefreshBySub("sub-from-jwt", "token");
+
+    assertThat(result).isPresent();
+    assertThat(result.orElseThrow().getSub()).isEqualTo("sub-from-user-info");
+    verify(cognitoClient).fetchUserInfo("token");
+    verify(userIdentityPersistenceService)
+        .saveHydratedIdentity(org.mockito.ArgumentMatchers.any(UserIdentityEntity.class));
   }
 
   @Test
