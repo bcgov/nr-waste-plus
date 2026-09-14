@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
+import ca.bc.gov.nrs.hrs.configuration.HrsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity;
 import ca.bc.gov.nrs.hrs.provider.cognito.CognitoUserInfoClient;
@@ -36,6 +37,12 @@ class UserIdentityServiceTest {
   @Mock
   private FeatureFlagsConfiguration featureFlagsConfiguration;
 
+  @Mock
+  private HrsConfiguration configuration;
+
+  @Mock
+  private HrsConfiguration.CognitoConfiguration cognitoConfiguration;
+
   @InjectMocks
   private UserIdentityService service;
 
@@ -61,6 +68,9 @@ class UserIdentityServiceTest {
   void shouldPersistWhenFlagEnabled() {
     when(featureFlagsConfiguration.isEnabled(FeatureFlag.USER_IDENTITY_PERSISTENCE_ENABLED))
         .thenReturn(true);
+    when(configuration.getCognito()).thenReturn(cognitoConfiguration);
+    when(cognitoConfiguration.getIdentityTtl()).thenReturn(java.time.Duration.ofHours(24));
+    when(repository.findById("sub-from-jwt")).thenReturn(Optional.empty());
     when(cognitoClient.fetchUserInfo("token"))
         .thenReturn(Optional.of(sampleResponse("sub-from-user-info")));
     when(userIdentityPersistenceService.saveHydratedIdentity(
@@ -73,7 +83,7 @@ class UserIdentityServiceTest {
     verify(cognitoClient).fetchUserInfo("token");
     verify(userIdentityPersistenceService)
         .saveHydratedIdentity(org.mockito.ArgumentMatchers.any(UserIdentityEntity.class));
-    verify(repository, never()).findById(org.mockito.ArgumentMatchers.anyString());
+    verify(repository).findById("sub-from-jwt");
   }
 
   @Test
