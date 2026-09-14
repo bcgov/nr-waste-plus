@@ -38,7 +38,8 @@ class GlobalExceptionHandlerTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
     assertThat(response.getBody()).isNotNull();
     assertThat(response.getBody().getTitle()).isEqualTo("Service Unavailable");
-    assertThat(response.getBody().getDetail()).doesNotContain("password=secret");
+    assertThat(response.getBody().getDetail())
+        .isEqualTo("The service is temporarily unable to process the request. Please try again later.");
     assertThat(response.getBody().getInstance()).hasToString(REQUEST_URI);
   }
 
@@ -53,7 +54,8 @@ class GlobalExceptionHandlerTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     assertThat(response.getBody()).isNotNull();
     assertThat(response.getBody().getTitle()).isEqualTo("Transaction Failed");
-    assertThat(response.getBody().getDetail()).doesNotContain("jdbcUrl=");
+    assertThat(response.getBody().getDetail())
+        .isEqualTo("The request could not be completed. Please contact support if this persists.");
     assertThat(response.getBody().getInstance()).hasToString(REQUEST_URI);
   }
 
