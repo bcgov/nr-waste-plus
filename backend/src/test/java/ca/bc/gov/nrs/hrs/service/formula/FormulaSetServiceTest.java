@@ -105,6 +105,16 @@ class FormulaSetServiceTest {
     verify(rowRepository).findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(12L);
   }
 
+  @Test
+  void currentOpenEndedPassesTodayToRepository() {
+    when(setRepository.findCurrentOpenEnded(eq(Area.COASTAL), any(LocalDate.class)))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> service.currentOpenEnded(Area.COASTAL))
+        .hasMessageContaining("No current open-ended formula set");
+    verify(setRepository).findCurrentOpenEnded(eq(Area.COASTAL), eq(LocalDate.now()));
+  }
+
   @DisplayName("Current Open-Ended Rejects Missing Set")
   @Test
   void currentOpenEndedRejectsMissingSet() {
