@@ -83,14 +83,15 @@ public class FormulaVariableService {
   private final DistrictVolumeRepository districtVolumeRepository;
 
   /**
-   * Builds the complete variables response for the given date and area.
+   * Builds the complete variables response for the given date, area, and district.
    *
    * @param date the effective date
    * @param area the geographic area
+   * @param districtCode the district code to filter by
    * @return the three-representation response
    * @throws ResponseStatusException if no configuration is effective
    */
-  public FormulaVariablesResponse build(LocalDate date, Area area) {
+  public FormulaVariablesResponse build(LocalDate date, Area area, String districtCode) {
     DistrictVolumeEntity dvEntity = districtVolumeRepository
         .findEffectiveByConfigTypeAndArea(ConfigType.DISTRICT_VOLUME, area, date)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -102,13 +103,14 @@ public class FormulaVariableService {
             "No species composition configuration is effective for the requested date and area."));
 
     Map<String, VariableNodeDto> namespaces = new LinkedHashMap<>();
-    namespaces.put("da", buildDaNode(dvEntity.getTableData(), area));
-    namespaces.put("sc", buildScNode(scEntity.getTableData()));
+    namespaces.put("da", buildDaNode(dvEntity.getTableData(), area, districtCode));
+    namespaces.put("sc", buildScNode(scEntity.getTableData(), districtCode));
 
     Map<String, BigDecimal> flat = new LinkedHashMap<>();
     collectLeaves(namespaces, flat);
 
-    JsonNode schema = buildSchema(dvEntity.getTableData(), scEntity.getTableData(), area);
+    JsonNode schema = buildSchema(dvEntity.getTableData(), scEntity.getTableData(), area,
+        districtCode);
 
     return new FormulaVariablesResponse(
         date, area, namespaces, flat, schema, buildCatalog(namespaces));
@@ -165,13 +167,14 @@ public class FormulaVariableService {
     }
   }
 
-  private VariableNodeDto buildDaNode(TableData tableData, Area area) {
+  private VariableNodeDto buildDaNode(TableData tableData, Area area, String districtCode) {
     Map<String, VariableNodeDto> groupChildren = new LinkedHashMap<>();
 
     if (area == Area.INTERIOR && tableData.zones() != null) {
       for (Zone zone : tableData.zones()) {
         String groupName = normalizeGroupName(zone.name());
-        Map<String, VariableNodeDto> fieldNodes = buildFieldNodes(zone.districts(), groupName);
+        Map<String, VariableNodeDto> fieldNodes =
+            buildFieldNodes(zone.districts(), groupName, districtCode);
         if (!fieldNodes.isEmpty()) {
           groupChildren.put(groupName,
               VariableNodeDto.object("Group " + zone.name() + " values", fieldNodes));
@@ -180,7 +183,8 @@ public class FormulaVariableService {
     } else if (area == Area.COASTAL && tableData.sections() != null) {
       for (Section section : tableData.sections()) {
         String groupName = normalizeGroupName(section.name());
-        Map<String, VariableNodeDto> fieldNodes = buildFieldNodes(section.districts(), groupName);
+        Map<String, VariableNodeDto> fieldNodes =
+            buildFieldNodes(section.districts(), groupName, districtCode);
         if (!fieldNodes.isEmpty()) {
           groupChildren.put(groupName,
               VariableNodeDto.object("Group " + section.name() + " values", fieldNodes));
@@ -193,21 +197,22 @@ public class FormulaVariableService {
   }
 
   private Map<String, VariableNodeDto> buildFieldNodes(List<DistrictRow> districts,
-      String groupName) {
+      String groupName, String districtCode) {
     Map<String, VariableNodeDto> fieldNodes = new LinkedHashMap<>();
     for (DistrictRow row : districts) {
-      String districtCode = row.district() != null ? row.district().code() : "UNKNOWN";
+      if (row.district() == null || !districtCode.equalsIgnoreCase(row.district().code())) {
+        continue;
+      }
       Map<String, BigDecimal> fields = extractDaFields(row);
       for (var entry : fields.entrySet()) {
         String field = entry.getKey();
         BigDecimal value = entry.getValue();
-        String path = "da." + groupName + "." + districtCode + "." + field;
+        String path = "da." + groupName + "." + field;
         String label = DA_FIELD_LABELS.get(field);
         if (label == null) {
           label = humanize(field);
         }
-        String key = field + "_" + districtCode;
-        fieldNodes.put(key, VariableNodeDto.number(path, value, label + " (" + districtCode + ")"));
+        fieldNodes.put(field, VariableNodeDto.number(path, value, label));
       }
     }
     return fieldNodes;
@@ -247,20 +252,21 @@ public class FormulaVariableService {
     return fields;
   }
 
-  private VariableNodeDto buildScNode(TableData tableData) {
+  private VariableNodeDto buildScNode(TableData tableData, String districtCode) {
     Map<String, VariableNodeDto> speciesNodes = new LinkedHashMap<>();
 
     if (tableData.speciesRows() != null) {
       for (SpeciesCompositionRow row : tableData.speciesRows()) {
-        String districtCode = row.district() != null ? row.district().code() : "UNKNOWN";
+        if (row.district() == null || !districtCode.equalsIgnoreCase(row.district().code())) {
+          continue;
+        }
         if (row.species() != null) {
           for (var entry : row.species().entrySet()) {
             String speciesCode = entry.getKey();
             BigDecimal value = entry.getValue();
-            String path = "sc." + districtCode + "." + speciesCode;
+            String path = "sc." + speciesCode;
             String label = SPECIES_LABELS.getOrDefault(speciesCode, speciesCode);
-            String key = speciesCode + "_" + districtCode;
-            speciesNodes.put(key, VariableNodeDto.number(path, scale(value), label + " (" + districtCode + ")"));
+            speciesNodes.put(speciesCode, VariableNodeDto.number(path, scale(value), label));
           }
         }
       }
@@ -269,19 +275,20 @@ public class FormulaVariableService {
     return VariableNodeDto.object("Species composition percentages", speciesNodes);
   }
 
-  private JsonNode buildSchema(TableData dvData, TableData scData, Area area) {
+  private JsonNode buildSchema(TableData dvData, TableData scData, Area area,
+      String districtCode) {
     ObjectNode root = MAPPER.createObjectNode();
 
     ObjectNode daSchema = MAPPER.createObjectNode();
     if (area == Area.INTERIOR && dvData.zones() != null) {
       for (Zone zone : dvData.zones()) {
         daSchema.set(normalizeGroupName(zone.name()),
-            buildGroupSchema(zone.districts()));
+            buildGroupSchema(zone.districts(), districtCode));
       }
     } else if (area == Area.COASTAL && dvData.sections() != null) {
       for (Section section : dvData.sections()) {
         daSchema.set(normalizeGroupName(section.name()),
-            buildGroupSchema(section.districts()));
+            buildGroupSchema(section.districts(), districtCode));
       }
     }
     root.set("da", daSchema);
@@ -290,6 +297,9 @@ public class FormulaVariableService {
     Set<String> species = new LinkedHashSet<>();
     if (scData.speciesRows() != null) {
       for (SpeciesCompositionRow row : scData.speciesRows()) {
+        if (row.district() == null || !districtCode.equalsIgnoreCase(row.district().code())) {
+          continue;
+        }
         if (row.species() != null) {
           species.addAll(row.species().keySet());
         }
@@ -303,9 +313,12 @@ public class FormulaVariableService {
     return root;
   }
 
-  private ObjectNode buildGroupSchema(List<DistrictRow> districts) {
+  private ObjectNode buildGroupSchema(List<DistrictRow> districts, String districtCode) {
     Set<String> fields = new LinkedHashSet<>();
     for (DistrictRow row : districts) {
+      if (row.district() == null || !districtCode.equalsIgnoreCase(row.district().code())) {
+        continue;
+      }
       fields.addAll(extractDaFields(row).keySet());
     }
     ObjectNode groupSchema = MAPPER.createObjectNode();

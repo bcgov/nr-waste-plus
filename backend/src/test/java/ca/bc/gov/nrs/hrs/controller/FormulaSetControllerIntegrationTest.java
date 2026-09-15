@@ -354,8 +354,9 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void variablesReturns404WhenNoSpeciesComposition() throws Exception {
     mockMvc.perform(get("/api/configuration/formulas/variables")
-            .param("date", "2020-06-01")
-            .param("area", "INTERIOR"))
+            .param("date", "2020-08-01")
+            .param("area", "INTERIOR")
+            .param("districtCode", "DCC"))
         .andExpect(status().isNotFound());
   }
 
@@ -364,7 +365,8 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   void variablesRejectsUnauthenticated() throws Exception {
     mockMvc.perform(get("/api/configuration/formulas/variables")
             .param("date", "2020-06-01")
-            .param("area", "INTERIOR"))
+            .param("area", "INTERIOR")
+            .param("districtCode", "DCC"))
         .andExpect(status().isUnauthorized());
   }
 
@@ -383,6 +385,16 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   void variablesRejectsMissingArea() throws Exception {
     mockMvc.perform(get("/api/configuration/formulas/variables")
             .param("date", "2020-06-01"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("Variables rejects missing districtCode parameter")
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
+  void variablesRejectsMissingDistrictCode() throws Exception {
+    mockMvc.perform(get("/api/configuration/formulas/variables")
+            .param("date", "2020-06-01")
+            .param("area", "INTERIOR"))
         .andExpect(status().isBadRequest());
   }
 

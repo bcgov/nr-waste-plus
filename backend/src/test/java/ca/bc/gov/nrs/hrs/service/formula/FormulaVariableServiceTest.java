@@ -60,7 +60,7 @@ class FormulaVariableServiceTest {
         ConfigType.SPECIES_COMPOSITION, Area.INTERIOR, DATE))
         .thenReturn(java.util.Optional.of(scEntity));
 
-    FormulaVariablesResponse response = service.build(DATE, Area.INTERIOR);
+    FormulaVariablesResponse response = service.build(DATE, Area.INTERIOR, "DCC");
 
     assertThat(response.effectiveDate()).isEqualTo(DATE);
     assertThat(response.area()).isEqualTo(Area.INTERIOR);
@@ -119,7 +119,7 @@ class FormulaVariableServiceTest {
         ConfigType.SPECIES_COMPOSITION, Area.COASTAL, DATE))
         .thenReturn(java.util.Optional.of(scEntity));
 
-    FormulaVariablesResponse response = service.build(DATE, Area.COASTAL);
+    FormulaVariablesResponse response = service.build(DATE, Area.COASTAL, "DNI");
 
     VariableNodeDto daNode = response.namespaces().get("da");
     assertThat(daNode.children()).containsKey("mature");
@@ -134,7 +134,7 @@ class FormulaVariableServiceTest {
         ConfigType.DISTRICT_VOLUME, Area.INTERIOR, DATE))
         .thenReturn(java.util.Optional.empty());
 
-    assertThatThrownBy(() -> service.build(DATE, Area.INTERIOR))
+    assertThatThrownBy(() -> service.build(DATE, Area.INTERIOR, "DCC"))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("district volume");
   }
@@ -151,7 +151,7 @@ class FormulaVariableServiceTest {
         ConfigType.SPECIES_COMPOSITION, Area.INTERIOR, DATE))
         .thenReturn(java.util.Optional.empty());
 
-    assertThatThrownBy(() -> service.build(DATE, Area.INTERIOR))
+    assertThatThrownBy(() -> service.build(DATE, Area.INTERIOR, "DCC"))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("species composition");
   }
@@ -171,7 +171,7 @@ class FormulaVariableServiceTest {
         ConfigType.SPECIES_COMPOSITION, Area.INTERIOR, DATE))
         .thenReturn(java.util.Optional.of(scEntity));
 
-    FormulaVariablesResponse response = service.build(DATE, Area.INTERIOR);
+    FormulaVariablesResponse response = service.build(DATE, Area.INTERIOR, "DCC");
 
     assertThat(response.namespaces().get("da").children()).isEmpty();
     assertThat(response.namespaces().get("sc").children()).isEmpty();
@@ -197,7 +197,7 @@ class FormulaVariableServiceTest {
         ConfigType.SPECIES_COMPOSITION, Area.INTERIOR, DATE))
         .thenReturn(java.util.Optional.of(scEntity));
 
-    FormulaVariablesResponse response = service.build(DATE, Area.INTERIOR);
+    FormulaVariablesResponse response = service.build(DATE, Area.INTERIOR, "DCC");
 
     assertThat(response.flat()).containsEntry("da.mature.futureMetric",
         new BigDecimal("7.125"));

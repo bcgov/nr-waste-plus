@@ -188,7 +188,7 @@ class FormulaSetServiceTest {
   void createRejectsDataIntegrityMultipleOpenEndedSets() {
     FormulaSetEntity open1 = futureSet(10L, null);
     FormulaSetEntity open2 = futureSet(11L, null);
-    when(setRepository.findFuture(eq(Area.COASTAL), any(LocalDate.class)))
+    when(setRepository.findAllOpenEnded(eq(Area.COASTAL)))
         .thenReturn(List.of(open1, open2));
 
     assertThatThrownBy(() -> service.create(request("da.x", "1")))

@@ -81,12 +81,14 @@ public class FormulaSetController {
    *
    * @param date the effective date for variable resolution
    * @param area the geographic area (INTERIOR or COASTAL)
+   * @param districtCode the district code used to resolve the single district's values
    * @return three complementary variable representations
    */
   @GetMapping("/variables")
   public FormulaVariablesResponse variables(
       @RequestParam LocalDate date,
-      @RequestParam Area area) {
-    return variableService.build(date, area);
+      @RequestParam Area area,
+      @RequestParam String districtCode) {
+    return variableService.build(date, area, districtCode);
   }
 }
