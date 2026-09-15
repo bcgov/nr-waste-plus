@@ -1,3 +1,4 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
@@ -13,7 +14,6 @@ import type {
   FormulaSetResponse,
   FormulaSetEffectiveParams,
 } from '@/services/formulaConfiguration.types';
-import type { PageableRequest } from '@/services/types';
 
 // Mock the API module
 vi.mock('@/services/APIs', () => {
@@ -24,6 +24,8 @@ vi.mock('@/services/APIs', () => {
       createFormulaSet: vi.fn(),
       updateFormulaSet: vi.fn(),
       deleteFormulaSet: vi.fn(),
+      getCurrentOpenEndedFormulaSet: vi.fn(),
+      getVariables: vi.fn(),
     },
   };
   return {
@@ -46,8 +48,6 @@ vi.mock('@tanstack/react-query', async () => {
   };
 });
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-
 import API from '@/services/APIs';
 
 const formulaConfiguration = API.formulaConfiguration;
@@ -69,17 +69,15 @@ describe('useFormulaConfiguration hooks', () => {
         isError: false,
       });
 
-      const params = { page: 0, size: 20, sort: ['startDate,DESC'] };
-      const { result } = renderHook(() =>
-        useFormulaSetList(params as PageableRequest<FormulaSetResponse>),
-      );
+      const params = { page: 0, size: 20, sort: { startDate: 'DESC' as const } };
+      const { result } = renderHook(() => useFormulaSetList(params));
 
       // The queryKey includes the params object directly, so we check the structure
       const callArgs = (useQuery as ReturnType<typeof vi.fn>).mock.calls[0][0];
       expect(callArgs.queryKey).toEqual([
         'formulaConfiguration',
         'list',
-        { page: 0, size: 20, sort: ['startDate,DESC'] },
+        { page: 0, size: 20, sort: { startDate: 'DESC' } },
       ]);
       expect(callArgs.queryFn).toEqual(expect.any(Function));
       expect(callArgs.placeholderData).toBeDefined();

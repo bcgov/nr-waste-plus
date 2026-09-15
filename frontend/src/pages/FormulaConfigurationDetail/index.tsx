@@ -17,7 +17,9 @@ const FormulaConfigurationDetailPage: FC = () => {
   const params = useParams({ strict: false });
   const id = Number(params.id);
 
-  const { data, isLoading, isError } = useFormulaSetDetail(id);
+  const { data, isLoading, isError } = useFormulaSetDetail(id, {
+    notificationTarget: 'formula-set-detail',
+  });
 
   if (isLoading) {
     return <FormulaConfigurationDetailSkeleton />;

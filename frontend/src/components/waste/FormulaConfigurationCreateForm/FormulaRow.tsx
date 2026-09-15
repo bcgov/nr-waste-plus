@@ -1,7 +1,9 @@
-import { type FC, useMemo } from 'react';
+import { type FC, useMemo, useRef } from 'react';
 
+import type { FormulaError } from '@/components/Form/FormulaInput/types';
 import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants';
 import type { FormulaItemDto } from '@/services/formulaConfiguration.types';
+import type { FormulaValidationError } from '@/services/formulaConfiguration.types';
 
 import FormulaInput from '@/components/Form/FormulaInput';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
@@ -13,11 +15,12 @@ interface FormulaRowProps {
   keyDef: FormulaKeyDefinition;
   formula: FormulaItemDto | undefined;
   isEditable: boolean;
-  onChange: (expression: string) => void;
+  onChange: (expression: string, validationErrors: FormulaValidationError[]) => void;
 }
 
 const FormulaRow: FC<FormulaRowProps> = ({ area, date, keyDef, formula, isEditable, onChange }) => {
   const expression = formula?.expression ?? '';
+  const expressionRef = useRef(expression);
 
   // Fetch variables from backend API
   const { data: variablesData } = useFormulaVariables({ date, area });
@@ -37,6 +40,11 @@ const FormulaRow: FC<FormulaRowProps> = ({ area, date, keyDef, formula, isEditab
           <ReadonlyInput label="Expression">
             {expression || <span className="formula-row__expression-empty">Not configured</span>}
           </ReadonlyInput>
+          {formula?.validationErrors.map((error) => (
+            <div key={`${error.code}-${error.startOffset ?? 0}`} role="alert">
+              <strong>{error.code}</strong>: {error.message}
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -50,7 +58,16 @@ const FormulaRow: FC<FormulaRowProps> = ({ area, date, keyDef, formula, isEditab
       <div className="formula-row__expression">
         <FormulaInput
           initialFormula={expression}
-          onChange={(value) => onChange(value)}
+          onChange={(value) => {
+            expressionRef.current = value;
+            onChange(value, formula?.validationErrors ?? []);
+          }}
+          onValidationError={(error: FormulaError | null) =>
+            onChange(
+              expressionRef.current,
+              error ? [{ code: 'FORMULA_ERROR', message: error.message }] : [],
+            )
+          }
           readOnly={false}
           displayResult={true}
           displayDependencyGraph={false}

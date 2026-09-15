@@ -23,6 +23,7 @@ import type {
   FormulaValidationError,
 } from '@/services/formulaConfiguration.types';
 
+import { ApiError } from '@/config/api/types';
 import {
   useCreateFormulaSet,
   useCurrentOpenEndedFormulaSet,
@@ -42,7 +43,14 @@ const FormulaConfigurationCreateForm: FC = () => {
   const defaultStartDate = DateTime.now().plus({ days: 1 }).toFormat(DATE_FORMAT);
 
   const [isReviewing, setIsReviewing] = useState(false);
-  const [editedKeys, setEditedKeys] = useState<Set<string>>(() => new Set());
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const editedKeysByArea = useRef<Record<string, Set<string>>>({});
+  const formulasByArea = useRef<
+    Record<
+      string,
+      Record<string, { expression: string; validationErrors: FormulaValidationError[] }>
+    >
+  >({});
 
   const initialFormulas = useMemo(() => {
     const keys = getFormulaKeysForArea(defaultArea);
@@ -65,16 +73,20 @@ const FormulaConfigurationCreateForm: FC = () => {
         area: value.area,
         startDate: value.startDate,
         endDate: null,
-        formulas: allKeys.map((k, idx) => ({
-          formulaKey: k.key,
-          expression: value.formulas[k.key]?.expression ?? '',
+        formulas: Object.keys(value.formulas).map((formulaKey, idx) => ({
+          formulaKey,
+          expression: value.formulas[formulaKey]?.expression ?? '',
           declaredVariables: [],
           validationErrors: [],
           sortOrder: idx,
         })),
       };
-      const created = await createMutation.mutateAsync(dto);
-      navigate({ to: `/configuration/formulas/${created.id}` });
+      try {
+        const created = await createMutation.mutateAsync(dto);
+        navigate({ to: `/configuration/formulas/${created.id}` });
+      } catch (error) {
+        setSubmitError(error instanceof Error ? error.message : 'Formula set creation failed.');
+      }
     },
   });
 
@@ -89,11 +101,12 @@ const FormulaConfigurationCreateForm: FC = () => {
     data: currentFormulaSet,
     isError: isCurrentFormulaSetError,
     isFetched: isCurrentFormulaSetFetched,
+    error: currentFormulaSetError,
   } = useCurrentOpenEndedFormulaSet({ area });
 
   const formulaGroups = useMemo(() => FORMULA_KEYS[area as keyof typeof FORMULA_KEYS], [area]);
 
-  const allKeys = getFormulaKeysForArea(area);
+  const allKeys = useMemo(() => getFormulaKeysForArea(area), [area]);
 
   const prefetchedContexts = useRef(new Set<string>());
 
@@ -110,13 +123,21 @@ const FormulaConfigurationCreateForm: FC = () => {
     }
     prefetchedContexts.current.add(contextIdentity);
 
-    const keys = allKeys.map((formulaKey) => formulaKey.key);
+    const keys = [
+      ...new Set([
+        ...allKeys.map((formulaKey) => formulaKey.key),
+        ...(source?.formulas ?? []).map((formula) => formula.formulaKey),
+      ]),
+    ];
     const carriedForward = carryForwardFormulaValues(
       formulasState,
       keys,
       source?.formulas ?? [],
-      editedKeys,
+      editedKeysByArea.current[area] ?? new Set(),
     );
+    for (const key of keys) {
+      carriedForward[key] ??= { expression: '1', validationErrors: [] };
+    }
     const hasChanges = keys.some(
       (key) => carriedForward[key]?.expression !== formulasState[key]?.expression,
     );
@@ -124,29 +145,7 @@ const FormulaConfigurationCreateForm: FC = () => {
     if (hasChanges) {
       form.setFieldValue('formulas', carriedForward);
     }
-  }, [
-    allKeys,
-    area,
-    currentFormulaSet,
-    editedKeys,
-    form,
-    formulasState,
-    isCurrentFormulaSetFetched,
-  ]);
-
-  useEffect(() => {
-    const missingKeys = allKeys.filter((key) => formulasState[key.key] === undefined);
-    if (missingKeys.length === 0) {
-      return;
-    }
-
-    form.setFieldValue('formulas', {
-      ...formulasState,
-      ...Object.fromEntries(
-        missingKeys.map((key) => [key.key, { expression: '1', validationErrors: [] }]),
-      ),
-    });
-  }, [allKeys, form, formulasState]);
+  }, [allKeys, area, currentFormulaSet, form, formulasState, isCurrentFormulaSetFetched]);
 
   const isEmpty = useMemo(() => {
     return allKeys.some((k) => !formulasState[k.key]?.expression?.trim());
@@ -156,7 +155,8 @@ const FormulaConfigurationCreateForm: FC = () => {
     return allKeys.some((k) => (formulasState[k.key]?.validationErrors?.length ?? 0) > 0);
   }, [allKeys, formulasState]);
 
-  const canReview = !isEmpty && !hasErrors;
+  const canReview =
+    !isEmpty && !hasErrors && isCurrentFormulaSetFetched && !createMutation.isPending;
 
   const handleBack = () => {
     if (isReviewing) {
@@ -169,7 +169,7 @@ const FormulaConfigurationCreateForm: FC = () => {
 
   const handleReview = () => {
     if (isReviewing) {
-      form.handleSubmit();
+      void form.handleSubmit();
       return;
     }
     if (!canReview) {
@@ -183,7 +183,9 @@ const FormulaConfigurationCreateForm: FC = () => {
     expression: string,
     validationErrors: FormulaValidationError[] = [],
   ) => {
-    setEditedKeys((previous) => new Set(previous).add(key));
+    const areaKeys = editedKeysByArea.current[area] ?? new Set<string>();
+    editedKeysByArea.current[area] = new Set(areaKeys).add(key);
+    setSubmitError(null);
     form.setFieldValue('formulas', {
       ...formulasState,
       [key]: { expression, validationErrors },
@@ -202,16 +204,39 @@ const FormulaConfigurationCreateForm: FC = () => {
 
   const handleAreaChange = (selected?: string | number) => {
     if (typeof selected === 'string') {
+      formulasByArea.current[area] = formulasState;
       // @ts-expect-error TanStack Form does not narrow the radio callback value.
       form.setFieldValue('area', selected);
+      form.setFieldValue('formulas', formulasByArea.current[selected] ?? initialFormulas);
+      setIsReviewing(false);
     }
   };
 
   const handleDateChange = (dates: Date[]) => {
-    if (dates[0]) {
-      const formatted = DateTime.fromJSDate(dates[0]).toFormat(DATE_FORMAT);
-      form.setFieldValue('startDate', formatted);
+    if (!dates[0]) {
+      form.setFieldValue('startDate', '');
+      return;
     }
+    const selected = DateTime.fromJSDate(dates[0]);
+    if (
+      selected.isValid &&
+      selected.startOf('day') >= DateTime.now().plus({ days: 1 }).startOf('day')
+    ) {
+      const formatted = selected.toFormat(DATE_FORMAT);
+      form.setFieldValue('startDate', formatted);
+    } else {
+      form.setFieldValue('startDate', '');
+    }
+  };
+
+  const handleDateInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.currentTarget.value.trim().replaceAll('/', '-');
+    const parsed = DateTime.fromFormat(value, DATE_FORMAT);
+    if (!value || !parsed.isValid || parsed < DateTime.now().plus({ days: 1 }).startOf('day')) {
+      form.setFieldValue('startDate', '');
+      return;
+    }
+    form.setFieldValue('startDate', parsed.toFormat(DATE_FORMAT));
   };
 
   return (
@@ -223,7 +248,13 @@ const FormulaConfigurationCreateForm: FC = () => {
       sm={4}
       className="formula-config-create-column__content"
     >
-      <form data-testid="formula-config-create-form">
+      <form
+        data-testid="formula-config-create-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          handleReview();
+        }}
+      >
         <Grid>
           {!isReviewing && (
             <>
@@ -252,6 +283,7 @@ const FormulaConfigurationCreateForm: FC = () => {
                     data-testid="start-date-picker"
                     labelText="Start date"
                     placeholder="yyyy/mm/dd"
+                    onChange={handleDateInputChange}
                   />
                 </DatePicker>
               </Column>
@@ -263,10 +295,18 @@ const FormulaConfigurationCreateForm: FC = () => {
                 <FormulaVariableCatalog catalog={variablesData.catalog} />
               </div>
             )}
-            {isCurrentFormulaSetError && (
+            {isCurrentFormulaSetError &&
+              (currentFormulaSetError instanceof ApiError
+                ? currentFormulaSetError.status !== 404
+                : true) && (
+                <p role="alert" className="formula-config-create-validation">
+                  The current formula set could not be loaded. Review the default values before
+                  continuing.
+                </p>
+              )}
+            {submitError && (
               <p role="alert" className="formula-config-create-validation">
-                The current formula set could not be loaded. Review the default values before
-                continuing.
+                {submitError}
               </p>
             )}
             <div className="formula-sections">
@@ -292,10 +332,10 @@ const FormulaConfigurationCreateForm: FC = () => {
           </Column>
         </Grid>
         <div className="formula-config-create-actions">
-          <Button kind="secondary" onClick={handleBack}>
+          <Button kind="secondary" type="button" onClick={handleBack}>
             {isReviewing ? 'Back to edit' : 'Cancel'}
           </Button>
-          <Button kind="primary" onClick={handleReview} disabled={!canReview && !isReviewing}>
+          <Button kind="primary" type="submit" disabled={!canReview && !isReviewing}>
             {isReviewing ? 'Create formula set' : 'Review formulas'}
           </Button>
         </div>

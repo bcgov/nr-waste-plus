@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import type { FormulaNamespaceCatalog } from '@/services/formulaConfiguration.types';
-
 import FormulaVariableCatalog from '.';
+
+import type { FormulaNamespaceCatalog } from '@/services/formulaConfiguration.types';
 
 const catalog: FormulaNamespaceCatalog[] = [
   {
@@ -40,5 +40,17 @@ describe('FormulaVariableCatalog', () => {
     expect(screen.getByText('10')).toBeTruthy();
     expect(screen.getByText('submission.*')).toBeTruthy();
     expect(screen.getByText('Provided during submission')).toBeTruthy();
+  });
+
+  it('filters variables while retaining the matching namespace', async () => {
+    const user = userEvent.setup();
+    render(<FormulaVariableCatalog catalog={catalog} />);
+
+    await user.click(screen.getByRole('button', { name: 'View formula variables' }));
+    await user.type(screen.getByRole('searchbox', { name: 'Search formula variables' }), 'grade');
+
+    expect(screen.getByText('da.*')).toBeTruthy();
+    expect(screen.getByText('da.mature.avoidableGradeY')).toBeTruthy();
+    expect(screen.queryByText('submission.*')).toBeNull();
   });
 });

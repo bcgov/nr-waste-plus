@@ -1,8 +1,10 @@
 import { type FC } from 'react';
 
 import FormulaRow from './FormulaRow';
-import type { FormulaItemDto } from '@/services/formulaConfiguration.types';
+
 import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants';
+import type { FormulaItemDto } from '@/services/formulaConfiguration.types';
+import type { FormulaValidationError } from '@/services/formulaConfiguration.types';
 
 interface FormulaSectionProps {
   sectionName: string;
@@ -11,7 +13,11 @@ interface FormulaSectionProps {
   date: string; // YYYY-MM-DD
   formulas: FormulaItemDto[];
   isEditable: boolean;
-  onChange: (formulaKey: string, expression: string) => void;
+  onChange: (
+    formulaKey: string,
+    expression: string,
+    validationErrors: FormulaValidationError[],
+  ) => void;
 }
 
 const FormulaSection: FC<FormulaSectionProps> = ({
@@ -41,7 +47,9 @@ const FormulaSection: FC<FormulaSectionProps> = ({
             keyDef={keyDef}
             formula={formula}
             isEditable={isEditable}
-            onChange={(expression) => onChange(keyDef.key, expression)}
+            onChange={(expression, validationErrors) =>
+              onChange(keyDef.key, expression, validationErrors)
+            }
           />
         );
       })}

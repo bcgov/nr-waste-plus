@@ -1,5 +1,5 @@
-import { Button, ComposedModal, ModalBody, ModalHeader } from '@carbon/react';
 import { Information } from '@carbon/icons-react';
+import { Button, ComposedModal, ModalBody, ModalHeader, Search } from '@carbon/react';
 import { type FC, useState } from 'react';
 
 import type { FormulaNamespaceCatalog } from '@/services/formulaConfiguration.types';
@@ -12,6 +12,25 @@ interface FormulaVariableCatalogProps {
 
 const FormulaVariableCatalog: FC<FormulaVariableCatalogProps> = ({ catalog }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredCatalog = catalog
+    .map((namespace) => ({
+      ...namespace,
+      variables: namespace.variables.filter((variable) =>
+        [variable.path, variable.label, variable.value?.toString()].some((value) =>
+          value?.toLowerCase().includes(normalizedQuery),
+        ),
+      ),
+    }))
+    .filter(
+      (namespace) =>
+        !normalizedQuery ||
+        [namespace.prefix, namespace.label, namespace.description].some((value) =>
+          value.toLowerCase().includes(normalizedQuery),
+        ) ||
+        namespace.variables.length > 0,
+    );
 
   return (
     <>
@@ -43,8 +62,14 @@ const FormulaVariableCatalog: FC<FormulaVariableCatalogProps> = ({ catalog }) =>
           <p className="formula-variable-catalog__description">
             Use these grammar-approved variables in your formulas.
           </p>
+          <Search
+            labelText="Search formula variables"
+            placeholder="Search by namespace, variable, label, or value"
+            value={query}
+            onChange={(event) => setQuery(event.currentTarget.value)}
+          />
           <div className="formula-variable-catalog__namespaces">
-            {catalog.map((namespace) => (
+            {filteredCatalog.map((namespace) => (
               <details className="formula-variable-catalog__namespace" key={namespace.prefix}>
                 <summary>
                   <span className="formula-variable-catalog__prefix">{namespace.prefix}.*</span>

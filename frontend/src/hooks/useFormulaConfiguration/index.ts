@@ -72,7 +72,7 @@ export function useEffectiveFormulaSet(params: FormulaSetEffectiveParams, enable
 /**
  * Fetches a single formula set by ID.
  */
-export function useFormulaSetDetail(id?: number) {
+export function useFormulaSetDetail(id?: number, options?: { notificationTarget?: string }) {
   return useQuery({
     queryKey:
       typeof id === 'number'
@@ -80,6 +80,9 @@ export function useFormulaSetDetail(id?: number) {
         : ['formulaConfiguration', 'detail', 'disabled'],
     queryFn: () => formulaConfiguration.getFormulaSet(id!),
     enabled: typeof id === 'number',
+    meta: options?.notificationTarget
+      ? { notificationTarget: options.notificationTarget }
+      : undefined,
   });
 }
 

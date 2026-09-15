@@ -12,13 +12,14 @@
  */
 
 import Editor from '@monaco-editor/react';
-import React, { useCallback, useId, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 
 import DependencyGraph from './DependencyGraph';
 import { useFormulaEngine } from './useFormulaEngine';
 import { useMonacoFormula, FORMULA_LANGUAGE_ID } from './useMonacoFormula';
 import VariablePanel from './VariablePanel';
 
+import type { FormulaError } from './types';
 import type { OnMount } from '@monaco-editor/react';
 
 import './index.scss';
@@ -84,6 +85,9 @@ export interface FormulaInputProps {
    */
   onChange?: (formula: string) => void;
 
+  /** Called whenever formula evaluation produces or clears a validation error. */
+  onValidationError?: (error: FormulaError | null) => void;
+
   /**
    * Optional flags to toggle display of certain UI elements.
    * Useful for advanced use cases where you want to hide the result as the result
@@ -143,6 +147,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
   dynamicParams,
   initialFormula = '',
   onChange,
+  onValidationError,
   displayResult = true,
   displayDependencyGraph = true,
   readOnly = false,
@@ -162,6 +167,10 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
     initialFormula,
     onChange,
   });
+
+  useEffect(() => {
+    onValidationError?.(result.error);
+  }, [onValidationError, result.error]);
 
   // ── Monaco configuration ────────────────────────────────────────────────────
   const { theme } = useTheme();
