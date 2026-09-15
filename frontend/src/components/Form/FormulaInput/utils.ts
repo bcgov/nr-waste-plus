@@ -55,40 +55,155 @@ export function isFormulaError(value: MathNode | FormulaError): value is Formula
 // ─── Variable Extraction ──────────────────────────────────────────────────────
 
 /**
- * Walks a mathjs AST and collects every SymbolNode name that is NOT a
- * mathjs built-in. This is the single source of truth for "which variables
- * does this formula reference?" — used by both the evaluation layer and
- * the dependency graph.
+ * Reconstructs the full dotted path from a mathjs AccessorNode chain.
+ *
+ * mathjs parses `block.area.road` as:
+ *   AccessorNode("road")
+ *     └─ AccessorNode("area")
+ *          └─ SymbolNode("block")
+ *
+ * This helper walks up the `object` chain, collecting property names from
+ * IndexNode dimensions (dotNotation), and returns the full dotted path
+ * e.g. `"block.area.road"`.
+ *
+ * @param node - An AccessorNode or SymbolNode from the AST.
+ * @returns The reconstructed dotted path, or `null` if the chain cannot be resolved.
+ */
+function reconstructDottedPath(node: MathNode): string | null {
+  const parts: string[] = [];
+  let current: MathNode = node;
+
+  while (current) {
+    const n = current as unknown as {
+      type: string;
+      name?: string;
+      object?: MathNode;
+      index?: { dimensions?: Array<{ type: string; value?: string }> };
+    };
+
+    if (n.type === 'SymbolNode' && n.name) {
+      // Root of the chain — prepend the symbol name
+      parts.unshift(n.name);
+      break;
+    }
+
+    if (n.type === 'AccessorNode' && n.index?.dimensions?.[0]) {
+      const dim = n.index.dimensions[0] as unknown as { type: string; value?: string };
+      if (dim.type === 'ConstantNode' && dim.value) {
+        parts.unshift(dim.value);
+      }
+      current = n.object!;
+      continue;
+    }
+
+    // Unexpected node type — bail
+    return null;
+  }
+
+  return parts.length > 0 ? parts.join('.') : null;
+}
+
+/**
+ * Walks a mathjs AST and collects every variable reference as a full dotted path.
+ *
+ * - Simple variables like `rate` produce `["rate"]`.
+ * - Nested accessors like `block.area.road` produce `["block.area.road"]`.
+ * - mathjs built-ins (sin, cos, pi, etc.) are excluded.
+ *
+ * For AccessorNode chains, only the outermost (full) path is returned.
+ * Intermediate paths like `da.mature` are filtered out when `da.mature.total` exists.
+ *
+ * This is the single source of truth for "which variables does this formula
+ * reference?" — used by both the evaluation layer and the dependency graph.
  */
 export function extractVariables(node: MathNode): string[] {
   const vars = new Set<string>();
+  const accessorRoots = new Set<string>(); // root symbols involved in AccessorNode chains
+
   node.traverse((n: MathNode) => {
     const sym = n as unknown as { type: string; name: string };
+
     if (sym.type === 'SymbolNode' && !isMathBuiltin(sym.name)) {
       vars.add(sym.name);
     }
-    // Handle namespace accessors like da.rate — extract the root object name
+
+    // Handle namespace accessors like da.mature.avoidableGradeY — extract full path
     if (sym.type === 'AccessorNode') {
-      const object = (sym as unknown as { object: MathNode }).object;
-      if (
-        object?.type === 'SymbolNode' &&
-        !isMathBuiltin((object as unknown as { name: string }).name)
-      ) {
-        vars.add((object as unknown as { name: string }).name);
-      }
-    }
-    // Handle indexed access like arr[0] — extract the array name
-    if (sym.type === 'IndexNode') {
-      const object = (sym as unknown as { object: MathNode }).object;
-      if (
-        object?.type === 'SymbolNode' &&
-        !isMathBuiltin((object as unknown as { name: string }).name)
-      ) {
-        vars.add((object as unknown as { name: string }).name);
+      const path = reconstructDottedPath(n);
+      if (path) {
+        const rootName = path.split('.')[0];
+        if (!isMathBuiltin(rootName)) {
+          // Remove the root-only entry and mark this root as part of a chain
+          vars.delete(rootName);
+          accessorRoots.add(rootName);
+          vars.add(path);
+        }
       }
     }
   });
-  return Array.from(vars);
+
+  // Filter out partial paths: if we have "da.mature.total", remove "da.mature" and "da"
+  // This happens because traverse visits intermediate AccessorNodes too.
+  const result = Array.from(vars).filter((v) => {
+    // Keep if this is a root symbol not involved in any AccessorNode chain
+    if (!v.includes('.')) return !accessorRoots.has(v);
+    // Keep if no other variable starts with this one followed by a dot
+    return !Array.from(vars).some((other) => other !== v && other.startsWith(v + '.'));
+  });
+
+  return result;
+}
+
+// ─── Scope Nesting ────────────────────────────────────────────────────────────
+
+/**
+ * Converts a flat scope with dotted keys into a nested object structure
+ * that mathjs can resolve for AccessorNode evaluation.
+ *
+ * @example
+ * buildNestedScope({ "block.area.road": 123, "rate": 2.5 })
+ * // → { block: { area: { road: 123 } }, rate: 2.5 }
+ *
+ * Non-dotted keys are passed through as leaf values.
+ * When a dotted key conflicts with a non-dotted key, the non-dotted key wins
+ * (matching the fixed-over-dynamic precedence in useFormulaEngine).
+ */
+export function buildNestedScope(flat: Record<string, number>): Record<string, unknown> {
+  // Use a null-prototype object for the root so dangerous keys like
+  // `__proto__` or `constructor` cannot resolve to inherited Object.prototype
+  // members (prototype pollution guard).
+  const nested: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
+
+  for (const [key, value] of Object.entries(flat)) {
+    if (!key.includes('.')) {
+      // Simple key — direct assignment (fixed params win on collision)
+      nested[key] = value;
+      continue;
+    }
+
+    const parts = key.split('.');
+    let current: Record<string, unknown> = nested;
+
+    for (let i = 0; i < parts.length - 1; i++) {
+      const part = parts[i];
+      // Own-property check only: `part in current` would treat inherited
+      // members (e.g. `__proto__`) as existing namespaces and descend into
+      // Object.prototype. Null-prototype namespace objects make any `__proto__`
+      // assignment a plain data property instead of a prototype write.
+      if (
+        !Object.hasOwn(current, part) ||
+        typeof current[part] !== 'object' ||
+        current[part] === null
+      ) {
+        current[part] = Object.create(null) as Record<string, unknown>;
+      }
+      current = current[part] as Record<string, unknown>;
+    }
+
+    current[parts[parts.length - 1]] = value;
+  }
+
+  return nested;
 }
 
 // ─── Evaluation ───────────────────────────────────────────────────────────────
@@ -243,11 +358,25 @@ export function evaluateFormula(
   }
 
   try {
+    // Nest flat dotted keys so mathjs can resolve AccessorNode chains
+    // e.g. { "block.area.road": 123 } → { block: { area: { road: 123 } } }
+    const nestedScope = buildNestedScope(scope);
+
     // Convert scope to BigNumber so that mixed arithmetic stays precise
-    const bigScope: Record<string, BigNumber> = {};
-    for (const [key, val] of Object.entries(scope)) {
-      bigScope[key] = math.bignumber(val);
-    }
+    const convertToBigNumber = (obj: any): any => {
+      if (typeof obj === 'number') {
+        return math.bignumber(obj);
+      }
+      if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+        const out: Record<string, any> = {};
+        for (const [k, v] of Object.entries(obj)) {
+          out[k] = convertToBigNumber(v);
+        }
+        return out;
+      }
+      return obj;
+    };
+    const bigScope = convertToBigNumber(nestedScope);
 
     // Use compiled AST to avoid re-parsing the formula string
     const result = validation.ast.compile().evaluate(bigScope);
@@ -313,7 +442,7 @@ function formatResult(value: BigNumber): string {
  * multi-formula dependency tracking without breaking the API.
  *
  * @param formula       - Formula string to analyse
- * @param allVariables  - The full available variable scope
+ * @param allVariables  - The full available variable scope (flat dotted keys)
  */
 export function buildDependencyGraph(
   formula: string,

@@ -464,6 +464,60 @@ describe('tokenizeFormula', () => {
     });
   });
 
+  describe('dotted variable tokenization', () => {
+    it('should tokenize dotted variable as single token', () => {
+      const tokens = tokenizeFormula('block.area.road', new Set(['block.area.road']));
+      const variables = tokens.filter((t) => t.type === 'variable');
+      expect(variables).toHaveLength(1);
+      expect(variables[0].value).toBe('block.area.road');
+      expect(variables[0].startIndex).toBe(0);
+      expect(variables[0].endIndex).toBe(15);
+    });
+
+    it('should tokenize dotted variable with arithmetic', () => {
+      const tokens = tokenizeFormula('da.mature.total * 1.5', new Set(['da.mature.total']));
+      const variables = tokens.filter((t) => t.type === 'variable');
+      expect(variables).toHaveLength(1);
+      expect(variables[0].value).toBe('da.mature.total');
+
+      const numbers = tokens.filter((t) => t.type === 'number');
+      expect(numbers).toHaveLength(1);
+      expect(numbers[0].value).toBe('1.5');
+    });
+
+    it('should tokenize multiple dotted variables', () => {
+      const tokens = tokenizeFormula('da.mature.total + sc.AL', new Set(['da.mature.total', 'sc.AL']));
+      const variables = tokens.filter((t) => t.type === 'variable');
+      expect(variables).toHaveLength(2);
+      expect(variables[0].value).toBe('da.mature.total');
+      expect(variables[1].value).toBe('sc.AL');
+    });
+
+    it('should classify dotted variable as variable type', () => {
+      const tokens = tokenizeFormula('block.area.road', new Set(['block.area.road']));
+      expect(tokens[0].type).toBe('variable');
+    });
+
+    it('should not confuse decimal number with dotted identifier', () => {
+      const tokens = tokenizeFormula('3.14', new Set());
+      // Should be a single number token, not split at the dot
+      const numbers = tokens.filter((t) => t.type === 'number');
+      expect(numbers).toHaveLength(1);
+      expect(numbers[0].value).toBe('3.14');
+    });
+
+    it('should handle dotted variable inside function call', () => {
+      const tokens = tokenizeFormula('sqrt(da.mature.total)', new Set(['da.mature.total']));
+      const functions = tokens.filter((t) => t.type === 'function');
+      expect(functions).toHaveLength(1);
+      expect(functions[0].value).toBe('sqrt');
+
+      const variables = tokens.filter((t) => t.type === 'variable');
+      expect(variables).toHaveLength(1);
+      expect(variables[0].value).toBe('da.mature.total');
+    });
+  });
+
   describe('token type validation', () => {
     it('should only return valid token types', () => {
       const validTypes: TokenType[] = [

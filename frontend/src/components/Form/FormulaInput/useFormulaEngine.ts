@@ -10,7 +10,7 @@
  * rather than re-parsing independently, reducing per-keystroke work.
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 
 import { evaluateFormula, extractVariables, parseFormula, isFormulaError } from './utils';
 
@@ -95,6 +95,10 @@ export function useFormulaEngine({
   onChange,
 }: UseFormulaEngineOptions): FormulaEngineState {
   const [formula, setFormulaState] = useState<string>(initialFormula);
+
+  useEffect(() => {
+    setFormulaState(initialFormula);
+  }, [initialFormula]);
 
   // ── Merged scope ───────────────────────────────────────────────────────────
   // Dynamic params are spread first so that fixed (server-authoritative) values
