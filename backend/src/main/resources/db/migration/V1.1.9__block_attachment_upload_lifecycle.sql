@@ -5,14 +5,31 @@
 --   * checksum      - object-store ETag captured at finalize, used to detect
 --                     object replacement between verification attempts.
 
-ALTER TABLE hrs.block_attachment
-    ADD COLUMN IF NOT EXISTS document_type VARCHAR(64),
-    ADD COLUMN IF NOT EXISTS status VARCHAR(32) NOT NULL DEFAULT 'UPLOADING',
-    ADD COLUMN IF NOT EXISTS checksum VARCHAR(128);
+DO $$
+DECLARE
+    status_column_exists BOOLEAN;
+BEGIN
+    SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'hrs'
+          AND table_name = 'block_attachment'
+          AND column_name = 'status'
+    ) INTO status_column_exists;
 
--- Rows that predate the upload lifecycle hold already-uploaded evidence, so
--- they are treated as finalized rather than pending uploads.
-UPDATE hrs.block_attachment SET status = 'FINALIZED' WHERE status = 'UPLOADING';
+    ALTER TABLE hrs.block_attachment
+        ADD COLUMN IF NOT EXISTS document_type VARCHAR(64),
+        ADD COLUMN IF NOT EXISTS status VARCHAR(32) NOT NULL DEFAULT 'UPLOADING',
+        ADD COLUMN IF NOT EXISTS checksum VARCHAR(128);
+
+    -- Rows that predate the upload lifecycle hold already-uploaded evidence, so
+    -- they are treated as finalized rather than pending uploads.
+    -- Gated on initial column addition so re-running this migration is idempotent
+    -- and will not force-finalize active in-flight UPLOADING intents.
+    IF NOT status_column_exists THEN
+        EXECUTE 'UPDATE hrs.block_attachment SET status = ''FINALIZED'' WHERE status = ''UPLOADING''';
+    END IF;
+END $$;
 
 ALTER TABLE hrs.block_attachment DROP CONSTRAINT IF EXISTS chk_block_attachment_status;
 ALTER TABLE hrs.block_attachment
