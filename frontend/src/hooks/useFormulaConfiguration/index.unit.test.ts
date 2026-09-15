@@ -4,6 +4,9 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import {
   useFormulaSetList,
   useEffectiveFormulaSet,
+  useFormulaSetDetail,
+  useCurrentOpenEndedFormulaSet,
+  useFormulaVariables,
   useCreateFormulaSet,
   useUpdateFormulaSet,
   useDeleteFormulaSet,
@@ -12,8 +15,9 @@ import {
 import type {
   FormulaSetResponse,
   FormulaSetEffectiveParams,
+  CurrentFormulaSetParams,
+  FormulaVariablesParams,
 } from '@/services/formulaConfiguration.types';
-import type { PageableRequest } from '@/services/types';
 
 // Mock the API module
 vi.mock('@/services/APIs', () => {
@@ -21,6 +25,9 @@ vi.mock('@/services/APIs', () => {
     formulaConfiguration: {
       getFormulaSets: vi.fn(),
       getEffectiveFormulaSet: vi.fn(),
+      getFormulaSet: vi.fn(),
+      getCurrentOpenEndedFormulaSet: vi.fn(),
+      getVariables: vi.fn(),
       createFormulaSet: vi.fn(),
       updateFormulaSet: vi.fn(),
       deleteFormulaSet: vi.fn(),
@@ -71,7 +78,7 @@ describe('useFormulaConfiguration hooks', () => {
 
       const params = { page: 0, size: 20, sort: ['startDate,DESC'] };
       const { result } = renderHook(() =>
-        useFormulaSetList(params as PageableRequest<FormulaSetResponse>),
+        useFormulaSetList(params as unknown as Parameters<typeof useFormulaSetList>[0]),
       );
 
       // The queryKey includes the params object directly, so we check the structure
@@ -248,6 +255,185 @@ describe('useFormulaConfiguration hooks', () => {
       result.current.mutateAsync(5);
 
       expect(mockMutateAsync).toHaveBeenCalledWith(5);
+    });
+  });
+
+  describe('useFormulaSetDetail', () => {
+    it('should call useQuery with correct key and query function when id is provided', () => {
+      const mockData: FormulaSetResponse = {
+        id: 5,
+        area: 'INTERIOR',
+        startDate: '2026-06-01',
+        endDate: null,
+        deleted: false,
+        formulas: [],
+        createdAt: '',
+        updatedAt: '',
+      };
+      (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+        data: mockData,
+        isLoading: false,
+        isError: false,
+      });
+
+      renderHook(() => useFormulaSetDetail(5));
+
+      const callArgs = (useQuery as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      expect(callArgs.queryKey).toEqual(['formulaConfiguration', 'detail', 5]);
+      expect(callArgs.queryFn).toEqual(expect.any(Function));
+      expect(callArgs.enabled).toBe(true);
+    });
+
+    it('should be disabled when id is undefined', () => {
+      (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+      });
+
+      renderHook(() => useFormulaSetDetail(undefined));
+
+      const callArgs = (useQuery as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      expect(callArgs.queryKey).toEqual(['formulaConfiguration', 'detail', 'disabled']);
+      expect(callArgs.enabled).toBe(false);
+    });
+  });
+
+  describe('useCurrentOpenEndedFormulaSet', () => {
+    it('should call useQuery with correct key when enabled', () => {
+      const mockData: FormulaSetResponse = {
+        id: 12,
+        area: 'INTERIOR',
+        startDate: '2026-06-01',
+        endDate: null,
+        deleted: false,
+        formulas: [],
+        createdAt: '',
+        updatedAt: '',
+      };
+      (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+        data: mockData,
+        isLoading: false,
+        isError: false,
+      });
+
+      const params: CurrentFormulaSetParams = { area: 'INTERIOR' };
+      const { result } = renderHook(() => useCurrentOpenEndedFormulaSet(params, true));
+
+      expect(useQuery).toHaveBeenCalledWith({
+        queryKey: ['formulaConfiguration', 'current', params],
+        queryFn: expect.any(Function),
+        enabled: true,
+      });
+      expect(result.current.data).toEqual(mockData);
+    });
+
+    it('should not fetch when disabled', () => {
+      (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+      });
+
+      const params: CurrentFormulaSetParams = { area: 'INTERIOR' };
+      renderHook(() => useCurrentOpenEndedFormulaSet(params, false));
+
+      expect(useQuery).toHaveBeenCalledWith({
+        queryKey: ['formulaConfiguration', 'current', params],
+        queryFn: expect.any(Function),
+        enabled: false,
+      });
+    });
+
+    it('should be disabled when area is empty', () => {
+      (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+      });
+
+      const params = { area: '' } as unknown as CurrentFormulaSetParams;
+      renderHook(() => useCurrentOpenEndedFormulaSet(params, true));
+
+      expect(useQuery).toHaveBeenCalledWith({
+        queryKey: ['formulaConfiguration', 'current', params],
+        queryFn: expect.any(Function),
+        enabled: false,
+      });
+    });
+  });
+
+  describe('useFormulaVariables', () => {
+    it('should call useQuery with correct key and staleTime when enabled', () => {
+      (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+      });
+
+      const params: FormulaVariablesParams = { date: '2026-11-03', area: 'INTERIOR' };
+      renderHook(() => useFormulaVariables(params, true));
+
+      expect(useQuery).toHaveBeenCalledWith({
+        queryKey: ['formulaConfiguration', 'variables', params],
+        queryFn: expect.any(Function),
+        enabled: true,
+        staleTime: 5 * 60 * 1000,
+      });
+    });
+
+    it('should not fetch when disabled', () => {
+      (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+      });
+
+      const params: FormulaVariablesParams = { date: '2026-11-03', area: 'INTERIOR' };
+      renderHook(() => useFormulaVariables(params, false));
+
+      expect(useQuery).toHaveBeenCalledWith({
+        queryKey: ['formulaConfiguration', 'variables', params],
+        queryFn: expect.any(Function),
+        enabled: false,
+        staleTime: 5 * 60 * 1000,
+      });
+    });
+
+    it('should be disabled when date is empty', () => {
+      (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+      });
+
+      const params = { date: '', area: 'INTERIOR' } as FormulaVariablesParams;
+      renderHook(() => useFormulaVariables(params, true));
+
+      expect(useQuery).toHaveBeenCalledWith({
+        queryKey: ['formulaConfiguration', 'variables', params],
+        queryFn: expect.any(Function),
+        enabled: false,
+        staleTime: 5 * 60 * 1000,
+      });
+    });
+
+    it('should be disabled when area is empty', () => {
+      (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+      });
+
+      const params = { date: '2026-11-03', area: '' } as unknown as FormulaVariablesParams;
+      renderHook(() => useFormulaVariables(params, true));
+
+      expect(useQuery).toHaveBeenCalledWith({
+        queryKey: ['formulaConfiguration', 'variables', params],
+        queryFn: expect.any(Function),
+        enabled: false,
+        staleTime: 5 * 60 * 1000,
+      });
     });
   });
 });

@@ -73,6 +73,28 @@ describe('FormulaConfigurationService', () => {
         query: { size: 20 },
       });
     });
+
+    it('should pass through meta when provided', async () => {
+      const mockResponse: FormulaSetListResponse = {
+        content: [],
+        page: { number: 0, size: 20, totalElements: 0, totalPages: 0 },
+      };
+      mockDoRequest.mockResolvedValue(mockResponse);
+
+      const pageable: PageableRequest<FormulaSetResponse> = {
+        page: 0,
+        size: 20,
+        sort: ['startDate,DESC'],
+      };
+      await service.getFormulaSets(pageable, { raw: true });
+
+      expect(mockDoRequest).toHaveBeenCalledWith(mockConfig, {
+        method: 'GET',
+        url: '/api/configuration/formulas',
+        query: { size: 20, sort: ['startDate,DESC'] },
+        meta: { raw: true },
+      });
+    });
   });
 
   describe('getEffectiveFormulaSet', () => {
@@ -128,6 +150,52 @@ describe('FormulaConfigurationService', () => {
         body: dto,
       });
       expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe('getFormulaSet', () => {
+    it('should call doRequest with GET and the correct URL for the id', async () => {
+      const mockResponse: FormulaSetResponse = {
+        id: 5,
+        area: 'INTERIOR',
+        startDate: '2026-06-01',
+        endDate: null,
+        deleted: false,
+        formulas: [],
+        createdAt: '2026-05-15T14:23:00Z',
+        updatedAt: '2026-06-01T10:00:00Z',
+      };
+      mockDoRequest.mockResolvedValue(mockResponse);
+
+      const result = await service.getFormulaSet(5);
+
+      expect(mockDoRequest).toHaveBeenCalledWith(mockConfig, {
+        method: 'GET',
+        url: '/api/configuration/formulas/5',
+      });
+      expect(result).toEqual(mockResponse);
+    });
+
+    it('should include meta when provided', async () => {
+      const mockResponse: FormulaSetResponse = {
+        id: 5,
+        area: 'INTERIOR',
+        startDate: '2026-06-01',
+        endDate: null,
+        deleted: false,
+        formulas: [],
+        createdAt: '2026-05-15T14:23:00Z',
+        updatedAt: '2026-06-01T10:00:00Z',
+      };
+      mockDoRequest.mockResolvedValue(mockResponse);
+
+      await service.getFormulaSet(5, { raw: true });
+
+      expect(mockDoRequest).toHaveBeenCalledWith(mockConfig, {
+        method: 'GET',
+        url: '/api/configuration/formulas/5',
+        meta: { raw: true },
+      });
     });
   });
 
