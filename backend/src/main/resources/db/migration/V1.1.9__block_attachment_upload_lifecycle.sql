@@ -39,3 +39,13 @@ COMMENT ON COLUMN hrs.block_attachment.status IS
     'Upload lifecycle state: UPLOADING while the client is expected to upload, FINALIZED once the object has been verified and accepted.';
 COMMENT ON COLUMN hrs.block_attachment.checksum IS
     'Object-store ETag/checksum captured at finalize; a later finalize attempt whose object ETag differs is rejected with a conflict.';
+
+-- Indexing note:
+-- No index is added on status today because block_attachment is small and all
+-- active access paths filter by id or block_id. If a background sweeper job is
+-- added in the future to clean up abandoned/stale UPLOADING intents, consider
+-- adding a partial index in a separate migration:
+--   CREATE INDEX idx_block_attachment_status_uploading
+--       ON hrs.block_attachment (status)
+--       WHERE status = 'UPLOADING';
+
