@@ -1,0 +1,59 @@
+@use '@carbon/react/scss/spacing' as *;
+
+.formula-variable-catalog {
+  .cds--modal-header__label {
+    color: var(--cds-text-secondary);
+  }
+}
+
+.formula-variable-catalog__description,
+.formula-variable-catalog__namespace-description {
+  margin: $spacing-03 0;
+}
+
+.formula-variable-catalog__namespaces {
+  display: grid;
+  gap: $spacing-03;
+  padding-bottom: $spacing-05;
+}
+
+.formula-variable-catalog__namespace {
+  border-top: 1px solid var(--cds-border-subtle-01);
+  padding-top: $spacing-03;
+}
+
+.formula-variable-catalog__namespace summary {
+  cursor: pointer;
+  display: flex;
+  gap: $spacing-03;
+  font-weight: 600;
+}
+
+.formula-variable-catalog__prefix,
+.formula-variable-catalog code {
+  font-family: var(--cds-code-01-font-family, monospace);
+}
+
+.formula-variable-catalog__availability {
+  font-weight: 600;
+}
+
+.formula-variable-catalog__variables {
+  display: grid;
+  gap: $spacing-02;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.formula-variable-catalog__variables li {
+  display: grid;
+  gap: $spacing-02;
+  grid-template-columns: minmax(12rem, 1fr) minmax(12rem, 2fr) auto;
+}
+
+@media (max-width: 672px) {
+  .formula-variable-catalog__variables li {
+    grid-template-columns: 1fr;
+  }
+}
