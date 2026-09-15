@@ -1,5 +1,6 @@
 import { CodesService } from './codes.service';
 import { DistrictVolumeService } from './districtvolume.service';
+import { FormulaConfigurationService } from './formulaConfiguration.service';
 import { SpeciesCompositionService } from './speciesComposition.service';
 
 import type { APIConfig } from '@/config/api/types';
@@ -54,6 +55,7 @@ const serviceConstructors = {
   reportingUnit: new ReportingUnitService(BackendApiConfig),
   districtVolume: new DistrictVolumeService(BackendApiConfig),
   speciesComposition: new SpeciesCompositionService(BackendApiConfig),
+  formulaConfiguration: new FormulaConfigurationService(BackendApiConfig),
 } as const;
 
 /** Maps each service namespace key to its concrete service class instance. */
