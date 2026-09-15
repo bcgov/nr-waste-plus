@@ -1,0 +1,156 @@
+{
+  "content": [
+    {
+      "id": 1,
+      "area": "INTERIOR",
+      "startDate": "2026-06-01",
+      "endDate": "2026-09-10",
+      "deleted": false,
+      "formulas": [
+        {
+          "formulaKey": "da.mature.avoidableGradeY",
+          "expression": "da.mature.merchantableVolume * 0.15",
+          "declaredVariables": ["da.mature.merchantableVolume"],
+          "validationErrors": [],
+          "sortOrder": 1
+        },
+        {
+          "formulaKey": "da.mature.nonMerchantableVolume",
+          "expression": "da.mature.totalVolume - da.mature.merchantableVolume",
+          "declaredVariables": ["da.mature.totalVolume", "da.mature.merchantableVolume"],
+          "validationErrors": [],
+          "sortOrder": 2
+        },
+        {
+          "formulaKey": "sc.PL",
+          "expression": "sc.PL * submission.blockArea",
+          "declaredVariables": ["sc.PL", "submission.blockArea"],
+          "validationErrors": [],
+          "sortOrder": 3
+        }
+      ],
+      "createdAt": "2026-05-15T14:23:00Z",
+      "updatedAt": "2026-06-01T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "area": "INTERIOR",
+      "startDate": "2025-06-01",
+      "endDate": "2026-06-01",
+      "deleted": false,
+      "formulas": [
+        {
+          "formulaKey": "da.mature.avoidableGradeY",
+          "expression": "da.mature.merchantableVolume * 0.12",
+          "declaredVariables": ["da.mature.merchantableVolume"],
+          "validationErrors": [],
+          "sortOrder": 1
+        },
+        {
+          "formulaKey": "sc.PL",
+          "expression": "sc.PL * submission.blockArea",
+          "declaredVariables": ["sc.PL", "submission.blockArea"],
+          "validationErrors": [],
+          "sortOrder": 2
+        }
+      ],
+      "createdAt": "2025-05-10T09:00:00Z",
+      "updatedAt": "2025-06-01T10:00:00Z"
+    },
+    {
+      "id": 3,
+      "area": "COASTAL",
+      "startDate": "2026-06-01",
+      "endDate": "2026-09-10",
+      "deleted": false,
+      "formulas": [
+        {
+          "formulaKey": "da.mature.avoidableGradeY",
+          "expression": "da.mature.merchantableVolume * 0.18",
+          "declaredVariables": ["da.mature.merchantableVolume"],
+          "validationErrors": [],
+          "sortOrder": 1
+        },
+        {
+          "formulaKey": "sc.Hw",
+          "expression": "sc.Hw * submission.blockArea * 1.1",
+          "declaredVariables": ["sc.Hw", "submission.blockArea"],
+          "validationErrors": [],
+          "sortOrder": 2
+        }
+      ],
+      "createdAt": "2026-05-15T14:50:00Z",
+      "updatedAt": "2026-06-01T10:00:00Z"
+    },
+    {
+      "id": 4,
+      "area": "COASTAL",
+      "startDate": "2025-06-01",
+      "endDate": "2026-06-01",
+      "deleted": false,
+      "formulas": [
+        {
+          "formulaKey": "da.mature.avoidableGradeY",
+          "expression": "da.mature.merchantableVolume * 0.15",
+          "declaredVariables": ["da.mature.merchantableVolume"],
+          "validationErrors": [],
+          "sortOrder": 1
+        }
+      ],
+      "createdAt": "2025-05-10T10:00:00Z",
+      "updatedAt": "2025-06-01T10:00:00Z"
+    },
+    {
+      "id": 5,
+      "area": "INTERIOR",
+      "startDate": "2026-09-11",
+      "endDate": null,
+      "deleted": false,
+      "formulas": [
+        {
+          "formulaKey": "da.mature.avoidableGradeY",
+          "expression": "da.mature.merchantableVolume * 0.15",
+          "declaredVariables": ["da.mature.merchantableVolume"],
+          "validationErrors": [],
+          "sortOrder": 1
+        },
+        {
+          "formulaKey": "da.mature.nonMerchantableVolume",
+          "expression": "da.mature.totalVolume - da.mature.merchantableVolume",
+          "declaredVariables": ["da.mature.totalVolume", "da.mature.merchantableVolume"],
+          "validationErrors": [],
+          "sortOrder": 2
+        },
+        {
+          "formulaKey": "sc.PL",
+          "expression": "sc.PL * submission.blockArea",
+          "declaredVariables": ["sc.PL", "submission.blockArea"],
+          "validationErrors": [],
+          "sortOrder": 3
+        },
+        {
+          "formulaKey": "sc.Sx",
+          "expression": "sc.Sx * submission.blockArea * 0.9",
+          "declaredVariables": ["sc.Sx", "submission.blockArea"],
+          "validationErrors": [],
+          "sortOrder": 4
+        },
+        {
+          "formulaKey": "submission.wastePercentage",
+          "expression": "IF(da.mature.avoidableGradeY > 10, submission.blockArea * 0.05, 0)",
+          "declaredVariables": ["da.mature.avoidableGradeY", "submission.blockArea"],
+          "validationErrors": [],
+          "sortOrder": 5
+        }
+      ],
+      "createdAt": "2026-09-10T10:00:00Z",
+      "updatedAt": "2026-09-10T10:00:00Z"
+    }
+  ],
+  "page": {
+    "number": 0,
+    "size": 20,
+    "totalElements": 5,
+    "totalPages": 1
+  }
+}

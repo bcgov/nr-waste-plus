@@ -58,7 +58,7 @@ test.describe('Configuration Page', () => {
       await page.goto('/configuration');
       await page.waitForLoadState('domcontentloaded');
 
-      await expect(page.getByRole('heading', { name: 'Configuration' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Configuration', exact: true })).toBeVisible();
       await expect(page.getByText('Check and manage configuration data')).toBeVisible();
       await expect(page.getByText('District average waste volumes')).toBeVisible();
       await expect(

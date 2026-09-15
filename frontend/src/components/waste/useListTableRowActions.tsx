@@ -1,10 +1,11 @@
 import { TableShortcut, TrashCan } from '@carbon/icons-react';
 import { useNavigate } from '@tanstack/react-router';
+import { useCallback } from 'react';
 
 import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types';
-import { navigateInTree } from '@/routes/inTreePaths';
+
+import { navigateInTree, type InTreePath } from '@/routes/inTreePaths';
 import { isFutureDated } from '@/utils/businessDate';
-import { useCallback } from 'react';
 
 interface UseListTableRowActionsConfig<TRow> {
   /** The configuration type for display (e.g., "district volume", "species composition") */
@@ -17,6 +18,8 @@ interface UseListTableRowActionsConfig<TRow> {
   getStartDate: (row: TRow) => string;
   /** Custom label for the delete action (e.g., "district average volume entry") */
   deleteActionLabel: string;
+  /** Optional additional guard for resources with lifecycle-specific delete rules. */
+  canDelete?: (row: TRow) => boolean;
 }
 
 /**
@@ -39,12 +42,16 @@ export const useListTableRowActions = <
           icon: <TableShortcut />,
           onClick: (selectedRow) => {
             const path = config.routePath.replace('{id}', String(selectedRow.id));
-            navigateInTree(navigate, path as any);
+            navigateInTree(navigate, path as InTreePath);
           },
         },
       ];
 
-      if (isFutureDated(config.getStartDate(row)) && !row.endDate) {
+      if (
+        isFutureDated(config.getStartDate(row)) &&
+        !row.endDate &&
+        (config.canDelete?.(row) ?? true)
+      ) {
         actions.push({
           id: 'delete',
           label: `Delete ${config.deleteActionLabel}`,
@@ -57,6 +64,6 @@ export const useListTableRowActions = <
 
       return actions;
     },
-    [config.configType, config.routePath, config.onDeleteClick, config.getStartDate, navigate],
+    [config, navigate],
   );
 };
