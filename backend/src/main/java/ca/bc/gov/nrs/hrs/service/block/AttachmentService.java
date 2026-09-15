@@ -137,19 +137,6 @@ public class AttachmentService {
   }
 
   /**
-   * Overload for {@link #createIntent(Jwt, Long, Long, AttachmentIntentRequest)} without a JWT.
-   *
-   * @param reportingUnitId the owning reporting unit
-   * @param blockId the owning submission block
-   * @param request document metadata provided by the client
-   * @return the attachment intent response
-   */
-  public AttachmentIntentResponse createIntent(
-      Long reportingUnitId, Long blockId, AttachmentIntentRequest request) {
-    return createIntent(null, reportingUnitId, blockId, request);
-  }
-
-  /**
    * Finalizes a previously registered upload intent.
    *
    * <p>Performs a HEAD request against the object store, verifies size against the value declared
@@ -255,19 +242,6 @@ public class AttachmentService {
         attachment.getObjectKey(),
         attachment.getStatus(),
         attachment.getChecksum());
-  }
-
-  /**
-   * Overload for {@link #finalizeAttachment(Jwt, Long, Long, Long)} without a JWT.
-   *
-   * @param reportingUnitId the owning reporting unit
-   * @param blockId the owning submission block
-   * @param attachmentId the attachment intent to finalize
-   * @return the finalized attachment state
-   */
-  public AttachmentFinalizeResponse finalizeAttachment(
-      Long reportingUnitId, Long blockId, Long attachmentId) {
-    return finalizeAttachment(null, reportingUnitId, blockId, attachmentId);
   }
 
   /**

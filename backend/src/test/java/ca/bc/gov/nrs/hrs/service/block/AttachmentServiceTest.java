@@ -118,7 +118,7 @@ class AttachmentServiceTest {
             "application/pdf",
             5L * 1024 * 1024 + 1);
 
-    assertThatThrownBy(() -> service.createIntent(RU_ID, BLOCK_ID, request))
+    assertThatThrownBy(() -> service.createIntent(null, RU_ID, BLOCK_ID, request))
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(
             e ->
@@ -129,7 +129,8 @@ class AttachmentServiceTest {
   @Test
   @DisplayName("Rejects invalid document type")
   void rejectsInvalidDocumentType() {
-    assertThatThrownBy(() -> service.createIntent(RU_ID, BLOCK_ID, intentRequest("NOT_A_TYPE")))
+    assertThatThrownBy(
+            () -> service.createIntent(null, RU_ID, BLOCK_ID, intentRequest("NOT_A_TYPE")))
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(
             e ->
@@ -146,7 +147,10 @@ class AttachmentServiceTest {
     assertThatThrownBy(
             () ->
                 service.createIntent(
-                    RU_ID, BLOCK_ID, intentRequest(AttachmentDocumentType.FINAL_MAP.name())))
+                    null,
+                    RU_ID,
+                    BLOCK_ID,
+                    intentRequest(AttachmentDocumentType.FINAL_MAP.name())))
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(
             e ->
@@ -176,7 +180,7 @@ class AttachmentServiceTest {
 
     AttachmentIntentResponse response =
         service.createIntent(
-            RU_ID, BLOCK_ID, intentRequest(AttachmentDocumentType.FINAL_MAP.name()));
+            null, RU_ID, BLOCK_ID, intentRequest(AttachmentDocumentType.FINAL_MAP.name()));
 
     assertThat(response.attachmentId()).isEqualTo(ATTACHMENT_ID);
     assertThat(response.objectKey()).isEqualTo("hrs/block/2/attachment/501/report_FINAL-MAP.pdf");
@@ -208,7 +212,7 @@ class AttachmentServiceTest {
     given(objectStorage.presignPut(any(), any(), any()))
         .willReturn(new PresignedUpload("https://s3.example.com/upload", EXPIRY));
 
-    service.createIntent(RU_ID, BLOCK_ID, intentRequest("  FINAL_MAP  "));
+    service.createIntent(null, RU_ID, BLOCK_ID, intentRequest("  FINAL_MAP  "));
 
     assertThat(captor.getValue().getDocumentType())
         .isEqualTo(AttachmentDocumentType.FINAL_MAP.name());
@@ -222,7 +226,7 @@ class AttachmentServiceTest {
     given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
         .willReturn(Optional.empty());
 
-    assertThatThrownBy(() -> service.finalizeAttachment(RU_ID, BLOCK_ID, ATTACHMENT_ID))
+    assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(
             e ->
@@ -240,7 +244,7 @@ class AttachmentServiceTest {
     given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
         .willReturn(Optional.of(attachment));
 
-    assertThatThrownBy(() -> service.finalizeAttachment(RU_ID, BLOCK_ID, ATTACHMENT_ID))
+    assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(
             e ->
@@ -254,7 +258,7 @@ class AttachmentServiceTest {
     given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .willReturn(Optional.empty());
 
-    assertThatThrownBy(() -> service.finalizeAttachment(RU_ID, BLOCK_ID, ATTACHMENT_ID))
+    assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(
             e ->
@@ -274,7 +278,7 @@ class AttachmentServiceTest {
             new ObjectStorageObjectNotFoundException(
                 "hrs/block/2/attachment/501/report_FINAL-MAP.pdf", new RuntimeException()));
 
-    assertThatThrownBy(() -> service.finalizeAttachment(RU_ID, BLOCK_ID, ATTACHMENT_ID))
+    assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(
             e ->
@@ -292,7 +296,7 @@ class AttachmentServiceTest {
     given(objectStorage.headObject(any()))
         .willReturn(new StoredObjectSummary(2048L, "abc123"));
 
-    assertThatThrownBy(() -> service.finalizeAttachment(RU_ID, BLOCK_ID, ATTACHMENT_ID))
+    assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(
             e ->
@@ -310,7 +314,7 @@ class AttachmentServiceTest {
     given(objectStorage.headObject(any()))
         .willReturn(new StoredObjectSummary(5L * 1024 * 1024 + 1, "abc123"));
 
-    assertThatThrownBy(() -> service.finalizeAttachment(RU_ID, BLOCK_ID, ATTACHMENT_ID))
+    assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(
             e ->
@@ -330,7 +334,7 @@ class AttachmentServiceTest {
     given(objectStorage.headObject(any()))
         .willReturn(new StoredObjectSummary(1024L, "different-checksum"));
 
-    assertThatThrownBy(() -> service.finalizeAttachment(RU_ID, BLOCK_ID, ATTACHMENT_ID))
+    assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
         .isInstanceOf(ResponseStatusException.class)
         .satisfies(
             e ->
@@ -349,7 +353,7 @@ class AttachmentServiceTest {
         .willReturn(new StoredObjectSummary(1024L, "abc123"));
 
     AttachmentFinalizeResponse response =
-        service.finalizeAttachment(RU_ID, BLOCK_ID, ATTACHMENT_ID);
+        service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID);
 
     assertThat(response.attachmentId()).isEqualTo(ATTACHMENT_ID);
     assertThat(response.status()).isEqualTo("FINALIZED");
@@ -364,6 +368,7 @@ class AttachmentServiceTest {
     assertThatThrownBy(
             () ->
                 service.createIntent(
+                    null,
                     RU_ID,
                     BLOCK_ID,
                     intentRequest(AttachmentDocumentType.FINAL_MAP.name())))
@@ -448,7 +453,7 @@ class AttachmentServiceTest {
   void rejectsFinalizeWhenReportingUnitNotFound() {
     given(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).willReturn(Optional.empty());
 
-    assertThatThrownBy(() -> service.finalizeAttachment(RU_ID, BLOCK_ID, ATTACHMENT_ID))
+    assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
         .isInstanceOf(ResponseStatusException.class)
         .extracting(e -> ((ResponseStatusException) e).getStatusCode())
         .isEqualTo(HttpStatus.NOT_FOUND);
