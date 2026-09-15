@@ -11,22 +11,22 @@ interface FormulaConfigurationDetailHeaderProps {
 }
 
 const FormulaConfigurationDetailHeader: FC<FormulaConfigurationDetailHeaderProps> = ({
+  area,
   startDate,
   endDate,
 }) => {
   return (
-    <>
-      <Column lg={4} md={4} sm={4} className="district-volume-detail__start-date">
+    <Column lg={16} md={8} sm={4} className="detail-header">
+      <div className="detail-header__meta">
+        <ReadonlyInput label="Area">{area === 'INTERIOR' ? 'Interior' : 'Coastal'}</ReadonlyInput>
         <ReadonlyInput label="Start date">
           {startDate && <DateTag date={startDate} format="MMMM dd, yyyy" />}
         </ReadonlyInput>
-      </Column>
-      <Column lg={12} md={4} sm={4} className="district-volume-detail__end-date">
         <ReadonlyInput label="End date">
           {endDate ? <DateTag date={endDate} format="MMMM dd, yyyy" /> : 'Open-ended'}
         </ReadonlyInput>
-      </Column>
-    </>
+      </div>
+    </Column>
   );
 };
 
