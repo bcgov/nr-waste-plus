@@ -269,8 +269,8 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
         .andExpect(jsonPath("$.content[0].createdAt").isNotEmpty())
         .andExpect(jsonPath("$.content[0].updatedAt").isNotEmpty())
         .andExpect(jsonPath("$.content[0].formulas").doesNotExist())
-        .andExpect(jsonPath("$.size").value(1))
-        .andExpect(jsonPath("$.number").value(0));
+        .andExpect(jsonPath("$.page.size").value(1))
+        .andExpect(jsonPath("$.page.number").value(0));
   }
 
   @Test
@@ -304,10 +304,10 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   @DisplayName("List excludes deleted sets and orders newest start date first")
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void listExcludesDeletedSetsAndOrdersByStartDate() throws Exception {
-    String deletedLocation = createFormulaSetWithTwoRows(LocalDate.now().plusDays(60));
+    createFormulaSetWithTwoRows(LocalDate.now().plusDays(60));
+    String deletedLocation = createFormulaSetWithTwoRows(LocalDate.now().plusDays(90));
     long deletedId = Long.parseLong(
         deletedLocation.substring(deletedLocation.lastIndexOf('/') + 1));
-    createFormulaSetWithTwoRows(LocalDate.now().plusDays(90));
 
     mockMvc.perform(delete("/api/configuration/formulas/" + deletedId)
             .with(SecurityMockMvcRequestPostProcessors.csrf()))
@@ -316,7 +316,7 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
     mockMvc.perform(get("/api/configuration/formulas"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content[0].startDate")
-            .value(LocalDate.now().plusDays(90).toString()))
+            .value(LocalDate.now().plusDays(60).toString()))
         .andExpect(jsonPath("$.content[?(@.id == " + deletedId + ")]").doesNotExist());
   }
 
