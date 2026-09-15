@@ -23,7 +23,7 @@
     },
     {
       "name": "Block attachment upload intent - oversized",
-      "priority": 2,
+      "priority": 1,
       "request": {
         "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/intent",
         "method": "POST",
@@ -44,7 +44,7 @@
     },
     {
       "name": "Block attachment upload intent - invalid document type",
-      "priority": 2,
+      "priority": 1,
       "request": {
         "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/intent",
         "method": "POST",
