@@ -152,9 +152,10 @@ public class AttachmentService {
   /**
    * Finalizes a previously registered upload intent.
    *
-   * <p>Performs a HEAD request against the object store, verifies size and checksum against the
-   * values declared at intent time, and only then transitions {@code status} from
-   * {@code UPLOADING} to {@code FINALIZED}.
+   * <p>Performs a HEAD request against the object store, verifies size against the value declared
+   * at intent time, captures the object store checksum (ETag), and transitions {@code status} from
+   * {@code UPLOADING} to {@code FINALIZED}. On subsequent retries, verifies the checksum has not
+   * changed.
    *
    * @param jwt the JWT principal for the authenticated caller, if available
    * @param reportingUnitId the owning reporting unit
@@ -229,6 +230,7 @@ public class AttachmentService {
               attachment.getFileSizeBytes(), stored.sizeBytes()));
     }
 
+    // Checksum is captured on initial finalize; verify it has not drifted on idempotent retries.
     if (StringUtils.isNotBlank(attachment.getChecksum())
         && !attachment.getChecksum().equals(stored.checksum())) {
       throw new ResponseStatusException(
