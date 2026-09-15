@@ -169,7 +169,10 @@ export function extractVariables(node: MathNode): string[] {
  * (matching the fixed-over-dynamic precedence in useFormulaEngine).
  */
 export function buildNestedScope(flat: Record<string, number>): Record<string, unknown> {
-  const nested: Record<string, unknown> = {};
+  // Use a null-prototype object for the root so dangerous keys like
+  // `__proto__` or `constructor` cannot resolve to inherited Object.prototype
+  // members (prototype pollution guard).
+  const nested: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
 
   for (const [key, value] of Object.entries(flat)) {
     if (!key.includes('.')) {
@@ -183,8 +186,16 @@ export function buildNestedScope(flat: Record<string, number>): Record<string, u
 
     for (let i = 0; i < parts.length - 1; i++) {
       const part = parts[i];
-      if (!(part in current) || typeof current[part] !== 'object' || current[part] === null) {
-        current[part] = {};
+      // Own-property check only: `part in current` would treat inherited
+      // members (e.g. `__proto__`) as existing namespaces and descend into
+      // Object.prototype. Null-prototype namespace objects make any `__proto__`
+      // assignment a plain data property instead of a prototype write.
+      if (
+        !Object.hasOwn(current, part) ||
+        typeof current[part] !== 'object' ||
+        current[part] === null
+      ) {
+        current[part] = Object.create(null) as Record<string, unknown>;
       }
       current = current[part] as Record<string, unknown>;
     }

@@ -137,6 +137,32 @@ describe('FormulaInput utils', () => {
     it('shouldReturnEmptyObject_whenInputIsEmpty', () => {
       expect(buildNestedScope({})).toEqual({});
     });
+
+    it('shouldNotPolluteObjectPrototype_whenKeyUsesDangerousSegments', () => {
+      buildNestedScope({ '__proto__.polluted': 123, 'constructor.prototype.hacked': 1 });
+
+      // If the scope writer had descended into Object.prototype, a plain
+      // object would suddenly expose these keys.
+      const clean: Record<string, unknown> = {};
+      expect(clean.polluted).toBeUndefined();
+      expect(clean.hacked).toBeUndefined();
+      expect(Object.prototype.hasOwnProperty.call(clean, 'polluted')).toBe(false);
+      expect(Object.prototype.hasOwnProperty.call(clean, 'hacked')).toBe(false);
+    });
+
+    it('shouldKeepDangerousSegmentsAsOwnKeys_whenBuildingNestedScope', () => {
+      const nested = buildNestedScope({ '__proto__.polluted': 123, 'constructor.prototype.hacked': 1 });
+
+      expect(Object.getPrototypeOf(nested)).toBeNull();
+      expect(Object.hasOwn(nested, '__proto__')).toBe(true);
+      expect(Object.hasOwn(nested, 'constructor')).toBe(true);
+
+      const protoScope = nested['__proto__'] as Record<string, unknown>;
+      expect(protoScope.polluted).toBe(123);
+
+      const ctorScope = nested['constructor'] as Record<string, unknown>;
+      expect((ctorScope['prototype'] as Record<string, unknown>).hacked).toBe(1);
+    });
   });
 
   describe('evaluateFormula with nested variables', () => {
