@@ -10,7 +10,6 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.FormulaSetRowEntity;
 import ca.bc.gov.nrs.hrs.repository.FormulaSetRepository;
 import ca.bc.gov.nrs.hrs.repository.FormulaSetRowRepository;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -25,6 +24,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 /** Owns the independent date-effective formula-set lifecycle. */
@@ -47,7 +48,7 @@ public class FormulaSetService {
    *   <li>Create the new set.</li>
    * </ol>
    */
-  @Transactional
+  @Transactional(isolation = Isolation.SERIALIZABLE)
   public FormulaSetResponse create(FormulaSetRequest request) {
     validateRequest(request);
     LocalDate today = LocalDate.now();
@@ -56,13 +57,14 @@ public class FormulaSetService {
     }
 
     // Data-integrity guard: more than one open-ended set is a data issue.
-    List<FormulaSetEntity> future = setRepository.findFuture(request.area(), today);
-    List<FormulaSetEntity> openEnded = future.stream()
-        .filter(set -> set.getEndDate() == null).toList();
-    if (openEnded.size() > 1) {
+    List<FormulaSetEntity> openEndedAll = setRepository.findAllOpenEnded(request.area());
+    if (openEndedAll.size() > 1) {
       throw conflict("Data integrity issue: multiple open-ended formula sets exist for area "
           + request.area() + ".");
     }
+    List<FormulaSetEntity> future = setRepository.findFuture(request.area(), today);
+    List<FormulaSetEntity> openEnded = future.stream()
+        .filter(set -> set.getEndDate() == null).toList();
 
     // Close the predecessor if it starts before the new entry.
     FormulaSetEntity predecessor = setRepository
@@ -107,6 +109,7 @@ public class FormulaSetService {
       return response(set, existing);
     }
     replaceRowsInPlace(id, existing, request.formulas());
+    setRepository.save(set);
     return response(set,
         rowRepository.findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(id));
   }
@@ -125,7 +128,7 @@ public class FormulaSetService {
   }
 
   /** Reads the set effective for a submission date and selected area. */
-  @Transactional(Transactional.TxType.SUPPORTS)
+  @Transactional(readOnly = true)
   public FormulaSetResponse effective(LocalDate date, Area area) {
     FormulaSetEntity set = setRepository.findEffective(area, date)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -136,14 +139,15 @@ public class FormulaSetService {
   }
 
   /** Retrieves the non-deleted formula sets for the administration list. */
-  @Transactional(Transactional.TxType.SUPPORTS)
+  @Transactional(readOnly = true)
   public Page<FormulaSetListItemDto> list(Pageable pageable) {
+    // The repository's start-date/id order is the administration list contract.
     Pageable serverPage = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
     return setRepository.findAllLive(serverPage);
   }
 
   /** Retrieves a single formula set by ID. */
-  @Transactional(Transactional.TxType.SUPPORTS)
+  @Transactional(readOnly = true)
   public FormulaSetResponse getById(Long id) {
     FormulaSetEntity set = load(id);
     List<FormulaSetRowEntity> rows = rowRepository
@@ -152,9 +156,9 @@ public class FormulaSetService {
   }
 
   /** Retrieves the current open-ended formula set for carry-forward. */
-  @Transactional(Transactional.TxType.SUPPORTS)
+  @Transactional(readOnly = true)
   public FormulaSetResponse currentOpenEnded(Area area) {
-    FormulaSetEntity set = setRepository.findCurrentOpenEnded(area).orElseThrow(
+    FormulaSetEntity set = setRepository.findCurrentOpenEnded(area, LocalDate.now()).orElseThrow(
         () -> new ResponseStatusException(
             HttpStatus.NOT_FOUND, "No current open-ended formula set exists for the area."));
     List<FormulaSetRowEntity> rows =
