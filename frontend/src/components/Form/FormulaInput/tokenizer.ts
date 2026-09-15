@@ -17,7 +17,7 @@ function classifyIdentifier(
   return 'variable';
 }
 
-/** Tokenizes a leading identifier span starting at `i`. */
+/** Tokenizes a leading identifier span starting at `i`, including dotted paths. */
 function tokenizeIdentifier(
   formula: string,
   i: number,
@@ -26,6 +26,25 @@ function tokenizeIdentifier(
 ): PositionedToken {
   let j = i;
   while (j < formula.length && /\w/.test(formula[j])) j++;
+
+  // Consume dotted identifier chains (e.g. `block.area.road`) as a single token.
+  // This ensures dotted variable names are treated as atomic tokens rather than
+  // being split into separate identifiers and punctuation.
+  while (j < formula.length && formula[j] === '.') {
+    // Peek ahead: is there a `\w+` segment after the dot?
+    const dotPos = j;
+    let k = j + 1;
+    while (k < formula.length && /\w/.test(formula[k])) k++;
+
+    if (k > dotPos + 1) {
+      // Valid dot + identifier — consume the entire chain
+      j = k;
+    } else {
+      // Dot not followed by identifier (e.g. `3.14` decimal) — stop
+      break;
+    }
+  }
+
   const name = formula.slice(i, j);
   return {
     type: classifyIdentifier(name, functionNames, variableNames),
@@ -73,6 +92,8 @@ function classifyAstNodes(
         type: string;
         name?: string;
         fn?: { name?: string } | string;
+        object?: MathNode;
+        index?: { dimensions?: Array<{ type: string; value?: string }> };
       };
       if (n.type === 'FunctionNode') {
         const fnName = typeof n.fn === 'string' ? n.fn : (n.fn as { name?: string })?.name;
@@ -80,6 +101,42 @@ function classifyAstNodes(
       } else if (n.type === 'SymbolNode' && n.name) {
         if (!isMathBuiltin(n.name) && !functionNames.has(n.name)) {
           variableNames.add(n.name);
+        }
+      } else if (n.type === 'AccessorNode') {
+        // Reconstruct full dotted path for AccessorNode chains
+        // e.g. AccessorNode("road") → AccessorNode("area") → SymbolNode("block")
+        // produces "block.area.road"
+        const parts: string[] = [];
+        let current: MathNode = node;
+        let valid = true;
+        while (current) {
+          const cn = current as unknown as {
+            type: string;
+            name?: string;
+            object?: MathNode;
+            index?: { dimensions?: Array<{ type: string; value?: string }> };
+          };
+          if (cn.type === 'SymbolNode' && cn.name) {
+            parts.unshift(cn.name);
+            break;
+          }
+          if (cn.type === 'AccessorNode' && cn.index?.dimensions?.[0]) {
+            const dim = cn.index.dimensions[0] as unknown as { type: string; value?: string };
+            if (dim.type === 'ConstantNode' && dim.value) {
+              parts.unshift(dim.value);
+            }
+            current = cn.object!;
+            continue;
+          }
+          valid = false;
+          break;
+        }
+        if (valid && parts.length > 1) {
+          const fullPath = parts.join('.');
+          const rootName = parts[0];
+          if (!isMathBuiltin(rootName) && !functionNames.has(rootName)) {
+            variableNames.add(fullPath);
+          }
         }
       }
     });

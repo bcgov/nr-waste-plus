@@ -1,4 +1,4 @@
-import { AccumulationRain, ArrowRight, CropGrowth } from '@carbon/icons-react';
+import { AccumulationRain, ArrowRight, CropGrowth, Function } from '@carbon/icons-react';
 import { Column } from '@carbon/react';
 import { useNavigate } from '@tanstack/react-router';
 import { type FC } from 'react';
@@ -52,6 +52,22 @@ const ConfigurationPage: FC = () => {
               linkVariant={true}
               linkIcon={<ArrowRight />}
               onButtonClick={() => navigateInTree(navigate, '/configuration/species-composition')}
+            />
+          </div>
+        </div>
+
+        <div className="configuration-section">
+          <h2 className="configuration-section__heading">Formula configuration</h2>
+
+          <div className="configuration-section__cards">
+            <ConfigurationCard
+              icon={<Function />}
+              title="Formula sets"
+              description="Manage formula sets with date-effective lifecycle for district average calculations"
+              buttonLabel="View or update formulas"
+              linkVariant={true}
+              linkIcon={<ArrowRight />}
+              onButtonClick={() => navigateInTree(navigate, '/configuration/formulas')}
             />
           </div>
         </div>

@@ -1,0 +1,66 @@
+.formula-configuration-table {
+  margin-top: 16px;
+
+  .skeleton {
+    height: 16px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+}
+
+.formula-configuration-error {
+  padding: 24px;
+  text-align: center;
+  color: #da1e28;
+}
+
+.formula-configuration-empty {
+  padding: 48px;
+  text-align: center;
+  color: #525252;
+}
+
+.formula-configuration-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 16px;
+}
+
+.pagination-info {
+  font-size: 0.875rem;
+  color: #525252;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.editable {
+  background-color: #19803815;
+  color: #198038;
+}
+
+.status-badge.readonly {
+  background-color: #8d8d8d15;
+  color: #525252;
+}

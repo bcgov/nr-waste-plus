@@ -9,6 +9,8 @@ import ConfigurationDistrictVolumeListPage from '@/pages/ConfigurationDistrictVo
 import ConfigurationPage from '@/pages/ConfigurationPage';
 import DistrictVolumeTableDetailPage from '@/pages/DistrictVolumeTableDetail';
 import DistrictVolumeTableUploadPage from '@/pages/DistrictVolumeTableUpload';
+import FormulaConfigurationDetailPage from '@/pages/FormulaConfigurationDetail';
+import FormulaConfigurationListPage from '@/pages/FormulaConfigurationList';
 import LandingPage from '@/pages/Landing';
 import MyClientListPage from '@/pages/MyClientList';
 import NoRolePage from '@/pages/NoRole';
@@ -22,6 +24,7 @@ import SpeciesCompositionUploadPage from '@/pages/SpeciesCompositionUpload';
 import WasteSearchPage from '@/pages/WasteSearch';
 import { withPersistentRedirect } from '@/routes/guards/withPersistentRedirect';
 import { withPublicOnly } from '@/routes/guards/withPublicOnly';
+import FormulaConfigurationCreatePage from '@/pages/FormulaConfigurationCreate';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -222,6 +225,45 @@ export const ROUTES: RouteDescription[] = [
     component: () => (
       <Layout>
         <SpeciesCompositionDetailPage />
+      </Layout>
+    ),
+    isSideMenu: false,
+    protected: true,
+    roles: [{ role: Role.ADMIN, clients: [] }],
+    featureFlag: 'configuration-enabled',
+  },
+  {
+    path: '/configuration/formulas',
+    id: 'Formula Configuration',
+    component: () => (
+      <Layout>
+        <FormulaConfigurationListPage />
+      </Layout>
+    ),
+    isSideMenu: false,
+    protected: true,
+    roles: [{ role: Role.ADMIN, clients: [] }],
+    featureFlag: 'configuration-enabled',
+  },
+  {
+    path: '/configuration/formulas/$id',
+    id: 'Formula Configuration Detail',
+    component: () => (
+      <Layout>
+        <FormulaConfigurationDetailPage />
+      </Layout>
+    ),
+    isSideMenu: false,
+    protected: true,
+    roles: [{ role: Role.ADMIN, clients: [] }],
+    featureFlag: 'configuration-enabled',
+  },
+  {
+    path: '/configuration/formulas/new',
+    id: 'Create Formula Configuration',
+    component: () => (
+      <Layout>
+        <FormulaConfigurationCreatePage />
       </Layout>
     ),
     isSideMenu: false,
