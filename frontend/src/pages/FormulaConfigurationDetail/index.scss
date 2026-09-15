@@ -6,6 +6,14 @@
   margin-top: $spacing-06;
 }
 
+.formula-set-detail-column {
+  &__banner,
+  &__notification,
+  &__actions {
+    margin-bottom: $spacing-06;
+  }
+}
+
 .formula-config-sections {
   margin-top: $spacing-07;
 }
@@ -174,6 +182,12 @@
   overflow-x: auto;
 }
 
+.validation-errors {
+  color: $support-error;
+  font-size: 0.75rem;
+  margin-top: $spacing-03;
+}
+
 /* === Action Bar === */
 .detail-actions {
   display: flex;
@@ -181,6 +195,10 @@
   gap: $spacing-03;
   padding-top: $spacing-05;
   border-top: 1px solid $border-subtle-01;
+}
+
+.formula-set-detail-column__actions {
+  @extend .detail-actions;
 }
 
 /* === Responsive === */
