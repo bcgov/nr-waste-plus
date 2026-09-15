@@ -269,8 +269,8 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
         .andExpect(jsonPath("$.content[0].createdAt").isNotEmpty())
         .andExpect(jsonPath("$.content[0].updatedAt").isNotEmpty())
         .andExpect(jsonPath("$.content[0].formulas").doesNotExist())
-        .andExpect(jsonPath("$.size").value(1))
-        .andExpect(jsonPath("$.number").value(0));
+        .andExpect(jsonPath("$.page.size").value(1))
+        .andExpect(jsonPath("$.page.number").value(0));
   }
 
   @Test
@@ -304,10 +304,10 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   @DisplayName("List excludes deleted sets and orders newest start date first")
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void listExcludesDeletedSetsAndOrdersByStartDate() throws Exception {
-    String deletedLocation = createFormulaSetWithTwoRows(LocalDate.now().plusDays(60));
+    createFormulaSetWithTwoRows(LocalDate.now().plusDays(60));
+    String deletedLocation = createFormulaSetWithTwoRows(LocalDate.now().plusDays(90));
     long deletedId = Long.parseLong(
         deletedLocation.substring(deletedLocation.lastIndexOf('/') + 1));
-    createFormulaSetWithTwoRows(LocalDate.now().plusDays(90));
 
     mockMvc.perform(delete("/api/configuration/formulas/" + deletedId)
             .with(SecurityMockMvcRequestPostProcessors.csrf()))
@@ -316,7 +316,7 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
     mockMvc.perform(get("/api/configuration/formulas"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content[0].startDate")
-            .value(LocalDate.now().plusDays(90).toString()))
+            .value(LocalDate.now().plusDays(60).toString()))
         .andExpect(jsonPath("$.content[?(@.id == " + deletedId + ")]").doesNotExist());
   }
 
@@ -333,11 +333,11 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   }
 
   @Test
-  @DisplayName("Effective returns 404 when no set found")
+  @DisplayName("Effective rejects non-admin users")
   @WithMockJwt
-  void effectiveReturns404WhenNotFound() throws Exception {
+  void effectiveRejectsNonAdminUsers() throws Exception {
     mockMvc.perform(get("/api/configuration/formulas/2000-01-01/COASTAL"))
-        .andExpect(status().isNotFound());
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -354,8 +354,9 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void variablesReturns404WhenNoSpeciesComposition() throws Exception {
     mockMvc.perform(get("/api/configuration/formulas/variables")
-            .param("date", "2020-06-01")
-            .param("area", "INTERIOR"))
+            .param("date", "2020-08-01")
+            .param("area", "INTERIOR")
+            .param("districtCode", "DCC"))
         .andExpect(status().isNotFound());
   }
 
@@ -364,7 +365,8 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   void variablesRejectsUnauthenticated() throws Exception {
     mockMvc.perform(get("/api/configuration/formulas/variables")
             .param("date", "2020-06-01")
-            .param("area", "INTERIOR"))
+            .param("area", "INTERIOR")
+            .param("districtCode", "DCC"))
         .andExpect(status().isUnauthorized());
   }
 
@@ -383,6 +385,16 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   void variablesRejectsMissingArea() throws Exception {
     mockMvc.perform(get("/api/configuration/formulas/variables")
             .param("date", "2020-06-01"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("Variables rejects missing districtCode parameter")
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
+  void variablesRejectsMissingDistrictCode() throws Exception {
+    mockMvc.perform(get("/api/configuration/formulas/variables")
+            .param("date", "2020-06-01")
+            .param("area", "INTERIOR"))
         .andExpect(status().isBadRequest());
   }
 
