@@ -157,6 +157,75 @@ export interface UseMonacoFormulaReturn {
 let providerRefCount = 0;
 let sharedDisposables: IDisposable[] = [];
 
+// ─── Dotted Word Detection ────────────────────────────────────────────────────
+
+/**
+ * Scans backward from Monaco's detected word boundary to find the full
+ * dotted identifier path (e.g., "da.mature.total"). Monaco's default word
+ * detection treats `.` as a separator, returning only the last segment.
+ * This function absorbs preceding `.` + segment pairs to recover the
+ * complete variable name.
+ *
+ * @returns The full dotted word, its 1-based inclusive start column, and
+ *          1-based exclusive end column — or `null` if no word is found.
+ */
+function getDottedWordRange(
+  model: MonacoEditorNS.ITextModel,
+  position: Position,
+  /** When true, also scans forward through dot-separated segments to find
+   *  the full dotted path (needed for hover). When false (default), only
+   *  scans backward — suitable for autocomplete where the range should be
+   *  what the user has typed so far. */
+  scanForward = false,
+): { word: string; startColumn: number; endColumn: number } | null {
+  const lineContent = model.getLineContent(position.lineNumber);
+  const monacoWord = model.getWordUntilPosition(position);
+
+  // Start from Monaco's detected word start (0-based)
+  let dottedStart = monacoWord.startColumn - 1;
+
+  // Scan backward: when we see a dot followed by word chars, absorb that segment
+  while (dottedStart > 0 && lineContent[dottedStart - 1] === '.') {
+    dottedStart--; // skip the dot
+    while (dottedStart > 0 && /[a-zA-Z0-9_]/.test(lineContent[dottedStart - 1])) {
+      dottedStart--;
+    }
+  }
+
+  // Scan forward (for hover): absorb remaining chars of the current word
+  // (Monaco's getWordUntilPosition only returns up to the cursor), then
+  // absorb dot + word-char segments after the current word.
+  let dottedEnd = monacoWord.endColumn - 1; // 0-based exclusive
+  if (scanForward) {
+    // First, finish the current word (cursor may be mid-word)
+    while (dottedEnd < lineContent.length && /[a-zA-Z0-9_]/.test(lineContent[dottedEnd])) {
+      dottedEnd++;
+    }
+    // Then, absorb dot-separated segments after the current word
+    while (dottedEnd < lineContent.length && lineContent[dottedEnd] === '.') {
+      dottedEnd++; // skip the dot
+      while (dottedEnd < lineContent.length && /[a-zA-Z0-9_]/.test(lineContent[dottedEnd])) {
+        dottedEnd++;
+      }
+    }
+  }
+
+  const endCol = (scanForward ? dottedEnd : monacoWord.endColumn - 1) + 1; // 1-based exclusive
+
+  // Build the lookup word (trim any trailing dot from the range)
+  let lookupEnd = endCol - 1; // 0-based exclusive
+  while (lookupEnd > dottedStart && lineContent[lookupEnd - 1] === '.') {
+    lookupEnd--;
+  }
+  const word = lineContent.substring(dottedStart, lookupEnd);
+
+  return {
+    word,
+    startColumn: dottedStart + 1, // 1-based inclusive
+    endColumn: endCol, // 1-based exclusive
+  };
+}
+
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 /**
@@ -312,21 +381,32 @@ export function useMonacoFormula({
 
   /**
    * Provides variable names (with current values) and mathjs built-in snippets
-   * as completion suggestions. Triggered on identifier characters.
+   * as completion suggestions. Triggered on identifier characters and the dot
+   * separator so namespace suggestions appear immediately after typing `da.`.
    * Pushes to sharedDisposables — global provider shared across instances.
    */
   const registerCompletions = useCallback((monaco: Monaco) => {
     sharedDisposables.push(
       monaco.languages.registerCompletionItemProvider(FORMULA_LANGUAGE_ID, {
-        triggerCharacters: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'.split(''),
+        triggerCharacters: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.'.split(''),
         provideCompletionItems(model: MonacoEditorNS.ITextModel, position: Position) {
-          const word = model.getWordUntilPosition(position);
-          const range = {
-            startLineNumber: position.lineNumber,
-            endLineNumber: position.lineNumber,
-            startColumn: word.startColumn,
-            endColumn: word.endColumn,
-          };
+          const dotted = getDottedWordRange(model, position);
+          const range = dotted
+            ? {
+                startLineNumber: position.lineNumber,
+                endLineNumber: position.lineNumber,
+                startColumn: dotted.startColumn,
+                endColumn: dotted.endColumn,
+              }
+            : (() => {
+                const word = model.getWordUntilPosition(position);
+                return {
+                  startLineNumber: position.lineNumber,
+                  endLineNumber: position.lineNumber,
+                  startColumn: word.startColumn,
+                  endColumn: word.endColumn,
+                };
+              })();
 
           // Variable suggestions — show current value in detail
           const varSuggestions = Object.entries(variablesRef.current).map(([name, value]) => ({
@@ -371,15 +451,15 @@ export function useMonacoFormula({
     sharedDisposables.push(
       monaco.languages.registerHoverProvider(FORMULA_LANGUAGE_ID, {
         provideHover(model: MonacoEditorNS.ITextModel, position: Position) {
-          const word = model.getWordAtPosition(position);
-          if (!word) return null;
+          const dotted = getDottedWordRange(model, position, true);
+          if (!dotted || dotted.word.length === 0) return null;
 
-          const name = word.word;
+          const name = dotted.word;
           const range = {
             startLineNumber: position.lineNumber,
             endLineNumber: position.lineNumber,
-            startColumn: word.startColumn,
-            endColumn: word.endColumn,
+            startColumn: dotted.startColumn,
+            endColumn: dotted.endColumn,
           };
 
           // User variable — show name + live value

@@ -67,10 +67,9 @@ export interface FormulaInputProps {
   dynamicParams: Record<string, number>;
 
   /**
-   * Starting formula shown when the editor first mounts.
-   * **Note:** this value is read once on mount and is not reactive — changing it
-   * after the component mounts will have no effect. To reset the formula after
-   * mount, remount the component with a new `key`.
+   * Starting formula shown when the editor mounts. Changes from the parent are
+   * synchronized after mount so asynchronously loaded formulas can populate the
+   * editor.
    * @default ''
    */
   initialFormula?: string;
