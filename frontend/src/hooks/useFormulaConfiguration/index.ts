@@ -1,8 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
-const formulaConfiguration = API.formulaConfiguration;
-
 import type {
   FormulaSetResponse,
   FormulaSetRequest,
@@ -15,6 +13,8 @@ import type { SortDirectionType } from '@/services/types';
 import { notifyProblemDetailsError, type QueryNotificationOptions } from '@/config/react-query/hooks';
 import API from '@/services/APIs';
 import { generateSortArray } from '@/services/utils';
+
+const formulaConfiguration = API.formulaConfiguration;
 
 export type FormulaConfigurationQueryParams = {
   page: number;
