@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.service.block;
 
 import ca.bc.gov.nrs.hrs.configuration.ObjectStorageProperties;
+import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentDocumentType;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentFinalizeResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentRequest;
@@ -8,17 +9,22 @@ import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentStatus;
 import ca.bc.gov.nrs.hrs.entity.block.BlockAttachmentEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
+import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageObjectNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageProvider;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.StoredObjectSummary;
 import ca.bc.gov.nrs.hrs.repository.block.BlockAttachmentRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
+import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -41,6 +47,7 @@ public class AttachmentService {
 
   private final BlockAttachmentRepository attachmentRepository;
   private final BlockRepository blockRepository;
+  private final ReportingUnitRepository reportingUnitRepository;
   private final ObjectStorageProvider objectStorage;
   private final ObjectStorageProperties objectStorageProperties;
 
@@ -50,6 +57,7 @@ public class AttachmentService {
    * <p>The attached row is persisted immediately with {@code status = UPLOADING} so the returned
    * object key and attachment id are stable for the duration of the upload.
    *
+   * @param jwt the JWT principal for the authenticated caller, if available
    * @param reportingUnitId the owning reporting unit
    * @param blockId the owning submission block
    * @param request document metadata provided by the client
@@ -58,7 +66,7 @@ public class AttachmentService {
   @NewSpan
   @Transactional
   public AttachmentIntentResponse createIntent(
-      Long reportingUnitId, Long blockId, AttachmentIntentRequest request) {
+      Jwt jwt, Long reportingUnitId, Long blockId, AttachmentIntentRequest request) {
 
     long maxSize = objectStorageProperties.getMaxAttachmentSizeBytes();
     if (request.declaredSizeBytes() > maxSize) {
@@ -75,6 +83,17 @@ public class AttachmentService {
                 new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Invalid documentType: " + request.documentType()));
+
+    ReportingUnitEntity reportingUnit =
+        reportingUnitRepository
+            .findByIdAndDeletedFalse(reportingUnitId)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        String.format("Reporting unit %d not found", reportingUnitId)));
+
+    validateClientAccess(jwt, reportingUnit);
 
     blockRepository
         .findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId)
@@ -118,12 +137,26 @@ public class AttachmentService {
   }
 
   /**
+   * Overload for {@link #createIntent(Jwt, Long, Long, AttachmentIntentRequest)} without a JWT.
+   *
+   * @param reportingUnitId the owning reporting unit
+   * @param blockId the owning submission block
+   * @param request document metadata provided by the client
+   * @return the attachment intent response
+   */
+  public AttachmentIntentResponse createIntent(
+      Long reportingUnitId, Long blockId, AttachmentIntentRequest request) {
+    return createIntent(null, reportingUnitId, blockId, request);
+  }
+
+  /**
    * Finalizes a previously registered upload intent.
    *
    * <p>Performs a HEAD request against the object store, verifies size and checksum against the
    * values declared at intent time, and only then transitions {@code status} from
    * {@code UPLOADING} to {@code FINALIZED}.
    *
+   * @param jwt the JWT principal for the authenticated caller, if available
    * @param reportingUnitId the owning reporting unit
    * @param blockId the owning submission block
    * @param attachmentId the attachment intent to finalize
@@ -132,7 +165,27 @@ public class AttachmentService {
   @NewSpan
   @Transactional
   public AttachmentFinalizeResponse finalize(
-      Long reportingUnitId, Long blockId, Long attachmentId) {
+      Jwt jwt, Long reportingUnitId, Long blockId, Long attachmentId) {
+
+    ReportingUnitEntity reportingUnit =
+        reportingUnitRepository
+            .findByIdAndDeletedFalse(reportingUnitId)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        String.format("Reporting unit %d not found", reportingUnitId)));
+
+    validateClientAccess(jwt, reportingUnit);
+
+    blockRepository
+        .findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId)
+        .orElseThrow(
+            () ->
+                new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    String.format(
+                        "Block %d not found for reporting unit %d", blockId, reportingUnitId)));
 
     BlockAttachmentEntity attachment =
         attachmentRepository
@@ -148,15 +201,6 @@ public class AttachmentService {
           String.format(
               "Attachment %d does not belong to block %d", attachmentId, blockId));
     }
-
-    blockRepository
-        .findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId)
-        .orElseThrow(
-            () ->
-                new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    String.format(
-                        "Block %d not found for reporting unit %d", blockId, reportingUnitId)));
 
     StoredObjectSummary stored;
     try {
@@ -212,6 +256,19 @@ public class AttachmentService {
   }
 
   /**
+   * Overload for {@link #finalize(Jwt, Long, Long, Long)} without a JWT.
+   *
+   * @param reportingUnitId the owning reporting unit
+   * @param blockId the owning submission block
+   * @param attachmentId the attachment intent to finalize
+   * @return the finalized attachment state
+   */
+  public AttachmentFinalizeResponse finalize(
+      Long reportingUnitId, Long blockId, Long attachmentId) {
+    return finalize(null, reportingUnitId, blockId, attachmentId);
+  }
+
+  /**
    * Sanitizes a client-supplied file name into a safe object-key suffix.
    *
    * <p>Path components are stripped, non-alphanumeric characters (except {@code . - _}) are
@@ -260,5 +317,25 @@ public class AttachmentService {
         + attachmentId
         + "/"
         + sanitizedFileName;
+  }
+
+  private void validateClientAccess(Jwt jwt, ReportingUnitEntity reportingUnit) {
+    if (jwt == null) {
+      return;
+    }
+    IdentityProvider idp =
+        IdentityProvider.fromClaim(JwtPrincipalUtil.getProvider(jwt)).orElse(null);
+    if (IdentityProvider.BUSINESS_BCEID == idp) {
+      List<String> userClientNumbers = JwtPrincipalUtil.getClientFromRoles(jwt);
+      if (!userClientNumbers.contains(reportingUnit.getClientNumber())) {
+        log.warn(
+            "SECURITY: BCeID user {} attempted unauthorized access to reporting unit {}",
+            JwtPrincipalUtil.getUserId(jwt),
+            reportingUnit.getId());
+        throw new ResponseStatusException(
+            HttpStatus.FORBIDDEN,
+            "User is not authorized to access reporting unit: " + reportingUnit.getId());
+      }
+    }
   }
 }

@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,6 +27,7 @@ public class AttachmentController {
   /**
    * Registers an upload intent and returns a short-lived presigned PUT URL.
    *
+   * @param jwt the JWT principal for the authenticated caller
    * @param reportingUnitId the owning reporting unit
    * @param blockId the owning submission block
    * @param request the document metadata supplied by the client
@@ -32,16 +35,18 @@ public class AttachmentController {
    */
   @PostMapping("/intent")
   public ResponseEntity<AttachmentIntentResponse> createIntent(
+      @AuthenticationPrincipal Jwt jwt,
       @PathVariable Long reportingUnitId,
       @PathVariable Long blockId,
       @Valid @RequestBody AttachmentIntentRequest request) {
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(attachmentService.createIntent(reportingUnitId, blockId, request));
+        .body(attachmentService.createIntent(jwt, reportingUnitId, blockId, request));
   }
 
   /**
    * Finalizes a previously registered upload intent after the client has completed the direct PUT.
    *
+   * @param jwt the JWT principal for the authenticated caller
    * @param reportingUnitId the owning reporting unit
    * @param blockId the owning submission block
    * @param attachmentId the intent to finalize
@@ -49,10 +54,11 @@ public class AttachmentController {
    */
   @PostMapping("/{attachmentId}/finalize")
   public ResponseEntity<AttachmentFinalizeResponse> finalize(
+      @AuthenticationPrincipal Jwt jwt,
       @PathVariable Long reportingUnitId,
       @PathVariable Long blockId,
       @PathVariable Long attachmentId) {
     return ResponseEntity.ok(
-        attachmentService.finalize(reportingUnitId, blockId, attachmentId));
+        attachmentService.finalize(jwt, reportingUnitId, blockId, attachmentId));
   }
 }

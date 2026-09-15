@@ -70,7 +70,7 @@ class DistrictVolumeCorrelationIdAuditIntegrationTest extends AbstractTestContai
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   @DisplayName("POST propagates the supplied B3 trace ID to the audit event")
   void postDistrictVolumePersistsB3TraceIdInAuditEvent() throws Exception {
-    long eventIdBefore = maxAuditEventId();
+    final long eventIdBefore = maxAuditEventId();
 
     mockMvc
         .perform(

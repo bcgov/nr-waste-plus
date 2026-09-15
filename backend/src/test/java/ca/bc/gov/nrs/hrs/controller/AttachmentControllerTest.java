@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.hrs.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -21,6 +22,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.server.ResponseStatusException;
@@ -49,6 +52,7 @@ class AttachmentControllerTest {
             .build();
     this.mockMvc =
         MockMvcBuilders.standaloneSetup(attachmentController)
+            .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
             .setMessageConverters(new JacksonJsonHttpMessageConverter(objectMapper))
             .build();
   }
@@ -57,7 +61,7 @@ class AttachmentControllerTest {
   @DisplayName("POST /intent returns 201 with presigned upload URL")
   void createIntent_returnsCreatedWithPresignedUrl() throws Exception {
     Instant expiresAt = Instant.parse("2026-01-01T00:05:00Z");
-    when(attachmentService.createIntent(eq(1L), eq(2L), any()))
+    when(attachmentService.createIntent(nullable(Jwt.class), eq(1L), eq(2L), any()))
         .thenReturn(
             new AttachmentIntentResponse(
                 501L,
@@ -82,7 +86,7 @@ class AttachmentControllerTest {
   @Test
   @DisplayName("POST /{attachmentId}/finalize returns 200 with finalized state")
   void finalize_returnsOkWithFinalizedState() throws Exception {
-    when(attachmentService.finalize(eq(1L), eq(2L), eq(501L)))
+    when(attachmentService.finalize(nullable(Jwt.class), eq(1L), eq(2L), eq(501L)))
         .thenReturn(
             new AttachmentFinalizeResponse(
                 501L, "hrs/block/2/attachment/501/final_map.pdf", "FINALIZED", "abc123"));
@@ -98,7 +102,7 @@ class AttachmentControllerTest {
   @Test
   @DisplayName("POST /intent returns 413 when declared size exceeds maximum")
   void createIntent_whenOversized_returns413() throws Exception {
-    when(attachmentService.createIntent(eq(1L), eq(2L), any()))
+    when(attachmentService.createIntent(nullable(Jwt.class), eq(1L), eq(2L), any()))
         .thenThrow(
             new ResponseStatusException(
                 HttpStatus.PAYLOAD_TOO_LARGE, "Declared size exceeds maximum"));
@@ -116,7 +120,7 @@ class AttachmentControllerTest {
   @Test
   @DisplayName("POST /intent returns 400 when documentType is invalid")
   void createIntent_whenInvalidDocumentType_returns400() throws Exception {
-    when(attachmentService.createIntent(eq(1L), eq(2L), any()))
+    when(attachmentService.createIntent(nullable(Jwt.class), eq(1L), eq(2L), any()))
         .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid documentType"));
 
     mockMvc
@@ -145,7 +149,7 @@ class AttachmentControllerTest {
   @Test
   @DisplayName("POST /{attachmentId}/finalize returns 404 when attachment not found")
   void finalize_whenNotFound_returns404() throws Exception {
-    when(attachmentService.finalize(eq(1L), eq(2L), eq(999L)))
+    when(attachmentService.finalize(nullable(Jwt.class), eq(1L), eq(2L), eq(999L)))
         .thenThrow(
             new ResponseStatusException(
                 HttpStatus.NOT_FOUND, "Attachment intent not found"));
@@ -158,7 +162,7 @@ class AttachmentControllerTest {
   @Test
   @DisplayName("POST /{attachmentId}/finalize returns 409 on object missing or checksum mismatch")
   void finalize_whenConflict_returns409() throws Exception {
-    when(attachmentService.finalize(eq(1L), eq(2L), eq(501L)))
+    when(attachmentService.finalize(nullable(Jwt.class), eq(1L), eq(2L), eq(501L)))
         .thenThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Checksum mismatch"));
 
     mockMvc

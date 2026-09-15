@@ -13,14 +13,18 @@ import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentRequest;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentResponse;
 import ca.bc.gov.nrs.hrs.entity.block.BlockAttachmentEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
+import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageObjectNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageProvider;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.PresignedUpload;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.StoredObjectSummary;
 import ca.bc.gov.nrs.hrs.repository.block.BlockAttachmentRepository;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
+import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,6 +35,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,6 +53,9 @@ class AttachmentServiceTest {
   @Mock
   private BlockRepository blockRepository;
 
+  @Mock(lenient = true)
+  private ReportingUnitRepository reportingUnitRepository;
+
   @Mock
   private ObjectStorageProvider objectStorage;
 
@@ -63,6 +71,15 @@ class AttachmentServiceTest {
         .willReturn(5L * 1024 * 1024);
     given(objectStorageProperties.getPresignedUrlDuration())
         .willReturn(Duration.ofMinutes(5));
+    given(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .willReturn(Optional.of(reportingUnit()));
+  }
+
+  private ReportingUnitEntity reportingUnit() {
+    ReportingUnitEntity ru = new ReportingUnitEntity();
+    ru.setId(RU_ID);
+    ru.setClientNumber("00012797");
+    return ru;
   }
 
   private AttachmentIntentRequest intentRequest(String documentType) {
@@ -176,6 +193,8 @@ class AttachmentServiceTest {
   @Test
   @DisplayName("Rejects finalize for unknown attachment")
   void rejectsFinalizeUnknownAttachment() {
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
     given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
         .willReturn(Optional.empty());
 
@@ -192,6 +211,8 @@ class AttachmentServiceTest {
   void rejectsFinalizeAttachmentForOtherBlock() {
     BlockAttachmentEntity attachment = persistedAttachment();
     attachment.setBlockId(999L);
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
     given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
         .willReturn(Optional.of(attachment));
 
@@ -206,8 +227,6 @@ class AttachmentServiceTest {
   @Test
   @DisplayName("Rejects finalize for unknown block")
   void rejectsFinalizeUnknownBlock() {
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
-        .willReturn(Optional.of(persistedAttachment()));
     given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .willReturn(Optional.empty());
 
@@ -310,6 +329,145 @@ class AttachmentServiceTest {
     assertThat(response.attachmentId()).isEqualTo(ATTACHMENT_ID);
     assertThat(response.status()).isEqualTo("FINALIZED");
     assertThat(response.checksum()).isEqualTo("abc123");
+  }
+
+  @Test
+  @DisplayName("Rejects intent creation when reporting unit not found")
+  void rejectsIntentWhenReportingUnitNotFound() {
+    given(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).willReturn(Optional.empty());
+
+    assertThatThrownBy(
+            () ->
+                service.createIntent(
+                    RU_ID,
+                    BLOCK_ID,
+                    intentRequest(AttachmentDocumentType.FINAL_MAP.name())))
+        .isInstanceOf(ResponseStatusException.class)
+        .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+        .isEqualTo(HttpStatus.NOT_FOUND);
+  }
+
+  @Test
+  @DisplayName("Rejects intent creation when BCeID user lacks client role for reporting unit")
+  void rejectsIntentWhenBceidUserLacksClientRole() {
+    Jwt jwt =
+        WithMockJwtSecurityContextFactory.createJwt(
+            "bceid-user",
+            List.of("WASTE_PLUS_SUBMITTER_99999999"),
+            "bceidbusiness",
+            "BCeID User",
+            "bceid@example.com");
+
+    assertThatThrownBy(
+            () ->
+                service.createIntent(
+                    jwt,
+                    RU_ID,
+                    BLOCK_ID,
+                    intentRequest(AttachmentDocumentType.FINAL_MAP.name())))
+        .isInstanceOf(ResponseStatusException.class)
+        .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+        .isEqualTo(HttpStatus.FORBIDDEN);
+  }
+
+  @Test
+  @DisplayName("Allows intent creation when BCeID user has matching client role")
+  void allowsIntentWhenBceidUserHasMatchingClientRole() {
+    Jwt jwt =
+        WithMockJwtSecurityContextFactory.createJwt(
+            "bceid-user",
+            List.of("WASTE_PLUS_SUBMITTER_00012797"),
+            "bceidbusiness",
+            "BCeID User",
+            "bceid@example.com");
+
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
+    given(attachmentRepository.saveAndFlush(any())).willReturn(persistedAttachment());
+    given(objectStorage.presignPut(any(), any(), any()))
+        .willReturn(new PresignedUpload("https://s3.example.com/upload", EXPIRY));
+
+    AttachmentIntentResponse response =
+        service.createIntent(
+            jwt, RU_ID, BLOCK_ID, intentRequest(AttachmentDocumentType.FINAL_MAP.name()));
+
+    assertThat(response.attachmentId()).isEqualTo(ATTACHMENT_ID);
+  }
+
+  @Test
+  @DisplayName("Allows intent creation when IDIR user accesses any reporting unit")
+  void allowsIntentWhenIdirUserBypassesClientRole() {
+    Jwt jwt =
+        WithMockJwtSecurityContextFactory.createJwt(
+            "idir-user",
+            List.of("WASTE_PLUS_ADMIN"),
+            "idir",
+            "IDIR User",
+            "idir@gov.bc.ca");
+
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
+    given(attachmentRepository.saveAndFlush(any())).willReturn(persistedAttachment());
+    given(objectStorage.presignPut(any(), any(), any()))
+        .willReturn(new PresignedUpload("https://s3.example.com/upload", EXPIRY));
+
+    AttachmentIntentResponse response =
+        service.createIntent(
+            jwt, RU_ID, BLOCK_ID, intentRequest(AttachmentDocumentType.FINAL_MAP.name()));
+
+    assertThat(response.attachmentId()).isEqualTo(ATTACHMENT_ID);
+  }
+
+  @Test
+  @DisplayName("Rejects finalize when reporting unit not found")
+  void rejectsFinalizeWhenReportingUnitNotFound() {
+    given(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).willReturn(Optional.empty());
+
+    assertThatThrownBy(() -> service.finalize(RU_ID, BLOCK_ID, ATTACHMENT_ID))
+        .isInstanceOf(ResponseStatusException.class)
+        .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+        .isEqualTo(HttpStatus.NOT_FOUND);
+  }
+
+  @Test
+  @DisplayName("Rejects finalize when BCeID user lacks client role for reporting unit")
+  void rejectsFinalizeWhenBceidUserLacksClientRole() {
+    Jwt jwt =
+        WithMockJwtSecurityContextFactory.createJwt(
+            "bceid-user",
+            List.of("WASTE_PLUS_SUBMITTER_99999999"),
+            "bceidbusiness",
+            "BCeID User",
+            "bceid@example.com");
+
+    assertThatThrownBy(() -> service.finalize(jwt, RU_ID, BLOCK_ID, ATTACHMENT_ID))
+        .isInstanceOf(ResponseStatusException.class)
+        .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+        .isEqualTo(HttpStatus.FORBIDDEN);
+  }
+
+  @Test
+  @DisplayName("Allows finalize when BCeID user has matching client role")
+  void allowsFinalizeWhenBceidUserHasMatchingClientRole() {
+    Jwt jwt =
+        WithMockJwtSecurityContextFactory.createJwt(
+            "bceid-user",
+            List.of("WASTE_PLUS_SUBMITTER_00012797"),
+            "bceidbusiness",
+            "BCeID User",
+            "bceid@example.com");
+
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(persistedAttachment()));
+    given(objectStorage.headObject(any()))
+        .willReturn(new StoredObjectSummary(1024L, "abc123"));
+
+    AttachmentFinalizeResponse response =
+        service.finalize(jwt, RU_ID, BLOCK_ID, ATTACHMENT_ID);
+
+    assertThat(response.status()).isEqualTo("FINALIZED");
   }
 
   @Test

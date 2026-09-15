@@ -39,7 +39,8 @@ class GlobalExceptionHandlerTest {
     assertThat(response.getBody()).isNotNull();
     assertThat(response.getBody().getTitle()).isEqualTo("Service Unavailable");
     assertThat(response.getBody().getDetail())
-        .isEqualTo("The service is temporarily unable to process the request. Please try again later.");
+        .isEqualTo(
+            "The service is temporarily unable to process the request. Please try again later.");
     assertThat(response.getBody().getInstance()).hasToString(REQUEST_URI);
   }
 
