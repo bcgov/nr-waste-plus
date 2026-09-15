@@ -191,6 +191,30 @@ class AttachmentServiceTest {
   }
 
   @Test
+  @DisplayName("Normalizes document type whitespace before persisting")
+  void normalizesDocumentTypeWhitespaceBeforePersisting() {
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
+    ArgumentCaptor<BlockAttachmentEntity> captor =
+        ArgumentCaptor.forClass(BlockAttachmentEntity.class);
+    given(attachmentRepository.saveAndFlush(captor.capture()))
+        .willAnswer(
+            invocation -> {
+              BlockAttachmentEntity entity = captor.getValue();
+              entity.setId(ATTACHMENT_ID);
+              return entity;
+            });
+    given(attachmentRepository.save(any())).willAnswer(invocation -> invocation.getArgument(0));
+    given(objectStorage.presignPut(any(), any(), any()))
+        .willReturn(new PresignedUpload("https://s3.example.com/upload", EXPIRY));
+
+    service.createIntent(RU_ID, BLOCK_ID, intentRequest("  FINAL_MAP  "));
+
+    assertThat(captor.getValue().getDocumentType())
+        .isEqualTo(AttachmentDocumentType.FINAL_MAP.name());
+  }
+
+  @Test
   @DisplayName("Rejects finalize for unknown attachment")
   void rejectsFinalizeUnknownAttachment() {
     given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))

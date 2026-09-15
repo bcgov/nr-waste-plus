@@ -8,7 +8,6 @@ import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentRequest;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentStatus;
 import ca.bc.gov.nrs.hrs.entity.block.BlockAttachmentEntity;
-import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageObjectNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageProvider;
@@ -77,12 +76,13 @@ public class AttachmentService {
               request.declaredSizeBytes(), maxSize));
     }
 
-    AttachmentDocumentType.from(request.documentType())
-        .orElseThrow(
-            () ->
-                new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Invalid documentType: " + request.documentType()));
+    final AttachmentDocumentType documentType =
+        AttachmentDocumentType.from(request.documentType())
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Invalid documentType: " + request.documentType()));
 
     ReportingUnitEntity reportingUnit =
         reportingUnitRepository
@@ -113,7 +113,7 @@ public class AttachmentService {
     entity.setFileSizeBytes(request.declaredSizeBytes());
     entity.setScanStatus(SCAN_STATUS_PENDING);
     entity.setStatus(AttachmentStatus.UPLOADING.name());
-    entity.setDocumentType(request.documentType());
+    entity.setDocumentType(documentType.name());
 
     BlockAttachmentEntity saved = attachmentRepository.saveAndFlush(entity);
 
