@@ -85,8 +85,8 @@ class AttachmentControllerTest {
 
   @Test
   @DisplayName("POST /{attachmentId}/finalize returns 200 with finalized state")
-  void finalize_returnsOkWithFinalizedState() throws Exception {
-    when(attachmentService.finalize(nullable(Jwt.class), eq(1L), eq(2L), eq(501L)))
+  void finalizeAttachment_returnsOkWithFinalizedState() throws Exception {
+    when(attachmentService.finalizeAttachment(nullable(Jwt.class), eq(1L), eq(2L), eq(501L)))
         .thenReturn(
             new AttachmentFinalizeResponse(
                 501L, "hrs/block/2/attachment/501/final_map.pdf", "FINALIZED", "abc123"));
@@ -148,8 +148,8 @@ class AttachmentControllerTest {
 
   @Test
   @DisplayName("POST /{attachmentId}/finalize returns 404 when attachment not found")
-  void finalize_whenNotFound_returns404() throws Exception {
-    when(attachmentService.finalize(nullable(Jwt.class), eq(1L), eq(2L), eq(999L)))
+  void finalizeAttachment_whenNotFound_returns404() throws Exception {
+    when(attachmentService.finalizeAttachment(nullable(Jwt.class), eq(1L), eq(2L), eq(999L)))
         .thenThrow(
             new ResponseStatusException(
                 HttpStatus.NOT_FOUND, "Attachment intent not found"));
@@ -161,8 +161,8 @@ class AttachmentControllerTest {
 
   @Test
   @DisplayName("POST /{attachmentId}/finalize returns 409 on object missing or checksum mismatch")
-  void finalize_whenConflict_returns409() throws Exception {
-    when(attachmentService.finalize(nullable(Jwt.class), eq(1L), eq(2L), eq(501L)))
+  void finalizeAttachment_whenConflict_returns409() throws Exception {
+    when(attachmentService.finalizeAttachment(nullable(Jwt.class), eq(1L), eq(2L), eq(501L)))
         .thenThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Checksum mismatch"));
 
     mockMvc

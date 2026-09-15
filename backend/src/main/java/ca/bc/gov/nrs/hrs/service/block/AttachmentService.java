@@ -165,7 +165,7 @@ public class AttachmentService {
    */
   @NewSpan
   @Transactional
-  public AttachmentFinalizeResponse finalize(
+  public AttachmentFinalizeResponse finalizeAttachment(
       Jwt jwt, Long reportingUnitId, Long blockId, Long attachmentId) {
 
     ReportingUnitEntity reportingUnit =
@@ -258,16 +258,16 @@ public class AttachmentService {
   }
 
   /**
-   * Overload for {@link #finalize(Jwt, Long, Long, Long)} without a JWT.
+   * Overload for {@link #finalizeAttachment(Jwt, Long, Long, Long)} without a JWT.
    *
    * @param reportingUnitId the owning reporting unit
    * @param blockId the owning submission block
    * @param attachmentId the attachment intent to finalize
    * @return the finalized attachment state
    */
-  public AttachmentFinalizeResponse finalize(
+  public AttachmentFinalizeResponse finalizeAttachment(
       Long reportingUnitId, Long blockId, Long attachmentId) {
-    return finalize(null, reportingUnitId, blockId, attachmentId);
+    return finalizeAttachment(null, reportingUnitId, blockId, attachmentId);
   }
 
   /**

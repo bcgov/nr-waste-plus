@@ -53,12 +53,12 @@ public class AttachmentController {
    * @return {@code 200 OK} with the finalized attachment metadata
    */
   @PostMapping("/{attachmentId}/finalize")
-  public ResponseEntity<AttachmentFinalizeResponse> finalize(
+  public ResponseEntity<AttachmentFinalizeResponse> finalizeAttachment(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable Long reportingUnitId,
       @PathVariable Long blockId,
       @PathVariable Long attachmentId) {
     return ResponseEntity.ok(
-        attachmentService.finalize(jwt, reportingUnitId, blockId, attachmentId));
+        attachmentService.finalizeAttachment(jwt, reportingUnitId, blockId, attachmentId));
   }
 }
