@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 import ca.bc.gov.nrs.hrs.configuration.ObjectStorageProperties;
 import java.net.URL;
@@ -49,8 +50,7 @@ class S3ObjectStorageProviderTest {
   @DisplayName("Presigns a PUT URL with the requested expiry")
   void presignPut_returnsUrlAndFutureExpiry() throws Exception {
     Instant expectedExpiry = Instant.parse("2026-08-24T12:05:00Z");
-    PresignedPutObjectRequest presigned =
-        org.mockito.Mockito.mock(PresignedPutObjectRequest.class);
+    PresignedPutObjectRequest presigned = mock(PresignedPutObjectRequest.class);
     given(presigned.url()).willReturn(new URL("https://s3.example.com/upload"));
     given(presigned.expiration()).willReturn(expectedExpiry);
     given(presigner.presignPutObject(any(PutObjectPresignRequest.class))).willReturn(presigned);
