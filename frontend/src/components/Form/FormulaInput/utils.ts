@@ -89,7 +89,7 @@ function reconstructDottedPath(node: MathNode): string | null {
 
     if (n.type === 'AccessorNode' && n.index?.dimensions?.[0]) {
       const dim = n.index.dimensions[0] as unknown as { type: string; value?: string };
-      if (dim.type === 'ConstantNode' && dim.value) {
+      if (dim.type === 'ConstantNode' && dim.value !== undefined) {
         parts.unshift(dim.value);
       }
       current = n.object!;
@@ -174,15 +174,18 @@ export function buildNestedScope(flat: Record<string, number>): Record<string, u
   // members (prototype pollution guard).
   const nested: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
 
+  // Assign flat keys first so they win over dotted keys regardless of input order.
   for (const [key, value] of Object.entries(flat)) {
-    if (!key.includes('.')) {
-      // Simple key — direct assignment (fixed params win on collision)
-      nested[key] = value;
-      continue;
-    }
+    if (!key.includes('.')) nested[key] = value;
+  }
+
+  for (const [key, value] of Object.entries(flat)) {
+    if (!key.includes('.')) continue;
 
     const parts = key.split('.');
     let current: Record<string, unknown> = nested;
+
+    if (Object.hasOwn(nested, parts[0]) && typeof nested[parts[0]] !== 'object') continue;
 
     for (let i = 0; i < parts.length - 1; i++) {
       const part = parts[i];
@@ -363,12 +366,12 @@ export function evaluateFormula(
     const nestedScope = buildNestedScope(scope);
 
     // Convert scope to BigNumber so that mixed arithmetic stays precise
-    const convertToBigNumber = (obj: any): any => {
+    const convertToBigNumber = (obj: unknown): unknown => {
       if (typeof obj === 'number') {
         return math.bignumber(obj);
       }
       if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
-        const out: Record<string, any> = {};
+        const out: Record<string, unknown> = {};
         for (const [k, v] of Object.entries(obj)) {
           out[k] = convertToBigNumber(v);
         }
@@ -376,7 +379,7 @@ export function evaluateFormula(
       }
       return obj;
     };
-    const bigScope = convertToBigNumber(nestedScope);
+    const bigScope = convertToBigNumber(nestedScope) as Record<string, unknown>;
 
     // Use compiled AST to avoid re-parsing the formula string
     const result = validation.ast.compile().evaluate(bigScope);

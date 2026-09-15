@@ -105,6 +105,14 @@ describe('FormulaInput utils', () => {
       const variables = extractVariables(parsed).sort();
       expect(variables).toEqual(['da.bonus', 'da.rate']);
     });
+
+    it('shouldKeepIndexedVariable_whenIndexIsZero', () => {
+      const parsed = parseFormula('arr[0]');
+      expect(isFormulaError(parsed)).toBe(false);
+      if (isFormulaError(parsed)) return;
+
+      expect(extractVariables(parsed)).toEqual(['arr.0']);
+    });
   });
 
   describe('buildNestedScope', () => {
@@ -121,7 +129,7 @@ describe('FormulaInput utils', () => {
     });
 
     it('shouldHandleMixedFlatAndDottedKeys', () => {
-      const flat = { rate: 2.5, 'da.mature.total': 34.58 };
+      const flat = { 'rate': 2.5, 'da.mature.total': 34.58 };
       const nested = buildNestedScope(flat);
       expect(nested).toEqual({ rate: 2.5, da: { mature: { total: 34.58 } } });
     });
@@ -151,7 +159,10 @@ describe('FormulaInput utils', () => {
     });
 
     it('shouldKeepDangerousSegmentsAsOwnKeys_whenBuildingNestedScope', () => {
-      const nested = buildNestedScope({ '__proto__.polluted': 123, 'constructor.prototype.hacked': 1 });
+      const nested = buildNestedScope({
+        '__proto__.polluted': 123,
+        'constructor.prototype.hacked': 1,
+      });
 
       expect(Object.getPrototypeOf(nested)).toBeNull();
       expect(Object.hasOwn(nested, '__proto__')).toBe(true);
@@ -162,6 +173,11 @@ describe('FormulaInput utils', () => {
 
       const ctorScope = nested['constructor'] as Record<string, unknown>;
       expect((ctorScope['prototype'] as Record<string, unknown>).hacked).toBe(1);
+    });
+
+    it('shouldPreferFlatKeyOverDottedKey_regardlessOfInsertionOrder', () => {
+      expect(buildNestedScope({ 'da': 2, 'da.rate': 1 })).toEqual({ da: 2 });
+      expect(buildNestedScope({ 'da.rate': 1, 'da': 2 })).toEqual({ da: 2 });
     });
   });
 
@@ -189,7 +205,7 @@ describe('FormulaInput utils', () => {
 
     it('shouldEvaluateMixedFlatAndDottedVariables', () => {
       const result = evaluateFormula('rate * da.mature.total', {
-        rate: 2,
+        'rate': 2,
         'da.mature.total': 34.58,
       });
       expect(result.error).toBeNull();
