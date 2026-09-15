@@ -239,6 +239,10 @@ const FormulaConfigurationCreateForm: FC = () => {
     form.setFieldValue('startDate', parsed.toFormat(DATE_FORMAT));
   };
 
+  const datePickerValue = startDate
+    ? DateTime.fromFormat(startDate, DATE_FORMAT).toJSDate()
+    : undefined;
+
   return (
     <Column
       max={16}
@@ -275,7 +279,7 @@ const FormulaConfigurationCreateForm: FC = () => {
                   dateFormat="Y/m/d"
                   allowInput
                   minDate={DateTime.now().plus({ days: 1 }).toFormat(DATE_FORMAT)}
-                  value={[DateTime.fromFormat(startDate, DATE_FORMAT).toJSDate()]}
+                  value={datePickerValue ? [datePickerValue] : []}
                   onChange={handleDateChange}
                 >
                   <DatePickerInput
