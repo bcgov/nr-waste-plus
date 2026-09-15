@@ -36,6 +36,9 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * Builds the three complementary variable representations for a given effective date and area.
  *
+ * <p>Produces district-scoped runtime values and a catalog resolved from those values. The catalog
+ * therefore contains only variables available to the selected district.
+ *
  * <p>Produces:
  * <ul>
  *   <li>{@code namespaces} — nested tree with resolved values for autocomplete UIs</li>
@@ -176,7 +179,7 @@ public class FormulaVariableService {
         Map<String, VariableNodeDto> fieldNodes =
             buildFieldNodes(zone.districts(), groupName, districtCode);
         if (!fieldNodes.isEmpty()) {
-          groupChildren.put(groupName,
+          putGroup(groupChildren, groupName,
               VariableNodeDto.object("Group " + zone.name() + " values", fieldNodes));
         }
       }
@@ -186,7 +189,7 @@ public class FormulaVariableService {
         Map<String, VariableNodeDto> fieldNodes =
             buildFieldNodes(section.districts(), groupName, districtCode);
         if (!fieldNodes.isEmpty()) {
-          groupChildren.put(groupName,
+          putGroup(groupChildren, groupName,
               VariableNodeDto.object("Group " + section.name() + " values", fieldNodes));
         }
       }
@@ -282,12 +285,11 @@ public class FormulaVariableService {
     ObjectNode daSchema = MAPPER.createObjectNode();
     if (area == Area.INTERIOR && dvData.zones() != null) {
       for (Zone zone : dvData.zones()) {
-        daSchema.set(normalizeGroupName(zone.name()),
-            buildGroupSchema(zone.districts(), districtCode));
+        setGroupSchema(daSchema, zone.name(), buildGroupSchema(zone.districts(), districtCode));
       }
     } else if (area == Area.COASTAL && dvData.sections() != null) {
       for (Section section : dvData.sections()) {
-        daSchema.set(normalizeGroupName(section.name()),
+        setGroupSchema(daSchema, section.name(),
             buildGroupSchema(section.districts(), districtCode));
       }
     }
@@ -311,6 +313,22 @@ public class FormulaVariableService {
     root.set("sc", scSchema);
 
     return root;
+  }
+
+  private void putGroup(Map<String, VariableNodeDto> groups, String groupName,
+      VariableNodeDto node) {
+    if (groups.putIfAbsent(groupName, node) != null) {
+      throw new IllegalStateException("Normalized formula variable group name collision: " + groupName);
+    }
+  }
+
+  private void setGroupSchema(ObjectNode schema, String originalName, JsonNode groupSchema) {
+    String normalizedName = normalizeGroupName(originalName);
+    if (schema.has(normalizedName)) {
+      throw new IllegalStateException(
+          "Normalized formula variable group name collision: " + normalizedName);
+    }
+    schema.set(normalizedName, groupSchema);
   }
 
   private ObjectNode buildGroupSchema(List<DistrictRow> districts, String districtCode) {

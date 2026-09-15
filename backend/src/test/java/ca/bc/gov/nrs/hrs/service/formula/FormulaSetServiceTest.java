@@ -20,10 +20,10 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.DisplayName;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.DisplayName;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Unit Test | Formula Set Service")
@@ -91,7 +91,8 @@ class FormulaSetServiceTest {
     FormulaSetEntity set = currentSet(12L);
     FormulaSetRowEntity first = row("da.first", "1", 0);
     FormulaSetRowEntity second = row("da.second", "2", 1);
-    when(setRepository.findCurrentOpenEnded(Area.COASTAL)).thenReturn(Optional.of(set));
+    when(setRepository.findCurrentOpenEnded(eq(Area.COASTAL), any(LocalDate.class)))
+        .thenReturn(Optional.of(set));
     when(rowRepository.findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(12L))
         .thenReturn(List.of(first, second));
 
@@ -100,18 +101,34 @@ class FormulaSetServiceTest {
     assertThat(response.formulas())
         .extracting(FormulaItemDto::formulaKey)
         .containsExactly("da.first", "da.second");
-    verify(setRepository).findCurrentOpenEnded(Area.COASTAL);
+    verify(setRepository).findCurrentOpenEnded(eq(Area.COASTAL), any(LocalDate.class));
     verify(rowRepository).findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(12L);
   }
 
   @DisplayName("Current Open-Ended Rejects Missing Set")
   @Test
   void currentOpenEndedRejectsMissingSet() {
-    when(setRepository.findCurrentOpenEnded(Area.INTERIOR)).thenReturn(Optional.empty());
+    when(setRepository.findCurrentOpenEnded(eq(Area.INTERIOR), any(LocalDate.class)))
+        .thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> service.currentOpenEnded(Area.INTERIOR))
         .hasMessageContaining("No current open-ended formula set");
     verify(rowRepository, never()).findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(any());
+  }
+
+  @Test
+  void updateTouchesParentForListAuditTimestamp() {
+    FormulaSetEntity set = futureSet(13L, null);
+    when(setRepository.findById(13L)).thenReturn(Optional.of(set));
+    when(validationService.validateForSave(any())).thenReturn(List.of());
+    when(rowRepository.findByFormulaSetIdOrderBySortOrderAscIdAsc(13L)).thenReturn(List.of());
+    when(rowRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
+    when(rowRepository.findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(13L))
+        .thenReturn(List.of());
+
+    service.update(13L, request("da.anything", "1"));
+
+    verify(setRepository).save(set);
   }
 
   @DisplayName("Invalid Expression Does Not Persist Rows")

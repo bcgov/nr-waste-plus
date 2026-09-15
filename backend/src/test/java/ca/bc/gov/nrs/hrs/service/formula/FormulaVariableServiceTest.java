@@ -203,6 +203,26 @@ class FormulaVariableServiceTest {
         new BigDecimal("7.125"));
   }
 
+  @Test
+  void rejectsNormalizedGroupNameCollision() {
+    DistrictRow first = row("DCC", new BigDecimal("1"), null);
+    DistrictRow second = row("DCC", new BigDecimal("2"), null);
+    TableData dvData = new TableData(
+        List.of(new Zone("North Interior", List.of(first)),
+            new Zone("North-Interior", List.of(second))), null, null, Map.of());
+    DistrictVolumeEntity dvEntity = dvEntity(Area.INTERIOR, dvData);
+    DistrictVolumeEntity scEntity = scEntity(Area.INTERIOR,
+        new TableData(null, null, List.of(), Map.of()));
+    when(districtVolumeRepository.findEffectiveByConfigTypeAndArea(
+        ConfigType.DISTRICT_VOLUME, Area.INTERIOR, DATE)).thenReturn(java.util.Optional.of(dvEntity));
+    when(districtVolumeRepository.findEffectiveByConfigTypeAndArea(
+        ConfigType.SPECIES_COMPOSITION, Area.INTERIOR, DATE)).thenReturn(java.util.Optional.of(scEntity));
+
+    assertThatThrownBy(() -> service.build(DATE, Area.INTERIOR, "DCC"))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("collision");
+  }
+
   @DisplayName("Normalizes group names to lowercase alphanumeric")
   @Test
   void normalizesGroupNames() {
