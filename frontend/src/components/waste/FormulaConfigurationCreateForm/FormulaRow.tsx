@@ -20,7 +20,7 @@ const FormulaRow: FC<FormulaRowProps> = ({ area, date, keyDef, formula, isEditab
   const expression = formula?.expression ?? '';
 
   // Fetch variables from backend API
-  const { data: variablesData } = useFormulaVariables({ date, area });
+  const { data: variablesData } = useFormulaVariables({ date, area }, isEditable);
 
   // Use the flat map from the API response as dynamicParams
   const dynamicParams = useMemo(() => {
@@ -37,6 +37,18 @@ const FormulaRow: FC<FormulaRowProps> = ({ area, date, keyDef, formula, isEditab
           <ReadonlyInput label="Expression">
             {expression || <span className="formula-row__expression-empty">Not configured</span>}
           </ReadonlyInput>
+          {formula?.validationErrors.length ? (
+            <div className="validation-errors" role="alert">
+              {formula.validationErrors.map((error) => (
+                <div key={`${error.code}-${error.startOffset ?? 'unknown'}`}>
+                  <strong>{error.code}</strong>: {error.message}
+                  {error.startOffset !== undefined && ` (offset ${error.startOffset}`}
+                  {error.endOffset !== undefined && `-${error.endOffset}`}
+                  {error.startOffset !== undefined && ')'}
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
     );

@@ -1,8 +1,8 @@
 import { Column } from '@carbon/react';
 import { type FC } from 'react';
 
+import { FORMULA_KEYS, getFormulaLabel } from '@/services/formulaConfiguration.constants';
 import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
-import { FORMULA_KEYS } from '@/services/formulaConfiguration.constants';
 
 import FormulaConfigurationDetailHeader from './FormulaConfigurationDetailHeader';
 import FormulaSection from '@/components/waste/FormulaConfigurationCreateForm/FormulaSection';
@@ -12,7 +12,21 @@ interface FormulaConfigurationDetailViewProps {
 }
 
 const FormulaConfigurationDetailView: FC<FormulaConfigurationDetailViewProps> = ({ data }) => {
-  const sections = Object.entries(FORMULA_KEYS[data.area]);
+  const knownKeys = Object.values(FORMULA_KEYS[data.area]).flat();
+  const knownKeySet = new Set(knownKeys.map(({ key }) => key));
+  const sections = Object.entries(FORMULA_KEYS[data.area])
+    .map(([sectionName, keys]) => [
+      sectionName,
+      keys.filter((keyDef) => data.formulas.some(({ formulaKey }) => formulaKey === keyDef.key)),
+    ] as const)
+    .filter(([, keys]) => keys.length > 0);
+  const additionalKeys = data.formulas
+    .filter(({ formulaKey }) => !knownKeySet.has(formulaKey))
+    .map(({ formulaKey }) => ({ key: formulaKey, label: getFormulaLabel(data.area, formulaKey) }));
+
+  if (additionalKeys.length > 0) {
+    sections.push(['Additional Formulas', additionalKeys]);
+  }
 
   return (
     <>
