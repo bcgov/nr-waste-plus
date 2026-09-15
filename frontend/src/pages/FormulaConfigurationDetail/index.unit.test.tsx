@@ -253,7 +253,9 @@ describe('FormulaConfigurationDetailPage', () => {
 
     render(<FormulaConfigurationDetailPage />);
 
-    expect(useFormulaSetDetail).toHaveBeenCalledWith(42);
+    expect(useFormulaSetDetail).toHaveBeenCalledWith(42, {
+      notificationTarget: 'formula-set-detail',
+    });
   });
 
   it('forwards NaN when the route id cannot be parsed as a number', () => {
@@ -268,6 +270,8 @@ describe('FormulaConfigurationDetailPage', () => {
 
     render(<FormulaConfigurationDetailPage />);
 
-    expect(useFormulaSetDetail).toHaveBeenCalledWith(NaN);
+    expect(useFormulaSetDetail).toHaveBeenCalledWith(NaN, {
+      notificationTarget: 'formula-set-detail',
+    });
   });
 });

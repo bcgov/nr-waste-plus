@@ -63,7 +63,7 @@ type CodeResource = 'samplingOptions' | 'districtOptions' | 'statusOptions';
  * When `notificationTarget` is supplied, the hook fires a notification event
  * on query failure instead of (or in addition to) propagating the error state.
  */
-type QueryNotificationOptions = {
+export type QueryNotificationOptions = {
   /** Target element identifier for inline error notifications. When omitted, no notification is dispatched. */
   notificationTarget?: string;
 };
@@ -95,7 +95,7 @@ const getProblemDetails = (error: Error) => {
  * @param error - The error thrown by a query function.
  * @param eventTarget - Identifier for the notification target element.
  */
-const notifyProblemDetailsError = (error: Error, eventTarget: string) => {
+export const notifyProblemDetailsError = (error: Error, eventTarget: string) => {
   const problemDetails = getProblemDetails(error);
 
   sendEvent({

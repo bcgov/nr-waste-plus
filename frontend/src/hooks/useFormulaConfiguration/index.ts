@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 const formulaConfiguration = API.formulaConfiguration;
 
@@ -11,6 +12,7 @@ import type {
 } from '@/services/formulaConfiguration.types';
 import type { SortDirectionType } from '@/services/types';
 
+import { notifyProblemDetailsError, type QueryNotificationOptions } from '@/config/react-query/hooks';
 import API from '@/services/APIs';
 import { generateSortArray } from '@/services/utils';
 
@@ -72,15 +74,27 @@ export function useEffectiveFormulaSet(params: FormulaSetEffectiveParams, enable
 /**
  * Fetches a single formula set by ID.
  */
-export function useFormulaSetDetail(id?: number) {
-  return useQuery({
+export function useFormulaSetDetail(id?: number, options?: QueryNotificationOptions) {
+  const { notificationTarget, ...queryOptions } = options ?? {};
+  const query = useQuery({
     queryKey:
       typeof id === 'number'
         ? formulaConfigurationKeys.detail(id)
         : ['formulaConfiguration', 'detail', 'disabled'],
     queryFn: () => formulaConfiguration.getFormulaSet(id!),
     enabled: typeof id === 'number',
+    ...queryOptions,
   });
+
+  useEffect(() => {
+    if (!notificationTarget || !query.isError || !query.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(query.error, notificationTarget);
+  }, [notificationTarget, query.error, query.isError]);
+
+  return query;
 }
 
 export function useCurrentOpenEndedFormulaSet(params: CurrentFormulaSetParams, enabled = true) {
