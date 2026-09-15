@@ -196,16 +196,18 @@ public class FormulaVariableService {
       String groupName) {
     Map<String, VariableNodeDto> fieldNodes = new LinkedHashMap<>();
     for (DistrictRow row : districts) {
+      String districtCode = row.district() != null ? row.district().code() : "UNKNOWN";
       Map<String, BigDecimal> fields = extractDaFields(row);
       for (var entry : fields.entrySet()) {
         String field = entry.getKey();
         BigDecimal value = entry.getValue();
-        String path = "da." + groupName + "." + field;
+        String path = "da." + groupName + "." + districtCode + "." + field;
         String label = DA_FIELD_LABELS.get(field);
         if (label == null) {
           label = humanize(field);
         }
-        fieldNodes.put(field, VariableNodeDto.number(path, value, label));
+        String key = field + "_" + districtCode;
+        fieldNodes.put(key, VariableNodeDto.number(path, value, label + " (" + districtCode + ")"));
       }
     }
     return fieldNodes;
@@ -235,8 +237,11 @@ public class FormulaVariableService {
       fields.put("total", scale(row.total()));
     }
     for (var additional : row.additionalProperties().entrySet()) {
-      if (additional.getValue() instanceof BigDecimal bd) {
+      Object val = additional.getValue();
+      if (val instanceof BigDecimal bd) {
         fields.putIfAbsent(additional.getKey(), scale(bd));
+      } else if (val instanceof Number n) {
+        fields.putIfAbsent(additional.getKey(), scale(BigDecimal.valueOf(n.doubleValue())));
       }
     }
     return fields;
@@ -247,13 +252,15 @@ public class FormulaVariableService {
 
     if (tableData.speciesRows() != null) {
       for (SpeciesCompositionRow row : tableData.speciesRows()) {
+        String districtCode = row.district() != null ? row.district().code() : "UNKNOWN";
         if (row.species() != null) {
           for (var entry : row.species().entrySet()) {
             String speciesCode = entry.getKey();
             BigDecimal value = entry.getValue();
-            String path = "sc." + speciesCode;
+            String path = "sc." + districtCode + "." + speciesCode;
             String label = SPECIES_LABELS.getOrDefault(speciesCode, speciesCode);
-            speciesNodes.put(speciesCode, VariableNodeDto.number(path, scale(value), label));
+            String key = speciesCode + "_" + districtCode;
+            speciesNodes.put(key, VariableNodeDto.number(path, scale(value), label + " (" + districtCode + ")"));
           }
         }
       }

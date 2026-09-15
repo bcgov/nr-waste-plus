@@ -56,13 +56,14 @@ public class FormulaSetService {
     }
 
     // Data-integrity guard: more than one open-ended set is a data issue.
-    List<FormulaSetEntity> future = setRepository.findFuture(request.area(), today);
-    List<FormulaSetEntity> openEnded = future.stream()
-        .filter(set -> set.getEndDate() == null).toList();
-    if (openEnded.size() > 1) {
+    List<FormulaSetEntity> openEndedAll = setRepository.findAllOpenEnded(request.area());
+    if (openEndedAll.size() > 1) {
       throw conflict("Data integrity issue: multiple open-ended formula sets exist for area "
           + request.area() + ".");
     }
+    List<FormulaSetEntity> future = setRepository.findFuture(request.area(), today);
+    List<FormulaSetEntity> openEnded = future.stream()
+        .filter(set -> set.getEndDate() == null).toList();
 
     // Close the predecessor if it starts before the new entry.
     FormulaSetEntity predecessor = setRepository
