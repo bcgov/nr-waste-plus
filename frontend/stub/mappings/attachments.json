@@ -50,7 +50,7 @@
         "method": "POST",
         "bodyPatterns": [
           {
-            "matchesJsonPath": "$[?(@.documentType !~ /^(FINAL_MAP|POST_HARVEST_CERTIFICATE|RATIONALE|ENDORSEMENT_LETTER|CALCULATOR_SPREADSHEET|HBS_BILLING_REPORT|REDUCTION_FACTOR_SUPPORT|OTHER)$/)]"
+            "matchesJsonPath": "$[?(!(@.documentType =~ /^(FINAL_MAP|POST_HARVEST_CERTIFICATE|RATIONALE|ENDORSEMENT_LETTER|CALCULATOR_SPREADSHEET|HBS_BILLING_REPORT|REDUCTION_FACTOR_SUPPORT|OTHER)$/))]"
           }
         ]
       },
