@@ -291,6 +291,36 @@ describe('completion provider', () => {
     expect(sorted[0].label).toBe('rate');
   });
 
+  it('shouldTriggerCompletion_onDotCharacter', () => {
+    const { monaco } = mountHook();
+    const [, provider] = monaco.languages.registerCompletionItemProvider.mock.calls[0];
+
+    expect(provider.triggerCharacters).toContain('.');
+  });
+
+  it('shouldProvideDottedRange_whenCursorIsAfterDot', () => {
+    const { monaco } = mountHook({ allVariables: { 'da.mature.total': 34.58 } });
+    const [, provider] = monaco.languages.registerCompletionItemProvider.mock.calls[0];
+    const model = {
+      getLineContent: vi.fn().mockReturnValue('da.'),
+      getWordUntilPosition: vi.fn().mockReturnValue({ startColumn: 4, endColumn: 4 }),
+    };
+    const position = { lineNumber: 1, column: 4 };
+
+    const { suggestions } = provider.provideCompletionItems(model, position);
+    const suggestion = suggestions.find((s: { label: string }) => s.label === 'da.mature.total');
+
+    // The range must cover `da.` so that accepting the suggestion yields the
+    // full dotted path (`da.mature.total`) rather than duplicating `da`.
+    expect(suggestion).toBeDefined();
+    expect(suggestion.range).toEqual({
+      startLineNumber: 1,
+      endLineNumber: 1,
+      startColumn: 1,
+      endColumn: 4,
+    });
+  });
+
   it('shouldIncludeCurrentVariableValue_inDetail', () => {
     const { monaco } = mountHook({ allVariables: { rate: 42 } });
     const [, provider] = monaco.languages.registerCompletionItemProvider.mock.calls[0];

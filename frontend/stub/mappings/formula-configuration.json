@@ -17,12 +17,26 @@
     {
       "name": "Get effective formula set by date and area",
       "request": {
-        "urlPattern": "/api/configuration/formulas/\\d{4}-\\d{2}-\\d{2}/(INTERIOR|COASTAL)",
+        "urlPathPattern": "/api/configuration/formulas/\\d{4}-\\d{2}-\\d{2}/INTERIOR",
         "method": "GET"
       },
       "response": {
         "status": 200,
         "bodyFileName": "configuration/formulas/effective.json",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "name": "Get effective coastal formula set by date",
+      "request": {
+        "urlPathPattern": "/api/configuration/formulas/\\d{4}-\\d{2}-\\d{2}/COASTAL",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "configuration/formulas/effective-coastal.json",
         "headers": {
           "Content-Type": "application/json"
         }
@@ -61,7 +75,7 @@
       "response": {
         "status": 200,
         "jsonBody": {
-          "id": "{{jsonPath request.urlPath '.*/(\\d+)$'}}",
+          "id": "{{request.pathSegments.[3]}}",
           "area": "{{jsonPath request.body '$.area'}}",
           "startDate": "{{jsonPath request.body '$.startDate'}}",
           "endDate": "{{jsonPath request.body '$.endDate'}}",
