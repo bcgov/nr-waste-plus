@@ -2,6 +2,11 @@ package ca.bc.gov.nrs.hrs.configuration;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.base.CodeNameDto;
+import ca.bc.gov.nrs.hrs.dto.block.AttachmentDocumentType;
+import ca.bc.gov.nrs.hrs.dto.block.AttachmentFinalizeResponse;
+import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentRequest;
+import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentResponse;
+import ca.bc.gov.nrs.hrs.dto.block.AttachmentStatus;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientAutocompleteResultDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientLocationDto;
@@ -96,7 +101,12 @@ import tools.jackson.databind.json.JsonMapper.Builder;
   CoastSectionDto.class,
   CoastDistrictRowDto.class,
   SpeciesCompositionTableDataDto.class,
-  SpeciesCompositionRow.class
+  SpeciesCompositionRow.class,
+  AttachmentDocumentType.class,
+  AttachmentStatus.class,
+  AttachmentIntentRequest.class,
+  AttachmentIntentResponse.class,
+  AttachmentFinalizeResponse.class
 })
 @EnableJpaAuditing(auditorAwareRef = "databaseAuditor")
 public class GlobalConfiguration {

@@ -1,0 +1,86 @@
+{
+  "mappings": [
+    {
+      "name": "Block attachment upload intent - FINAL_MAP",
+      "priority": 2,
+      "request": {
+        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/intent",
+        "method": "POST",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$[?(@.documentType == 'FINAL_MAP')]" }
+        ]
+      },
+      "response": {
+        "status": 201,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "attachmentId": 501,
+          "objectKey": "hrs/block/12345/attachment/501/evidence-final-map.pdf",
+          "uploadUrl": "http://localhost:9000/nr-waste/hrs/block/12345/attachment/501/evidence-final-map.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=test%2F20260101%2Fca-central-1%2Fs3%2Faws4_request&X-Amz-Date=20260101T000000Z&X-Amz-Expires=300&X-Amz-SignedHeaders=content-type%3Bhost&X-Amz-Signature=0000000000000000000000000000000000000000000000000000000000000000",
+          "expiresAt": "2026-01-01T00:05:00Z"
+        }
+      }
+    },
+    {
+      "name": "Block attachment upload intent - oversized",
+      "priority": 1,
+      "request": {
+        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/intent",
+        "method": "POST",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$[?(@.declaredSizeBytes > 5242880)]" }
+        ]
+      },
+      "response": {
+        "status": 413,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "type": "about:blank",
+          "title": "Payload Too Large",
+          "status": 413,
+          "detail": "Declared size exceeds the maximum allowed size of 5242880 bytes"
+        }
+      }
+    },
+    {
+      "name": "Block attachment upload intent - invalid document type",
+      "priority": 1,
+      "request": {
+        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/intent",
+        "method": "POST",
+        "bodyPatterns": [
+          {
+            "matchesJsonPath": "$[?(!(@.documentType =~ /^(FINAL_MAP|POST_HARVEST_CERTIFICATE|RATIONALE|ENDORSEMENT_LETTER|CALCULATOR_SPREADSHEET|HBS_BILLING_REPORT|REDUCTION_FACTOR_SUPPORT|OTHER)$/))]"
+          }
+        ]
+      },
+      "response": {
+        "status": 400,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "type": "about:blank",
+          "title": "Bad Request",
+          "status": 400,
+          "detail": "Invalid documentType"
+        }
+      }
+    },
+    {
+      "name": "Block attachment finalize - success",
+      "request": {
+        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/[0-9]+/finalize",
+        "method": "POST"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "attachmentId": 501,
+          "objectKey": "hrs/block/12345/attachment/501/evidence-final-map.pdf",
+          "status": "FINALIZED",
+          "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+        }
+      }
+    }
+  ]
+}
