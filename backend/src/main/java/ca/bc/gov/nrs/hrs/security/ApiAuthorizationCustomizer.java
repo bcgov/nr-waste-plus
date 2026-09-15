@@ -119,6 +119,9 @@ public class ApiAuthorizationCustomizer
         .requestMatchers(HttpMethod.GET, "/api/configuration/formulas/current/**")
         .access(roleCheck.gotRoleMatching(Role.ADMIN))
 
+        .requestMatchers(HttpMethod.GET, "/api/configuration/formulas/*/*")
+        .access(roleCheck.gotRoleMatching(Role.ADMIN))
+
         .requestMatchers(HttpMethod.GET, "/api/configuration/formulas/**")
         .authenticated()
 

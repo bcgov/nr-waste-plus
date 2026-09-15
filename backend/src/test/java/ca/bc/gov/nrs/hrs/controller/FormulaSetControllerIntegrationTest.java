@@ -333,11 +333,11 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
   }
 
   @Test
-  @DisplayName("Effective returns 404 when no set found")
+  @DisplayName("Effective rejects non-admin users")
   @WithMockJwt
-  void effectiveReturns404WhenNotFound() throws Exception {
+  void effectiveRejectsNonAdminUsers() throws Exception {
     mockMvc.perform(get("/api/configuration/formulas/2000-01-01/COASTAL"))
-        .andExpect(status().isNotFound());
+        .andExpect(status().isForbidden());
   }
 
   @Test
