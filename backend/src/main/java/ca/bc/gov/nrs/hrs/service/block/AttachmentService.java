@@ -9,6 +9,14 @@ import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentStatus;
 import ca.bc.gov.nrs.hrs.entity.block.BlockAttachmentEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.exception.AttachmentConflictException;
+import ca.bc.gov.nrs.hrs.exception.AttachmentNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.AttachmentSizeExceededException;
+import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
+import ca.bc.gov.nrs.hrs.exception.InvalidDocumentTypeException;
+import ca.bc.gov.nrs.hrs.exception.InvalidFileNameException;
+import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageObjectNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageProvider;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.StoredObjectSummary;
@@ -22,11 +30,9 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Manages the private object-storage attachment lifecycle: intent registration, presigned PUT
@@ -69,40 +75,23 @@ public class AttachmentService {
 
     long maxSize = objectStorageProperties.getMaxAttachmentSizeBytes();
     if (request.declaredSizeBytes() > maxSize) {
-      throw new ResponseStatusException(
-          HttpStatus.PAYLOAD_TOO_LARGE,
-          String.format(
-              "Declared size %d bytes exceeds the maximum allowed size of %d bytes",
-              request.declaredSizeBytes(), maxSize));
+      throw new AttachmentSizeExceededException(request.declaredSizeBytes(), maxSize);
     }
 
     final AttachmentDocumentType documentType =
         AttachmentDocumentType.from(request.documentType())
-            .orElseThrow(
-                () ->
-                    new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Invalid documentType: " + request.documentType()));
+            .orElseThrow(() -> new InvalidDocumentTypeException(request.documentType()));
 
     ReportingUnitEntity reportingUnit =
         reportingUnitRepository
             .findByIdAndDeletedFalse(reportingUnitId)
-            .orElseThrow(
-                () ->
-                    new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        String.format("Reporting unit %d not found", reportingUnitId)));
+            .orElseThrow(() -> new ReportingUnitNotFoundException(reportingUnitId));
 
     validateClientAccess(jwt, reportingUnit);
 
     blockRepository
         .findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId)
-        .orElseThrow(
-            () ->
-                new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    String.format(
-                        "Block %d not found for reporting unit %d", blockId, reportingUnitId)));
+        .orElseThrow(() -> new BlockNotFoundException(blockId, reportingUnitId));
 
     String sanitizedFileName = sanitizeFileName(request.fileName());
     BlockAttachmentEntity entity = new BlockAttachmentEntity();
@@ -158,73 +147,46 @@ public class AttachmentService {
     ReportingUnitEntity reportingUnit =
         reportingUnitRepository
             .findByIdAndDeletedFalse(reportingUnitId)
-            .orElseThrow(
-                () ->
-                    new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        String.format("Reporting unit %d not found", reportingUnitId)));
+            .orElseThrow(() -> new ReportingUnitNotFoundException(reportingUnitId));
 
     validateClientAccess(jwt, reportingUnit);
 
     blockRepository
         .findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId)
-        .orElseThrow(
-            () ->
-                new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    String.format(
-                        "Block %d not found for reporting unit %d", blockId, reportingUnitId)));
+        .orElseThrow(() -> new BlockNotFoundException(blockId, reportingUnitId));
 
     BlockAttachmentEntity attachment =
         attachmentRepository
             .findByIdAndDeletedFalse(attachmentId)
-            .orElseThrow(
-                () ->
-                    new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Attachment intent not found: " + attachmentId));
+            .orElseThrow(() -> new AttachmentNotFoundException(attachmentId));
 
     if (!attachment.getBlockId().equals(blockId)) {
-      throw new ResponseStatusException(
-          HttpStatus.NOT_FOUND,
-          String.format(
-              "Attachment %d does not belong to block %d", attachmentId, blockId));
+      throw new AttachmentNotFoundException(attachmentId, blockId);
     }
 
     StoredObjectSummary stored;
     try {
       stored = objectStorage.headObject(attachment.getObjectKey());
     } catch (ObjectStorageObjectNotFoundException e) {
-      throw new ResponseStatusException(
-          HttpStatus.CONFLICT,
-          "Uploaded object missing for attachment " + attachmentId);
+      throw AttachmentConflictException.missingObject(attachmentId);
     }
 
     long maxSize = objectStorageProperties.getMaxAttachmentSizeBytes();
     if (stored.sizeBytes() > maxSize) {
-      throw new ResponseStatusException(
-          HttpStatus.PAYLOAD_TOO_LARGE,
-          String.format(
-              "Stored object size %d bytes exceeds the maximum allowed size of %d bytes",
-              stored.sizeBytes(), maxSize));
+      throw AttachmentSizeExceededException.forStoredSize(stored.sizeBytes(), maxSize);
     }
 
     if (attachment.getFileSizeBytes() != null
         && stored.sizeBytes() != attachment.getFileSizeBytes()) {
-      throw new ResponseStatusException(
-          HttpStatus.CONFLICT,
-          String.format(
-              "Size mismatch: expected %d bytes, actual %d bytes",
-              attachment.getFileSizeBytes(), stored.sizeBytes()));
+      throw AttachmentConflictException.sizeMismatch(
+          attachment.getFileSizeBytes(), stored.sizeBytes());
     }
 
     // Checksum is captured on initial finalize; verify it has not drifted on idempotent retries.
     if (StringUtils.isNotBlank(attachment.getChecksum())
         && !attachment.getChecksum().equals(stored.checksum())) {
-      throw new ResponseStatusException(
-          HttpStatus.CONFLICT,
-          String.format(
-              "Checksum mismatch: expected %s, actual %s",
-              attachment.getChecksum(), stored.checksum()));
+      throw AttachmentConflictException.checksumMismatch(
+          attachment.getChecksum(), stored.checksum());
     }
 
     attachment.setStatus(AttachmentStatus.FINALIZED.name());
@@ -256,7 +218,7 @@ public class AttachmentService {
    */
   static String sanitizeFileName(String fileName) {
     if (StringUtils.isBlank(fileName)) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "fileName must not be blank");
+      throw new InvalidFileNameException("fileName must not be blank");
     }
     String normalized = fileName.trim().replace('\\', '/');
     int lastSeparator = normalized.lastIndexOf('/');
@@ -267,8 +229,7 @@ public class AttachmentService {
             .replaceAll("_+", "_")
             .replaceAll("^[._]+", "");
     if (StringUtils.isBlank(cleaned)) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "fileName does not contain a usable name");
+      throw new InvalidFileNameException("fileName does not contain a usable name");
     }
     int dot = cleaned.lastIndexOf('.');
     String stem = dot > 0 ? cleaned.substring(0, dot) : cleaned;
@@ -308,8 +269,7 @@ public class AttachmentService {
             "SECURITY: BCeID user {} attempted unauthorized access to reporting unit {}",
             JwtPrincipalUtil.getUserId(jwt),
             reportingUnit.getId());
-        throw new ResponseStatusException(
-            HttpStatus.FORBIDDEN,
+        throw new ForbiddenException(
             "User is not authorized to access reporting unit: " + reportingUnit.getId());
       }
     }

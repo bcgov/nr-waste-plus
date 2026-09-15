@@ -14,6 +14,14 @@ import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentResponse;
 import ca.bc.gov.nrs.hrs.entity.block.BlockAttachmentEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.exception.AttachmentConflictException;
+import ca.bc.gov.nrs.hrs.exception.AttachmentNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.AttachmentSizeExceededException;
+import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
+import ca.bc.gov.nrs.hrs.exception.InvalidDocumentTypeException;
+import ca.bc.gov.nrs.hrs.exception.InvalidFileNameException;
+import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageObjectNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageProvider;
@@ -119,7 +127,7 @@ class AttachmentServiceTest {
             5L * 1024 * 1024 + 1);
 
     assertThatThrownBy(() -> service.createIntent(null, RU_ID, BLOCK_ID, request))
-        .isInstanceOf(ResponseStatusException.class)
+        .isInstanceOf(AttachmentSizeExceededException.class)
         .satisfies(
             e ->
                 assertThat(((ResponseStatusException) e).getStatusCode())
@@ -131,7 +139,7 @@ class AttachmentServiceTest {
   void rejectsInvalidDocumentType() {
     assertThatThrownBy(
             () -> service.createIntent(null, RU_ID, BLOCK_ID, intentRequest("NOT_A_TYPE")))
-        .isInstanceOf(ResponseStatusException.class)
+        .isInstanceOf(InvalidDocumentTypeException.class)
         .satisfies(
             e ->
                 assertThat(((ResponseStatusException) e).getStatusCode())
@@ -151,7 +159,7 @@ class AttachmentServiceTest {
                     RU_ID,
                     BLOCK_ID,
                     intentRequest(AttachmentDocumentType.FINAL_MAP.name())))
-        .isInstanceOf(ResponseStatusException.class)
+        .isInstanceOf(BlockNotFoundException.class)
         .satisfies(
             e ->
                 assertThat(((ResponseStatusException) e).getStatusCode())
@@ -227,7 +235,7 @@ class AttachmentServiceTest {
         .willReturn(Optional.empty());
 
     assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
-        .isInstanceOf(ResponseStatusException.class)
+        .isInstanceOf(AttachmentNotFoundException.class)
         .satisfies(
             e ->
                 assertThat(((ResponseStatusException) e).getStatusCode())
@@ -245,7 +253,7 @@ class AttachmentServiceTest {
         .willReturn(Optional.of(attachment));
 
     assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
-        .isInstanceOf(ResponseStatusException.class)
+        .isInstanceOf(AttachmentNotFoundException.class)
         .satisfies(
             e ->
                 assertThat(((ResponseStatusException) e).getStatusCode())
@@ -259,7 +267,7 @@ class AttachmentServiceTest {
         .willReturn(Optional.empty());
 
     assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
-        .isInstanceOf(ResponseStatusException.class)
+        .isInstanceOf(BlockNotFoundException.class)
         .satisfies(
             e ->
                 assertThat(((ResponseStatusException) e).getStatusCode())
@@ -279,7 +287,7 @@ class AttachmentServiceTest {
                 "hrs/block/2/attachment/501/report_FINAL-MAP.pdf", new RuntimeException()));
 
     assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
-        .isInstanceOf(ResponseStatusException.class)
+        .isInstanceOf(AttachmentConflictException.class)
         .satisfies(
             e ->
                 assertThat(((ResponseStatusException) e).getStatusCode())
@@ -297,7 +305,7 @@ class AttachmentServiceTest {
         .willReturn(new StoredObjectSummary(2048L, "abc123"));
 
     assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
-        .isInstanceOf(ResponseStatusException.class)
+        .isInstanceOf(AttachmentConflictException.class)
         .satisfies(
             e ->
                 assertThat(((ResponseStatusException) e).getStatusCode())
@@ -315,7 +323,7 @@ class AttachmentServiceTest {
         .willReturn(new StoredObjectSummary(5L * 1024 * 1024 + 1, "abc123"));
 
     assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
-        .isInstanceOf(ResponseStatusException.class)
+        .isInstanceOf(AttachmentSizeExceededException.class)
         .satisfies(
             e ->
                 assertThat(((ResponseStatusException) e).getStatusCode())
@@ -335,7 +343,7 @@ class AttachmentServiceTest {
         .willReturn(new StoredObjectSummary(1024L, "different-checksum"));
 
     assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
-        .isInstanceOf(ResponseStatusException.class)
+        .isInstanceOf(AttachmentConflictException.class)
         .satisfies(
             e ->
                 assertThat(((ResponseStatusException) e).getStatusCode())
@@ -372,7 +380,7 @@ class AttachmentServiceTest {
                     RU_ID,
                     BLOCK_ID,
                     intentRequest(AttachmentDocumentType.FINAL_MAP.name())))
-        .isInstanceOf(ResponseStatusException.class)
+        .isInstanceOf(ReportingUnitNotFoundException.class)
         .extracting(e -> ((ResponseStatusException) e).getStatusCode())
         .isEqualTo(HttpStatus.NOT_FOUND);
   }
@@ -395,7 +403,7 @@ class AttachmentServiceTest {
                     RU_ID,
                     BLOCK_ID,
                     intentRequest(AttachmentDocumentType.FINAL_MAP.name())))
-        .isInstanceOf(ResponseStatusException.class)
+        .isInstanceOf(ForbiddenException.class)
         .extracting(e -> ((ResponseStatusException) e).getStatusCode())
         .isEqualTo(HttpStatus.FORBIDDEN);
   }
@@ -454,7 +462,7 @@ class AttachmentServiceTest {
     given(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).willReturn(Optional.empty());
 
     assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
-        .isInstanceOf(ResponseStatusException.class)
+        .isInstanceOf(ReportingUnitNotFoundException.class)
         .extracting(e -> ((ResponseStatusException) e).getStatusCode())
         .isEqualTo(HttpStatus.NOT_FOUND);
   }
@@ -471,7 +479,7 @@ class AttachmentServiceTest {
             "bceid@example.com");
 
     assertThatThrownBy(() -> service.finalizeAttachment(jwt, RU_ID, BLOCK_ID, ATTACHMENT_ID))
-        .isInstanceOf(ResponseStatusException.class)
+        .isInstanceOf(ForbiddenException.class)
         .extracting(e -> ((ResponseStatusException) e).getStatusCode())
         .isEqualTo(HttpStatus.FORBIDDEN);
   }
@@ -504,7 +512,7 @@ class AttachmentServiceTest {
   @DisplayName("Sanitizes client-supplied file names into safe object-key suffixes")
   void sanitizesFileNames() {
     assertThatThrownBy(() -> AttachmentService.sanitizeFileName("  "))
-        .isInstanceOf(ResponseStatusException.class)
+        .isInstanceOf(InvalidFileNameException.class)
         .satisfies(
             e ->
                 assertThat(((ResponseStatusException) e).getStatusCode())

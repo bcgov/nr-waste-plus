@@ -28,9 +28,17 @@ import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.entity.speciescomposition.SpeciesCompositionRow;
 import ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity;
 import ca.bc.gov.nrs.hrs.entity.users.UserPreferenceEntity;
+import ca.bc.gov.nrs.hrs.exception.AttachmentConflictException;
+import ca.bc.gov.nrs.hrs.exception.AttachmentNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.AttachmentSizeExceededException;
+import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.GlobalExceptionHandler;
+import ca.bc.gov.nrs.hrs.exception.InvalidDocumentTypeException;
+import ca.bc.gov.nrs.hrs.exception.InvalidFileNameException;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
+import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.RequestException;
 import ca.bc.gov.nrs.hrs.exception.RetriableException;
 import ca.bc.gov.nrs.hrs.exception.TooManyRequestsException;
@@ -78,8 +86,16 @@ import tools.jackson.databind.json.JsonMapper.Builder;
   CodeNameDto.class,
   UserPreferenceEntity.class,
   UserIdentityEntity.class,
+  AttachmentConflictException.class,
+  AttachmentNotFoundException.class,
+  AttachmentSizeExceededException.class,
+  BlockNotFoundException.class,
+  ForbiddenException.class,
   ForestClientNotFoundException.class,
+  InvalidDocumentTypeException.class,
+  InvalidFileNameException.class,
   NotFoundGenericException.class,
+  ReportingUnitNotFoundException.class,
   RequestException.class,
   RetriableException.class,
   TooManyRequestsException.class,
