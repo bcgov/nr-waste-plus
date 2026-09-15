@@ -1,0 +1,226 @@
+{
+  "mappings": [
+    {
+      "name": "List formula sets",
+      "request": {
+        "urlPathPattern": "/api/configuration/formulas",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "configuration/formulas/list.json",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "name": "Get effective formula set by date and area",
+      "request": {
+        "urlPathPattern": "/api/configuration/formulas/\\d{4}-\\d{2}-\\d{2}/INTERIOR",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "configuration/formulas/effective.json",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "name": "Get effective coastal formula set by date",
+      "request": {
+        "urlPathPattern": "/api/configuration/formulas/\\d{4}-\\d{2}-\\d{2}/COASTAL",
+        "method": "GET"
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "configuration/formulas/effective-coastal.json",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "name": "Create formula set",
+      "request": {
+        "urlPathPattern": "/api/configuration/formulas",
+        "method": "POST"
+      },
+      "response": {
+        "status": 201,
+        "jsonBody": {
+          "id": 10,
+          "area": "{{jsonPath request.body '$.area'}}",
+          "startDate": "{{jsonPath request.body '$.startDate'}}",
+          "endDate": null,
+          "deleted": false,
+          "formulas": "{{jsonPath request.body '$.formulas'}}",
+          "createdAt": "2026-09-10T10:00:00Z",
+          "updatedAt": "2026-09-10T10:00:00Z"
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "Location": "/api/configuration/formulas/10"
+        }
+      }
+    },
+    {
+      "name": "Update formula set (complete replace)",
+      "request": {
+        "urlPattern": "/api/configuration/formulas/\\d+",
+        "method": "PUT"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "id": "{{request.pathSegments.[3]}}",
+          "area": "{{jsonPath request.body '$.area'}}",
+          "startDate": "{{jsonPath request.body '$.startDate'}}",
+          "endDate": "{{jsonPath request.body '$.endDate'}}",
+          "deleted": false,
+          "formulas": "{{jsonPath request.body '$.formulas'}}",
+          "createdAt": "2026-09-10T10:00:00Z",
+          "updatedAt": "2026-09-10T10:00:00Z"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "name": "Soft-delete future open-ended formula set",
+      "request": {
+        "urlPattern": "/api/configuration/formulas/\\d+",
+        "method": "DELETE"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "name": "Error - Invalid date or area for effective lookup",
+      "request": {
+        "urlPattern": "/api/configuration/formulas/.+",
+        "method": "GET"
+      },
+      "response": {
+        "status": 400,
+        "jsonBody": {
+          "type": "https://example.com/problem/invalid-parameters",
+          "title": "Invalid Parameters",
+          "status": 400,
+          "detail": "Invalid date format or area. Expected date (YYYY-MM-DD) and area (INTERIOR|COASTAL).",
+          "instance": "/api/configuration/formulas/invalid"
+        },
+        "headers": {
+          "Content-Type": "application/problem+json"
+        }
+      }
+    },
+    {
+      "name": "Error - Formula set not found for effective lookup",
+      "request": {
+        "urlPattern": "/api/configuration/formulas/2020-01-01/INTERIOR",
+        "method": "GET"
+      },
+      "response": {
+        "status": 404,
+        "jsonBody": {
+          "type": "https://example.com/problem/not-found",
+          "title": "Not Found",
+          "status": 404,
+          "detail": "No formula set found effective for date 2020-01-01 and area INTERIOR",
+          "instance": "/api/configuration/formulas/2020-01-01/INTERIOR"
+        },
+        "headers": {
+          "Content-Type": "application/problem+json"
+        }
+      }
+    },
+    {
+      "name": "Error - Soft-delete non-future or non-open-ended set",
+      "request": {
+        "urlPattern": "/api/configuration/formulas/1",
+        "method": "DELETE"
+      },
+      "response": {
+        "status": 422,
+        "jsonBody": {
+          "type": "https://example.com/problem/invalid-state",
+          "title": "Invalid State",
+          "status": 422,
+          "detail": "Only future open-ended formula sets can be deleted",
+          "instance": "/api/configuration/formulas/1"
+        },
+        "headers": {
+          "Content-Type": "application/problem+json"
+        }
+      }
+    },
+    {
+      "name": "Error - Create with validation errors in formulas",
+      "request": {
+        "urlPathPattern": "/api/configuration/formulas",
+        "method": "POST",
+        "bodyPatterns": [
+          {
+            "contains": "INVALID_FORMULA"
+          }
+        ]
+      },
+      "response": {
+        "status": 422,
+        "jsonBody": {
+          "type": "https://example.com/problem/validation-failed",
+          "title": "Validation Failed",
+          "status": 422,
+          "detail": "One or more formulas failed validation",
+          "instance": "/api/configuration/formulas",
+          "validationErrors": [
+            {
+              "formulaKey": "da.mature.avoidableGradeY",
+              "errors": [
+                {
+                  "code": "UNKNOWN_VARIABLE",
+                  "message": "Unknown variable: da.mature.avoidableGradeY",
+                  "startOffset": 0,
+                  "endOffset": 24
+                }
+              ]
+            }
+          ]
+        },
+        "headers": {
+          "Content-Type": "application/problem+json"
+        }
+      }
+    },
+    {
+      "name": "Error - Update conflicts with existing future open-ended set",
+      "request": {
+        "urlPattern": "/api/configuration/formulas/\\d+",
+        "method": "PUT",
+        "bodyPatterns": [
+          {
+            "contains": "CONFLICT"
+          }
+        ]
+      },
+      "response": {
+        "status": 409,
+        "jsonBody": {
+          "type": "https://example.com/problem/conflict",
+          "title": "Conflict",
+          "status": 409,
+          "detail": "A future open-ended formula set already exists for this area. Delete it first or adjust the start date.",
+          "instance": "/api/configuration/formulas/5"
+        },
+        "headers": {
+          "Content-Type": "application/problem+json"
+        }
+      }
+    }
+  ]
+}
