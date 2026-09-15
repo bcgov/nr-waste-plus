@@ -28,6 +28,18 @@ describe('useFormulaEngine', () => {
 
       expect(result.current.formula).toBe('a + b');
     });
+
+    it('shouldSynchronizeFormula_whenInitialFormulaChangesAfterMount', () => {
+      let initialFormula = '1';
+      const { result, rerender } = renderHook(() =>
+        useFormulaEngine({ fixedParams: {}, dynamicParams: {}, initialFormula }),
+      );
+
+      initialFormula = 'da.drybelt.avoidableGrade4 * 3';
+      rerender();
+
+      expect(result.current.formula).toBe('da.drybelt.avoidableGrade4 * 3');
+    });
   });
 
   // ── mergedScope ────────────────────────────────────────────────────────────

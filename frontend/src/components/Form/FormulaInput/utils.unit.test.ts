@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 
 import {
   buildDependencyGraph,
+  buildNestedScope,
   evaluateFormula,
   extractVariables,
   isFormulaError,
@@ -67,6 +68,106 @@ describe('FormulaInput utils', () => {
 
       const variables = extractVariables(parsed).sort();
       expect(variables).toEqual(['a', 'b', 'c']);
+    });
+
+    it('shouldExtractFullDottedPath_whenAccessorNodeChainIsPresent', () => {
+      const parsed = parseFormula('block.area.road');
+      expect(isFormulaError(parsed)).toBe(false);
+      if (isFormulaError(parsed)) return;
+
+      const variables = extractVariables(parsed);
+      expect(variables).toEqual(['block.area.road']);
+    });
+
+    it('shouldExtractMultipleDottedPaths_whenMultipleAccessorsUsed', () => {
+      const parsed = parseFormula('da.mature.avoidableGradeY + sc.AL');
+      expect(isFormulaError(parsed)).toBe(false);
+      if (isFormulaError(parsed)) return;
+
+      const variables = extractVariables(parsed).sort();
+      expect(variables).toEqual(['da.mature.avoidableGradeY', 'sc.AL']);
+    });
+
+    it('shouldExtractDottedPathAndBuiltin_whenMixed', () => {
+      const parsed = parseFormula('sqrt(da.mature.total) + pi');
+      expect(isFormulaError(parsed)).toBe(false);
+      if (isFormulaError(parsed)) return;
+
+      const variables = extractVariables(parsed);
+      expect(variables).toEqual(['da.mature.total']);
+    });
+
+    it('shouldNotDoubleCountRootSymbol_whenAccessorNodeIsPresent', () => {
+      const parsed = parseFormula('da.rate + da.bonus');
+      expect(isFormulaError(parsed)).toBe(false);
+      if (isFormulaError(parsed)) return;
+
+      const variables = extractVariables(parsed).sort();
+      expect(variables).toEqual(['da.bonus', 'da.rate']);
+    });
+  });
+
+  describe('buildNestedScope', () => {
+    it('shouldReturnFlatKeys_whenNoDotsPresent', () => {
+      const flat = { rate: 2.5, hours: 4 };
+      const nested = buildNestedScope(flat);
+      expect(nested).toEqual({ rate: 2.5, hours: 4 });
+    });
+
+    it('shouldNestDottedKeysIntoHierarchy', () => {
+      const flat = { 'block.area.road': 123 };
+      const nested = buildNestedScope(flat);
+      expect(nested).toEqual({ block: { area: { road: 123 } } });
+    });
+
+    it('shouldHandleMixedFlatAndDottedKeys', () => {
+      const flat = { rate: 2.5, 'da.mature.total': 34.58 };
+      const nested = buildNestedScope(flat);
+      expect(nested).toEqual({ rate: 2.5, da: { mature: { total: 34.58 } } });
+    });
+
+    it('shouldHandleMultipleDottedKeysUnderSameRoot', () => {
+      const flat = { 'da.mature.total': 34.58, 'da.immature.total': 12.0 };
+      const nested = buildNestedScope(flat);
+      expect(nested).toEqual({
+        da: { mature: { total: 34.58 }, immature: { total: 12.0 } },
+      });
+    });
+
+    it('shouldReturnEmptyObject_whenInputIsEmpty', () => {
+      expect(buildNestedScope({})).toEqual({});
+    });
+  });
+
+  describe('evaluateFormula with nested variables', () => {
+    it('shouldEvaluateDottedVariable_whenScopeHasNestedKeys', () => {
+      const result = evaluateFormula('block.area.road', { 'block.area.road': 123 });
+      expect(result.error).toBeNull();
+      expect(result.value).toBe('123');
+    });
+
+    it('shouldEvaluateNestedExpression_whenScopeHasDottedKeys', () => {
+      const result = evaluateFormula('da.mature.total * 1.5', {
+        'da.mature.total': 34.58,
+      });
+      expect(result.error).toBeNull();
+      expect(result.value).toBe('51.87');
+    });
+
+    it('shouldReturnMissingVariableError_whenDottedKeyIsMissing', () => {
+      const result = evaluateFormula('block.area.road + 1', {});
+      expect(result.value).toBeNull();
+      expect(result.error?.message).toContain('Missing variable: block.area.road');
+      expect(result.error?.token).toBe('block.area.road');
+    });
+
+    it('shouldEvaluateMixedFlatAndDottedVariables', () => {
+      const result = evaluateFormula('rate * da.mature.total', {
+        rate: 2,
+        'da.mature.total': 34.58,
+      });
+      expect(result.error).toBeNull();
+      expect(result.value).toBe('69.16');
     });
   });
 

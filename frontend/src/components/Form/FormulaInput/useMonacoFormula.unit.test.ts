@@ -19,6 +19,7 @@ const makeDisposable = () => ({ dispose: vi.fn() });
 
 const makeMockModel = (formulaText = '') => ({
   getValue: vi.fn().mockReturnValue(formulaText),
+  getLineContent: vi.fn().mockReturnValue(formulaText),
   getLineLength: vi.fn().mockReturnValue(formulaText.length),
   getWordAtPosition: vi.fn().mockReturnValue(null),
   getWordUntilPosition: vi.fn().mockReturnValue({ startColumn: 1, endColumn: 1 }),
@@ -242,7 +243,8 @@ describe('completion provider', () => {
     const { monaco } = mountHook({ allVariables: { rate: 10, hours: 8 } });
     const [, provider] = monaco.languages.registerCompletionItemProvider.mock.calls[0];
     const model = {
-      getWordUntilPosition: vi.fn().mockReturnValue({ startColumn: 1, endColumn: 1 }),
+      getLineContent: vi.fn().mockReturnValue('rate'),
+      getWordUntilPosition: vi.fn().mockReturnValue({ startColumn: 1, endColumn: 5 }),
     };
 
     const { suggestions } = provider.provideCompletionItems(model, makePosition());
@@ -259,6 +261,7 @@ describe('completion provider', () => {
     const { monaco } = mountHook();
     const [, provider] = monaco.languages.registerCompletionItemProvider.mock.calls[0];
     const model = {
+      getLineContent: vi.fn().mockReturnValue(''),
       getWordUntilPosition: vi.fn().mockReturnValue({ startColumn: 1, endColumn: 1 }),
     };
 
@@ -276,6 +279,7 @@ describe('completion provider', () => {
     const { monaco } = mountHook({ allVariables: { rate: 10 } });
     const [, provider] = monaco.languages.registerCompletionItemProvider.mock.calls[0];
     const model = {
+      getLineContent: vi.fn().mockReturnValue('rate'),
       getWordUntilPosition: vi.fn().mockReturnValue({ startColumn: 1, endColumn: 5 }),
     };
 
@@ -291,7 +295,8 @@ describe('completion provider', () => {
     const { monaco } = mountHook({ allVariables: { rate: 42 } });
     const [, provider] = monaco.languages.registerCompletionItemProvider.mock.calls[0];
     const model = {
-      getWordUntilPosition: vi.fn().mockReturnValue({ startColumn: 1, endColumn: 1 }),
+      getLineContent: vi.fn().mockReturnValue('rate'),
+      getWordUntilPosition: vi.fn().mockReturnValue({ startColumn: 1, endColumn: 5 }),
     };
 
     const { suggestions } = provider.provideCompletionItems(model, makePosition());
@@ -309,7 +314,11 @@ describe('hover provider', () => {
   it('shouldReturnNull_whenNoWordAtPosition', () => {
     const { monaco } = mountHook();
     const [, provider] = monaco.languages.registerHoverProvider.mock.calls[0];
-    const model = { getWordAtPosition: vi.fn().mockReturnValue(null) };
+    const model = {
+      getLineContent: vi.fn().mockReturnValue(''),
+      getWordAtPosition: vi.fn().mockReturnValue(null),
+      getWordUntilPosition: vi.fn().mockReturnValue({ startColumn: 1, endColumn: 1 }),
+    };
     expect(provider.provideHover(model, makePosition())).toBeNull();
   });
 
@@ -317,11 +326,13 @@ describe('hover provider', () => {
     const { monaco } = mountHook({ allVariables: { rate: 15 } });
     const [, provider] = monaco.languages.registerHoverProvider.mock.calls[0];
     const model = {
+      getLineContent: vi.fn().mockReturnValue('rate'),
       getWordAtPosition: vi.fn().mockReturnValue({
         word: 'rate',
         startColumn: 1,
         endColumn: 5,
       }),
+      getWordUntilPosition: vi.fn().mockReturnValue({ startColumn: 1, endColumn: 5 }),
     };
 
     const hover = provider.provideHover(model, makePosition());
@@ -333,11 +344,13 @@ describe('hover provider', () => {
     const { monaco } = mountHook();
     const [, provider] = monaco.languages.registerHoverProvider.mock.calls[0];
     const model = {
+      getLineContent: vi.fn().mockReturnValue('sqrt'),
       getWordAtPosition: vi.fn().mockReturnValue({
         word: 'sqrt',
         startColumn: 1,
         endColumn: 5,
       }),
+      getWordUntilPosition: vi.fn().mockReturnValue({ startColumn: 1, endColumn: 5 }),
     };
 
     const hover = provider.provideHover(model, makePosition());
@@ -350,11 +363,13 @@ describe('hover provider', () => {
     const { monaco } = mountHook();
     const [, provider] = monaco.languages.registerHoverProvider.mock.calls[0];
     const model = {
+      getLineContent: vi.fn().mockReturnValue('exp'),
       getWordAtPosition: vi.fn().mockReturnValue({
         word: 'exp', // mathjs builtin but not in BUILTIN_SNIPPETS
         startColumn: 1,
         endColumn: 4,
       }),
+      getWordUntilPosition: vi.fn().mockReturnValue({ startColumn: 1, endColumn: 4 }),
     };
 
     const hover = provider.provideHover(model, makePosition());
@@ -367,11 +382,13 @@ describe('hover provider', () => {
     const { monaco } = mountHook();
     const [, provider] = monaco.languages.registerHoverProvider.mock.calls[0];
     const model = {
+      getLineContent: vi.fn().mockReturnValue('unknownFoo'),
       getWordAtPosition: vi.fn().mockReturnValue({
         word: 'unknownFoo',
         startColumn: 1,
         endColumn: 11,
       }),
+      getWordUntilPosition: vi.fn().mockReturnValue({ startColumn: 1, endColumn: 11 }),
     };
 
     expect(provider.provideHover(model, makePosition())).toBeNull();
