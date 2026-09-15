@@ -1,6 +1,11 @@
 ### Builder
-# Use GraalVM Native Image with Java 21 (LTS) to satisfy connectivity with Oracle DB
+# Use GraalVM Native Image with Java 25. Override jdk.tls.disabledAlgorithms to
+# re-enable TLS_RSA cipher suites and SHA-1 handshake signatures required by
+# Oracle 19c TCPS (see issue #1020).
 FROM ghcr.io/graalvm/native-image-community:25.0.2 AS build
+
+# Re-enable TLS_RSA cipher suites and SHA-1 signatures for Oracle 19c TCPS
+RUN sed -i '/^jdk.tls.disabledAlgorithms=/,/[^\]$/c\jdk.tls.disabledAlgorithms=SSLv3, TLSv1, TLSv1.1, DTLSv1.0, RC4, DES, MD5withRSA, DH keySize < 1024, EC keySize < 224, 3DES_EDE_CBC, anon, NULL, ECDH' $JAVA_HOME/conf/security/java.security
 
 # Copy
 WORKDIR /app
@@ -9,7 +14,7 @@ COPY src ./src
 COPY .mvn/ ./.mvn
 
 # Build
-RUN ./mvnw -Pnative package -DskipTests -Dskip.unit.tests=true -Dspring-boot.run.profiles=prod
+RUN sed -i 's/\r$//' ./mvnw && ./mvnw -Pnative package -DskipTests -Dskip.unit.tests=true -Dspring-boot.run.profiles=prod
 
 ### Deployer
 FROM gcr.io/distroless/java21-debian12:nonroot

@@ -381,13 +381,14 @@ export function useMonacoFormula({
 
   /**
    * Provides variable names (with current values) and mathjs built-in snippets
-   * as completion suggestions. Triggered on identifier characters.
+   * as completion suggestions. Triggered on identifier characters and the dot
+   * separator so namespace suggestions appear immediately after typing `da.`.
    * Pushes to sharedDisposables — global provider shared across instances.
    */
   const registerCompletions = useCallback((monaco: Monaco) => {
     sharedDisposables.push(
       monaco.languages.registerCompletionItemProvider(FORMULA_LANGUAGE_ID, {
-        triggerCharacters: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'.split(''),
+        triggerCharacters: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.'.split(''),
         provideCompletionItems(model: MonacoEditorNS.ITextModel, position: Position) {
           const dotted = getDottedWordRange(model, position);
           const range = dotted

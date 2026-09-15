@@ -40,6 +40,19 @@ describe('useFormulaEngine', () => {
 
       expect(result.current.formula).toBe('da.drybelt.avoidableGrade4 * 3');
     });
+
+    it('shouldPreserveUserEdit_whenInitialFormulaChangesAfterUserEditing', () => {
+      let initialFormula = '1';
+      const { result, rerender } = renderHook(() =>
+        useFormulaEngine({ fixedParams: {}, dynamicParams: {}, initialFormula }),
+      );
+
+      act(() => result.current.setFormula('user * 2'));
+      initialFormula = 'loaded * 3';
+      rerender();
+
+      expect(result.current.formula).toBe('user * 2');
+    });
   });
 
   // ── mergedScope ────────────────────────────────────────────────────────────

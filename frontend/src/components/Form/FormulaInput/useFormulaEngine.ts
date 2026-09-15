@@ -10,7 +10,7 @@
  * rather than re-parsing independently, reducing per-keystroke work.
  */
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { evaluateFormula, extractVariables, parseFormula, isFormulaError } from './utils';
 
@@ -95,9 +95,10 @@ export function useFormulaEngine({
   onChange,
 }: UseFormulaEngineOptions): FormulaEngineState {
   const [formula, setFormulaState] = useState<string>(initialFormula);
+  const hasUserEdited = useRef(false);
 
   useEffect(() => {
-    setFormulaState(initialFormula);
+    if (!hasUserEdited.current) setFormulaState(initialFormula);
   }, [initialFormula]);
 
   // ── Merged scope ───────────────────────────────────────────────────────────
@@ -113,6 +114,7 @@ export function useFormulaEngine({
   // re-receive a new function reference on every render.
   const setFormula = useCallback(
     (f: string) => {
+      hasUserEdited.current = true;
       setFormulaState(f);
       onChange?.(f);
     },

@@ -34,10 +34,10 @@ export default defineConfig(({ mode }) => {
           navigateFallback: '/index.html',
           globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
           sourcemap: true,
-          maximumFileSizeToCacheInBytes: 6000000,
+          maximumFileSizeToCacheInBytes: 15000000,
         },
         injectManifest: {
-          maximumFileSizeToCacheInBytes: 7500000,
+          maximumFileSizeToCacheInBytes: 15000000,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
         },
         manifest: {
