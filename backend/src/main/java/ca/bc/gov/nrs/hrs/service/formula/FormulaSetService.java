@@ -10,7 +10,8 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.FormulaSetRowEntity;
 import ca.bc.gov.nrs.hrs.repository.FormulaSetRepository;
 import ca.bc.gov.nrs.hrs.repository.FormulaSetRowRepository;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class FormulaSetService {
    *   <li>Create the new set.</li>
    * </ol>
    */
-  @Transactional
+  @Transactional(isolation = Isolation.SERIALIZABLE)
   public FormulaSetResponse create(FormulaSetRequest request) {
     validateRequest(request);
     LocalDate today = LocalDate.now();
@@ -126,7 +127,7 @@ public class FormulaSetService {
   }
 
   /** Reads the set effective for a submission date and selected area. */
-  @Transactional(Transactional.TxType.SUPPORTS)
+  @Transactional(readOnly = true)
   public FormulaSetResponse effective(LocalDate date, Area area) {
     FormulaSetEntity set = setRepository.findEffective(area, date)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -137,14 +138,14 @@ public class FormulaSetService {
   }
 
   /** Retrieves the non-deleted formula sets for the administration list. */
-  @Transactional(Transactional.TxType.SUPPORTS)
+  @Transactional(readOnly = true)
   public Page<FormulaSetListItemDto> list(Pageable pageable) {
     Pageable serverPage = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
     return setRepository.findAllLive(serverPage);
   }
 
   /** Retrieves a single formula set by ID. */
-  @Transactional(Transactional.TxType.SUPPORTS)
+  @Transactional(readOnly = true)
   public FormulaSetResponse getById(Long id) {
     FormulaSetEntity set = load(id);
     List<FormulaSetRowEntity> rows = rowRepository
@@ -153,7 +154,7 @@ public class FormulaSetService {
   }
 
   /** Retrieves the current open-ended formula set for carry-forward. */
-  @Transactional(Transactional.TxType.SUPPORTS)
+  @Transactional(readOnly = true)
   public FormulaSetResponse currentOpenEnded(Area area) {
     FormulaSetEntity set = setRepository.findCurrentOpenEnded(area).orElseThrow(
         () -> new ResponseStatusException(
