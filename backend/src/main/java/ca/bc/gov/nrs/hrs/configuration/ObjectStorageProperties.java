@@ -25,34 +25,27 @@ import org.springframework.stereotype.Component;
 public class ObjectStorageProperties {
 
   /** Optional custom endpoint (for example {@code http://localhost:9000} for MinIO). */
-  @Builder.Default
-  private String endpoint = "";
+  private String endpoint;
 
   /** AWS region used for signing; MinIO deployments ignore the exact value. */
-  @Builder.Default
-  private String region = "ca-central-1";
+  private String region;
 
   /** Static access key used when a custom endpoint is configured. */
-  @Builder.Default
-  private String accessKey = "";
+  private String accessKey;
 
   /** Static secret key used when a custom endpoint is configured. */
-  @Builder.Default
-  private String secretKey = "";
+  private String secretKey;
 
   /** Bucket that holds attachment objects. */
-  @Builder.Default
-  private String bucket = "nr-waste";
+  private String bucket;
 
   /** Whether to force path-style addressing (required for MinIO). */
-  @Builder.Default
-  private boolean forcePathStyle = false;
+  private boolean forcePathStyle;
 
   /** Lifetime of presigned upload URLs. */
-  @Builder.Default
-  private Duration presignedUrlDuration = Duration.ofMinutes(5);
+  private Duration presignedUrlDuration;
 
   /** Maximum accepted attachment size in bytes. */
-  @Builder.Default
-  private long maxAttachmentSizeBytes = 5L * 1024 * 1024;
+  private long maxAttachmentSizeBytes;
 }
+
