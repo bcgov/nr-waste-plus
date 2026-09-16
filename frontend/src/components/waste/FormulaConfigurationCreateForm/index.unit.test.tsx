@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
@@ -19,6 +19,16 @@ const mocks = vi.hoisted(() => ({
   variables: {
     data: { flat: {}, catalog: [] } as { flat: Record<string, number>; catalog: unknown[] },
   },
+  variableCalls: [] as unknown[][],
+  districts: {
+    data: [
+      { code: 'DCC', description: 'Dease Lake', areas: ['INTERIOR'] },
+      { code: 'DCK', description: 'Coastal Lake', areas: ['COASTAL'] },
+      { code: 'DKM', description: 'Shared District', areas: ['INTERIOR', 'COASTAL'] },
+      { code: 'DNO', description: 'No Area District' },
+    ],
+    isLoading: false,
+  },
   formulaSectionOnChange: null as ((key: string, expression: string) => void) | null,
   // Store the RadioButtonGroup onChange callback so tests can invoke it directly
   radioGroupOnChange: null as ((value: string, name: string) => void) | null,
@@ -31,7 +41,14 @@ vi.mock('@tanstack/react-router', () => ({
 vi.mock('@/hooks/useFormulaConfiguration', () => ({
   useCreateFormulaSet: () => ({ isPending: false, mutateAsync: mocks.mutateAsync }),
   useCurrentOpenEndedFormulaSet: () => mocks.current,
-  useFormulaVariables: () => mocks.variables,
+  useFormulaVariables: (...args: unknown[]) => {
+    mocks.variableCalls.push(args);
+    return mocks.variables;
+  },
+}));
+
+vi.mock('@/config/react-query/hooks', () => ({
+  useCodesQuery: () => mocks.districts,
 }));
 
 vi.mock('./FormulaSection', () => ({
@@ -40,7 +57,6 @@ vi.mock('./FormulaSection', () => ({
     keys,
     area,
     date,
-    formulas,
     isEditable,
     onChange,
   }: {
@@ -54,7 +70,11 @@ vi.mock('./FormulaSection', () => ({
   }) => {
     mocks.formulaSectionOnChange = onChange;
     return (
-      <div data-testid="formula-section" data-section={sectionName} data-editable={String(isEditable)}>
+      <div
+        data-testid="formula-section"
+        data-section={sectionName}
+        data-editable={String(isEditable)}
+      >
         <span data-testid="formula-section-area">{area}</span>
         <span data-testid="formula-section-date">{date}</span>
         {keys.map((k) => (
@@ -81,7 +101,7 @@ vi.mock('../FormulaVariableCatalog', () => ({
 // The real Carbon RadioButtonGroup doesn't fire onChange in jsdom because
 // the native radio click→change chain is not fully simulated.
 vi.mock('@carbon/react', async (importOriginal) => {
-  const actual: Record<string, unknown> = await importOriginal('@carbon/react');
+  const actual = (await importOriginal()) as Record<string, unknown>;
   const { default: React } = await import('react');
   const { Children, isValidElement } = React;
   return {
@@ -146,6 +166,7 @@ describe('FormulaConfigurationCreateForm', () => {
     mocks.current.isFetched = true;
     mocks.current.error = null;
     mocks.variables.data = { flat: {}, catalog: [] };
+    mocks.variableCalls = [];
     mocks.formulaSectionOnChange = null;
     mocks.radioGroupOnChange = null;
   });
@@ -176,6 +197,14 @@ describe('FormulaConfigurationCreateForm', () => {
     const coast = screen.getByLabelText('Coast') as HTMLInputElement;
     expect(interior.checked).toBe(true);
     expect(coast.checked).toBe(false);
+  });
+
+  it('does not request variables before a district is selected', () => {
+    render(<FormulaConfigurationCreateForm />);
+
+    expect(mocks.variableCalls).toEqual([
+      [{ date: '2026-09-17', area: 'INTERIOR', districtCode: '' }],
+    ]);
   });
 
   it('renders the date picker input', () => {
@@ -301,6 +330,9 @@ describe('FormulaConfigurationCreateForm', () => {
         formulas: expect.any(Array),
       }),
     );
+    expect(mocks.mutateAsync).toHaveBeenCalledWith(
+      expect.not.objectContaining({ districtCode: expect.any(String) }),
+    );
     expect(mocks.navigate).toHaveBeenCalledWith({ to: '/configuration/formulas/42' });
   });
 
@@ -366,6 +398,21 @@ describe('FormulaConfigurationCreateForm', () => {
 
     // handleAreaChange was called — it sets setIsReviewing(false), restoring the edit buttons
     expect(screen.getByRole('button', { name: 'Review formulas' })).toBeTruthy();
+  });
+
+  it('clears district selection when area changes', () => {
+    render(<FormulaConfigurationCreateForm />);
+    // variableCalls first entry should have empty districtCode
+    expect(mocks.variableCalls[0][0]).toHaveProperty('districtCode', '');
+
+    // Change area — handleAreaChange resets districtCode to ''
+    act(() => {
+      mocks.radioGroupOnChange?.('COASTAL', 'area');
+    });
+
+    // A subsequent variable hook call should reflect empty districtCode again
+    const lastCall = mocks.variableCalls[mocks.variableCalls.length - 1][0];
+    expect(lastCall).toHaveProperty('districtCode', '');
   });
 
   it('resets review mode when area changes', () => {

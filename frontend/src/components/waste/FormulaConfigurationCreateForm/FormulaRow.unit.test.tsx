@@ -34,10 +34,7 @@ vi.mock('@/components/Form/FormulaInput', () => ({
       <div data-testid="formula-input" aria-label={ariaLabel}>
         <span data-testid="formula-input-value">{initialFormula}</span>
         {/* Buttons to simulate user interactions for testing callbacks */}
-        <button
-          data-testid="trigger-change"
-          onClick={() => onChange?.('new_value')}
-        >
+        <button data-testid="trigger-change" onClick={() => onChange?.('new_value')}>
           simulate change
         </button>
         <button
@@ -46,10 +43,7 @@ vi.mock('@/components/Form/FormulaInput', () => ({
         >
           simulate error
         </button>
-        <button
-          data-testid="trigger-clear-error"
-          onClick={() => onValidationError?.(null)}
-        >
+        <button data-testid="trigger-clear-error" onClick={() => onValidationError?.(null)}>
           simulate clear error
         </button>
       </div>
@@ -58,13 +52,7 @@ vi.mock('@/components/Form/FormulaInput', () => ({
 }));
 
 vi.mock('@/components/Form/ReadonlyInput', () => ({
-  default: ({
-    label,
-    children,
-  }: {
-    label: string;
-    children?: React.ReactNode;
-  }) => (
+  default: ({ label, children }: { label: string; children?: React.ReactNode }) => (
     <div data-testid="readonly-input">
       <span data-testid="readonly-label">{label}</span>
       <span data-testid="readonly-value">{children}</span>
@@ -81,7 +69,6 @@ vi.mock('@/hooks/useFormulaConfiguration', () => ({
 const keyDef: FormulaKeyDefinition = {
   key: 'WASTE_VOLUME_INTERIOR',
   label: 'Waste Volume - Interior',
-  group: 'Waste Volume Formulas',
 };
 
 const formulaDto: FormulaItemDto = {
@@ -102,6 +89,7 @@ const formulaWithErrors: FormulaItemDto = {
 const defaultProps = {
   area: 'INTERIOR' as const,
   date: '2025-01-15',
+  districtCode: 'DKM',
   keyDef,
   formula: formulaDto,
   isEditable: false,
@@ -141,6 +129,24 @@ describe('FormulaRow', () => {
     it('shows "Not configured" when formula is undefined', () => {
       render(<FormulaRow {...defaultProps} formula={undefined} />);
       expect(screen.getByText('Not configured')).toBeTruthy();
+    });
+
+    it('does not crash when validationErrors is undefined (API omits the field)', () => {
+      const formulaWithoutErrors = { ...formulaDto, validationErrors: undefined };
+      render(<FormulaRow {...defaultProps} formula={formulaWithoutErrors as FormulaItemDto} />);
+      expect(screen.getByText('quantity * rate')).toBeTruthy();
+      expect(screen.queryByRole('alert')).toBeNull();
+    });
+
+    it('does not crash when backend returns only required fields', () => {
+      const minimalFormula = {
+        formulaKey: 'WASTE_VOLUME_INTERIOR',
+        expression: 'quantity * rate',
+        sortOrder: 1,
+      } as unknown as FormulaItemDto;
+      render(<FormulaRow {...defaultProps} formula={minimalFormula} />);
+      expect(screen.getByText('quantity * rate')).toBeTruthy();
+      expect(screen.queryByRole('alert')).toBeNull();
     });
 
     it('displays validation errors', () => {
@@ -254,15 +260,28 @@ describe('FormulaRow', () => {
   // ─── useFormulaVariables ────────────────────────────────────────────────────
 
   describe('useFormulaVariables integration', () => {
-    it('passes date and area to useFormulaVariables', () => {
+    it('skips variables fetch when not editable', () => {
       render(<FormulaRow {...defaultProps} />);
-      expect(mocks.useFormulaVariables).toHaveBeenCalledWith({ date: '2025-01-15', area: 'INTERIOR' });
+      expect(mocks.useFormulaVariables).toHaveBeenCalledWith(
+        { date: '2025-01-15', area: 'INTERIOR', districtCode: 'DKM' },
+        false,
+      );
     });
 
-    it('passes flat variables as dynamicParams to FormulaInput', () => {
+    it('enables variables fetch when editable', () => {
       render(<FormulaRow {...defaultProps} isEditable={true} />);
-      // The mock FormulaInput receives dynamicParams — we verify via the variables hook being called
-      expect(mocks.useFormulaVariables).toHaveBeenCalled();
+      expect(mocks.useFormulaVariables).toHaveBeenCalledWith(
+        { date: '2025-01-15', area: 'INTERIOR', districtCode: 'DKM' },
+        true,
+      );
+    });
+
+    it('passes districtCode through to variables hook', () => {
+      render(<FormulaRow {...defaultProps} districtCode="DCC" isEditable={true} />);
+      expect(mocks.useFormulaVariables).toHaveBeenCalledWith(
+        { date: '2025-01-15', area: 'INTERIOR', districtCode: 'DCC' },
+        true,
+      );
     });
   });
 });

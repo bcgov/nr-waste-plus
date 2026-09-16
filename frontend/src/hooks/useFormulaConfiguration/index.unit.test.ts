@@ -94,11 +94,7 @@ describe('useFormulaConfiguration hooks', () => {
     });
 
     it('should build the detail key with id', () => {
-      expect(formulaConfigurationKeys.detail(42)).toEqual([
-        'formulaConfiguration',
-        'detail',
-        42,
-      ]);
+      expect(formulaConfigurationKeys.detail(42)).toEqual(['formulaConfiguration', 'detail', 42]);
     });
 
     it('should build the current key with params', () => {
@@ -111,7 +107,11 @@ describe('useFormulaConfiguration hooks', () => {
     });
 
     it('should build the variables key with params', () => {
-      const params: FormulaVariablesParams = { date: '2026-01-01', area: 'INTERIOR' };
+      const params: FormulaVariablesParams = {
+        date: '2026-01-01',
+        area: 'INTERIOR',
+        districtCode: 'DKM',
+      };
       expect(formulaConfigurationKeys.variables(params)).toEqual([
         'formulaConfiguration',
         'variables',
@@ -149,7 +149,10 @@ describe('useFormulaConfiguration hooks', () => {
     });
 
     it('should execute queryFn and call API', async () => {
-      const mockData = { content: [], page: { number: 0, size: 20, totalElements: 0, totalPages: 0 } };
+      const mockData = {
+        content: [],
+        page: { number: 0, size: 20, totalElements: 0, totalPages: 0 },
+      };
       (formulaConfiguration.getFormulaSets as ReturnType<typeof vi.fn>).mockResolvedValue(mockData);
       (useQuery as ReturnType<typeof vi.fn>).mockImplementation(({ queryFn }) => ({
         data: queryFn(),
@@ -177,8 +180,6 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
       (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
         data: mockData,
@@ -250,10 +251,10 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
-      (formulaConfiguration.getEffectiveFormulaSet as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+      (formulaConfiguration.getEffectiveFormulaSet as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockResponse,
+      );
       (useQuery as ReturnType<typeof vi.fn>).mockImplementation(({ queryFn }) => ({
         data: queryFn(),
         isLoading: false,
@@ -276,8 +277,6 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
       (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
         data: mockData,
@@ -344,10 +343,10 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
-      (formulaConfiguration.getFormulaSet as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+      (formulaConfiguration.getFormulaSet as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockResponse,
+      );
       (useQuery as ReturnType<typeof vi.fn>).mockImplementation(({ queryFn }) => ({
         data: queryFn(),
         isLoading: false,
@@ -369,8 +368,6 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
       (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
         data: mockData,
@@ -425,10 +422,10 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
-      (formulaConfiguration.getCurrentOpenEndedFormulaSet as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+      (
+        formulaConfiguration.getCurrentOpenEndedFormulaSet as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(mockResponse);
       (useQuery as ReturnType<typeof vi.fn>).mockImplementation(({ queryFn }) => ({
         data: queryFn(),
         isLoading: false,
@@ -458,7 +455,11 @@ describe('useFormulaConfiguration hooks', () => {
         isError: false,
       });
 
-      const params: FormulaVariablesParams = { date: '2026-01-01', area: 'INTERIOR' };
+      const params: FormulaVariablesParams = {
+        date: '2026-01-01',
+        area: 'INTERIOR',
+        districtCode: 'DKM',
+      };
       const { result } = renderHook(() => useFormulaVariables(params));
 
       expect(useQuery).toHaveBeenCalledWith({
@@ -477,7 +478,7 @@ describe('useFormulaConfiguration hooks', () => {
         isError: false,
       });
 
-      const params = { date: '', area: 'INTERIOR' as const };
+      const params = { date: '', area: 'INTERIOR' as const, districtCode: 'DKM' };
       renderHook(() => useFormulaVariables(params));
 
       const callArgs = (useQuery as ReturnType<typeof vi.fn>).mock.calls[0][0];
@@ -491,7 +492,21 @@ describe('useFormulaConfiguration hooks', () => {
         isError: false,
       });
 
-      const params = { date: '2026-01-01', area: '' as unknown as 'INTERIOR' };
+      const params = { date: '2026-01-01', area: '' as unknown as 'INTERIOR', districtCode: 'DKM' };
+      renderHook(() => useFormulaVariables(params));
+
+      const callArgs = (useQuery as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      expect(callArgs.enabled).toBe(false);
+    });
+
+    it('should be disabled when districtCode is missing', () => {
+      (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+      });
+
+      const params = { date: '2026-01-01', area: 'INTERIOR' as const, districtCode: '' };
       renderHook(() => useFormulaVariables(params));
 
       const callArgs = (useQuery as ReturnType<typeof vi.fn>).mock.calls[0][0];
@@ -505,7 +520,11 @@ describe('useFormulaConfiguration hooks', () => {
         isError: false,
       });
 
-      const params: FormulaVariablesParams = { date: '2026-01-01', area: 'INTERIOR' };
+      const params: FormulaVariablesParams = {
+        date: '2026-01-01',
+        area: 'INTERIOR',
+        districtCode: 'DKM',
+      };
       renderHook(() => useFormulaVariables(params, false));
 
       const callArgs = (useQuery as ReturnType<typeof vi.fn>).mock.calls[0][0];
@@ -521,17 +540,41 @@ describe('useFormulaConfiguration hooks', () => {
         schema: {},
         catalog: [],
       };
-      (formulaConfiguration.getVariables as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+      (formulaConfiguration.getVariables as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockResponse,
+      );
       (useQuery as ReturnType<typeof vi.fn>).mockImplementation(({ queryFn }) => ({
         data: queryFn(),
         isLoading: false,
         isError: false,
       }));
 
-      const params: FormulaVariablesParams = { date: '2026-01-01', area: 'INTERIOR' };
+      const params: FormulaVariablesParams = {
+        date: '2026-01-01',
+        area: 'INTERIOR',
+        districtCode: 'DKM',
+      };
       renderHook(() => useFormulaVariables(params));
 
       expect(formulaConfiguration.getVariables).toHaveBeenCalledWith(params);
+    });
+
+    it('should build different query keys when districtCode changes', () => {
+      const params1: FormulaVariablesParams = {
+        date: '2026-01-01',
+        area: 'INTERIOR',
+        districtCode: 'DKM',
+      };
+      const params2: FormulaVariablesParams = {
+        date: '2026-01-01',
+        area: 'INTERIOR',
+        districtCode: 'DCC',
+      };
+      const key1 = formulaConfigurationKeys.variables(params1);
+      const key2 = formulaConfigurationKeys.variables(params2);
+      expect(key1).not.toEqual(key2);
+      expect(key1).toEqual(['formulaConfiguration', 'variables', params1]);
+      expect(key2).toEqual(['formulaConfiguration', 'variables', params2]);
     });
   });
 
@@ -572,8 +615,6 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
       (formulaConfiguration.createFormulaSet as ReturnType<typeof vi.fn>).mockResolvedValue(
         mockResponse,
@@ -606,17 +647,19 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
-      (formulaConfiguration.createFormulaSet as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+      (formulaConfiguration.createFormulaSet as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockResponse,
+      );
 
       let capturedOnSuccess: ((data: FormulaSetResponse) => void) | undefined;
       (useMutation as ReturnType<typeof vi.fn>).mockImplementation(({ onSuccess }) => {
         capturedOnSuccess = onSuccess;
         return { mutateAsync: vi.fn(), isPending: false };
       });
-      (useQueryClient as ReturnType<typeof vi.fn>).mockReturnValue({ invalidateQueries: mockInvalidate });
+      (useQueryClient as ReturnType<typeof vi.fn>).mockReturnValue({
+        invalidateQueries: mockInvalidate,
+      });
 
       renderHook(() => useCreateFormulaSet());
 
@@ -666,8 +709,6 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
 
       let capturedOnSuccess: ((data: FormulaSetResponse) => void) | undefined;

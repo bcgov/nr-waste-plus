@@ -20,7 +20,9 @@ const fixture: FormulaSetResponse = {
       formulaKey: 'block.waste.avoidable_sawlog',
       expression: '1.5',
       declaredVariables: [],
-      validationErrors: [{ code: 'UNKNOWN_VARIABLE', message: 'Variable is not defined', startOffset: 2 }],
+      validationErrors: [
+        { code: 'UNKNOWN_VARIABLE', message: 'Variable is not defined', startOffset: 2 },
+      ],
       sortOrder: 1,
     },
     {
@@ -31,8 +33,6 @@ const fixture: FormulaSetResponse = {
       sortOrder: 2,
     },
   ],
-  createdAt: '2026-05-15T14:23:00Z',
-  updatedAt: '2026-06-01T10:00:00Z',
 };
 
 describe('FormulaConfigurationDetailView', () => {
@@ -50,5 +50,27 @@ describe('FormulaConfigurationDetailView', () => {
   it('renders the formula set metadata', () => {
     render(<FormulaConfigurationDetailView data={fixture} />);
     expect(screen.getByText('Open-ended')).toBeTruthy();
+  });
+
+  it('does not crash when API response omits declaredVariables and validationErrors', () => {
+    const minimalFixture: FormulaSetResponse = {
+      ...fixture,
+      formulas: [
+        {
+          formulaKey: 'block.waste.avoidable_sawlog',
+          expression: '1.5',
+          sortOrder: 1,
+        },
+        {
+          formulaKey: 'da.mature.avoidableGradeY',
+          expression: '2.5',
+          sortOrder: 2,
+        },
+      ],
+    };
+    render(<FormulaConfigurationDetailView data={minimalFixture} />);
+    expect(screen.getByText('Avoidable Sawlog Volume')).toBeTruthy();
+    expect(screen.getByText('1.5')).toBeTruthy();
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });
