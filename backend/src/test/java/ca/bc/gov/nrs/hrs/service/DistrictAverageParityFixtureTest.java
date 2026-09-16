@@ -50,23 +50,23 @@ class DistrictAverageParityFixtureTest {
   @Test
   void fixturesAreExplicitlyDiscoveredAndMatchFixtureContract() throws IOException {
     JsonNode schema = readFixture(SCHEMA_NAME);
-    assertThat(schema.path("$schema").asText())
+    assertThat(schema.path("$schema").asString())
         .isEqualTo("http://json-schema.org/draft-07/schema#");
     assertThat(schema.path("additionalProperties").asBoolean()).isFalse();
 
     for (String name : FIXTURE_NAMES) {
       JsonNode fixture = readFixture(name);
       assertFixtureAgainstSchema(fixture, schema, name);
-      assertThat(fixture.path("caseId").asText()).isNotBlank();
-      assertThat(fixture.path("area").asText()).isIn("INTERIOR", "COASTAL");
-      if (fixture.path("area").asText().equals("COASTAL")) {
-        assertThat(fixture.path("maturity").asText()).isIn("Immature", "Mature");
+      assertThat(fixture.path("caseId").asString()).isNotBlank();
+      assertThat(fixture.path("area").asString()).isIn("INTERIOR", "COASTAL");
+      if (fixture.path("area").asString().equals("COASTAL")) {
+        assertThat(fixture.path("maturity").asString()).isIn("Immature", "Mature");
       }
-      assertThat(fixture.path("workbookReference").asText())
+      assertThat(fixture.path("workbookReference").asString())
           .matches(
               "(?s)^(?=.*(Provincial v1\\.1 workbook|Coast Table Layout))"
                   + "(?=.*Manual p(37|38|52|53|54)(?:-\\d+)?).+$");
-      assertThat(fixture.path("inputs").path("benchmark").path("source").asText())
+      assertThat(fixture.path("inputs").path("benchmark").path("source").asString())
           .matches("(?s)^.*Manual p(37|38|52|53|54)(?:-\\d+)?.*$");
       assertThat(fixture.path("expected").has("trace")).isFalse();
       assertThat(fixture.path("expected").has("formula")).isFalse();
@@ -104,7 +104,7 @@ class DistrictAverageParityFixtureTest {
               .map(node -> decimal(node.get("volumeM3")))
               .reduce(BigDecimal.ZERO, BigDecimal::add);
       Map<String, List<JsonNode>> byGrade =
-          species.stream().collect(Collectors.groupingBy(node -> node.path("grade").asText("U")));
+          species.stream().collect(Collectors.groupingBy(node -> node.path("grade").asString("U")));
       Map<String, BigDecimal> residuals = residuals(fixture);
 
       byGrade.forEach(
@@ -134,25 +134,25 @@ class DistrictAverageParityFixtureTest {
           .path("residualAllocation")
           .forEach(
               node -> {
-                String grade = node.path("grade").asText("U");
-                String code = node.path("species").asText();
+                String grade = node.path("grade").asString("U");
+                String code = node.path("species").asString();
                 List<JsonNode> gradeSpecies = byGrade.get(grade);
                 assertThat(gradeSpecies).isNotNull();
                 gradeSpecies.stream()
-                    .filter(speciesNode -> code.equals(speciesNode.path("code").asText()))
+                    .filter(speciesNode -> code.equals(speciesNode.path("code").asString()))
                     .findFirst()
                     .orElseThrow();
                 assertThat(decimal(node.get("residualM3")).remainder(ZERO_TICK))
                     .isEqualByComparingTo(BigDecimal.ZERO);
                 assertThat(code)
-                    .isEqualTo(selectResidualSpecies(gradeSpecies).path("code").asText());
+                    .isEqualTo(selectResidualSpecies(gradeSpecies).path("code").asString());
               });
       assertThat(
               fixture
                   .path("expected")
                   .path("residualAllocation")
                   .valueStream()
-                  .map(node -> node.path("grade").asText("U"))
+                  .map(node -> node.path("grade").asString("U"))
                   .distinct()
                   .count())
           .isEqualTo(fixture.path("expected").path("residualAllocation").size());
@@ -179,17 +179,17 @@ class DistrictAverageParityFixtureTest {
             List.of(
                 JSON_MAPPER.createObjectNode().put("code", "ZZ").put("volumeM3", 10),
                 JSON_MAPPER.createObjectNode().put("code", "AA").put("volumeM3", 10)));
-    assertThat(selected.path("code").asText()).isEqualTo("AA");
+    assertThat(selected.path("code").asString()).isEqualTo("AA");
   }
 
   private static BigDecimal referenceTotal(JsonNode fixture) {
     JsonNode inputs = fixture.path("inputs");
     String key =
-        inputs.path("districtCode").asText()
+        inputs.path("districtCode").asString()
             + "|"
-            + fixture.path("area").asText()
+            + fixture.path("area").asString()
             + "|"
-            + inputs.path("benchmark").path("zone").asText(fixture.path("benchmarkZone").asText());
+            + inputs.path("benchmark").path("zone").asString(fixture.path("benchmarkZone").asString());
     BigDecimal factor = DISTRICT_FACTORS.get(key);
     assertThat(factor).as("known district factor %s", key).isNotNull();
     BigDecimal total =
@@ -231,7 +231,7 @@ class DistrictAverageParityFixtureTest {
         .forEach(
             node ->
                 result.merge(
-                    node.path("grade").asText("U"),
+                    node.path("grade").asString("U"),
                     decimal(node.get("residualM3")),
                     BigDecimal::add));
     return result;
@@ -241,7 +241,7 @@ class DistrictAverageParityFixtureTest {
     return species.stream()
         .max(
             Comparator.comparing((JsonNode node) -> decimal(node.get("volumeM3")))
-                .thenComparing(node -> node.path("code").asText(), Comparator.reverseOrder()))
+                .thenComparing(node -> node.path("code").asString(), Comparator.reverseOrder()))
         .orElseThrow();
   }
 
@@ -259,15 +259,15 @@ class DistrictAverageParityFixtureTest {
         fixture.path("expected"), schema.path("properties").path("expected"), name);
     assertThat(fixture.path("inputs").path("species").isArray()).as(name).isTrue();
     JsonNode inputs = fixture.path("inputs");
-    assertThat(inputs.path("districtCode").asText()).matches("D[A-Z]{2}");
+    assertThat(inputs.path("districtCode").asString()).matches("D[A-Z]{2}");
     assertThat(inputs.path("netWasteAreaHa").isNumber()).isTrue();
     assertThat(inputs.path("netWasteAreaHa").decimalValue()).isPositive();
     assertThat(inputs.path("tableLevelFactor").isNumber()).isTrue();
     assertThat(inputs.path("tableLevelFactor").decimalValue()).isPositive();
-    assertThat(inputs.path("benchmark").path("zone").asText()).isNotBlank();
+    assertThat(inputs.path("benchmark").path("zone").asString()).isNotBlank();
     assertThat(inputs.path("benchmark").path("valueM3PerHa").isNumber()).isTrue();
     assertThat(inputs.path("benchmark").path("valueM3PerHa").decimalValue()).isPositive();
-    assertThat(inputs.path("benchmark").path("source").asText())
+    assertThat(inputs.path("benchmark").path("source").asString())
         .matches("(?s)^.*Manual p(37|38|52|53|54)(?:-\\d+)?.*$");
     assertThat(inputs.path("has_dispersed_retention").isBoolean()).isTrue();
     assertThat(inputs.path("heli_logging").isBoolean()).isTrue();
@@ -289,8 +289,8 @@ class DistrictAverageParityFixtureTest {
         .path("species")
         .forEach(
             species -> {
-              assertThat(species.path("code").asText()).hasSizeGreaterThanOrEqualTo(2);
-              assertThat(species.path("grade").asText()).isNotBlank();
+              assertThat(species.path("code").asString()).hasSizeGreaterThanOrEqualTo(2);
+              assertThat(species.path("grade").asString()).isNotBlank();
               assertThat(species.path("volumeM3").isNumber()).isTrue();
               assertThat(species.path("volumeM3").decimalValue()).isNotNegative();
             });
@@ -301,8 +301,8 @@ class DistrictAverageParityFixtureTest {
         .path("residualAllocation")
         .forEach(
             allocation -> {
-              assertThat(allocation.path("species").asText()).isNotBlank();
-              assertThat(allocation.path("grade").asText()).isNotBlank();
+              assertThat(allocation.path("species").asString()).isNotBlank();
+              assertThat(allocation.path("grade").asString()).isNotBlank();
               assertThat(allocation.path("residualM3").isNumber()).isTrue();
               assertThat(decimal(allocation.get("residualM3")).remainder(ZERO_TICK))
                   .isEqualByComparingTo(BigDecimal.ZERO);
@@ -312,7 +312,7 @@ class DistrictAverageParityFixtureTest {
 
   private static void assertObjectMatchesSchema(JsonNode value, JsonNode schema, String name) {
     assertThat(value.isObject()).as("object %s", name).isTrue();
-    List<String> required = nodes(schema.path("required")).stream().map(JsonNode::asText).toList();
+    List<String> required = nodes(schema.path("required")).stream().map(JsonNode::asString).toList();
     assertThat(propertyNames(value)).containsAll(required);
     if (!schema.path("additionalProperties").asBoolean(true)) {
       assertThat(propertyNames(schema.path("properties"))).containsAll(propertyNames(value));
@@ -334,6 +334,6 @@ class DistrictAverageParityFixtureTest {
   }
 
   private static BigDecimal decimal(JsonNode node) {
-    return new BigDecimal(node.asText());
+    return new BigDecimal(node.asString());
   }
 }

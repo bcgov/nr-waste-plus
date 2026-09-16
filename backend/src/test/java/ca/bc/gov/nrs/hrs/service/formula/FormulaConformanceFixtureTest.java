@@ -28,29 +28,29 @@ class FormulaConformanceFixtureTest {
   @Test
   void should_match_shared_fixture_contract() throws IOException {
     JsonNode root = JSON.readTree(Files.readString(fixturePath()));
-    assertThat(root.path("contractVersion").asText()).isEqualTo("1.0");
+    assertThat(root.path("contractVersion").asString()).isEqualTo("1.0");
     List<String> namespaces = new ArrayList<>();
-    root.path("namespaces").forEach(node -> namespaces.add(node.asText()));
+    root.path("namespaces").forEach(node -> namespaces.add(node.asString()));
     assertThat(namespaces).containsExactly("da", "sc", "submission", "hbs", "fta");
     assertThat(root.path("diagnosticCodes").size()).isEqualTo(7);
     assertThat(root.path("rounding").path("scale").asInt()).isEqualTo(3);
-    assertThat(root.path("rounding").path("mode").asText()).isEqualTo("HALF_UP");
+    assertThat(root.path("rounding").path("mode").asString()).isEqualTo("HALF_UP");
     assertThat(root.path("cases").isArray()).isTrue();
 
     for (JsonNode fixture : root.path("cases")) {
-      assertThat(fixture.path("id").asText()).isNotBlank();
-      assertThat(fixture.path("mode").asText()).isIn("MATHEMATICAL", "CONDITIONAL");
+      assertThat(fixture.path("id").asString()).isNotBlank();
+      assertThat(fixture.path("mode").asString()).isIn("MATHEMATICAL", "CONDITIONAL");
       assertThat(fixture.path("variables").isObject()).isTrue();
       assertThat(fixture.has("expression") || fixture.has("definitions"))
-          .as(fixture.path("id").asText())
+          .as(fixture.path("id").asString())
           .isTrue();
-      String status = fixture.path("expected").path("status").asText();
+      String status = fixture.path("expected").path("status").asString();
       assertThat(fixture.path("expected").isObject()).isTrue();
-      assertThat(status).as(fixture.path("id").asText()).isIn(ALLOWED_STATUSES);
+      assertThat(status).as(fixture.path("id").asString()).isIn(ALLOWED_STATUSES);
       List<FormulaDefinition> definitions = definitionsFor(fixture);
-      FormulaParseMode mode = FormulaParseMode.valueOf(fixture.path("mode").asText());
+      FormulaParseMode mode = FormulaParseMode.valueOf(fixture.path("mode").asString());
       if ("PENDING_EVALUATOR".equals(status)) {
-        assertThat(fixture.path("expected").path("reason").asText()).isNotBlank();
+        assertThat(fixture.path("expected").path("reason").asString()).isNotBlank();
         for (FormulaDefinition definition : definitions) {
           // Pending cases still require parsing; unresolved values are evaluator-pending.
           new FormulaParser(new FormulaParser.Options(30, 200))
@@ -69,17 +69,17 @@ class FormulaConformanceFixtureTest {
       List<FormulaValidationError> errors =
           VALIDATOR.validate(new FormulaValidationRequest(definitions, variables, mode));
       assertThat(errors)
-          .as(fixture.path("id").asText())
+          .as(fixture.path("id").asString())
           .hasSameSizeAs(fixture.path("expected").path("errors"));
       for (int index = 0; index < errors.size(); index++) {
         JsonNode expected = fixture.path("expected").path("errors").get(index);
-        assertThat(errors.get(index).code().name()).isEqualTo(expected.path("code").asText());
+        assertThat(errors.get(index).code().name()).isEqualTo(expected.path("code").asString());
         if (expected.has("startOffset")) {
           assertThat(errors.get(index).startOffset())
-              .as(fixture.path("id").asText())
+              .as(fixture.path("id").asString())
               .isEqualTo(expected.path("startOffset").asInt());
           assertThat(errors.get(index).endOffset())
-              .as(fixture.path("id").asText())
+              .as(fixture.path("id").asString())
               .isEqualTo(expected.path("endOffset").asInt());
         }
       }
@@ -99,7 +99,7 @@ class FormulaConformanceFixtureTest {
 
   private static List<FormulaDefinition> definitionsFor(JsonNode fixture) {
     assertThat(fixture.has("expression") ^ fixture.has("definitions"))
-        .as(fixture.path("id").asText())
+        .as(fixture.path("id").asString())
         .isTrue();
     if (fixture.has("definitions")) {
       assertThat(fixture.path("definitions").isArray()).isTrue();
@@ -107,16 +107,16 @@ class FormulaConformanceFixtureTest {
       List<FormulaDefinition> definitions = new ArrayList<>();
       for (JsonNode definition : fixture.path("definitions")) {
         assertThat(definition.isObject()).isTrue();
-        assertThat(definition.path("key").asText()).isNotBlank();
-        assertThat(definition.path("expression").asText()).isNotBlank();
+        assertThat(definition.path("key").asString()).isNotBlank();
+        assertThat(definition.path("expression").asString()).isNotBlank();
         definitions.add(
             new FormulaDefinition(
-                definition.path("key").asText(), definition.path("expression").asText()));
+                definition.path("key").asString(), definition.path("expression").asString()));
       }
       return definitions;
     }
-    assertThat(fixture.path("expression").asText()).isNotBlank();
-    return List.of(new FormulaDefinition("fixture", fixture.path("expression").asText()));
+    assertThat(fixture.path("expression").asString()).isNotBlank();
+    return List.of(new FormulaDefinition("fixture", fixture.path("expression").asString()));
   }
 
   private static void assertAst(String expression, FormulaParseMode mode, JsonNode expected) {
@@ -127,11 +127,11 @@ class FormulaConformanceFixtureTest {
 
   private static void assertAstNode(FormulaNode node, JsonNode expected) {
     assertThat(node.getClass().getSimpleName().toLowerCase())
-        .contains(expected.path("kind").asText());
+        .contains(expected.path("kind").asString());
     if (node instanceof LiteralNode literal) {
-      assertThat(literal.value()).isEqualByComparingTo(expected.path("value").asText());
+      assertThat(literal.value()).isEqualByComparingTo(expected.path("value").asString());
     } else if (node instanceof BinaryOperationNode binary) {
-      assertThat(binary.operator().symbol()).isEqualTo(expected.path("operator").asText());
+      assertThat(binary.operator().symbol()).isEqualTo(expected.path("operator").asString());
       if (expected.has("left")) {
         assertAstNode(binary.left(), expected.path("left"));
         assertAstNode(binary.right(), expected.path("right"));
@@ -146,7 +146,7 @@ class FormulaConformanceFixtureTest {
   private static void assertEvaluation(
       JsonNode fixture, List<FormulaDefinition> definitions, FormulaParseMode mode) {
     JsonNode eval = fixture.path("evaluation");
-    String evalStatus = eval.path("status").asText();
+    String evalStatus = eval.path("status").asString();
     Map<String, BigDecimal> variables =
         JSON.convertValue(
             fixture.path("variables"),
@@ -160,20 +160,20 @@ class FormulaConformanceFixtureTest {
       org.assertj.core.api.Assertions.assertThatThrownBy(
               () -> FormulaEvaluator.evaluate(ast, variables))
           .isInstanceOf(FormulaEvaluationException.class)
-          .hasMessageContaining(eval.path("expectedMessageContains").asText());
+          .hasMessageContaining(eval.path("expectedMessageContains").asString());
     } else if ("VALID".equals(evalStatus)) {
       assertThat(definitions).hasSize(1);
       FormulaNode ast =
           new FormulaParser(new FormulaParser.Options(30, 200))
               .parse(definitions.get(0).expression(), mode);
       BigDecimal result = FormulaEvaluator.evaluate(ast, variables);
-      assertThat(result).isEqualByComparingTo(eval.path("expectedResult").asText());
+      assertThat(result).isEqualByComparingTo(eval.path("expectedResult").asString());
     } else {
       throw new AssertionError(
           "Unknown evaluation status: "
               + evalStatus
               + " in fixture case "
-              + fixture.path("id").asText());
+              + fixture.path("id").asString());
     }
   }
 }

@@ -361,7 +361,7 @@ class DistrictVolumeControllerTest {
         .perform(
             delete("/api/configuration/district-average-volumes/42")
                 .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isUnprocessableEntity());
+        .andExpect(status().isUnprocessableContent());
 
     verify(districtVolumeService).deleteDistrictVolume(eq("IDIR\\jakethedog"), eq(42L));
   }
@@ -383,7 +383,7 @@ class DistrictVolumeControllerTest {
         .perform(
             delete("/api/configuration/district-average-volumes/42")
                 .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isUnprocessableEntity());
+        .andExpect(status().isUnprocessableContent());
 
     verify(districtVolumeService).deleteDistrictVolume(eq("IDIR\\jakethedog"), eq(42L));
   }

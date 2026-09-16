@@ -61,13 +61,13 @@ class AttachmentServiceTest {
   @Mock
   private BlockRepository blockRepository;
 
-  @Mock(lenient = true)
+  @Mock(strictness = Mock.Strictness.LENIENT)
   private ReportingUnitRepository reportingUnitRepository;
 
   @Mock
   private ObjectStorageProvider objectStorage;
 
-  @Mock(lenient = true)
+  @Mock(strictness = Mock.Strictness.LENIENT)
   private ObjectStorageProperties objectStorageProperties;
 
   @InjectMocks
@@ -131,7 +131,7 @@ class AttachmentServiceTest {
         .satisfies(
             e ->
                 assertThat(((ResponseStatusException) e).getStatusCode())
-                    .isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE));
+                    .isEqualTo(HttpStatus.CONTENT_TOO_LARGE));
   }
 
   @Test
@@ -327,7 +327,7 @@ class AttachmentServiceTest {
         .satisfies(
             e ->
                 assertThat(((ResponseStatusException) e).getStatusCode())
-                    .isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE));
+                    .isEqualTo(HttpStatus.CONTENT_TOO_LARGE));
   }
 
   @Test
