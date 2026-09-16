@@ -484,7 +484,7 @@ describe('reactive markers', () => {
     });
 
     const lastCall = monaco.editor.setModelMarkers.mock.calls.at(-1);
-    const [, , markers] = lastCall;
+    const [, , markers] = lastCall ?? [];
     expect(markers[0]).toMatchObject({ startColumn: 8, endColumn: 11 });
   });
 
@@ -504,7 +504,7 @@ describe('reactive markers', () => {
     });
 
     const lastCall = monaco.editor.setModelMarkers.mock.calls.at(-1);
-    const [, , markers] = lastCall;
+    const [, , markers] = lastCall ?? [];
     // 'bad' starts at index 7 → 1-based column 8
     expect(markers[0].startColumn).toBe(8);
     expect(markers[0].endColumn).toBe(11);
@@ -527,7 +527,7 @@ describe('reactive markers', () => {
     });
 
     const lastCall = monaco.editor.setModelMarkers.mock.calls.at(-1);
-    const [, , markers] = lastCall;
+    const [, , markers] = lastCall ?? [];
     expect(markers[0].endColumn).toBe(9); // 8 + 1
   });
 
@@ -547,7 +547,7 @@ describe('reactive markers', () => {
     });
 
     const lastCall = monaco.editor.setModelMarkers.mock.calls.at(-1);
-    const [, , markers] = lastCall;
+    const [, , markers] = lastCall ?? [];
     // Falls back to startColumn=1 (full line)
     expect(markers[0].startColumn).toBe(1);
   });

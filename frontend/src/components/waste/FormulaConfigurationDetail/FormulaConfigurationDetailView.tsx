@@ -1,32 +1,34 @@
 import { Column } from '@carbon/react';
 import { type FC } from 'react';
 
-import { FORMULA_KEYS, getFormulaLabel } from '@/services/formulaConfiguration.constants';
+import FormulaConfigurationDetailHeader from './FormulaConfigurationDetailHeader';
+
 import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
 
-import FormulaConfigurationDetailHeader from './FormulaConfigurationDetailHeader';
 import FormulaSection from '@/components/waste/FormulaConfigurationCreateForm/FormulaSection';
+import {
+  FORMULA_KEYS,
+  getFormulaLabel,
+  type FormulaKeyDefinition,
+} from '@/services/formulaConfiguration.constants';
 
 interface FormulaConfigurationDetailViewProps {
   data: FormulaSetResponse;
 }
 
 const FormulaConfigurationDetailView: FC<FormulaConfigurationDetailViewProps> = ({ data }) => {
-  const knownKeys = Object.values(FORMULA_KEYS[data.area]).flat();
-  const knownKeySet = new Set(knownKeys.map(({ key }) => key));
-  const sections = Object.entries(FORMULA_KEYS[data.area])
-    .map(([sectionName, keys]) => [
-      sectionName,
-      keys.filter((keyDef) => data.formulas.some(({ formulaKey }) => formulaKey === keyDef.key)),
-    ] as const)
-    .filter(([, keys]) => keys.length > 0);
-  const additionalKeys = data.formulas
-    .filter(({ formulaKey }) => !knownKeySet.has(formulaKey))
+  const configuredKeys = new Set(
+    Object.values(FORMULA_KEYS[data.area])
+      .flat()
+      .map(({ key }) => key),
+  );
+  const additionalKeys: FormulaKeyDefinition[] = data.formulas
+    .filter(({ formulaKey }) => !configuredKeys.has(formulaKey))
     .map(({ formulaKey }) => ({ key: formulaKey, label: getFormulaLabel(data.area, formulaKey) }));
-
-  if (additionalKeys.length > 0) {
-    sections.push(['Additional Formulas', additionalKeys]);
-  }
+  const sections = [
+    ...Object.entries(FORMULA_KEYS[data.area]),
+    ...(additionalKeys.length > 0 ? [['Additional Formulas', additionalKeys] as const] : []),
+  ];
 
   return (
     <>

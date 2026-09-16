@@ -1,0 +1,41 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+
+.formula-config-create-column__content {
+  margin-top: $spacing-08;
+
+  @include breakpoint-down(md) {
+    margin-top: $spacing-04;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-08;
+
+    @include breakpoint-down(md) {
+      padding: $spacing-02 $spacing-02;
+      flex-shrink: 0;
+    }
+  }
+}
+
+.formula-config-create-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: $spacing-04;
+  margin-top: $spacing-08;
+  padding-top: $spacing-06;
+  border-top: 1px solid var(--cds-border-subtle-01);
+
+  @include breakpoint-down(md) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.formula-variable-catalog-trigger {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: $spacing-04;
+}
