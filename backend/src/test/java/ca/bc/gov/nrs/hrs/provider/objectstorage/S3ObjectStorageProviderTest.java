@@ -8,7 +8,6 @@ import static org.mockito.Mockito.mock;
 
 import ca.bc.gov.nrs.hrs.configuration.ObjectStorageProperties;
 import java.net.URI;
-import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
