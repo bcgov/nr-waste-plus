@@ -155,6 +155,9 @@
          <column autoUpdated="false" defaultValue="now()" digits="6" id="9" name="created_at" nullable="false" remarks="Timestamp when the attachment was created." size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="now()" digits="6" id="10" name="updated_at" nullable="false" remarks="Timestamp when the attachment was last updated." size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="false" digits="0" id="11" name="is_deleted" nullable="false" remarks="Soft-delete flag." size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="document_type" nullable="true" remarks="Evidence document category: FINAL_MAP, POST_HARVEST_CERTIFICATE, RATIONALE, ENDORSEMENT_LETTER, CALCULATOR_SPREADSHEET, HBS_BILLING_REPORT, REDUCTION_FACTOR_SUPPORT or OTHER." size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'UPLOADING'::character varying" digits="0" id="13" name="status" nullable="false" remarks="Upload lifecycle state: UPLOADING while the client is expected to upload, FINALIZED once the object has been verified and accepted." size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="checksum" nullable="true" remarks="Object-store ETag/checksum captured at finalize; a later finalize attempt whose object ETag differs is rejected with a conflict." size="128" type="varchar" typeCode="12"/>
          <primaryKey column="block_attachment_id" sequenceNumberInPK="1"/>
          <index name="block_attachment_pk" unique="true">
             <column ascending="true" name="block_attachment_id"/>
@@ -162,6 +165,8 @@
          <index name="idx_block_attachment_block_id" unique="false">
             <column ascending="true" name="block_id"/>
          </index>
+         <checkConstraint constraint="((document_type IS NULL) OR ((document_type)::text = ANY ((ARRAY['FINAL_MAP'::character varying, 'POST_HARVEST_CERTIFICATE'::character varying, 'RATIONALE'::character varying, 'ENDORSEMENT_LETTER'::character varying, 'CALCULATOR_SPREADSHEET'::character varying, 'HBS_BILLING_REPORT'::character varying, 'REDUCTION_FACTOR_SUPPORT'::character varying, 'OTHER'::character varying])::text[])))" name="chk_block_attachment_document_type"/>
+         <checkConstraint constraint="((status)::text = ANY ((ARRAY['UPLOADING'::character varying, 'FINALIZED'::character varying])::text[]))" name="chk_block_attachment_status"/>
       </table>
       <table name="block_calculation_snapshot" remarks="Append-only calculation inputs and outputs pinned to a district-volume configuration." schema="hrs" type="TABLE">
          <column autoUpdated="true" defaultValue="nextval('hrs.block_calculation_snapshot_id_seq'::regclass)" digits="0" id="0" name="block_calculation_snapshot_id" nullable="false" remarks="Unique identifier for the calculation snapshot." size="19" type="bigserial" typeCode="-5"/>
