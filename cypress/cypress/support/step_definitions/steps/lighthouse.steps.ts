@@ -68,8 +68,12 @@ Then(
 Then("the page should be mobile friendly",
   browserGuardAny(["chrome", "chromium"],() => {
     runReportTo((report) => {
-      expect(report.categories.accessibility).to.be.gte(defaultValues.accessibility);
-      expect(report.categories.seo).to.be.gte(defaultValues.seo);
+      expectLighthouse(report)
+        .category("accessibility")
+        .toBeAtLeast(defaultValues.accessibility);
+      expectLighthouse(report)
+        .category("seo")
+        .toBeAtLeast(defaultValues.seo);
       expectLighthouse(report)
         .category("performance")
         .toBeAtLeast(defaultValues.performance);

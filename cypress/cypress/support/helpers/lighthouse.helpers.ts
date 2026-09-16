@@ -299,6 +299,11 @@ export const parseThresholdTable = (table: DataTableLike): Record<string, number
 export const runReportTo = (fn: (report: any) => void) => {
   const options = resolveLighthouseRunOptions();
 
+  // Ensure the Single Page Application (React) has mounted and rendered into the DOM
+  // before Lighthouse audits the page, preventing audits of empty/partially-loaded states.
+  cy.get("#root", { timeout: 30000 }).should("be.visible");
+  cy.get("#root").children().should("have.length.at.least", 1);
+
   cy
     .url()
     .then((currentUrl) => {
