@@ -6,6 +6,7 @@ import {
   RadioButton,
   DatePicker,
   DatePickerInput,
+  Dropdown,
 } from '@carbon/react';
 import { useForm } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
@@ -24,6 +25,7 @@ import type {
 } from '@/services/formulaConfiguration.types';
 
 import { ApiError } from '@/config/api/types';
+import { useCodesQuery } from '@/config/react-query/hooks';
 import {
   useCreateFormulaSet,
   useCurrentOpenEndedFormulaSet,
@@ -93,9 +95,23 @@ const FormulaConfigurationCreateForm: FC = () => {
   const area = form.state.values.area;
   const startDate = form.state.values.startDate;
   const formulasState = form.state.values.formulas;
+
+  // District selection for variable preview (not persisted with formula set)
+  const [districtCode, setDistrictCode] = useState<string>('');
+  const { data: allDistricts, isLoading: isDistrictsLoading } = useCodesQuery('districtOptions');
+  const filteredDistricts = useMemo(
+    () => (allDistricts ?? []).filter((d) => d.areas?.includes(area)),
+    [allDistricts, area],
+  );
+  const districtItems = useMemo(
+    () => filteredDistricts.map((d) => ({ id: d.code, text: `${d.code} — ${d.description}` })),
+    [filteredDistricts],
+  );
+
   const { data: variablesData } = useFormulaVariables({
     date: startDate,
     area,
+    districtCode,
   });
   const {
     data: currentFormulaSet,
@@ -208,6 +224,7 @@ const FormulaConfigurationCreateForm: FC = () => {
       // @ts-expect-error TanStack Form does not narrow the radio callback value.
       form.setFieldValue('area', selected);
       form.setFieldValue('formulas', formulasByArea.current[selected] ?? initialFormulas);
+      setDistrictCode('');
       setIsReviewing(false);
     }
   };
@@ -291,6 +308,23 @@ const FormulaConfigurationCreateForm: FC = () => {
                   />
                 </DatePicker>
               </Column>
+              <Column max={4} xlg={4} lg={4} md={4} sm={4}>
+                <Dropdown
+                  id="district-code"
+                  data-testid="district-code"
+                  titleText="District"
+                  label={isDistrictsLoading ? 'Loading districts…' : 'Select a district'}
+                  items={districtItems}
+                  itemToString={(item) => item?.text ?? ''}
+                  itemToElement={(item) => (
+                    <span className="district-dropdown-item">{item?.text}</span>
+                  )}
+                  onChange={({ selectedItem }) => {
+                    setDistrictCode(selectedItem?.id ?? '');
+                  }}
+                  disabled={isDistrictsLoading || districtItems.length === 0}
+                />
+              </Column>
             </>
           )}
           <Column max={16} xlg={16} lg={16} md={8} sm={4}>
@@ -321,6 +355,7 @@ const FormulaConfigurationCreateForm: FC = () => {
                   keys={keys}
                   area={area}
                   date={startDate}
+                  districtCode={districtCode}
                   formulas={formulas}
                   isEditable={!isReviewing}
                   onChange={onFormulaChange}

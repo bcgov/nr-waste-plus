@@ -1,5 +1,5 @@
 import type { TableHeaderType } from '@/components/Form/TableResource/types';
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
+import type { FormulaSetListItemDto } from '@/services/formulaConfiguration.types';
 
 import DateTag from '@/components/core/Tags/DateTag';
 
@@ -12,7 +12,7 @@ const areaDisplayMap: Record<string, string> = {
  * Table headers for the formula configuration list table.
  * Area and start date are sortable.
  */
-export const headers: TableHeaderType<FormulaSetResponse>[] = [
+export const headers: TableHeaderType<FormulaSetListItemDto>[] = [
   {
     key: 'area',
     header: 'Area',
@@ -36,27 +36,26 @@ export const headers: TableHeaderType<FormulaSetResponse>[] = [
       value ? <DateTag date={value as string} format="MMMM dd, yyyy" /> : <span>—</span>,
   },
   {
-    key: 'formulas',
+    key: 'formulaCount',
     header: 'Formulas',
     sortable: false,
     selected: true,
-    renderAs: (value) => {
-      const count = Array.isArray(value) ? value.length : 0;
-      return <span>{count}</span>;
-    },
+    renderAs: (value) => <span>{(value as number) ?? 0}</span>,
   },
   {
     key: 'createdAt',
     header: 'Created',
     sortable: false,
     selected: false,
-    renderAs: (value) => <DateTag date={value as string} format="MMM dd, yyyy h:mm a" />,
+    renderAs: (value) =>
+      value ? <DateTag date={value as string} format="MMM dd, yyyy h:mm a" /> : null,
   },
   {
     key: 'updatedAt',
     header: 'Updated',
     sortable: false,
     selected: false,
-    renderAs: (value) => <DateTag date={value as string} format="MMM dd, yyyy h:mm a" />,
+    renderAs: (value) =>
+      value ? <DateTag date={value as string} format="MMM dd, yyyy h:mm a" /> : null,
   },
 ];

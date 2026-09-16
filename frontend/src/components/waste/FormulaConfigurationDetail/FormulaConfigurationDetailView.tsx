@@ -32,11 +32,7 @@ const FormulaConfigurationDetailView: FC<FormulaConfigurationDetailViewProps> = 
 
   return (
     <>
-      <FormulaConfigurationDetailHeader
-        area={data.area}
-        startDate={data.startDate}
-        endDate={data.endDate}
-      />
+      <FormulaConfigurationDetailHeader startDate={data.startDate} endDate={data.endDate} />
       <Column lg={16} md={8} sm={4} className="formula-config-sections">
         <div className="formula-sections">
           {sections.map(([sectionName, keys]) => (
@@ -46,6 +42,7 @@ const FormulaConfigurationDetailView: FC<FormulaConfigurationDetailViewProps> = 
               keys={keys}
               area={data.area}
               date={data.startDate}
+              districtCode=""
               formulas={data.formulas}
               isEditable={false}
               onChange={() => {}}

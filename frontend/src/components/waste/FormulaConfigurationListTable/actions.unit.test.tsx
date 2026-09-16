@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { useFormulaConfigurationListRowActions } from './actions';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
+import type { FormulaSetListItemDto } from '@/services/formulaConfiguration.types';
 
 import { resolveTableRowActionValue } from '@/components/Form/TableResource/types';
 import { navigateInTree } from '@/routes/inTreePaths';
@@ -25,7 +25,7 @@ vi.mock('@/utils/businessDate', () => ({
 
 const mockIsFutureDated = vi.mocked(isFutureDated);
 
-type FormulaSetRow = PageableResponse<FormulaSetResponse>['content'][number];
+type FormulaSetRow = PageableResponse<FormulaSetListItemDto>['content'][number];
 
 const makeRow = (overrides: Partial<FormulaSetRow> = {}): FormulaSetRow => ({
   id: 42,
@@ -33,7 +33,7 @@ const makeRow = (overrides: Partial<FormulaSetRow> = {}): FormulaSetRow => ({
   startDate: '2025-01-01',
   endDate: null,
   deleted: false,
-  formulas: [],
+  formulaCount: 0,
   createdAt: '2025-01-15T10:30:00',
   updatedAt: '2025-01-15T10:30:00',
   ...overrides,

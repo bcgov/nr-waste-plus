@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import FormulaConfigurationListTable from './index';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
+import type { FormulaSetListItemDto } from '@/services/formulaConfiguration.types';
 
 import { renderCell, resolveTableRowActionValue } from '@/components/Form/TableResource/types';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
@@ -155,58 +155,48 @@ vi.mock('@/components/Form/TableResource', () => ({
   },
 }));
 
-const makeFormulaSet = (overrides: Partial<FormulaSetResponse>): FormulaSetResponse => ({
+const makeFormulaSet = (
+  overrides: Omit<Partial<FormulaSetListItemDto>, 'createdAt' | 'updatedAt'> & {
+    createdAt?: string | null;
+    updatedAt?: string | null;
+  } = {},
+): FormulaSetListItemDto => ({
   id: 1,
   area: 'INTERIOR',
   startDate: '2025-01-01',
   endDate: null,
   deleted: false,
-  formulas: [],
-  createdAt: '2025-01-15T10:30:00',
-  updatedAt: '2025-01-15T10:30:00',
+  formulaCount: 0,
+  createdAt: null,
+  updatedAt: null,
   ...overrides,
 });
 
-const mockData: PageableResponse<FormulaSetResponse> = {
+const mockData: PageableResponse<FormulaSetListItemDto> = {
   content: [
-    makeFormulaSet({ id: 1, area: 'INTERIOR', formulas: [] }),
+    makeFormulaSet({ id: 1, area: 'INTERIOR', formulaCount: 0 }),
     makeFormulaSet({
       id: 2,
       area: 'COASTAL',
       startDate: '2024-06-01',
       endDate: '2024-12-31',
-      formulas: [
-        {
-          formulaKey: 'block.waste.avoidable_sawlog',
-          expression: '1.5',
-          declaredVariables: [],
-          validationErrors: [],
-          sortOrder: 1,
-        },
-        {
-          formulaKey: 'block.area.road',
-          expression: '0.5',
-          declaredVariables: [],
-          validationErrors: [],
-          sortOrder: 2,
-        },
-      ],
+      formulaCount: 2,
     }),
   ],
   page: { number: 0, size: 10, totalElements: 2, totalPages: 1 },
 };
 
-const mockEmptyData: PageableResponse<FormulaSetResponse> = {
+const mockEmptyData: PageableResponse<FormulaSetListItemDto> = {
   content: [],
   page: { number: 0, size: 10, totalElements: 0, totalPages: 0 },
 };
 
-const mockMultiPageData: PageableResponse<FormulaSetResponse> = {
+const mockMultiPageData: PageableResponse<FormulaSetListItemDto> = {
   content: [makeFormulaSet({ id: 1 })],
   page: { number: 0, size: 10, totalElements: 25, totalPages: 3 },
 };
 
-const mockFutureData: PageableResponse<FormulaSetResponse> = {
+const mockFutureData: PageableResponse<FormulaSetListItemDto> = {
   content: [makeFormulaSet({ id: 3, startDate: '2099-01-01' })],
   page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
 };
@@ -366,7 +356,7 @@ describe('FormulaConfigurationListTable', () => {
     });
 
     it('handles previous page click', async () => {
-      const page2Data: PageableResponse<FormulaSetResponse> = {
+      const page2Data: PageableResponse<FormulaSetListItemDto> = {
         ...mockMultiPageData,
         page: { number: 1, size: 10, totalElements: 25, totalPages: 3 },
       };

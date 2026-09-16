@@ -10,6 +10,7 @@ interface FormulaSectionProps {
   keys: readonly FormulaKeyDefinition[];
   area: 'INTERIOR' | 'COASTAL';
   date: string; // YYYY-MM-DD
+  districtCode: string;
   formulas: FormulaItemDto[];
   isEditable: boolean;
   onChange: (
@@ -24,6 +25,7 @@ const FormulaSection: FC<FormulaSectionProps> = ({
   keys,
   area,
   date,
+  districtCode,
   formulas,
   isEditable,
   onChange,
@@ -43,6 +45,7 @@ const FormulaSection: FC<FormulaSectionProps> = ({
             key={keyDef.key}
             area={area}
             date={date}
+            districtCode={districtCode}
             keyDef={keyDef}
             formula={formula}
             isEditable={isEditable}

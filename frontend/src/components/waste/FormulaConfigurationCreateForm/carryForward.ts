@@ -1,8 +1,8 @@
-import type { FormulaItemDto } from '@/services/formulaConfiguration.types';
+import type { FormulaItemDto, FormulaValidationError } from '@/services/formulaConfiguration.types';
 
 interface FormulaDraftValue {
   expression: string;
-  validationErrors: FormulaItemDto['validationErrors'];
+  validationErrors: FormulaValidationError[];
 }
 
 export function carryForwardFormulaValues(

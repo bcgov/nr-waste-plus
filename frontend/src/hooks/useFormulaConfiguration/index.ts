@@ -2,6 +2,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 
 import type {
   FormulaSetResponse,
+  FormulaSetListItemDto,
   FormulaSetRequest,
   FormulaSetEffectiveParams,
   CurrentFormulaSetParams,
@@ -51,7 +52,7 @@ export function useFormulaSetList(
       formulaConfiguration.getFormulaSets({
         page: params.page,
         size: params.size,
-        sort: generateSortArray<FormulaSetResponse>(params.sort),
+        sort: generateSortArray<FormulaSetListItemDto>(params.sort),
       }),
     placeholderData: keepPreviousData,
     ...options,
@@ -102,8 +103,8 @@ export function useFormulaVariables(params: FormulaVariablesParams, enabled = tr
   return useQuery({
     queryKey: formulaConfigurationKeys.variables(params),
     queryFn: () => formulaConfiguration.getVariables(params),
-    enabled: enabled && !!params.date && !!params.area,
-    staleTime: 5 * 60 * 1000, // 5 minutes — variable values change with date/area
+    enabled: enabled && !!params.date && !!params.area && !!params.districtCode,
+    staleTime: 5 * 60 * 1000, // 5 minutes — variable values change with date/area/district
   });
 }
 

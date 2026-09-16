@@ -8,8 +8,8 @@ export interface FormulaValidationError {
 export interface FormulaItemDto {
   formulaKey: string;
   expression: string;
-  declaredVariables: string[];
-  validationErrors: FormulaValidationError[];
+  declaredVariables?: string[];
+  validationErrors?: FormulaValidationError[];
   sortOrder: number;
 }
 
@@ -20,12 +20,21 @@ export interface FormulaSetResponse {
   endDate: string | null;
   deleted: boolean;
   formulas: FormulaItemDto[];
-  createdAt: string;
-  updatedAt: string;
+}
+
+export interface FormulaSetListItemDto {
+  id: number;
+  area: 'INTERIOR' | 'COASTAL';
+  startDate: string; // ISO date string
+  endDate: string | null;
+  deleted: boolean;
+  formulaCount: number;
+  createdAt: string | null;
+  updatedAt: string | null;
 }
 
 export interface FormulaSetListResponse {
-  content: FormulaSetResponse[];
+  content: FormulaSetListItemDto[];
   page: {
     number: number;
     size: number;
@@ -102,4 +111,5 @@ export interface FormulaNamespaceCatalog {
 export interface FormulaVariablesParams {
   date: string; // YYYY-MM-DD
   area: 'INTERIOR' | 'COASTAL';
+  districtCode: string;
 }

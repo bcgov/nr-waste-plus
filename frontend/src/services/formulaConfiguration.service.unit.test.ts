@@ -5,6 +5,7 @@ import { FormulaConfigurationService } from './formulaConfiguration.service';
 import type {
   FormulaSetRequest,
   FormulaSetResponse,
+  FormulaSetListItemDto,
   FormulaSetListResponse,
   FormulaSetEffectiveParams,
   CurrentFormulaSetParams,
@@ -42,7 +43,7 @@ describe('FormulaConfigurationService', () => {
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
-      const pageable: PageableRequest<FormulaSetResponse> = {
+      const pageable: PageableRequest<FormulaSetListItemDto> = {
         page: 0,
         size: 20,
         sort: ['startDate,DESC'],
@@ -64,7 +65,7 @@ describe('FormulaConfigurationService', () => {
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
-      const pageable: PageableRequest<FormulaSetResponse> = { page: 0, size: 20 };
+      const pageable: PageableRequest<FormulaSetListItemDto> = { page: 0, size: 20 };
       await service.getFormulaSets(pageable);
 
       expect(mockDoRequest).toHaveBeenCalledWith(mockConfig, {
@@ -81,7 +82,7 @@ describe('FormulaConfigurationService', () => {
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
-      const pageable: PageableRequest<FormulaSetResponse> = {
+      const pageable: PageableRequest<FormulaSetListItemDto> = {
         page: 0,
         size: 20,
         sort: ['startDate,DESC'],
@@ -106,8 +107,6 @@ describe('FormulaConfigurationService', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '2026-05-15T14:23:00Z',
-        updatedAt: '2026-06-01T10:00:00Z',
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
@@ -131,8 +130,6 @@ describe('FormulaConfigurationService', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '2026-09-10T10:00:00Z',
-        updatedAt: '2026-09-10T10:00:00Z',
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
@@ -162,8 +159,6 @@ describe('FormulaConfigurationService', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '2026-05-15T14:23:00Z',
-        updatedAt: '2026-06-01T10:00:00Z',
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
@@ -184,8 +179,6 @@ describe('FormulaConfigurationService', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '2026-05-15T14:23:00Z',
-        updatedAt: '2026-06-01T10:00:00Z',
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
@@ -208,8 +201,6 @@ describe('FormulaConfigurationService', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '2026-05-15T14:23:00Z',
-        updatedAt: '2026-06-01T10:00:00Z',
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
@@ -233,8 +224,6 @@ describe('FormulaConfigurationService', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '2026-09-10T10:00:00Z',
-        updatedAt: '2026-09-10T10:00:00Z',
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
@@ -280,13 +269,17 @@ describe('FormulaConfigurationService', () => {
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
-      const params: FormulaVariablesParams = { date: '2026-11-03', area: 'INTERIOR' };
+      const params: FormulaVariablesParams = {
+        date: '2026-11-03',
+        area: 'INTERIOR',
+        districtCode: 'DKM',
+      };
       const result = await service.getVariables(params);
 
       expect(mockDoRequest).toHaveBeenCalledWith(mockConfig, {
         method: 'GET',
         url: '/api/configuration/formulas/variables',
-        query: { date: '2026-11-03', area: 'INTERIOR' },
+        query: { date: '2026-11-03', area: 'INTERIOR', districtCode: 'DKM' },
       });
       expect(result).toEqual(mockResponse);
     });

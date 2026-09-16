@@ -2,7 +2,7 @@ import { Column } from '@carbon/react';
 import { useState, type FC } from 'react';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
+import type { FormulaSetListItemDto } from '@/services/formulaConfiguration.types';
 
 import TableResource from '@/components/Form/TableResource';
 import ConfigurationDeleteConfirmModal from '@/components/waste/ConfigurationDeleteConfirmModal';
@@ -14,13 +14,13 @@ import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler';
 
 /** Paginated formula-set table backed by the shared TableResource component. */
 const FormulaConfigurationListTable: FC = () => {
-  const [rowToDelete, setRowToDelete] = useState<FormulaSetResponse | null>(null);
+  const [rowToDelete, setRowToDelete] = useState<FormulaSetListItemDto | null>(null);
   const { data, isLoading, isFetching, isError, refetch, handlePageChange, handleSort, pageSize } =
     useListTableState({ queryHook: useFormulaSetList });
   const deleteMutation = useDeleteFormulaSet();
   const getRowActions = useFormulaConfigurationListRowActions(setRowToDelete);
 
-  const content = (data as PageableResponse<FormulaSetResponse> | undefined) ?? {
+  const content = (data as PageableResponse<FormulaSetListItemDto> | undefined) ?? {
     content: [],
     page: { number: 0, size: pageSize, totalElements: 0, totalPages: 0 },
   };

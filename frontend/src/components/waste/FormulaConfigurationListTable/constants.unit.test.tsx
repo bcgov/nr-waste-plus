@@ -3,8 +3,6 @@ import { describe, expect, it } from 'vitest';
 
 import { headers } from './constants';
 
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
-
 describe('FormulaConfigurationListTable headers', () => {
   it('exports six headers in a stable order', () => {
     expect(headers).toHaveLength(6);
@@ -12,7 +10,7 @@ describe('FormulaConfigurationListTable headers', () => {
       'area',
       'startDate',
       'endDate',
-      'formulas',
+      'formulaCount',
       'createdAt',
       'updatedAt',
     ]);
@@ -33,7 +31,7 @@ describe('FormulaConfigurationListTable headers', () => {
     expect(headers.find((h) => h.key === 'area')?.sortable).toBe(true);
     expect(headers.find((h) => h.key === 'startDate')?.sortable).toBe(true);
     expect(headers.find((h) => h.key === 'endDate')?.sortable).toBe(false);
-    expect(headers.find((h) => h.key === 'formulas')?.sortable).toBe(false);
+    expect(headers.find((h) => h.key === 'formulaCount')?.sortable).toBe(false);
     expect(headers.find((h) => h.key === 'createdAt')?.sortable).toBe(false);
     expect(headers.find((h) => h.key === 'updatedAt')?.sortable).toBe(false);
   });
@@ -42,7 +40,7 @@ describe('FormulaConfigurationListTable headers', () => {
     expect(headers.find((h) => h.key === 'area')?.selected).toBe(true);
     expect(headers.find((h) => h.key === 'startDate')?.selected).toBe(true);
     expect(headers.find((h) => h.key === 'endDate')?.selected).toBe(true);
-    expect(headers.find((h) => h.key === 'formulas')?.selected).toBe(true);
+    expect(headers.find((h) => h.key === 'formulaCount')?.selected).toBe(true);
     expect(headers.find((h) => h.key === 'createdAt')?.selected).toBe(false);
     expect(headers.find((h) => h.key === 'updatedAt')?.selected).toBe(false);
   });
@@ -89,20 +87,11 @@ describe('FormulaConfigurationListTable headers', () => {
     });
   });
 
-  describe('formulas renderAs', () => {
-    it('renders the length of the formulas array', () => {
-      const formulasHeader = headers.find((h) => h.key === 'formulas');
-      const data: Partial<FormulaSetResponse> = {
-        formulas: [{}, {}, {}] as FormulaSetResponse['formulas'],
-      };
-      render(<>{formulasHeader?.renderAs?.(data.formulas as never)}</>);
+  describe('formulaCount renderAs', () => {
+    it('renders the formula count value', () => {
+      const formulaCountHeader = headers.find((h) => h.key === 'formulaCount');
+      render(<>{formulaCountHeader?.renderAs?.(3 as never)}</>);
       screen.getByText('3');
-    });
-
-    it('renders 0 when formulas is missing', () => {
-      const formulasHeader = headers.find((h) => h.key === 'formulas');
-      render(<>{formulasHeader?.renderAs?.(undefined as never)}</>);
-      screen.getByText('0');
     });
   });
 

@@ -3,6 +3,7 @@ import { removeEmpty } from './utils';
 import type {
   FormulaSetRequest,
   FormulaSetResponse,
+  FormulaSetListItemDto,
   FormulaSetListResponse,
   FormulaSetEffectiveParams,
   CurrentFormulaSetParams,
@@ -36,7 +37,7 @@ export class FormulaConfigurationService extends HttpClient {
    * @returns A paged list of formula set items.
    */
   getFormulaSets(
-    pageable: PageableRequest<FormulaSetResponse>,
+    pageable: PageableRequest<FormulaSetListItemDto>,
     meta?: Record<string, unknown>,
   ): CancelablePromise<FormulaSetListResponse> {
     return this.doRequest<FormulaSetListResponse>(this.config, {
@@ -174,7 +175,7 @@ export class FormulaConfigurationService extends HttpClient {
     return this.doRequest<FormulaVariablesResponse>(this.config, {
       method: 'GET',
       url: '/api/configuration/formulas/variables',
-      query: { date: params.date, area: params.area },
+      query: { date: params.date, area: params.area, districtCode: params.districtCode },
       ...(meta === undefined ? {} : { meta }),
     });
   }
