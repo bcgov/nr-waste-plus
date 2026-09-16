@@ -100,6 +100,7 @@ Cypress.on("window:before:load", (win) => {
 
 beforeEach(() => {
   pageDiagnostics = [];
+  cy.task("lighthouse:resetCache", null, { log: false });
 
   // Keep diagnostics as a non-middleware observer. Cypress evaluates
   // non-middleware routes in reverse definition order, so a route registered

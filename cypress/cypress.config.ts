@@ -146,6 +146,11 @@ async function setupNodeEvents(
     },
     "lighthouse:reset": () => {
       lighthouseResults = [];
+      lighthouseReport = {};
+      return null;
+    },
+    "lighthouse:resetCache": () => {
+      lighthouseReport = {};
       return null;
     },
     async "lighthouse:run"({ url, options }) {
@@ -172,16 +177,27 @@ async function setupNodeEvents(
     }
 
     // Run Lighthouse
+    // disableStorageReset: true ensures Lighthouse does not wipe cookies, sessionStorage,
+    // and localStorage from Chrome, preserving active Cypress sessions and network sockets.
     const result = await lighthouse.default(url, {
       port: debugPort,
       hostname: "127.0.0.1",
       output: "json",
       logLevel: "error",
+      disableStorageReset: true,
       ...effectiveOptions,
-    }, lighthouseConfig as any) ?? {} as { lhr: any };
+    }, lighthouseConfig as any);
 
-    // Extract the useful parts
-    const lhr = result.lhr;
+    const lhr = result?.lhr;
+    if (!lhr) {
+      throw new Error(`Lighthouse failed to generate a report for ${url}`);
+    }
+
+    if (lhr.runtimeError) {
+      throw new Error(
+        `Lighthouse runtime error for ${url}: [${lhr.runtimeError.code}] ${lhr.runtimeError.message}`
+      );
+    }
 
     const report = {
       url: normalizedURL,
@@ -189,16 +205,15 @@ async function setupNodeEvents(
         formFactor: effectiveOptions.formFactor,
         screenEmulation: effectiveOptions.screenEmulation ?? null,
       },
-      lighthouseConfigSettings: result.lhr?.configSettings ?? {},
+      lighthouseConfigSettings: lhr.configSettings ?? {},
       categories: Object.fromEntries(
-          Object.entries(lhr.categories)
-            .filter(([, v]) => (v as any).score !== undefined)
-            .map(([k, v]) => [k, (v as any).score ?? 0])
-            .map(([k, v]) => [k, Math.round(v * 100)])
+          Object.entries(lhr.categories || {})
+            .filter(([, v]) => (v as any)?.score != null)
+            .map(([k, v]) => [k, Math.round((v as any).score * 100)])
         ),
       metrics: Object.fromEntries(
-          Object.entries(result.lhr.audits)
-            .filter(([, v]) => (v as any).numericValue !== undefined)
+          Object.entries(lhr.audits || {})
+            .filter(([, v]) => (v as any)?.numericValue !== undefined && (v as any)?.numericValue !== null)
             .map(([k, v]) => [k, (v as any).numericValue ?? null])
         ),
       raw: lhr,
@@ -213,6 +228,7 @@ async function setupNodeEvents(
   // NOTE: videoUploadOnPasses was removed in Cypress 13, so we delete the
   // passing-spec video here instead of relying on a removed option.
   on("after:spec", (_spec: unknown, results: CypressCommandLine.RunResult) => {
+    lighthouseReport = {};
     if (!results) return;
     const video = results.video;
     if (!video) return;
@@ -348,6 +364,8 @@ export default defineConfig({
     setupNodeEvents,
     defaultCommandTimeout: 10000,
     pageLoadTimeout: 120000,
+    responseTimeout: 60000,
+    requestTimeout: 20000,
     chromeWebSecurity: false,
     env: { 
       idir_username: process.env.idir_username,
