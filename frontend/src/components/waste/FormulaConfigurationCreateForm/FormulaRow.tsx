@@ -2,8 +2,7 @@ import { type FC, useMemo, useRef } from 'react';
 
 import type { FormulaError } from '@/components/Form/FormulaInput/types';
 import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants';
-import type { FormulaItemDto } from '@/services/formulaConfiguration.types';
-import type { FormulaValidationError } from '@/services/formulaConfiguration.types';
+import type { FormulaItemDto, FormulaValidationError } from '@/services/formulaConfiguration.types';
 
 import FormulaInput from '@/components/Form/FormulaInput';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';

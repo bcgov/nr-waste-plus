@@ -3,8 +3,7 @@ import { type FC } from 'react';
 import FormulaRow from './FormulaRow';
 
 import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants';
-import type { FormulaItemDto } from '@/services/formulaConfiguration.types';
-import type { FormulaValidationError } from '@/services/formulaConfiguration.types';
+import type { FormulaItemDto, FormulaValidationError } from '@/services/formulaConfiguration.types';
 
 interface FormulaSectionProps {
   sectionName: string;
