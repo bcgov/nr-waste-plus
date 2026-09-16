@@ -4,7 +4,6 @@ import ca.bc.gov.nrs.hrs.configuration.ObjectStorageProperties;
 import io.micrometer.observation.annotation.Observed;
 import java.net.HttpURLConnection;
 import java.time.Duration;
-import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

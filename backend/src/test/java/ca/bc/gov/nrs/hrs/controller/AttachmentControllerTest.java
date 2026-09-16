@@ -105,7 +105,7 @@ class AttachmentControllerTest {
     when(attachmentService.createIntent(nullable(Jwt.class), eq(1L), eq(2L), any()))
         .thenThrow(
             new ResponseStatusException(
-                HttpStatus.PAYLOAD_TOO_LARGE, "Declared size exceeds maximum"));
+                HttpStatus.CONTENT_TOO_LARGE, "Declared size exceeds maximum"));
 
     mockMvc
         .perform(
@@ -114,7 +114,7 @@ class AttachmentControllerTest {
                 .content(
                     "{\"documentType\":\"FINAL_MAP\",\"fileName\":\"huge.pdf\","
                         + "\"mimeType\":\"application/pdf\",\"declaredSizeBytes\":6000000}"))
-        .andExpect(status().isPayloadTooLarge());
+        .andExpect(status().isContentTooLarge());
   }
 
   @Test
