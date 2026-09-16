@@ -9,4 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BlockRepository extends JpaRepository<BlockEntity, Long> {
   Optional<BlockEntity> findByReportingUnitIdAndDeletedFalse(Long reportingUnitId);
+
+  /** Returns the non-deleted block with the given id that belongs to a reporting unit. */
+  Optional<BlockEntity> findByIdAndReportingUnitIdAndDeletedFalse(Long id, Long reportingUnitId);
 }

@@ -173,6 +173,15 @@ ca:
           key: ${FORESTCLIENTAPI_KEY:placeholder-api-key}
         legacy-api:
           address: ${LEGACY_URL:http://127.0.0.1:9090}
+        object-storage:
+          endpoint: ${OBJECT_STORAGE_ENDPOINT:}
+          region: ${OBJECT_STORAGE_REGION:ca-central-1}
+          access-key: ${OBJECT_STORAGE_ACCESS_KEY:}
+          secret-key: ${OBJECT_STORAGE_SECRET_KEY:}
+          bucket: ${OBJECT_STORAGE_BUCKET:nr-waste}
+          force-path-style: ${OBJECT_STORAGE_FORCE_PATH_STYLE:${S3_FORCE_PATH_STYLE:false}}
+          presigned-url-duration: ${OBJECT_STORAGE_PRESIGN_URL_DURATION:5m}
+          max-attachment-size-bytes: ${OBJECT_STORAGE_MAX_ATTACHMENT_SIZE_BYTES:${MAX_ATTACHMENT_SIZE_BYTES:5242880}}
         cognito:
           userinfo-uri: https://${COGNITO_DOMAIN:pool-domain}.auth.${COGNITO_REGION:region}.amazoncognito.com/oauth2/userInfo
           identity-ttl: ${COGNITO_IDENTITY_TTL:24h}
