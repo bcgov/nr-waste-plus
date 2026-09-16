@@ -7,6 +7,7 @@ interface LighthouseRawEvent {
   taxonomy: string;        // web-vitals, timing, layout, etc.
   severity: string;        // info/minor/major/critical
   url: string;
+  attempt?: number;
   timestamp: string;
   lighthouseOptions?: {
     formFactor?: "mobile" | "desktop";
@@ -83,6 +84,7 @@ export const getLighthouseSeverity = (id: string, value: number | null): string 
 
 export const recordEvent = (url: string, report: LighthouseReport) => {
   const timestamp = new Date().toISOString();
+  const attempt = Cypress.currentRetry ?? 0;
   const lighthouseEvents : LighthouseRawEvent[] = [];
 
   for (const [id, value] of Object.entries(report.metrics)) {
@@ -94,6 +96,7 @@ export const recordEvent = (url: string, report: LighthouseReport) => {
       taxonomy: getLighthouseTaxonomy(id),
       severity: getLighthouseSeverity(id, value),
       url,
+      attempt,
       timestamp,
       lighthouseOptions: report.lighthouseOptions,
       lighthouseConfigSettings: report.lighthouseConfigSettings,
@@ -109,6 +112,7 @@ export const recordEvent = (url: string, report: LighthouseReport) => {
       taxonomy: category,
       severity: "info",
       url,
+      attempt,
       timestamp,
       lighthouseOptions: report.lighthouseOptions,
       lighthouseConfigSettings: report.lighthouseConfigSettings,
@@ -353,6 +357,7 @@ export const expectLighthouse = (report: LighthouseReport) => {
       taxonomy: getLighthouseTaxonomy(id),
       url,
       scenario,
+      attempt: Cypress.currentRetry ?? 0,
       timestamp: new Date().toISOString(),
       lighthouseOptions: report.lighthouseOptions,
       lighthouseConfigSettings: report.lighthouseConfigSettings,

@@ -169,7 +169,8 @@ const buildLighthouseReportByUrl = (checks) => {
       configSettingsKey,
     ].join("|");
 
-    if(!seen.has(key)) {      
+    const existing = seen.get(key);
+    if (!existing || (e.attempt ?? 0) >= (existing.attempt ?? 0)) {      
       seen.set(key, e);
     }
   }  
