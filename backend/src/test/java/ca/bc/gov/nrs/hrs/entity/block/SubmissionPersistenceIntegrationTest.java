@@ -121,6 +121,7 @@ class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrat
     attachment.setContentType("application/pdf");
     attachment.setFileSizeBytes(1024L);
     attachment.setScanStatus("CLEAN");
+    attachment.setStatus("UPLOADING");
     audit(attachment);
     BlockAttachmentEntity savedAttachment = blockAttachmentRepository.saveAndFlush(attachment);
 
