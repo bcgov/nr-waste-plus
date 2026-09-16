@@ -7,6 +7,7 @@ interface LighthouseRawEvent {
   taxonomy: string;        // web-vitals, timing, layout, etc.
   severity: string;        // info/minor/major/critical
   url: string;
+  attempt?: number;
   timestamp: string;
   lighthouseOptions?: {
     formFactor?: "mobile" | "desktop";
@@ -83,6 +84,7 @@ export const getLighthouseSeverity = (id: string, value: number | null): string 
 
 export const recordEvent = (url: string, report: LighthouseReport) => {
   const timestamp = new Date().toISOString();
+  const attempt = Cypress.currentRetry ?? 0;
   const lighthouseEvents : LighthouseRawEvent[] = [];
 
   for (const [id, value] of Object.entries(report.metrics)) {
@@ -94,6 +96,7 @@ export const recordEvent = (url: string, report: LighthouseReport) => {
       taxonomy: getLighthouseTaxonomy(id),
       severity: getLighthouseSeverity(id, value),
       url,
+      attempt,
       timestamp,
       lighthouseOptions: report.lighthouseOptions,
       lighthouseConfigSettings: report.lighthouseConfigSettings,
@@ -109,6 +112,7 @@ export const recordEvent = (url: string, report: LighthouseReport) => {
       taxonomy: category,
       severity: "info",
       url,
+      attempt,
       timestamp,
       lighthouseOptions: report.lighthouseOptions,
       lighthouseConfigSettings: report.lighthouseConfigSettings,
@@ -299,6 +303,11 @@ export const parseThresholdTable = (table: DataTableLike): Record<string, number
 export const runReportTo = (fn: (report: any) => void) => {
   const options = resolveLighthouseRunOptions();
 
+  // Ensure the Single Page Application (React) has mounted and rendered into the DOM
+  // before Lighthouse audits the page, preventing audits of empty/partially-loaded states.
+  cy.get("#root", { timeout: 30000 }).should("be.visible");
+  cy.get("#root").children().should("have.length.at.least", 1);
+
   cy
     .url()
     .then((currentUrl) => {
@@ -348,6 +357,7 @@ export const expectLighthouse = (report: LighthouseReport) => {
       taxonomy: getLighthouseTaxonomy(id),
       url,
       scenario,
+      attempt: Cypress.currentRetry ?? 0,
       timestamp: new Date().toISOString(),
       lighthouseOptions: report.lighthouseOptions,
       lighthouseConfigSettings: report.lighthouseConfigSettings,
