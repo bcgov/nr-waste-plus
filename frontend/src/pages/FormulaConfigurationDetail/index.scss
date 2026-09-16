@@ -1,7 +1,213 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/theme' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+
+.formula-configuration-detail {
+  margin-top: $spacing-06;
+}
+
 .formula-set-detail-column {
   &__banner,
   &__notification,
   &__actions {
-    margin-bottom: 1rem;
+    margin-bottom: $spacing-06;
+  }
+}
+
+.formula-config-sections {
+  margin-top: $spacing-07;
+}
+
+/* === Header Section === */
+.detail-header {
+  background: $layer-01;
+  border-radius: 8px;
+  padding: $spacing-06;
+  margin-bottom: $spacing-06;
+}
+
+.detail-header__heading {
+  margin: 0 0 $spacing-05;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.detail-header__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-05;
+}
+
+/* === Status Badge === */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px $spacing-03;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-badge--editable {
+  background-color: rgba(#198038, 0.1);
+  color: #198038;
+}
+
+.status-badge--readonly {
+  background-color: rgba(#8d8d8d, 0.1);
+  color: #525252;
+}
+
+/* === Formula Sections === */
+.detail-formulas {
+  margin-bottom: $spacing-06;
+}
+
+.formula-section {
+  background: $layer-02;
+  border: 1px solid $border-subtle-01;
+  border-radius: 8px;
+  margin-bottom: $spacing-05;
+  overflow: hidden;
+}
+
+.formula-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-04 $spacing-06;
+  background: $layer-01;
+  border-bottom: 1px solid $border-subtle-01;
+}
+
+.formula-section__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.formula-section__count {
+  font-size: 0.75rem;
+  color: $text-secondary;
+}
+
+/* === Formula Row === */
+.formula-row {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: $spacing-05;
+  padding: $spacing-05 $spacing-06;
+  border-bottom: 1px solid $border-subtle-01;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: $layer-01;
+  }
+}
+
+.formula-row__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.formula-row__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.formula-row__key {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  color: $text-secondary;
+  background: $layer-01;
+  padding: $spacing-03 $spacing-04;
+  border: 1px solid $border-subtle-01;
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+.formula-row__expression {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.formula-row__expression-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $text-secondary;
+  text-transform: uppercase;
+}
+
+.formula-row__expression-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.875rem;
+  color: $text-primary;
+  background: $layer-01;
+  padding: $spacing-04;
+  border: 1px solid $border-subtle-01;
+  border-radius: 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 48px;
+}
+
+.formula-row__expression-empty {
+  color: $text-secondary;
+  font-style: italic;
+}
+
+/* === Validation Errors === */
+.validation-errors-summary {
+  margin-bottom: $spacing-06;
+  padding: $spacing-05;
+  background: rgba(#da1e28, 0.05);
+  border: 1px solid rgba(#da1e28, 0.2);
+  border-radius: 8px;
+}
+
+.validation-errors-summary h3 {
+  margin: 0 0 $spacing-04;
+  color: #da1e28;
+}
+
+.validation-errors-summary pre {
+  margin: 0;
+  font-size: 0.75rem;
+  overflow-x: auto;
+}
+
+.validation-errors {
+  color: $support-error;
+  font-size: 0.75rem;
+  margin-top: $spacing-03;
+}
+
+/* === Action Bar === */
+.detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-03;
+  padding-top: $spacing-05;
+  border-top: 1px solid $border-subtle-01;
+}
+
+.formula-set-detail-column__actions {
+  @extend .detail-actions;
+}
+
+/* === Responsive === */
+@include breakpoint-down(md) {
+  .formula-row {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-header__meta {
+    grid-template-columns: 1fr;
   }
 }
