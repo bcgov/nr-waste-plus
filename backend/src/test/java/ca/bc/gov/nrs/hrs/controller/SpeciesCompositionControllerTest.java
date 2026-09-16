@@ -364,7 +364,7 @@ class SpeciesCompositionControllerTest {
         .perform(
             delete("/api/configuration/species-compositions/42")
                 .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isUnprocessableEntity());
+        .andExpect(status().isUnprocessableContent());
 
     verify(speciesCompositionService).deleteSpeciesComposition(eq("IDIR\\jakethedog"), eq(42L));
   }
@@ -386,7 +386,7 @@ class SpeciesCompositionControllerTest {
         .perform(
             delete("/api/configuration/species-compositions/42")
                 .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isUnprocessableEntity());
+        .andExpect(status().isUnprocessableContent());
 
     verify(speciesCompositionService).deleteSpeciesComposition(eq("IDIR\\jakethedog"), eq(42L));
   }

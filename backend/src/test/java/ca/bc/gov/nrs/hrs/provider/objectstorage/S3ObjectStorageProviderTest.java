@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 import ca.bc.gov.nrs.hrs.configuration.ObjectStorageProperties;
+import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
@@ -35,7 +36,7 @@ class S3ObjectStorageProviderTest {
   @Mock
   private S3Presigner presigner;
 
-  @Mock(lenient = true)
+  @Mock(strictness = Mock.Strictness.LENIENT)
   private ObjectStorageProperties properties;
 
   @InjectMocks
@@ -51,7 +52,7 @@ class S3ObjectStorageProviderTest {
   void presignPut_returnsUrlAndFutureExpiry() throws Exception {
     Instant expectedExpiry = Instant.parse("2026-08-24T12:05:00Z");
     PresignedPutObjectRequest presigned = mock(PresignedPutObjectRequest.class);
-    given(presigned.url()).willReturn(new URL("https://s3.example.com/upload"));
+    given(presigned.url()).willReturn(URI.create("https://s3.example.com/upload").toURL());
     given(presigned.expiration()).willReturn(expectedExpiry);
     given(presigner.presignPutObject(any(PutObjectPresignRequest.class))).willReturn(presigned);
 

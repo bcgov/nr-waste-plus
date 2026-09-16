@@ -84,7 +84,7 @@ public class ObjectStorageConfiguration {
 
   private AwsCredentialsProvider resolveCredentials() {
     if (StringUtils.isAnyBlank(properties.getAccessKey(), properties.getSecretKey())) {
-      return DefaultCredentialsProvider.create();
+      return DefaultCredentialsProvider.builder().build();
     }
     return StaticCredentialsProvider.create(
         AwsBasicCredentials.create(properties.getAccessKey(), properties.getSecretKey()));

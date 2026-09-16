@@ -68,9 +68,7 @@ public class BlockCalculationService {
       return BigDecimal.ZERO;
     }
     BigDecimal total = BigDecimal.ZERO;
-    var fields = outputsNode.fields();
-    while (fields.hasNext()) {
-      Map.Entry<String, JsonNode> entry = fields.next();
+    for (Map.Entry<String, JsonNode> entry : outputsNode.properties()) {
       JsonNode val = entry.getValue();
       if (val.isNumber()) {
         total = total.add(val.decimalValue());

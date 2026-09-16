@@ -6,9 +6,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Exception thrown when an attachment payload or stored object exceeds the configured maximum
- * allowed size. Mapped to HTTP 413 (Payload Too Large).
+ * allowed size. Mapped to HTTP 413 (Content Too Large).
  */
-@ResponseStatus(value = HttpStatus.PAYLOAD_TOO_LARGE)
+@ResponseStatus(value = HttpStatus.CONTENT_TOO_LARGE)
 public class AttachmentSizeExceededException extends ResponseStatusException {
 
   /**
@@ -19,7 +19,7 @@ public class AttachmentSizeExceededException extends ResponseStatusException {
    */
   public AttachmentSizeExceededException(long declaredSize, long maxSize) {
     super(
-        HttpStatus.PAYLOAD_TOO_LARGE,
+        HttpStatus.CONTENT_TOO_LARGE,
         String.format(
             "Declared size %d bytes exceeds the maximum allowed size of %d bytes",
             declaredSize, maxSize));
@@ -31,7 +31,7 @@ public class AttachmentSizeExceededException extends ResponseStatusException {
    * @param message the detail message
    */
   public AttachmentSizeExceededException(String message) {
-    super(HttpStatus.PAYLOAD_TOO_LARGE, message);
+    super(HttpStatus.CONTENT_TOO_LARGE, message);
   }
 
   /**
