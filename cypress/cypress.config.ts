@@ -106,6 +106,7 @@ async function setupNodeEvents(
   let uiuxResults: Array<Record<string, unknown>> = [];
   let lighthouseResults: Array<Record<string, unknown>> = [];
   let lighthouseReport: Record<string, Record<string, unknown>> = {};
+  let axeSourceCache: string | null = null;
 
 
   // This is required for the preprocessor to be able to generate JSON reports after each run, and more,
@@ -124,6 +125,13 @@ async function setupNodeEvents(
   });
 
   on("task", {
+    "a11y:getSource": () => {
+      if (!axeSourceCache) {
+        const axePath = require.resolve("axe-core/axe.min.js");
+        axeSourceCache = fs.readFileSync(axePath, "utf8");
+      }
+      return axeSourceCache;
+    },
     "uiux:record": (payload: Record<string, unknown>) => {
       uiuxResults.push(payload);
       return null;

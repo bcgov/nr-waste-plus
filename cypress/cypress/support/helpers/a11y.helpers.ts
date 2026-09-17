@@ -1,4 +1,4 @@
-import axe from "axe-core";
+import type axe from "axe-core";
 
 interface RecordedA11yViolation {
   id: string;
@@ -100,7 +100,9 @@ const assertNoViolations = (violations: RecordedA11yViolation[], scope: string) 
 export const injectAxe = (): void => {
   cy.window({ log: false }).then((win) => {
     if (!(win as unknown as { axe?: typeof axe }).axe) {
-      (win as unknown as { eval: (code: string) => void }).eval(axe.source);
+      cy.task<string>("a11y:getSource").then((source) => {
+        (win as unknown as { eval: (code: string) => void }).eval(source);
+      });
     }
   });
 };
