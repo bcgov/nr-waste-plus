@@ -1,7 +1,10 @@
 import "./commands";
 import "@testing-library/cypress/add-commands";
-import "cypress-axe";
 import "cypress-real-events";
+
+Cypress.Keyboard.defaults({
+  keystrokeDelay: 10,
+});
 
 type PageDiagnostic = {
   kind: string;

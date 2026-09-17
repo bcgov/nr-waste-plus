@@ -39,8 +39,7 @@
     "@testing-library/cypress": "^10.1.0",
     "@types/node": "^25.5.0",
     "axe-core": "^4.11.0",
-    "cypress": "15.21.1",
-    "cypress-axe": "^1.7.0",
+    "cypress": "^16.0.0",
     "cypress-real-events": "^1.14.0",
     "dotenv": "^17.4.2",
     "lighthouse": "^13.0.0",
@@ -74,7 +73,7 @@
     "js-yaml@<4.3.2": "4.3.2"
   },
   "allowScripts": {
-    "cypress@15.20.1": true,
+    "cypress@16.0.0": true,
     "esbuild@0.28.2": true,
     "fsevents@2.3.3": true
   }
