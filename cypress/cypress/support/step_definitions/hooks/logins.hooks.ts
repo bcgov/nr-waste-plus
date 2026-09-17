@@ -1,59 +1,63 @@
 import { Before, Step } from '@badeball/cypress-cucumber-preprocessor';
 
 const doLogin = (context: Mocha.Context, kind: string, afterLoginLocation: string) => {
+  const usernameKey = `${kind}_username`;
+  const passwordKey = `${kind}_password`;
 
-  const username = Cypress.env(`${kind}_username`);
-  const password = Cypress.env(`${kind}_password`);
+  cy.env([usernameKey, passwordKey]).then((env) => {
+    const username = env[usernameKey];
+    const password = env[passwordKey];
 
-  if(!username || !password) {
-    throw new Error(`Username or password for ${kind} not found.`);
-  }
-  
-  cy.session(
-    `${kind}-${username}`,
-    () => {
-      const landingPage = '/';
-      // Visit the landing page
-      Step(context, `I visit "${landingPage}"`);
-      cy.visit(landingPage);
-      
-      cy.waitForPageLoad('img');
+    if (!username || !password) {
+      throw new Error(`Username or password for ${kind} not found.`);
+    }
 
-      Step(context, 'I can read "Waste Plus"');
+    cy.session(
+      `${kind}-${username}`,
+      () => {
+        const landingPage = '/';
+        // Visit the landing page
+        Step(context, `I visit "${landingPage}"`);
+        cy.visit(landingPage);
 
-      // Click on the login button
-      if(kind !== 'bceid') {        
-        Step(context, 'I click on the "Log in with IDIR" button');
-      } else if(kind === 'bceid') {
-        Step(context, 'I click on the "Log in with Business BCeID" button');
-      }
+        cy.waitForPageLoad('img');
 
-      // Wait for redirect to external domain
-      cy.url({ timeout: 10000 }).should('include', 'logontest7.gov.bc.ca');
-      cy.get('.site-title').should('be.visible');
-      
-      // Log into the application, not using a step here to prevent password spillage
-      cy.get("#user").type(username, { log: false });
-      cy.get("#password").type(password, { log: false });
-      cy.get('input[type="submit"]').click();
-      
-      // Validate the login for session purposes
-      cy.url().should('include', afterLoginLocation);      
-    },
-    {
-      validate: () => {
-        cy.request(afterLoginLocation).its('status').should('eq', 200);
+        Step(context, 'I can read "Waste Plus"');
+
+        // Click on the login button
+        if (kind !== 'bceid') {
+          Step(context, 'I click on the "Log in with IDIR" button');
+        } else if (kind === 'bceid') {
+          Step(context, 'I click on the "Log in with Business BCeID" button');
+        }
+
+        // Wait for redirect to external domain
+        cy.url({ timeout: 10000 }).should('include', 'logontest7.gov.bc.ca');
+        cy.get('.site-title').should('be.visible');
+
+        // Log into the application, not using a step here to prevent password spillage
+        cy.get("#user").type(username, { log: false });
+        cy.get("#password").type(password, { log: false });
+        cy.get('input[type="submit"]').click();
+
+        // Validate the login for session purposes
+        cy.url().should('include', afterLoginLocation);
       },
-      // B1 (#1083): reuse the IdP session across specs in one run, so the
-      // logontest7.gov.bc.ca login dance runs once per run instead of once per
-      // spec. Safe with logouts.feature: cy.session restores the cached snapshot
-      // (re-establishing login) before validate, so an in-app logout in one spec
-      // does not break later specs.
-      cacheAcrossSpecs: true,
-    });
+      {
+        validate: () => {
+          cy.request(afterLoginLocation).its('status').should('eq', 200);
+        },
+        // B1 (#1083): reuse the IdP session across specs in one run, so the
+        // logontest7.gov.bc.ca login dance runs once per run instead of once per
+        // spec. Safe with logouts.feature: cy.session restores the cached snapshot
+        // (re-establishing login) before validate, so an in-app logout in one spec
+        // does not break later specs.
+        cacheAcrossSpecs: true,
+      }
+    );
     cy.visit(afterLoginLocation);
-    
-}
+  });
+};
 
 Before({ tags: '@loginAsIDIR' }, function () {  
   doLogin(this, 'idir','/search');

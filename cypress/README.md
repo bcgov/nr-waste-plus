@@ -42,7 +42,7 @@ When I press "Tab" 3 times
 Then the element "Facility Name" should be focused
 ```
 
-These steps use `cypress-axe`, `axe-core`, `@testing-library/cypress`, and `cypress-real-events`.
+These steps use `axe-core`, `@testing-library/cypress`, and `cypress-real-events`.
 
 ## Submitting a test without coding
 

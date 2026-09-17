@@ -1,3 +1,5 @@
+import axe from "axe-core";
+
 interface RecordedA11yViolation {
   id: string;
   impact: string;
@@ -95,23 +97,44 @@ const assertNoViolations = (violations: RecordedA11yViolation[], scope: string) 
   throw new Error(`Accessibility violations found for ${scope}: ${details}`);
 };
 
-export const runA11yCheck = (context: string | null, checkType: "page" | "region", scope: string) => {
-  let recordedViolations: RecordedA11yViolation[] = [];
-
-  cy.injectAxe();
-  cy.checkA11y(
-    context || undefined,
-    undefined,
-    (violations: AxeViolationInput[]) => {
-      recordedViolations = toRecordedViolations(violations);
-    },
-    true
-  );
-
-  cy.then(() => {
-    recordA11yCheck(checkType, scope, recordedViolations);
-    assertNoViolations(recordedViolations, scope);
+export const injectAxe = (): void => {
+  cy.window({ log: false }).then((win) => {
+    if (!(win as unknown as { axe?: typeof axe }).axe) {
+      (win as unknown as { eval: (code: string) => void }).eval(axe.source);
+    }
   });
+};
+
+export const runA11yCheck = (context: string | null, checkType: "page" | "region", scope: string) => {
+  injectAxe();
+
+  cy.window({ log: false })
+    .then((win) => {
+      const axeInstance = (win as unknown as { axe?: typeof axe }).axe;
+      if (!axeInstance) {
+        throw new Error("axe-core was not injected into the application window.");
+      }
+      return axeInstance.run(context || win.document);
+    })
+    .then((results) => {
+      const violations = results.violations ?? [];
+      if (violations.length > 0) {
+        violations.forEach((v) => {
+          const selectors = v.nodes
+            .map((node) => Array.isArray(node.target) ? node.target.join(" ") : String(node.target))
+            .join(", ");
+          Cypress.log({
+            name: "a11y error!",
+            message: `${v.id} on ${v.nodes.length} Node(s): ${selectors}`,
+            consoleProps: () => v,
+          });
+        });
+      }
+
+      const recordedViolations = toRecordedViolations(violations as unknown as AxeViolationInput[]);
+      recordA11yCheck(checkType, scope, recordedViolations);
+      assertNoViolations(recordedViolations, scope);
+    });
 };
 
 export const resolveRegionSelector = (region: string): Cypress.Chainable<string> => {
