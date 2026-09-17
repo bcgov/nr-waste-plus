@@ -105,7 +105,17 @@ export const injectAxe = (): void => {
   });
 };
 
+const isValidSelector = (selector: string): boolean => {
+  try {
+    document.createDocumentFragment().querySelector(selector);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const runA11yCheck = (context: string | null, checkType: "page" | "region", scope: string) => {
+  cy.get('[data-testid="loading"]', { timeout: 10000 }).should('not.exist');
   injectAxe();
 
   cy.window({ log: false })
@@ -153,8 +163,12 @@ export const resolveRegionSelector = (region: string): Cypress.Chainable<string>
     `[role='region'][aria-label='${trimmedRegion}']`
   );
   
-  // Wait for React to finish rendering before probing selectors
-  return cy.get('div#root *:first', { timeout: 10000 }).then(() => {
+  const validCandidates = selectorCandidates.filter(isValidSelector);
+  const combinedSelector = validCandidates.length > 0 ? validCandidates.join(", ") : trimmedRegion;
+
+  // Wait for the region element to be present in the DOM and any loading overlay to clear
+  return cy.get(combinedSelector, { timeout: 15000 }).then(() => {
+    cy.get('[data-testid="loading"]', { timeout: 10000 }).should('not.exist');
     return cy.document().then((doc) => {
       for (const selector of selectorCandidates) {
         try {
@@ -276,8 +290,9 @@ export const findInputElement = (inputIdentifier: string): Cypress.Chainable<JQu
 export const findFocusableElement = (label: string): Cypress.Chainable<JQuery<HTMLElement>> => {
   const exactLabel = label.trim();
 
-  return cy.get('div#root *:first', { timeout: 10000 }).then(($doc) => {
-    console.log(`Finding focusable element for label/text: "${exactLabel}"`,$doc);
+  cy.get('[data-testid="loading"]', { timeout: 10000 }).should('not.exist');
+  return cy.get('div#root', { timeout: 10000 }).then(($root) => {
+    console.log(`Finding focusable element for label/text: "${exactLabel}"`, $root);
     const asHTMLElement = (element: Element | null): HTMLElement | null => {
       if (element instanceof HTMLElement) {
         return element;
@@ -286,14 +301,14 @@ export const findFocusableElement = (label: string): Cypress.Chainable<JQuery<HT
       return null;
     };
 
-    const labelElement = Array.from($doc.find("label")).find(
+    const labelElement = Array.from($root.find("label")).find(
       (candidate) => candidate.textContent?.trim() === exactLabel
     );
 
     if (labelElement) {
       const htmlFor = labelElement.getAttribute("for");
       if (htmlFor) {
-        const input = asHTMLElement($doc.find(`#${htmlFor}`)[0]);
+        const input = asHTMLElement($root.find(`#${htmlFor}`)[0]);
         if (input) {
           return cy.wrap(input);
         }
@@ -307,12 +322,12 @@ export const findFocusableElement = (label: string): Cypress.Chainable<JQuery<HT
       }
     }
 
-    const ariaLabelElement = asHTMLElement($doc.find(`[aria-label='${exactLabel}']`)[0]);
+    const ariaLabelElement = asHTMLElement($root.find(`[aria-label='${exactLabel}']`)[0]);
     if (ariaLabelElement) {
       return cy.wrap(ariaLabelElement);
     }
 
-    const ariaLabelledByElement = Array.from($doc.find(focusableSelector)).find(
+    const ariaLabelledByElement = Array.from($root.find(focusableSelector)).find(
       (candidate) => {
         const labelledBy = candidate.getAttribute("aria-labelledby");
         if (!labelledBy) {
@@ -321,7 +336,7 @@ export const findFocusableElement = (label: string): Cypress.Chainable<JQuery<HT
 
         return labelledBy
           .split(" ")
-          .map((id) => $doc.find(`#${id}`)[0]?.textContent?.trim())
+          .map((id) => $root.find(`#${id}`)[0]?.textContent?.trim())
           .includes(exactLabel);
       }
     );
@@ -330,7 +345,7 @@ export const findFocusableElement = (label: string): Cypress.Chainable<JQuery<HT
       return cy.wrap(ariaLabelledByElement);
     }
 
-    const textMatchedFocusable = Array.from($doc.find(focusableSelector)).find(
+    const textMatchedFocusable = Array.from($root.find(focusableSelector)).find(
       (candidate) => candidate.textContent?.trim() === exactLabel
     );
 
@@ -338,7 +353,7 @@ export const findFocusableElement = (label: string): Cypress.Chainable<JQuery<HT
       return cy.wrap(textMatchedFocusable);
     }
 
-    const placeholderElement = asHTMLElement($doc.find(`input[placeholder='${exactLabel}']`)[0]);
+    const placeholderElement = asHTMLElement($root.find(`input[placeholder='${exactLabel}']`)[0]);
     if (placeholderElement) {
       return cy.wrap(placeholderElement);
     }
