@@ -28,7 +28,7 @@ jobs:
     
   zap_scan:
     if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: ZAP Baseline (${{ matrix.name }})
     permissions:
       contents: read
