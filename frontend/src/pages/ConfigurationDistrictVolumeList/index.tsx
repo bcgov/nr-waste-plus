@@ -4,7 +4,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { type FC } from 'react';
 
 import PageTitle from '@/components/core/PageTitle';
-import DistrictVolumeListTable from '@/components/waste/DistrictVolumeListTable';
+import DistrictVolumeListTable from '@/components/waste/DistrictVolume/DistrictVolumeListTable';
 import { navigateInTree } from '@/routes/inTreePaths';
 
 import './index.scss';

@@ -5,8 +5,8 @@ import { type FC } from 'react';
 
 import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
-import FormulaConfigurationDetailSkeleton from '@/components/waste/FormulaConfigurationDetail/FormulaConfigurationDetailSkeleton';
-import FormulaConfigurationDetailView from '@/components/waste/FormulaConfigurationDetail/FormulaConfigurationDetailView';
+import FormulaConfigurationDetailSkeleton from '@/components/waste/Formula/FormulaConfigurationDetail/FormulaConfigurationDetailSkeleton';
+import FormulaConfigurationDetailView from '@/components/waste/Formula/FormulaConfigurationDetail/FormulaConfigurationDetailView';
 import { useFormulaSetDetail } from '@/hooks/useFormulaConfiguration';
 import { navigateInTree } from '@/routes/inTreePaths';
 

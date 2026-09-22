@@ -23,7 +23,7 @@ vi.mock('@/config/react-query/hooks', () => ({
   useSpeciesCompositionDetailQuery: vi.fn(),
 }));
 
-vi.mock('@/components/waste/SpeciesCompositionDetailView', () => ({
+vi.mock('@/components/waste/SpeciesComposition/SpeciesCompositionDetailView', () => ({
   default: ({ data }: { data: SpeciesCompositionDetail }) => (
     <div data-testid="species-composition-detail-view">
       <span data-testid="rendered-id">{data.id}</span>
@@ -31,7 +31,7 @@ vi.mock('@/components/waste/SpeciesCompositionDetailView', () => ({
   ),
 }));
 
-vi.mock('@/components/waste/SpeciesCompositionDetailView/SpeciesCompositionDetailSkeleton', () => ({
+vi.mock('@/components/waste/SpeciesComposition/SpeciesCompositionDetailView/SpeciesCompositionDetailSkeleton', () => ({
   default: () => <div data-testid="species-composition-detail-skeleton" />,
 }));
 

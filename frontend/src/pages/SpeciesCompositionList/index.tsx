@@ -4,7 +4,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { type FC } from 'react';
 
 import PageTitle from '@/components/core/PageTitle';
-import SpeciesCompositionListTable from '@/components/waste/SpeciesCompositionListTable';
+import SpeciesCompositionListTable from '@/components/waste/SpeciesComposition/SpeciesCompositionListTable';
 import { navigateInTree } from '@/routes/inTreePaths';
 
 import './index.scss';

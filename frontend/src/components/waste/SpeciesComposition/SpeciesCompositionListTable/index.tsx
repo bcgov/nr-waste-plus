@@ -1,7 +1,7 @@
 import { Column } from '@carbon/react';
 import { useState } from 'react';
 
-import { useListTableState } from '../useListTableState';
+import { useListTableState } from '../../useListTableState';
 
 import { useSpeciesCompositionListRowActions } from './actions';
 import { headers } from './constants';

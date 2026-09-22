@@ -24,7 +24,7 @@ vi.mock('@/hooks/useFormulaConfiguration', () => ({
   useFormulaSetDetail: vi.fn(),
 }));
 
-vi.mock('@/components/waste/FormulaConfigurationDetail/FormulaConfigurationDetailView', () => ({
+vi.mock('@/components/waste/Formula/FormulaConfigurationDetail/FormulaConfigurationDetailView', () => ({
   default: ({ data }: { data: FormulaSetResponse }) => (
     <div data-testid="formula-set-detail-view">
       <span data-testid="rendered-id">{data.id}</span>
@@ -32,7 +32,7 @@ vi.mock('@/components/waste/FormulaConfigurationDetail/FormulaConfigurationDetai
   ),
 }));
 
-vi.mock('@/components/waste/FormulaConfigurationDetail/FormulaConfigurationDetailSkeleton', () => ({
+vi.mock('@/components/waste/Formula/FormulaConfigurationDetail/FormulaConfigurationDetailSkeleton', () => ({
   default: () => <div data-testid="formula-set-detail-skeleton" />,
 }));
 

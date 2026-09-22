@@ -9,7 +9,7 @@ import type { SpeciesCompositionDetail } from '@/services/speciesComposition.typ
 // Mocks
 // ============================================================================
 
-vi.mock('@/components/waste/SpeciesCompositionDetailView/SpeciesCompositionDetailMatrix', () => ({
+vi.mock('@/components/waste/SpeciesComposition/SpeciesCompositionDetailView/SpeciesCompositionDetailMatrix', () => ({
   default: ({ rows }: { rows: unknown[] }) => (
     <div data-testid="species-composition-matrix" data-rows-count={rows.length} />
   ),

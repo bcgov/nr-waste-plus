@@ -1,4 +1,4 @@
-import { useListTableRowActions } from '../useListTableRowActions';
+import { useListTableRowActions } from '../../useListTableRowActions';
 
 import type { SpeciesCompositionListItem } from '@/services/speciesComposition.types';
 import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types';

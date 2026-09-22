@@ -1,4 +1,4 @@
-import { useListTableRowActions } from '../useListTableRowActions';
+import { useListTableRowActions } from '../../useListTableRowActions';
 
 import type { DistrictVolumeListItem } from '@/services/districtvolumes.types';
 import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types';
