@@ -21,7 +21,7 @@ import type {
 
 import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 import FileUploadInput from '@/components/Form/FileUploadInput';
-import DistrictVolumeDetailTabs from '@/components/waste/DistrictVolumeDetail/DistrictVolumeDetailTabs';
+import DistrictVolumeDetailTabs from '@/components/waste/DistrictVolume/DistrictVolumeDetail/DistrictVolumeDetailTabs';
 import UploadFormActions from '@/components/waste/UploadFormActions';
 import {
   useDistrictOptionsQuery,

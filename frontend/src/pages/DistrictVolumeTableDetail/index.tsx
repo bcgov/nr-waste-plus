@@ -5,8 +5,8 @@ import { type FC } from 'react';
 
 import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
-import DistrictVolumeDetailView from '@/components/waste/DistrictVolumeDetail';
-import DistrictVolumeDetailSkeleton from '@/components/waste/DistrictVolumeDetail/DistrictVolumeDetailSkeleton';
+import DistrictVolumeDetailView from '@/components/waste/DistrictVolume/DistrictVolumeDetail';
+import DistrictVolumeDetailSkeleton from '@/components/waste/DistrictVolume/DistrictVolumeDetail/DistrictVolumeDetailSkeleton';
 import { useDistrictVolumeTableDetailQuery } from '@/config/react-query/hooks';
 import { navigateInTree } from '@/routes/inTreePaths';
 

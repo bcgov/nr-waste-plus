@@ -24,7 +24,7 @@ vi.mock('@/context/pageTitle/usePageTitle', () => ({
   }),
 }));
 
-vi.mock('@/components/waste/FormulaConfigurationListTable', () => ({
+vi.mock('@/components/waste/Formula/FormulaConfigurationListTable', () => ({
   default: () => <div data-testid="formula-configuration-list-table" />,
 }));
 

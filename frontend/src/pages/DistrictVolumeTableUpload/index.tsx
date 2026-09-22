@@ -4,7 +4,7 @@ import type { FC } from 'react';
 
 import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
-import DistrictVolumeTableUpload from '@/components/waste/DistrictVolumeUpload';
+import DistrictVolumeTableUpload from '@/components/waste/DistrictVolume/DistrictVolumeUpload';
 
 import './index.scss';
 

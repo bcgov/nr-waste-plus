@@ -6,8 +6,8 @@ import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
 
 import TableResource from '@/components/Form/TableResource';
 import ConfigurationDeleteConfirmModal from '@/components/waste/ConfigurationDeleteConfirmModal';
-import { useFormulaConfigurationListRowActions } from '@/components/waste/FormulaConfigurationListTable/actions';
-import { headers } from '@/components/waste/FormulaConfigurationListTable/constants';
+import { useFormulaConfigurationListRowActions } from '@/components/waste/Formula/FormulaConfigurationListTable/actions';
+import { headers } from '@/components/waste/Formula/FormulaConfigurationListTable/constants';
 import { useListTableState } from '@/components/waste/useListTableState';
 import { useFormulaSetList, useDeleteFormulaSet } from '@/hooks/useFormulaConfiguration';
 import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler';

@@ -22,7 +22,7 @@ vi.mock('@/config/react-query/hooks', () => ({
   useDistrictVolumeTableDetailQuery: vi.fn(),
 }));
 
-vi.mock('@/components/waste/DistrictVolumeDetail', () => ({
+vi.mock('@/components/waste/DistrictVolume/DistrictVolumeDetail', () => ({
   default: ({ data }: { data: DistrictVolumeDetail }) => (
     <div data-testid="district-volume-detail-view">
       <span data-testid="rendered-area">{data.area}</span>
@@ -30,9 +30,12 @@ vi.mock('@/components/waste/DistrictVolumeDetail', () => ({
   ),
 }));
 
-vi.mock('@/components/waste/DistrictVolumeDetail/DistrictVolumeDetailSkeleton', () => ({
-  default: () => <div data-testid="district-volume-detail-skeleton" />,
-}));
+vi.mock(
+  '@/components/waste/DistrictVolume/DistrictVolumeDetail/DistrictVolumeDetailSkeleton',
+  () => ({
+    default: () => <div data-testid="district-volume-detail-skeleton" />,
+  }),
+);
 
 vi.mock('@/components/core/PageTitle', () => ({
   default: ({

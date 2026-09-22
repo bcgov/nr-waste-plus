@@ -5,7 +5,7 @@ import FormulaConfigurationDetailHeader from './FormulaConfigurationDetailHeader
 
 import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
 
-import FormulaSection from '@/components/waste/FormulaConfigurationCreateForm/FormulaSection';
+import FormulaSection from '@/components/waste/Formula/FormulaConfigurationCreateForm/FormulaSection';
 import {
   FORMULA_KEYS,
   getFormulaLabel,

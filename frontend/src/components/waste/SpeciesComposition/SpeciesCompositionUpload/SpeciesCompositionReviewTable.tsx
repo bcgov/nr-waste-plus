@@ -1,7 +1,7 @@
 import type { SpeciesCompositionRow } from '@/services/speciesComposition.types';
 import type { FC } from 'react';
 
-import SpeciesCompositionDetailMatrix from '@/components/waste/SpeciesCompositionDetailView/SpeciesCompositionDetailMatrix';
+import SpeciesCompositionDetailMatrix from '@/components/waste/SpeciesComposition/SpeciesCompositionDetailView/SpeciesCompositionDetailMatrix';
 
 /**
  * Props for the SpeciesCompositionReviewTable component.

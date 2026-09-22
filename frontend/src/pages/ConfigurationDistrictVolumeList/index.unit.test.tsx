@@ -24,7 +24,7 @@ vi.mock('@/context/pageTitle/usePageTitle', () => ({
   }),
 }));
 
-vi.mock('@/components/waste/DistrictVolumeListTable', () => ({
+vi.mock('@/components/waste/DistrictVolume/DistrictVolumeListTable', () => ({
   default: () => <div data-testid="district-volume-list-table" />,
 }));
 
