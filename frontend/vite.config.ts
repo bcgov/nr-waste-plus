@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => {
     build: {
       chunkSizeWarningLimit: 1024,
       outDir: 'build',
+      license: true,
       sourcemap: process.env.VITE_COVERAGE === 'true' ? 'inline' : false,
       rollupOptions: {
         output: {
@@ -67,12 +68,22 @@ export default defineConfig(({ mode }) => {
         'react-dom/client',
         '@tanstack/react-query-devtools',
         'aws-amplify/auth',
+        'mathjs',
+        '@monaco-editor/react',
       ],
     },
     server: {
       port: 3000,
       hmr: {
         overlay: false,
+      },
+      warmup: {
+        clientFiles: [
+          './src/main.tsx',
+          './src/App.tsx',
+          './src/routes/routeTree.tsx',
+          './src/routes/routePaths.tsx',
+        ],
       },
       watch: {
         ignored: [
