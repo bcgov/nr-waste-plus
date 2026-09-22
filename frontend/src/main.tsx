@@ -14,12 +14,9 @@ import NotificationProvider from '@/context/notification/NotificationProvider';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider.tsx';
 import ThemeProvider from '@/context/theme/ThemeProvider.tsx';
-import updateSW from '@/registerServiceWorker';
 
 Amplify.configure(amplifyconfig);
 cognitoUserPoolsTokenProvider.setKeyValueStorage(new CookieStorage());
-
-updateSW();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

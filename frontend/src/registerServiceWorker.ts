@@ -1,47 +1,16 @@
-import { registerSW } from 'virtual:pwa-register';
-
-import { featureFlags } from '@/env';
-import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler';
-
-const updateSW = featureFlags['offline-mode-enabled']
-  ? registerSW({
-      onRegistered() {
-        sendToastEvent({
-          eventType: 'success',
-          title: 'Application registered successfully',
-          description: 'Your application is now ready to work offline.',
-        });
-      },
-      onRegisterError(error) {
-        sendToastEvent({
-          eventType: 'error',
-          title: 'Failed to register the app for offline use',
-          description: error instanceof Error ? error.message : String(error),
-        });
-      },
-      onNeedRefresh() {
-        sendToastEvent({
-          eventType: 'info',
-          title: 'New content available',
-          description: 'A new version of the app is available. Please refresh the app.',
-        });
-      },
-      onOfflineReady() {
-        sendToastEvent({
-          eventType: 'info',
-          title: 'You are offline',
-          description: "Don't worry, you will still be able to access offline content.",
-        });
-      },
-    })
-  : (_?: boolean) => {
-      // No-op when offline mode is disabled. Keep the signature compatible with
-      // the registerSW return value so callers don't need to change.
-      // The argument is intentionally ignored in this mode.
-      // eslint-disable-next-line no-console
-      console.debug(
-        '[pwa] offline-mode-disabled: skipping service worker registration (call ignored)',
-      );
-    };
+/**
+ * Stub module — service worker registration is currently disabled.
+ *
+ * Previously this file called `registerSW()` from `virtual:pwa-register` when
+ * the `offline-mode-enabled` feature flag was true.  The PWA plugin has been
+ * removed from the Vite config, so this module is now a no-op.
+ *
+ * When offline mode is re-enabled, restore the registration logic here and
+ * re-add `vite-plugin-pwa` to the Vite config.
+ */
+const updateSW = (_?: boolean) => {
+  // eslint-disable-next-line no-console
+  console.debug('[pwa] service-worker registration disabled (no-op)');
+};
 
 export default updateSW;

@@ -122,6 +122,7 @@ export const router = createRouter({
       <GlobalErrorPage error={error} />
     </Layout>
   ),
+  defaultPreload: 'intent',
 });
 
 // Module augmentation: registers the router type with TanStack Router so that
