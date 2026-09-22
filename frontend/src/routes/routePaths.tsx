@@ -1,6 +1,7 @@
+import { Loading } from '@carbon/react';
 import { DocumentAdd, Group, SearchLocate } from '@carbon/icons-react';
-import { type RouteLoaderFn } from '@tanstack/react-router';
-import { type ComponentType, lazy, Suspense } from 'react';
+import { lazyRouteComponent, type RouteLoaderFn } from '@tanstack/react-router';
+import { type ComponentType, Suspense } from 'react';
 
 import Layout from '@/components/Layout';
 import { Role, type FamRole } from '@/context/auth/types';
@@ -12,22 +13,38 @@ import NoRolePage from '@/pages/NoRole';
 import RoleErrorPage from '@/pages/RoleError';
 
 // ─── Lazy imports (loaded on demand when the route is navigated to) ───────────
-const MyClientListPage = lazy(() => import('@/pages/MyClientList'));
-const WasteSearchPage = lazy(() => import('@/pages/WasteSearch'));
-const ReportingUnitDetailsPage = lazy(() => import('@/pages/ReportingUnitDetails'));
-const ReportingUnitCreatePage = lazy(() => import('@/pages/ReportingUnitCreate'));
-const ConfigurationPage = lazy(() => import('@/pages/ConfigurationPage'));
-const ConfigurationDistrictVolumeListPage = lazy(
+const MyClientListPage = lazyRouteComponent(() => import('@/pages/MyClientList'));
+const WasteSearchPage = lazyRouteComponent(() => import('@/pages/WasteSearch'));
+const ReportingUnitDetailsPage = lazyRouteComponent(() => import('@/pages/ReportingUnitDetails'));
+const ReportingUnitCreatePage = lazyRouteComponent(() => import('@/pages/ReportingUnitCreate'));
+const ConfigurationPage = lazyRouteComponent(() => import('@/pages/ConfigurationPage'));
+const ConfigurationDistrictVolumeListPage = lazyRouteComponent(
   () => import('@/pages/ConfigurationDistrictVolumeList'),
 );
-const DistrictVolumeTableDetailPage = lazy(() => import('@/pages/DistrictVolumeTableDetail'));
-const DistrictVolumeTableUploadPage = lazy(() => import('@/pages/DistrictVolumeTableUpload'));
-const SpeciesCompositionListPage = lazy(() => import('@/pages/SpeciesCompositionList'));
-const SpeciesCompositionUploadPage = lazy(() => import('@/pages/SpeciesCompositionUpload'));
-const SpeciesCompositionDetailPage = lazy(() => import('@/pages/SpeciesCompositionDetail'));
-const FormulaConfigurationListPage = lazy(() => import('@/pages/FormulaConfigurationList'));
-const FormulaConfigurationDetailPage = lazy(() => import('@/pages/FormulaConfigurationDetail'));
-const FormulaConfigurationCreatePage = lazy(() => import('@/pages/FormulaConfigurationCreate'));
+const DistrictVolumeTableDetailPage = lazyRouteComponent(
+  () => import('@/pages/DistrictVolumeTableDetail'),
+);
+const DistrictVolumeTableUploadPage = lazyRouteComponent(
+  () => import('@/pages/DistrictVolumeTableUpload'),
+);
+const SpeciesCompositionListPage = lazyRouteComponent(
+  () => import('@/pages/SpeciesCompositionList'),
+);
+const SpeciesCompositionUploadPage = lazyRouteComponent(
+  () => import('@/pages/SpeciesCompositionUpload'),
+);
+const SpeciesCompositionDetailPage = lazyRouteComponent(
+  () => import('@/pages/SpeciesCompositionDetail'),
+);
+const FormulaConfigurationListPage = lazyRouteComponent(
+  () => import('@/pages/FormulaConfigurationList'),
+);
+const FormulaConfigurationDetailPage = lazyRouteComponent(
+  () => import('@/pages/FormulaConfigurationDetail'),
+);
+const FormulaConfigurationCreatePage = lazyRouteComponent(
+  () => import('@/pages/FormulaConfigurationCreate'),
+);
 
 // ─── Shared loader (eager — used by route config at module load time) ──────────
 import { reportingUnitLoader } from '@/pages/ReportingUnitDetails/loader';
@@ -101,7 +118,7 @@ export const ROUTES: RouteDescription[] = [
     id: 'My clients',
     icon: Group,
     component: () => (
-      <Suspense fallback={null}>
+      <Suspense fallback={<Loading withOverlay />}>
         <Layout>
           <MyClientListPage />
         </Layout>
@@ -119,7 +136,7 @@ export const ROUTES: RouteDescription[] = [
     id: 'Waste search',
     icon: SearchLocate,
     component: () => (
-      <Suspense fallback={null}>
+      <Suspense fallback={<Loading withOverlay />}>
         <Layout>
           <WasteSearchPage />
         </Layout>
@@ -133,7 +150,7 @@ export const ROUTES: RouteDescription[] = [
     id: 'Reporting Unit Details',
     loader: reportingUnitLoader,
     component: () => (
-      <Suspense fallback={null}>
+      <Suspense fallback={<Loading withOverlay />}>
         <Layout>
           <ReportingUnitDetailsPage />
         </Layout>
@@ -147,7 +164,7 @@ export const ROUTES: RouteDescription[] = [
     id: 'Create reporting unit',
     icon: DocumentAdd,
     component: () => (
-      <Suspense fallback={null}>
+      <Suspense fallback={<Loading withOverlay />}>
         <Layout>
           <ReportingUnitCreatePage />
         </Layout>
@@ -161,7 +178,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/configuration',
     id: 'Configuration',
     component: () => (
-      <Suspense fallback={null}>
+      <Suspense fallback={<Loading withOverlay />}>
         <Layout>
           <ConfigurationPage />
         </Layout>
@@ -176,7 +193,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/configuration/district-volume-tables',
     id: 'District Volume Tables',
     component: () => (
-      <Suspense fallback={null}>
+      <Suspense fallback={<Loading withOverlay />}>
         <Layout>
           <ConfigurationDistrictVolumeListPage />
         </Layout>
@@ -191,7 +208,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/configuration/district-volume-tables/$id',
     id: 'District Volume Table Detail',
     component: () => (
-      <Suspense fallback={null}>
+      <Suspense fallback={<Loading withOverlay />}>
         <Layout>
           <DistrictVolumeTableDetailPage />
         </Layout>
@@ -206,7 +223,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/configuration/district-volume-tables/upload',
     id: 'Upload District Volume Table',
     component: () => (
-      <Suspense fallback={null}>
+      <Suspense fallback={<Loading withOverlay />}>
         <Layout>
           <DistrictVolumeTableUploadPage />
         </Layout>
@@ -221,7 +238,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/configuration/species-composition',
     id: 'Species Composition',
     component: () => (
-      <Suspense fallback={null}>
+      <Suspense fallback={<Loading withOverlay />}>
         <Layout>
           <SpeciesCompositionListPage />
         </Layout>
@@ -236,7 +253,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/configuration/species-composition/upload',
     id: 'Upload Species Composition',
     component: () => (
-      <Suspense fallback={null}>
+      <Suspense fallback={<Loading withOverlay />}>
         <Layout>
           <SpeciesCompositionUploadPage />
         </Layout>
@@ -251,7 +268,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/configuration/species-composition/$id',
     id: 'Species Composition Detail',
     component: () => (
-      <Suspense fallback={null}>
+      <Suspense fallback={<Loading withOverlay />}>
         <Layout>
           <SpeciesCompositionDetailPage />
         </Layout>
@@ -266,7 +283,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/configuration/formulas',
     id: 'Formula Configuration',
     component: () => (
-      <Suspense fallback={null}>
+      <Suspense fallback={<Loading withOverlay />}>
         <Layout>
           <FormulaConfigurationListPage />
         </Layout>
@@ -281,7 +298,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/configuration/formulas/$id',
     id: 'Formula Configuration Detail',
     component: () => (
-      <Suspense fallback={null}>
+      <Suspense fallback={<Loading withOverlay />}>
         <Layout>
           <FormulaConfigurationDetailPage />
         </Layout>
@@ -296,7 +313,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/configuration/formulas/new',
     id: 'Create Formula Configuration',
     component: () => (
-      <Suspense fallback={null}>
+      <Suspense fallback={<Loading withOverlay />}>
         <Layout>
           <FormulaConfigurationCreatePage />
         </Layout>
