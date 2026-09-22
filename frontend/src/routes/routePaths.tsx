@@ -106,6 +106,21 @@ export type MenuItem = Pick<RouteDescription, 'id' | 'path' | 'icon'> & {
 };
 
 /**
+ * Wraps a lazy-loaded page component with an accessible Suspense boundary and
+ * the application {@link Layout}.  Centralises the repeated pattern so each
+ * route's `component` field is a single expression.
+ */
+function withLazyLayout(LazyComponent: ComponentType): ComponentType {
+  return () => (
+    <Suspense fallback={<Loading withOverlay />}>
+      <Layout>
+        <LazyComponent />
+      </Layout>
+    </Suspense>
+  );
+}
+
+/**
  * Feature routes that drive the left-panel navigation.
  *
  * Each entry is registered as a TanStack Router route in `routeTree.tsx` and
@@ -117,13 +132,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/clients',
     id: 'My clients',
     icon: Group,
-    component: () => (
-      <Suspense fallback={<Loading withOverlay />}>
-        <Layout>
-          <MyClientListPage />
-        </Layout>
-      </Suspense>
-    ),
+    component: withLazyLayout(MyClientListPage),
     isSideMenu: true,
     protected: true,
     roles: [
@@ -135,13 +144,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/search',
     id: 'Waste search',
     icon: SearchLocate,
-    component: () => (
-      <Suspense fallback={<Loading withOverlay />}>
-        <Layout>
-          <WasteSearchPage />
-        </Layout>
-      </Suspense>
-    ),
+    component: withLazyLayout(WasteSearchPage),
     isSideMenu: true,
     protected: true,
   },
@@ -149,13 +152,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/reporting-units/$ruId',
     id: 'Reporting Unit Details',
     loader: reportingUnitLoader,
-    component: () => (
-      <Suspense fallback={<Loading withOverlay />}>
-        <Layout>
-          <ReportingUnitDetailsPage />
-        </Layout>
-      </Suspense>
-    ),
+    component: withLazyLayout(ReportingUnitDetailsPage),
     isSideMenu: false,
     protected: true,
   },
@@ -163,13 +160,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/reporting-units/create',
     id: 'Create reporting unit',
     icon: DocumentAdd,
-    component: () => (
-      <Suspense fallback={<Loading withOverlay />}>
-        <Layout>
-          <ReportingUnitCreatePage />
-        </Layout>
-      </Suspense>
-    ),
+    component: withLazyLayout(ReportingUnitCreatePage),
     isSideMenu: true,
     protected: true,
     featureFlag: 'reporting-unit-create-enabled',
@@ -177,13 +168,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration',
     id: 'Configuration',
-    component: () => (
-      <Suspense fallback={<Loading withOverlay />}>
-        <Layout>
-          <ConfigurationPage />
-        </Layout>
-      </Suspense>
-    ),
+    component: withLazyLayout(ConfigurationPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -192,13 +177,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/district-volume-tables',
     id: 'District Volume Tables',
-    component: () => (
-      <Suspense fallback={<Loading withOverlay />}>
-        <Layout>
-          <ConfigurationDistrictVolumeListPage />
-        </Layout>
-      </Suspense>
-    ),
+    component: withLazyLayout(ConfigurationDistrictVolumeListPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -207,13 +186,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/district-volume-tables/$id',
     id: 'District Volume Table Detail',
-    component: () => (
-      <Suspense fallback={<Loading withOverlay />}>
-        <Layout>
-          <DistrictVolumeTableDetailPage />
-        </Layout>
-      </Suspense>
-    ),
+    component: withLazyLayout(DistrictVolumeTableDetailPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -222,13 +195,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/district-volume-tables/upload',
     id: 'Upload District Volume Table',
-    component: () => (
-      <Suspense fallback={<Loading withOverlay />}>
-        <Layout>
-          <DistrictVolumeTableUploadPage />
-        </Layout>
-      </Suspense>
-    ),
+    component: withLazyLayout(DistrictVolumeTableUploadPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -237,13 +204,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/species-composition',
     id: 'Species Composition',
-    component: () => (
-      <Suspense fallback={<Loading withOverlay />}>
-        <Layout>
-          <SpeciesCompositionListPage />
-        </Layout>
-      </Suspense>
-    ),
+    component: withLazyLayout(SpeciesCompositionListPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -252,13 +213,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/species-composition/upload',
     id: 'Upload Species Composition',
-    component: () => (
-      <Suspense fallback={<Loading withOverlay />}>
-        <Layout>
-          <SpeciesCompositionUploadPage />
-        </Layout>
-      </Suspense>
-    ),
+    component: withLazyLayout(SpeciesCompositionUploadPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -267,13 +222,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/species-composition/$id',
     id: 'Species Composition Detail',
-    component: () => (
-      <Suspense fallback={<Loading withOverlay />}>
-        <Layout>
-          <SpeciesCompositionDetailPage />
-        </Layout>
-      </Suspense>
-    ),
+    component: withLazyLayout(SpeciesCompositionDetailPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -282,13 +231,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/formulas',
     id: 'Formula Configuration',
-    component: () => (
-      <Suspense fallback={<Loading withOverlay />}>
-        <Layout>
-          <FormulaConfigurationListPage />
-        </Layout>
-      </Suspense>
-    ),
+    component: withLazyLayout(FormulaConfigurationListPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -297,13 +240,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/formulas/$id',
     id: 'Formula Configuration Detail',
-    component: () => (
-      <Suspense fallback={<Loading withOverlay />}>
-        <Layout>
-          <FormulaConfigurationDetailPage />
-        </Layout>
-      </Suspense>
-    ),
+    component: withLazyLayout(FormulaConfigurationDetailPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -312,13 +249,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/formulas/new',
     id: 'Create Formula Configuration',
-    component: () => (
-      <Suspense fallback={<Loading withOverlay />}>
-        <Layout>
-          <FormulaConfigurationCreatePage />
-        </Layout>
-      </Suspense>
-    ),
+    component: withLazyLayout(FormulaConfigurationCreatePage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
