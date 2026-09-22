@@ -137,6 +137,8 @@ export default defineConfig(({ mode }) => {
           '**/*.scss',
           '**/*.css',
           '**/*.d.ts',
+          '**/registerServiceWorker.ts',
+          '**/service-worker.ts',
           '**/types.ts',
           '**/*.types.ts',
           '**/main.tsx',

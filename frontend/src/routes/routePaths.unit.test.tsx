@@ -83,6 +83,18 @@ vi.mock('@/pages/SpeciesCompositionDetail', () => ({
   default: () => <div data-testid="species-composition-detail" />,
 }));
 
+vi.mock('@/pages/FormulaConfigurationList', () => ({
+  default: () => <div data-testid="formula-configuration-list" />,
+}));
+
+vi.mock('@/pages/FormulaConfigurationDetail', () => ({
+  default: () => <div data-testid="formula-configuration-detail" />,
+}));
+
+vi.mock('@/pages/FormulaConfigurationCreate', () => ({
+  default: () => <div data-testid="formula-configuration-create" />,
+}));
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 describe('routePaths', () => {
   describe('isRouteAccessible', () => {
@@ -428,6 +440,57 @@ describe('routePaths', () => {
       const route = routePaths.ROUTES.find(
         (r) => r.path === '/configuration/species-composition/$id',
       )!;
+      const Comp = route.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldRenderReportingUnitDetailsRouteComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/reporting-units/$ruId')!;
+      const Comp = route.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldRenderReportingUnitCreateRouteComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/reporting-units/create')!;
+      const Comp = route.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldRenderConfigurationRouteComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/configuration')!;
+      const Comp = route.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldRenderDistrictVolumeTablesRouteComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/district-volume-tables',
+      )!;
+      const Comp = route.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldRenderFormulaConfigurationListRouteComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/configuration/formulas')!;
+      const Comp = route.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldRenderFormulaConfigurationDetailRouteComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/configuration/formulas/$id')!;
+      const Comp = route.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldRenderFormulaConfigurationCreateRouteComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/configuration/formulas/new')!;
       const Comp = route.component;
       const { container } = render(<Comp />);
       expect(container).toBeDefined();
