@@ -1,4 +1,4 @@
-import type { FormulaItemDto } from '@/services/formulaConfiguration.types';
+import type { FormulaItemDto } from '@/services/formulaConfiguration.types.ts';
 
 interface FormulaDraftValue {
   expression: string;

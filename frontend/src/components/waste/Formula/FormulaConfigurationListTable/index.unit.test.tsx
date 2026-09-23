@@ -4,15 +4,15 @@ import userEvent from '@testing-library/user-event';
 import { act } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import FormulaConfigurationListTable from './index';
+import FormulaConfigurationListTable from './index.tsx';
 
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
+import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
+import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
 
-import { renderCell, resolveTableRowActionValue } from '@/components/Form/TableResource/types';
-import { renderWithAppAsync } from '@/config/tests/renderWithApp';
+import { renderCell, resolveTableRowActionValue } from '@/components/Form/TableResource/types.ts';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp.tsx';
 import { useFormulaSetList, useDeleteFormulaSet } from '@/hooks/useFormulaConfiguration';
-import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler';
+import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
 
 const mockUseFormulaSetList = vi.mocked(useFormulaSetList);
 const mockUseDeleteFormulaSet = vi.mocked(useDeleteFormulaSet);

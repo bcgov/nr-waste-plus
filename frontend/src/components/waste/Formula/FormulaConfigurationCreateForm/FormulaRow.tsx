@@ -1,8 +1,8 @@
 import { type FC, useMemo, useRef } from 'react';
 
-import type { FormulaError } from '@/components/Form/FormulaInput/types';
-import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants';
-import type { FormulaItemDto, FormulaValidationError } from '@/services/formulaConfiguration.types';
+import type { FormulaError } from '@/components/Form/FormulaInput/types.ts';
+import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants.ts';
+import type { FormulaItemDto, FormulaValidationError } from '@/services/formulaConfiguration.types.ts';
 
 import FormulaInput from '@/components/Form/FormulaInput';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';

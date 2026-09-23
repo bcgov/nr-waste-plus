@@ -1,5 +1,5 @@
-import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types';
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
+import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types.ts';
+import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
 
 import { useListTableRowActions } from '@/hooks/useTableRow';
 

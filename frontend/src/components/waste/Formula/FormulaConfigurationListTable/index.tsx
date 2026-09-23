@@ -1,16 +1,16 @@
 import { Column } from '@carbon/react';
 import { useState, type FC } from 'react';
 
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
+import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
+import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
 
 import TableResource from '@/components/Form/TableResource';
 import ConfigurationDeleteConfirmModal from '@/components/waste/ConfigurationDeleteConfirmModal';
-import { useFormulaConfigurationListRowActions } from '@/components/waste/FormulaConfigurationListTable/actions';
-import { headers } from '@/components/waste/FormulaConfigurationListTable/constants';
+import { useFormulaConfigurationListRowActions } from '@/components/waste/Formula/FormulaConfigurationListTable/actions.tsx';
+import { headers } from '@/components/waste/Formula/FormulaConfigurationListTable/constants.tsx';
 import { useListTableState } from '@/hooks/useTableRow';
 import { useFormulaSetList, useDeleteFormulaSet } from '@/hooks/useFormulaConfiguration';
-import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler';
+import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
 
 /** Paginated formula-set table backed by the shared TableResource component. */
 const FormulaConfigurationListTable: FC = () => {

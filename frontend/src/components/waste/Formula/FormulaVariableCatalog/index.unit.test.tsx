@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import FormulaVariableCatalog from '.';
+import FormulaVariableCatalog from './index.tsx';
 
-import type { FormulaNamespaceCatalog } from '@/services/formulaConfiguration.types';
+import type { FormulaNamespaceCatalog } from '@/services/formulaConfiguration.types.ts';
 
 const catalog: FormulaNamespaceCatalog[] = [
   {

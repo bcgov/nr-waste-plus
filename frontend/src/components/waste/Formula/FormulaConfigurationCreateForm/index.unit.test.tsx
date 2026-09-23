@@ -3,7 +3,7 @@ import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-import { ApiError } from '@/config/api/types';
+import { ApiError } from '@/config/api/types.ts';
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -131,7 +131,7 @@ vi.mock('@carbon/react', async (importOriginal) => {
   };
 });
 
-import FormulaConfigurationCreateForm from './index';
+import FormulaConfigurationCreateForm from './index.tsx';
 
 /** Submit the form via fireEvent — Carbon Button doesn't trigger onSubmit via userEvent.click */
 const submitForm = () => {

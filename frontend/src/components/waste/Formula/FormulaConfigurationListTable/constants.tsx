@@ -1,5 +1,5 @@
-import type { TableHeaderType } from '@/components/Form/TableResource/types';
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
+import type { TableHeaderType } from '@/components/Form/TableResource/types.ts';
+import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
 
 import DateTag from '@/components/core/Tags/DateTag';
 
