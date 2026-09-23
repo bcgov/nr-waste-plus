@@ -12,6 +12,8 @@ import { useListTableState } from '@/hooks/useTableRow';
 import { useFormulaSetList, useDeleteFormulaSet } from '@/hooks/useFormulaConfiguration';
 import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
 
+import './index.scss';
+
 /** Paginated formula-set table backed by the shared TableResource component. */
 const FormulaConfigurationListTable: FC = () => {
   const [rowToDelete, setRowToDelete] = useState<FormulaSetResponse | null>(null);
