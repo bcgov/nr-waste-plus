@@ -5,9 +5,9 @@ vi.mock('@/hooks/useFormulaConfiguration', () => ({
   useFormulaVariables: vi.fn(() => ({ data: undefined })),
 }));
 
-import FormulaConfigurationDetailView from './FormulaConfigurationDetailView';
+import FormulaConfigurationDetailView from './FormulaConfigurationDetailView.tsx';
 
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
+import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
 
 const fixture: FormulaSetResponse = {
   id: 42,

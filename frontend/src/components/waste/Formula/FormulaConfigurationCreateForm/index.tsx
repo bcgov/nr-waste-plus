@@ -14,22 +14,22 @@ import { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import FormulaVariableCatalog from '../FormulaVariableCatalog';
 
-import { carryForwardFormulaValues } from './carryForward';
-import FormulaSection from './FormulaSection';
+import { carryForwardFormulaValues } from './carryForward.ts';
+import FormulaSection from './FormulaSection.tsx';
 
 import type {
   FormulaItemDto,
   FormulaSetRequest,
   FormulaValidationError,
-} from '@/services/formulaConfiguration.types';
+} from '@/services/formulaConfiguration.types.ts';
 
-import { ApiError } from '@/config/api/types';
+import { ApiError } from '@/config/api/types.ts';
 import {
   useCreateFormulaSet,
   useCurrentOpenEndedFormulaSet,
   useFormulaVariables,
 } from '@/hooks/useFormulaConfiguration';
-import { FORMULA_KEYS, getFormulaKeysForArea } from '@/services/formulaConfiguration.constants';
+import { FORMULA_KEYS, getFormulaKeysForArea } from '@/services/formulaConfiguration.constants.ts';
 
 import './index.scss';
 

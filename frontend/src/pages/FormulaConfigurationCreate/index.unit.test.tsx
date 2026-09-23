@@ -15,7 +15,7 @@ vi.mock('@/components/core/PageNotification', () => ({
   ),
 }));
 
-vi.mock('@/components/waste/FormulaConfigurationCreateForm', () => ({
+vi.mock('@/components/waste/Formula/FormulaConfigurationCreateForm', () => ({
   default: () => <div data-testid="formula-configuration-create-form" />,
 }));
 

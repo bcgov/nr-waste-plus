@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { headers } from './constants';
+import { headers } from './constants.tsx';
 
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
+import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
 
 describe('FormulaConfigurationListTable headers', () => {
   it('exports six headers in a stable order', () => {

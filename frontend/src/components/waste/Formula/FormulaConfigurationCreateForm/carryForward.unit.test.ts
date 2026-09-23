@@ -1,4 +1,4 @@
-import { carryForwardFormulaValues } from './carryForward';
+import { carryForwardFormulaValues } from './carryForward.ts';
 
 describe('carryForwardFormulaValues', () => {
   it('carries matching expressions, defaults new keys to one, and drops removed keys', () => {

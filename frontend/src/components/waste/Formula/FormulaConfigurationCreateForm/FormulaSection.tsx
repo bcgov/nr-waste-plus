@@ -1,9 +1,9 @@
 import { type FC } from 'react';
 
-import FormulaRow from './FormulaRow';
+import FormulaRow from './FormulaRow.tsx';
 
-import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants';
-import type { FormulaItemDto, FormulaValidationError } from '@/services/formulaConfiguration.types';
+import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants.ts';
+import type { FormulaItemDto, FormulaValidationError } from '@/services/formulaConfiguration.types.ts';
 
 interface FormulaSectionProps {
   sectionName: string;

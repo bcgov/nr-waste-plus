@@ -2,7 +2,7 @@ import { Information } from '@carbon/icons-react';
 import { Button, ComposedModal, ModalBody, ModalHeader, Search } from '@carbon/react';
 import { type FC, useState } from 'react';
 
-import type { FormulaNamespaceCatalog } from '@/services/formulaConfiguration.types';
+import type { FormulaNamespaceCatalog } from '@/services/formulaConfiguration.types.ts';
 
 import './index.scss';
 

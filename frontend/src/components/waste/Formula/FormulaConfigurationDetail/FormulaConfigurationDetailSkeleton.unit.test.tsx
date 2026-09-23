@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import FormulaConfigurationDetailSkeleton from './FormulaConfigurationDetailSkeleton';
+import FormulaConfigurationDetailSkeleton from './FormulaConfigurationDetailSkeleton.tsx';
 
 describe('FormulaConfigurationDetailSkeleton', () => {
   it('renders Carbon skeleton text placeholders', () => {
