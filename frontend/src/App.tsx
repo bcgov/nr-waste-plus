@@ -1,8 +1,6 @@
-import { lazy, type FC } from 'react';
+import { type FC } from 'react';
 
 import AppRouter from '@/routes/AppRouter';
-
-const DevTools = import.meta.env.DEV ? lazy(() => import('./DevTools')) : () => null;
 
 /**
  * Root application component.
@@ -15,12 +13,7 @@ const DevTools = import.meta.env.DEV ? lazy(() => import('./DevTools')) : () => 
  * @returns The root JSX element containing the router and, in dev, devtools panels.
  */
 const App: FC = () => {
-  return (
-    <>
-      <AppRouter />
-      <DevTools />
-    </>
-  );
+  return <AppRouter />;
 };
 
 export default App;
