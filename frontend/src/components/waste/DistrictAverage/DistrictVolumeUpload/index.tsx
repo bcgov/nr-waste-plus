@@ -17,23 +17,23 @@ import type {
   InteriorData,
   InteriorDistrictRow,
   TableData,
-} from '@/services/districtvolumes.types';
+} from '@/services/districtvolumes.types.ts';
 
 import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 import FileUploadInput from '@/components/Form/FileUploadInput';
-import DistrictVolumeDetailTabs from '@/components/waste/DistrictVolumeDetail/DistrictVolumeDetailTabs';
+import DistrictVolumeDetailTabs from '@/components/waste/DistrictAverage/DistrictVolumeDetail/DistrictVolumeDetailTabs.tsx';
 import UploadFormActions from '@/components/waste/UploadFormActions';
 import {
   useDistrictOptionsQuery,
   useDistrictVolumeTableCreateMutation,
-} from '@/config/react-query/hooks';
-import { navigateInTree } from '@/routes/inTreePaths';
-import { DistrictVolumeProcessor } from '@/services/districtvolumes/processors/districtVolumeProcessor';
-import { coastValidator } from '@/services/districtvolumes/validators/coastValidator';
-import { interiorValidator } from '@/services/districtvolumes/validators/interiorValidator';
-import { ExcelReader } from '@/services/spreadsheet/excelReader';
-import { runValidators } from '@/utils/runValidators';
-import { required } from '@/utils/validators';
+} from '@/config/react-query/hooks.ts';
+import { navigateInTree } from '@/routes/inTreePaths.ts';
+import { DistrictVolumeProcessor } from '@/services/districtvolumes/processors/districtVolumeProcessor.ts';
+import { coastValidator } from '@/services/districtvolumes/validators/coastValidator.ts';
+import { interiorValidator } from '@/services/districtvolumes/validators/interiorValidator.ts';
+import { ExcelReader } from '@/services/spreadsheet/excelReader.ts';
+import { runValidators } from '@/utils/runValidators.ts';
+import { required } from '@/utils/validators.ts';
 
 import './index.scss';
 

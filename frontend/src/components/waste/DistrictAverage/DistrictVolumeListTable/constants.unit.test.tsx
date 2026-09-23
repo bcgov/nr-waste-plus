@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 
-import { headers } from './constants';
+import { headers } from './constants.tsx';
 
 describe('District Volume List headers', () => {
   it('should export 5 column headers', () => {

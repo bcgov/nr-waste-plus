@@ -4,15 +4,15 @@ import userEvent from '@testing-library/user-event';
 import { act } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import DistrictVolumeListTable from './index';
+import DistrictVolumeListTable from './index.tsx';
 
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { DistrictVolumeListItem } from '@/services/districtvolumes.types';
+import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
+import type { DistrictVolumeListItem } from '@/services/districtvolumes.types.ts';
 
-import { renderCell, resolveTableRowActionValue } from '@/components/Form/TableResource/types';
-import * as hooks from '@/config/react-query/hooks';
-import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler';
+import { renderCell, resolveTableRowActionValue } from '@/components/Form/TableResource/types.ts';
+import * as hooks from '@/config/react-query/hooks.ts';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp.tsx';
+import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
 
 vi.mock('@/config/react-query/hooks');
 

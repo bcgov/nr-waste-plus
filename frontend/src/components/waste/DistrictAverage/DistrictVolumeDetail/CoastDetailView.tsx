@@ -1,12 +1,12 @@
 import { type FC } from 'react';
 
-import DistrictVolumeDetailHeader from './DistrictVolumeDetailHeader';
-import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs';
-import { useDistrictCodeColumn } from './useDistrictCodeColumn';
+import DistrictVolumeDetailHeader from './DistrictVolumeDetailHeader.tsx';
+import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs.tsx';
+import { useDistrictCodeColumn } from './useDistrictCodeColumn.tsx';
 
-import type { TableHeaderType } from '@/components/Form/TableResource/types';
-import type { CoastDistrictRow, DistrictVolumeDetail } from '@/services/districtvolumes.types';
-import type { CodeDescriptionDto } from '@/services/search.types';
+import type { TableHeaderType } from '@/components/Form/TableResource/types.ts';
+import type { CoastDistrictRow, DistrictVolumeDetail } from '@/services/districtvolumes.types.ts';
+import type { CodeDescriptionDto } from '@/services/search.types.ts';
 
 import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 

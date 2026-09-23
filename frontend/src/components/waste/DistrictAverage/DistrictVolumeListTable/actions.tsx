@@ -1,7 +1,7 @@
-import { useListTableRowActions } from '../useListTableRowActions';
+import { useListTableRowActions } from '../../useListTableRowActions.tsx';
 
-import type { DistrictVolumeListItem } from '@/services/districtvolumes.types';
-import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types';
+import type { DistrictVolumeListItem } from '@/services/districtvolumes.types.ts';
+import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types.ts';
 
 type DistrictVolumeRow = PageableResponse<DistrictVolumeListItem>['content'][number];
 

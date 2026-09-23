@@ -2,9 +2,9 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import CoastDetailView from './CoastDetailView';
+import CoastDetailView from './CoastDetailView.tsx';
 
-import type { DistrictVolumeDetail } from '@/services/districtvolumes.types';
+import type { DistrictVolumeDetail } from '@/services/districtvolumes.types.ts';
 
 /** Shared district options for testing the lookup in the coast district column. */
 const SAMPLE_DISTRICT_OPTIONS = [
@@ -47,7 +47,7 @@ vi.mock('@/components/core/Tags/PrecisionNumberTag', () => ({
   ),
 }));
 
-vi.mock('@/components/waste/DistrictZoneSection', () => ({
+vi.mock('@/components/waste/DistrictAverage/DistrictZoneSection', () => ({
   default: ({
     zoneName,
     rows,

@@ -1,9 +1,9 @@
 import { Column, Tab, TabList, TabPanel, TabPanels, Tabs } from '@carbon/react';
 
-import type { TableHeaderType } from '@/components/Form/TableResource/types';
-import type { CoastDistrictRow, InteriorDistrictRow } from '@/services/districtvolumes.types';
+import type { TableHeaderType } from '@/components/Form/TableResource/types.ts';
+import type { CoastDistrictRow, InteriorDistrictRow } from '@/services/districtvolumes.types.ts';
 
-import DistrictZoneSection from '@/components/waste/DistrictZoneSection';
+import DistrictZoneSection from '@/components/waste/DistrictAverage/DistrictZoneSection';
 
 /**
  * A generic section item for the tabs.

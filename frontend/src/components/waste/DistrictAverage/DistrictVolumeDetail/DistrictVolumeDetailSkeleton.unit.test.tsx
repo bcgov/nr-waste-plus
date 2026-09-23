@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 
-import DistrictVolumeDetailSkeleton from './DistrictVolumeDetailSkeleton';
+import DistrictVolumeDetailSkeleton from './DistrictVolumeDetailSkeleton.tsx';
 
 describe('DistrictVolumeDetailSkeleton', () => {
   it('should render skeleton for start date column', () => {
