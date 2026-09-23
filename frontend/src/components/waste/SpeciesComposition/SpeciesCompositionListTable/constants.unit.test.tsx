@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 
-import { headers } from './constants';
+import { headers } from './constants.tsx';
 
 describe('Species Composition List headers', () => {
   it('should export 4 column headers', () => {

@@ -1,4 +1,4 @@
-import { useListTableRowActions } from '../../useListTableRowActions.tsx';
+import { useListTableRowActions } from '@/hooks/useTableRow';
 
 import type { DistrictVolumeListItem } from '@/services/districtvolumes.types.ts';
 import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types.ts';

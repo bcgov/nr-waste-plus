@@ -443,7 +443,7 @@ describe('FormulaConfigurationListTable', () => {
       await renderWithAppAsync(<FormulaConfigurationListTable />);
 
       const callArgs = mockUseFormulaSetList.mock.calls[0];
-      expect(callArgs[1]).toEqual(expect.objectContaining({ enabled: false, staleTime: Infinity }));
+      expect(callArgs[0]).toEqual(expect.objectContaining({ page: 0, size: 10, sort: {} }));
     });
   });
 
