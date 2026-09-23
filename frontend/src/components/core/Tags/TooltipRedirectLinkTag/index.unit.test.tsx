@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
-import TooltipRedirectLinkTag from './index';
+import TooltipRedirectLinkTag from './index.tsx';
 
-vi.mock('@/components/waste/RedirectLinkTag', () => ({
+vi.mock('@/components/core/Tags/RedirectLinkTag', () => ({
   default: ({
     text,
     url,

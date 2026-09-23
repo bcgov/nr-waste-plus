@@ -1,9 +1,9 @@
 import { type FC, useEffect } from 'react';
 
-import type { Role } from '@/context/auth/types';
+import type { Role } from '@/context/auth/types.ts';
 
-import RedirectLinkTag from '@/components/waste/RedirectLinkTag';
-import { useAuth } from '@/context/auth/useAuth';
+import RedirectLinkTag from '@/components/core/Tags/RedirectLinkTag';
+import { useAuth } from '@/context/auth/useAuth.ts';
 
 type RoleBasedRedirectLinkTagProps = {
   text: string;
