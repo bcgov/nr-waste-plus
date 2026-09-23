@@ -1,7 +1,7 @@
 import { Column } from '@carbon/react';
 import { type FC } from 'react';
 
-import SpeciesCompositionDetailMatrix from './SpeciesCompositionDetailMatrix';
+import SpeciesCompositionDetailMatrix from './SpeciesCompositionDetailMatrix.tsx';
 
 import PageNotification from '@/components/core/PageNotification';
 import DateTag from '@/components/core/Tags/DateTag';
@@ -9,7 +9,7 @@ import ReadonlyInput from '@/components/Form/ReadonlyInput';
 import {
   speciesCompositionDataSchema,
   type SpeciesCompositionDetail,
-} from '@/services/speciesComposition.types';
+} from '@/services/speciesComposition.types.ts';
 
 /**
  * Props for the {@link SpeciesCompositionDetailView} component.

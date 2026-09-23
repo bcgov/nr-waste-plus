@@ -1,5 +1,5 @@
-import type { TableHeaderType } from '@/components/Form/TableResource/types';
-import type { SpeciesCompositionListItem } from '@/services/speciesComposition.types';
+import type { TableHeaderType } from '@/components/Form/TableResource/types.ts';
+import type { SpeciesCompositionListItem } from '@/services/speciesComposition.types.ts';
 
 import DateTag from '@/components/core/Tags/DateTag';
 

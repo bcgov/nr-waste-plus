@@ -5,18 +5,18 @@ import type {
   TableHeaderType,
   PageableResponse,
   IdentifiableContent,
-} from '@/components/Form/TableResource/types';
-import type { NestedKeyOf } from '@/services/pagination.types';
-import type { SpeciesCompositionRow, SpeciesKey } from '@/services/speciesComposition.types';
+} from '@/components/Form/TableResource/types.ts';
+import type { NestedKeyOf } from '@/services/pagination.types.ts';
+import type { SpeciesCompositionRow, SpeciesKey } from '@/services/speciesComposition.types.ts';
 
 import TooltipTag from '@/components/core/Tags/TooltipTag';
 import TableResource from '@/components/Form/TableResource';
-import { useDistrictOptionsQuery } from '@/config/react-query/hooks';
+import { useDistrictOptionsQuery } from '@/config/react-query/hooks.ts';
 import {
   SPECIES_DESCRIPTIONS,
   SPECIES_LABELS,
   speciesCompositionRowSchema,
-} from '@/services/speciesComposition.types';
+} from '@/services/speciesComposition.types.ts';
 
 /**
  * Props for the {@link SpeciesCompositionDetailMatrix} component.

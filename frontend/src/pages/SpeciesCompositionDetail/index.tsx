@@ -5,8 +5,8 @@ import { type FC } from 'react';
 
 import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
-import SpeciesCompositionDetailView from '@/components/waste/SpeciesCompositionDetailView';
-import SpeciesCompositionDetailSkeleton from '@/components/waste/SpeciesCompositionDetailView/SpeciesCompositionDetailSkeleton';
+import SpeciesCompositionDetailView from '@/components/waste/SpeciesComposition/SpeciesCompositionDetailView';
+import SpeciesCompositionDetailSkeleton from '@/components/waste/SpeciesComposition/SpeciesCompositionDetailView/SpeciesCompositionDetailSkeleton';
 import { useSpeciesCompositionDetailQuery } from '@/config/react-query/hooks';
 import { navigateInTree } from '@/routes/inTreePaths';
 

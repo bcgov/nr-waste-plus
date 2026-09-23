@@ -4,19 +4,19 @@ import { useNavigate } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
 import { useCallback, useState, type FC } from 'react';
 
-import SpeciesCompositionReviewTable from './SpeciesCompositionReviewTable';
+import SpeciesCompositionReviewTable from './SpeciesCompositionReviewTable.tsx';
 
 import type {
   SpeciesCompositionCreate,
   SpeciesCompositionData,
-} from '@/services/speciesComposition.types';
+} from '@/services/speciesComposition.types.ts';
 
 import FileUploadInput from '@/components/Form/FileUploadInput';
 import UploadFormActions from '@/components/waste/UploadFormActions';
-import { useSpeciesCompositionCreateMutation } from '@/config/react-query/hooks';
-import { navigateInTree } from '@/routes/inTreePaths';
-import { SpeciesCompositionProcessor } from '@/services/speciescomposition/processors/speciesCompositionProcessor';
-import { speciesCompositionValidator } from '@/services/speciescomposition/validators/speciesCompositionValidator';
+import { useSpeciesCompositionCreateMutation } from '@/config/react-query/hooks.ts';
+import { navigateInTree } from '@/routes/inTreePaths.ts';
+import { SpeciesCompositionProcessor } from '@/services/speciescomposition/processors/speciesCompositionProcessor.ts';
+import { speciesCompositionValidator } from '@/services/speciescomposition/validators/speciesCompositionValidator.ts';
 
 import './index.scss';
 

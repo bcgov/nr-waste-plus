@@ -1,19 +1,22 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import SpeciesCompositionDetailView from './index';
+import SpeciesCompositionDetailView from './index.tsx';
 
-import type { SpeciesCompositionDetail } from '@/services/speciesComposition.types';
+import type { SpeciesCompositionDetail } from '@/services/speciesComposition.types.ts';
 
 // ============================================================================
 // Mocks
 // ============================================================================
 
-vi.mock('@/components/waste/SpeciesCompositionDetailView/SpeciesCompositionDetailMatrix', () => ({
-  default: ({ rows }: { rows: unknown[] }) => (
-    <div data-testid="species-composition-matrix" data-rows-count={rows.length} />
-  ),
-}));
+vi.mock(
+  '@/components/waste/SpeciesComposition/SpeciesCompositionDetailView/SpeciesCompositionDetailMatrix',
+  () => ({
+    default: ({ rows }: { rows: unknown[] }) => (
+      <div data-testid="species-composition-matrix" data-rows-count={rows.length} />
+    ),
+  }),
+);
 
 vi.mock('@/components/core/PageNotification', () => ({
   default: ({ eventTarget }: { eventTarget: string }) => (
