@@ -8,7 +8,7 @@ import TableResource from '@/components/Form/TableResource';
 import ConfigurationDeleteConfirmModal from '@/components/waste/ConfigurationDeleteConfirmModal';
 import { useFormulaConfigurationListRowActions } from '@/components/waste/FormulaConfigurationListTable/actions';
 import { headers } from '@/components/waste/FormulaConfigurationListTable/constants';
-import { useListTableState } from '@/components/waste/useListTableState';
+import { useListTableState } from '@/hooks/useTableRow';
 import { useFormulaSetList, useDeleteFormulaSet } from '@/hooks/useFormulaConfiguration';
 import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler';
 

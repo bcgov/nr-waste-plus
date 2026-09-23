@@ -9,12 +9,12 @@ import type {
   ReportingUnitSearchParametersViewDto,
   ReportingUnitSearchResultDto,
 } from '@/services/search.types';
-import type { SortDirectionType } from '@/services/types';
 
 import TableResource from '@/components/Form/TableResource';
 import WasteSearchFilters from '@/components/waste/WasteSearch/WasteSearchFilters';
 import WasteSearchTableExpandContent from '@/components/waste/WasteSearch/WasteSearchTableExpandContent';
 import { useSearchReportingUnitsQuery } from '@/config/react-query/hooks';
+import { useListTablePagination } from '@/hooks/useTableRow';
 import { featureFlags } from '@/env';
 import useNotificationEvents from '@/hooks/useNotificationEvents';
 import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
@@ -25,48 +25,45 @@ import './index.scss';
 /**
  * Coordinates waste-search filters, results, pagination, sorting, and row expansion.
  *
+ * Uses {@link useListTablePagination} for pagination state and calls
+ * {@link useSearchReportingUnitsQuery} directly at the top level so the
+ * React hook call is not wrapped in a callback (satisfying rules-of-hooks).
+ *
  * @returns The waste search table view.
  */
 const WasteSearchTable: FC = () => {
-  const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
   const [filters, setFilters] = useState<ReportingUnitSearchParametersViewDto>({});
-  const [sort, setSort] = useState<Record<string, SortDirectionType>>({});
-  const [searchTrigger, setSearchTrigger] = useState(0);
   const { clearEvents } = useNotificationEvents();
 
   const { sendInlineEvent } = useNotificationEvents();
   const plainFilters = useMemo(() => reportingUnitSearchParametersView2Plain(filters), [filters]);
 
-  const { data, isLoading, isFetching, isError, refetch } = useSearchReportingUnitsQuery(
-    {
-      page: currentPage,
-      size: pageSize,
-      filters: plainFilters,
-      sort,
-    },
-    {
-      enabled: false,
-      gcTime: 0,
-      notificationTarget: 'waste-search',
-      staleTime: Infinity,
-    },
+  const hasFilters = useMemo(
+    () => Object.keys(removeEmpty(plainFilters)).length > 0,
+    [plainFilters],
   );
 
-  /**
-   * Runs a search using the current filter, sort, and pagination state.
-   *
-   * @param pageOverride Optional page number to apply before searching.
-   * @param pageSizeOverride Optional page size to apply before searching.
-   */
-  const executeSearch = (pageOverride?: number, pageSizeOverride?: number) => {
-    clearEvents('waste-search');
-    setCurrentPage(pageOverride ?? currentPage);
-    setPageSize(pageSizeOverride ?? pageSize);
-    if (Object.keys(removeEmpty(plainFilters)).length > 0) {
-      setSearchTrigger((n) => n + 1);
+  const { page, size, sort, searchTrigger, executeSearch, handleSort, isSearchEnabled } =
+    useListTablePagination({ filters: plainFilters, enabled: hasFilters });
+
+  const { data, isLoading, isFetching, isError, refetch } = useSearchReportingUnitsQuery(
+    { page, size, sort, filters: plainFilters },
+    { enabled: false, gcTime: 0, notificationTarget: 'waste-search', staleTime: Infinity },
+  );
+
+  useEffect(() => {
+    if (searchTrigger > 0) {
+      refetch();
     }
-  };
+  }, [searchTrigger, refetch]);
+
+  useEffect(() => {
+    if (isSearchEnabled()) {
+      refetch();
+    }
+    // Mount-only: skip auto-fetch when filters are empty.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refetch]);
 
   const getRowActions = useWasteSearchRowActions({
     sendInlineEvent,
@@ -77,27 +74,8 @@ const WasteSearchTable: FC = () => {
    * Starts a new search from the first page.
    */
   const executeNewSearch = () => {
-    executeSearch(0, pageSize);
-  };
-
-  /**
-   * Applies a table page change and fetches the corresponding result set.
-   *
-   * @param paging The requested page and page size.
-   */
-  const handlePageChange = ({ page, pageSize }: { page: number; pageSize: number }) => {
-    const adjustedPage = Math.min(Math.max(page, 0), (data?.page.totalPages ?? 1) - 1); // Adjust for zero-based index
-    executeSearch(adjustedPage, pageSize);
-  };
-
-  /**
-   * Applies updated sort keys and reruns the current search.
-   *
-   * @param sortingKeys The next table sort definition.
-   */
-  const handleSort = (sortingKeys: Record<string, SortDirectionType>) => {
-    setSort(sortingKeys);
-    executeSearch(currentPage, pageSize);
+    clearEvents('waste-search');
+    executeSearch(0, 10, { resetPage: true });
   };
 
   /**
@@ -110,11 +88,11 @@ const WasteSearchTable: FC = () => {
     return Promise.resolve(<WasteSearchTableExpandContent rowId={String(rowId)} />);
   };
 
-  useEffect(() => {
-    if (searchTrigger > 0) {
-      refetch();
-    }
-  }, [searchTrigger, refetch]);
+  const handlePageChange = ({ page, pageSize }: { page: number; pageSize: number }) => {
+    const maxPage = Math.max((data?.page.totalPages ?? 1) - 1, 0);
+    const adjustedPage = Math.min(Math.max(page, 0), maxPage);
+    executeSearch(adjustedPage, pageSize);
+  };
 
   return (
     <>
