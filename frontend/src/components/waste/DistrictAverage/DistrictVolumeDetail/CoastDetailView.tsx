@@ -2,13 +2,11 @@ import { type FC } from 'react';
 
 import DistrictVolumeDetailHeader from './DistrictVolumeDetailHeader.tsx';
 import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs.tsx';
+import { buildDistrictVolumeDetailHeaders } from './districtVolumeDetailHeaders.tsx';
 import { useDistrictCodeColumn } from './useDistrictCodeColumn.tsx';
 
-import type { TableHeaderType } from '@/components/Form/TableResource/types.ts';
 import type { CoastDistrictRow, DistrictVolumeDetail } from '@/services/districtvolumes.types.ts';
 import type { CodeDescriptionDto } from '@/services/search.types.ts';
-
-import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 
 /**
  * Props for the {@link CoastDetailView} component.
@@ -42,44 +40,13 @@ const CoastDetailView: FC<CoastDetailViewProps> = ({ data, districtOptions }) =>
   /** O(1) code→description render function for the district column. */
   const renderDistrictCode = useDistrictCodeColumn(districtOptions);
 
-  const headers: TableHeaderType<CoastDistrictRow>[] = [
-    {
-      key: 'code',
-      header: 'District',
-      selected: true,
-      renderAs: renderDistrictCode,
-    },
-    {
-      key: 'avoidableSawlog',
-      header: 'Avoidable sawlog',
-      selected: true,
-      renderAs: (row) => <PrecisionNumberTag value={row} precision={3} />,
-    },
-    {
-      key: 'avoidableHembalGradeU',
-      header: 'Avoidable Hembal Grade U',
-      selected: true,
-      renderAs: (row) => <PrecisionNumberTag value={row} precision={3} />,
-    },
-    {
-      key: 'avoidableGradeY',
-      header: 'Avoidable Grade Y',
-      selected: true,
-      renderAs: (row) => <PrecisionNumberTag value={row} precision={3} />,
-    },
-    {
-      key: 'unavoidable',
-      header: 'Unavoidable',
-      selected: true,
-      renderAs: (row) => <PrecisionNumberTag value={row} precision={3} />,
-    },
-    {
-      key: 'total',
-      header: 'Total',
-      selected: true,
-      renderAs: (row) => <PrecisionNumberTag value={row} precision={3} />,
-    },
-  ];
+  const headers = buildDistrictVolumeDetailHeaders<CoastDistrictRow>(renderDistrictCode, [
+    { key: 'avoidableSawlog', header: 'Avoidable sawlog' },
+    { key: 'avoidableHembalGradeU', header: 'Avoidable Hembal Grade U' },
+    { key: 'avoidableGradeY', header: 'Avoidable Grade Y' },
+    { key: 'unavoidable', header: 'Unavoidable' },
+    { key: 'total', header: 'Total' },
+  ]);
 
   return (
     <>
