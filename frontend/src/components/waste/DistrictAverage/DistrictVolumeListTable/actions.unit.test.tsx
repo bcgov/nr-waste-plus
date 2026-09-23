@@ -2,14 +2,14 @@ import { useNavigate } from '@tanstack/react-router';
 import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
-import { useDistrictVolumeListRowActions } from './actions';
+import { useDistrictVolumeListRowActions } from './actions.tsx';
 
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { DistrictVolumeListItem } from '@/services/districtvolumes.types';
+import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
+import type { DistrictVolumeListItem } from '@/services/districtvolumes.types.ts';
 
-import { resolveTableRowActionValue } from '@/components/Form/TableResource/types';
-import { navigateInTree } from '@/routes/inTreePaths';
-import { isFutureDated } from '@/utils/businessDate';
+import { resolveTableRowActionValue } from '@/components/Form/TableResource/types.ts';
+import { navigateInTree } from '@/routes/inTreePaths.ts';
+import { isFutureDated } from '@/utils/businessDate.ts';
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: vi.fn(),

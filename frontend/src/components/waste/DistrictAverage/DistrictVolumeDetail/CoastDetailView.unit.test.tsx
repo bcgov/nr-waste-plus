@@ -2,9 +2,10 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import CoastDetailView from './CoastDetailView';
+import CoastDetailView from './CoastDetailView.tsx';
+import { buildDistrictVolumeDetailHeaders } from './districtVolumeDetailHeaders.tsx';
 
-import type { DistrictVolumeDetail } from '@/services/districtvolumes.types';
+import type { DistrictVolumeDetail } from '@/services/districtvolumes.types.ts';
 
 /** Shared district options for testing the lookup in the coast district column. */
 const SAMPLE_DISTRICT_OPTIONS = [
@@ -47,7 +48,7 @@ vi.mock('@/components/core/Tags/PrecisionNumberTag', () => ({
   ),
 }));
 
-vi.mock('@/components/waste/DistrictZoneSection', () => ({
+vi.mock('@/components/waste/DistrictAverage/DistrictZoneSection', () => ({
   default: ({
     zoneName,
     rows,
@@ -216,6 +217,30 @@ describe('CoastDetailView', () => {
       await waitFor(() => {});
 
       expect(screen.getByTestId('readonly-input-heli-multiplier')).toBeTruthy();
+    });
+  });
+
+  describe('header helper contract', () => {
+    it('should build the shared district detail headers with district first and 3dp numeric values', () => {
+      const renderDistrictCode = (value: string | number) => <span>{String(value)}</span>;
+
+      const headers = buildDistrictVolumeDetailHeaders<{ code: string; avoidableSawlog: number }>(
+        renderDistrictCode,
+        [{ key: 'avoidableSawlog', header: 'Avoidable sawlog' }],
+      );
+
+      expect(headers[0]).toMatchObject({
+        key: 'code',
+        header: 'District',
+        selected: true,
+      });
+      expect(headers[1]).toMatchObject({
+        key: 'avoidableSawlog',
+        header: 'Avoidable sawlog',
+        selected: true,
+      });
+      expect(typeof headers[1].renderAs).toBe('function');
+      expect(headers[1].renderAs?.(1.234)).toBeTruthy();
     });
   });
 

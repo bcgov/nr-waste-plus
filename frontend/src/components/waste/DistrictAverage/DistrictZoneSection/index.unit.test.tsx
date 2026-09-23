@@ -1,10 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import DistrictZoneSection from './index';
+import DistrictZoneSection from './index.tsx';
 
-import type { TableHeaderType } from '@/components/Form/TableResource/types';
-import type { CoastDistrictRow, InteriorDistrictRow } from '@/services/districtvolumes.types';
+import type { TableHeaderType } from '@/components/Form/TableResource/types.ts';
+import type { CoastDistrictRow, InteriorDistrictRow } from '@/services/districtvolumes.types.ts';
 
 // ============================================================================
 // Mocks

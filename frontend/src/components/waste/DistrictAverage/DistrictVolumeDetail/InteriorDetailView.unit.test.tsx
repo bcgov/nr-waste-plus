@@ -49,7 +49,7 @@ vi.mock('@/components/core/Tags/PrecisionNumberTag', () => ({
   ),
 }));
 
-vi.mock('@/components/waste/DistrictZoneSection', () => ({
+vi.mock('@/components/waste/DistrictAverage/DistrictZoneSection', () => ({
   default: ({
     zoneName,
     rows,

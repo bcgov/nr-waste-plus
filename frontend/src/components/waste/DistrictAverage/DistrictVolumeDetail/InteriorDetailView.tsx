@@ -1,14 +1,15 @@
 import { type FC } from 'react';
 
-import DistrictVolumeDetailHeader from './DistrictVolumeDetailHeader';
-import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs';
-import { useDistrictCodeColumn } from './useDistrictCodeColumn';
+import DistrictVolumeDetailHeader from './DistrictVolumeDetailHeader.tsx';
+import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs.tsx';
+import { buildDistrictVolumeDetailHeaders } from './districtVolumeDetailHeaders.tsx';
+import { useDistrictCodeColumn } from './useDistrictCodeColumn.tsx';
 
-import type { TableHeaderType } from '@/components/Form/TableResource/types';
-import type { DistrictVolumeDetail, InteriorDistrictRow } from '@/services/districtvolumes.types';
-import type { CodeDescriptionDto } from '@/services/search.types';
-
-import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
+import type {
+  DistrictVolumeDetail,
+  InteriorDistrictRow,
+} from '@/services/districtvolumes.types.ts';
+import type { CodeDescriptionDto } from '@/services/search.types.ts';
 
 /**
  * Props for the {@link InteriorDetailView} component.
@@ -43,39 +44,12 @@ const InteriorDetailView: FC<InteriorDetailViewProps> = ({ data, districtOptions
   /** O(1) code→description render function for the district column. */
   const renderDistrictCode = useDistrictCodeColumn(districtOptions);
 
-  /** Table headers for interior district volume rows. */
-  const headers: TableHeaderType<InteriorDistrictRow>[] = [
-    {
-      key: 'code',
-      header: 'District',
-      selected: true,
-      renderAs: renderDistrictCode,
-    },
-    {
-      key: 'avoidableSawlog',
-      header: 'Avoidable sawlog',
-      selected: true,
-      renderAs: (row) => <PrecisionNumberTag value={row} precision={3} />,
-    },
-    {
-      key: 'avoidableGrade4',
-      header: 'Avoidable Grade 4',
-      selected: true,
-      renderAs: (row) => <PrecisionNumberTag value={row} precision={3} />,
-    },
-    {
-      key: 'unavoidableGrade4',
-      header: 'Unavoidable Grade 4',
-      selected: true,
-      renderAs: (row) => <PrecisionNumberTag value={row} precision={3} />,
-    },
-    {
-      key: 'total',
-      header: 'Total',
-      selected: true,
-      renderAs: (row) => <PrecisionNumberTag value={row} precision={3} />,
-    },
-  ];
+  const headers = buildDistrictVolumeDetailHeaders<InteriorDistrictRow>(renderDistrictCode, [
+    { key: 'avoidableSawlog', header: 'Avoidable sawlog' },
+    { key: 'avoidableGrade4', header: 'Avoidable Grade 4' },
+    { key: 'unavoidableGrade4', header: 'Unavoidable Grade 4' },
+    { key: 'total', header: 'Total' },
+  ]);
 
   return (
     <>

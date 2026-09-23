@@ -1,5 +1,5 @@
-import type { TableHeaderType } from '@/components/Form/TableResource/types';
-import type { DistrictVolumeListItem } from '@/services/districtvolumes.types';
+import type { TableHeaderType } from '@/components/Form/TableResource/types.ts';
+import type { DistrictVolumeListItem } from '@/services/districtvolumes.types.ts';
 
 import DateTag from '@/components/core/Tags/DateTag';
 

@@ -3,13 +3,13 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import DistrictVolumeTableUpload from './index';
+import DistrictVolumeTableUpload from './index.tsx';
 
-import type { TableData } from '@/services/districtvolumes.types';
+import type { TableData } from '@/services/districtvolumes.types.ts';
 
-import * as hooks from '@/config/react-query/hooks';
-import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import * as inTreePaths from '@/routes/inTreePaths';
+import * as hooks from '@/config/react-query/hooks.ts';
+import { renderWithAppAsync } from '@/config/tests/renderWithApp.tsx';
+import * as inTreePaths from '@/routes/inTreePaths.ts';
 
 // ============================================================================
 // Mocks

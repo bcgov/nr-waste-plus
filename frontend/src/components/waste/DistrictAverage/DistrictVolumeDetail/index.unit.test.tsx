@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import DistrictVolumeDetailView from './index';
+import DistrictVolumeDetailView from './index.tsx';
 
-import type { DistrictVolumeDetail } from '@/services/districtvolumes.types';
+import type { DistrictVolumeDetail } from '@/services/districtvolumes.types.ts';
 
 // ============================================================================
 // Mocks

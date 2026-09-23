@@ -1,5 +1,5 @@
-import type { PageableResponse, TableHeaderType } from '@/components/Form/TableResource/types';
-import type { CoastDistrictRow, InteriorDistrictRow } from '@/services/districtvolumes.types';
+import type { PageableResponse, TableHeaderType } from '@/components/Form/TableResource/types.ts';
+import type { CoastDistrictRow, InteriorDistrictRow } from '@/services/districtvolumes.types.ts';
 
 import TableResource from '@/components/Form/TableResource';
 

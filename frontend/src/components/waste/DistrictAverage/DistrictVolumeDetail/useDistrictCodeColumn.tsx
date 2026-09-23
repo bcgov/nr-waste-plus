@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode } from 'react';
 
-import type { CodeDescriptionDto } from '@/services/search.types';
+import type { CodeDescriptionDto } from '@/services/search.types.ts';
 
 import CodeDescriptionTag from '@/components/waste/CodeDescriptionTag';
 
