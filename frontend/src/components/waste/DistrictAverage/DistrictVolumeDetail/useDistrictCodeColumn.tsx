@@ -2,7 +2,7 @@ import { useMemo, type ReactNode } from 'react';
 
 import type { CodeDescriptionDto } from '@/services/search.types.ts';
 
-import CodeDescriptionTag from '@/components/waste/CodeDescriptionTag';
+import CodeDescriptionTag from '@/components/core/Tags/CodeDescriptionTag';
 
 /**
  * Builds a `renderAs` function for the district *code* column used by both

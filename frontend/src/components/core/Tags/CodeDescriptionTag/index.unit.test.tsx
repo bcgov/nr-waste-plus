@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it } from 'vitest';
 
-import CodeDescriptionTag from './index';
+import CodeDescriptionTag from './index.tsx';
 
 describe('CodeDescriptionTag', () => {
   it('renders code and description', () => {

@@ -1,7 +1,7 @@
 import { DefinitionTooltip } from '@carbon/react';
 import { type FC } from 'react';
 
-import RedirectLinkTag from '@/components/waste/RedirectLinkTag';
+import RedirectLinkTag from '@/components/core/Tags/RedirectLinkTag';
 
 type TooltipRedirectLinkTagProps = {
   tooltip: string;

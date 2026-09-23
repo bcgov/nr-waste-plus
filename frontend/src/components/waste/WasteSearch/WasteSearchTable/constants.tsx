@@ -5,9 +5,9 @@ import ColorTag, { type CarbonColors } from '@/components/core/Tags/ColorTag';
 import DateTag from '@/components/core/Tags/DateTag';
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 import YesNoTag from '@/components/core/Tags/YesNoTag';
-import CodeDescriptionTag from '@/components/waste/CodeDescriptionTag';
-import TooltipRedirectLinkTag from '@/components/waste/TooltipRedirectLinkTag';
-import TooltipRoleBasedRedirectLinkTag from '@/components/waste/TooltipRoleBasedRedirectLinkTag';
+import CodeDescriptionTag from '@/components/core/Tags/CodeDescriptionTag';
+import TooltipRedirectLinkTag from '@/components/core/Tags/TooltipRedirectLinkTag';
+import TooltipRoleBasedRedirectLinkTag from '@/components/core/Tags/TooltipRoleBasedRedirectLinkTag';
 import { Role } from '@/context/auth/types';
 import { env, featureFlags } from '@/env';
 
