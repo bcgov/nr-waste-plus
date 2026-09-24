@@ -9,7 +9,9 @@ import java.util.Optional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.QueryHints;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /** Repository for block attachments. */
@@ -18,6 +20,17 @@ public interface BlockAttachmentRepository extends JpaRepository<BlockAttachment
 
   /** Returns the non-deleted attachment with the given identifier, if present. */
   Optional<BlockAttachmentEntity> findByIdAndDeletedFalse(Long id);
+
+  /**
+   * Returns the non-deleted attachment with the given identifier, acquiring a pessimistic
+   * write lock ({@code SELECT ... FOR UPDATE}) to serialize state transitions.
+   *
+   * @param id the attachment identifier
+   * @return optional containing the locked entity if present
+   */
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("SELECT a FROM BlockAttachmentEntity a WHERE a.id = :id AND a.deleted = false")
+  Optional<BlockAttachmentEntity> findByIdAndDeletedFalseForUpdate(@Param("id") Long id);
 
   /**
    * Finds abandoned upload intents older than the cutoff timestamp using a lock-skip strategy

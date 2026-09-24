@@ -118,7 +118,7 @@ public class AttachmentScanService {
       Long attachmentId, Long expectedBlockId, AttachmentScanStatus newStatus) {
     BlockAttachmentEntity attachment =
         attachmentRepository
-            .findByIdAndDeletedFalse(attachmentId)
+            .findByIdAndDeletedFalseForUpdate(attachmentId)
             .orElseThrow(() -> new AttachmentNotFoundException(attachmentId));
 
     if (expectedBlockId != null && !attachment.getBlockId().equals(expectedBlockId)) {

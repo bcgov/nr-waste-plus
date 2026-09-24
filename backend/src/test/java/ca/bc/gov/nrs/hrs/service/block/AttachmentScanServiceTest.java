@@ -59,9 +59,23 @@ class AttachmentScanServiceTest {
   // --- Scan state transitions ---
 
   @Test
+  @DisplayName("Acquires pessimistic write lock when updating scan status")
+  void updateScanStatus_acquiresPessimisticWriteLock() {
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
+        .willReturn(Optional.of(entity));
+    given(attachmentRepository.save(any(BlockAttachmentEntity.class)))
+        .willAnswer(inv -> inv.getArgument(0));
+
+    scanService.updateScanStatus(ATTACHMENT_ID, AttachmentScanStatus.CLEAN);
+
+    verify(attachmentRepository).findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID);
+    verify(attachmentRepository, never()).findByIdAndDeletedFalse(ATTACHMENT_ID);
+  }
+
+  @Test
   @DisplayName("Transitions from PENDING to CLEAN")
   void updateScanStatus_fromPendingToClean_succeeds() {
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(entity));
     given(attachmentRepository.save(any(BlockAttachmentEntity.class)))
         .willAnswer(inv -> inv.getArgument(0));
@@ -76,7 +90,7 @@ class AttachmentScanServiceTest {
   @Test
   @DisplayName("Transitions from PENDING to QUARANTINED")
   void updateScanStatus_fromPendingToQuarantined_succeeds() {
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(entity));
     given(attachmentRepository.save(any(BlockAttachmentEntity.class)))
         .willAnswer(inv -> inv.getArgument(0));
@@ -91,7 +105,7 @@ class AttachmentScanServiceTest {
   @Test
   @DisplayName("Transitions from PENDING to FAILED")
   void updateScanStatus_fromPendingToFailed_succeeds() {
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(entity));
     given(attachmentRepository.save(any(BlockAttachmentEntity.class)))
         .willAnswer(inv -> inv.getArgument(0));
@@ -110,7 +124,7 @@ class AttachmentScanServiceTest {
   @DisplayName("Transitioning to the same status is idempotent")
   void updateScanStatus_sameStatus_isIdempotent(AttachmentScanStatus status) {
     entity.setScanStatus(status.name());
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(entity));
 
     BlockAttachmentEntity updated = scanService.updateScanStatus(ATTACHMENT_ID, status);
@@ -123,7 +137,7 @@ class AttachmentScanServiceTest {
   @DisplayName("Rejects transition from CLEAN to QUARANTINED with 409 Conflict")
   void updateScanStatus_fromCleanToQuarantined_fails() {
     entity.setScanStatus(AttachmentScanStatus.CLEAN.name());
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(entity));
 
     assertThatThrownBy(
@@ -139,7 +153,7 @@ class AttachmentScanServiceTest {
   @DisplayName("Rejects transition from QUARANTINED to CLEAN with 409 Conflict")
   void updateScanStatus_fromQuarantinedToClean_fails() {
     entity.setScanStatus(AttachmentScanStatus.QUARANTINED.name());
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(entity));
 
     assertThatThrownBy(
@@ -155,7 +169,7 @@ class AttachmentScanServiceTest {
   @DisplayName("Rejects transition from FAILED to CLEAN with 409 Conflict")
   void updateScanStatus_fromFailedToClean_fails() {
     entity.setScanStatus(AttachmentScanStatus.FAILED.name());
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(entity));
 
     assertThatThrownBy(
@@ -170,7 +184,7 @@ class AttachmentScanServiceTest {
   @Test
   @DisplayName("Rejects update when expected blockId does not match attachment")
   void updateScanStatus_mismatchedBlockId_throwsNotFound() {
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(entity));
 
     assertThatThrownBy(
@@ -219,6 +233,8 @@ class AttachmentScanServiceTest {
   void scan_scannerReturnsClean_transitionsToClean() {
     given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
         .willReturn(Optional.of(entity));
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
+        .willReturn(Optional.of(entity));
     given(attachmentRepository.save(any(BlockAttachmentEntity.class)))
         .willAnswer(inv -> inv.getArgument(0));
     given(scanner.scan(ATTACHMENT_ID, OBJECT_KEY)).willReturn(AttachmentScanStatus.CLEAN);
@@ -235,6 +251,8 @@ class AttachmentScanServiceTest {
   void scan_scannerReturnsQuarantined_transitionsToQuarantined() {
     given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
         .willReturn(Optional.of(entity));
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
+        .willReturn(Optional.of(entity));
     given(attachmentRepository.save(any(BlockAttachmentEntity.class)))
         .willAnswer(inv -> inv.getArgument(0));
     given(scanner.scan(ATTACHMENT_ID, OBJECT_KEY)).willReturn(AttachmentScanStatus.QUARANTINED);
@@ -250,6 +268,8 @@ class AttachmentScanServiceTest {
   @DisplayName("Scanner returns FAILED -> transitions to FAILED")
   void scan_scannerReturnsFailed_transitionsToFailed() {
     given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(entity));
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(entity));
     given(attachmentRepository.save(any(BlockAttachmentEntity.class)))
         .willAnswer(inv -> inv.getArgument(0));
@@ -281,7 +301,7 @@ class AttachmentScanServiceTest {
   @DisplayName("Rejects updateScanStatus if attachment is not yet FINALIZED")
   void updateScanStatus_unfinalizedAttachment_throwsConflict() {
     entity.setStatus(AttachmentStatus.UPLOADING.name());
-    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(entity));
 
     assertThatThrownBy(
@@ -298,6 +318,8 @@ class AttachmentScanServiceTest {
   void scan_whenUpdateScanStatusThrowsConflict_rethrowsConflict() {
     entity.setScanStatus(AttachmentScanStatus.QUARANTINED.name());
     given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(entity));
+    given(attachmentRepository.findByIdAndDeletedFalseForUpdate(ATTACHMENT_ID))
         .willReturn(Optional.of(entity));
     given(scanner.scan(ATTACHMENT_ID, OBJECT_KEY)).willReturn(AttachmentScanStatus.CLEAN);
 
