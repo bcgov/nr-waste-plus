@@ -28,7 +28,7 @@ const FormulaConfigurationListTable: FC = () => {
   };
 
   return (
-    <Column lg={16} md={8} sm={4} className="configuration-column__content">
+    <Column lg={16} md={8} sm={4} className="formula-set-list-column__content">
       <TableResource
         id="formula-configuration-list"
         headers={headers}

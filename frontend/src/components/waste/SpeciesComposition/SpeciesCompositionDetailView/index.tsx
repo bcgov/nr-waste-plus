@@ -1,11 +1,9 @@
-import { Column } from '@carbon/react';
 import { type FC } from 'react';
 
+import SpeciesCompositionDetailHeader from './SpeciesCompositionDetailHeader.tsx';
 import SpeciesCompositionDetailMatrix from './SpeciesCompositionDetailMatrix.tsx';
 
 import PageNotification from '@/components/core/PageNotification';
-import DateTag from '@/components/core/Tags/DateTag';
-import ReadonlyInput from '@/components/Form/ReadonlyInput';
 import {
   speciesCompositionDataSchema,
   type SpeciesCompositionDetail,
@@ -34,11 +32,12 @@ const SpeciesCompositionDetailView: FC<SpeciesCompositionDetailViewProps> = ({ d
   return (
     <>
       {/* Metadata header */}
-      <Column lg={16} md={8} sm={4} className="species-composition-detail__start-date">
-        <ReadonlyInput label="Start date">
-          {data.startDate && <DateTag date={data.startDate} format="MMMM dd, yyyy" />}
-        </ReadonlyInput>
-      </Column>
+      <SpeciesCompositionDetailHeader
+        startDate={data.startDate}
+        endDate={data.endDate}
+        uploadedBy={data.uploadedBy}
+        dateOfUpload={data.dateOfUpload}
+      />
 
       {/* Notification area */}
       <div className="species-composition-detail-column__notification">

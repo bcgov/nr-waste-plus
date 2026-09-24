@@ -12,11 +12,11 @@ import {
   type FormulaKeyDefinition,
 } from '@/services/formulaConfiguration.constants.ts';
 
-interface FormulaConfigurationDetailViewProps {
+interface FormulaConfigurationDetailProps {
   data: FormulaSetResponse;
 }
 
-const FormulaConfigurationDetailView: FC<FormulaConfigurationDetailViewProps> = ({ data }) => {
+const FormulaConfigurationDetail: FC<FormulaConfigurationDetailProps> = ({ data }) => {
   const configuredKeys = new Set(
     Object.values(FORMULA_KEYS[data.area])
       .flat()
@@ -32,11 +32,7 @@ const FormulaConfigurationDetailView: FC<FormulaConfigurationDetailViewProps> = 
 
   return (
     <>
-      <FormulaConfigurationDetailHeader
-        area={data.area}
-        startDate={data.startDate}
-        endDate={data.endDate}
-      />
+      <FormulaConfigurationDetailHeader startDate={data.startDate} endDate={data.endDate} />
       <Column lg={16} md={8} sm={4} className="formula-config-sections">
         <div className="formula-sections">
           {sections.map(([sectionName, keys]) => (
@@ -57,4 +53,4 @@ const FormulaConfigurationDetailView: FC<FormulaConfigurationDetailViewProps> = 
   );
 };
 
-export default FormulaConfigurationDetailView;
+export default FormulaConfigurationDetail;

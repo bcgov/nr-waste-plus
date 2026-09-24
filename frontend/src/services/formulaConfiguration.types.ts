@@ -8,8 +8,12 @@ export interface FormulaValidationError {
 export interface FormulaItemDto {
   formulaKey: string;
   expression: string;
-  declaredVariables: string[];
-  validationErrors: FormulaValidationError[];
+  // CONTRACT CHANGE: now optional — matches the backend GET contract.
+  /** Optional — the backend contract does not include this field. */
+  declaredVariables?: string[];
+  // CONTRACT CHANGE: now optional — matches the backend GET contract.
+  /** Optional — populated client-side for display; the backend never sends it. */
+  validationErrors?: FormulaValidationError[];
   sortOrder: number;
 }
 
@@ -102,4 +106,9 @@ export interface FormulaNamespaceCatalog {
 export interface FormulaVariablesParams {
   date: string; // YYYY-MM-DD
   area: 'INTERIOR' | 'COASTAL';
+  /**
+   * District code required by the backend — variables are district-scoped.
+   * The editor pins this to {@link FORMULA_VARIABLES_DISTRICT_CODE}.
+   */
+  districtCode: string;
 }

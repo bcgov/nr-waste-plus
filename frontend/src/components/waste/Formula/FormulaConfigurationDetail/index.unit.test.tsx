@@ -5,7 +5,7 @@ vi.mock('@/hooks/useFormulaConfiguration', () => ({
   useFormulaVariables: vi.fn(() => ({ data: undefined })),
 }));
 
-import FormulaConfigurationDetailView from './FormulaConfigurationDetailView.tsx';
+import FormulaConfigurationDetail from '.';
 
 import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
 
@@ -37,7 +37,7 @@ const fixture: FormulaSetResponse = {
 
 describe('FormulaConfigurationDetailView', () => {
   it('renders configured formulas returned by the API', () => {
-    const { container } = render(<FormulaConfigurationDetailView data={fixture} />);
+    const { container } = render(<FormulaConfigurationDetail data={fixture} />);
     expect(screen.getByText('Avoidable Sawlog Volume')).toBeTruthy();
     expect(screen.getByText('1.5')).toBeTruthy();
     expect(screen.getByText('Additional Formulas')).toBeTruthy();
@@ -48,7 +48,7 @@ describe('FormulaConfigurationDetailView', () => {
   });
 
   it('renders the formula set metadata', () => {
-    render(<FormulaConfigurationDetailView data={fixture} />);
+    render(<FormulaConfigurationDetail data={fixture} />);
     expect(screen.getByText('Open-ended')).toBeTruthy();
   });
 });

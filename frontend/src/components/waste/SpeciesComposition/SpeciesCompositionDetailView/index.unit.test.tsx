@@ -89,24 +89,40 @@ describe('SpeciesCompositionDetailView', () => {
     vi.clearAllMocks();
   });
 
-  it('should render metadata header with start date only', () => {
+  it('should render metadata header with all four fields', () => {
     const data = createDetailData();
     render(<SpeciesCompositionDetailView data={data} />);
 
     const inputs = screen.getAllByTestId('readonly-input');
     const labels = inputs.map((el) => el.getAttribute('data-label'));
 
-    expect(labels).toHaveLength(1);
-    expect(labels).toContain('Start date');
+    expect(labels).toEqual(['Start date', 'End date', 'Uploaded by', 'Date of upload']);
   });
 
-  it('should render start date as DateTag', () => {
+  it('should render start date and date of upload as DateTags', () => {
     const data = createDetailData();
     render(<SpeciesCompositionDetailView data={data} />);
 
     const dateTags = screen.getAllByTestId('date-tag');
-    expect(dateTags).toHaveLength(1);
+    expect(dateTags).toHaveLength(2);
     expect(dateTags[0].textContent).toBe('2026-06-01');
+    expect(dateTags[1].textContent).toBe('2026-05-15T14:23:00Z');
+  });
+
+  it('should render TBD when end date is null', () => {
+    const data = createDetailData({ endDate: null });
+    render(<SpeciesCompositionDetailView data={data} />);
+
+    expect(screen.getByText('TBD')).toBeTruthy();
+  });
+
+  it('should render end date as a DateTag when present', () => {
+    const data = createDetailData({ endDate: '2026-12-31' });
+    render(<SpeciesCompositionDetailView data={data} />);
+
+    const dateTags = screen.getAllByTestId('date-tag');
+    expect(dateTags).toHaveLength(3);
+    expect(dateTags[1].textContent).toBe('2026-12-31');
   });
 
   it('should render PageNotification with correct eventTarget', () => {

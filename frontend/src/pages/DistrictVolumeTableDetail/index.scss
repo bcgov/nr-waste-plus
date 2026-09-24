@@ -4,18 +4,11 @@
 @use '@carbon/react/scss/colors' as *;
 @use '@carbon/styles/scss/components/tabs';
 
-.district-volume {
-  &-detail-column__notification,
-  &-detail-column__banner,
-  &-detail-column__actions,
-  &-detail__start-date,
-  &-detail__end-date,
-  &-detail__table-level-factor,
-  &-detail__heli-multiplier,
-  &-detail__zones {
+.district-volume-detail {
+  &-column__banner,
+  &-column__actions {
     display: flex;
-    flex-direction: column;
-    margin-top: $spacing-08;
+    flex-direction: column;   
     gap: $spacing-08;
 
     @include breakpoint-down(md) {
@@ -24,12 +17,31 @@
       flex-shrink: 0;
     }
   }
+  
+  &__start-date,
+  &__end-date,
+  &__table-level-factor,
+  &__heli-multiplier {
+    display: flex;
+    flex-direction: column;
+  }
 
-  &-detail-column__banner {
+  &-column__notification,
+  &-column__actions {
+    display: flex;
+    flex-direction: column;
+    margin-top: $spacing-08;
+  }
+  &-column__actions {  
+    margin-top: $spacing-06;
+  }  
+
+  &-column__banner {
     margin-top: 0;
   }
 
-  &-detail__zones {
+  &__zones {
+    margin-top: $spacing-08;
     gap: 0;
   }
 }

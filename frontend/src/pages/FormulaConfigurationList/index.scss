@@ -2,7 +2,7 @@
 @use '@carbon/react/scss/spacing' as *;
 @use '@carbon/react/scss/breakpoint' as *;
 
-.configuration-column__header {
+.formula-set-list-column__header {
   margin-bottom: $spacing-08;
   @include breakpoint-down(md) {
     margin: $spacing-04;
