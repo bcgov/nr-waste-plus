@@ -320,6 +320,25 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
         .andExpect(jsonPath("$.content[?(@.id == " + deletedId + ")]").doesNotExist());
   }
 
+  // ─── GET /{id} ─────────────────────────────────────────────────────────
+
+  @Test
+  @DisplayName("Get by id returns 200 and formula rows omit internal validation state")
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
+  void getByIdOmitsInternalValidationState() throws Exception {
+    String location = createFormulaSet();
+    long id = Long.parseLong(location.substring(location.lastIndexOf('/') + 1));
+
+    mockMvc.perform(get("/api/configuration/formulas/" + id))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(id))
+        .andExpect(jsonPath("$.formulas[0].formulaKey").value("da.mature.volume"))
+        .andExpect(jsonPath("$.formulas[0].expression").value("1 + 2"))
+        .andExpect(jsonPath("$.formulas[0].sortOrder").value(0))
+        .andExpect(jsonPath("$.formulas[0].declaredVariables").doesNotExist())
+        .andExpect(jsonPath("$.formulas[0].validationErrors").doesNotExist());
+  }
+
   @Test
   @DisplayName("Effective returns 200 with formula set")
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
