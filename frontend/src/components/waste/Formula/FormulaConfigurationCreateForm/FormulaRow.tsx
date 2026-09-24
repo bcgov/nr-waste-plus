@@ -2,11 +2,15 @@ import { type FC, useMemo, useRef } from 'react';
 
 import type { FormulaError } from '@/components/Form/FormulaInput/types.ts';
 import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants.ts';
-import type { FormulaItemDto, FormulaValidationError } from '@/services/formulaConfiguration.types.ts';
+import type {
+  FormulaItemDto,
+  FormulaValidationError,
+} from '@/services/formulaConfiguration.types.ts';
 
 import FormulaInput from '@/components/Form/FormulaInput';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
 import { useFormulaVariables } from '@/hooks/useFormulaConfiguration';
+import { FORMULA_VARIABLES_DISTRICT_CODE } from '@/services/formulaConfiguration.constants.ts';
 
 interface FormulaRowProps {
   area: 'INTERIOR' | 'COASTAL';
@@ -20,9 +24,15 @@ interface FormulaRowProps {
 const FormulaRow: FC<FormulaRowProps> = ({ area, date, keyDef, formula, isEditable, onChange }) => {
   const expression = formula?.expression ?? '';
   const expressionRef = useRef(expression);
+  // Optional on FormulaItemDto — the backend contract omits it.
+  const validationErrors = formula?.validationErrors ?? [];
 
   // Fetch variables from backend API
-  const { data: variablesData } = useFormulaVariables({ date, area });
+  const { data: variablesData } = useFormulaVariables({
+    date,
+    area,
+    districtCode: FORMULA_VARIABLES_DISTRICT_CODE,
+  });
 
   // Use the flat map from the API response as dynamicParams
   const dynamicParams = useMemo(() => {
@@ -39,7 +49,7 @@ const FormulaRow: FC<FormulaRowProps> = ({ area, date, keyDef, formula, isEditab
           <ReadonlyInput label="Expression">
             {expression || <span className="formula-row__expression-empty">Not configured</span>}
           </ReadonlyInput>
-          {formula?.validationErrors.map((error) => (
+          {validationErrors.map((error) => (
             <div key={`${error.code}-${error.startOffset ?? 0}`} role="alert">
               <strong>{error.code}</strong>: {error.message}
             </div>
@@ -59,7 +69,7 @@ const FormulaRow: FC<FormulaRowProps> = ({ area, date, keyDef, formula, isEditab
           initialFormula={expression}
           onChange={(value) => {
             expressionRef.current = value;
-            onChange(value, formula?.validationErrors ?? []);
+            onChange(value, validationErrors);
           }}
           onValidationError={(error: FormulaError | null) =>
             onChange(

@@ -34,10 +34,7 @@ vi.mock('@/components/Form/FormulaInput', () => ({
       <div data-testid="formula-input" aria-label={ariaLabel}>
         <span data-testid="formula-input-value">{initialFormula}</span>
         {/* Buttons to simulate user interactions for testing callbacks */}
-        <button
-          data-testid="trigger-change"
-          onClick={() => onChange?.('new_value')}
-        >
+        <button data-testid="trigger-change" onClick={() => onChange?.('new_value')}>
           simulate change
         </button>
         <button
@@ -46,10 +43,7 @@ vi.mock('@/components/Form/FormulaInput', () => ({
         >
           simulate error
         </button>
-        <button
-          data-testid="trigger-clear-error"
-          onClick={() => onValidationError?.(null)}
-        >
+        <button data-testid="trigger-clear-error" onClick={() => onValidationError?.(null)}>
           simulate clear error
         </button>
       </div>
@@ -58,13 +52,7 @@ vi.mock('@/components/Form/FormulaInput', () => ({
 }));
 
 vi.mock('@/components/Form/ReadonlyInput', () => ({
-  default: ({
-    label,
-    children,
-  }: {
-    label: string;
-    children?: React.ReactNode;
-  }) => (
+  default: ({ label, children }: { label: string; children?: React.ReactNode }) => (
     <div data-testid="readonly-input">
       <span data-testid="readonly-label">{label}</span>
       <span data-testid="readonly-value">{children}</span>
@@ -81,7 +69,6 @@ vi.mock('@/hooks/useFormulaConfiguration', () => ({
 const keyDef: FormulaKeyDefinition = {
   key: 'WASTE_VOLUME_INTERIOR',
   label: 'Waste Volume - Interior',
-  group: 'Waste Volume Formulas',
 };
 
 const formulaDto: FormulaItemDto = {
@@ -251,12 +238,60 @@ describe('FormulaRow', () => {
     });
   });
 
+  // ─── Backend contract: optional fields omitted ──────────────────────────────
+
+  describe('backend contract shape', () => {
+    // The GET /api/configuration/formulas/{id} payload omits declaredVariables
+    // and validationErrors entirely.
+    const apiFormula: FormulaItemDto = {
+      formulaKey: 'WASTE_VOLUME_INTERIOR',
+      expression: 'quantity * rate',
+      sortOrder: 1,
+    };
+
+    it('readonly: renders the expression with no validation errors when fields are omitted', () => {
+      render(<FormulaRow {...defaultProps} formula={apiFormula} />);
+      expect(screen.getByTestId('readonly-value').textContent).toBe('quantity * rate');
+      expect(screen.queryByRole('alert')).toBeNull();
+    });
+
+    it('editable: renders and calls onChange with empty errors when fields are omitted', async () => {
+      const onChange = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <FormulaRow {...defaultProps} formula={apiFormula} isEditable={true} onChange={onChange} />,
+      );
+
+      await user.click(screen.getByTestId('trigger-change'));
+
+      expect(onChange).toHaveBeenCalledWith('new_value', []);
+    });
+
+    it('editable: uses the API expression for validation errors when fields are omitted', async () => {
+      const onChange = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <FormulaRow {...defaultProps} formula={apiFormula} isEditable={true} onChange={onChange} />,
+      );
+
+      await user.click(screen.getByTestId('trigger-validation-error'));
+
+      expect(onChange).toHaveBeenCalledWith('quantity * rate', [
+        { code: 'FORMULA_ERROR', message: 'Syntax error' },
+      ]);
+    });
+  });
+
   // ─── useFormulaVariables ────────────────────────────────────────────────────
 
   describe('useFormulaVariables integration', () => {
-    it('passes date and area to useFormulaVariables', () => {
+    it('passes date, area, and district code to useFormulaVariables', () => {
       render(<FormulaRow {...defaultProps} />);
-      expect(mocks.useFormulaVariables).toHaveBeenCalledWith({ date: '2025-01-15', area: 'INTERIOR' });
+      expect(mocks.useFormulaVariables).toHaveBeenCalledWith({
+        date: '2025-01-15',
+        area: 'INTERIOR',
+        districtCode: 'DKM',
+      });
     });
 
     it('passes flat variables as dynamicParams to FormulaInput', () => {

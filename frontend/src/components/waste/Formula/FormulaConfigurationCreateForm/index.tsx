@@ -29,7 +29,11 @@ import {
   useCurrentOpenEndedFormulaSet,
   useFormulaVariables,
 } from '@/hooks/useFormulaConfiguration';
-import { FORMULA_KEYS, getFormulaKeysForArea } from '@/services/formulaConfiguration.constants.ts';
+import {
+  FORMULA_KEYS,
+  FORMULA_VARIABLES_DISTRICT_CODE,
+  getFormulaKeysForArea,
+} from '@/services/formulaConfiguration.constants.ts';
 
 import './index.scss';
 
@@ -96,6 +100,7 @@ const FormulaConfigurationCreateForm: FC = () => {
   const { data: variablesData } = useFormulaVariables({
     date: startDate,
     area,
+    districtCode: FORMULA_VARIABLES_DISTRICT_CODE,
   });
   const {
     data: currentFormulaSet,
@@ -273,7 +278,7 @@ const FormulaConfigurationCreateForm: FC = () => {
                   <RadioButton labelText="Coast" value="COASTAL" id="area-coast" />
                 </RadioButtonGroup>
               </Column>
-              <Column max={16} xlg={16} lg={16} md={8} sm={4}>
+              <Column max={4} xlg={4} lg={4} md={4} sm={4}>
                 <DatePicker
                   datePickerType="single"
                   dateFormat="Y/m/d"
@@ -291,14 +296,21 @@ const FormulaConfigurationCreateForm: FC = () => {
                   />
                 </DatePicker>
               </Column>
+              <Column
+                max={12}
+                xlg={12}
+                lg={12}
+                md={4}
+                sm={4}
+                className="formula-variable-catalog-trigger"
+              >
+                {variablesData?.catalog && (
+                  <FormulaVariableCatalog catalog={variablesData.catalog} />
+                )}
+              </Column>
             </>
           )}
           <Column max={16} xlg={16} lg={16} md={8} sm={4}>
-            {variablesData?.catalog && (
-              <div className="formula-variable-catalog-trigger">
-                <FormulaVariableCatalog catalog={variablesData.catalog} />
-              </div>
-            )}
             {isCurrentFormulaSetError &&
               (currentFormulaSetError instanceof ApiError
                 ? currentFormulaSetError.status !== 404
