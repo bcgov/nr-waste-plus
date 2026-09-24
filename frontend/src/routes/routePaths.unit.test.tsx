@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
 import * as routePaths from './routePaths';
@@ -81,6 +81,18 @@ vi.mock('@/pages/SpeciesCompositionUpload', () => ({
 
 vi.mock('@/pages/SpeciesCompositionDetail', () => ({
   default: () => <div data-testid="species-composition-detail" />,
+}));
+
+vi.mock('@/pages/FormulaConfigurationList', () => ({
+  default: () => <div data-testid="formula-configuration-list" />,
+}));
+
+vi.mock('@/pages/FormulaConfigurationDetail', () => ({
+  default: () => <div data-testid="formula-configuration-detail" />,
+}));
+
+vi.mock('@/pages/FormulaConfigurationCreate', () => ({
+  default: () => <div data-testid="formula-configuration-create" />,
 }));
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -432,6 +444,102 @@ describe('routePaths', () => {
       const { container } = render(<Comp />);
       expect(container).toBeDefined();
     });
+
+    it('shouldRenderReportingUnitDetailsRouteComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/reporting-units/$ruId')!;
+      const Comp = route.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldRenderReportingUnitCreateRouteComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/reporting-units/create')!;
+      const Comp = route.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldRenderConfigurationRouteComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/configuration')!;
+      const Comp = route.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldRenderDistrictVolumeTablesRouteComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find(
+        (r) => r.path === '/configuration/district-volume-tables',
+      )!;
+      const Comp = route.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldRenderFormulaConfigurationListRouteComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/configuration/formulas')!;
+      const Comp = route.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldRenderFormulaConfigurationDetailRouteComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/configuration/formulas/$id')!;
+      const Comp = route.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldRenderFormulaConfigurationCreateRouteComponent_withoutThrowing', () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/configuration/formulas/new')!;
+      const Comp = route.component;
+      const { container } = render(<Comp />);
+      expect(container).toBeDefined();
+    });
+
+    it('shouldRenderClientsRouteComponent_afterLazyLoad', async () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/clients')!;
+      const Comp = route.component;
+      render(<Comp />);
+      await waitFor(() => {
+        expect(document.querySelector('[data-testid="my-client-list"]')).toBeTruthy();
+      });
+    });
+
+    it('shouldRenderSearchRouteComponent_afterLazyLoad', async () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/search')!;
+      const Comp = route.component;
+      render(<Comp />);
+      await waitFor(() => {
+        expect(document.querySelector('[data-testid="waste-search"]')).toBeTruthy();
+      });
+    });
+
+    it('shouldRenderConfigurationRouteComponent_afterLazyLoad', async () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/configuration')!;
+      const Comp = route.component;
+      render(<Comp />);
+      await waitFor(() => {
+        expect(document.querySelector('[data-testid="configuration-page"]')).toBeTruthy();
+      });
+    });
+
+    it('shouldRenderFormulaConfigurationList_afterLazyLoad', async () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/configuration/formulas')!;
+      const Comp = route.component;
+      render(<Comp />);
+      await waitFor(() => {
+        expect(document.querySelector('[data-testid="formula-configuration-list"]')).toBeTruthy();
+      });
+    });
+
+    it('shouldRenderReportingUnitDetails_afterLazyLoad', async () => {
+      const route = routePaths.ROUTES.find((r) => r.path === '/reporting-units/$ruId')!;
+      const Comp = route.component;
+      render(<Comp />);
+      await waitFor(() => {
+        expect(document.querySelector('[data-testid="reporting-unit-details"]')).toBeTruthy();
+      });
+    });
   });
 
   describe('SYSTEM_ROUTES', () => {
@@ -455,5 +563,12 @@ describe('routePaths', () => {
         expect(r.isSideMenu).toBe(false);
       });
     });
+  });
+});
+
+describe('migrateOldServiceWorker', () => {
+  it('shouldBeExportedFromRegisterServiceWorker', async () => {
+    const mod = await import('@/registerServiceWorker');
+    expect(typeof mod.migrateOldServiceWorker).toBe('function');
   });
 });

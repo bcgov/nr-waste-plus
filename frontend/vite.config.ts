@@ -1,6 +1,5 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
-import { VitePWA } from 'vite-plugin-pwa';
 import { configDefaults } from 'vitest/config';
 
 // Shared alias definition to ensure consistency across resolve, test, and tsconfig
@@ -18,101 +17,11 @@ export default defineConfig(({ mode }) => {
       },
       tsconfigPaths: true,
     },
-    plugins: [
-      react(),
-      VitePWA({
-        registerType: 'autoUpdate',
-        strategies: 'injectManifest',
-        srcDir: 'src',
-        filename: 'service-worker.ts',
-        injectRegister: 'auto',
-        devOptions: {
-          enabled: true,
-          type: 'module', // use module type for service worker in development
-        },
-        workbox: {
-          navigateFallback: '/index.html',
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
-          sourcemap: true,
-          maximumFileSizeToCacheInBytes: 15000000,
-        },
-        injectManifest: {
-          maximumFileSizeToCacheInBytes: 15000000,
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
-        },
-        manifest: {
-          id: '/',
-          lang: 'en',
-          short_name: 'WastePlus',
-          name: 'Waste Plus',
-          start_url: '.',
-          display: 'standalone',
-          theme_color: '#000000',
-          background_color: '#ffffff',
-          description: 'Report logging waste and residue data for billing and cut control',
-          icons: [
-            {
-              src: '/icons/favicon.ico',
-              sizes: '48x48',
-              type: 'image/x-icon',
-            },
-            {
-              src: '/icons/favicon-16x16.png',
-              sizes: '16x16',
-              type: 'image/png',
-            },
-            {
-              src: '/icons/favicon-32x32.png',
-              sizes: '32x32',
-              type: 'image/png',
-            },
-            {
-              src: '/icons/favicon-64x64.png',
-              sizes: '64x64',
-              type: 'image/png',
-            },
-            {
-              src: '/icons/android-chrome-192x192.png',
-              sizes: '192x192',
-              type: 'image/png',
-            },
-            {
-              src: '/icons/android-chrome-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-            },
-          ],
-          screenshots: [
-            {
-              src: '/screenshots/homepage-light.jpeg',
-              sizes: '2434x1237',
-              type: 'image/jpeg',
-              form_factor: 'wide',
-            },
-            {
-              src: '/screenshots/homepage-dark.jpeg',
-              sizes: '2434x1237',
-              type: 'image/jpeg',
-              form_factor: 'wide',
-            },
-            {
-              src: '/screenshots/mobile-homepage-light.jpeg',
-              sizes: '320x920',
-              type: 'image/jpeg',
-            },
-            {
-              src: '/screenshots/mobile-homepage-dark.jpeg',
-              sizes: '320x920',
-              type: 'image/jpeg',
-            },
-          ],
-          display_override: ['window-controls-overlay', 'standalone'],
-        },
-      }),
-    ],
+    plugins: [react()],
     build: {
       chunkSizeWarningLimit: 1024,
       outDir: 'build',
+      license: true,
       sourcemap: process.env.VITE_COVERAGE === 'true' ? 'inline' : false,
       rollupOptions: {
         output: {
@@ -128,6 +37,15 @@ export default defineConfig(({ mode }) => {
             }
             if (id.includes('node_modules/@tanstack/')) {
               return 'query';
+            }
+            if (id.includes('node_modules/exceljs/')) {
+              return 'exceljs';
+            }
+            if (
+              id.includes('node_modules/mathjs/') ||
+              id.includes('node_modules/@monaco-editor/')
+            ) {
+              return 'math-monaco';
             }
             if (
               id.includes('node_modules/axios/') ||
@@ -150,12 +68,22 @@ export default defineConfig(({ mode }) => {
         'react-dom/client',
         '@tanstack/react-query-devtools',
         'aws-amplify/auth',
+        'mathjs',
+        '@monaco-editor/react',
       ],
     },
     server: {
       port: 3000,
       hmr: {
         overlay: false,
+      },
+      warmup: {
+        clientFiles: [
+          './src/main.tsx',
+          './src/App.tsx',
+          './src/routes/routeTree.tsx',
+          './src/routes/routePaths.tsx',
+        ],
       },
       watch: {
         ignored: [
@@ -209,6 +137,8 @@ export default defineConfig(({ mode }) => {
           '**/*.scss',
           '**/*.css',
           '**/*.d.ts',
+          '**/registerServiceWorker.ts',
+          '**/service-worker.ts',
           '**/types.ts',
           '**/*.types.ts',
           '**/main.tsx',

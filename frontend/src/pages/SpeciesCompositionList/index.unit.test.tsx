@@ -24,7 +24,7 @@ vi.mock('@/context/pageTitle/usePageTitle', () => ({
   }),
 }));
 
-vi.mock('@/components/waste/SpeciesCompositionListTable', () => ({
+vi.mock('@/components/waste/SpeciesComposition/SpeciesCompositionListTable', () => ({
   default: () => <div data-testid="species-composition-list-table" />,
 }));
 

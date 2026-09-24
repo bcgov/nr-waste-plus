@@ -4,7 +4,7 @@ import type { FC } from 'react';
 
 import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
-import SpeciesCompositionUpload from '@/components/waste/SpeciesCompositionUpload';
+import SpeciesCompositionUpload from '@/components/waste/SpeciesComposition/SpeciesCompositionUpload';
 
 import './index.scss';
 

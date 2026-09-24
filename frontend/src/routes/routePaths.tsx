@@ -1,30 +1,55 @@
+import { Loading } from '@carbon/react';
 import { DocumentAdd, Group, SearchLocate } from '@carbon/icons-react';
-import { type RouteLoaderFn } from '@tanstack/react-router';
-import { type ComponentType } from 'react';
+import { lazyRouteComponent, type RouteLoaderFn } from '@tanstack/react-router';
+import { type ComponentType, Suspense } from 'react';
 
 import Layout from '@/components/Layout';
 import { Role, type FamRole } from '@/context/auth/types';
 import { featureFlags, type FeatureFlags } from '@/env';
-import ConfigurationDistrictVolumeListPage from '@/pages/ConfigurationDistrictVolumeList';
-import ConfigurationPage from '@/pages/ConfigurationPage';
-import DistrictVolumeTableDetailPage from '@/pages/DistrictVolumeTableDetail';
-import DistrictVolumeTableUploadPage from '@/pages/DistrictVolumeTableUpload';
-import FormulaConfigurationDetailPage from '@/pages/FormulaConfigurationDetail';
-import FormulaConfigurationListPage from '@/pages/FormulaConfigurationList';
+
+// ─── Eager imports (entry point + error states — must load instantly) ──────────
 import LandingPage from '@/pages/Landing';
-import MyClientListPage from '@/pages/MyClientList';
 import NoRolePage from '@/pages/NoRole';
-import ReportingUnitCreatePage from '@/pages/ReportingUnitCreate';
-import ReportingUnitDetailsPage from '@/pages/ReportingUnitDetails';
-import { reportingUnitLoader } from '@/pages/ReportingUnitDetails/loader';
 import RoleErrorPage from '@/pages/RoleError';
-import SpeciesCompositionDetailPage from '@/pages/SpeciesCompositionDetail';
-import SpeciesCompositionListPage from '@/pages/SpeciesCompositionList';
-import SpeciesCompositionUploadPage from '@/pages/SpeciesCompositionUpload';
-import WasteSearchPage from '@/pages/WasteSearch';
+
+// ─── Lazy imports (loaded on demand when the route is navigated to) ───────────
+const MyClientListPage = lazyRouteComponent(() => import('@/pages/MyClientList'));
+const WasteSearchPage = lazyRouteComponent(() => import('@/pages/WasteSearch'));
+const ReportingUnitDetailsPage = lazyRouteComponent(() => import('@/pages/ReportingUnitDetails'));
+const ReportingUnitCreatePage = lazyRouteComponent(() => import('@/pages/ReportingUnitCreate'));
+const ConfigurationPage = lazyRouteComponent(() => import('@/pages/ConfigurationPage'));
+const ConfigurationDistrictVolumeListPage = lazyRouteComponent(
+  () => import('@/pages/ConfigurationDistrictVolumeList'),
+);
+const DistrictVolumeTableDetailPage = lazyRouteComponent(
+  () => import('@/pages/DistrictVolumeTableDetail'),
+);
+const DistrictVolumeTableUploadPage = lazyRouteComponent(
+  () => import('@/pages/DistrictVolumeTableUpload'),
+);
+const SpeciesCompositionListPage = lazyRouteComponent(
+  () => import('@/pages/SpeciesCompositionList'),
+);
+const SpeciesCompositionUploadPage = lazyRouteComponent(
+  () => import('@/pages/SpeciesCompositionUpload'),
+);
+const SpeciesCompositionDetailPage = lazyRouteComponent(
+  () => import('@/pages/SpeciesCompositionDetail'),
+);
+const FormulaConfigurationListPage = lazyRouteComponent(
+  () => import('@/pages/FormulaConfigurationList'),
+);
+const FormulaConfigurationDetailPage = lazyRouteComponent(
+  () => import('@/pages/FormulaConfigurationDetail'),
+);
+const FormulaConfigurationCreatePage = lazyRouteComponent(
+  () => import('@/pages/FormulaConfigurationCreate'),
+);
+
+// ─── Shared loader (eager — used by route config at module load time) ──────────
+import { reportingUnitLoader } from '@/pages/ReportingUnitDetails/loader';
 import { withPersistentRedirect } from '@/routes/guards/withPersistentRedirect';
 import { withPublicOnly } from '@/routes/guards/withPublicOnly';
-import FormulaConfigurationCreatePage from '@/pages/FormulaConfigurationCreate';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -81,6 +106,21 @@ export type MenuItem = Pick<RouteDescription, 'id' | 'path' | 'icon'> & {
 };
 
 /**
+ * Wraps a lazy-loaded page component with an accessible Suspense boundary and
+ * the application {@link Layout}.  Centralises the repeated pattern so each
+ * route's `component` field is a single expression.
+ */
+function withLazyLayout(LazyComponent: ComponentType): ComponentType {
+  return () => (
+    <Suspense fallback={<Loading withOverlay />}>
+      <Layout>
+        <LazyComponent />
+      </Layout>
+    </Suspense>
+  );
+}
+
+/**
  * Feature routes that drive the left-panel navigation.
  *
  * Each entry is registered as a TanStack Router route in `routeTree.tsx` and
@@ -92,11 +132,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/clients',
     id: 'My clients',
     icon: Group,
-    component: () => (
-      <Layout>
-        <MyClientListPage />
-      </Layout>
-    ),
+    component: withLazyLayout(MyClientListPage),
     isSideMenu: true,
     protected: true,
     roles: [
@@ -108,11 +144,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/search',
     id: 'Waste search',
     icon: SearchLocate,
-    component: () => (
-      <Layout>
-        <WasteSearchPage />
-      </Layout>
-    ),
+    component: withLazyLayout(WasteSearchPage),
     isSideMenu: true,
     protected: true,
   },
@@ -120,11 +152,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/reporting-units/$ruId',
     id: 'Reporting Unit Details',
     loader: reportingUnitLoader,
-    component: () => (
-      <Layout>
-        <ReportingUnitDetailsPage />
-      </Layout>
-    ),
+    component: withLazyLayout(ReportingUnitDetailsPage),
     isSideMenu: false,
     protected: true,
   },
@@ -132,11 +160,7 @@ export const ROUTES: RouteDescription[] = [
     path: '/reporting-units/create',
     id: 'Create reporting unit',
     icon: DocumentAdd,
-    component: () => (
-      <Layout>
-        <ReportingUnitCreatePage />
-      </Layout>
-    ),
+    component: withLazyLayout(ReportingUnitCreatePage),
     isSideMenu: true,
     protected: true,
     featureFlag: 'reporting-unit-create-enabled',
@@ -144,11 +168,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration',
     id: 'Configuration',
-    component: () => (
-      <Layout>
-        <ConfigurationPage />
-      </Layout>
-    ),
+    component: withLazyLayout(ConfigurationPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -157,11 +177,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/district-volume-tables',
     id: 'District Volume Tables',
-    component: () => (
-      <Layout>
-        <ConfigurationDistrictVolumeListPage />
-      </Layout>
-    ),
+    component: withLazyLayout(ConfigurationDistrictVolumeListPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -170,11 +186,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/district-volume-tables/$id',
     id: 'District Volume Table Detail',
-    component: () => (
-      <Layout>
-        <DistrictVolumeTableDetailPage />
-      </Layout>
-    ),
+    component: withLazyLayout(DistrictVolumeTableDetailPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -183,11 +195,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/district-volume-tables/upload',
     id: 'Upload District Volume Table',
-    component: () => (
-      <Layout>
-        <DistrictVolumeTableUploadPage />
-      </Layout>
-    ),
+    component: withLazyLayout(DistrictVolumeTableUploadPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -196,11 +204,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/species-composition',
     id: 'Species Composition',
-    component: () => (
-      <Layout>
-        <SpeciesCompositionListPage />
-      </Layout>
-    ),
+    component: withLazyLayout(SpeciesCompositionListPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -209,11 +213,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/species-composition/upload',
     id: 'Upload Species Composition',
-    component: () => (
-      <Layout>
-        <SpeciesCompositionUploadPage />
-      </Layout>
-    ),
+    component: withLazyLayout(SpeciesCompositionUploadPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -222,11 +222,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/species-composition/$id',
     id: 'Species Composition Detail',
-    component: () => (
-      <Layout>
-        <SpeciesCompositionDetailPage />
-      </Layout>
-    ),
+    component: withLazyLayout(SpeciesCompositionDetailPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -235,11 +231,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/formulas',
     id: 'Formula Configuration',
-    component: () => (
-      <Layout>
-        <FormulaConfigurationListPage />
-      </Layout>
-    ),
+    component: withLazyLayout(FormulaConfigurationListPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -248,11 +240,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/formulas/$id',
     id: 'Formula Configuration Detail',
-    component: () => (
-      <Layout>
-        <FormulaConfigurationDetailPage />
-      </Layout>
-    ),
+    component: withLazyLayout(FormulaConfigurationDetailPage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
@@ -261,11 +249,7 @@ export const ROUTES: RouteDescription[] = [
   {
     path: '/configuration/formulas/new',
     id: 'Create Formula Configuration',
-    component: () => (
-      <Layout>
-        <FormulaConfigurationCreatePage />
-      </Layout>
-    ),
+    component: withLazyLayout(FormulaConfigurationCreatePage),
     isSideMenu: false,
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],

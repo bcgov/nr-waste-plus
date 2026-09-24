@@ -5,7 +5,7 @@ import type { ReportingUnitDto } from '@/services/types';
 
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
-import TooltipRoleBasedRedirectLinkTag from '@/components/waste/TooltipRoleBasedRedirectLinkTag';
+import TooltipRoleBasedRedirectLinkTag from '@/components/core/Tags/TooltipRoleBasedRedirectLinkTag';
 import { Role } from '@/context/auth/types';
 import { env } from '@/env';
 
