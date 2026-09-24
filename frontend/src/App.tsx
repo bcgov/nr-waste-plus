@@ -5,12 +5,9 @@ import AppRouter from '@/routes/AppRouter';
 /**
  * Root application component.
  *
- * Mounts the TanStack Router provider via {@link AppRouter} and, in development
- * mode only, lazy-loads the {@link DevTools} panel. The lazy import is guarded by
- * `import.meta.env.DEV` so Vite statically eliminates the entire devtools bundle
- * from production builds — the widget never appears in staging or deployed builds.
+ * Mounts the TanStack Router provider via {@link AppRouter}.
  *
- * @returns The root JSX element containing the router and, in dev, devtools panels.
+ * @returns The root JSX element containing the application router.
  */
 const App: FC = () => {
   return <AppRouter />;

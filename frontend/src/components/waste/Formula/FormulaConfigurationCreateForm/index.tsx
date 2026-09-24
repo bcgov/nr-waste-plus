@@ -259,6 +259,11 @@ const FormulaConfigurationCreateForm: FC = () => {
     >
       <form
         data-testid="formula-config-create-form"
+        // Carbon's DatePickerInput injects a default pattern (d/M/yyyy) that the
+        // yyyy/mm/dd value format can never satisfy, which would silently block
+        // native form submission. Validation is handled by the form state below
+        // (isEmpty/hasErrors plus handleDateInputChange), so skip native checks.
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
           handleReview();

@@ -73,6 +73,34 @@ test.describe('Species Composition Detail Page', () => {
       await expect(page.getByText('June 01, 2026')).toBeVisible();
     });
 
+    test('should render Open-ended for a null end date with all header fields @idir-only', async ({
+      page,
+    }, testInfo) => {
+      test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
+
+      await mockJwt(page, testInfo.project.metadata, {
+        'custom:idp_name': 'idir',
+        'cognito:groups': ['WASTE_PLUS_ADMIN'],
+      });
+
+      await mockApiResponsesWithStub(
+        page,
+        'configuration/species-compositions/42',
+        'species-composition/detail.json',
+      );
+
+      await page.goto('/configuration/species-composition/42');
+      await page.waitForLoadState('domcontentloaded');
+
+      // The stub endDate is null → the header renders the Open-ended fallback
+      await expect(page.getByText('Start date')).toBeVisible();
+      await expect(page.getByText('End date')).toBeVisible();
+      await expect(page.getByText('Uploaded by')).toBeVisible();
+      await expect(page.getByText('Date of upload')).toBeVisible();
+      await expect(page.getByText('Open-ended').first()).toBeVisible();
+      await expect(page.getByText('TBD')).toHaveCount(0);
+    });
+
     test('should display district × species matrix table @idir-only', async ({
       page,
     }, testInfo) => {

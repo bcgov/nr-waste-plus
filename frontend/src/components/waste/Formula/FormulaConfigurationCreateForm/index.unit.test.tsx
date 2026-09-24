@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   variables: {
     data: { flat: {}, catalog: [] } as { flat: Record<string, number>; catalog: unknown[] },
   },
+  variablesParams: null as { date: string; area: string; districtCode: string } | null,
   formulaSectionOnChange: null as ((key: string, expression: string) => void) | null,
   // Store the RadioButtonGroup onChange callback so tests can invoke it directly
   radioGroupOnChange: null as ((value: string, name: string) => void) | null,
@@ -31,16 +32,18 @@ vi.mock('@tanstack/react-router', () => ({
 vi.mock('@/hooks/useFormulaConfiguration', () => ({
   useCreateFormulaSet: () => ({ isPending: false, mutateAsync: mocks.mutateAsync }),
   useCurrentOpenEndedFormulaSet: () => mocks.current,
-  useFormulaVariables: () => mocks.variables,
+  useFormulaVariables: (params: { date: string; area: string; districtCode: string }) => {
+    mocks.variablesParams = params;
+    return mocks.variables;
+  },
 }));
 
-vi.mock('./FormulaSection', () => ({
+vi.mock('@/components/waste/Formula/FormulaSection', () => ({
   default: ({
     sectionName,
     keys,
     area,
     date,
-    formulas,
     isEditable,
     onChange,
   }: {
@@ -48,13 +51,16 @@ vi.mock('./FormulaSection', () => ({
     keys: { key: string; label: string }[];
     area: string;
     date: string;
-    formulas: { formulaKey: string; expression: string }[];
     isEditable: boolean;
     onChange: (key: string, expression: string) => void;
   }) => {
     mocks.formulaSectionOnChange = onChange;
     return (
-      <div data-testid="formula-section" data-section={sectionName} data-editable={String(isEditable)}>
+      <div
+        data-testid="formula-section"
+        data-section={sectionName}
+        data-editable={String(isEditable)}
+      >
         <span data-testid="formula-section-area">{area}</span>
         <span data-testid="formula-section-date">{date}</span>
         {keys.map((k) => (
@@ -81,7 +87,7 @@ vi.mock('../FormulaVariableCatalog', () => ({
 // The real Carbon RadioButtonGroup doesn't fire onChange in jsdom because
 // the native radio click→change chain is not fully simulated.
 vi.mock('@carbon/react', async (importOriginal) => {
-  const actual: Record<string, unknown> = await importOriginal('@carbon/react');
+  const actual: Record<string, unknown> = await importOriginal();
   const { default: React } = await import('react');
   const { Children, isValidElement } = React;
   return {
@@ -146,6 +152,7 @@ describe('FormulaConfigurationCreateForm', () => {
     mocks.current.isFetched = true;
     mocks.current.error = null;
     mocks.variables.data = { flat: {}, catalog: [] };
+    mocks.variablesParams = null;
     mocks.formulaSectionOnChange = null;
     mocks.radioGroupOnChange = null;
   });
@@ -190,6 +197,19 @@ describe('FormulaConfigurationCreateForm', () => {
     };
     render(<FormulaConfigurationCreateForm />);
     expect(screen.getByTestId('formula-variable-catalog')).toBeTruthy();
+  });
+
+  it('requests variables with the configured district code', () => {
+    render(<FormulaConfigurationCreateForm />);
+
+    expect(mocks.variablesParams?.districtCode).toBe('DKM');
+  });
+
+  it('wraps the variable catalog in the catalog-trigger column', () => {
+    const { container } = render(<FormulaConfigurationCreateForm />);
+
+    // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
+    expect(container.querySelector('.formula-variable-catalog-trigger')).toBeTruthy();
   });
 
   // ─── Error Handling ────────────────────────────────────────────────────────

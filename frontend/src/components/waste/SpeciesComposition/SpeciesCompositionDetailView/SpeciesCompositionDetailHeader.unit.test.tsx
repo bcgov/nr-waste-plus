@@ -20,7 +20,7 @@ describe('SpeciesCompositionDetailHeader', () => {
     render(<SpeciesCompositionDetailHeader {...defaultProps} />);
 
     expect(screen.getByTestId('card-item-content-start-date').textContent).toBe('June 01, 2026');
-    expect(screen.getByTestId('card-item-content-end-date').textContent).toBe('TBD');
+    expect(screen.getByTestId('card-item-content-end-date').textContent).toBe('Open-ended');
     expect(screen.getByTestId('card-item-content-uploaded-by').textContent).toBe(
       'jsmith@gov.bc.ca',
     );

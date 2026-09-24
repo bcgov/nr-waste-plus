@@ -109,11 +109,11 @@ describe('SpeciesCompositionDetailView', () => {
     expect(dateTags[1].textContent).toBe('2026-05-15T14:23:00Z');
   });
 
-  it('should render TBD when end date is null', () => {
+  it('should render Open-ended when end date is null', () => {
     const data = createDetailData({ endDate: null });
     render(<SpeciesCompositionDetailView data={data} />);
 
-    expect(screen.getByText('TBD')).toBeTruthy();
+    expect(screen.getByText('Open-ended')).toBeTruthy();
   });
 
   it('should render end date as a DateTag when present', () => {
