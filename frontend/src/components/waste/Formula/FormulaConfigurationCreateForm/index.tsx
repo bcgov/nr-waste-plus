@@ -15,7 +15,6 @@ import { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import FormulaVariableCatalog from '../FormulaVariableCatalog';
 
 import { carryForwardFormulaValues } from './carryForward.ts';
-import FormulaSection from './FormulaSection.tsx';
 
 import type {
   FormulaItemDto,
@@ -23,6 +22,7 @@ import type {
   FormulaValidationError,
 } from '@/services/formulaConfiguration.types.ts';
 
+import FormulaSection from '@/components/waste/Formula/FormulaSection';
 import { ApiError } from '@/config/api/types.ts';
 import {
   useCreateFormulaSet,

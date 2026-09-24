@@ -5,7 +5,7 @@ import FormulaConfigurationDetailHeader from './FormulaConfigurationDetailHeader
 
 import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
 
-import FormulaSection from '@/components/waste/Formula/FormulaConfigurationCreateForm/FormulaSection.tsx';
+import FormulaSection from '@/components/waste/Formula/FormulaSection/index.tsx';
 import {
   FORMULA_KEYS,
   getFormulaLabel,
