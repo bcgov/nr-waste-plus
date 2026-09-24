@@ -832,4 +832,29 @@ class AttachmentServiceTest {
     assertThatThrownBy(() -> service.getDownloadUrl(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
         .isInstanceOf(AttachmentNotFoundException.class);
   }
+
+  @Test
+  @DisplayName("getDownloadUrl preserves null fileSizeBytes without throwing NullPointerException")
+  void getDownloadUrl_whenFileSizeBytesNull_preservesNullWithoutNpe() {
+    BlockAttachmentEntity attachment = persistedAttachment();
+    attachment.setStatus(AttachmentStatus.FINALIZED.name());
+    attachment.setScanStatus(AttachmentScanStatus.CLEAN.name());
+    attachment.setFileSizeBytes(null);
+
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(attachment));
+    given(objectStorageProperties.getPresignedUrlDuration()).willReturn(Duration.ofMinutes(5));
+
+    Instant expiresAt = Instant.parse("2026-01-01T00:05:00Z");
+    given(objectStorage.presignGet(eq(attachment.getObjectKey()), any()))
+        .willReturn(new PresignedDownload("https://s3.example.com/download?sig=xyz", expiresAt));
+
+    AttachmentDownloadResponse response =
+        service.getDownloadUrl(null, RU_ID, BLOCK_ID, ATTACHMENT_ID);
+
+    assertThat(response.attachmentId()).isEqualTo(ATTACHMENT_ID);
+    assertThat(response.fileSizeBytes()).isNull();
+  }
 }

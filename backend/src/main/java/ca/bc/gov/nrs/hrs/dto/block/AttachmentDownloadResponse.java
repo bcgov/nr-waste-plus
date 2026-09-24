@@ -7,7 +7,7 @@ public record AttachmentDownloadResponse(
     Long attachmentId,
     String fileName,
     String contentType,
-    long fileSizeBytes,
+    Long fileSizeBytes,
     String downloadUrl,
     Instant expiresAt) {}
 
