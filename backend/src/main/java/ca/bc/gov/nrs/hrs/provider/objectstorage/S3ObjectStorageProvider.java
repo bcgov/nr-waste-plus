@@ -8,11 +8,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
@@ -47,6 +52,23 @@ public class S3ObjectStorageProvider implements ObjectStorageProvider {
   }
 
   @Override
+  public PresignedDownload presignGet(String objectKey, Duration signatureDuration) {
+    GetObjectRequest getObjectRequest =
+        GetObjectRequest.builder()
+            .bucket(properties.getBucket())
+            .key(objectKey)
+            .build();
+    GetObjectPresignRequest presignRequest =
+        GetObjectPresignRequest.builder()
+            .signatureDuration(signatureDuration)
+            .getObjectRequest(getObjectRequest)
+            .build();
+
+    PresignedGetObjectRequest presigned = presigner.presignGetObject(presignRequest);
+    return new PresignedDownload(presigned.url().toString(), presigned.expiration());
+  }
+
+  @Override
   public StoredObjectSummary headObject(String objectKey) {
     HeadObjectRequest request =
         HeadObjectRequest.builder().bucket(properties.getBucket()).key(objectKey).build();
@@ -58,6 +80,25 @@ public class S3ObjectStorageProvider implements ObjectStorageProvider {
       if (e.statusCode() == HttpURLConnection.HTTP_NOT_FOUND) {
         throw new ObjectStorageObjectNotFoundException(objectKey, e);
       }
+      throw e;
+    }
+  }
+
+  @Override
+  public void deleteObject(String objectKey) {
+    DeleteObjectRequest request =
+        DeleteObjectRequest.builder().bucket(properties.getBucket()).key(objectKey).build();
+    try {
+      s3Client.deleteObject(request);
+      log.debug("Deleted object from storage at key {}", objectKey);
+    } catch (NoSuchKeyException e) {
+      log.debug("Object not found when deleting key {}: {}", objectKey, e.getMessage());
+    } catch (S3Exception e) {
+      if (e.statusCode() == HttpURLConnection.HTTP_NOT_FOUND) {
+        log.debug("Object not found (404) when deleting key {}", objectKey);
+        return;
+      }
+      log.error("Failed to delete object from storage at key {}", objectKey, e);
       throw e;
     }
   }

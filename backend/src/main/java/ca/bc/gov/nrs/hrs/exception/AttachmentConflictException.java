@@ -59,5 +59,66 @@ public class AttachmentConflictException extends ResponseStatusException {
         String.format(
             "Checksum mismatch: expected %s, actual %s", expectedChecksum, actualChecksum));
   }
+
+  /**
+   * Creates an AttachmentConflictException when attempting an illegal scan status transition.
+   *
+   * @param current the current scan status
+   * @param target the requested scan status
+   * @return a new AttachmentConflictException
+   */
+  public static AttachmentConflictException invalidScanStatusTransition(
+      Object current, Object target) {
+    return new AttachmentConflictException(
+        String.format(
+            "Invalid scan status transition: cannot transition from %s to %s", current, target));
+  }
+
+  /**
+   * Creates an AttachmentConflictException when attempting to scan an attachment that has
+   * not been finalized.
+   *
+   * @param attachmentId the attachment identifier
+   * @return a new AttachmentConflictException
+   */
+  public static AttachmentConflictException attachmentNotFinalized(Long attachmentId) {
+    return new AttachmentConflictException(
+        String.format("Attachment %d cannot be scanned because it is not finalized", attachmentId));
+  }
+
+  /**
+   * Creates an AttachmentConflictException when attempting to access a quarantined attachment.
+   *
+   * @param attachmentId the attachment identifier
+   * @return a new AttachmentConflictException
+   */
+  public static AttachmentConflictException quarantined(Long attachmentId) {
+    return new AttachmentConflictException(
+        String.format("Attachment %d has been quarantined due to malware", attachmentId));
+  }
+
+  /**
+   * Creates an AttachmentConflictException when attempting to access an attachment
+   * whose malware scan is still pending.
+   *
+   * @param attachmentId the attachment identifier
+   * @return a new AttachmentConflictException
+   */
+  public static AttachmentConflictException scanPending(Long attachmentId) {
+    return new AttachmentConflictException(
+        String.format("Attachment %d scan is currently pending", attachmentId));
+  }
+
+  /**
+   * Creates an AttachmentConflictException when attempting to access an attachment
+   * whose malware scan failed.
+   *
+   * @param attachmentId the attachment identifier
+   * @return a new AttachmentConflictException
+   */
+  public static AttachmentConflictException scanFailed(Long attachmentId) {
+    return new AttachmentConflictException(
+        String.format("Attachment %d malware scan failed", attachmentId));
+  }
 }
 

@@ -5,12 +5,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 
 import ca.bc.gov.nrs.hrs.configuration.ObjectStorageProperties;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentDocumentType;
+import ca.bc.gov.nrs.hrs.dto.block.AttachmentDownloadResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentFinalizeResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentRequest;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentIntentResponse;
+import ca.bc.gov.nrs.hrs.dto.block.AttachmentScanStatus;
+import ca.bc.gov.nrs.hrs.dto.block.AttachmentStatus;
 import ca.bc.gov.nrs.hrs.entity.block.BlockAttachmentEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
@@ -25,6 +29,7 @@ import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageObjectNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageProvider;
+import ca.bc.gov.nrs.hrs.provider.objectstorage.PresignedDownload;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.PresignedUpload;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.StoredObjectSummary;
 import ca.bc.gov.nrs.hrs.repository.block.BlockAttachmentRepository;
@@ -69,6 +74,9 @@ class AttachmentServiceTest {
 
   @Mock(strictness = Mock.Strictness.LENIENT)
   private ObjectStorageProperties objectStorageProperties;
+
+  @Mock
+  private AttachmentScanService scanService;
 
   @InjectMocks
   private AttachmentService service;
@@ -196,10 +204,38 @@ class AttachmentServiceTest {
     assertThat(response.expiresAt()).isEqualTo(EXPIRY);
 
     BlockAttachmentEntity saved = captor.getValue();
-    assertThat(saved.getStatus()).isEqualTo("UPLOADING");
+    assertThat(saved.getStatus()).isEqualTo(AttachmentStatus.UPLOADING.name());
     assertThat(saved.getDocumentType()).isEqualTo(AttachmentDocumentType.FINAL_MAP.name());
-    assertThat(saved.getScanStatus()).isEqualTo("PENDING");
+    assertThat(saved.getScanStatus()).isEqualTo(AttachmentScanStatus.PENDING.name());
     assertThat(saved.getFileName()).isEqualTo("report_FINAL-MAP.pdf");
+  }
+
+  @Test
+  @DisplayName("createAttempt delegates to createIntent")
+  void createAttempt_delegatesToCreateIntent() {
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
+    ArgumentCaptor<BlockAttachmentEntity> captor =
+        ArgumentCaptor.forClass(BlockAttachmentEntity.class);
+    given(attachmentRepository.saveAndFlush(captor.capture()))
+        .willAnswer(
+            invocation -> {
+              BlockAttachmentEntity entity = invocation.getArgument(0);
+              entity.setId(ATTACHMENT_ID);
+              return entity;
+            });
+    given(
+            objectStorage.presignPut(
+                eq("hrs/block/2/attachment/501/report_FINAL-MAP.pdf"),
+                eq("application/pdf"),
+                any()))
+        .willReturn(new PresignedUpload("https://s3.example.com/upload", EXPIRY));
+
+    AttachmentIntentResponse response =
+        service.createAttempt(
+            null, RU_ID, BLOCK_ID, intentRequest(AttachmentDocumentType.FINAL_MAP.name()));
+
+    assertThat(response.attachmentId()).isEqualTo(ATTACHMENT_ID);
   }
 
   @Test
@@ -366,6 +402,7 @@ class AttachmentServiceTest {
     assertThat(response.attachmentId()).isEqualTo(ATTACHMENT_ID);
     assertThat(response.status()).isEqualTo("FINALIZED");
     assertThat(response.checksum()).isEqualTo("abc123");
+    verify(scanService).scan(ATTACHMENT_ID);
   }
 
   @Test
@@ -524,5 +561,209 @@ class AttachmentServiceTest {
         .isEqualTo("path.pdf");
     assertThat(AttachmentService.sanitizeFileName("x?a=b"))
         .isEqualTo("x_a_b");
+  }
+
+  @Test
+  @DisplayName("isValid returns true only when attachment is FINALIZED and CLEAN")
+  void isValid_returnsTrueWhenFinalizedAndClean() {
+    BlockAttachmentEntity attachment = persistedAttachment();
+    attachment.setStatus(AttachmentStatus.FINALIZED.name());
+    attachment.setScanStatus(AttachmentScanStatus.CLEAN.name());
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(attachment));
+
+    assertThat(service.isValid(ATTACHMENT_ID)).isTrue();
+  }
+
+  @Test
+  @DisplayName("isValid returns false when attachment is UPLOADING")
+  void isValid_returnsFalseWhenUploading() {
+    BlockAttachmentEntity attachment = persistedAttachment();
+    attachment.setStatus(AttachmentStatus.UPLOADING.name());
+    attachment.setScanStatus(AttachmentScanStatus.CLEAN.name());
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(attachment));
+
+    assertThat(service.isValid(ATTACHMENT_ID)).isFalse();
+  }
+
+  @Test
+  @DisplayName("isValid returns false when scan_status is PENDING (fail-closed)")
+  void isValid_returnsFalseWhenPending() {
+    BlockAttachmentEntity attachment = persistedAttachment();
+    attachment.setStatus(AttachmentStatus.FINALIZED.name());
+    attachment.setScanStatus(AttachmentScanStatus.PENDING.name());
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(attachment));
+
+    assertThat(service.isValid(ATTACHMENT_ID)).isFalse();
+  }
+
+  @Test
+  @DisplayName("isValid returns false when scan_status is QUARANTINED")
+  void isValid_returnsFalseWhenQuarantined() {
+    BlockAttachmentEntity attachment = persistedAttachment();
+    attachment.setStatus(AttachmentStatus.FINALIZED.name());
+    attachment.setScanStatus(AttachmentScanStatus.QUARANTINED.name());
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(attachment));
+
+    assertThat(service.isValid(ATTACHMENT_ID)).isFalse();
+  }
+
+  @Test
+  @DisplayName("isValid returns false when scan_status is FAILED")
+  void isValid_returnsFalseWhenFailed() {
+    BlockAttachmentEntity attachment = persistedAttachment();
+    attachment.setStatus(AttachmentStatus.FINALIZED.name());
+    attachment.setScanStatus(AttachmentScanStatus.FAILED.name());
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(attachment));
+
+    assertThat(service.isValid(ATTACHMENT_ID)).isFalse();
+  }
+
+  @Test
+  @DisplayName("isValid returns false when attachment is not found or id is null")
+  void isValid_returnsFalseWhenNotFoundOrNull() {
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID)).willReturn(Optional.empty());
+
+    assertThat(service.isValid(ATTACHMENT_ID)).isFalse();
+    assertThat(service.isValid(null)).isFalse();
+  }
+
+  @Test
+  @DisplayName("countValidAttachments delegates to repository with FINALIZED and CLEAN")
+  void countValidAttachments_delegatesToRepository() {
+    given(
+            attachmentRepository.countByBlockIdAndStatusAndScanStatusAndDeletedFalse(
+                BLOCK_ID, AttachmentStatus.FINALIZED.name(), AttachmentScanStatus.CLEAN.name()))
+        .willReturn(3L);
+
+    assertThat(service.countValidAttachments(BLOCK_ID)).isEqualTo(3L);
+    assertThat(service.countValidAttachments(null)).isZero();
+  }
+
+  @Test
+  @DisplayName("findValidAttachments delegates to repository with FINALIZED and CLEAN")
+  void findValidAttachments_delegatesToRepository() {
+    BlockAttachmentEntity attachment = persistedAttachment();
+    attachment.setStatus(AttachmentStatus.FINALIZED.name());
+    attachment.setScanStatus(AttachmentScanStatus.CLEAN.name());
+    given(
+            attachmentRepository.findByBlockIdAndStatusAndScanStatusAndDeletedFalse(
+                BLOCK_ID, AttachmentStatus.FINALIZED.name(), AttachmentScanStatus.CLEAN.name()))
+        .willReturn(List.of(attachment));
+
+    assertThat(service.findValidAttachments(BLOCK_ID)).containsExactly(attachment);
+    assertThat(service.findValidAttachments(null)).isEmpty();
+  }
+
+  // --- Quarantine gating download tests ---
+
+  @Test
+  @DisplayName("getDownloadUrl returns presigned download URL when attachment is FINALIZED and CLEAN")
+  void getDownloadUrl_whenFinalizedAndClean_returnsPresignedUrl() {
+    BlockAttachmentEntity attachment = persistedAttachment();
+    attachment.setStatus(AttachmentStatus.FINALIZED.name());
+    attachment.setScanStatus(AttachmentScanStatus.CLEAN.name());
+
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(attachment));
+    given(objectStorageProperties.getPresignedUrlDuration()).willReturn(Duration.ofMinutes(5));
+
+    Instant expiresAt = Instant.parse("2026-01-01T00:05:00Z");
+    given(objectStorage.presignGet(eq(attachment.getObjectKey()), any()))
+        .willReturn(new PresignedDownload("https://s3.example.com/download?sig=xyz", expiresAt));
+
+    AttachmentDownloadResponse response =
+        service.getDownloadUrl(null, RU_ID, BLOCK_ID, ATTACHMENT_ID);
+
+    assertThat(response.attachmentId()).isEqualTo(ATTACHMENT_ID);
+    assertThat(response.fileName()).isEqualTo("report_FINAL-MAP.pdf");
+    assertThat(response.downloadUrl())
+        .isEqualTo("https://s3.example.com/download?sig=xyz");
+    assertThat(response.expiresAt()).isEqualTo(expiresAt);
+  }
+
+  @Test
+  @DisplayName("getDownloadUrl throws conflict when attachment is UPLOADING")
+  void getDownloadUrl_whenUploading_throwsConflict() {
+    BlockAttachmentEntity attachment = persistedAttachment();
+    attachment.setStatus(AttachmentStatus.UPLOADING.name());
+    attachment.setScanStatus(AttachmentScanStatus.CLEAN.name());
+
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(attachment));
+
+    assertThatThrownBy(() -> service.getDownloadUrl(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
+        .isInstanceOf(AttachmentConflictException.class);
+  }
+
+  @Test
+  @DisplayName("getDownloadUrl throws conflict when scan_status is QUARANTINED (gated)")
+  void getDownloadUrl_whenQuarantined_throwsConflict() {
+    BlockAttachmentEntity attachment = persistedAttachment();
+    attachment.setStatus(AttachmentStatus.FINALIZED.name());
+    attachment.setScanStatus(AttachmentScanStatus.QUARANTINED.name());
+
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(attachment));
+
+    assertThatThrownBy(() -> service.getDownloadUrl(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
+        .isInstanceOf(AttachmentConflictException.class);
+  }
+
+  @Test
+  @DisplayName("getDownloadUrl throws conflict when scan_status is PENDING")
+  void getDownloadUrl_whenPending_throwsConflict() {
+    BlockAttachmentEntity attachment = persistedAttachment();
+    attachment.setStatus(AttachmentStatus.FINALIZED.name());
+    attachment.setScanStatus(AttachmentScanStatus.PENDING.name());
+
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(attachment));
+
+    assertThatThrownBy(() -> service.getDownloadUrl(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
+        .isInstanceOf(AttachmentConflictException.class);
+  }
+
+  @Test
+  @DisplayName("getDownloadUrl throws conflict when scan_status is FAILED")
+  void getDownloadUrl_whenFailed_throwsConflict() {
+    BlockAttachmentEntity attachment = persistedAttachment();
+    attachment.setStatus(AttachmentStatus.FINALIZED.name());
+    attachment.setScanStatus(AttachmentScanStatus.FAILED.name());
+
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(attachment));
+
+    assertThatThrownBy(() -> service.getDownloadUrl(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
+        .isInstanceOf(AttachmentConflictException.class);
+  }
+
+  @Test
+  @DisplayName("getDownloadUrl throws not found when attachment belongs to a different block")
+  void getDownloadUrl_whenBlockMismatch_throwsNotFound() {
+    BlockAttachmentEntity attachment = persistedAttachment();
+    attachment.setBlockId(999L);
+
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(attachment));
+
+    assertThatThrownBy(() -> service.getDownloadUrl(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
+        .isInstanceOf(AttachmentNotFoundException.class);
   }
 }
