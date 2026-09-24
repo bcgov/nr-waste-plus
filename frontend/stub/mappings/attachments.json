@@ -1,10 +1,10 @@
 {
   "mappings": [
     {
-      "name": "Block attachment upload intent - FINAL_MAP",
+      "name": "Block attachment upload attempt - FINAL_MAP",
       "priority": 2,
       "request": {
-        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/intent",
+        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/attempt",
         "method": "POST",
         "bodyPatterns": [
           { "matchesJsonPath": "$[?(@.documentType == 'FINAL_MAP')]" }
@@ -22,10 +22,10 @@
       }
     },
     {
-      "name": "Block attachment upload intent - oversized",
+      "name": "Block attachment upload attempt - oversized",
       "priority": 1,
       "request": {
-        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/intent",
+        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/attempt",
         "method": "POST",
         "bodyPatterns": [
           { "matchesJsonPath": "$[?(@.declaredSizeBytes > 5242880)]" }
@@ -43,10 +43,10 @@
       }
     },
     {
-      "name": "Block attachment upload intent - invalid document type",
+      "name": "Block attachment upload attempt - invalid document type",
       "priority": 1,
       "request": {
-        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/intent",
+        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/attempt",
         "method": "POST",
         "bodyPatterns": [
           {

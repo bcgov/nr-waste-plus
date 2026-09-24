@@ -1,7 +1,7 @@
 {
-  "name": "Create attachment intent",
+  "name": "Create attachment attempt",
   "request": {
-    "url": "/api/reporting-units/37870/12345/attachments/intent",
+    "url": "/api/reporting-units/37870/12345/attachments/attempt",
     "method": "POST"
   },
   "response": {
