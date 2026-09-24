@@ -49,6 +49,7 @@ public class AttachmentCleanupJob {
    */
   @Scheduled(cron = "${ca.bc.gov.nrs.attachment.cleanup.cron}")
   @NewSpan
+  @Transactional
   public int cleanAbandonedUploads() {
     Instant cutoff = Instant.now().minus(properties.getTtl());
     int totalPurged = 0;
