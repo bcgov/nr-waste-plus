@@ -20,9 +20,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.CopyObjectResponse;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.MetadataDirective;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
@@ -159,6 +162,56 @@ class S3ObjectStorageProviderTest {
         .willThrow(S3Exception.builder().statusCode(500).message("Internal error").build());
 
     assertThatThrownBy(() -> provider.deleteObject("key"))
+        .isInstanceOf(S3Exception.class);
+  }
+
+  @Test
+  @DisplayName("Copy object sends CopyObjectRequest with correct bucket, keys, and metadata directive")
+  void copyObject_callsS3ClientWithMetadataDirectiveCopy() {
+    given(s3Client.copyObject(any(CopyObjectRequest.class)))
+        .willReturn(CopyObjectResponse.builder().build());
+
+    provider.copyObject(
+        "hrs/staging/block/1/attachment/501/map.pdf",
+        "hrs/block/1/attachment/501/map.pdf");
+
+    ArgumentCaptor<CopyObjectRequest> captor =
+        ArgumentCaptor.forClass(CopyObjectRequest.class);
+    verify(s3Client).copyObject(captor.capture());
+    assertThat(captor.getValue().sourceBucket()).isEqualTo("nr-waste");
+    assertThat(captor.getValue().sourceKey())
+        .isEqualTo("hrs/staging/block/1/attachment/501/map.pdf");
+    assertThat(captor.getValue().destinationBucket()).isEqualTo("nr-waste");
+    assertThat(captor.getValue().destinationKey())
+        .isEqualTo("hrs/block/1/attachment/501/map.pdf");
+    assertThat(captor.getValue().metadataDirective()).isEqualTo(MetadataDirective.COPY);
+  }
+
+  @Test
+  @DisplayName("Copy object maps a 404 to ObjectStorageObjectNotFoundException")
+  void copyObject_when404_throwsNotFound() {
+    given(s3Client.copyObject(any(CopyObjectRequest.class)))
+        .willThrow(S3Exception.builder().statusCode(404).message("Not Found").build());
+
+    assertThatThrownBy(
+            () ->
+                provider.copyObject(
+                    "hrs/staging/block/1/attachment/501/missing.pdf",
+                    "hrs/block/1/attachment/501/missing.pdf"))
+        .isInstanceOf(ObjectStorageObjectNotFoundException.class);
+  }
+
+  @Test
+  @DisplayName("Copy object rethrows non-404 storage errors")
+  void copyObject_whenOtherError_rethrows() {
+    given(s3Client.copyObject(any(CopyObjectRequest.class)))
+        .willThrow(S3Exception.builder().statusCode(500).message("Internal error").build());
+
+    assertThatThrownBy(
+            () ->
+                provider.copyObject(
+                    "hrs/staging/block/1/attachment/501/map.pdf",
+                    "hrs/block/1/attachment/501/map.pdf"))
         .isInstanceOf(S3Exception.class);
   }
 }

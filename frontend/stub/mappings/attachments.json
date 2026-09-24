@@ -15,8 +15,8 @@
         "headers": { "Content-Type": "application/json" },
         "jsonBody": {
           "attachmentId": 501,
-          "objectKey": "hrs/block/12345/attachment/501/evidence-final-map.pdf",
-          "uploadUrl": "http://localhost:9000/nr-waste/hrs/block/12345/attachment/501/evidence-final-map.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=test%2F20260101%2Fca-central-1%2Fs3%2Faws4_request&X-Amz-Date=20260101T000000Z&X-Amz-Expires=300&X-Amz-SignedHeaders=content-type%3Bhost&X-Amz-Signature=0000000000000000000000000000000000000000000000000000000000000000",
+          "objectKey": "hrs/staging/block/12345/attachment/501/evidence-final-map.pdf",
+          "uploadUrl": "http://localhost:9000/nr-waste/hrs/staging/block/12345/attachment/501/evidence-final-map.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=test%2F20260101%2Fca-central-1%2Fs3%2Faws4_request&X-Amz-Date=20260101T000000Z&X-Amz-Expires=300&X-Amz-SignedHeaders=content-type%3Bhost&X-Amz-Signature=0000000000000000000000000000000000000000000000000000000000000000",
           "expiresAt": "2026-01-01T00:05:00Z"
         }
       }

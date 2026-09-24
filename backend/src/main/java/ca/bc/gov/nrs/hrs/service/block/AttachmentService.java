@@ -35,6 +35,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * Manages the private object-storage attachment lifecycle: intent registration, presigned PUT
@@ -49,7 +51,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Observed
 public class AttachmentService {
 
-  private static final String OBJECT_KEY_PREFIX = "hrs/block/";
+  private static final String STAGING_KEY_PREFIX = "hrs/staging/block/";
+  private static final String PERMANENT_KEY_PREFIX = "hrs/block/";
 
   private final BlockAttachmentRepository attachmentRepository;
   private final BlockRepository blockRepository;
@@ -125,23 +128,23 @@ public class AttachmentService {
 
     BlockAttachmentEntity saved = attachmentRepository.saveAndFlush(entity);
 
-    String objectKey = buildObjectKey(blockId, saved.getId(), sanitizedFileName);
-    saved.setObjectKey(objectKey);
+    String stagingKey = buildStagingObjectKey(blockId, saved.getId(), sanitizedFileName);
+    saved.setObjectKey(stagingKey);
     attachmentRepository.save(saved);
 
     var upload =
         objectStorage.presignPut(
-            objectKey, request.mimeType(), objectStorageProperties.getPresignedUrlDuration());
+            stagingKey, request.mimeType(), objectStorageProperties.getPresignedUrlDuration());
 
     log.info(
-        "Attachment intent created: id={}, blockId={}, objectKey={}, expiresAt={}",
+        "Attachment intent created: id={}, blockId={}, stagingKey={}, expiresAt={}",
         saved.getId(),
         blockId,
-        objectKey,
+        stagingKey,
         upload.expiresAt());
 
     return new AttachmentIntentResponse(
-        saved.getId(), objectKey, upload.uploadUrl(), upload.expiresAt());
+        saved.getId(), stagingKey, upload.uploadUrl(), upload.expiresAt());
   }
 
   /**
@@ -183,10 +186,52 @@ public class AttachmentService {
       throw new AttachmentNotFoundException(attachmentId, blockId);
     }
 
+    String permanentKey =
+        buildPermanentObjectKey(blockId, attachmentId, attachment.getFileName());
+
+    // 1. Idempotent check: if already finalized, verify checksum against permanent key.
+    if (AttachmentStatus.FINALIZED.name().equals(attachment.getStatus())) {
+      StoredObjectSummary stored;
+      try {
+        stored = objectStorage.headObject(attachment.getObjectKey());
+      } catch (ObjectStorageObjectNotFoundException e) {
+        throw AttachmentConflictException.missingObject(attachmentId);
+      }
+      if (StringUtils.isNotBlank(attachment.getChecksum())
+          && !attachment.getChecksum().equals(stored.checksum())) {
+        throw AttachmentConflictException.checksumMismatch(
+            attachment.getChecksum(), stored.checksum());
+      }
+      return new AttachmentFinalizeResponse(
+          attachmentId,
+          attachment.getObjectKey(),
+          attachment.getStatus(),
+          attachment.getChecksum());
+    }
+
+    // 2. Fetch staging metadata with concurrency fallback
+    String stagingKey = attachment.getObjectKey();
     StoredObjectSummary stored;
     try {
-      stored = objectStorage.headObject(attachment.getObjectKey());
+      stored = objectStorage.headObject(stagingKey);
     } catch (ObjectStorageObjectNotFoundException e) {
+      // Concurrency fallback: check if a racing request already promoted to permanent key
+      try {
+        StoredObjectSummary permStored = objectStorage.headObject(permanentKey);
+        BlockAttachmentEntity reloaded =
+            attachmentRepository.findByIdAndDeletedFalse(attachmentId).orElse(attachment);
+        if (AttachmentStatus.FINALIZED.name().equals(reloaded.getStatus())
+            && StringUtils.isNotBlank(reloaded.getChecksum())
+            && reloaded.getChecksum().equals(permStored.checksum())) {
+          return new AttachmentFinalizeResponse(
+              attachmentId,
+              reloaded.getObjectKey(),
+              reloaded.getStatus(),
+              reloaded.getChecksum());
+        }
+      } catch (Exception ignored) {
+        // Fall through to throw original missingObject
+      }
       throw AttachmentConflictException.missingObject(attachmentId);
     }
 
@@ -201,29 +246,37 @@ public class AttachmentService {
           attachment.getFileSizeBytes(), stored.sizeBytes());
     }
 
-    // Checksum is captured on initial finalize; verify it has not drifted on idempotent retries.
     if (StringUtils.isNotBlank(attachment.getChecksum())
         && !attachment.getChecksum().equals(stored.checksum())) {
       throw AttachmentConflictException.checksumMismatch(
           attachment.getChecksum(), stored.checksum());
     }
 
+    // 3. Promote object from staging key to immutable permanent key
+    objectStorage.copyObject(stagingKey, permanentKey);
+
+    // 4. Update and persist entity
     attachment.setStatus(AttachmentStatus.FINALIZED.name());
+    attachment.setObjectKey(permanentKey);
     attachment.setChecksum(stored.checksum());
-    attachmentRepository.save(attachment);
+    attachmentRepository.saveAndFlush(attachment);
+
+    // 5. Delete staging object post-commit (leaves staging intact if DB fails)
+    deleteStagingPostCommit(stagingKey);
 
     log.info(
-        "Attachment finalized: id={}, status={}, checksum={}",
+        "Attachment finalized: id={}, status={}, checksum={}, permanentKey={}",
         attachmentId,
         attachment.getStatus(),
-        attachment.getChecksum());
+        attachment.getChecksum(),
+        permanentKey);
 
-    // Trigger scan hook: fails closed (remains PENDING) if scanner is unavailable.
+    // 6. Trigger scan hook on permanent object
     scanService.scan(attachmentId);
 
     return new AttachmentFinalizeResponse(
         attachmentId,
-        attachment.getObjectKey(),
+        permanentKey,
         attachment.getStatus(),
         attachment.getChecksum());
   }
@@ -395,16 +448,53 @@ public class AttachmentService {
   }
 
   private static String placeholderKey(long blockId) {
-    return OBJECT_KEY_PREFIX + blockId + "/attachment/pending";
+    return STAGING_KEY_PREFIX + blockId + "/attachment/pending";
   }
 
-  private static String buildObjectKey(long blockId, Long attachmentId, String sanitizedFileName) {
-    return OBJECT_KEY_PREFIX
+  private static String buildStagingObjectKey(
+      long blockId, Long attachmentId, String sanitizedFileName) {
+    return STAGING_KEY_PREFIX
         + blockId
         + "/attachment/"
         + attachmentId
         + "/"
         + sanitizedFileName;
+  }
+
+  private static String buildPermanentObjectKey(
+      long blockId, Long attachmentId, String sanitizedFileName) {
+    return PERMANENT_KEY_PREFIX
+        + blockId
+        + "/attachment/"
+        + attachmentId
+        + "/"
+        + sanitizedFileName;
+  }
+
+  private void deleteStagingPostCommit(String stagingKey) {
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+      TransactionSynchronizationManager.registerSynchronization(
+          new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+              try {
+                objectStorage.deleteObject(stagingKey);
+                log.debug("Deleted staging object post-commit at key {}", stagingKey);
+              } catch (Exception e) {
+                log.warn(
+                    "Failed to delete staging object at key {} after commit: {}",
+                    stagingKey,
+                    e.getMessage());
+              }
+            }
+          });
+    } else {
+      try {
+        objectStorage.deleteObject(stagingKey);
+      } catch (Exception e) {
+        log.warn("Failed to delete staging object at key {}: {}", stagingKey, e.getMessage());
+      }
+    }
   }
 
   private void validateClientAccess(Jwt jwt, ReportingUnitEntity reportingUnit) {

@@ -70,8 +70,8 @@ class AttachmentControllerTest {
         .thenReturn(
             new AttachmentIntentResponse(
                 501L,
-                "hrs/block/2/attachment/501/final-map.pdf",
-                "https://s3.example.com/hrs/block/2/attachment/501/final-map.pdf?signature=xyz",
+                "hrs/staging/block/2/attachment/501/final-map.pdf",
+                "https://s3.example.com/hrs/staging/block/2/attachment/501/final-map.pdf?signature=xyz",
                 expiresAt));
 
     mockMvc
@@ -83,11 +83,11 @@ class AttachmentControllerTest {
                         + "\"mimeType\":\"application/pdf\",\"declaredSizeBytes\":1024}"))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.attachmentId").value(501))
-        .andExpect(jsonPath("$.objectKey").value("hrs/block/2/attachment/501/final-map.pdf"))
+        .andExpect(jsonPath("$.objectKey").value("hrs/staging/block/2/attachment/501/final-map.pdf"))
         .andExpect(
             jsonPath("$.uploadUrl")
                 .value(
-                    "https://s3.example.com/hrs/block/2/attachment/501/final-map.pdf?signature=xyz"))
+                    "https://s3.example.com/hrs/staging/block/2/attachment/501/final-map.pdf?signature=xyz"))
         .andExpect(jsonPath("$.expiresAt").value("2026-01-01T00:05:00Z"));
   }
 

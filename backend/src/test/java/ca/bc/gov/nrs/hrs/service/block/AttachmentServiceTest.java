@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import ca.bc.gov.nrs.hrs.configuration.ObjectStorageProperties;
@@ -110,7 +111,7 @@ class AttachmentServiceTest {
     entity.setScanStatus("PENDING");
     entity.setStatus("UPLOADING");
     entity.setDocumentType(AttachmentDocumentType.FINAL_MAP.name());
-    entity.setObjectKey("hrs/block/2/attachment/501/report_FINAL-MAP.pdf");
+    entity.setObjectKey("hrs/staging/block/2/attachment/501/report_FINAL-MAP.pdf");
     entity.setFileName("report_FINAL-MAP.pdf");
     entity.setContentType("application/pdf");
     entity.setFileSizeBytes(1024L);
@@ -189,7 +190,7 @@ class AttachmentServiceTest {
     given(attachmentRepository.save(any())).willAnswer(invocation -> invocation.getArgument(0));
     given(
             objectStorage.presignPut(
-                eq("hrs/block/2/attachment/501/report_FINAL-MAP.pdf"),
+                eq("hrs/staging/block/2/attachment/501/report_FINAL-MAP.pdf"),
                 eq("application/pdf"),
                 any()))
         .willReturn(new PresignedUpload("https://s3.example.com/upload", EXPIRY));
@@ -199,7 +200,8 @@ class AttachmentServiceTest {
             null, RU_ID, BLOCK_ID, intentRequest(AttachmentDocumentType.FINAL_MAP.name()));
 
     assertThat(response.attachmentId()).isEqualTo(ATTACHMENT_ID);
-    assertThat(response.objectKey()).isEqualTo("hrs/block/2/attachment/501/report_FINAL-MAP.pdf");
+    assertThat(response.objectKey())
+        .isEqualTo("hrs/staging/block/2/attachment/501/report_FINAL-MAP.pdf");
     assertThat(response.uploadUrl()).isEqualTo("https://s3.example.com/upload");
     assertThat(response.expiresAt()).isEqualTo(EXPIRY);
 
@@ -226,7 +228,7 @@ class AttachmentServiceTest {
             });
     given(
             objectStorage.presignPut(
-                eq("hrs/block/2/attachment/501/report_FINAL-MAP.pdf"),
+                eq("hrs/staging/block/2/attachment/501/report_FINAL-MAP.pdf"),
                 eq("application/pdf"),
                 any()))
         .willReturn(new PresignedUpload("https://s3.example.com/upload", EXPIRY));
@@ -387,10 +389,41 @@ class AttachmentServiceTest {
   }
 
   @Test
-  @DisplayName("Finalizes attachment and captures stored checksum")
+  @DisplayName("Finalizes attachment, promotes staging to permanent, and captures stored checksum")
   void finalizesAttachment() {
     given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
         .willReturn(Optional.of(persistedAttachment()));
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
+    given(objectStorage.headObject("hrs/staging/block/2/attachment/501/report_FINAL-MAP.pdf"))
+        .willReturn(new StoredObjectSummary(1024L, "abc123"));
+
+    AttachmentFinalizeResponse response =
+        service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID);
+
+    assertThat(response.attachmentId()).isEqualTo(ATTACHMENT_ID);
+    assertThat(response.status()).isEqualTo("FINALIZED");
+    assertThat(response.objectKey())
+        .isEqualTo("hrs/block/2/attachment/501/report_FINAL-MAP.pdf");
+    assertThat(response.checksum()).isEqualTo("abc123");
+    verify(objectStorage)
+        .copyObject(
+            "hrs/staging/block/2/attachment/501/report_FINAL-MAP.pdf",
+            "hrs/block/2/attachment/501/report_FINAL-MAP.pdf");
+    verify(objectStorage).deleteObject("hrs/staging/block/2/attachment/501/report_FINAL-MAP.pdf");
+    verify(scanService).scan(ATTACHMENT_ID);
+  }
+
+  @Test
+  @DisplayName("Finalizes attachment idempotently when already FINALIZED without re-copying")
+  void finalizeAttachment_whenAlreadyFinalized_returnsExistingWithoutCopy() {
+    BlockAttachmentEntity entity = persistedAttachment();
+    entity.setStatus(AttachmentStatus.FINALIZED.name());
+    entity.setObjectKey("hrs/block/2/attachment/501/report_FINAL-MAP.pdf");
+    entity.setChecksum("abc123");
+
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(entity));
     given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
         .willReturn(Optional.of(block()));
     given(objectStorage.headObject("hrs/block/2/attachment/501/report_FINAL-MAP.pdf"))
@@ -401,8 +434,41 @@ class AttachmentServiceTest {
 
     assertThat(response.attachmentId()).isEqualTo(ATTACHMENT_ID);
     assertThat(response.status()).isEqualTo("FINALIZED");
+    assertThat(response.objectKey())
+        .isEqualTo("hrs/block/2/attachment/501/report_FINAL-MAP.pdf");
     assertThat(response.checksum()).isEqualTo("abc123");
-    verify(scanService).scan(ATTACHMENT_ID);
+    verify(objectStorage, never()).copyObject(any(), any());
+    verify(objectStorage, never()).deleteObject(any());
+  }
+
+  @Test
+  @DisplayName("Finalize handles race condition where staging is deleted but permanent exists")
+  void finalizeAttachment_whenStagingDeletedAndPermanentExists_resolvesCleanly() {
+    BlockAttachmentEntity entity = persistedAttachment();
+    BlockAttachmentEntity reloadedFinalized = persistedAttachment();
+    reloadedFinalized.setStatus(AttachmentStatus.FINALIZED.name());
+    reloadedFinalized.setObjectKey("hrs/block/2/attachment/501/report_FINAL-MAP.pdf");
+    reloadedFinalized.setChecksum("abc123");
+
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(entity), Optional.of(reloadedFinalized));
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
+    given(objectStorage.headObject("hrs/staging/block/2/attachment/501/report_FINAL-MAP.pdf"))
+        .willThrow(
+            new ObjectStorageObjectNotFoundException(
+                "hrs/staging/block/2/attachment/501/report_FINAL-MAP.pdf",
+                new RuntimeException()));
+    given(objectStorage.headObject("hrs/block/2/attachment/501/report_FINAL-MAP.pdf"))
+        .willReturn(new StoredObjectSummary(1024L, "abc123"));
+
+    AttachmentFinalizeResponse response =
+        service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID);
+
+    assertThat(response.status()).isEqualTo("FINALIZED");
+    assertThat(response.objectKey())
+        .isEqualTo("hrs/block/2/attachment/501/report_FINAL-MAP.pdf");
+    assertThat(response.checksum()).isEqualTo("abc123");
   }
 
   @Test

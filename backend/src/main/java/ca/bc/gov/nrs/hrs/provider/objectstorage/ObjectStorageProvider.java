@@ -46,4 +46,13 @@ public interface ObjectStorageProvider {
    * @param objectKey the object key to delete
    */
   void deleteObject(String objectKey);
+
+  /**
+   * Copies an object from a source key to a destination key within the configured bucket.
+   *
+   * @param sourceKey the source object key
+   * @param destinationKey the destination object key
+   * @throws ObjectStorageObjectNotFoundException if the source object does not exist
+   */
+  void copyObject(String sourceKey, String destinationKey);
 }
