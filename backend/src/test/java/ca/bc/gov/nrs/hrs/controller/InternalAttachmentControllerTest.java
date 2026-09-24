@@ -109,5 +109,19 @@ class InternalAttachmentControllerTest {
                 .content("{}"))
         .andExpect(status().isBadRequest());
   }
+
+  @Test
+  @DisplayName("PATCH /{attachmentId}/scan-status returns 409 when attachment is not finalized")
+  void updateScanStatus_whenNotFinalized_returns409() throws Exception {
+    when(scanService.updateScanStatus(501L, AttachmentScanStatus.CLEAN))
+        .thenThrow(AttachmentConflictException.attachmentNotFinalized(501L));
+
+    mockMvc
+        .perform(
+            patch("/api/internal/attachments/501/scan-status")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"scanStatus\":\"CLEAN\"}"))
+        .andExpect(status().isConflict());
+  }
 }
 

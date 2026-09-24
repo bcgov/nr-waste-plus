@@ -125,6 +125,10 @@ public class AttachmentScanService {
       throw new AttachmentNotFoundException(attachmentId, expectedBlockId);
     }
 
+    if (!AttachmentStatus.FINALIZED.name().equals(attachment.getStatus())) {
+      throw AttachmentConflictException.attachmentNotFinalized(attachmentId);
+    }
+
     AttachmentScanStatus currentStatus =
         AttachmentScanStatus.fromDb(attachment.getScanStatus());
     if (currentStatus == newStatus) {

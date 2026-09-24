@@ -278,6 +278,22 @@ class AttachmentScanServiceTest {
   }
 
   @Test
+  @DisplayName("Rejects updateScanStatus if attachment is not yet FINALIZED")
+  void updateScanStatus_unfinalizedAttachment_throwsConflict() {
+    entity.setStatus(AttachmentStatus.UPLOADING.name());
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(entity));
+
+    assertThatThrownBy(
+            () -> scanService.updateScanStatus(ATTACHMENT_ID, AttachmentScanStatus.CLEAN))
+        .isInstanceOf(AttachmentConflictException.class)
+        .satisfies(
+            e ->
+                assertThat(((AttachmentConflictException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.CONFLICT));
+  }
+
+  @Test
   @DisplayName("scan rethrows AttachmentConflictException when updateScanStatus encounters conflict")
   void scan_whenUpdateScanStatusThrowsConflict_rethrowsConflict() {
     entity.setScanStatus(AttachmentScanStatus.QUARANTINED.name());
