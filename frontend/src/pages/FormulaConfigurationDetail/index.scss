@@ -7,13 +7,14 @@
 
   &-set-detail {
     &-column {
-      &__actions,
       &__notification {
         display: flex;
         flex-direction: column;
         margin-top: $spacing-08;
       }
       &__actions {
+        display: flex;
+        flex-direction: column;
         margin-top: $spacing-06;
       }
     }
