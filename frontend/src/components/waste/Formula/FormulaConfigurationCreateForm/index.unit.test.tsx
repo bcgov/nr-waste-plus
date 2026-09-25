@@ -647,4 +647,133 @@ describe('FormulaConfigurationCreateForm', () => {
     const createBtn = screen.getByRole('button', { name: 'Create formula set' });
     expect(createBtn).toHaveProperty('disabled', false);
   });
+
+  // ─── Submit error messages (RFC 7807 problem detail) ───────────────────────
+
+  describe('submit error messages (RFC 7807 problem detail)', () => {
+    const makeApiError = (body: unknown): ApiError =>
+      new ApiError(
+        {
+          method: 'POST',
+          url: '/formula-sets',
+          mediaType: 'application/json',
+          headers: {},
+          query: undefined,
+          body: undefined,
+        },
+        {
+          url: '/formula-sets',
+          ok: false,
+          status: 422,
+          statusText: 'Unprocessable Content',
+          body,
+        },
+        'Unprocessable Content',
+      );
+
+    /** Enter review mode, submit, and land on the submit-error path. */
+    const submitFailingForm = (body: unknown): void => {
+      mocks.mutateAsync.mockRejectedValue(makeApiError(body));
+      render(<FormulaConfigurationCreateForm />);
+      submitForm(); // enter review
+      submitForm(); // submit → rejects → setSubmitError
+    };
+
+    it('prefers the problem-detail detail with itemized validation messages', async () => {
+      submitFailingForm({
+        detail: 'One or more formulas failed validation',
+        validationErrors: [
+          {
+            formulaKey: 'da.mature.avoidableGradeY',
+            errors: [{ code: 'UNKNOWN_VARIABLE', message: 'Unknown variable: da.mature' }],
+          },
+          {
+            formulaKey: 'da.mature.quality',
+            errors: [{ code: 'SYNTAX_ERROR', message: 'Syntax error' }],
+          },
+        ],
+      });
+      await act(async () => {});
+
+      expect(screen.getByRole('alert').textContent).toContain(
+        'One or more formulas failed validation: Unknown variable: da.mature; Syntax error',
+      );
+    });
+
+    it('uses detail alone when there are no itemized messages', async () => {
+      submitFailingForm({ detail: 'Formula keys must be unique.' });
+      await act(async () => {});
+
+      expect(screen.getByRole('alert').textContent).toContain('Formula keys must be unique.');
+      expect(screen.getByRole('alert').textContent).not.toContain(': ');
+    });
+
+    it('joins itemized messages when detail is missing', async () => {
+      submitFailingForm({
+        validationErrors: [
+          {
+            formulaKey: 'da.a',
+            errors: [{ code: 'UNKNOWN_VARIABLE', message: 'Unknown variable: da.a' }],
+          },
+          {
+            formulaKey: 'da.b',
+            errors: [{ code: 'SYNTAX_ERROR', message: 'Syntax error' }],
+          },
+        ],
+      });
+      await act(async () => {});
+
+      expect(screen.getByRole('alert').textContent).toContain(
+        'Unknown variable: da.a; Syntax error',
+      );
+    });
+
+    it('skips malformed validationErrors entries and keeps the good message', async () => {
+      submitFailingForm({
+        detail: 'Validation failed',
+        validationErrors: [
+          null,
+          'not-an-entry',
+          { errors: 'not-an-array' },
+          {
+            errors: [
+              null,
+              'not-an-error',
+              { message: '' },
+              { message: '   ' },
+              { message: 42 },
+              { message: 'Good message' },
+            ],
+          },
+        ],
+      });
+      await act(async () => {});
+
+      const alert = screen.getByRole('alert').textContent ?? '';
+      expect(alert).toContain('Validation failed: Good message');
+      expect(alert).not.toContain('not-an-entry');
+      expect(alert).not.toContain('not-an-error');
+    });
+
+    it('uses the ApiError message when the body has no usable problem detail', async () => {
+      submitFailingForm({ detail: 123, validationErrors: 'not-an-array' });
+      await act(async () => {});
+
+      expect(screen.getByRole('alert').textContent).toContain('Unprocessable Content');
+    });
+
+    it('uses the ApiError message when the body is null', async () => {
+      submitFailingForm(null);
+      await act(async () => {});
+
+      expect(screen.getByRole('alert').textContent).toContain('Unprocessable Content');
+    });
+
+    it('uses the ApiError message when the body is not an object', async () => {
+      submitFailingForm('plain string body');
+      await act(async () => {});
+
+      expect(screen.getByRole('alert').textContent).toContain('Unprocessable Content');
+    });
+  });
 });
