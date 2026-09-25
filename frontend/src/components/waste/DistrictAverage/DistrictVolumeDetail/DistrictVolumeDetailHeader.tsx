@@ -38,9 +38,9 @@ const DistrictVolumeDetailHeader: FC<DistrictVolumeDetailHeaderProps> = ({
           {startDate && <DateTag date={startDate} format="MMMM dd, yyyy" />}
         </ReadonlyInput>
       </Column>
-      <Column lg={12} md={4} sm={4} className="district-volume-detail__end-date">
+      <Column lg={4} md={4} sm={4} className="district-volume-detail__end-date">
         <ReadonlyInput label="End date">
-          {endDate && <DateTag date={endDate} format="MMMM dd, yyyy" />}
+          {endDate ? <DateTag date={endDate} format="MMMM dd, yyyy" /> : <span>Open-ended</span>}
         </ReadonlyInput>
       </Column>
       <Column lg={4} md={4} sm={4} className="district-volume-detail__table-level-factor">
@@ -48,7 +48,7 @@ const DistrictVolumeDetailHeader: FC<DistrictVolumeDetailHeaderProps> = ({
           <PrecisionNumberTag value={tableLevelFactor} precision={3} />
         </ReadonlyInput>
       </Column>
-      <Column lg={12} md={4} sm={4} className="district-volume-detail__heli-multiplier">
+      <Column lg={4} md={4} sm={4} className="district-volume-detail__heli-multiplier">
         <ReadonlyInput label="Heli multiplier">
           {heliMultiplier !== undefined ? (
             <PrecisionNumberTag value={heliMultiplier} precision={3} />

@@ -40,7 +40,7 @@ const SpeciesCompositionDetailHeader: FC<SpeciesCompositionDetailHeaderProps> = 
       {/* End date */}
       <Column lg={4} md={4} sm={4} className="species-composition-detail-column__end-date">
         <ReadonlyInput label="End date">
-          {endDate ? <DateTag date={endDate} format="MMMM dd, yyyy" /> : <span>TBD</span>}
+          {endDate ? <DateTag date={endDate} format="MMMM dd, yyyy" /> : <span>Open-ended</span>}
         </ReadonlyInput>
       </Column>
       {/* Uploaded by */}

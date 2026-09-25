@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   variables: {
     data: { flat: {}, catalog: [] } as { flat: Record<string, number>; catalog: unknown[] },
   },
+  variablesParams: null as { date: string; area: string; districtCode: string } | null,
   formulaSectionOnChange: null as ((key: string, expression: string) => void) | null,
   // Store the RadioButtonGroup onChange callback so tests can invoke it directly
   radioGroupOnChange: null as ((value: string, name: string) => void) | null,
@@ -31,16 +32,18 @@ vi.mock('@tanstack/react-router', () => ({
 vi.mock('@/hooks/useFormulaConfiguration', () => ({
   useCreateFormulaSet: () => ({ isPending: false, mutateAsync: mocks.mutateAsync }),
   useCurrentOpenEndedFormulaSet: () => mocks.current,
-  useFormulaVariables: () => mocks.variables,
+  useFormulaVariables: (params: { date: string; area: string; districtCode: string }) => {
+    mocks.variablesParams = params;
+    return mocks.variables;
+  },
 }));
 
-vi.mock('./FormulaSection', () => ({
+vi.mock('@/components/waste/Formula/FormulaSection', () => ({
   default: ({
     sectionName,
     keys,
     area,
     date,
-    formulas,
     isEditable,
     onChange,
   }: {
@@ -48,13 +51,16 @@ vi.mock('./FormulaSection', () => ({
     keys: { key: string; label: string }[];
     area: string;
     date: string;
-    formulas: { formulaKey: string; expression: string }[];
     isEditable: boolean;
     onChange: (key: string, expression: string) => void;
   }) => {
     mocks.formulaSectionOnChange = onChange;
     return (
-      <div data-testid="formula-section" data-section={sectionName} data-editable={String(isEditable)}>
+      <div
+        data-testid="formula-section"
+        data-section={sectionName}
+        data-editable={String(isEditable)}
+      >
         <span data-testid="formula-section-area">{area}</span>
         <span data-testid="formula-section-date">{date}</span>
         {keys.map((k) => (
@@ -81,7 +87,7 @@ vi.mock('../FormulaVariableCatalog', () => ({
 // The real Carbon RadioButtonGroup doesn't fire onChange in jsdom because
 // the native radio click→change chain is not fully simulated.
 vi.mock('@carbon/react', async (importOriginal) => {
-  const actual: Record<string, unknown> = await importOriginal('@carbon/react');
+  const actual: Record<string, unknown> = await importOriginal();
   const { default: React } = await import('react');
   const { Children, isValidElement } = React;
   return {
@@ -146,6 +152,7 @@ describe('FormulaConfigurationCreateForm', () => {
     mocks.current.isFetched = true;
     mocks.current.error = null;
     mocks.variables.data = { flat: {}, catalog: [] };
+    mocks.variablesParams = null;
     mocks.formulaSectionOnChange = null;
     mocks.radioGroupOnChange = null;
   });
@@ -190,6 +197,19 @@ describe('FormulaConfigurationCreateForm', () => {
     };
     render(<FormulaConfigurationCreateForm />);
     expect(screen.getByTestId('formula-variable-catalog')).toBeTruthy();
+  });
+
+  it('requests variables with the configured district code', () => {
+    render(<FormulaConfigurationCreateForm />);
+
+    expect(mocks.variablesParams?.districtCode).toBe('DKM');
+  });
+
+  it('wraps the variable catalog in the catalog-trigger column', () => {
+    const { container } = render(<FormulaConfigurationCreateForm />);
+
+    // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
+    expect(container.querySelector('.formula-variable-catalog-trigger')).toBeTruthy();
   });
 
   // ─── Error Handling ────────────────────────────────────────────────────────
@@ -476,6 +496,44 @@ describe('FormulaConfigurationCreateForm', () => {
     expect(screen.getByRole('button', { name: 'Review formulas' })).toBeTruthy();
   });
 
+  it('blocks review and explains why when the start date is invalid', () => {
+    render(<FormulaConfigurationCreateForm />);
+    const datePicker = screen.getByTestId('start-date-picker');
+
+    // A past date is rejected by the handler, which clears the form value.
+    act(() => {
+      fireEvent.change(datePicker, { target: { value: '2020/01/01' } });
+    });
+
+    expect(screen.getByRole('button', { name: 'Review formulas' })).toHaveProperty(
+      'disabled',
+      true,
+    );
+    expect(
+      screen.getByText('Select a start date of tomorrow or later before reviewing.'),
+    ).toBeTruthy();
+  });
+
+  it('re-enables review once a future start date is entered', () => {
+    render(<FormulaConfigurationCreateForm />);
+    const datePicker = screen.getByTestId('start-date-picker');
+
+    act(() => {
+      fireEvent.change(datePicker, { target: { value: '2020/01/01' } });
+    });
+    act(() => {
+      fireEvent.change(datePicker, { target: { value: '2099/12/31' } });
+    });
+
+    expect(screen.getByRole('button', { name: 'Review formulas' })).toHaveProperty(
+      'disabled',
+      false,
+    );
+    expect(
+      screen.queryByText('Select a start date of tomorrow or later before reviewing.'),
+    ).toBeNull();
+  });
+
   // ─── Validation Messages ───────────────────────────────────────────────────
 
   it('does not show empty or error warnings when all formulas are valid', () => {
@@ -588,5 +646,134 @@ describe('FormulaConfigurationCreateForm', () => {
 
     const createBtn = screen.getByRole('button', { name: 'Create formula set' });
     expect(createBtn).toHaveProperty('disabled', false);
+  });
+
+  // ─── Submit error messages (RFC 7807 problem detail) ───────────────────────
+
+  describe('submit error messages (RFC 7807 problem detail)', () => {
+    const makeApiError = (body: unknown): ApiError =>
+      new ApiError(
+        {
+          method: 'POST',
+          url: '/formula-sets',
+          mediaType: 'application/json',
+          headers: {},
+          query: undefined,
+          body: undefined,
+        },
+        {
+          url: '/formula-sets',
+          ok: false,
+          status: 422,
+          statusText: 'Unprocessable Content',
+          body,
+        },
+        'Unprocessable Content',
+      );
+
+    /** Enter review mode, submit, and land on the submit-error path. */
+    const submitFailingForm = (body: unknown): void => {
+      mocks.mutateAsync.mockRejectedValue(makeApiError(body));
+      render(<FormulaConfigurationCreateForm />);
+      submitForm(); // enter review
+      submitForm(); // submit → rejects → setSubmitError
+    };
+
+    it('prefers the problem-detail detail with itemized validation messages', async () => {
+      submitFailingForm({
+        detail: 'One or more formulas failed validation',
+        validationErrors: [
+          {
+            formulaKey: 'da.mature.avoidableGradeY',
+            errors: [{ code: 'UNKNOWN_VARIABLE', message: 'Unknown variable: da.mature' }],
+          },
+          {
+            formulaKey: 'da.mature.quality',
+            errors: [{ code: 'SYNTAX_ERROR', message: 'Syntax error' }],
+          },
+        ],
+      });
+      await act(async () => {});
+
+      expect(screen.getByRole('alert').textContent).toContain(
+        'One or more formulas failed validation: Unknown variable: da.mature; Syntax error',
+      );
+    });
+
+    it('uses detail alone when there are no itemized messages', async () => {
+      submitFailingForm({ detail: 'Formula keys must be unique.' });
+      await act(async () => {});
+
+      expect(screen.getByRole('alert').textContent).toContain('Formula keys must be unique.');
+      expect(screen.getByRole('alert').textContent).not.toContain(': ');
+    });
+
+    it('joins itemized messages when detail is missing', async () => {
+      submitFailingForm({
+        validationErrors: [
+          {
+            formulaKey: 'da.a',
+            errors: [{ code: 'UNKNOWN_VARIABLE', message: 'Unknown variable: da.a' }],
+          },
+          {
+            formulaKey: 'da.b',
+            errors: [{ code: 'SYNTAX_ERROR', message: 'Syntax error' }],
+          },
+        ],
+      });
+      await act(async () => {});
+
+      expect(screen.getByRole('alert').textContent).toContain(
+        'Unknown variable: da.a; Syntax error',
+      );
+    });
+
+    it('skips malformed validationErrors entries and keeps the good message', async () => {
+      submitFailingForm({
+        detail: 'Validation failed',
+        validationErrors: [
+          null,
+          'not-an-entry',
+          { errors: 'not-an-array' },
+          {
+            errors: [
+              null,
+              'not-an-error',
+              { message: '' },
+              { message: '   ' },
+              { message: 42 },
+              { message: 'Good message' },
+            ],
+          },
+        ],
+      });
+      await act(async () => {});
+
+      const alert = screen.getByRole('alert').textContent ?? '';
+      expect(alert).toContain('Validation failed: Good message');
+      expect(alert).not.toContain('not-an-entry');
+      expect(alert).not.toContain('not-an-error');
+    });
+
+    it('uses the ApiError message when the body has no usable problem detail', async () => {
+      submitFailingForm({ detail: 123, validationErrors: 'not-an-array' });
+      await act(async () => {});
+
+      expect(screen.getByRole('alert').textContent).toContain('Unprocessable Content');
+    });
+
+    it('uses the ApiError message when the body is null', async () => {
+      submitFailingForm(null);
+      await act(async () => {});
+
+      expect(screen.getByRole('alert').textContent).toContain('Unprocessable Content');
+    });
+
+    it('uses the ApiError message when the body is not an object', async () => {
+      submitFailingForm('plain string body');
+      await act(async () => {});
+
+      expect(screen.getByRole('alert').textContent).toContain('Unprocessable Content');
+    });
   });
 });

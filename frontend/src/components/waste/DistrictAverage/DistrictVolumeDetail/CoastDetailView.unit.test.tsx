@@ -317,14 +317,15 @@ describe('CoastDetailView', () => {
   });
 
   describe('edge cases', () => {
-    it('should handle null endDate — not render DateTag for end date', async () => {
+    it('should handle null endDate — render Open-ended instead of a DateTag', async () => {
       const data = createCoastData({ endDate: null });
       render(<CoastDetailView districtOptions={SAMPLE_DISTRICT_OPTIONS} data={data} />);
       await waitFor(() => {});
 
-      // End date field children should be empty (no DateTag when endDate is null)
+      // No DateTag when endDate is null — the header renders the Open-ended fallback
       const endDateField = screen.getByTestId('readonly-input-end-date');
-      expect(within(endDateField).getByTestId('readonly-children').textContent).toBe('');
+      expect(within(endDateField).getByTestId('readonly-children').textContent).toBe('Open-ended');
+      expect(within(endDateField).queryByTestId('date-tag')).toBeNull();
     });
 
     it('should render nothing for empty sections', async () => {

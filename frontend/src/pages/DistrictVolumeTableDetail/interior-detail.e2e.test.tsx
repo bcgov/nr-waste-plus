@@ -55,6 +55,16 @@ test.describe('District Volume Table Detail — Interior View', () => {
     await expect(page.getByText('June 01, 2026')).toBeVisible();
   });
 
+  test('should display Open-ended when the end date is null @idir-only', async ({ page }) => {
+    test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
+
+    await page.goto('/configuration/district-volume-tables/1');
+    await page.waitForLoadState('domcontentloaded');
+
+    // The interior stub endDate is null → header renders the Open-ended fallback
+    await expect(page.getByText('Open-ended').first()).toBeVisible();
+  });
+
   // ─── D4: Zone Tabs ──────────────────────────────────────────────────────
 
   test('should render zone tabs for Interior @idir-only', async ({ page }) => {

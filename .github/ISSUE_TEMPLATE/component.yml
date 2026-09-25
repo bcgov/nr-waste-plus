@@ -1,0 +1,165 @@
+name: Frontend Task
+description: >-
+  Use this template for creating or modifying a frontend component, hook, or
+  page. Structured so an AI coding agent (or a human) has everything needed
+  to implement, test, and open a PR without further clarification.
+title: "[FE]: "
+labels: [frontend, agent-task]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Frontend task — React / TypeScript / Vite / TanStack.**
+        Fill every required section precisely. If a section doesn't apply, write "N/A" rather than leaving it blank.
+
+  - type: input
+    id: task_summary
+    attributes:
+      label: Task Summary
+      description: One sentence describing what is being built or changed.
+      placeholder: "Add a LifecycleEventPanel component to submit and track RU/block transitions."
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why this is needed. Link the parent epic/story, Figma frame(s), and the backend endpoint(s) it consumes.
+      placeholder: |
+        Parent epic: #625. Figma: 79:7691.
+        Consumes backend endpoint from #1236 (see API contract there).
+    validations:
+      required: true
+
+  - type: textarea
+    id: component_spec
+    attributes:
+      label: Component / Hook Spec
+      description: >-
+        Name and file location in the monorepo, the public props/return-type
+        interface (as TypeScript), and any variants/states it must support.
+      render: typescript
+      placeholder: |
+        // src/features/reporting-units/components/LifecycleEventPanel.tsx
+        interface LifecycleEventPanelProps {
+          reportingUnitId: number;
+          blockId?: number;
+          onTransitioned?: (newState: string) => void;
+        }
+
+        // src/features/reporting-units/hooks/useLifecycleEvent.ts
+        function useLifecycleEvent(ruId: number, blockId?: number): {
+          submit: (event: string, comment?: string) => Promise<void>;
+          status: "idle" | "pending" | "confirmed" | "error";
+        }
+    validations:
+      required: true
+
+  - type: textarea
+    id: state_data_requirements
+    attributes:
+      label: State & Data Requirements
+      description: >-
+        TanStack Query keys, queries/mutations needed, cache invalidation
+        rules, polling behavior (e.g. for 202/pending operations), and any
+        client-only state.
+      placeholder: |
+        - useMutation: POST lifecycle-events. On 202, start polling GET /api/operations/{id} via useQuery with refetchInterval until status is terminal.
+        - Invalidate query key ["reporting-unit", ruId] on success.
+        - Query keys: ["lifecycle-event", ruId, blockId], ["operation", operationId].
+    validations:
+      required: true
+
+  - type: textarea
+    id: ui_behavior
+    attributes:
+      label: UI Behavior
+      description: >-
+        Interactions, and explicit loading/empty/error states. Include
+        accessibility requirements (keyboard nav, ARIA roles/labels) and
+        responsive/breakpoint behavior.
+      placeholder: |
+        - Disable submit button while status === "pending".
+        - Show inline error message on 409/412 with a retry action.
+        - Panel is a labelled region (aria-label="Lifecycle actions"); status changes are announced via aria-live="polite".
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation_steps
+    attributes:
+      label: Implementation Steps
+      description: >-
+        Concrete steps referencing actual files/modules to add or modify.
+        Name existing shared components/hooks/utilities to reuse so the
+        agent doesn't reinvent them.
+      placeholder: |
+        1. Add `useLifecycleEvent` hook wrapping the mutation + polling query.
+        2. Add `LifecycleEventPanel` component, reusing shared `<StatusBadge>` and `<ErrorInline>`.
+        3. Wire the panel into `ReportingUnitDetailPage`.
+        4. Add API client function(s) in `api/lifecycleEvents.ts`.
+    validations:
+      required: true
+
+  - type: textarea
+    id: testing_plan
+    attributes:
+      label: Testing Plan
+      description: One row per scenario, noting whether it's a unit test (Vitest/RTL) or a Playwright e2e scenario.
+      render: markdown
+      placeholder: |
+        | Scenario | Method |
+        | --- | --- |
+        | Renders current state and available transitions | RTL unit test |
+        | Submits and reflects 202 pending → confirmed | RTL unit test with mocked query client |
+        | Full submit flow against real backend | Playwright e2e |
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies / Cross-links
+      description: Issues or PRs this depends on, blocks, or is blocked by (e.g. the backend endpoint issue).
+      placeholder: "Depends on #1236 (backend). Blocks #1245."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: affected_environments
+    attributes:
+      label: Affected Environments
+      options:
+        - label: Development
+        - label: Test
+        - label: Production
+
+  - type: checkboxes
+    id: definition_of_done
+    attributes:
+      label: Definition of Done
+      options:
+        - label: Unit tests pass and cover the scenarios above
+        - label: Playwright scenario added/updated, if applicable
+        - label: Keyboard navigation and screen-reader labels verified
+        - label: Verified at mobile and desktop breakpoints
+        - label: No new lint/type errors
+        - label: Peer reviewed
+
+  - type: input
+    id: estimate
+    attributes:
+      label: Estimate (optional)
+      placeholder: "low 6h / expected 10h / high 16h — Fibonacci 2, confidence high"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Anything else — related tickets, screenshots, design notes.
+      render: shell
+    validations:
+      required: false

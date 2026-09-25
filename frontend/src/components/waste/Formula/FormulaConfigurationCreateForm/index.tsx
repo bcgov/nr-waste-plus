@@ -7,7 +7,7 @@ import {
   DatePicker,
   DatePickerInput,
 } from '@carbon/react';
-import { useForm } from '@tanstack/react-form';
+import { useForm, useSelector } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
 import { type FC, useEffect, useMemo, useRef, useState } from 'react';
@@ -15,7 +15,6 @@ import { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import FormulaVariableCatalog from '../FormulaVariableCatalog';
 
 import { carryForwardFormulaValues } from './carryForward.ts';
-import FormulaSection from './FormulaSection.tsx';
 
 import type {
   FormulaItemDto,
@@ -23,17 +22,72 @@ import type {
   FormulaValidationError,
 } from '@/services/formulaConfiguration.types.ts';
 
+import FormulaSection from '@/components/waste/Formula/FormulaSection';
 import { ApiError } from '@/config/api/types.ts';
 import {
   useCreateFormulaSet,
   useCurrentOpenEndedFormulaSet,
   useFormulaVariables,
 } from '@/hooks/useFormulaConfiguration';
-import { FORMULA_KEYS, getFormulaKeysForArea } from '@/services/formulaConfiguration.constants.ts';
+import {
+  FORMULA_KEYS,
+  FORMULA_VARIABLES_DISTRICT_CODE,
+  getFormulaKeysForArea,
+} from '@/services/formulaConfiguration.constants.ts';
 
 import './index.scss';
 
 const DATE_FORMAT = 'yyyy-MM-dd' as const;
+
+/** RFC 7807 problem-detail body shape returned by the API for validation failures. */
+interface ProblemDetailBody {
+  readonly detail?: unknown;
+  readonly validationErrors?: unknown;
+}
+
+/** Collects the `message` strings from a `validationErrors` problem-detail extension. */
+const readValidationMessages = (validationErrors: unknown): string[] => {
+  if (!Array.isArray(validationErrors)) {
+    return [];
+  }
+  return validationErrors.flatMap((entry) => {
+    if (entry === null || typeof entry !== 'object') {
+      return [];
+    }
+    const errors = (entry as { readonly errors?: unknown }).errors;
+    if (!Array.isArray(errors)) {
+      return [];
+    }
+    return errors.flatMap((error) => {
+      if (error === null || typeof error !== 'object') {
+        return [];
+      }
+      const message = (error as { readonly message?: unknown }).message;
+      return typeof message === 'string' && message.trim().length > 0 ? [message] : [];
+    });
+  });
+};
+
+/**
+ * Converts a create-set failure into a user-facing message.
+ *
+ * API failures surface as {@link ApiError}; for a 422 the response body carries the
+ * RFC 7807 `detail` (and optionally itemized `validationErrors`), which reads far better
+ * in the alert than the raw status/JSON dump in `ApiError.message`.
+ */
+const toSubmitErrorMessage = (error: unknown): string => {
+  if (error instanceof ApiError && typeof error.body === 'object' && error.body !== null) {
+    const { detail, validationErrors } = error.body as ProblemDetailBody;
+    const messages = readValidationMessages(validationErrors);
+    if (typeof detail === 'string' && detail.trim().length > 0) {
+      return messages.length > 0 ? `${detail}: ${messages.join('; ')}` : detail;
+    }
+    if (messages.length > 0) {
+      return messages.join('; ');
+    }
+  }
+  return error instanceof Error ? error.message : 'Formula set creation failed.';
+};
 
 const FormulaConfigurationCreateForm: FC = () => {
   const navigate = useNavigate();
@@ -85,17 +139,23 @@ const FormulaConfigurationCreateForm: FC = () => {
         const created = await createMutation.mutateAsync(dto);
         navigate({ to: `/configuration/formulas/${created.id}` });
       } catch (error) {
-        setSubmitError(error instanceof Error ? error.message : 'Formula set creation failed.');
+        setSubmitError(toSubmitErrorMessage(error));
       }
     },
   });
 
+  // `useForm` does not subscribe the owning component to the form store, so a
+  // value written by setFieldValue only becomes visible on the next unrelated
+  // re-render — which left canReview trusting a stale start date. Subscribe to
+  // the date (a string, so updates are reference-stable) instead of the whole
+  // values object, which would re-enter validation on every formula edit.
+  const startDate = useSelector(form.store, (state) => state.values.startDate);
   const area = form.state.values.area;
-  const startDate = form.state.values.startDate;
   const formulasState = form.state.values.formulas;
   const { data: variablesData } = useFormulaVariables({
     date: startDate,
     area,
+    districtCode: FORMULA_VARIABLES_DISTRICT_CODE,
   });
   const {
     data: currentFormulaSet,
@@ -155,8 +215,24 @@ const FormulaConfigurationCreateForm: FC = () => {
     return allKeys.some((k) => (formulasState[k.key]?.validationErrors?.length ?? 0) > 0);
   }, [allKeys, formulasState]);
 
+  // The form is submitted with noValidate (Carbon's DatePickerInput pattern blocks
+  // native submission), so the date must be gated here: both date handlers clear
+  // invalid/past input to '', but nothing previously stopped review + submit with
+  // an empty start date.
+  const hasValidStartDate = useMemo(() => {
+    if (!startDate.trim()) {
+      return false;
+    }
+    const parsed = DateTime.fromFormat(startDate, DATE_FORMAT);
+    return parsed.isValid && parsed >= DateTime.now().plus({ days: 1 }).startOf('day');
+  }, [startDate]);
+
   const canReview =
-    !isEmpty && !hasErrors && isCurrentFormulaSetFetched && !createMutation.isPending;
+    !isEmpty &&
+    !hasErrors &&
+    hasValidStartDate &&
+    isCurrentFormulaSetFetched &&
+    !createMutation.isPending;
 
   const handleBack = () => {
     if (isReviewing) {
@@ -230,6 +306,7 @@ const FormulaConfigurationCreateForm: FC = () => {
   };
 
   const handleDateInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // eslint-disable-next-line no-console
     const value = event.currentTarget.value.trim().replaceAll('/', '-');
     const parsed = DateTime.fromFormat(value, DATE_FORMAT);
     if (!value || !parsed.isValid || parsed < DateTime.now().plus({ days: 1 }).startOf('day')) {
@@ -254,6 +331,11 @@ const FormulaConfigurationCreateForm: FC = () => {
     >
       <form
         data-testid="formula-config-create-form"
+        // Carbon's DatePickerInput injects a default pattern (d/M/yyyy) that the
+        // yyyy/mm/dd value format can never satisfy, which would silently block
+        // native form submission. Validation is handled by the form state below
+        // (isEmpty/hasErrors plus handleDateInputChange), so skip native checks.
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
           handleReview();
@@ -273,7 +355,7 @@ const FormulaConfigurationCreateForm: FC = () => {
                   <RadioButton labelText="Coast" value="COASTAL" id="area-coast" />
                 </RadioButtonGroup>
               </Column>
-              <Column max={16} xlg={16} lg={16} md={8} sm={4}>
+              <Column max={4} xlg={4} lg={4} md={4} sm={4}>
                 <DatePicker
                   datePickerType="single"
                   dateFormat="Y/m/d"
@@ -291,14 +373,21 @@ const FormulaConfigurationCreateForm: FC = () => {
                   />
                 </DatePicker>
               </Column>
+              <Column
+                max={12}
+                xlg={12}
+                lg={12}
+                md={4}
+                sm={4}
+                className="formula-variable-catalog-trigger"
+              >
+                {variablesData?.catalog && (
+                  <FormulaVariableCatalog catalog={variablesData.catalog} />
+                )}
+              </Column>
             </>
           )}
           <Column max={16} xlg={16} lg={16} md={8} sm={4}>
-            {variablesData?.catalog && (
-              <div className="formula-variable-catalog-trigger">
-                <FormulaVariableCatalog catalog={variablesData.catalog} />
-              </div>
-            )}
             {isCurrentFormulaSetError &&
               (currentFormulaSetError instanceof ApiError
                 ? currentFormulaSetError.status !== 404
@@ -327,10 +416,13 @@ const FormulaConfigurationCreateForm: FC = () => {
                 />
               ))}
             </div>
-            {!isReviewing && (isEmpty || hasErrors) && (
+            {!isReviewing && (isEmpty || hasErrors || !hasValidStartDate) && (
               <div className="formula-config-create-validation">
                 {isEmpty && <p>All formulas must be filled before reviewing.</p>}
                 {hasErrors && <p>Fix formula validation errors before reviewing.</p>}
+                {!hasValidStartDate && (
+                  <p>Select a start date of tomorrow or later before reviewing.</p>
+                )}
               </div>
             )}
           </Column>

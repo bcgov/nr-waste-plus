@@ -1,0 +1,158 @@
+name: Refactor Task
+description: >-
+  Use this template for a refactor with no intended behavior change.
+  Structured so an AI coding agent (or a human) knows exactly what to touch,
+  what NOT to touch, and how to prove nothing broke.
+title: "[REFACTOR]: "
+labels: [refactor, agent-task]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Refactor task.**
+        The scope boundary section is the most important part of this template — an agent left to infer scope will tend to "improve" adjacent code. Be explicit about what is and isn't included.
+
+  - type: input
+    id: task_summary
+    attributes:
+      label: Task Summary
+      description: One sentence describing what is being refactored.
+      placeholder: "Extract lifecycle transition validation out of the controller into a dedicated PolicyService."
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why this refactor is needed now — the pain it causes today (duplication, untestability, coupling, performance, etc). Link related issues/incidents if any.
+      placeholder: |
+        Transition validation logic is duplicated across 3 controllers and untestable in isolation. This blocks adding a 4th endpoint (#1245) without copy-pasting the same rules again.
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_state
+    attributes:
+      label: Current State
+      description: Describe the existing implementation — files/classes/modules involved and how they currently work.
+      placeholder: |
+        `ReportingUnitController.submitEvent()` and `BlockController.submitEvent()` each inline the same 40-line validation switch statement directly in the handler method.
+    validations:
+      required: true
+
+  - type: textarea
+    id: target_state
+    attributes:
+      label: Target State
+      description: Describe the desired end state — the new structure, responsibilities, and how it should be used going forward.
+      placeholder: |
+        A single `TransitionPolicyService.validate(currentState, event)` used by both controllers, unit-testable in isolation, returning a typed result rather than throwing generic exceptions.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope_boundaries
+    attributes:
+      label: Scope Boundaries
+      description: >-
+        Explicitly list what IS in scope and what is OUT of scope. Call out
+        adjacent code that looks related but must not be touched.
+      placeholder: |
+        IN SCOPE:
+        - Extracting validation logic from the two controllers listed above into TransitionPolicyService.
+        - Updating existing tests to target the new service.
+
+        OUT OF SCOPE:
+        - Do not change the API contract, request/response shapes, or status codes.
+        - Do not touch the outbox/event publishing code in the same methods.
+        - Do not rename existing DTOs.
+    validations:
+      required: true
+
+  - type: textarea
+    id: risk_areas
+    attributes:
+      label: Risk Areas
+      description: What could break, subtle behavior that must be preserved, backward-compatibility or migration concerns.
+      placeholder: |
+        - Validation order matters: state check must run before permission check (existing tests rely on this for correct error codes).
+        - Both controllers currently swallow one specific exception type — must preserve that behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation_steps
+    attributes:
+      label: Implementation Steps
+      description: A staged plan an agent can follow incrementally, ideally with a working state after each step.
+      placeholder: |
+        1. Create `TransitionPolicyService` with the extracted logic, unit tested against the existing validation matrix.
+        2. Update `ReportingUnitController` to delegate to it; run full test suite.
+        3. Update `BlockController` to delegate to it; run full test suite.
+        4. Remove the now-dead inline validation code.
+    validations:
+      required: true
+
+  - type: textarea
+    id: testing_plan
+    attributes:
+      label: Testing Plan
+      description: >-
+        How to prove behavior is unchanged. Prefer characterization tests
+        before the refactor starts, plus the specific before/after checks.
+      render: markdown
+      placeholder: |
+        | Check | Method |
+        | --- | --- |
+        | Existing controller tests still pass unmodified | Full suite run before and after |
+        | New PolicyService unit tests cover every transition in the matrix | Unit tests |
+        | No change in HTTP status/response body for any existing scenario | Re-run existing integration tests |
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies / Cross-links
+      description: Issues or PRs this depends on, blocks, or is blocked by.
+      placeholder: "Blocks #1245, which needs the extracted service."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: affected_environments
+    attributes:
+      label: Affected Environments
+      options:
+        - label: Development
+        - label: Test
+        - label: Production
+
+  - type: checkboxes
+    id: definition_of_done
+    attributes:
+      label: Definition of Done
+      options:
+        - label: No functional/behavioral change — all pre-existing tests pass unmodified
+        - label: New tests added for the extracted/restructured code
+        - label: Scope boundaries respected — no unrelated files changed
+        - label: No new lint/Sonar issues
+        - label: Peer reviewed with explicit focus on scope creep
+
+  - type: input
+    id: estimate
+    attributes:
+      label: Estimate (optional)
+      placeholder: "low 4h / expected 8h / high 12h — Fibonacci 2, confidence high"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Anything else — related tickets, prior discussion, links.
+      render: shell
+    validations:
+      required: false

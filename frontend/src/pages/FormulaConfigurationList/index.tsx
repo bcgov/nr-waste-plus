@@ -15,7 +15,7 @@ const FormulaConfigurationListPage: FC = () => {
 
   return (
     <>
-      <Column lg={16} md={8} sm={4} className="configuration-column__header">
+      <Column lg={16} md={8} sm={4} className="formula-set-list-column__header">
         <PageTitle
           title="Formula Configuration"
           subtitle="Manage formula sets with date-effective lifecycle for district average calculations"

@@ -24,6 +24,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Unit Test | Formula Set Service")
@@ -149,8 +151,12 @@ class FormulaSetServiceTest {
     when(validationService.validateForSave(any())).thenReturn(List.of(
         new FormulaValidationError(FormulaValidationError.Code.SYNTAX_ERROR, "bad", 0, 1)));
 
-    assertThatThrownBy(() -> service.update(3L, request("da.anything", "bad")))
-        .hasMessageContaining("bad");
+    FormulaSetRequest badRequest = request("da.anything", "bad");
+    assertThatThrownBy(() -> service.update(3L, badRequest))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("bad")
+        .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+        .isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
     verify(rowRepository, org.mockito.Mockito.never()).saveAll(any());
   }
 
@@ -196,7 +202,10 @@ class FormulaSetServiceTest {
         List.of(new FormulaItemDto("da.x", "1", 0)));
 
     assertThatThrownBy(() -> service.create(pastRequest))
-        .hasMessageContaining("future");
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("future")
+        .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+        .isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
   }
 
   @DisplayName("Create Rejects Duplicate Open-Ended Future Set")
@@ -435,7 +444,10 @@ class FormulaSetServiceTest {
             new FormulaItemDto("da.x", "2", 1)));
 
     assertThatThrownBy(() -> service.create(duplicateKeys))
-        .hasMessageContaining("unique");
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("unique")
+        .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+        .isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
   }
 
   private FormulaSetRequest request(String key, String expression) {

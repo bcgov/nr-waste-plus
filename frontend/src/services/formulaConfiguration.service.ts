@@ -163,7 +163,7 @@ export class FormulaConfigurationService extends HttpClient {
   /**
    * Returns available formula variables with nested, flat, and schema representations.
    *
-   * @param params Date and area parameters for variable resolution.
+   * @param params Date, area, and district parameters for variable resolution.
    * @param meta Optional request metadata.
    * @returns Three complementary variable representations.
    */
@@ -174,7 +174,7 @@ export class FormulaConfigurationService extends HttpClient {
     return this.doRequest<FormulaVariablesResponse>(this.config, {
       method: 'GET',
       url: '/api/configuration/formulas/variables',
-      query: { date: params.date, area: params.area },
+      query: { date: params.date, area: params.area, districtCode: params.districtCode },
       ...(meta === undefined ? {} : { meta }),
     });
   }

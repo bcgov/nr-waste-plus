@@ -1,0 +1,74 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/theme' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+
+// BEM roots: `.formula-section` (this component) and `.formula-row` (FormulaRow)
+.formula-section {
+  border: 1px solid $border-subtle-01;
+  border-radius: 8px;
+  margin-bottom: $spacing-05;
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-04 $spacing-06;
+    background: $layer-01;
+    border-bottom: 1px solid $border-subtle-01;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  &__count {
+    font-size: 0.75rem;
+    color: $text-secondary;
+  }
+}
+
+.formula-row {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: $spacing-05;
+  padding: $spacing-05 $spacing-06;
+  border-bottom: 1px solid $border-subtle-01;
+
+  @include breakpoint-down(md) {
+    grid-template-columns: 1fr;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: $layer-01;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: $text-primary;
+  }
+
+  &__expression {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__expression-empty {
+    color: $text-secondary;
+    font-style: italic;
+  }
+}

@@ -15,8 +15,6 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.transaction.TransactionSystemException;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,6 +22,11 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * Global exception handler that converts exceptions into RFC 7807 ProblemDetail responses
  * (application/problem+json).
+ *
+ * <p>Request-body validation failures ({@code MethodArgumentNotValidException}) are intentionally
+ * not handled here: {@link ValidationProblemDetailsExceptionHandler} claims them first through its
+ * {@code @Order(0)} position and answers them with HTTP 422 (Unprocessable Content), so an override
+ * on this class would be shadowed and unreachable.
  */
 @RestControllerAdvice
 @Slf4j
@@ -84,48 +87,18 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * Handles {@link MethodArgumentNotValidException} exceptions thrown when request validation
-   * fails.
-   *
-   * <p>Collects all field validation error messages from the binding result and returns them as a
-   * single {@link ProblemDetail} response with HTTP 400 (Bad Request) status.
-   *
-   * @param ex the validation exception containing binding and field errors
-   * @param request the current HTTP servlet request
-   * @return a {@link ResponseEntity} containing the validation error details
-   */
-  @ExceptionHandler
-  public ResponseEntity<ProblemDetail> handleMethodArgumentNotValid(
-      MethodArgumentNotValidException ex, HttpServletRequest request) {
-    log.warn("Validation failed: {}", ex.getMessage());
-
-    var errors =
-        ex.getBindingResult().getFieldErrors().stream()
-            .map(FieldError::getDefaultMessage)
-            .collect(Collectors.joining("; "));
-
-    ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-    problem.setTitle("Validation Failed");
-    problem.setDetail(errors.isEmpty() ? "One or more validation errors occurred." : errors);
-    problem.setInstance(URI.create(request.getRequestURI()));
-
-    return ResponseEntity.badRequest()
-        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
-        .body(problem);
-  }
-
-  /**
    * Handle {@link ConstraintViolationException} typically raised by validation on constructor or
    * method parameters (for example when using {@code @Validated} on beans).
    *
    * <p>Builds a semicolon-delimited string of constraint violations where each entry contains the
-   * property path and the violation message. Returns HTTP 400 Bad Request with an {@link
-   * ProblemDetail} (application/problem+json) containing the combined detail.
+   * property path and the violation message. Returns HTTP 422 (Unprocessable Content) with an
+   * {@link ProblemDetail} (application/problem+json) containing the combined detail, matching the
+   * contract that all validation failures surface as 422 on create/update.
    *
    * @param ex the constraint violation exception
    * @param request the current {@link HttpServletRequest} used to set the ProblemDetail instance
    *     URI
-   * @return a 400 {@link ResponseEntity} containing a {@link ProblemDetail}
+   * @return a 422 {@link ResponseEntity} containing a {@link ProblemDetail}
    */
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<ProblemDetail> handleConstraintViolation(
@@ -137,12 +110,12 @@ public class GlobalExceptionHandler {
             .map(cv -> cv.getPropertyPath() + ": " + cv.getMessage())
             .collect(Collectors.joining("; "));
 
-    ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+    ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.UNPROCESSABLE_CONTENT);
     problem.setTitle("Validation Error");
     problem.setDetail(detail.isEmpty() ? "Constraint violation" : detail);
     problem.setInstance(URI.create(request.getRequestURI()));
 
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
         .contentType(MediaType.APPLICATION_PROBLEM_JSON)
         .body(problem);
   }
