@@ -15,8 +15,6 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.transaction.TransactionSystemException;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,6 +22,11 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * Global exception handler that converts exceptions into RFC 7807 ProblemDetail responses
  * (application/problem+json).
+ *
+ * <p>Request-body validation failures ({@code MethodArgumentNotValidException}) are intentionally
+ * not handled here: {@link ValidationProblemDetailsExceptionHandler} claims them first through its
+ * {@code @Order(0)} position and answers them with HTTP 422 (Unprocessable Content), so an override
+ * on this class would be shadowed and unreachable.
  */
 @RestControllerAdvice
 @Slf4j
@@ -79,38 +82,6 @@ public class GlobalExceptionHandler {
     problem.setInstance(URI.create(request.getRequestURI()));
 
     return ResponseEntity.status(HttpStatus.CONFLICT)
-        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
-        .body(problem);
-  }
-
-  /**
-   * Handles {@link MethodArgumentNotValidException} exceptions thrown when request validation
-   * fails.
-   *
-   * <p>Collects all field validation error messages from the binding result and returns them as a
-   * single {@link ProblemDetail} response with HTTP 422 (Unprocessable Content) status, matching
-   * the contract that all validation failures surface as 422 on create/update.
-   *
-   * @param ex the validation exception containing binding and field errors
-   * @param request the current HTTP servlet request
-   * @return a {@link ResponseEntity} containing the validation error details
-   */
-  @ExceptionHandler
-  public ResponseEntity<ProblemDetail> handleMethodArgumentNotValid(
-      MethodArgumentNotValidException ex, HttpServletRequest request) {
-    log.warn("Validation failed: {}", ex.getMessage());
-
-    var errors =
-        ex.getBindingResult().getFieldErrors().stream()
-            .map(FieldError::getDefaultMessage)
-            .collect(Collectors.joining("; "));
-
-    ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.UNPROCESSABLE_CONTENT);
-    problem.setTitle("Validation Failed");
-    problem.setDetail(errors.isEmpty() ? "One or more validation errors occurred." : errors);
-    problem.setInstance(URI.create(request.getRequestURI()));
-
-    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
         .contentType(MediaType.APPLICATION_PROBLEM_JSON)
         .body(problem);
   }

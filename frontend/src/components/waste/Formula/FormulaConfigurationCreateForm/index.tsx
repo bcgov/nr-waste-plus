@@ -39,6 +39,56 @@ import './index.scss';
 
 const DATE_FORMAT = 'yyyy-MM-dd' as const;
 
+/** RFC 7807 problem-detail body shape returned by the API for validation failures. */
+interface ProblemDetailBody {
+  readonly detail?: unknown;
+  readonly validationErrors?: unknown;
+}
+
+/** Collects the `message` strings from a `validationErrors` problem-detail extension. */
+const readValidationMessages = (validationErrors: unknown): string[] => {
+  if (!Array.isArray(validationErrors)) {
+    return [];
+  }
+  return validationErrors.flatMap((entry) => {
+    if (entry === null || typeof entry !== 'object') {
+      return [];
+    }
+    const errors = (entry as { readonly errors?: unknown }).errors;
+    if (!Array.isArray(errors)) {
+      return [];
+    }
+    return errors.flatMap((error) => {
+      if (error === null || typeof error !== 'object') {
+        return [];
+      }
+      const message = (error as { readonly message?: unknown }).message;
+      return typeof message === 'string' && message.trim().length > 0 ? [message] : [];
+    });
+  });
+};
+
+/**
+ * Converts a create-set failure into a user-facing message.
+ *
+ * API failures surface as {@link ApiError}; for a 422 the response body carries the
+ * RFC 7807 `detail` (and optionally itemized `validationErrors`), which reads far better
+ * in the alert than the raw status/JSON dump in `ApiError.message`.
+ */
+const toSubmitErrorMessage = (error: unknown): string => {
+  if (error instanceof ApiError && typeof error.body === 'object' && error.body !== null) {
+    const { detail, validationErrors } = error.body as ProblemDetailBody;
+    const messages = readValidationMessages(validationErrors);
+    if (typeof detail === 'string' && detail.trim().length > 0) {
+      return messages.length > 0 ? `${detail}: ${messages.join('; ')}` : detail;
+    }
+    if (messages.length > 0) {
+      return messages.join('; ');
+    }
+  }
+  return error instanceof Error ? error.message : 'Formula set creation failed.';
+};
+
 const FormulaConfigurationCreateForm: FC = () => {
   const navigate = useNavigate();
   const createMutation = useCreateFormulaSet();
@@ -89,7 +139,7 @@ const FormulaConfigurationCreateForm: FC = () => {
         const created = await createMutation.mutateAsync(dto);
         navigate({ to: `/configuration/formulas/${created.id}` });
       } catch (error) {
-        setSubmitError(error instanceof Error ? error.message : 'Formula set creation failed.');
+        setSubmitError(toSubmitErrorMessage(error));
       }
     },
   });

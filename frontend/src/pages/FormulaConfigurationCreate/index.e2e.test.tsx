@@ -203,8 +203,12 @@ test.describe('Formula Configuration Create Page', () => {
 
       const alert = page.locator('p.formula-config-create-validation');
       await expect(alert).toBeVisible();
-      await expect(alert).toContainText('422');
-      await expect(alert).toContainText('UNKNOWN_VARIABLE');
+      // The alert renders the RFC 7807 problem-detail message, not the raw
+      // status/JSON dump that ApiError.message carries for unmapped codes.
+      await expect(alert).toContainText('One or more formulas failed validation');
+      await expect(alert).toContainText('Unknown variable: da.mature.avoidableGradeY');
+      await expect(alert).not.toContainText('Generic Error');
+      await expect(alert).not.toContainText('UNKNOWN_VARIABLE');
       await expect(page).toHaveURL(/\/configuration\/formulas\/new/);
     });
   });

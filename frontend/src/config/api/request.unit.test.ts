@@ -422,6 +422,18 @@ describe('catchErrorCodes', () => {
     const result = { status: 418, ok: false, url: '', statusText: '', body: '' };
     expect(() => requestModule.catchErrorCodes(validOptions, result)).toThrow(ApiError);
   });
+  it('maps 422 to a known message instead of a generic status dump', () => {
+    const result = {
+      status: 422,
+      ok: false,
+      url: '',
+      statusText: 'Unprocessable Content',
+      body: { status: 422, detail: 'Start date must be in the future.' },
+    };
+    expect(() => requestModule.catchErrorCodes(validOptions, result)).toThrow(
+      'Unprocessable Content',
+    );
+  });
   it('does not throw if ok and no error', () => {
     const result = { status: 200, ok: true, url: '', statusText: '', body: '' };
     expect(() => requestModule.catchErrorCodes(validOptions, result)).not.toThrow();
