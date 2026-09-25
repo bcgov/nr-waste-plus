@@ -27,12 +27,17 @@ const FormulaRow: FC<FormulaRowProps> = ({ area, date, keyDef, formula, isEditab
   // Optional on FormulaItemDto — the backend contract omits it.
   const validationErrors = formula?.validationErrors ?? [];
 
-  // Fetch variables from backend API
-  const { data: variablesData } = useFormulaVariables({
-    date,
-    area,
-    districtCode: FORMULA_VARIABLES_DISTRICT_CODE,
-  });
+  // Fetch variables from backend API — only editable rows render the editor
+  // that consumes them, so read-only rows and review mode skip the request
+  // (it 404s for historical date ranges).
+  const { data: variablesData } = useFormulaVariables(
+    {
+      date,
+      area,
+      districtCode: FORMULA_VARIABLES_DISTRICT_CODE,
+    },
+    isEditable,
+  );
 
   // Use the flat map from the API response as dynamicParams
   const dynamicParams = useMemo(() => {

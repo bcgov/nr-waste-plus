@@ -285,13 +285,21 @@ describe('FormulaRow', () => {
   // ─── useFormulaVariables ────────────────────────────────────────────────────
 
   describe('useFormulaVariables integration', () => {
-    it('passes date, area, and district code to useFormulaVariables', () => {
-      render(<FormulaRow {...defaultProps} />);
-      expect(mocks.useFormulaVariables).toHaveBeenCalledWith({
-        date: '2025-01-15',
-        area: 'INTERIOR',
-        districtCode: 'DKM',
-      });
+    it('passes date, area, district code and the editable flag to useFormulaVariables', () => {
+      render(<FormulaRow {...defaultProps} isEditable={true} />);
+      expect(mocks.useFormulaVariables).toHaveBeenCalledWith(
+        {
+          date: '2025-01-15',
+          area: 'INTERIOR',
+          districtCode: 'DKM',
+        },
+        true,
+      );
+    });
+
+    it('skips the variables query when the row is read-only', () => {
+      render(<FormulaRow {...defaultProps} isEditable={false} />);
+      expect(mocks.useFormulaVariables).toHaveBeenCalledWith(expect.any(Object), false);
     });
 
     it('passes flat variables as dynamicParams to FormulaInput', () => {
