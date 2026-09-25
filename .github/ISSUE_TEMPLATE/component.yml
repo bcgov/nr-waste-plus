@@ -106,14 +106,14 @@ body:
     id: testing_plan
     attributes:
       label: Testing Plan
-      description: One row per scenario, noting whether it's a unit test (Vitest/RTL) or an e2e/Cypress scenario.
+      description: One row per scenario, noting whether it's a unit test (Vitest/RTL) or a Playwright e2e scenario.
       render: markdown
       placeholder: |
         | Scenario | Method |
         | --- | --- |
         | Renders current state and available transitions | RTL unit test |
         | Submits and reflects 202 pending → confirmed | RTL unit test with mocked query client |
-        | Full submit flow against real backend | Cypress e2e |
+        | Full submit flow against real backend | Playwright e2e |
     validations:
       required: true
 
@@ -141,7 +141,7 @@ body:
       label: Definition of Done
       options:
         - label: Unit tests pass and cover the scenarios above
-        - label: Cypress scenario added/updated, if applicable
+        - label: Playwright scenario added/updated, if applicable
         - label: Keyboard navigation and screen-reader labels verified
         - label: Verified at mobile and desktop breakpoints
         - label: No new lint/type errors
