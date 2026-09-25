@@ -11,12 +11,10 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.CopyObjectResponse;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.MetadataDirective;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
@@ -38,16 +36,14 @@ public class S3ObjectStorageProvider implements ObjectStorageProvider {
   @Override
   public PresignedUpload presignPut(
       String objectKey, String contentType, Duration signatureDuration) {
-    PutObjectRequest putObjectRequest =
-        PutObjectRequest.builder()
-            .bucket(properties.getBucket())
-            .key(objectKey)
-            .contentType(contentType)
-            .build();
     PutObjectPresignRequest presignRequest =
         PutObjectPresignRequest.builder()
             .signatureDuration(signatureDuration)
-            .putObjectRequest(putObjectRequest)
+            .putObjectRequest(
+                b ->
+                    b.bucket(properties.getBucket())
+                        .key(objectKey)
+                        .contentType(contentType))
             .build();
 
     PresignedPutObjectRequest presigned = presigner.presignPutObject(presignRequest);
@@ -56,15 +52,10 @@ public class S3ObjectStorageProvider implements ObjectStorageProvider {
 
   @Override
   public PresignedDownload presignGet(String objectKey, Duration signatureDuration) {
-    GetObjectRequest getObjectRequest =
-        GetObjectRequest.builder()
-            .bucket(properties.getBucket())
-            .key(objectKey)
-            .build();
     GetObjectPresignRequest presignRequest =
         GetObjectPresignRequest.builder()
             .signatureDuration(signatureDuration)
-            .getObjectRequest(getObjectRequest)
+            .getObjectRequest(b -> b.bucket(properties.getBucket()).key(objectKey))
             .build();
 
     PresignedGetObjectRequest presigned = presigner.presignGetObject(presignRequest);
