@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.CopyObjectResponse;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
@@ -106,27 +107,42 @@ public class S3ObjectStorageProvider implements ObjectStorageProvider {
   }
 
   @Override
-  public void copyObject(String sourceKey, String destinationKey) {
-    CopyObjectRequest request =
+  public String copyObject(
+      String sourceKey, String destinationKey, String expectedSourceChecksum) {
+    CopyObjectRequest.Builder builder =
         CopyObjectRequest.builder()
             .sourceBucket(properties.getBucket())
             .sourceKey(sourceKey)
             .destinationBucket(properties.getBucket())
             .destinationKey(destinationKey)
-            .metadataDirective(MetadataDirective.COPY)
-            .build();
+            .metadataDirective(MetadataDirective.COPY);
+
+    if (expectedSourceChecksum != null && !expectedSourceChecksum.isBlank()) {
+      builder.copySourceIfMatch(formatEtag(expectedSourceChecksum));
+    }
+
+    CopyObjectRequest request = builder.build();
     try {
-      s3Client.copyObject(request);
+      CopyObjectResponse response = s3Client.copyObject(request);
+      String resultChecksum = null;
+      if (response.copyObjectResult() != null) {
+        resultChecksum = normalizeChecksum(response.copyObjectResult().eTag());
+      }
       log.debug(
-          "Copied object from key {} to {} in bucket {}",
+          "Copied object from key {} to {} in bucket {} (result checksum: {})",
           sourceKey,
           destinationKey,
-          properties.getBucket());
+          properties.getBucket(),
+          resultChecksum);
+      return resultChecksum;
     } catch (NoSuchKeyException e) {
       throw new ObjectStorageObjectNotFoundException(sourceKey, e);
     } catch (S3Exception e) {
       if (e.statusCode() == HttpURLConnection.HTTP_NOT_FOUND) {
         throw new ObjectStorageObjectNotFoundException(sourceKey, e);
+      }
+      if (e.statusCode() == HttpURLConnection.HTTP_PRECON_FAILED) {
+        throw new ObjectStoragePreconditionFailedException(sourceKey, e);
       }
       log.error(
           "Failed to copy object from key {} to {} in bucket {}",
@@ -136,6 +152,17 @@ public class S3ObjectStorageProvider implements ObjectStorageProvider {
           e);
       throw e;
     }
+  }
+
+  private String formatEtag(String checksum) {
+    if (checksum == null || checksum.isBlank()) {
+      return null;
+    }
+    String trimmed = checksum.trim();
+    if (trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
+      return trimmed;
+    }
+    return "\"" + trimmed + "\"";
   }
 
   private String normalizeChecksum(String etag) {

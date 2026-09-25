@@ -20,6 +20,7 @@ import ca.bc.gov.nrs.hrs.exception.InvalidDocumentTypeException;
 import ca.bc.gov.nrs.hrs.exception.InvalidFileNameException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageObjectNotFoundException;
+import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStoragePreconditionFailedException;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageProvider;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.StoredObjectSummary;
 import ca.bc.gov.nrs.hrs.repository.block.BlockAttachmentRepository;
@@ -253,12 +254,18 @@ public class AttachmentService {
     }
 
     // 3. Promote object from staging key to immutable permanent key
-    objectStorage.copyObject(stagingKey, permanentKey);
+    String confirmedChecksum;
+    try {
+      confirmedChecksum = objectStorage.copyObject(stagingKey, permanentKey, stored.checksum());
+    } catch (ObjectStoragePreconditionFailedException e) {
+      throw AttachmentConflictException.sourceModified(attachmentId);
+    }
 
     // 4. Update and persist entity
     attachment.setStatus(AttachmentStatus.FINALIZED.name());
     attachment.setObjectKey(permanentKey);
-    attachment.setChecksum(stored.checksum());
+    attachment.setChecksum(
+        StringUtils.isNotBlank(confirmedChecksum) ? confirmedChecksum : stored.checksum());
     attachmentRepository.saveAndFlush(attachment);
 
     // 5. Delete staging object post-commit (leaves staging intact if DB fails)

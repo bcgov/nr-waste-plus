@@ -120,5 +120,18 @@ public class AttachmentConflictException extends ResponseStatusException {
     return new AttachmentConflictException(
         String.format("Attachment %d malware scan failed", attachmentId));
   }
+
+  /**
+   * Creates an AttachmentConflictException when the uploaded staging object was modified
+   * concurrently during finalization.
+   *
+   * @param attachmentId the attachment identifier
+   * @return a new AttachmentConflictException
+   */
+  public static AttachmentConflictException sourceModified(Long attachmentId) {
+    return new AttachmentConflictException(
+        String.format(
+            "Uploaded object for attachment %d was modified during finalization", attachmentId));
+  }
 }
 

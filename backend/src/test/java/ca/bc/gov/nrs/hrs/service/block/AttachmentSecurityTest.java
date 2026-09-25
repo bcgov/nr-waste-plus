@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.service.block;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
@@ -15,7 +16,9 @@ import ca.bc.gov.nrs.hrs.dto.block.AttachmentStatus;
 import ca.bc.gov.nrs.hrs.entity.block.BlockAttachmentEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.exception.AttachmentConflictException;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageObjectNotFoundException;
+import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStoragePreconditionFailedException;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageProvider;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.PresignedDownload;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.PresignedUpload;
@@ -175,12 +178,44 @@ class AttachmentSecurityTest {
     assertThat(storageProvider.getObjectChecksum(permanentKey)).isEqualTo(benignChecksum);
   }
 
+  @Test
+  @DisplayName("Overwriting staging key during finalization is rejected by conditional copy")
+  void stagingOverwriteDuringFinalize_isRejectedDueToPreconditionFailure() {
+    AttachmentIntentRequest intentRequest =
+        new AttachmentIntentRequest(
+            AttachmentDocumentType.FINAL_MAP.name(), "contract.pdf", "application/pdf", 16L);
+    AttachmentIntentResponse intentResponse =
+        attachmentService.createAttempt(null, REPORTING_UNIT_ID, BLOCK_ID, intentRequest);
+
+    String stagingKey = intentResponse.objectKey();
+    byte[] benignContent = "BENIGN_CONTENT_A".getBytes();
+    String benignChecksum = "checksum-aaa";
+    storageProvider.putObjectDirect(stagingKey, benignContent, benignChecksum);
+
+    // Simulate attacker overwriting staging key right after HEAD but before copyObject
+    storageProvider.simulateConcurrentOverwriteOnNextCopy(
+        stagingKey, "MALICIOUS_OVERWRITE".getBytes(), "checksum-malicious-overwrite");
+
+    assertThatThrownBy(
+            () ->
+                attachmentService.finalizeAttachment(
+                    null, REPORTING_UNIT_ID, BLOCK_ID, ATTACHMENT_ID))
+        .isInstanceOf(AttachmentConflictException.class);
+
+    // Verify permanent key was never created
+    String permanentKey = "hrs/block/2/attachment/501/contract.pdf";
+    assertThat(storageProvider.hasObject(permanentKey)).isFalse();
+  }
+
   /** In-memory stateful test double for {@link ObjectStorageProvider}. */
   private static class InMemoryObjectStorageProvider implements ObjectStorageProvider {
 
     private record StoredData(byte[] bytes, String checksum) {}
 
     private final Map<String, StoredData> storage = new ConcurrentHashMap<>();
+    private String overwriteKey;
+    private byte[] overwriteBytes;
+    private String overwriteChecksum;
 
     void putObjectDirect(String key, byte[] bytes, String checksum) {
       storage.put(key, new StoredData(bytes, checksum));
@@ -193,6 +228,12 @@ class AttachmentSecurityTest {
     String getObjectChecksum(String key) {
       StoredData data = storage.get(key);
       return data != null ? data.checksum() : null;
+    }
+
+    void simulateConcurrentOverwriteOnNextCopy(String key, byte[] bytes, String checksum) {
+      this.overwriteKey = key;
+      this.overwriteBytes = bytes;
+      this.overwriteChecksum = checksum;
     }
 
     @Override
@@ -225,13 +266,23 @@ class AttachmentSecurityTest {
     }
 
     @Override
-    public void copyObject(String sourceKey, String destinationKey) {
+    public String copyObject(
+        String sourceKey, String destinationKey, String expectedSourceChecksum) {
+      if (sourceKey.equals(overwriteKey)) {
+        storage.put(overwriteKey, new StoredData(overwriteBytes, overwriteChecksum));
+        overwriteKey = null;
+      }
       StoredData data = storage.get(sourceKey);
       if (data == null) {
         throw new ObjectStorageObjectNotFoundException(
             sourceKey, new RuntimeException("Not found"));
       }
+      if (expectedSourceChecksum != null && !expectedSourceChecksum.equals(data.checksum())) {
+        throw new ObjectStoragePreconditionFailedException(
+            sourceKey, new RuntimeException("Precondition failed"));
+      }
       storage.put(destinationKey, data);
+      return data.checksum();
     }
   }
 }

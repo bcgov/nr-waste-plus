@@ -29,6 +29,7 @@ import ca.bc.gov.nrs.hrs.exception.InvalidFileNameException;
 import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwtSecurityContextFactory;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageObjectNotFoundException;
+import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStoragePreconditionFailedException;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.ObjectStorageProvider;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.PresignedDownload;
 import ca.bc.gov.nrs.hrs.provider.objectstorage.PresignedUpload;
@@ -409,9 +410,41 @@ class AttachmentServiceTest {
     verify(objectStorage)
         .copyObject(
             "hrs/staging/block/2/attachment/501/report_FINAL-MAP.pdf",
-            "hrs/block/2/attachment/501/report_FINAL-MAP.pdf");
+            "hrs/block/2/attachment/501/report_FINAL-MAP.pdf",
+            "abc123");
     verify(objectStorage).deleteObject("hrs/staging/block/2/attachment/501/report_FINAL-MAP.pdf");
     verify(scanService).scan(ATTACHMENT_ID);
+  }
+
+  @Test
+  @DisplayName("Rejects finalize when source object modified during copy (precondition failed)")
+  void finalizeAttachment_whenSourceModifiedDuringCopy_throwsConflict() {
+    given(attachmentRepository.findByIdAndDeletedFalse(ATTACHMENT_ID))
+        .willReturn(Optional.of(persistedAttachment()));
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(BLOCK_ID, RU_ID))
+        .willReturn(Optional.of(block()));
+    given(objectStorage.headObject("hrs/staging/block/2/attachment/501/report_FINAL-MAP.pdf"))
+        .willReturn(new StoredObjectSummary(1024L, "abc123"));
+    given(
+            objectStorage.copyObject(
+                "hrs/staging/block/2/attachment/501/report_FINAL-MAP.pdf",
+                "hrs/block/2/attachment/501/report_FINAL-MAP.pdf",
+                "abc123"))
+        .willThrow(
+            new ObjectStoragePreconditionFailedException(
+                "hrs/staging/block/2/attachment/501/report_FINAL-MAP.pdf",
+                new RuntimeException("Precondition failed")));
+
+    assertThatThrownBy(() -> service.finalizeAttachment(null, RU_ID, BLOCK_ID, ATTACHMENT_ID))
+        .isInstanceOf(AttachmentConflictException.class)
+        .satisfies(
+            e ->
+                assertThat(((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.CONFLICT));
+
+    verify(attachmentRepository, never()).saveAndFlush(any());
+    verify(objectStorage, never()).deleteObject(any());
+    verify(scanService, never()).scan(any());
   }
 
   @Test
@@ -437,7 +470,7 @@ class AttachmentServiceTest {
     assertThat(response.objectKey())
         .isEqualTo("hrs/block/2/attachment/501/report_FINAL-MAP.pdf");
     assertThat(response.checksum()).isEqualTo("abc123");
-    verify(objectStorage, never()).copyObject(any(), any());
+    verify(objectStorage, never()).copyObject(any(), any(), any());
     verify(objectStorage, never()).deleteObject(any());
   }
 

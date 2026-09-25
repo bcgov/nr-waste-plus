@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.CopyObjectResponse;
+import software.amazon.awssdk.services.s3.model.CopyObjectResult;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
@@ -185,6 +186,43 @@ class S3ObjectStorageProviderTest {
     assertThat(captor.getValue().destinationKey())
         .isEqualTo("hrs/block/1/attachment/501/map.pdf");
     assertThat(captor.getValue().metadataDirective()).isEqualTo(MetadataDirective.COPY);
+    assertThat(captor.getValue().copySourceIfMatch()).isNull();
+  }
+
+  @Test
+  @DisplayName("Copy object sets copySourceIfMatch and returns normalized checksum")
+  void copyObject_withExpectedChecksum_setsCopySourceIfMatch() {
+    CopyObjectResult result =
+        CopyObjectResult.builder().eTag("\"promoted-etag\"").build();
+    given(s3Client.copyObject(any(CopyObjectRequest.class)))
+        .willReturn(CopyObjectResponse.builder().copyObjectResult(result).build());
+
+    String checksum =
+        provider.copyObject(
+            "hrs/staging/block/1/attachment/501/map.pdf",
+            "hrs/block/1/attachment/501/map.pdf",
+            "expected-checksum");
+
+    ArgumentCaptor<CopyObjectRequest> captor =
+        ArgumentCaptor.forClass(CopyObjectRequest.class);
+    verify(s3Client).copyObject(captor.capture());
+    assertThat(captor.getValue().copySourceIfMatch()).isEqualTo("\"expected-checksum\"");
+    assertThat(checksum).isEqualTo("promoted-etag");
+  }
+
+  @Test
+  @DisplayName("Copy object maps HTTP 412 to ObjectStoragePreconditionFailedException")
+  void copyObject_when412_throwsPreconditionFailed() {
+    given(s3Client.copyObject(any(CopyObjectRequest.class)))
+        .willThrow(S3Exception.builder().statusCode(412).message("Precondition Failed").build());
+
+    assertThatThrownBy(
+            () ->
+                provider.copyObject(
+                    "hrs/staging/block/1/attachment/501/map.pdf",
+                    "hrs/block/1/attachment/501/map.pdf",
+                    "expected-checksum"))
+        .isInstanceOf(ObjectStoragePreconditionFailedException.class);
   }
 
   @Test
