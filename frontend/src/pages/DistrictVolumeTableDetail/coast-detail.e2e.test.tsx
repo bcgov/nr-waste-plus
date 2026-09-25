@@ -47,6 +47,16 @@ test.describe('District Volume Table Detail — Coast View', () => {
     await expect(page.getByText('Heli multiplier')).toBeVisible();
   });
 
+  test('should display Open-ended when the end date is null @idir-only', async ({ page }) => {
+    test.skip(!canOverrideClaims(), 'Per-test role override requires VITE_MOCK_AUTH=true.');
+
+    await page.goto('/configuration/district-volume-tables/4');
+    await page.waitForLoadState('domcontentloaded');
+
+    // The coast stub endDate is null → header renders the Open-ended fallback
+    await expect(page.getByText('Open-ended').first()).toBeVisible();
+  });
+
   // ─── E3: Heli Multiplier Value ──────────────────────────────────────────
 
   test('should display Heli multiplier value @idir-only', async ({ page }) => {

@@ -280,6 +280,23 @@ describe('FormulaConfigurationListTable', () => {
       screen.getByText('Coastal');
     });
 
+    it('wraps the table in the formula-set-list-column content class', async () => {
+      mockUseFormulaSetList.mockReturnValue({
+        data: mockData,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch: vi.fn(),
+      } as any);
+      const { container } = await renderWithAppAsync(<FormulaConfigurationListTable />);
+
+      await screen.findByTestId('formula-configuration-list');
+      // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
+      expect(container.querySelector('.formula-set-list-column__content')).toBeTruthy();
+      // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
+      expect(container.querySelector('.configuration-column__content')).toBeNull();
+    });
+
     it('displays all column headers', async () => {
       mockUseFormulaSetList.mockReturnValue({
         data: mockData,

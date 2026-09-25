@@ -52,4 +52,15 @@ describe('carryForwardFormulaValues', () => {
 
     expect(result.matching.expression).toBe('edited');
   });
+
+  it('always yields an explicit validationErrors array when the DTO omits it', () => {
+    const result = carryForwardFormulaValues(
+      { matching: { expression: '1', validationErrors: [] } },
+      ['matching'],
+      [{ formulaKey: 'matching', expression: 'previous', sortOrder: 0 }],
+      new Set(),
+    );
+
+    expect(result.matching.validationErrors).toEqual([]);
+  });
 });

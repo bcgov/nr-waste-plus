@@ -34,10 +34,7 @@ vi.mock('@/components/Form/FormulaInput', () => ({
       <div data-testid="formula-input" aria-label={ariaLabel}>
         <span data-testid="formula-input-value">{initialFormula}</span>
         {/* Buttons to simulate user interactions for testing callbacks */}
-        <button
-          data-testid="trigger-change"
-          onClick={() => onChange?.('new_value')}
-        >
+        <button data-testid="trigger-change" onClick={() => onChange?.('new_value')}>
           simulate change
         </button>
         <button
@@ -46,10 +43,7 @@ vi.mock('@/components/Form/FormulaInput', () => ({
         >
           simulate error
         </button>
-        <button
-          data-testid="trigger-clear-error"
-          onClick={() => onValidationError?.(null)}
-        >
+        <button data-testid="trigger-clear-error" onClick={() => onValidationError?.(null)}>
           simulate clear error
         </button>
       </div>
@@ -58,13 +52,7 @@ vi.mock('@/components/Form/FormulaInput', () => ({
 }));
 
 vi.mock('@/components/Form/ReadonlyInput', () => ({
-  default: ({
-    label,
-    children,
-  }: {
-    label: string;
-    children?: React.ReactNode;
-  }) => (
+  default: ({ label, children }: { label: string; children?: React.ReactNode }) => (
     <div data-testid="readonly-input">
       <span data-testid="readonly-label">{label}</span>
       <span data-testid="readonly-value">{children}</span>
@@ -81,7 +69,6 @@ vi.mock('@/hooks/useFormulaConfiguration', () => ({
 const keyDef: FormulaKeyDefinition = {
   key: 'WASTE_VOLUME_INTERIOR',
   label: 'Waste Volume - Interior',
-  group: 'Waste Volume Formulas',
 };
 
 const formulaDto: FormulaItemDto = {
@@ -148,6 +135,17 @@ describe('FormulaRow', () => {
       expect(screen.getByRole('alert')).toBeTruthy();
       expect(screen.getByText('SYNTAX_ERROR')).toBeTruthy();
       expect(screen.getByText(/Unexpected token/)).toBeTruthy();
+    });
+
+    it('renders a validation error when offsets are omitted', () => {
+      const errorWithoutOffsets: FormulaItemDto = {
+        ...formulaDto,
+        validationErrors: [{ code: 'UNKNOWN_VARIABLE', message: 'Variable is not defined' }],
+      };
+      render(<FormulaRow {...defaultProps} formula={errorWithoutOffsets} />);
+      const alert = screen.getByRole('alert');
+      expect(alert.textContent).toContain('UNKNOWN_VARIABLE');
+      expect(alert.textContent).toContain('Variable is not defined');
     });
 
     it('does not render FormulaInput in readonly mode', () => {
@@ -249,14 +247,101 @@ describe('FormulaRow', () => {
         { code: 'FORMULA_ERROR', message: 'Syntax error' },
       ]);
     });
+
+    it('clears the previous validation errors when the expression is edited', async () => {
+      const onChange = vi.fn();
+      const user = userEvent.setup();
+      render(<FormulaRow {...editableProps} formula={formulaWithErrors} onChange={onChange} />);
+
+      await user.click(screen.getByTestId('trigger-change'));
+
+      expect(onChange).toHaveBeenCalledWith('new_value', []);
+    });
+
+    it('re-syncs expressionRef when the expression prop changes', async () => {
+      const onChange = vi.fn();
+      const user = userEvent.setup();
+      const { rerender } = render(<FormulaRow {...editableProps} onChange={onChange} />);
+
+      // Carry-forward / area switch replaces the expression from the parent.
+      rerender(
+        <FormulaRow
+          {...editableProps}
+          formula={{ ...formulaDto, expression: 'carried_forward' }}
+          onChange={onChange}
+        />,
+      );
+
+      await user.click(screen.getByTestId('trigger-validation-error'));
+
+      expect(onChange).toHaveBeenLastCalledWith('carried_forward', [
+        { code: 'FORMULA_ERROR', message: 'Syntax error' },
+      ]);
+    });
+  });
+
+  // ─── Backend contract: optional fields omitted ──────────────────────────────
+
+  describe('backend contract shape', () => {
+    // The GET /api/configuration/formulas/{id} payload omits declaredVariables
+    // and validationErrors entirely.
+    const apiFormula: FormulaItemDto = {
+      formulaKey: 'WASTE_VOLUME_INTERIOR',
+      expression: 'quantity * rate',
+      sortOrder: 1,
+    };
+
+    it('readonly: renders the expression with no validation errors when fields are omitted', () => {
+      render(<FormulaRow {...defaultProps} formula={apiFormula} />);
+      expect(screen.getByTestId('readonly-value').textContent).toBe('quantity * rate');
+      expect(screen.queryByRole('alert')).toBeNull();
+    });
+
+    it('editable: renders and calls onChange with empty errors when fields are omitted', async () => {
+      const onChange = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <FormulaRow {...defaultProps} formula={apiFormula} isEditable={true} onChange={onChange} />,
+      );
+
+      await user.click(screen.getByTestId('trigger-change'));
+
+      expect(onChange).toHaveBeenCalledWith('new_value', []);
+    });
+
+    it('editable: uses the API expression for validation errors when fields are omitted', async () => {
+      const onChange = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <FormulaRow {...defaultProps} formula={apiFormula} isEditable={true} onChange={onChange} />,
+      );
+
+      await user.click(screen.getByTestId('trigger-validation-error'));
+
+      expect(onChange).toHaveBeenCalledWith('quantity * rate', [
+        { code: 'FORMULA_ERROR', message: 'Syntax error' },
+      ]);
+    });
   });
 
   // ─── useFormulaVariables ────────────────────────────────────────────────────
 
   describe('useFormulaVariables integration', () => {
-    it('passes date and area to useFormulaVariables', () => {
-      render(<FormulaRow {...defaultProps} />);
-      expect(mocks.useFormulaVariables).toHaveBeenCalledWith({ date: '2025-01-15', area: 'INTERIOR' });
+    it('passes date, area, district code and the editable flag to useFormulaVariables', () => {
+      render(<FormulaRow {...defaultProps} isEditable={true} />);
+      expect(mocks.useFormulaVariables).toHaveBeenCalledWith(
+        {
+          date: '2025-01-15',
+          area: 'INTERIOR',
+          districtCode: 'DKM',
+        },
+        true,
+      );
+    });
+
+    it('skips the variables query when the row is read-only', () => {
+      render(<FormulaRow {...defaultProps} isEditable={false} />);
+      expect(mocks.useFormulaVariables).toHaveBeenCalledWith(expect.any(Object), false);
     });
 
     it('passes flat variables as dynamicParams to FormulaInput', () => {

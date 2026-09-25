@@ -1,8 +1,13 @@
-import type { FormulaItemDto } from '@/services/formulaConfiguration.types.ts';
+import type {
+  FormulaItemDto,
+  FormulaValidationError,
+} from '@/services/formulaConfiguration.types.ts';
 
 interface FormulaDraftValue {
   expression: string;
-  validationErrors: FormulaItemDto['validationErrors'];
+  // Client-side draft state always carries an explicit array, even though the
+  // backend contract omits validationErrors (optional on FormulaItemDto).
+  validationErrors: FormulaValidationError[];
 }
 
 export function carryForwardFormulaValues(

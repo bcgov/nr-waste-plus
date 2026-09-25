@@ -18,6 +18,15 @@ export interface FormulaKeyDefinition {
 /** Formula key groups organized by category. */
 export type FormulaKeyGroup = Record<string, readonly FormulaKeyDefinition[]>;
 
+/**
+ * District code pinned for formula variable resolution.
+ *
+ * The backend variables endpoint is district-scoped while formula sets are
+ * area-scoped, so the editor always resolves variables against this reference
+ * district (parity with fix/1327-formula-configuration-test).
+ */
+export const FORMULA_VARIABLES_DISTRICT_CODE = 'DKM';
+
 /** Formula key definitions per area type. */
 export const FORMULA_KEYS: Record<'INTERIOR' | 'COASTAL', FormulaKeyGroup> = {
   INTERIOR: {

@@ -5,8 +5,8 @@ import { type FC } from 'react';
 
 import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
+import FormulaConfigurationDetail from '@/components/waste/Formula/FormulaConfigurationDetail';
 import FormulaConfigurationDetailSkeleton from '@/components/waste/Formula/FormulaConfigurationDetail/FormulaConfigurationDetailSkeleton';
-import FormulaConfigurationDetailView from '@/components/waste/Formula/FormulaConfigurationDetail/FormulaConfigurationDetailView';
 import { useFormulaSetDetail } from '@/hooks/useFormulaConfiguration';
 import { navigateInTree } from '@/routes/inTreePaths';
 
@@ -79,7 +79,7 @@ const FormulaConfigurationDetailPage: FC = () => {
       <Column lg={16} md={8} sm={4} className="formula-set-detail-column__notification">
         <PageNotification eventTarget="formula-set-detail" />
       </Column>
-      <FormulaConfigurationDetailView data={data} />
+      <FormulaConfigurationDetail data={data} />
       <Column
         lg={16}
         md={8}

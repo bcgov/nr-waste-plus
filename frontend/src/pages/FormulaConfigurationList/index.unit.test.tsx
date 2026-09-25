@@ -72,4 +72,13 @@ describe('FormulaConfigurationListPage', () => {
     expect(navigateInTree).toHaveBeenCalledOnce();
     expect(navigateInTree).toHaveBeenCalledWith(mockNavigate, '/configuration/formulas/new');
   });
+
+  it('wraps the page content in the formula-set-list-column header class', () => {
+    const { container } = render(<FormulaConfigurationListPage />);
+
+    // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
+    expect(container.querySelector('.formula-set-list-column__header')).toBeTruthy();
+    // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
+    expect(container.querySelector('.configuration-column__header')).toBeNull();
+  });
 });

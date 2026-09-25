@@ -1,12 +1,16 @@
-import { type FC, useMemo, useRef } from 'react';
+import { type FC, useEffect, useMemo, useRef } from 'react';
 
 import type { FormulaError } from '@/components/Form/FormulaInput/types.ts';
 import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants.ts';
-import type { FormulaItemDto, FormulaValidationError } from '@/services/formulaConfiguration.types.ts';
+import type {
+  FormulaItemDto,
+  FormulaValidationError,
+} from '@/services/formulaConfiguration.types.ts';
 
 import FormulaInput from '@/components/Form/FormulaInput';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
 import { useFormulaVariables } from '@/hooks/useFormulaConfiguration';
+import { FORMULA_VARIABLES_DISTRICT_CODE } from '@/services/formulaConfiguration.constants.ts';
 
 interface FormulaRowProps {
   area: 'INTERIOR' | 'COASTAL';
@@ -20,9 +24,27 @@ interface FormulaRowProps {
 const FormulaRow: FC<FormulaRowProps> = ({ area, date, keyDef, formula, isEditable, onChange }) => {
   const expression = formula?.expression ?? '';
   const expressionRef = useRef(expression);
+  // Optional on FormulaItemDto — the backend contract omits it.
+  const validationErrors = formula?.validationErrors ?? [];
 
-  // Fetch variables from backend API
-  const { data: variablesData } = useFormulaVariables({ date, area });
+  // The parent replaces the expression when carry-forward or an area switch runs;
+  // without this the ref keeps the previous value and onValidationError would push
+  // it back over the parent state.
+  useEffect(() => {
+    expressionRef.current = expression;
+  }, [expression]);
+
+  // Fetch variables from backend API — only editable rows render the editor
+  // that consumes them, so read-only rows and review mode skip the request
+  // (it 404s for historical date ranges).
+  const { data: variablesData } = useFormulaVariables(
+    {
+      date,
+      area,
+      districtCode: FORMULA_VARIABLES_DISTRICT_CODE,
+    },
+    isEditable,
+  );
 
   // Use the flat map from the API response as dynamicParams
   const dynamicParams = useMemo(() => {
@@ -39,7 +61,7 @@ const FormulaRow: FC<FormulaRowProps> = ({ area, date, keyDef, formula, isEditab
           <ReadonlyInput label="Expression">
             {expression || <span className="formula-row__expression-empty">Not configured</span>}
           </ReadonlyInput>
-          {formula?.validationErrors.map((error) => (
+          {validationErrors.map((error) => (
             <div key={`${error.code}-${error.startOffset ?? 0}`} role="alert">
               <strong>{error.code}</strong>: {error.message}
             </div>
@@ -59,7 +81,10 @@ const FormulaRow: FC<FormulaRowProps> = ({ area, date, keyDef, formula, isEditab
           initialFormula={expression}
           onChange={(value) => {
             expressionRef.current = value;
-            onChange(value, formula?.validationErrors ?? []);
+            // Editing invalidates the previous expression's validation result —
+            // carrying it forward would keep `hasErrors` true in the parent
+            // until the next validation pass.
+            onChange(value, []);
           }}
           onValidationError={(error: FormulaError | null) =>
             onChange(

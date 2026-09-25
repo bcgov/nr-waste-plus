@@ -102,7 +102,7 @@ export function useFormulaVariables(params: FormulaVariablesParams, enabled = tr
   return useQuery({
     queryKey: formulaConfigurationKeys.variables(params),
     queryFn: () => formulaConfiguration.getVariables(params),
-    enabled: enabled && !!params.date && !!params.area,
+    enabled: enabled && !!params.date && !!params.area && !!params.districtCode,
     staleTime: 5 * 60 * 1000, // 5 minutes — variable values change with date/area
   });
 }

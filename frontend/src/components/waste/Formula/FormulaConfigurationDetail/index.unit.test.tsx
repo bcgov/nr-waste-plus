@@ -5,7 +5,7 @@ vi.mock('@/hooks/useFormulaConfiguration', () => ({
   useFormulaVariables: vi.fn(() => ({ data: undefined })),
 }));
 
-import FormulaConfigurationDetailView from './FormulaConfigurationDetailView.tsx';
+import FormulaConfigurationDetail from '.';
 
 import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
 
@@ -37,7 +37,7 @@ const fixture: FormulaSetResponse = {
 
 describe('FormulaConfigurationDetailView', () => {
   it('renders configured formulas returned by the API', () => {
-    const { container } = render(<FormulaConfigurationDetailView data={fixture} />);
+    const { container } = render(<FormulaConfigurationDetail data={fixture} />);
     expect(screen.getByText('Avoidable Sawlog Volume')).toBeTruthy();
     expect(screen.getByText('1.5')).toBeTruthy();
     expect(screen.getByText('Additional Formulas')).toBeTruthy();
@@ -48,7 +48,26 @@ describe('FormulaConfigurationDetailView', () => {
   });
 
   it('renders the formula set metadata', () => {
-    render(<FormulaConfigurationDetailView data={fixture} />);
+    render(<FormulaConfigurationDetail data={fixture} />);
     expect(screen.getByText('Open-ended')).toBeTruthy();
+  });
+
+  it('omits the Additional Formulas section when every formula is configured', () => {
+    const configuredOnly: FormulaSetResponse = {
+      ...fixture,
+      formulas: [
+        {
+          formulaKey: 'block.waste.avoidable_sawlog',
+          expression: '1.5',
+          declaredVariables: [],
+          validationErrors: [],
+          sortOrder: 1,
+        },
+      ],
+    };
+    render(<FormulaConfigurationDetail data={configuredOnly} />);
+    expect(screen.queryByText('Additional Formulas')).toBeNull();
+    expect(screen.getByText('Avoidable Sawlog Volume')).toBeTruthy();
+    expect(screen.getByText('1.5')).toBeTruthy();
   });
 });

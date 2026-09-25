@@ -280,13 +280,17 @@ describe('FormulaConfigurationService', () => {
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
-      const params: FormulaVariablesParams = { date: '2026-11-03', area: 'INTERIOR' };
+      const params: FormulaVariablesParams = {
+        date: '2026-11-03',
+        area: 'INTERIOR',
+        districtCode: 'DKM',
+      };
       const result = await service.getVariables(params);
 
       expect(mockDoRequest).toHaveBeenCalledWith(mockConfig, {
         method: 'GET',
         url: '/api/configuration/formulas/variables',
-        query: { date: '2026-11-03', area: 'INTERIOR' },
+        query: { date: '2026-11-03', area: 'INTERIOR', districtCode: 'DKM' },
       });
       expect(result).toEqual(mockResponse);
     });
