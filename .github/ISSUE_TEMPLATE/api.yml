@@ -1,0 +1,163 @@
+name: Backend API Task
+description: >-
+  Use this template to define a backend API endpoint(s) to create or modify.
+  Structured so an AI coding agent (or a human) has everything needed to
+  implement, test, and open a PR without further clarification.
+title: "[API]: "
+labels: [backend, api, agent-task]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Backend API task — Java 21 / Spring Boot.**
+        Fill every required section precisely. If a section doesn't apply, write "N/A" rather than leaving it blank — an agent should not have to guess whether something was skipped or forgotten.
+
+  - type: input
+    id: task_summary
+    attributes:
+      label: Task Summary
+      description: One sentence describing what this endpoint (or set of endpoints) does.
+      placeholder: "Expose RU/block lifecycle-event endpoints backed by status_event history."
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why this is needed. Link the parent epic/story, design docs, or prior discussion. State any domain concepts an agent unfamiliar with this module would need.
+      placeholder: |
+        Parent epic: #625
+        Related design: Figma frame 51:14067
+        Domain note: a "reporting unit" (RU) can have child "blocks"; both carry a status_event history.
+    validations:
+      required: true
+
+  - type: textarea
+    id: api_contract
+    attributes:
+      label: API Contract
+      description: >-
+        One row per endpoint. Include HTTP method, path, auth/headers required,
+        success responses, and error responses with status codes.
+      render: markdown
+      placeholder: |
+        | Method | Path | Auth | Success | Errors |
+        | --- | --- | --- | --- | --- |
+        | POST | /api/resource/{id}/action | JWT, If-Match, Idempotency-Key | 200 OK / 202 Accepted | 400, 409, 412 |
+        | GET  | /api/resource/{id} | JWT | 200 OK | 404 |
+    validations:
+      required: true
+
+  - type: textarea
+    id: request_response_examples
+    attributes:
+      label: Request / Response Examples
+      description: >-
+        Concrete JSON payloads for each endpoint's request body and every distinct
+        response shape (success and error). This is what the agent will assert
+        against in tests — be exact about field names and types.
+      render: json
+      placeholder: |
+        // Request
+        { "event": "SUBMIT", "comment": null }
+
+        // 200 response
+        { "id": 37870, "previousState": "DRAFT", "state": "SUBMITTED", "version": 15 }
+
+        // 409 response
+        { "error": "ILLEGAL_TRANSITION", "message": "..." }
+    validations:
+      required: true
+
+  - type: textarea
+    id: business_rules
+    attributes:
+      label: Business Rules
+      description: >-
+        Numbered, unambiguous invariants: validation order, transactional
+        boundaries, what must happen atomically, what must NEVER happen.
+        Agents follow this list literally, so precision here avoids rework.
+      placeholder: |
+        1. Validate X against PolicyService BEFORE any write — invalid input must produce zero side effects.
+        2. A valid request appends a history row, bumps the aggregate version, and enqueues an outbox event in the same transaction.
+        3. If the downstream system doesn't confirm within the deadline, return 202 with an operation reference — never report this to the caller as complete.
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation_steps
+    attributes:
+      label: Implementation Steps
+      description: >-
+        Concrete steps referencing actual classes/packages to add or modify.
+        Name existing services/utilities to reuse (with issue/PR references)
+        so the agent doesn't reinvent them.
+      placeholder: |
+        1. Add `ResourceController` with handler(s), delegating validation to `PolicyService` (#1231).
+        2. Add/extend `ResourceService` for the transactional write + outbox enqueue.
+        3. Reuse `ConditionalRequestSupport` (#1218) for If-Match; reuse idempotency middleware (#1234).
+        4. Add/extend request/response DTOs and MapStruct mappers as needed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: testing_plan
+    attributes:
+      label: Testing Plan
+      description: One row per test scenario, with the testing approach (unit, integration, WireMock stub, etc). Include expected inputs, outputs, and any setup/teardown steps.
+      render: markdown
+      placeholder: |
+        | Scenario | Method |
+        | --- | --- |
+        | Happy path | Integration test, in-memory DB |
+        | Illegal transition | Unit test — assert 409, zero side effects |
+        | Downstream timeout | Integration test with WireMock delayed stub |
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies / Cross-links
+      description: Issues or PRs this depends on, blocks, or is blocked by.
+      placeholder: "Depends on #1231, #1232, #1218. Blocks #1245 (frontend consumer)."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: affected_environments
+    attributes:
+      label: Affected Environments
+      options:
+        - label: Development
+        - label: Test
+        - label: Production
+
+  - type: checkboxes
+    id: definition_of_done
+    attributes:
+      label: Definition of Done
+      options:
+        - label: Unit and integration tests pass and cover the scenarios above
+        - label: OpenAPI/Swagger spec updated
+        - label: DB migration included, if schema changed
+        - label: No new Sonar issues / coverage threshold maintained
+        - label: Peer reviewed
+
+  - type: input
+    id: estimate
+    attributes:
+      label: Estimate (optional)
+      placeholder: "low 10h / expected 16h / high 26h — Fibonacci 3, confidence medium"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Anything else — related tickets, logs, screenshots, prior attempts.
+      render: shell
+    validations:
+      required: false
