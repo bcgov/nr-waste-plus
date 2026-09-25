@@ -51,4 +51,23 @@ describe('FormulaConfigurationDetailView', () => {
     render(<FormulaConfigurationDetail data={fixture} />);
     expect(screen.getByText('Open-ended')).toBeTruthy();
   });
+
+  it('omits the Additional Formulas section when every formula is configured', () => {
+    const configuredOnly: FormulaSetResponse = {
+      ...fixture,
+      formulas: [
+        {
+          formulaKey: 'block.waste.avoidable_sawlog',
+          expression: '1.5',
+          declaredVariables: [],
+          validationErrors: [],
+          sortOrder: 1,
+        },
+      ],
+    };
+    render(<FormulaConfigurationDetail data={configuredOnly} />);
+    expect(screen.queryByText('Additional Formulas')).toBeNull();
+    expect(screen.getByText('Avoidable Sawlog Volume')).toBeTruthy();
+    expect(screen.getByText('1.5')).toBeTruthy();
+  });
 });

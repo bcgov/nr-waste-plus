@@ -137,6 +137,17 @@ describe('FormulaRow', () => {
       expect(screen.getByText(/Unexpected token/)).toBeTruthy();
     });
 
+    it('renders a validation error when offsets are omitted', () => {
+      const errorWithoutOffsets: FormulaItemDto = {
+        ...formulaDto,
+        validationErrors: [{ code: 'UNKNOWN_VARIABLE', message: 'Variable is not defined' }],
+      };
+      render(<FormulaRow {...defaultProps} formula={errorWithoutOffsets} />);
+      const alert = screen.getByRole('alert');
+      expect(alert.textContent).toContain('UNKNOWN_VARIABLE');
+      expect(alert.textContent).toContain('Variable is not defined');
+    });
+
     it('does not render FormulaInput in readonly mode', () => {
       render(<FormulaRow {...defaultProps} />);
       expect(screen.queryByTestId('formula-input')).toBeNull();
