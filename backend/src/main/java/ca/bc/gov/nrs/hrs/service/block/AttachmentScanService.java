@@ -12,6 +12,8 @@ import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,12 @@ public class AttachmentScanService {
 
   private final BlockAttachmentRepository attachmentRepository;
   private final AttachmentScanner scanner;
+  private AttachmentScanService self = this;
+
+  @Autowired
+  public void setSelf(@Lazy AttachmentScanService self) {
+    this.self = self;
+  }
 
   /**
    * Triggers or evaluates malware scanning for a finalized attachment.
@@ -39,7 +47,6 @@ public class AttachmentScanService {
    *     {@code QUARANTINED}, or {@code FAILED})
    */
   @NewSpan
-  @Transactional
   public AttachmentScanStatus scan(Long attachmentId) {
     BlockAttachmentEntity attachment =
         attachmentRepository
@@ -53,7 +60,7 @@ public class AttachmentScanService {
     try {
       AttachmentScanStatus verdict = scanner.scan(attachmentId, attachment.getObjectKey());
       if (verdict != null && verdict != AttachmentScanStatus.PENDING) {
-        updateScanStatus(attachmentId, verdict);
+        self.updateScanStatus(attachmentId, verdict);
         return verdict;
       }
       return AttachmentScanStatus.PENDING;
@@ -96,7 +103,7 @@ public class AttachmentScanService {
   @NewSpan
   @Transactional
   public BlockAttachmentEntity updateScanStatus(Long attachmentId, AttachmentScanStatus newStatus) {
-    return updateScanStatus(attachmentId, null, newStatus);
+    return applyScanStatus(attachmentId, null, newStatus);
   }
 
   /**
@@ -115,6 +122,11 @@ public class AttachmentScanService {
   @NewSpan
   @Transactional
   public BlockAttachmentEntity updateScanStatus(
+      Long attachmentId, Long expectedBlockId, AttachmentScanStatus newStatus) {
+    return applyScanStatus(attachmentId, expectedBlockId, newStatus);
+  }
+
+  private BlockAttachmentEntity applyScanStatus(
       Long attachmentId, Long expectedBlockId, AttachmentScanStatus newStatus) {
     BlockAttachmentEntity attachment =
         attachmentRepository
