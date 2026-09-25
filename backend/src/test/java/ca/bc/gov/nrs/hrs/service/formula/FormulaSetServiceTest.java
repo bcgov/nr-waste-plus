@@ -151,7 +151,8 @@ class FormulaSetServiceTest {
     when(validationService.validateForSave(any())).thenReturn(List.of(
         new FormulaValidationError(FormulaValidationError.Code.SYNTAX_ERROR, "bad", 0, 1)));
 
-    assertThatThrownBy(() -> service.update(3L, request("da.anything", "bad")))
+    FormulaSetRequest badRequest = request("da.anything", "bad");
+    assertThatThrownBy(() -> service.update(3L, badRequest))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("bad")
         .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
