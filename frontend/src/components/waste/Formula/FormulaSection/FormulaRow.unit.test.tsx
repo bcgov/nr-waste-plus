@@ -236,6 +236,37 @@ describe('FormulaRow', () => {
         { code: 'FORMULA_ERROR', message: 'Syntax error' },
       ]);
     });
+
+    it('clears the previous validation errors when the expression is edited', async () => {
+      const onChange = vi.fn();
+      const user = userEvent.setup();
+      render(<FormulaRow {...editableProps} formula={formulaWithErrors} onChange={onChange} />);
+
+      await user.click(screen.getByTestId('trigger-change'));
+
+      expect(onChange).toHaveBeenCalledWith('new_value', []);
+    });
+
+    it('re-syncs expressionRef when the expression prop changes', async () => {
+      const onChange = vi.fn();
+      const user = userEvent.setup();
+      const { rerender } = render(<FormulaRow {...editableProps} onChange={onChange} />);
+
+      // Carry-forward / area switch replaces the expression from the parent.
+      rerender(
+        <FormulaRow
+          {...editableProps}
+          formula={{ ...formulaDto, expression: 'carried_forward' }}
+          onChange={onChange}
+        />,
+      );
+
+      await user.click(screen.getByTestId('trigger-validation-error'));
+
+      expect(onChange).toHaveBeenLastCalledWith('carried_forward', [
+        { code: 'FORMULA_ERROR', message: 'Syntax error' },
+      ]);
+    });
   });
 
   // ─── Backend contract: optional fields omitted ──────────────────────────────

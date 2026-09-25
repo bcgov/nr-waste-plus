@@ -496,6 +496,44 @@ describe('FormulaConfigurationCreateForm', () => {
     expect(screen.getByRole('button', { name: 'Review formulas' })).toBeTruthy();
   });
 
+  it('blocks review and explains why when the start date is invalid', () => {
+    render(<FormulaConfigurationCreateForm />);
+    const datePicker = screen.getByTestId('start-date-picker');
+
+    // A past date is rejected by the handler, which clears the form value.
+    act(() => {
+      fireEvent.change(datePicker, { target: { value: '2020/01/01' } });
+    });
+
+    expect(screen.getByRole('button', { name: 'Review formulas' })).toHaveProperty(
+      'disabled',
+      true,
+    );
+    expect(
+      screen.getByText('Select a start date of tomorrow or later before reviewing.'),
+    ).toBeTruthy();
+  });
+
+  it('re-enables review once a future start date is entered', () => {
+    render(<FormulaConfigurationCreateForm />);
+    const datePicker = screen.getByTestId('start-date-picker');
+
+    act(() => {
+      fireEvent.change(datePicker, { target: { value: '2020/01/01' } });
+    });
+    act(() => {
+      fireEvent.change(datePicker, { target: { value: '2099/12/31' } });
+    });
+
+    expect(screen.getByRole('button', { name: 'Review formulas' })).toHaveProperty(
+      'disabled',
+      false,
+    );
+    expect(
+      screen.queryByText('Select a start date of tomorrow or later before reviewing.'),
+    ).toBeNull();
+  });
+
   // ─── Validation Messages ───────────────────────────────────────────────────
 
   it('does not show empty or error warnings when all formulas are valid', () => {

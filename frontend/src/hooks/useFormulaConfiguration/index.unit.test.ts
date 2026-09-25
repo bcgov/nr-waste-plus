@@ -511,6 +511,24 @@ describe('useFormulaConfiguration hooks', () => {
       expect(callArgs.enabled).toBe(false);
     });
 
+    it('should be disabled when district code is empty', () => {
+      (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+      });
+
+      const params: FormulaVariablesParams = {
+        date: '2026-01-01',
+        area: 'INTERIOR',
+        districtCode: '',
+      };
+      renderHook(() => useFormulaVariables(params));
+
+      const callArgs = (useQuery as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      expect(callArgs.enabled).toBe(false);
+    });
+
     it('should respect explicit enabled=false', () => {
       (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
         data: undefined,

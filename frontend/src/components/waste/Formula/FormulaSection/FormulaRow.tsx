@@ -1,4 +1,4 @@
-import { type FC, useMemo, useRef } from 'react';
+import { type FC, useEffect, useMemo, useRef } from 'react';
 
 import type { FormulaError } from '@/components/Form/FormulaInput/types.ts';
 import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants.ts';
@@ -26,6 +26,13 @@ const FormulaRow: FC<FormulaRowProps> = ({ area, date, keyDef, formula, isEditab
   const expressionRef = useRef(expression);
   // Optional on FormulaItemDto — the backend contract omits it.
   const validationErrors = formula?.validationErrors ?? [];
+
+  // The parent replaces the expression when carry-forward or an area switch runs;
+  // without this the ref keeps the previous value and onValidationError would push
+  // it back over the parent state.
+  useEffect(() => {
+    expressionRef.current = expression;
+  }, [expression]);
 
   // Fetch variables from backend API — only editable rows render the editor
   // that consumes them, so read-only rows and review mode skip the request
@@ -74,7 +81,10 @@ const FormulaRow: FC<FormulaRowProps> = ({ area, date, keyDef, formula, isEditab
           initialFormula={expression}
           onChange={(value) => {
             expressionRef.current = value;
-            onChange(value, validationErrors);
+            // Editing invalidates the previous expression's validation result —
+            // carrying it forward would keep `hasErrors` true in the parent
+            // until the next validation pass.
+            onChange(value, []);
           }}
           onValidationError={(error: FormulaError | null) =>
             onChange(

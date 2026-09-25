@@ -7,7 +7,7 @@ import {
   DatePicker,
   DatePickerInput,
 } from '@carbon/react';
-import { useForm } from '@tanstack/react-form';
+import { useForm, useSelector } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
 import { type FC, useEffect, useMemo, useRef, useState } from 'react';
@@ -144,8 +144,13 @@ const FormulaConfigurationCreateForm: FC = () => {
     },
   });
 
+  // `useForm` does not subscribe the owning component to the form store, so a
+  // value written by setFieldValue only becomes visible on the next unrelated
+  // re-render — which left canReview trusting a stale start date. Subscribe to
+  // the date (a string, so updates are reference-stable) instead of the whole
+  // values object, which would re-enter validation on every formula edit.
+  const startDate = useSelector(form.store, (state) => state.values.startDate);
   const area = form.state.values.area;
-  const startDate = form.state.values.startDate;
   const formulasState = form.state.values.formulas;
   const { data: variablesData } = useFormulaVariables({
     date: startDate,
@@ -210,8 +215,24 @@ const FormulaConfigurationCreateForm: FC = () => {
     return allKeys.some((k) => (formulasState[k.key]?.validationErrors?.length ?? 0) > 0);
   }, [allKeys, formulasState]);
 
+  // The form is submitted with noValidate (Carbon's DatePickerInput pattern blocks
+  // native submission), so the date must be gated here: both date handlers clear
+  // invalid/past input to '', but nothing previously stopped review + submit with
+  // an empty start date.
+  const hasValidStartDate = useMemo(() => {
+    if (!startDate.trim()) {
+      return false;
+    }
+    const parsed = DateTime.fromFormat(startDate, DATE_FORMAT);
+    return parsed.isValid && parsed >= DateTime.now().plus({ days: 1 }).startOf('day');
+  }, [startDate]);
+
   const canReview =
-    !isEmpty && !hasErrors && isCurrentFormulaSetFetched && !createMutation.isPending;
+    !isEmpty &&
+    !hasErrors &&
+    hasValidStartDate &&
+    isCurrentFormulaSetFetched &&
+    !createMutation.isPending;
 
   const handleBack = () => {
     if (isReviewing) {
@@ -285,6 +306,7 @@ const FormulaConfigurationCreateForm: FC = () => {
   };
 
   const handleDateInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // eslint-disable-next-line no-console
     const value = event.currentTarget.value.trim().replaceAll('/', '-');
     const parsed = DateTime.fromFormat(value, DATE_FORMAT);
     if (!value || !parsed.isValid || parsed < DateTime.now().plus({ days: 1 }).startOf('day')) {
@@ -394,10 +416,13 @@ const FormulaConfigurationCreateForm: FC = () => {
                 />
               ))}
             </div>
-            {!isReviewing && (isEmpty || hasErrors) && (
+            {!isReviewing && (isEmpty || hasErrors || !hasValidStartDate) && (
               <div className="formula-config-create-validation">
                 {isEmpty && <p>All formulas must be filled before reviewing.</p>}
                 {hasErrors && <p>Fix formula validation errors before reviewing.</p>}
+                {!hasValidStartDate && (
+                  <p>Select a start date of tomorrow or later before reviewing.</p>
+                )}
               </div>
             )}
           </Column>
