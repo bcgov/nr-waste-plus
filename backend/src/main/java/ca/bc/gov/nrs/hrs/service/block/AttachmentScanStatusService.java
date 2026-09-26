@@ -1,0 +1,102 @@
+package ca.bc.gov.nrs.hrs.service.block;
+
+import ca.bc.gov.nrs.hrs.dto.block.AttachmentScanStatus;
+import ca.bc.gov.nrs.hrs.dto.block.AttachmentStatus;
+import ca.bc.gov.nrs.hrs.entity.block.BlockAttachmentEntity;
+import ca.bc.gov.nrs.hrs.exception.AttachmentConflictException;
+import ca.bc.gov.nrs.hrs.exception.AttachmentNotFoundException;
+import ca.bc.gov.nrs.hrs.repository.block.BlockAttachmentRepository;
+import io.micrometer.observation.annotation.Observed;
+import io.micrometer.tracing.annotation.NewSpan;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Service managing scan status transitions and transactional persistence for block attachments.
+ */
+@Service
+@RequiredArgsConstructor
+@Slf4j
+@Observed
+public class AttachmentScanStatusService {
+
+  private final BlockAttachmentRepository attachmentRepository;
+
+  /**
+   * Updates an attachment's scan status according to the state machine:
+   * {@code PENDING -> CLEAN | QUARANTINED | FAILED}.
+   *
+   * <p>Transitions from terminal states to different states are rejected with
+   * {@link AttachmentConflictException}. Transitions to the identical state are idempotent
+   * no-ops.
+   *
+   * @param attachmentId the attachment identifier
+   * @param newStatus the new scan status to apply
+   * @return the updated entity
+   */
+  @NewSpan
+  @Transactional
+  public BlockAttachmentEntity updateScanStatus(Long attachmentId, AttachmentScanStatus newStatus) {
+    return applyScanStatus(attachmentId, null, newStatus);
+  }
+
+  /**
+   * Updates an attachment's scan status according to the state machine:
+   * {@code PENDING -> CLEAN | QUARANTINED | FAILED}, optionally verifying the owning block.
+   *
+   * <p>Transitions from terminal states to different states are rejected with
+   * {@link AttachmentConflictException}. Transitions to the identical state are idempotent
+   * no-ops.
+   *
+   * @param attachmentId the attachment identifier
+   * @param expectedBlockId optional owning block identifier to verify
+   * @param newStatus the new scan status to apply
+   * @return the updated entity
+   */
+  @NewSpan
+  @Transactional
+  public BlockAttachmentEntity updateScanStatus(
+      Long attachmentId, Long expectedBlockId, AttachmentScanStatus newStatus) {
+    return applyScanStatus(attachmentId, expectedBlockId, newStatus);
+  }
+
+  private BlockAttachmentEntity applyScanStatus(
+      Long attachmentId, Long expectedBlockId, AttachmentScanStatus newStatus) {
+    BlockAttachmentEntity attachment =
+        attachmentRepository
+            .findByIdAndDeletedFalseForUpdate(attachmentId)
+            .orElseThrow(() -> new AttachmentNotFoundException(attachmentId));
+
+    if (expectedBlockId != null && !attachment.getBlockId().equals(expectedBlockId)) {
+      throw new AttachmentNotFoundException(attachmentId, expectedBlockId);
+    }
+
+    if (!AttachmentStatus.FINALIZED.name().equals(attachment.getStatus())) {
+      throw AttachmentConflictException.attachmentNotFinalized(attachmentId);
+    }
+
+    AttachmentScanStatus currentStatus =
+        AttachmentScanStatus.fromDb(attachment.getScanStatus());
+    if (currentStatus == newStatus) {
+      log.debug("Attachment id={} scan status already {}; no-op", attachmentId, newStatus);
+      return attachment;
+    }
+
+    if (!currentStatus.canTransitionTo(newStatus)) {
+      throw AttachmentConflictException.invalidScanStatusTransition(currentStatus, newStatus);
+    }
+
+    attachment.setScanStatus(newStatus.name());
+    BlockAttachmentEntity saved = attachmentRepository.save(attachment);
+
+    log.info(
+        "Attachment scan status transitioned: id={}, from={}, to={}",
+        attachmentId,
+        currentStatus,
+        newStatus);
+
+    return saved;
+  }
+}

@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -41,13 +40,15 @@ class AttachmentScanServiceTest {
   @Mock
   private AttachmentScanner scanner;
 
-  @InjectMocks
+  private AttachmentScanStatusService scanStatusService;
   private AttachmentScanService scanService;
 
   private BlockAttachmentEntity entity;
 
   @BeforeEach
   void setUp() {
+    scanStatusService = new AttachmentScanStatusService(attachmentRepository);
+    scanService = new AttachmentScanService(attachmentRepository, scanner, scanStatusService);
     entity = new BlockAttachmentEntity();
     entity.setId(ATTACHMENT_ID);
     entity.setBlockId(BLOCK_ID);
