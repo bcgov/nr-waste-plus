@@ -457,12 +457,12 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td>chk_block_attachment_status</td>
-                                    <td>((status)::text &#61; ANY ((ARRAY[&#39;UPLOADING&#39;::character varying, &#39;FINALIZED&#39;::character varying])::text[]))</td>
-                                </tr>
-                                <tr>
                                     <td>chk_block_attachment_document_type</td>
                                     <td>((document_type IS NULL) OR ((document_type)::text &#61; ANY ((ARRAY[&#39;FINAL_MAP&#39;::character varying, &#39;POST_HARVEST_CERTIFICATE&#39;::character varying, &#39;RATIONALE&#39;::character varying, &#39;ENDORSEMENT_LETTER&#39;::character varying, &#39;CALCULATOR_SPREADSHEET&#39;::character varying, &#39;HBS_BILLING_REPORT&#39;::character varying, &#39;REDUCTION_FACTOR_SUPPORT&#39;::character varying, &#39;OTHER&#39;::character varying])::text[])))</td>
+                                </tr>
+                                <tr>
+                                    <td>chk_block_attachment_status</td>
+                                    <td>((status)::text &#61; ANY ((ARRAY[&#39;UPLOADING&#39;::character varying, &#39;FINALIZED&#39;::character varying])::text[]))</td>
                                 </tr>
                                 </tbody>
                             </table>
