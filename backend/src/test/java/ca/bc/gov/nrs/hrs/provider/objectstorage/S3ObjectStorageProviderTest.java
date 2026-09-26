@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import ca.bc.gov.nrs.hrs.configuration.ObjectStorageProperties;
 import java.net.URI;
@@ -14,14 +15,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.CopyObjectResponse;
+import software.amazon.awssdk.services.s3.model.CopyObjectResult;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.MetadataDirective;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
@@ -61,6 +70,22 @@ class S3ObjectStorageProviderTest {
 
     assertThat(upload.uploadUrl()).isEqualTo("https://s3.example.com/upload");
     assertThat(upload.expiresAt()).isEqualTo(expectedExpiry);
+  }
+
+  @Test
+  @DisplayName("Presigns a GET URL with the requested expiry")
+  void presignGet_returnsUrlAndFutureExpiry() throws Exception {
+    Instant expectedExpiry = Instant.parse("2026-08-24T12:05:00Z");
+    PresignedGetObjectRequest presigned = mock(PresignedGetObjectRequest.class);
+    given(presigned.url()).willReturn(URI.create("https://s3.example.com/download").toURL());
+    given(presigned.expiration()).willReturn(expectedExpiry);
+    given(presigner.presignGetObject(any(GetObjectPresignRequest.class))).willReturn(presigned);
+
+    PresignedDownload download =
+        provider.presignGet("hrs/block/1/attachment/501/map.pdf", Duration.ofMinutes(5));
+
+    assertThat(download.downloadUrl()).isEqualTo("https://s3.example.com/download");
+    assertThat(download.expiresAt()).isEqualTo(expectedExpiry);
   }
 
   @Test
@@ -106,6 +131,125 @@ class S3ObjectStorageProviderTest {
         .willThrow(S3Exception.builder().statusCode(500).message("Internal").build());
 
     assertThatThrownBy(() -> provider.headObject("key"))
+        .isInstanceOf(S3Exception.class);
+  }
+
+  @Test
+  @DisplayName("Delete object sends DeleteObjectRequest with correct bucket and key")
+  void deleteObject_callsS3Client() {
+    provider.deleteObject("hrs/block/1/attachment/501/map.pdf");
+
+    ArgumentCaptor<DeleteObjectRequest> captor =
+        ArgumentCaptor.forClass(DeleteObjectRequest.class);
+    verify(s3Client).deleteObject(captor.capture());
+    assertThat(captor.getValue().bucket()).isEqualTo("nr-waste");
+    assertThat(captor.getValue().key()).isEqualTo("hrs/block/1/attachment/501/map.pdf");
+  }
+
+  @Test
+  @DisplayName("Delete object completes normally when 404 is encountered")
+  void deleteObject_when404_completesSilently() {
+    given(s3Client.deleteObject(any(DeleteObjectRequest.class)))
+        .willThrow(S3Exception.builder().statusCode(404).message("Not Found").build());
+
+    provider.deleteObject("hrs/block/1/attachment/501/missing.pdf");
+    // No exception thrown
+  }
+
+  @Test
+  @DisplayName("Delete object rethrows non-404 storage errors")
+  void deleteObject_whenOtherError_rethrows() {
+    given(s3Client.deleteObject(any(DeleteObjectRequest.class)))
+        .willThrow(S3Exception.builder().statusCode(500).message("Internal error").build());
+
+    assertThatThrownBy(() -> provider.deleteObject("key"))
+        .isInstanceOf(S3Exception.class);
+  }
+
+  @Test
+  @DisplayName("Copy object sends CopyObjectRequest with correct bucket, keys, and metadata directive")
+  void copyObject_callsS3ClientWithMetadataDirectiveCopy() {
+    given(s3Client.copyObject(any(CopyObjectRequest.class)))
+        .willReturn(CopyObjectResponse.builder().build());
+
+    provider.copyObject(
+        "hrs/staging/block/1/attachment/501/map.pdf",
+        "hrs/block/1/attachment/501/map.pdf");
+
+    ArgumentCaptor<CopyObjectRequest> captor =
+        ArgumentCaptor.forClass(CopyObjectRequest.class);
+    verify(s3Client).copyObject(captor.capture());
+    assertThat(captor.getValue().sourceBucket()).isEqualTo("nr-waste");
+    assertThat(captor.getValue().sourceKey())
+        .isEqualTo("hrs/staging/block/1/attachment/501/map.pdf");
+    assertThat(captor.getValue().destinationBucket()).isEqualTo("nr-waste");
+    assertThat(captor.getValue().destinationKey())
+        .isEqualTo("hrs/block/1/attachment/501/map.pdf");
+    assertThat(captor.getValue().metadataDirective()).isEqualTo(MetadataDirective.COPY);
+    assertThat(captor.getValue().copySourceIfMatch()).isNull();
+  }
+
+  @Test
+  @DisplayName("Copy object sets copySourceIfMatch and returns normalized checksum")
+  void copyObject_withExpectedChecksum_setsCopySourceIfMatch() {
+    CopyObjectResult result =
+        CopyObjectResult.builder().eTag("\"promoted-etag\"").build();
+    given(s3Client.copyObject(any(CopyObjectRequest.class)))
+        .willReturn(CopyObjectResponse.builder().copyObjectResult(result).build());
+
+    String checksum =
+        provider.copyObject(
+            "hrs/staging/block/1/attachment/501/map.pdf",
+            "hrs/block/1/attachment/501/map.pdf",
+            "expected-checksum");
+
+    ArgumentCaptor<CopyObjectRequest> captor =
+        ArgumentCaptor.forClass(CopyObjectRequest.class);
+    verify(s3Client).copyObject(captor.capture());
+    assertThat(captor.getValue().copySourceIfMatch()).isEqualTo("\"expected-checksum\"");
+    assertThat(checksum).isEqualTo("promoted-etag");
+  }
+
+  @Test
+  @DisplayName("Copy object maps HTTP 412 to ObjectStoragePreconditionFailedException")
+  void copyObject_when412_throwsPreconditionFailed() {
+    given(s3Client.copyObject(any(CopyObjectRequest.class)))
+        .willThrow(S3Exception.builder().statusCode(412).message("Precondition Failed").build());
+
+    assertThatThrownBy(
+            () ->
+                provider.copyObject(
+                    "hrs/staging/block/1/attachment/501/map.pdf",
+                    "hrs/block/1/attachment/501/map.pdf",
+                    "expected-checksum"))
+        .isInstanceOf(ObjectStoragePreconditionFailedException.class);
+  }
+
+  @Test
+  @DisplayName("Copy object maps a 404 to ObjectStorageObjectNotFoundException")
+  void copyObject_when404_throwsNotFound() {
+    given(s3Client.copyObject(any(CopyObjectRequest.class)))
+        .willThrow(S3Exception.builder().statusCode(404).message("Not Found").build());
+
+    assertThatThrownBy(
+            () ->
+                provider.copyObject(
+                    "hrs/staging/block/1/attachment/501/missing.pdf",
+                    "hrs/block/1/attachment/501/missing.pdf"))
+        .isInstanceOf(ObjectStorageObjectNotFoundException.class);
+  }
+
+  @Test
+  @DisplayName("Copy object rethrows non-404 storage errors")
+  void copyObject_whenOtherError_rethrows() {
+    given(s3Client.copyObject(any(CopyObjectRequest.class)))
+        .willThrow(S3Exception.builder().statusCode(500).message("Internal error").build());
+
+    assertThatThrownBy(
+            () ->
+                provider.copyObject(
+                    "hrs/staging/block/1/attachment/501/map.pdf",
+                    "hrs/block/1/attachment/501/map.pdf"))
         .isInstanceOf(S3Exception.class);
   }
 }

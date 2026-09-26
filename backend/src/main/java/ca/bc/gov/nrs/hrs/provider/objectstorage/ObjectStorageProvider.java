@@ -21,6 +21,15 @@ public interface ObjectStorageProvider {
   PresignedUpload presignPut(String objectKey, String contentType, Duration signatureDuration);
 
   /**
+   * Produces a presigned GET URL for downloading an object.
+   *
+   * @param objectKey the opaque object key
+   * @param signatureDuration how long the returned URL stays valid
+   * @return the presigned download URL and its expiry
+   */
+  PresignedDownload presignGet(String objectKey, Duration signatureDuration);
+
+  /**
    * Performs a HEAD request to retrieve the stored object's metadata.
    *
    * @param objectKey the object key to inspect
@@ -28,4 +37,38 @@ public interface ObjectStorageProvider {
    * @throws ObjectStorageObjectNotFoundException if no object exists at the key
    */
   StoredObjectSummary headObject(String objectKey);
+
+  /**
+   * Deletes the stored object at the given key if present.
+   *
+   * <p>Must be idempotent: if no object exists at the key, this method completes normally.
+   *
+   * @param objectKey the object key to delete
+   */
+  void deleteObject(String objectKey);
+
+  /**
+   * Copies an object from a source key to a destination key within the configured bucket.
+   *
+   * @param sourceKey the source object key
+   * @param destinationKey the destination object key
+   * @return the checksum of the copied destination object
+   * @throws ObjectStorageObjectNotFoundException if the source object does not exist
+   */
+  default String copyObject(String sourceKey, String destinationKey) {
+    return copyObject(sourceKey, destinationKey, null);
+  }
+
+  /**
+   * Copies an object from a source key to a destination key within the configured bucket,
+   * conditionally asserting that the source object's checksum matches the expected value.
+   *
+   * @param sourceKey the source object key
+   * @param destinationKey the destination object key
+   * @param expectedSourceChecksum optional expected checksum/ETag of the source object
+   * @return the checksum of the copied destination object
+   * @throws ObjectStorageObjectNotFoundException if the source object does not exist
+   * @throws ObjectStoragePreconditionFailedException if the source checksum does not match
+   */
+  String copyObject(String sourceKey, String destinationKey, String expectedSourceChecksum);
 }

@@ -123,8 +123,13 @@ public class FormulaSetService {
     }
     set.setDeleted(true);
     setRepository.save(set);
-    setRepository.findPredecessorForReopen(set.getArea(), set.getStartDate()).stream().findFirst()
-        .ifPresent(predecessor -> { predecessor.setEndDate(null); setRepository.save(predecessor); });
+    setRepository.findPredecessorForReopen(set.getArea(), set.getStartDate()).stream()
+        .findFirst()
+        .ifPresent(
+            predecessor -> {
+              predecessor.setEndDate(null);
+              setRepository.save(predecessor);
+            });
   }
 
   /** Reads the set effective for a submission date and selected area. */
@@ -207,20 +212,26 @@ public class FormulaSetService {
         .forEach(variable -> knownVariables.put(variable, BigDecimal.ONE)));
     List<FormulaValidationError> errors = validationService.validateForSave(
         new FormulaValidationRequest(definitions, knownVariables, FormulaParseMode.MATHEMATICAL));
-    if (!errors.isEmpty()) throw conflict(errors.toString());
+    if (!errors.isEmpty()) {
+      throw conflict(errors.toString());
+    }
   }
 
   private void validateRequest(FormulaSetRequest request) {
     Objects.requireNonNull(request, "request");
     if (request.formulas().stream().map(FormulaItemDto::formulaKey).distinct().count()
-        != request.formulas().size()) throw conflict("Formula keys must be unique.");
+        != request.formulas().size()) {
+      throw conflict("Formula keys must be unique.");
+    }
   }
 
   private FormulaSetEntity load(Long id) {
     return setRepository.findById(id)
         .filter(e -> !e.isDeleted())
         .orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Formula set not found: " + id));
+            () ->
+                new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Formula set not found: " + id));
   }
 
   private boolean semanticallyEqual(List<FormulaSetRowEntity> rows, List<FormulaItemDto> items) {
@@ -244,7 +255,10 @@ public class FormulaSetService {
         set.getEndDate(),
         set.isDeleted(),
         rows.stream()
-            .map(row -> new FormulaItemDto(row.getFormulaKey(), row.getExpression(), row.getSortOrder()))
+            .map(
+                row ->
+                    new FormulaItemDto(
+                        row.getFormulaKey(), row.getExpression(), row.getSortOrder()))
             .toList());
   }
 

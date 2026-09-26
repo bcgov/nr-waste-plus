@@ -1,7 +1,7 @@
 {
-  "name": "Create attachment intent",
+  "name": "Create attachment attempt",
   "request": {
-    "url": "/api/reporting-units/37870/12345/attachments/intent",
+    "url": "/api/reporting-units/37870/12345/attachments/attempt",
     "method": "POST"
   },
   "response": {
@@ -11,7 +11,7 @@
     },
     "jsonBody": {
       "attachmentId": 501,
-      "objectKey": "hrs/block/12345/attachment/501/final-map.pdf",
+      "objectKey": "hrs/staging/block/12345/attachment/501/final-map.pdf",
       "uploadUrl": "https://minio.local/mock-upload",
       "expiresAt": "2026-08-24T12:05:00Z"
     }
