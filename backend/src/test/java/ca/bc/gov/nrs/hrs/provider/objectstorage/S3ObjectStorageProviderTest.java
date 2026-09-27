@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.provider.objectstorage;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -152,8 +153,10 @@ class S3ObjectStorageProviderTest {
     given(s3Client.deleteObject(any(DeleteObjectRequest.class)))
         .willThrow(S3Exception.builder().statusCode(404).message("Not Found").build());
 
-    provider.deleteObject("hrs/block/1/attachment/501/missing.pdf");
-    // No exception thrown
+    assertThatNoException()
+        .isThrownBy(() -> provider.deleteObject("hrs/block/1/attachment/501/missing.pdf"));
+
+    verify(s3Client).deleteObject(any(DeleteObjectRequest.class));
   }
 
   @Test
