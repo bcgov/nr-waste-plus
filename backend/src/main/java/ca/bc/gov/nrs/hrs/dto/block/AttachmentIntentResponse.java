@@ -4,4 +4,7 @@ import java.time.Instant;
 
 /** Response returned by the attachment intent endpoint. */
 public record AttachmentIntentResponse(
-    Long attachmentId, String objectKey, String uploadUrl, Instant expiresAt) {}
+    Long attachmentId,
+    String objectKey,
+    String uploadUrl,
+    Instant expiresAt) {}
