@@ -473,6 +473,21 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
         .andExpect(status().isUnauthorized());
   }
 
+  @Test
+  @DisplayName("Current returns a set created today with a future start date")
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
+  void currentReturnsSetCreatedTodayWithFutureStartDate() throws Exception {
+    // The create form requires startDate in the future, so on creation day the new set is
+    // the only carry-forward source yet has startDate > today — it must still be found.
+    createFormulaSet();
+
+    mockMvc.perform(get("/api/configuration/formulas/current/COASTAL"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.area").value("COASTAL"))
+        .andExpect(jsonPath("$.formulas.length()").value(1))
+        .andExpect(jsonPath("$.formulas[0].formulaKey").value("da.mature.volume"));
+  }
+
   // ─── GET /variables ─────────────────────────────────────────────────
 
   @Test
