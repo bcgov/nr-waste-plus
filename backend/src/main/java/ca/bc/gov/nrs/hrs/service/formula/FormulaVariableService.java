@@ -100,8 +100,10 @@ public class FormulaVariableService {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "No district volume configuration is effective for the requested date and area."));
 
+    // Species composition is a single shared table (the area column always stores INTERIOR),
+    // so an area-scoped lookup can never match COASTAL — resolve it for every requested area.
     DistrictVolumeEntity scEntity = districtVolumeRepository
-        .findEffectiveByConfigTypeAndArea(ConfigType.SPECIES_COMPOSITION, area, date)
+        .findEffectiveByConfigTypeAndArea(ConfigType.SPECIES_COMPOSITION, Area.INTERIOR, date)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "No species composition configuration is effective for the requested date and area."));
 

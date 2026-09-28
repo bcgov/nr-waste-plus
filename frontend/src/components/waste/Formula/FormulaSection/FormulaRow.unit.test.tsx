@@ -16,8 +16,9 @@ const mocks = vi.hoisted(() => ({
   useFormulaVariables: vi.fn(),
 }));
 
-vi.mock('@/components/Form/FormulaInput', () => ({
-  default: ({
+vi.mock('@/components/Form/FormulaInput', async () => {
+  const { useEffect } = await import('react');
+  const MockFormulaInput = ({
     initialFormula,
     onChange,
     onValidationError,
@@ -30,6 +31,13 @@ vi.mock('@/components/Form/FormulaInput', () => ({
   }) => {
     mocks.formulaInputOnChange = onChange ?? null;
     mocks.formulaInputOnValidationError = onValidationError ?? null;
+    // The real component reports its evaluation result whenever the formula
+    // (or the callback identity) changes — including the parent-driven
+    // reseed after carry-forward, which lands as a child effect in the same
+    // commit as the new expression prop.
+    useEffect(() => {
+      onValidationError?.(null);
+    }, [initialFormula, onValidationError]);
     return (
       <div data-testid="formula-input" aria-label={ariaLabel}>
         <span data-testid="formula-input-value">{initialFormula}</span>
@@ -48,8 +56,9 @@ vi.mock('@/components/Form/FormulaInput', () => ({
         </button>
       </div>
     );
-  },
-}));
+  };
+  return { default: MockFormulaInput };
+});
 
 vi.mock('@/components/Form/ReadonlyInput', () => ({
   default: ({ label, children }: { label: string; children?: React.ReactNode }) => (
@@ -209,41 +218,66 @@ describe('FormulaRow', () => {
       expect(onChange).toHaveBeenCalledWith('quantity * rate', []);
     });
 
-    it('updates expressionRef when onChange fires, so validation errors use the latest expression', async () => {
+    it('uses the expression prop for validation errors once the parent applies an edit', async () => {
       const onChange = vi.fn();
       const user = userEvent.setup();
-      render(<FormulaRow {...editableProps} onChange={onChange} />);
+      const { rerender } = render(<FormulaRow {...editableProps} onChange={onChange} />);
 
-      // First change the expression
+      // The user edits; the parent round-trips the value through its store.
       await user.click(screen.getByTestId('trigger-change'));
       expect(onChange).toHaveBeenCalledWith('new_value', []);
+      rerender(
+        <FormulaRow
+          {...editableProps}
+          formula={{ ...formulaDto, expression: 'new_value' }}
+          onChange={onChange}
+        />,
+      );
 
-      // Then trigger a validation error — should use the updated expressionRef
       await user.click(screen.getByTestId('trigger-validation-error'));
-      expect(onChange).toHaveBeenCalledWith('new_value', [
+      expect(onChange).toHaveBeenLastCalledWith('new_value', [
         { code: 'FORMULA_ERROR', message: 'Syntax error' },
       ]);
     });
 
-    it('initializes expressionRef from formula.expression', async () => {
+    it('validation echoes in the same commit as a parent-driven change use the new expression', () => {
+      const onChange = vi.fn();
+      const { rerender } = render(<FormulaRow {...editableProps} onChange={onChange} />);
+
+      // Carry-forward / area switch replaces the expression from the parent.
+      // The mock's validation effect fires as a child effect in that same
+      // commit — before any parent-side mirror could sync — so a stale mirror
+      // would echo the PREVIOUS expression back over the parent state here.
+      rerender(
+        <FormulaRow
+          {...editableProps}
+          formula={{ ...formulaDto, expression: 'carried_forward' }}
+          onChange={onChange}
+        />,
+      );
+
+      expect(onChange).toHaveBeenLastCalledWith('carried_forward', []);
+    });
+
+    it('uses the initial expression for validation errors', async () => {
       const onChange = vi.fn();
       const user = userEvent.setup();
       render(<FormulaRow {...editableProps} onChange={onChange} />);
 
       // Trigger validation error immediately — should use the initial expression
       await user.click(screen.getByTestId('trigger-validation-error'));
-      expect(onChange).toHaveBeenCalledWith('quantity * rate', [
+      expect(onChange).toHaveBeenLastCalledWith('quantity * rate', [
         { code: 'FORMULA_ERROR', message: 'Syntax error' },
       ]);
     });
 
-    it('uses empty string for expressionRef when formula is undefined', async () => {
+    it('uses empty string for expression when formula is undefined', async () => {
       const onChange = vi.fn();
       const user = userEvent.setup();
       render(<FormulaRow {...editableProps} formula={undefined} onChange={onChange} />);
 
       await user.click(screen.getByTestId('trigger-validation-error'));
-      expect(onChange).toHaveBeenCalledWith('', [
+      expect(onChange).toHaveBeenLastCalledWith('', [
         { code: 'FORMULA_ERROR', message: 'Syntax error' },
       ]);
     });
@@ -258,7 +292,7 @@ describe('FormulaRow', () => {
       expect(onChange).toHaveBeenCalledWith('new_value', []);
     });
 
-    it('re-syncs expressionRef when the expression prop changes', async () => {
+    it('uses the expression prop after carry-forward replaces it', async () => {
       const onChange = vi.fn();
       const user = userEvent.setup();
       const { rerender } = render(<FormulaRow {...editableProps} onChange={onChange} />);

@@ -37,7 +37,7 @@ public class FormulaRuntimeResolver {
     }
     return switch (parts[0]) {
       case "da" -> resolveDistrictAverage(date, area, district, parts, path);
-      case "sc" -> resolveSpeciesComposition(date, area, district, parts, path);
+      case "sc" -> resolveSpeciesComposition(date, district, parts, path);
       default -> throw failure(
           "Runtime resolution is not available for namespace '" + parts[0] + "'.");
     };
@@ -59,11 +59,13 @@ public class FormulaRuntimeResolver {
   }
 
   private BigDecimal resolveSpeciesComposition(
-      LocalDate date, Area area, String district, String[] parts, String path) {
+      LocalDate date, String district, String[] parts, String path) {
     if (parts.length != 2) {
       throw failure("Species-composition path must be sc.<species>: " + path);
     }
-    DistrictVolumeEntity entity = find(date, area, ConfigType.SPECIES_COMPOSITION, path);
+    // Species composition is a single shared table (the area column always stores INTERIOR),
+    // so the lookup ignores the requested area — a COASTAL request must still resolve sc.*.
+    DistrictVolumeEntity entity = find(date, Area.INTERIOR, ConfigType.SPECIES_COMPOSITION, path);
     SpeciesCompositionRow row =
         entity.getTableData().speciesRows().stream()
             .filter(
