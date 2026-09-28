@@ -473,6 +473,8 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
         .andExpect(status().isUnauthorized());
   }
 
+  // ─── GET /current ──────────────────────────────────────────────────────
+
   @Test
   @DisplayName("Current returns a set created today with a future start date")
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
@@ -546,20 +548,11 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
     // Species-composition fixture effective from 2020-09-01 so it stays outside the
     // 2020-08-01 window pinned by variablesReturns404WhenNoSpeciesComposition.
     // Inserted on the test-managed transaction and rolled back with it.
-    jdbcTemplate.execute("""
-        INSERT INTO hrs.district_volume
-            (area, start_date, end_date, table_data, table_level_factor, heli_multiplier,
-             config_type, created_at, created_by, updated_at, updated_by)
-        VALUES
-            ('INTERIOR', '2020-09-01', NULL,
-             '{"speciesRows": [
-                 {"district": {"code": "DKM", "description": "Coast"}, "species": {"SS": 100.0}},
-                 {"district": {"code": "DCC", "description": "Other"}, "species": {"PW": 42.0}}
-               ],
-               "formulas": {}}'::jsonb,
-             1.000, NULL, 'SPECIES_COMPOSITION',
-             NOW(), 'test-seed:variables-dkm-v1', NOW(), 'test-seed:variables-dkm-v1')
-        """);
+    insertSpeciesComposition(
+        "test-seed:variables-dkm-v1",
+        """
+            {"district": {"code": "DKM", "description": "Coast"}, "species": {"SS": 100.0}},
+            {"district": {"code": "DCC", "description": "Other"}, "species": {"PW": 42.0}}""");
 
     mockMvc.perform(get("/api/configuration/formulas/variables")
             .param("date", "2020-09-15")
@@ -584,20 +577,11 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
     // Species composition is stored once with area INTERIOR, so a COASTAL request must
     // resolve the shared row instead of 404ing on an area-scoped lookup.
     // Inserted on the test-managed transaction and rolled back with it.
-    jdbcTemplate.execute("""
-        INSERT INTO hrs.district_volume
-            (area, start_date, end_date, table_data, table_level_factor, heli_multiplier,
-             config_type, created_at, created_by, updated_at, updated_by)
-        VALUES
-            ('INTERIOR', '2020-09-01', NULL,
-             '{"speciesRows": [
-                 {"district": {"code": "DKM", "description": "Coast Mountains"},
-                  "species": {"SS": 100.0}}
-               ],
-               "formulas": {}}'::jsonb,
-             1.000, NULL, 'SPECIES_COMPOSITION',
-             NOW(), 'test-seed:variables-coastal-v1', NOW(), 'test-seed:variables-coastal-v1')
-        """);
+    insertSpeciesComposition(
+        "test-seed:variables-coastal-v1",
+        """
+            {"district": {"code": "DKM", "description": "Coast Mountains"},
+             "species": {"SS": 100.0}}""");
 
     mockMvc.perform(get("/api/configuration/formulas/variables")
             .param("date", "2020-09-15")
@@ -646,5 +630,20 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
         .andReturn()
         .getResponse()
         .getHeader("Location");
+  }
+
+  private void insertSpeciesComposition(String createdBy, String speciesRowsJson) {
+    // Species composition is a single shared table: rows are always stored with area INTERIOR.
+    jdbcTemplate.execute("""
+        INSERT INTO hrs.district_volume
+            (area, start_date, end_date, table_data, table_level_factor, heli_multiplier,
+             config_type, created_at, created_by, updated_at, updated_by)
+        VALUES
+            ('INTERIOR', '2020-09-01', NULL,
+             '{"speciesRows": [%s],
+                "formulas": {}}'::jsonb,
+             1.000, NULL, 'SPECIES_COMPOSITION',
+             NOW(), '%s', NOW(), '%s')
+        """.formatted(speciesRowsJson, createdBy, createdBy));
   }
 }

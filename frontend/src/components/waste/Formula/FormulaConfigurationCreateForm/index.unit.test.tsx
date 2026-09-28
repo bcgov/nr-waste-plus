@@ -154,6 +154,9 @@ const submitForm = () => {
   fireEvent.submit(screen.getByTestId('formula-config-create-form'));
 };
 
+/** Formulas the section mock received in its last render ([] until first capture). */
+const sectionFormulas = () => mocks.formulaSectionFormulas ?? [];
+
 describe('FormulaConfigurationCreateForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -654,7 +657,7 @@ describe('FormulaConfigurationCreateForm', () => {
 
     // The carry-forward effect writes to the store; without a subscription no
     // re-render follows, so the sections keep showing the seeded expression.
-    const formulas = mocks.formulaSectionFormulas ?? [];
+    const formulas = sectionFormulas();
     expect(formulas.find((f) => f.formulaKey === 'block.waste.avoidable_sawlog')?.expression).toBe(
       'carried',
     );
@@ -675,7 +678,7 @@ describe('FormulaConfigurationCreateForm', () => {
 
     const { rerender } = render(<FormulaConfigurationCreateForm />);
 
-    const seeded = mocks.formulaSectionFormulas ?? [];
+    const seeded = sectionFormulas();
     expect(seeded.length).toBeGreaterThan(0);
     act(() => {
       for (const formula of seeded) {
@@ -686,7 +689,7 @@ describe('FormulaConfigurationCreateForm', () => {
     mocks.current.isFetched = true;
     rerender(<FormulaConfigurationCreateForm />);
 
-    const formulas = mocks.formulaSectionFormulas ?? [];
+    const formulas = sectionFormulas();
     expect(formulas.find((f) => f.formulaKey === 'block.waste.avoidable_sawlog')?.expression).toBe(
       'carried',
     );
@@ -722,7 +725,7 @@ describe('FormulaConfigurationCreateForm', () => {
     await user.click(editBtns[0]);
     await user.click(editBtns[1]);
 
-    const formulas = mocks.formulaSectionFormulas ?? [];
+    const formulas = sectionFormulas();
     expect(formulas.filter((f) => f.expression === '2').length).toBeGreaterThanOrEqual(2);
   });
 

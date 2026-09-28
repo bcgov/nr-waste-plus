@@ -305,8 +305,8 @@ class FormulaRuntimeResolverTest {
   private DistrictVolumeEntity volume(ConfigType type, TableData data) {
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setConfigType(type);
-    // Species composition rows are stored once with area INTERIOR (shared table).
-    entity.setArea(type == ConfigType.SPECIES_COMPOSITION ? Area.INTERIOR : Area.COASTAL);
+    // The resolver reads only tableData (never the entity's area), so no area is set;
+    // species-composition rows are stored once with area INTERIOR (shared table).
     entity.setTableData(data);
     return entity;
   }

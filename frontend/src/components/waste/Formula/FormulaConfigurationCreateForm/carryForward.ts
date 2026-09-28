@@ -3,7 +3,8 @@ import type {
   FormulaValidationError,
 } from '@/services/formulaConfiguration.types.ts';
 
-interface FormulaDraftValue {
+/** A single formula's client-side draft state in the create form. */
+export interface FormulaDraftValue {
   expression: string;
   // Client-side draft state always carries an explicit array, even though the
   // backend contract omits validationErrors (optional on FormulaItemDto).

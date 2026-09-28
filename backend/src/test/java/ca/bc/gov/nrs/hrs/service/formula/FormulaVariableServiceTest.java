@@ -51,7 +51,7 @@ class FormulaVariableServiceTest {
         new CodeDescriptionDto("DCC", "DCC"),
         Map.of("AL", new BigDecimal("0.000"), "BA", new BigDecimal("5.500")));
     TableData scData = new TableData(null, null, List.of(scRow), Map.of());
-    DistrictVolumeEntity scEntity = scEntity(Area.INTERIOR, scData);
+    DistrictVolumeEntity scEntity = scEntity(scData);
 
     when(districtVolumeRepository.findEffectiveByConfigTypeAndArea(
         ConfigType.DISTRICT_VOLUME, Area.INTERIOR, DATE))
@@ -111,7 +111,7 @@ class FormulaVariableServiceTest {
         Map.of("AL", new BigDecimal("0.000")));
     TableData scData = new TableData(null, null, List.of(scRow), Map.of());
     // Species composition is shared: the COASTAL request must resolve the INTERIOR-stored row.
-    DistrictVolumeEntity scEntity = scEntity(Area.INTERIOR, scData);
+    DistrictVolumeEntity scEntity = scEntity(scData);
 
     when(districtVolumeRepository.findEffectiveByConfigTypeAndArea(
         ConfigType.DISTRICT_VOLUME, Area.COASTAL, DATE))
@@ -162,8 +162,7 @@ class FormulaVariableServiceTest {
   void handlesEmptyZones() {
     DistrictVolumeEntity dvEntity = dvEntity(Area.INTERIOR,
         new TableData(List.of(), null, null, Map.of()));
-    DistrictVolumeEntity scEntity = scEntity(Area.INTERIOR,
-        new TableData(null, null, List.of(), Map.of()));
+    DistrictVolumeEntity scEntity = scEntity(new TableData(null, null, List.of(), Map.of()));
 
     when(districtVolumeRepository.findEffectiveByConfigTypeAndArea(
         ConfigType.DISTRICT_VOLUME, Area.INTERIOR, DATE))
@@ -188,8 +187,7 @@ class FormulaVariableServiceTest {
     TableData dvData = new TableData(List.of(zone), null, null, Map.of());
     DistrictVolumeEntity dvEntity = dvEntity(Area.INTERIOR, dvData);
 
-    DistrictVolumeEntity scEntity = scEntity(Area.INTERIOR,
-        new TableData(null, null, List.of(), Map.of()));
+    DistrictVolumeEntity scEntity = scEntity(new TableData(null, null, List.of(), Map.of()));
 
     when(districtVolumeRepository.findEffectiveByConfigTypeAndArea(
         ConfigType.DISTRICT_VOLUME, Area.INTERIOR, DATE))
@@ -212,8 +210,7 @@ class FormulaVariableServiceTest {
         List.of(new Zone("North Interior", List.of(first)),
             new Zone("North-Interior", List.of(second))), null, null, Map.of());
     DistrictVolumeEntity dvEntity = dvEntity(Area.INTERIOR, dvData);
-    DistrictVolumeEntity scEntity = scEntity(Area.INTERIOR,
-        new TableData(null, null, List.of(), Map.of()));
+    DistrictVolumeEntity scEntity = scEntity(new TableData(null, null, List.of(), Map.of()));
     when(districtVolumeRepository.findEffectiveByConfigTypeAndArea(
         ConfigType.DISTRICT_VOLUME, Area.INTERIOR, DATE)).thenReturn(java.util.Optional.of(dvEntity));
     when(districtVolumeRepository.findEffectiveByConfigTypeAndArea(
@@ -259,10 +256,11 @@ class FormulaVariableServiceTest {
     return entity;
   }
 
-  private DistrictVolumeEntity scEntity(Area area, TableData data) {
+  private DistrictVolumeEntity scEntity(TableData data) {
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setConfigType(ConfigType.SPECIES_COMPOSITION);
-    entity.setArea(area);
+    // Species composition is a single shared table: the area column always stores INTERIOR.
+    entity.setArea(Area.INTERIOR);
     entity.setTableData(data);
     return entity;
   }

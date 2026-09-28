@@ -14,7 +14,7 @@ import { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import FormulaVariableCatalog from '../FormulaVariableCatalog';
 
-import { carryForwardFormulaValues } from './carryForward.ts';
+import { carryForwardFormulaValues, type FormulaDraftValue } from './carryForward.ts';
 
 import type {
   FormulaItemDto,
@@ -92,9 +92,8 @@ const toSubmitErrorMessage = (error: unknown): string => {
 /** Seeds every catalog key for an area with the baseline expression. */
 const buildInitialFormulas = (
   area: keyof typeof FORMULA_KEYS,
-): Record<string, { expression: string; validationErrors: FormulaValidationError[] }> => {
-  const obj: Record<string, { expression: string; validationErrors: FormulaValidationError[] }> =
-    {};
+): Record<string, FormulaDraftValue> => {
+  const obj: Record<string, FormulaDraftValue> = {};
   for (const k of getFormulaKeysForArea(area)) {
     obj[k.key] = { expression: '1', validationErrors: [] };
   }
@@ -119,20 +118,13 @@ const FormulaConfigurationCreateForm: FC = () => {
   const [isReviewing, setIsReviewing] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const editedKeysByArea = useRef<Record<string, Set<string>>>({});
-  const formulasByArea = useRef<
-    Record<
-      string,
-      Record<string, { expression: string; validationErrors: FormulaValidationError[] }>
-    >
-  >({});
-
-  const initialFormulas = useMemo(() => buildInitialFormulas(defaultArea), []);
+  const formulasByArea = useRef<Record<string, Record<string, FormulaDraftValue>>>({});
 
   const form = useForm({
     defaultValues: {
       area: defaultArea,
       startDate: defaultStartDate,
-      formulas: initialFormulas,
+      formulas: buildInitialFormulas(defaultArea),
     },
     onSubmit: async ({ value }) => {
       const dto: FormulaSetRequest = {
@@ -319,8 +311,6 @@ const FormulaConfigurationCreateForm: FC = () => {
       formulasByArea.current[area] = formulasState;
       // @ts-expect-error TanStack Form does not narrow the radio callback value.
       form.setFieldValue('area', selected);
-      // Seed from the area's own catalog: defaultValues only ever contain the
-      // default area's keys, so a first switch must not carry them over.
       // Seed from the area's own catalog: defaultValues only ever contain the
       // default area's keys, so a first switch must not carry them over.
       form.setFieldValue(

@@ -109,8 +109,11 @@ class FormulaSetServiceTest {
 
   @Test
   void currentOpenEndedDoesNotFilterByStartDate() {
-    // A set created today with a future start date is the carry-forward source the create
-    // form needs; the repository must find it without a start-date cutoff.
+    // Unit-level purpose: lock the single-argument repository signature — the strict-stub
+    // rekey is the regression lock. Start-date filtering is not observable against a
+    // mock, so the behavior (a set created today with a future start date is found) is
+    // proven by the integration test
+    // FormulaSetControllerIntegrationTest.currentReturnsSetCreatedTodayWithFutureStartDate.
     FormulaSetEntity futureDated = futureSet(14L, null);
     when(setRepository.findCurrentOpenEnded(eq(Area.COASTAL)))
         .thenReturn(Optional.of(futureDated));
