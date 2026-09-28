@@ -93,7 +93,7 @@ class FormulaSetServiceTest {
     FormulaSetEntity set = currentSet(12L);
     FormulaSetRowEntity first = row("da.first", "1", 0);
     FormulaSetRowEntity second = row("da.second", "2", 1);
-    when(setRepository.findCurrentOpenEnded(eq(Area.COASTAL), any(LocalDate.class)))
+    when(setRepository.findCurrentOpenEnded(eq(Area.COASTAL)))
         .thenReturn(Optional.of(set));
     when(rowRepository.findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(12L))
         .thenReturn(List.of(first, second));
@@ -103,24 +103,31 @@ class FormulaSetServiceTest {
     assertThat(response.formulas())
         .extracting(FormulaItemDto::formulaKey)
         .containsExactly("da.first", "da.second");
-    verify(setRepository).findCurrentOpenEnded(eq(Area.COASTAL), any(LocalDate.class));
+    verify(setRepository).findCurrentOpenEnded(eq(Area.COASTAL));
     verify(rowRepository).findByFormulaSetIdAndDeletedFalseOrderBySortOrderAscIdAsc(12L);
   }
 
   @Test
-  void currentOpenEndedPassesTodayToRepository() {
-    when(setRepository.findCurrentOpenEnded(eq(Area.COASTAL), any(LocalDate.class)))
-        .thenReturn(Optional.empty());
+  void currentOpenEndedDoesNotFilterByStartDate() {
+    // Unit-level purpose: lock the single-argument repository signature — the strict-stub
+    // rekey is the regression lock. Start-date filtering is not observable against a
+    // mock, so the behavior (a set created today with a future start date is found) is
+    // proven by the integration test
+    // FormulaSetControllerIntegrationTest.currentReturnsSetCreatedTodayWithFutureStartDate.
+    FormulaSetEntity futureDated = futureSet(14L, null);
+    when(setRepository.findCurrentOpenEnded(eq(Area.COASTAL)))
+        .thenReturn(Optional.of(futureDated));
 
-    assertThatThrownBy(() -> service.currentOpenEnded(Area.COASTAL))
-        .hasMessageContaining("No current open-ended formula set");
-    verify(setRepository).findCurrentOpenEnded(eq(Area.COASTAL), eq(LocalDate.now()));
+    var response = service.currentOpenEnded(Area.COASTAL);
+
+    assertThat(response.id()).isEqualTo(14L);
+    verify(setRepository).findCurrentOpenEnded(eq(Area.COASTAL));
   }
 
   @DisplayName("Current Open-Ended Rejects Missing Set")
   @Test
   void currentOpenEndedRejectsMissingSet() {
-    when(setRepository.findCurrentOpenEnded(eq(Area.INTERIOR), any(LocalDate.class)))
+    when(setRepository.findCurrentOpenEnded(eq(Area.INTERIOR)))
         .thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> service.currentOpenEnded(Area.INTERIOR))

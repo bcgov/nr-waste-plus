@@ -14,7 +14,7 @@ import { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import FormulaVariableCatalog from '../FormulaVariableCatalog';
 
-import { carryForwardFormulaValues } from './carryForward.ts';
+import { carryForwardFormulaValues, type FormulaDraftValue } from './carryForward.ts';
 
 import type {
   FormulaItemDto,
@@ -89,6 +89,25 @@ const toSubmitErrorMessage = (error: unknown): string => {
   return error instanceof Error ? error.message : 'Formula set creation failed.';
 };
 
+/** Seeds every catalog key for an area with the baseline expression. */
+const buildInitialFormulas = (
+  area: keyof typeof FORMULA_KEYS,
+): Record<string, FormulaDraftValue> => {
+  const obj: Record<string, FormulaDraftValue> = {};
+  for (const k of getFormulaKeysForArea(area)) {
+    obj[k.key] = { expression: '1', validationErrors: [] };
+  }
+  return obj;
+};
+
+/** Content equality for validation errors — the engine rebuilds arrays on each run. */
+const sameValidationErrors = (
+  a: readonly FormulaValidationError[],
+  b: readonly FormulaValidationError[],
+): boolean =>
+  a.length === b.length &&
+  a.every((error, idx) => error.code === b[idx]?.code && error.message === b[idx]?.message);
+
 const FormulaConfigurationCreateForm: FC = () => {
   const navigate = useNavigate();
   const createMutation = useCreateFormulaSet();
@@ -99,28 +118,13 @@ const FormulaConfigurationCreateForm: FC = () => {
   const [isReviewing, setIsReviewing] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const editedKeysByArea = useRef<Record<string, Set<string>>>({});
-  const formulasByArea = useRef<
-    Record<
-      string,
-      Record<string, { expression: string; validationErrors: FormulaValidationError[] }>
-    >
-  >({});
-
-  const initialFormulas = useMemo(() => {
-    const keys = getFormulaKeysForArea(defaultArea);
-    const obj: Record<string, { expression: string; validationErrors: FormulaValidationError[] }> =
-      {};
-    for (const k of keys) {
-      obj[k.key] = { expression: '1', validationErrors: [] };
-    }
-    return obj;
-  }, []);
+  const formulasByArea = useRef<Record<string, Record<string, FormulaDraftValue>>>({});
 
   const form = useForm({
     defaultValues: {
       area: defaultArea,
       startDate: defaultStartDate,
-      formulas: initialFormulas,
+      formulas: buildInitialFormulas(defaultArea),
     },
     onSubmit: async ({ value }) => {
       const dto: FormulaSetRequest = {
@@ -146,12 +150,15 @@ const FormulaConfigurationCreateForm: FC = () => {
 
   // `useForm` does not subscribe the owning component to the form store, so a
   // value written by setFieldValue only becomes visible on the next unrelated
-  // re-render — which left canReview trusting a stale start date. Subscribe to
-  // the date (a string, so updates are reference-stable) instead of the whole
-  // values object, which would re-enter validation on every formula edit.
+  // re-render — which left canReview trusting a stale start date, left the
+  // formula sections showing the previous area after a radio toggle, and left
+  // isEmpty/hasErrors (and every onFormulaChange merge) reading formulas written
+  // by earlier renders: carried-forward values never appeared and the Review
+  // button could never enable. Subscribe to each field instead of the whole
+  // values object, which would re-enter validation on every edit.
   const startDate = useSelector(form.store, (state) => state.values.startDate);
-  const area = form.state.values.area;
-  const formulasState = form.state.values.formulas;
+  const area = useSelector(form.store, (state) => state.values.area);
+  const formulasState = useSelector(form.store, (state) => state.values.formulas);
   const { data: variablesData } = useFormulaVariables({
     date: startDate,
     area,
@@ -259,9 +266,28 @@ const FormulaConfigurationCreateForm: FC = () => {
     expression: string,
     validationErrors: FormulaValidationError[] = [],
   ) => {
-    const areaKeys = editedKeysByArea.current[area] ?? new Set<string>();
-    editedKeysByArea.current[area] = new Set(areaKeys).add(key);
+    const current = formulasState[key];
+    const isContentChange = current?.expression !== expression;
+    // Only a real content change marks the key as edited. Validation echoes
+    // (FormulaInput reports its result on mount and on every evaluation) reuse
+    // the stored expression — treating those as edits would mark every key
+    // before carry-forward runs, and carry-forward keeps edited keys as-is,
+    // so the loaded set would never appear.
+    if (isContentChange) {
+      const areaKeys = editedKeysByArea.current[area] ?? new Set<string>();
+      editedKeysByArea.current[area] = new Set(areaKeys).add(key);
+    }
     setSubmitError(null);
+    // A no-op change (e.g. an engine echo of the value already in the store)
+    // must not replace the record — a new object reference would re-render the
+    // sections for nothing.
+    if (
+      current &&
+      !isContentChange &&
+      sameValidationErrors(current.validationErrors ?? [], validationErrors)
+    ) {
+      return;
+    }
     form.setFieldValue('formulas', {
       ...formulasState,
       [key]: { expression, validationErrors },
@@ -279,11 +305,18 @@ const FormulaConfigurationCreateForm: FC = () => {
   }, [allKeys, formulasState]);
 
   const handleAreaChange = (selected?: string | number) => {
-    if (typeof selected === 'string') {
+    // Narrow to the radio's values: the form field is typed from defaultValues
+    // and the callback gives back a bare string.
+    if (selected === 'INTERIOR' || selected === 'COASTAL') {
       formulasByArea.current[area] = formulasState;
       // @ts-expect-error TanStack Form does not narrow the radio callback value.
       form.setFieldValue('area', selected);
-      form.setFieldValue('formulas', formulasByArea.current[selected] ?? initialFormulas);
+      // Seed from the area's own catalog: defaultValues only ever contain the
+      // default area's keys, so a first switch must not carry them over.
+      form.setFieldValue(
+        'formulas',
+        formulasByArea.current[selected] ?? buildInitialFormulas(selected),
+      );
       setIsReviewing(false);
     }
   };
