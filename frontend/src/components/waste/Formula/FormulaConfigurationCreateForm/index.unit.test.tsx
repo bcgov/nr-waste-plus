@@ -388,6 +388,29 @@ describe('FormulaConfigurationCreateForm', () => {
     expect(screen.getByRole('button', { name: 'Review formulas' })).toBeTruthy();
   });
 
+  it('swaps the rendered formula sections when the area radio changes', () => {
+    mocks.current.isFetched = true;
+    render(<FormulaConfigurationCreateForm />);
+
+    // INTERIOR renders first: zone benchmark, no coastal-only keys.
+    expect(screen.getAllByTestId('formula-section-area')[0].textContent).toBe('INTERIOR');
+    expect(screen.queryByTestId('formula-key-block.benchmark.zone')).toBeTruthy();
+    expect(screen.queryByTestId('formula-key-block.coast.heli.factor')).toBeNull();
+
+    // Switch area while still in edit mode: handleAreaChange writes only to the
+    // form store (setIsReviewing(false) is a no-op here), so this swaps the
+    // sections only if `area` is store-subscribed — a plain
+    // form.state.values.area read would render the stale INTERIOR catalog.
+    act(() => {
+      mocks.radioGroupOnChange?.('COASTAL', 'area');
+    });
+
+    expect(screen.getAllByTestId('formula-section-area')[0].textContent).toBe('COASTAL');
+    expect(screen.queryByTestId('formula-key-block.benchmark.weighted')).toBeTruthy();
+    expect(screen.queryByTestId('formula-key-block.coast.heli.factor')).toBeTruthy();
+    expect(screen.queryByTestId('formula-key-block.benchmark.zone')).toBeNull();
+  });
+
   it('resets review mode when area changes', () => {
     mocks.current.isFetched = true;
     render(<FormulaConfigurationCreateForm />);

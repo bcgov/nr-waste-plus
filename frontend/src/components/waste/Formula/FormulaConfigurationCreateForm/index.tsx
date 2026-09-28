@@ -146,11 +146,12 @@ const FormulaConfigurationCreateForm: FC = () => {
 
   // `useForm` does not subscribe the owning component to the form store, so a
   // value written by setFieldValue only becomes visible on the next unrelated
-  // re-render — which left canReview trusting a stale start date. Subscribe to
-  // the date (a string, so updates are reference-stable) instead of the whole
-  // values object, which would re-enter validation on every formula edit.
+  // re-render — which left canReview trusting a stale start date, and left the
+  // formula sections showing the previous area after a radio toggle. Subscribe
+  // to each primitive value (strings, so updates are reference-stable) instead
+  // of the whole values object, which would re-enter validation on every edit.
   const startDate = useSelector(form.store, (state) => state.values.startDate);
-  const area = form.state.values.area;
+  const area = useSelector(form.store, (state) => state.values.area);
   const formulasState = form.state.values.formulas;
   const { data: variablesData } = useFormulaVariables({
     date: startDate,
