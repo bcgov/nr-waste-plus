@@ -318,7 +318,8 @@ public class FormulaVariableService {
   private void putGroup(Map<String, VariableNodeDto> groups, String groupName,
       VariableNodeDto node) {
     if (groups.putIfAbsent(groupName, node) != null) {
-      throw new IllegalStateException("Normalized formula variable group name collision: " + groupName);
+      throw new IllegalStateException(
+          "Normalized formula variable group name collision: " + groupName);
     }
   }
 

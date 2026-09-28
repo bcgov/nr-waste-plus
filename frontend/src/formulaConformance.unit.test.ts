@@ -12,7 +12,7 @@ const allowedStatuses = ['VALID', 'INVALID', 'PENDING_EVALUATOR'] as const;
 
 describe('formula conformance fixture', () => {
   it('contains executable backend cases and explicit evaluator boundaries', () => {
-    expect(fixture.contractVersion).toBe('1.0');
+    expect(fixture.contractVersion).toBe('1.1');
     expect(fixture.namespaces).toEqual(['da', 'sc', 'submission', 'hbs', 'fta']);
     expect(fixture.diagnosticCodes).toHaveLength(7);
     expect(fixture.rounding).toEqual({
