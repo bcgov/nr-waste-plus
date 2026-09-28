@@ -1,5 +1,5 @@
 import tanstackQuery from '@tanstack/eslint-plugin-query';
-import eslintPluginImport from 'eslint-plugin-import';
+import { importX } from 'eslint-plugin-import-x';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import tseslint from 'typescript-eslint';
 import prettierPlugin from 'eslint-plugin-prettier';
@@ -23,7 +23,7 @@ export default defineConfig([
     extends: [js.configs.recommended, tseslint.configs.recommended, eslintConfigPrettier],
     plugins: {
       '@tanstack/query': tanstackQuery,
-      'import': eslintPluginImport,
+      'import-x': importX,
       'prettier': prettierPlugin,
       'react-hooks': reactHooks,
       'testing-library': testingLibrary,
@@ -32,7 +32,7 @@ export default defineConfig([
     rules: {
       '@tanstack/query/exhaustive-deps': 'warn',
       'react-hooks/exhaustive-deps': 'warn',
-      'import/order': [
+      'import-x/order': [
         'warn',
         {
           'groups': [
@@ -81,10 +81,9 @@ export default defineConfig([
       'react': {
         version: 'detect',
       },
-      'import/resolver': {
-        alias: {
-          map: [['@/', './src']],
-          extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+      'import-x/resolver': {
+        typescript: {
+          project: './tsconfig.json',
         },
       },
     },
