@@ -28,7 +28,7 @@ class FormulaConformanceFixtureTest {
   @Test
   void should_match_shared_fixture_contract() throws IOException {
     JsonNode root = JSON.readTree(Files.readString(fixturePath()));
-    assertThat(root.path("contractVersion").asString()).isEqualTo("1.0");
+    assertThat(root.path("contractVersion").asString()).isEqualTo("1.1");
     List<String> namespaces = new ArrayList<>();
     root.path("namespaces").forEach(node -> namespaces.add(node.asString()));
     assertThat(namespaces).containsExactly("da", "sc", "submission", "hbs", "fta");

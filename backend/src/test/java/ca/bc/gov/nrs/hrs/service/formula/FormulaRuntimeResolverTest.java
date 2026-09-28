@@ -68,7 +68,7 @@ class FormulaRuntimeResolverTest {
                         Map.of("AL", new BigDecimal("0.000")))),
                 Map.of()));
     when(repository.findEffectiveByConfigTypeAndArea(
-            ConfigType.SPECIES_COMPOSITION, Area.COASTAL, LocalDate.of(2026, 11, 3)))
+            ConfigType.SPECIES_COMPOSITION, Area.INTERIOR, LocalDate.of(2026, 11, 3)))
         .thenReturn(java.util.Optional.of(volume));
 
     assertThat(resolver.resolve(LocalDate.of(2026, 11, 3), Area.COASTAL, "DNI", "sc.AL"))
@@ -249,7 +249,7 @@ class FormulaRuntimeResolverTest {
                         new CodeDescriptionDto("DNI", "DNI"), Map.of("AL", new BigDecimal("1")))),
                 Map.of()));
     when(repository.findEffectiveByConfigTypeAndArea(
-            ConfigType.SPECIES_COMPOSITION, Area.COASTAL, LocalDate.of(2026, 11, 3)))
+            ConfigType.SPECIES_COMPOSITION, Area.INTERIOR, LocalDate.of(2026, 11, 3)))
         .thenReturn(java.util.Optional.of(volume));
 
     assertThatThrownBy(
@@ -269,7 +269,7 @@ class FormulaRuntimeResolverTest {
                 List.of(new SpeciesCompositionRow(new CodeDescriptionDto("DNI", "DNI"), Map.of())),
                 Map.of()));
     when(repository.findEffectiveByConfigTypeAndArea(
-            ConfigType.SPECIES_COMPOSITION, Area.COASTAL, LocalDate.of(2026, 11, 3)))
+            ConfigType.SPECIES_COMPOSITION, Area.INTERIOR, LocalDate.of(2026, 11, 3)))
         .thenReturn(java.util.Optional.of(volume));
 
     assertThatThrownBy(
@@ -294,7 +294,7 @@ class FormulaRuntimeResolverTest {
   @Test
   void rejectsNoEffectiveScConfiguration() {
     when(repository.findEffectiveByConfigTypeAndArea(
-            ConfigType.SPECIES_COMPOSITION, Area.COASTAL, LocalDate.of(2026, 11, 3)))
+            ConfigType.SPECIES_COMPOSITION, Area.INTERIOR, LocalDate.of(2026, 11, 3)))
         .thenReturn(java.util.Optional.empty());
 
     assertThatThrownBy(
@@ -305,7 +305,8 @@ class FormulaRuntimeResolverTest {
   private DistrictVolumeEntity volume(ConfigType type, TableData data) {
     DistrictVolumeEntity entity = new DistrictVolumeEntity();
     entity.setConfigType(type);
-    entity.setArea(Area.COASTAL);
+    // The resolver reads only tableData (never the entity's area), so no area is set;
+    // species-composition rows are stored once with area INTERIOR (shared table).
     entity.setTableData(data);
     return entity;
   }

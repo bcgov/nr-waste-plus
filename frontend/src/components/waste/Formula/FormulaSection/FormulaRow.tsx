@@ -1,4 +1,4 @@
-import { type FC, useEffect, useMemo, useRef } from 'react';
+import { type FC, useMemo } from 'react';
 
 import type { FormulaError } from '@/components/Form/FormulaInput/types.ts';
 import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants.ts';
@@ -23,16 +23,8 @@ interface FormulaRowProps {
 
 const FormulaRow: FC<FormulaRowProps> = ({ area, date, keyDef, formula, isEditable, onChange }) => {
   const expression = formula?.expression ?? '';
-  const expressionRef = useRef(expression);
   // Optional on FormulaItemDto — the backend contract omits it.
   const validationErrors = formula?.validationErrors ?? [];
-
-  // The parent replaces the expression when carry-forward or an area switch runs;
-  // without this the ref keeps the previous value and onValidationError would push
-  // it back over the parent state.
-  useEffect(() => {
-    expressionRef.current = expression;
-  }, [expression]);
 
   // Fetch variables from backend API — only editable rows render the editor
   // that consumes them, so read-only rows and review mode skip the request
@@ -80,17 +72,20 @@ const FormulaRow: FC<FormulaRowProps> = ({ area, date, keyDef, formula, isEditab
         <FormulaInput
           initialFormula={expression}
           onChange={(value) => {
-            expressionRef.current = value;
             // Editing invalidates the previous expression's validation result —
             // carrying it forward would keep `hasErrors` true in the parent
             // until the next validation pass.
             onChange(value, []);
           }}
+          // Validation echoes carry the expression prop, never a locally
+          // mirrored ref: a ref would only sync in this component's effect,
+          // which runs AFTER the child's onValidationError effect in the same
+          // commit — so the first echo after carry-forward would push the
+          // pre-carry value back over the parent state. The prop closure is
+          // created in the render that received the new value, so it is always
+          // the freshest committed expression.
           onValidationError={(error: FormulaError | null) =>
-            onChange(
-              expressionRef.current,
-              error ? [{ code: 'FORMULA_ERROR', message: error.message }] : [],
-            )
+            onChange(expression, error ? [{ code: 'FORMULA_ERROR', message: error.message }] : [])
           }
           readOnly={false}
           displayResult={true}

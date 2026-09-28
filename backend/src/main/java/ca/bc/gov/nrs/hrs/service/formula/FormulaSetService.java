@@ -163,7 +163,7 @@ public class FormulaSetService {
   /** Retrieves the current open-ended formula set for carry-forward. */
   @Transactional(readOnly = true)
   public FormulaSetResponse currentOpenEnded(Area area) {
-    FormulaSetEntity set = setRepository.findCurrentOpenEnded(area, LocalDate.now()).orElseThrow(
+    FormulaSetEntity set = setRepository.findCurrentOpenEnded(area).orElseThrow(
         () -> new ResponseStatusException(
             HttpStatus.NOT_FOUND, "No current open-ended formula set exists for the area."));
     List<FormulaSetRowEntity> rows =

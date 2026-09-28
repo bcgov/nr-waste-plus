@@ -33,11 +33,17 @@ public interface FormulaSetRepository extends JpaRepository<FormulaSetEntity, Lo
       + "and f.startDate > :today order by f.startDate")
   List<FormulaSetEntity> findFuture(@Param("area") Area area, @Param("today") LocalDate today);
 
-  /** Finds the current open-ended formula set for an area. */
+  /**
+   * Finds the open-ended formula set for an area, regardless of its start date.
+   *
+   * <p>Deliberate near-twin of {@link #findAllOpenEnded} (same predicate, Optional
+   * return). The Optional is intentional: an invariant violation with more than one
+   * open-ended set per area throws IncorrectResultSizeDataAccessException and fails
+   * loudly, where a List-based lookup would silently pick a row. Do not consolidate.
+   */
   @Query("select f from FormulaSetEntity f where f.area = :area and f.deleted = false "
-      + "and f.startDate <= :today and f.endDate is null order by f.startDate desc")
-  Optional<FormulaSetEntity> findCurrentOpenEnded(@Param("area") Area area,
-      @Param("today") LocalDate today);
+      + "and f.endDate is null order by f.startDate desc")
+  Optional<FormulaSetEntity> findCurrentOpenEnded(@Param("area") Area area);
 
   @Query("select f from FormulaSetEntity f where f.area = :area and f.deleted = false "
       + "and f.endDate is null order by f.startDate desc")
