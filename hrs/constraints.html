@@ -511,6 +511,11 @@
                                     </tr>
                                     <tr>
                                         <td><a href='tables/block_attachment.html'>block_attachment</a></td>
+                                        <td>chk_block_attachment_scan_status</td>
+                                        <td>((scan_status)::text &#61; ANY ((ARRAY[&#39;PENDING&#39;::character varying, &#39;CLEAN&#39;::character varying, &#39;QUARANTINED&#39;::character varying, &#39;FAILED&#39;::character varying])::text[]))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/block_attachment.html'>block_attachment</a></td>
                                         <td>chk_block_attachment_status</td>
                                         <td>((status)::text &#61; ANY ((ARRAY[&#39;UPLOADING&#39;::character varying, &#39;FINALIZED&#39;::character varying])::text[]))</td>
                                     </tr>

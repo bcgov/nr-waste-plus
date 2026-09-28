@@ -239,7 +239,7 @@
                                     <td>32</td>
                                     <td title=''></td>
                                     <td title=''></td>
-                                    <td>null</td>
+                                    <td>&#39;PENDING&#39;::character varying</td>
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
@@ -248,7 +248,7 @@
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                         </table>
                                     </td>
-                                    <td><p>Virus scan verdict, e.g. CLEAN or INFECTED.</p></td>
+                                    <td><p>Malware scan status: PENDING while awaiting verdict, CLEAN if safe, QUARANTINED if malicious/suspicious, FAILED if scanning errored.</p></td>
                                 </tr>
                                 <tr>
                                     <td><span id="created_by">created_by</span></td>
@@ -285,7 +285,7 @@
                                     <td><p>Audit actor that last updated the attachment metadata.</p></td>
                                 </tr>
                                 <tr>
-                                    <td><span id="created_at">created_at</span></td>
+                                    <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="created_at">created_at</span></td>
                                     <td>timestamptz</td>
                                     <td>35,6</td>
                                     <td title=''></td>
@@ -428,6 +428,12 @@
                                     <td><span title='Ascending'>Asc</span></td>
                                     <td>block_id</td>
                                 </tr>
+                                <tr>
+                                    <td title='Indexed'>idx_block_attachment_uploading_cleanup</td>
+                                    <td>Performance</td>
+                                    <td><span title='Ascending'>Asc</span></td>
+                                    <td>created_at</td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div><!-- /.box-body -->
@@ -459,6 +465,10 @@
                                 <tr>
                                     <td>chk_block_attachment_document_type</td>
                                     <td>((document_type IS NULL) OR ((document_type)::text &#61; ANY ((ARRAY[&#39;FINAL_MAP&#39;::character varying, &#39;POST_HARVEST_CERTIFICATE&#39;::character varying, &#39;RATIONALE&#39;::character varying, &#39;ENDORSEMENT_LETTER&#39;::character varying, &#39;CALCULATOR_SPREADSHEET&#39;::character varying, &#39;HBS_BILLING_REPORT&#39;::character varying, &#39;REDUCTION_FACTOR_SUPPORT&#39;::character varying, &#39;OTHER&#39;::character varying])::text[])))</td>
+                                </tr>
+                                <tr>
+                                    <td>chk_block_attachment_scan_status</td>
+                                    <td>((scan_status)::text &#61; ANY ((ARRAY[&#39;PENDING&#39;::character varying, &#39;CLEAN&#39;::character varying, &#39;QUARANTINED&#39;::character varying, &#39;FAILED&#39;::character varying])::text[]))</td>
                                 </tr>
                                 <tr>
                                     <td>chk_block_attachment_status</td>
