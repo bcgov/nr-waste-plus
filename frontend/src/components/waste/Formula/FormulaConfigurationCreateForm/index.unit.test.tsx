@@ -20,7 +20,12 @@ const mocks = vi.hoisted(() => ({
     data: { flat: {}, catalog: [] } as { flat: Record<string, number>; catalog: unknown[] },
   },
   variablesParams: null as { date: string; area: string; districtCode: string } | null,
-  formulaSectionOnChange: null as ((key: string, expression: string) => void) | null,
+  formulaSectionOnChange: null as
+    | ((key: string, expression: string, validationErrors?: unknown[]) => void)
+    | null,
+  // Last-rendered `formulas` prop captured from the FormulaSection mock — lets
+  // tests assert what the form store actually pushed down to the sections.
+  formulaSectionFormulas: null as { formulaKey: string; expression: string }[] | null,
   // Store the RadioButtonGroup onChange callback so tests can invoke it directly
   radioGroupOnChange: null as ((value: string, name: string) => void) | null,
 }));
@@ -44,6 +49,7 @@ vi.mock('@/components/waste/Formula/FormulaSection', () => ({
     keys,
     area,
     date,
+    formulas,
     isEditable,
     onChange,
   }: {
@@ -51,10 +57,12 @@ vi.mock('@/components/waste/Formula/FormulaSection', () => ({
     keys: { key: string; label: string }[];
     area: string;
     date: string;
+    formulas: { formulaKey: string; expression: string }[];
     isEditable: boolean;
     onChange: (key: string, expression: string) => void;
   }) => {
     mocks.formulaSectionOnChange = onChange;
+    mocks.formulaSectionFormulas = formulas;
     return (
       <div
         data-testid="formula-section"
@@ -68,7 +76,9 @@ vi.mock('@/components/waste/Formula/FormulaSection', () => ({
             {k.label}
           </span>
         ))}
-        <button type="button" onClick={() => onChange('block.waste.avoidable_sawlog', '2')}>
+        {/* Edit the section's own first key so clicks in different sections hit
+            different keys — that is what exposes stale-closure clobbering. */}
+        <button type="button" onClick={() => onChange(keys[0]?.key ?? '', '2')}>
           Edit formula
         </button>
       </div>
@@ -154,6 +164,7 @@ describe('FormulaConfigurationCreateForm', () => {
     mocks.variables.data = { flat: {}, catalog: [] };
     mocks.variablesParams = null;
     mocks.formulaSectionOnChange = null;
+    mocks.formulaSectionFormulas = null;
     mocks.radioGroupOnChange = null;
   });
 
@@ -457,8 +468,8 @@ describe('FormulaConfigurationCreateForm', () => {
     const editBtns = screen.getAllByRole('button', { name: 'Edit formula' });
     await user.click(editBtns[0]);
 
-    // The mock triggers onChange('block.waste.avoidable_sawlog', '2')
-    // This should call onFormulaChange in the parent which updates form state
+    // The mock triggers onChange with the section's first key and expression
+    // '2'. This should call onFormulaChange in the parent which updates form state
     expect(screen.getAllByTestId('formula-section').length).toBeGreaterThan(0);
   });
 
@@ -624,6 +635,95 @@ describe('FormulaConfigurationCreateForm', () => {
     };
     rerender(<FormulaConfigurationCreateForm />);
     expect(screen.getAllByTestId('formula-section-area')[0].textContent).toBe('INTERIOR');
+  });
+
+  // ─── Store subscription regressions ────────────────────────────────────────
+  // `useForm` does not re-render the owner on setFieldValue: a plain
+  // form.state.values.formulas read goes stale after every store-only write.
+  // These three tests fail if the formulas subscription is removed.
+
+  it('renders carried-forward values once the current formula set loads', () => {
+    mocks.current.data = {
+      id: 10,
+      area: 'INTERIOR',
+      formulas: [{ formulaKey: 'block.waste.avoidable_sawlog', expression: 'carried' }],
+    };
+    mocks.current.isFetched = true;
+
+    render(<FormulaConfigurationCreateForm />);
+
+    // The carry-forward effect writes to the store; without a subscription no
+    // re-render follows, so the sections keep showing the seeded expression.
+    const formulas = mocks.formulaSectionFormulas ?? [];
+    expect(formulas.find((f) => f.formulaKey === 'block.waste.avoidable_sawlog')?.expression).toBe(
+      'carried',
+    );
+  });
+
+  it('applies carry-forward even after rows echo their seeded values on mount', () => {
+    // Mirrors the live page: FormulaInput reports its validation result on
+    // mount (no error for the seeded '1'), FormulaRow echoes it through
+    // onChange, and only then does the current-set query settle. If those
+    // echoes mark every key as edited, carry-forward keeps the seeds and the
+    // previous data never appears.
+    mocks.current.data = {
+      id: 10,
+      area: 'INTERIOR',
+      formulas: [{ formulaKey: 'block.waste.avoidable_sawlog', expression: 'carried' }],
+    };
+    mocks.current.isFetched = false;
+
+    const { rerender } = render(<FormulaConfigurationCreateForm />);
+
+    const seeded = mocks.formulaSectionFormulas ?? [];
+    expect(seeded.length).toBeGreaterThan(0);
+    act(() => {
+      for (const formula of seeded) {
+        mocks.formulaSectionOnChange?.(formula.formulaKey, formula.expression, []);
+      }
+    });
+
+    mocks.current.isFetched = true;
+    rerender(<FormulaConfigurationCreateForm />);
+
+    const formulas = mocks.formulaSectionFormulas ?? [];
+    expect(formulas.find((f) => f.formulaKey === 'block.waste.avoidable_sawlog')?.expression).toBe(
+      'carried',
+    );
+  });
+
+  it('enables review after switching to Coast on the first visit', () => {
+    mocks.current.isFetched = true;
+    render(<FormulaConfigurationCreateForm />);
+
+    act(() => {
+      mocks.radioGroupOnChange?.('COASTAL', 'area');
+    });
+
+    // First Coast visit seeds formulas from the COASTAL catalog, and the store
+    // write re-renders isEmpty — a stale INTERIOR-keyed snapshot (or a stale
+    // isEmpty memo) would leave the button disabled with "must be filled".
+    expect(screen.getByRole('button', { name: 'Review formulas' })).toHaveProperty(
+      'disabled',
+      false,
+    );
+    expect(screen.queryByText('All formulas must be filled before reviewing.')).toBeNull();
+  });
+
+  it('keeps an earlier formula edit when another formula is edited', async () => {
+    const user = userEvent.setup();
+    mocks.current.isFetched = true;
+    render(<FormulaConfigurationCreateForm />);
+
+    // Two edits in different sections without an intervening store-triggered
+    // render: a merge built from a stale render snapshot would drop the first
+    // edit once the second lands.
+    const editBtns = screen.getAllByRole('button', { name: 'Edit formula' });
+    await user.click(editBtns[0]);
+    await user.click(editBtns[1]);
+
+    const formulas = mocks.formulaSectionFormulas ?? [];
+    expect(formulas.filter((f) => f.expression === '2').length).toBeGreaterThanOrEqual(2);
   });
 
   // ─── Review Mode Hide/Show ─────────────────────────────────────────────────
