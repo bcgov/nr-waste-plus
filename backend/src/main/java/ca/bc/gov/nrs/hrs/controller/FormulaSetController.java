@@ -33,7 +33,12 @@ public class FormulaSetController {
   private final FormulaSetService service;
   private final FormulaVariableService variableService;
 
-  /** Creates a formula set with its rows and returns the created representation. */
+  /**
+   * Creates a new formula set.
+   *
+   * @param request the create request
+   * @return the created formula set response
+   */
   @PostMapping
   public ResponseEntity<FormulaSetResponse> create(
       @Valid @RequestBody FormulaSetRequest request) {

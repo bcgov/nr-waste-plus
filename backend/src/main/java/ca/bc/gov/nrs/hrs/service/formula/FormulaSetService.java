@@ -123,11 +123,13 @@ public class FormulaSetService {
     }
     set.setDeleted(true);
     setRepository.save(set);
-    setRepository.findPredecessorForReopen(set.getArea(), set.getStartDate()).stream().findFirst()
-        .ifPresent(predecessor -> {
-          predecessor.setEndDate(null);
-          setRepository.save(predecessor);
-        });
+    setRepository.findPredecessorForReopen(set.getArea(), set.getStartDate()).stream()
+        .findFirst()
+        .ifPresent(
+            predecessor -> {
+              predecessor.setEndDate(null);
+              setRepository.save(predecessor);
+            });
   }
 
   /** Reads the set effective for a submission date and selected area. */
@@ -227,8 +229,9 @@ public class FormulaSetService {
     return setRepository.findById(id)
         .filter(e -> !e.isDeleted())
         .orElseThrow(
-            () -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND, "Formula set not found: " + id));
+            () ->
+                new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Formula set not found: " + id));
   }
 
   private boolean semanticallyEqual(List<FormulaSetRowEntity> rows, List<FormulaItemDto> items) {
@@ -252,8 +255,10 @@ public class FormulaSetService {
         set.getEndDate(),
         set.isDeleted(),
         rows.stream()
-            .map(row -> new FormulaItemDto(
-                row.getFormulaKey(), row.getExpression(), row.getSortOrder()))
+            .map(
+                row ->
+                    new FormulaItemDto(
+                        row.getFormulaKey(), row.getExpression(), row.getSortOrder()))
             .toList());
   }
 

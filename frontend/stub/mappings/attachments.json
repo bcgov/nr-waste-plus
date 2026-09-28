@@ -1,10 +1,10 @@
 {
   "mappings": [
     {
-      "name": "Block attachment upload intent - FINAL_MAP",
+      "name": "Block attachment upload attempt - FINAL_MAP",
       "priority": 2,
       "request": {
-        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/intent",
+        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/attempt",
         "method": "POST",
         "bodyPatterns": [
           { "matchesJsonPath": "$[?(@.documentType == 'FINAL_MAP')]" }
@@ -15,17 +15,17 @@
         "headers": { "Content-Type": "application/json" },
         "jsonBody": {
           "attachmentId": 501,
-          "objectKey": "hrs/block/12345/attachment/501/evidence-final-map.pdf",
-          "uploadUrl": "http://localhost:9000/nr-waste/hrs/block/12345/attachment/501/evidence-final-map.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=test%2F20260101%2Fca-central-1%2Fs3%2Faws4_request&X-Amz-Date=20260101T000000Z&X-Amz-Expires=300&X-Amz-SignedHeaders=content-type%3Bhost&X-Amz-Signature=0000000000000000000000000000000000000000000000000000000000000000",
+          "objectKey": "hrs/staging/block/12345/attachment/501/evidence-final-map.pdf",
+          "uploadUrl": "http://localhost:9000/nr-waste/hrs/staging/block/12345/attachment/501/evidence-final-map.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=test%2F20260101%2Fca-central-1%2Fs3%2Faws4_request&X-Amz-Date=20260101T000000Z&X-Amz-Expires=300&X-Amz-SignedHeaders=content-type%3Bhost&X-Amz-Signature=0000000000000000000000000000000000000000000000000000000000000000",
           "expiresAt": "2026-01-01T00:05:00Z"
         }
       }
     },
     {
-      "name": "Block attachment upload intent - oversized",
+      "name": "Block attachment upload attempt - oversized",
       "priority": 1,
       "request": {
-        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/intent",
+        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/attempt",
         "method": "POST",
         "bodyPatterns": [
           { "matchesJsonPath": "$[?(@.declaredSizeBytes > 5242880)]" }
@@ -43,10 +43,10 @@
       }
     },
     {
-      "name": "Block attachment upload intent - invalid document type",
+      "name": "Block attachment upload attempt - invalid document type",
       "priority": 1,
       "request": {
-        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/intent",
+        "urlPathPattern": "/api/reporting-units/[0-9]+/[0-9]+/attachments/attempt",
         "method": "POST",
         "bodyPatterns": [
           {
