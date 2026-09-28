@@ -182,6 +182,11 @@ ca:
           force-path-style: ${OBJECT_STORAGE_FORCE_PATH_STYLE:${S3_FORCE_PATH_STYLE:false}}
           presigned-url-duration: ${OBJECT_STORAGE_PRESIGN_URL_DURATION:5m}
           max-attachment-size-bytes: ${OBJECT_STORAGE_MAX_ATTACHMENT_SIZE_BYTES:${MAX_ATTACHMENT_SIZE_BYTES:5242880}}
+        attachment:
+          cleanup:
+            ttl: ${ATTACHMENT_CLEANUP_TTL:24h}
+            cron: ${ATTACHMENT_CLEANUP_CRON:0 0 * * * *}
+            enabled: ${ATTACHMENT_CLEANUP_ENABLED:true}
         cognito:
           userinfo-uri: https://${COGNITO_DOMAIN:pool-domain}.auth.${COGNITO_REGION:region}.amazoncognito.com/oauth2/userInfo
           identity-ttl: ${COGNITO_IDENTITY_TTL:24h}
@@ -223,6 +228,7 @@ ca:
               - GET
               - POST
               - PUT
+              - PATCH
               - DELETE
             age: 5m
             origins: []
