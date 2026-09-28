@@ -36,12 +36,16 @@ export const FORMULA_KEYS: Record<'INTERIOR' | 'COASTAL', FormulaKeyGroup> = {
       { key: 'block.waste.unavoidable', label: 'Unavoidable Volume' },
       { key: 'block.waste.total_m3ha', label: 'Total Waste Volume (m\u00B3/ha)' },
       { key: 'block.waste.total_m3', label: 'Total Waste Volume (m\u00B3)' },
+      { key: 'block.waste.total_cut_control', label: 'Total cut control volume (m\u00B3)' },
     ],
     'Area Formulas': [
       { key: 'block.area.road', label: 'Road Area' },
       { key: 'block.area.net_waste', label: 'Net Waste Area' },
     ],
     'Benchmark Formulas': [{ key: 'block.benchmark.zone', label: 'Benchmark Zone' }],
+    'Factors': [
+      { key: 'block.waste.dispersed_retention_factor', label: 'Dispersed Retention Factor' },
+    ],
   },
   COASTAL: {
     'Waste Volume Formulas': [
@@ -50,7 +54,8 @@ export const FORMULA_KEYS: Record<'INTERIOR' | 'COASTAL', FormulaKeyGroup> = {
       { key: 'block.waste.avoidable_grade_y', label: 'Avoidable Grade Y Volume' },
       { key: 'block.waste.unavoidable', label: 'Unavoidable Volume' },
       { key: 'block.waste.total_m3ha', label: 'Total Waste Volume (m\u00B3/ha)' },
-      { key: 'block.waste.total_m3', label: 'Total Waste Volume (m\u00B3)' },
+      { key: 'block.waste.total_m3', label: 'Total billable volume (m\u00B3)' },
+      { key: 'block.waste.total_cut_control', label: 'Total cut control volume (m\u00B3)' },
     ],
     'Area Formulas': [
       { key: 'block.area.road', label: 'Road Area' },
@@ -58,7 +63,10 @@ export const FORMULA_KEYS: Record<'INTERIOR' | 'COASTAL', FormulaKeyGroup> = {
     ],
     'Benchmark Formulas': [
       { key: 'block.benchmark.weighted', label: 'Weighted Benchmark' },
+    ],
+    'Factors': [
       { key: 'block.coast.heli.factor', label: 'Heli Logging Factor' },
+      { key: 'block.waste.dispersed_retention_factor', label: 'Dispersed Retention Factor' },
     ],
   },
 } as const;

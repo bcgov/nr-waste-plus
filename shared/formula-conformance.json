@@ -1,5 +1,5 @@
 {
-  "contractVersion": "1.0",
+  "contractVersion": "1.1",
   "namespaces": ["da", "sc", "submission", "hbs", "fta"],
   "diagnosticCodes": [
     "SYNTAX_ERROR",
@@ -76,6 +76,16 @@
       "expression": "IF(da.rate >= 2, 10, IF(sc.value == 1, 3, 4))",
       "mode": "CONDITIONAL",
       "variables": { "da.rate": "1", "sc.value": "1" },
+      "expected": { "status": "VALID" }
+    },
+    {
+      "id": "valid-catalog-factor-placeholders",
+      "definitions": [
+        { "key": "block.waste.total_cut_control", "expression": "1" },
+        { "key": "block.waste.dispersed_retention_factor", "expression": "1" }
+      ],
+      "mode": "MATHEMATICAL",
+      "variables": {},
       "expected": { "status": "VALID" }
     },
     {
