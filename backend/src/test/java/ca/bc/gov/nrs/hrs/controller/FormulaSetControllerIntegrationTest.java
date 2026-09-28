@@ -562,6 +562,40 @@ class FormulaSetControllerIntegrationTest extends AbstractTestContainerIntegrati
         .andExpect(jsonPath("$.catalog.length()").value(5));
   }
 
+  @Test
+  @DisplayName("Variables returns 200 for COASTAL using the shared species-composition row")
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
+  void variablesReturns200ForCoastalUsingSharedSpeciesComposition() throws Exception {
+    // Species composition is stored once with area INTERIOR, so a COASTAL request must
+    // resolve the shared row instead of 404ing on an area-scoped lookup.
+    // Inserted on the test-managed transaction and rolled back with it.
+    jdbcTemplate.execute("""
+        INSERT INTO hrs.district_volume
+            (area, start_date, end_date, table_data, table_level_factor, heli_multiplier,
+             config_type, created_at, created_by, updated_at, updated_by)
+        VALUES
+            ('INTERIOR', '2020-09-01', NULL,
+             '{"speciesRows": [
+                 {"district": {"code": "DKM", "description": "Coast Mountains"},
+                  "species": {"SS": 100.0}}
+               ],
+               "formulas": {}}'::jsonb,
+             1.000, NULL, 'SPECIES_COMPOSITION',
+             NOW(), 'test-seed:variables-coastal-v1', NOW(), 'test-seed:variables-coastal-v1')
+        """);
+
+    mockMvc.perform(get("/api/configuration/formulas/variables")
+            .param("date", "2020-09-15")
+            .param("area", "COASTAL")
+            .param("districtCode", "DKM"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.area").value("COASTAL"))
+        .andExpect(jsonPath("$.namespaces.da").isNotEmpty())
+        .andExpect(jsonPath("$.namespaces.sc").isNotEmpty())
+        .andExpect(jsonPath("$.flat['sc.SS']").exists())
+        .andExpect(jsonPath("$.catalog.length()").value(5));
+  }
+
   // ─── Helpers ───────────────────────────────────────────────────────────
 
   private String createFormulaSet() throws Exception {

@@ -110,13 +110,14 @@ class FormulaVariableServiceTest {
         new CodeDescriptionDto("DNI", "DNI"),
         Map.of("AL", new BigDecimal("0.000")));
     TableData scData = new TableData(null, null, List.of(scRow), Map.of());
-    DistrictVolumeEntity scEntity = scEntity(Area.COASTAL, scData);
+    // Species composition is shared: the COASTAL request must resolve the INTERIOR-stored row.
+    DistrictVolumeEntity scEntity = scEntity(Area.INTERIOR, scData);
 
     when(districtVolumeRepository.findEffectiveByConfigTypeAndArea(
         ConfigType.DISTRICT_VOLUME, Area.COASTAL, DATE))
         .thenReturn(java.util.Optional.of(dvEntity));
     when(districtVolumeRepository.findEffectiveByConfigTypeAndArea(
-        ConfigType.SPECIES_COMPOSITION, Area.COASTAL, DATE))
+        ConfigType.SPECIES_COMPOSITION, Area.INTERIOR, DATE))
         .thenReturn(java.util.Optional.of(scEntity));
 
     FormulaVariablesResponse response = service.build(DATE, Area.COASTAL, "DNI");
