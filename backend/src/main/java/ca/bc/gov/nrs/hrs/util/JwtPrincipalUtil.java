@@ -26,12 +26,9 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
  *
  * <p><strong>Access-token migration note:</strong> The application now validates Cognito <em>access
  * tokens</em> instead of ID tokens. Several claims that were present in the ID token are absent
- * from the access token and can only be retrieved via the Cognito {@code /oauth2/userInfo} endpoint
- * (persisted in {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity}). Methods that read such
- * claims are marked {@link Deprecated}; when called against an access token, they may return an
- * empty string. They should be replaced with reads from {@link
- * ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity} via {@link
- * ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()}.
+ * from the access token and can only be retrieved via the Cognito {@code /oauth2/userInfo}
+ * endpoint. Methods that read such claims are marked {@link Deprecated}; when called against an
+ * access token, they may return an empty string.
  */
 @NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public class JwtPrincipalUtil {
@@ -103,9 +100,7 @@ public class JwtPrincipalUtil {
    *
    * @param principal JwtAuthenticationToken object from which the business ID is to be extracted.
    * @return The business ID, or an empty string if the business ID is blank.
-   * @deprecated {@code custom:idp_business_id} is not present in Cognito access tokens. Use {@link
-   *     ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity#getBusinessId()} obtained from {@link
-   *     ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()} instead.
+   * @deprecated {@code custom:idp_business_id} is not present in Cognito access tokens.
    */
   @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getBusinessId(JwtAuthenticationToken principal) {
@@ -119,9 +114,7 @@ public class JwtPrincipalUtil {
    *
    * @param principal Jwt object from which the business ID is to be extracted.
    * @return The business ID, or an empty string if the business ID is blank.
-   * @deprecated {@code custom:idp_business_id} is not present in Cognito access tokens. Use {@link
-   *     ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity#getBusinessId()} obtained from {@link
-   *     ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()} instead.
+   * @deprecated {@code custom:idp_business_id} is not present in Cognito access tokens.
    */
   @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getBusinessId(Jwt principal) {
@@ -165,9 +158,7 @@ public class JwtPrincipalUtil {
    *
    * @param principal JwtAuthenticationToken object from which the email is to be extracted.
    * @return The email, or an empty string if the claim is blank.
-   * @deprecated {@code email} is not present in Cognito access tokens. Use {@link
-   *     ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity#getEmail()} obtained from {@link
-   *     ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()} instead.
+   * @deprecated {@code email} is not present in Cognito access tokens.
    */
   @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getEmail(JwtAuthenticationToken principal) {
@@ -179,9 +170,7 @@ public class JwtPrincipalUtil {
    *
    * @param principal Jwt object from which the email is to be extracted.
    * @return The email, or an empty string if the claim is blank.
-   * @deprecated {@code email} is not present in Cognito access tokens. Use {@link
-   *     ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity#getEmail()} obtained from {@link
-   *     ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()} instead.
+   * @deprecated {@code email} is not present in Cognito access tokens.
    */
   @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getEmail(Jwt principal) {
@@ -194,9 +183,7 @@ public class JwtPrincipalUtil {
    * @param principal JwtAuthenticationToken object from which the display name is to be extracted.
    * @return The display name, or concatenated first/last names, or an empty string.
    * @deprecated {@code custom:idp_display_name}, {@code given_name} and {@code family_name} are not
-   *     present in Cognito access tokens — this method will always return an empty string. Use
-   *     {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity#getIdpDisplayName()} obtained from
-   *     {@link ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()} instead.
+   *     present in Cognito access tokens — this method will always return an empty string.
    */
   @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getName(JwtAuthenticationToken principal) {
@@ -209,9 +196,7 @@ public class JwtPrincipalUtil {
    * @param principal Jwt object from which the display name is to be extracted.
    * @return The display name, or concatenated first/last names, or an empty string.
    * @deprecated {@code custom:idp_display_name}, {@code given_name} and {@code family_name} are not
-   *     present in Cognito access tokens — this method will always return an empty string. Use
-   *     {@link ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity#getIdpDisplayName()} obtained from
-   *     {@link ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()} instead.
+   *     present in Cognito access tokens — this method will always return an empty string.
    */
   @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getName(Jwt principal) {
@@ -279,9 +264,7 @@ public class JwtPrincipalUtil {
    *
    * @param principal JwtAuthenticationToken object from which the display name is to be extracted.
    * @return The display name or an empty string if the display name is blank.
-   * @deprecated {@code custom:idp_display_name} is not present in Cognito access tokens. Use {@link
-   *     ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity#getIdpDisplayName()} obtained from {@link
-   *     ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()} instead.
+   * @deprecated {@code custom:idp_display_name} is not present in Cognito access tokens.
    */
   @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getDisplayName(JwtAuthenticationToken principal) {
@@ -293,9 +276,7 @@ public class JwtPrincipalUtil {
    *
    * @param principal Jwt object from which the display name is to be extracted.
    * @return The display name or an empty string if the display name is blank.
-   * @deprecated {@code custom:idp_display_name} is not present in Cognito access tokens. Use {@link
-   *     ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity#getIdpDisplayName()} obtained from {@link
-   *     ca.bc.gov.nrs.hrs.security.UserIdentityAuthentication#getIdentity()} instead.
+   * @deprecated {@code custom:idp_display_name} is not present in Cognito access tokens.
    */
   @Deprecated(since = "access-token-migration", forRemoval = true)
   public static String getDisplayName(Jwt principal) {
