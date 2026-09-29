@@ -1,5 +1,4 @@
 user_preferences
-user_identity
 user_bookmarks
 outbox_event
 lifecycle_setting
@@ -10,7 +9,6 @@ block_comment
 block_calculation_snapshot
 block_area_segment
 formula_set_row
-district_volume_formula
 district_average_block
 block_submitter
 block_sponsor
@@ -20,6 +18,6 @@ block_mark
 block_attachment
 block
 formula_set
+district_volume
 audit_event
 reporting_unit
-district_volume

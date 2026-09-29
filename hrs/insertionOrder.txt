@@ -1,6 +1,6 @@
-district_volume
 reporting_unit
 audit_event
+district_volume
 formula_set
 block
 block_attachment
@@ -10,7 +10,6 @@ audit_change
 block_sponsor
 block_submitter
 district_average_block
-district_volume_formula
 formula_set_row
 block_area_segment
 block_calculation_snapshot
@@ -21,5 +20,4 @@ idempotency_record
 lifecycle_setting
 outbox_event
 user_bookmarks
-user_identity
 user_preferences
