@@ -1,8 +1,6 @@
 package ca.bc.gov.nrs.hrs.entity.districtaveragevolume;
 
 import ca.bc.gov.nrs.hrs.entity.SoftDeletableAuditableEntity;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -13,8 +11,6 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Formula expression belonging to an independently versioned formula set. */
@@ -38,14 +34,6 @@ public class FormulaSetRowEntity extends SoftDeletableAuditableEntity {
 
   @Column(nullable = false, length = 4000)
   private String expression;
-
-  @JdbcTypeCode(SqlTypes.JSON)
-  @Column(name = "declared_variables", nullable = false, columnDefinition = "jsonb")
-  private JsonNode declaredVariables = JsonNodeFactory.instance.objectNode();
-
-  @JdbcTypeCode(SqlTypes.JSON)
-  @Column(name = "validation_errors", nullable = false, columnDefinition = "jsonb")
-  private JsonNode validationErrors = JsonNodeFactory.instance.arrayNode();
 
   @Column(name = "sort_order", nullable = false)
   private int sortOrder;

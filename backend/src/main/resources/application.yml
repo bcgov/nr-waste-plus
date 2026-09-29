@@ -189,9 +189,6 @@ ca:
             enabled: ${ATTACHMENT_CLEANUP_ENABLED:true}
         cognito:
           userinfo-uri: https://${COGNITO_DOMAIN:pool-domain}.auth.${COGNITO_REGION:region}.amazoncognito.com/oauth2/userInfo
-          identity-ttl: ${COGNITO_IDENTITY_TTL:24h}
-        hydration:
-          paths: []
         frontend:
           url: ${FRONTEND_URL:http://localhost:3000}
           cors:

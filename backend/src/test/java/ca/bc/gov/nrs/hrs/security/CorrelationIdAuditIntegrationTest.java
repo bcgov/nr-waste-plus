@@ -264,9 +264,8 @@ class CorrelationIdAuditIntegrationTest extends AbstractTestContainerIntegration
    * CorrelationIdConnectionProvider} binds the trace id via {@code SELECT
    * set_config('app.correlation_id', ?, true)} — the third argument {@code true} means {@code
    * is_local}, i.e. PostgreSQL marks the GUC as <em>local to the current transaction</em> and
-   * discards it automatically on {@code COMMIT} / {@code ROLLBACK} (see {@code
-   * src/main/resources/db/migration/V1.0.6__audit_correlation_id.sql} and the Postgres {@code
-   * set_config} docs). Hibernate's default connection handling mode is {@code
+   * discards it automatically on {@code COMMIT} / {@code ROLLBACK} (see {@link
+   * CorrelationIdConnectionProvider} and the Postgres {@code set_config} docs). Hibernate's default connection handling mode is {@code
    * DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION}: the JDBC {@code Connection} is acquired at
    * the first SQL statement inside the Spring {@code @Transactional} and returned to the Hikari
    * pool after the transaction commits. The same physical connection may therefore be handed to the

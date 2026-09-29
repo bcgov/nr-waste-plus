@@ -4,7 +4,6 @@ import ca.bc.gov.nrs.hrs.security.ApiAuthorizationCustomizer;
 import ca.bc.gov.nrs.hrs.security.CsrfSecurityCustomizer;
 import ca.bc.gov.nrs.hrs.security.HeadersSecurityCustomizer;
 import ca.bc.gov.nrs.hrs.security.Oauth2SecurityCustomizer;
-import ca.bc.gov.nrs.hrs.security.UserIdentityHydrationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -34,22 +33,15 @@ public class SecurityConfiguration {
    * Configure and build the primary {@link SecurityFilterChain} for the app.
    *
    * <p>The supplied customizers are applied in the following logical order: headers -> CSRF -> CORS
-   * defaults -> authorization rules -> disable HTTP Basic and form login -> OAuth2 resource server
-   * -> identity hydration filter. Each argument is a Spring-managed component that encapsulates the
-   * configuration for the corresponding concern.
-   *
-   * <p>The {@link UserIdentityHydrationFilter} is inserted immediately after the {@code
-   * BearerTokenAuthenticationFilter} so that the JWT is already validated and the {@code
-   * SecurityContext} is populated before identity hydration runs. This guarantees that role-based
-   * authorization decisions in {@link ApiAuthorizationCustomizer} always see a fully enriched
-   * principal on hydrated paths.
+   * defaults -> authorization rules -> disable HTTP Basic and form login -> OAuth2 resource server.
+   * Each argument is a Spring-managed component that encapsulates the configuration for the
+   * corresponding concern.
    *
    * @param http the {@link HttpSecurity} builder provided by Spring Security
    * @param headersCustomizer customizer used to configure security-related HTTP headers
    * @param csrfCustomizer customizer used to configure CSRF protection
    * @param apiCustomizer customizer used to configure authorization rules for HTTP endpoints
    * @param oauth2Customizer customizer used to configure OAuth2 resource server support
-   * @param hydrationFilter filter that enriches the security context with persisted identity data
    * @return the configured {@link SecurityFilterChain}
    * @throws Exception if an error occurs while configuring {@code HttpSecurity}
    */
@@ -59,8 +51,7 @@ public class SecurityConfiguration {
       HeadersSecurityCustomizer headersCustomizer,
       CsrfSecurityCustomizer csrfCustomizer,
       ApiAuthorizationCustomizer apiCustomizer,
-      Oauth2SecurityCustomizer oauth2Customizer,
-      UserIdentityHydrationFilter hydrationFilter)
+      Oauth2SecurityCustomizer oauth2Customizer)
       throws Exception {
     http.headers(headersCustomizer)
         .csrf(csrfCustomizer)
@@ -68,11 +59,7 @@ public class SecurityConfiguration {
         .authorizeHttpRequests(apiCustomizer)
         .httpBasic(AbstractHttpConfigurer::disable)
         .formLogin(AbstractHttpConfigurer::disable)
-        .oauth2ResourceServer(oauth2Customizer)
-        .addFilterAfter(
-            hydrationFilter,
-            org.springframework.security.oauth2.server.resource.web.authentication
-                .BearerTokenAuthenticationFilter.class);
+        .oauth2ResourceServer(oauth2Customizer);
 
     return http.build();
   }
