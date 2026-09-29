@@ -9,7 +9,6 @@ import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.FormulaSetEntity;
 import ca.bc.gov.nrs.hrs.entity.districtaveragevolume.FormulaSetRowEntity;
 import ca.bc.gov.nrs.hrs.repository.FormulaSetRepository;
 import ca.bc.gov.nrs.hrs.repository.FormulaSetRowRepository;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -190,8 +189,6 @@ public class FormulaSetService {
         row.setExpression(item.expression());
         row.setSortOrder(item.sortOrder());
         row.setDeleted(false);
-        row.setDeclaredVariables(JsonNodeFactory.instance.objectNode());
-        row.setValidationErrors(JsonNodeFactory.instance.arrayNode());
       }
       changed.add(row);
     }

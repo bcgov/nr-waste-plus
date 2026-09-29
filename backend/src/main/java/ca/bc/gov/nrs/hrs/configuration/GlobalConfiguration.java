@@ -30,7 +30,6 @@ import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.entity.speciescomposition.SpeciesCompositionRow;
-import ca.bc.gov.nrs.hrs.entity.users.UserIdentityEntity;
 import ca.bc.gov.nrs.hrs.entity.users.UserPreferenceEntity;
 import ca.bc.gov.nrs.hrs.exception.AttachmentConflictException;
 import ca.bc.gov.nrs.hrs.exception.AttachmentNotFoundException;
@@ -89,7 +88,6 @@ import tools.jackson.databind.json.JsonMapper.Builder;
   CodeDescriptionDto.class,
   CodeNameDto.class,
   UserPreferenceEntity.class,
-  UserIdentityEntity.class,
   AttachmentConflictException.class,
   AttachmentNotFoundException.class,
   AttachmentSizeExceededException.class,

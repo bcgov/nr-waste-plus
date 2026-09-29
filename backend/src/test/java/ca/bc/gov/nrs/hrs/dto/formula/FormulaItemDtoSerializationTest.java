@@ -12,8 +12,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Pins the serialization contract of {@link FormulaItemDto}: a formula row exposes exactly {@code
- * formulaKey}, {@code expression}, and {@code sortOrder}. The persistence-internal fields {@code
- * declaredVariables} and {@code validationErrors} must never appear in serialized output.
+ * formulaKey}, {@code expression}, and {@code sortOrder} — nothing else.
  */
 @DisplayName("Unit Test | Formula Item Dto Serialization")
 class FormulaItemDtoSerializationTest {
