@@ -21,7 +21,9 @@ import org.springframework.stereotype.Component;
 public class ApiAuthorizationCustomizer implements
     Customizer<
         AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry
-        > {
+         > {
+
+  private final JwtRoleAuthorizationManagerFactory roleCheck;
 
   /**
    * The environment of the application, which is injected from the application properties. The
@@ -48,7 +50,11 @@ public class ApiAuthorizationCustomizer implements
         .requestMatchers(HttpMethod.OPTIONS, "/**")
         .authenticated()
 
-        // Allow unrestricted access to authenticated users
+        // User search is independently protected in legacy. IDIR is unrestricted; non-IDIR
+        // callers must have a client scope before the service/query applies it.
+        .requestMatchers(HttpMethod.GET, "/api/search/reporting-units-users")
+        .access(roleCheck.gotReportingUnitUserSearchAccess())
+
         .requestMatchers("/api/**")
         .authenticated();
 

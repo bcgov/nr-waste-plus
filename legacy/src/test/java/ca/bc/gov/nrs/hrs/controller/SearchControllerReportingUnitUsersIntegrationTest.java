@@ -13,11 +13,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc
 @DisplayName("Integrated Test | Search Endpoint : Reporting Unit as Users")
 @WithMockJwt(
+    idp = "idir",
     cognitoGroups = {"Submitter_00010002", "Viewer"}
 )
 class SearchControllerReportingUnitUsersIntegrationTest extends
@@ -73,9 +75,8 @@ class SearchControllerReportingUnitUsersIntegrationTest extends
   }
 
   @Test
-  @DisplayName("Lump Space Princess, where are you?")
+  @DisplayName("Non-IDIR user without client scope is rejected")
   @WithMockJwt(
-      cognitoGroups = {"Submitter_00010002", "Viewer"},
       idp = "bceidbusiness"
   )
   void shouldReturnNothingWhenClientNotListed() throws Exception {
@@ -85,9 +86,18 @@ class SearchControllerReportingUnitUsersIntegrationTest extends
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .param("userId", "lsp")
                 .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.length()").value(0))
-        .andReturn();
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithAnonymousUser
+  @DisplayName("Anonymous user search is rejected before the legacy query")
+  void shouldRejectAnonymousUserSearch() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units-users")
+                .param("userId", "jakedog")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isUnauthorized());
   }
 }
