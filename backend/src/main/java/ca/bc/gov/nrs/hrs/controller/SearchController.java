@@ -138,15 +138,8 @@ public class SearchController {
    * @return a list of user ids that match the provided value
    */
   @GetMapping("/reporting-units-users")
-  public List<String> searchReportingUnitUsers(
-      @AuthenticationPrincipal Jwt jwt, @RequestParam String userId) {
+  public List<String> searchReportingUnitUsers(@RequestParam String userId) {
     log.info("Searching for users that matches {}", userId);
-    IdentityProvider identityProvider = JwtPrincipalUtil.getIdentityProvider(jwt);
-    if (!IdentityProvider.IDIR.equals(identityProvider)
-        && JwtPrincipalUtil.getClientFromRoles(jwt).isEmpty()) {
-      return List.of();
-    }
-
     return service.searchReportingUnitUser(userId);
   }
 }

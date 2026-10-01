@@ -16,8 +16,8 @@ import org.springframework.stereotype.Component;
  * endpoints require authentication, which are permitted anonymously, and custom
  * access checks using {@link JwtRoleAuthorizationManagerFactory}.</p>
  */
-@Component
 @RequiredArgsConstructor
+@Component
 public class ApiAuthorizationCustomizer
     implements
     Customizer<
@@ -99,11 +99,6 @@ public class ApiAuthorizationCustomizer
             "/api/search/reporting-units",
             "/api/search/reporting-units/ex/**")
         .access(roleCheck.notGotIdp(IdentityProvider.BCSC))
-
-        // User search is sensitive: IDIR is unrestricted and every non-IDIR caller must have a
-        // client scope before the legacy service/query is invoked.
-        .requestMatchers(HttpMethod.GET, "/api/search/reporting-units-users")
-        .access(roleCheck.gotReportingUnitUserSearchAccess())
 
         // Other search endpoints can be accessed by authenticated users.
         .requestMatchers("/api/search/**")

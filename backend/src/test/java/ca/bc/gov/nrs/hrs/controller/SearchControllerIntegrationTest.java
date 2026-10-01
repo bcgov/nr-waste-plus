@@ -264,7 +264,6 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
   }
 
   @Test
-  @WithMockJwt(idp = "idir")
   @DisplayName("Search Reporting Unit Users")
   void searchReportingUnitUsers_shouldSucceed() throws Exception {
     legacyApiStub.stubFor(
@@ -282,38 +281,6 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
         .andExpect(jsonPath("$.length()").value(1))
         .andExpect(jsonPath("$[0]").value("TESTUSER"))
         .andReturn();
-  }
-
-  @Test
-  @WithMockJwt(idp = "bceidbusiness")
-  @DisplayName("Non-IDIR user search without client scope is rejected")
-  void searchReportingUnitUsers_bceidWithoutClient_returnsForbiddenWithoutLegacyCall() throws Exception {
-    mockMvc
-        .perform(
-            get("/api/search/reporting-units-users")
-                .queryParam("userId", "TEST")
-                .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isForbidden());
-
-    legacyApiStub.verify(0, WireMock.getRequestedFor(
-        urlPathEqualTo("/api/search/reporting-units-users")));
-  }
-
-  @Test
-  @WithMockJwt(idp = "bcsc", cognitoGroups = {"WASTE_PLUS_VIEWER_00010002"})
-  @DisplayName("BCSC user search remains client-scoped")
-  void searchReportingUnitUsers_bcscWithClientScope_isAllowed() throws Exception {
-    legacyApiStub.stubFor(
-        WireMock.get(urlPathEqualTo("/api/search/reporting-units-users"))
-            .willReturn(okJson("[\"TESTUSER\"]")));
-
-    mockMvc
-        .perform(
-            get("/api/search/reporting-units-users")
-                .queryParam("userId", "TEST")
-                .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0]").value("TESTUSER"));
   }
 
   private static Stream<Arguments> searchReportingUnitBceid() {

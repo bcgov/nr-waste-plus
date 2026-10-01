@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.hrs.security;
 
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
-import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Locale;
 import java.util.Set;
@@ -61,31 +60,6 @@ public class JwtRoleAuthorizationManagerFactory {
           String upperRole = role.toUpperCase(Locale.ROOT);
           return requiredRolePrefixes.stream().anyMatch(upperRole::startsWith);
         });
-  }
-
-  /**
-   * Create the policy for reporting-unit user search.
-   *
-   * <p>IDIR users are unrestricted. Other identity providers must have at least one client
-   * number in the JWT; downstream legacy processing applies that client scope.</p>
-   *
-   * @return an authorization manager for reporting-unit user search
-   */
-  public AuthorizationManager<RequestAuthorizationContext> gotReportingUnitUserSearchAccess() {
-    return (authenticationSupplier, ignoredContext) -> {
-      Authentication authentication = authenticationSupplier == null
-          ? null
-          : authenticationSupplier.get();
-      if (!(authentication instanceof JwtAuthenticationToken jwtAuthentication)) {
-        return new AuthorizationDecision(false);
-      }
-
-      var jwt = jwtAuthentication.getToken();
-      if (IdentityProvider.IDIR.equals(JwtPrincipalUtil.getIdentityProvider(jwt))) {
-        return new AuthorizationDecision(true);
-      }
-      return new AuthorizationDecision(!JwtPrincipalUtil.getClientFromRoles(jwt).isEmpty());
-    };
   }
 
   /**

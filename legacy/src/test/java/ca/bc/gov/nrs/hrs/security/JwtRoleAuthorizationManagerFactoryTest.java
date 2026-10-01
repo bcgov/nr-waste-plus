@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.List;
 import java.util.function.Predicate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,9 +21,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.authorization.AuthorizationResult;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 
 @DisplayName("Unit Test | JwtRoleAuthorizationManagerFactory")
@@ -182,54 +178,6 @@ class JwtRoleAuthorizationManagerFactoryTest {
           "Should match second role");
       assertFalse(builtPredicate.test("WASTE_PLUS_SUBMITTER"),
           "Should not match role not in the list");
-    }
-  }
-
-  @Nested
-  @DisplayName("gotReportingUnitUserSearchAccess()")
-  class ReportingUnitUserSearchAccess {
-
-    @Test
-    void grantsIdirWithoutApplicationGroups() {
-      AuthorizationResult result = authorize("idir", List.of());
-
-      assertTrue(result.isGranted());
-    }
-
-    @Test
-    void grantsClientScopedBceidAndBcscWithoutApplicationGroups() {
-      assertTrue(authorize("bceidbusiness", List.of("WASTE_PLUS_VIEWER_00010002"))
-          .isGranted());
-      assertTrue(authorize("bcsc", List.of("WASTE_PLUS_VIEWER_00010002"))
-          .isGranted());
-    }
-
-    @Test
-    void deniesNonIdirWithoutClientScope() {
-      assertFalse(authorize("bceidbusiness", List.of()).isGranted());
-      assertFalse(authorize("bcsc", List.of()).isGranted());
-    }
-
-    @Test
-    void deniesAnonymousAuthentication() {
-      AuthorizationResult result = factory.gotReportingUnitUserSearchAccess()
-          .authorize(() -> null, context);
-
-      assertFalse(result.isGranted());
-    }
-
-    private AuthorizationResult authorize(String idp, List<String> groups) {
-      Jwt jwt = Jwt.withTokenValue("token")
-          .header("alg", "none")
-          .subject("user")
-          .claim("custom:idp_name", idp)
-          .claim("custom:idp_username", "user")
-          .claim("cognito:groups", groups)
-          .build();
-      JwtAuthenticationToken authentication = new JwtAuthenticationToken(
-          jwt, AuthorityUtils.createAuthorityList(groups));
-      return factory.gotReportingUnitUserSearchAccess()
-          .authorize(() -> authentication, context);
     }
   }
 
@@ -406,3 +354,4 @@ class JwtRoleAuthorizationManagerFactoryTest {
     }
   }
 }
+
