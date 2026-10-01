@@ -1,7 +1,7 @@
 @use '@carbon/react/scss/spacing' as *;
 @use '@carbon/react/scss/breakpoint' as *;
 
-// Page layout for /reporting-units/$ruId/blocks/$blockId (Figma 161:29613).
+// Page layout for /reporting-units/$ruId/$blockId (Figma 161:29613).
 .rublock-column {
   &__banner {
     display: flex;
@@ -11,7 +11,7 @@
   }
 
   &__summary {
-    // Summary card → results table gap.
+    // Summary card → page actions gap.
     margin-bottom: $spacing-07;
   }
 

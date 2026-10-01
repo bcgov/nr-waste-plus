@@ -5,14 +5,11 @@ import { useEffect, useRef, type FC } from 'react';
 
 import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
-import TableResource from '@/components/Form/TableResource';
 import BlockDetailsSkeleton from '@/components/waste/ReportingUnits/BlockDetailsSkeleton';
 import BlockDetailsSummary from '@/components/waste/ReportingUnits/BlockDetailsSummary';
 import { useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
 import useDelayedFlag from '@/hooks/useDelayedFlag';
 import { navigateInTree } from '@/routes/inTreePaths';
-
-import type { PageableResponse, TableHeaderType } from '@/components/Form/TableResource/types';
 
 import './index.scss';
 
@@ -22,32 +19,17 @@ import './index.scss';
  */
 const EVENT_TARGET = 'reporting-unit-block-details';
 
-/** Row shape of the waste-volume results table (populated once slice 3 lands). */
-type BlockResultsRow = { id: number };
-
-/**
- * Empty column definitions. The results table is rendered through
- * {@link TableResource} so its built-in empty state is reused; row columns
- * and status tags arrive with slice 3.
- */
-const EMPTY_RESULTS_HEADERS: TableHeaderType<BlockResultsRow>[] = [];
-
-/** Empty page payload that drives {@link TableResource}'s "No results" state. */
-const EMPTY_RESULTS_CONTENT: PageableResponse<BlockResultsRow> = {
-  content: [],
-  page: { size: 10, number: 0, totalElements: 0, totalPages: 0 },
-};
-
 /**
  * Read-only District Average block details page for a single reporting unit.
  *
- * Route: `/reporting-units/$ruId/blocks/$blockId` (issue #1369).
+ * Route: `/reporting-units/$ruId/$blockId` (issue #1369).
  *
  * Fetches the reporting unit through {@link useReportingUnitDetailsQuery} and renders
  * the page banner (breadcrumb + focusable `h1`), the {@link BlockDetailsSummary}
- * card, an empty {@link TableResource} results region, and a Back action. Errors
- * surface an inline `role="alert"` notification with a Retry action; the loading
- * skeleton is deferred by 300 ms via `useDelayedFlag`.
+ * card, and a Back action. Errors surface an inline `role="alert"` notification
+ * with a Retry action; the loading skeleton is deferred by 300 ms via
+ * `useDelayedFlag`. The blocks results region lives on the Reporting Unit
+ * Details page; row columns and status tags arrive with issue #1250.
  *
  * @returns The block details page columns, ready for the layout `Grid`.
  */
@@ -132,7 +114,7 @@ const ReportingUnitBlockDetailsPage: FC = () => {
           subtitle="View reporting unit details"
           breadCrumbs={[
             { name: 'Reporting unit', path: `/reporting-units/${ruId}` },
-            { name: 'Blocks', path: `/reporting-units/${ruId}/blocks/${blockId}` },
+            { name: 'Blocks', path: `/reporting-units/${ruId}/${blockId}` },
           ]}
         />
       </Column>
@@ -141,15 +123,6 @@ const ReportingUnitBlockDetailsPage: FC = () => {
       </Column>
       <Column lg={16} md={8} sm={4} className="rublock-column__summary">
         <BlockDetailsSummary data={data} />
-      </Column>
-      <Column lg={16} md={8} sm={4} className="rublock-column__results">
-        <TableResource
-          id="block-details-results"
-          headers={EMPTY_RESULTS_HEADERS}
-          content={EMPTY_RESULTS_CONTENT}
-          loading={false}
-          error={isError}
-        />
       </Column>
       <Column
         lg={16}

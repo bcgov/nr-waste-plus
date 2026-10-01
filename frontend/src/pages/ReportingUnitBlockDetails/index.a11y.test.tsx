@@ -10,7 +10,7 @@ import { mockApiResponses } from '@/config/tests/e2e.helper';
 
 const RU_ID = 468;
 const BLOCK_ID = 12;
-const ROUTE_PATH = `/reporting-units/${RU_ID}/blocks/${BLOCK_ID}`;
+const ROUTE_PATH = `/reporting-units/${RU_ID}/${BLOCK_ID}`;
 
 /** Reporting-unit payload used by the a11y audit. */
 const reportingUnitPayload = {

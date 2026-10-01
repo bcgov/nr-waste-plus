@@ -107,7 +107,7 @@ describe('ReportingUnitBlockDetailsPage', () => {
       expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468' });
 
       await user.click(screen.getByText('Blocks'));
-      expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468/blocks/12' });
+      expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468/12' });
     });
 
     it('shouldMoveFocusToHeading_onLoad', async () => {
@@ -159,14 +159,6 @@ describe('ReportingUnitBlockDetailsPage', () => {
       await renderPage();
 
       expect(screen.getByTestId('card-item-content-created-on').textContent).toBe('--');
-    });
-  });
-
-  describe('results region', () => {
-    it('shouldRenderEmptyTableState', async () => {
-      await renderPage();
-
-      expect(screen.getByTestId('empty-section-title').textContent).toBe('No results');
     });
   });
 

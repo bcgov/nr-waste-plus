@@ -468,7 +468,7 @@ export const useReportingUnitCreateMutation = (
  * Fetches the read-only reporting-unit details for a single reporting unit.
  *
  * Backs every read-only reporting-unit view (for example
- * `/reporting-units/$ruId/blocks/$blockId`), which renders the unit's summary
+ * `/reporting-units/$ruId/$blockId`), which renders the unit's summary
  * fields and page chrome from the returned {@link ReportingUnitDto}.
  *
  * On error, dispatches an inline notification to `notificationTarget` (when supplied)

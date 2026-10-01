@@ -160,7 +160,7 @@ export const ROUTES: RouteDescription[] = [
     protected: true,
   },
   {
-    path: '/reporting-units/$ruId/blocks/$blockId',
+    path: '/reporting-units/$ruId/$blockId',
     id: 'Reporting Unit Block Details',
     component: withLazyLayout(ReportingUnitBlockDetailsPage),
     isSideMenu: false,

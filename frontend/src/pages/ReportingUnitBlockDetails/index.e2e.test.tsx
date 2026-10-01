@@ -8,7 +8,7 @@ import { mockApi, mockApiResponses } from '@/config/tests/e2e.helper';
 
 const RU_ID = 468;
 const BLOCK_ID = 12;
-const ROUTE_PATH = `/reporting-units/${RU_ID}/blocks/${BLOCK_ID}`;
+const ROUTE_PATH = `/reporting-units/${RU_ID}/${BLOCK_ID}`;
 
 /** Reporting-unit payload used by every happy-path test (includes createdAt). */
 const reportingUnitPayload = {
@@ -27,7 +27,7 @@ test.describe('Reporting Unit Block Details', () => {
     await mockJwt(page, testInfo.project.metadata);
   });
 
-  test('renders title, read-only summary and empty results state', async ({ page }) => {
+  test('renders title and read-only summary', async ({ page }) => {
     await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
       ...reportingUnitPayload,
     });
@@ -53,9 +53,6 @@ test.describe('Reporting Unit Block Details', () => {
     );
     await expect(page.getByTestId('card-item-content-created-on')).toHaveText('May 25, 2025');
 
-    // Slice 3 is deferred: the results region shows the built-in empty state, not rows.
-    await expect(page.getByTestId('empty-section-title')).toHaveText('No results');
-
     // No edit controls in the read-only design.
     await expect(page.getByRole('button', { name: /edit/i })).toHaveCount(0);
     await expect(page.getByRole('button', { name: /delete/i })).toHaveCount(0);
@@ -73,10 +70,11 @@ test.describe('Reporting Unit Block Details', () => {
     await expect(breadcrumb.getByText('Reporting unit')).toBeVisible();
     await expect(breadcrumb.getByText('Blocks')).toBeVisible();
 
-    // D6: both crumbs are clickable. "Blocks" points at this route (no
-    // blocks-list route exists), so clicking it stays on the block details page.
+    // D6: both crumbs are clickable. "Blocks" points at this route (the blocks
+    // list lives on the RU details page, not a separate route), so clicking it
+    // stays on the block details page.
     await breadcrumb.getByText('Blocks').click();
-    await expect(page).toHaveURL(new RegExp(`/reporting-units/${RU_ID}/blocks/${BLOCK_ID}$`));
+    await expect(page).toHaveURL(new RegExp(`/reporting-units/${RU_ID}/${BLOCK_ID}$`));
 
     await breadcrumb.getByText('Reporting unit').click();
     await expect(page).toHaveURL(new RegExp(`/reporting-units/${RU_ID}$`));
