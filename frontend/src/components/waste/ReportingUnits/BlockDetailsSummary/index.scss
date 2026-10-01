@@ -1,0 +1,27 @@
+@use '@carbon/styles/scss/components/tile';
+@use '@carbon/type' as *;
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+
+.rublock-summary {
+  // Figma 161:29619 — white card, subtle border, 16 px radius and 16 px padding.
+  border: solid 1px var(--cds-border-subtle-selected-03, #c6c6c8);
+  border-radius: $spacing-05;
+  background-color: var(--cds-background);
+
+  &__title {
+    margin-bottom: $spacing-05;
+
+    @include type-style('heading-compact-02');
+    font-weight: 700;
+  }
+
+  &__grid {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  @include breakpoint-down(md) {
+    margin-bottom: $spacing-04;
+  }
+}

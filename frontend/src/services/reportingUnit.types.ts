@@ -24,6 +24,9 @@ export const reportingUnitSchema = z.looseObject({
   grade: codeDescriptionSchema,
   sampling: codeDescriptionSchema,
   district: codeDescriptionSchema,
+  // Creation timestamp; optional because older payloads (and the read-only
+  // block details view) may omit it, in which case the UI falls back to a placeholder.
+  createdAt: z.optional(z.nullable(z.string())),
 });
 
 /** TypeScript representation of a reporting unit, inferred from {@link reportingUnitSchema}. */

@@ -1,0 +1,36 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+
+// Page layout for /reporting-units/$ruId/blocks/$blockId (Figma 161:29613).
+.rublock-column {
+  &__banner {
+    display: flex;
+    flex-direction: column;
+    // Title block → summary card gap.
+    margin-bottom: $spacing-08;
+  }
+
+  &__summary {
+    // Summary card → results table gap.
+    margin-bottom: $spacing-07;
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: $spacing-05;
+    margin-top: $spacing-06;
+
+    @include breakpoint-down(md) {
+      margin-bottom: $spacing-04;
+    }
+  }
+}
+
+// Placeholder field rows shown while the block details skeleton is visible.
+.rublock-skeleton-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-05 $spacing-06;
+}
