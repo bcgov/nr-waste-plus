@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.hrs.security;
 
 import ca.bc.gov.nrs.hrs.dto.base.Role;
-import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
@@ -93,19 +92,13 @@ public class ApiAuthorizationCustomizer
         .requestMatchers("/api/forest-clients/**")
         .authenticated()
 
-        // BCSC users must not access reporting-unit search operations.
-        .requestMatchers(
-            HttpMethod.GET,
-            "/api/search/reporting-units",
-            "/api/search/reporting-units/ex/**")
-        .access(roleCheck.notGotIdp(IdentityProvider.BCSC))
-
-        // Other search endpoints can be accessed by authenticated users.
+        // Search reporting units can be accessed by authenticated users
+        // This is added as a repeat of the above rule to allow future customization
         .requestMatchers("/api/search/**")
         .authenticated()
 
         .requestMatchers(HttpMethod.GET, "/api/reporting-units/**")
-        .access(roleCheck.notGotIdp(IdentityProvider.BCSC))
+        .authenticated()
 
         .requestMatchers(HttpMethod.OPTIONS, "/api/reporting-units/**")
         .authenticated()
