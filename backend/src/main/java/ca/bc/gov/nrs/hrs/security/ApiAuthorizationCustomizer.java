@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.security;
 
 import ca.bc.gov.nrs.hrs.dto.base.Role;
+import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
@@ -98,7 +99,7 @@ public class ApiAuthorizationCustomizer
         .authenticated()
 
         .requestMatchers(HttpMethod.GET, "/api/reporting-units/**")
-        .authenticated()
+        .access(roleCheck.notGotIdp(IdentityProvider.BCSC))
 
         .requestMatchers(HttpMethod.OPTIONS, "/api/reporting-units/**")
         .authenticated()

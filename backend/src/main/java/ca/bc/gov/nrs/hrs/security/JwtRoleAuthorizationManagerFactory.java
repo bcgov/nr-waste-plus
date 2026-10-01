@@ -107,4 +107,16 @@ public class JwtRoleAuthorizationManagerFactory {
     return (ignoredAuthentication, ignoredContext) ->
         new AuthorizationDecision(roleChecker.hasIdpProvider(provider));
   }
+
+  /**
+   * Creates an AuthorizationManager that checks that the current user does not use the supplied
+   * identity provider.
+   *
+   * @param provider the identity provider to reject
+   * @return an AuthorizationManager for request contexts
+   */
+  public AuthorizationManager<RequestAuthorizationContext> notGotIdp(IdentityProvider provider) {
+    return (ignoredAuthentication, ignoredContext) ->
+        new AuthorizationDecision(!roleChecker.hasIdpProvider(provider));
+  }
 }

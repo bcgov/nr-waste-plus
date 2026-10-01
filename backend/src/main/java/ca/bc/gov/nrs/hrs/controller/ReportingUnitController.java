@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.controller;
 import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
+import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
@@ -113,11 +114,19 @@ public class ReportingUnitController {
   @PostMapping
   @Observed
   public ResponseEntity<Void> createReportingUnit(
-      @Valid @RequestBody CreateReportingUnitRequestDto request) {
+      @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CreateReportingUnitRequestDto request) {
+    if (IdentityProvider.BUSINESS_BCEID == JwtPrincipalUtil.getIdentityProvider(jwt)
+        && !JwtPrincipalUtil.hasPrivilegedCreateRole(jwt)
+        && !JwtPrincipalUtil.hasAbstractRole(jwt, Role.SUBMITTER, request.clientNumber())) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "User is not authorized to create a reporting unit for this client");
+    }
+
     Long createdId = reportingUnitService.createReportingUnit(request);
 
     URI location = URI.create("/reporting-units/" + createdId);
 
     return ResponseEntity.created(location).build();
   }
+
 }
