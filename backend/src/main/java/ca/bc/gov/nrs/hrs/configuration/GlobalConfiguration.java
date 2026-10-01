@@ -11,6 +11,10 @@ import ca.bc.gov.nrs.hrs.dto.block.AttachmentScanResponse;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentScanStatus;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentScanStatusUpdateRequest;
 import ca.bc.gov.nrs.hrs.dto.block.AttachmentStatus;
+import ca.bc.gov.nrs.hrs.dto.block.BlockCreateRequestDto;
+import ca.bc.gov.nrs.hrs.dto.block.BlockDetailDto;
+import ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto;
+import ca.bc.gov.nrs.hrs.dto.block.BlockType;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientAutocompleteResultDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientLocationDto;
@@ -36,6 +40,7 @@ import ca.bc.gov.nrs.hrs.exception.AttachmentConflictException;
 import ca.bc.gov.nrs.hrs.exception.AttachmentNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.AttachmentSizeExceededException;
 import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.DuplicateBlockException;
 import ca.bc.gov.nrs.hrs.exception.ForbiddenException;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.exception.GlobalExceptionHandler;
@@ -130,7 +135,12 @@ import tools.jackson.databind.json.JsonMapper.Builder;
   AttachmentIntentRequest.class,
   AttachmentIntentResponse.class,
   AttachmentFinalizeResponse.class,
-  AttachmentDownloadResponse.class
+  AttachmentDownloadResponse.class,
+  BlockCreateRequestDto.class,
+  BlockDetailDto.class,
+  BlockResponseDto.class,
+  BlockType.class,
+  DuplicateBlockException.class
 })
 @EnableJpaAuditing(auditorAwareRef = "databaseAuditor")
 public class GlobalConfiguration {

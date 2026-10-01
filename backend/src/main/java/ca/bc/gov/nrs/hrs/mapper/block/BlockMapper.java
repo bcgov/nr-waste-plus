@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.hrs.mapper.block;
 
 import ca.bc.gov.nrs.hrs.dto.block.BlockCreateDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockDetailDto;
+import ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -21,6 +22,11 @@ public interface BlockMapper {
    */
   @Mapping(target = "isLegacy", constant = "false")
   BlockDetailDto toDetailDto(BlockEntity entity);
+
+  /** Maps a persisted block to its creation response representation. */
+  @Mapping(target = "state", expression = "java(entity.isDraft() ? \"DRAFT\" : \"ACTIVE\")")
+  @Mapping(target = "version", source = "revision")
+  BlockResponseDto toResponseDto(BlockEntity entity);
 
   /** Maps a create payload to a new entity. */
   BlockEntity toEntity(BlockCreateDto dto);

@@ -3,21 +3,31 @@ package ca.bc.gov.nrs.hrs.controller;
 import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.dto.block.BlockCalculationDto;
+import ca.bc.gov.nrs.hrs.dto.block.BlockCreateRequestDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockDetailDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
+import ca.bc.gov.nrs.hrs.dto.block.BlockResponseDto;
+import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
+import ca.bc.gov.nrs.hrs.mapper.block.BlockMapper;
 import ca.bc.gov.nrs.hrs.service.ReportingUnitBlockService;
 import ca.bc.gov.nrs.hrs.service.block.BlockCalculationService;
 import ca.bc.gov.nrs.hrs.service.block.BlockService;
+import ca.bc.gov.nrs.hrs.util.ConditionalRequestSupport;
 import io.micrometer.observation.annotation.Observed;
+import jakarta.validation.Valid;
+import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,14 +35,14 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * REST controller exposing block endpoints nested under a reporting unit.
  *
- * <p>Provides HTTP endpoints for retrieving a single block's details, listing the blocks of a
- * reporting unit, and reading the latest calculation snapshot for a block. Block details are
- * resolved from postgres when the reporting unit lives there and fall back to the legacy API
- * otherwise, mirroring the reporting-unit details behaviour.
+ * <p>Provides HTTP endpoints for creating a new block under a reporting unit, retrieving a single
+ * block's details, listing the blocks of a reporting unit, and reading the latest calculation
+ * snapshot for a block. Block details are resolved from postgres when the reporting unit lives
+ * there and fall back to the legacy API otherwise, mirroring the reporting-unit details behaviour.
  *
  * <p>The details endpoint is gated behind {@link FeatureFlag#REPORTING_UNIT_BLOCK_DETAILS_ENABLED}.
  * When the flag is disabled the controller responds with HTTP 404 so the feature remains invisible
- * to callers. The block-list and calculation endpoints are not flag-gated.
+ * to callers. The block creation, block-list, and calculation endpoints are not flag-gated.
  */
 @RestController
 @RequestMapping("/api/reporting-units")
@@ -45,6 +55,36 @@ public class BlockController {
   private final ReportingUnitBlockService reportingUnitBlockService;
   private final BlockCalculationService blockCalculationService;
   private final FeatureFlagsConfiguration featureFlagsConfiguration;
+  private final BlockMapper blockMapper;
+
+  /**
+   * Creates a new submission block under the specified reporting unit.
+   *
+   * @param jwt caller JWT principal
+   * @param reportingUnitId target reporting unit identifier
+   * @param request creation payload specifying block subtype
+   * @return 201 Created with the created block details, Location header, and strong ETag header
+   */
+  @PostMapping("/{reportingUnitId}/blocks")
+  public ResponseEntity<BlockResponseDto> create(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable Long reportingUnitId,
+      @Valid @RequestBody BlockCreateRequestDto request) {
+    log.info("Creating block under reporting unit {}", reportingUnitId);
+
+    BlockEntity created = blockService.create(jwt, reportingUnitId, request.blockType());
+    URI location =
+        URI.create(
+            String.format("/api/reporting-units/%d/blocks/%d", reportingUnitId, created.getId()));
+
+    var responseBuilder = ResponseEntity.created(location);
+    if (created.getRevision() != null) {
+      responseBuilder.header(
+          HttpHeaders.ETAG, ConditionalRequestSupport.eTagOf(created.getRevision()));
+    }
+
+    return responseBuilder.body(blockMapper.toResponseDto(created));
+  }
 
   /**
    * Retrieve the details of a block owned by a reporting unit.
@@ -66,7 +106,10 @@ public class BlockController {
    * @return a {@link BlockDetailDto} containing the block's details and source marker
    * @throws NotFoundGenericException when the feature flag is disabled or the block cannot be found
    */
-  @GetMapping("/{reportingUnitId}/{blockId}")
+  @GetMapping({
+    "/{reportingUnitId}/{blockId}",
+    "/{reportingUnitId}/blocks/{blockId}"
+  })
   public BlockDetailDto getBlockDetails(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable Long reportingUnitId,

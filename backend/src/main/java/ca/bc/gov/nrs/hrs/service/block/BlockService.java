@@ -4,44 +4,163 @@ import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.block.BlockDetailDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
+import ca.bc.gov.nrs.hrs.dto.block.BlockType;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
+import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.exception.BlockNotFoundException;
+import ca.bc.gov.nrs.hrs.exception.DuplicateBlockException;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
+import ca.bc.gov.nrs.hrs.exception.ReportingUnitNotFoundException;
 import ca.bc.gov.nrs.hrs.mapper.block.BlockMapper;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
+import io.micrometer.observation.annotation.Observed;
+import io.micrometer.tracing.annotation.NewSpan;
+import java.sql.SQLException;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * Read service for individual block details.
- *
- * <p>Blocks live in two places: reporting units persisted in postgres are resolved against the
- * block tables, while everything else is delegated to the legacy API through {@link
- * LegacyApiProvider}. The resolved {@link BlockDetailDto} carries an {@code isLegacy} marker so
- * callers can tell which store served the block.
- *
- * <p>Client scoping mirrors {@link BlockCalculationService}: BUSINESS_BCEID callers must hold a
- * viewer or submitter role for the owning client number; IDIR and BCSC callers are unrestricted.
- * The owning client is resolved from the postgres reporting-unit record on the postgres path and
- * from the legacy reporting-unit details on the legacy path.
- */
-@Slf4j
+/** Service managing core submission blocks for reporting units. */
 @Service
 @RequiredArgsConstructor
+@Slf4j
+@Observed
 public class BlockService {
 
   private static final String DRAFT_STATUS_CODE = "DFT";
+  private static final String ONE_DA_PER_RU_CONSTRAINT = "uq_block_one_da_per_ru";
 
   private final ReportingUnitRepository reportingUnitRepository;
   private final BlockRepository blockRepository;
   private final LegacyApiProvider legacyApiProvider;
   private final BlockMapper blockMapper;
+
+  /**
+   * Creates a new submission block under the specified reporting unit.
+   *
+   * @param jwt caller JWT for tenant authorization
+   * @param reportingUnitId target reporting unit
+   * @param blockType block subtype to create
+   * @return newly created and persisted block entity
+   * @throws ReportingUnitNotFoundException if reporting unit is unknown or outside caller scope
+   * @throws DuplicateBlockException if creating a duplicate DA block for the reporting unit
+   */
+  @NewSpan
+  @Transactional
+  public BlockEntity create(Jwt jwt, Long reportingUnitId, BlockType blockType) {
+    ReportingUnitEntity reportingUnit =
+        reportingUnitRepository
+            .findByIdAndDeletedFalse(reportingUnitId)
+            .orElseThrow(() -> new ReportingUnitNotFoundException(reportingUnitId));
+
+    validateTenantAccess(jwt, reportingUnit);
+
+    BlockEntity entity = new BlockEntity();
+    entity.setReportingUnitId(reportingUnitId);
+    entity.setBlockType(blockType.name());
+    entity.setDraft(true);
+    // revision left null to trigger JPA persist rather than merge
+
+    try {
+      return blockRepository.saveAndFlush(entity);
+    } catch (DataIntegrityViolationException ex) {
+      if (isUniqueDaBlockViolation(ex)) {
+        log.warn(
+            "Conflict: A District Average block already exists for reporting unit {}",
+            reportingUnitId);
+        throw new DuplicateBlockException();
+      }
+      throw ex;
+    }
+  }
+
+  /**
+   * Creates a new submission block without JWT tenant scoping.
+   *
+   * @param reportingUnitId target reporting unit
+   * @param blockType block subtype to create
+   * @return newly created and persisted block entity
+   */
+  public BlockEntity create(Long reportingUnitId, BlockType blockType) {
+    return create(null, reportingUnitId, blockType);
+  }
+
+  /**
+   * Retrieves a non-deleted block that belongs to the specified reporting unit.
+   *
+   * @param jwt caller JWT for tenant authorization
+   * @param reportingUnitId owning reporting unit
+   * @param blockId target block identifier
+   * @return the owned block entity
+   * @throws BlockNotFoundException if block is not found or does not belong to the reporting unit
+   * @throws ReportingUnitNotFoundException if reporting unit is outside caller scope
+   */
+  @NewSpan
+  @Transactional(readOnly = true)
+  public BlockEntity getOwned(Jwt jwt, Long reportingUnitId, Long blockId) {
+    ReportingUnitEntity reportingUnit =
+        reportingUnitRepository
+            .findByIdAndDeletedFalse(reportingUnitId)
+            .orElseThrow(() -> new BlockNotFoundException(blockId, reportingUnitId));
+
+    validateTenantAccess(jwt, reportingUnit);
+
+    return blockRepository
+        .findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId)
+        .orElseThrow(() -> new BlockNotFoundException(blockId, reportingUnitId));
+  }
+
+  /**
+   * Retrieves a non-deleted block that belongs to the specified reporting unit without JWT tenant scoping.
+   *
+   * @param reportingUnitId owning reporting unit
+   * @param blockId target block identifier
+   * @return the owned block entity
+   */
+  public BlockEntity getOwned(Long reportingUnitId, Long blockId) {
+    return getOwned(null, reportingUnitId, blockId);
+  }
+
+  /**
+   * Retrieves all non-deleted blocks for a reporting unit ordered by ID ascending.
+   *
+   * @param jwt caller JWT for tenant authorization
+   * @param reportingUnitId target reporting unit
+   * @return list of non-deleted blocks
+   * @throws ReportingUnitNotFoundException if reporting unit is unknown or outside caller scope
+   */
+  @NewSpan
+  @Transactional(readOnly = true)
+  public List<BlockEntity> findAllByReportingUnitId(Jwt jwt, Long reportingUnitId) {
+    ReportingUnitEntity reportingUnit =
+        reportingUnitRepository
+            .findByIdAndDeletedFalse(reportingUnitId)
+            .orElseThrow(() -> new ReportingUnitNotFoundException(reportingUnitId));
+
+    validateTenantAccess(jwt, reportingUnit);
+
+    return blockRepository.findAllByReportingUnitIdAndDeletedFalseOrderByIdAsc(reportingUnitId);
+  }
+
+  /**
+   * Retrieves all non-deleted blocks for a reporting unit ordered by ID ascending without JWT scoping.
+   *
+   * @param reportingUnitId target reporting unit
+   * @return list of non-deleted blocks
+   */
+  public List<BlockEntity> findAllByReportingUnitId(Long reportingUnitId) {
+    return findAllByReportingUnitId(null, reportingUnitId);
+  }
 
   /**
    * Retrieve the details of a block owned by the given reporting unit.
@@ -125,6 +244,48 @@ public class BlockService {
   private boolean hasClientRole(Jwt jwt, String clientNumber) {
     return JwtPrincipalUtil.hasAbstractRole(jwt, Role.VIEWER, clientNumber)
         || JwtPrincipalUtil.hasAbstractRole(jwt, Role.SUBMITTER, clientNumber);
+  }
+
+  private void validateTenantAccess(Jwt jwt, ReportingUnitEntity reportingUnit) {
+    if (jwt == null) {
+      return;
+    }
+    IdentityProvider idp = JwtPrincipalUtil.getIdentityProvider(jwt);
+    if (IdentityProvider.BUSINESS_BCEID == idp) {
+      List<String> userClientNumbers = JwtPrincipalUtil.getClientFromRoles(jwt);
+      if (!userClientNumbers.contains(reportingUnit.getClientNumber())) {
+        log.warn(
+            "SECURITY: BCeID user {} attempted unauthorized access to reporting unit {}",
+            JwtPrincipalUtil.getUserId(jwt),
+            reportingUnit.getId());
+        throw new ReportingUnitNotFoundException(reportingUnit.getId());
+      }
+    }
+  }
+
+  private boolean isUniqueDaBlockViolation(DataIntegrityViolationException ex) {
+    Throwable current = ex;
+    while (current != null) {
+      if (current instanceof ConstraintViolationException cve) {
+        if (ONE_DA_PER_RU_CONSTRAINT.equalsIgnoreCase(cve.getConstraintName())) {
+          return true;
+        }
+      }
+      if (current instanceof SQLException sqlEx) {
+        if ("23505".equals(sqlEx.getSQLState())) {
+          String msg = sqlEx.getMessage();
+          if (msg != null && msg.toLowerCase().contains(ONE_DA_PER_RU_CONSTRAINT)) {
+            return true;
+          }
+        }
+      }
+      String msg = current.getMessage();
+      if (msg != null && msg.toLowerCase().contains(ONE_DA_PER_RU_CONSTRAINT)) {
+        return true;
+      }
+      current = current.getCause();
+    }
+    return false;
   }
 
   /**

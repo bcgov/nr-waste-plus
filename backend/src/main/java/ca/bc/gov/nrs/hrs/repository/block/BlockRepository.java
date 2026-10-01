@@ -80,4 +80,8 @@ public interface BlockRepository extends JpaRepository<BlockEntity, Long> {
 
   /** Returns the non-deleted block with the given id that belongs to a reporting unit. */
   Optional<BlockEntity> findByIdAndReportingUnitIdAndDeletedFalse(Long id, Long reportingUnitId);
+
+  /** Returns all non-deleted blocks for a reporting unit ordered by id ascending. */
+  List<BlockEntity> findAllByReportingUnitIdAndDeletedFalseOrderByIdAsc(Long reportingUnitId);
 }
+
