@@ -10,8 +10,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.stereotype.Component;
 
@@ -116,7 +118,17 @@ public class JwtRoleAuthorizationManagerFactory {
    * @return an AuthorizationManager for request contexts
    */
   public AuthorizationManager<RequestAuthorizationContext> notGotIdp(IdentityProvider provider) {
-    return (ignoredAuthentication, ignoredContext) ->
-        new AuthorizationDecision(!roleChecker.hasIdpProvider(provider));
+    return (authenticationSupplier, ignoredContext) ->
+        new AuthorizationDecision(
+            hasJwtAuthentication(authenticationSupplier)
+                && !roleChecker.hasIdpProvider(provider));
+  }
+
+  private boolean hasJwtAuthentication(
+      java.util.function.Supplier<? extends Authentication> authenticationSupplier) {
+    Authentication authentication =
+        authenticationSupplier == null ? null : authenticationSupplier.get();
+    return authentication != null
+        && authentication instanceof JwtAuthenticationToken;
   }
 }

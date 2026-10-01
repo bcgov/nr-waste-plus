@@ -231,6 +231,39 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
   }
 
   @Test
+  @WithMockJwt(idp = "bcsc")
+  @DisplayName("BCSC cannot call expanded reporting-unit search")
+  void searchExpanded_bcsc_returns403WithoutLegacyCall() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units/ex/202/302")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden())
+        .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("FOREIGN"))));
+
+    legacyApiStub.verify(0, WireMock.getRequestedFor(urlPathEqualTo("/api/reporting-units/202")));
+    legacyApiStub.verify(
+        0, WireMock.getRequestedFor(urlPathEqualTo("/api/search/reporting-units/ex/202/302")));
+  }
+
+  @Test
+  @WithMockJwt(idp = "bcsc")
+  @DisplayName("BCSC cannot call reporting-unit search")
+  void searchReportingUnits_bcsc_returns403WithoutLegacyCall() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/search/reporting-units")
+                .queryParam("mainSearchTerm", "FOREIGN")
+                .queryParam("page", "0")
+                .queryParam("size", "10")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden())
+        .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("FOREIGN"))));
+
+    legacyApiStub.verify(0, WireMock.getRequestedFor(urlPathEqualTo("/api/search/reporting-units")));
+  }
+
+  @Test
   @DisplayName("Search Reporting Unit Users")
   void searchReportingUnitUsers_shouldSucceed() throws Exception {
     legacyApiStub.stubFor(

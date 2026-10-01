@@ -21,6 +21,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.authorization.AuthorizationResult;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 
 @DisplayName("Unit Test | JwtRoleAuthorizationManagerFactory")
@@ -344,6 +346,42 @@ class JwtRoleAuthorizationManagerFactoryTest {
         assertTrue(result.isGranted(), "Should grant access for provider " + provider.name());
         verify(roleChecker).hasIdpProvider(provider);
       }
+    }
+  }
+
+  @Nested
+  @DisplayName("notGotIdp(IdentityProvider)")
+  class NotGotIdp {
+
+    @Test
+    @DisplayName("denies anonymous authentication without consulting the JWT checker")
+    void shouldDenyAnonymous() {
+      AuthorizationManager<RequestAuthorizationContext> manager =
+          factory.notGotIdp(IdentityProvider.BCSC);
+
+      AuthorizationResult result = manager.authorize(() -> null, context);
+
+      assertFalse(result.isGranted());
+    }
+
+    @Test
+    @DisplayName("preserves the identity-provider decision for a JWT")
+    void shouldDelegateForJwtAuthentication() {
+      when(roleChecker.hasIdpProvider(IdentityProvider.BCSC)).thenReturn(false);
+      Jwt jwt =
+          Jwt.withTokenValue("token")
+              .header("alg", "none")
+              .claim("custom:idp_name", "idir")
+              .build();
+      JwtAuthenticationToken authentication = new JwtAuthenticationToken(jwt);
+      AuthorizationManager<RequestAuthorizationContext> manager =
+          factory.notGotIdp(IdentityProvider.BCSC);
+
+      AuthorizationResult result =
+          manager.authorize(() -> authentication, context);
+
+      assertTrue(result.isGranted());
+      verify(roleChecker).hasIdpProvider(IdentityProvider.BCSC);
     }
   }
 }

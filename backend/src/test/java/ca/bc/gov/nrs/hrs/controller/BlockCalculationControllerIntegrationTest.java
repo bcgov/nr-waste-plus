@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.hrs.controller;
 
 import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -46,6 +47,9 @@ class BlockCalculationControllerIntegrationTest extends AbstractTestContainerInt
   private JdbcTemplate jdbcTemplate;
 
   private Long blockId;
+  private Long reportingUnitId;
+  private Long foreignBlockId;
+  private Long foreignReportingUnitId;
   private Long districtVolumeId;
 
   @BeforeEach
@@ -53,11 +57,12 @@ class BlockCalculationControllerIntegrationTest extends AbstractTestContainerInt
     String unique = UUID.randomUUID().toString().substring(0, 8);
 
     ReportingUnitEntity ru = new ReportingUnitEntity();
-    ru.setClientNumber("0000" + unique.substring(0, 4));
+    ru.setClientNumber("00000000");
     ru.setClientLocnCode("CTRL-" + unique);
     ru.setOrgUnitNo("DCC");
     audit(ru);
     ReportingUnitEntity savedRu = reportingUnitRepository.saveAndFlush(ru);
+    reportingUnitId = savedRu.getId();
 
     BlockEntity block = new BlockEntity();
     block.setReportingUnitId(savedRu.getId());
@@ -67,6 +72,22 @@ class BlockCalculationControllerIntegrationTest extends AbstractTestContainerInt
     audit(block);
     BlockEntity savedBlock = blockRepository.saveAndFlush(block);
     blockId = savedBlock.getId();
+
+    ReportingUnitEntity foreignRu = new ReportingUnitEntity();
+    foreignRu.setClientNumber("99999999");
+    foreignRu.setClientLocnCode("FOREIGN-" + unique);
+    foreignRu.setOrgUnitNo("DCC");
+    audit(foreignRu);
+    ReportingUnitEntity savedForeignRu = reportingUnitRepository.saveAndFlush(foreignRu);
+    foreignReportingUnitId = savedForeignRu.getId();
+
+    BlockEntity foreignBlock = new BlockEntity();
+    foreignBlock.setReportingUnitId(foreignReportingUnitId);
+    foreignBlock.setBlockType("DISTRICT_AVERAGE");
+    foreignBlock.setDraft(false);
+    foreignBlock.setPlcDate(LocalDate.of(2025, Month.JUNE, 1));
+    audit(foreignBlock);
+    foreignBlockId = blockRepository.saveAndFlush(foreignBlock).getId();
 
     districtVolumeId =
         jdbcTemplate.queryForObject(
@@ -115,7 +136,7 @@ class BlockCalculationControllerIntegrationTest extends AbstractTestContainerInt
             t2));
 
     mockMvc
-        .perform(get("/api/blocks/" + blockId + "/calculation"))
+         .perform(get(calculationUrl(reportingUnitId, blockId)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.blockId").value(blockId))
         .andExpect(jsonPath("$.districtVolumeId").value(districtVolumeId))
@@ -132,7 +153,7 @@ class BlockCalculationControllerIntegrationTest extends AbstractTestContainerInt
   @WithMockJwt
   void returns404WhenNoSnapshot() throws Exception {
     mockMvc
-        .perform(get("/api/blocks/" + blockId + "/calculation"))
+         .perform(get(calculationUrl(reportingUnitId, blockId)))
         .andExpect(status().isNotFound());
   }
 
@@ -140,15 +161,118 @@ class BlockCalculationControllerIntegrationTest extends AbstractTestContainerInt
   @DisplayName("Returns 404 for non-existent block id")
   @WithMockJwt
   void returns404ForNonExistentBlock() throws Exception {
-    mockMvc.perform(get("/api/blocks/999999/calculation")).andExpect(status().isNotFound());
+    mockMvc.perform(get(calculationUrl(reportingUnitId, 999999L))).andExpect(status().isNotFound());
   }
 
   @Test
-  @DisplayName("Returns 401 for unauthenticated request")
-  void returns401ForUnauthenticated() throws Exception {
+  @DisplayName("Returns the snapshot through the reporting-unit-scoped calculation URL")
+  @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
+  void returnsSnapshotThroughReportingUnitScopedUrl() throws Exception {
+    String marker = "SAME_SCOPE_CALCULATION";
+    snapshotRepository.save(
+        new BlockCalculationSnapshotEntity(
+            blockId,
+            districtVolumeId,
+            null,
+            null,
+            MAPPER.readTree("{}"),
+            MAPPER.readTree("{\"marker\":1}"),
+            Instant.parse("2025-07-01T12:00:00Z"),
+            marker,
+            MAPPER.createArrayNode(),
+            ACTOR,
+            ACTOR,
+            Instant.parse("2025-07-01T12:00:00Z"),
+            Instant.parse("2025-07-01T12:00:00Z")));
+
     mockMvc
-        .perform(get("/api/blocks/" + blockId + "/calculation"))
-        .andExpect(status().isUnauthorized());
+        .perform(get("/api/reporting-units/" + reportingUnitId + "/blocks/" + blockId + "/calculation"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.roundingPolicy").value(marker));
+  }
+
+  @Test
+  @DisplayName("Denies a BCeID caller reading another client's calculation snapshot")
+  @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
+  void deniesCrossClientCalculationSnapshotWithoutForeignMarker() throws Exception {
+    String marker = "FOREIGN_CLIENT_CALCULATION";
+    snapshotRepository.save(
+        new BlockCalculationSnapshotEntity(
+            foreignBlockId,
+            districtVolumeId,
+            null,
+            null,
+            MAPPER.readTree("{}"),
+            MAPPER.readTree("{\"marker\":1}"),
+            Instant.parse("2025-07-01T12:00:00Z"),
+            marker,
+            MAPPER.createArrayNode(),
+            ACTOR,
+            ACTOR,
+            Instant.parse("2025-07-01T12:00:00Z"),
+            Instant.parse("2025-07-01T12:00:00Z")));
+
+    mockMvc
+        .perform(
+            get(
+                "/api/reporting-units/" + foreignReportingUnitId + "/blocks/" + foreignBlockId
+                    + "/calculation"))
+        .andExpect(status().isForbidden())
+        .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString(marker))));
+  }
+
+  @Test
+  @DisplayName("Keeps IDIR unrestricted on the reporting-unit-scoped calculation URL")
+  @WithMockJwt(idp = "idir")
+  void allowsIdirCalculationSnapshotRead() throws Exception {
+    snapshotRepository.save(
+        new BlockCalculationSnapshotEntity(
+            foreignBlockId,
+            districtVolumeId,
+            null,
+            null,
+            MAPPER.readTree("{}"),
+            MAPPER.readTree("{\"marker\":1}"),
+            Instant.parse("2025-07-01T12:00:00Z"),
+            "IDIR_CONTROL",
+            MAPPER.createArrayNode(),
+            ACTOR,
+            ACTOR,
+            Instant.parse("2025-07-01T12:00:00Z"),
+            Instant.parse("2025-07-01T12:00:00Z")));
+
+    mockMvc
+        .perform(
+            get(
+                "/api/reporting-units/" + foreignReportingUnitId + "/blocks/" + foreignBlockId
+                    + "/calculation"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.roundingPolicy").value("IDIR_CONTROL"));
+  }
+
+  @Test
+  @DisplayName("Rejects a calculation request with the wrong parent reporting unit")
+  @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
+  void rejectsWrongParentReportingUnit() throws Exception {
+    mockMvc
+        .perform(get("/api/reporting-units/" + foreignReportingUnitId + "/blocks/" + blockId + "/calculation"))
+        .andExpect(status().isNotFound());
+  }
+
+   @Test
+   @DisplayName("Returns 401 for unauthenticated request")
+   void returns401ForUnauthenticated() throws Exception {
+     mockMvc
+         .perform(get(calculationUrl(reportingUnitId, blockId)))
+         .andExpect(status().isUnauthorized());
+   }
+
+  private String calculationUrl(Long parentReportingUnitId, Long childBlockId) {
+    return "/api/reporting-units/"
+        + parentReportingUnitId
+        + "/blocks/"
+        + childBlockId
+        + "/calculation";
   }
 
   private void audit(ReportingUnitEntity entity) {

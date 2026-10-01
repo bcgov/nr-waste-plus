@@ -93,8 +93,14 @@ public class ApiAuthorizationCustomizer
         .requestMatchers("/api/forest-clients/**")
         .authenticated()
 
-        // Search reporting units can be accessed by authenticated users
-        // This is added as a repeat of the above rule to allow future customization
+        // BCSC users must not access reporting-unit search operations.
+        .requestMatchers(
+            HttpMethod.GET,
+            "/api/search/reporting-units",
+            "/api/search/reporting-units/ex/**")
+        .access(roleCheck.notGotIdp(IdentityProvider.BCSC))
+
+        // Other search endpoints can be accessed by authenticated users.
         .requestMatchers("/api/search/**")
         .authenticated()
 
