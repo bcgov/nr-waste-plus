@@ -5,7 +5,12 @@ import static org.mockito.BDDMockito.given;
 
 import ca.bc.gov.nrs.hrs.dto.block.BlockCalculationDto;
 import ca.bc.gov.nrs.hrs.entity.block.BlockCalculationSnapshotEntity;
+import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
+import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.repository.block.BlockCalculationSnapshotRepository;
+import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
+import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
+import org.springframework.security.oauth2.jwt.Jwt;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
@@ -26,15 +31,27 @@ class BlockCalculationServiceTest {
 
   @Mock
   private BlockCalculationSnapshotRepository repository;
+  @Mock
+  private BlockRepository blockRepository;
+  @Mock
+  private ReportingUnitRepository reportingUnitRepository;
+  @Mock
+  private BlockEntity block;
+  @Mock
+  private ReportingUnitEntity reportingUnit;
   @InjectMocks
   private BlockCalculationService service;
+
+  private final Jwt jwt = Jwt.withTokenValue("token").header("alg", "none").claim(
+      "custom:idp_name", "idir").build();
 
   @Test
   @DisplayName("Returns empty when no snapshot exists")
   void returnsEmptyWhenNoSnapshot() {
+    givenAuthorizedParent(999L, 999L);
     given(repository.findTopByBlockIdOrderByCalculatedAtDesc(999L)).willReturn(Optional.empty());
 
-    Optional<BlockCalculationDto> result = service.findLatest(999L);
+    Optional<BlockCalculationDto> result = service.findLatest(999L, 999L, jwt);
 
     assertThat(result).isEmpty();
   }
@@ -47,9 +64,10 @@ class BlockCalculationServiceTest {
             MAPPER.readTree("{}"), // outputs — null fields
             MAPPER.createArrayNode()); // warnings — empty
 
+    givenAuthorizedParent(1L, 1L);
     given(repository.findTopByBlockIdOrderByCalculatedAtDesc(1L)).willReturn(Optional.of(entity));
 
-    BlockCalculationDto dto = service.findLatest(1L).orElseThrow();
+    BlockCalculationDto dto = service.findLatest(1L, 1L, jwt).orElseThrow();
 
     assertThat(dto.outputs().grandTotalM3()).isEqualByComparingTo(BigDecimal.ZERO);
   }
@@ -60,9 +78,10 @@ class BlockCalculationServiceTest {
     JsonNode warnings = MAPPER.readTree("[\"rounding_applied\",\"data_missing\"]");
     BlockCalculationSnapshotEntity entity = snapshot(MAPPER.readTree("{\"da.x\":1}"), warnings);
 
+    givenAuthorizedParent(1L, 1L);
     given(repository.findTopByBlockIdOrderByCalculatedAtDesc(1L)).willReturn(Optional.of(entity));
 
-    BlockCalculationDto dto = service.findLatest(1L).orElseThrow();
+    BlockCalculationDto dto = service.findLatest(1L, 1L, jwt).orElseThrow();
 
     assertThat(dto.warnings()).hasSize(2);
     assertThat(dto.warnings().get(0).code()).isEqualTo("rounding_applied");
@@ -77,9 +96,10 @@ class BlockCalculationServiceTest {
         MAPPER.readTree("[{\"code\":\"FTA_UNAVAILABLE\",\"message\":\"FTA service timeout\"}]");
     BlockCalculationSnapshotEntity entity = snapshot(MAPPER.readTree("{\"da.x\":1}"), warnings);
 
+    givenAuthorizedParent(1L, 1L);
     given(repository.findTopByBlockIdOrderByCalculatedAtDesc(1L)).willReturn(Optional.of(entity));
 
-    BlockCalculationDto dto = service.findLatest(1L).orElseThrow();
+    BlockCalculationDto dto = service.findLatest(1L, 1L, jwt).orElseThrow();
 
     assertThat(dto.warnings()).hasSize(1);
     assertThat(dto.warnings().get(0).code()).isEqualTo("FTA_UNAVAILABLE");
@@ -93,9 +113,10 @@ class BlockCalculationServiceTest {
         MAPPER.readTree("{\"da.mature.volume\":10.5,\"da.total\":20.0,\"da.label\":\"text\"}");
     BlockCalculationSnapshotEntity entity = snapshot(outputs, MAPPER.createArrayNode());
 
+    givenAuthorizedParent(1L, 1L);
     given(repository.findTopByBlockIdOrderByCalculatedAtDesc(1L)).willReturn(Optional.of(entity));
 
-    BlockCalculationDto dto = service.findLatest(1L).orElseThrow();
+    BlockCalculationDto dto = service.findLatest(1L, 1L, jwt).orElseThrow();
 
     assertThat(dto.outputs().grandTotalM3()).isEqualByComparingTo(new BigDecimal("30.5"));
   }
@@ -116,5 +137,13 @@ class BlockCalculationServiceTest {
         "test",
         now,
         now);
+  }
+
+  private void givenAuthorizedParent(Long reportingUnitId, Long blockId) {
+    given(blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId))
+        .willReturn(Optional.of(block));
+    given(reportingUnitRepository.findByIdAndDeletedFalse(reportingUnitId))
+        .willReturn(Optional.of(reportingUnit));
+    given(reportingUnit.getClientNumber()).willReturn("00000000");
   }
 }
