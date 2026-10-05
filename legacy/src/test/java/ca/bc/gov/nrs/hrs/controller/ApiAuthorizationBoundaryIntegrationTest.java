@@ -121,28 +121,22 @@ class ApiAuthorizationBoundaryIntegrationTest
 
   static Stream<Arguments> protectedRoutes() {
     return Stream.of(
-        Arguments.of("reporting unit search", "/api/search/reporting-units"),
-        Arguments.of(
-            "expanded reporting unit search",
-            "/api/search/reporting-units/ex/879/1"
-        ),
-        Arguments.of(
-            "reporting unit user search",
-            "/api/search/reporting-units-users?userId=a"
-        ),
-        Arguments.of("my forest clients", "/api/search/my-forest-clients"),
-        Arguments.of("district codes", "/api/codes/districts"),
-        Arguments.of("sampling codes", "/api/codes/samplings"),
-        Arguments.of("assess area status codes", "/api/codes/assess-area-statuses"),
-        Arguments.of("reporting unit details", "/api/reporting-units/879"),
-        Arguments.of("metrics endpoint", "/metrics")
+        Arguments.of("/api/search/reporting-units"),
+        Arguments.of("/api/search/reporting-units/ex/879/1"),
+        Arguments.of("/api/search/reporting-units-users?userId=a"),
+        Arguments.of("/api/search/my-forest-clients"),
+        Arguments.of("/api/codes/districts"),
+        Arguments.of("/api/codes/samplings"),
+        Arguments.of("/api/codes/assess-area-statuses"),
+        Arguments.of("/api/reporting-units/879"),
+        Arguments.of("/metrics")
     );
   }
 
   @ParameterizedTest(name = "{0}")
   @MethodSource("protectedRoutes")
   @DisplayName("should return 401 before the controller for an anonymous request")
-  void shouldReturn401BeforeController_whenRequestIsAnonymous(String name, String uri)
+  void shouldReturn401BeforeController_whenRequestIsAnonymous(String uri)
       throws Exception {
     mockMvc
         .perform(get(uri).accept(JSON))
