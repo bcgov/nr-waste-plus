@@ -82,6 +82,11 @@ jobs:
           CYPRESS_bceid_password: ${{ secrets.BCEID_UAT_PASSWORD }}
           CYPRESS_bceid_username: ${{ secrets.BCEID_UAT_USERNAME }}
 
+      - name: Run Cypress script tests
+        working-directory: cypress
+        if: always()
+        run: npm run test:unit
+
       - name: Generate Markdown Report
         working-directory: cypress
         if: always()
