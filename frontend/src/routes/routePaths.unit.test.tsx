@@ -15,6 +15,7 @@ vi.mock('@/env', async () => {
       'bookmark-ru-enabled': false,
       'reporting-unit-details-enabled': false,
       'reporting-unit-create-enabled': true, // enabled by default in tests
+      'reporting-unit-block-details-enabled': false,
       'configuration-enabled': false,
     },
   };
@@ -457,6 +458,21 @@ describe('routePaths', () => {
       const Comp = route.component;
       const { container } = render(<Comp />);
       expect(container).toBeDefined();
+    });
+
+    it('shouldMarkBlockDetailsRouteAsProtectedAdmin', () => {
+      const blockRoute = routePaths.ROUTES.find(
+        (r) => r.path === '/reporting-units/$ruId/$blockId',
+      )!;
+      expect(blockRoute.protected).toBe(true);
+      expect(blockRoute.roles).toEqual([{ role: Role.ADMIN, clients: [] }]);
+    });
+
+    it('shouldGateBlockDetailsRouteBehindReportingUnitBlockDetailsFlag', () => {
+      const blockRoute = routePaths.ROUTES.find(
+        (r) => r.path === '/reporting-units/$ruId/$blockId',
+      )!;
+      expect(blockRoute.featureFlag).toBe('reporting-unit-block-details-enabled');
     });
 
     it('shouldRenderConfigurationRouteComponent_withoutThrowing', () => {

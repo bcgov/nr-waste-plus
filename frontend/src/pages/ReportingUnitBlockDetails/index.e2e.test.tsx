@@ -27,7 +27,14 @@ test.describe('Reporting Unit Block Details', () => {
     await mockJwt(page, testInfo.project.metadata);
   });
 
+  // The block details route is ADMIN-only, and the BCeID mock user carries only
+  // client-scoped roles — every scenario below therefore runs on the IDIR project.
   test('renders title and read-only summary', async ({ page }) => {
+    test.skip(
+      test.info().project.metadata.userType === 'bceid',
+      'This scenario is validated on IDIR to avoid BCeID role-rule redirects.',
+    );
+
     await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
       ...reportingUnitPayload,
     });
@@ -59,6 +66,11 @@ test.describe('Reporting Unit Block Details', () => {
   });
 
   test('renders breadcrumb with both crumbs clickable', async ({ page }) => {
+    test.skip(
+      test.info().project.metadata.userType === 'bceid',
+      'This scenario is validated on IDIR to avoid BCeID role-rule redirects.',
+    );
+
     await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
       ...reportingUnitPayload,
     });
@@ -81,6 +93,11 @@ test.describe('Reporting Unit Block Details', () => {
   });
 
   test('moves focus to the page heading on mount', async ({ page }) => {
+    test.skip(
+      test.info().project.metadata.userType === 'bceid',
+      'This scenario is validated on IDIR to avoid BCeID role-rule redirects.',
+    );
+
     await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
       ...reportingUnitPayload,
     });
@@ -93,6 +110,11 @@ test.describe('Reporting Unit Block Details', () => {
   });
 
   test('shows the alert banner on failure and recovers after retry', async ({ page }) => {
+    test.skip(
+      test.info().project.metadata.userType === 'bceid',
+      'This scenario is validated on IDIR to avoid BCeID role-rule redirects.',
+    );
+
     let attempts = 0;
     await mockApi(page, `reporting-units/${RU_ID}`, async (route) => {
       attempts += 1;

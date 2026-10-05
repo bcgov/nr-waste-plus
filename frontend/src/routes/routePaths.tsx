@@ -165,6 +165,8 @@ export const ROUTES: RouteDescription[] = [
     component: withLazyLayout(ReportingUnitBlockDetailsPage),
     isSideMenu: false,
     protected: true,
+    roles: [{ role: Role.ADMIN, clients: [] }],
+    featureFlag: 'reporting-unit-block-details-enabled',
   },
   {
     path: '/reporting-units/create',

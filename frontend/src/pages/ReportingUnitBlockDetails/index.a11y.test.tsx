@@ -26,10 +26,23 @@ const reportingUnitPayload = {
 test.describe('<ReportingUnitBlockDetailsPage />', () => {
   test.beforeEach(async ({ page }, testInfo) => {
     await setupAppShellMocks(page, testInfo.project.metadata.userType);
-    await mockJwt(page, testInfo.project.metadata);
+    // The a11y project authenticates as BCeID, but the block details route now
+    // requires the ADMIN role — grant it for the audit run.
+    await mockJwt(page, testInfo.project.metadata, { 'cognito:groups': ['WASTE_PLUS_ADMIN'] });
     await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
       ...reportingUnitPayload,
     });
+    // The a11y workflow keeps the block details flag off (matching the other
+    // reporting-unit flags there), so inject it at runtime: params.js loads
+    // with `defer` before the main bundle, so window.config is set before
+    // env.ts evaluates featureFlags on page load.
+    await page.route('**/data/params.js', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: `window.config = { VITE_FEATURE_FLAGS: '{"reporting-unit-block-details-enabled":true}' };`,
+      }),
+    );
     await page.goto(ROUTE_PATH);
     await page.waitForLoadState('domcontentloaded');
     await injectAxe(page);

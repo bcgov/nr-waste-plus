@@ -11,6 +11,7 @@ import TagWrapper from '@/components/core/Tags/TagWrapper';
 import UnderConstructionTag from '@/components/core/Tags/UnderConstructionTag';
 import ReportingUnitBlocksList from '@/components/waste/ReportingUnits/ReportingUnitBlocksList';
 import ReportingUnitDetailsTombstone from '@/components/waste/ReportingUnits/ReportingUnitDetailsTombstone';
+import { featureFlags } from '@/env';
 
 import './index.scss';
 
@@ -19,7 +20,8 @@ import './index.scss';
  *
  * Reads the pre-fetched {@link ReportingUnitDto} from the TanStack Router loader
  * context and renders the tombstone panel, page title, inline notifications, and
- * the empty blocks list section (issue #1369).
+ * the empty blocks list section (issue #1369), the latter only when the
+ * `reporting-unit-block-details-enabled` feature flag is enabled.
  * Shows a legacy-data tag when the unit has no grade code, and always renders
  * an under-construction tag while the page is in development.
  *
@@ -72,7 +74,7 @@ const ReportingUnitDetailsPage: FC = () => {
         <PageNotification eventTarget="ru-details" />
       </Column>
       <ReportingUnitDetailsTombstone data={data} />
-      <ReportingUnitBlocksList />
+      {featureFlags['reporting-unit-block-details-enabled'] && <ReportingUnitBlocksList />}
     </>
   );
 };
