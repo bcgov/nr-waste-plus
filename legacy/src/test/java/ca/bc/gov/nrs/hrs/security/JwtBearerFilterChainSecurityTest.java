@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.security;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import ca.bc.gov.nrs.hrs.configuration.SecurityConfiguration;
@@ -108,6 +109,28 @@ class JwtBearerFilterChainSecurityTest {
             .header("Authorization", "Bearer " + token("client-good", ISSUER, null)))
         .andExpect(status().isOk());
     assertThat(CONTROLLER_INVOCATIONS).hasValue(1);
+  }
+
+  @Test
+  void anonymousProtectedRequestIsUnauthorizedBeforeController() throws Exception {
+    CONTROLLER_INVOCATIONS.set(0);
+
+    mockMvc.perform(get("/api/protected"))
+        .andExpect(status().isUnauthorized());
+
+    assertThat(CONTROLLER_INVOCATIONS).hasValue(0);
+  }
+
+  @Test
+  void localEnvironmentAppliesRequiredSecurityHeaders() throws Exception {
+    mockMvc.perform(get("/api/protected")
+            .header("Authorization", "Bearer " + token("client-good", ISSUER, null)))
+        .andExpect(status().isOk())
+        .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+        .andExpect(header().string("X-Frame-Options", "DENY"))
+        .andExpect(header().string("Referrer-Policy", "strict-origin-when-cross-origin"))
+        .andExpect(header().string("Content-Security-Policy",
+            org.hamcrest.Matchers.containsString("default-src 'self'")));
   }
 
   @Test
