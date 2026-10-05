@@ -117,7 +117,12 @@ class JwtValidationSecurityTest {
   @Test
   void alteredSignatureMustBeRejected() {
     var compact = token("client-good", ISSUER, Instant.now().plusSeconds(60));
-    var altered = compact.substring(0, compact.length() - 1) + (compact.endsWith("A") ? "B" : "A");
+    int signatureStart = compact.lastIndexOf('.') + 1;
+    int mutationIndex = signatureStart + 1;
+    char current = compact.charAt(mutationIndex);
+    char replacement = current == 'A' ? 'B' : 'A';
+    var altered = compact.substring(0, mutationIndex) + replacement
+        + compact.substring(mutationIndex + 1);
     assertThatThrownBy(() -> decoder.decode(altered)).isInstanceOf(JwtException.class);
   }
 
