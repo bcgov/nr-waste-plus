@@ -181,6 +181,11 @@ objects:
                     secretKeyRef:
                       name: ${NAME}-${ZONE}
                       key: cognito-user-pool
+                - name: COGNITO_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: cognito-client-id
                 - name: COGNITO_REGION
                   value: ${COGNITO_REGION}
                 - name: RANDOM_EXPRESSION
