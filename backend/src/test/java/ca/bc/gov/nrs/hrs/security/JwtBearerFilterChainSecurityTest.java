@@ -258,6 +258,11 @@ class JwtBearerFilterChainSecurityTest {
     }
 
     @Bean
+    CsrfAccessDeniedHandler csrfAccessDeniedHandler() {
+      return new CsrfAccessDeniedHandler(new SecurityEventLoggingListener("backend-test", "test"));
+    }
+
+    @Bean
     JwtRoleChecker jwtRoleChecker() {
       return new JwtRoleChecker();
     }

@@ -14,11 +14,13 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.event.AuthorizationDeniedEvent;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
@@ -107,6 +109,44 @@ class SecurityEventLoggingListenerTest {
             "claims",
             "body",
             "query");
+  }
+
+  @Test
+  void unauthenticatedAuthorizationDenialEmits401AuthenticationFailed() {
+    MockHttpServletRequest request = request("GET", "/api/reporting-units/123");
+    RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+    AuthorizationDeniedEvent<RequestAuthorizationContext> event =
+        new AuthorizationDeniedEvent<RequestAuthorizationContext>(
+            () -> null,
+            new RequestAuthorizationContext(request),
+            new AuthorizationDecision(false));
+
+    listener.onAuthorizationDenied(event);
+
+    String message = message();
+    assertThat(message)
+        .contains("event=AUTHENTICATION_FAILED", "status=401", "method=GET")
+        .contains("routeTemplate=/api/reporting-units/{id}");
+    assertThat(message).doesNotContain("event=AUTHORIZATION_DENIED", "status=403");
+  }
+
+  @Test
+  void anonymousTokenAuthorizationDenialEmits401AuthenticationFailed() {
+    MockHttpServletRequest request = request("GET", "/api/reporting-units/123");
+    RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+    AuthorizationDeniedEvent<RequestAuthorizationContext> event =
+        new AuthorizationDeniedEvent<>(
+            () ->
+                new AnonymousAuthenticationToken(
+                    "key", "anonymousUser", AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS")),
+            new RequestAuthorizationContext(request),
+            new AuthorizationDecision(false));
+
+    listener.onAuthorizationDenied(event);
+
+    String message = message();
+    assertThat(message).contains("event=AUTHENTICATION_FAILED", "status=401");
+    assertThat(message).doesNotContain("event=AUTHORIZATION_DENIED");
   }
 
   private static MockHttpServletRequest request(String method, String route) {

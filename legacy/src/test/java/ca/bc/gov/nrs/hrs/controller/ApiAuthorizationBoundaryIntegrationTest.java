@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
@@ -9,15 +10,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
+import ca.bc.gov.nrs.hrs.security.SecurityEventLoggingListener;
 import ca.bc.gov.nrs.hrs.service.codes.AssessAreaStatusService;
 import ca.bc.gov.nrs.hrs.service.codes.DistrictService;
 import ca.bc.gov.nrs.hrs.service.codes.SamplingService;
 import ca.bc.gov.nrs.hrs.service.reportingunit.ReportingUnitSearchService;
 import ca.bc.gov.nrs.hrs.service.reportingunit.ReportingUnitService;
 import ca.bc.gov.nrs.hrs.service.search.AdvancedSearchService;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import java.util.List;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -73,6 +82,32 @@ class ApiAuthorizationBoundaryIntegrationTest
   @MockitoBean
   private AssessAreaStatusService assessAreaStatusService;
 
+  private ListAppender<ILoggingEvent> securityEvents;
+
+  @BeforeEach
+  void attachSecurityEventAppender() {
+    securityEvents = new ListAppender<>();
+    securityEvents.start();
+    listenerLogger().addAppender(securityEvents);
+  }
+
+  @AfterEach
+  void detachSecurityEventAppender() {
+    listenerLogger().detachAppender(securityEvents);
+    securityEvents.stop();
+  }
+
+  private static Logger listenerLogger() {
+    return (Logger) LoggerFactory.getLogger(SecurityEventLoggingListener.class);
+  }
+
+  private List<String> securityEventMessages() {
+    return securityEvents.list.stream()
+        .map(ILoggingEvent::getFormattedMessage)
+        .filter(message -> message.contains("SECURITY_EVENT"))
+        .toList();
+  }
+
   private void assertNoBusinessComponentInvoked() {
     verifyNoInteractions(
         reportingUnitSearchService,
@@ -113,6 +148,15 @@ class ApiAuthorizationBoundaryIntegrationTest
         .perform(get(uri).accept(JSON))
         .andExpect(status().isUnauthorized());
 
+    // The response is 401, so the audit record must not claim a 403 authorization denial.
+    assertThat(securityEventMessages())
+        .anySatisfy(
+            message ->
+                assertThat(message)
+                    .contains("event=AUTHENTICATION_FAILED", "status=401"))
+        .noneSatisfy(
+            message -> assertThat(message).contains("event=AUTHORIZATION_DENIED"));
+
     assertNoBusinessComponentInvoked();
   }
 
@@ -145,7 +189,7 @@ class ApiAuthorizationBoundaryIntegrationTest
 
   @Test
   @WithMockJwt
-  @DisplayName("should return 403 before the controller when the CSRF token is missing")
+  @DisplayName("should return 403 and audit it before the controller when the CSRF token is missing")
   void shouldReturn403BeforeController_whenCsrfTokenIsMissing() throws Exception {
     mockMvc
         .perform(
@@ -155,6 +199,16 @@ class ApiAuthorizationBoundaryIntegrationTest
                 .content("{}")
         )
         .andExpect(status().isForbidden());
+
+    // A CSRF refusal answers 403 and must leave an audit record with the same status.
+    assertThat(securityEventMessages())
+        .anySatisfy(
+            message ->
+                assertThat(message)
+                    .contains(
+                        "event=AUTHORIZATION_DENIED",
+                        "status=403",
+                        "failureCategory=MissingCsrfTokenException"));
 
     assertNoBusinessComponentInvoked();
   }

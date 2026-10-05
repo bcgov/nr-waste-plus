@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
 import org.springframework.security.authorization.event.AuthorizationDeniedEvent;
 import org.springframework.security.core.Authentication;
@@ -43,9 +44,11 @@ public class SecurityEventLoggingListener {
   /**
    * Records a denied authorization for the current request.
    *
-   * <p>The status is fixed at {@code 403} because this event is only published once the caller is
-   * already authenticated; unauthenticated requests are reported by
-   * {@link #onAuthenticationFailure(AbstractAuthenticationFailureEvent)} instead.</p>
+   * <p>The reported status follows the response the caller will receive: an anonymous caller is
+   * re-challenged by {@code ExceptionTranslationFilter} and answered {@code 401}, so the denial is
+   * reported as {@code AUTHENTICATION_FAILED}; an authenticated caller refused by a rule is
+   * answered {@code 403} and is reported as {@code AUTHORIZATION_DENIED}. This keeps the audit
+   * status aligned with the HTTP status for both cases.</p>
    *
    * @param event the authorization-denied event carrying the request and authentication supplier
    */
@@ -53,10 +56,17 @@ public class SecurityEventLoggingListener {
   public void onAuthorizationDenied(AuthorizationDeniedEvent<?> event) {
     HttpServletRequest request = event.getObject() instanceof RequestAuthorizationContext context
         ? context.getRequest() : currentRequest();
+    Authentication authentication = event.getAuthentication() == null
+        ? null
+        : event.getAuthentication().get();
+    if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+      logEvent("AUTHENTICATION_FAILED", 401, request, event.getAuthentication(), null);
+      return;
+    }
     logEvent("AUTHORIZATION_DENIED", 403, request, event.getAuthentication(), null);
   }
 
-  private void logEvent(String eventName, int status, HttpServletRequest request,
+  void logEvent(String eventName, int status, HttpServletRequest request,
       Supplier<Authentication> authentication, String failureCategory) {
     String identity = safeIdentity(authentication);
     String[] parts = identity == null ? new String[] {"", ""} : identity.split("\\|", 2);
