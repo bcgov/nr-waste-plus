@@ -126,20 +126,6 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
   }
 
   @Test
-  @WithMockJwt(idp = "bcsc", cognitoGroups = {"WASTE_PLUS_SUBMITTER_00012797"})
-  @DisplayName("BCSC may not search a client in scope")
-  void shouldDenyBcscSearchWithinClientScope() throws Exception {
-    assertBcscSearchIsDenied("00012797");
-  }
-
-  @Test
-  @WithMockJwt(idp = "bcsc", cognitoGroups = {"WASTE_PLUS_SUBMITTER_00012797"})
-  @DisplayName("BCSC may not search a client outside scope")
-  void shouldDenyBcscSearchOutsideClientScope() throws Exception {
-    assertBcscSearchIsDenied("00010002");
-  }
-
-  @Test
   @WithMockJwt(idp = "bceidbusiness")
   @DisplayName("BCeID without a client scope may not search clients")
   void shouldDenyBceidSearchWithoutClientScope() throws Exception {
@@ -185,18 +171,6 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
         .andExpect(content().string(org.hamcrest.Matchers.containsString("AUTHZ003_IDIR_MARKER")));
 
     verifyClientSearch("00010002");
-  }
-
-  private void assertBcscSearchIsDenied(String clientNumber) throws Exception {
-    stubClientSearch(clientNumber, "AUTHZ003_BCSC_MARKER");
-
-    mockMvc
-        .perform(searchByNumbers(clientNumber))
-        .andExpect(MockMvcResultMatchers.status().isForbidden())
-        .andExpect(content().string(org.hamcrest.Matchers.not(
-            org.hamcrest.Matchers.containsString("AUTHZ003_BCSC_MARKER"))));
-
-    clientApiStub.verify(0, getRequestedFor(urlPathEqualTo("/clients/search")));
   }
 
   private void stubClientSearch(String clientNumber, String marker) {

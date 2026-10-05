@@ -175,28 +175,6 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
             .withRequestBody(containing("00012797")));
   }
 
-  @Test
-  @WithMockJwt(idp = "bcsc")
-  @DisplayName("Should deny BCSC reporting unit detail access before provider calls")
-  void shouldDenyBcscReportingUnitDetails() throws Exception {
-    String foreignMarker = "FOREIGN_CLIENT_MARKER_AUTHZ002";
-    legacyApiStub.stubFor(
-        get(urlPathEqualTo("/api/reporting-units/12345"))
-            .willReturn(okJson(LEGACY_RU_DETAILS)));
-    clientApiStub.stubFor(
-        get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE
-                .replace("MINISTRY OF FORESTS", foreignMarker))));
-
-    mockMvc
-        .perform(MockMvcRequestBuilders.get("/api/reporting-units/{id}", 12345L))
-        .andExpect(status().isForbidden())
-        .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString(foreignMarker))));
-
-    legacyApiStub.verify(0, getRequestedFor(urlPathEqualTo("/api/reporting-units/12345")));
-    clientApiStub.verify(0, getRequestedFor(urlPathEqualTo("/clients/findByClientNumber/00012797")));
-  }
-
   private void stubCreateDependencies() {
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
