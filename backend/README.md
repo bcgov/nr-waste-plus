@@ -26,19 +26,24 @@ docker compose up -d minio minio-init
 - **API Endpoint**: `http://localhost:9000` (from host) / `http://minio:9000` (within Docker network)
 - **Web Console**: `http://localhost:9001`
 - **Default Bucket**: `nr-waste` (automatically created by `minio-init`)
+- **Persistence**: Storage is backed by a named Docker volume (`minio_data`). Objects persist across `docker compose down` and are only wiped when explicitly requested via `docker compose down -v`.
+- **Healthcheck & Client Architecture**: The MinIO server service (`cgr.dev/chainguard/minio`) provides a readiness probe via `curl http://localhost:9000/minio/health/ready`. The bucket seeding service (`minio-init`) uses the dedicated client image `cgr.dev/chainguard/minio-client:latest` containing the `mc` command-line utility.
 
-#### Environment Variables
+#### Environment Variables & Credentials Setup
 
-Credentials must be non-default and sourced from environment variables or a local `.env` file (never committed to version control):
+Credentials must be non-default and sourced from environment variables or a local `.env` file (which is git-ignored and never committed to version control):
+
+- Ensure your local `.env` file or environment defines `MINIO_ROOT_USER` and `MINIO_ROOT_PASSWORD` alongside `POSTGRES_PASSWORD` and `APP_USER_PASSWORD`.
+- Never commit credentials to version control.
 
 | Environment Variable | Description | Local / Dev Default |
 | --- | --- | --- |
-| `MINIO_ROOT_USER` / `OBJECT_STORAGE_ACCESS_KEY` | MinIO root / S3 access key | (Must be set in `.env` / environment) |
-| `MINIO_ROOT_PASSWORD` / `OBJECT_STORAGE_SECRET_KEY` | MinIO root / S3 secret key | (Must be set in `.env` / environment) |
+| `MINIO_ROOT_USER` / `OBJECT_STORAGE_ACCESS_KEY` | MinIO root / S3 access key | (Set in `.env` / environment) |
+| `MINIO_ROOT_PASSWORD` / `OBJECT_STORAGE_SECRET_KEY` | MinIO root / S3 secret key | (Set in `.env` / environment) |
 | `OBJECT_STORAGE_ENDPOINT` | Custom S3/MinIO endpoint URL | `http://localhost:9000` |
 | `OBJECT_STORAGE_BUCKET` | Target bucket name | `nr-waste` |
 | `OBJECT_STORAGE_REGION` | Signing region | `ca-central-1` |
-| `S3_FORCE_PATH_STYLE` | Enables path-style addressing (required for MinIO) | `true` |
+| `S3_FORCE_PATH_STYLE` | Enables path-style addressing on the S3 client (required for MinIO) | `true` |
 
 #### Integration Tests & CI Isolation
 

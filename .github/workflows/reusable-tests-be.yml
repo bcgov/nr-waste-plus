@@ -32,7 +32,7 @@ jobs:
             -e MINIO_ROOT_USER="$MINIO_USER" \
             -e MINIO_ROOT_PASSWORD="$MINIO_PASSWORD" \
             -e BUCKET="$BUCKET" \
-            cgr.dev/chainguard/minio:latest /bin/sh -c "
+            cgr.dev/chainguard/minio-client:latest /bin/sh -c "
               until mc alias set local http://127.0.0.1:9000 \$MINIO_ROOT_USER \$MINIO_ROOT_PASSWORD; do
                 sleep 1
               done
