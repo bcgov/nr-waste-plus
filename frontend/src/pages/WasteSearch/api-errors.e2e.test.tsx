@@ -123,7 +123,9 @@ test.describe('Waste Search - API Errors', () => {
       await expect(notification).toBeVisible();
       await expect(notification.getByText(title)).toBeVisible();
       await expect(notification.getByText(detail)).toBeVisible();
-      await expect(page).toHaveURL(/\/search$/);
+      // Still on the search route — a 401/403 must not bounce the user to
+      // the landing page or /no-role.
+      await expect(page).toHaveURL(/\/search\?mainSearchTerm=auth-negative/);
     });
   }
 });
