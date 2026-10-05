@@ -33,11 +33,15 @@ jobs:
 
       - name: Install Cypress dependencies
         working-directory: cypress
-        run: npm ci --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Install Cypress binary
         working-directory: cypress
         run: npx cypress install
+
+      - name: Verify Cypress installation
+        working-directory: cypress
+        run: npx cypress version
 
       - name: Wait for frontend deployment
         env:
