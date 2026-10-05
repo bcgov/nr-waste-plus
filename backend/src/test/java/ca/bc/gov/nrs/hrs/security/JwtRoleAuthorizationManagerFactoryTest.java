@@ -122,6 +122,18 @@ class JwtRoleAuthorizationManagerFactoryTest {
 
     @SuppressWarnings("unchecked")
     @Test
+    @DisplayName("should deny when no roles are configured")
+    void shouldDenyWhenRolesAreEmpty() {
+      when(roleChecker.hasRoleMatching(any(Predicate.class))).thenReturn(false);
+
+      AuthorizationResult result =
+          factory.gotRoleMatching().authorize(() -> null, context);
+
+      assertFalse(result.isGranted());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
     @DisplayName("built predicate should match role by prefix (startsWith)")
     void predicateShouldMatchByPrefix() {
       // Capture the predicate passed to roleChecker

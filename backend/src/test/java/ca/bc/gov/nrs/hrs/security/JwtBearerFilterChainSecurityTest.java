@@ -119,6 +119,37 @@ class JwtBearerFilterChainSecurityTest {
   }
 
   @Test
+  void anonymousHealthIsPublicAndCarriesSecurityHeaders() throws Exception {
+    mockMvc
+        .perform(get("/actuator/health"))
+        .andExpect(status().isOk())
+        .andExpect(result -> assertThat(result.getResponse().getHeader("Content-Security-Policy"))
+            .contains("default-src 'none'"))
+        .andExpect(result -> assertThat(result.getResponse().getHeader("X-Content-Type-Options"))
+            .isEqualTo("nosniff"))
+        .andExpect(result -> assertThat(result.getResponse().getHeader("X-Frame-Options"))
+            .isEqualTo("DENY"));
+  }
+
+  @Test
+  void anonymousProtectedRouteReturnsUnauthorized() throws Exception {
+    mockMvc.perform(get("/api/users/protected")).andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void authenticatedInsufficientRoleReturnsForbiddenWithoutControllerInvocation() throws Exception {
+    PROVIDER_INVOCATIONS.set(0);
+
+    mockMvc
+        .perform(
+            get("/api/configuration/formulas")
+                .header("Authorization", "Bearer " + token("client-good", ISSUER, null)))
+        .andExpect(status().isForbidden());
+
+    assertThat(PROVIDER_INVOCATIONS).hasValue(0);
+  }
+
+  @Test
   void wrongClientIdDoesNotReachProtectedController() throws Exception {
     assertRejectedWithoutProvider(token("client-other", ISSUER, null));
   }
@@ -199,6 +230,12 @@ class JwtBearerFilterChainSecurityTest {
     String protectedEndpoint() {
       PROVIDER_INVOCATIONS.incrementAndGet();
       return "provider-result";
+    }
+
+    @GetMapping("/actuator/health")
+    @ResponseBody
+    String health() {
+      return "{\"status\":\"UP\"}";
     }
   }
 
