@@ -3,12 +3,3 @@
 // Blocks section for the Reporting Unit Details page (issue #1369).
 .rublocks-column {
   &__body {
-    // Blocks section → page end gap.
-    margin-bottom: $spacing-07;
-  }
-
-  &__title {
-    // Section heading → blocks table gap.
-    margin-bottom: $spacing-05;
-  }
-}

@@ -1,49 +1,93 @@
 import { Column } from '@carbon/react';
-import { type FC } from 'react';
+import { useState, type FC } from 'react';
 
 import TableResource from '@/components/Form/TableResource';
+import type { PageChangeParams } from '@/components/Form/TableResource/types';
+import type { PageableResponse } from '@/types/PageableResponse';
 
-import type { PageableResponse, TableHeaderType } from '@/components/Form/TableResource/types';
-
+import {
+  BLOCKS_TABLE_HEADERS,
+  EMPTY_BLOCKS_CONTENT,
+  type ReportingUnitBlocksRow,
+} from './constants';
 import './index.scss';
 
-/** Row shape of the reporting-unit blocks table (populated once #1250 lands). */
-type ReportingUnitBlocksRow = { id: number };
+export type { ReportingUnitBlocksRow } from './constants';
 
 /**
- * Empty column definitions. The blocks table is rendered through
- * {@link TableResource} so its built-in empty state is reused; row columns
- * and status tags arrive with issue #1250.
+ * Component props for the Reporting Unit blocks table.
+ *
+ * `content` comes from the block-details endpoint (issue #1250). While the query
+ * is not wired, leave it undefined and the table renders its empty state.
  */
-const EMPTY_BLOCKS_HEADERS: TableHeaderType<ReportingUnitBlocksRow>[] = [];
+export interface ReportingUnitBlocksListProps {
+  /**
+   * Page of blocks to render. When the TanStack Query is wired, pass the query's
+   * `data` straight through.
+   */
+  readonly content?: PageableResponse<ReportingUnitBlocksRow>;
+  /**
+   * Whether the blocks query is in flight. When the TanStack Query is wired, pass
+   * the query's pending state (e.g. `query.isPending`) straight through.
+   */
+  readonly isLoading?: boolean;
+  /**
+   * Whether the blocks query failed. When the TanStack Query is wired, pass the
+   * query's error state (e.g. `query.isError`) straight through.
+   */
+  readonly isError?: boolean;
+}
 
-/** Empty page payload that drives {@link TableResource}'s "No results" state. */
-const EMPTY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
-  content: [],
-  page: { size: 10, number: 0, totalElements: 0, totalPages: 0 },
+/**
+ * Renders the District Average blocks table of a Reporting Unit (read-only).
+ *
+ * Data arrives through the `content` prop so the page stays in charge of the
+ * TanStack Query: while issue #1250 is pending the table simply renders its empty
+ * state. Column definitions, status colors and the empty page live in
+ * `./constants`; pagination and sorting are design-driven out of scope.
+ *
+ * @param props - {@link ReportingUnitBlocksListProps}
+ * @returns The blocks table.
+ */
+const ReportingUnitBlocksList: FC<ReportingUnitBlocksListProps> = ({
+  content,
+  isLoading = false,
+  isError = false,
+}) => {
+  const [{ page, pageSize }, setPage] = useState({ page: 0, pageSize: 10 });
+
+  /**
+   * Tracks the requested page locally until issue #1250 turns this into
+   * server-side paging.
+   *
+   * @param params - The requested page (0-based) and size.
+   */
+  const handlePageChange = ({ page: nextPage, pageSize: nextSize }: PageChangeParams) => {
+    setPage({ page: nextPage, pageSize: nextSize });
+  };
+
+  return (
+    <Column sm={4} md={8} lg={16} className="rublocks-column">
+      <TableResource
+        id="reporting-unit-blocks-list"
+        headers={BLOCKS_TABLE_HEADERS}
+        // Page metadata is synthesized until issue #1250 provides server-side paging.
+        content={{
+          content: (content ?? EMPTY_BLOCKS_CONTENT).content,
+          page: {
+            size: pageSize,
+            number: page,
+            totalElements: (content ?? EMPTY_BLOCKS_CONTENT).page.totalElements,
+            totalPages: (content ?? EMPTY_BLOCKS_CONTENT).page.totalPages,
+          },
+        }}
+        loading={isLoading}
+        error={isError}
+        displayToolbar={false}
+        onPageChange={handlePageChange}
+      />
+    </Column>
+  );
 };
-
-/**
- * Blocks section for the Reporting Unit Details page.
- *
- * Renders a "Blocks" section heading and an empty {@link TableResource} so the
- * built-in "No results" empty state shows until the backend blocks endpoint
- * exists (issue #1250). No data fetching is performed.
- *
- * @returns The blocks section column, ready for the page layout `Grid`.
- */
-const ReportingUnitBlocksList: FC = () => (
-  <Column lg={16} md={8} sm={4} className="rublocks-column__body">
-    <h2 className="rublocks-column__title">Blocks</h2>
-    <TableResource
-      id="reporting-unit-blocks-list"
-      headers={EMPTY_BLOCKS_HEADERS}
-      content={EMPTY_BLOCKS_CONTENT}
-      loading={false}
-      error={false}
-      displayToolbar={false}
-    />
-  </Column>
-);
 
 export default ReportingUnitBlocksList;

@@ -2,8 +2,6 @@ import { Column } from '@carbon/react';
 import { useLoaderData } from '@tanstack/react-router';
 import { type FC } from 'react';
 
-import type { ReportingUnitDto } from '@/services/types';
-
 import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
 import LegacyDataTag from '@/components/core/Tags/LegacyDataTag';
@@ -12,6 +10,8 @@ import UnderConstructionTag from '@/components/core/Tags/UnderConstructionTag';
 import ReportingUnitBlocksList from '@/components/waste/ReportingUnits/ReportingUnitBlocksList';
 import ReportingUnitDetailsTombstone from '@/components/waste/ReportingUnits/ReportingUnitDetailsTombstone';
 import { featureFlags } from '@/env';
+
+import type { ReportingUnitDto } from '@/services/types';
 
 import './index.scss';
 
