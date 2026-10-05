@@ -176,8 +176,8 @@ ca:
         object-storage:
           endpoint: ${OBJECT_STORAGE_ENDPOINT:}
           region: ${OBJECT_STORAGE_REGION:ca-central-1}
-          access-key: ${OBJECT_STORAGE_ACCESS_KEY:}
-          secret-key: ${OBJECT_STORAGE_SECRET_KEY:}
+          access-key: ${OBJECT_STORAGE_ACCESS_KEY:${MINIO_ROOT_USER:}}
+          secret-key: ${OBJECT_STORAGE_SECRET_KEY:${MINIO_ROOT_PASSWORD:}}
           bucket: ${OBJECT_STORAGE_BUCKET:nr-waste}
           force-path-style: ${OBJECT_STORAGE_FORCE_PATH_STYLE:${S3_FORCE_PATH_STYLE:false}}
           presigned-url-duration: ${OBJECT_STORAGE_PRESIGN_URL_DURATION:5m}

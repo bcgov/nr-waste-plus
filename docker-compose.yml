@@ -80,6 +80,49 @@ services:
         condition: service_healthy
     <<: *defaults
 
+  # MinIO Object Storage Service
+  minio:
+    container_name: minio
+    image: ${MINIO_IMAGE:-cgr.dev/chainguard/minio:latest}
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      S3_FORCE_PATH_STYLE: "true"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - /data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    <<: *defaults
+
+  # MinIO Bucket Seeding Service
+  minio-init:
+    container_name: minio-init
+    image: ${MINIO_IMAGE:-cgr.dev/chainguard/minio:latest}
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD}; do
+        sleep 1;
+      done;
+      mc mb --ignore-existing local/$${OBJECT_STORAGE_BUCKET:-nr-waste};
+      exit 0;
+      "
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      OBJECT_STORAGE_BUCKET: ${OBJECT_STORAGE_BUCKET:-nr-waste}
+    <<: *defaults
+
   # Backend Service
   # We use by default the docker image we build locally, but you can
   # uncomment the image line to use the official image from GitHub Container Registry,
@@ -95,9 +138,19 @@ services:
     # We map the volume to override the default configuration with our local config
     # It is easier than passing everything as environment variables
     volumes: [./backend/config:/app/config]
+    environment:
+      S3_FORCE_PATH_STYLE: "true"
+      OBJECT_STORAGE_ENDPOINT: http://minio:9000
+      OBJECT_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER}
+      OBJECT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      OBJECT_STORAGE_BUCKET: ${OBJECT_STORAGE_BUCKET:-nr-waste}
     depends_on:
       database:
         condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
     <<: *defaults
 
   # Legacy Service
