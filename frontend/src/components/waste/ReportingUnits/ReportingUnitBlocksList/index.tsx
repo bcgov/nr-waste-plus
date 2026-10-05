@@ -2,8 +2,8 @@ import { Column } from '@carbon/react';
 import { useState, type FC } from 'react';
 
 import TableResource from '@/components/Form/TableResource';
-import type { PageChangeParams } from '@/components/Form/TableResource/types';
-import type { PageableResponse } from '@/types/PageableResponse';
+import type { PaginationOnChangeType } from '@/components/Form/TableResource/types';
+import type { PageableResponse } from '@/types/PageableResponse.types';
 
 import {
   BLOCKS_TABLE_HEADERS,
@@ -62,7 +62,7 @@ const ReportingUnitBlocksList: FC<ReportingUnitBlocksListProps> = ({
    *
    * @param params - The requested page (0-based) and size.
    */
-  const handlePageChange = ({ page: nextPage, pageSize: nextSize }: PageChangeParams) => {
+  const handlePageChange = ({ page: nextPage, pageSize: nextSize }: PaginationOnChangeType) => {
     setPage({ page: nextPage, pageSize: nextSize });
   };
 

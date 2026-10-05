@@ -1,6 +1,6 @@
 import type { TableHeaderType } from '@/components/Form/TableResource/types';
 import type { CodeDescriptionDto } from '@/services/types';
-import type { NestedKeyOf, PageableResponse } from '@/types/PageableResponse';
+import type { NestedKeyOf, PageableResponse } from '@/types/PageableResponse.types';
 
 import ColorTag, { type CarbonColors } from '@/components/core/Tags/ColorTag';
 import DateTag from '@/components/core/Tags/DateTag';
