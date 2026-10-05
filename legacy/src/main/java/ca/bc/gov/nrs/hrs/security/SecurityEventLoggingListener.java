@@ -15,9 +15,9 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.servlet.HandlerMapping;
 
 /** Emits the security-event audit record without copying request credentials into logs. */
 @Component
@@ -40,6 +40,15 @@ public class SecurityEventLoggingListener {
         event.getException().getClass().getSimpleName());
   }
 
+  /**
+   * Records a denied authorization for the current request.
+   *
+   * <p>The status is fixed at {@code 403} because this event is only published once the caller is
+   * already authenticated; unauthenticated requests are reported by
+   * {@link #onAuthenticationFailure(AbstractAuthenticationFailureEvent)} instead.</p>
+   *
+   * @param event the authorization-denied event carrying the request and authentication supplier
+   */
   @EventListener
   public void onAuthorizationDenied(AuthorizationDeniedEvent<?> event) {
     HttpServletRequest request = event.getObject() instanceof RequestAuthorizationContext context
@@ -50,14 +59,19 @@ public class SecurityEventLoggingListener {
   private void logEvent(String eventName, int status, HttpServletRequest request,
       Supplier<Authentication> authentication, String failureCategory) {
     String identity = safeIdentity(authentication);
+    String[] parts = identity == null ? new String[] {"", ""} : identity.split("\\|", 2);
+    String issuer = parts[0];
+    String subject = parts.length > 1 ? parts[1] : "";
     Object pattern = request == null ? null
         : request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
     LOG.info("SECURITY_EVENT event={} service={} environment={} timestamp={} method={} "
-            + "routeTemplate={} status={} correlationId={} identityProvider={} subject={} failureCategory={}",
-        eventName, service, environment, Instant.now(), request == null ? "" : request.getMethod(),
-        pattern instanceof String ? pattern : "", status, correlationId(),
-         identity == null ? "" : identity.split("\\|", 2)[0],
-         identity == null ? "" : identity.split("\\|", 2)[1], failureCategory == null ? "" : failureCategory);
+            + "routeTemplate={} status={} correlationId={} identityProvider={} subject={} "
+            + "failureCategory={}",
+        eventName, service, environment, Instant.now(),
+        request == null ? "" : request.getMethod(),
+        pattern instanceof String ? pattern : "",
+        status, correlationId(), issuer, subject,
+        failureCategory == null ? "" : failureCategory);
   }
 
   private static String correlationId() {
@@ -71,7 +85,9 @@ public class SecurityEventLoggingListener {
   }
 
   private static String safeIdentity(Supplier<Authentication> supplier) {
-    if (supplier == null) return null;
+    if (supplier == null) {
+      return null;
+    }
     Authentication authentication = supplier.get();
     Object principal = authentication == null ? null : authentication.getPrincipal();
     if (principal instanceof Jwt jwt) {
@@ -90,7 +106,8 @@ public class SecurityEventLoggingListener {
   }
 
   private static HttpServletRequest currentRequest() {
-    if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attributes) {
+    if (RequestContextHolder.getRequestAttributes()
+        instanceof ServletRequestAttributes attributes) {
       return attributes.getRequest();
     }
     return null;

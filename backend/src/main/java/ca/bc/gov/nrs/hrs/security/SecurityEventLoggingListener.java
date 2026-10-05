@@ -15,9 +15,9 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.servlet.HandlerMapping;
 
 /** Emits the security-event audit record without copying request credentials into logs. */
 @Component
@@ -36,6 +36,14 @@ public class SecurityEventLoggingListener {
     this.environment = environment;
   }
 
+  /**
+   * Records a failed authentication attempt for the current request.
+   *
+   * <p>The status is fixed at {@code 401} because this event is only published when credentials
+   * were presented and rejected.</p>
+   *
+   * @param event the authentication-failure event carrying the rejection cause
+   */
   @EventListener
   public void onAuthenticationFailure(AbstractAuthenticationFailureEvent event) {
     HttpServletRequest request = currentRequest();
@@ -129,13 +137,15 @@ public class SecurityEventLoggingListener {
   }
 
   private static HttpServletRequest currentRequest() {
-    if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attributes) {
+    if (RequestContextHolder.getRequestAttributes()
+        instanceof ServletRequestAttributes attributes) {
       return attributes.getRequest();
     }
     return null;
   }
 
   private static HttpServletRequest requestFrom(Object object) {
-    return object instanceof RequestAuthorizationContext context ? context.getRequest() : currentRequest();
+    return object instanceof RequestAuthorizationContext context
+        ? context.getRequest() : currentRequest();
   }
 }

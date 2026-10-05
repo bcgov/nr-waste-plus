@@ -44,6 +44,14 @@ public class Oauth2SecurityCustomizer
 
   private final String jwkSetUri;
 
+  /**
+   * Creates the customizer from the configured Cognito resource-server properties.
+   *
+   * @param cognitoUserInfoClient client used to resolve the caller's Cognito groups
+   * @param issuerUri expected JWT issuer URI
+   * @param expectedClientId {@code client_id} the token must carry
+   * @param jwkSetUri JWK set used to verify token signatures
+   */
   public Oauth2SecurityCustomizer(
       CognitoUserInfoClient cognitoUserInfoClient,
       @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuerUri,

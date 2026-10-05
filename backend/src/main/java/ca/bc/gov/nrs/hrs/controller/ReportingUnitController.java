@@ -119,7 +119,8 @@ public class ReportingUnitController {
         && !JwtPrincipalUtil.hasPrivilegedCreateRole(jwt)
         && !JwtPrincipalUtil.hasAbstractRole(jwt, Role.SUBMITTER, request.clientNumber())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "User is not authorized to create a reporting unit for this client");
+          HttpStatus.FORBIDDEN,
+          "User is not authorized to create a reporting unit for this client");
     }
 
     Long createdId = reportingUnitService.createReportingUnit(request);
