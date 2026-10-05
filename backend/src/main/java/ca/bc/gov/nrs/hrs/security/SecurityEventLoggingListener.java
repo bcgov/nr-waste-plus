@@ -1,0 +1,141 @@
+package ca.bc.gov.nrs.hrs.security;
+
+import jakarta.servlet.http.HttpServletRequest;
+import java.time.Instant;
+import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.EventListener;
+import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
+import org.springframework.security.authorization.event.AuthorizationDeniedEvent;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerMapping;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+/** Emits the security-event audit record without copying request credentials into logs. */
+@Component
+public class SecurityEventLoggingListener {
+  private static final Logger LOG = LoggerFactory.getLogger(SecurityEventLoggingListener.class);
+  private static final String EVENT_AUTHENTICATION_FAILED = "AUTHENTICATION_FAILED";
+  private static final String EVENT_AUTHORIZATION_DENIED = "AUTHORIZATION_DENIED";
+
+  private final String service;
+  private final String environment;
+
+  public SecurityEventLoggingListener(
+      @Value("${spring.application.name:nr-waste-backend}") String service,
+      @Value("${ca.bc.gov.nrs.environment:local}") String environment) {
+    this.service = service;
+    this.environment = environment;
+  }
+
+  @EventListener
+  public void onAuthenticationFailure(AbstractAuthenticationFailureEvent event) {
+    HttpServletRequest request = currentRequest();
+    logEvent(
+        EVENT_AUTHENTICATION_FAILED,
+        401,
+        request,
+        null,
+        event.getException().getClass().getSimpleName());
+  }
+
+  @EventListener
+  public void onAuthorizationDenied(AuthorizationDeniedEvent<?> event) {
+    HttpServletRequest request = requestFrom(event.getObject());
+    logEvent(EVENT_AUTHORIZATION_DENIED, 403, request, event.getAuthentication(), null);
+  }
+
+  private void logEvent(
+      String eventName,
+      int status,
+      HttpServletRequest request,
+      Supplier<Authentication> authentication,
+      String failureCategory) {
+    String routeTemplate = routeTemplate(request);
+    String identity = safeIdentity(authentication);
+    LOG.info(
+        "SECURITY_EVENT event={} service={} environment={} timestamp={} method={} "
+            + "routeTemplate={} status={} correlationId={} identityProvider={} subject={} "
+            + "failureCategory={}",
+        eventName,
+        service,
+        environment,
+        Instant.now(),
+        request == null ? "" : request.getMethod(),
+        routeTemplate,
+        status,
+        correlationId(),
+         identity == null ? "" : identity.split("\\|", 2)[0],
+         identity == null ? "" : identity.split("\\|", 2)[1],
+        failureCategory == null ? "" : failureCategory);
+  }
+
+  private static String routeTemplate(HttpServletRequest request) {
+    if (request == null) {
+      return "";
+    }
+    Object pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+    return pattern instanceof String ? (String) pattern : "";
+  }
+
+  private static String correlationId() {
+    return firstMdc("traceId", "X-B3-TraceId", "X-TRACE-ID");
+  }
+
+  private static String firstMdc(String... keys) {
+    for (String key : keys) {
+      String value = MDC.get(key);
+      if (value != null && !value.isBlank()) {
+        return value;
+      }
+    }
+    return "";
+  }
+
+  private static String safeIdentity(Supplier<Authentication> supplier) {
+    if (supplier == null) {
+      return null;
+    }
+    Authentication authentication = supplier.get();
+    Object principal = authentication == null ? null : authentication.getPrincipal();
+    if (principal instanceof Jwt jwt) {
+      return issuer(jwt) + "|" + valueOrEmpty(jwt.getSubject());
+    }
+    if (principal instanceof OAuth2AuthenticatedPrincipal oauthPrincipal) {
+      return issuer(oauthPrincipal) + "|" + valueOrEmpty(oauthPrincipal.getAttribute("sub"));
+    }
+    return null;
+  }
+
+  private static String issuer(Jwt jwt) {
+    return jwt.getIssuer() == null ? "" : jwt.getIssuer().toString();
+  }
+
+  private static String issuer(OAuth2AuthenticatedPrincipal principal) {
+    Object issuer = principal.getAttribute("iss");
+    return issuer instanceof String ? (String) issuer : "";
+  }
+
+  private static String valueOrEmpty(Object value) {
+    return value instanceof String ? (String) value : "";
+  }
+
+  private static HttpServletRequest currentRequest() {
+    if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attributes) {
+      return attributes.getRequest();
+    }
+    return null;
+  }
+
+  private static HttpServletRequest requestFrom(Object object) {
+    return object instanceof RequestAuthorizationContext context ? context.getRequest() : currentRequest();
+  }
+}
