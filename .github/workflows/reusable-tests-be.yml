@@ -29,10 +29,11 @@ jobs:
 
           # Wait for MinIO readiness and seed the run-isolated bucket
           docker run --rm --network host \
+            --entrypoint /bin/sh \
             -e MINIO_ROOT_USER="$MINIO_USER" \
             -e MINIO_ROOT_PASSWORD="$MINIO_PASSWORD" \
             -e BUCKET="$BUCKET" \
-            cgr.dev/chainguard/minio-client:latest-dev /bin/sh -c "
+            cgr.dev/chainguard/minio-client:latest-dev -c "
               until mc alias set local http://127.0.0.1:9000 \$MINIO_ROOT_USER \$MINIO_ROOT_PASSWORD; do
                 sleep 1
               done
