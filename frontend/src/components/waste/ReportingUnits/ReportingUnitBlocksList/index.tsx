@@ -2,14 +2,16 @@ import { Column } from '@carbon/react';
 import { useState, type FC } from 'react';
 
 import TableResource from '@/components/Form/TableResource';
-import type { PaginationOnChangeType } from '@/components/Form/TableResource/types';
-import type { PageableResponse } from '@/types/PageableResponse.types';
 
 import {
   BLOCKS_TABLE_HEADERS,
   EMPTY_BLOCKS_CONTENT,
   type ReportingUnitBlocksRow,
 } from './constants';
+
+import type { PaginationOnChangeType } from '@/components/Form/TableResource/types';
+import type { PageableResponse } from '@/types/PageableResponse.types';
+
 import './index.scss';
 
 export type { ReportingUnitBlocksRow } from './constants';
@@ -68,6 +70,7 @@ const ReportingUnitBlocksList: FC<ReportingUnitBlocksListProps> = ({
 
   return (
     <Column sm={4} md={8} lg={16} className="rublocks-column">
+      <h2>Blocks</h2>
       <TableResource
         id="reporting-unit-blocks-list"
         headers={BLOCKS_TABLE_HEADERS}

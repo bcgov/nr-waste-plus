@@ -7,6 +7,13 @@ import {
 } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
+import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
+import API from '@/services/APIs';
+import {
+  forestClientAutocompleteResult2CodeDescription,
+  generateSortArray,
+} from '@/services/utils';
+
 import {
   queryKeys,
   type DistrictVolumeQueryParams,
@@ -34,13 +41,6 @@ import type {
   ReportingUnitDto,
   ReportingUnitSearchResultDto,
 } from '@/services/types';
-
-import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
-import API from '@/services/APIs';
-import {
-  forestClientAutocompleteResult2CodeDescription,
-  generateSortArray,
-} from '@/services/utils';
 
 /**
  * Shared TanStack Query options for reference-data requests.
@@ -496,8 +496,9 @@ export const useReportingUnitDetailsQuery = <TData = ReportingUnitDto>(
   const { notificationTarget, ...queryOptions } = options ?? {};
 
   const query = useQuery({
-    queryKey: queryKeys.reportingUnit.details(ruId),
-    queryFn: () => API.reportingUnit.getReportingUnit(ruId) as unknown as Promise<TData>,
+    queryKey: queryKeys.reportingUnit.details(ruId, notificationTarget),
+    queryFn: () =>
+      API.reportingUnit.getReportingUnit(ruId, { notificationTarget }) as unknown as Promise<TData>,
     ...queryOptions,
   });
 

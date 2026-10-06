@@ -28,7 +28,11 @@ test.describe('<ReportingUnitBlockDetailsPage />', () => {
     await setupAppShellMocks(page, testInfo.project.metadata.userType);
     // The a11y project authenticates as BCeID, but the block details route now
     // requires the ADMIN role — grant it for the audit run.
-    await mockJwt(page, testInfo.project.metadata, { 'cognito:groups': ['WASTE_PLUS_ADMIN'] });
+    await mockJwt(
+      page,
+      { ...testInfo.project.metadata, userType: 'idir' },
+      { 'cognito:groups': ['WASTE_PLUS_ADMIN'] },
+    );
     await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
       ...reportingUnitPayload,
     });
@@ -50,17 +54,15 @@ test.describe('<ReportingUnitBlockDetailsPage />', () => {
 
   test('simple accessibility run', async ({ page }) => {
     // Assert the audited page is the block details page, not a redirect target.
-    await expect(
-      page.getByRole('heading', { level: 1, name: `Reporting Unit No. ${RU_ID}` }),
-    ).toBeVisible();
+    const heading = page.locator('h1', { hasText: `Reporting Unit No. ${RU_ID}` });
+    await expect(heading).toBeVisible();
     await checkA11y(page);
   });
 
   test('check a11y for the whole page and axe run options', async ({ page }) => {
     // Assert the audited page is the block details page, not a redirect target.
-    await expect(
-      page.getByRole('heading', { level: 1, name: `Reporting Unit No. ${RU_ID}` }),
-    ).toBeVisible();
+    const heading = page.locator('h1', { hasText: `Reporting Unit No. ${RU_ID}` });
+    await expect(heading).toBeVisible();
     await runA11yAudit(page, undefined);
   });
 });

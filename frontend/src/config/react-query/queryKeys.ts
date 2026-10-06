@@ -93,7 +93,8 @@ export const queryKeys = {
     byFieldAndValue: (id: string, value: string) => ['autocomplete', id, value] as const,
   },
   reportingUnit: {
-    details: (ruId: number) => ['reporting-unit', 'details', ruId] as const,
+    details: (ruId: number, notificationTarget?: string) =>
+      ['reporting-unit', 'details', ruId, notificationTarget] as const,
     create: () => ['reporting-unit', 'create'] as const,
   },
   table: {
