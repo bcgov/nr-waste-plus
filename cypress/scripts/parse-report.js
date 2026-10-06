@@ -6,28 +6,28 @@ const { uiuxToMarkdown } = require('./modules/uiuxModule.js');
 const { lighthouseToMarkdown } = require('./modules/lighthouseModule.js');
 const { writeMarkdown } = require('./renderers/markdownWriter.js');
 
-function generateSummary() {
-  const timestamp = new Date().toISOString();
+function generateSummary({ reportRoot = './reports', outputPath = './summary.md', now = new Date() } = {}) {
+  const timestamp = now.toISOString();
+  const reportPath = (name) => `${reportRoot}/${name}`;
 
-
-  const summaryMd = testSummaryToMarkdown(parseMochawesomeReports('./reports/mochawesome'));
-  const mochawesomeMd = mochawesomeToMarkdown(parseMochawesomeReports('./reports/mochawesome'));
+  const summaryMd = testSummaryToMarkdown(parseMochawesomeReports(reportPath('mochawesome')));
+  const mochawesomeMd = mochawesomeToMarkdown(parseMochawesomeReports(reportPath('mochawesome')));
 
   /* a11y report */
   const accessibilityData = JSON.parse(
-    fs.readFileSync('./reports/a11y/a11y-results.json', 'utf8')
+    fs.readFileSync(reportPath('a11y/a11y-results.json'), 'utf8')
   );
   const accessibilityMd = accessibilityToMarkdown(accessibilityData);
 
   /* lighthouse report */
   const lighthouseData = JSON.parse(
-    fs.readFileSync('./reports/lighthouse/lighthouse-results.json', 'utf8')
+    fs.readFileSync(reportPath('lighthouse/lighthouse-results.json'), 'utf8')
   );
   const lighthouseMd = lighthouseToMarkdown(lighthouseData);
 
   /* UI/UX report */
   const uiuxData = JSON.parse(
-    fs.readFileSync('./reports/uiux/uiux-results.json', 'utf8')
+    fs.readFileSync(reportPath('uiux/uiux-results.json'), 'utf8')
   );
   const uiuxMd = uiuxToMarkdown(uiuxData);
 
@@ -41,7 +41,12 @@ ${lighthouseMd}
 ${uiuxMd}
 ${mochawesomeMd}`;
 
-  writeMarkdown('./summary.md', finalMd);
+  writeMarkdown(outputPath, finalMd);
+  return finalMd;
 }
 
-generateSummary();
+if (require.main === module) {
+  generateSummary();
+}
+
+module.exports = { generateSummary };

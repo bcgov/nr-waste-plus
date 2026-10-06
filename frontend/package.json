@@ -31,6 +31,7 @@
     "pretest:coverage": "echo '{}' > src/config/tests/user.bceid.json && echo '{}' > src/config/tests/user.idir.json",
     "test:coverage": "npm run test:unit; UNIT=$?; npm run test:e2e; E2E=$?; exit $((UNIT||E2E))",
     "coverage:merge": "node scripts/merge-coverage.cjs",
+    "test:scripts": "node --test scripts/*.test.cjs",
     "posttest:coverage": "npm run coverage:merge"
   },
   "dependencies": {
@@ -60,7 +61,7 @@
     "@eslint/js": "^10.0.0",
     "@playwright/test": "1.63.0",
     "@tanstack/eslint-plugin-query": "^5.91.2",
-    "@tanstack/react-devtools": "^0.10.5",
+    "@tanstack/react-devtools": "^0.10.13",
     "@tanstack/react-form-devtools": "^0.2.27",
     "@tanstack/react-query-devtools": "^5.91.2",
     "@tanstack/react-router-devtools": "^1.166.13",
@@ -113,6 +114,7 @@
     "brace-expansion@2": "2.1.7",
     "brace-expansion@5": "5.0.12",
     "js-yaml@<4.3.2": "4.3.2",
-    "dompurify": "^3.4.13"
+    "dompurify": "^3.4.13",
+    "seroval": "^1.6.3"
   }
 }

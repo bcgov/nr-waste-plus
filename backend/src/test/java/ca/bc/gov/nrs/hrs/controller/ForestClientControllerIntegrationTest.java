@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.controller;
 import static ca.bc.gov.nrs.hrs.BackendConstants.X_TOTAL_COUNT;
 import static com.github.tomakehurst.wiremock.client.WireMock.badRequest;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.serviceUnavailable;
@@ -27,6 +28,7 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -79,11 +81,121 @@ class ForestClientControllerIntegrationTest extends AbstractTestContainerIntegra
 
   @BeforeEach
   public void resetCircuitBreaker() {
+    clientApiStub.resetAll();
+    legacyApiStub.resetAll();
     CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("breaker");
     breaker.reset();
     RetryConfig retry = retryRegistry.retry("apiRetry").getRetryConfig();
     retryRegistry.remove("apiRetry");
     retryRegistry.retry("apiRetry", retry);
+  }
+
+  @Test
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00012797"})
+  @DisplayName("BCeID may search a client in its scope")
+  void shouldAllowBceidSearchWithinClientScope() throws Exception {
+    stubClientSearch("00012797", "AUTHZ003_ALLOWED_MARKER");
+
+    mockMvc
+        .perform(searchByNumbers("00012797"))
+        .andExpect(MockMvcResultMatchers.status().isOk())
+        .andExpect(jsonPath("$.[0].clientNumber").value("00012797"))
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("AUTHZ003_ALLOWED_MARKER")));
+
+    verifyClientSearch("00012797");
+  }
+
+  @Test
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00012797"})
+  @DisplayName("BCeID may not search a client outside its scope")
+  void shouldDenyBceidSearchOutsideClientScope() throws Exception {
+    stubClientSearch("00010002", "AUTHZ003_FOREIGN_MARKER");
+
+    mockMvc
+        .perform(searchByNumbers("00010002"))
+        .andExpect(MockMvcResultMatchers.status().isOk())
+        .andExpect(content().string(org.hamcrest.Matchers.not(
+            org.hamcrest.Matchers.containsString("AUTHZ003_FOREIGN_MARKER"))))
+        .andExpect(jsonPath("$").isEmpty());
+
+    clientApiStub.verify(0, getRequestedFor(urlPathEqualTo("/clients/search")));
+  }
+
+  @Test
+  @WithMockJwt(idp = "bceidbusiness")
+  @DisplayName("BCeID without a client scope may not search clients")
+  void shouldDenyBceidSearchWithoutClientScope() throws Exception {
+    stubClientSearch("00012797", "AUTHZ003_NO_SCOPE_MARKER");
+
+    mockMvc
+        .perform(searchByNumbers("00012797"))
+        .andExpect(MockMvcResultMatchers.status().isOk())
+        .andExpect(content().string(org.hamcrest.Matchers.not(
+            org.hamcrest.Matchers.containsString("AUTHZ003_NO_SCOPE_MARKER"))))
+        .andExpect(jsonPath("$").isEmpty());
+
+    clientApiStub.verify(0, getRequestedFor(urlPathEqualTo("/clients/search")));
+  }
+
+  @Test
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00012797"})
+  @DisplayName("An empty requested client value may not broaden the search")
+  void shouldNotBroadenBceidSearchForEmptyValue() throws Exception {
+    stubClientSearch("00012797", "AUTHZ003_EMPTY_VALUE_MARKER");
+
+    mockMvc
+        .perform(searchByNumbers(""))
+        .andExpect(MockMvcResultMatchers.status().isOk())
+        .andExpect(content().string(org.hamcrest.Matchers.not(
+            org.hamcrest.Matchers.containsString("AUTHZ003_EMPTY_VALUE_MARKER"))))
+        .andExpect(jsonPath("$").isEmpty());
+
+    clientApiStub.verify(0, getRequestedFor(urlPathEqualTo("/clients/search")));
+  }
+
+  @Test
+  @WithMockJwt(idp = "idir")
+  @DisplayName("IDIR may search a client outside client scope")
+  void shouldAllowIdirSearchOutsideClientScope() throws Exception {
+    stubClientSearch("00010002", "AUTHZ003_IDIR_MARKER");
+
+    mockMvc
+        .perform(searchByNumbers("00010002"))
+        .andExpect(MockMvcResultMatchers.status().isOk())
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("AUTHZ003_IDIR_MARKER")));
+
+    verifyClientSearch("00010002");
+  }
+
+  private void stubClientSearch(String clientNumber, String marker) {
+    String response =
+        ForestClientApiProviderTestConstants.ONE_BY_VALUE_LIST
+            .replace("00012797", clientNumber)
+            .replace("MINISTRY OF FORESTS", marker);
+    clientApiStub.stubFor(get(urlPathEqualTo("/clients/search")).willReturn(okJson(response)));
+  }
+
+  private void verifyClientSearch(String clientNumber) {
+    clientApiStub.verify(
+        1,
+        getRequestedFor(urlPathEqualTo("/clients/search"))
+            .withQueryParam("page", com.github.tomakehurst.wiremock.client.WireMock.equalTo("0"))
+            .withQueryParam("size", com.github.tomakehurst.wiremock.client.WireMock.equalTo("10"))
+            .withQueryParam("id", com.github.tomakehurst.wiremock.client.WireMock.equalTo(clientNumber)));
+  }
+
+  private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder searchByNumbers(
+      String clientNumber) {
+    return MockMvcRequestBuilders.get("/api/forest-clients/searchByNumbers")
+        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .accept(MediaType.APPLICATION_JSON)
+        .param("values", clientNumber);
   }
 
   @ParameterizedTest

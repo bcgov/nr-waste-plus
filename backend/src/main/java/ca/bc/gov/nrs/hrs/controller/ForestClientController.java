@@ -130,7 +130,23 @@ public class ForestClientController {
       @AuthenticationPrincipal Jwt jwt) {
     log.info(
         "Searching forest clients by client numbers for user: {}", JwtPrincipalUtil.getUserId(jwt));
-    return forestClientService.searchByClientNumbers(page, size, values, null);
+
+    IdentityProvider identityProvider = JwtPrincipalUtil.getIdentityProvider(jwt);
+    if (identityProvider == IdentityProvider.IDIR) {
+      return forestClientService.searchByClientNumbers(page, size, values, null);
+    }
+
+    List<String> clientsFromRoles = JwtPrincipalUtil.getClientFromRoles(jwt);
+    List<String> effectiveValues =
+        values.stream()
+            .filter(StringUtils::isNotBlank)
+            .filter(clientsFromRoles::contains)
+            .toList();
+    if (effectiveValues.isEmpty()) {
+      return List.of();
+    }
+
+    return forestClientService.searchByClientNumbers(page, size, effectiveValues, null);
   }
 
   /**

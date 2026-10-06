@@ -6,7 +6,11 @@ import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.stereotype.Component;
@@ -27,10 +31,35 @@ public class Oauth2SecurityCustomizer implements
   @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
   String jwkSetUri;
 
+  @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+  String issuerUri;
+
+  @Value("${spring.security.oauth2.resourceserver.jwt.client-id}")
+  String expectedClientId;
+
   @Override
   public void customize(
       OAuth2ResourceServerConfigurer<HttpSecurity> customize) {
-    customize.jwt(jwt -> jwt.jwtAuthenticationConverter(converter()).jwkSetUri(jwkSetUri));
+    var decoder = org.springframework.security.oauth2.jwt.NimbusJwtDecoder
+        .withJwkSetUri(jwkSetUri).build();
+    decoder.setJwtValidator(new org.springframework.security.oauth2.core
+        .DelegatingOAuth2TokenValidator<>(
+            JwtValidators.createDefaultWithIssuer(issuerUri),
+            new ClientIdValidator(expectedClientId)));
+    customize.jwt(jwt -> jwt.jwtAuthenticationConverter(converter()).decoder(decoder));
+  }
+
+  private record ClientIdValidator(String expectedClientId)
+      implements OAuth2TokenValidator<Jwt> {
+
+    @Override
+    public OAuth2TokenValidatorResult validate(Jwt token) {
+      if (expectedClientId.equals(token.getClaimAsString("client_id"))) {
+        return OAuth2TokenValidatorResult.success();
+      }
+      return OAuth2TokenValidatorResult.failure(
+          new OAuth2Error("invalid_token", "Token client_id is not authorized", null));
+    }
   }
 
   private Converter<Jwt, AbstractAuthenticationToken> converter() {

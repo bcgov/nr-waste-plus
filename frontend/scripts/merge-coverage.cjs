@@ -19,8 +19,8 @@ const { createContext } = require('istanbul-lib-report');
 const reports = require('istanbul-reports');
 
 const PROJECT_ROOT = path.resolve(__dirname, '..');
-const NYC_OUTPUT_DIR = path.resolve(PROJECT_ROOT, '.nyc_output');
-const COVERAGE_DIR = path.resolve(PROJECT_ROOT, 'coverage');
+const NYC_OUTPUT_DIR = path.resolve(process.env.NYC_OUTPUT_DIR || path.join(PROJECT_ROOT, '.nyc_output'));
+const COVERAGE_DIR = path.resolve(process.env.COVERAGE_DIR || path.join(PROJECT_ROOT, 'coverage'));
 
 function main() {
   // 1. Copy unit coverage from vitest into .nyc_output so it gets merged
@@ -95,9 +95,13 @@ function main() {
   console.info('LCOV and text-summary reports generated in %s', COVERAGE_DIR);
 }
 
-try {
-  main();
-} catch (err) {
-  console.error(err);
-  process.exit(1);
+if (require.main === module) {
+  try {
+    main();
+  } catch (err) {
+    console.error(err);
+    process.exit(1);
+  }
 }
+
+module.exports = { main };

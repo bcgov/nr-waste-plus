@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "report:md": "node scripts/parse-report.js",
+    "test:unit": "node --test scripts/*.test.js",
     "report:clean": "rm -rf reports/*",
     "precy:run": "npm run report:clean",
     "cy:run": "cypress run --browser chrome",
@@ -70,7 +71,8 @@
     "ws@^7.0.0": "7.5.11",
     "brace-expansion@5": "5.0.12",
     "brace-expansion@2": "2.1.7",
-    "js-yaml@<4.3.2": "4.3.2"
+    "js-yaml@<4.3.2": "4.3.2",
+    "shelljs": "0.8.5"
   },
   "allowScripts": {
     "cypress@16.0.0": true,

@@ -8,6 +8,7 @@ COPY src ./src
 COPY .mvn/ ./.mvn
 
 # Build
+RUN microdnf install -y unzip && microdnf clean all
 RUN ./mvnw -Pnative package -DskipTests -Dskip.unit.tests=true -Dspring-boot.run.profiles=prod
 
 ### Deployer
