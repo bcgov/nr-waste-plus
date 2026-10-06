@@ -39,10 +39,6 @@ public class BlockCalculationService {
    * @return the latest snapshot, if one exists
    */
   public Optional<BlockCalculationDto> findLatest(Long reportingUnitId, Long blockId, Jwt jwt) {
-    blockRepository
-        .findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
     String clientNumber =
         reportingUnitRepository
             .findByIdAndDeletedFalse(reportingUnitId)
@@ -52,6 +48,10 @@ public class BlockCalculationService {
         && !hasClientRole(jwt, clientNumber)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
+
+    blockRepository
+        .findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     return repository.findTopByBlockIdOrderByCalculatedAtDesc(blockId).map(this::toDto);
   }

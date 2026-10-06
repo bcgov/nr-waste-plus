@@ -115,12 +115,11 @@ public class ReportingUnitController {
   @Observed
   public ResponseEntity<Void> createReportingUnit(
       @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CreateReportingUnitRequestDto request) {
-    if (IdentityProvider.BUSINESS_BCEID == JwtPrincipalUtil.getIdentityProvider(jwt)
-        && !JwtPrincipalUtil.hasPrivilegedCreateRole(jwt)
+    if (!JwtPrincipalUtil.hasPrivilegedCreateRole(jwt)
         && !JwtPrincipalUtil.hasAbstractRole(jwt, Role.SUBMITTER, request.clientNumber())) {
       throw new ResponseStatusException(
           HttpStatus.FORBIDDEN,
-          "User is not authorized to create a reporting unit for this client");
+          "User is not authorized to create a reporting unit for client " + request.clientNumber());
     }
 
     Long createdId = reportingUnitService.createReportingUnit(request);
