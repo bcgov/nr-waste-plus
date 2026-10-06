@@ -1,14 +1,14 @@
 import { screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import ReportingUnitDetailsPage from './index';
-
-import type { ReportingUnitDto } from '@/services/types';
-
 import { renderWithApp } from '@/config/tests/renderWithApp';
 import { Role } from '@/context/auth/types';
 import * as useAuthModule from '@/context/auth/useAuth';
 import * as envModule from '@/env';
+
+import ReportingUnitDetailsPage from './index';
+
+import type { ReportingUnitDto } from '@/services/types';
 
 // ── Mutable state ─────────────────────────────────────────────────────────────
 
@@ -322,14 +322,14 @@ describe('ReportingUnitDetailsPage', () => {
       await waitFor(() => {
         screen.getByText('Reporting Unit no.: 12345');
       });
-      expect(screen.queryByRole('heading', { level: 2, name: 'Blocks' })).toBeNull();
+      expect(screen.queryByRole('table')).toBeNull();
     });
 
     it('renders the blocks list when the flag is enabled', async () => {
       envModule.featureFlags['reporting-unit-block-details-enabled'] = true;
       renderPage();
       await waitFor(() => {
-        expect(screen.getByRole('heading', { level: 2, name: 'Blocks' })).toBeDefined();
+        expect(screen.getByText('No results')).toBeDefined();
       });
     });
   });

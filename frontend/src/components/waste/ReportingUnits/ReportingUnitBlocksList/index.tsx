@@ -70,7 +70,6 @@ const ReportingUnitBlocksList: FC<ReportingUnitBlocksListProps> = ({
 
   return (
     <Column sm={4} md={8} lg={16} className="rublocks-column">
-      <h2>Blocks</h2>
       <TableResource
         id="reporting-unit-blocks-list"
         headers={BLOCKS_TABLE_HEADERS}
