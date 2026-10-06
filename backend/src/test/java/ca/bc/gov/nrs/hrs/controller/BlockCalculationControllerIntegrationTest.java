@@ -48,6 +48,7 @@ class BlockCalculationControllerIntegrationTest extends AbstractTestContainerInt
 
   private Long blockId;
   private Long reportingUnitId;
+  private Long otherReportingUnitId;
   private Long foreignBlockId;
   private Long foreignReportingUnitId;
   private Long districtVolumeId;
@@ -63,6 +64,13 @@ class BlockCalculationControllerIntegrationTest extends AbstractTestContainerInt
     audit(ru);
     ReportingUnitEntity savedRu = reportingUnitRepository.saveAndFlush(ru);
     reportingUnitId = savedRu.getId();
+
+    ReportingUnitEntity otherRu = new ReportingUnitEntity();
+    otherRu.setClientNumber("00000000");
+    otherRu.setClientLocnCode("OTHER-" + unique);
+    otherRu.setOrgUnitNo("DCC");
+    audit(otherRu);
+    otherReportingUnitId = reportingUnitRepository.saveAndFlush(otherRu).getId();
 
     BlockEntity block = new BlockEntity();
     block.setReportingUnitId(savedRu.getId());
@@ -255,8 +263,17 @@ class BlockCalculationControllerIntegrationTest extends AbstractTestContainerInt
   @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
   void rejectsWrongParentReportingUnit() throws Exception {
     mockMvc
-        .perform(get("/api/reporting-units/" + foreignReportingUnitId + "/blocks/" + blockId + "/calculation"))
+        .perform(get("/api/reporting-units/" + otherReportingUnitId + "/blocks/" + blockId + "/calculation"))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("Denies a foreign parent reporting unit before probing the block")
+  @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
+  void forbidsForeignParentBeforeBlockProbe() throws Exception {
+    mockMvc
+        .perform(get("/api/reporting-units/" + foreignReportingUnitId + "/blocks/" + blockId + "/calculation"))
+        .andExpect(status().isForbidden());
   }
 
    @Test
