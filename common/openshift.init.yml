@@ -92,6 +92,7 @@ objects:
       oracle-service: ${ORACLEDB_SERVICENAME}
       oracle-secret: ${ORACLEDB_SECRET}  
       cognito-user-pool: ${COGNITO_USER_POOL}
+      cognito-client-id: ${COGNITO_CLIENT_ID}
       cognito-environment: ${COGNITO_ENVIRONMENT}      
       spring-profiles-active: "container,${SPRING_PROFILES_ACTIVE}"
       client-base-url: ${CLIENT_BASE_URL}

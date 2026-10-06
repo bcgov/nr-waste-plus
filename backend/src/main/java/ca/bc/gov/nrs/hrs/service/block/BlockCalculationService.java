@@ -1,9 +1,14 @@
 package ca.bc.gov.nrs.hrs.service.block;
 
+import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
+import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.block.BlockCalculationDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockCalculationWarning;
 import ca.bc.gov.nrs.hrs.entity.block.BlockCalculationSnapshotEntity;
 import ca.bc.gov.nrs.hrs.repository.block.BlockCalculationSnapshotRepository;
+import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
+import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -11,7 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 /** Thin read service for block calculation snapshots. */
 @Service
@@ -19,15 +27,38 @@ import org.springframework.stereotype.Service;
 public class BlockCalculationService {
 
   private final BlockCalculationSnapshotRepository repository;
+  private final BlockRepository blockRepository;
+  private final ReportingUnitRepository reportingUnitRepository;
 
   /**
-   * Returns the latest calculation snapshot for the given block, or empty if none exists.
+   * Returns the latest snapshot after validating its reporting-unit parent and client scope.
    *
+   * @param reportingUnitId the expected parent reporting-unit identifier
    * @param blockId the block identifier
-   * @return optional containing the mapped DTO, or empty
+   * @param jwt the authenticated caller's token
+   * @return the latest snapshot, if one exists
    */
-  public Optional<BlockCalculationDto> findLatest(Long blockId) {
+  public Optional<BlockCalculationDto> findLatest(Long reportingUnitId, Long blockId, Jwt jwt) {
+    String clientNumber =
+        reportingUnitRepository
+            .findByIdAndDeletedFalse(reportingUnitId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND))
+            .getClientNumber();
+    if (IdentityProvider.BUSINESS_BCEID.equals(JwtPrincipalUtil.getIdentityProvider(jwt))
+        && !hasClientRole(jwt, clientNumber)) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+
+    blockRepository
+        .findByIdAndReportingUnitIdAndDeletedFalse(blockId, reportingUnitId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
     return repository.findTopByBlockIdOrderByCalculatedAtDesc(blockId).map(this::toDto);
+  }
+
+  private boolean hasClientRole(Jwt jwt, String clientNumber) {
+    return JwtPrincipalUtil.hasAbstractRole(jwt, Role.VIEWER, clientNumber)
+        || JwtPrincipalUtil.hasAbstractRole(jwt, Role.SUBMITTER, clientNumber);
   }
 
   private BlockCalculationDto toDto(BlockCalculationSnapshotEntity entity) {

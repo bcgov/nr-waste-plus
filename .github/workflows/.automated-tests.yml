@@ -33,11 +33,15 @@ jobs:
 
       - name: Install Cypress dependencies
         working-directory: cypress
-        run: npm ci --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Install Cypress binary
         working-directory: cypress
         run: npx cypress install
+
+      - name: Verify Cypress installation
+        working-directory: cypress
+        run: npx cypress version
 
       - name: Wait for frontend deployment
         env:
@@ -77,6 +81,11 @@ jobs:
           CYPRESS_MOCHAWESOME_REPORT: true
           CYPRESS_bceid_password: ${{ secrets.BCEID_UAT_PASSWORD }}
           CYPRESS_bceid_username: ${{ secrets.BCEID_UAT_USERNAME }}
+
+      - name: Run Cypress script tests
+        working-directory: cypress
+        if: always()
+        run: npm run test:unit
 
       - name: Generate Markdown Report
         working-directory: cypress

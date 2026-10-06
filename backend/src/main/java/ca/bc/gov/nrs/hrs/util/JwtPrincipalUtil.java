@@ -404,6 +404,18 @@ public class JwtPrincipalUtil {
   }
 
   /**
+   * Check whether the JWT contains a role that permits cross-client reporting-unit creation.
+   *
+   * @param jwtPrincipal the JWT to inspect
+   * @return true when the token has an area, district, or administrator role
+   */
+  public static boolean hasPrivilegedCreateRole(Jwt jwtPrincipal) {
+    return hasConcreteRole(jwtPrincipal, Role.AREA)
+        || hasConcreteRole(jwtPrincipal, Role.DISTRICT)
+        || hasConcreteRole(jwtPrincipal, Role.ADMIN);
+  }
+
+  /**
    * Check whether the JWT contains an abstract role for the supplied client id.
    *
    * @param jwtPrincipal the JWT to inspect

@@ -5,6 +5,7 @@ spring:
         jwt:
           issuer-uri: https://aws-cognito-issuer-uri.aws.com
           jwk-set-uri: https://aws-cognito-issuer-uri.aws.com/.well-known/jwks.json
+          client-id: ${COGNITO_CLIENT_ID:test-client-id}
   flyway:
     schemas: THE
     default-schema: THE

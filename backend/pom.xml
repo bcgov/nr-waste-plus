@@ -416,7 +416,6 @@
                         <exclude>**/*$*Builder*</exclude>
                         <exclude>**/BackendApplication.*</exclude>
                         <exclude>**/*Constants.*</exclude>
-                        <exclude>**/security/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
