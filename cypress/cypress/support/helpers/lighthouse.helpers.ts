@@ -1,11 +1,11 @@
 interface LighthouseRawEvent {
   type: "category" | "metric" | "lighthouse:record";
-  id: string;              // audit ID
-  name: string;            // human-friendly name
-  value: number | null;    // numericValue
-  category?: string;       // performance, seo, etc.
-  taxonomy: string;        // web-vitals, timing, layout, etc.
-  severity: string;        // info/minor/major/critical
+  id: string; // audit ID
+  name: string; // human-friendly name
+  value: number | null; // numericValue
+  category?: string; // performance, seo, etc.
+  taxonomy: string; // web-vitals, timing, layout, etc.
+  severity: string; // info/minor/major/critical
   url: string;
   attempt?: number;
   timestamp: string;
@@ -20,14 +20,14 @@ interface LighthouseRawEvent {
     } | null;
   };
   lighthouseConfigSettings?: Record<string, unknown>;
-};
+}
 
-export interface LighthouseAssertionEvent extends LighthouseRawEvent{  
-  threshold: number;          // user-provided threshold
-  comparison: "gte" | "lte";  // ≥ or ≤
-  passed: boolean;  
+export interface LighthouseAssertionEvent extends LighthouseRawEvent {
+  threshold: number; // user-provided threshold
+  comparison: "gte" | "lte"; // ≥ or ≤
+  passed: boolean;
   scenario: string;
-};
+}
 
 export interface LighthouseReport {
   url: string;
@@ -45,10 +45,16 @@ export interface LighthouseReport {
   categories: Record<string, number | null>;
   metrics: Record<string, number | null>;
   raw: any;
-};
+}
 
 export const getLighthouseTaxonomy = (id: string): string => {
-  if (["largest-contentful-paint", "first-contentful-paint", "cumulative-layout-shift"].includes(id)) {
+  if (
+    [
+      "largest-contentful-paint",
+      "first-contentful-paint",
+      "cumulative-layout-shift",
+    ].includes(id)
+  ) {
     return "web-vitals";
   }
   if (id.includes("response") || id.includes("network")) {
@@ -63,7 +69,10 @@ export const getLighthouseTaxonomy = (id: string): string => {
   return "other";
 };
 
-export const getLighthouseSeverity = (id: string, value: number | null): string => {
+export const getLighthouseSeverity = (
+  id: string,
+  value: number | null,
+): string => {
   if (value == null) return "info";
 
   if (id === "largest-contentful-paint") {
@@ -85,7 +94,7 @@ export const getLighthouseSeverity = (id: string, value: number | null): string 
 export const recordEvent = (url: string, report: LighthouseReport) => {
   const timestamp = new Date().toISOString();
   const attempt = Cypress.currentRetry ?? 0;
-  const lighthouseEvents : LighthouseRawEvent[] = [];
+  const lighthouseEvents: LighthouseRawEvent[] = [];
 
   for (const [id, value] of Object.entries(report.metrics)) {
     lighthouseEvents.push({
@@ -120,15 +129,11 @@ export const recordEvent = (url: string, report: LighthouseReport) => {
   }
 
   return cy.task("lighthouse:record", lighthouseEvents);
-
 };
 
-export const recordLighthouseAssertion = (
-  event: LighthouseAssertionEvent
-) => {
+export const recordLighthouseAssertion = (event: LighthouseAssertionEvent) => {
   return cy.task("lighthouse:record", [event]);
 };
-
 
 export const formatTiming = (value: number | null | undefined): string => {
   if (value == null) return "N/A";
@@ -243,7 +248,9 @@ export const resolveLighthouseFormFactor = (): LighthouseFormFactor => {
 
 export const resolveLighthouseRunOptions = (): LighthouseRunOptions => {
   const formFactor = resolveLighthouseFormFactor();
-  return formFactor === "mobile" ? mobileLighthouseOptions : desktopLighthouseOptions;
+  return formFactor === "mobile"
+    ? mobileLighthouseOptions
+    : desktopLighthouseOptions;
 };
 
 export const normalizeMetricKey = (metric: string): string => {
@@ -264,7 +271,7 @@ export const normalizeMetricKey = (metric: string): string => {
 
     "loading time": "server-response-time",
     bestpractices: "best-practices",
-    "best practices": "best-practices",  
+    "best practices": "best-practices",
     "time to interactive": "interactive",
     "first input delay": "max-potential-fid",
   };
@@ -281,12 +288,16 @@ export const parseThresholdNumber = (input: string): number => {
   return parsed;
 };
 
-export const parseThresholdTable = (table: DataTableLike): Record<string, number> => {
+export const parseThresholdTable = (
+  table: DataTableLike,
+): Record<string, number> => {
   const thresholds: Record<string, number> = {};
 
   for (const row of table.rawTable) {
     if (!Array.isArray(row) || row.length < 2) {
-      throw new Error("Each Lighthouse threshold row must have metric and value columns.");
+      throw new Error(
+        "Each Lighthouse threshold row must have metric and value columns.",
+      );
     }
 
     const metric = normalizeMetricKey(row[0] || "");
@@ -308,20 +319,20 @@ export const runReportTo = (fn: (report: any) => void) => {
   cy.get("#root", { timeout: 30000 }).should("be.visible");
   cy.get("#root").children().should("have.length.at.least", 1);
 
-  cy
-    .url()
-    .then((currentUrl) => {
-      return cy.runLighthouseAudit(currentUrl, options)
-              .as("lhReport")
-              .then((report) => {
-                const enrichedReport: LighthouseReport = {
-                  ...(report as LighthouseReport),
-                  lighthouseOptions: (report as LighthouseReport).lighthouseOptions ?? options,
-                };
+  cy.url().then((currentUrl) => {
+    return cy
+      .runLighthouseAudit(currentUrl, options)
+      .as("lhReport")
+      .then((report) => {
+        const enrichedReport: LighthouseReport = {
+          ...(report as LighthouseReport),
+          lighthouseOptions:
+            (report as LighthouseReport).lighthouseOptions ?? options,
+        };
 
-                return fn(enrichedReport);
-              });
+        return fn(enrichedReport);
       });
+  });
 };
 
 export const expectLighthouse = (report: LighthouseReport) => {
@@ -341,15 +352,13 @@ export const expectLighthouse = (report: LighthouseReport) => {
     const safeValue = value ?? 0; // Treat null/undefined as 0 for assertion purposes
 
     const passed =
-      comparison === "gte"
-        ? safeValue >= threshold
-        : safeValue <= threshold;
+      comparison === "gte" ? safeValue >= threshold : safeValue <= threshold;
 
-    const event: LighthouseAssertionEvent = {  
+    const event: LighthouseAssertionEvent = {
       type,
       id,
       name,
-      value,      
+      value,
       threshold,
       comparison,
       passed,
@@ -365,7 +374,7 @@ export const expectLighthouse = (report: LighthouseReport) => {
 
     return cy.task("lighthouse:record", [event]);
   };
-  
+
   return {
     category: (name: string) => ({
       toBeAtLeast: (threshold: number) => {
@@ -376,11 +385,13 @@ export const expectLighthouse = (report: LighthouseReport) => {
           value,
           threshold,
           comparison: "gte",
-          type: 'category',
+          type: "category",
           url: report.url,
-        })
-        .then(() =>
-          expect(value,`Lighthouse ${name} score is ${value}, expected at least ${threshold}`).to.be.gte(threshold)
+        }).then(() =>
+          expect(
+            value,
+            `Lighthouse ${name} score is ${value}, expected at least ${threshold}`,
+          ).to.be.gte(threshold),
         );
       },
     }),
@@ -400,10 +411,12 @@ export const expectLighthouse = (report: LighthouseReport) => {
         message: string,
       ) => {
         const safeValue = value ?? 0;
-        const passed = comparison === "lte" ? safeValue <= threshold : safeValue >= threshold;
+        const passed =
+          comparison === "lte"
+            ? safeValue <= threshold
+            : safeValue >= threshold;
 
         if (!passed) {
-          // eslint-disable-next-line no-console
           console.warn(`[lighthouse:warn] ${message}`);
           Cypress.log({
             name: "lighthouse:warn",
@@ -426,10 +439,9 @@ export const expectLighthouse = (report: LighthouseReport) => {
             value,
             threshold,
             comparison: "lte",
-            type: 'metric',
+            type: "metric",
             url: report.url,
-          })
-          .then(() => warnOnMiss("lte", value, threshold, message));
+          }).then(() => warnOnMiss("lte", value, threshold, message));
         },
 
         toBeAtLeast: (rawThreshold: string | number) => {
@@ -443,10 +455,9 @@ export const expectLighthouse = (report: LighthouseReport) => {
             value,
             threshold,
             comparison: "gte",
-            type: 'metric',
+            type: "metric",
             url: report.url,
-          })
-          .then(() => warnOnMiss("gte", value, threshold, message));
+          }).then(() => warnOnMiss("gte", value, threshold, message));
         },
       };
     },
@@ -455,7 +466,7 @@ export const expectLighthouse = (report: LighthouseReport) => {
 
 export const runLighthouseAudit = (url: string, options: unknown = {}) => {
   return cy
-    .task('lighthouse:run', { url, options })
-    .as('lhReport')
-    .then(report => report);
+    .task("lighthouse:run", { url, options })
+    .as("lhReport")
+    .then((report) => report);
 };

@@ -43,6 +43,14 @@ jobs:
         working-directory: cypress
         run: npx cypress version
 
+      - name: Lint Cypress tests
+        working-directory: cypress
+        run: npm run lint
+
+      - name: Typecheck Cypress tests
+        working-directory: cypress
+        run: npx tsc --noEmit -p tsconfig.json
+
       - name: Wait for frontend deployment
         env:
           FRONTEND_URL: https://${{ inputs.url }}
