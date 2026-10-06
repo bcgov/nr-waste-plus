@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { checkA11y, injectAxe } from 'axe-playwright';
+import { injectAxe } from 'axe-playwright';
 
 import { runA11yAudit } from '@/config/tests/a11y.helper';
 import { setupAppShellMocks } from '@/config/tests/app.setup';
@@ -25,14 +25,8 @@ const reportingUnitPayload = {
 
 test.describe('<ReportingUnitBlockDetailsPage />', () => {
   test.beforeEach(async ({ page }, testInfo) => {
-    await setupAppShellMocks(page, testInfo.project.metadata.userType);
-    // The a11y project authenticates as BCeID, but the block details route now
-    // requires the ADMIN role — grant it for the audit run.
-    await mockJwt(
-      page,
-      { ...testInfo.project.metadata, userType: 'idir' },
-      { 'cognito:groups': ['WASTE_PLUS_ADMIN'] },
-    );
+    const idirMetadata = { ...testInfo.project.metadata, userType: 'idir' };
+    await setupAppShellMocks(page, idirMetadata.userType);
     await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
       ...reportingUnitPayload,
     });
@@ -47,7 +41,8 @@ test.describe('<ReportingUnitBlockDetailsPage />', () => {
         body: `window.config = { VITE_FEATURE_FLAGS: '{"reporting-unit-block-details-enabled":true}' };`,
       }),
     );
-    await page.goto(ROUTE_PATH);
+    await mockJwt(page, idirMetadata);
+    await page.goto(ROUTE_PATH, { waitUntil: 'networkidle' });
     await page.waitForLoadState('domcontentloaded');
     await injectAxe(page);
   });
@@ -56,7 +51,7 @@ test.describe('<ReportingUnitBlockDetailsPage />', () => {
     // Assert the audited page is the block details page, not a redirect target.
     const heading = page.locator('h1', { hasText: `Reporting Unit No. ${RU_ID}` });
     await expect(heading).toBeVisible();
-    await checkA11y(page);
+    await runA11yAudit(page, undefined);
   });
 
   test('check a11y for the whole page and axe run options', async ({ page }) => {
