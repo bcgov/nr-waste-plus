@@ -549,6 +549,11 @@
                     <includeTestSourceDirectory>
                         ${checkstyle.includeTestSourceDirectory}
                     </includeTestSourceDirectory>
+                    <!-- Limit the scan to hand-authored sources; MapStruct writes its
+                         generated *MapperImpl classes into target/generated-sources. -->
+                    <sourceDirectories>
+                        <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+                    </sourceDirectories>
                     <configLocation>.mvn/google_checks.xml</configLocation>
                     <consoleOutput>true</consoleOutput>
                     <linkXRef>false</linkXRef>

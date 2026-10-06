@@ -30,6 +30,7 @@ spring:
         jwt:
           jwk-set-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}/.well-known/jwks.json
           issuer-uri: https://cognito-idp.${COGNITO_REGION:region}.amazonaws.com/${COGNITO_USER_POOL:usrpool}
+          client-id: ${COGNITO_CLIENT_ID:test-client-id}
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DATABASE:nr-hrs}
     username: ${POSTGRES_USER:nr-hrs}

@@ -2,14 +2,17 @@ package ca.bc.gov.nrs.hrs.controller;
 
 import static ca.bc.gov.nrs.hrs.TestConstants.LEGACY_RU_DETAILS;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -119,6 +122,88 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
         .andExpect(status().isCreated());
+  }
+
+  @Test
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_00012797"})
+  @DisplayName("Should allow a submitter to create for the claimed client")
+  void shouldAllowSubmitterCreateForMatchingClient() throws Exception {
+    stubCreateDependencies();
+    assertSuccessfulCreate();
+  }
+
+  @Test
+  @WithMockJwt(
+      idp = "bceidbusiness",
+      cognitoGroups = {"WASTE_PLUS_SUBMITTER_99999999"})
+  @DisplayName("Should deny a submitter creating for a different client")
+  void shouldDenySubmitterCreateForCrossClient() throws Exception {
+    stubCreateDependencies();
+
+    mockMvc.perform(createReportingUnitRequest()).andExpect(status().isForbidden());
+
+    legacyApiStub.verify(
+        0, postRequestedFor(urlPathEqualTo("/api/reporting-units")));
+  }
+
+  @Test
+  @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_ADMIN"})
+  @DisplayName("Should allow an admin to create for a different client")
+  void shouldAllowAdminCreateForCrossClient() throws Exception {
+    String foreignClient = "00099999";
+    stubCreateDependencies(foreignClient);
+
+    mockMvc
+        .perform(createReportingUnitRequest(foreignClient))
+        .andExpect(status().isCreated())
+        .andExpect(header().exists("Location"));
+
+    legacyApiStub.verify(
+        1,
+        postRequestedFor(urlPathEqualTo("/api/reporting-units"))
+            .withRequestBody(containing(foreignClient)));
+  }
+
+  private void assertSuccessfulCreate() throws Exception {
+    mockMvc
+        .perform(createReportingUnitRequest())
+        .andExpect(status().isCreated())
+        .andExpect(header().exists("Location"));
+
+    legacyApiStub.verify(
+        1,
+        postRequestedFor(urlPathEqualTo("/api/reporting-units"))
+            .withRequestBody(containing("00012797")));
+  }
+
+  private void stubCreateDependencies() {
+    stubCreateDependencies("00012797");
+  }
+
+  private void stubCreateDependencies(String clientNumber) {
+    legacyApiStub.stubFor(
+        get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/clients/findByClientNumber/" + clientNumber))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
+    legacyApiStub.stubFor(post(urlPathEqualTo("/api/reporting-units")).willReturn(okJson("333")));
+  }
+
+  private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder createReportingUnitRequest() {
+    return createReportingUnitRequest("00012797");
+  }
+
+  private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder createReportingUnitRequest(
+      String clientNumber) {
+    return MockMvcRequestBuilders.post("/api/reporting-units")
+        .with(SecurityMockMvcRequestPostProcessors.csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(
+            "{\"clientNumber\":\"" + clientNumber + "\",\"districtCode\":\"DND\","
+                + "\"samplingCode\":\"AVG\",\"gradeCode\":null}");
   }
 
   @DisplayName("Should Return 400 when Grade Missing For DKM")

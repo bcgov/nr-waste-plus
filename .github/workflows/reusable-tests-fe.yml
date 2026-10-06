@@ -213,6 +213,7 @@ jobs:
         working-directory: frontend
         run: |
           npm ci
+          npm run test:scripts
           npm run coverage:merge
 
       - name: Sonar scan

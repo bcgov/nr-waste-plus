@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "report:md": "node scripts/parse-report.js",
+    "test:unit": "node --test scripts/*.test.js",
     "report:clean": "rm -rf reports/*",
     "precy:run": "npm run report:clean",
     "cy:run": "cypress run --browser chrome",

@@ -1,11 +1,17 @@
 package ca.bc.gov.nrs.hrs.configuration;
 
 import ca.bc.gov.nrs.hrs.security.ApiAuthorizationCustomizer;
+import ca.bc.gov.nrs.hrs.security.CsrfAccessDeniedHandler;
 import ca.bc.gov.nrs.hrs.security.CsrfSecurityCustomizer;
 import ca.bc.gov.nrs.hrs.security.HeadersSecurityCustomizer;
 import ca.bc.gov.nrs.hrs.security.Oauth2SecurityCustomizer;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
+import org.springframework.security.authorization.AuthorizationEventPublisher;
+import org.springframework.security.authorization.SpringAuthorizationEventPublisher;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -29,19 +35,35 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
+  @Bean
+  public AuthenticationEventPublisher authenticationEventPublisher(
+      ApplicationEventPublisher applicationEventPublisher) {
+    return new DefaultAuthenticationEventPublisher(applicationEventPublisher);
+  }
+
+  @Bean
+  public AuthorizationEventPublisher authorizationEventPublisher(
+      ApplicationEventPublisher applicationEventPublisher) {
+    return new SpringAuthorizationEventPublisher(applicationEventPublisher);
+  }
+
   /**
    * Configure and build the primary {@link SecurityFilterChain} for the app.
    *
    * <p>The supplied customizers are applied in the following logical order:
    * headers -> CSRF -> CORS defaults -> authorization rules -> disable HTTP Basic and form login ->
-   * OAuth2 resource server. Each argument is a Spring-managed component that encapsulates the
-   * configuration for the corresponding concern.</p>
+   * OAuth2 resource server -> exception handling. Each argument is a Spring-managed component
+   * that encapsulates the configuration for the corresponding concern. The exception-handling
+   * access-denied handler audits CSRF refusals, which {@code CsrfFilter} resolves without
+   * publishing an authorization event.</p>
    *
-   * @param http              the {@link HttpSecurity} builder provided by Spring Security
-   * @param headersCustomizer customizer used to configure security-related HTTP headers
-   * @param csrfCustomizer    customizer used to configure CSRF protection
-   * @param apiCustomizer     customizer used to configure authorization rules for HTTP endpoints
-   * @param oauth2Customizer  customizer used to configure OAuth2 resource server support
+   * @param http                     the {@link HttpSecurity} builder provided by Spring Security
+   * @param headersCustomizer        customizer used to configure security-related HTTP headers
+   * @param csrfCustomizer           customizer used to configure CSRF protection
+   * @param apiCustomizer            customizer used to configure authorization rules for HTTP
+   *                                 endpoints
+   * @param oauth2Customizer         customizer used to configure OAuth2 resource server support
+   * @param csrfAccessDeniedHandler  handler that audits CSRF refusals before responding
    * @return the configured {@link SecurityFilterChain}
    * @throws Exception if an error occurs while configuring {@code HttpSecurity}
    */
@@ -51,7 +73,8 @@ public class SecurityConfiguration {
       HeadersSecurityCustomizer headersCustomizer,
       CsrfSecurityCustomizer csrfCustomizer,
       ApiAuthorizationCustomizer apiCustomizer,
-      Oauth2SecurityCustomizer oauth2Customizer
+      Oauth2SecurityCustomizer oauth2Customizer,
+      CsrfAccessDeniedHandler csrfAccessDeniedHandler
   ) throws Exception {
     http
         .headers(headersCustomizer)
@@ -60,7 +83,9 @@ public class SecurityConfiguration {
         .authorizeHttpRequests(apiCustomizer)
         .httpBasic(AbstractHttpConfigurer::disable)
         .formLogin(AbstractHttpConfigurer::disable)
-        .oauth2ResourceServer(oauth2Customizer);
+        .oauth2ResourceServer(oauth2Customizer)
+        .exceptionHandling(exceptionHandling ->
+            exceptionHandling.accessDeniedHandler(csrfAccessDeniedHandler));
 
     return http.build();
   }
