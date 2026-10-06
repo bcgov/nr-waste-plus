@@ -71,7 +71,7 @@ public class SecurityEventLoggingListener {
   public void onAuthorizationDenied(AuthorizationDeniedEvent<?> event) {
     HttpServletRequest request = requestFrom(event.getObject());
     Supplier<Authentication> supplier = event.getAuthentication();
-    Authentication authentication = supplier != null ? supplier.get() : null;
+    Authentication authentication = supplier.get();
     if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
       logEvent(EVENT_AUTHENTICATION_FAILED, 401, request, event.getAuthentication(), null);
       return;

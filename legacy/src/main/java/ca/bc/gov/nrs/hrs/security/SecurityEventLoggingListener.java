@@ -57,7 +57,7 @@ public class SecurityEventLoggingListener {
     HttpServletRequest request = event.getObject() instanceof RequestAuthorizationContext context
         ? context.getRequest() : currentRequest();
     Supplier<Authentication> supplier = event.getAuthentication();
-    Authentication authentication = supplier != null ? supplier.get() : null;
+    Authentication authentication = supplier.get();
     if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
       logEvent("AUTHENTICATION_FAILED", 401, request, event.getAuthentication(), null);
       return;
