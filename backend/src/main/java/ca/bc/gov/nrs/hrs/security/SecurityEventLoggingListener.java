@@ -70,7 +70,8 @@ public class SecurityEventLoggingListener {
   @EventListener
   public void onAuthorizationDenied(AuthorizationDeniedEvent<?> event) {
     HttpServletRequest request = requestFrom(event.getObject());
-    Authentication authentication = event.getAuthentication().get();
+    Supplier<Authentication> supplier = event.getAuthentication();
+    Authentication authentication = supplier != null ? supplier.get() : null;
     if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
       logEvent(EVENT_AUTHENTICATION_FAILED, 401, request, event.getAuthentication(), null);
       return;
@@ -87,8 +88,9 @@ public class SecurityEventLoggingListener {
     String routeTemplate = routeTemplate(request);
     String identity = safeIdentity(authentication);
     String correlationId = correlationId();
-    String identityProvider = identity == null ? "" : identity.split("\\|", 2)[0];
-    String subject = identity == null ? "" : identity.split("\\|", 2)[1];
+    String[] parts = identity == null ? new String[] {"", ""} : identity.split("\\|", 2);
+    String identityProvider = parts[0];
+    String subject = parts.length > 1 ? parts[1] : "";
     LOG.info(
         "SECURITY_EVENT event={} service={} environment={} timestamp={} method={} "
             + "routeTemplate={} status={} correlationId={} identityProvider={} subject={} "
