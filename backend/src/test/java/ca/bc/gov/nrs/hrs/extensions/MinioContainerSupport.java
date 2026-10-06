@@ -8,11 +8,13 @@ import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 
 /**
  * Testcontainers support for MinIO object storage in integration tests.
@@ -166,8 +168,14 @@ public final class MinioContainerSupport {
             .build()) {
       try {
         client.headBucket(HeadBucketRequest.builder().bucket(bucket).build());
-      } catch (Exception e) {
+      } catch (NoSuchBucketException e) {
         client.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
+      } catch (AwsServiceException e) {
+        if (e.statusCode() == 404) {
+          client.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
+        } else {
+          throw e;
+        }
       }
     }
   }

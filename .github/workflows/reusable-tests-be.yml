@@ -15,37 +15,6 @@ jobs:
     env:
       NLS_DATE_FORMAT: 'YYYY-MM-DD'
     steps:
-      - name: Start MinIO for backend integration tests
-        run: |
-          MINIO_USER="minio_$(openssl rand -hex 8)"
-          MINIO_PASSWORD="$(openssl rand -hex 16)"
-          BUCKET="nr-waste-pr-${{ github.event.number || github.run_id }}-${{ github.run_attempt }}"
-
-          docker run -d --name minio \
-            -p 9000:9000 -p 9001:9001 \
-            -e MINIO_ROOT_USER="$MINIO_USER" \
-            -e MINIO_ROOT_PASSWORD="$MINIO_PASSWORD" \
-            cgr.dev/chainguard/minio:latest server /data --console-address ":9001"
-
-          # Wait for MinIO readiness and seed the run-isolated bucket
-          docker run --rm --network host \
-            --entrypoint /bin/sh \
-            -e MINIO_ROOT_USER="$MINIO_USER" \
-            -e MINIO_ROOT_PASSWORD="$MINIO_PASSWORD" \
-            -e BUCKET="$BUCKET" \
-            cgr.dev/chainguard/minio-client:latest-dev -c "
-              until mc alias set local http://127.0.0.1:9000 \$MINIO_ROOT_USER \$MINIO_ROOT_PASSWORD; do
-                sleep 1
-              done
-              mc mb --ignore-existing local/\$BUCKET
-            "
-
-          echo "OBJECT_STORAGE_ENDPOINT=http://127.0.0.1:9000" >> $GITHUB_ENV
-          echo "OBJECT_STORAGE_ACCESS_KEY=$MINIO_USER" >> $GITHUB_ENV
-          echo "OBJECT_STORAGE_SECRET_KEY=$MINIO_PASSWORD" >> $GITHUB_ENV
-          echo "OBJECT_STORAGE_BUCKET=$BUCKET" >> $GITHUB_ENV
-          echo "S3_FORCE_PATH_STYLE=true" >> $GITHUB_ENV
-
       - uses: bcgov/action-test-and-analyse-java@7c7309721cae054b3e837c723afa4efb4b1a256d # v1.1.0
         name: Backend Coverage
         with:

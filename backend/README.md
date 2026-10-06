@@ -10,31 +10,20 @@ For more developer information visit the [documentation](https://github.com/bcgo
 
 ### Object Storage (MinIO / S3)
 
-The application uses the `ObjectStorageProvider` abstraction for the attachment upload and download lifecycle. The environment split is:
-- **Production / Deployed**: AWS S3 with standard credentials and virtual-host addressing.
-- **Local / Testcontainers / Dev / PR**: MinIO with path-style addressing (`S3_FORCE_PATH_STYLE=true`), avoiding any dependency on real AWS credentials.
-
-#### Local MinIO via Docker Compose
-
-MinIO and its automated bucket-seeding service (`minio-init`) are defined in `docker-compose.yml`:
+The application uses the `ObjectStorageProvider` abstraction for attachment storage. For local development, an S3-compatible MinIO service is provided via Docker Compose:
 
 ```bash
 # Start MinIO and auto-seed the default bucket
 docker compose up -d minio minio-init
 ```
 
-- **API Endpoint**: `http://localhost:9000` (from host) / `http://minio:9000` (within Docker network)
+- **API Endpoint**: `http://localhost:9000` (host) / `http://minio:9000` (Docker network)
 - **Web Console**: `http://localhost:9001`
-- **Default Bucket**: `nr-waste` (automatically created by `minio-init`)
-- **Persistence**: Storage is backed by a named Docker volume (`minio_data`). Objects persist across `docker compose down` and are only wiped when explicitly requested via `docker compose down -v`.
-- **Readiness & Client Architecture**: The bucket seeding service (`minio-init`) uses `cgr.dev/chainguard/minio-client:latest-dev` to poll MinIO readiness via `mc` and seed the default bucket before `backend` starts, coordinating dependencies without requiring utilities inside the minimal MinIO server container.
+- **Default Bucket**: `nr-waste` (persisted in named volume `minio_data`)
 
-#### Environment Variables & Credentials Setup
+#### Environment Variables
 
-Credentials must be non-default and sourced from environment variables or a local `.env` file (which is git-ignored and never committed to version control):
-
-- Ensure your local `.env` file or environment defines `MINIO_ROOT_USER` and `MINIO_ROOT_PASSWORD` alongside `POSTGRES_PASSWORD` and `APP_USER_PASSWORD`.
-- Never commit credentials to version control.
+Set non-default credentials in your `.env` file or environment (never committed to version control):
 
 | Environment Variable | Description | Local / Dev Default |
 | --- | --- | --- |
@@ -43,10 +32,7 @@ Credentials must be non-default and sourced from environment variables or a loca
 | `OBJECT_STORAGE_ENDPOINT` | Custom S3/MinIO endpoint URL | `http://localhost:9000` |
 | `OBJECT_STORAGE_BUCKET` | Target bucket name | `nr-waste` |
 | `OBJECT_STORAGE_REGION` | Signing region | `ca-central-1` |
-| `S3_FORCE_PATH_STYLE` | Enables path-style addressing on the S3 client (required for MinIO) | `true` |
+| `S3_FORCE_PATH_STYLE` | Enables path-style addressing on the S3 client | `true` |
 
-#### Integration Tests & CI Isolation
-
-- **Local Integration Tests**: When running tests locally without an external MinIO instance, `MinioContainerSupport` automatically starts a Testcontainers MinIO instance with dynamic credentials and an isolated bucket (`nr-waste-test-<UUID>`).
-- **CI / PR Pipeline**: The PR pipeline provisions an isolated MinIO instance per job run with unique credentials and a dedicated bucket namespace (`nr-waste-pr-<run_id>-<run_attempt>`), preventing state collision between parallel PR runs. Tests execute against this provisioned instance when `OBJECT_STORAGE_ENDPOINT` is present.
+For integration tests, `MinioContainerSupport` provisions on-demand Testcontainers with isolated bucket namespaces. For extended architectural documentation, visit the [project wiki](https://github.com/bcgov/nr-waste-plus/wiki/Backend-Structure).
 
