@@ -15,6 +15,7 @@ import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.MinioContainerSupport;
+import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import ca.bc.gov.nrs.hrs.service.block.AttachmentScanStatusService;
@@ -39,6 +40,7 @@ import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @DisplayName("Integrated Test | MinIO Object Storage Provider and Attachment Lifecycle")
+@WithMockJwt
 class MinioObjectStorageIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @Autowired
