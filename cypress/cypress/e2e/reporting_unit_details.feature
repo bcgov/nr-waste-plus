@@ -90,3 +90,13 @@ Feature: Reporting Unit Details
     And I wait for the text "36828" to appear
     When I click on the "36828" button
     Then I can read "Legacy data"
+
+  # ── Blocks section (feature-flagged) ──
+  # The blocks list renders behind the `reporting-unit-block-details-enabled`
+  # feature flag. Until its API is wired (#1250), the section shows its empty
+  # state: a "No results" title with no table headers.
+  @loginAsBCeID
+  Scenario: Blocks section shows its empty state while the API is not wired
+    Given I visit "/reporting-units/36828"
+    Then I can read "No results"
+    And I cannot see "Licence No."

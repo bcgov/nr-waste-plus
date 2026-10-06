@@ -30,26 +30,26 @@ When("I select the client {string}", (clientNumber: string) => {
 });
 
 When("I select no client", () => {
-  cy.get('[data-testid="header-panel"] [data-testid="district-select-none"] button')
+  cy.get(
+    '[data-testid="header-panel"] [data-testid="district-select-none"] button',
+  )
     .should("be.visible")
     .click();
 });
 
 Then("no client should be selected", () => {
-  cy.get('[data-testid="header-panel"] [data-testid="district-select-none"] button', { timeout: 30_000 })
-    .should("have.class", "selected-district");
+  cy.get(
+    '[data-testid="header-panel"] [data-testid="district-select-none"] button',
+    { timeout: 30_000 },
+  ).should("have.class", "selected-district");
 });
 
 When("I close the profile panel", () => {
-  cy.get('[data-testid="profile-action"]')
-    .should("be.visible")
-    .click();
+  cy.get('[data-testid="profile-action"]').should("be.visible").click();
 });
 
 When("I click on the theme toggle", () => {
-  cy.get('[data-testid="theme-toggle"]')
-    .should("be.visible")
-    .click();
+  cy.get('[data-testid="theme-toggle"]').should("be.visible").click();
 });
 
 Then("the theme toggle should offer {string} mode", (mode: string) => {
@@ -85,14 +85,18 @@ When("I search", function () {
  *   3. input[type="submit"][value="<name>"]
  *   4. [data-testid="<name>"]
  *   5. .cds--tooltip-content — icon-only Carbon button (traces back via aria-labelledby)
- *   6. findByRole("button", { name }) — @testing-library fallback
+ *   6. explicit attribute selectors with a 20s timeout — late-render fallback
  */
 const buttonClick = (
   name: string,
   waitForIntercept: string = "",
   waitForTime: number = 1,
-  retries: number = 3,
-  retryDelay: number = 100,
+  // The app layout is Suspense-wrapped: after cy.visit the header (and any
+  // icon-only header button) mounts only once the lazy route chunk resolves,
+  // which routinely takes longer than a few hundred ms in dev. Budget 10s
+  // (50 x 200ms) before falling back inside findButton.
+  retries: number = 50,
+  retryDelay: number = 200,
   selector: string = "body",
 ) => {
   const timeout = waitForTime * 1000;

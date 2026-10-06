@@ -136,7 +136,7 @@ export const findInputByLabel = (labelText: string) => {
  *   3. input[type="submit"][value="<name>"]
  *   4. [data-testid="<name>"]
  *   5. .cds--tooltip-content — icon-only Carbon button (traces back via aria-labelledby)
- *   6. findByRole("button", { name }) — @testing-library fallback
+ *   6. explicit attribute selectors with a 20s timeout — late-render fallback
  */
 
 /**
@@ -149,12 +149,12 @@ export const findInputByLabel = (labelText: string) => {
  *   3. input[type="submit"][value="<name>"]
  *   4. [data-testid="<name>"]
  *   5. .cds--tooltip-content — icon-only Carbon button (traces back via aria-labelledby)
- *   6. findByRole("button", { name }) — @testing-library fallback
+ *   6. explicit attribute selectors with a 20s timeout — late-render fallback
  */
 export const findButton = (
   name: string,
-  retries: number = 3,
-  retryDelay: number = 100,
+  retries: number = 30,
+  retryDelay: number = 200,
   selector: string = "body",
 ): Cypress.Chainable<JQuery<HTMLElement>> => {
   const selectors = [
@@ -190,24 +190,19 @@ export const findButton = (
         // Element may not have rendered yet — wait and retry
         return cy.wait(retryDelay).then(() => tryFind(attempt + 1));
       } else {
-        // Last resort: use @testing-library/cypress findByRole
-        // Try button first, then link role — covers <a> acting as buttons
-        const nameRegex = new RegExp(name, "i");
-        return cy.get("body").then(($body) => {
-          const hasButton = Array.from(
-            $body.find('button, [role="button"]'),
-          ).some(
-            (el) =>
-              nameRegex.test(el.textContent || "") ||
-              nameRegex.test(el.getAttribute("aria-label") || ""),
-          );
-
-          if (hasButton) {
-            return cy.findByRole("button", { name: nameRegex });
-          } else {
-            return cy.findByRole("link", { name: nameRegex });
-          }
-        });
+        // Last resort: the element can render late (the app layout is wrapped
+        // in <Suspense>, so the header mounts only after the lazy route chunk
+        // resolves) and icon-only Carbon buttons may compute an empty
+        // accessible name (aria-labelledby -> empty tooltip overrides
+        // aria-label), which defeats findByRole. Match explicit attributes
+        // with a generous timeout instead.
+        const fallbackSelectors = [
+          `[data-testid="${name}"]`,
+          `button[aria-label="${name}"]`,
+          `a[aria-label="${name}"]`,
+          `input[type="submit"][value="${name}"]`,
+        ].join(", ");
+        return cy.get(fallbackSelectors, { timeout: 20_000 }).first();
       }
     });
   }
