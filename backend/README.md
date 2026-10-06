@@ -27,7 +27,7 @@ docker compose up -d minio minio-init
 - **Web Console**: `http://localhost:9001`
 - **Default Bucket**: `nr-waste` (automatically created by `minio-init`)
 - **Persistence**: Storage is backed by a named Docker volume (`minio_data`). Objects persist across `docker compose down` and are only wiped when explicitly requested via `docker compose down -v`.
-- **Healthcheck & Client Architecture**: The MinIO server service (`cgr.dev/chainguard/minio`) provides a readiness probe via `curl http://localhost:9000/minio/health/ready`. The bucket seeding service (`minio-init`) uses the dedicated client image `cgr.dev/chainguard/minio-client:latest` containing the `mc` command-line utility.
+- **Readiness & Client Architecture**: The bucket seeding service (`minio-init`) uses `cgr.dev/chainguard/minio-client:latest-dev` to poll MinIO readiness via `mc` and seed the default bucket before `backend` starts, coordinating dependencies without requiring utilities inside the minimal MinIO server container.
 
 #### Environment Variables & Credentials Setup
 

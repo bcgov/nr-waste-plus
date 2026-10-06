@@ -172,9 +172,10 @@ class MinioObjectStorageIntegrationTest extends AbstractTestContainerIntegration
   @Test
   @DisplayName("AttachmentService intent, upload, finalize, and download lifecycle end-to-end")
   void attachmentServiceLifecycleEndToEnd() throws Exception {
+    String uniqueId = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
     ReportingUnitEntity ru = new ReportingUnitEntity();
-    ru.setClientNumber("00001234");
-    ru.setClientLocnCode("LOC-1");
+    ru.setClientNumber(uniqueId);
+    ru.setClientLocnCode("LOC-" + uniqueId.substring(0, 4));
     ru.setOrgUnitNo("DCC");
     ru.setRevision(1L);
     ru.setCreatedBy("test");

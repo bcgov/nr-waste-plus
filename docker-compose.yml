@@ -94,21 +94,14 @@ services:
       - "9001:9001"
     volumes:
       - minio_data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 5s
     <<: *defaults
 
   # MinIO Bucket Seeding Service
   minio-init:
     container_name: minio-init
-    image: ${MINIO_CLIENT_IMAGE:-cgr.dev/chainguard/minio-client:latest}
+    image: ${MINIO_CLIENT_IMAGE:-cgr.dev/chainguard/minio-client:latest-dev}
     depends_on:
-      minio:
-        condition: service_healthy
+      - minio
     entrypoint: >
       /bin/sh -c "
       until mc alias set local http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD}; do
@@ -148,7 +141,7 @@ services:
       database:
         condition: service_healthy
       minio:
-        condition: service_healthy
+        condition: service_started
       minio-init:
         condition: service_completed_successfully
     <<: *defaults
