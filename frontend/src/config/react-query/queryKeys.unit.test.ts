@@ -118,6 +118,15 @@ describe('queryKeys', () => {
       expect(queryKeys.reportingUnit.details(123)).toEqual(['reporting-unit', 'details', 123]);
     });
 
+    it('should include notificationTarget in details key', () => {
+      expect(queryKeys.reportingUnit.details(123, 'reporting-unit-details')).toEqual([
+        'reporting-unit',
+        'details',
+        123,
+        'reporting-unit-details',
+      ]);
+    });
+
     it('should build create key', () => {
       expect(queryKeys.reportingUnit.create()).toEqual(['reporting-unit', 'create']);
     });

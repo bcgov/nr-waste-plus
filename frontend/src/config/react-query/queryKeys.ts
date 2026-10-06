@@ -94,7 +94,9 @@ export const queryKeys = {
   },
   reportingUnit: {
     details: (ruId: number, notificationTarget?: string) =>
-      ['reporting-unit', 'details', ruId, notificationTarget] as const,
+      notificationTarget === undefined
+        ? (['reporting-unit', 'details', ruId] as const)
+        : (['reporting-unit', 'details', ruId, notificationTarget] as const),
     create: () => ['reporting-unit', 'create'] as const,
   },
   table: {
