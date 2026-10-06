@@ -74,6 +74,24 @@ jobs:
           echo "Frontend did not become ready after ${max_attempts} attempts: ${FRONTEND_URL}"
           exit 1
 
+      - name: Verify Cypress credentials configured
+        env:
+          IDIR_USERNAME: ${{ secrets.IDIR_UAT_USERNAME }}
+          IDIR_PASSWORD: ${{ secrets.IDIR_UAT_PASSWORD }}
+          BCEID_USERNAME: ${{ secrets.BCEID_UAT_USERNAME }}
+          BCEID_PASSWORD: ${{ secrets.BCEID_UAT_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          for credential in IDIR_USERNAME IDIR_PASSWORD BCEID_USERNAME BCEID_PASSWORD; do
+            if [ -n "${!credential:-}" ]; then
+              echo "${credential}: present"
+            else
+              echo "${credential}: missing"
+              exit 1
+            fi
+          done
+
       - name: Run Cypress End-to-End
         uses: cypress-io/github-action@v7.4.5
         with:

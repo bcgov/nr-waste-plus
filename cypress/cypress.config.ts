@@ -7,6 +7,13 @@ import path from "node:path";
 
 dotenv.config();
 
+const cypressCredentials = {
+  idir_username: process.env.idir_username ?? process.env.CYPRESS_idir_username,
+  idir_password: process.env.idir_password ?? process.env.CYPRESS_idir_password,
+  bceid_username: process.env.bceid_username ?? process.env.CYPRESS_bceid_username,
+  bceid_password: process.env.bceid_password ?? process.env.CYPRESS_bceid_password,
+};
+
 const A11Y_REPORT_FILE = path.resolve(__dirname, "reports", "a11y", "a11y-results.json");
 const UIUX_REPORT_FILE = path.resolve(__dirname, "reports", "uiux", "uiux-results.json");
 const LIGHTHOUSE_REPORT_FILE = path.resolve(__dirname, "reports", "lighthouse", "lighthouse-results.json");
@@ -375,11 +382,8 @@ export default defineConfig({
     responseTimeout: 60000,
     requestTimeout: 20000,
     chromeWebSecurity: false,
-    env: { 
-      idir_username: process.env.idir_username,
-      idir_password: process.env.idir_password,
-      bceid_username: process.env.bceid_username,
-      bceid_password: process.env.bceid_password,
+    env: {
+      ...cypressCredentials,
     },
   },
   video: true,
