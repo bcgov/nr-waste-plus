@@ -152,8 +152,18 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_ADMIN"})
   @DisplayName("Should allow an admin to create for a different client")
   void shouldAllowAdminCreateForCrossClient() throws Exception {
-    stubCreateDependencies();
-    assertSuccessfulCreate();
+    String foreignClient = "00099999";
+    stubCreateDependencies(foreignClient);
+
+    mockMvc
+        .perform(createReportingUnitRequest(foreignClient))
+        .andExpect(status().isCreated())
+        .andExpect(header().exists("Location"));
+
+    legacyApiStub.verify(
+        1,
+        postRequestedFor(urlPathEqualTo("/api/reporting-units"))
+            .withRequestBody(containing(foreignClient)));
   }
 
   private void assertSuccessfulCreate() throws Exception {
@@ -169,21 +179,30 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
   private void stubCreateDependencies() {
+    stubCreateDependencies("00012797");
+  }
+
+  private void stubCreateDependencies(String clientNumber) {
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
             .willReturn(okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
     clientApiStub.stubFor(
-        get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
+        get(urlPathEqualTo("/clients/findByClientNumber/" + clientNumber))
             .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
     legacyApiStub.stubFor(post(urlPathEqualTo("/api/reporting-units")).willReturn(okJson("333")));
   }
 
   private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder createReportingUnitRequest() {
+    return createReportingUnitRequest("00012797");
+  }
+
+  private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder createReportingUnitRequest(
+      String clientNumber) {
     return MockMvcRequestBuilders.post("/api/reporting-units")
         .with(SecurityMockMvcRequestPostProcessors.csrf())
         .contentType(MediaType.APPLICATION_JSON)
         .content(
-            "{\"clientNumber\":\"00012797\",\"districtCode\":\"DND\","
+            "{\"clientNumber\":\"" + clientNumber + "\",\"districtCode\":\"DND\","
                 + "\"samplingCode\":\"AVG\",\"gradeCode\":null}");
   }
 
