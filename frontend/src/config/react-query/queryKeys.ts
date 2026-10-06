@@ -56,8 +56,9 @@ export type SpeciesCompositionQueryParams = {
  * - `reportingUnit` — Individual reporting-unit detail queries.
  * - `table` — Persisted table sorting state.
  *
- * `notificationTarget` params (where present) are included in the key so that
- * different notification targets produce isolated cache entries.
+ * Notification targets are intentionally excluded from resource-data keys. They
+ * control error routing for a consumer and must not split otherwise identical
+ * cached resources.
  */
 export const queryKeys = {
   codes: {
@@ -93,10 +94,7 @@ export const queryKeys = {
     byFieldAndValue: (id: string, value: string) => ['autocomplete', id, value] as const,
   },
   reportingUnit: {
-    details: (ruId: number, notificationTarget?: string) =>
-      notificationTarget === undefined
-        ? (['reporting-unit', 'details', ruId] as const)
-        : (['reporting-unit', 'details', ruId, notificationTarget] as const),
+    details: (ruId: number) => ['reporting-unit', 'details', ruId] as const,
     create: () => ['reporting-unit', 'create'] as const,
   },
   table: {

@@ -496,7 +496,7 @@ export const useReportingUnitDetailsQuery = <TData = ReportingUnitDto>(
   const { notificationTarget, ...queryOptions } = options ?? {};
 
   const query = useQuery({
-    queryKey: queryKeys.reportingUnit.details(ruId, notificationTarget),
+    queryKey: queryKeys.reportingUnit.details(ruId),
     queryFn: () =>
       API.reportingUnit.getReportingUnit(ruId, { notificationTarget }) as unknown as Promise<TData>,
     ...queryOptions,
