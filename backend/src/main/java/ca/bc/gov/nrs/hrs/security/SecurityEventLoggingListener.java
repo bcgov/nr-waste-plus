@@ -70,9 +70,7 @@ public class SecurityEventLoggingListener {
   @EventListener
   public void onAuthorizationDenied(AuthorizationDeniedEvent<?> event) {
     HttpServletRequest request = requestFrom(event.getObject());
-    Authentication authentication = event.getAuthentication() == null
-        ? null
-        : event.getAuthentication().get();
+    Authentication authentication = event.getAuthentication().get();
     if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
       logEvent(EVENT_AUTHENTICATION_FAILED, 401, request, event.getAuthentication(), null);
       return;
@@ -88,6 +86,9 @@ public class SecurityEventLoggingListener {
       String failureCategory) {
     String routeTemplate = routeTemplate(request);
     String identity = safeIdentity(authentication);
+    String correlationId = correlationId();
+    String identityProvider = identity == null ? "" : identity.split("\\|", 2)[0];
+    String subject = identity == null ? "" : identity.split("\\|", 2)[1];
     LOG.info(
         "SECURITY_EVENT event={} service={} environment={} timestamp={} method={} "
             + "routeTemplate={} status={} correlationId={} identityProvider={} subject={} "
@@ -99,9 +100,9 @@ public class SecurityEventLoggingListener {
         request == null ? "" : request.getMethod(),
         routeTemplate,
         status,
-        correlationId(),
-         identity == null ? "" : identity.split("\\|", 2)[0],
-         identity == null ? "" : identity.split("\\|", 2)[1],
+        correlationId,
+        identityProvider,
+        subject,
         failureCategory == null ? "" : failureCategory);
   }
 
@@ -110,7 +111,7 @@ public class SecurityEventLoggingListener {
       return "";
     }
     Object pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-    return pattern instanceof String ? (String) pattern : "";
+    return pattern instanceof String stringPattern ? stringPattern : "";
   }
 
   private static String correlationId() {
@@ -148,11 +149,11 @@ public class SecurityEventLoggingListener {
 
   private static String issuer(OAuth2AuthenticatedPrincipal principal) {
     Object issuer = principal.getAttribute("iss");
-    return issuer instanceof String ? (String) issuer : "";
+    return issuer instanceof String stringIssuer ? stringIssuer : "";
   }
 
   private static String valueOrEmpty(Object value) {
-    return value instanceof String ? (String) value : "";
+    return value instanceof String stringValue ? stringValue : "";
   }
 
   private static HttpServletRequest currentRequest() {

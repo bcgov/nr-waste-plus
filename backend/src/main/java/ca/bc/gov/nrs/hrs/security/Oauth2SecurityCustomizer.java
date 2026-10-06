@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.hrs.security;
 import ca.bc.gov.nrs.hrs.provider.cognito.CognitoUserInfoClient;
 import java.util.Collection;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;

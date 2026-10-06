@@ -3,16 +3,13 @@ package ca.bc.gov.nrs.hrs.security;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.time.Instant;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterAll;
@@ -85,13 +82,15 @@ class JwtValidationSecurityTest {
 
   @Test
   void wrongClientIdMustBeRejected() {
-    assertThatThrownBy(() -> decoder.decode(token("client-other", ISSUER, Instant.now().plusSeconds(60))))
+    String compactToken = token("client-other", ISSUER, Instant.now().plusSeconds(60));
+    assertThatThrownBy(() -> decoder.decode(compactToken))
         .isInstanceOf(JwtException.class);
   }
 
   @Test
   void missingClientIdMustBeRejected() {
-    assertThatThrownBy(() -> decoder.decode(token(null, ISSUER, Instant.now().plusSeconds(60))))
+    String compactToken = token(null, ISSUER, Instant.now().plusSeconds(60));
+    assertThatThrownBy(() -> decoder.decode(compactToken))
         .isInstanceOf(JwtException.class);
   }
 
@@ -104,13 +103,15 @@ class JwtValidationSecurityTest {
 
   @Test
   void wrongIssuerMustBeRejected() {
-    assertThatThrownBy(() -> decoder.decode(token("client-good", "https://issuer-other.test/pool", Instant.now().plusSeconds(60))))
+    String compactToken = token("client-good", "https://issuer-other.test/pool", Instant.now().plusSeconds(60));
+    assertThatThrownBy(() -> decoder.decode(compactToken))
         .isInstanceOf(JwtException.class);
   }
 
   @Test
   void expiredTokenMustBeRejected() {
-    assertThatThrownBy(() -> decoder.decode(token("client-good", ISSUER, Instant.now().minusSeconds(60))))
+    String compactToken = token("client-good", ISSUER, Instant.now().minusSeconds(60));
+    assertThatThrownBy(() -> decoder.decode(compactToken))
         .isInstanceOf(JwtException.class);
   }
 

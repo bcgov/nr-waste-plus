@@ -67,8 +67,8 @@ class SecurityEventLoggingListenerTest {
     assertThat(message)
         .contains("event=AUTHENTICATION_FAILED", "service=legacy-test", "status=401")
         .contains("method=POST", "routeTemplate=/api/users/preferences")
-        .contains("correlationId=correlation-401", "failureCategory=BadCredentialsException");
-    assertThat(message).doesNotContain(SECRET_MARKER, "Authorization", "Cookie", "password");
+        .contains("correlationId=correlation-401", "failureCategory=BadCredentialsException")
+        .doesNotContain(SECRET_MARKER, "Authorization", "Cookie", "password");
   }
 
   @Test
@@ -98,8 +98,7 @@ class SecurityEventLoggingListenerTest {
         .contains("event=AUTHORIZATION_DENIED", "status=403", "method=GET")
         .contains("routeTemplate=/api/reporting-units/{id}")
         .contains("correlationId=correlation-403", "identityProvider=" + ISSUER)
-        .contains("subject=" + SUBJECT);
-    assertThat(message)
+        .contains("subject=" + SUBJECT)
         .doesNotContain(
             SECRET_MARKER,
             "secret-scope",
@@ -126,8 +125,8 @@ class SecurityEventLoggingListenerTest {
     String message = message();
     assertThat(message)
         .contains("event=AUTHENTICATION_FAILED", "status=401", "method=GET")
-        .contains("routeTemplate=/api/reporting-units/{id}");
-    assertThat(message).doesNotContain("event=AUTHORIZATION_DENIED", "status=403");
+        .contains("routeTemplate=/api/reporting-units/{id}")
+        .doesNotContain("event=AUTHORIZATION_DENIED", "status=403");
   }
 
   @Test
@@ -145,8 +144,9 @@ class SecurityEventLoggingListenerTest {
     listener.onAuthorizationDenied(event);
 
     String message = message();
-    assertThat(message).contains("event=AUTHENTICATION_FAILED", "status=401");
-    assertThat(message).doesNotContain("event=AUTHORIZATION_DENIED");
+    assertThat(message)
+        .contains("event=AUTHENTICATION_FAILED", "status=401")
+        .doesNotContain("event=AUTHORIZATION_DENIED");
   }
 
   private static MockHttpServletRequest request(String method, String route) {

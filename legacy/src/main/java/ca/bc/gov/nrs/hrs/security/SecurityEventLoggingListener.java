@@ -56,9 +56,7 @@ public class SecurityEventLoggingListener {
   public void onAuthorizationDenied(AuthorizationDeniedEvent<?> event) {
     HttpServletRequest request = event.getObject() instanceof RequestAuthorizationContext context
         ? context.getRequest() : currentRequest();
-    Authentication authentication = event.getAuthentication() == null
-        ? null
-        : event.getAuthentication().get();
+    Authentication authentication = event.getAuthentication().get();
     if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
       logEvent("AUTHENTICATION_FAILED", 401, request, event.getAuthentication(), null);
       return;
@@ -74,14 +72,15 @@ public class SecurityEventLoggingListener {
     String subject = parts.length > 1 ? parts[1] : "";
     Object pattern = request == null ? null
         : request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+    String method = request == null ? "" : request.getMethod();
+    String routeTemplate = pattern instanceof String stringPattern ? stringPattern : "";
+    String correlationId = correlationId();
+    String category = failureCategory == null ? "" : failureCategory;
     LOG.info("SECURITY_EVENT event={} service={} environment={} timestamp={} method={} "
             + "routeTemplate={} status={} correlationId={} identityProvider={} subject={} "
             + "failureCategory={}",
         eventName, service, environment, Instant.now(),
-        request == null ? "" : request.getMethod(),
-        pattern instanceof String ? pattern : "",
-        status, correlationId(), issuer, subject,
-        failureCategory == null ? "" : failureCategory);
+        method, routeTemplate, status, correlationId, issuer, subject, category);
   }
 
   private static String correlationId() {
@@ -112,7 +111,7 @@ public class SecurityEventLoggingListener {
   }
 
   private static String valueOrEmpty(Object value) {
-    return value instanceof String ? (String) value : "";
+    return value instanceof String stringValue ? stringValue : "";
   }
 
   private static HttpServletRequest currentRequest() {

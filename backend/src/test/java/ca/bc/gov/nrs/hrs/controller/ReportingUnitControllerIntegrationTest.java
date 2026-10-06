@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.hrs.controller;
 
 import static ca.bc.gov.nrs.hrs.TestConstants.LEGACY_RU_DETAILS;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
@@ -132,16 +131,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @DisplayName("Should allow a submitter to create for the claimed client")
   void shouldAllowSubmitterCreateForMatchingClient() throws Exception {
     stubCreateDependencies();
-
-    mockMvc
-        .perform(createReportingUnitRequest())
-        .andExpect(status().isCreated())
-        .andExpect(header().exists("Location"));
-
-    legacyApiStub.verify(
-        1,
-        postRequestedFor(urlPathEqualTo("/api/reporting-units"))
-            .withRequestBody(containing("00012797")));
+    assertSuccessfulCreate();
   }
 
   @Test
@@ -163,7 +153,10 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @DisplayName("Should allow an admin to create for a different client")
   void shouldAllowAdminCreateForCrossClient() throws Exception {
     stubCreateDependencies();
+    assertSuccessfulCreate();
+  }
 
+  private void assertSuccessfulCreate() throws Exception {
     mockMvc
         .perform(createReportingUnitRequest())
         .andExpect(status().isCreated())
