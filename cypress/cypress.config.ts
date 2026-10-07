@@ -397,7 +397,7 @@ export default defineConfig({
     // search 0->1->3) and are all async data-render races in the Vite SPA, not a product
     // regression. runMode 1 turned that into hard CI failures. Lower to 1, then 0, only
     // once the flaky signal (persisted RunResult retries) shows a sustained rate below 1%.
-    runMode: 2,
+    runMode: 0,
     openMode: 0,
   },
 });

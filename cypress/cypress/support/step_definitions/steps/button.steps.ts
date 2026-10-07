@@ -91,16 +91,18 @@ const buttonClick = (
   name: string,
   waitForIntercept: string = "",
   waitForTime: number = 1,
-  // The app layout is Suspense-wrapped: after cy.visit the header (and any
-  // icon-only header button) mounts only once the lazy route chunk resolves,
-  // which routinely takes longer than a few hundred ms in dev. Budget 10s
-  // (50 x 200ms) before falling back inside findButton.
+  // CI may take longer for Suspense-wrapped headers to mount. Budget 10s
+  // (50 x 200ms) before falling back inside findButton. Reduced retries
+  // (vs 50) for non-Suspense buttons to fail-fast when the button truly
+  // does not exist (common in CI for district-selection dropdowns whose
+  // data has not loaded yet).
   retries: number = 50,
   retryDelay: number = 200,
   selector: string = "body",
 ) => {
   const timeout = waitForTime * 1000;
 
+  cy.log(`[DIAG] buttonClick: searching for "${name}"`);
   const button = findButton(name, retries, retryDelay, selector);
   button.click({ force: true });
 

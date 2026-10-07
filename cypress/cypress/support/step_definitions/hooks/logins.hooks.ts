@@ -37,7 +37,8 @@ const doLogin = (
 
         // The hosted login page is cross-origin. Keep all commands that run there inside
         // cy.origin so Cypress does not depend on the current deployment's IdP host.
-        cy.location("origin", { timeout: 30000 }).then((loginOrigin) => {
+        // 10s timeout: fail fast when IdP host is unreachable instead of spending 30s per spec.
+        cy.location("origin", { timeout: 10000 }).then((loginOrigin) => {
           cy.origin(
             loginOrigin,
             {
@@ -73,7 +74,11 @@ const doLogin = (
       },
       {
         validate: () => {
-          cy.request(afterLoginLocation).its("status").should("eq", 200);
+          // Use requestTimeout (20 s) instead of pageLoadTimeout (120 s) so the
+          // validate callback fails fast when the backend is unreachable in CI.
+          cy.request({ url: afterLoginLocation, timeout: 20_000 })
+            .its("status")
+            .should("eq", 200);
         },
         // B1 (#1083): reuse the IdP session across specs in one run, so the
         // logontest7.gov.bc.ca login dance runs once per run instead of once per
