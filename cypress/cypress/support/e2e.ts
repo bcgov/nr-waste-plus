@@ -9,6 +9,10 @@ Cypress.Keyboard.defaults({
 type PageDiagnostic = {
   kind: string;
   message: string;
+  url?: string;
+  filename?: string;
+  line?: number;
+  column?: number;
 };
 
 let currentPage: Window | undefined;
@@ -22,8 +26,16 @@ const stringify = (value: unknown): string => {
   }
 };
 
-const recordDiagnostic = (kind: string, message: string) => {
-  pageDiagnostics.push({ kind, message });
+const recordDiagnostic = (
+  kind: string,
+  message: string,
+  details: Omit<PageDiagnostic, "kind" | "message"> = {},
+) => {
+  pageDiagnostics.push({
+    kind,
+    message,
+    ...details,
+  });
 };
 
 const redactUrl = (url: string): string => {
@@ -93,7 +105,12 @@ Cypress.on("window:before:load", (win) => {
   };
 
   win.addEventListener("error", (event) => {
-    recordDiagnostic("window.error", event.message || "Unknown browser error");
+    recordDiagnostic("window.error", event.message || "Unknown browser error", {
+      url: redactUrl(win.location.href),
+      filename: event.filename || undefined,
+      line: event.lineno || undefined,
+      column: event.colno || undefined,
+    });
   });
 
   win.addEventListener("unhandledrejection", (event) => {
@@ -122,8 +139,10 @@ beforeEach(() => {
   });
 });
 
-Cypress.on("uncaught:exception", (err, runnable) => {
-  recordDiagnostic("uncaught:exception", err.message);
+Cypress.on("uncaught:exception", (err, _runnable) => {
+  recordDiagnostic("uncaught:exception", err.message, {
+    url: currentPage ? redactUrl(currentPage.location.href) : undefined,
+  });
   console.error(`[uncaught:exception] ${err.message}`);
 
   // Only ignore known, non-breaking third-party errors.

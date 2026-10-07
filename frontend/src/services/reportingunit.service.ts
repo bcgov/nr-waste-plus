@@ -1,7 +1,7 @@
-import type { ReportingUnitCreateDto, ReportingUnitDto } from './types';
-
 import { CancelablePromise } from '@/config/api/CancelablePromise';
 import { HttpClient, type APIConfig } from '@/config/api/types';
+
+import type { ReportingUnitCreateDto, ReportingUnitDto } from './types';
 
 /**
  * Backend client for Reporting Unit data.
@@ -25,14 +25,19 @@ export class ReportingUnitService extends HttpClient {
    * to catch unexpected shape changes from the backend early.
    *
    * @param id - The ID of the reporting unit.
+   * @param meta - Optional request metadata used by the API middleware.
    * @returns A promise that resolves to the validated reporting unit details.
    * @throws {Error} When the API response does not match the expected schema.
    * @throws {ApiError} When the HTTP request fails.
    */
-  getReportingUnit(id: number): CancelablePromise<ReportingUnitDto> {
+  getReportingUnit(
+    id: number,
+    meta?: Record<string, unknown>,
+  ): CancelablePromise<ReportingUnitDto> {
     return this.doRequest<ReportingUnitDto>(this.config, {
       method: 'GET',
       url: `/api/reporting-units/${id}`,
+      ...(meta === undefined ? {} : { meta }),
     });
   }
 

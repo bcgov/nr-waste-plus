@@ -1,13 +1,14 @@
 import { screen, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-import ReportingUnitDetailsPage from './index';
-
-import type { ReportingUnitDto } from '@/services/types';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { renderWithApp } from '@/config/tests/renderWithApp';
 import { Role } from '@/context/auth/types';
 import * as useAuthModule from '@/context/auth/useAuth';
+import * as envModule from '@/env';
+
+import ReportingUnitDetailsPage from './index';
+
+import type { ReportingUnitDto } from '@/services/types';
 
 // ── Mutable state ─────────────────────────────────────────────────────────────
 
@@ -304,6 +305,31 @@ describe('ReportingUnitDetailsPage', () => {
       await waitFor(() => {
         screen.getByText('Integration Corp.');
         screen.getByText('DTI - Test District');
+      });
+    });
+  });
+
+  describe('blocks list feature flag', () => {
+    const originalFlag = envModule.featureFlags['reporting-unit-block-details-enabled'];
+
+    afterEach(() => {
+      envModule.featureFlags['reporting-unit-block-details-enabled'] = originalFlag;
+    });
+
+    it('does not render the blocks list when the flag is disabled', async () => {
+      envModule.featureFlags['reporting-unit-block-details-enabled'] = false;
+      renderPage();
+      await waitFor(() => {
+        screen.getByText('Reporting Unit no.: 12345');
+      });
+      expect(screen.queryByRole('table')).toBeNull();
+    });
+
+    it('renders the blocks list when the flag is enabled', async () => {
+      envModule.featureFlags['reporting-unit-block-details-enabled'] = true;
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByText('No results')).toBeDefined();
       });
     });
   });

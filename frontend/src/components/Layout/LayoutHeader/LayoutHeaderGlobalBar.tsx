@@ -13,7 +13,7 @@ import './LayoutHeaderGlobalBar.scss';
 const LayoutHeaderGlobalBar: FC = () => {
   const { toggleHeaderPanel, isHeaderPanelOpen } = useLayout();
   const { user } = useAuth();
-  const { theme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <HeaderGlobalBar>
@@ -21,8 +21,9 @@ const LayoutHeaderGlobalBar: FC = () => {
         data-testid="theme-toggle"
         aria-label={`Switch to ${theme === 'g100' ? 'light' : 'dark'} mode`}
         tooltipAlignment="end"
+        onClick={toggleTheme}
       >
-        <ThemeToggle />
+        <ThemeToggle interactive={false} />
       </HeaderGlobalAction>
 
       <HeaderGlobalAction

@@ -158,6 +158,19 @@ describe('ReportingUnitService', () => {
       });
     });
 
+    it('passes request metadata to the endpoint', async () => {
+      (service as any).doRequest = vi.fn().mockResolvedValue(validReportingUnit);
+      const meta = { notificationTarget: 'reporting-unit-details' };
+
+      await service.getReportingUnit(1, meta);
+
+      expect((service as any).doRequest).toHaveBeenCalledWith(mockConfig, {
+        method: 'GET',
+        url: '/api/reporting-units/1',
+        meta,
+      });
+    });
+
     it('accepts extra fields from the API response (loose schema)', async () => {
       const withExtra = { ...validReportingUnit, newBackendField: 'future-proof' };
       (service as any).doRequest = vi.fn().mockResolvedValue(withExtra);

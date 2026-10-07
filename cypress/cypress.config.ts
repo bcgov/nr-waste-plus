@@ -7,12 +7,26 @@ import path from "node:path";
 
 dotenv.config();
 
+const cypressCredentials = {
+  idir_username: process.env.idir_username ?? process.env.CYPRESS_idir_username,
+  idir_password: process.env.idir_password ?? process.env.CYPRESS_idir_password,
+  bceid_username: process.env.bceid_username ?? process.env.CYPRESS_bceid_username,
+  bceid_password: process.env.bceid_password ?? process.env.CYPRESS_bceid_password,
+};
+
 const A11Y_REPORT_FILE = path.resolve(__dirname, "reports", "a11y", "a11y-results.json");
 const UIUX_REPORT_FILE = path.resolve(__dirname, "reports", "uiux", "uiux-results.json");
 const LIGHTHOUSE_REPORT_FILE = path.resolve(__dirname, "reports", "lighthouse", "lighthouse-results.json");
 
 const RUN_RESULT_FILE = path.resolve(__dirname, "reports", "run-result.json");
 const FLAKY_SUMMARY_FILE = path.resolve(__dirname, "reports", "flaky", "flaky-summary.json");
+
+// Node-side cy.task handlers are NOT covered by any Cypress timeout (requestTimeout,
+// pageLoadTimeout, etc. only govern browser-side commands). A stalled DevTools
+// connection to debugPort would therefore block the entire run forever, surfacing
+// as a silent CI freeze. Individual audits measured 10-16 s in CI, so 120 s is a
+// generous ceiling that still fails the spec loudly instead of hanging the job.
+const LIGHTHOUSE_TIMEOUT_MS = 120_000;
 
 let debugPort = 0;
 
@@ -187,7 +201,7 @@ async function setupNodeEvents(
     // Run Lighthouse
     // disableStorageReset: true ensures Lighthouse does not wipe cookies, sessionStorage,
     // and localStorage from Chrome, preserving active Cypress sessions and network sockets.
-    const result = await lighthouse.default(url, {
+    const lighthouseRun = lighthouse.default(url, {
       port: debugPort,
       hostname: "127.0.0.1",
       output: "json",
@@ -195,6 +209,30 @@ async function setupNodeEvents(
       disableStorageReset: true,
       ...effectiveOptions,
     }, lighthouseConfig as any);
+
+    // Race against a hard ceiling so a stalled DevTools connection fails the
+    // task instead of hanging the run indefinitely.
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+    const timedOut = new Promise<never>((_resolve, reject) => {
+      timeoutHandle = setTimeout(() => {
+        reject(
+          new Error(
+            `Lighthouse timed out after ${LIGHTHOUSE_TIMEOUT_MS} ms for ${url} (debugPort=${debugPort})`
+          )
+        );
+      }, LIGHTHOUSE_TIMEOUT_MS);
+    });
+
+    // Swallow a late rejection from the losing branch so an eventual timeout
+    // does not resurface as an unhandled rejection after we have already failed.
+    lighthouseRun.catch(() => {});
+
+    let result: Awaited<typeof lighthouseRun>;
+    try {
+      result = await Promise.race([lighthouseRun, timedOut]);
+    } finally {
+      if (timeoutHandle) clearTimeout(timeoutHandle);
+    }
 
     const lhr = result?.lhr;
     if (!lhr) {
@@ -375,11 +413,8 @@ export default defineConfig({
     responseTimeout: 60000,
     requestTimeout: 20000,
     chromeWebSecurity: false,
-    env: { 
-      idir_username: process.env.idir_username,
-      idir_password: process.env.idir_password,
-      bceid_username: process.env.bceid_username,
-      bceid_password: process.env.bceid_password,
+    env: {
+      ...cypressCredentials,
     },
   },
   video: true,
@@ -393,6 +428,11 @@ export default defineConfig({
     // search 0->1->3) and are all async data-render races in the Vite SPA, not a product
     // regression. runMode 1 turned that into hard CI failures. Lower to 1, then 0, only
     // once the flaky signal (persisted RunResult retries) shows a sustained rate below 1%.
+    //
+    // NOTE: the stale-session flake (logouts poisoning every later BCeID spec) was a
+    // separate defect and is now fixed in logins.hooks.ts, so the rate measured from
+    // here on reflects only the SPA races this setting exists to absorb. Every wait in
+    // the suite is now bounded, so lowering this is safe whenever the data supports it.
     runMode: 2,
     openMode: 0,
   },

@@ -7,21 +7,31 @@ import { useTheme } from '@/context/theme/useTheme';
 /**
  * Toggles between the supported Carbon light and dark themes.
  *
- * @returns An interactive theme toggle control.
+ * @param props Component options.
+ * @param props.interactive Whether the component owns keyboard and click behavior.
+ * @returns A theme toggle control.
  */
-const ThemeToggle: FC = () => {
+interface ThemeToggleProps {
+  readonly interactive?: boolean;
+}
+
+const ThemeToggle: FC<ThemeToggleProps> = ({ interactive = true }) => {
   const { theme, toggleTheme } = useTheme();
   return (
     <div
       className={`theme-toggle ${theme !== 'g10' ? 'on' : 'off'}`}
-      onClick={toggleTheme}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          toggleTheme();
-        }
-      }}
+      onClick={interactive ? toggleTheme : undefined}
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      onKeyDown={
+        interactive
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                toggleTheme();
+              }
+            }
+          : undefined
+      }
     >
       <div className="circle">
         {theme !== 'g10' ? (
