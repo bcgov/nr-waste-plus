@@ -98,7 +98,6 @@ jobs:
           working-directory: cypress
           browser: chrome
           install: false
-          spec: "**/test.feature"
         env:
           CYPRESS_baseUrl: https://${{ inputs.url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
