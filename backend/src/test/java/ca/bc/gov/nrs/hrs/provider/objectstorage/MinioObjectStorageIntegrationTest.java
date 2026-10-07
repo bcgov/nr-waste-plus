@@ -161,10 +161,9 @@ class MinioObjectStorageIntegrationTest extends AbstractTestContainerIntegration
     assertThat(headA.contentLength()).isEqualTo(content.length);
 
     // Verify absent from bucketB
-    assertThatThrownBy(
-            () ->
-                s3Client.headObject(
-                    HeadObjectRequest.builder().bucket(bucketB).key(key).build()))
+    HeadObjectRequest headBRequest =
+        HeadObjectRequest.builder().bucket(bucketB).key(key).build();
+    assertThatThrownBy(() -> s3Client.headObject(headBRequest))
         .isInstanceOf(NoSuchKeyException.class);
 
     // Clean up
