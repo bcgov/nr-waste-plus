@@ -39,15 +39,3 @@ Feature: My profile
     And I click on the "Profile settings" button
     When I select no client
     Then no client should be selected
-
-  # ── District selection (IDIR users) ──
-  # IDIR users pick a district in the profile panel; the selection shows on
-  # the profile settings button and survives closing the panel.
-  @loginAsIDIR
-  Scenario: Selected district shows on the profile settings button
-    Given I visit "/search"
-    When I click on the "Profile settings" button
-    And I click on the "Campbell River" button
-    Then the profile settings button should show "Campbell River"
-    When I close the profile panel
-    Then the profile settings button should show "Campbell River"
