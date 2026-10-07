@@ -14,6 +14,7 @@ import {
   generateSortArray,
 } from '@/services/utils';
 
+import { queryClient } from './config';
 import {
   queryKeys,
   type DistrictVolumeQueryParams,
@@ -23,6 +24,7 @@ import {
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { ProblemDetails } from '@/config/api/types';
+import type { ReportingUnitBlocksRow } from '@/components/waste/ReportingUnits/ReportingUnitBlocksList/constants';
 import type {
   DistrictVolumeCreate,
   DistrictVolumeDetail,
@@ -35,6 +37,8 @@ import type {
   SpeciesCompositionListItem,
 } from '@/services/speciesComposition.types';
 import type {
+  BlockCreateRequestDto,
+  BlockCreateResponseDto,
   ForestClientDto,
   MyForestClientDto,
   ReportingUnitCreateDto,
@@ -462,6 +466,121 @@ export const useReportingUnitCreateMutation = (
   }, [notificationTarget, mutation.error, mutation.isError]);
 
   return mutation;
+};
+
+/**
+ * Creates a District Average block under the given reporting unit (issue #1228).
+ *
+ * On success, invokes `onSuccess` with the created block resource so the caller
+ * can navigate to the block wizard shell. On error, dispatches an inline
+ * notification to `notificationTarget` (when supplied) using the RFC 7807
+ * problem-details payload from the backend when available — including the
+ * `409` duplicate-block conflict.
+ *
+ * @param ruId - The numeric reporting unit the block is created under.
+ * @param options - Optional TanStack Query mutation overrides plus:
+ *   - `notificationTarget`: Optional target for inline error notifications.
+ *   - `onSuccess`: Optional callback invoked with the created block (allows caller to navigate).
+ * @returns The TanStack Query mutation result for creating a block.
+ *
+ * @example
+ * ```tsx
+ * const mutation = useCreateBlock(ruId, {
+ *   notificationTarget: 'ru-details',
+ *   onSuccess: (block) =>
+ *     navigate({ to: '/reporting-units/$ruId/blocks/create', params: { ruId }, search: { blockId: block.id, blockState: block.state } }),
+ * });
+ *
+ * mutation.mutate({ blockType: 'DISTRICT_AVERAGE' });
+ * ```
+ */
+export const useCreateBlock = (
+  ruId: number,
+  options?: Omit<
+    UseMutationOptions<BlockCreateResponseDto, Error, BlockCreateRequestDto>,
+    'mutationKey' | 'mutationFn' | 'onSuccess'
+  > &
+    QueryNotificationOptions & {
+      /** Called with the created block resource on success. */
+      onSuccess?: (block: BlockCreateResponseDto) => void;
+    },
+) => {
+  const { notificationTarget, onSuccess, ...mutationOptions } = options ?? {};
+
+  const mutation = useMutation({
+    mutationKey: queryKeys.block.create(),
+    mutationFn: (body) => API.reportingUnit.createBlock(ruId, body),
+    onSuccess: (data) => {
+      // Refresh the reporting-unit blocks table so the new row appears
+      // (and the single-block rule can be re-evaluated from real counts).
+      queryClient.invalidateQueries({ queryKey: queryKeys.block.list(ruId) });
+      onSuccess?.(data);
+    },
+    ...mutationOptions,
+  });
+
+  useEffect(() => {
+    if (!notificationTarget || !mutation.isError || !mutation.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(mutation.error, notificationTarget);
+  }, [notificationTarget, mutation.error, mutation.isError]);
+
+  return mutation;
+};
+
+/**
+ * Fetches the paged block list for a reporting unit (issue #1250).
+ *
+ * Serves both the blocks table on the reporting-unit details page and the
+ * block-count check inside `BlockCreateAction` (same cache key, one request).
+ * Disabled by callers when its feature flag, the route params, or visibility
+ * preconditions are not met.
+ *
+ * On error, dispatches an inline notification to `notificationTarget` (when
+ * supplied); the table also renders its own error state either way.
+ *
+ * @param ruId - The numeric reporting unit whose blocks are listed.
+ * @param options - Optional TanStack Query overrides plus an optional `notificationTarget`.
+ * @returns The TanStack Query result containing {@link PageableResponse} rows.
+ *
+ * @example
+ * ```tsx
+ * const { data, isPending, isError } = useReportingUnitBlocksQuery(ruId, { enabled: flag });
+ * <ReportingUnitBlocksList content={data} isLoading={isPending} isError={isError} />
+ * ```
+ */
+export const useReportingUnitBlocksQuery = <TData = PageableResponse<ReportingUnitBlocksRow>>(
+  ruId: number,
+  options?: Omit<
+    UseQueryOptions<
+      PageableResponse<ReportingUnitBlocksRow>,
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.block.list>
+    >,
+    'queryKey' | 'queryFn'
+  > &
+    QueryNotificationOptions,
+) => {
+  const { notificationTarget, ...queryOptions } = options ?? {};
+
+  const query = useQuery({
+    queryKey: queryKeys.block.list(ruId),
+    queryFn: () => API.reportingUnit.getBlocks(ruId, { notificationTarget }),
+    ...queryOptions,
+  });
+
+  useEffect(() => {
+    if (!notificationTarget || !query.isError || !query.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(query.error, notificationTarget);
+  }, [notificationTarget, query.error, query.isError]);
+
+  return query;
 };
 
 /**

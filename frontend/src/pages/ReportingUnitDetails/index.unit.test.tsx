@@ -82,23 +82,21 @@ describe('ReportingUnitDetailsPage', () => {
     it('renders the reporting unit ID in the page title', async () => {
       renderPage();
       await waitFor(() => {
-        screen.getByText('Reporting Unit no.: 12345');
+        screen.getByText('Reporting Unit No. 12345');
       });
     });
 
     it('renders the page subtitle', async () => {
       renderPage();
       await waitFor(() => {
-        expect(
-          screen.getByText('Start a new waste submission by creating a reporting unit'),
-        ).toBeDefined();
+        expect(screen.getByText('View reporting unit details')).toBeDefined();
       });
     });
 
     it('renders with a different reporting unit ID', async () => {
       renderPage({ ...defaultData, id: 99999 });
       await waitFor(() => {
-        screen.getByText('Reporting Unit no.: 99999');
+        screen.getByText('Reporting Unit No. 99999');
       });
     });
   });
@@ -244,7 +242,7 @@ describe('ReportingUnitDetailsPage', () => {
       });
       renderPage();
       await waitFor(() => {
-        screen.getByText('Reporting Unit no.: 12345');
+        screen.getByText('Reporting Unit No. 12345');
       });
     });
 
@@ -260,7 +258,7 @@ describe('ReportingUnitDetailsPage', () => {
       });
       renderPage();
       await waitFor(() => {
-        screen.getByText('Reporting Unit no.: 12345');
+        screen.getByText('Reporting Unit No. 12345');
       });
     });
   });
@@ -276,7 +274,7 @@ describe('ReportingUnitDetailsPage', () => {
         district: { code: 'DND', description: 'North' },
       });
       await waitFor(() => {
-        screen.getByText('Reporting Unit no.: 1');
+        screen.getByText('Reporting Unit No. 1');
         screen.getByText('A Client');
         screen.getByText('Inactive');
       });
@@ -320,7 +318,7 @@ describe('ReportingUnitDetailsPage', () => {
       envModule.featureFlags['reporting-unit-block-details-enabled'] = false;
       renderPage();
       await waitFor(() => {
-        screen.getByText('Reporting Unit no.: 12345');
+        screen.getByText('Reporting Unit No. 12345');
       });
       expect(screen.queryByRole('table')).toBeNull();
     });

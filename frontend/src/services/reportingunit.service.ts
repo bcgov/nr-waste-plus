@@ -1,7 +1,15 @@
 import { CancelablePromise } from '@/config/api/CancelablePromise';
 import { HttpClient, type APIConfig } from '@/config/api/types';
 
-import type { ReportingUnitCreateDto, ReportingUnitDto } from './types';
+import type { ReportingUnitBlocksRow } from '@/components/waste/ReportingUnits/ReportingUnitBlocksList/constants';
+import type { PageableResponse } from '@/types/PageableResponse.types';
+
+import type {
+  BlockCreateRequestDto,
+  BlockCreateResponseDto,
+  ReportingUnitCreateDto,
+  ReportingUnitDto,
+} from './types';
 
 /**
  * Backend client for Reporting Unit data.
@@ -58,5 +66,80 @@ export class ReportingUnitService extends HttpClient {
       url: '/api/reporting-units',
       body,
     });
+  }
+
+  /**
+   * Retrieves the paged block list for a reporting unit (issue #1250).
+   *
+   * The backend serves this page from either postgres (blocks created in the
+   * new app) or the legacy/Oracle system, whichever owns the reporting unit.
+   * Rows match the blocks table shape exactly; fields the backend cannot
+   * resolve come back `null` and render as empty-value tags. Following the
+   * established paged-list pattern (see `getDistrictVolumes`), the response
+   * is typed rather than zod-validated so it stays assignable to the table's
+   * `content` prop.
+   *
+   * @param ruId - The numeric reporting unit whose blocks are listed.
+   * @param meta - Optional request metadata used by the API middleware.
+   * @returns A promise that resolves to the paged block rows.
+   * @throws {ApiError} When the HTTP request fails.
+   */
+  getBlocks(
+    ruId: number,
+    meta?: Record<string, unknown>,
+  ): CancelablePromise<PageableResponse<ReportingUnitBlocksRow>> {
+    return this.doRequest<PageableResponse<ReportingUnitBlocksRow>>(this.config, {
+      method: 'GET',
+      url: `/api/reporting-units/${ruId}/blocks`,
+      ...(meta === undefined ? {} : { meta }),
+    });
+  }
+
+  /**
+   * Creates a new block under the given reporting unit (issue #1228).
+   *
+   * Contract highlights (issue #1228):
+   * - `201` with the full block resource in the body
+   *   (`{ id, reportingUnitId, blockType, state, version, createdAt, updatedAt }`).
+   * - `409` when a live District Average block already exists for the unit
+   *   ("A District Average block already exists for this Reporting Unit").
+   * - `404` for an unknown reporting unit (never `403` for RU/block mismatch).
+   *
+   * STUB: the backend POST endpoint does not exist yet. This method currently
+   * fabricates a 201-shaped body after a short delay so the whole UI flow
+   * (add → hide panel → refresh list) runs end-to-end. Swap point: delete the
+   * stub below and restore the commented-out `doRequest` when the backend
+   * lands — nothing else in the app needs to change.
+   *
+   * @param ruId - The numeric reporting unit the block belongs to.
+   * @param body - The block-creation payload (`blockType`).
+   * @returns A promise that resolves to the (stubbed) created block resource.
+   */
+  createBlock(
+    ruId: number,
+    body: BlockCreateRequestDto,
+  ): CancelablePromise<BlockCreateResponseDto> {
+    const now = new Date().toISOString();
+    const stubBody: BlockCreateResponseDto = {
+      id: Date.now(),
+      reportingUnitId: ruId,
+      blockType: body.blockType,
+      state: 'DRAFT',
+      version: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    return new CancelablePromise<BlockCreateResponseDto>((resolve, _reject, onCancel) => {
+      const timer = setTimeout(() => resolve(stubBody), 300);
+      onCancel(() => clearTimeout(timer));
+    });
+
+    // Real implementation — restore once the backend endpoint ships:
+    // return this.doRequest<BlockCreateResponseDto>(this.config, {
+    //   method: 'POST',
+    //   url: `/api/reporting-units/${ruId}/blocks`,
+    //   body,
+    // });
   }
 }
