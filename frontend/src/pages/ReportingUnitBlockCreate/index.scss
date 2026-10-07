@@ -1,0 +1,61 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/type' as *;
+
+.rubc-column__banner {
+  margin-top: $spacing-06;
+}
+
+.rubc-column__actions {
+  display: flex;
+  gap: $spacing-05;
+  margin-top: $spacing-06;
+}
+
+.rubc-column__wizard {
+  margin-top: $spacing-04;
+}
+
+.block-wizard__progress {
+  margin-top: $spacing-06;
+
+  h2 {
+    margin-bottom: $spacing-05;
+  }
+}
+
+.block-wizard__summary-card {
+  border: 1px solid var(--cds-border-subtle-01);
+  border-radius: var(--cds-border-radius);
+  padding: $spacing-05;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-05;
+}
+
+.block-wizard__summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: $spacing-04;
+}
+
+.block-wizard__summary-field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-01;
+}
+
+.block-wizard__summary-label {
+  @include type-style('helper-text-01');
+  color: var(--cds-text-secondary);
+}
+
+.block-wizard__summary-value {
+  @include type-style('body-01');
+}
+
+.block-wizard__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-05;
+  margin-top: $spacing-06;
+}

@@ -1,5 +1,5 @@
-import { Loading } from '@carbon/react';
 import { DocumentAdd, Group, SearchLocate } from '@carbon/icons-react';
+import { Loading } from '@carbon/react';
 import { lazyRouteComponent, type RouteLoaderFn } from '@tanstack/react-router';
 import { type ComponentType, Suspense } from 'react';
 
@@ -10,6 +10,7 @@ import { featureFlags, type FeatureFlags } from '@/env';
 // ─── Eager imports (entry point + error states — must load instantly) ──────────
 import LandingPage from '@/pages/Landing';
 import NoRolePage from '@/pages/NoRole';
+import { reportingUnitLoader } from '@/pages/ReportingUnitDetails/loader';
 import RoleErrorPage from '@/pages/RoleError';
 
 // ─── Lazy imports (loaded on demand when the route is navigated to) ───────────
@@ -18,6 +19,9 @@ const WasteSearchPage = lazyRouteComponent(() => import('@/pages/WasteSearch'));
 const ReportingUnitDetailsPage = lazyRouteComponent(() => import('@/pages/ReportingUnitDetails'));
 const ReportingUnitBlockDetailsPage = lazyRouteComponent(
   () => import('@/pages/ReportingUnitBlockDetails'),
+);
+const ReportingUnitBlockCreatePage = lazyRouteComponent(
+  () => import('@/pages/ReportingUnitBlockCreate'),
 );
 const ReportingUnitCreatePage = lazyRouteComponent(() => import('@/pages/ReportingUnitCreate'));
 const ConfigurationPage = lazyRouteComponent(() => import('@/pages/ConfigurationPage'));
@@ -50,7 +54,6 @@ const FormulaConfigurationCreatePage = lazyRouteComponent(
 );
 
 // ─── Shared loader (eager — used by route config at module load time) ──────────
-import { reportingUnitLoader } from '@/pages/ReportingUnitDetails/loader';
 import { withPersistentRedirect } from '@/routes/guards/withPersistentRedirect';
 import { withPublicOnly } from '@/routes/guards/withPublicOnly';
 
@@ -58,6 +61,22 @@ import { withPublicOnly } from '@/routes/guards/withPublicOnly';
 
 /** A HOC that wraps a route component with additional behaviour (e.g. auth, connectivity). */
 export type RouteGuard = <P extends object>(Component: ComponentType<P>) => ComponentType<P>;
+
+/**
+ * Query-string contract for the block-wizard entry route
+ * (`/reporting-units/$ruId/blocks/create`).
+ *
+ * `blockId` identifies the block created by `POST /api/reporting-units/{ruId}/blocks`
+ * (issue #1228); `blockState` carries the lifecycle state returned by that call
+ * (e.g. `DRAFT`) so the shell can render the status tag and read-only mode
+ * before a block-details endpoint exists (issue #1250).
+ */
+export type BlockWizardSearch = {
+  /** Numeric ID of the newly created block. */
+  blockId: number;
+  /** Block lifecycle state returned by the create call; defaults to `DRAFT` in the shell. */
+  blockState?: string;
+};
 
 /**
  * Describes a single application route and all of its access/navigation metadata.
@@ -79,6 +98,12 @@ export type RouteDescription = {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   loader?: RouteLoaderFn<any>;
+  /**
+   * Optional TanStack Router search validator for the route's query string.
+   * Routes that carry query parameters declare their parsed shape here so
+   * `useSearch()` stays fully typed (e.g. the block wizard entry route).
+   */
+  validateSearch?: (search: Record<string, unknown>) => BlockWizardSearch;
   /** Carbon icon component rendered next to the nav label when `isSideMenu` is true. */
   icon?: ComponentType;
   /** When `true`, the route appears in the left-panel side navigation. */
@@ -167,6 +192,27 @@ export const ROUTES: RouteDescription[] = [
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
     featureFlag: 'reporting-unit-block-details-enabled',
+  },
+  {
+    path: '/reporting-units/$ruId/blocks/create',
+    id: 'Create reporting unit block',
+    component: withLazyLayout(ReportingUnitBlockCreatePage),
+    isSideMenu: false,
+    protected: true,
+    roles: [
+      { role: Role.ADMIN, clients: [] },
+      { role: Role.DISTRICT, clients: [] },
+      { role: Role.AREA, clients: [] },
+      { role: Role.SUBMITTER, clients: [] },
+    ],
+    featureFlag: 'block-creation-enabled',
+    validateSearch: (search): BlockWizardSearch => {
+      const blockId = Number(search.blockId);
+      return {
+        blockId: Number.isFinite(blockId) ? blockId : Number.NaN,
+        ...(typeof search.blockState === 'string' ? { blockState: search.blockState } : {}),
+      };
+    },
   },
   {
     path: '/reporting-units/create',
