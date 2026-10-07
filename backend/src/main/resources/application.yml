@@ -188,6 +188,11 @@ ca:
             ttl: ${ATTACHMENT_CLEANUP_TTL:24h}
             cron: ${ATTACHMENT_CLEANUP_CRON:0 0 * * * *}
             enabled: ${ATTACHMENT_CLEANUP_ENABLED:true}
+        block-rules:
+          sampling:
+            AVG:
+              max-blocks: 1
+              block-type: DISTRICT_AVERAGE
         cognito:
           userinfo-uri: https://${COGNITO_DOMAIN:pool-domain}.auth.${COGNITO_REGION:region}.amazoncognito.com/oauth2/userInfo
         frontend:

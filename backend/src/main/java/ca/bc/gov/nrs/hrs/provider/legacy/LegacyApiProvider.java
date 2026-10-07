@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.provider.legacy;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
@@ -139,6 +140,19 @@ public class LegacyApiProvider {
    */
   public ReportingUnitLegacyDetailsDto getReportingUnitDetails(Long reportingUnitId) {
     return reportingUnitClient.getReportingUnitDetails(reportingUnitId);
+  }
+
+  /**
+   * Retrieve the block list for a reporting unit from the legacy API.
+   *
+   * <p>Delegates to {@link LegacyReportingUnitClient}; returns an empty list when the legacy API
+   * is unavailable.
+   *
+   * @param reportingUnitId the unique identifier of the reporting unit
+   * @return the block rows; never null, empty when no blocks exist or the API call fails
+   */
+  public List<BlockListItemDto> getReportingUnitBlocks(Long reportingUnitId) {
+    return reportingUnitClient.getReportingUnitBlocks(reportingUnitId);
   }
 
   /**

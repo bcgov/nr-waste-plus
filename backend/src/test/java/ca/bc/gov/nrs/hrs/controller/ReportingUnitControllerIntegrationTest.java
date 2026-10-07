@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
@@ -253,6 +254,24 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
         .andExpect(status().isConflict());
+  }
+
+  @Test
+  @WithMockJwt
+  @DisplayName("Should Return 404 for an Unknown Legacy Reporting Unit Block List")
+  void shouldReturn404_whenBlockListReportingUnitDoesNotExist() throws Exception {
+    legacyApiStub.stubFor(
+        get(urlPathEqualTo("/api/reporting-units/999999999/blocks"))
+            .willReturn(notFound()));
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/api/reporting-units/{id}/blocks", 999999999L)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound());
+
+    legacyApiStub.verify(
+        1, getRequestedFor(urlPathEqualTo("/api/reporting-units/999999999/blocks")));
   }
 
   @Test

@@ -201,6 +201,20 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
     assertEquals(404, ex.getStatusCode().value());
   }
 
+  @Test
+  @DisplayName("shouldPreserveNotFound_whenLegacyBlockListReportingUnitDoesNotExist")
+  void shouldPreserveNotFound_whenLegacyBlockListReportingUnitDoesNotExist() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/reporting-units/99999/blocks")).willReturn(notFound()));
+
+    NotFoundGenericException ex =
+        assertThrows(
+            NotFoundGenericException.class,
+            () -> legacyReportingUnitClient.getReportingUnitBlocks(99999L));
+
+    assertEquals(404, ex.getStatusCode().value());
+  }
+
   private static Stream<Arguments> expandedDetailsArguments() {
     ReportingUnitSearchExpandedDto fullDto =
         new ReportingUnitSearchExpandedDto(

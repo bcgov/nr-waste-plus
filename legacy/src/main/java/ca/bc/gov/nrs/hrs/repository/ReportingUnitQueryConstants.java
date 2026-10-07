@@ -295,4 +295,41 @@ public final class ReportingUnitQueryConstants {
            'NOVALUE' in (:clientNumbers)
            OR wru.CLIENT_NUMBER IN (:clientNumbers)
         )""";
+
+  public static final String GET_RU_BLOCKS = """
+      SELECT
+        waa.WASTE_ASSESSMENT_AREA_ID AS id,
+        waa.FOREST_FILE_ID AS license_number,
+        NULLIF(
+          TRIM(COALESCE(waa.CUTTING_PERMIT_ID, waa.DRAFT_CUTTING_PERMIT_ID)),
+          ''
+        ) AS cutting_permit,
+        COALESCE(waa.CUT_BLOCK_ID, waa.DRAFT_CUT_BLOCK_ID) AS cut_block_id,
+        COALESCE(waa.TIMBER_MARK, waa.DRAFT_TIMBER_MARK) AS timber_mark,
+        waa.WASTE_NET_AREA AS total_waste_area_ha,
+        (
+          SELECT SUM(stratum.TOTAL_ESTIMATED_VOLUME)
+          FROM WASTE_STRATUM stratum
+          WHERE stratum.WASTE_ASSESSMENT_AREA_ID = waa.WASTE_ASSESSMENT_AREA_ID
+        ) AS total_waste_volume_m3,
+        (
+          SELECT MIN(COALESCE(sponsor.WASTE_SUBMITTER_NAME, sponsor.NAME))
+          FROM WASTE_SPONSOR sponsor
+          WHERE sponsor.WASTE_ASSESSMENT_AREA_ID = waa.WASTE_ASSESSMENT_AREA_ID
+        ) AS submitter,
+        waa.WASTE_ASSESS_AREA_STS_CODE AS status_code,
+        waasc.DESCRIPTION AS status_name,
+        waa.UPDATE_TIMESTAMP AS last_updated
+      FROM WASTE_ASSESSMENT_AREA waa
+      LEFT JOIN WASTE_ASSESS_AREA_STS_CODE waasc
+        ON waasc.WASTE_ASSESS_AREA_STS_CODE = waa.WASTE_ASSESS_AREA_STS_CODE
+      WHERE waa.REPORTING_UNIT_ID = :reportingUnit
+        AND (
+          waa.PARENT_WAA_ID IS NULL
+          OR (
+            waa.PARENT_WAA_ID IS NOT NULL AND NVL(waa.CHILD_BLOCK_IND, 'N') = 'Y'
+          )
+        )
+      ORDER BY waa.WASTE_ASSESSMENT_AREA_ID
+      """;
 }

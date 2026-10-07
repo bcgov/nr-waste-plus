@@ -1,10 +1,12 @@
 package ca.bc.gov.nrs.hrs.controller;
 
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitBlockDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.service.reportingunit.ReportingUnitService;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -57,6 +59,26 @@ public class ReportingUnitController {
         reportingUnitId,
         JwtPrincipalUtil.getClientListFromJwt(jwt)
     );
+  }
+
+  /**
+   * Retrieve the block rows for the Reporting Unit identified by {@code reportingUnitId}.
+   *
+   * <p>Returned as a plain JSON array, ordered by waste assessment area identifier. Nullable
+   * fields are carried through as {@code null}; {@code cutBlockId} and {@code status} always
+   * have a value.</p>
+   *
+   * @param reportingUnitId the identifier of the reporting unit whose blocks are requested
+   * @return the list of blocks belonging to the reporting unit
+   */
+  @GetMapping("/{reportingUnitId}/blocks")
+  public List<ReportingUnitBlockDto> getReportingUnitBlocks(
+      @PathVariable Long reportingUnitId
+  ) {
+
+    log.info("Fetching blocks for reporting unit {}", reportingUnitId);
+
+    return service.getReportingUnitBlocks(reportingUnitId);
   }
 
   /**

@@ -56,6 +56,16 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .andReturn();
   }
 
+  @Test
+  @DisplayName("should return 404 for a block list when the reporting unit does not exist")
+  void shouldReturn404_whenBlockListReportingUnitNotFound() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/reporting-units/{id}/blocks", 999999999)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound());
+  }
+
   // -----------------------------------------------------------------------
   // GET /api/reporting-units/{id} — non-IDIR with matching client
   // -----------------------------------------------------------------------
@@ -95,4 +105,3 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   }
 
 }
-

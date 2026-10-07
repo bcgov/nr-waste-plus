@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.repository;
 
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
+import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitBlockProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitDetailsProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.search.ClientDistrictSearchProjection;
@@ -104,5 +105,22 @@ public interface ReportingUnitRepository extends JpaRepository<ReportingUnitEnti
       Long ruNumber,
       List<String> clientNumbers
   );
+
+  /**
+   * Fetch all block rows belonging to the given reporting unit.
+   *
+   * <p>The native query defined in {@link ReportingUnitQueryConstants#GET_RU_BLOCKS} mirrors the
+   * block-count row predicate (top-level blocks plus secondary entries flagged
+   * {@code CHILD_BLOCK_IND = 'Y'}) and returns one {@link ReportingUnitBlockProjection} per
+   * waste assessment area.</p>
+   *
+   * @param reportingUnit the reporting unit whose blocks are requested
+   * @return the list of block projections for the reporting unit, empty when none exist
+   */
+  @Query(
+      nativeQuery = true,
+      value = ReportingUnitQueryConstants.GET_RU_BLOCKS
+  )
+  List<ReportingUnitBlockProjection> getReportingUnitBlocks(Long reportingUnit);
 
 }

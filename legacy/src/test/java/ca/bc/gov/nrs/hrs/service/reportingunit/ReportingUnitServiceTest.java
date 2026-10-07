@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import ca.bc.gov.nrs.hrs.LegacyConstants;
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitBlockDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.entity.codes.OrgUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.codes.SamplingOptionEntity;
@@ -141,6 +142,30 @@ class ReportingUnitServiceTest {
       // Assert
       verify(ruRepository).getReportingUnitDetails(RU_ID, CLIENTS);
     }
+  }
+
+  @Test
+  @DisplayName("shouldReturnEmptyBlockList_whenReportingUnitExistsWithoutBlocks")
+  void shouldReturnEmptyBlockList_whenReportingUnitExistsWithoutBlocks() {
+    when(ruRepository.existsById(RU_ID)).thenReturn(true);
+    when(ruRepository.getReportingUnitBlocks(RU_ID)).thenReturn(List.of());
+
+    List<ReportingUnitBlockDto> result = service.getReportingUnitBlocks(RU_ID);
+
+    assertThat(result).isEmpty();
+    verify(ruRepository).existsById(RU_ID);
+    verify(ruRepository).getReportingUnitBlocks(RU_ID);
+  }
+
+  @Test
+  @DisplayName("shouldThrowNotFound_whenReportingUnitDoesNotExistForBlockList")
+  void shouldThrowNotFound_whenReportingUnitDoesNotExistForBlockList() {
+    when(ruRepository.existsById(RU_ID)).thenReturn(false);
+
+    assertThatThrownBy(() -> service.getReportingUnitBlocks(RU_ID))
+        .isInstanceOf(WasteReportingUnitNotFound.class);
+
+    verify(ruRepository, never()).getReportingUnitBlocks(RU_ID);
   }
 
   // Helper for never-called verify when mapper should not be invoked
