@@ -136,7 +136,7 @@ export const findInputByLabel = (labelText: string) => {
  *   3. input[type="submit"][value="<name>"]
  *   4. [data-testid="<name>"]
  *   5. .cds--tooltip-content — icon-only Carbon button (traces back via aria-labelledby)
- *   6. findByRole("button", { name }) — @testing-library fallback
+ *   6. explicit attribute selectors with a 20s timeout — late-render fallback
  */
 
 /**
@@ -144,18 +144,30 @@ export const findInputByLabel = (labelText: string) => {
  * The caller can then perform any action (e.g., click, invoke, etc.) on the returned element.
  *
  * Selector priority:
- *   1. button[aria-label="<name>"]
- *   2. button:contains("<name>")
- *   3. input[type="submit"][value="<name>"]
- *   4. [data-testid="<name>"]
- *   5. .cds--tooltip-content — icon-only Carbon button (traces back via aria-labelledby)
- *   6. findByRole("button", { name }) — @testing-library fallback
+ *   1. [data-testid="<name>"]
+ *   2. button[aria-label="<name>"]
+ *   3. button:contains("<name>")
+ *   4. input[type="submit"][value="<name>"]
+ *   5. a:contains("<name>") / a[aria-label="<name>"]
+ *   6. .cds--tooltip-content — icon-only Carbon button (traced back via aria-labelledby)
+ *
+ * The wait is a single bounded `cy.get().should()`: Cypress already retries the
+ * assertion until `timeout`, so there is no manual retry loop. The previous
+ * implementation recursed through `cy.wait(retryDelay).then(() => tryFind(n + 1))`
+ * up to 50 times and then added a further 20 s fallback `cy.get()` — roughly 35 s
+ * of silent waiting per click, and 50 levels of nested chainables accumulating in
+ * the command queue. That is what made a missing element indistinguishable from a
+ * hung CI job, and it multiplied by three under `retries.runMode: 2`.
+ *
+ * @param name Test id, accessible name, or visible text of the target.
+ * @param timeout Total bounded wait in milliseconds.
+ * @param scope Selector for the subtree to search within.
+ * @returns A chainable yielding the first matching element.
  */
 export const findButton = (
   name: string,
-  retries: number = 3,
-  retryDelay: number = 100,
-  selector: string = "body",
+  timeout: number = 20_000,
+  scope: string = "body",
 ): Cypress.Chainable<JQuery<HTMLElement>> => {
   const selectors = [
     `[data-testid="${name}"]`,
@@ -166,51 +178,39 @@ export const findButton = (
     `a[aria-label="${name}"]`,
   ];
 
-  function tryFind(attempt: number): Cypress.Chainable<JQuery<HTMLElement>> {
-    return cy.get(selector).then(($body) => {
-      const matchedSelector = selectors.find(
-        (sel) => $body.find(sel).length > 0,
-      );
+  /**
+   * Synchronously resolves the best matching selector for `name`.
+   *
+   * @returns The matching selector, or undefined while nothing matches yet.
+   */
+  const resolveSelector = (): string | undefined => {
+    const $scope = Cypress.$(scope);
 
-      if (matchedSelector) {
-        return cy.get(matchedSelector).first();
-      } else if (
-        $body.find(`.cds--tooltip-content:contains("${name}")`).length > 0
-      ) {
-        // Icon-only Carbon button: locate the tooltip text and trace back
-        // to the button via the tooltip's id / aria-labelledby relationship
-        return cy
-          .contains(".cds--tooltip-content", name)
-          .invoke("closest", "[id]")
-          .then(($tooltip) => {
-            const id = $tooltip.attr("id");
-            return cy.get(`button[aria-labelledby="${id}"]`).first();
-          });
-      } else if (attempt < retries) {
-        // Element may not have rendered yet — wait and retry
-        return cy.wait(retryDelay).then(() => tryFind(attempt + 1));
-      } else {
-        // Last resort: use @testing-library/cypress findByRole
-        // Try button first, then link role — covers <a> acting as buttons
-        const nameRegex = new RegExp(name, "i");
-        return cy.get("body").then(($body) => {
-          const hasButton = Array.from(
-            $body.find('button, [role="button"]'),
-          ).some(
-            (el) =>
-              nameRegex.test(el.textContent || "") ||
-              nameRegex.test(el.getAttribute("aria-label") || ""),
-          );
+    const matched = selectors.find((sel) => $scope.find(sel).length > 0);
+    if (matched) return matched;
 
-          if (hasButton) {
-            return cy.findByRole("button", { name: nameRegex });
-          } else {
-            return cy.findByRole("link", { name: nameRegex });
-          }
-        });
-      }
-    });
-  }
+    // Icon-only Carbon button: locate the tooltip text and trace back to the
+    // button via the tooltip's id / aria-labelledby relationship. Such buttons
+    // can compute an empty accessible name (an empty tooltip overrides
+    // aria-label), which defeats role-based queries.
+    const $tooltip = $scope
+      .find(`.cds--tooltip-content:contains("${name}")`)
+      .first();
+    if ($tooltip.length > 0) {
+      const id = $tooltip.closest("[id]").attr("id");
+      if (id) return `button[aria-labelledby="${id}"]`;
+    }
 
-  return tryFind(0);
+    return undefined;
+  };
+
+  let resolved: string | undefined;
+
+  return cy
+    .get(scope, { timeout })
+    .should(() => {
+      resolved = resolveSelector();
+      expect(resolved, `expected to find a button named "${name}"`).to.exist;
+    })
+    .then(() => cy.get(resolved as string, { timeout: 1_000 }).first());
 };

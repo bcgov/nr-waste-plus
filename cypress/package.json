@@ -4,6 +4,7 @@
   "description": "Cypress end-to-end user journey tests for nr-waste-plus, using Cucumber for BDD-style test scenarios executed during pull requests.",
   "main": "index.js",
   "scripts": {
+    "lint": "eslint . --max-warnings=0",
     "report:md": "node scripts/parse-report.js",
     "test:unit": "node --test scripts/*.test.js",
     "report:clean": "rm -rf reports/*",
@@ -37,17 +38,24 @@
   "devDependencies": {
     "@badeball/cypress-cucumber-preprocessor": "^28.0.0",
     "@cypress/webpack-preprocessor": "^8.0.0",
+    "@eslint/js": "^10.0.1",
     "@testing-library/cypress": "^10.1.0",
     "@types/node": "^25.5.0",
     "axe-core": "^4.11.0",
     "cypress": "^16.0.0",
     "cypress-real-events": "^1.14.0",
     "dotenv": "^18.0.0",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.13.0",
     "lighthouse": "^13.0.0",
     "mochawesome": "^8.0.0",
+    "prettier": "^3.9.9",
     "ts-loader": "^9.4.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.0.4",
+    "typescript-eslint": "^8.71.1",
     "webpack": "^5.81.0"
   },
   "cypress-cucumber-preprocessor": {

@@ -16,6 +16,9 @@ import RoleErrorPage from '@/pages/RoleError';
 const MyClientListPage = lazyRouteComponent(() => import('@/pages/MyClientList'));
 const WasteSearchPage = lazyRouteComponent(() => import('@/pages/WasteSearch'));
 const ReportingUnitDetailsPage = lazyRouteComponent(() => import('@/pages/ReportingUnitDetails'));
+const ReportingUnitBlockDetailsPage = lazyRouteComponent(
+  () => import('@/pages/ReportingUnitBlockDetails'),
+);
 const ReportingUnitCreatePage = lazyRouteComponent(() => import('@/pages/ReportingUnitCreate'));
 const ConfigurationPage = lazyRouteComponent(() => import('@/pages/ConfigurationPage'));
 const ConfigurationDistrictVolumeListPage = lazyRouteComponent(
@@ -155,6 +158,15 @@ export const ROUTES: RouteDescription[] = [
     component: withLazyLayout(ReportingUnitDetailsPage),
     isSideMenu: false,
     protected: true,
+  },
+  {
+    path: '/reporting-units/$ruId/$blockId',
+    id: 'Reporting Unit Block Details',
+    component: withLazyLayout(ReportingUnitBlockDetailsPage),
+    isSideMenu: false,
+    protected: true,
+    roles: [{ role: Role.ADMIN, clients: [] }],
+    featureFlag: 'reporting-unit-block-details-enabled',
   },
   {
     path: '/reporting-units/create',

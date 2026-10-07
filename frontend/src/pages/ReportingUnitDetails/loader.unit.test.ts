@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { reportingUnitLoader } from './loader';
-
 import { ApiError } from '@/config/api/types';
 import { queryClient } from '@/config/react-query/config';
 import APIs from '@/services/APIs';
+
+import { reportingUnitLoader } from './loader';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 

@@ -8,3 +8,11 @@
     margin: $spacing-04;
   }
 }
+
+.rublocks-column {  
+  margin-top: $spacing-08;
+  @include breakpoint-down(md) {
+    margin-top: $spacing-04;
+  }
+  
+}

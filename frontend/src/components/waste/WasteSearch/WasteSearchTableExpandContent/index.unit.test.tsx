@@ -184,13 +184,12 @@ describe('WasteSearchTableExpandContent', () => {
 
       const rowId = 'RU-4069-Block-411-224813681';
       const qc = makeTestQueryClient();
-      let container: HTMLElement = document.createElement('div');
       const result = render(
         <QueryClientProvider client={qc}>
           <WasteSearchTableExpandContent rowId={rowId} />
         </QueryClientProvider>,
       );
-      container = result.container;
+      const { container } = result;
 
       // Should show skeletons initially (not actual data)
       // eslint-disable-next-line testing-library/no-node-access

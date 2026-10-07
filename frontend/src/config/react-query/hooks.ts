@@ -7,6 +7,13 @@ import {
 } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
+import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
+import API from '@/services/APIs';
+import {
+  forestClientAutocompleteResult2CodeDescription,
+  generateSortArray,
+} from '@/services/utils';
+
 import {
   queryKeys,
   type DistrictVolumeQueryParams,
@@ -31,15 +38,9 @@ import type {
   ForestClientDto,
   MyForestClientDto,
   ReportingUnitCreateDto,
+  ReportingUnitDto,
   ReportingUnitSearchResultDto,
 } from '@/services/types';
-
-import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
-import API from '@/services/APIs';
-import {
-  forestClientAutocompleteResult2CodeDescription,
-  generateSortArray,
-} from '@/services/utils';
 
 /**
  * Shared TanStack Query options for reference-data requests.
@@ -461,6 +462,55 @@ export const useReportingUnitCreateMutation = (
   }, [notificationTarget, mutation.error, mutation.isError]);
 
   return mutation;
+};
+
+/**
+ * Fetches the read-only reporting-unit details for a single reporting unit.
+ *
+ * Backs every read-only reporting-unit view (for example
+ * `/reporting-units/$ruId/$blockId`), which renders the unit's summary
+ * fields and page chrome from the returned {@link ReportingUnitDto}.
+ *
+ * On error, dispatches an inline notification to `notificationTarget` (when supplied)
+ * using the RFC 7807 problem-details payload from the backend when available.
+ *
+ * @param ruId - The numeric reporting unit ID used as the route param and cache key.
+ * @param options - Optional TanStack Query overrides plus an optional `notificationTarget`.
+ * @returns The TanStack Query result containing the {@link ReportingUnitDto}.
+ *
+ * @example
+ * ```tsx
+ * const { data, isLoading, isError } = useReportingUnitDetailsQuery(ruId, {
+ *   notificationTarget: 'reporting-unit-block-details',
+ * });
+ * ```
+ */
+export const useReportingUnitDetailsQuery = <TData = ReportingUnitDto>(
+  ruId: number,
+  options?: Omit<
+    UseQueryOptions<TData, Error, TData, ReturnType<typeof queryKeys.reportingUnit.details>>,
+    'queryKey' | 'queryFn'
+  > &
+    QueryNotificationOptions,
+) => {
+  const { notificationTarget, ...queryOptions } = options ?? {};
+
+  const query = useQuery({
+    queryKey: queryKeys.reportingUnit.details(ruId),
+    queryFn: () =>
+      API.reportingUnit.getReportingUnit(ruId, { notificationTarget }) as unknown as Promise<TData>,
+    ...queryOptions,
+  });
+
+  useEffect(() => {
+    if (!notificationTarget || !query.isError || !query.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(query.error, notificationTarget);
+  }, [notificationTarget, query.error, query.isError]);
+
+  return query;
 };
 
 /**

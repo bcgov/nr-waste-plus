@@ -2,14 +2,16 @@ import { Column } from '@carbon/react';
 import { useLoaderData } from '@tanstack/react-router';
 import { type FC } from 'react';
 
-import type { ReportingUnitDto } from '@/services/types';
-
 import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
 import LegacyDataTag from '@/components/core/Tags/LegacyDataTag';
 import TagWrapper from '@/components/core/Tags/TagWrapper';
 import UnderConstructionTag from '@/components/core/Tags/UnderConstructionTag';
+import ReportingUnitBlocksList from '@/components/waste/ReportingUnits/ReportingUnitBlocksList';
 import ReportingUnitDetailsTombstone from '@/components/waste/ReportingUnits/ReportingUnitDetailsTombstone';
+import { featureFlags } from '@/env';
+
+import type { ReportingUnitDto } from '@/services/types';
 
 import './index.scss';
 
@@ -17,7 +19,9 @@ import './index.scss';
  * Page component that renders the Reporting Unit Details view.
  *
  * Reads the pre-fetched {@link ReportingUnitDto} from the TanStack Router loader
- * context and renders the tombstone panel, page title, and inline notifications.
+ * context and renders the tombstone panel, page title, inline notifications, and
+ * the empty blocks list section (issue #1369), the latter only when the
+ * `reporting-unit-block-details-enabled` feature flag is enabled.
  * Shows a legacy-data tag when the unit has no grade code, and always renders
  * an under-construction tag while the page is in development.
  *
@@ -70,6 +74,7 @@ const ReportingUnitDetailsPage: FC = () => {
         <PageNotification eventTarget="ru-details" />
       </Column>
       <ReportingUnitDetailsTombstone data={data} />
+      {featureFlags['reporting-unit-block-details-enabled'] && <ReportingUnitBlocksList />}
     </>
   );
 };
