@@ -40,6 +40,7 @@ public abstract class AbstractTestContainerIntegrationTest {
     registry.add("spring.datasource.password", postgres::getPassword);
     registry.add("spring.datasource.hikari.username", postgres::getUsername);
     registry.add("spring.datasource.hikari.password", postgres::getPassword);
+    MinioContainerSupport.registerDynamicProperties(registry);
   }
 
   public final Jwt jwt =
