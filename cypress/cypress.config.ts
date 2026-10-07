@@ -21,6 +21,13 @@ const LIGHTHOUSE_REPORT_FILE = path.resolve(__dirname, "reports", "lighthouse", 
 const RUN_RESULT_FILE = path.resolve(__dirname, "reports", "run-result.json");
 const FLAKY_SUMMARY_FILE = path.resolve(__dirname, "reports", "flaky", "flaky-summary.json");
 
+// Node-side cy.task handlers are NOT covered by any Cypress timeout (requestTimeout,
+// pageLoadTimeout, etc. only govern browser-side commands). A stalled DevTools
+// connection to debugPort would therefore block the entire run forever, surfacing
+// as a silent CI freeze. Individual audits measured 10-16 s in CI, so 120 s is a
+// generous ceiling that still fails the spec loudly instead of hanging the job.
+const LIGHTHOUSE_TIMEOUT_MS = 120_000;
+
 let debugPort = 0;
 
 interface LighthouseScreenEmulation {
@@ -194,7 +201,7 @@ async function setupNodeEvents(
     // Run Lighthouse
     // disableStorageReset: true ensures Lighthouse does not wipe cookies, sessionStorage,
     // and localStorage from Chrome, preserving active Cypress sessions and network sockets.
-    const result = await lighthouse.default(url, {
+    const lighthouseRun = lighthouse.default(url, {
       port: debugPort,
       hostname: "127.0.0.1",
       output: "json",
@@ -202,6 +209,30 @@ async function setupNodeEvents(
       disableStorageReset: true,
       ...effectiveOptions,
     }, lighthouseConfig as any);
+
+    // Race against a hard ceiling so a stalled DevTools connection fails the
+    // task instead of hanging the run indefinitely.
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+    const timedOut = new Promise<never>((_resolve, reject) => {
+      timeoutHandle = setTimeout(() => {
+        reject(
+          new Error(
+            `Lighthouse timed out after ${LIGHTHOUSE_TIMEOUT_MS} ms for ${url} (debugPort=${debugPort})`
+          )
+        );
+      }, LIGHTHOUSE_TIMEOUT_MS);
+    });
+
+    // Swallow a late rejection from the losing branch so an eventual timeout
+    // does not resurface as an unhandled rejection after we have already failed.
+    lighthouseRun.catch(() => {});
+
+    let result: Awaited<typeof lighthouseRun>;
+    try {
+      result = await Promise.race([lighthouseRun, timedOut]);
+    } finally {
+      if (timeoutHandle) clearTimeout(timeoutHandle);
+    }
 
     const lhr = result?.lhr;
     if (!lhr) {
@@ -368,12 +399,19 @@ async function setupNodeEvents(
 
 export default defineConfig({
   e2e: {
-    reporter: "mochawesome",
+    // Multi-reporter so CI logs show live per-scenario progress ("spec") while
+    // still writing the mochawesome JSON that scripts/parse-report.js consumes.
+    // With mochawesome alone, Cypress prints nothing until a spec finishes, so a
+    // mid-spec freeze looks identical to "nothing ever started".
+    reporter: "cypress-multi-reporters",
     reporterOptions: {
-      reportDir: "reports/mochawesome",
-      overwrite: false,
-      html: false,
-      json: true
+      reporterEnabled: "spec, mochawesome",
+      mochawesomeReporterOptions: {
+        reportDir: "reports/mochawesome",
+        overwrite: false,
+        html: false,
+        json: true
+      },
     },
     specPattern: "**/*.feature",
     setupNodeEvents,
