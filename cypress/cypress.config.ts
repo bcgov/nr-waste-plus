@@ -399,19 +399,12 @@ async function setupNodeEvents(
 
 export default defineConfig({
   e2e: {
-    // Multi-reporter so CI logs show live per-scenario progress ("spec") while
-    // still writing the mochawesome JSON that scripts/parse-report.js consumes.
-    // With mochawesome alone, Cypress prints nothing until a spec finishes, so a
-    // mid-spec freeze looks identical to "nothing ever started".
-    reporter: "cypress-multi-reporters",
+    reporter: "mochawesome",
     reporterOptions: {
-      reporterEnabled: "spec, mochawesome",
-      mochawesomeReporterOptions: {
-        reportDir: "reports/mochawesome",
-        overwrite: false,
-        html: false,
-        json: true
-      },
+      reportDir: "reports/mochawesome",
+      overwrite: false,
+      html: false,
+      json: true
     },
     specPattern: "**/*.feature",
     setupNodeEvents,
@@ -435,7 +428,12 @@ export default defineConfig({
     // search 0->1->3) and are all async data-render races in the Vite SPA, not a product
     // regression. runMode 1 turned that into hard CI failures. Lower to 1, then 0, only
     // once the flaky signal (persisted RunResult retries) shows a sustained rate below 1%.
-    runMode: 0,
+    //
+    // NOTE: the stale-session flake (logouts poisoning every later BCeID spec) was a
+    // separate defect and is now fixed in logins.hooks.ts, so the rate measured from
+    // here on reflects only the SPA races this setting exists to absorb. Every wait in
+    // the suite is now bounded, so lowering this is safe whenever the data supports it.
+    runMode: 2,
     openMode: 0,
   },
 });

@@ -99,7 +99,6 @@ jobs:
           browser: chrome
           install: false
         env:
-          CYPRESS_video: "false"
           CYPRESS_baseUrl: https://${{ inputs.url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CYPRESS_idir_password: ${{ secrets.IDIR_UAT_PASSWORD }}

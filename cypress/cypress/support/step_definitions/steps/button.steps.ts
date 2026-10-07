@@ -73,41 +73,31 @@ When("I search", function () {
 /**
  * Attempts to click a button by trying multiple selectors in priority order.
  *
- * Cypress commands are NOT Promises — they don't have .catch().
- * Instead, we use $body.find() (synchronous jQuery) to check which selector
- * matches, then use cy.get() on the matched selector for proper Cypress
- * retryability and logging. Includes a retry loop for cases where the
- * element hasn't rendered yet.
+ * Cypress commands are NOT Promises — they don't have .catch(). findButton
+ * resolves the matching selector synchronously against the DOM inside a single
+ * bounded `cy.get().should()`, so a missing element fails once with a clear
+ * message instead of burning a hand-rolled retry loop.
  *
- * Selector priority:
- *   1. button[aria-label="<name>"]
- *   2. button:contains("<name>")
- *   3. input[type="submit"][value="<name>"]
- *   4. [data-testid="<name>"]
- *   5. .cds--tooltip-content — icon-only Carbon button (traces back via aria-labelledby)
- *   6. explicit attribute selectors with a 20s timeout — late-render fallback
+ * Selector priority is documented on findButton.
  */
 const buttonClick = (
   name: string,
   waitForIntercept: string = "",
   waitForTime: number = 1,
-  // CI may take longer for Suspense-wrapped headers to mount. Budget 10s
-  // (50 x 200ms) before falling back inside findButton. Reduced retries
-  // (vs 50) for non-Suspense buttons to fail-fast when the button truly
-  // does not exist (common in CI for district-selection dropdowns whose
-  // data has not loaded yet).
-  retries: number = 50,
-  retryDelay: number = 200,
+  // The app layout is Suspense-wrapped: after cy.visit the header (and any
+  // icon-only header button) mounts only once the lazy route chunk resolves,
+  // which routinely takes longer on a CI runner than on a workstation. 20 s is a
+  // hard ceiling — one bounded wait, not 50 stacked ones.
+  timeout: number = 20_000,
   selector: string = "body",
 ) => {
-  const timeout = waitForTime * 1000;
+  const interceptTimeout = waitForTime * 1000;
 
-  cy.log(`[DIAG] buttonClick: searching for "${name}"`);
-  const button = findButton(name, retries, retryDelay, selector);
+  const button = findButton(name, timeout, selector);
   button.click({ force: true });
 
   if (waitForIntercept) {
-    cy.wait(`@${waitForIntercept}`, { timeout });
+    cy.wait(`@${waitForIntercept}`, { timeout: interceptTimeout });
   } else if (waitForTime) {
     cy.wait(waitForTime);
   }
