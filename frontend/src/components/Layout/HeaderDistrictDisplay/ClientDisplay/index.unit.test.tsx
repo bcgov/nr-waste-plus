@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import APIs from '@/services/APIs';
 
 import ClientDisplay from '.';
 
@@ -52,11 +51,21 @@ let mockedClientValues = [
 let mockedPreference = { selectedClient: null } as Partial<UserPreference>;
 const mockUpdatePreferences = vi.fn();
 
-vi.mock('@/services/APIs', () => ({
-  default: {
-    forestclient: {
-      searchByClientNumbers: vi.fn(),
-    },
+const { mockForestClient } = vi.hoisted(() => ({
+  mockForestClient: {
+    getForestClient: vi.fn(),
+    searchForestClients: vi.fn(),
+    searchByClientNumbers: vi.fn(),
+    searchMyForestClients: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/forest-client-resource', () => ({
+  ForestClientResource: class {
+    getForestClient = mockForestClient.getForestClient;
+    searchForestClients = mockForestClient.searchForestClients;
+    searchByClientNumbers = mockForestClient.searchByClientNumbers;
+    searchMyForestClients = mockForestClient.searchMyForestClients;
   },
 }));
 
@@ -129,7 +138,7 @@ describe('ClientDisplay', () => {
       },
     ];
     mockedPreference = { selectedClient: null };
-    (APIs.forestclient.searchByClientNumbers as Mock).mockResolvedValue(mockedClientValues);
+    (mockForestClient.searchByClientNumbers as Mock).mockResolvedValue(mockedClientValues);
   });
 
   it('small size or no client should not display anything', async () => {

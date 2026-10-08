@@ -5,7 +5,6 @@ import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as useNotificationEvents from '@/hooks/useNotificationEvents';
-import APIs from '@/services/APIs';
 
 import WasteSearchTable from './index';
 
@@ -98,18 +97,23 @@ vi.mock('@/components/Form/TableResource', () => ({
   },
 }));
 
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      user: {
-        getUserPreferences: vi.fn(),
-        updateUserPreferences: vi.fn(),
-        setUserBookmarkedRu: vi.fn(),
-        deleteUserBookmarkedRu: vi.fn(),
-      },
-    },
-  };
-});
+const { mockUsers } = vi.hoisted(() => ({
+  mockUsers: {
+    getUserPreferences: vi.fn(),
+    updateUserPreferences: vi.fn(),
+    setUserBookmarkedRu: vi.fn(),
+    deleteUserBookmarkedRu: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/users-resource', () => ({
+  UsersResource: class {
+    getUserPreferences = mockUsers.getUserPreferences;
+    updateUserPreferences = mockUsers.updateUserPreferences;
+    setUserBookmarkedRu = mockUsers.setUserBookmarkedRu;
+    deleteUserBookmarkedRu = mockUsers.deleteUserBookmarkedRu;
+  },
+}));
 
 const { mockCodes } = vi.hoisted(() => ({
   mockCodes: {
@@ -248,8 +252,8 @@ describe('WasteSearchTable - Pagination', () => {
       unsubscribe: vi.fn(),
     });
 
-    (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
-    (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
+    (mockUsers.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
+    (mockUsers.updateUserPreferences as Mock).mockResolvedValue({});
     (mockCodes.getSamplingOptions as Mock).mockResolvedValue([
       { code: 'S1', description: 'Sampling One' },
       { code: 'S2', description: 'Sampling Two' },

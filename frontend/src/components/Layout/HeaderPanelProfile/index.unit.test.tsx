@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { Role, type FamLoginUser } from '@/context/auth/types';
-import APIs from '@/services/APIs';
 
 import HeaderPanelProfile from './index';
 
@@ -35,16 +34,23 @@ vi.mock('@/context/auth/useAuth', () => ({
 vi.mock('@/context/theme/useTheme', () => ({
   useTheme: () => ({ theme: 'g100', toggleTheme: mockToggleTheme }),
 }));
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      user: {
-        getUserPreferences: vi.fn(),
-        updateUserPreferences: vi.fn(),
-      },
-    },
-  };
-});
+const { mockUsers } = vi.hoisted(() => ({
+  mockUsers: {
+    getUserPreferences: vi.fn(),
+    updateUserPreferences: vi.fn(),
+    setUserBookmarkedRu: vi.fn(),
+    deleteUserBookmarkedRu: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/users-resource', () => ({
+  UsersResource: class {
+    getUserPreferences = mockUsers.getUserPreferences;
+    updateUserPreferences = mockUsers.updateUserPreferences;
+    setUserBookmarkedRu = mockUsers.setUserBookmarkedRu;
+    deleteUserBookmarkedRu = mockUsers.deleteUserBookmarkedRu;
+  },
+}));
 
 const renderWithProviders = () => renderWithAppAsync(<HeaderPanelProfile />);
 
@@ -58,8 +64,8 @@ describe('HeaderPanelProfile', () => {
       email: 'jane@example.com',
       roles: [{ role: Role.ADMIN, clients: ['client1', 'client2'] }],
     } as FamLoginUser;
-    (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
-    (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
+    (mockUsers.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
+    (mockUsers.updateUserPreferences as Mock).mockResolvedValue({});
   });
 
   it('renders user info and avatar', async () => {

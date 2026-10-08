@@ -13,7 +13,7 @@ import {
 import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import AdvancedFilterClientInput from '@/components/waste/WasteSearch/WasteSearchFiltersAdvanced/AdvancedFilterClientInput';
-import { useReportingUnitCreateMutation } from '@/config/react-query/hooks';
+import { useReportingUnitCreateMutation } from '@/api/reportingUnits';
 import { useAuth } from '@/context/auth/useAuth';
 import { runValidators } from '@/utils/runValidators';
 import { required } from '@/utils/validators';

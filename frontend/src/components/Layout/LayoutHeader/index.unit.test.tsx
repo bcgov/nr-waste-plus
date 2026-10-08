@@ -4,19 +4,25 @@ import { describe, it, expect, vi, beforeEach, type Mock, beforeAll } from 'vite
 import { LayoutHeader } from '@/components/Layout/LayoutHeader';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
-import APIs from '@/services/APIs';
 
 let mockBreakpoint = 'md';
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      user: {
-        getUserPreferences: vi.fn(),
-        updateUserPreferences: vi.fn(),
-      },
-    },
-  };
-});
+const { mockUsers } = vi.hoisted(() => ({
+  mockUsers: {
+    getUserPreferences: vi.fn(),
+    updateUserPreferences: vi.fn(),
+    setUserBookmarkedRu: vi.fn(),
+    deleteUserBookmarkedRu: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/users-resource', () => ({
+  UsersResource: class {
+    getUserPreferences = mockUsers.getUserPreferences;
+    updateUserPreferences = mockUsers.updateUserPreferences;
+    setUserBookmarkedRu = mockUsers.setUserBookmarkedRu;
+    deleteUserBookmarkedRu = mockUsers.deleteUserBookmarkedRu;
+  },
+}));
 
 vi.mock('@/hooks/useBreakpoint', () => ({
   default: () => mockBreakpoint,
@@ -31,8 +37,8 @@ const renderWithProviders = () =>
 
 describe('LayoutHeader', () => {
   beforeEach(() => {
-    (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
-    (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
+    (mockUsers.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
+    (mockUsers.updateUserPreferences as Mock).mockResolvedValue({});
   });
 
   it('shouldRenderHeaderAndTitle_whenBreakpointIsLg', async () => {

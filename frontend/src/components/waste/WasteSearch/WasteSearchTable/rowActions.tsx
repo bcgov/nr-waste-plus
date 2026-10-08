@@ -2,7 +2,7 @@ import { BookmarkAdd, BookmarkFilled } from '@carbon/icons-react';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import API from '@/services/APIs';
+import { deleteUserBookmarkedRu, setUserBookmarkedRu } from '@/api/users';
 
 import type { ReportingUnitSearchResultDto } from '@/api/search.types';
 import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types';
@@ -31,9 +31,9 @@ export const useWasteSearchRowActions = ({
 
   const toggleBookmarkApiCall = async (row: WasteSearchRow) => {
     if (row.bookmarked) {
-      await API.user.deleteUserBookmarkedRu(row.ruNumber);
+      await deleteUserBookmarkedRu(row.ruNumber);
     } else {
-      await API.user.setUserBookmarkedRu(row.ruNumber);
+      await setUserBookmarkedRu(row.ruNumber);
     }
     return row;
   };

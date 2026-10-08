@@ -73,6 +73,22 @@ vi.mock('@/api/resources/search-resource', () => ({
   },
 }));
 
+vi.mock('@/api/resources/users-resource', () => ({
+  UsersResource: class {
+    getUserPreferences = vi.fn().mockResolvedValue({});
+    updateUserPreferences = vi.fn().mockResolvedValue(undefined);
+    setUserBookmarkedRu = vi.fn().mockResolvedValue(undefined);
+    deleteUserBookmarkedRu = vi.fn().mockResolvedValue(undefined);
+  },
+}));
+
+vi.mock('@/api/resources/reporting-unit-resource', () => ({
+  ReportingUnitResource: class {
+    getReportingUnit = vi.fn().mockResolvedValue({});
+    createReportingUnit = vi.fn().mockResolvedValue(1);
+  },
+}));
+
 // Mock global fetch to prevent real HTTP requests in jsdom tests
 // Uses vi.stubGlobal for automatic cleanup via restoreMocks: true in vite.config.ts
 vi.stubGlobal(

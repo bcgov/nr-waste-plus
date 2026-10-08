@@ -11,7 +11,6 @@ import {
   useDistrictVolumeTableCreateMutation,
   useDistrictVolumeTableDeleteMutation,
   useDistrictVolumeTableDetailQuery,
-  useReportingUnitCreateMutation,
   useSpeciesCompositionCreateMutation,
   useSpeciesCompositionDeleteMutation,
   useSpeciesCompositionDetailQuery,
@@ -26,10 +25,6 @@ vi.mock('@/hooks/useNotificationEvents/eventHandler', () => ({
 
 vi.mock('@/services/APIs', () => ({
   default: {
-    reportingUnit: {
-      getReportingUnit: vi.fn().mockResolvedValue({ id: 1 }),
-      createReportingUnit: vi.fn().mockResolvedValue(333),
-    },
     districtVolume: {
       getDistrictVolumes: vi.fn().mockResolvedValue({
         content: [
@@ -100,148 +95,6 @@ describe('react-query hooks', () => {
     vi.clearAllMocks();
   });
 
-  describe('useReportingUnitCreateMutation', () => {
-    const validCreateRequest = {
-      clientNumber: '00012797',
-      districtCode: 'DKM',
-      samplingCode: 'AVG',
-      gradeCode: null,
-    };
-
-    it('should call createReportingUnit on mutate', async () => {
-      const { result } = renderHook(() => useReportingUnitCreateMutation(), {
-        wrapper: createWrapper(),
-      });
-
-      await act(async () => {
-        await result.current.mutateAsync(validCreateRequest);
-      });
-
-      await waitFor(() => {
-        expect(result.current.isSuccess).toBe(true);
-      });
-    });
-
-    it('should return the created reporting unit ID', async () => {
-      const { result } = renderHook(() => useReportingUnitCreateMutation(), {
-        wrapper: createWrapper(),
-      });
-
-      let createdId: number | undefined;
-      await act(async () => {
-        createdId = await result.current.mutateAsync(validCreateRequest);
-      });
-
-      expect(typeof createdId).toBe('number');
-      expect(createdId).toBeGreaterThan(0);
-    });
-
-    it('should invoke onSuccess callback with the created ID', async () => {
-      const onSuccessMock = vi.fn();
-      const { result } = renderHook(
-        () => useReportingUnitCreateMutation({ onSuccess: onSuccessMock }),
-        {
-          wrapper: createWrapper(),
-        },
-      );
-
-      await act(async () => {
-        await result.current.mutateAsync(validCreateRequest);
-      });
-
-      expect(onSuccessMock).toHaveBeenCalledWith(expect.any(Number));
-      expect(onSuccessMock).toHaveBeenCalledTimes(1);
-    });
-
-    it('should handle mutation errors without throwing', async () => {
-      const mockError = new Error('Mock API error');
-      const { result } = renderHook(() => useReportingUnitCreateMutation(), {
-        wrapper: createWrapper(),
-      });
-
-      vi.mocked(API.reportingUnit.createReportingUnit).mockRejectedValueOnce(mockError);
-
-      await act(async () => {
-        try {
-          await result.current.mutateAsync(validCreateRequest);
-        } catch (_e) {
-          // Error is expected and caught
-        }
-      });
-
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
-      });
-    });
-
-    it('should support notificationTarget for error notifications', () => {
-      const { result } = renderHook(
-        () => useReportingUnitCreateMutation({ notificationTarget: 'create-ru' }),
-        { wrapper: createWrapper() },
-      );
-
-      expect(result.current).toBeDefined();
-      expect(result.current.mutateAsync).toBeDefined();
-    });
-
-    it('should support both onSuccess and notificationTarget together', async () => {
-      const onSuccessMock = vi.fn();
-      const { result } = renderHook(
-        () =>
-          useReportingUnitCreateMutation({
-            onSuccess: onSuccessMock,
-            notificationTarget: 'create-ru',
-          }),
-        { wrapper: createWrapper() },
-      );
-
-      await act(async () => {
-        await result.current.mutateAsync(validCreateRequest);
-      });
-
-      expect(onSuccessMock).toHaveBeenCalled();
-    });
-  });
-
-  describe('error notification behavior', () => {
-    it('useReportingUnitCreateMutation should dispatch error notification when notificationTarget is provided', async () => {
-      const mockError = new Error('Create failed');
-      (mockError as unknown as { body: { detail: string; title: string } }).body = {
-        detail: 'Duplicate entry',
-        title: 'Conflict',
-      };
-      vi.mocked(API.reportingUnit.createReportingUnit).mockRejectedValueOnce(mockError);
-
-      const { result } = renderHook(
-        () => useReportingUnitCreateMutation({ notificationTarget: 'create-form' }),
-        { wrapper: createWrapper() },
-      );
-
-      const validRequest = {
-        clientNumber: '00012797',
-        districtCode: 'DKM',
-        samplingCode: 'AVG',
-        gradeCode: null,
-      };
-
-      await act(async () => {
-        try {
-          await result.current.mutateAsync(validRequest);
-        } catch (_e) {
-          // expected
-        }
-      });
-
-      await waitFor(() => expect(sendEvent).toHaveBeenCalled());
-      expect(sendEvent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          eventType: 'error',
-          eventTarget: 'create-form',
-          description: 'Duplicate entry',
-        }),
-      );
-    });
-  });
 
   describe('useDistrictVolumeListQuery', () => {
     it('should return paginated district volume data', async () => {

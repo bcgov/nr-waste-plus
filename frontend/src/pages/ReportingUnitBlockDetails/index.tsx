@@ -7,7 +7,7 @@ import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
 import BlockDetailsSkeleton from '@/components/waste/ReportingUnits/BlockDetailsSkeleton';
 import BlockDetailsSummary from '@/components/waste/ReportingUnits/BlockDetailsSummary';
-import { useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
+import { useReportingUnitDetailsQuery } from '@/api/reportingUnits';
 import useDelayedFlag from '@/hooks/useDelayedFlag';
 import { navigateInTree } from '@/routes/inTreePaths';
 

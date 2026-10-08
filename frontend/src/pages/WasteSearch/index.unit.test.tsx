@@ -3,28 +3,58 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { renderWithApp } from '@/config/tests/renderWithApp';
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
-import APIs from '@/services/APIs';
 
 import WasteSearchPage from './index';
 
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      user: {
-        getUserPreferences: vi.fn(),
-        updateUserPreferences: vi.fn(),
-      },
-      codes: {
-        getSamplingOptions: vi.fn(),
-        getDistricts: vi.fn(),
-        getAssessAreaStatuses: vi.fn(),
-      },
-      search: {
-        searchReportingUnit: vi.fn(),
-      },
-    },
-  };
-});
+const { mockUsers } = vi.hoisted(() => ({
+  mockUsers: {
+    getUserPreferences: vi.fn(),
+    updateUserPreferences: vi.fn(),
+    setUserBookmarkedRu: vi.fn(),
+    deleteUserBookmarkedRu: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/users-resource', () => ({
+  UsersResource: class {
+    getUserPreferences = mockUsers.getUserPreferences;
+    updateUserPreferences = mockUsers.updateUserPreferences;
+    setUserBookmarkedRu = mockUsers.setUserBookmarkedRu;
+    deleteUserBookmarkedRu = mockUsers.deleteUserBookmarkedRu;
+  },
+}));
+
+const { mockCodes } = vi.hoisted(() => ({
+  mockCodes: {
+    getSamplingOptions: vi.fn(),
+    getDistricts: vi.fn(),
+    getAssessAreaStatuses: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/codes-resource', () => ({
+  CodesResource: class {
+    getSamplingOptions = mockCodes.getSamplingOptions;
+    getDistricts = mockCodes.getDistricts;
+    getAssessAreaStatuses = mockCodes.getAssessAreaStatuses;
+  },
+}));
+
+const { mockSearch } = vi.hoisted(() => ({
+  mockSearch: {
+    searchReportingUnit: vi.fn(),
+    getReportingUnitSearchExpand: vi.fn(),
+    searchReportingUnitUsers: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/search-resource', () => ({
+  SearchResource: class {
+    searchReportingUnit = mockSearch.searchReportingUnit;
+    getReportingUnitSearchExpand = mockSearch.getReportingUnitSearchExpand;
+    searchReportingUnitUsers = mockSearch.searchReportingUnitUsers;
+  },
+}));
 
 /**
  * Sync render helper that wraps render in act() so the RouterProvider's
@@ -41,12 +71,12 @@ const renderWithProps = () => act(() => renderWithApp(<WasteSearchPage />));
 
 describe('WasteSearchPage', () => {
   beforeEach(() => {
-    vi.mocked(APIs.user.getUserPreferences).mockResolvedValue({ theme: 'g10' });
-    vi.mocked(APIs.user.updateUserPreferences).mockResolvedValue(undefined);
-    vi.mocked(APIs.codes.getSamplingOptions).mockResolvedValue([]);
-    vi.mocked(APIs.codes.getDistricts).mockResolvedValue([]);
-    vi.mocked(APIs.codes.getAssessAreaStatuses).mockResolvedValue([]);
-    vi.mocked(APIs.search.searchReportingUnit).mockResolvedValue({
+    vi.mocked(mockUsers.getUserPreferences).mockResolvedValue({ theme: 'g10' });
+    vi.mocked(mockUsers.updateUserPreferences).mockResolvedValue(undefined);
+    vi.mocked(mockCodes.getSamplingOptions).mockResolvedValue([]);
+    vi.mocked(mockCodes.getDistricts).mockResolvedValue([]);
+    vi.mocked(mockCodes.getAssessAreaStatuses).mockResolvedValue([]);
+    vi.mocked(mockSearch.searchReportingUnit).mockResolvedValue({
       content: [],
       page: {
         number: 0,

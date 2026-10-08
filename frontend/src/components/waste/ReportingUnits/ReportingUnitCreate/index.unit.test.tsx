@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { useMyForestClientsQuery } from '@/api/forestClients';
 import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
-import { useReportingUnitCreateMutation } from '@/config/react-query/hooks';
+import { useReportingUnitCreateMutation } from '@/api/reportingUnits';
 import { createTestRouter } from '@/config/tests/routerTestHelper';
 import { useAuth } from '@/context/auth/useAuth';
 
@@ -29,8 +29,10 @@ vi.mock(
   }),
 );
 
-vi.mock('@/config/react-query/hooks', async () => ({
+vi.mock('@/api/reportingUnits', async () => ({
   useReportingUnitCreateMutation: vi.fn(),
+  useReportingUnitDetailsQuery: vi.fn(),
+  fetchReportingUnit: vi.fn(),
 }));
 
 vi.mock('@/api/forestClients', async () => ({

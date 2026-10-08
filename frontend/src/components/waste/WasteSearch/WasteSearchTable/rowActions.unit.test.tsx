@@ -4,7 +4,6 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
-import APIs from '@/services/APIs';
 
 import { useWasteSearchRowActions } from './rowActions';
 
@@ -12,14 +11,21 @@ import type { ReportingUnitSearchResultDto } from '@/api/search.types';
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { ReactNode } from 'react';
 
-vi.mock('@/services/APIs', () => ({
-  default: {
-    user: {
-      setUserBookmarkedRu: vi.fn(),
-      deleteUserBookmarkedRu: vi.fn(),
-      getUserPreferences: vi.fn().mockResolvedValue({}),
-      updateUserPreferences: vi.fn().mockResolvedValue({}),
-    },
+const { mockUsers } = vi.hoisted(() => ({
+  mockUsers: {
+    getUserPreferences: vi.fn().mockResolvedValue({}),
+    updateUserPreferences: vi.fn().mockResolvedValue({}),
+    setUserBookmarkedRu: vi.fn(),
+    deleteUserBookmarkedRu: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/users-resource', () => ({
+  UsersResource: class {
+    getUserPreferences = mockUsers.getUserPreferences;
+    updateUserPreferences = mockUsers.updateUserPreferences;
+    setUserBookmarkedRu = mockUsers.setUserBookmarkedRu;
+    deleteUserBookmarkedRu = mockUsers.deleteUserBookmarkedRu;
   },
 }));
 
@@ -59,8 +65,8 @@ describe('useWasteSearchRowActions', () => {
     vi.clearAllMocks();
     sendEventMock = vi.fn();
     onToggleRefreshMock = vi.fn();
-    (APIs.user.setUserBookmarkedRu as Mock).mockResolvedValue(undefined);
-    (APIs.user.deleteUserBookmarkedRu as Mock).mockResolvedValue(undefined);
+    (mockUsers.setUserBookmarkedRu as Mock).mockResolvedValue(undefined);
+    (mockUsers.deleteUserBookmarkedRu as Mock).mockResolvedValue(undefined);
   });
 
   const renderRowActionsHook = (onToggleRefresh?: () => void) =>
@@ -112,8 +118,8 @@ describe('useWasteSearchRowActions', () => {
         await actions[0].onClick(row);
       });
 
-      expect(APIs.user.setUserBookmarkedRu).toHaveBeenCalledWith(42);
-      expect(APIs.user.deleteUserBookmarkedRu).not.toHaveBeenCalled();
+      expect(mockUsers.setUserBookmarkedRu).toHaveBeenCalledWith(42, { signal: undefined });
+      expect(mockUsers.deleteUserBookmarkedRu).not.toHaveBeenCalled();
     });
 
     it('sends an "Added to bookmarks" event on success', async () => {
@@ -156,8 +162,8 @@ describe('useWasteSearchRowActions', () => {
         await actions[0].onClick(row);
       });
 
-      expect(APIs.user.deleteUserBookmarkedRu).toHaveBeenCalledWith(99);
-      expect(APIs.user.setUserBookmarkedRu).not.toHaveBeenCalled();
+      expect(mockUsers.deleteUserBookmarkedRu).toHaveBeenCalledWith(99, { signal: undefined });
+      expect(mockUsers.setUserBookmarkedRu).not.toHaveBeenCalled();
     });
 
     it('sends a "Removed from bookmarks" event on success', async () => {
@@ -180,7 +186,7 @@ describe('useWasteSearchRowActions', () => {
 
   describe('error handling', () => {
     it('sends an error event when the API call fails', async () => {
-      (APIs.user.setUserBookmarkedRu as Mock).mockRejectedValue(new Error('Network error'));
+      (mockUsers.setUserBookmarkedRu as Mock).mockRejectedValue(new Error('Network error'));
       const { result } = renderRowActionsHook();
       const row = makeRow({ bookmarked: false, ruNumber: 77 });
 
@@ -202,7 +208,7 @@ describe('useWasteSearchRowActions', () => {
     });
 
     it('does not call onToggleRefresh when the API call fails', async () => {
-      (APIs.user.deleteUserBookmarkedRu as Mock).mockRejectedValue(new Error('fail'));
+      (mockUsers.deleteUserBookmarkedRu as Mock).mockRejectedValue(new Error('fail'));
       const { result } = renderRowActionsHook();
       const row = makeRow({ bookmarked: true });
 
@@ -222,7 +228,7 @@ describe('useWasteSearchRowActions', () => {
   describe('loading state', () => {
     it('isLoading returns true while the mutation is in flight', async () => {
       let resolveApi!: () => void;
-      (APIs.user.setUserBookmarkedRu as Mock).mockReturnValue(
+      (mockUsers.setUserBookmarkedRu as Mock).mockReturnValue(
         new Promise<void>((resolve) => {
           resolveApi = resolve;
         }),

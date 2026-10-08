@@ -1,10 +1,10 @@
 import { notFound } from '@tanstack/react-router';
 
 import { queryKeys } from '@/api/queryKeys';
-import { ApiError } from '@/config/api/types';
+import { fetchReportingUnit } from '@/api/reportingUnits';
 import { queryClient } from '@/config/react-query/config';
 import { featureFlags } from '@/env';
-import service from '@/services/APIs';
+import { HttpError } from '@/http/types';
 
 import type { ReportingUnitDto } from '@/api/types';
 
@@ -36,10 +36,10 @@ export const reportingUnitLoader = async ({
   try {
     data = await queryClient.ensureQueryData({
       queryKey: queryKeys.reportingUnit.details(ruIdNum),
-      queryFn: () => service.reportingUnit.getReportingUnit(ruIdNum),
+      queryFn: ({ signal }) => fetchReportingUnit(ruIdNum, signal),
     });
   } catch (error) {
-    if (error instanceof ApiError && (error.status === 404 || error.status === 403)) {
+    if (error instanceof HttpError && (error.status === 404 || error.status === 403)) {
       throw notFound();
     }
     throw error;

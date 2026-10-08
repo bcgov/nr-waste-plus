@@ -1,4 +1,4 @@
-import APIs from '@/services/APIs';
+import { getUserPreferences, updateUserPreferences } from '@/api/users';
 
 import { type UserPreference } from './types';
 
@@ -7,7 +7,7 @@ export const initialValue: UserPreference = {
 };
 
 const loadUserPreference = async (): Promise<UserPreference> => {
-  const loadedPreferences = await APIs.user.getUserPreferences();
+  const loadedPreferences = await getUserPreferences();
   if (loadedPreferences && Object.keys(loadedPreferences).length > 0) {
     return loadedPreferences;
   }
@@ -17,7 +17,7 @@ const loadUserPreference = async (): Promise<UserPreference> => {
 };
 
 const saveUserPreference = async (preference: Partial<UserPreference>): Promise<UserPreference> => {
-  await APIs.user.updateUserPreferences(preference as UserPreference);
+  await updateUserPreferences(preference as UserPreference);
   return preference as UserPreference;
 };
 
