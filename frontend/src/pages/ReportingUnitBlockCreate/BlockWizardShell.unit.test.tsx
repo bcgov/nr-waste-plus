@@ -114,4 +114,37 @@ describe('BlockWizardShell', () => {
       ).toBe('true'),
     );
   });
+
+  it('shouldDiscardToMostRecentlyRequestedTab_andAllowFurtherCleanNavigation', async () => {
+    const user = userEvent.setup();
+    render(
+      <BlockWizardShell
+        panels={[
+          <DirtyStateControls key="details" />,
+          <p key="area">Area panel</p>,
+          <p key="volumes">Waste volumes panel</p>,
+          <p key="attachments">Attachments panel</p>,
+        ]}
+      />,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Mark dirty' }));
+    await user.click(screen.getByRole('tab', { name: 'Area calculator' }));
+    await user.click(await screen.findByRole('button', { name: 'Stay on tab' }));
+
+    await user.click(screen.getByRole('tab', { name: 'Waste volumes' }));
+    await user.click(await screen.findByRole('button', { name: 'Discard changes' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('tab', { name: 'Waste volumes' }).getAttribute('aria-selected')).toBe(
+        'true',
+      ),
+    );
+    await user.click(screen.getByRole('tab', { name: 'Attachments' }));
+    await waitFor(() =>
+      expect(screen.getByRole('tab', { name: 'Attachments' }).getAttribute('aria-selected')).toBe(
+        'true',
+      ),
+    );
+  });
 });
