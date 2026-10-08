@@ -90,7 +90,7 @@ const mapAxiosError = (error: AxiosError): never => {
   }
 
   // Network-level failure (no response received)
-  throw new NetworkError(error.message);
+  throw new NetworkError(error.message, error.code ?? undefined);
 };
 
 // ── Transport function ─────────────────────────────────────────────

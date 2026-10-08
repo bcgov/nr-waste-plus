@@ -182,10 +182,19 @@ export class HttpError extends ApiError {
  */
 export class NetworkError extends ApiError {
   override readonly name: string;
+  /**
+   * Underlying transport error code when mapped from an axios failure
+   * (e.g. `ERR_NETWORK`, `ECONNABORTED`).
+   *
+   * Lets app-layer middlewares pick user-friendly messages without
+   * inspecting raw axios errors.
+   */
+  readonly code?: string;
 
-  constructor(message = 'Network request failed') {
+  constructor(message = 'Network request failed', code?: string) {
     super(message);
     this.name = 'NetworkError';
+    this.code = code;
   }
 }
 

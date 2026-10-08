@@ -405,6 +405,44 @@ describe('transport', () => {
     expect.unreachable('Expected NetworkError to be thrown');
   });
 
+  it('preserves the axios error code on NetworkError', async () => {
+    const axiosError = makeAxiosError({
+      code: 'ERR_NETWORK',
+      message: 'Network Error',
+    });
+
+    mockRequest.mockRejectedValueOnce(axiosError);
+    mockIsAxiosError.mockReturnValueOnce(true);
+
+    try {
+      await transport(baseCtx);
+    } catch (error) {
+      expect((error as NetworkError).code).toBe('ERR_NETWORK');
+      return;
+    }
+    expect.unreachable('Expected NetworkError to be thrown');
+  });
+
+  it('preserves the ECONNABORTED code for timeouts without an aborted signal', async () => {
+    const axiosError = makeAxiosError({
+      code: 'ECONNABORTED',
+      message: 'timeout of 60000ms exceeded',
+      config: { url: '/api/slow', signal: undefined },
+    });
+
+    mockRequest.mockRejectedValueOnce(axiosError);
+    mockIsAxiosError.mockReturnValueOnce(true);
+
+    try {
+      await transport(baseCtx);
+    } catch (error) {
+      expect(error).toBeInstanceOf(NetworkError);
+      expect((error as NetworkError).code).toBe('ECONNABORTED');
+      return;
+    }
+    expect.unreachable('Expected NetworkError to be thrown');
+  });
+
   // ── Non-Axios error ─────────────────────────────────────────────
 
   it('wraps non-Axios errors in NetworkError', async () => {

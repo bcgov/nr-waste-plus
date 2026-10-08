@@ -93,6 +93,16 @@ describe('NetworkError', () => {
     const err = new NetworkError('DNS resolution failed');
     expect(err.message).toBe('DNS resolution failed');
   });
+
+  it('carries the transport error code when provided', () => {
+    const err = new NetworkError('Network Error', 'ERR_NETWORK');
+    expect(err.code).toBe('ERR_NETWORK');
+  });
+
+  it('code defaults to undefined', () => {
+    const err = new NetworkError();
+    expect(err.code).toBeUndefined();
+  });
 });
 
 // ── AbortError ─────────────────────────────────────────────────────
