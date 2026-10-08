@@ -4,7 +4,6 @@ import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.base.Role;
-import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
@@ -17,7 +16,6 @@ import java.net.URI;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,7 +36,7 @@ import org.springframework.web.server.ResponseStatusException;
  *
  * <p>The details endpoint is gated behind {@link FeatureFlag#REPORTING_UNIT_DETAILS_ENABLED}.
  * When the flag is disabled the controller responds with HTTP 404 so the feature remains invisible
- * to callers. The block-list endpoint and the create endpoint are not flag-gated.
+ * to callers. The create endpoint is not flag-gated.
  *
  * <p>POST /api/reporting-units creates a new Reporting Unit in the legacy system. On success it
  * returns HTTP 201 (Created) with a Location header pointing to the created resource. Per API
@@ -103,23 +101,6 @@ public class ReportingUnitController {
     }
 
     return reportingUnitBlockService.enrichWithBlockMetadata(details);
-  }
-
-  /**
-   * Retrieve the block list for a reporting unit.
-   *
-   * <p>Returns a single page of block rows assembled either from the postgres block tables or from
-   * the legacy API, depending on where the reporting unit lives. Unlike the details endpoint this
-   * endpoint is not gated behind {@link FeatureFlag#REPORTING_UNIT_DETAILS_ENABLED}.
-   *
-   * @param reportingUnitId the unique identifier of the reporting unit
-   * @return a single page of block rows; never null
-   */
-  @GetMapping("/{reportingUnitId}/blocks")
-  public Page<BlockListItemDto> getReportingUnitBlocks(@PathVariable Long reportingUnitId) {
-    log.info("Fetching blocks for reporting unit {}", reportingUnitId);
-
-    return reportingUnitBlockService.getBlockList(reportingUnitId);
   }
 
   /**

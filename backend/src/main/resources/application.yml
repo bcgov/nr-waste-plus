@@ -246,6 +246,7 @@ info:
 features:
   flags:
     reporting-unit-details-enabled: false
+    reporting-unit-block-details-enabled: false
 
 # Logging
 logging:

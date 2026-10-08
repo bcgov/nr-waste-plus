@@ -1,6 +1,6 @@
 spring:
-#  flyway:
-#    enabled: true
+  #  flyway:
+  #    enabled: true
   # FAM
   security:
     oauth2:
@@ -35,6 +35,7 @@ features:
     disabled-flag: false
     bookmark-ru-enabled: true
     reporting-unit-details-enabled: true
+    reporting-unit-block-details-enabled: true
 
 logging:
   level:
