@@ -8,40 +8,10 @@ vi.mock('aws-amplify/auth', () => ({
   signOut: vi.fn(),
 }));
 
-// Mock the APIs service globally to prevent HTTP requests
-vi.mock('@/services/APIs', () => ({
-  default: {
-    user: {
-      getUserPreferences: vi.fn().mockResolvedValue({}),
-      updateUserPreferences: vi.fn().mockResolvedValue({}),
-      setUserBookmarkedRu: vi.fn().mockResolvedValue(undefined),
-      deleteUserBookmarkedRu: vi.fn().mockResolvedValue(undefined),
-    },
-    forestclient: {
-      searchByClientNumbers: vi.fn().mockResolvedValue([]),
-      searchClients: vi.fn().mockResolvedValue([]),
-      searchMyForestClients: vi.fn().mockResolvedValue([]),
-    },
-    codes: {
-      getDistricts: vi.fn().mockResolvedValue([]),
-      getWasteCodes: vi.fn().mockResolvedValue([]),
-      getSamplingOptions: vi.fn().mockResolvedValue([]),
-      getAssessAreaStatuses: vi.fn().mockResolvedValue([]),
-    },
-    search: {
-      search: vi.fn().mockResolvedValue({ items: [] }),
-      searchReportingUnit: vi.fn().mockResolvedValue({
-        content: [],
-        page: { number: 0, size: 10, totalElements: 0, totalPages: 0 },
-      }),
-    },
-  },
-}));
-
-// Mock the migrated API-layer resource modules globally so hook modules
-// (api/codes.ts, api/forestClients.ts, api/search.ts) never reach the real
-// pipeline in jsdom. Mirrors the '@/services/APIs' defaults above; tests that
-// need specific data re-mock the resource module locally.
+// Mock the API-layer resource modules globally so hook modules never reach
+// the real pipeline in jsdom. Benign defaults mirror the former service
+// registry mock; tests that need specific data re-mock the resource module
+// locally.
 vi.mock('@/api/resources/codes-resource', () => ({
   CodesResource: class {
     getSamplingOptions = vi.fn().mockResolvedValue([]);

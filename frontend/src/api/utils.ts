@@ -48,29 +48,6 @@ export const removeEmpty = <T extends object>(obj: T): Partial<T> => {
 };
 
 /**
- * Generates a random hexadecimal string of the requested length.
- *
- * @param length The number of hexadecimal characters to generate.
- * @returns A hexadecimal identifier segment.
- */
-const generateHex = (length: number): string => {
-  const chars = 'abcdef0123456789';
-  return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-};
-
-/**
- * Creates B3 tracing headers for outbound backend requests.
- *
- * @returns Trace and span identifiers for distributed tracing.
- */
-export const getB3Headers = () => {
-  return {
-    'X-B3-TraceId': generateHex(32),
-    'X-B3-SpanId': generateHex(16),
-  };
-};
-
-/**
  * Reads a nested value from an object using a dot-separated property path.
  *
  * @typeParam T The source object type.

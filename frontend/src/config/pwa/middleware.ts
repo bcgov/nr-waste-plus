@@ -1,10 +1,20 @@
 /**
  * Middleware utilities for handling offline data and mutations using IndexedDB.
  *
- * These middlewares enable offline-first support for API requests by saving and retrieving data from IndexedDB.
+ * These middlewares enable offline-first support for API requests by saving
+ * and retrieving data from IndexedDB. They follow the Koa-style pipeline
+ * `Middleware` signature from `@/http/types` and can be registered via
+ * `createApiClient({ middlewares: [...] })`.
  *
- * Note: To activate offline behavior, you must provide a valid `IdbMiddlewareOptions` object with the `idbSave` property set to true.
- * If not provided, the middleware will not attempt to persist or retrieve data from IndexedDB.
+ * Note: To activate offline behavior, you must provide a valid
+ * `IdbMiddlewareOptions` object with the `idbSave` property set to true.
+ * If not provided, the middleware will not attempt to persist or retrieve
+ * data from IndexedDB.
+ *
+ * Status: **dormant** — not registered on the app client; preserved for the
+ * future offline mode (`featureFlags['offline-mode-enabled']`).
+ *
+ * @module config/pwa/middleware
  */
 
 import { addMutation, addOfflineItem, getOfflineItem } from '@/config/pwa/idb/config';
@@ -12,87 +22,102 @@ import { onlineStatusStore } from '@/hooks/useOfflineMode/onlineStatusStore';
 
 import { registerPeriodicSync } from './utils';
 
-import type { ApiMiddleware } from '@/config/api/types';
 import type { IdbMiddlewareOptions } from '@/config/pwa/types';
+import type { Middleware } from '@/http/types';
+
+/** HTTP methods treated as mutations for offline queuing. */
+const MUTATION_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
 /**
- * Middleware implementation for caching GET/response data for offline usage.
+ * Middleware for caching GET/response data for offline usage.
  *
- * When `idbSave` is enabled in the provided `IdbMiddlewareOptions`, this middleware will:
- * - Save successful API responses to IndexedDB for offline access.
- * - On failure (when offline), attempt to return cached data from IndexedDB instead of failing.
+ * When `idbSave` is enabled in the provided {@link IdbMiddlewareOptions}:
+ * - Successful responses are saved to IndexedDB for offline access.
+ * - On failure (when offline), cached data is served from IndexedDB
+ *   instead of propagating the error.
  *
- * @param {IdbMiddlewareOptions} [cacheable] - Options to control offline caching. Must provide `idbSave: true` to enable offline behavior.
- * @returns {ApiMiddleware} Middleware for handling offline data caching and retrieval.
+ * @param cacheable - Options to control offline caching. Must provide
+ *   `idbSave: true` to enable offline behavior.
+ * @returns A {@link Middleware} providing offline read caching.
  */
-export const offlineDataMiddleware = (cacheable?: IdbMiddlewareOptions): ApiMiddleware => ({
-  async response(axiosResponse) {
-    if (cacheable?.idbSave) {
-      const key = cacheable?.idbKey || axiosResponse.config.url || '';
-      await addOfflineItem(key, axiosResponse.data);
-      await registerPeriodicSync(key, 30 * 1000);
+export const offlineDataMiddleware = (cacheable?: IdbMiddlewareOptions): Middleware => {
+  const offlineData: Middleware = async (ctx, next) => {
+    try {
+      const res = await next();
+
+      if (cacheable?.idbSave) {
+        const key = cacheable.idbKey || ctx.config.url || '';
+        await addOfflineItem(key, res.data);
+        await registerPeriodicSync(key, 30 * 1000);
+      }
+
+      return res;
+    } catch (error) {
+      if (cacheable?.idbSave && !onlineStatusStore.getStatus()) {
+        const key = cacheable.idbKey || ctx.config.url || '';
+        const entry = await getOfflineItem(key);
+        if (entry) {
+          return {
+            data: entry,
+            status: 200,
+            statusText: 'OK (offline cache)',
+            headers: { 'x-offline-cache': 'true' },
+            meta: { offlineCache: true },
+            config: ctx.config,
+          };
+        }
+      }
+
+      throw error;
     }
-    return axiosResponse;
-  },
-  async failure(error) {
-    if (cacheable?.idbSave && !onlineStatusStore.getStatus()) {
-      const key = cacheable?.idbKey || error.config?.url || '';
-      const entry = await getOfflineItem(key);
-      if (entry) {
+  };
+
+  return offlineData;
+};
+
+/**
+ * Middleware for queuing mutational (write) requests when offline.
+ *
+ * When `idbSave` is enabled in the provided {@link IdbMiddlewareOptions}:
+ * - Mutation requests (POST, PUT, PATCH, DELETE) are saved to IndexedDB
+ *   when offline, to be replayed later.
+ * - On failure (when offline), a successful 204 response is returned,
+ *   indicating the mutation has been queued.
+ *
+ * @param cacheable - Options to control offline mutation queuing. Must
+ *   provide `idbSave: true` to enable offline behavior.
+ * @returns A {@link Middleware} providing offline mutation queuing.
+ */
+export const offlineMutationMiddleware = (cacheable?: IdbMiddlewareOptions): Middleware => {
+  const offlineMutation: Middleware = async (ctx, next) => {
+    const isMutation = MUTATION_METHODS.includes(ctx.config.method);
+
+    if (cacheable?.idbSave && !onlineStatusStore.getStatus() && isMutation) {
+      await addMutation({
+        url: ctx.config.url,
+        method: ctx.config.method,
+        data: ctx.config.data,
+        headers: ctx.config.headers,
+      });
+    }
+
+    try {
+      return await next();
+    } catch (error) {
+      if (cacheable?.idbSave && !onlineStatusStore.getStatus() && isMutation) {
         return {
-          ...error.config,
-          status: 200,
-          statusText: 'OK (offline cache)',
-          data: entry,
-          headers: { ...error.config?.headers, 'x-offline-cache': 'true' },
-          config: error.config,
+          data: null,
+          status: 204,
+          statusText: 'No Content (offline mutation queued)',
+          headers: {},
+          meta: { offlineQueued: true },
+          config: ctx.config,
         };
       }
-    }
-    throw error;
-  },
-});
 
-/**
- * Middleware implementation for queuing mutational (write) requests when offline.
- *
- * When `idbSave` is enabled in the provided `IdbMiddlewareOptions`, this middleware will:
- * - Save mutation requests (POST, PUT, DELETE, etc.) to IndexedDB when offline, to be replayed later.
- * - Return a successful response (204) when offline, indicating the mutation has been queued.
- *
- * @param {IdbMiddlewareOptions} [cacheable] - Options to control offline mutation queuing. Must provide `idbSave: true` to enable offline behavior.
- * @returns {ApiMiddleware} Middleware for handling offline mutation queuing.
- */
-export const offlineMutationMiddleware = (cacheable?: IdbMiddlewareOptions): ApiMiddleware => ({
-  async request(config) {
-    const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(
-      config.method?.toUpperCase() || '',
-    );
-    if (cacheable?.idbSave && !onlineStatusStore.getStatus() && isMutation) {
-      const data = {
-        url: config.url,
-        method: config.method,
-        data: config.data,
-        headers: config.headers,
-      };
-      await addMutation(data);
+      throw error;
     }
-    return config;
-  },
-  async failure(error) {
-    const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(
-      error.config?.method?.toUpperCase() || '',
-    );
-    if (cacheable?.idbSave && !onlineStatusStore.getStatus() && isMutation) {
-      return {
-        ...error.config,
-        status: 204,
-        statusText: 'No Content (offline mutation queued)',
-        data: null,
-        headers: {},
-        config: error.config,
-      };
-    }
-    throw error;
-  },
-});
+  };
+
+  return offlineMutation;
+};

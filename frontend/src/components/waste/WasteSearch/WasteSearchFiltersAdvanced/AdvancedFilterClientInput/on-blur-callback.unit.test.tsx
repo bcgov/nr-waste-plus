@@ -19,14 +19,6 @@ vi.mock('@/context/auth/useAuth', () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock('@/services/APIs', () => ({
-  default: {
-    forestclient: {
-      searchForestClients: vi.fn(),
-    },
-  },
-}));
-
 const wrapper = ({ children }: { children: React.ReactNode }) => {
   const qc = makeTestQueryClient();
   return (

@@ -14,17 +14,6 @@ import { useTableToolbar } from './useTableToolbar';
 
 import type { TableHeaderType } from './types';
 
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      user: {
-        getUserPreferences: vi.fn(),
-        updateUserPreferences: vi.fn(),
-      },
-    },
-  };
-});
-
 vi.mock('@/context/preference/usePreference', () => {
   return {
     usePreference: vi.fn(),

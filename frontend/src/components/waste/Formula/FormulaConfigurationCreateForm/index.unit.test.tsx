@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-import { ApiError } from '@/config/api/types.ts';
+import { HttpError } from '@/http/types';
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -229,18 +229,7 @@ describe('FormulaConfigurationCreateForm', () => {
 
   it('does not show an error alert for a missing current formula set', () => {
     mocks.current.isError = true;
-    mocks.current.error = new ApiError(
-      {
-        method: 'GET',
-        url: '/formula-sets/current',
-        mediaType: 'application/json',
-        headers: {},
-        query: undefined,
-        body: undefined,
-      },
-      { url: '/formula-sets/current', ok: false, status: 404, statusText: 'Not Found', body: null },
-      'Not found',
-    );
+    mocks.current.error = new HttpError(404, 'Not Found', '/formula-sets/current', null);
     render(<FormulaConfigurationCreateForm />);
     expect(screen.queryByRole('alert')).toBeNull();
   });
@@ -776,29 +765,12 @@ describe('FormulaConfigurationCreateForm', () => {
   // ─── Submit error messages (RFC 7807 problem detail) ───────────────────────
 
   describe('submit error messages (RFC 7807 problem detail)', () => {
-    const makeApiError = (body: unknown): ApiError =>
-      new ApiError(
-        {
-          method: 'POST',
-          url: '/formula-sets',
-          mediaType: 'application/json',
-          headers: {},
-          query: undefined,
-          body: undefined,
-        },
-        {
-          url: '/formula-sets',
-          ok: false,
-          status: 422,
-          statusText: 'Unprocessable Content',
-          body,
-        },
-        'Unprocessable Content',
-      );
+    const makeHttpError = (body: unknown): HttpError =>
+      new HttpError(422, 'Unprocessable Content', '/formula-sets', body);
 
     /** Enter review mode, submit, and land on the submit-error path. */
     const submitFailingForm = (body: unknown): void => {
-      mocks.mutateAsync.mockRejectedValue(makeApiError(body));
+      mocks.mutateAsync.mockRejectedValue(makeHttpError(body));
       render(<FormulaConfigurationCreateForm />);
       submitForm(); // enter review
       submitForm(); // submit → rejects → setSubmitError
@@ -880,21 +852,21 @@ describe('FormulaConfigurationCreateForm', () => {
       expect(alert).not.toContain('not-an-error');
     });
 
-    it('uses the ApiError message when the body has no usable problem detail', async () => {
+    it('uses the HttpError statusText when the body has no usable problem detail', async () => {
       submitFailingForm({ detail: 123, validationErrors: 'not-an-array' });
       await act(async () => {});
 
       expect(screen.getByRole('alert').textContent).toContain('Unprocessable Content');
     });
 
-    it('uses the ApiError message when the body is null', async () => {
+    it('uses the HttpError statusText when the body is null', async () => {
       submitFailingForm(null);
       await act(async () => {});
 
       expect(screen.getByRole('alert').textContent).toContain('Unprocessable Content');
     });
 
-    it('uses the ApiError message when the body is not an object', async () => {
+    it('uses the HttpError statusText when the body is not an object', async () => {
       submitFailingForm('plain string body');
       await act(async () => {});
 

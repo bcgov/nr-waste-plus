@@ -3,7 +3,6 @@ import { describe, it, expect } from 'vitest';
 import {
   forestClientAutocompleteResult2CodeDescription,
   generateSortArray,
-  getB3Headers,
   getValueByPath,
   removeEmpty,
 } from './utils';
@@ -69,29 +68,6 @@ describe('removeEmpty', () => {
     const input = { a: { b: null, c: 2 }, d: 3 };
     const result = removeEmpty(input);
     expect(result).toEqual({ a: { c: 2 }, d: 3 });
-  });
-});
-
-describe('getB3Headers', () => {
-  it('give me some B3 please', () => {
-    const headers = getB3Headers();
-    expect(headers).toHaveProperty('X-B3-TraceId');
-    expect(headers).toHaveProperty('X-B3-SpanId');
-  });
-
-  it('should generate 64-bit hex strings for traceId and spanId', () => {
-    const headers = getB3Headers();
-
-    expect(headers['X-B3-TraceId']).toMatch(/^[a-f0-9]{32}$/);
-    expect(headers['X-B3-SpanId']).toMatch(/^[a-f0-9]{16}$/);
-  });
-
-  it('should generate different values on each call', () => {
-    const headers1 = getB3Headers();
-    const headers2 = getB3Headers();
-
-    expect(headers1['X-B3-TraceId']).not.toBe(headers2['X-B3-TraceId']);
-    expect(headers1['X-B3-SpanId']).not.toBe(headers2['X-B3-SpanId']);
   });
 });
 
