@@ -431,6 +431,41 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
         .andExpect(jsonPath("$.content").doesNotExist());
   }
 
+  @Test
+  @DisplayName("Denies a BCeID caller listing another client's blocks")
+  @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
+  void deniesBceidCrossClientBlockList() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get(
+                "/api/reporting-units/{id}/blocks", foreignReportingUnitId))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @DisplayName("Allows a BCeID caller with the matching client role to list blocks")
+  @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
+  void allowsBceidSameClientBlockList() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/api/reporting-units/{id}/blocks", reportingUnitId))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content").isArray())
+        .andExpect(jsonPath("$.content[0].id").value(blockId));
+  }
+
+  @Test
+  @DisplayName("Keeps IDIR unrestricted on the block list for a foreign reporting unit")
+  @WithMockJwt(idp = "idir")
+  void allowsIdirBlockListForForeignReportingUnit() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get(
+                "/api/reporting-units/{id}/blocks", foreignReportingUnitId))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content").isArray());
+  }
+
   // ---------------------------------------------------------------------
   // GET /{reportingUnitId}/{blockId}/calculation — moved into BlockController
   // ---------------------------------------------------------------------

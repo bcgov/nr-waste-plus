@@ -19,6 +19,7 @@ import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import ca.bc.gov.nrs.hrs.repository.block.BlockListItemProjection;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.service.block.BlockService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -35,6 +36,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Unit Test | ReportingUnitBlockService")
@@ -46,6 +48,8 @@ class ReportingUnitBlockServiceTest {
   @Mock private BlockRepository blockRepository;
   @Mock private LegacyApiProvider legacyApiProvider;
   @Mock private BlockRulesProperties blockRulesProperties;
+  @Mock private BlockService blockService;
+  @Mock private Jwt jwt;
 
   @InjectMocks private ReportingUnitBlockService service;
 
@@ -57,11 +61,42 @@ class ReportingUnitBlockServiceTest {
     when(blockRepository.findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID))
         .thenReturn(List.of());
 
-    var result = service.getBlockList(REPORTING_UNIT_ID);
+    var result = service.getBlockList(REPORTING_UNIT_ID, jwt);
 
     assertThat(result.getContent()).isEmpty();
     verify(legacyApiProvider, never()).getReportingUnitDetails(REPORTING_UNIT_ID);
     verify(legacyApiProvider, never()).getReportingUnitBlocks(REPORTING_UNIT_ID);
+  }
+
+  @Test
+  @DisplayName("shouldEnforceClientScope_whenReadingPostgresBlocks")
+  void shouldEnforceClientScope_whenReadingPostgresBlocks() {
+    ReportingUnitEntity reportingUnit = new ReportingUnitEntity();
+    reportingUnit.setClientNumber("00001271");
+    when(reportingUnitRepository.findByIdAndDeletedFalse(REPORTING_UNIT_ID))
+        .thenReturn(Optional.of(reportingUnit));
+    when(blockRepository.findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID))
+        .thenReturn(List.of());
+
+    service.getBlockList(REPORTING_UNIT_ID, jwt);
+
+    verify(blockService).enforceClientScope(jwt, REPORTING_UNIT_ID, "00001271");
+    verify(legacyApiProvider, never()).getReportingUnitDetails(REPORTING_UNIT_ID);
+  }
+
+  @Test
+  @DisplayName("shouldEnforceClientScopeWithLegacyClientNumber_whenReadingLegacyBlocks")
+  void shouldEnforceClientScopeWithLegacyClientNumber_whenReadingLegacyBlocks() {
+    when(reportingUnitRepository.findByIdAndDeletedFalse(REPORTING_UNIT_ID))
+        .thenReturn(Optional.empty());
+    when(legacyApiProvider.getReportingUnitDetails(REPORTING_UNIT_ID))
+        .thenReturn(new ReportingUnitLegacyDetailsDto("00001271", null, null, null));
+    when(legacyApiProvider.getReportingUnitBlocks(REPORTING_UNIT_ID)).thenReturn(List.of());
+
+    service.getBlockList(REPORTING_UNIT_ID, jwt);
+
+    verify(blockService).enforceClientScope(jwt, REPORTING_UNIT_ID, "00001271");
+    verify(blockRepository, never()).findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID);
   }
 
   @Test
@@ -85,7 +120,7 @@ class ReportingUnitBlockServiceTest {
     when(blockRepository.findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID))
         .thenReturn(List.of(projection));
 
-    var result = service.getBlockList(REPORTING_UNIT_ID);
+    var result = service.getBlockList(REPORTING_UNIT_ID, jwt);
 
     assertThat(result.getContent())
         .containsExactly(
@@ -128,7 +163,7 @@ class ReportingUnitBlockServiceTest {
     when(blockRepository.findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID))
         .thenReturn(List.of(row));
 
-    var result = service.getBlockList(REPORTING_UNIT_ID);
+    var result = service.getBlockList(REPORTING_UNIT_ID, jwt);
 
     assertThat(result.getContent())
         .containsExactly(
@@ -206,7 +241,7 @@ class ReportingUnitBlockServiceTest {
         .thenReturn(Optional.of(new ReportingUnitEntity()));
     when(blockRepository.findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID)).thenReturn(rows);
 
-    var result = service.getBlockList(REPORTING_UNIT_ID);
+    var result = service.getBlockList(REPORTING_UNIT_ID, jwt);
 
     assertThat(result.getContent()).extracting(BlockListItemDto::id).containsExactly(904L, 905L);
     assertThat(result.getSize()).isEqualTo(10);
@@ -234,7 +269,7 @@ class ReportingUnitBlockServiceTest {
     when(legacyApiProvider.getReportingUnitBlocks(REPORTING_UNIT_ID))
         .thenReturn(List.of(legacyRow));
 
-    var result = service.getBlockList(REPORTING_UNIT_ID);
+    var result = service.getBlockList(REPORTING_UNIT_ID, jwt);
 
     assertThat(result.getContent()).containsExactly(legacyRow);
     assertThat(result.getTotalElements()).isEqualTo(1);
@@ -250,7 +285,7 @@ class ReportingUnitBlockServiceTest {
         .thenReturn(new ReportingUnitLegacyDetailsDto(null, null, null, null));
     when(legacyApiProvider.getReportingUnitBlocks(REPORTING_UNIT_ID)).thenReturn(List.of());
 
-    service.getBlockList(REPORTING_UNIT_ID);
+    service.getBlockList(REPORTING_UNIT_ID, jwt);
 
     verify(blockRepository, never()).findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID);
   }
@@ -264,7 +299,7 @@ class ReportingUnitBlockServiceTest {
         .thenReturn(new ReportingUnitLegacyDetailsDto(null, null, null, null));
     when(legacyApiProvider.getReportingUnitBlocks(REPORTING_UNIT_ID)).thenReturn(List.of());
 
-    var result = service.getBlockList(REPORTING_UNIT_ID);
+    var result = service.getBlockList(REPORTING_UNIT_ID, jwt);
 
     assertThat(result.getContent()).isEmpty();
     verify(legacyApiProvider).getReportingUnitDetails(REPORTING_UNIT_ID);
@@ -322,7 +357,7 @@ class ReportingUnitBlockServiceTest {
     when(legacyApiProvider.getReportingUnitDetails(REPORTING_UNIT_ID))
         .thenThrow(new NotFoundGenericException("Reporting Unit", REPORTING_UNIT_ID.toString()));
 
-    assertThatThrownBy(() -> service.getBlockList(REPORTING_UNIT_ID))
+    assertThatThrownBy(() -> service.getBlockList(REPORTING_UNIT_ID, jwt))
         .isInstanceOf(NotFoundGenericException.class)
         .hasMessageContaining("not found");
 
@@ -381,7 +416,7 @@ class ReportingUnitBlockServiceTest {
     when(blockRepository.findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID))
         .thenReturn(List.of(row));
 
-    return service.getBlockList(REPORTING_UNIT_ID).getContent().getFirst();
+    return service.getBlockList(REPORTING_UNIT_ID, jwt).getContent().getFirst();
   }
 
   private BlockListItemDto readOnePostgresBlockWithArea(BigDecimal area) {
@@ -392,7 +427,7 @@ class ReportingUnitBlockServiceTest {
     when(blockRepository.findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID))
         .thenReturn(List.of(row));
 
-    return service.getBlockList(REPORTING_UNIT_ID).getContent().getFirst();
+    return service.getBlockList(REPORTING_UNIT_ID, jwt).getContent().getFirst();
   }
 
   private static BlockListItemProjection projection(

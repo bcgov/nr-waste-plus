@@ -96,7 +96,20 @@ public class BlockService {
     return toLegacyDetailDto(reportingUnitId, legacyRow);
   }
 
-  private void enforceClientScope(Jwt jwt, Long reportingUnitId, String clientNumber) {
+  /**
+   * Enforce owning-client scoping for a reporting-unit-scoped read.
+   *
+   * <p>Shared by the block details, block list and calculation reads so every reporting-unit
+   * endpoint applies the same rule: BUSINESS_BCEID callers must hold a viewer or submitter role
+   * for the owning client number; IDIR and BCSC callers are unrestricted.
+   *
+   * @param jwt the authenticated caller's token
+   * @param reportingUnitId the reporting unit being read
+   * @param clientNumber the owning client number resolved by the caller
+   * @throws ResponseStatusException with HTTP 403 if a BCeID caller is scoped to a different
+   *     client than the block's owner
+   */
+  public void enforceClientScope(Jwt jwt, Long reportingUnitId, String clientNumber) {
     if (IdentityProvider.BUSINESS_BCEID.equals(JwtPrincipalUtil.getIdentityProvider(jwt))
         && !hasClientRole(jwt, clientNumber)) {
       log.warn(

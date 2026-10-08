@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * REST controller exposing block endpoints nested under a reporting unit.
@@ -87,14 +88,22 @@ public class BlockController {
    * the legacy API, depending on where the reporting unit lives. Unlike the details endpoint this
    * endpoint is not gated behind {@link FeatureFlag#REPORTING_UNIT_BLOCK_DETAILS_ENABLED}.
    *
+   * <p>Validates that the authenticated user has permission to access the reporting unit's blocks.
+   * For BCeID business users, validates that the owning client number matches one of the user's
+   * authorized client numbers. IDIR and BCSC users bypass the client-level check.
+   *
+   * @param jwt the JWT principal for the authenticated caller
    * @param reportingUnitId the unique identifier of the reporting unit
    * @return a single page of block rows; never null
+   * @throws ResponseStatusException with HTTP 403 if a BCeID caller is scoped to a different
+   *     client than the reporting unit's owner
    */
   @GetMapping("/{reportingUnitId}/blocks")
-  public Page<BlockListItemDto> getReportingUnitBlocks(@PathVariable Long reportingUnitId) {
+  public Page<BlockListItemDto> getReportingUnitBlocks(
+      @AuthenticationPrincipal Jwt jwt, @PathVariable Long reportingUnitId) {
     log.info("Fetching blocks for reporting unit {}", reportingUnitId);
 
-    return reportingUnitBlockService.getBlockList(reportingUnitId);
+    return reportingUnitBlockService.getBlockList(reportingUnitId, jwt);
   }
 
   /**

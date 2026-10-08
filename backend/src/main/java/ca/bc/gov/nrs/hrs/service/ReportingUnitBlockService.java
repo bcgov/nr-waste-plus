@@ -5,10 +5,13 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.BlockRuleDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
+import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import ca.bc.gov.nrs.hrs.repository.block.BlockListItemProjection;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
+import ca.bc.gov.nrs.hrs.service.block.BlockService;
 import io.micrometer.observation.annotation.Observed;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -16,12 +19,15 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Read service for reporting-unit block lists and block metadata enrichment.
@@ -31,8 +37,9 @@ import org.springframework.stereotype.Service;
  * This service also attaches block-creation metadata — the sampling rule and the legacy marker —
  * to reporting unit details before they are returned to the caller.
  *
- * <p>Block reads are authenticated by the shared GET security rules but apply no client-number
- * scoping, matching the frontend contract for the block-list endpoints.
+ * <p>Block reads are authenticated by the shared GET security rules and scoped to the owning
+ * client number: BCeID business callers must hold a viewer or submitter role for the reporting
+ * unit's client, mirroring the block details and calculation endpoints.
  */
 @Slf4j
 @Service
@@ -67,6 +74,7 @@ public class ReportingUnitBlockService {
   private final BlockRepository blockRepository;
   private final LegacyApiProvider legacyApiProvider;
   private final BlockRulesProperties blockRulesProperties;
+  private final BlockService blockService;
 
   /**
    * Retrieve the block list for a reporting unit as a single page.
@@ -76,15 +84,28 @@ public class ReportingUnitBlockService {
    * size is at least ten so an empty list still reports {@code size: 10}, matching the frontend's
    * empty payload.
    *
+   * <p>Before any rows are read the owning client number is resolved from the reporting unit and
+   * handed to {@link BlockService#enforceClientScope}, so BCeID callers cannot enumerate another
+   * client's blocks.
+   *
    * @param reportingUnitId the reporting unit to list blocks for
+   * @param jwt the authenticated caller's token
    * @return a single {@link Page} of block rows; never null
+   * @throws ResponseStatusException with HTTP 403 if a BCeID caller is scoped to a different
+   *     client than the reporting unit's owner
    */
-  public Page<BlockListItemDto> getBlockList(Long reportingUnitId) {
+  public Page<BlockListItemDto> getBlockList(Long reportingUnitId, Jwt jwt) {
     List<BlockListItemDto> rows;
-    if (reportingUnitRepository.findByIdAndDeletedFalse(reportingUnitId).isPresent()) {
+    Optional<ReportingUnitEntity> reportingUnit =
+        reportingUnitRepository.findByIdAndDeletedFalse(reportingUnitId);
+    if (reportingUnit.isPresent()) {
+      blockService.enforceClientScope(
+          jwt, reportingUnitId, reportingUnit.get().getClientNumber());
       rows = buildPostgresBlocks(reportingUnitId);
     } else {
-      legacyApiProvider.getReportingUnitDetails(reportingUnitId);
+      ReportingUnitLegacyDetailsDto legacyReportingUnit =
+          legacyApiProvider.getReportingUnitDetails(reportingUnitId);
+      blockService.enforceClientScope(jwt, reportingUnitId, legacyReportingUnit.clientNumber());
       rows = legacyApiProvider.getReportingUnitBlocks(reportingUnitId);
     }
 

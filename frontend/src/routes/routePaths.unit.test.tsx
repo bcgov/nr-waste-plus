@@ -460,12 +460,14 @@ describe('routePaths', () => {
       expect(container).toBeDefined();
     });
 
-    it('shouldMarkBlockDetailsRouteAsProtectedAdmin', () => {
+    it('shouldMarkBlockDetailsRouteAsProtectedWithoutRoleRestriction', () => {
       const blockRoute = routePaths.ROUTES.find(
         (r) => r.path === '/reporting-units/$ruId/$blockId',
       )!;
       expect(blockRoute.protected).toBe(true);
-      expect(blockRoute.roles).toEqual([{ role: Role.ADMIN, clients: [] }]);
+      // Ownership is enforced by the backend for VIEWER/SUBMITTER clients, so the
+      // route must not redirect those users before the API can be called.
+      expect(blockRoute.roles).toBeUndefined();
     });
 
     it('shouldGateBlockDetailsRouteBehindReportingUnitBlockDetailsFlag', () => {
