@@ -1,9 +1,9 @@
-import { render, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
-import * as routePaths from './routePaths';
-
 import { Role } from '@/context/auth/types';
+
+import * as routePaths from './routePaths';
 
 // ── Mocks for env ──────────────────────────────────────────────────────────────
 vi.mock('@/env', async () => {
@@ -244,6 +244,45 @@ describe('routePaths', () => {
   });
 
   describe('ROUTES', () => {
+    it('shouldRegisterBlockCreationRouteWithAccessAndFeatureFlagRequirements', () => {
+      const blockRoute = routePaths.ROUTES.find(
+        (route) => route.path === '/reporting-units/$ruId/blocks/create',
+      );
+
+      expect(blockRoute).toBeDefined();
+      expect(blockRoute?.protected).toBe(true);
+      expect(blockRoute?.isSideMenu).toBe(false);
+      expect(blockRoute?.featureFlag).toBe('block-creation-enabled');
+      expect(blockRoute?.roles?.map(({ role }) => role)).toEqual([
+        Role.ADMIN,
+        Role.DISTRICT,
+        Role.AREA,
+        Role.SUBMITTER,
+      ]);
+    });
+
+    it('shouldParseBlockWizardSearchValuesAndOmitUnsupportedState', () => {
+      const blockRoute = routePaths.ROUTES.find(
+        (route) => route.path === '/reporting-units/$ruId/blocks/create',
+      );
+
+      expect(blockRoute?.validateSearch?.({ blockId: '42', blockState: 'DRAFT' })).toEqual({
+        blockId: 42,
+        blockState: 'DRAFT',
+      });
+      expect(blockRoute?.validateSearch?.({ blockId: 42, blockState: 4 })).toEqual({ blockId: 42 });
+    });
+
+    it('shouldPreserveAnInvalidBlockIdAsNaNForThePageErrorGuard', () => {
+      const blockRoute = routePaths.ROUTES.find(
+        (route) => route.path === '/reporting-units/$ruId/blocks/create',
+      );
+
+      expect(blockRoute?.validateSearch?.({ blockId: 'not-a-number' })).toEqual({
+        blockId: Number.NaN,
+      });
+    });
+
     it('shouldDefineClientsAndSearchRoutes', () => {
       expect(routePaths.ROUTES.some((r) => r.path === '/clients')).toBe(true);
       expect(routePaths.ROUTES.some((r) => r.path === '/search')).toBe(true);
@@ -516,45 +555,35 @@ describe('routePaths', () => {
       const route = routePaths.ROUTES.find((r) => r.path === '/clients')!;
       const Comp = route.component;
       render(<Comp />);
-      await waitFor(() => {
-        expect(document.querySelector('[data-testid="my-client-list"]')).toBeTruthy();
-      });
+      expect(await screen.findByTestId('my-client-list')).toBeTruthy();
     });
 
     it('shouldRenderSearchRouteComponent_afterLazyLoad', async () => {
       const route = routePaths.ROUTES.find((r) => r.path === '/search')!;
       const Comp = route.component;
       render(<Comp />);
-      await waitFor(() => {
-        expect(document.querySelector('[data-testid="waste-search"]')).toBeTruthy();
-      });
+      expect(await screen.findByTestId('waste-search')).toBeTruthy();
     });
 
     it('shouldRenderConfigurationRouteComponent_afterLazyLoad', async () => {
       const route = routePaths.ROUTES.find((r) => r.path === '/configuration')!;
       const Comp = route.component;
       render(<Comp />);
-      await waitFor(() => {
-        expect(document.querySelector('[data-testid="configuration-page"]')).toBeTruthy();
-      });
+      expect(await screen.findByTestId('configuration-page')).toBeTruthy();
     });
 
     it('shouldRenderFormulaConfigurationList_afterLazyLoad', async () => {
       const route = routePaths.ROUTES.find((r) => r.path === '/configuration/formulas')!;
       const Comp = route.component;
       render(<Comp />);
-      await waitFor(() => {
-        expect(document.querySelector('[data-testid="formula-configuration-list"]')).toBeTruthy();
-      });
+      expect(await screen.findByTestId('formula-configuration-list')).toBeTruthy();
     });
 
     it('shouldRenderReportingUnitDetails_afterLazyLoad', async () => {
       const route = routePaths.ROUTES.find((r) => r.path === '/reporting-units/$ruId')!;
       const Comp = route.component;
       render(<Comp />);
-      await waitFor(() => {
-        expect(document.querySelector('[data-testid="reporting-unit-details"]')).toBeTruthy();
-      });
+      expect(await screen.findByTestId('reporting-unit-details')).toBeTruthy();
     });
   });
 
