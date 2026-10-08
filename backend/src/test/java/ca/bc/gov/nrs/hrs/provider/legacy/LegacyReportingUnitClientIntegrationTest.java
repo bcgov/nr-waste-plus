@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.provider.legacy;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
@@ -213,6 +214,58 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
             () -> legacyReportingUnitClient.getReportingUnitBlocks(99999L));
 
     assertEquals(404, ex.getStatusCode().value());
+  }
+
+  @Test
+  @DisplayName("shouldMapLegacyBlockRows_whenBlockListEndpointReturnsContractPayload")
+  void shouldMapLegacyBlockRows_whenBlockListEndpointReturnsContractPayload() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/reporting-units/12345/blocks"))
+            .willReturn(
+                okJson(
+                    """
+                    [{
+                      "id": 75,
+                      "licenseNumber": "FILE-75",
+                      "cuttingPermit": "CP-75",
+                      "cutBlockId": "CUT-75",
+                      "timberMark": "TM-75",
+                      "totalWasteAreaHa": 12.5,
+                      "totalWasteVolumeM3": 38.25,
+                      "submitter": "A. Submitter",
+                      "status": {"code": "APP", "description": "Approved"},
+                      "lastUpdated": "2025-04-03T12:30:00"
+                    }]
+                    """)));
+
+    var result = legacyReportingUnitClient.getReportingUnitBlocks(12345L);
+
+    assertEquals(1, result.size());
+    assertEquals(75L, result.getFirst().id());
+    assertEquals("FILE-75", result.getFirst().licenseNumber());
+    assertEquals("CP-75", result.getFirst().cuttingPermit());
+    assertEquals("CUT-75", result.getFirst().cutBlockId());
+    assertEquals("TM-75", result.getFirst().timberMark());
+    assertEquals(0, new java.math.BigDecimal("12.5").compareTo(result.getFirst().totalWasteAreaHa()));
+    assertEquals(
+        0, new java.math.BigDecimal("38.25").compareTo(result.getFirst().totalWasteVolumeM3()));
+    assertEquals("A. Submitter", result.getFirst().submitter());
+    assertEquals("APP", result.getFirst().status().code());
+    assertEquals("Approved", result.getFirst().status().description());
+    assertEquals("2025-04-03T12:30", result.getFirst().lastUpdated().toString());
+    clientApiStub.verify(1, getRequestedFor(urlPathEqualTo("/api/reporting-units/12345/blocks")));
+  }
+
+  @Test
+  @DisplayName("shouldReturnEmptyBlockList_whenLegacyBlockListReturnsServerError")
+  void shouldReturnEmptyBlockList_whenLegacyBlockListReturnsServerError() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/reporting-units/12345/blocks")).willReturn(serviceUnavailable()));
+
+    var result = legacyReportingUnitClient.getReportingUnitBlocks(12345L);
+
+    assertEquals(List.of(), result);
+    clientApiStub.verify(2, getRequestedFor(urlPathEqualTo("/api/reporting-units/12345/blocks")));
   }
 
   private static Stream<Arguments> expandedDetailsArguments() {
