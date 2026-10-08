@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -243,6 +243,25 @@ describe('ReportingUnitBlocksList', () => {
     expect(screen.getByText('Items per page:')).toBeDefined();
     // Items-per-page and page selectors.
     expect(screen.getAllByRole('combobox').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('updates local page state and clears row-action requests when navigating pages', async () => {
+    const multiPageContent = {
+      ...DUMMY_BLOCKS_CONTENT,
+      page: { ...DUMMY_BLOCKS_CONTENT.page, totalElements: 20, totalPages: 2 },
+    };
+    await renderBlocksList(<ReportingUnitBlocksList ruId={468} content={multiPageContent} />);
+
+    // Carbon Pagination's controlled state updates are not reliably driven by userEvent in jsdom.
+    // eslint-disable-next-line testing-library/prefer-user-event
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }));
+
+    expect(screen.getByRole('button', { name: 'Previous page' })).toBeTruthy();
+    // eslint-disable-next-line testing-library/prefer-user-event
+    fireEvent.click(screen.getByRole('button', { name: 'Previous page' }));
+    expect(
+      (screen.getByRole('button', { name: 'Previous page' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
   });
 
   it('navigates to the selected block details page', async () => {
