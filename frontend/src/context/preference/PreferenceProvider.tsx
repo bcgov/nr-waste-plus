@@ -3,7 +3,7 @@ import isEqual from 'lodash/isEqual';
 import mergeWith from 'lodash/mergeWith';
 import { type FC, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { queryKeys } from '@/config/react-query/queryKeys';
+import { queryKeys } from '@/api/queryKeys';
 import { AuthContext } from '@/context/auth/AuthContext';
 
 import { PreferenceContext, type PreferenceProviderProps } from './PreferenceContext';

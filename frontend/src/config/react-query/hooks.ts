@@ -16,7 +16,7 @@ import {
   type DistrictVolumeQueryParams,
   type ReportingUnitsQueryParams,
   type SpeciesCompositionQueryParams,
-} from './queryKeys';
+} from '@/api/queryKeys';
 
 import type {
   DistrictVolumeCreate,

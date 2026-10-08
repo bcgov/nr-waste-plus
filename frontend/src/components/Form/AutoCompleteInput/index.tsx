@@ -3,7 +3,7 @@ import { Loading } from '@carbon/react';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import { queryKeys } from '@/config/react-query/queryKeys';
+import { queryKeys } from '@/api/queryKeys';
 import useDebounce from '@/hooks/useDebounce';
 
 type AutoCompleteProps<T> = {

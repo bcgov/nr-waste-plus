@@ -26,7 +26,7 @@ import {
   useSpeciesCompositionCreateMutation,
   useSpeciesCompositionDeleteMutation,
 } from './hooks';
-import { queryKeys } from './queryKeys';
+import { queryKeys } from '@/api/queryKeys';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 

@@ -2,7 +2,7 @@ import { notFound } from '@tanstack/react-router';
 
 import { ApiError } from '@/config/api/types';
 import { queryClient } from '@/config/react-query/config';
-import { queryKeys } from '@/config/react-query/queryKeys';
+import { queryKeys } from '@/api/queryKeys';
 import { featureFlags } from '@/env';
 import service from '@/services/APIs';
 
