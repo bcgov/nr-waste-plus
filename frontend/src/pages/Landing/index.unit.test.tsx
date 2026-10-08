@@ -2,10 +2,10 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, afterEach, beforeEach, type Mock } from 'vitest';
 
-import LandingPage from './index';
-
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
+
+import LandingPage from './index';
 
 const renderWithProps = () => renderWithAppAsync(<LandingPage />);
 

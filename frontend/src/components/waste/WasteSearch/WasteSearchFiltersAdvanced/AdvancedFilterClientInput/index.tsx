@@ -1,12 +1,12 @@
 import { type FilterableMultiSelectProps } from '@carbon/react';
 import { type FC } from 'react';
 
+import { lookupForestClients } from '@/api/forestClients';
 import { forestClientAutocompleteResult2CodeDescription } from '@/api/utils';
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import AutoCompleteInput from '@/components/Form/AutoCompleteInput';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import { useAuth } from '@/context/auth/useAuth';
-import APIs from '@/services/APIs';
 
 import type { CodeDescriptionDto } from '@/api/types';
 
@@ -68,9 +68,7 @@ const AdvancedFilterClientInput: FC<AdvancedFilterClientInputProps> = ({
           helperText="Search by client name, number or acronym"
           initialSelectedItem={selectedClients?.[0]}
           onAutoCompleteChange={async (value) =>
-            (await APIs.forestclient.searchForestClients(value, 0, 10)).map(
-              forestClientAutocompleteResult2CodeDescription,
-            )
+            (await lookupForestClients(value)).map(forestClientAutocompleteResult2CodeDescription)
           }
           itemToString={(item) => item!.description}
           onBlur={onBlur ? (e: React.FocusEvent) => onBlur(e.nativeEvent) : undefined}

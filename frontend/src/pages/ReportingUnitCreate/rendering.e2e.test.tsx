@@ -1,8 +1,8 @@
 import { expect } from '@playwright/test';
 
-import { setupCreateRuMocks } from './e2e.setup';
-
 import { test } from '@/config/tests/coverage.setup';
+
+import { setupCreateRuMocks } from './e2e.setup';
 
 test.describe('Create Reporting Unit - Rendering', () => {
   test.beforeEach(async ({ page }, testInfo) => {

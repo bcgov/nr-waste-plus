@@ -2,11 +2,11 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { eventIconDescription } from '@/hooks/useNotificationEvents/eventHandler';
+
 import PageNotification from './index';
 
 import type { GlobalEvent } from '@/hooks/useNotificationEvents/types';
-
-import { eventIconDescription } from '@/hooks/useNotificationEvents/eventHandler';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 const mockClearNotification = vi.fn();

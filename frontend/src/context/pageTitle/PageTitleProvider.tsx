@@ -1,8 +1,8 @@
 import { useState, useEffect, type ReactNode, useCallback, useMemo } from 'react';
 
-import { PageTitleContext } from './PageTitleContext';
-
 import { env } from '@/env';
+
+import { PageTitleContext } from './PageTitleContext';
 
 /**
  * Maintains the current document title and exposes hierarchical title updates.

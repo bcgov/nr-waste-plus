@@ -1,11 +1,11 @@
 import { AxiosHeaders } from 'axios';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
+import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
+
 import { failureNotificationMiddleware } from './failureNotificationMiddleware';
 
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
-
-import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 
 vi.mock('@/hooks/useNotificationEvents/eventHandler', () => ({
   sendEvent: vi.fn(),

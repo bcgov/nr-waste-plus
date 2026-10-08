@@ -1,6 +1,6 @@
-import type { GlobalEvent } from './types';
-
 import { useNotification } from '@/context/notification/useNotification';
+
+import type { GlobalEvent } from './types';
 
 /**
  * React hook for publishing and subscribing to application notification events.

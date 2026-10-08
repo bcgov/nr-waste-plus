@@ -38,6 +38,41 @@ vi.mock('@/services/APIs', () => ({
   },
 }));
 
+// Mock the migrated API-layer resource modules globally so hook modules
+// (api/codes.ts, api/forestClients.ts, api/search.ts) never reach the real
+// pipeline in jsdom. Mirrors the '@/services/APIs' defaults above; tests that
+// need specific data re-mock the resource module locally.
+vi.mock('@/api/resources/codes-resource', () => ({
+  CodesResource: class {
+    getSamplingOptions = vi.fn().mockResolvedValue([]);
+    getDistricts = vi.fn().mockResolvedValue([]);
+    getAssessAreaStatuses = vi.fn().mockResolvedValue([]);
+  },
+}));
+
+vi.mock('@/api/resources/forest-client-resource', () => ({
+  ForestClientResource: class {
+    getForestClient = vi.fn().mockResolvedValue({});
+    searchForestClients = vi.fn().mockResolvedValue([]);
+    searchByClientNumbers = vi.fn().mockResolvedValue([]);
+    searchMyForestClients = vi.fn().mockResolvedValue({
+      content: [],
+      page: { number: 0, size: 10, totalElements: 0, totalPages: 0 },
+    });
+  },
+}));
+
+vi.mock('@/api/resources/search-resource', () => ({
+  SearchResource: class {
+    searchReportingUnit = vi.fn().mockResolvedValue({
+      content: [],
+      page: { number: 0, size: 10, totalElements: 0, totalPages: 0 },
+    });
+    getReportingUnitSearchExpand = vi.fn().mockResolvedValue({});
+    searchReportingUnitUsers = vi.fn().mockResolvedValue([]);
+  },
+}));
+
 // Mock global fetch to prevent real HTTP requests in jsdom tests
 // Uses vi.stubGlobal for automatic cleanup via restoreMocks: true in vite.config.ts
 vi.stubGlobal(

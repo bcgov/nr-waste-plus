@@ -1,7 +1,7 @@
 import { type FC } from 'react';
 
+import { useForestClientsByNumbersQuery } from '@/api/forestClients';
 import HeaderDistrictDisplay from '@/components/Layout/HeaderDistrictDisplay';
-import { useForestClientsByNumbersQuery } from '@/config/react-query/hooks';
 import { useAuth } from '@/context/auth/useAuth';
 import { usePreference } from '@/context/preference/usePreference';
 

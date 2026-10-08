@@ -4,6 +4,7 @@ import { useForm } from '@tanstack/react-form';
 import { useRouter } from '@tanstack/react-router';
 import { type ChangeEvent, type FC } from 'react';
 
+import { useMyForestClientsQuery } from '@/api/forestClients';
 import {
   type CodeDescriptionDto,
   type ReportingUnitCreateDto,
@@ -12,10 +13,7 @@ import {
 import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import AdvancedFilterClientInput from '@/components/waste/WasteSearch/WasteSearchFiltersAdvanced/AdvancedFilterClientInput';
-import {
-  useMyForestClientsQuery,
-  useReportingUnitCreateMutation,
-} from '@/config/react-query/hooks';
+import { useReportingUnitCreateMutation } from '@/config/react-query/hooks';
 import { useAuth } from '@/context/auth/useAuth';
 import { runValidators } from '@/utils/runValidators';
 import { required } from '@/utils/validators';

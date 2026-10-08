@@ -1,7 +1,7 @@
-import type { MathNode } from 'mathjs';
-
 import { math, isMathBuiltin } from './math.config';
+
 import type { PositionedToken, TokenType } from './types';
+import type { MathNode } from 'mathjs';
 
 // ─── Private Helpers ──────────────────────────────────────────────────────────
 

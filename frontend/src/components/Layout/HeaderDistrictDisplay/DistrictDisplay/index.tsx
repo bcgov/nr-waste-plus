@@ -1,7 +1,7 @@
 import { type FC } from 'react';
 
+import { useDistrictOptionsQuery } from '@/api/codes';
 import HeaderDistrictDisplay from '@/components/Layout/HeaderDistrictDisplay';
-import { useDistrictOptionsQuery } from '@/config/react-query/hooks';
 import { usePreference } from '@/context/preference/usePreference';
 
 type DistrictDisplayProps = {

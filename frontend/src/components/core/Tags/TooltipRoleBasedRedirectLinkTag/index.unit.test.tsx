@@ -1,10 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
-import TooltipRoleBasedRedirectLinkTag from './index.tsx';
-
 import { Role } from '@/context/auth/types.ts';
 import * as useAuthModule from '@/context/auth/useAuth.ts';
+
+import TooltipRoleBasedRedirectLinkTag from './index.tsx';
 
 vi.mock('@/context/auth/useAuth', () => ({
   useAuth: vi.fn(),

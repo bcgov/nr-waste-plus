@@ -2,12 +2,12 @@ import { Loading } from '@carbon/react';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { useLayoutEffect, type ComponentType } from 'react';
 
-import type { FamRole, FamLoginUser } from '@/context/auth/types';
-
 import { useAuth } from '@/context/auth/useAuth';
 import { getUserAccessStatus, UNAUTHORIZED_PATH } from '@/context/auth/userAccessValidation';
 import { navigateInTree, type InTreePath } from '@/routes/inTreePaths';
 import { persistRedirectUrl } from '@/routes/redirectStorage';
+
+import type { FamRole, FamLoginUser } from '@/context/auth/types';
 
 /**
  * Decide where to redirect a user based on auth state and optional role requirements.

@@ -1,12 +1,12 @@
 import { Column } from '@carbon/react';
 import { useEffect, useState, useMemo, type FC, type ReactNode } from 'react';
 
+import { useSearchReportingUnitsQuery } from '@/api/search';
 import { reportingUnitSearchParametersView2Plain } from '@/api/search.utils';
 import { removeEmpty } from '@/api/utils';
 import TableResource from '@/components/Form/TableResource';
 import WasteSearchFilters from '@/components/waste/WasteSearch/WasteSearchFilters';
 import WasteSearchTableExpandContent from '@/components/waste/WasteSearch/WasteSearchTableExpandContent';
-import { useSearchReportingUnitsQuery } from '@/config/react-query/hooks';
 import { featureFlags } from '@/env';
 import useNotificationEvents from '@/hooks/useNotificationEvents';
 import { useListTablePagination } from '@/hooks/useTableRow';

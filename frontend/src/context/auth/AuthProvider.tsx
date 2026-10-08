@@ -2,13 +2,13 @@ import { fetchAuthSession, signInWithRedirect, signOut } from 'aws-amplify/auth'
 import isEqual from 'lodash/isEqual';
 import { useEffect, useMemo, useState, useCallback, type ReactNode } from 'react';
 
-import { AuthContext, type AuthContextType } from './AuthContext';
-import { parseToken, getUserAccessTokenFromCookie, getUserIdTokenFromCookie } from './authUtils';
-import { type FamLoginUser, type IdpProviderType, type JWT } from './types';
-
 import { signOutUrl } from '@/config/fam/config';
 import { env } from '@/env';
 import { navigateTo } from '@/utils/navigation';
+
+import { AuthContext, type AuthContextType } from './AuthContext';
+import { parseToken, getUserAccessTokenFromCookie, getUserIdTokenFromCookie } from './authUtils';
+import { type FamLoginUser, type IdpProviderType, type JWT } from './types';
 
 /**
  * Preserves the existing roles array reference when the next auth user has the

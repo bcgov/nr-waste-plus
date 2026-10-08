@@ -4,11 +4,9 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useMyForestClientsQuery } from '@/api/forestClients';
 import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
-import {
-  useMyForestClientsQuery,
-  useReportingUnitCreateMutation,
-} from '@/config/react-query/hooks';
+import { useReportingUnitCreateMutation } from '@/config/react-query/hooks';
 import { createTestRouter } from '@/config/tests/routerTestHelper';
 import { useAuth } from '@/context/auth/useAuth';
 
@@ -31,7 +29,13 @@ vi.mock(
 
 vi.mock('@/config/react-query/hooks', async () => ({
   useReportingUnitCreateMutation: vi.fn(),
+}));
+
+vi.mock('@/api/forestClients', async () => ({
   useMyForestClientsQuery: vi.fn(),
+  useForestClientsByNumbersQuery: vi.fn(),
+  useClientLookupQuery: vi.fn(),
+  lookupForestClients: vi.fn(),
 }));
 
 type MockClientInputProps = {

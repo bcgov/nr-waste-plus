@@ -2,11 +2,11 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
-import HeaderPanelProfile from './index';
-
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { Role, type FamLoginUser } from '@/context/auth/types';
 import APIs from '@/services/APIs';
+
+import HeaderPanelProfile from './index';
 
 vi.mock('@/components/Layout/AvatarImage', () => ({
   __esModule: true,

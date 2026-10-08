@@ -1,13 +1,13 @@
 import { screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import NoRolePage from './index';
-
-import type { FamLoginUser } from '@/context/auth/types';
-
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { Role } from '@/context/auth/types';
 import APIs from '@/services/APIs';
+
+import NoRolePage from './index';
+
+import type { FamLoginUser } from '@/context/auth/types';
 
 let mockIsLoggedIn = false;
 let mockUser: FamLoginUser | null = null;

@@ -1,6 +1,6 @@
-import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import { ApiError } from '@/config/api/types.ts';
@@ -21,8 +21,7 @@ const mocks = vi.hoisted(() => ({
   },
   variablesParams: null as { date: string; area: string; districtCode: string } | null,
   formulaSectionOnChange: null as
-    | ((key: string, expression: string, validationErrors?: unknown[]) => void)
-    | null,
+    ((key: string, expression: string, validationErrors?: unknown[]) => void) | null,
   // Last-rendered `formulas` prop captured from the FormulaSection mock — lets
   // tests assert what the form store actually pushed down to the sections.
   formulaSectionFormulas: null as { formulaKey: string; expression: string }[] | null,

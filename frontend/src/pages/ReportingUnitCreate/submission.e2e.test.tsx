@@ -1,9 +1,9 @@
 import { expect } from '@playwright/test';
 
+import { test } from '@/config/tests/coverage.setup';
+
 import { mockCreateRuSuccess, setupCreateRuMocks } from './e2e.setup';
 import { blurActiveElement, selectClient, selectComboBoxOption } from './e2e.utils';
-
-import { test } from '@/config/tests/coverage.setup';
 
 // ---------------------------------------------------------------------------
 // Tests

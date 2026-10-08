@@ -4,13 +4,13 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, type Mock, beforeEach } from 'vitest';
 
-import { ThemeProvider } from './ThemeProvider';
-import { useTheme } from './useTheme';
-
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import { CARBON_THEMES } from '@/context/preference/types';
 import APIs from '@/services/APIs';
+
+import { ThemeProvider } from './ThemeProvider';
+import { useTheme } from './useTheme';
 
 vi.mock('@/services/APIs', () => {
   return {

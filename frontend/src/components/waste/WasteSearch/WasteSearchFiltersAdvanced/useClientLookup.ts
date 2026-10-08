@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import { useClientLookupQuery } from '@/config/react-query/hooks';
+import { useClientLookupQuery } from '@/api/forestClients';
 import { useAuth } from '@/context/auth/useAuth';
 
 import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/api/types';

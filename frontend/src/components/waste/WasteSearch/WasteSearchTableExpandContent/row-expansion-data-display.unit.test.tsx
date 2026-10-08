@@ -3,21 +3,26 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
-import APIs from '@/services/APIs';
 
 import WasteSearchTableExpandContent from './index';
 
 import type { ReportingUnitSearchExpandedDto } from '@/api/search.types';
 
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      search: {
-        getReportingUnitSearchExpand: vi.fn(),
-      },
-    },
-  };
-});
+const { mockSearch } = vi.hoisted(() => ({
+  mockSearch: {
+    searchReportingUnit: vi.fn(),
+    getReportingUnitSearchExpand: vi.fn(),
+    searchReportingUnitUsers: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/search-resource', () => ({
+  SearchResource: class {
+    searchReportingUnit = mockSearch.searchReportingUnit;
+    getReportingUnitSearchExpand = mockSearch.getReportingUnitSearchExpand;
+    searchReportingUnitUsers = mockSearch.searchReportingUnitUsers;
+  },
+}));
 
 const mockExpandedData: ReportingUnitSearchExpandedDto = {
   id: 4069,
@@ -52,7 +57,7 @@ const renderWithProps = (rowId: string) => {
 describe('WasteSearchTableExpandContent - Row Expansion Data Display', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(mockExpandedData);
+    (mockSearch.getReportingUnitSearchExpand as Mock).mockResolvedValue(mockExpandedData);
   });
 
   describe('row expansion data display', () => {
@@ -75,7 +80,7 @@ describe('WasteSearchTableExpandContent - Row Expansion Data Display', () => {
         ...mockExpandedData,
         netArea: 2500.75,
       };
-      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithDecimal);
+      (mockSearch.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithDecimal);
 
       const rowId = 'RU-4069-Block-411B-224813681';
       renderWithProps(rowId);
@@ -90,7 +95,7 @@ describe('WasteSearchTableExpandContent - Row Expansion Data Display', () => {
         ...mockExpandedData,
         totalBlocks: 0,
       };
-      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithZeroBlocks);
+      (mockSearch.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithZeroBlocks);
 
       const rowId = 'RU-4069-Block-411B-224813681';
       renderWithProps(rowId);
@@ -161,13 +166,13 @@ describe('WasteSearchTableExpandContent - Row Expansion Data Display', () => {
         ...mockExpandedData,
         timberMark: null,
       };
-      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNullTimberMark);
+      (mockSearch.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNullTimberMark);
 
       const rowId = 'RU-4069-Block-411B-224813681';
       renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
+        expect(mockSearch.getReportingUnitSearchExpand).toHaveBeenCalled();
       });
     });
   });

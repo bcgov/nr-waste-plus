@@ -1,4 +1,4 @@
-import { useWasteSearchFilterOptionsQueries } from '@/config/react-query/hooks';
+import { useWasteSearchFilterOptionsQueries } from '@/api/codes';
 
 import type { CodeDescriptionDto } from '@/api/types';
 

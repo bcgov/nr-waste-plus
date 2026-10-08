@@ -1,10 +1,10 @@
 import { Column } from '@carbon/react';
 
-import type { FC } from 'react';
-
 import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
 import DistrictVolumeTableUpload from '@/components/waste/DistrictAverage/DistrictVolumeUpload';
+
+import type { FC } from 'react';
 
 import './index.scss';
 

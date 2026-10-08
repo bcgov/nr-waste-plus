@@ -1,9 +1,9 @@
 import { DefinitionTooltip } from '@carbon/react';
 import { type FC, useState } from 'react';
 
-import type { Role } from '@/context/auth/types.ts';
-
 import RoleBasedRedirectLinkTag from '@/components/core/Tags/RoleBasedRedirectLinkTag';
+
+import type { Role } from '@/context/auth/types.ts';
 
 type TooltipRoleBasedRedirectLinkTagProps = {
   tooltip: string;

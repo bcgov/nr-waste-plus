@@ -2,9 +2,9 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
-import LayoutHeaderGlobalBar from './LayoutHeaderGlobalBar';
-
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
+
+import LayoutHeaderGlobalBar from './LayoutHeaderGlobalBar';
 
 vi.mock('@/components/Layout/ThemeToggle', () => ({
   __esModule: true,

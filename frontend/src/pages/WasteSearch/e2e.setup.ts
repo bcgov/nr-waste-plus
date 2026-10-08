@@ -1,7 +1,7 @@
-import type { Page } from '@playwright/test';
-
 import { setupAppShellMocks } from '@/config/tests/app.setup';
 import { mockApi, mockApiResponses, mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
+
+import type { Page } from '@playwright/test';
 
 /**
  * Sets up the common API mocks shared by the Waste Search e2e tests.

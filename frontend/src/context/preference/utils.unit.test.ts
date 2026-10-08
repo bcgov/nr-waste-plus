@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, type Mock, beforeEach } from 'vitest';
 
-import { loadUserPreference, saveUserPreference, initialValue } from './utils';
-
 import APIs from '@/services/APIs';
+
+import { loadUserPreference, saveUserPreference, initialValue } from './utils';
 
 vi.mock('@/services/APIs', () => {
   return {

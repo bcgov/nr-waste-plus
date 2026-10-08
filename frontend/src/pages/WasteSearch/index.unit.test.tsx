@@ -1,11 +1,11 @@
 import { act, screen } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import WasteSearchPage from './index';
-
 import { renderWithApp } from '@/config/tests/renderWithApp';
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 import APIs from '@/services/APIs';
+
+import WasteSearchPage from './index';
 
 vi.mock('@/services/APIs', () => {
   return {

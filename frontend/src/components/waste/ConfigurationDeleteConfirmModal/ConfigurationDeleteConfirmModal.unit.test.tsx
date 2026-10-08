@@ -2,9 +2,9 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
-import ConfigurationDeleteConfirmModal from './index';
-
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
+
+import ConfigurationDeleteConfirmModal from './index';
 
 const defaultProps = {
   open: true,

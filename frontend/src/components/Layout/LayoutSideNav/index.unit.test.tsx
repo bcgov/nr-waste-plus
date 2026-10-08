@@ -1,13 +1,13 @@
 import { screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { LayoutSideNav } from './index';
-
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { Role } from '@/context/auth/types';
 import * as useAuthModule from '@/context/auth/useAuth';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import * as routePathsModule from '@/routes/routePaths';
+
+import { LayoutSideNav } from './index';
 
 vi.mock(import('@/env'), async (importOriginal) => {
   const actual = await importOriginal();

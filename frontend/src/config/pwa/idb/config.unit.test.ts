@@ -3,9 +3,9 @@
 import { DateTime, Settings } from 'luxon';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import * as idbConfig from './config';
-
 import { NoOfflineItemError, CacheVersionMismatchError } from '@/config/pwa/types';
+
+import * as idbConfig from './config';
 
 const mockTransaction = (
   stores: Record<string, Record<string, any>>,

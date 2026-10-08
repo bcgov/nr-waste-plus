@@ -2,9 +2,9 @@ import { CheckmarkFilled, Help } from '@carbon/icons-react';
 import { ButtonSkeleton } from '@carbon/react';
 import { type FC } from 'react';
 
-import type { DistrictType } from '@/components/core/DistrictSelection/types';
-
 import { ClientTypeIconMap } from '@/components/core/DistrictSelection/constants';
+
+import type { DistrictType } from '@/components/core/DistrictSelection/types';
 
 type DistrictItemProps = {
   client: DistrictType;

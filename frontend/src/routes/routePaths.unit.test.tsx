@@ -1,9 +1,9 @@
 import { render, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
-import * as routePaths from './routePaths';
-
 import { Role } from '@/context/auth/types';
+
+import * as routePaths from './routePaths';
 
 // ── Mocks for env ──────────────────────────────────────────────────────────────
 vi.mock('@/env', async () => {

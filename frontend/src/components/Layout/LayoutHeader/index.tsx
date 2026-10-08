@@ -2,13 +2,13 @@ import { Header, HeaderMenuButton, HeaderName, SkipToContent } from '@carbon/rea
 import { Link } from '@tanstack/react-router';
 import { type FC } from 'react';
 
-import LayoutHeaderGlobalBar from './LayoutHeaderGlobalBar';
-import { getFormattedEnvName } from './utils';
-
 import { LayoutHeaderPanel } from '@/components/Layout/LayoutHeaderPanel';
 import { LayoutSideNav } from '@/components/Layout/LayoutSideNav';
 import { useLayout } from '@/context/layout/useLayout';
 import { env } from '@/env';
+
+import LayoutHeaderGlobalBar from './LayoutHeaderGlobalBar';
+import { getFormattedEnvName } from './utils';
 
 import './index.scss';
 

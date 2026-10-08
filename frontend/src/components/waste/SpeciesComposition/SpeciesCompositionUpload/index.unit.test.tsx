@@ -3,11 +3,11 @@ import { act, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import SpeciesCompositionUpload from './index.tsx';
-
 import * as hooks from '@/config/react-query/hooks.ts';
 import { renderWithApp, renderWithAppAsync } from '@/config/tests/renderWithApp.tsx';
 import * as inTreePaths from '@/routes/inTreePaths.ts';
+
+import SpeciesCompositionUpload from './index.tsx';
 
 // ============================================================================
 // Mocks

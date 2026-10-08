@@ -14,6 +14,9 @@
 import Editor from '@monaco-editor/react';
 import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 
+import ReadonlyInput from '@/components/Form/ReadonlyInput';
+import { useTheme } from '@/context/theme/useTheme';
+
 import DependencyGraph from './DependencyGraph';
 import { useFormulaEngine } from './useFormulaEngine';
 import { useMonacoFormula, FORMULA_LANGUAGE_ID } from './useMonacoFormula';
@@ -23,8 +26,6 @@ import type { FormulaError } from './types';
 import type { OnMount } from '@monaco-editor/react';
 
 import './index.scss';
-import ReadonlyInput from '@/components/Form/ReadonlyInput';
-import { useTheme } from '@/context/theme/useTheme';
 
 /** BC Sans is the project's primary typeface — update here if the design token changes. */
 const EDITOR_FONT_FAMILY = '"BC Sans", monospace';

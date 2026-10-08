@@ -6,14 +6,29 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderCell } from '@/components/Form/TableResource/types';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as eventHandler from '@/hooks/useNotificationEvents/eventHandler';
-import APIs from '@/services/APIs';
 
 import MyClientListing from './index';
 
 import type { MyForestClientDto } from '@/api/types';
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 
-vi.mock('@/services/APIs');
+const { mockForestClient } = vi.hoisted(() => ({
+  mockForestClient: {
+    getForestClient: vi.fn(),
+    searchForestClients: vi.fn(),
+    searchByClientNumbers: vi.fn(),
+    searchMyForestClients: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/forest-client-resource', () => ({
+  ForestClientResource: class {
+    getForestClient = mockForestClient.getForestClient;
+    searchForestClients = mockForestClient.searchForestClients;
+    searchByClientNumbers = mockForestClient.searchByClientNumbers;
+    searchMyForestClients = mockForestClient.searchMyForestClients;
+  },
+}));
 vi.mock('@/hooks/useNotificationEvents', () => ({
   default: vi.fn(() => ({
     sendEvent: vi.fn(),
@@ -124,7 +139,7 @@ const mockLargeDataset: PageableResponse<MyForestClientDto> = {
 const renderWithProps = () => renderWithAppAsync(<MyClientListing />);
 
 describe('MyClientListing', () => {
-  const mockSearchClients = vi.mocked(APIs.forestclient.searchMyForestClients);
+  const mockSearchClients = vi.mocked(mockForestClient.searchMyForestClients);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -144,8 +159,9 @@ describe('MyClientListing', () => {
       await renderWithProps();
 
       await waitFor(() => {
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('', 0, 10, {
-          notificationTarget: 'my-client-list',
+        expect(mockForestClient.searchMyForestClients).toHaveBeenCalledWith('', 0, 10, {
+          signal: expect.any(AbortSignal),
+          meta: { notificationTarget: 'my-client-list' },
         });
       });
     });
@@ -171,8 +187,9 @@ describe('MyClientListing', () => {
       await userEvent.click(nextButton);
 
       await waitFor(() => {
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('', 1, 10, {
-          notificationTarget: 'my-client-list',
+        expect(mockForestClient.searchMyForestClients).toHaveBeenCalledWith('', 1, 10, {
+          signal: expect.any(AbortSignal),
+          meta: { notificationTarget: 'my-client-list' },
         });
       });
     });
@@ -354,7 +371,7 @@ describe('MyClientListing', () => {
 
       // Despite enabled: false, useEffect triggers refetch on mount
       await waitFor(() => {
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalled();
+        expect(mockForestClient.searchMyForestClients).toHaveBeenCalled();
       });
     });
 
@@ -363,7 +380,7 @@ describe('MyClientListing', () => {
       await renderWithProps();
 
       await waitFor(() => {
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledTimes(1);
+        expect(mockForestClient.searchMyForestClients).toHaveBeenCalledTimes(1);
       });
 
       const searchButton = screen.getByTestId('search-button-other');
@@ -371,7 +388,7 @@ describe('MyClientListing', () => {
 
       await waitFor(() => {
         // Each search fetches fresh data due to gcTime: 0
-        expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledTimes(2);
+        expect(mockForestClient.searchMyForestClients).toHaveBeenCalledTimes(2);
       });
     });
   });

@@ -4,12 +4,11 @@ import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { makeTestQueryClient } from '@/config/tests/renderWithApp';
+
 import { useClientLookup } from './useClientLookup';
 
 import type { FamLoginUser } from '@/context/auth/types';
-
-import { makeTestQueryClient } from '@/config/tests/renderWithApp';
-import APIs from '@/services/APIs';
 
 const mockUser = {
   idpProvider: 'IDIR',
@@ -24,15 +23,23 @@ vi.mock('@/context/auth/useAuth', () => ({
   }),
 }));
 
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      forestclient: {
-        searchForestClients: vi.fn(),
-      },
-    },
-  };
-});
+const { mockForestClient } = vi.hoisted(() => ({
+  mockForestClient: {
+    getForestClient: vi.fn(),
+    searchForestClients: vi.fn(),
+    searchByClientNumbers: vi.fn(),
+    searchMyForestClients: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/forest-client-resource', () => ({
+  ForestClientResource: class {
+    getForestClient = mockForestClient.getForestClient;
+    searchForestClients = mockForestClient.searchForestClients;
+    searchByClientNumbers = mockForestClient.searchByClientNumbers;
+    searchMyForestClients = mockForestClient.searchMyForestClients;
+  },
+}));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => {
   const qc = makeTestQueryClient();
@@ -52,7 +59,7 @@ describe('useClientLookup', () => {
       wrapper,
     });
 
-    expect(APIs.forestclient.searchForestClients).not.toHaveBeenCalled();
+    expect(mockForestClient.searchForestClients).not.toHaveBeenCalled();
   });
 
   it('does not trigger lookup when clientNumberEntry is undefined', () => {
@@ -60,7 +67,7 @@ describe('useClientLookup', () => {
 
     renderHook(() => useClientLookup(true, undefined, onChange), { wrapper });
 
-    expect(APIs.forestclient.searchForestClients).not.toHaveBeenCalled();
+    expect(mockForestClient.searchForestClients).not.toHaveBeenCalled();
   });
 
   it('does not trigger lookup when description is already resolved', () => {
@@ -76,7 +83,7 @@ describe('useClientLookup', () => {
       { wrapper },
     );
 
-    expect(APIs.forestclient.searchForestClients).not.toHaveBeenCalled();
+    expect(mockForestClient.searchForestClients).not.toHaveBeenCalled();
   });
 
   it('triggers lookup when code-only entry is detected on IDIR', async () => {
@@ -84,7 +91,7 @@ describe('useClientLookup', () => {
     const innerFn = vi.fn();
     onChange.mockReturnValue(innerFn);
 
-    vi.mocked(APIs.forestclient.searchForestClients).mockResolvedValueOnce([
+    vi.mocked(mockForestClient.searchForestClients).mockResolvedValueOnce([
       { id: '12345', name: 'ACME Corporation', acronym: 'ACME' } as any,
     ]);
 
@@ -93,7 +100,9 @@ describe('useClientLookup', () => {
     });
 
     await waitFor(() => {
-      expect(APIs.forestclient.searchForestClients).toHaveBeenCalledWith('12345', 0, 1);
+      expect(mockForestClient.searchForestClients).toHaveBeenCalledWith('12345', 0, 1, {
+        signal: expect.any(AbortSignal),
+      });
       expect(onChange).toHaveBeenCalledWith('clientNumbers');
       expect(innerFn).toHaveBeenCalledWith([
         { code: '12345', description: '12345 ACME Corporation (ACME)' },
@@ -112,7 +121,7 @@ describe('useClientLookup', () => {
 
     // For IDIR it should trigger the lookup
     await waitFor(() => {
-      expect(APIs.forestclient.searchForestClients).toHaveBeenCalled();
+      expect(mockForestClient.searchForestClients).toHaveBeenCalled();
     });
 
     vi.clearAllMocks();
@@ -127,7 +136,7 @@ describe('useClientLookup', () => {
     const innerFn = vi.fn();
     onChange1.mockReturnValue(innerFn);
 
-    vi.mocked(APIs.forestclient.searchForestClients).mockResolvedValueOnce([
+    vi.mocked(mockForestClient.searchForestClients).mockResolvedValueOnce([
       { id: '12345', name: 'ACME Corporation', acronym: 'ACME' } as any,
     ]);
 

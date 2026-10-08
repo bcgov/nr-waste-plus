@@ -1,9 +1,9 @@
 import { screen } from '@testing-library/react';
 import { describe, it, vi } from 'vitest';
 
-import SpeciesCompositionUploadPage from './index';
-
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
+
+import SpeciesCompositionUploadPage from './index';
 
 vi.mock('@tanstack/react-router', async () => {
   const actual = await vi.importActual('@tanstack/react-router');

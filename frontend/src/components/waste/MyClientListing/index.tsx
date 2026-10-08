@@ -2,9 +2,9 @@ import { Search } from '@carbon/icons-react';
 import { Button, Column, Grid } from '@carbon/react';
 import { useEffect, useState, type FC } from 'react';
 
+import { useMyForestClientsQuery } from '@/api/forestClients';
 import SearchInput from '@/components/Form/SearchInput';
 import TableResource from '@/components/Form/TableResource';
-import { useMyForestClientsQuery } from '@/config/react-query/hooks';
 import useNotificationEvents from '@/hooks/useNotificationEvents';
 
 import { headers } from './constants';

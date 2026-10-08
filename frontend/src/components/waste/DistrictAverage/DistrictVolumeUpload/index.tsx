@@ -11,14 +11,12 @@ import { useNavigate } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
 import { useCallback, useState, type FC, type ReactNode } from 'react';
 
+import { useDistrictOptionsQuery } from '@/api/codes';
 import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 import FileUploadInput from '@/components/Form/FileUploadInput';
 import DistrictVolumeDetailTabs from '@/components/waste/DistrictAverage/DistrictVolumeDetail/DistrictVolumeDetailTabs.tsx';
 import UploadFormActions from '@/components/waste/UploadFormActions';
-import {
-  useDistrictOptionsQuery,
-  useDistrictVolumeTableCreateMutation,
-} from '@/config/react-query/hooks.ts';
+import { useDistrictVolumeTableCreateMutation } from '@/config/react-query/hooks.ts';
 import { DistrictVolumeProcessor } from '@/domain/districtvolumes/processors/districtVolumeProcessor.ts';
 import { coastValidator } from '@/domain/districtvolumes/validators/coastValidator.ts';
 import { interiorValidator } from '@/domain/districtvolumes/validators/interiorValidator.ts';

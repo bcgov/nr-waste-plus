@@ -1,9 +1,9 @@
+import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
+
 import { isProblemDetails } from './problemDetailsMiddleware';
 
 import type { ApiMiddleware, ProblemDetails } from './types';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
-
-import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 
 type FailureNotificationMeta = {
   notificationTarget?: string;

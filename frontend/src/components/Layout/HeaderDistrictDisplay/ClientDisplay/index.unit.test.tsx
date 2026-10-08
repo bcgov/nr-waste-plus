@@ -2,13 +2,13 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
-import ClientDisplay from '.';
-
-import type { UserPreference } from '@/context/preference/types';
-
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
+
+import ClientDisplay from '.';
+
+import type { UserPreference } from '@/context/preference/types';
 
 let mockBreakpoint = 'md';
 let mockedClientValues = [

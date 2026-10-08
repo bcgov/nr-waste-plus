@@ -1,9 +1,9 @@
 import { screen, waitFor } from '@testing-library/react';
 import { describe, it } from 'vitest';
 
-import NotFoundPage from './index';
-
 import { renderWithApp } from '@/config/tests/renderWithApp';
+
+import NotFoundPage from './index';
 
 describe('NotFoundPage', () => {
   it('should render not found message when rendered', async () => {

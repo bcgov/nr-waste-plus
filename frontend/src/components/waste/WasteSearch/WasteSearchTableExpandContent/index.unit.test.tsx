@@ -5,21 +5,26 @@ import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
 import { toKebabCase } from '@/components/Form/ReadonlyInput/utils';
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
-import APIs from '@/services/APIs';
 
 import WasteSearchTableExpandContent from './index';
 
 import type { ReportingUnitSearchExpandedDto } from '@/api/search.types';
 
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      search: {
-        getReportingUnitSearchExpand: vi.fn(),
-      },
-    },
-  };
-});
+const { mockSearch } = vi.hoisted(() => ({
+  mockSearch: {
+    searchReportingUnit: vi.fn(),
+    getReportingUnitSearchExpand: vi.fn(),
+    searchReportingUnitUsers: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/search-resource', () => ({
+  SearchResource: class {
+    searchReportingUnit = mockSearch.searchReportingUnit;
+    getReportingUnitSearchExpand = mockSearch.getReportingUnitSearchExpand;
+    searchReportingUnitUsers = mockSearch.searchReportingUnitUsers;
+  },
+}));
 
 const mockExpandedData: ReportingUnitSearchExpandedDto = {
   id: 4069,
@@ -54,7 +59,7 @@ const renderWithProps = (rowId: string) => {
 describe('WasteSearchTableExpandContent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(mockExpandedData);
+    (mockSearch.getReportingUnitSearchExpand as Mock).mockResolvedValue(mockExpandedData);
   });
 
   describe('data extraction from rowId', () => {
@@ -63,7 +68,9 @@ describe('WasteSearchTableExpandContent', () => {
       renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalledWith(4069, 411);
+        expect(mockSearch.getReportingUnitSearchExpand).toHaveBeenCalledWith(4069, 411, {
+          signal: expect.any(AbortSignal),
+        });
       });
     });
 
@@ -72,7 +79,9 @@ describe('WasteSearchTableExpandContent', () => {
       renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalledWith(5000, 500);
+        expect(mockSearch.getReportingUnitSearchExpand).toHaveBeenCalledWith(5000, 500, {
+          signal: expect.any(AbortSignal),
+        });
       });
     });
 
@@ -81,7 +90,7 @@ describe('WasteSearchTableExpandContent', () => {
       renderWithProps(rowId);
 
       // Assert that no API call was triggered (ruId is null, so skip fetch)
-      expect(APIs.search.getReportingUnitSearchExpand).not.toHaveBeenCalled();
+      expect(mockSearch.getReportingUnitSearchExpand).not.toHaveBeenCalled();
     });
 
     it('does not call API when wasteAssessmentAreaId is null', async () => {
@@ -89,7 +98,7 @@ describe('WasteSearchTableExpandContent', () => {
       renderWithProps(rowId);
 
       // Assert that no API call was triggered (wasteAssessmentAreaId is null, so skip fetch)
-      expect(APIs.search.getReportingUnitSearchExpand).not.toHaveBeenCalled();
+      expect(mockSearch.getReportingUnitSearchExpand).not.toHaveBeenCalled();
     });
   });
 
@@ -180,7 +189,7 @@ describe('WasteSearchTableExpandContent', () => {
       const searchPromise = new Promise((resolve) => {
         resolveSearch = resolve;
       });
-      (APIs.search.getReportingUnitSearchExpand as Mock).mockReturnValue(searchPromise);
+      (mockSearch.getReportingUnitSearchExpand as Mock).mockReturnValue(searchPromise);
 
       const rowId = 'RU-4069-Block-411-224813681';
       const qc = makeTestQueryClient();
@@ -226,13 +235,13 @@ describe('WasteSearchTableExpandContent', () => {
         ...mockExpandedData,
         licenseNo: null,
       };
-      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNulls);
+      (mockSearch.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNulls);
 
       const rowId = 'RU-4069-Block-411B-224813681';
       renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
+        expect(mockSearch.getReportingUnitSearchExpand).toHaveBeenCalled();
       });
     });
 
@@ -241,13 +250,13 @@ describe('WasteSearchTableExpandContent', () => {
         ...mockExpandedData,
         cuttingPermit: null,
       };
-      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNulls);
+      (mockSearch.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNulls);
 
       const rowId = 'RU-4069-Block-411B-224813681';
       renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
+        expect(mockSearch.getReportingUnitSearchExpand).toHaveBeenCalled();
       });
     });
 
@@ -256,13 +265,13 @@ describe('WasteSearchTableExpandContent', () => {
         ...mockExpandedData,
         submitter: null,
       };
-      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNulls);
+      (mockSearch.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNulls);
 
       const rowId = 'RU-4069-Block-411B-224813681';
       renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
+        expect(mockSearch.getReportingUnitSearchExpand).toHaveBeenCalled();
       });
     });
 
@@ -271,13 +280,13 @@ describe('WasteSearchTableExpandContent', () => {
         ...mockExpandedData,
         comments: null,
       };
-      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNulls);
+      (mockSearch.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithNulls);
 
       const rowId = 'RU-4069-Block-411B-224813681';
       renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
+        expect(mockSearch.getReportingUnitSearchExpand).toHaveBeenCalled();
       });
     });
   });
@@ -288,13 +297,13 @@ describe('WasteSearchTableExpandContent', () => {
         ...mockExpandedData,
         exempted: true,
       };
-      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithTrue);
+      (mockSearch.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithTrue);
 
       const rowId = 'RU-4069-Block-411B-224813681';
       renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
+        expect(mockSearch.getReportingUnitSearchExpand).toHaveBeenCalled();
       });
     });
 
@@ -303,13 +312,13 @@ describe('WasteSearchTableExpandContent', () => {
         ...mockExpandedData,
         exempted: false,
       };
-      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithFalse);
+      (mockSearch.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataWithFalse);
 
       const rowId = 'RU-4069-Block-411B-224813681';
       renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
+        expect(mockSearch.getReportingUnitSearchExpand).toHaveBeenCalled();
       });
     });
   });
@@ -361,13 +370,13 @@ describe('WasteSearchTableExpandContent', () => {
         ...mockExpandedData,
         attachment: { code: '', description: 'Empty Attachment' },
       };
-      (APIs.search.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataNoAttachment);
+      (mockSearch.getReportingUnitSearchExpand as Mock).mockResolvedValue(dataNoAttachment);
 
       const rowId = 'RU-4069-Block-411B-224813681';
       renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
+        expect(mockSearch.getReportingUnitSearchExpand).toHaveBeenCalled();
       });
     });
 
@@ -376,7 +385,9 @@ describe('WasteSearchTableExpandContent', () => {
       renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalledWith(4069, 411);
+        expect(mockSearch.getReportingUnitSearchExpand).toHaveBeenCalledWith(4069, 411, {
+          signal: expect.any(AbortSignal),
+        });
       });
     });
   });
@@ -438,11 +449,11 @@ describe('WasteSearchTableExpandContent', () => {
       );
 
       await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalledTimes(1);
+        expect(mockSearch.getReportingUnitSearchExpand).toHaveBeenCalledTimes(1);
       });
 
       // API should not be called again due to cache
-      expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalledTimes(1);
+      expect(mockSearch.getReportingUnitSearchExpand).toHaveBeenCalledTimes(1);
     });
 
     it('includes all parameters in query key', async () => {
@@ -450,7 +461,7 @@ describe('WasteSearchTableExpandContent', () => {
       renderWithProps(rowId);
 
       await waitFor(() => {
-        const callArgs = (APIs.search.getReportingUnitSearchExpand as Mock).mock.calls[0];
+        const callArgs = (mockSearch.getReportingUnitSearchExpand as Mock).mock.calls[0];
         expect(callArgs[0]).toBe(4069);
         expect(callArgs[1]).toBe(411);
       });
@@ -464,7 +475,7 @@ describe('WasteSearchTableExpandContent', () => {
 
       // Block ID extraction only gets numeric part (position 3)
       await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalled();
+        expect(mockSearch.getReportingUnitSearchExpand).toHaveBeenCalled();
       });
     });
 
@@ -473,7 +484,9 @@ describe('WasteSearchTableExpandContent', () => {
       renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalledWith(9999, 999);
+        expect(mockSearch.getReportingUnitSearchExpand).toHaveBeenCalledWith(9999, 999, {
+          signal: expect.any(AbortSignal),
+        });
       });
     });
 
@@ -482,7 +495,9 @@ describe('WasteSearchTableExpandContent', () => {
       renderWithProps(rowId);
 
       await waitFor(() => {
-        expect(APIs.search.getReportingUnitSearchExpand).toHaveBeenCalledWith(50, 50);
+        expect(mockSearch.getReportingUnitSearchExpand).toHaveBeenCalledWith(50, 50, {
+          signal: expect.any(AbortSignal),
+        });
       });
     });
   });

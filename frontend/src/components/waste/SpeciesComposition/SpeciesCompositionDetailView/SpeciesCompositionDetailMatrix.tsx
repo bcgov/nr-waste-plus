@@ -1,6 +1,7 @@
 import { Column } from '@carbon/react';
 import { type FC, useMemo } from 'react';
 
+import { useDistrictOptionsQuery } from '@/api/codes';
 import {
   SPECIES_DESCRIPTIONS,
   SPECIES_LABELS,
@@ -8,7 +9,6 @@ import {
 } from '@/api/speciesComposition.types.ts';
 import TooltipTag from '@/components/core/Tags/TooltipTag';
 import TableResource from '@/components/Form/TableResource';
-import { useDistrictOptionsQuery } from '@/config/react-query/hooks.ts';
 
 import type { NestedKeyOf } from '@/api/pagination.types.ts';
 import type { SpeciesCompositionRow, SpeciesKey } from '@/api/speciesComposition.types.ts';

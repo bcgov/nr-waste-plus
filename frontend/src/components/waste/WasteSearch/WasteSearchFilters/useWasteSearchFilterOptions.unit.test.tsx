@@ -3,19 +3,24 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { type ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
-import { useWasteSearchFilterOptions } from './useWasteSearchFilterOptions';
-
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import * as eventHandler from '@/hooks/useNotificationEvents/eventHandler';
-import APIs from '@/services/APIs';
 
-vi.mock('@/services/APIs', () => ({
-  default: {
-    codes: {
-      getSamplingOptions: vi.fn(),
-      getDistricts: vi.fn(),
-      getAssessAreaStatuses: vi.fn(),
-    },
+import { useWasteSearchFilterOptions } from './useWasteSearchFilterOptions';
+
+const { mockCodes } = vi.hoisted(() => ({
+  mockCodes: {
+    getSamplingOptions: vi.fn(),
+    getDistricts: vi.fn(),
+    getAssessAreaStatuses: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/codes-resource', () => ({
+  CodesResource: class {
+    getSamplingOptions = mockCodes.getSamplingOptions;
+    getDistricts = mockCodes.getDistricts;
+    getAssessAreaStatuses = mockCodes.getAssessAreaStatuses;
   },
 }));
 
@@ -46,15 +51,15 @@ const createWrapper = () => {
 describe('useWasteSearchFilterOptions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (APIs.codes.getSamplingOptions as Mock).mockResolvedValue(samplingData);
-    (APIs.codes.getDistricts as Mock).mockResolvedValue(districtData);
-    (APIs.codes.getAssessAreaStatuses as Mock).mockResolvedValue(statusData);
+    (mockCodes.getSamplingOptions as Mock).mockResolvedValue(samplingData);
+    (mockCodes.getDistricts as Mock).mockResolvedValue(districtData);
+    (mockCodes.getAssessAreaStatuses as Mock).mockResolvedValue(statusData);
   });
 
   it('returns empty arrays before data is loaded', () => {
-    (APIs.codes.getSamplingOptions as Mock).mockReturnValue(new Promise(() => {}));
-    (APIs.codes.getDistricts as Mock).mockReturnValue(new Promise(() => {}));
-    (APIs.codes.getAssessAreaStatuses as Mock).mockReturnValue(new Promise(() => {}));
+    (mockCodes.getSamplingOptions as Mock).mockReturnValue(new Promise(() => {}));
+    (mockCodes.getDistricts as Mock).mockReturnValue(new Promise(() => {}));
+    (mockCodes.getAssessAreaStatuses as Mock).mockReturnValue(new Promise(() => {}));
 
     const { result } = renderHook(() => useWasteSearchFilterOptions(), {
       wrapper: createWrapper(),
@@ -69,7 +74,7 @@ describe('useWasteSearchFilterOptions', () => {
     renderHook(() => useWasteSearchFilterOptions(), { wrapper: createWrapper() });
 
     await waitFor(() => {
-      expect(APIs.codes.getSamplingOptions).toHaveBeenCalledTimes(1);
+      expect(mockCodes.getSamplingOptions).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -77,7 +82,7 @@ describe('useWasteSearchFilterOptions', () => {
     renderHook(() => useWasteSearchFilterOptions(), { wrapper: createWrapper() });
 
     await waitFor(() => {
-      expect(APIs.codes.getDistricts).toHaveBeenCalledTimes(1);
+      expect(mockCodes.getDistricts).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -85,7 +90,7 @@ describe('useWasteSearchFilterOptions', () => {
     renderHook(() => useWasteSearchFilterOptions(), { wrapper: createWrapper() });
 
     await waitFor(() => {
-      expect(APIs.codes.getAssessAreaStatuses).toHaveBeenCalledTimes(1);
+      expect(mockCodes.getAssessAreaStatuses).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -132,9 +137,9 @@ describe('useWasteSearchFilterOptions', () => {
   });
 
   it('returns empty arrays when API returns empty results', async () => {
-    (APIs.codes.getSamplingOptions as Mock).mockResolvedValue([]);
-    (APIs.codes.getDistricts as Mock).mockResolvedValue([]);
-    (APIs.codes.getAssessAreaStatuses as Mock).mockResolvedValue([]);
+    (mockCodes.getSamplingOptions as Mock).mockResolvedValue([]);
+    (mockCodes.getDistricts as Mock).mockResolvedValue([]);
+    (mockCodes.getAssessAreaStatuses as Mock).mockResolvedValue([]);
 
     const { result } = renderHook(() => useWasteSearchFilterOptions(), {
       wrapper: createWrapper(),
@@ -158,7 +163,7 @@ describe('useWasteSearchFilterOptions', () => {
         },
       });
 
-      (APIs.codes.getDistricts as Mock).mockRejectedValue(corsError);
+      (mockCodes.getDistricts as Mock).mockRejectedValue(corsError);
 
       renderHook(() => useWasteSearchFilterOptions(), { wrapper: createWrapper() });
 
@@ -185,7 +190,7 @@ describe('useWasteSearchFilterOptions', () => {
         },
       });
 
-      (APIs.codes.getSamplingOptions as Mock).mockRejectedValue(networkError);
+      (mockCodes.getSamplingOptions as Mock).mockRejectedValue(networkError);
 
       renderHook(() => useWasteSearchFilterOptions(), { wrapper: createWrapper() });
 
@@ -212,7 +217,7 @@ describe('useWasteSearchFilterOptions', () => {
         },
       });
 
-      (APIs.codes.getAssessAreaStatuses as Mock).mockRejectedValue(serverError);
+      (mockCodes.getAssessAreaStatuses as Mock).mockRejectedValue(serverError);
 
       renderHook(() => useWasteSearchFilterOptions(), { wrapper: createWrapper() });
 
@@ -232,7 +237,7 @@ describe('useWasteSearchFilterOptions', () => {
     it('uses error message when problem details are not available', async () => {
       const error = new Error('Generic network error');
 
-      (APIs.codes.getDistricts as Mock).mockRejectedValue(error);
+      (mockCodes.getDistricts as Mock).mockRejectedValue(error);
 
       renderHook(() => useWasteSearchFilterOptions(), { wrapper: createWrapper() });
 
@@ -256,8 +261,8 @@ describe('useWasteSearchFilterOptions', () => {
       const error2 = new Error('Statuses failed');
       Object.assign(error2, { body: { title: 'Error 2', detail: 'Statuses unavailable' } });
 
-      (APIs.codes.getDistricts as Mock).mockRejectedValue(error1);
-      (APIs.codes.getAssessAreaStatuses as Mock).mockRejectedValue(error2);
+      (mockCodes.getDistricts as Mock).mockRejectedValue(error1);
+      (mockCodes.getAssessAreaStatuses as Mock).mockRejectedValue(error2);
 
       renderHook(() => useWasteSearchFilterOptions(), { wrapper: createWrapper() });
 

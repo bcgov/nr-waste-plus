@@ -1,10 +1,10 @@
 import { act, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
-import MyClientListPage from './index';
-
 import { renderWithApp } from '@/config/tests/renderWithApp';
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
+
+import MyClientListPage from './index';
 
 vi.mock('@/services/APIs', () => {
   return {

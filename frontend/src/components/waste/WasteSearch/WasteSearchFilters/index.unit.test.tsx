@@ -2,12 +2,11 @@ import { screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
+
 import WasteSearchFilters from './index';
 
 import type { ComponentProps } from 'react';
-
-import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import APIs from '@/services/APIs';
 
 vi.mock('@/hooks/useSyncFiltersToSearchParams', () => ({
   default: vi.fn(() => {
@@ -15,22 +14,28 @@ vi.mock('@/hooks/useSyncFiltersToSearchParams', () => ({
   }),
 }));
 
-vi.mock('@/services/APIs', () => ({
-  default: {
-    codes: {
-      getSamplingOptions: vi.fn().mockResolvedValue([
-        { code: 'A', description: 'Sampling option: A' },
-        { code: 'B', description: 'Sampling option: B' },
-      ]),
-      getDistricts: vi.fn().mockResolvedValue([
-        { code: 'A', description: 'District: A' },
-        { code: 'B', description: 'District: B' },
-      ]),
-      getAssessAreaStatuses: vi.fn().mockResolvedValue([
-        { code: 'A', description: 'Assess area status: A' },
-        { code: 'B', description: 'Assess area status: B' },
-      ]),
-    },
+const { mockCodes } = vi.hoisted(() => ({
+  mockCodes: {
+    getSamplingOptions: vi.fn().mockResolvedValue([
+      { code: 'A', description: 'Sampling option: A' },
+      { code: 'B', description: 'Sampling option: B' },
+    ]),
+    getDistricts: vi.fn().mockResolvedValue([
+      { code: 'A', description: 'District: A' },
+      { code: 'B', description: 'District: B' },
+    ]),
+    getAssessAreaStatuses: vi.fn().mockResolvedValue([
+      { code: 'A', description: 'Assess area status: A' },
+      { code: 'B', description: 'Assess area status: B' },
+    ]),
+  },
+}));
+
+vi.mock('@/api/resources/codes-resource', () => ({
+  CodesResource: class {
+    getSamplingOptions = mockCodes.getSamplingOptions;
+    getDistricts = mockCodes.getDistricts;
+    getAssessAreaStatuses = mockCodes.getAssessAreaStatuses;
   },
 }));
 
@@ -94,7 +99,7 @@ describe('WasteSearchFilters', () => {
 
   it('shouldRenderFilterTagsAndShowOptions_whenFiltersDropdownsOpened', async () => {
     await renderWithProps({});
-    expect(APIs.codes.getAssessAreaStatuses).toHaveBeenCalled();
+    expect(mockCodes.getAssessAreaStatuses).toHaveBeenCalled();
 
     const samplingBox = screen.getByPlaceholderText(/Sampling/i);
     // eslint-disable-next-line testing-library/no-node-access

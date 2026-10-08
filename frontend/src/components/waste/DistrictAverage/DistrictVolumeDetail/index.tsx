@@ -1,6 +1,6 @@
 import { type FC } from 'react';
 
-import { useDistrictOptionsQuery } from '@/config/react-query/hooks.ts';
+import { useDistrictOptionsQuery } from '@/api/codes';
 
 import CoastDetailView from './CoastDetailView.tsx';
 import InteriorDetailView from './InteriorDetailView.tsx';

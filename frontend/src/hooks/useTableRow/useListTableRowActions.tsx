@@ -2,10 +2,10 @@ import { TableShortcut, TrashCan } from '@carbon/icons-react';
 import { useNavigate } from '@tanstack/react-router';
 import { useCallback } from 'react';
 
-import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types';
-
 import { navigateInTree, type InTreePath } from '@/routes/inTreePaths';
 import { isFutureDated } from '@/utils/businessDate';
+
+import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types';
 
 interface UseListTableRowActionsConfig<TRow> {
   /** The configuration type for display (e.g., "district volume", "species composition") */

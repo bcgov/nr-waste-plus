@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import APIs from '@/services/APIs';
 
 import WasteSearchFiltersAdvanced from './index';
 
@@ -24,17 +23,23 @@ vi.mock('@/context/auth/useAuth', () => ({
   }),
 }));
 
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      forestclient: {
-        getForestClientLocations: vi.fn(),
-        searchForestClients: vi.fn(),
-        searchMyForestClients: vi.fn(),
-      },
-    },
-  };
-});
+const { mockForestClient } = vi.hoisted(() => ({
+  mockForestClient: {
+    getForestClient: vi.fn(),
+    searchForestClients: vi.fn(),
+    searchByClientNumbers: vi.fn(),
+    searchMyForestClients: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/forest-client-resource', () => ({
+  ForestClientResource: class {
+    getForestClient = mockForestClient.getForestClient;
+    searchForestClients = mockForestClient.searchForestClients;
+    searchByClientNumbers = mockForestClient.searchByClientNumbers;
+    searchMyForestClients = mockForestClient.searchMyForestClients;
+  },
+}));
 
 const defaultFilters = {
   mainSearchTerm: '',
@@ -194,14 +199,16 @@ describe('WasteSearchFiltersActive', () => {
       clientNumbers: [{ code: '12345', description: '12345' }],
     };
 
-    vi.mocked(APIs.forestclient.searchForestClients).mockResolvedValueOnce([
+    vi.mocked(mockForestClient.searchForestClients).mockResolvedValueOnce([
       { id: '12345', name: 'ACME Corporation', acronym: 'ACME' } as any,
     ]);
 
     await renderWithProps({ filters, onChange });
 
     await waitFor(() => {
-      expect(APIs.forestclient.searchForestClients).toHaveBeenCalledWith('12345', 0, 1);
+      expect(mockForestClient.searchForestClients).toHaveBeenCalledWith('12345', 0, 1, {
+        signal: expect.any(AbortSignal),
+      });
       expect(onChange).toHaveBeenCalledWith('clientNumbers');
       expect(innerFn).toHaveBeenCalledWith([
         { code: '12345', description: '12345 ACME Corporation (ACME)' },
@@ -219,7 +226,7 @@ describe('WasteSearchFiltersActive', () => {
     await renderWithProps({ filters, onChange });
 
     // The lookup query should never be fired because the description is already resolved.
-    expect(APIs.forestclient.searchForestClients).not.toHaveBeenCalled();
+    expect(mockForestClient.searchForestClients).not.toHaveBeenCalled();
     // onChange should not be called for clientNumbers at all during render.
     expect(onChange).not.toHaveBeenCalledWith('clientNumbers');
   });
@@ -235,7 +242,7 @@ describe('WasteSearchFiltersActive', () => {
 
     await renderWithProps({ filters, onChange, isModalOpen: false });
 
-    expect(APIs.forestclient.searchForestClients).not.toHaveBeenCalled();
+    expect(mockForestClient.searchForestClients).not.toHaveBeenCalled();
     expect(onChange).not.toHaveBeenCalledWith('clientNumbers');
     expect(innerFn).not.toHaveBeenCalled();
   });

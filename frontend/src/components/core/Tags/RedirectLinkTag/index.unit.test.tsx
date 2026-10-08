@@ -2,9 +2,9 @@ import { RouterProvider } from '@tanstack/react-router';
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 
-import RedirectLinkTag from './index.tsx';
-
 import { createTestRouter } from '@/config/tests/routerTestHelper.tsx';
+
+import RedirectLinkTag from './index.tsx';
 
 describe('RedirectLinkTag', () => {
   it('shouldRenderExternalLinkInNewTab_whenSameTabIsNotSet', () => {

@@ -1,9 +1,9 @@
 import { type ComponentType } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import type { RouteDescription } from '@/routes/routePaths';
-
 import { applyGuards } from '@/routes/applyGuards';
+
+import type { RouteDescription } from '@/routes/routePaths';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 const mockOfflineWrapper = vi.fn();
@@ -25,7 +25,11 @@ vi.mock('@/routes/guards/withFeatureFlag', () => ({
     mockFeatureFlagWrapper(Component, flagName),
 }));
 
-vi.mock('@/env', () => ({
+vi.mock('@/env', async (importOriginal) => ({
+  // Keep the real validated env (api/client.ts reads env.VITE_BACKEND_URL at
+  // module scope through the Layout → ClientDisplay import chain); override
+  // only featureFlags for this suite.
+  ...(await importOriginal<typeof import('@/env')>()),
   featureFlags: {
     'reporting-unit-create-enabled': true,
     'bookmark-ru-enabled': false,

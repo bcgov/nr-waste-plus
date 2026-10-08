@@ -1,11 +1,11 @@
 import { screen } from '@testing-library/react';
 import { describe, it, vi, type Mock } from 'vitest';
 
-import Layout from './index';
-
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
 import APIs from '@/services/APIs';
+
+import Layout from './index';
 
 vi.mock('@/routes/routePaths', () => ({
   getMenuEntries: () => [

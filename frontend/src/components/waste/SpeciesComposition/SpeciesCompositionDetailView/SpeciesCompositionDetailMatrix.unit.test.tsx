@@ -41,8 +41,10 @@ const useDistrictOptionsQueryMock = vi.hoisted(() =>
 );
 
 vi.mock('@/components/Form/TableResource', () => ({ default: TableResourceMock }));
-vi.mock('@/config/react-query/hooks', () => ({
+vi.mock('@/api/codes', () => ({
   useDistrictOptionsQuery: useDistrictOptionsQueryMock,
+  useCodesQuery: vi.fn(),
+  useWasteSearchFilterOptionsQueries: vi.fn(),
 }));
 
 // ============================================================================

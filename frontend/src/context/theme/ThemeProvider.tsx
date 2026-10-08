@@ -1,10 +1,10 @@
 import { Theme } from '@carbon/react';
 import { useState, useEffect, useRef, type ReactNode, useMemo } from 'react';
 
-import { ThemeContext } from './ThemeContext';
-
 import { type CarbonTheme } from '@/context/preference/types';
 import { usePreference } from '@/context/preference/usePreference';
+
+import { ThemeContext } from './ThemeContext';
 
 /**
  * Synchronizes the active Carbon theme with persisted user preferences.

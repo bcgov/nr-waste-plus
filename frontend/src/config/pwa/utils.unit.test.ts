@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, afterEach } from 'vitest';
 
-import { registerBackgroundSync, registerPeriodicSync } from './utils';
-
 import { mockPwaWorker, restorePwaGlobals } from '@/config/tests/pwaTestHelper';
+
+import { registerBackgroundSync, registerPeriodicSync } from './utils';
 
 afterEach(() => {
   restorePwaGlobals();

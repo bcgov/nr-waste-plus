@@ -1,8 +1,8 @@
 import { expect } from '@playwright/test';
 
-import { setupWasteSearchMocks } from './e2e.setup';
-
 import { test } from '@/config/tests/coverage.setup';
+
+import { setupWasteSearchMocks } from './e2e.setup';
 
 // ---------------------------------------------------------------------------
 // Redirect-after-login behaviour

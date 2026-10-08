@@ -1,8 +1,8 @@
 import { type FC } from 'react';
 
+import { useForestClientsByNumbersQuery } from '@/api/forestClients';
 import { forestClientAutocompleteResult2CodeDescription } from '@/api/utils';
 import DistrictSelection from '@/components/core/DistrictSelection';
-import { useForestClientsByNumbersQuery } from '@/config/react-query/hooks';
 import { useAuth } from '@/context/auth/useAuth';
 
 import type { CodeDescriptionDto } from '@/api/search.types';

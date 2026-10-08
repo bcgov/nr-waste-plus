@@ -2,12 +2,12 @@
 import { render, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 
+import { jwtfy } from '@/config/tests/auth.helper';
+import { navigateTo } from '@/utils/navigation';
+
 import { AuthContext } from './AuthContext';
 import { AuthProvider, preserveRolesReference } from './AuthProvider';
 import { Role, type FamLoginUser, type FamRole } from './types';
-
-import { jwtfy } from '@/config/tests/auth.helper';
-import { navigateTo } from '@/utils/navigation';
 
 // Mocks
 vi.mock('aws-amplify/auth', () => ({
