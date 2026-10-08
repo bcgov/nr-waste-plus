@@ -2,19 +2,20 @@ import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
+import { useBlockDetailsQuery, useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
 import { renderWithApp } from '@/config/tests/renderWithApp';
 import { SKELETON_DELAY_MS } from '@/hooks/useDelayedFlag';
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 
 import ReportingUnitBlockDetailsPage from './index';
 
-import type { ReportingUnitDto } from '@/services/types';
+import type { BlockDetailsDto, ReportingUnitDto } from '@/services/types';
 
 // ── Mutable state used by the module mocks ─────────────────────────────────────
 
 const EVENT_TARGET = 'reporting-unit-block-details';
 const mockRefetch = vi.fn();
+const mockBlockRefetch = vi.fn();
 const mockNavigate = vi.fn();
 let mockParams: Record<string, string> = { ruId: '468', blockId: '12' };
 
@@ -22,7 +23,11 @@ let mockParams: Record<string, string> = { ruId: '468', blockId: '12' };
 
 vi.mock('@/config/react-query/hooks', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/config/react-query/hooks')>();
-  return { ...actual, useReportingUnitDetailsQuery: vi.fn() };
+  return {
+    ...actual,
+    useReportingUnitDetailsQuery: vi.fn(),
+    useBlockDetailsQuery: vi.fn(),
+  };
 });
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
@@ -46,7 +51,18 @@ const defaultData: ReportingUnitDto = {
   createdAt: '2025-05-25',
 };
 
+const defaultBlockData: BlockDetailsDto = {
+  id: 12,
+  reportingUnitId: 468,
+  blockType: 'DISTRICT_AVERAGE',
+  draft: true,
+  plcDate: '2026-01-15',
+  revision: 0,
+  isLegacy: false,
+};
+
 type QueryResult = Partial<ReturnType<typeof useReportingUnitDetailsQuery>>;
+type BlockQueryResult = Partial<ReturnType<typeof useBlockDetailsQuery>>;
 
 function mockQuery(result: QueryResult) {
   vi.mocked(useReportingUnitDetailsQuery).mockReturnValue({
@@ -56,6 +72,16 @@ function mockQuery(result: QueryResult) {
     refetch: mockRefetch,
     ...result,
   } as ReturnType<typeof useReportingUnitDetailsQuery>);
+}
+
+function mockBlockQuery(result: BlockQueryResult) {
+  vi.mocked(useBlockDetailsQuery).mockReturnValue({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    refetch: mockBlockRefetch,
+    ...result,
+  } as ReturnType<typeof useBlockDetailsQuery>);
 }
 
 /**
@@ -78,6 +104,7 @@ describe('ReportingUnitBlockDetailsPage', () => {
   beforeEach(() => {
     mockParams = { ruId: '468', blockId: '12' };
     mockQuery({ data: defaultData });
+    mockBlockQuery({ data: defaultBlockData });
   });
 
   afterEach(() => {
@@ -238,6 +265,50 @@ describe('ReportingUnitBlockDetailsPage', () => {
     });
   });
 
+  describe('block details query', () => {
+    it('shouldRenderBannerAndSummaryOnHappyPath', async () => {
+      await renderPage();
+
+      expect(screen.getByTestId('rublock-banner')).toBeTruthy();
+      expect(screen.getByTestId('block-details-summary')).toBeTruthy();
+      expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Block ID 12');
+      expect(screen.queryByTestId('legacy-data-tag')).toBeNull();
+    });
+
+    it('shouldRenderErrorState_whenBlockIsNotFound', async () => {
+      mockBlockQuery({ data: undefined, isError: true });
+
+      await renderPage();
+
+      expect(screen.getByText('Reporting Unit Block not found')).toBeTruthy();
+      expect(
+        screen.getByText('Required data is missing or an error occurred while loading.'),
+      ).toBeTruthy();
+      expect(screen.queryByTestId('rublock-banner')).toBeNull();
+      expect(screen.queryByTestId('block-details-summary')).toBeNull();
+      expect(screen.queryByRole('tab', { name: 'Block details' })).toBeNull();
+    });
+
+    it('shouldEnableLegacyTag_whenBlockApiReportsLegacy', async () => {
+      mockBlockQuery({ data: { ...defaultBlockData, isLegacy: true } });
+
+      await renderPage();
+
+      expect(screen.getByTestId('legacy-data-tag')).toBeTruthy();
+    });
+
+    it('shouldDisableLegacyTag_whenBlockApiReportsNotLegacy', async () => {
+      // RU grade heuristic alone would not tag this unit either, but an RU-level
+      // `isLegacy: true` must not win over the block API's explicit `false`.
+      mockQuery({ data: { ...defaultData, isLegacy: true } });
+      mockBlockQuery({ data: { ...defaultBlockData, isLegacy: false } });
+
+      await renderPage();
+
+      expect(screen.queryByTestId('legacy-data-tag')).toBeNull();
+    });
+  });
+
   describe('submission sections', () => {
     it('shouldRenderProgressSteps', async () => {
       await renderPage();
@@ -288,6 +359,27 @@ describe('ReportingUnitBlockDetailsPage', () => {
           notificationTarget: EVENT_TARGET,
         }),
       );
+    });
+
+    it('shouldQueryBlockDetailsWithRouteParams_andNotificationTarget', async () => {
+      await renderPage();
+
+      await waitFor(() =>
+        expect(vi.mocked(useBlockDetailsQuery)).toHaveBeenCalledWith(468, 12, {
+          notificationTarget: EVENT_TARGET,
+        }),
+      );
+    });
+
+    it('shouldRefetchBothQueries_whenRetryIsClicked', async () => {
+      const user = userEvent.setup();
+      mockBlockQuery({ data: undefined, isError: true });
+
+      await renderPage();
+      await user.click(screen.getByTestId('rublock-retry'));
+
+      expect(mockRefetch).toHaveBeenCalledTimes(1);
+      expect(mockBlockRefetch).toHaveBeenCalledTimes(1);
     });
   });
 });

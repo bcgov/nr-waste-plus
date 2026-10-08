@@ -100,6 +100,7 @@ export const queryKeys = {
   block: {
     create: () => ['block', 'create'] as const,
     list: (ruId: number) => ['block', 'list', ruId] as const,
+    details: (ruId: number, blockId: number) => ['block', 'details', ruId, blockId] as const,
   },
   table: {
     sorting: (sort: Record<string, SortDirectionType>) => ['table', 'sorting', sort] as const,

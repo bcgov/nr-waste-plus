@@ -9,6 +9,7 @@ import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils
 
 import { queryClient } from './config';
 import {
+  useBlockDetailsQuery,
   useClientLookupQuery,
   useCodesQuery,
   useCreateBlock,
@@ -68,6 +69,15 @@ vi.mock('@/services/APIs', () => ({
         version: 0,
         createdAt: null,
         updatedAt: null,
+      }),
+      getBlockDetails: vi.fn().mockResolvedValue({
+        id: 12,
+        reportingUnitId: 468,
+        blockType: 'DISTRICT_AVERAGE',
+        draft: true,
+        plcDate: '2026-01-15',
+        revision: 0,
+        isLegacy: false,
       }),
     },
     districtVolume: {
@@ -421,6 +431,81 @@ describe('react-query hooks', () => {
           }),
         ),
       );
+    });
+  });
+
+  describe('useBlockDetailsQuery', () => {
+    it('shouldRequestTheBlockDetailsWithNotificationMetadata', async () => {
+      const { result } = renderHook(
+        () =>
+          useBlockDetailsQuery(468, 12, {
+            notificationTarget: 'reporting-unit-block-details',
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+      expect(API.reportingUnit.getBlockDetails).toHaveBeenCalledWith(468, 12, {
+        notificationTarget: 'reporting-unit-block-details',
+      });
+      expect(result.current.data).toEqual({
+        id: 12,
+        reportingUnitId: 468,
+        blockType: 'DISTRICT_AVERAGE',
+        draft: true,
+        plcDate: '2026-01-15',
+        revision: 0,
+        isLegacy: false,
+      });
+    });
+
+    it('shouldNotFetchWhenDisabled', () => {
+      const { result } = renderHook(() => useBlockDetailsQuery(468, 12, { enabled: false }), {
+        wrapper: createWrapper(),
+      });
+
+      expect(result.current.fetchStatus).toBe('idle');
+      expect(API.reportingUnit.getBlockDetails).not.toHaveBeenCalled();
+    });
+
+    it('shouldDispatchProblemDetailsOnFailureWhenNotificationTargetExists', async () => {
+      const error = Object.assign(new Error('Not Found'), {
+        body: { title: 'Not found', detail: 'Block not found' },
+      });
+      vi.mocked(API.reportingUnit.getBlockDetails).mockRejectedValueOnce(error);
+
+      const { result } = renderHook(
+        () =>
+          useBlockDetailsQuery(468, 12, {
+            notificationTarget: 'reporting-unit-block-details',
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      await waitFor(() =>
+        expect(sendEvent).toHaveBeenCalledWith(
+          expect.objectContaining({
+            eventType: 'error',
+            eventTarget: 'reporting-unit-block-details',
+            title: 'Not found',
+            description: 'Block not found',
+          }),
+        ),
+      );
+    });
+
+    it('shouldNotDispatchNotificationWhenNoNotificationTargetExists', async () => {
+      const error = new Error('Not Found');
+      vi.mocked(API.reportingUnit.getBlockDetails).mockRejectedValueOnce(error);
+
+      const { result } = renderHook(() => useBlockDetailsQuery(468, 12), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(sendEvent).not.toHaveBeenCalled();
     });
   });
 

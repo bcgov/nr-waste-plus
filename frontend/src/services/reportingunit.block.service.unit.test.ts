@@ -48,6 +48,43 @@ describe('ReportingUnitService block endpoints', () => {
     });
   });
 
+  it('shouldRequestBlockDetailsForReportingUnitAndBlockAndForwardMetadata', async () => {
+    const service = new ReportingUnitService(config);
+    const response = {
+      id: 12,
+      reportingUnitId: 468,
+      blockType: 'DISTRICT_AVERAGE',
+      draft: true,
+      plcDate: '2026-01-15',
+      revision: 0,
+      isLegacy: false,
+    };
+    const doRequest = vi.fn().mockReturnValue(Promise.resolve(response));
+    Object.defineProperty(service, 'doRequest', { value: doRequest });
+    const meta = { notificationTarget: 'reporting-unit-block-details' };
+
+    await expect(service.getBlockDetails(468, 12, meta)).resolves.toBe(response);
+
+    expect(doRequest).toHaveBeenCalledWith(config, {
+      method: 'GET',
+      url: '/api/reporting-units/468/12',
+      meta,
+    });
+  });
+
+  it('shouldOmitMetadataWhenNoBlockDetailsRequestMetadataIsProvided', async () => {
+    const service = new ReportingUnitService(config);
+    const doRequest = vi.fn().mockResolvedValue({});
+    Object.defineProperty(service, 'doRequest', { value: doRequest });
+
+    await service.getBlockDetails(469, 7);
+
+    expect(doRequest).toHaveBeenCalledWith(config, {
+      method: 'GET',
+      url: '/api/reporting-units/469/7',
+    });
+  });
+
   it('shouldResolveTheCurrentStubbedCreateShapeWithoutCallingHttp', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-10-07T12:30:00.000Z'));

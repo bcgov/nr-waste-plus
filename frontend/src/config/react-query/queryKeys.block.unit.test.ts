@@ -13,6 +13,12 @@ describe('block query keys', () => {
     expect(queryKeys.block.list(469)).not.toEqual(queryKeys.block.list(468));
   });
 
+  it('shouldScopeDetailsKeyToItsReportingUnitAndBlock', () => {
+    expect(queryKeys.block.details(468, 12)).toEqual(['block', 'details', 468, 12]);
+    expect(queryKeys.block.details(468, 13)).not.toEqual(queryKeys.block.details(468, 12));
+    expect(queryKeys.block.details(469, 12)).not.toEqual(queryKeys.block.details(468, 12));
+  });
+
   it('shouldReturnIndependentListKeysForDifferentReportingUnits', () => {
     const first = queryKeys.block.list(468);
     const second = queryKeys.block.list(469);

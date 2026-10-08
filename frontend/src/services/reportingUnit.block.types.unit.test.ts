@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   blockCreateRequestSchema,
   blockCreateResponseSchema,
+  blockDetailsSchema,
   reportingUnitSchema,
 } from './reportingUnit.types';
 
@@ -84,4 +85,51 @@ describe('reporting-unit block contracts', () => {
 
     expect(() => reportingUnitSchema.parse(reportingUnit)).toThrow();
   });
+
+  it('shouldParseBlockDetailsAndAllowFutureFields', () => {
+    const details = {
+      id: 12,
+      reportingUnitId: 468,
+      blockType: 'DISTRICT_AVERAGE',
+      draft: true,
+      plcDate: '2026-01-15',
+      revision: 0,
+      isLegacy: false,
+      futureField: 'preserved',
+    };
+
+    expect(blockDetailsSchema.parse(details)).toEqual(details);
+  });
+
+  it('shouldParseBlockDetailsWithNullOptionalFields', () => {
+    const details = {
+      id: 12,
+      reportingUnitId: 468,
+      blockType: null,
+      draft: false,
+      plcDate: null,
+      revision: null,
+      isLegacy: true,
+    };
+
+    expect(blockDetailsSchema.parse(details)).toEqual(details);
+  });
+
+  it.each(['id', 'reportingUnitId', 'blockType', 'draft', 'plcDate', 'revision', 'isLegacy'])(
+    'shouldRejectBlockDetailsWithoutRequiredField_%s',
+    (field) => {
+      const details = {
+        id: 12,
+        reportingUnitId: 468,
+        blockType: 'DISTRICT_AVERAGE',
+        draft: true,
+        plcDate: '2026-01-15',
+        revision: 0,
+        isLegacy: false,
+      };
+      delete details[field as keyof typeof details];
+
+      expect(() => blockDetailsSchema.parse(details)).toThrow();
+    },
+  );
 });

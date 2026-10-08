@@ -91,3 +91,25 @@ export const blockCreateResponseSchema = z.looseObject({
 
 /** TypeScript representation of a block-creation response. */
 export type BlockCreateResponseDto = z.infer<typeof blockCreateResponseSchema>;
+
+/**
+ * Zod schema for the block-details response
+ * (`GET /api/reporting-units/{reportingUnitId}/{blockId}`).
+ *
+ * `blockType`, `plcDate`, and `revision` are nullable because the backend
+ * cannot resolve them for every block. `isLegacy` marks blocks served from
+ * the legacy system. Use loose-object parsing so future backend fields do
+ * not break validation.
+ */
+export const blockDetailsSchema = z.looseObject({
+  id: z.number(),
+  reportingUnitId: z.number(),
+  blockType: z.nullable(z.string()),
+  draft: z.boolean(),
+  plcDate: z.nullable(z.string()),
+  revision: z.nullable(z.number()),
+  isLegacy: z.boolean(),
+});
+
+/** TypeScript representation of a block-details response. */
+export type BlockDetailsDto = z.infer<typeof blockDetailsSchema>;

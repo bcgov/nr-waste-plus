@@ -21,7 +21,7 @@ import TagWrapper from '@/components/core/Tags/TagWrapper';
 import UnderConstructionTag from '@/components/core/Tags/UnderConstructionTag';
 import BlockDetailsSkeleton from '@/components/waste/ReportingUnits/BlockDetailsSkeleton';
 import BlockDetailsSummary from '@/components/waste/ReportingUnits/BlockDetailsSummary';
-import { useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
+import { useBlockDetailsQuery, useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
 import useDelayedFlag from '@/hooks/useDelayedFlag';
 import { navigateInTree } from '@/routes/inTreePaths';
 
@@ -38,12 +38,14 @@ const EVENT_TARGET = 'reporting-unit-block-details';
  *
  * Route: `/reporting-units/$ruId/$blockId` (issue #1369).
  *
- * Fetches the reporting unit through {@link useReportingUnitDetailsQuery} and renders
- * the page banner (breadcrumb + focusable `h1`), the {@link BlockDetailsSummary}
- * card, and a Back action. Errors surface an inline `role="alert"` notification
- * with a Retry action; the loading skeleton is deferred by 300 ms via
- * `useDelayedFlag`. The blocks results region lives on the Reporting Unit
- * Details page; row columns and status tags arrive with issue #1250.
+ * Fetches the block through {@link useBlockDetailsQuery} (the authority on
+ * block existence) and the reporting unit through
+ * {@link useReportingUnitDetailsQuery} (which still backs the
+ * {@link BlockDetailsSummary} card), then renders the page banner (breadcrumb +
+ * focusable `h1`), the summary card, and a Back action. Errors from either
+ * query surface the not-found state: an inline `role="alert"` notification
+ * with Retry/Back actions; the loading skeleton is deferred by 300 ms via
+ * `useDelayedFlag`.
  *
  * @returns The block details page columns, ready for the layout `Grid`.
  */
@@ -53,16 +55,36 @@ const ReportingUnitBlockDetailsPage: FC = () => {
   const ruId = Number(params.ruId);
   const blockId = Number(params.blockId);
 
-  const { data, isLoading, isError, refetch } = useReportingUnitDetailsQuery(ruId, {
+  const {
+    data,
+    isLoading: isRuLoading,
+    isError: isRuError,
+    refetch: refetchRu,
+  } = useReportingUnitDetailsQuery(ruId, {
     notificationTarget: EVENT_TARGET,
   });
+
+  const {
+    data: blockData,
+    isLoading: isBlockLoading,
+    isError: isBlockError,
+    refetch: refetchBlock,
+  } = useBlockDetailsQuery(ruId, blockId, {
+    notificationTarget: EVENT_TARGET,
+  });
+
+  const isLoading = isRuLoading || isBlockLoading;
+  const isError = isRuError || isBlockError;
+  // Captured before the early returns so the legacy fallback below stays
+  // `boolean | undefined` at the type level even once `blockData` is narrowed.
+  const blockIsLegacy = blockData?.isLegacy;
 
   const showSkeleton = useDelayedFlag(isLoading);
   const bannerRef = useRef<HTMLDivElement>(null);
 
   // Move focus to the h1 once the page has real content (after data resolves).
   useEffect(() => {
-    if (isLoading || isError || !data) {
+    if (isLoading || isError || !data || !blockData) {
       return;
     }
 
@@ -73,13 +95,13 @@ const ReportingUnitBlockDetailsPage: FC = () => {
 
     heading.setAttribute('tabindex', '-1');
     heading.focus();
-  }, [data, isError, isLoading]);
+  }, [data, blockData, isError, isLoading]);
 
   if (isLoading) {
     return showSkeleton ? <BlockDetailsSkeleton /> : null;
   }
 
-  if (isError || !data) {
+  if (isError || !data || !blockData) {
     return (
       <>
         <Column lg={16} md={8} sm={4} className="rublock-column__banner">
@@ -98,7 +120,14 @@ const ReportingUnitBlockDetailsPage: FC = () => {
           className="rublock-column__actions"
           data-testid="rublock-actions"
         >
-          <Button kind="primary" onClick={() => void refetch()} data-testid="rublock-retry">
+          <Button
+            kind="primary"
+            onClick={() => {
+              void refetchRu();
+              void refetchBlock();
+            }}
+            data-testid="rublock-retry"
+          >
             Retry
           </Button>
           <Button
@@ -126,9 +155,10 @@ const ReportingUnitBlockDetailsPage: FC = () => {
         <TagWrapper position="right" tag={<UnderConstructionTag type="page" />}>
           <TagWrapper
             position="right"
-            // API-driven once the backend ships `isLegacy`; grade fallback covers
-            // the rollout window (units without a grade are legacy-only today).
-            enabled={data.isLegacy ?? !data.grade?.code}
+            // Block API's `isLegacy` wins once available; the RU grade
+            // heuristic covers the rollout window (units without a grade are
+            // legacy-only today).
+            enabled={blockIsLegacy ?? data.isLegacy ?? !data.grade?.code}
             tag={
               <LegacyDataTag
                 url={`/waste101ReportUnitDetailsAction.do?dataBean.p_reporting_unit_id=${data.id}`}

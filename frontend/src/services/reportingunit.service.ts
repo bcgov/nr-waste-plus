@@ -7,6 +7,7 @@ import type { PageableResponse } from '@/types/PageableResponse.types';
 import type {
   BlockCreateRequestDto,
   BlockCreateResponseDto,
+  BlockDetailsDto,
   ReportingUnitCreateDto,
   ReportingUnitDto,
 } from './types';
@@ -91,6 +92,33 @@ export class ReportingUnitService extends HttpClient {
     return this.doRequest<PageableResponse<ReportingUnitBlocksRow>>(this.config, {
       method: 'GET',
       url: `/api/reporting-units/${ruId}/blocks`,
+      ...(meta === undefined ? {} : { meta }),
+    });
+  }
+
+  /**
+   * Retrieves a single block's details (issue #1254).
+   *
+   * `GET /api/reporting-units/{ruId}/{blockId}` returns the simple block
+   * fields typed by {@link BlockDetailsDto}: id, reporting unit, type, draft
+   * flag, PLC date, revision, and the `isLegacy` source marker. The response
+   * is typed (not zod-parsed) to match the sibling `getBlocks` convention.
+   *
+   * @param ruId - The numeric reporting unit the block belongs to.
+   * @param blockId - The numeric block ID from the route.
+   * @param meta - Optional request metadata used by the API middleware.
+   * @returns A promise that resolves to the block details.
+   * @throws {ApiError} When the HTTP request fails (404 when the feature flag
+   *   is off, the reporting unit is unknown, or the block does not exist).
+   */
+  getBlockDetails(
+    ruId: number,
+    blockId: number,
+    meta?: Record<string, unknown>,
+  ): CancelablePromise<BlockDetailsDto> {
+    return this.doRequest<BlockDetailsDto>(this.config, {
+      method: 'GET',
+      url: `/api/reporting-units/${ruId}/${blockId}`,
       ...(meta === undefined ? {} : { meta }),
     });
   }

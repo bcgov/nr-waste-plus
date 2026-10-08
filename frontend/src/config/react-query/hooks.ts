@@ -39,6 +39,7 @@ import type {
 import type {
   BlockCreateRequestDto,
   BlockCreateResponseDto,
+  BlockDetailsDto,
   ForestClientDto,
   MyForestClientDto,
   ReportingUnitCreateDto,
@@ -618,6 +619,58 @@ export const useReportingUnitDetailsQuery = <TData = ReportingUnitDto>(
     queryKey: queryKeys.reportingUnit.details(ruId),
     queryFn: () =>
       API.reportingUnit.getReportingUnit(ruId, { notificationTarget }) as unknown as Promise<TData>,
+    ...queryOptions,
+  });
+
+  useEffect(() => {
+    if (!notificationTarget || !query.isError || !query.error) {
+      return;
+    }
+
+    notifyProblemDetailsError(query.error, notificationTarget);
+  }, [notificationTarget, query.error, query.isError]);
+
+  return query;
+};
+
+/**
+ * Fetches the details of a single block within a reporting unit
+ * (`GET /api/reporting-units/{ruId}/{blockId}`).
+ *
+ * Backs the read-only block details page (`/reporting-units/$ruId/$blockId`),
+ * which treats this query as the authority on block existence: the backend
+ * answers `404` (RFC 7807 problem details) when the feature flag is off, the
+ * reporting unit is unknown, or the block does not exist.
+ *
+ * On error, dispatches an inline notification to `notificationTarget` (when supplied)
+ * using the RFC 7807 problem-details payload from the backend when available.
+ *
+ * @param ruId - The numeric reporting unit the block belongs to.
+ * @param blockId - The numeric block ID used as the route param.
+ * @param options - Optional TanStack Query overrides plus an optional `notificationTarget`.
+ * @returns The TanStack Query result containing the {@link BlockDetailsDto}.
+ *
+ * @example
+ * ```tsx
+ * const { data, isLoading, isError } = useBlockDetailsQuery(ruId, blockId, {
+ *   notificationTarget: 'reporting-unit-block-details',
+ * });
+ * ```
+ */
+export const useBlockDetailsQuery = <TData = BlockDetailsDto>(
+  ruId: number,
+  blockId: number,
+  options?: Omit<
+    UseQueryOptions<BlockDetailsDto, Error, TData, ReturnType<typeof queryKeys.block.details>>,
+    'queryKey' | 'queryFn'
+  > &
+    QueryNotificationOptions,
+) => {
+  const { notificationTarget, ...queryOptions } = options ?? {};
+
+  const query = useQuery({
+    queryKey: queryKeys.block.details(ruId, blockId),
+    queryFn: () => API.reportingUnit.getBlockDetails(ruId, blockId, { notificationTarget }),
     ...queryOptions,
   });
 
