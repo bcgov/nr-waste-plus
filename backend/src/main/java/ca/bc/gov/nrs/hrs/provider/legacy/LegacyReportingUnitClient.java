@@ -19,9 +19,11 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.JsonNode;
 
 /**
@@ -267,6 +269,34 @@ public class LegacyReportingUnitClient {
 
     log.info("Retrieving blocks for RU {}", reportingUnitId);
 
+    return fetchReportingUnitBlocks(reportingUnitId);
+  }
+
+  /**
+   * Retrieve the block list for a reporting unit without swallowing upstream failures.
+   *
+   * <p>Sends the same {@code GET} as {@link #getReportingUnitBlocks(Long)}, but the
+   * circuit-breaker fallback rethrows instead of substituting an empty list. Authoritative
+   * lookups — such as resolving a single block for the details endpoint — must distinguish a
+   * transient legacy outage from a reporting unit that genuinely has no blocks, so a failed call
+   * surfaces as HTTP 503 rather than being reported as "Block not found".
+   *
+   * @param reportingUnitId the unique identifier of the reporting unit; must not be null
+   * @return the block rows; never null, empty only when the legacy API reports no blocks
+   * @throws NotFoundGenericException with HTTP 404 when the reporting unit does not exist
+   * @throws org.springframework.web.server.ResponseStatusException with HTTP 503 when the legacy
+   *     API cannot be reached or returns an error
+   */
+  @CircuitBreaker(name = "breaker", fallbackMethod = "propagateBlocksFailure")
+  @NewSpan
+  public List<BlockListItemDto> getReportingUnitBlocksStrict(Long reportingUnitId) {
+
+    log.info("Retrieving blocks (strict) for RU {}", reportingUnitId);
+
+    return fetchReportingUnitBlocks(reportingUnitId);
+  }
+
+  private List<BlockListItemDto> fetchReportingUnitBlocks(Long reportingUnitId) {
     return restClient
         .get()
         .uri(
@@ -363,6 +393,22 @@ public class LegacyReportingUnitClient {
 
     log.error("Returning empty block list for RU: {}", reportingUnitId);
     return List.of();
+  }
+
+  @SuppressWarnings("unused")
+  private List<BlockListItemDto> propagateBlocksFailure(
+      Long reportingUnitId, Throwable throwable) {
+
+    logFallbackError(throwable);
+    if (throwable instanceof NotFoundGenericException notFoundException) {
+      throw notFoundException;
+    }
+
+    log.error("Propagating legacy block list failure for RU: {}", reportingUnitId);
+    throw new ResponseStatusException(
+        HttpStatus.SERVICE_UNAVAILABLE,
+        "Legacy block list unavailable for reporting unit: " + reportingUnitId,
+        throwable);
   }
 
   @SuppressWarnings("unused")

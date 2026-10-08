@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.serviceUnavailable;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.mockito.Mockito.doReturn;
@@ -335,6 +336,24 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   }
 
   @Test
+  @DisplayName("Returns 503 when the legacy block list call fails")
+  @WithMockJwt
+  void returns503WhenLegacyBlockListFails() throws Exception {
+    Long legacyReportingUnitId = 561L;
+
+    legacyApiStub.stubFor(
+        get(urlPathEqualTo("/api/reporting-units/" + legacyReportingUnitId))
+            .willReturn(okJson(LEGACY_RU_DETAILS)));
+    legacyApiStub.stubFor(
+        get(urlPathEqualTo("/api/reporting-units/" + legacyReportingUnitId + "/blocks"))
+            .willReturn(serviceUnavailable()));
+
+    mockMvc
+        .perform(MockMvcRequestBuilders.get(detailsUrl(legacyReportingUnitId, 777L)))
+        .andExpect(status().isServiceUnavailable());
+  }
+
+  @Test
   @DisplayName("Returns 404 when block is not found in postgres")
   @WithMockJwt
   void returns404WhenBlockNotFoundInPostgres() throws Exception {
@@ -562,6 +581,39 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
 
     mockMvc
         .perform(MockMvcRequestBuilders.get(calculationUrl(reportingUnitId, blockId)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.roundingPolicy").value(marker));
+  }
+
+  @Test
+  @DisplayName("Returns the snapshot through the original blocks-scoped calculation URL")
+  @WithMockJwt
+  void returnsSnapshotThroughOriginalBlocksScopedUrl() throws Exception {
+    String marker = "ORIGINAL_BLOCKS_CALC_URL";
+    snapshotRepository.save(
+        new BlockCalculationSnapshotEntity(
+            blockId,
+            districtVolumeId,
+            null,
+            null,
+            MAPPER.readTree("{}"),
+            MAPPER.readTree("{\"marker\":1}"),
+            Instant.parse("2025-07-01T12:00:00Z"),
+            marker,
+            MAPPER.createArrayNode(),
+            ACTOR,
+            ACTOR,
+            Instant.parse("2025-07-01T12:00:00Z"),
+            Instant.parse("2025-07-01T12:00:00Z")));
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get(
+                "/api/reporting-units/"
+                    + reportingUnitId
+                    + "/blocks/"
+                    + blockId
+                    + "/calculation"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.roundingPolicy").value(marker));
   }

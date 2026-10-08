@@ -156,6 +156,24 @@ public class LegacyApiProvider {
   }
 
   /**
+   * Retrieve the block list for a reporting unit without swallowing upstream failures.
+   *
+   * <p>Delegates to {@link LegacyReportingUnitClient#getReportingUnitBlocksStrict(Long)}: a
+   * transient legacy outage propagates as HTTP 503 instead of being reported as an empty list,
+   * so authoritative lookups never translate a failure into "not found".
+   *
+   * @param reportingUnitId the unique identifier of the reporting unit
+   * @return the block rows; never null, empty only when no blocks exist
+   * @throws ca.bc.gov.nrs.hrs.exception.NotFoundGenericException with HTTP 404 when the reporting
+   *     unit does not exist
+   * @throws org.springframework.web.server.ResponseStatusException with HTTP 503 when the legacy
+   *     API cannot be reached
+   */
+  public List<BlockListItemDto> getReportingUnitBlocksStrict(Long reportingUnitId) {
+    return reportingUnitClient.getReportingUnitBlocksStrict(reportingUnitId);
+  }
+
+  /**
    * Create a new reporting unit in the legacy API.
    *
    * @param request the create request dto

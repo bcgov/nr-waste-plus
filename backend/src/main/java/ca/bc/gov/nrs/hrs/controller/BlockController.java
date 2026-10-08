@@ -109,12 +109,20 @@ public class BlockController {
   /**
    * Returns the latest calculation snapshot for the given block.
    *
+   * <p>Mapped under both URLs: the original {@code /{reportingUnitId}/blocks/{blockId}/calculation}
+   * path served by the pre-consolidation {@code BlockCalculationController} (kept so existing
+   * callers do not 404), and the reporting-unit-scoped {@code /{reportingUnitId}/{blockId}/
+   * calculation} path that mirrors the block details endpoint.
+   *
    * @param blockId the block identifier
    * @param reportingUnitId the parent reporting-unit identifier
    * @param jwt the authenticated caller's token
    * @return 200 with the latest snapshot, or 404 if no snapshot exists
    */
-  @GetMapping("/{reportingUnitId}/{blockId}/calculation")
+  @GetMapping({
+    "/{reportingUnitId}/blocks/{blockId}/calculation",
+    "/{reportingUnitId}/{blockId}/calculation"
+  })
   public ResponseEntity<BlockCalculationDto> getLatest(
       @PathVariable Long reportingUnitId,
       @PathVariable Long blockId,

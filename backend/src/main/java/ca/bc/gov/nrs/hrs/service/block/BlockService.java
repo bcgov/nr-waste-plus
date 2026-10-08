@@ -88,7 +88,7 @@ public class BlockService {
     enforceClientScope(jwt, reportingUnitId, legacyReportingUnit.clientNumber());
 
     BlockListItemDto legacyRow =
-        legacyApiProvider.getReportingUnitBlocks(reportingUnitId).stream()
+        legacyApiProvider.getReportingUnitBlocksStrict(reportingUnitId).stream()
             .filter(row -> row.id() != null && row.id().equals(blockId))
             .findFirst()
             .orElseThrow(() -> new NotFoundGenericException("Block", String.valueOf(blockId)));

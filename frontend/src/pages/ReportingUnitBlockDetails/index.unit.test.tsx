@@ -214,19 +214,19 @@ describe('ReportingUnitBlockDetailsPage', () => {
     });
   });
 
-  describe('error state', () => {
+  describe('reporting-unit summary error', () => {
     beforeEach(() => {
       mockQuery({ data: undefined, isError: true });
     });
 
-    it('shouldRenderErrorTitle_andNotificationRegion', async () => {
+    it('shouldRenderSummaryUnavailable_withoutBlockNotFound', async () => {
       await renderPage();
 
-      expect(screen.getByText('Reporting Unit Block not found')).toBeTruthy();
-      expect(
-        screen.getByText('Required data is missing or an error occurred while loading.'),
-      ).toBeTruthy();
+      expect(screen.getByText('Reporting unit summary unavailable')).toBeTruthy();
+      expect(screen.queryByText('Reporting Unit Block not found')).toBeNull();
       expect(screen.queryByTestId('block-details-summary')).toBeNull();
+      expect(screen.getByTestId('rublock-banner')).toBeTruthy();
+      expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Block ID 12');
     });
 
     it('shouldRenderAlert_whenErrorNotificationIsDispatched', async () => {
@@ -244,6 +244,28 @@ describe('ReportingUnitBlockDetailsPage', () => {
 
       const alert = await screen.findByRole('alert');
       expect(alert.textContent).toContain('The reporting unit could not be loaded.');
+    });
+
+    it('shouldNotOfferRetry_whenOnlyTheRuQueryFails', async () => {
+      await renderPage();
+
+      expect(screen.queryByTestId('rublock-retry')).toBeNull();
+    });
+  });
+
+  describe('block not found error', () => {
+    beforeEach(() => {
+      mockBlockQuery({ data: undefined, isError: true });
+    });
+
+    it('shouldRenderErrorTitle_andNotificationRegion', async () => {
+      await renderPage();
+
+      expect(screen.getByText('Reporting Unit Block not found')).toBeTruthy();
+      expect(
+        screen.getByText('Required data is missing or an error occurred while loading.'),
+      ).toBeTruthy();
+      expect(screen.queryByTestId('block-details-summary')).toBeNull();
     });
 
     it('shouldCallRefetch_whenRetryIsClicked', async () => {

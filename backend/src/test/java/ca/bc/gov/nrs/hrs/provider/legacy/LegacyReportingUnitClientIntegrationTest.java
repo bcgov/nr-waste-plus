@@ -45,6 +45,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.json.JsonMapper;
 
 @DisplayName("Integrated Test | Legacy Reporting Unit Client")
@@ -266,6 +268,34 @@ class LegacyReportingUnitClientIntegrationTest extends AbstractTestContainerInte
 
     assertEquals(List.of(), result);
     clientApiStub.verify(2, getRequestedFor(urlPathEqualTo("/api/reporting-units/12345/blocks")));
+  }
+
+  @Test
+  @DisplayName("shouldPropagateServiceUnavailable_whenStrictBlockListReturnsServerError")
+  void shouldPropagateServiceUnavailable_whenStrictBlockListReturnsServerError() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/reporting-units/12345/blocks")).willReturn(serviceUnavailable()));
+
+    ResponseStatusException ex =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> legacyReportingUnitClient.getReportingUnitBlocksStrict(12345L));
+
+    assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
+  }
+
+  @Test
+  @DisplayName("shouldPreserveNotFound_whenStrictBlockListReportingUnitDoesNotExist")
+  void shouldPreserveNotFound_whenStrictBlockListReportingUnitDoesNotExist() {
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/api/reporting-units/99999/blocks")).willReturn(notFound()));
+
+    NotFoundGenericException ex =
+        assertThrows(
+            NotFoundGenericException.class,
+            () -> legacyReportingUnitClient.getReportingUnitBlocksStrict(99999L));
+
+    assertEquals(404, ex.getStatusCode().value());
   }
 
   private static Stream<Arguments> expandedDetailsArguments() {

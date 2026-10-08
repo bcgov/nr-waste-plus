@@ -14,6 +14,7 @@ import {
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useEffect, useRef, type FC } from 'react';
 
+import EmptySection from '@/components/core/EmptySection';
 import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
 import LegacyDataTag from '@/components/core/Tags/LegacyDataTag';
@@ -40,12 +41,13 @@ const EVENT_TARGET = 'reporting-unit-block-details';
  *
  * Fetches the block through {@link useBlockDetailsQuery} (the authority on
  * block existence) and the reporting unit through
- * {@link useReportingUnitDetailsQuery} (which still backs the
+ * {@link useReportingUnitDetailsQuery} (which backs the
  * {@link BlockDetailsSummary} card), then renders the page banner (breadcrumb +
- * focusable `h1`), the summary card, and a Back action. Errors from either
- * query surface the not-found state: an inline `role="alert"` notification
- * with Retry/Back actions; the loading skeleton is deferred by 300 ms via
- * `useDelayedFlag`.
+ * focusable `h1`), the summary card, and a Back action. Only a failed/missing
+ * block query renders the not-found state (an inline `role="alert"` notification
+ * with Retry/Back actions); a reporting-unit-only failure keeps the block page
+ * and swaps the summary card for an inline error. The loading skeleton is
+ * deferred by 300 ms via `useDelayedFlag`.
  *
  * @returns The block details page columns, ready for the layout `Grid`.
  */
@@ -74,17 +76,23 @@ const ReportingUnitBlockDetailsPage: FC = () => {
   });
 
   const isLoading = isRuLoading || isBlockLoading;
-  const isError = isRuError || isBlockError;
+  // The block query alone decides whether the page renders its not-found state;
+  // a reporting-unit summary failure must not masquerade as a missing block.
+  const isBlockMissing = isBlockError || !blockData;
+  const isRuSummaryUnavailable = isRuError || !data;
   // Captured before the early returns so the legacy fallback below stays
   // `boolean | undefined` at the type level even once `blockData` is narrowed.
   const blockIsLegacy = blockData?.isLegacy;
+  const legacyTagEnabled = data
+    ? (blockIsLegacy ?? data.isLegacy ?? !data.grade?.code)
+    : (blockIsLegacy ?? false);
 
   const showSkeleton = useDelayedFlag(isLoading);
   const bannerRef = useRef<HTMLDivElement>(null);
 
   // Move focus to the h1 once the page has real content (after data resolves).
   useEffect(() => {
-    if (isLoading || isError || !data || !blockData) {
+    if (isLoading || !data || !blockData) {
       return;
     }
 
@@ -95,13 +103,13 @@ const ReportingUnitBlockDetailsPage: FC = () => {
 
     heading.setAttribute('tabindex', '-1');
     heading.focus();
-  }, [data, blockData, isError, isLoading]);
+  }, [data, blockData, isLoading]);
 
   if (isLoading) {
     return showSkeleton ? <BlockDetailsSkeleton /> : null;
   }
 
-  if (isError || !data || !blockData) {
+  if (isBlockMissing) {
     return (
       <>
         <Column lg={16} md={8} sm={4} className="rublock-column__banner">
@@ -158,10 +166,10 @@ const ReportingUnitBlockDetailsPage: FC = () => {
             // Block API's `isLegacy` wins once available; the RU grade
             // heuristic covers the rollout window (units without a grade are
             // legacy-only today).
-            enabled={blockIsLegacy ?? data.isLegacy ?? !data.grade?.code}
+            enabled={legacyTagEnabled}
             tag={
               <LegacyDataTag
-                url={`/waste101ReportUnitDetailsAction.do?dataBean.p_reporting_unit_id=${data.id}`}
+                url={`/waste101ReportUnitDetailsAction.do?dataBean.p_reporting_unit_id=${ruId}`}
               />
             }
           >
@@ -202,7 +210,15 @@ const ReportingUnitBlockDetailsPage: FC = () => {
         )}
       </Column>
       <Column lg={16} md={8} sm={4} className="rublock-column__summary">
-        <BlockDetailsSummary data={data} />
+        {data && !isRuSummaryUnavailable ? (
+          <BlockDetailsSummary data={data} />
+        ) : (
+          <EmptySection
+            className="initial-empty-section"
+            title="Reporting unit summary unavailable"
+            description="The reporting unit details could not be loaded. The block details above are unaffected."
+          />
+        )}
       </Column>
       <Column lg={16} md={8} sm={4} className="rublock-column__content">
         <Tabs defaultSelectedIndex={0}>
