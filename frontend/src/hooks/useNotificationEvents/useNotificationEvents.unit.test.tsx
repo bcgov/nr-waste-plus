@@ -1,13 +1,13 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
-import NotificationProvider from '@/context/notification/NotificationProvider';
-
 import { eventHandler } from './eventHandler';
 
 import useNotificationEvents from './index';
 
 import type { GlobalEvent, EventType } from './types';
+
+import NotificationProvider from '@/context/notification/NotificationProvider';
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <NotificationProvider>{children}</NotificationProvider>

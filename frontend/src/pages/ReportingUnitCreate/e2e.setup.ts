@@ -1,6 +1,6 @@
-import { mockApi, mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
-
 import type { Page } from '@playwright/test';
+
+import { mockApi, mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
 
 /**
  * Sets up the common API mocks shared by the ReportingUnitCreate e2e tests.

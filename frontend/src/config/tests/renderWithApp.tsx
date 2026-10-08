@@ -3,13 +3,13 @@ import { RouterProvider } from '@tanstack/react-router';
 import { act, render } from '@testing-library/react';
 import { type ReactElement } from 'react';
 
+import { createTestRouter } from './routerTestHelper';
+
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import NotificationProvider from '@/context/notification/NotificationProvider';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import ThemeProvider from '@/context/theme/ThemeProvider';
-
-import { createTestRouter } from './routerTestHelper';
 
 export interface RenderWithAppOptions {
   /** Initial URL path for the in-memory router (default: '/'). */

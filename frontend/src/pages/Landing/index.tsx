@@ -2,12 +2,12 @@ import { Login } from '@carbon/icons-react';
 import { Button, Column, Grid } from '@carbon/react';
 import { useEffect } from 'react';
 
+import type { BreakpointType } from '@/hooks/useBreakpoint/types';
+import type { FC } from 'react';
+
 import { useAuth } from '@/context/auth/useAuth';
 import { useTheme } from '@/context/theme/useTheme';
 import useBreakpoint from '@/hooks/useBreakpoint';
-
-import type { BreakpointType } from '@/hooks/useBreakpoint/types';
-import type { FC } from 'react';
 
 import './index.scss';
 

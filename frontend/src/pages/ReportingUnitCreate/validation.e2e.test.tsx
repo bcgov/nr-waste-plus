@@ -1,9 +1,9 @@
 import { expect } from '@playwright/test';
 
-import { test } from '@/config/tests/coverage.setup';
-
 import { setupCreateRuMocks } from './e2e.setup';
 import { selectComboBoxOption } from './e2e.utils';
+
+import { test } from '@/config/tests/coverage.setup';
 
 test.describe('Create Reporting Unit - Validation', () => {
   test.beforeEach(async ({ page }, testInfo) => {

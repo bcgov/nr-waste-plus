@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 
-import useBreakpoint from '@/hooks/useBreakpoint';
-
 import { LayoutContext } from './LayoutContext';
+
+import useBreakpoint from '@/hooks/useBreakpoint';
 
 /**
  * Provides responsive layout state for the header panel and side navigation.

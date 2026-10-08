@@ -1,10 +1,10 @@
 import { Column } from '@carbon/react';
 
+import type { FC } from 'react';
+
 import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
 import ReportingUnitCreate from '@/components/waste/ReportingUnits/ReportingUnitCreate';
-
-import type { FC } from 'react';
 
 import './index.scss';
 

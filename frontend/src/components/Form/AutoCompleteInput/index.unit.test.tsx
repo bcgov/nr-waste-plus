@@ -4,9 +4,9 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-
 import AutoCompleteInput from './index';
+
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 
 const items = [
   { name: 'Alpha', id: 1 },

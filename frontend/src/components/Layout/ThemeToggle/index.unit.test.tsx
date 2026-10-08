@@ -2,12 +2,12 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect } from 'vitest';
 
-import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import { ThemeContext, type ThemeContextData } from '@/context/theme/ThemeContext';
-
 import ThemeToggle from './index';
 
 import type { CarbonTheme } from '@/context/preference/types';
+
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
+import { ThemeContext, type ThemeContextData } from '@/context/theme/ThemeContext';
 
 const mockCtxLight: ThemeContextData = {
   theme: 'g10' as CarbonTheme,

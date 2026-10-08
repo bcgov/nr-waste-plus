@@ -1,8 +1,8 @@
 import { expect } from '@playwright/test';
 
-import { test } from '@/config/tests/coverage.setup';
-
 import { setupWasteSearchMocks } from './e2e.setup';
+
+import { test } from '@/config/tests/coverage.setup';
 
 test.describe('Waste Search - Filters', () => {
   test.beforeEach(async ({ page }, testInfo) => {

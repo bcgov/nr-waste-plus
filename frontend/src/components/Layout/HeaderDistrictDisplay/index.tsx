@@ -1,9 +1,9 @@
 import { ChevronDown, ChevronUp } from '@carbon/icons-react';
 import { useMemo, type FC } from 'react';
 
-import useBreakpoint from '@/hooks/useBreakpoint';
-
 import type { DistrictType } from '@/components/core/DistrictSelection/types';
+
+import useBreakpoint from '@/hooks/useBreakpoint';
 
 type HeaderDistrictDisplayProps = {
   queryHook: () => { data: DistrictType | undefined; isLoading: boolean };

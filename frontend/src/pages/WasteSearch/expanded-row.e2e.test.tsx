@@ -1,9 +1,9 @@
 import { expect } from '@playwright/test';
 
+import { setupWasteSearchMocks } from './e2e.setup';
+
 import { test } from '@/config/tests/coverage.setup';
 import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
-
-import { setupWasteSearchMocks } from './e2e.setup';
 
 /**
  * Builds a `data-testid` selector for an expanded-row value cell (the `<dd>`),

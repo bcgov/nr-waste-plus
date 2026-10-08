@@ -1,9 +1,9 @@
 import { expect, type Locator } from '@playwright/test';
 
+import { setupWasteSearchMocks } from './e2e.setup';
+
 import { test } from '@/config/tests/coverage.setup';
 import { mockApiResponsesWithStub } from '@/config/tests/e2e.helper';
-
-import { setupWasteSearchMocks } from './e2e.setup';
 
 test.describe('Waste Search - Advanced Search', () => {
   let advancedSearchButton: Locator;

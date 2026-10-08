@@ -1,6 +1,6 @@
-import { dispatchNotificationEvent } from '@/context/notification/eventBridge.ts';
-
 import type { GlobalEvent, EventType } from './types';
+
+import { dispatchNotificationEvent } from '@/context/notification/eventBridge.ts';
 
 const EVENT_TYPES = new Set<EventType>(['error', 'info', 'success', 'warning']);
 

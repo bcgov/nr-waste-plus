@@ -1,9 +1,9 @@
 import { screen, waitFor } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 
-import { renderWithApp } from '@/config/tests/renderWithApp';
-
 import GlobalErrorPage from './index';
+
+import { renderWithApp } from '@/config/tests/renderWithApp';
 
 const renderPage = (error?: unknown) => renderWithApp(<GlobalErrorPage error={error} />);
 

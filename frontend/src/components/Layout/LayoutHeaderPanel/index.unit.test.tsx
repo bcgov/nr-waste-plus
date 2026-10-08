@@ -1,9 +1,9 @@
 import { screen } from '@testing-library/react';
 import { describe, it, vi, beforeEach } from 'vitest';
 
-import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-
 import { LayoutHeaderPanel } from './index';
+
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 
 vi.mock('@/context/layout/useLayout', () => ({
   useLayout: () => ({

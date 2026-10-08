@@ -1,6 +1,6 @@
-import UploadReviewActions from '@/components/waste/UploadReviewActions';
-
 import type { FC, FunctionComponent, ReactNode } from 'react';
+
+import UploadReviewActions from '@/components/waste/UploadReviewActions';
 
 interface UploadFormLike {
   readonly Subscribe: (props: {

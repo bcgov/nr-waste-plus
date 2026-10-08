@@ -1,9 +1,9 @@
 import isEqual from 'lodash/isEqual';
 import { useEffect, useRef } from 'react';
 
-import { usePreference } from '@/context/preference/usePreference';
-
 import type { UserPreference } from '@/context/preference/types';
+
+import { usePreference } from '@/context/preference/usePreference';
 
 /**
  * Syncs user preferences to filter state using a mapping dictionary and optional transform function.

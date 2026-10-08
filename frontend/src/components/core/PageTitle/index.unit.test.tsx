@@ -2,10 +2,10 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect } from 'vitest';
 
+import PageTitle from './index';
+
 import { renderWithApp } from '@/config/tests/renderWithApp';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
-
-import PageTitle from './index';
 
 // Helper function to render PageTitle with props
 const renderPageTitle = (

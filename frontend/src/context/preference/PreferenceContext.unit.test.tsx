@@ -3,11 +3,11 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, type Mock, beforeEach, afterEach } from 'vitest';
 
-import { makeTestQueryClient } from '@/config/tests/renderWithApp';
-
 import { PreferenceProvider } from './PreferenceProvider';
 import { usePreference } from './usePreference';
 import { loadUserPreference, saveUserPreference } from './utils';
+
+import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 
 const mockStorage = (() => {
   let store: Record<string, string> = {};

@@ -1,9 +1,9 @@
 import { screen, waitFor } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 
-import { renderWithApp } from '@/config/tests/renderWithApp';
-
 import RoleErrorPage from './index';
+
+import { renderWithApp } from '@/config/tests/renderWithApp';
 
 describe('RoleErrorPage', () => {
   it('should render fallback message when no reason param present', async () => {
