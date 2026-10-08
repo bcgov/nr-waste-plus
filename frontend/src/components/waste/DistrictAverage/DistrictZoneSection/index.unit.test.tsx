@@ -3,8 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import DistrictZoneSection from './index.tsx';
 
+import type { CoastDistrictRow, InteriorDistrictRow } from '@/api/districtvolumes.types.ts';
 import type { TableHeaderType } from '@/components/Form/TableResource/types.ts';
-import type { CoastDistrictRow, InteriorDistrictRow } from '@/services/districtvolumes.types.ts';
 
 // ============================================================================
 // Mocks

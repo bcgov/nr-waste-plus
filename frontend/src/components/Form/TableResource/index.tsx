@@ -14,6 +14,9 @@ import {
 } from '@carbon/react';
 import { Children, useEffect, useRef, useState, type ReactNode } from 'react';
 
+import EmptySection from '@/components/core/EmptySection';
+import TooltipTag from '@/components/core/Tags/TooltipTag';
+
 import ColumnCustomizationMenu from './ColumnCustomizationMenu';
 import TableResourceActions from './TableResourceActions';
 import TableResourceExpandRow from './TableResourceExpandRow';
@@ -27,10 +30,7 @@ import {
 } from './types';
 import { useTableToolbar } from './useTableToolbar';
 
-import type { NestedKeyOf, SortDirectionType } from '@/services/types';
-
-import EmptySection from '@/components/core/EmptySection';
-import TooltipTag from '@/components/core/Tags/TooltipTag';
+import type { NestedKeyOf, SortDirectionType } from '@/api/types';
 
 import './index.scss';
 

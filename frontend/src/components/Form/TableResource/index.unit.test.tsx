@@ -5,24 +5,30 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
+import { makeTestQueryClient } from '@/config/tests/renderWithApp';
+import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
+
 import TableResource from './index';
 
 import type { PageableResponse, TableHeaderType } from './types';
 
-import { makeTestQueryClient } from '@/config/tests/renderWithApp';
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import APIs from '@/services/APIs';
+const { mockUsers } = vi.hoisted(() => ({
+  mockUsers: {
+    getUserPreferences: vi.fn(),
+    updateUserPreferences: vi.fn(),
+    setUserBookmarkedRu: vi.fn(),
+    deleteUserBookmarkedRu: vi.fn(),
+  },
+}));
 
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      user: {
-        getUserPreferences: vi.fn(),
-        updateUserPreferences: vi.fn(),
-      },
-    },
-  };
-});
+vi.mock('@/api/resources/users-resource', () => ({
+  UsersResource: class {
+    getUserPreferences = mockUsers.getUserPreferences;
+    updateUserPreferences = mockUsers.updateUserPreferences;
+    setUserBookmarkedRu = mockUsers.setUserBookmarkedRu;
+    deleteUserBookmarkedRu = mockUsers.deleteUserBookmarkedRu;
+  },
+}));
 
 type TestObjectType = {
   id: number;
@@ -60,8 +66,8 @@ describe('TableResource', () => {
   };
 
   beforeEach(() => {
-    (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
-    (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
+    (mockUsers.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
+    (mockUsers.updateUserPreferences as Mock).mockResolvedValue({});
   });
 
   it('renders skeleton when loading', async () => {

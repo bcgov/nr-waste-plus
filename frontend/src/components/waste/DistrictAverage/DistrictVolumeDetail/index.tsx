@@ -1,11 +1,11 @@
 import { type FC } from 'react';
 
+import { useDistrictOptionsQuery } from '@/api/codes';
+
 import CoastDetailView from './CoastDetailView.tsx';
 import InteriorDetailView from './InteriorDetailView.tsx';
 
-import type { DistrictVolumeDetail } from '@/services/districtvolumes.types.ts';
-
-import { useDistrictOptionsQuery } from '@/config/react-query/hooks.ts';
+import type { DistrictVolumeDetail } from '@/api/districtvolumes.types.ts';
 
 /**
  * Props for the {@link DistrictVolumeDetailView} component.

@@ -1,9 +1,9 @@
 import { type FC } from 'react';
 
-import type { DistrictType } from '@/components/core/DistrictSelection/types';
-
+import { useDistrictOptionsQuery } from '@/api/codes';
 import DistrictSelection from '@/components/core/DistrictSelection';
-import { useDistrictOptionsQuery } from '@/config/react-query/hooks';
+
+import type { DistrictType } from '@/components/core/DistrictSelection/types';
 
 /**
  * Loads district options and renders the default district preference selector.

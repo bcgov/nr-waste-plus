@@ -3,16 +3,31 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import MyClientListing from './index';
-
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { MyForestClientDto } from '@/services/types';
-
 import { renderCell } from '@/components/Form/TableResource/types';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import APIs from '@/services/APIs';
 
-vi.mock('@/services/APIs');
+import MyClientListing from './index';
+
+import type { MyForestClientDto } from '@/api/types';
+import type { PageableResponse } from '@/components/Form/TableResource/types';
+
+const { mockForestClient } = vi.hoisted(() => ({
+  mockForestClient: {
+    getForestClient: vi.fn(),
+    searchForestClients: vi.fn(),
+    searchByClientNumbers: vi.fn(),
+    searchMyForestClients: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/forest-client-resource', () => ({
+  ForestClientResource: class {
+    getForestClient = mockForestClient.getForestClient;
+    searchForestClients = mockForestClient.searchForestClients;
+    searchByClientNumbers = mockForestClient.searchByClientNumbers;
+    searchMyForestClients = mockForestClient.searchMyForestClients;
+  },
+}));
 vi.mock('@/hooks/useNotificationEvents', () => ({
   default: vi.fn(() => ({
     sendEvent: vi.fn(),
@@ -112,7 +127,7 @@ const mockEmptyResults: PageableResponse<MyForestClientDto> = {
 const renderWithProps = () => renderWithAppAsync(<MyClientListing />);
 
 describe('search functionality', () => {
-  const mockSearchClients = vi.mocked(APIs.forestclient.searchMyForestClients);
+  const mockSearchClients = vi.mocked(mockForestClient.searchMyForestClients);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -124,7 +139,7 @@ describe('search functionality', () => {
 
     // Wait for initial load
     await waitFor(() => {
-      expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledTimes(1);
+      expect(mockForestClient.searchMyForestClients).toHaveBeenCalledTimes(1);
     });
 
     const searchInput = screen.getByPlaceholderText('Search by name');
@@ -134,8 +149,9 @@ describe('search functionality', () => {
     await userEvent.click(searchButton);
 
     await waitFor(() => {
-      expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('ABC', 0, 10, {
-        notificationTarget: 'my-client-list',
+      expect(mockForestClient.searchMyForestClients).toHaveBeenCalledWith('ABC', 0, 10, {
+        signal: expect.any(AbortSignal),
+        meta: { notificationTarget: 'my-client-list' },
       });
     });
   });
@@ -205,17 +221,18 @@ describe('search functionality', () => {
     await renderWithProps();
 
     await waitFor(() => {
-      expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledTimes(1);
+      expect(mockForestClient.searchMyForestClients).toHaveBeenCalledTimes(1);
     });
 
     const searchButton = screen.getByTestId('search-button-other');
     await userEvent.click(searchButton);
 
     await waitFor(() => {
-      expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledWith('', 0, 10, {
-        notificationTarget: 'my-client-list',
+      expect(mockForestClient.searchMyForestClients).toHaveBeenCalledWith('', 0, 10, {
+        signal: expect.any(AbortSignal),
+        meta: { notificationTarget: 'my-client-list' },
       });
-      expect(APIs.forestclient.searchMyForestClients).toHaveBeenCalledTimes(2);
+      expect(mockForestClient.searchMyForestClients).toHaveBeenCalledTimes(2);
     });
   });
 });

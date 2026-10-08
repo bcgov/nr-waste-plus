@@ -1,11 +1,11 @@
 import { Button, DismissibleTag } from '@carbon/react';
 import { useCallback, type FC } from 'react';
 
-import type { ReportingUnitSearchParametersViewDto } from '@/services/types';
-import type { ArrayKey, DefinedValue, ElementOf } from '@/services/utils.types';
-
+import { reportingUnitSearchParametersView2Plain } from '@/api/search.utils';
 import { mapDisplayFilter } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
-import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
+
+import type { ReportingUnitSearchParametersViewDto } from '@/api/types';
+import type { ArrayKey, DefinedValue, ElementOf } from '@/api/utils.types';
 
 import './index.scss';
 

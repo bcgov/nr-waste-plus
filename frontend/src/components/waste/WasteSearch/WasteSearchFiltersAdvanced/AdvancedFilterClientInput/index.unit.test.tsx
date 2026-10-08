@@ -3,13 +3,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { makeTestQueryClient } from '@/config/tests/renderWithApp';
+import { useAuth } from '@/context/auth/useAuth';
+
 import AdvancedFilterClientInput from './index';
 
 import type { FamLoginUser } from '@/context/auth/types';
-
-import { makeTestQueryClient } from '@/config/tests/renderWithApp';
-import { useAuth } from '@/context/auth/useAuth';
-import APIs from '@/services/APIs';
 
 const mockUser = {
   idpProvider: 'IDIR',
@@ -19,11 +18,21 @@ vi.mock('@/context/auth/useAuth', () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock('@/services/APIs', () => ({
-  default: {
-    forestclient: {
-      searchForestClients: vi.fn(),
-    },
+const { mockForestClient } = vi.hoisted(() => ({
+  mockForestClient: {
+    getForestClient: vi.fn(),
+    searchForestClients: vi.fn(),
+    searchByClientNumbers: vi.fn(),
+    searchMyForestClients: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/forest-client-resource', () => ({
+  ForestClientResource: class {
+    getForestClient = mockForestClient.getForestClient;
+    searchForestClients = mockForestClient.searchForestClients;
+    searchByClientNumbers = mockForestClient.searchByClientNumbers;
+    searchMyForestClients = mockForestClient.searchMyForestClients;
   },
 }));
 
@@ -277,7 +286,7 @@ describe('AdvancedFilterClientInput', () => {
 
   describe('IDIR onAutoCompleteChange and onSelect callbacks', () => {
     beforeEach(() => {
-      vi.mocked(APIs.forestclient.searchForestClients).mockResolvedValue([
+      vi.mocked(mockForestClient.searchForestClients).mockResolvedValue([
         { id: '00000', name: 'Test Client', acronym: 'TC' },
       ]);
     });
@@ -301,7 +310,9 @@ describe('AdvancedFilterClientInput', () => {
       // Covers line 69: onAutoCompleteChange fires after debounce
       await waitFor(
         () => {
-          expect(APIs.forestclient.searchForestClients).toHaveBeenCalledWith('te', 0, 10);
+          expect(mockForestClient.searchForestClients).toHaveBeenCalledWith('te', 0, 10, {
+            signal: undefined,
+          });
         },
         { timeout: 2000 },
       );

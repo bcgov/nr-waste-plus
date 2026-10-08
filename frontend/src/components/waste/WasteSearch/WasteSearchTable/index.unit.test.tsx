@@ -3,15 +3,14 @@ import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
-import WasteSearchTable from './index';
-
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { ReportingUnitSearchResultDto } from '@/services/search.types';
-
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as useNotificationEvents from '@/hooks/useNotificationEvents';
 import * as eventHandler from '@/hooks/useNotificationEvents/eventHandler';
-import APIs from '@/services/APIs';
+
+import WasteSearchTable from './index';
+
+import type { ReportingUnitSearchResultDto } from '@/api/search.types';
+import type { PageableResponse } from '@/components/Form/TableResource/types';
 
 // Mock WasteSearchFilters to avoid slow typing interactions
 vi.mock('@/components/waste/WasteSearch/WasteSearchFilters', () => ({
@@ -99,26 +98,54 @@ vi.mock('@/components/Form/TableResource', () => ({
   },
 }));
 
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      user: {
-        getUserPreferences: vi.fn(),
-        updateUserPreferences: vi.fn(),
-        setUserBookmarkedRu: vi.fn(),
-        deleteUserBookmarkedRu: vi.fn(),
-      },
-      codes: {
-        getSamplingOptions: vi.fn(),
-        getDistricts: vi.fn(),
-        getAssessAreaStatuses: vi.fn(),
-      },
-      search: {
-        searchReportingUnit: vi.fn(),
-      },
-    },
-  };
-});
+const { mockUsers } = vi.hoisted(() => ({
+  mockUsers: {
+    getUserPreferences: vi.fn(),
+    updateUserPreferences: vi.fn(),
+    setUserBookmarkedRu: vi.fn(),
+    deleteUserBookmarkedRu: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/users-resource', () => ({
+  UsersResource: class {
+    getUserPreferences = mockUsers.getUserPreferences;
+    updateUserPreferences = mockUsers.updateUserPreferences;
+    setUserBookmarkedRu = mockUsers.setUserBookmarkedRu;
+    deleteUserBookmarkedRu = mockUsers.deleteUserBookmarkedRu;
+  },
+}));
+
+const { mockCodes } = vi.hoisted(() => ({
+  mockCodes: {
+    getSamplingOptions: vi.fn(),
+    getDistricts: vi.fn(),
+    getAssessAreaStatuses: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/codes-resource', () => ({
+  CodesResource: class {
+    getSamplingOptions = mockCodes.getSamplingOptions;
+    getDistricts = mockCodes.getDistricts;
+    getAssessAreaStatuses = mockCodes.getAssessAreaStatuses;
+  },
+}));
+const { mockSearch } = vi.hoisted(() => ({
+  mockSearch: {
+    searchReportingUnit: vi.fn(),
+    getReportingUnitSearchExpand: vi.fn(),
+    searchReportingUnitUsers: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/search-resource', () => ({
+  SearchResource: class {
+    searchReportingUnit = mockSearch.searchReportingUnit;
+    getReportingUnitSearchExpand = mockSearch.getReportingUnitSearchExpand;
+    searchReportingUnitUsers = mockSearch.searchReportingUnitUsers;
+  },
+}));
 
 const mockSearchResults: PageableResponse<ReportingUnitSearchResultDto> = {
   content: [
@@ -202,22 +229,22 @@ describe('WasteSearchTable', () => {
 
     // Use mockResolvedValue (persistent) instead of mockResolvedValue
     // These are called multiple times due to React Query refetches and component re-renders
-    (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
-    (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
-    (APIs.codes.getSamplingOptions as Mock).mockResolvedValue([
+    (mockUsers.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
+    (mockUsers.updateUserPreferences as Mock).mockResolvedValue({});
+    (mockCodes.getSamplingOptions as Mock).mockResolvedValue([
       { code: 'S1', description: 'Sampling One' },
       { code: 'S2', description: 'Sampling Two' },
     ]);
-    (APIs.codes.getDistricts as Mock).mockResolvedValue([
+    (mockCodes.getDistricts as Mock).mockResolvedValue([
       { code: 'D1', description: 'District One' },
       { code: 'D2', description: 'District Two' },
     ]);
-    (APIs.codes.getAssessAreaStatuses as Mock).mockResolvedValue([
+    (mockCodes.getAssessAreaStatuses as Mock).mockResolvedValue([
       { code: 'APP', description: 'Approved' },
       { code: 'SUB', description: 'Submitted' },
     ]);
     // Default mock for search - can be overridden in individual tests
-    (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockEmptyResults);
+    (mockSearch.searchReportingUnit as Mock).mockResolvedValue(mockEmptyResults);
   });
 
   describe('initial rendering', () => {
@@ -238,13 +265,13 @@ describe('WasteSearchTable', () => {
 
     it('does not trigger search on initial load', async () => {
       await renderWithProps();
-      expect(APIs.search.searchReportingUnit).not.toHaveBeenCalled();
+      expect(mockSearch.searchReportingUnit).not.toHaveBeenCalled();
     });
   });
 
   describe('search functionality', () => {
     it('executes search when search button is clicked with filters', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (mockSearch.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -254,16 +281,16 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
+        expect(mockSearch.searchReportingUnit).toHaveBeenCalledWith(
           expect.objectContaining({ mainSearchTerm: '411B' }),
           expect.objectContaining({ page: 0, size: 10, sort: [] }),
-          expect.objectContaining({ notificationTarget: 'waste-search' }),
+          expect.objectContaining({ meta: { notificationTarget: 'waste-search' } }),
         );
       });
     });
 
     it('displays search results after successful search', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (mockSearch.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -279,7 +306,7 @@ describe('WasteSearchTable', () => {
     });
 
     it('displays no results message when search returns empty', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockEmptyResults);
+      (mockSearch.searchReportingUnit as Mock).mockResolvedValue(mockEmptyResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -300,11 +327,11 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       // Assert that no search API call was triggered (checked synchronously)
-      expect(APIs.search.searchReportingUnit).not.toHaveBeenCalled();
+      expect(mockSearch.searchReportingUnit).not.toHaveBeenCalled();
     });
 
     it('clears events when search is executed', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (mockSearch.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -321,7 +348,7 @@ describe('WasteSearchTable', () => {
 
   describe('sorting', () => {
     it('handles sort change correctly', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (mockSearch.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -343,7 +370,7 @@ describe('WasteSearchTable', () => {
     });
 
     it('can sort by multiple columns', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (mockSearch.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -375,7 +402,7 @@ describe('WasteSearchTable', () => {
           type: 'about:blank',
         },
       };
-      (APIs.search.searchReportingUnit as Mock).mockRejectedValue(errorResponse);
+      (mockSearch.searchReportingUnit as Mock).mockRejectedValue(errorResponse);
 
       const sendEventSpy = vi.spyOn(eventHandler, 'sendEvent').mockImplementation(vi.fn());
 
@@ -409,7 +436,7 @@ describe('WasteSearchTable', () => {
           type: 'about:blank',
         },
       };
-      (APIs.search.searchReportingUnit as Mock).mockRejectedValue(errorResponse);
+      (mockSearch.searchReportingUnit as Mock).mockRejectedValue(errorResponse);
 
       await renderWithProps();
 
@@ -432,7 +459,7 @@ describe('WasteSearchTable', () => {
           type: 'about:blank',
         },
       };
-      (APIs.search.searchReportingUnit as Mock).mockRejectedValue(errorResponse);
+      (mockSearch.searchReportingUnit as Mock).mockRejectedValue(errorResponse);
 
       const sendEventSpy = vi.spyOn(eventHandler, 'sendEvent').mockImplementation(vi.fn());
 
@@ -460,7 +487,7 @@ describe('WasteSearchTable', () => {
 
   describe('filter integration', () => {
     it('updates search when filters change', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (mockSearch.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -470,16 +497,16 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
+        expect(mockSearch.searchReportingUnit).toHaveBeenCalledWith(
           expect.objectContaining({ mainSearchTerm: 'test' }),
           expect.anything(),
-          expect.objectContaining({ notificationTarget: 'waste-search' }),
+          expect.objectContaining({ meta: { notificationTarget: 'waste-search' } }),
         );
       });
     });
 
     it('includes all filter parameters in search request', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (mockSearch.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       // Open advanced filters
@@ -494,10 +521,10 @@ describe('WasteSearchTable', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
+        expect(mockSearch.searchReportingUnit).toHaveBeenCalledWith(
           expect.objectContaining({ mainSearchTerm: 'BLOCK' }),
           expect.objectContaining({ page: 0, size: 10 }),
-          expect.objectContaining({ notificationTarget: 'waste-search' }),
+          expect.objectContaining({ meta: { notificationTarget: 'waste-search' } }),
         );
       });
     });
@@ -509,7 +536,7 @@ describe('WasteSearchTable', () => {
       const searchPromise = new Promise((resolve) => {
         resolveSearch = resolve;
       });
-      (APIs.search.searchReportingUnit as Mock).mockReturnValue(searchPromise);
+      (mockSearch.searchReportingUnit as Mock).mockReturnValue(searchPromise);
 
       await renderWithProps();
 
@@ -530,7 +557,7 @@ describe('WasteSearchTable', () => {
     });
 
     it('hides loading state after data is fetched', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (mockSearch.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -551,11 +578,11 @@ describe('WasteSearchTable', () => {
     it('disables query by default', async () => {
       await renderWithProps();
       // Query should not execute automatically
-      expect(APIs.search.searchReportingUnit).not.toHaveBeenCalled();
+      expect(mockSearch.searchReportingUnit).not.toHaveBeenCalled();
     });
 
     it('clears cache on each search (gcTime: 0)', async () => {
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      (mockSearch.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
       await renderWithProps();
 
       const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
@@ -566,13 +593,13 @@ describe('WasteSearchTable', () => {
       // First search
       await userEvent.click(searchButton);
       await waitFor(() => {
-        expect(APIs.search.searchReportingUnit).toHaveBeenCalledTimes(1);
+        expect(mockSearch.searchReportingUnit).toHaveBeenCalledTimes(1);
       });
 
       // Second search
       await userEvent.click(searchButton);
       await waitFor(() => {
-        expect(APIs.search.searchReportingUnit).toHaveBeenCalledTimes(2);
+        expect(mockSearch.searchReportingUnit).toHaveBeenCalledTimes(2);
       });
     });
   });

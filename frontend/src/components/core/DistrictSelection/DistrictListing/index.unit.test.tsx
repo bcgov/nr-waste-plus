@@ -2,11 +2,10 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
-import DistrictListing from '.';
-
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import APIs from '@/services/APIs';
+
+import DistrictListing from '.';
 
 let mockedDistrictValues = [
   {
@@ -33,11 +32,19 @@ let mockedDistrictValues = [
 
 const mockUpdatePreferences = vi.fn();
 
-vi.mock('@/services/APIs', () => ({
-  default: {
-    codes: {
-      getDistricts: vi.fn(),
-    },
+const { mockCodes } = vi.hoisted(() => ({
+  mockCodes: {
+    getSamplingOptions: vi.fn(),
+    getDistricts: vi.fn(),
+    getAssessAreaStatuses: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/codes-resource', () => ({
+  CodesResource: class {
+    getSamplingOptions = mockCodes.getSamplingOptions;
+    getDistricts = mockCodes.getDistricts;
+    getAssessAreaStatuses = mockCodes.getAssessAreaStatuses;
   },
 }));
 
@@ -84,7 +91,7 @@ describe('DistrictListing', () => {
         description: 'North Island - Central Coast Natural Resource District',
       },
     ];
-    (APIs.codes.getDistricts as Mock).mockResolvedValue(mockedDistrictValues);
+    (mockCodes.getDistricts as Mock).mockResolvedValue(mockedDistrictValues);
   });
 
   it('should render DistrictListing component successfully', async () => {
@@ -99,7 +106,7 @@ describe('DistrictListing', () => {
 
     await screen.findByTestId('district-select-none');
 
-    expect(APIs.codes.getDistricts).toHaveBeenCalled();
+    expect(mockCodes.getDistricts).toHaveBeenCalled();
   });
 
   it('should transform district data correctly', async () => {
@@ -167,7 +174,7 @@ describe('DistrictListing', () => {
 
   it('should handle empty district list', async () => {
     mockedDistrictValues = [];
-    (APIs.codes.getDistricts as Mock).mockResolvedValue([]);
+    (mockCodes.getDistricts as Mock).mockResolvedValue([]);
 
     await renderWithProviders();
 
@@ -185,7 +192,7 @@ describe('DistrictListing', () => {
     await screen.findByTestId('district-select-none');
 
     // Verify the API was called once and data is cached
-    expect(APIs.codes.getDistricts).toHaveBeenCalledTimes(1);
+    expect(mockCodes.getDistricts).toHaveBeenCalledTimes(1);
   });
 
   it('should enable query by default', async () => {
@@ -194,6 +201,6 @@ describe('DistrictListing', () => {
     await screen.findByTestId('district-select-none');
 
     // The API should be called since the query is enabled
-    expect(APIs.codes.getDistricts).toHaveBeenCalled();
+    expect(mockCodes.getDistricts).toHaveBeenCalled();
   });
 });

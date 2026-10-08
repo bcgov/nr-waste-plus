@@ -1,6 +1,6 @@
-import type { CodeDescriptionDto } from '@/services/types';
+import { useWasteSearchFilterOptionsQueries } from '@/api/codes';
 
-import { useWasteSearchFilterOptionsQueries } from '@/config/react-query/hooks';
+import type { CodeDescriptionDto } from '@/api/types';
 
 type WasteSearchFilterOptions = {
   samplingOptions: CodeDescriptionDto[];

@@ -3,11 +3,11 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { useDistrictVolumeTableDetailQuery } from '@/api/districtVolumes';
+
 import DistrictVolumeTableDetailPage from './index';
 
-import type { DistrictVolumeDetail } from '@/services/districtvolumes.types';
-
-import { useDistrictVolumeTableDetailQuery } from '@/config/react-query/hooks';
+import type { DistrictVolumeDetail } from '@/api/districtvolumes.types';
 
 // ============================================================================
 // Mocks
@@ -18,7 +18,7 @@ vi.mock('@tanstack/react-router', () => ({
   useNavigate: vi.fn(),
 }));
 
-vi.mock('@/config/react-query/hooks', () => ({
+vi.mock('@/api/districtVolumes', () => ({
   useDistrictVolumeTableDetailQuery: vi.fn(),
 }));
 

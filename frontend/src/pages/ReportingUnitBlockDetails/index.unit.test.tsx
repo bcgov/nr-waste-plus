@@ -2,14 +2,14 @@ import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
+import { useReportingUnitDetailsQuery } from '@/api/reportingUnits';
 import { renderWithApp } from '@/config/tests/renderWithApp';
 import { SKELETON_DELAY_MS } from '@/hooks/useDelayedFlag';
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 
 import ReportingUnitBlockDetailsPage from './index';
 
-import type { ReportingUnitDto } from '@/services/types';
+import type { ReportingUnitDto } from '@/api/types';
 
 // ── Mutable state used by the module mocks ─────────────────────────────────────
 
@@ -20,8 +20,8 @@ let mockParams: Record<string, string> = { ruId: '468', blockId: '12' };
 
 // ── Module mocks ───────────────────────────────────────────────────────────────
 
-vi.mock('@/config/react-query/hooks', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/config/react-query/hooks')>();
+vi.mock('@/api/reportingUnits', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/api/reportingUnits')>();
   return { ...actual, useReportingUnitDetailsQuery: vi.fn() };
 });
 

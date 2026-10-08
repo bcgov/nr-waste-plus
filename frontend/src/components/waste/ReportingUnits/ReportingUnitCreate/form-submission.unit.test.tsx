@@ -3,18 +3,16 @@ import { RouterProvider } from '@tanstack/react-router';
 import { act, render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import ReportingUnitCreate from './index';
-
-import type { FamLoginUser } from '@/context/auth/types';
-import type { CodeDescriptionDto, ReportingUnitCreateDto } from '@/services/types';
-
+import { useMyForestClientsQuery } from '@/api/forestClients';
 import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
-import {
-  useReportingUnitCreateMutation,
-  useMyForestClientsQuery,
-} from '@/config/react-query/hooks';
+import { useReportingUnitCreateMutation } from '@/api/reportingUnits';
 import { createTestRouter } from '@/config/tests/routerTestHelper';
 import { useAuth } from '@/context/auth/useAuth';
+
+import ReportingUnitCreate from './index';
+
+import type { CodeDescriptionDto, ReportingUnitCreateDto } from '@/api/types';
+import type { FamLoginUser } from '@/context/auth/types';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
@@ -29,9 +27,17 @@ vi.mock(
   }),
 );
 
-vi.mock('@/config/react-query/hooks', async () => ({
+vi.mock('@/api/reportingUnits', async () => ({
   useReportingUnitCreateMutation: vi.fn(),
+  useReportingUnitDetailsQuery: vi.fn(),
+  fetchReportingUnit: vi.fn(),
+}));
+
+vi.mock('@/api/forestClients', async () => ({
   useMyForestClientsQuery: vi.fn(),
+  useForestClientsByNumbersQuery: vi.fn(),
+  useClientLookupQuery: vi.fn(),
+  lookupForestClients: vi.fn(),
 }));
 
 type MockClientInputProps = {

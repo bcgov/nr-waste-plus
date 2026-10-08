@@ -1,13 +1,13 @@
 import { type FC } from 'react';
 
-import SpeciesCompositionDetailHeader from './SpeciesCompositionDetailHeader.tsx';
-import SpeciesCompositionDetailMatrix from './SpeciesCompositionDetailMatrix.tsx';
-
-import PageNotification from '@/components/core/PageNotification';
 import {
   speciesCompositionDataSchema,
   type SpeciesCompositionDetail,
-} from '@/services/speciesComposition.types.ts';
+} from '@/api/speciesComposition.types.ts';
+import PageNotification from '@/components/core/PageNotification';
+
+import SpeciesCompositionDetailHeader from './SpeciesCompositionDetailHeader.tsx';
+import SpeciesCompositionDetailMatrix from './SpeciesCompositionDetailMatrix.tsx';
 
 /**
  * Props for the {@link SpeciesCompositionDetailView} component.

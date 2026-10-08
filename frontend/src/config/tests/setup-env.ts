@@ -8,33 +8,94 @@ vi.mock('aws-amplify/auth', () => ({
   signOut: vi.fn(),
 }));
 
-// Mock the APIs service globally to prevent HTTP requests
-vi.mock('@/services/APIs', () => ({
-  default: {
-    user: {
-      getUserPreferences: vi.fn().mockResolvedValue({}),
-      updateUserPreferences: vi.fn().mockResolvedValue({}),
-      setUserBookmarkedRu: vi.fn().mockResolvedValue(undefined),
-      deleteUserBookmarkedRu: vi.fn().mockResolvedValue(undefined),
-    },
-    forestclient: {
-      searchByClientNumbers: vi.fn().mockResolvedValue([]),
-      searchClients: vi.fn().mockResolvedValue([]),
-      searchMyForestClients: vi.fn().mockResolvedValue([]),
-    },
-    codes: {
-      getDistricts: vi.fn().mockResolvedValue([]),
-      getWasteCodes: vi.fn().mockResolvedValue([]),
-      getSamplingOptions: vi.fn().mockResolvedValue([]),
-      getAssessAreaStatuses: vi.fn().mockResolvedValue([]),
-    },
-    search: {
-      search: vi.fn().mockResolvedValue({ items: [] }),
-      searchReportingUnit: vi.fn().mockResolvedValue({
-        content: [],
-        page: { number: 0, size: 10, totalElements: 0, totalPages: 0 },
-      }),
-    },
+// Mock the API-layer resource modules globally so hook modules never reach
+// the real pipeline in jsdom. Benign defaults mirror the former service
+// registry mock; tests that need specific data re-mock the resource module
+// locally.
+vi.mock('@/api/resources/codes-resource', () => ({
+  CodesResource: class {
+    getSamplingOptions = vi.fn().mockResolvedValue([]);
+    getDistricts = vi.fn().mockResolvedValue([]);
+    getAssessAreaStatuses = vi.fn().mockResolvedValue([]);
+  },
+}));
+
+vi.mock('@/api/resources/forest-client-resource', () => ({
+  ForestClientResource: class {
+    getForestClient = vi.fn().mockResolvedValue({});
+    searchForestClients = vi.fn().mockResolvedValue([]);
+    searchByClientNumbers = vi.fn().mockResolvedValue([]);
+    searchMyForestClients = vi.fn().mockResolvedValue({
+      content: [],
+      page: { number: 0, size: 10, totalElements: 0, totalPages: 0 },
+    });
+  },
+}));
+
+vi.mock('@/api/resources/search-resource', () => ({
+  SearchResource: class {
+    searchReportingUnit = vi.fn().mockResolvedValue({
+      content: [],
+      page: { number: 0, size: 10, totalElements: 0, totalPages: 0 },
+    });
+    getReportingUnitSearchExpand = vi.fn().mockResolvedValue({});
+    searchReportingUnitUsers = vi.fn().mockResolvedValue([]);
+  },
+}));
+
+vi.mock('@/api/resources/users-resource', () => ({
+  UsersResource: class {
+    getUserPreferences = vi.fn().mockResolvedValue({});
+    updateUserPreferences = vi.fn().mockResolvedValue(undefined);
+    setUserBookmarkedRu = vi.fn().mockResolvedValue(undefined);
+    deleteUserBookmarkedRu = vi.fn().mockResolvedValue(undefined);
+  },
+}));
+
+vi.mock('@/api/resources/reporting-unit-resource', () => ({
+  ReportingUnitResource: class {
+    getReportingUnit = vi.fn().mockResolvedValue({});
+    createReportingUnit = vi.fn().mockResolvedValue(1);
+  },
+}));
+
+vi.mock('@/api/resources/district-volume-resource', () => ({
+  DistrictVolumeResource: class {
+    getDistrictVolumes = vi.fn().mockResolvedValue({
+      content: [],
+      page: { number: 0, size: 10, totalElements: 0, totalPages: 0 },
+    });
+    createDistrictVolumeTable = vi.fn().mockResolvedValue(1);
+    getDistrictVolumeTableDetail = vi.fn().mockResolvedValue({});
+    deleteDistrictVolume = vi.fn().mockResolvedValue(undefined);
+  },
+}));
+
+vi.mock('@/api/resources/species-composition-resource', () => ({
+  SpeciesCompositionResource: class {
+    listSpeciesCompositions = vi.fn().mockResolvedValue({
+      content: [],
+      page: { number: 0, size: 10, totalElements: 0, totalPages: 0 },
+    });
+    getSpeciesCompositionById = vi.fn().mockResolvedValue({});
+    createSpeciesComposition = vi.fn().mockResolvedValue(1);
+    deleteSpeciesComposition = vi.fn().mockResolvedValue(undefined);
+  },
+}));
+
+vi.mock('@/api/resources/formula-configuration-resource', () => ({
+  FormulaConfigurationResource: class {
+    getFormulaSets = vi.fn().mockResolvedValue({
+      content: [],
+      page: { number: 0, size: 10, totalElements: 0, totalPages: 0 },
+    });
+    getEffectiveFormulaSet = vi.fn().mockResolvedValue({});
+    getFormulaSet = vi.fn().mockResolvedValue({});
+    getCurrentOpenEndedFormulaSet = vi.fn().mockResolvedValue({});
+    getVariables = vi.fn().mockResolvedValue({});
+    createFormulaSet = vi.fn().mockResolvedValue({});
+    updateFormulaSet = vi.fn().mockResolvedValue({});
+    deleteFormulaSet = vi.fn().mockResolvedValue(undefined);
   },
 }));
 

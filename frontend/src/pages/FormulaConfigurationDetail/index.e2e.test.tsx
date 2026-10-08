@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
-
 import { setupAppShellMocks } from '@/config/tests/app.setup';
 import { mockJwt } from '@/config/tests/auth.helper';
 import { mockApiResponses } from '@/config/tests/e2e.helper';
+
+import type { FormulaSetResponse } from '@/api/formulaConfiguration.types';
 
 const canOverrideClaims = (): boolean => process.env.VITE_MOCK_AUTH?.toLowerCase() === 'true';
 

@@ -1,11 +1,10 @@
 import { screen } from '@testing-library/react';
 import { describe, it, vi, type Mock } from 'vitest';
 
-import Layout from './index';
-
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import { LayoutProvider } from '@/context/layout/LayoutProvider';
-import APIs from '@/services/APIs';
+
+import Layout from './index';
 
 vi.mock('@/routes/routePaths', () => ({
   getMenuEntries: () => [
@@ -30,23 +29,30 @@ vi.mock('@/routes/routePaths', () => ({
   isRouteAccessible: () => true,
 }));
 
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      user: {
-        getUserPreferences: vi.fn(),
-        updateUserPreferences: vi.fn(),
-      },
-    },
-  };
-});
+const { mockUsers } = vi.hoisted(() => ({
+  mockUsers: {
+    getUserPreferences: vi.fn(),
+    updateUserPreferences: vi.fn(),
+    setUserBookmarkedRu: vi.fn(),
+    deleteUserBookmarkedRu: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/users-resource', () => ({
+  UsersResource: class {
+    getUserPreferences = mockUsers.getUserPreferences;
+    updateUserPreferences = mockUsers.updateUserPreferences;
+    setUserBookmarkedRu = mockUsers.setUserBookmarkedRu;
+    deleteUserBookmarkedRu = mockUsers.deleteUserBookmarkedRu;
+  },
+}));
 
 // Dummy child component for testing
 const DummyChild = () => <div data-testid="dummy-child">Hello Child</div>;
 
 describe('Layout', () => {
   it('shouldRenderHeaderGridAndChildren_whenRendered', async () => {
-    (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
+    (mockUsers.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
 
     await renderWithAppAsync(
       <LayoutProvider>

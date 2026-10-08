@@ -12,6 +12,19 @@ import { useNavigate } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
 import { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
+import {
+  useCreateFormulaSet,
+  useCurrentOpenEndedFormulaSet,
+  useFormulaVariables,
+} from '@/api/formulaConfiguration';
+import {
+  FORMULA_KEYS,
+  FORMULA_VARIABLES_DISTRICT_CODE,
+  getFormulaKeysForArea,
+} from '@/api/formulaConfiguration.constants.ts';
+import FormulaSection from '@/components/waste/Formula/FormulaSection';
+import { HttpError } from '@/http/types';
+
 import FormulaVariableCatalog from '../FormulaVariableCatalog';
 
 import { carryForwardFormulaValues, type FormulaDraftValue } from './carryForward.ts';
@@ -20,20 +33,7 @@ import type {
   FormulaItemDto,
   FormulaSetRequest,
   FormulaValidationError,
-} from '@/services/formulaConfiguration.types.ts';
-
-import FormulaSection from '@/components/waste/Formula/FormulaSection';
-import { ApiError } from '@/config/api/types.ts';
-import {
-  useCreateFormulaSet,
-  useCurrentOpenEndedFormulaSet,
-  useFormulaVariables,
-} from '@/hooks/useFormulaConfiguration';
-import {
-  FORMULA_KEYS,
-  FORMULA_VARIABLES_DISTRICT_CODE,
-  getFormulaKeysForArea,
-} from '@/services/formulaConfiguration.constants.ts';
+} from '@/api/formulaConfiguration.types.ts';
 
 import './index.scss';
 
@@ -71,12 +71,12 @@ const readValidationMessages = (validationErrors: unknown): string[] => {
 /**
  * Converts a create-set failure into a user-facing message.
  *
- * API failures surface as {@link ApiError}; for a 422 the response body carries the
+ * API failures surface as {@link HttpError}; for a 422 the response body carries the
  * RFC 7807 `detail` (and optionally itemized `validationErrors`), which reads far better
- * in the alert than the raw status/JSON dump in `ApiError.message`.
+ * in the alert than the raw path/status fallback in `HttpError.message`.
  */
 const toSubmitErrorMessage = (error: unknown): string => {
-  if (error instanceof ApiError && typeof error.body === 'object' && error.body !== null) {
+  if (error instanceof HttpError && typeof error.body === 'object' && error.body !== null) {
     const { detail, validationErrors } = error.body as ProblemDetailBody;
     const messages = readValidationMessages(validationErrors);
     if (typeof detail === 'string' && detail.trim().length > 0) {
@@ -85,6 +85,10 @@ const toSubmitErrorMessage = (error: unknown): string => {
     if (messages.length > 0) {
       return messages.join('; ');
     }
+  }
+  if (error instanceof HttpError && error.statusText) {
+    // Parity with the legacy ApiError message, which carried the status text.
+    return error.statusText;
   }
   return error instanceof Error ? error.message : 'Formula set creation failed.';
 };
@@ -339,7 +343,6 @@ const FormulaConfigurationCreateForm: FC = () => {
   };
 
   const handleDateInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // eslint-disable-next-line no-console
     const value = event.currentTarget.value.trim().replaceAll('/', '-');
     const parsed = DateTime.fromFormat(value, DATE_FORMAT);
     if (!value || !parsed.isValid || parsed < DateTime.now().plus({ days: 1 }).startOf('day')) {
@@ -422,7 +425,7 @@ const FormulaConfigurationCreateForm: FC = () => {
           )}
           <Column max={16} xlg={16} lg={16} md={8} sm={4}>
             {isCurrentFormulaSetError &&
-              (currentFormulaSetError instanceof ApiError
+              (currentFormulaSetError instanceof HttpError
                 ? currentFormulaSetError.status !== 404
                 : true) && (
                 <p role="alert" className="formula-config-create-validation">

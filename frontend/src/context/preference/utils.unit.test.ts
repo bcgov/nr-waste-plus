@@ -1,34 +1,40 @@
 import { describe, it, expect, vi, type Mock, beforeEach } from 'vitest';
 
+
 import { loadUserPreference, saveUserPreference, initialValue } from './utils';
 
-import APIs from '@/services/APIs';
+const { mockUsers } = vi.hoisted(() => ({
+  mockUsers: {
+    getUserPreferences: vi.fn(),
+    updateUserPreferences: vi.fn(),
+    setUserBookmarkedRu: vi.fn(),
+    deleteUserBookmarkedRu: vi.fn(),
+  },
+}));
 
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      user: {
-        getUserPreferences: vi.fn(),
-        updateUserPreferences: vi.fn(),
-      },
-    },
-  };
-});
+vi.mock('@/api/resources/users-resource', () => ({
+  UsersResource: class {
+    getUserPreferences = mockUsers.getUserPreferences;
+    updateUserPreferences = mockUsers.updateUserPreferences;
+    setUserBookmarkedRu = mockUsers.setUserBookmarkedRu;
+    deleteUserBookmarkedRu = mockUsers.deleteUserBookmarkedRu;
+  },
+}));
 
 describe('loadUserPreference', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
+    (mockUsers.updateUserPreferences as Mock).mockResolvedValue({});
   });
 
   it('no value initially, resort to default', async () => {
-    (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({});
+    (mockUsers.getUserPreferences as Mock).mockResolvedValueOnce({});
     const result = await loadUserPreference();
     expect(result).toEqual(initialValue);
   });
 
   it('returns preference', async () => {
-    (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'g100' });
+    (mockUsers.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'g100' });
     const result = await loadUserPreference();
     expect(result).toEqual({ theme: 'g100' });
   });

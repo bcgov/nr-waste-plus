@@ -2,14 +2,14 @@ import { render, screen } from '@testing-library/react';
 import { DateTime } from 'luxon';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
-import { headers } from './constants';
-
-import type { CodeDescriptionDto } from '@/services/types';
-
 import { createRouterWrapper } from '@/config/tests/routerTestHelper';
 import { Role } from '@/context/auth/types';
 import * as useAuthModule from '@/context/auth/useAuth';
 import * as envModule from '@/env';
+
+import { headers } from './constants';
+
+import type { CodeDescriptionDto } from '@/api/types';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 

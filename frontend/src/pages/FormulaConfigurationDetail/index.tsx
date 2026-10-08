@@ -3,11 +3,11 @@ import { Button, Column } from '@carbon/react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { type FC } from 'react';
 
+import { useFormulaSetDetail } from '@/api/formulaConfiguration';
 import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
 import FormulaConfigurationDetail from '@/components/waste/Formula/FormulaConfigurationDetail';
 import FormulaConfigurationDetailSkeleton from '@/components/waste/Formula/FormulaConfigurationDetail/FormulaConfigurationDetailSkeleton';
-import { useFormulaSetDetail } from '@/hooks/useFormulaConfiguration';
 import { navigateInTree } from '@/routes/inTreePaths';
 
 import './index.scss';

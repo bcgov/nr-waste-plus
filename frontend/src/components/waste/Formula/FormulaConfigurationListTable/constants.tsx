@@ -1,7 +1,7 @@
-import type { TableHeaderType } from '@/components/Form/TableResource/types.ts';
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
-
 import DateTag from '@/components/core/Tags/DateTag';
+
+import type { FormulaSetResponse } from '@/api/formulaConfiguration.types.ts';
+import type { TableHeaderType } from '@/components/Form/TableResource/types.ts';
 
 const areaDisplayMap: Record<string, string> = {
   INTERIOR: 'Interior',

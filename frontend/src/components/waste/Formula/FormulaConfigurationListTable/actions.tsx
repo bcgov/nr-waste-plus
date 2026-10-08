@@ -1,7 +1,7 @@
-import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types.ts';
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
-
 import { useListTableRowActions } from '@/hooks/useTableRow';
+
+import type { FormulaSetResponse } from '@/api/formulaConfiguration.types.ts';
+import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types.ts';
 
 type FormulaSetRow = PageableResponse<FormulaSetResponse>['content'][number];
 

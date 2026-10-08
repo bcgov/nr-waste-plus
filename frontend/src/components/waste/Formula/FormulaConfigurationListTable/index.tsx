@@ -1,16 +1,16 @@
 import { Column } from '@carbon/react';
 import { useState, type FC } from 'react';
 
-import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
-
+import { useFormulaSetList, useDeleteFormulaSet } from '@/api/formulaConfiguration';
 import TableResource from '@/components/Form/TableResource';
 import ConfigurationDeleteConfirmModal from '@/components/waste/ConfigurationDeleteConfirmModal';
 import { useFormulaConfigurationListRowActions } from '@/components/waste/Formula/FormulaConfigurationListTable/actions.tsx';
 import { headers } from '@/components/waste/Formula/FormulaConfigurationListTable/constants.tsx';
-import { useListTableState } from '@/hooks/useTableRow';
-import { useFormulaSetList, useDeleteFormulaSet } from '@/hooks/useFormulaConfiguration';
 import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
+import { useListTableState } from '@/hooks/useTableRow';
+
+import type { FormulaSetResponse } from '@/api/formulaConfiguration.types.ts';
+import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
 
 import './index.scss';
 

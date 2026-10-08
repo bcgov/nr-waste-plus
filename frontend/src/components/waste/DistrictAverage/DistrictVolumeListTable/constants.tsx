@@ -1,7 +1,7 @@
-import type { TableHeaderType } from '@/components/Form/TableResource/types.ts';
-import type { DistrictVolumeListItem } from '@/services/districtvolumes.types.ts';
-
 import DateTag from '@/components/core/Tags/DateTag';
+
+import type { DistrictVolumeListItem } from '@/api/districtvolumes.types.ts';
+import type { TableHeaderType } from '@/components/Form/TableResource/types.ts';
 
 const areaDisplayMap: Record<string, string> = {
   INTERIOR: 'Interior',

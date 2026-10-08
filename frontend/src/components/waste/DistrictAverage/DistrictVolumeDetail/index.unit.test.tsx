@@ -3,20 +3,22 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import DistrictVolumeDetailView from './index.tsx';
 
-import type { DistrictVolumeDetail } from '@/services/districtvolumes.types.ts';
+import type { DistrictVolumeDetail } from '@/api/districtvolumes.types.ts';
 
 // ============================================================================
 // Mocks
 // ============================================================================
 
 // Mock the TanStack Query hook that fetches district codes/descriptions
-vi.mock('@/config/react-query/hooks', () => ({
+vi.mock('@/api/codes', () => ({
   useDistrictOptionsQuery: vi.fn(() => ({
     data: [
       { code: 'DCC', description: 'Cariboo-Chilcotin' },
       { code: 'DKM', description: 'Coast Mountains' },
     ],
   })),
+  useCodesQuery: vi.fn(),
+  useWasteSearchFilterOptionsQueries: vi.fn(),
 }));
 
 // Mock the sub-views to isolate the conditional routing logic

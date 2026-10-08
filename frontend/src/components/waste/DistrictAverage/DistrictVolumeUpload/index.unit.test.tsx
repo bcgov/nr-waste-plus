@@ -3,13 +3,13 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import DistrictVolumeTableUpload from './index.tsx';
-
-import type { TableData } from '@/services/districtvolumes.types.ts';
-
-import * as hooks from '@/config/react-query/hooks.ts';
+import * as hooks from '@/api/districtVolumes.ts';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp.tsx';
 import * as inTreePaths from '@/routes/inTreePaths.ts';
+
+import DistrictVolumeTableUpload from './index.tsx';
+
+import type { TableData } from '@/api/districtvolumes.types.ts';
 
 // ============================================================================
 // Mocks
@@ -33,22 +33,22 @@ const { mockListSheets, mockTableData, coastValidator, interiorValidator, bypass
 
 // Mock ExcelReader so the validator doesn't need real .xlsx files
 // Must use a regular function (not arrow) so `new ExcelReader()` works as a constructor.
-vi.mock('@/services/spreadsheet/excelReader', () => ({
+vi.mock('@/domain/spreadsheet/excelReader', () => ({
   ExcelReader: vi.fn().mockImplementation(function () {
     return { listSheets: mockListSheets };
   }),
 }));
 
 // Mock the format-specific validators the component validator delegates to
-vi.mock('@/services/districtvolumes/validators/coastValidator', () => ({
+vi.mock('@/domain/districtvolumes/validators/coastValidator', () => ({
   coastValidator,
 }));
 
-vi.mock('@/services/districtvolumes/validators/interiorValidator', () => ({
+vi.mock('@/domain/districtvolumes/validators/interiorValidator', () => ({
   interiorValidator,
 }));
 
-vi.mock('@/config/react-query/hooks');
+vi.mock('@/api/districtVolumes');
 
 vi.mock('@carbon/react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@carbon/react')>();

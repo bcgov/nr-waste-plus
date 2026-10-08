@@ -1,10 +1,10 @@
-import type { TableHeaderType } from '@/components/Form/TableResource/types';
-import type { CodeDescriptionDto } from '@/services/types';
-import type { NestedKeyOf, PageableResponse } from '@/types/PageableResponse.types';
-
 import ColorTag, { type CarbonColors } from '@/components/core/Tags/ColorTag';
 import DateTag from '@/components/core/Tags/DateTag';
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
+
+import type { CodeDescriptionDto } from '@/api/types';
+import type { TableHeaderType } from '@/components/Form/TableResource/types';
+import type { NestedKeyOf, PageableResponse } from '@/types/PageableResponse.types';
 
 /**
  * A single row of the Reporting Unit blocks table (District Average Draft state,

@@ -1,13 +1,12 @@
 import { screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
+import { Role } from '@/context/auth/types';
+
 import NoRolePage from './index';
 
 import type { FamLoginUser } from '@/context/auth/types';
-
-import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import { Role } from '@/context/auth/types';
-import APIs from '@/services/APIs';
 
 let mockIsLoggedIn = false;
 let mockUser: FamLoginUser | null = null;
@@ -21,16 +20,23 @@ vi.mock('@/context/auth/useAuth', () => ({
   }),
 }));
 
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      user: {
-        getUserPreferences: vi.fn(),
-        updateUserPreferences: vi.fn(),
-      },
-    },
-  };
-});
+const { mockUsers } = vi.hoisted(() => ({
+  mockUsers: {
+    getUserPreferences: vi.fn(),
+    updateUserPreferences: vi.fn(),
+    setUserBookmarkedRu: vi.fn(),
+    deleteUserBookmarkedRu: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/users-resource', () => ({
+  UsersResource: class {
+    getUserPreferences = mockUsers.getUserPreferences;
+    updateUserPreferences = mockUsers.updateUserPreferences;
+    setUserBookmarkedRu = mockUsers.setUserBookmarkedRu;
+    deleteUserBookmarkedRu = mockUsers.deleteUserBookmarkedRu;
+  },
+}));
 
 vi.mock('@tanstack/react-router', async () => {
   const actual = await vi.importActual('@tanstack/react-router');
@@ -47,8 +53,8 @@ describe('NoRolePage', () => {
     mockIsLoggedIn = false;
     mockUser = null;
     mockNavigate.mockClear();
-    vi.mocked(APIs.user.getUserPreferences).mockResolvedValue({ theme: 'g10' });
-    vi.mocked(APIs.user.updateUserPreferences).mockResolvedValue(undefined);
+    vi.mocked(mockUsers.getUserPreferences).mockResolvedValue({ theme: 'g10' });
+    vi.mocked(mockUsers.updateUserPreferences).mockResolvedValue(undefined);
   });
 
   it('should navigate to home when user is not logged in', async () => {

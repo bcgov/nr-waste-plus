@@ -1,12 +1,12 @@
 import { useEffect, useState, type ComponentProps } from 'react';
 
-import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
-
+import { removeEmpty } from '@/api/utils';
 import { clientNumbersTransform } from '@/components/waste/WasteSearch/WasteSearchFilters/utils';
 import WasteSearchFiltersActive from '@/components/waste/WasteSearch/WasteSearchFiltersActive';
 import useSyncFiltersToSearchParams from '@/hooks/useSyncFiltersToSearchParams';
 import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
-import { removeEmpty } from '@/services/utils';
+
+import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/api/types';
 
 /** Shape of the object returned by {@link useWasteSearchFilters}. */
 type UseWasteSearchFiltersReturn = {

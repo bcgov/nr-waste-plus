@@ -1,13 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/hooks/useFormulaConfiguration', () => ({
+vi.mock('@/api/formulaConfiguration', () => ({
   useFormulaVariables: vi.fn(() => ({ data: undefined })),
 }));
 
 import FormulaConfigurationDetail from '.';
 
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
+import type { FormulaSetResponse } from '@/api/formulaConfiguration.types.ts';
 
 const fixture: FormulaSetResponse = {
   id: 42,
@@ -20,7 +20,9 @@ const fixture: FormulaSetResponse = {
       formulaKey: 'block.waste.avoidable_sawlog',
       expression: '1.5',
       declaredVariables: [],
-      validationErrors: [{ code: 'UNKNOWN_VARIABLE', message: 'Variable is not defined', startOffset: 2 }],
+      validationErrors: [
+        { code: 'UNKNOWN_VARIABLE', message: 'Variable is not defined', startOffset: 2 },
+      ],
       sortOrder: 1,
     },
     {

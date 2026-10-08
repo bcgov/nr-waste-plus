@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { ApiError } from '@/config/api/types';
+import { fetchReportingUnit } from '@/api/reportingUnits';
 import { queryClient } from '@/config/react-query/config';
-import APIs from '@/services/APIs';
+import { HttpError } from '@/http/types';
 
 import { reportingUnitLoader } from './loader';
 
@@ -14,24 +14,16 @@ vi.mock('@/config/react-query/config', () => ({
   },
 }));
 
-vi.mock('@/services/APIs', () => ({
-  default: {
-    reportingUnit: {
-      getReportingUnit: vi.fn(),
-    },
-  },
+vi.mock('@/api/reportingUnits', () => ({
+  fetchReportingUnit: vi.fn(),
 }));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const mockEnsureQueryData = vi.mocked(queryClient.ensureQueryData);
 
-function makeApiError(status: number, statusText: string): ApiError {
-  return new ApiError(
-    { method: 'GET', url: `/api/reporting-units/999` },
-    { url: `/api/reporting-units/999`, ok: false, status, statusText, body: null },
-    statusText,
-  );
+function makeHttpError(status: number, statusText: string): HttpError {
+  return new HttpError(status, statusText, '/api/reporting-units/999', null);
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -119,16 +111,19 @@ describe('reportingUnitLoader', () => {
         sampling: { code: 'A', description: 'A' },
         district: { code: 'A', description: 'A' },
       };
-      const mockGetReportingUnit = vi.mocked(APIs.reportingUnit.getReportingUnit);
-      mockGetReportingUnit.mockResolvedValue(mockData);
+      const mockFetchReportingUnit = vi.mocked(fetchReportingUnit);
+      mockFetchReportingUnit.mockResolvedValue(mockData);
 
-      // Let ensureQueryData actually call the queryFn
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mockEnsureQueryData.mockImplementation(({ queryFn }) => (queryFn as any)());
+      // Let ensureQueryData actually call the queryFn (TanStack passes a
+      // QueryFunctionContext; the loader threads its signal through)
+      mockEnsureQueryData.mockImplementation(({ queryFn }) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (queryFn as any)({ signal: undefined }),
+      );
 
       const result = await reportingUnitLoader({ params: { ruId: '7' } });
 
-      expect(mockGetReportingUnit).toHaveBeenCalledWith(7);
+      expect(mockFetchReportingUnit).toHaveBeenCalledWith(7, undefined);
       expect(result).toEqual(mockData);
     });
 
@@ -171,7 +166,7 @@ describe('reportingUnitLoader', () => {
 
   describe('API error handling', () => {
     it('throws notFound when the API returns 404', async () => {
-      mockEnsureQueryData.mockRejectedValue(makeApiError(404, 'Not Found'));
+      mockEnsureQueryData.mockRejectedValue(makeHttpError(404, 'Not Found'));
 
       await expect(reportingUnitLoader({ params: { ruId: '999' } })).rejects.toMatchObject({
         isNotFound: true,
@@ -179,30 +174,28 @@ describe('reportingUnitLoader', () => {
     });
 
     it('throws notFound when the API returns 403 (non-existent resource reported as Forbidden)', async () => {
-      mockEnsureQueryData.mockRejectedValue(makeApiError(403, 'Forbidden'));
+      mockEnsureQueryData.mockRejectedValue(makeHttpError(403, 'Forbidden'));
 
       await expect(reportingUnitLoader({ params: { ruId: '999' } })).rejects.toMatchObject({
         isNotFound: true,
       });
     });
 
-    it('re-throws ApiError as-is when status is 500', async () => {
-      const serverError = makeApiError(500, 'Internal Server Error');
+    it('re-throws HttpError as-is when status is 500', async () => {
+      const serverError = makeHttpError(500, 'Internal Server Error');
       mockEnsureQueryData.mockRejectedValue(serverError);
 
-      await expect(reportingUnitLoader({ params: { ruId: '999' } })).rejects.toThrow(
-        'Internal Server Error',
-      );
+      await expect(reportingUnitLoader({ params: { ruId: '999' } })).rejects.toBe(serverError);
     });
 
-    it('re-throws ApiError as-is when status is 401', async () => {
-      const unauthorizedError = makeApiError(401, 'Unauthorized');
+    it('re-throws HttpError as-is when status is 401', async () => {
+      const unauthorizedError = makeHttpError(401, 'Unauthorized');
       mockEnsureQueryData.mockRejectedValue(unauthorizedError);
 
-      await expect(reportingUnitLoader({ params: { ruId: '99' } })).rejects.toThrow('Unauthorized');
+      await expect(reportingUnitLoader({ params: { ruId: '99' } })).rejects.toBe(unauthorizedError);
     });
 
-    it('re-throws non-ApiError network errors unchanged', async () => {
+    it('re-throws non-HttpError network errors unchanged', async () => {
       const networkError = new Error('Network Error');
       mockEnsureQueryData.mockRejectedValue(networkError);
 

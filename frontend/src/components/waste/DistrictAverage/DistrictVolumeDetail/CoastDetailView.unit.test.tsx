@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import CoastDetailView from './CoastDetailView.tsx';
 import { buildDistrictVolumeDetailHeaders } from './districtVolumeDetailHeaders.tsx';
 
-import type { DistrictVolumeDetail } from '@/services/districtvolumes.types.ts';
+import type { DistrictVolumeDetail } from '@/api/districtvolumes.types.ts';
 
 /** Shared district options for testing the lookup in the coast district column. */
 const SAMPLE_DISTRICT_OPTIONS = [

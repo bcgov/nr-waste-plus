@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import InteriorDetailView from './InteriorDetailView';
 
-import type { DistrictVolumeDetail } from '@/services/districtvolumes.types';
+import type { DistrictVolumeDetail } from '@/api/districtvolumes.types';
 
 /** Shared district options for testing the lookup in the district column. */
 const SAMPLE_DISTRICT_OPTIONS = [

@@ -4,19 +4,17 @@ import { useForm } from '@tanstack/react-form';
 import { useRouter } from '@tanstack/react-router';
 import { type ChangeEvent, type FC } from 'react';
 
-import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
-import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
-import AdvancedFilterClientInput from '@/components/waste/WasteSearch/WasteSearchFiltersAdvanced/AdvancedFilterClientInput';
-import {
-  useMyForestClientsQuery,
-  useReportingUnitCreateMutation,
-} from '@/config/react-query/hooks';
-import { useAuth } from '@/context/auth/useAuth';
+import { useMyForestClientsQuery } from '@/api/forestClients';
 import {
   type CodeDescriptionDto,
   type ReportingUnitCreateDto,
   reportingUnitCreateRequestSchema,
-} from '@/services/types';
+} from '@/api/types';
+import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
+import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
+import AdvancedFilterClientInput from '@/components/waste/WasteSearch/WasteSearchFiltersAdvanced/AdvancedFilterClientInput';
+import { useReportingUnitCreateMutation } from '@/api/reportingUnits';
+import { useAuth } from '@/context/auth/useAuth';
 import { runValidators } from '@/utils/runValidators';
 import { required } from '@/utils/validators';
 

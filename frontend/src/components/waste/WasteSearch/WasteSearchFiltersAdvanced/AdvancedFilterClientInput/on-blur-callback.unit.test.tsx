@@ -3,13 +3,13 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import AdvancedFilterClientInput from './index';
-
-import type { FamLoginUser } from '@/context/auth/types';
-
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import { useAuth } from '@/context/auth/useAuth';
+
+import AdvancedFilterClientInput from './index';
+
+import type { FamLoginUser } from '@/context/auth/types';
 
 const mockUser = {
   idpProvider: 'IDIR',
@@ -17,14 +17,6 @@ const mockUser = {
 
 vi.mock('@/context/auth/useAuth', () => ({
   useAuth: vi.fn(),
-}));
-
-vi.mock('@/services/APIs', () => ({
-  default: {
-    forestclient: {
-      searchForestClients: vi.fn(),
-    },
-  },
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => {

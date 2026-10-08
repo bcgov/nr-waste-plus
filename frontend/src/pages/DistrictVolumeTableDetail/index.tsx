@@ -3,11 +3,11 @@ import { Button, Column } from '@carbon/react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { type FC } from 'react';
 
+import { useDistrictVolumeTableDetailQuery } from '@/api/districtVolumes';
 import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
 import DistrictVolumeDetailView from '@/components/waste/DistrictAverage/DistrictVolumeDetail';
 import DistrictVolumeDetailSkeleton from '@/components/waste/DistrictAverage/DistrictVolumeDetail/DistrictVolumeDetailSkeleton';
-import { useDistrictVolumeTableDetailQuery } from '@/config/react-query/hooks';
 import { navigateInTree } from '@/routes/inTreePaths';
 
 import './index.scss';

@@ -1,13 +1,13 @@
 import { Column, Grid } from '@carbon/react';
 import { type FC } from 'react';
 
-import type { ReportingUnitDto } from '@/services/types';
-
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
-import ReadonlyInput from '@/components/Form/ReadonlyInput';
 import TooltipRoleBasedRedirectLinkTag from '@/components/core/Tags/TooltipRoleBasedRedirectLinkTag';
+import ReadonlyInput from '@/components/Form/ReadonlyInput';
 import { Role } from '@/context/auth/types';
 import { env } from '@/env';
+
+import type { ReportingUnitDto } from '@/api/types';
 
 import './index.scss';
 

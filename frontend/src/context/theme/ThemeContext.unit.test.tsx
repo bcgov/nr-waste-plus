@@ -4,24 +4,30 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, type Mock, beforeEach } from 'vitest';
 
-import { ThemeProvider } from './ThemeProvider';
-import { useTheme } from './useTheme';
-
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import { CARBON_THEMES } from '@/context/preference/types';
-import APIs from '@/services/APIs';
 
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      user: {
-        getUserPreferences: vi.fn(),
-        updateUserPreferences: vi.fn(),
-      },
-    },
-  };
-});
+import { ThemeProvider } from './ThemeProvider';
+import { useTheme } from './useTheme';
+
+const { mockUsers } = vi.hoisted(() => ({
+  mockUsers: {
+    getUserPreferences: vi.fn(),
+    updateUserPreferences: vi.fn(),
+    setUserBookmarkedRu: vi.fn(),
+    deleteUserBookmarkedRu: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/users-resource', () => ({
+  UsersResource: class {
+    getUserPreferences = mockUsers.getUserPreferences;
+    updateUserPreferences = mockUsers.updateUserPreferences;
+    setUserBookmarkedRu = mockUsers.setUserBookmarkedRu;
+    deleteUserBookmarkedRu = mockUsers.deleteUserBookmarkedRu;
+  },
+}));
 
 const TestComponent = () => {
   const { theme, setTheme, toggleTheme } = useTheme();
@@ -53,13 +59,13 @@ describe('ThemeContext', () => {
   });
 
   it('provides the default theme', () => {
-    (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'g10' });
+    (mockUsers.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'g10' });
     renderWithProviders();
     expect(screen.getByTestId('theme-value').textContent).toBe('g10');
   });
 
   it('setTheme changes the theme', async () => {
-    (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'g10' });
+    (mockUsers.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'g10' });
     renderWithProviders();
     const setThemeButton = screen.getByText('Set g100');
     await userEvent.click(setThemeButton);
@@ -69,11 +75,11 @@ describe('ThemeContext', () => {
 
   it('toggleTheme toggles between g10 and g100', async () => {
     const user = userEvent.setup();
-    (APIs.user.getUserPreferences as Mock)
+    (mockUsers.getUserPreferences as Mock)
       .mockResolvedValueOnce({ theme: 'g10' })
       .mockResolvedValueOnce({ theme: 'g100' })
       .mockResolvedValueOnce({ theme: 'g10' });
-    (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
+    (mockUsers.updateUserPreferences as Mock).mockResolvedValue({});
     renderWithProviders();
 
     // Default is g10, toggle should set to g100

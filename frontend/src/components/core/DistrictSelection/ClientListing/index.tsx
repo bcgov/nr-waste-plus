@@ -1,12 +1,12 @@
 import { type FC } from 'react';
 
-import type { DistrictType } from '@/components/core/DistrictSelection/types';
-import type { CodeDescriptionDto } from '@/services/search.types';
-
+import { useForestClientsByNumbersQuery } from '@/api/forestClients';
+import { forestClientAutocompleteResult2CodeDescription } from '@/api/utils';
 import DistrictSelection from '@/components/core/DistrictSelection';
-import { useForestClientsByNumbersQuery } from '@/config/react-query/hooks';
 import { useAuth } from '@/context/auth/useAuth';
-import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils';
+
+import type { CodeDescriptionDto } from '@/api/search.types';
+import type { DistrictType } from '@/components/core/DistrictSelection/types';
 
 /**
  * Loads the current user's clients and renders the default client preference selector.

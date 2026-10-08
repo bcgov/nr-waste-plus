@@ -3,14 +3,13 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
-import WasteSearchTable from './index';
-
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { ReportingUnitSearchResultDto } from '@/services/search.types';
-
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as useNotificationEvents from '@/hooks/useNotificationEvents';
-import APIs from '@/services/APIs';
+
+import WasteSearchTable from './index';
+
+import type { ReportingUnitSearchResultDto } from '@/api/search.types';
+import type { PageableResponse } from '@/components/Form/TableResource/types';
 
 // Mock WasteSearchFilters
 vi.mock('@/components/waste/WasteSearch/WasteSearchFilters', () => ({
@@ -98,26 +97,54 @@ vi.mock('@/components/Form/TableResource', () => ({
   },
 }));
 
-vi.mock('@/services/APIs', () => {
-  return {
-    default: {
-      user: {
-        getUserPreferences: vi.fn(),
-        updateUserPreferences: vi.fn(),
-        setUserBookmarkedRu: vi.fn(),
-        deleteUserBookmarkedRu: vi.fn(),
-      },
-      codes: {
-        getSamplingOptions: vi.fn(),
-        getDistricts: vi.fn(),
-        getAssessAreaStatuses: vi.fn(),
-      },
-      search: {
-        searchReportingUnit: vi.fn(),
-      },
-    },
-  };
-});
+const { mockUsers } = vi.hoisted(() => ({
+  mockUsers: {
+    getUserPreferences: vi.fn(),
+    updateUserPreferences: vi.fn(),
+    setUserBookmarkedRu: vi.fn(),
+    deleteUserBookmarkedRu: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/users-resource', () => ({
+  UsersResource: class {
+    getUserPreferences = mockUsers.getUserPreferences;
+    updateUserPreferences = mockUsers.updateUserPreferences;
+    setUserBookmarkedRu = mockUsers.setUserBookmarkedRu;
+    deleteUserBookmarkedRu = mockUsers.deleteUserBookmarkedRu;
+  },
+}));
+
+const { mockCodes } = vi.hoisted(() => ({
+  mockCodes: {
+    getSamplingOptions: vi.fn(),
+    getDistricts: vi.fn(),
+    getAssessAreaStatuses: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/codes-resource', () => ({
+  CodesResource: class {
+    getSamplingOptions = mockCodes.getSamplingOptions;
+    getDistricts = mockCodes.getDistricts;
+    getAssessAreaStatuses = mockCodes.getAssessAreaStatuses;
+  },
+}));
+const { mockSearch } = vi.hoisted(() => ({
+  mockSearch: {
+    searchReportingUnit: vi.fn(),
+    getReportingUnitSearchExpand: vi.fn(),
+    searchReportingUnitUsers: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/search-resource', () => ({
+  SearchResource: class {
+    searchReportingUnit = mockSearch.searchReportingUnit;
+    getReportingUnitSearchExpand = mockSearch.getReportingUnitSearchExpand;
+    searchReportingUnitUsers = mockSearch.searchReportingUnitUsers;
+  },
+}));
 
 const mockSearchResults: PageableResponse<ReportingUnitSearchResultDto> = {
   content: [
@@ -225,21 +252,21 @@ describe('WasteSearchTable - Pagination', () => {
       unsubscribe: vi.fn(),
     });
 
-    (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
-    (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
-    (APIs.codes.getSamplingOptions as Mock).mockResolvedValue([
+    (mockUsers.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
+    (mockUsers.updateUserPreferences as Mock).mockResolvedValue({});
+    (mockCodes.getSamplingOptions as Mock).mockResolvedValue([
       { code: 'S1', description: 'Sampling One' },
       { code: 'S2', description: 'Sampling Two' },
     ]);
-    (APIs.codes.getDistricts as Mock).mockResolvedValue([
+    (mockCodes.getDistricts as Mock).mockResolvedValue([
       { code: 'D1', description: 'District One' },
       { code: 'D2', description: 'District Two' },
     ]);
-    (APIs.codes.getAssessAreaStatuses as Mock).mockResolvedValue([
+    (mockCodes.getAssessAreaStatuses as Mock).mockResolvedValue([
       { code: 'APP', description: 'Approved' },
       { code: 'SUB', description: 'Submitted' },
     ]);
-    (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+    (mockSearch.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
   });
 
   describe('pagination', () => {
@@ -253,7 +280,7 @@ describe('WasteSearchTable - Pagination', () => {
           totalPages: 5,
         },
       };
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(largeResults);
+      (mockSearch.searchReportingUnit as Mock).mockResolvedValue(largeResults);
 
       await renderWithProps();
 
@@ -271,10 +298,10 @@ describe('WasteSearchTable - Pagination', () => {
       await userEvent.click(nextPageButton);
 
       await waitFor(() => {
-        expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
+        expect(mockSearch.searchReportingUnit).toHaveBeenCalledWith(
           expect.objectContaining({ mainSearchTerm: 'BLOCK' }),
           expect.objectContaining({ page: 1, size: 10 }),
-          expect.objectContaining({ notificationTarget: 'waste-search' }),
+          expect.objectContaining({ meta: { notificationTarget: 'waste-search' } }),
         );
       });
     });
@@ -289,7 +316,7 @@ describe('WasteSearchTable - Pagination', () => {
           totalPages: 5,
         },
       };
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(largeResults);
+      (mockSearch.searchReportingUnit as Mock).mockResolvedValue(largeResults);
 
       await renderWithProps();
 
@@ -307,10 +334,10 @@ describe('WasteSearchTable - Pagination', () => {
       await userEvent.selectOptions(pageSizeSelect, '20');
 
       await waitFor(() => {
-        expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
+        expect(mockSearch.searchReportingUnit).toHaveBeenCalledWith(
           expect.objectContaining({ mainSearchTerm: 'BLOCK' }),
           expect.objectContaining({ page: 0, size: 20 }),
-          expect.objectContaining({ notificationTarget: 'waste-search' }),
+          expect.objectContaining({ meta: { notificationTarget: 'waste-search' } }),
         );
       });
     });
@@ -325,7 +352,7 @@ describe('WasteSearchTable - Pagination', () => {
           totalPages: 1,
         },
       };
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(largeResults);
+      (mockSearch.searchReportingUnit as Mock).mockResolvedValue(largeResults);
 
       await renderWithProps();
 
@@ -336,10 +363,10 @@ describe('WasteSearchTable - Pagination', () => {
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
+        expect(mockSearch.searchReportingUnit).toHaveBeenCalledWith(
           expect.anything(),
           expect.objectContaining({ page: 0 }),
-          expect.objectContaining({ notificationTarget: 'waste-search' }),
+          expect.objectContaining({ meta: { notificationTarget: 'waste-search' } }),
         );
       });
     });
@@ -354,7 +381,7 @@ describe('WasteSearchTable - Pagination', () => {
           totalPages: 5,
         },
       };
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(largeResults);
+      (mockSearch.searchReportingUnit as Mock).mockResolvedValue(largeResults);
 
       await renderWithProps();
 
@@ -377,16 +404,16 @@ describe('WasteSearchTable - Pagination', () => {
           totalPages: 5,
         },
       };
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(secondPageResults);
+      (mockSearch.searchReportingUnit as Mock).mockResolvedValue(secondPageResults);
 
       const nextPageButton = screen.getByLabelText('Next page');
       await userEvent.click(nextPageButton);
 
       await waitFor(() => {
-        expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
+        expect(mockSearch.searchReportingUnit).toHaveBeenCalledWith(
           expect.objectContaining({ mainSearchTerm: 'BLOCK' }),
           expect.objectContaining({ page: 1, size: 10 }),
-          expect.objectContaining({ notificationTarget: 'waste-search' }),
+          expect.objectContaining({ meta: { notificationTarget: 'waste-search' } }),
         );
       });
 
@@ -397,16 +424,16 @@ describe('WasteSearchTable - Pagination', () => {
       const fewResults: PageableResponse<ReportingUnitSearchResultDto> = {
         ...altMockSearchResults2,
       };
-      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(fewResults);
+      (mockSearch.searchReportingUnit as Mock).mockResolvedValue(fewResults);
 
       await setInputValue(keywordInput, 'LESS');
       await userEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(APIs.search.searchReportingUnit).toHaveBeenCalledWith(
+        expect(mockSearch.searchReportingUnit).toHaveBeenCalledWith(
           expect.objectContaining({ mainSearchTerm: 'LESS' }),
           expect.objectContaining({ page: 0 }),
-          expect.objectContaining({ notificationTarget: 'waste-search' }),
+          expect.objectContaining({ meta: { notificationTarget: 'waste-search' } }),
         );
       });
 

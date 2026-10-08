@@ -13,22 +13,22 @@ import {
 } from '@carbon/react';
 import { type FC } from 'react';
 
+import { useMyForestClientsQuery } from '@/api/forestClients';
+import { searchReportingUnitUsers } from '@/api/search';
+import { getCodeDescriptionArrayConverter } from '@/api/search.utils';
+import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
+import AutoCompleteInput from '@/components/Form/AutoCompleteInput';
+import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
+import { useAuth } from '@/context/auth/useAuth';
+import { featureFlags } from '@/env';
+
 import AdvancedFilterClientInput from './AdvancedFilterClientInput';
 import AdvancedFilterDateRange from './AdvancedFilterDateRange';
 import { useAdvancedFilterHandlers } from './useAdvancedFilterHandlers';
 import { useClientLookup } from './useClientLookup';
 import { MAX_TEXT_INPUT_LEN } from './utils';
 
-import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
-
-import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
-import AutoCompleteInput from '@/components/Form/AutoCompleteInput';
-import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
-import { useMyForestClientsQuery } from '@/config/react-query/hooks';
-import { useAuth } from '@/context/auth/useAuth';
-import { featureFlags } from '@/env';
-import APIs from '@/services/APIs';
-import { getCodeDescriptionArrayConverter } from '@/services/search.utils';
+import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/api/types';
 
 import './index.scss';
 
@@ -231,9 +231,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
               data-testid="submitter-name-ac"
               titleText="Submitter IDIR/BCeID"
               initialSelectedItem={filters.requestUserId}
-              onAutoCompleteChange={async (value) =>
-                await APIs.search.searchReportingUnitUsers(value)
-              }
+              onAutoCompleteChange={async (value) => await searchReportingUnitUsers(value)}
               itemToString={(item) => {
                 if (typeof item === 'string') return item;
                 if (item && typeof item === 'object') {

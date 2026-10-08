@@ -2,11 +2,10 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
-import ClientListing from '.';
-
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import APIs from '@/services/APIs';
+
+import ClientListing from '.';
 
 let mockedClientValues = [
   {
@@ -63,11 +62,21 @@ let mockedClientValues = [
 
 const mockUpdatePreferences = vi.fn();
 
-vi.mock('@/services/APIs', () => ({
-  default: {
-    forestclient: {
-      searchByClientNumbers: vi.fn(),
-    },
+const { mockForestClient } = vi.hoisted(() => ({
+  mockForestClient: {
+    getForestClient: vi.fn(),
+    searchForestClients: vi.fn(),
+    searchByClientNumbers: vi.fn(),
+    searchMyForestClients: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/forest-client-resource', () => ({
+  ForestClientResource: class {
+    getForestClient = mockForestClient.getForestClient;
+    searchForestClients = mockForestClient.searchForestClients;
+    searchByClientNumbers = mockForestClient.searchByClientNumbers;
+    searchMyForestClients = mockForestClient.searchMyForestClients;
   },
 }));
 
@@ -152,7 +161,7 @@ describe('ClientListing', () => {
         acronym: 'CITZ',
       },
     ];
-    (APIs.forestclient.searchByClientNumbers as Mock).mockResolvedValue(mockedClientValues);
+    (mockForestClient.searchByClientNumbers as Mock).mockResolvedValue(mockedClientValues);
   });
 
   it('should render ClientListing component successfully', async () => {
@@ -167,10 +176,11 @@ describe('ClientListing', () => {
 
     await screen.findByTestId('district-select-none');
 
-    expect(APIs.forestclient.searchByClientNumbers).toHaveBeenCalledWith(
+    expect(mockForestClient.searchByClientNumbers).toHaveBeenCalledWith(
       ['00000001', '00000002', '00000003', '00000004', '00000005'],
       0,
       5,
+      { signal: expect.any(AbortSignal) },
     );
   });
 
@@ -204,7 +214,7 @@ describe('ClientListing', () => {
     await renderWithProviders();
 
     // Should not call the API when there are no clients
-    expect(APIs.forestclient.searchByClientNumbers).not.toHaveBeenCalled();
+    expect(mockForestClient.searchByClientNumbers).not.toHaveBeenCalled();
   });
 
   it('should prefer name over clientName in transformation', async () => {
@@ -220,7 +230,7 @@ describe('ClientListing', () => {
         acronym: 'TEST',
       },
     ];
-    (APIs.forestclient.searchByClientNumbers as Mock).mockResolvedValue(mockedClientValues);
+    (mockForestClient.searchByClientNumbers as Mock).mockResolvedValue(mockedClientValues);
 
     await renderWithProviders();
 
@@ -241,7 +251,7 @@ describe('ClientListing', () => {
         acronym: 'TEST',
       },
     ];
-    (APIs.forestclient.searchByClientNumbers as Mock).mockResolvedValue(mockedClientValues);
+    (mockForestClient.searchByClientNumbers as Mock).mockResolvedValue(mockedClientValues);
 
     await renderWithProviders();
 
@@ -260,7 +270,7 @@ describe('ClientListing', () => {
   });
 
   it('should pass correct props to DistrictSelection', async () => {
-    (APIs.forestclient.searchByClientNumbers as Mock).mockResolvedValue(mockedClientValues);
+    (mockForestClient.searchByClientNumbers as Mock).mockResolvedValue(mockedClientValues);
     await renderWithProviders();
 
     // Verify search label is rendered

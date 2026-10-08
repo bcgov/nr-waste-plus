@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 
 import FormulaVariableCatalog from './index.tsx';
 
-import type { FormulaNamespaceCatalog } from '@/services/formulaConfiguration.types.ts';
+import type { FormulaNamespaceCatalog } from '@/api/formulaConfiguration.types.ts';
 
 const catalog: FormulaNamespaceCatalog[] = [
   {

@@ -1,7 +1,7 @@
-import type { SpeciesCompositionRow } from '@/services/speciesComposition.types.ts';
-import type { FC } from 'react';
-
 import SpeciesCompositionDetailMatrix from '@/components/waste/SpeciesComposition/SpeciesCompositionDetailView/SpeciesCompositionDetailMatrix.tsx';
+
+import type { SpeciesCompositionRow } from '@/api/speciesComposition.types.ts';
+import type { FC } from 'react';
 
 /**
  * Props for the SpeciesCompositionReviewTable component.

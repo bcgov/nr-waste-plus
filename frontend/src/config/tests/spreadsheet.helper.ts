@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs';
 
-import { EXPECTED_DISTRICT_CODES } from '@/services/speciescomposition/config/speciesCompositionConfig';
+import { EXPECTED_DISTRICT_CODES } from '@/domain/speciescomposition/config/speciesCompositionConfig';
 
 // ─── Interior Config ────────────────────────────────────────────────────────
 // 13 columns: A=District code, B-E=Dry belt (4), F-I=Transition (4), J-M=Wet belt (4)

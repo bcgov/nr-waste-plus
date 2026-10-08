@@ -1,12 +1,13 @@
 import { Column, Grid, Search, SkeletonPlaceholder } from '@carbon/react';
 import { useState } from 'react';
 
+import { usePreference } from '@/context/preference/usePreference';
+
 import { DESELECT_CLIENT, MIN_CLIENTS_SHOW_SEARCH } from './constants';
 import DistrictItem from './DistrictItem';
 
 import type { DistrictType } from './types';
 
-import { usePreference } from '@/context/preference/usePreference';
 import './index.scss';
 
 type IsSelected<T = string> = (item: DistrictType, userPreferenceValue: T) => boolean;

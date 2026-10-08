@@ -1,15 +1,15 @@
-import type { TableHeaderType } from '@/components/Form/TableResource/types';
-import type { CodeDescriptionDto, ReportingUnitSearchResultDto } from '@/services/types';
-
+import CodeDescriptionTag from '@/components/core/Tags/CodeDescriptionTag';
 import ColorTag, { type CarbonColors } from '@/components/core/Tags/ColorTag';
 import DateTag from '@/components/core/Tags/DateTag';
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
-import YesNoTag from '@/components/core/Tags/YesNoTag';
-import CodeDescriptionTag from '@/components/core/Tags/CodeDescriptionTag';
 import TooltipRedirectLinkTag from '@/components/core/Tags/TooltipRedirectLinkTag';
 import TooltipRoleBasedRedirectLinkTag from '@/components/core/Tags/TooltipRoleBasedRedirectLinkTag';
+import YesNoTag from '@/components/core/Tags/YesNoTag';
 import { Role } from '@/context/auth/types';
 import { env, featureFlags } from '@/env';
+
+import type { CodeDescriptionDto, ReportingUnitSearchResultDto } from '@/api/types';
+import type { TableHeaderType } from '@/components/Form/TableResource/types';
 
 /**
  * Maps reporting-unit status codes to their corresponding Carbon Design System tag colours.

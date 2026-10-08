@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { filterClientByKeyword } from './utils';
 
-import type { ForestClientDto } from '@/services/types';
+import type { ForestClientDto } from '@/api/types';
 
 describe('filterClientByKeyword', () => {
   const baseClient: ForestClientDto = {
