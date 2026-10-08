@@ -16,6 +16,7 @@ import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.entity.codes.OrgUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.codes.SamplingOptionEntity;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitDetailsProjection;
+import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitBlockProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.WasteReportingUnitNotFound;
 import ca.bc.gov.nrs.hrs.mappers.reportingunit.ReportingUnitDetailsMapper;
@@ -155,6 +156,79 @@ class ReportingUnitServiceTest {
     assertThat(result).isEmpty();
     verify(ruRepository).existsById(RU_ID);
     verify(ruRepository).getReportingUnitBlocks(RU_ID);
+  }
+
+  @Test
+  @DisplayName("shouldMapBlockProjectionFields_whenNativeQueryReturnsCompleteBlock")
+  void shouldMapBlockProjectionFields_whenNativeQueryReturnsCompleteBlock() {
+    ReportingUnitBlockProjection projection = mock(ReportingUnitBlockProjection.class);
+    when(ruRepository.existsById(RU_ID)).thenReturn(true);
+    when(ruRepository.getReportingUnitBlocks(RU_ID)).thenReturn(List.of(projection));
+    when(projection.getId()).thenReturn(1906L);
+    when(projection.getLicenseNumber()).thenReturn("R21110");
+    when(projection.getCuttingPermit()).thenReturn("CP-1");
+    when(projection.getCutBlockId()).thenReturn("CUT-1");
+    when(projection.getTimberMark()).thenReturn("TM-1");
+    when(projection.getTotalWasteAreaHa()).thenReturn(new java.math.BigDecimal("27.02"));
+    when(projection.getTotalWasteVolumeM3()).thenReturn(new java.math.BigDecimal("22.125"));
+    when(projection.getSubmitter()).thenReturn("Sponsor Name");
+    when(projection.getStatusCode()).thenReturn("APP");
+    when(projection.getStatusName()).thenReturn("Approved");
+    when(projection.getLastUpdated()).thenReturn(java.time.LocalDateTime.parse("2025-08-11T10:19:56"));
+
+    List<ReportingUnitBlockDto> result = service.getReportingUnitBlocks(RU_ID);
+
+    assertThat(result)
+        .containsExactly(
+            new ReportingUnitBlockDto(
+                1906L,
+                "R21110",
+                "CP-1",
+                "CUT-1",
+                "TM-1",
+                new java.math.BigDecimal("27.02"),
+                new java.math.BigDecimal("22.125"),
+                "Sponsor Name",
+                new CodeDescriptionDto("APP", "Approved"),
+                java.time.LocalDateTime.parse("2025-08-11T10:19:56")));
+  }
+
+  @Test
+  @DisplayName("shouldUseDraftDefaults_whenProjectionStatusOrCutBlockIsUnresolved")
+  void shouldUseDraftDefaults_whenProjectionStatusOrCutBlockIsUnresolved() {
+    ReportingUnitBlockProjection projection = mock(ReportingUnitBlockProjection.class);
+    when(ruRepository.existsById(RU_ID)).thenReturn(true);
+    when(ruRepository.getReportingUnitBlocks(RU_ID)).thenReturn(List.of(projection));
+    when(projection.getId()).thenReturn(1905L);
+    when(projection.getCutBlockId()).thenReturn("  ");
+    when(projection.getStatusCode()).thenReturn(" ");
+    when(projection.getStatusName()).thenReturn("Draft");
+
+    var result = service.getReportingUnitBlocks(RU_ID).getFirst();
+
+    assertThat(result.cutBlockId()).isEmpty();
+    assertThat(result.status()).isEqualTo(new CodeDescriptionDto("DFT", "Draft"));
+    assertThat(result.licenseNumber()).isNull();
+    assertThat(result.totalWasteAreaHa()).isNull();
+    assertThat(result.totalWasteVolumeM3()).isNull();
+    assertThat(result.submitter()).isNull();
+    assertThat(result.lastUpdated()).isNull();
+  }
+
+  @Test
+  @DisplayName("shouldUseDraftDefaults_whenProjectionStatusDescriptionIsMissing")
+  void shouldUseDraftDefaults_whenProjectionStatusDescriptionIsMissing() {
+    ReportingUnitBlockProjection projection = mock(ReportingUnitBlockProjection.class);
+    when(ruRepository.existsById(RU_ID)).thenReturn(true);
+    when(ruRepository.getReportingUnitBlocks(RU_ID)).thenReturn(List.of(projection));
+    when(projection.getStatusCode()).thenReturn("APP");
+    when(projection.getStatusName()).thenReturn(null);
+    when(projection.getCutBlockId()).thenReturn("CUT-9");
+
+    var result = service.getReportingUnitBlocks(RU_ID).getFirst();
+
+    assertThat(result.status()).isEqualTo(new CodeDescriptionDto("DFT", "Draft"));
+    assertThat(result.cutBlockId()).isEqualTo("CUT-9");
   }
 
   @Test
