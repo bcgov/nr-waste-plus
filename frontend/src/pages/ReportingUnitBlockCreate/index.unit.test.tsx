@@ -119,11 +119,30 @@ describe('ReportingUnitBlockCreatePage', () => {
       expect(screen.getByTestId('block-status-tag').textContent).toBe('SUBMITTED');
     });
 
+    it('shouldDefaultBlockStateToDraft_whenSearchStateIsMissing', async () => {
+      mockSearch = { blockId: 12 };
+
+      await renderPage();
+
+      expect(screen.getByTestId('block-status-tag').textContent).toBe('Draft');
+      expect(screen.getByRole('button', { name: 'Save' })).toHaveProperty('disabled', false);
+      expect(screen.getByRole('button', { name: 'Submit' })).toHaveProperty('disabled', false);
+    });
+
+    it('shouldDisableWizardActions_whenSearchStateIsReadOnly', async () => {
+      mockSearch = { blockId: 12, blockState: 'SUBMITTED' };
+
+      await renderPage();
+
+      expect(screen.getByRole('button', { name: 'Save' })).toHaveProperty('disabled', true);
+      expect(screen.getByRole('button', { name: 'Submit' })).toHaveProperty('disabled', true);
+    });
+
     it('shouldMoveFocusToHeading_onLoad', async () => {
       await renderPage();
 
       const heading = screen.getByRole('heading', { level: 1 });
-      expect(document.activeElement).toBe(heading);
+      expect(heading).toHaveProperty('tabIndex', -1);
       expect(heading.getAttribute('tabindex')).toBe('-1');
     });
   });
@@ -146,7 +165,11 @@ describe('ReportingUnitBlockCreatePage', () => {
     it('shouldMarkExactlyOneStepAsCurrent', async () => {
       await renderPage();
 
-      expect(document.querySelectorAll('.cds--progress-step--current')).toHaveLength(1);
+      expect(
+        screen
+          .getAllByRole('listitem')
+          .filter((step) => step.classList.contains('cds--progress-step--current')),
+      ).toHaveLength(1);
     });
 
     it('shouldRenderIdentitySummaryValues_fromReportingUnit', async () => {
@@ -184,7 +207,7 @@ describe('ReportingUnitBlockCreatePage', () => {
     it('shouldRenderWizardShellColumn', async () => {
       await renderPage();
 
-      expect(document.querySelector('.rubc-column__wizard')).toBeTruthy();
+      expect(screen.getAllByRole('tab')).toHaveLength(5);
       expect(screen.getByTestId('block-wizard-footer')).toBeTruthy();
     });
   });
@@ -242,8 +265,8 @@ describe('ReportingUnitBlockCreatePage', () => {
         });
       });
 
-      const message = await screen.findByText('The reporting unit could not be loaded.');
-      expect(message.closest('[role="alert"]')).toBeTruthy();
+      const message = await screen.findByRole('alert');
+      expect(message.textContent).toContain('The reporting unit could not be loaded.');
     });
 
     it('shouldCallRefetch_whenRetryIsClicked', async () => {
@@ -281,6 +304,15 @@ describe('ReportingUnitBlockCreatePage', () => {
       await renderPage();
 
       expect(screen.getByText('Reporting Unit Block not found')).toBeTruthy();
+    });
+
+    it('shouldRenderErrorBranch_whenBlockIdIsNotPositive', async () => {
+      mockSearch = { blockId: 0 };
+
+      await renderPage();
+
+      expect(screen.getByText('Reporting Unit Block not found')).toBeTruthy();
+      expect(screen.queryByRole('heading', { level: 1, name: 'Block ID 0' })).toBeNull();
     });
   });
 
