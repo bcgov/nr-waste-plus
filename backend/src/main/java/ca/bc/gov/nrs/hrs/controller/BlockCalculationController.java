@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** Read-only endpoint for block calculation snapshots. */
 @RestController
-@RequestMapping("/api/reporting-units/{reportingUnitId}/blocks/{blockId}/calculation")
+@RequestMapping("/api/reporting-units/{reportingUnitId}/{blockId}/calculation")
 @RequiredArgsConstructor
 public class BlockCalculationController {
 

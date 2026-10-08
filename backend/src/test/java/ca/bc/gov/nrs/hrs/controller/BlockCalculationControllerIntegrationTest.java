@@ -194,7 +194,7 @@ class BlockCalculationControllerIntegrationTest extends AbstractTestContainerInt
             Instant.parse("2025-07-01T12:00:00Z")));
 
     mockMvc
-        .perform(get("/api/reporting-units/" + reportingUnitId + "/blocks/" + blockId + "/calculation"))
+        .perform(get("/api/reporting-units/" + reportingUnitId + "/" + blockId + "/calculation"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.roundingPolicy").value(marker));
   }
@@ -223,7 +223,7 @@ class BlockCalculationControllerIntegrationTest extends AbstractTestContainerInt
     mockMvc
         .perform(
             get(
-                "/api/reporting-units/" + foreignReportingUnitId + "/blocks/" + foreignBlockId
+                "/api/reporting-units/" + foreignReportingUnitId + "/" + foreignBlockId
                     + "/calculation"))
         .andExpect(status().isForbidden())
         .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString(marker))));
@@ -252,7 +252,7 @@ class BlockCalculationControllerIntegrationTest extends AbstractTestContainerInt
     mockMvc
         .perform(
             get(
-                "/api/reporting-units/" + foreignReportingUnitId + "/blocks/" + foreignBlockId
+                "/api/reporting-units/" + foreignReportingUnitId + "/" + foreignBlockId
                     + "/calculation"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.roundingPolicy").value("IDIR_CONTROL"));
@@ -263,7 +263,7 @@ class BlockCalculationControllerIntegrationTest extends AbstractTestContainerInt
   @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
   void rejectsWrongParentReportingUnit() throws Exception {
     mockMvc
-        .perform(get("/api/reporting-units/" + otherReportingUnitId + "/blocks/" + blockId + "/calculation"))
+        .perform(get("/api/reporting-units/" + otherReportingUnitId + "/" + blockId + "/calculation"))
         .andExpect(status().isNotFound());
   }
 
@@ -272,7 +272,7 @@ class BlockCalculationControllerIntegrationTest extends AbstractTestContainerInt
   @WithMockJwt(idp = "bceidbusiness", cognitoGroups = {"WASTE_PLUS_VIEWER_00000000"})
   void forbidsForeignParentBeforeBlockProbe() throws Exception {
     mockMvc
-        .perform(get("/api/reporting-units/" + foreignReportingUnitId + "/blocks/" + blockId + "/calculation"))
+        .perform(get("/api/reporting-units/" + foreignReportingUnitId + "/" + blockId + "/calculation"))
         .andExpect(status().isForbidden());
   }
 
@@ -285,11 +285,7 @@ class BlockCalculationControllerIntegrationTest extends AbstractTestContainerInt
    }
 
   private String calculationUrl(Long parentReportingUnitId, Long childBlockId) {
-    return "/api/reporting-units/"
-        + parentReportingUnitId
-        + "/blocks/"
-        + childBlockId
-        + "/calculation";
+    return "/api/reporting-units/" + parentReportingUnitId + "/" + childBlockId + "/calculation";
   }
 
   private void audit(ReportingUnitEntity entity) {
