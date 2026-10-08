@@ -39,6 +39,6 @@ class ReportingUnitBlockRepositoryIntegrationTest extends AbstractTestContainerI
   @DisplayName("shouldReturnNoBlockRows_whenReportingUnitHasNoAssessmentAreas")
   void shouldReturnNoBlockRows_whenReportingUnitHasNoAssessmentAreas() {
     Long reportingUnitId = 900000L;
-    assertThat(reportingUnitRepository.getReportingUnitBlocks(999999999L)).isEmpty();
+    assertThat(reportingUnitRepository.getReportingUnitBlocks(reportingUnitId)).isEmpty();
   }
 }
