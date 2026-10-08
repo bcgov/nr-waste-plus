@@ -1,17 +1,16 @@
-import { act, screen, waitFor } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-import BlockCreateAction from './index';
 
 import { useCreateBlock, useReportingUnitBlocksQuery } from '@/config/react-query/hooks';
 import { renderWithApp } from '@/config/tests/renderWithApp';
 import { Role } from '@/context/auth/types';
 import { useAuth } from '@/context/auth/useAuth';
 
-import type { UseMutationResult } from '@tanstack/react-query';
+import BlockCreateAction from './index';
 
 import type { BlockCreateRequestDto, BlockCreateResponseDto } from '@/services/types';
+import type { UseMutationResult } from '@tanstack/react-query';
 
 // ── Mutable state shared with the module mocks ─────────────────────────────────
 
@@ -131,7 +130,7 @@ async function renderAction(props?: Partial<React.ComponentProps<typeof BlockCre
       <BlockCreateAction ruId={468} samplingCode="AVG" {...props} />
     </>,
   );
-  await waitFor(() => expect(screen.getByTestId('render-probe')).not.toBeNull());
+  expect(await screen.findByTestId('render-probe')).not.toBeNull();
 }
 
 const HELPER_LINE_1 =
@@ -168,14 +167,14 @@ describe('BlockCreateAction', () => {
 
       expect(screen.queryByTestId('block-create-action')).toBeNull();
       expect(screen.queryByRole('button', { name: 'Add' })).toBeNull();
-      expect(document.querySelector('[disabled]')).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Add' })).toBeNull();
     });
 
     it('shouldRenderNothing_whenReportingUnitIsClosed [TC-C03]', async () => {
       await renderAction({ isClosed: true });
 
       expect(screen.queryByTestId('block-create-action')).toBeNull();
-      expect(document.querySelector('[disabled]')).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Add' })).toBeNull();
     });
 
     it.each([Role.ADMIN, Role.DISTRICT, Role.AREA, Role.SUBMITTER])(
@@ -210,6 +209,46 @@ describe('BlockCreateAction', () => {
       await renderAction();
 
       expect(screen.queryByTestId('block-create-action')).toBeNull();
+    });
+
+    it('shouldUseServerRuleInsteadOfSamplingFallback_whenBlockRuleIsProvided', async () => {
+      await renderAction({ blockRule: { blockType: 'DISTRICT_AVERAGE', maxBlocks: 2 } });
+
+      expect(screen.getByTestId('block-create-action')).toBeTruthy();
+      expect(useReportingUnitBlocksQuery).toHaveBeenCalledWith(468, { enabled: true });
+    });
+
+    it.each([null, 'AGR', 'BLK', 'OCU'])(
+      'shouldHideAction_whenNoSupportedRuleExists_%s',
+      async (samplingCode) => {
+        await renderAction({ samplingCode });
+
+        expect(screen.queryByTestId('block-create-action')).toBeNull();
+        expect(useReportingUnitBlocksQuery).toHaveBeenCalledWith(468, { enabled: false });
+      },
+    );
+
+    it('shouldKeepActionVisibleWhenBlockCountQueryFails', async () => {
+      vi.mocked(useReportingUnitBlocksQuery).mockReturnValue({
+        data: undefined,
+        isPending: false,
+        isError: true,
+      } as ReturnType<typeof useReportingUnitBlocksQuery>);
+
+      await renderAction();
+
+      expect(screen.getByTestId('block-create-action')).toBeTruthy();
+    });
+
+    it('shouldDisableAddWhileCreateMutationIsPending', async () => {
+      vi.mocked(useCreateBlock).mockReturnValue(createMockMutation({ isPending: true }));
+      const user = userEvent.setup();
+      await renderAction();
+
+      await user.type(screen.getByLabelText('Licence No.'), 'A123');
+      await user.type(screen.getByLabelText('Timber mark'), 'X');
+
+      expect(screen.getByRole('button', { name: 'Add' })).toHaveProperty('disabled', true);
     });
   });
 
@@ -267,6 +306,24 @@ describe('BlockCreateAction', () => {
       const mutate = vi.mocked(useCreateBlock).mock.results[0].value.mutate;
       expect(mutate).toHaveBeenCalledWith({ blockType: 'DISTRICT_AVERAGE' });
     });
+
+    it.each([
+      ['Licence No.', 'A123', 'Block ID', '42'],
+      ['Cutting permit', 'CP-1', 'Block ID', '42'],
+      ['Timber mark', 'TM-1', 'Block ID', '42'],
+      ['Block ID', '42', 'Licence No.', 'A123'],
+    ])(
+      'shouldEnableAddForAnyTwoCriteria_including_%s',
+      async (firstCriterion, value, secondCriterion, secondValue) => {
+        const user = userEvent.setup();
+        await renderAction();
+
+        await user.type(screen.getByLabelText(firstCriterion), value);
+        await user.type(screen.getByLabelText(secondCriterion), secondValue);
+
+        expect(screen.getByRole('button', { name: 'Add' })).toHaveProperty('disabled', false);
+      },
+    );
 
     it('shouldHidePanelAndNotNavigate_whenCreateSucceeds [TC-C05]', async () => {
       await renderAction();
