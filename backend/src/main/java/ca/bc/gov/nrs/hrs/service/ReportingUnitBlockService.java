@@ -111,18 +111,14 @@ public class ReportingUnitBlockService {
    * Attach block metadata to reporting unit details.
    *
    * <p>Adds the block-creation rule for the unit's sampling code — omitted from the response when
-   * no rule is configured — and reports whether the unit predates the blocks feature, which is
-   * true when no postgres record exists for it.
+   * no rule is configured. The source marker set by {@link ReportingUnitService} is preserved.
    *
-   * @param details the reporting unit details to enrich; must not be null
-   * @param reportingUnitId the reporting unit the details describe
+   * @param details the reporting unit details to enrich, including its source marker; must not be
+   *     null
    * @return the details with block metadata populated
    */
-  public ReportingUnitDetailsDto enrichWithBlockMetadata(
-      ReportingUnitDetailsDto details, Long reportingUnitId) {
-    boolean isLegacy = reportingUnitRepository.findByIdAndDeletedFalse(reportingUnitId).isEmpty();
-
-    return details.withBlockRule(resolveBlockRule(details.sampling())).withLegacy(isLegacy);
+  public ReportingUnitDetailsDto enrichWithBlockMetadata(ReportingUnitDetailsDto details) {
+    return details.withBlockRule(resolveBlockRule(details.sampling()));
   }
 
   private BlockRuleDto resolveBlockRule(CodeDescriptionDto sampling) {

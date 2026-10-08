@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -11,9 +12,11 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientStatusEnum;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
+import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProvider;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
+import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +46,12 @@ class ReportingUnitServiceTest {
 
   @Mock
   private DistrictVolumeService districtVolumeService;
+
+  @Mock
+  private CodesService codesService;
+
+  @Mock
+  private ReportingUnitRepository reportingUnitRepository;
 
   @InjectMocks
   private ReportingUnitService reportingUnitService;
@@ -78,6 +87,7 @@ class ReportingUnitServiceTest {
     var clientDto = buildClientDto(CLIENT_NUMBER);
 
     when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyDetails);
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(clientDto));
 
@@ -96,6 +106,7 @@ class ReportingUnitServiceTest {
     assertThat(result.district()).isEqualTo(legacyDetails.district());
     assertThat(result.grade().code()).isNull();
     assertThat(result.grade().description()).isNull();
+    assertThat(result.isLegacy()).isTrue();
   }
 
   @Test
@@ -105,6 +116,7 @@ class ReportingUnitServiceTest {
     var legacyDetails = buildLegacyDetails("00099999");
 
     when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyDetails);
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
     when(forestClientApiProvider.fetchClientByNumber("00099999")).thenReturn(Optional.empty());
 
     // Act & Assert
@@ -121,6 +133,8 @@ class ReportingUnitServiceTest {
     var clientDto = buildClientDto(CLIENT_NUMBER);
 
     when(legacyApiProvider.getReportingUnitDetails(anotherRuId)).thenReturn(legacyDetails);
+    when(reportingUnitRepository.findByIdAndDeletedFalse(anotherRuId))
+        .thenReturn(Optional.empty());
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(clientDto));
 
@@ -145,6 +159,7 @@ class ReportingUnitServiceTest {
     var clientDto = buildClientDto(CLIENT_NUMBER);
 
     when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyDetails);
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(clientDto));
 
@@ -154,6 +169,38 @@ class ReportingUnitServiceTest {
     // Assert
     assertThat(result.sampling()).isEqualTo(customSampling);
     assertThat(result.district()).isEqualTo(customDistrict);
+  }
+
+  @Test
+  @DisplayName("shouldBuildDetailsFromPostgres_whenReportingUnitExists")
+  void shouldBuildDetailsFromPostgres_whenReportingUnitExists() {
+    var reportingUnit = new ReportingUnitEntity();
+    reportingUnit.setClientNumber(CLIENT_NUMBER);
+    reportingUnit.setClientLocnCode("01");
+    reportingUnit.setOrgUnitNo("DND");
+    var clientDto = buildClientDto(CLIENT_NUMBER);
+
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+    when(codesService.getDistrictCodes())
+        .thenReturn(
+            List.of(new CodeDescriptionDto("DND", "Nadina Natural Resource District")));
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(clientDto));
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
+
+    var result = reportingUnitService.getReportingUnitDetails(RU_ID);
+
+    assertThat(result.id()).isEqualTo(RU_ID);
+    assertThat(result.client()).isEqualTo(new CodeDescriptionDto(CLIENT_NUMBER, "MINISTRY OF FORESTS"));
+    assertThat(result.clientStatus())
+        .isEqualTo(new CodeDescriptionDto("ACT", "Active"));
+    assertThat(result.sampling()).isEqualTo(new CodeDescriptionDto("AVG", "Average"));
+    assertThat(result.district())
+        .isEqualTo(new CodeDescriptionDto("DND", "Nadina Natural Resource District"));
+    assertThat(result.grade()).isEqualTo(new CodeDescriptionDto("COASTAL", "COASTAL"));
+    assertThat(result.isLegacy()).isFalse();
+    verify(legacyApiProvider, never()).getReportingUnitDetails(RU_ID);
   }
 
   @Test

@@ -7,6 +7,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import ca.bc.gov.nrs.hrs.configuration.BlockRulesProperties;
+import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.BlockRuleDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
@@ -72,6 +75,49 @@ class ReportingUnitBlockServiceTest {
     assertThat(result.getContent()).isEmpty();
     verify(legacyApiProvider).getReportingUnitDetails(REPORTING_UNIT_ID);
     verify(legacyApiProvider).getReportingUnitBlocks(REPORTING_UNIT_ID);
+  }
+
+  @Test
+  @DisplayName("shouldPreservePostgresSourceFlag_whenEnrichingDetails")
+  void shouldPreservePostgresSourceFlag_whenEnrichingDetails() {
+    var details =
+        new ReportingUnitDetailsDto(
+            REPORTING_UNIT_ID,
+            null,
+            null,
+            new CodeDescriptionDto("AVG", "Average"),
+            null,
+            null);
+    when(blockRulesProperties.getSampling())
+        .thenReturn(
+            java.util.Map.of(
+                "AVG", new BlockRulesProperties.SamplingBlockRule(1, "DISTRICT_AVERAGE")));
+
+    var enriched = service.enrichWithBlockMetadata(details.withLegacy(false));
+
+    assertThat(enriched.isLegacy()).isFalse();
+    assertThat(enriched.blockRule()).isEqualTo(new BlockRuleDto(1, "DISTRICT_AVERAGE"));
+    verify(reportingUnitRepository, never()).findByIdAndDeletedFalse(REPORTING_UNIT_ID);
+  }
+
+  @Test
+  @DisplayName("shouldPreserveLegacySourceFlag_whenEnrichingDetails")
+  void shouldPreserveLegacySourceFlag_whenEnrichingDetails() {
+    var details =
+        new ReportingUnitDetailsDto(
+                REPORTING_UNIT_ID,
+                null,
+                null,
+                new CodeDescriptionDto("AGR", "Agriculture"),
+                null,
+                null)
+            .withLegacy(true);
+
+    var enriched = service.enrichWithBlockMetadata(details);
+
+    assertThat(enriched.isLegacy()).isTrue();
+    assertThat(enriched.blockRule()).isNull();
+    verify(reportingUnitRepository, never()).findByIdAndDeletedFalse(REPORTING_UNIT_ID);
   }
 
   @Test

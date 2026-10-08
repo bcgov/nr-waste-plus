@@ -260,18 +260,15 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @WithMockJwt
   @DisplayName("Should Return 404 for an Unknown Legacy Reporting Unit Block List")
   void shouldReturn404_whenBlockListReportingUnitDoesNotExist() throws Exception {
-    legacyApiStub.stubFor(
-        get(urlPathEqualTo("/api/reporting-units/999999999/blocks"))
-            .willReturn(notFound()));
-
     mockMvc
         .perform(
             MockMvcRequestBuilders.get("/api/reporting-units/{id}/blocks", 999999999L)
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isNotFound());
 
+    legacyApiStub.verify(1, getRequestedFor(urlPathEqualTo("/api/reporting-units/999999999")));
     legacyApiStub.verify(
-        1, getRequestedFor(urlPathEqualTo("/api/reporting-units/999999999/blocks")));
+        0, getRequestedFor(urlPathEqualTo("/api/reporting-units/999999999/blocks")));
   }
 
   @Test

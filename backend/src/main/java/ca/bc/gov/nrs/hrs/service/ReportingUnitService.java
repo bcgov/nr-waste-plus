@@ -4,13 +4,16 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
+import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProvider;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
+import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -32,16 +35,20 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class ReportingUnitService {
 
+  private static final CodeDescriptionDto DISTRICT_AVERAGE_SAMPLING =
+      new CodeDescriptionDto("AVG", "Average");
+
   private final LegacyApiProvider legacyApiProvider;
   private final ForestClientApiProvider forestClientApiProvider;
   private final DistrictVolumeService districtVolumeService;
+  private final CodesService codesService;
+  private final ReportingUnitRepository reportingUnitRepository;
 
   /**
    * Retrieves and enriches the full details of a reporting unit.
    *
-   * <p>Fetches the reporting unit's legacy data (client number, sampling, district) from the legacy
-   * API and enriches it with the client name and status from the Forest Client API. Determines the
-   * grade based on the number of configured areas for the district.
+   * <p>Uses PostgreSQL details for locally-owned reporting units and falls back to the legacy API
+   * for reporting units not present in PostgreSQL.
    *
    * @param reportingUnitId the unique identifier of the reporting unit to retrieve (must not be
    *     null)
@@ -55,6 +62,50 @@ public class ReportingUnitService {
 
     log.info("Fetching reporting unit details for RU {}", reportingUnitId);
 
+    return getPostgresReportingUnitDetails(reportingUnitId)
+        .orElseGet(() -> getLegacyReportingUnitDetails(reportingUnitId));
+  }
+
+  private Optional<ReportingUnitDetailsDto> getPostgresReportingUnitDetails(Long reportingUnitId) {
+    return reportingUnitRepository
+        .findByIdAndDeletedFalse(reportingUnitId)
+        .map(reportingUnit -> buildPostgresReportingUnitDetails(reportingUnitId, reportingUnit));
+  }
+
+  private ReportingUnitDetailsDto buildPostgresReportingUnitDetails(
+      Long reportingUnitId, ReportingUnitEntity reportingUnit) {
+    var district =
+        codesService.getDistrictCodes().stream()
+            .filter(code -> reportingUnit.getOrgUnitNo().equals(code.code()))
+            .findFirst()
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "No district code found for reporting unit organizational unit "
+                            + reportingUnit.getOrgUnitNo()));
+    var clientInformation =
+        forestClientApiProvider
+            .fetchClientByNumber(reportingUnit.getClientNumber())
+            .orElseThrow(
+                () -> new ForestClientNotFoundException(reportingUnit.getClientNumber()));
+    var districtAreas = districtVolumeService.getAreasForDistrictCode(district.code());
+    var grade =
+        districtAreas.size() == 1
+            ? new CodeDescriptionDto(districtAreas.getFirst(), districtAreas.getFirst())
+            : new CodeDescriptionDto(null, null);
+
+    return new ReportingUnitDetailsDto(
+        reportingUnitId,
+        new CodeDescriptionDto(clientInformation.clientNumber(), clientInformation.name()),
+        new CodeDescriptionDto(
+            clientInformation.clientStatusCode().getCode(),
+            clientInformation.clientStatusCode().getDescription()),
+        DISTRICT_AVERAGE_SAMPLING,
+        new CodeDescriptionDto(district.code(), district.description()),
+        grade);
+  }
+
+  private ReportingUnitDetailsDto getLegacyReportingUnitDetails(Long reportingUnitId) {
     var legacyClient = legacyApiProvider.getReportingUnitDetails(reportingUnitId);
 
     var clientInformation =
@@ -70,14 +121,15 @@ public class ReportingUnitService {
             : new CodeDescriptionDto(null, null);
 
     return new ReportingUnitDetailsDto(
-        reportingUnitId,
-        new CodeDescriptionDto(clientInformation.clientNumber(), clientInformation.name()),
-        new CodeDescriptionDto(
-            clientInformation.clientStatusCode().getCode(),
-            clientInformation.clientStatusCode().getDescription()),
-        legacyClient.sampling(),
-        legacyClient.district(),
-        grade);
+            reportingUnitId,
+            new CodeDescriptionDto(clientInformation.clientNumber(), clientInformation.name()),
+            new CodeDescriptionDto(
+                clientInformation.clientStatusCode().getCode(),
+                clientInformation.clientStatusCode().getDescription()),
+            legacyClient.sampling(),
+            legacyClient.district(),
+            grade)
+        .withLegacy(true);
   }
 
   /**

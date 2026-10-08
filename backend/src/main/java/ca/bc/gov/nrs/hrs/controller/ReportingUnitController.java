@@ -102,7 +102,7 @@ public class ReportingUnitController {
       }
     }
 
-    return reportingUnitBlockService.enrichWithBlockMetadata(details, reportingUnitId);
+    return reportingUnitBlockService.enrichWithBlockMetadata(details);
   }
 
   /**
