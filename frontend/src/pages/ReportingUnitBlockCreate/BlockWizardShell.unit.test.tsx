@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, renderHook, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
@@ -19,6 +19,12 @@ const DirtyStateControls = () => {
 };
 
 describe('BlockWizardShell', () => {
+  it('shouldThrowWhenDirtyStateHookIsUsedOutsideItsProvider', () => {
+    expect(() => renderHook(() => useBlockWizardDirty())).toThrow(
+      'useBlockWizardDirty must be used within a BlockWizardDirtyProvider',
+    );
+  });
+
   it('shouldRenderDefaultDraftStateAndProvidedPanel', async () => {
     render(<BlockWizardShell panels={[<DirtyStateControls key="details" />]} />);
 
@@ -89,6 +95,7 @@ describe('BlockWizardShell', () => {
     await user.click(await screen.findByRole('button', { name: 'Discard changes' }));
 
     expect(await screen.findByText('Area panel')).toBeTruthy();
+    expect(screen.getByText('Clean')).toBeTruthy();
     await waitFor(() =>
       expect(
         screen.getByRole('tab', { name: 'Area calculator' }).getAttribute('aria-selected'),
