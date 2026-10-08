@@ -77,10 +77,11 @@ describe('ReportingUnitService block endpoints', () => {
     vi.useFakeTimers();
     const service = new ReportingUnitService(config);
     const promise = service.createBlock(468, { blockType: 'DISTRICT_AVERAGE' });
+    const settledPromise = promise.catch((error: unknown) => error);
     promise.cancel();
     await vi.advanceTimersByTimeAsync(300);
 
-    await expect(promise).rejects.toMatchObject({ name: 'CancelError' });
+    await expect(settledPromise).resolves.toMatchObject({ name: 'CancelError' });
     expect(promise.isCancelled).toBe(true);
   });
 });
