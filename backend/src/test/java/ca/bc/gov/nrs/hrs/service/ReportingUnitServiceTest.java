@@ -274,6 +274,22 @@ class ReportingUnitServiceTest {
   }
 
   @Test
+  @DisplayName("shouldUseSingleConfiguredGrade_whenLegacyDistrictHasOneConfiguredArea")
+  void shouldUseSingleConfiguredGrade_whenLegacyDistrictHasOneConfiguredArea() {
+    var legacyDetails = buildLegacyDetails(CLIENT_NUMBER);
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyDetails);
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("INTERIOR"));
+
+    var result = reportingUnitService.getReportingUnitDetails(RU_ID);
+
+    assertThat(result.grade()).isEqualTo(new CodeDescriptionDto("INTERIOR", "INTERIOR"));
+    assertThat(result.isLegacy()).isTrue();
+  }
+
+  @Test
   @DisplayName("shouldUseLegacyDetails_whenPostgresReportingUnitIsSoftDeleted")
   void shouldUseLegacyDetails_whenPostgresReportingUnitIsSoftDeleted() {
     var legacyDetails = buildLegacyDetails(CLIENT_NUMBER);
@@ -402,6 +418,84 @@ class ReportingUnitServiceTest {
             e ->
                 assertThat(((ResponseStatusException) e).getStatusCode())
                     .isEqualTo(org.springframework.http.HttpStatus.CONFLICT));
+  }
+
+  @Test
+  @DisplayName("shouldCreateReportingUnit_whenLegacySearchReturnsNull")
+  void shouldCreateReportingUnit_whenLegacySearchReturnsNull() {
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER, "DND", "AVG", null);
+    when(legacyApiProvider.searchReportingUnit(
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+        .thenReturn(null);
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of());
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
+    when(legacyApiProvider.createReportingUnit(request)).thenReturn(444L);
+
+    assertThat(reportingUnitService.createReportingUnit(request)).isEqualTo(444L);
+    verify(legacyApiProvider).createReportingUnit(request);
+  }
+
+  @Test
+  @DisplayName("shouldThrowBadRequest_whenGradeIsBlankForMultiAreaDistrict")
+  void shouldThrowBadRequest_whenGradeIsBlankForMultiAreaDistrict() {
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER, "DKM", "AVG", "  ");
+    when(legacyApiProvider.searchReportingUnit(
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+        .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
+    when(districtVolumeService.getAreasForDistrictCode("DKM"))
+        .thenReturn(List.of("COASTAL", "INTERIOR"));
+
+    assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(
+            exception -> {
+              var statusException = (ResponseStatusException) exception;
+              assertThat(statusException.getStatusCode())
+                  .isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST);
+              assertThat(statusException.getReason()).contains("Grade code is required");
+            });
+    verify(forestClientApiProvider, never()).fetchClientByNumber(CLIENT_NUMBER);
+  }
+
+  @Test
+  @DisplayName("shouldCreateReportingUnit_whenGradeIsProvidedForMultiAreaDistrict")
+  void shouldCreateReportingUnit_whenGradeIsProvidedForMultiAreaDistrict() {
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER, "DKM", "AVG", "COASTAL");
+    when(legacyApiProvider.searchReportingUnit(
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+        .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
+    when(districtVolumeService.getAreasForDistrictCode("DKM"))
+        .thenReturn(List.of("COASTAL", "INTERIOR"));
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
+    when(legacyApiProvider.createReportingUnit(request)).thenReturn(445L);
+
+    assertThat(reportingUnitService.createReportingUnit(request)).isEqualTo(445L);
+    verify(legacyApiProvider).createReportingUnit(request);
+  }
+
+  @Test
+  @DisplayName("shouldThrowForestClientNotFound_whenCreatingForUnknownClient")
+  void shouldThrowForestClientNotFound_whenCreatingForUnknownClient() {
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER, "DND", "AVG", null);
+    when(legacyApiProvider.searchReportingUnit(
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+        .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of());
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
+        .isInstanceOf(ForestClientNotFoundException.class);
+    verify(legacyApiProvider, never()).createReportingUnit(request);
   }
 
   @Test
