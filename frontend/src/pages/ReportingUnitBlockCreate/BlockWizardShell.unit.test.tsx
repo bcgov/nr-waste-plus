@@ -80,6 +80,8 @@ describe('BlockWizardShell', () => {
       'true',
     );
     expect(screen.getByText('Dirty')).toBeTruthy();
+    await user.click(screen.getByRole('tab', { name: 'Waste volumes' }));
+    expect(screen.getByRole('dialog')).toBeTruthy();
   });
 
   it('shouldDiscardDirtyStateAndSwitchTabs_whenDiscardIsConfirmed', async () => {
