@@ -61,9 +61,7 @@ export const FORMULA_KEYS: Record<'INTERIOR' | 'COASTAL', FormulaKeyGroup> = {
       { key: 'block.area.road', label: 'Road Area' },
       { key: 'block.area.net_waste', label: 'Net Waste Area' },
     ],
-    'Benchmark Formulas': [
-      { key: 'block.benchmark.weighted', label: 'Weighted Benchmark' },
-    ],
+    'Benchmark Formulas': [{ key: 'block.benchmark.weighted', label: 'Weighted Benchmark' }],
     'Factors': [
       { key: 'block.coast.heli.factor', label: 'Heli Logging Factor' },
       { key: 'block.waste.dispersed_retention_factor', label: 'Dispersed Retention Factor' },

@@ -1,7 +1,8 @@
 import axios from 'axios';
 
+import { parseResourceIdFromLocation } from '@/api/location';
+
 import { CancelablePromise } from './CancelablePromise';
-import { parseResourceIdFromLocation } from './locationHeader';
 import { request } from './request';
 
 import type {

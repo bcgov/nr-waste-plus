@@ -3,11 +3,11 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { useDistrictVolumeTableDetailQuery } from '@/config/react-query/hooks';
+
 import DistrictVolumeTableDetailPage from './index';
 
-import type { DistrictVolumeDetail } from '@/services/districtvolumes.types';
-
-import { useDistrictVolumeTableDetailQuery } from '@/config/react-query/hooks';
+import type { DistrictVolumeDetail } from '@/api/districtvolumes.types';
 
 // ============================================================================
 // Mocks

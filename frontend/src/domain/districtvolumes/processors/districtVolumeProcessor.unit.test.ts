@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 
 import { DistrictVolumeProcessor } from './districtVolumeProcessor';
 
-import type { TableData } from '@/services/districtvolumes.types';
+import type { TableData } from '@/api/districtvolumes.types';
 
 async function buildXlsxBuffer(
   rows: unknown[][],

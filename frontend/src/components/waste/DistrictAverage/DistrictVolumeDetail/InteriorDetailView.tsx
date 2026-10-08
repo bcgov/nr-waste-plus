@@ -1,15 +1,12 @@
 import { type FC } from 'react';
 
 import DistrictVolumeDetailHeader from './DistrictVolumeDetailHeader.tsx';
-import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs.tsx';
 import { buildDistrictVolumeDetailHeaders } from './districtVolumeDetailHeaders.tsx';
+import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs.tsx';
 import { useDistrictCodeColumn } from './useDistrictCodeColumn.tsx';
 
-import type {
-  DistrictVolumeDetail,
-  InteriorDistrictRow,
-} from '@/services/districtvolumes.types.ts';
-import type { CodeDescriptionDto } from '@/services/search.types.ts';
+import type { DistrictVolumeDetail, InteriorDistrictRow } from '@/api/districtvolumes.types.ts';
+import type { CodeDescriptionDto } from '@/api/search.types.ts';
 
 /**
  * Props for the {@link InteriorDetailView} component.

@@ -8,8 +8,8 @@ import {
   DATA_START_ROW,
   DISTRICT_COL,
   SPECIES_START_COL,
-} from '@/services/speciescomposition/config/speciesCompositionConfig';
-import { ExcelReader } from '@/services/spreadsheet/excelReader';
+} from '@/domain/speciescomposition/config/speciesCompositionConfig';
+import { ExcelReader } from '@/domain/spreadsheet/excelReader';
 
 function normalise(text: string): string {
   return text.replace(/\s+/g, ' ').trim().toLowerCase();

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import type { SortDirectionType } from '@/services/types';
+import type { SortDirectionType } from '@/api/types';
 
 /**
  * When a plain `boolean`, gates `executeSearch` directly.

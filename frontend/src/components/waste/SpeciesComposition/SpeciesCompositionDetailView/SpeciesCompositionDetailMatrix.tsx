@@ -1,22 +1,22 @@
 import { Column } from '@carbon/react';
 import { type FC, useMemo } from 'react';
 
+import {
+  SPECIES_DESCRIPTIONS,
+  SPECIES_LABELS,
+  speciesCompositionRowSchema,
+} from '@/api/speciesComposition.types.ts';
+import TooltipTag from '@/components/core/Tags/TooltipTag';
+import TableResource from '@/components/Form/TableResource';
+import { useDistrictOptionsQuery } from '@/config/react-query/hooks.ts';
+
+import type { NestedKeyOf } from '@/api/pagination.types.ts';
+import type { SpeciesCompositionRow, SpeciesKey } from '@/api/speciesComposition.types.ts';
 import type {
   TableHeaderType,
   PageableResponse,
   IdentifiableContent,
 } from '@/components/Form/TableResource/types.ts';
-import type { NestedKeyOf } from '@/services/pagination.types.ts';
-import type { SpeciesCompositionRow, SpeciesKey } from '@/services/speciesComposition.types.ts';
-
-import TooltipTag from '@/components/core/Tags/TooltipTag';
-import TableResource from '@/components/Form/TableResource';
-import { useDistrictOptionsQuery } from '@/config/react-query/hooks.ts';
-import {
-  SPECIES_DESCRIPTIONS,
-  SPECIES_LABELS,
-  speciesCompositionRowSchema,
-} from '@/services/speciesComposition.types.ts';
 
 /**
  * Props for the {@link SpeciesCompositionDetailMatrix} component.

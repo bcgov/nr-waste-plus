@@ -1,5 +1,5 @@
-import { type NestedKeyOf, type ValueByPath } from '@/services/types';
-import { getValueByPath } from '@/services/utils';
+import { type NestedKeyOf, type ValueByPath } from '@/api/types';
+import { getValueByPath } from '@/api/utils';
 
 export { pageTypeSchema, pageableResponseSchema } from './schemas';
 

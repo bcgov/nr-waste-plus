@@ -2,11 +2,8 @@ import { type FC } from 'react';
 
 import FormulaRow from './FormulaRow.tsx';
 
-import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants.ts';
-import type {
-  FormulaItemDto,
-  FormulaValidationError,
-} from '@/services/formulaConfiguration.types.ts';
+import type { FormulaKeyDefinition } from '@/api/formulaConfiguration.constants.ts';
+import type { FormulaItemDto, FormulaValidationError } from '@/api/formulaConfiguration.types.ts';
 
 import './index.scss';
 

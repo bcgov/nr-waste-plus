@@ -1,4 +1,6 @@
-import { removeEmpty } from './utils';
+import { removeEmpty } from '@/api/utils';
+import { CancelablePromise } from '@/config/api/CancelablePromise';
+import { HttpClient, type APIConfig } from '@/config/api/types';
 
 import type {
   FormulaSetRequest,
@@ -8,11 +10,8 @@ import type {
   CurrentFormulaSetParams,
   FormulaVariablesResponse,
   FormulaVariablesParams,
-} from './formulaConfiguration.types';
-import type { PageableRequest } from '@/services/types';
-
-import { CancelablePromise } from '@/config/api/CancelablePromise';
-import { HttpClient, type APIConfig } from '@/config/api/types';
+} from '@/api/formulaConfiguration.types';
+import type { PageableRequest } from '@/api/types';
 
 /**
  * Backend client for formula configuration endpoints.

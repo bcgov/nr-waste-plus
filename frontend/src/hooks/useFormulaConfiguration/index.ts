@@ -1,16 +1,16 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { generateSortArray } from '@/api/utils';
+import API from '@/services/APIs';
+
 import type {
   FormulaSetResponse,
   FormulaSetRequest,
   FormulaSetEffectiveParams,
   CurrentFormulaSetParams,
   FormulaVariablesParams,
-} from '@/services/formulaConfiguration.types';
-import type { SortDirectionType } from '@/services/types';
-
-import API from '@/services/APIs';
-import { generateSortArray } from '@/services/utils';
+} from '@/api/formulaConfiguration.types';
+import type { SortDirectionType } from '@/api/types';
 
 const formulaConfiguration = API.formulaConfiguration;
 

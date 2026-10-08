@@ -19,7 +19,7 @@ import type {
   FormulaSetEffectiveParams,
   CurrentFormulaSetParams,
   FormulaVariablesParams,
-} from '@/services/formulaConfiguration.types';
+} from '@/api/formulaConfiguration.types';
 
 // Mock the API module
 vi.mock('@/services/APIs', () => {

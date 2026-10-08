@@ -1,15 +1,14 @@
-import { removeEmpty } from './utils';
+import { removeEmpty } from '@/api/utils';
+import { CancelablePromise } from '@/config/api/CancelablePromise';
+import { HttpClient, type APIConfig } from '@/config/api/types';
 
-import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type {
   SpeciesCompositionCreate,
   SpeciesCompositionDetail,
   SpeciesCompositionListItem,
   PageableRequest,
-} from '@/services/types';
-
-import { CancelablePromise } from '@/config/api/CancelablePromise';
-import { HttpClient, type APIConfig } from '@/config/api/types';
+} from '@/api/types';
+import type { PageableResponse } from '@/components/Form/TableResource/types';
 
 /**
  * Backend client for district level species composition configuration endpoints.

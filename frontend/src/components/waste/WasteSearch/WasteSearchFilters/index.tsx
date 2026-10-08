@@ -2,8 +2,6 @@ import { Search as SearchIcon, FilterEdit as FilterIcon } from '@carbon/icons-re
 import { Button, Column, Grid } from '@carbon/react';
 import { type FC } from 'react';
 
-import type { ReportingUnitSearchParametersViewDto } from '@/services/types';
-
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import SearchInput from '@/components/Form/SearchInput';
 import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
@@ -11,6 +9,8 @@ import { useWasteSearchFilters } from '@/components/waste/WasteSearch/WasteSearc
 import WasteSearchFiltersActive from '@/components/waste/WasteSearch/WasteSearchFiltersActive';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import WasteSearchFiltersAdvanced from '@/components/waste/WasteSearch/WasteSearchFiltersAdvanced';
+
+import type { ReportingUnitSearchParametersViewDto } from '@/api/types';
 
 import './index.scss';
 

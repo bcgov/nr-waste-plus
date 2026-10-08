@@ -1,8 +1,4 @@
-import type {
-  InteriorDistrictRow,
-  InteriorZone,
-  InteriorData,
-} from '@/services/districtvolumes.types';
+import type { InteriorDistrictRow, InteriorZone, InteriorData } from '@/api/districtvolumes.types';
 
 function extractDistrictCode(raw: string): string {
   const trimmed = raw.trim();

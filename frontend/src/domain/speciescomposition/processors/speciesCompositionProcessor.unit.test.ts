@@ -1,20 +1,20 @@
 import { describe, it, expect } from 'vitest';
 
-import { SpeciesCompositionProcessor } from './speciesCompositionProcessor';
-
-import type { SpeciesCompositionData } from '@/services/speciesComposition.types';
-
 import {
   DISTRICT_COL,
   SPECIES_START_COL,
-} from '@/services/speciescomposition/config/speciesCompositionConfig';
+} from '@/domain/speciescomposition/config/speciesCompositionConfig';
 import {
   buildSpeciesCompositionFile,
   headerRow,
   dataRow,
   sampleValues,
   wrapInSpreadsheetLayout,
-} from '@/services/speciescomposition/validators/testHelper';
+} from '@/domain/speciescomposition/validators/testHelper';
+
+import { SpeciesCompositionProcessor } from './speciesCompositionProcessor';
+
+import type { SpeciesCompositionData } from '@/api/speciesComposition.types';
 
 async function makeFile(dataRows: unknown[][]) {
   return buildSpeciesCompositionFile(wrapInSpreadsheetLayout(headerRow(), dataRows));

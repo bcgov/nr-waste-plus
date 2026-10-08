@@ -1,7 +1,7 @@
 import { CancelablePromise } from '@/config/api/CancelablePromise';
 import { HttpClient, type APIConfig } from '@/config/api/types';
 
-import type { ReportingUnitCreateDto, ReportingUnitDto } from './types';
+import type { ReportingUnitCreateDto, ReportingUnitDto } from '@/api/types';
 
 /**
  * Backend client for Reporting Unit data.

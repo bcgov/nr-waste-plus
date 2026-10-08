@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 
-import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
-
 import { useClientLookupQuery } from '@/config/react-query/hooks';
 import { useAuth } from '@/context/auth/useAuth';
+
+import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/api/types';
 
 type OnChangeByKey = <K extends keyof ReportingUnitSearchParametersViewDto>(
   key: K,

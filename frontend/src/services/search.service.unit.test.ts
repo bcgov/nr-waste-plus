@@ -8,7 +8,7 @@ import type {
   ReportingUnitSearchResultDto,
   ReportingUnitSearchExpandedDto,
   PageableRequest,
-} from './types';
+} from '@/api/types';
 
 const mockConfig = { baseURL: 'http://localhost' };
 let service: SearchService;

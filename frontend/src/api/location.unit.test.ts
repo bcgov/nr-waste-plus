@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { parseResourceIdFromLocation } from './locationHeader';
+import { parseResourceIdFromLocation } from './location';
 
 describe('parseResourceIdFromLocation', () => {
   it('extracts the trailing numeric ID from a relative path', () => {

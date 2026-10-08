@@ -1,4 +1,4 @@
-import type { CodeDescriptionDto, ReportingUnitSearchParametersDto } from '@/services/types';
+import type { CodeDescriptionDto, ReportingUnitSearchParametersDto } from '@/api/types';
 
 /**
  * Maps a search filter key to the label shown in the active-filter tag list.

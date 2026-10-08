@@ -1,15 +1,14 @@
-import { removeEmpty } from './utils';
+import { removeEmpty } from '@/api/utils';
+import { HttpClient, type APIConfig } from '@/config/api/types';
 
 import type {
   PageableRequest,
   ReportingUnitSearchExpandedDto,
   ReportingUnitSearchParametersDto,
   ReportingUnitSearchResultDto,
-} from './types';
+} from '@/api/types';
 import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { CancelablePromise } from '@/config/api/CancelablePromise';
-
-import { HttpClient, type APIConfig } from '@/config/api/types';
 
 /**
  * Backend client for reporting unit search endpoints.

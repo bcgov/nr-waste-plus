@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
-import { codeDescriptionSchema } from './reportingUnit.types';
-
 import { pageableResponseSchema } from '@/components/Form/TableResource/schemas';
+
+import { codeDescriptionSchema } from './reportingUnit.types';
 
 // ─── SPECIES COLUMN KEYS ─────────────────────────────────────────────────────
 /** The species codes used in the spreadsheet and API. */

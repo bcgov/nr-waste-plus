@@ -1,12 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import ReportingUnitDetailsTombstone from './index';
-
-import type { ReportingUnitDto } from '@/services/reportingUnit.types';
-
 import { Role } from '@/context/auth/types';
 import * as useAuthModule from '@/context/auth/useAuth';
+
+import ReportingUnitDetailsTombstone from './index';
+
+import type { ReportingUnitDto } from '@/api/reportingUnit.types';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 

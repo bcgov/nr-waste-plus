@@ -1,12 +1,12 @@
 import ExcelJS from 'exceljs';
 import { describe, it, expect, beforeEach } from 'vitest';
 
+import { coastMatrixConfig } from '@/domain/districtvolumes/config/coastMatrixConfig';
+import { interiorMatrixConfig } from '@/domain/districtvolumes/config/interiorMatrixConfig';
+
 import { SpreadsheetValidator } from './spreadsheetValidator';
 
 import type { MatrixConfig } from './types';
-
-import { coastMatrixConfig } from '@/services/districtvolumes/config/coastMatrixConfig';
-import { interiorMatrixConfig } from '@/services/districtvolumes/config/interiorMatrixConfig';
 
 function buildWorksheet(rows: unknown[][], mergeCells?: string[]): ExcelJS.Worksheet {
   const wb = new ExcelJS.Workbook();

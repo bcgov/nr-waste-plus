@@ -1,12 +1,12 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants.ts';
-import type { FormulaItemDto } from '@/services/formulaConfiguration.types.ts';
-
 import FormulaRow from './FormulaRow.tsx';
+
+import type { FormulaKeyDefinition } from '@/api/formulaConfiguration.constants.ts';
+import type { FormulaItemDto } from '@/api/formulaConfiguration.types.ts';
 
 // ─── Mocks ─────────────────────────────────────────────────────────────────────
 

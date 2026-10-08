@@ -38,7 +38,7 @@ export const useListTableState = <TData extends PageableData>({
   queryHook: (params: {
     page: number;
     size: number;
-    sort: Record<string, import('@/services/types').SortDirectionType>;
+    sort: Record<string, import('@/api/types').SortDirectionType>;
   }) => QueryResult<TData>;
   filters?: Record<string, unknown>;
   enabled?: EnabledGate;

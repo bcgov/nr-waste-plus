@@ -1,4 +1,4 @@
-import type { CoastDistrictRow, CoastSection, CoastData } from '@/services/districtvolumes.types';
+import type { CoastDistrictRow, CoastSection, CoastData } from '@/api/districtvolumes.types';
 
 function extractDistrictCode(raw: string): string {
   const trimmed = raw.trim();

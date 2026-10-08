@@ -3,7 +3,7 @@ import { Column as ColumnIcon } from '@carbon/react/icons';
 
 import { type TableHeaderType, getHeaderId } from '../types';
 
-import type { NestedKeyOf } from '@/services/types';
+import type { NestedKeyOf } from '@/api/types';
 
 type ColumnCustomizationMenuProps<T> = {
   headers: TableHeaderType<T, NestedKeyOf<T>>[];

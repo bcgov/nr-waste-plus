@@ -2,15 +2,15 @@ import { Search } from '@carbon/icons-react';
 import { Button, Column, Grid } from '@carbon/react';
 import { useEffect, useState, type FC } from 'react';
 
-import { headers } from './constants';
-
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { MyForestClientDto } from '@/services/types';
-
 import SearchInput from '@/components/Form/SearchInput';
 import TableResource from '@/components/Form/TableResource';
 import { useMyForestClientsQuery } from '@/config/react-query/hooks';
 import useNotificationEvents from '@/hooks/useNotificationEvents';
+
+import { headers } from './constants';
+
+import type { MyForestClientDto } from '@/api/types';
+import type { PageableResponse } from '@/components/Form/TableResource/types';
 
 import './index.scss';
 

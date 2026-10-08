@@ -1,15 +1,15 @@
+import { mapCoastSpreadsheet } from '@/domain/districtvolumes/coast/coastMapper';
+import { coastMatrixConfig } from '@/domain/districtvolumes/config/coastMatrixConfig';
+import { interiorMatrixConfig } from '@/domain/districtvolumes/config/interiorMatrixConfig';
+import { mapInteriorSpreadsheet } from '@/domain/districtvolumes/interior/interiorMapper';
+import { ExcelReader } from '@/domain/spreadsheet/excelReader';
+import { MatrixParser } from '@/domain/spreadsheet/matrixParser';
+
+import type { TableData } from '@/api/districtvolumes.types';
 import type {
   FileProcessor,
   ProcessorResult,
 } from '@/components/Form/FileUploadInput/fileProcessor';
-import type { TableData } from '@/services/districtvolumes.types';
-
-import { mapCoastSpreadsheet } from '@/services/districtvolumes/coast/coastMapper';
-import { coastMatrixConfig } from '@/services/districtvolumes/config/coastMatrixConfig';
-import { interiorMatrixConfig } from '@/services/districtvolumes/config/interiorMatrixConfig';
-import { mapInteriorSpreadsheet } from '@/services/districtvolumes/interior/interiorMapper';
-import { ExcelReader } from '@/services/spreadsheet/excelReader';
-import { MatrixParser } from '@/services/spreadsheet/matrixParser';
 
 enum SpreadsheetVariant {
   INTERIOR = 'INTERIOR',

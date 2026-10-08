@@ -1,4 +1,4 @@
-import type { SpeciesKey } from '@/services/speciesComposition.types';
+import type { SpeciesKey } from '@/api/speciesComposition.types';
 
 // ─── SPREADSHEET LAYOUT ──────────────────────────────────────────────────────
 /** Row index containing the species column headers (1-indexed). */

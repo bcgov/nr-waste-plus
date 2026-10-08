@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
 
+import {
+  EXPECTED_DISTRICT_CODES,
+  DISTRICT_COL,
+  SPECIES_START_COL,
+} from '@/domain/speciescomposition/config/speciesCompositionConfig';
+
 import { speciesCompositionValidator } from './speciesCompositionValidator';
 import {
   buildSpeciesCompositionFile,
@@ -8,12 +14,6 @@ import {
   sampleValues,
   wrapInSpreadsheetLayout,
 } from './testHelper';
-
-import {
-  EXPECTED_DISTRICT_CODES,
-  DISTRICT_COL,
-  SPECIES_START_COL,
-} from '@/services/speciescomposition/config/speciesCompositionConfig';
 
 async function makeFile(dataRows: unknown[][]) {
   return buildSpeciesCompositionFile(wrapInSpreadsheetLayout(headerRow(), dataRows));

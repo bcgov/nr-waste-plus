@@ -11,14 +11,6 @@ import { useNavigate } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
 import { useCallback, useState, type FC, type ReactNode } from 'react';
 
-import type {
-  CoastData,
-  CoastDistrictRow,
-  InteriorData,
-  InteriorDistrictRow,
-  TableData,
-} from '@/services/districtvolumes.types.ts';
-
 import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 import FileUploadInput from '@/components/Form/FileUploadInput';
 import DistrictVolumeDetailTabs from '@/components/waste/DistrictAverage/DistrictVolumeDetail/DistrictVolumeDetailTabs.tsx';
@@ -27,13 +19,21 @@ import {
   useDistrictOptionsQuery,
   useDistrictVolumeTableCreateMutation,
 } from '@/config/react-query/hooks.ts';
+import { DistrictVolumeProcessor } from '@/domain/districtvolumes/processors/districtVolumeProcessor.ts';
+import { coastValidator } from '@/domain/districtvolumes/validators/coastValidator.ts';
+import { interiorValidator } from '@/domain/districtvolumes/validators/interiorValidator.ts';
+import { ExcelReader } from '@/domain/spreadsheet/excelReader.ts';
 import { navigateInTree } from '@/routes/inTreePaths.ts';
-import { DistrictVolumeProcessor } from '@/services/districtvolumes/processors/districtVolumeProcessor.ts';
-import { coastValidator } from '@/services/districtvolumes/validators/coastValidator.ts';
-import { interiorValidator } from '@/services/districtvolumes/validators/interiorValidator.ts';
-import { ExcelReader } from '@/services/spreadsheet/excelReader.ts';
 import { runValidators } from '@/utils/runValidators.ts';
 import { required } from '@/utils/validators.ts';
+
+import type {
+  CoastData,
+  CoastDistrictRow,
+  InteriorData,
+  InteriorDistrictRow,
+  TableData,
+} from '@/api/districtvolumes.types.ts';
 
 import './index.scss';
 

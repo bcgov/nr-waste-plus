@@ -1,8 +1,8 @@
-import { validateDistrictCodes } from './districtCodeValidator';
+import { coastMatrixConfig } from '@/domain/districtvolumes/config/coastMatrixConfig';
+import { ExcelReader } from '@/domain/spreadsheet/excelReader';
+import { SpreadsheetValidator } from '@/domain/spreadsheet/spreadsheetValidator';
 
-import { coastMatrixConfig } from '@/services/districtvolumes/config/coastMatrixConfig';
-import { ExcelReader } from '@/services/spreadsheet/excelReader';
-import { SpreadsheetValidator } from '@/services/spreadsheet/spreadsheetValidator';
+import { validateDistrictCodes } from './districtCodeValidator';
 
 export async function coastValidator(file: File): Promise<string[]> {
   const errors: string[] = [];

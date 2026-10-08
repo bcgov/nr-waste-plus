@@ -13,14 +13,7 @@ import {
 } from '@carbon/react';
 import { type FC } from 'react';
 
-import AdvancedFilterClientInput from './AdvancedFilterClientInput';
-import AdvancedFilterDateRange from './AdvancedFilterDateRange';
-import { useAdvancedFilterHandlers } from './useAdvancedFilterHandlers';
-import { useClientLookup } from './useClientLookup';
-import { MAX_TEXT_INPUT_LEN } from './utils';
-
-import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
-
+import { getCodeDescriptionArrayConverter } from '@/api/search.utils';
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import AutoCompleteInput from '@/components/Form/AutoCompleteInput';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
@@ -28,7 +21,14 @@ import { useMyForestClientsQuery } from '@/config/react-query/hooks';
 import { useAuth } from '@/context/auth/useAuth';
 import { featureFlags } from '@/env';
 import APIs from '@/services/APIs';
-import { getCodeDescriptionArrayConverter } from '@/services/search.utils';
+
+import AdvancedFilterClientInput from './AdvancedFilterClientInput';
+import AdvancedFilterDateRange from './AdvancedFilterDateRange';
+import { useAdvancedFilterHandlers } from './useAdvancedFilterHandlers';
+import { useClientLookup } from './useClientLookup';
+import { MAX_TEXT_INPUT_LEN } from './utils';
+
+import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/api/types';
 
 import './index.scss';
 

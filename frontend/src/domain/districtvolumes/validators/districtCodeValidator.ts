@@ -1,4 +1,4 @@
-import type { MatrixConfig } from '@/services/spreadsheet/types';
+import type { MatrixConfig } from '@/domain/spreadsheet/types';
 import type ExcelJS from 'exceljs';
 
 const DISTRICT_CODE_REGEX = /^[A-Z]{3}$/;

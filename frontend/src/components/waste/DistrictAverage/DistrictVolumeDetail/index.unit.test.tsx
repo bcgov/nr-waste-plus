@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import DistrictVolumeDetailView from './index.tsx';
 
-import type { DistrictVolumeDetail } from '@/services/districtvolumes.types.ts';
+import type { DistrictVolumeDetail } from '@/api/districtvolumes.types.ts';
 
 // ============================================================================
 // Mocks

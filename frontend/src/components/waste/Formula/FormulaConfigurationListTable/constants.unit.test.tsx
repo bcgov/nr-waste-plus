@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { headers } from './constants.tsx';
 
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
+import type { FormulaSetResponse } from '@/api/formulaConfiguration.types.ts';
 
 describe('FormulaConfigurationListTable headers', () => {
   it('exports six headers in a stable order', () => {

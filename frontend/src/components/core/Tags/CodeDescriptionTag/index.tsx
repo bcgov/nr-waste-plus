@@ -1,6 +1,6 @@
 import { type FC } from 'react';
 
-import type { CodeDescriptionDto } from '@/services/search.types.ts';
+import type { CodeDescriptionDto } from '@/api/search.types.ts';
 
 /**
  * Displays a code-description pair in a compact inline format.

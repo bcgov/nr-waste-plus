@@ -1,10 +1,4 @@
-import { CodesService } from './codes.service';
-import { DistrictVolumeService } from './districtvolume.service';
-import { FormulaConfigurationService } from './formulaConfiguration.service';
-import { SpeciesCompositionService } from './speciesComposition.service';
-
-import type { APIConfig } from '@/config/api/types';
-
+import { getB3Headers } from '@/api/utils';
 import { failureNotificationMiddleware } from '@/config/api/failureNotificationMiddleware';
 import { problemDetailsMiddleware } from '@/config/api/problemDetailsMiddleware';
 import { getUserAccessTokenFromCookie } from '@/context/auth/authUtils';
@@ -13,7 +7,13 @@ import { ForestClientService } from '@/services/forestclient.service';
 import { ReportingUnitService } from '@/services/reportingunit.service';
 import { SearchService } from '@/services/search.service';
 import { UserService } from '@/services/users.service';
-import { getB3Headers } from '@/services/utils';
+
+import { CodesService } from './codes.service';
+import { DistrictVolumeService } from './districtvolume.service';
+import { FormulaConfigurationService } from './formulaConfiguration.service';
+import { SpeciesCompositionService } from './speciesComposition.service';
+
+import type { APIConfig } from '@/config/api/types';
 
 /**
  * Base configuration shared by all generated backend service clients.

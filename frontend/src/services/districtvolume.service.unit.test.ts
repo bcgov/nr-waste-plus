@@ -3,8 +3,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { DistrictVolumeService } from './districtvolume.service';
 
-import type { DistrictVolumeDetail, DistrictVolumeListItem } from './districtvolumes.types';
-import type { PageableRequest } from './types';
+import type { DistrictVolumeDetail, DistrictVolumeListItem } from '@/api/districtvolumes.types';
+import type { PageableRequest } from '@/api/types';
 
 const mockConfig = { baseURL: 'http://localhost' };
 let service: DistrictVolumeService;

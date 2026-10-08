@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import SpeciesCompositionDetailView from './index.tsx';
 
-import type { SpeciesCompositionDetail } from '@/services/speciesComposition.types.ts';
+import type { SpeciesCompositionDetail } from '@/api/speciesComposition.types.ts';
 
 // ============================================================================
 // Mocks

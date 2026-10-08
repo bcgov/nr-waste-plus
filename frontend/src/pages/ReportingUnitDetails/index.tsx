@@ -11,7 +11,7 @@ import ReportingUnitBlocksList from '@/components/waste/ReportingUnits/Reporting
 import ReportingUnitDetailsTombstone from '@/components/waste/ReportingUnits/ReportingUnitDetailsTombstone';
 import { featureFlags } from '@/env';
 
-import type { ReportingUnitDto } from '@/services/types';
+import type { ReportingUnitDto } from '@/api/types';
 
 import './index.scss';
 

@@ -2,10 +2,10 @@ import { BookmarkAdd, BookmarkFilled } from '@carbon/icons-react';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types';
-import type { ReportingUnitSearchResultDto } from '@/services/search.types';
-
 import API from '@/services/APIs';
+
+import type { ReportingUnitSearchResultDto } from '@/api/search.types';
+import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types';
 
 type WasteSearchRow = PageableResponse<ReportingUnitSearchResultDto>['content'][number];
 

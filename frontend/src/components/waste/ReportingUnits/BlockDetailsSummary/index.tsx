@@ -5,7 +5,7 @@ import DateTag from '@/components/core/Tags/DateTag';
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
 
-import type { ReportingUnitDto } from '@/services/types';
+import type { ReportingUnitDto } from '@/api/types';
 
 import './index.scss';
 

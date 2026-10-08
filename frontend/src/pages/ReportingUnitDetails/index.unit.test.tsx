@@ -8,7 +8,7 @@ import * as envModule from '@/env';
 
 import ReportingUnitDetailsPage from './index';
 
-import type { ReportingUnitDto } from '@/services/types';
+import type { ReportingUnitDto } from '@/api/types';
 
 // ── Mutable state ─────────────────────────────────────────────────────────────
 

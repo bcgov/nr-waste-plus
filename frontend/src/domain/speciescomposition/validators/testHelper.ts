@@ -3,7 +3,7 @@ import ExcelJS from 'exceljs';
 import {
   DISTRICT_COL,
   SPECIES_START_COL,
-} from '@/services/speciescomposition/config/speciesCompositionConfig';
+} from '@/domain/speciescomposition/config/speciesCompositionConfig';
 
 export async function buildSpeciesCompositionFile(
   rows: unknown[][],

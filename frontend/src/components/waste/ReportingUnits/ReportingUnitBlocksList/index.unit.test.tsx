@@ -1,15 +1,14 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { ReactElement } from 'react';
-
-import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import type { CodeDescriptionDto } from '@/services/types';
-import type { PageableResponse } from '@/types/PageableResponse.types';
+import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 
 import ReportingUnitBlocksList, { type ReportingUnitBlocksRow } from './index';
+
+import type { CodeDescriptionDto } from '@/api/types';
+import type { PageableResponse } from '@/types/PageableResponse.types';
+import type { ReactElement } from 'react';
 
 /**
  * Status code/description pairs from the Figma design (zInceMk1eEq3X1p0LFwoK8,

@@ -2,14 +2,14 @@ import { useNavigate } from '@tanstack/react-router';
 import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
-import { useSpeciesCompositionListRowActions } from './actions.tsx';
-
-import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
-import type { SpeciesCompositionListItem } from '@/services/speciesComposition.types.ts';
-
 import { resolveTableRowActionValue } from '@/components/Form/TableResource/types.ts';
 import { navigateInTree } from '@/routes/inTreePaths.ts';
 import { isFutureDated } from '@/utils/businessDate.ts';
+
+import { useSpeciesCompositionListRowActions } from './actions.tsx';
+
+import type { SpeciesCompositionListItem } from '@/api/speciesComposition.types.ts';
+import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: vi.fn(),

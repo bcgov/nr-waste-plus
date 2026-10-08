@@ -10,9 +10,9 @@ import type {
   CurrentFormulaSetParams,
   FormulaVariablesResponse,
   FormulaVariablesParams,
-} from './formulaConfiguration.types';
+} from '@/api/formulaConfiguration.types';
+import type { PageableRequest } from '@/api/types';
 import type { APIConfig } from '@/config/api/types';
-import type { PageableRequest } from '@/services/types';
 
 describe('FormulaConfigurationService', () => {
   let service: FormulaConfigurationService;

@@ -3,6 +3,10 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { forestClientAutocompleteResult2CodeDescription } from '@/api/utils';
+import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
+import API from '@/services/APIs';
+
 import {
   useClientLookupQuery,
   useCodesQuery,
@@ -23,10 +27,6 @@ import {
   useSpeciesCompositionDeleteMutation,
 } from './hooks';
 import { queryKeys } from './queryKeys';
-
-import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
-import API from '@/services/APIs';
-import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
@@ -104,7 +104,7 @@ vi.mock('@/services/APIs', () => ({
   },
 }));
 
-vi.mock('@/services/utils', () => ({
+vi.mock('@/api/utils', () => ({
   forestClientAutocompleteResult2CodeDescription: vi.fn((c) => c),
   generateSortArray: vi.fn(() => []),
 }));

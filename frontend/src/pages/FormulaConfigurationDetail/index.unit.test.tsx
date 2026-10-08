@@ -4,12 +4,12 @@ import userEvent from '@testing-library/user-event';
 import { type ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import FormulaConfigurationDetailPage from './index';
-
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
-
 import { useFormulaSetDetail } from '@/hooks/useFormulaConfiguration';
 import { navigateInTree } from '@/routes/inTreePaths';
+
+import FormulaConfigurationDetailPage from './index';
+
+import type { FormulaSetResponse } from '@/api/formulaConfiguration.types';
 
 // ============================================================================
 // Mocks

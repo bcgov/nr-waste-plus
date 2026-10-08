@@ -1,15 +1,6 @@
 import { Column } from '@carbon/react';
 import { useState } from 'react';
 
-import { useListTableState } from '@/hooks/useTableRow';
-
-import { useDistrictVolumeListRowActions } from './actions.tsx';
-import { headers } from './constants.tsx';
-
-import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
-import type { DistrictVolumeListItem } from '@/services/districtvolumes.types.ts';
-import type { FC } from 'react';
-
 import TableResource from '@/components/Form/TableResource';
 import ConfigurationDeleteConfirmModal from '@/components/waste/ConfigurationDeleteConfirmModal';
 import {
@@ -17,6 +8,14 @@ import {
   useDistrictVolumeTableDeleteMutation,
 } from '@/config/react-query/hooks.ts';
 import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
+import { useListTableState } from '@/hooks/useTableRow';
+
+import { useDistrictVolumeListRowActions } from './actions.tsx';
+import { headers } from './constants.tsx';
+
+import type { DistrictVolumeListItem } from '@/api/districtvolumes.types.ts';
+import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
+import type { FC } from 'react';
 
 import './index.scss';
 

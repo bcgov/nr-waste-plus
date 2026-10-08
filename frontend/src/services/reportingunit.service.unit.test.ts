@@ -2,10 +2,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { ReportingUnitService } from './reportingunit.service';
-import { reportingUnitSchema, codeDescriptionSchema } from './reportingUnit.types';
+import { reportingUnitSchema, codeDescriptionSchema } from '@/api/reportingUnit.types';
 
-import type { ReportingUnitCreateDto, ReportingUnitDto } from './reportingUnit.types';
+import { ReportingUnitService } from './reportingunit.service';
+
+import type { ReportingUnitCreateDto, ReportingUnitDto } from '@/api/reportingUnit.types';
 
 vi.mock('axios');
 

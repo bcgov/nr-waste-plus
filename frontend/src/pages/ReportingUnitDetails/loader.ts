@@ -1,12 +1,12 @@
 import { notFound } from '@tanstack/react-router';
 
-import type { ReportingUnitDto } from '@/services/types';
-
 import { ApiError } from '@/config/api/types';
 import { queryClient } from '@/config/react-query/config';
 import { queryKeys } from '@/config/react-query/queryKeys';
 import { featureFlags } from '@/env';
 import service from '@/services/APIs';
+
+import type { ReportingUnitDto } from '@/api/types';
 
 /**
  * Loader for the Reporting Unit Details page.

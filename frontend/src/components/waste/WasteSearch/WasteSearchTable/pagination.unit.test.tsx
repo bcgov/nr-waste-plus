@@ -3,14 +3,14 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
-import WasteSearchTable from './index';
-
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { ReportingUnitSearchResultDto } from '@/services/search.types';
-
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as useNotificationEvents from '@/hooks/useNotificationEvents';
 import APIs from '@/services/APIs';
+
+import WasteSearchTable from './index';
+
+import type { ReportingUnitSearchResultDto } from '@/api/search.types';
+import type { PageableResponse } from '@/components/Form/TableResource/types';
 
 // Mock WasteSearchFilters
 vi.mock('@/components/waste/WasteSearch/WasteSearchFilters', () => ({

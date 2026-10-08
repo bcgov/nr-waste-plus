@@ -1,15 +1,14 @@
-import { removeEmpty } from './utils';
+import { removeEmpty } from '@/api/utils';
+import { CancelablePromise } from '@/config/api/CancelablePromise';
+import { HttpClient, type APIConfig } from '@/config/api/types';
 
 import type {
   DistrictVolumeCreate,
   DistrictVolumeDetail,
   DistrictVolumeListItem,
-} from './districtvolumes.types';
+} from '@/api/districtvolumes.types';
+import type { PageableRequest } from '@/api/types';
 import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { PageableRequest } from '@/services/types';
-
-import { CancelablePromise } from '@/config/api/CancelablePromise';
-import { HttpClient, type APIConfig } from '@/config/api/types';
 
 /**
  * Backend client for district average volume configuration endpoints.

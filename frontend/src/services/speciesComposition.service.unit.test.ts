@@ -6,8 +6,8 @@ import { SpeciesCompositionService } from './speciesComposition.service';
 import type {
   SpeciesCompositionDetail,
   SpeciesCompositionListItem,
-} from './speciesComposition.types';
-import type { PageableRequest } from '@/services/types';
+} from '@/api/speciesComposition.types';
+import type { PageableRequest } from '@/api/types';
 
 const mockConfig = { baseURL: 'http://localhost' };
 let service: SpeciesCompositionService;

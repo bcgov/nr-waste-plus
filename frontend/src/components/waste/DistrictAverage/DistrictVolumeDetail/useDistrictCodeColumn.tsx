@@ -1,8 +1,8 @@
 import { useMemo, type ReactNode } from 'react';
 
-import type { CodeDescriptionDto } from '@/services/search.types.ts';
-
 import CodeDescriptionTag from '@/components/core/Tags/CodeDescriptionTag';
+
+import type { CodeDescriptionDto } from '@/api/search.types.ts';
 
 /**
  * Builds a `renderAs` function for the district *code* column used by both

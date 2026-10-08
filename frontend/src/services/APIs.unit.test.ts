@@ -9,7 +9,7 @@ describe('BackendApiConfig', () => {
     it('returns B3 tracing headers object', async () => {
       const mockHeaders = { 'X-B3-TraceId': 'abc123', 'X-B3-SpanId': 'def456' };
       const getB3Headers = vi.fn(() => mockHeaders);
-      vi.doMock('@/services/utils', () => ({ getB3Headers }));
+      vi.doMock('@/api/utils', () => ({ getB3Headers }));
 
       const { BackendApiConfig } = await vi.importActual<typeof import('./APIs')>('./APIs');
       const headersResolver = BackendApiConfig.HEADERS as
