@@ -62,6 +62,16 @@ describe('BlockWizardShell', () => {
     );
   });
 
+  it('shouldKeepTheFirstPanelActive_whenSelectingCurrentTab', async () => {
+    const user = userEvent.setup();
+    render(<BlockWizardShell />);
+
+    const currentTab = await screen.findByRole('tab', { name: 'Block details' });
+    await user.click(currentTab);
+
+    expect(currentTab.getAttribute('aria-selected')).toBe('true');
+  });
+
   it('shouldStayOnCurrentTab_whenDirtyTabChangeIsCancelled', async () => {
     const user = userEvent.setup();
     render(
