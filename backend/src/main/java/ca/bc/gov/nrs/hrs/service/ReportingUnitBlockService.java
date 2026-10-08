@@ -5,20 +5,11 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.BlockRuleDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
-import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
-import ca.bc.gov.nrs.hrs.entity.block.BlockMarkEntity;
-import ca.bc.gov.nrs.hrs.entity.block.BlockSubmitterEntity;
-import ca.bc.gov.nrs.hrs.entity.block.DistrictAverageBlockEntity;
-import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
-import ca.bc.gov.nrs.hrs.repository.block.BlockMarkRepository;
+import ca.bc.gov.nrs.hrs.repository.block.BlockListItemProjection;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
-import ca.bc.gov.nrs.hrs.repository.block.BlockSubmitterRepository;
-import ca.bc.gov.nrs.hrs.repository.block.DistrictAverageBlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
-import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
 import io.micrometer.observation.annotation.Observed;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -49,8 +40,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ReportingUnitBlockService {
 
-  private static final String PRIMARY_MARK_TYPE = "PRIMARY";
-
   /** Page size reported for an empty block list, matching the frontend's empty payload. */
   private static final int EMPTY_PAGE_SIZE = 10;
 
@@ -76,10 +65,6 @@ public class ReportingUnitBlockService {
 
   private final ReportingUnitRepository reportingUnitRepository;
   private final BlockRepository blockRepository;
-  private final BlockMarkRepository blockMarkRepository;
-  private final StatusEventRepository statusEventRepository;
-  private final BlockSubmitterRepository blockSubmitterRepository;
-  private final DistrictAverageBlockRepository districtAverageBlockRepository;
   private final LegacyApiProvider legacyApiProvider;
   private final BlockRulesProperties blockRulesProperties;
 
@@ -133,61 +118,25 @@ public class ReportingUnitBlockService {
   }
 
   private List<BlockListItemDto> buildPostgresBlocks(Long reportingUnitId) {
-    return blockRepository.findAllByReportingUnitIdAndDeletedFalseOrderById(reportingUnitId)
+    return blockRepository.findBlockListItemsByReportingUnitId(reportingUnitId)
         .stream()
         .map(this::toBlockListItem)
         .toList();
   }
 
-  private BlockListItemDto toBlockListItem(BlockEntity block) {
-    BlockMarkEntity primaryMark = findPrimaryMark(block.getId());
-    StatusEventEntity latestStatus =
-        statusEventRepository.findFirstByBlockIdOrderByCreatedAtDesc(block.getId()).orElse(null);
-    BlockSubmitterEntity submitter =
-        blockSubmitterRepository.findFirstByBlockIdAndDeletedFalseOrderById(block.getId())
-            .orElse(null);
-    String cutBlockId = primaryMark == null ? null : primaryMark.getCutBlockId();
-
+  private BlockListItemDto toBlockListItem(BlockListItemProjection row) {
+    String cutBlockId = row.getCutBlockId();
     return new BlockListItemDto(
-        block.getId(),
-        primaryMark == null ? null : primaryMark.getForestFileId(),
-        primaryMark == null ? null : primaryMark.getCuttingPermitId(),
+        row.getId(),
+        row.getLicenseNumber(),
+        row.getCuttingPermit(),
         cutBlockId == null ? "" : cutBlockId,
-        primaryMark == null ? null : primaryMark.getTimberMark(),
-        resolveTotalAreaHa(block.getId()),
+        row.getTimberMark(),
+        row.getTotalWasteAreaHa(),
         null,
-        submitter == null ? null : submitter.getSubmitterName(),
-        resolveStatus(latestStatus == null ? null : latestStatus.getStatus()),
-        toLocalDateTime(block.getUpdatedAt()));
-  }
-
-  private BlockMarkEntity findPrimaryMark(Long blockId) {
-    List<BlockMarkEntity> marks =
-        blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
-            blockId, PRIMARY_MARK_TYPE);
-
-    return marks.isEmpty() ? null : marks.getFirst();
-  }
-
-  private BigDecimal resolveTotalAreaHa(Long blockId) {
-    DistrictAverageBlockEntity districtAverageBlock =
-        districtAverageBlockRepository.findByBlockIdAndDeletedFalse(blockId).orElse(null);
-
-    if (districtAverageBlock == null
-        || (districtAverageBlock.getCoastGroundBasedAreaHa() == null
-            && districtAverageBlock.getCoastHelicopterAreaHa() == null)) {
-      return null;
-    }
-
-    BigDecimal total = BigDecimal.ZERO;
-    if (districtAverageBlock.getCoastGroundBasedAreaHa() != null) {
-      total = total.add(districtAverageBlock.getCoastGroundBasedAreaHa());
-    }
-    if (districtAverageBlock.getCoastHelicopterAreaHa() != null) {
-      total = total.add(districtAverageBlock.getCoastHelicopterAreaHa());
-    }
-
-    return total;
+        row.getSubmitter(),
+        resolveStatus(row.getRawStatus()),
+        toLocalDateTime(row.getUpdatedAt()));
   }
 
   private static BlockListItemDto.Status resolveStatus(String rawStatus) {

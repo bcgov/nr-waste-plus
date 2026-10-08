@@ -15,6 +15,8 @@ import {
 import type { PaginationOnChangeType, TableRowAction } from '@/components/Form/TableResource/types';
 import type { PageableResponse } from '@/types/PageableResponse.types';
 
+import EmptySection from '@/components/core/EmptySection';
+
 import './index.scss';
 
 export type { ReportingUnitBlocksRow } from './constants';
@@ -92,6 +94,18 @@ const ReportingUnitBlocksList: FC<ReportingUnitBlocksListProps> = ({
   const handlePageChange = ({ page: nextPage, pageSize: nextSize }: PaginationOnChangeType) => {
     setPage({ page: nextPage, pageSize: nextSize });
   };
+
+  if (isError && !isLoading && !content) {
+    return (
+      <Column sm={4} md={8} lg={16} className="rublocks-column">
+        <EmptySection
+          className="initial-empty-section"
+          title="Something went wrong!"
+          description="Error occurred while searching for results."
+        />
+      </Column>
+    );
+  }
 
   return (
     <Column sm={4} md={8} lg={16} className="rublocks-column">

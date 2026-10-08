@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.hrs.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -12,20 +13,12 @@ import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.BlockRuleDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
-import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
-import ca.bc.gov.nrs.hrs.entity.block.BlockMarkEntity;
-import ca.bc.gov.nrs.hrs.entity.block.BlockSubmitterEntity;
-import ca.bc.gov.nrs.hrs.entity.block.DistrictAverageBlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
-import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
-import ca.bc.gov.nrs.hrs.repository.block.BlockMarkRepository;
+import ca.bc.gov.nrs.hrs.repository.block.BlockListItemProjection;
 import ca.bc.gov.nrs.hrs.repository.block.BlockRepository;
-import ca.bc.gov.nrs.hrs.repository.block.BlockSubmitterRepository;
-import ca.bc.gov.nrs.hrs.repository.block.DistrictAverageBlockRepository;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
-import ca.bc.gov.nrs.hrs.repository.block.StatusEventRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -51,10 +44,6 @@ class ReportingUnitBlockServiceTest {
 
   @Mock private ReportingUnitRepository reportingUnitRepository;
   @Mock private BlockRepository blockRepository;
-  @Mock private BlockMarkRepository blockMarkRepository;
-  @Mock private StatusEventRepository statusEventRepository;
-  @Mock private BlockSubmitterRepository blockSubmitterRepository;
-  @Mock private DistrictAverageBlockRepository districtAverageBlockRepository;
   @Mock private LegacyApiProvider legacyApiProvider;
   @Mock private BlockRulesProperties blockRulesProperties;
 
@@ -65,7 +54,7 @@ class ReportingUnitBlockServiceTest {
   void shouldReadPostgresBlocks_whenReportingUnitExistsInPostgres() {
     when(reportingUnitRepository.findByIdAndDeletedFalse(REPORTING_UNIT_ID))
         .thenReturn(Optional.of(new ReportingUnitEntity()));
-    when(blockRepository.findAllByReportingUnitIdAndDeletedFalseOrderById(REPORTING_UNIT_ID))
+    when(blockRepository.findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID))
         .thenReturn(List.of());
 
     var result = service.getBlockList(REPORTING_UNIT_ID);
@@ -79,29 +68,22 @@ class ReportingUnitBlockServiceTest {
   @DisplayName("shouldMapPostgresBlockFields_whenBlockHasMarkAreaStatusAndSubmitter")
   void shouldMapPostgresBlockFields_whenBlockHasMarkAreaStatusAndSubmitter() {
     Instant updatedAt = Instant.parse("2025-04-03T12:30:00Z");
-    BlockEntity block = block(901L, updatedAt);
-    BlockMarkEntity firstMark = mark("CUT-1", "FILE-1", "CP-1", "TM-1");
-    BlockMarkEntity secondMark = mark("CUT-2", "FILE-2", "CP-2", "TM-2");
-    DistrictAverageBlockEntity area = new DistrictAverageBlockEntity();
-    area.setCoastGroundBasedAreaHa(new BigDecimal("12.125"));
-    area.setCoastHelicopterAreaHa(new BigDecimal("3.375"));
-    StatusEventEntity status = new StatusEventEntity();
-    status.setStatus(" approved ");
-    BlockSubmitterEntity submitter = new BlockSubmitterEntity();
-    submitter.setSubmitterName("Alex Example");
+    BlockListItemProjection projection =
+        projection(
+            901L,
+            "FILE-1",
+            "CP-1",
+            "CUT-1",
+            "TM-1",
+            new BigDecimal("15.500"),
+            "Alex Example",
+            " approved ",
+            updatedAt);
 
     when(reportingUnitRepository.findByIdAndDeletedFalse(REPORTING_UNIT_ID))
         .thenReturn(Optional.of(new ReportingUnitEntity()));
-    when(blockRepository.findAllByReportingUnitIdAndDeletedFalseOrderById(REPORTING_UNIT_ID))
-        .thenReturn(List.of(block));
-    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(901L, "PRIMARY"))
-        .thenReturn(List.of(firstMark, secondMark));
-    when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDesc(901L))
-        .thenReturn(Optional.of(status));
-    when(blockSubmitterRepository.findFirstByBlockIdAndDeletedFalseOrderById(901L))
-        .thenReturn(Optional.of(submitter));
-    when(districtAverageBlockRepository.findByBlockIdAndDeletedFalse(901L))
-        .thenReturn(Optional.of(area));
+    when(blockRepository.findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID))
+        .thenReturn(List.of(projection));
 
     var result = service.getBlockList(REPORTING_UNIT_ID);
 
@@ -120,43 +102,31 @@ class ReportingUnitBlockServiceTest {
                 LocalDateTime.ofInstant(updatedAt, ZoneId.systemDefault())));
     assertThat(result.getTotalElements()).isEqualTo(1);
     assertThat(result.getSize()).isEqualTo(10);
-    verify(blockMarkRepository)
-        .findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(901L, "PRIMARY");
+    verify(blockRepository).findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID);
   }
 
   @Test
   @DisplayName("shouldReturnNullArea_whenDistrictAverageExtensionDoesNotExist")
   void shouldReturnNullArea_whenDistrictAverageExtensionDoesNotExist() {
-    assertThat(readOnePostgresBlockWithArea(Optional.empty()).totalWasteAreaHa()).isNull();
+    assertThat(readOnePostgresBlockWithArea(null).totalWasteAreaHa()).isNull();
   }
 
   @Test
   @DisplayName("shouldReturnGroundArea_whenHelicopterAreaIsNull")
   void shouldReturnGroundArea_whenHelicopterAreaIsNull() {
-    DistrictAverageBlockEntity extension = new DistrictAverageBlockEntity();
-    extension.setCoastGroundBasedAreaHa(new BigDecimal("7.125"));
-    extension.setCoastHelicopterAreaHa(null);
-
-    assertThat(readOnePostgresBlockWithArea(Optional.of(extension)).totalWasteAreaHa())
+    assertThat(readOnePostgresBlockWithArea(new BigDecimal("7.125")).totalWasteAreaHa())
         .isEqualByComparingTo("7.125");
   }
 
   @Test
   @DisplayName("shouldMapMissingPostgresMetadataToContractFallbacks_whenRelationsAreAbsent")
   void shouldMapMissingPostgresMetadataToContractFallbacks_whenRelationsAreAbsent() {
-    BlockEntity block = block(902L, null);
+    BlockListItemProjection row =
+        projection(902L, null, null, null, null, null, null, null, null);
     when(reportingUnitRepository.findByIdAndDeletedFalse(REPORTING_UNIT_ID))
         .thenReturn(Optional.of(new ReportingUnitEntity()));
-    when(blockRepository.findAllByReportingUnitIdAndDeletedFalseOrderById(REPORTING_UNIT_ID))
-        .thenReturn(List.of(block));
-    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(902L, "PRIMARY"))
-        .thenReturn(List.of());
-    when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDesc(902L))
-        .thenReturn(Optional.empty());
-    when(blockSubmitterRepository.findFirstByBlockIdAndDeletedFalseOrderById(902L))
-        .thenReturn(Optional.empty());
-    when(districtAverageBlockRepository.findByBlockIdAndDeletedFalse(902L))
-        .thenReturn(Optional.empty());
+    when(blockRepository.findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID))
+        .thenReturn(List.of(row));
 
     var result = service.getBlockList(REPORTING_UNIT_ID);
 
@@ -198,7 +168,8 @@ class ReportingUnitBlockServiceTest {
 
     var result = readOnePostgresBlockWithStatus(rawStatus);
 
-    assertThat(result.status()).isEqualTo(new BlockListItemDto.Status(expectedCode, expectedDescription));
+    assertThat(result.status())
+        .isEqualTo(new BlockListItemDto.Status(expectedCode, expectedDescription));
   }
 
   @ParameterizedTest
@@ -214,41 +185,26 @@ class ReportingUnitBlockServiceTest {
   @Test
   @DisplayName("shouldSumSingleAvailableArea_whenOtherAreaIsNull")
   void shouldSumSingleAvailableArea_whenOtherAreaIsNull() {
-    DistrictAverageBlockEntity extension = new DistrictAverageBlockEntity();
-    extension.setCoastGroundBasedAreaHa(null);
-    extension.setCoastHelicopterAreaHa(new BigDecimal("2.750"));
-
-    assertThat(readOnePostgresBlockWithArea(Optional.of(extension)).totalWasteAreaHa())
+    assertThat(readOnePostgresBlockWithArea(new BigDecimal("2.750")).totalWasteAreaHa())
         .isEqualByComparingTo("2.750");
   }
 
   @Test
   @DisplayName("shouldReturnNullArea_whenBothAreaValuesAreNull")
   void shouldReturnNullArea_whenBothAreaValuesAreNull() {
-    DistrictAverageBlockEntity extension = new DistrictAverageBlockEntity();
-    extension.setCoastGroundBasedAreaHa(null);
-    extension.setCoastHelicopterAreaHa(null);
-
-    assertThat(readOnePostgresBlockWithArea(Optional.of(extension)).totalWasteAreaHa()).isNull();
+    assertThat(readOnePostgresBlockWithArea(null).totalWasteAreaHa()).isNull();
   }
 
   @Test
   @DisplayName("shouldMapMultiplePostgresBlocks_inRepositoryOrder")
   void shouldMapMultiplePostgresBlocks_inRepositoryOrder() {
+    List<BlockListItemProjection> rows =
+        List.of(
+            projection(904L, null, null, null, null, null, null, null, null),
+            projection(905L, null, null, null, null, null, null, null, null));
     when(reportingUnitRepository.findByIdAndDeletedFalse(REPORTING_UNIT_ID))
         .thenReturn(Optional.of(new ReportingUnitEntity()));
-    when(blockRepository.findAllByReportingUnitIdAndDeletedFalseOrderById(REPORTING_UNIT_ID))
-        .thenReturn(List.of(block(904L, null), block(905L, null)));
-    for (long id : List.of(904L, 905L)) {
-      when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(id, "PRIMARY"))
-          .thenReturn(List.of());
-      when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDesc(id))
-          .thenReturn(Optional.empty());
-      when(blockSubmitterRepository.findFirstByBlockIdAndDeletedFalseOrderById(id))
-          .thenReturn(Optional.empty());
-      when(districtAverageBlockRepository.findByBlockIdAndDeletedFalse(id))
-          .thenReturn(Optional.empty());
-    }
+    when(blockRepository.findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID)).thenReturn(rows);
 
     var result = service.getBlockList(REPORTING_UNIT_ID);
 
@@ -275,7 +231,8 @@ class ReportingUnitBlockServiceTest {
         .thenReturn(Optional.empty());
     when(legacyApiProvider.getReportingUnitDetails(REPORTING_UNIT_ID))
         .thenReturn(new ReportingUnitLegacyDetailsDto(null, null, null, null));
-    when(legacyApiProvider.getReportingUnitBlocks(REPORTING_UNIT_ID)).thenReturn(List.of(legacyRow));
+    when(legacyApiProvider.getReportingUnitBlocks(REPORTING_UNIT_ID))
+        .thenReturn(List.of(legacyRow));
 
     var result = service.getBlockList(REPORTING_UNIT_ID);
 
@@ -295,8 +252,7 @@ class ReportingUnitBlockServiceTest {
 
     service.getBlockList(REPORTING_UNIT_ID);
 
-    verify(blockRepository, never())
-        .findAllByReportingUnitIdAndDeletedFalseOrderById(REPORTING_UNIT_ID);
+    verify(blockRepository, never()).findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID);
   }
 
   @Test
@@ -394,7 +350,10 @@ class ReportingUnitBlockServiceTest {
   void shouldOmitRule_whenSamplingRulesAreNotConfigured() {
     when(blockRulesProperties.getSampling()).thenReturn(null);
 
-    assertThat(service.enrichWithBlockMetadata(details(new CodeDescriptionDto("AVG", "Average"))).blockRule())
+    assertThat(
+            service
+                .enrichWithBlockMetadata(details(new CodeDescriptionDto("AVG", "Average")))
+                .blockRule())
         .isNull();
   }
 
@@ -403,7 +362,10 @@ class ReportingUnitBlockServiceTest {
   void shouldOmitRule_whenSamplingCodeHasNoConfiguredRule() {
     when(blockRulesProperties.getSampling()).thenReturn(Map.of("AGR", rule()));
 
-    assertThat(service.enrichWithBlockMetadata(details(new CodeDescriptionDto("AVG", "Average")).withLegacy(true)))
+    assertThat(
+            service
+                .enrichWithBlockMetadata(
+                    details(new CodeDescriptionDto("AVG", "Average")).withLegacy(true)))
         .satisfies(
             enriched -> {
               assertThat(enriched.blockRule()).isNull();
@@ -412,56 +374,48 @@ class ReportingUnitBlockServiceTest {
   }
 
   private BlockListItemDto readOnePostgresBlockWithStatus(String rawStatus) {
-    BlockEntity block = block(903L, null);
-    StatusEventEntity status = new StatusEventEntity();
-    status.setStatus(rawStatus);
+    BlockListItemProjection row =
+        projection(903L, null, null, null, null, null, null, rawStatus, null);
     when(reportingUnitRepository.findByIdAndDeletedFalse(REPORTING_UNIT_ID))
         .thenReturn(Optional.of(new ReportingUnitEntity()));
-    when(blockRepository.findAllByReportingUnitIdAndDeletedFalseOrderById(REPORTING_UNIT_ID))
-        .thenReturn(List.of(block));
-    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(903L, "PRIMARY"))
-        .thenReturn(List.of());
-    when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDesc(903L))
-        .thenReturn(Optional.of(status));
-    when(blockSubmitterRepository.findFirstByBlockIdAndDeletedFalseOrderById(903L))
-        .thenReturn(Optional.empty());
-    when(districtAverageBlockRepository.findByBlockIdAndDeletedFalse(903L))
-        .thenReturn(Optional.empty());
+    when(blockRepository.findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID))
+        .thenReturn(List.of(row));
 
     return service.getBlockList(REPORTING_UNIT_ID).getContent().getFirst();
   }
 
-  private BlockListItemDto readOnePostgresBlockWithArea(Optional<DistrictAverageBlockEntity> area) {
+  private BlockListItemDto readOnePostgresBlockWithArea(BigDecimal area) {
+    BlockListItemProjection row =
+        projection(906L, null, null, null, null, area, null, null, null);
     when(reportingUnitRepository.findByIdAndDeletedFalse(REPORTING_UNIT_ID))
         .thenReturn(Optional.of(new ReportingUnitEntity()));
-    when(blockRepository.findAllByReportingUnitIdAndDeletedFalseOrderById(REPORTING_UNIT_ID))
-        .thenReturn(List.of(block(906L, null)));
-    when(blockMarkRepository.findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(906L, "PRIMARY"))
-        .thenReturn(List.of());
-    when(statusEventRepository.findFirstByBlockIdOrderByCreatedAtDesc(906L))
-        .thenReturn(Optional.empty());
-    when(blockSubmitterRepository.findFirstByBlockIdAndDeletedFalseOrderById(906L))
-        .thenReturn(Optional.empty());
-    when(districtAverageBlockRepository.findByBlockIdAndDeletedFalse(906L)).thenReturn(area);
+    when(blockRepository.findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID))
+        .thenReturn(List.of(row));
 
     return service.getBlockList(REPORTING_UNIT_ID).getContent().getFirst();
   }
 
-  private static BlockEntity block(Long id, Instant updatedAt) {
-    BlockEntity block = new BlockEntity();
-    block.setId(id);
-    block.setUpdatedAt(updatedAt);
-    return block;
-  }
-
-  private static BlockMarkEntity mark(
-      String cutBlockId, String forestFileId, String cuttingPermitId, String timberMark) {
-    BlockMarkEntity mark = new BlockMarkEntity();
-    mark.setCutBlockId(cutBlockId);
-    mark.setForestFileId(forestFileId);
-    mark.setCuttingPermitId(cuttingPermitId);
-    mark.setTimberMark(timberMark);
-    return mark;
+  private static BlockListItemProjection projection(
+      Long id,
+      String licenseNumber,
+      String cuttingPermit,
+      String cutBlockId,
+      String timberMark,
+      BigDecimal totalWasteAreaHa,
+      String submitter,
+      String rawStatus,
+      Instant updatedAt) {
+    BlockListItemProjection projection = mock(BlockListItemProjection.class);
+    when(projection.getId()).thenReturn(id);
+    when(projection.getLicenseNumber()).thenReturn(licenseNumber);
+    when(projection.getCuttingPermit()).thenReturn(cuttingPermit);
+    when(projection.getCutBlockId()).thenReturn(cutBlockId);
+    when(projection.getTimberMark()).thenReturn(timberMark);
+    when(projection.getTotalWasteAreaHa()).thenReturn(totalWasteAreaHa);
+    when(projection.getSubmitter()).thenReturn(submitter);
+    when(projection.getRawStatus()).thenReturn(rawStatus);
+    when(projection.getUpdatedAt()).thenReturn(updatedAt);
+    return projection;
   }
 
   private static ReportingUnitDetailsDto details(CodeDescriptionDto sampling) {

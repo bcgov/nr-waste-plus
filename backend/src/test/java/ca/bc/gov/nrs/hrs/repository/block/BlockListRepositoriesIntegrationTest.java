@@ -63,11 +63,6 @@ class BlockListRepositoriesIntegrationTest extends AbstractTestContainerIntegrat
           deletedBlock.setDeleted(true);
           deletedBlock = blockRepository.saveAndFlush(deletedBlock);
 
-          assertThat(
-                  blockRepository.findAllByReportingUnitIdAndDeletedFalseOrderById(
-                      reportingUnit.getId()))
-              .extracting(BlockEntity::getId)
-              .containsExactly(firstBlock.getId(), secondBlock.getId());
           assertThatThrownBy(
                   () ->
                       blockRepository.findByReportingUnitIdAndDeletedFalse(
@@ -83,8 +78,12 @@ class BlockListRepositoriesIntegrationTest extends AbstractTestContainerIntegrat
               .isEmpty();
 
           BlockMarkEntity earlierMark = primaryMark(firstBlock.getId(), actor, 0, "EARLY");
+          earlierMark.setForestFileId("FILE-PRIMARY");
+          earlierMark.setCuttingPermitId("CP-PRIMARY");
+          earlierMark.setCutBlockId("CUT-PRIMARY");
+          earlierMark.setTimberMark("TM-PRIMARY");
           BlockMarkEntity laterMark = primaryMark(firstBlock.getId(), actor, 1, "LATE");
-          BlockMarkEntity deletedMark = primaryMark(firstBlock.getId(), actor, 2, "DELETED");
+          BlockMarkEntity deletedMark = primaryMark(firstBlock.getId(), actor, -1, "DELETED");
           deletedMark.setDeleted(true);
           blockMarkRepository.saveAllAndFlush(List.of(laterMark, deletedMark, earlierMark));
           assertThat(
@@ -94,10 +93,13 @@ class BlockListRepositoriesIntegrationTest extends AbstractTestContainerIntegrat
               .containsExactly("EARLY", "LATE");
 
           BlockSubmitterEntity firstSubmitter = submitter(firstBlock.getId(), actor, "First");
+          BlockSubmitterEntity secondSubmitter = submitter(firstBlock.getId(), actor, "Second");
           BlockSubmitterEntity deletedSubmitter =
               submitter(firstBlock.getId(), actor, "Deleted");
           deletedSubmitter.setDeleted(true);
-          blockSubmitterRepository.saveAllAndFlush(List.of(deletedSubmitter, firstSubmitter));
+          blockSubmitterRepository.saveAndFlush(firstSubmitter);
+          blockSubmitterRepository.saveAndFlush(secondSubmitter);
+          blockSubmitterRepository.saveAndFlush(deletedSubmitter);
           assertThat(
                   blockSubmitterRepository.findFirstByBlockIdAndDeletedFalseOrderById(
                       firstBlock.getId()))
@@ -108,9 +110,10 @@ class BlockListRepositoriesIntegrationTest extends AbstractTestContainerIntegrat
           jdbcTemplate.update(
               """
               INSERT INTO hrs.district_average_block
-                  (district_average_block_id, has_dispersed_retention, is_heli_logging,
+                  (district_average_block_id, coast_ground_based_area_ha,
+                   coast_helicopter_area_ha, has_dispersed_retention, is_heli_logging,
                    created_by, updated_by)
-              VALUES (?, FALSE, FALSE, ?, ?)
+              VALUES (?, 12.125, 3.375, FALSE, FALSE, ?, ?)
               """,
               firstBlock.getId(),
               actor,
@@ -146,6 +149,31 @@ class BlockListRepositoriesIntegrationTest extends AbstractTestContainerIntegrat
               .get()
               .extracting(StatusEventEntity::getStatus)
               .isEqualTo("APP");
+
+          StatusEventEntity tieBreakStatus = status(firstBlock.getId(), actor, "SUBMITTED");
+          tieBreakStatus.setCreatedAt(Instant.parse("2025-01-01T00:00:00Z"));
+          tieBreakStatus.setUpdatedAt(Instant.parse("2025-01-01T00:00:00Z"));
+          statusEventRepository.save(tieBreakStatus);
+
+          List<BlockListItemProjection> blockListRows =
+              blockRepository.findBlockListItemsByReportingUnitId(reportingUnit.getId());
+          assertThat(blockListRows)
+              .hasSize(2)
+              .extracting(BlockListItemProjection::getId)
+              .containsExactly(firstBlock.getId(), secondBlock.getId());
+          assertThat(blockListRows.getFirst().getLicenseNumber()).isEqualTo("FILE-PRIMARY");
+          assertThat(blockListRows.getFirst().getCuttingPermit()).isEqualTo("CP-PRIMARY");
+          assertThat(blockListRows.getFirst().getCutBlockId()).isEqualTo("CUT-PRIMARY");
+          assertThat(blockListRows.getFirst().getTimberMark()).isEqualTo("TM-PRIMARY");
+          assertThat(blockListRows.getFirst().getTotalWasteAreaHa())
+              .isEqualByComparingTo("15.500");
+          assertThat(blockListRows.getFirst().getSubmitter()).isEqualTo("First");
+          assertThat(blockListRows.getFirst().getRawStatus()).isEqualTo("SUBMITTED");
+          assertThat(blockListRows.getFirst().getUpdatedAt()).isNotNull();
+          assertThat(blockListRows.get(1).getLicenseNumber()).isNull();
+          assertThat(blockListRows.get(1).getTotalWasteAreaHa()).isNull();
+          assertThat(blockListRows.get(1).getSubmitter()).isNull();
+          assertThat(blockListRows.get(1).getRawStatus()).isNull();
 
         });
   }

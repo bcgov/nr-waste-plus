@@ -172,11 +172,12 @@ const renderBlocksList = async (
       <PreferenceProvider>{ui}</PreferenceProvider>
     </QueryClientProvider>,
   );
-  // Wait until the table headers or the empty state have rendered — the empty
-  // state (no content prop) never shows any header text.
+  // Wait until the table headers or an empty/error state has rendered.
   await waitFor(() => {
     const ready =
-      screen.queryByText('Licence No.') !== null || screen.queryByText('No results') !== null;
+      screen.queryByText('Licence No.') !== null ||
+      screen.queryByText('No results') !== null ||
+      screen.queryByText('Something went wrong!') !== null;
     expect(ready).toBe(true);
   });
 };
@@ -303,6 +304,14 @@ describe('ReportingUnitBlocksList', () => {
 
     expect(screen.getByRole('table')).toBeTruthy();
     expect(screen.queryByText('No results')).toBeNull();
+  });
+
+  it('shows an error state when the block-list request fails without data', async () => {
+    await renderBlocksList(<ReportingUnitBlocksList ruId={468} isError />);
+
+    expect(screen.getByTestId('empty-section-title').textContent).toBe('Something went wrong!');
+    expect(screen.queryByText('No results')).toBeNull();
+    expect(screen.queryByRole('table')).toBeNull();
   });
 
   it('keeps delete actions disabled and does not navigate', async () => {
