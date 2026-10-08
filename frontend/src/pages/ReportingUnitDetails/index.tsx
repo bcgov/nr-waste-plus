@@ -95,6 +95,7 @@ const ReportingUnitDetailsPage: FC = () => {
       />
       {blocksListEnabled && (
         <ReportingUnitBlocksList
+          ruId={data.id}
           content={blocksQuery.data}
           isLoading={blocksQuery.isPending}
           isError={blocksQuery.isError}

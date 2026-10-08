@@ -1,7 +1,10 @@
+import { TableShortcut, TrashCan } from '@carbon/icons-react';
 import { Column } from '@carbon/react';
+import { useNavigate } from '@tanstack/react-router';
 import { useState, type FC } from 'react';
 
 import TableResource from '@/components/Form/TableResource';
+import { navigateInTree } from '@/routes/inTreePaths';
 
 import {
   BLOCKS_TABLE_HEADERS,
@@ -9,7 +12,7 @@ import {
   type ReportingUnitBlocksRow,
 } from './constants';
 
-import type { PaginationOnChangeType } from '@/components/Form/TableResource/types';
+import type { PaginationOnChangeType, TableRowAction } from '@/components/Form/TableResource/types';
 import type { PageableResponse } from '@/types/PageableResponse.types';
 
 import './index.scss';
@@ -23,6 +26,8 @@ export type { ReportingUnitBlocksRow } from './constants';
  * is not wired, leave it undefined and the table renders its empty state.
  */
 export interface ReportingUnitBlocksListProps {
+  /** Reporting unit that owns the displayed blocks. */
+  readonly ruId: number;
   /**
    * Page of blocks to render. When the TanStack Query is wired, pass the query's
    * `data` straight through.
@@ -52,11 +57,31 @@ export interface ReportingUnitBlocksListProps {
  * @returns The blocks table.
  */
 const ReportingUnitBlocksList: FC<ReportingUnitBlocksListProps> = ({
+  ruId,
   content,
   isLoading = false,
   isError = false,
 }) => {
+  const navigate = useNavigate();
   const [{ page, pageSize }, setPage] = useState({ page: 0, pageSize: 10 });
+
+  const getRowActions = (): TableRowAction<ReportingUnitBlocksRow>[] => [
+    {
+      id: 'view-details',
+      label: 'See details',
+      icon: <TableShortcut />,
+      onClick: (selectedRow) => {
+        navigateInTree(navigate, `/reporting-units/${ruId}/${selectedRow.id}`);
+      },
+    },
+    {
+      id: 'delete',
+      label: 'Delete block',
+      icon: <TrashCan />,
+      isDisabled: true,
+      onClick: () => undefined,
+    },
+  ];
 
   /**
    * Tracks the requested page locally until issue #1250 turns this into
@@ -87,6 +112,7 @@ const ReportingUnitBlocksList: FC<ReportingUnitBlocksListProps> = ({
         error={isError}
         displayToolbar={false}
         onPageChange={handlePageChange}
+        getRowActions={getRowActions}
       />
     </Column>
   );

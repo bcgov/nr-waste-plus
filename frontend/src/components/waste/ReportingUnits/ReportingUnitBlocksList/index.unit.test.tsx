@@ -1,15 +1,23 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
+import userEvent from '@testing-library/user-event';
 
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 
 import { render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { CodeDescriptionDto } from '@/services/types';
 import type { PageableResponse } from '@/types/PageableResponse.types';
 
 import ReportingUnitBlocksList, { type ReportingUnitBlocksRow } from './index';
+
+const { mockNavigate } = vi.hoisted(() => ({ mockNavigate: vi.fn() }));
+
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-router')>();
+  return { ...actual, useNavigate: () => mockNavigate };
+});
 
 /**
  * Status code/description pairs from the Figma design (zInceMk1eEq3X1p0LFwoK8,
@@ -157,7 +165,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
 };
 
 const renderBlocksList = async (
-  ui: ReactElement = <ReportingUnitBlocksList content={DUMMY_BLOCKS_CONTENT} />,
+  ui: ReactElement = <ReportingUnitBlocksList ruId={468} content={DUMMY_BLOCKS_CONTENT} />,
 ) => {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
@@ -191,6 +199,7 @@ describe('ReportingUnitBlocksList', () => {
       'Status',
       'Last updated',
       'Time',
+      'Actions',
     ]);
   });
 
@@ -240,8 +249,25 @@ describe('ReportingUnitBlocksList', () => {
     expect(screen.getAllByRole('combobox').length).toBeGreaterThanOrEqual(2);
   });
 
+  it('navigates to the selected block details page', async () => {
+    mockNavigate.mockClear();
+    await renderBlocksList();
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'See details' })[0]);
+
+    expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468/1' });
+  });
+
+  it('shows the delete action as disabled', async () => {
+    await renderBlocksList();
+
+    const deleteButtons = screen.getAllByRole('button', { name: 'Delete block' });
+    expect(deleteButtons).toHaveLength(DUMMY_BLOCKS_CONTENT.content.length);
+    expect(deleteButtons.every((button) => (button as HTMLButtonElement).disabled)).toBe(true);
+  });
+
   it('renders the empty state when no content is provided (API not wired yet)', async () => {
-    await renderBlocksList(<ReportingUnitBlocksList />);
+    await renderBlocksList(<ReportingUnitBlocksList ruId={468} />);
 
     // TableResource shows its "No results" empty section for a provided but
     // empty page — the initial-empty branch needs `content: undefined`, which
