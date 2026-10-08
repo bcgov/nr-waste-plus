@@ -1,5 +1,7 @@
 @use '@carbon/react/scss/spacing' as *;
 @use '@carbon/react/scss/breakpoint' as *;
+@use '@carbon/styles/scss/components/tabs';
+@use '@carbon/styles/scss/components/progress-indicator';
 
 // Page layout for /reporting-units/$ruId/$blockId (Figma 161:29613).
 .rublock-column {
@@ -10,9 +12,18 @@
     margin-bottom: $spacing-08;
   }
 
-  &__summary {
+  &__summary,
+  &__progress {
     // Summary card → page actions gap.
     margin-bottom: $spacing-07;
+  }
+
+  &__progress .cds--progress-step {
+    flex: 1 1 0;
+
+    .cds--progress-line {
+      inline-size: 100%;
+    }
   }
 
   &__actions {

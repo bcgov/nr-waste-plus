@@ -1,10 +1,24 @@
 import { ArrowLeft } from '@carbon/icons-react';
-import { Button, Column } from '@carbon/react';
+import {
+  Button,
+  Column,
+  ProgressIndicator,
+  ProgressIndicatorSkeleton,
+  ProgressStep,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
+} from '@carbon/react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useEffect, useRef, type FC } from 'react';
 
 import PageNotification from '@/components/core/PageNotification';
 import PageTitle from '@/components/core/PageTitle';
+import LegacyDataTag from '@/components/core/Tags/LegacyDataTag';
+import TagWrapper from '@/components/core/Tags/TagWrapper';
+import UnderConstructionTag from '@/components/core/Tags/UnderConstructionTag';
 import BlockDetailsSkeleton from '@/components/waste/ReportingUnits/BlockDetailsSkeleton';
 import BlockDetailsSummary from '@/components/waste/ReportingUnits/BlockDetailsSummary';
 import { useReportingUnitDetailsQuery } from '@/config/react-query/hooks';
@@ -109,20 +123,74 @@ const ReportingUnitBlockDetailsPage: FC = () => {
         data-testid="rublock-banner"
         ref={bannerRef}
       >
-        <PageTitle
-          title={`Reporting Unit No. ${ruId}`}
-          subtitle="View reporting unit details"
-          breadCrumbs={[
-            { name: 'Reporting unit', path: `/reporting-units/${ruId}` },
-            { name: 'Blocks', path: `/reporting-units/${ruId}/${blockId}` },
-          ]}
-        />
+        <TagWrapper position="right" tag={<UnderConstructionTag type="page" />}>
+          <TagWrapper
+            position="right"
+            // API-driven once the backend ships `isLegacy`; grade fallback covers
+            // the rollout window (units without a grade are legacy-only today).
+            enabled={data.isLegacy ?? !data.grade?.code}
+            tag={
+              <LegacyDataTag
+                url={`/waste101ReportUnitDetailsAction.do?dataBean.p_reporting_unit_id=${data.id}`}
+              />
+            }
+          >
+            <PageTitle
+              title={`Block ID ${blockId}`}
+              subtitle="View block details"
+              breadCrumbs={[
+                { name: `Reporting unit ${ruId}`, path: `/reporting-units/${ruId}` },
+                {
+                  name: `Block ${blockId}` /* TODO: this id should be the block number, not the PK of the block */,
+                  path: `/reporting-units/${ruId}/${blockId}`,
+                },
+              ]}
+            />
+          </TagWrapper>
+        </TagWrapper>
       </Column>
       <Column lg={16} md={8} sm={4} className="notification-column">
         <PageNotification eventTarget={EVENT_TARGET} />
       </Column>
+      <Column lg={16} md={8} sm={4} className="rublock-column__progress">
+        {isLoading && <ProgressIndicatorSkeleton />}
+        {!isLoading && (
+          <ProgressIndicator currentIndex={0}>
+            <ProgressStep
+              current
+              label="Step 1"
+              description="Enter details and submit"
+              secondaryLabel="Enter details and submit"
+            />
+            <ProgressStep
+              label="Step 2"
+              description="Ministry review"
+              secondaryLabel="Ministry review"
+            />
+            <ProgressStep label="Step 3" description="Decision" secondaryLabel="Decision" />
+          </ProgressIndicator>
+        )}
+      </Column>
       <Column lg={16} md={8} sm={4} className="rublock-column__summary">
         <BlockDetailsSummary data={data} />
+      </Column>
+      <Column lg={16} md={8} sm={4} className="rublock-column__content">
+        <Tabs defaultSelectedIndex={0}>
+          <TabList aria-label="aria" contained size="lg">
+            <Tab>Block details</Tab>
+            <Tab>Area calculator</Tab>
+            <Tab>Waste volumes</Tab>
+            <Tab>Attachments</Tab>
+            <Tab>Endorsement</Tab>
+          </TabList>
+          <TabPanels>
+            <TabPanel>Block details content</TabPanel>
+            <TabPanel>Area calculator content</TabPanel>
+            <TabPanel>Waste volumes content</TabPanel>
+            <TabPanel>Attachments content</TabPanel>
+            <TabPanel>Endorsement content</TabPanel>
+          </TabPanels>
+        </Tabs>
       </Column>
       <Column
         lg={16}
@@ -132,11 +200,13 @@ const ReportingUnitBlockDetailsPage: FC = () => {
         data-testid="rublock-actions"
       >
         <Button
-          kind="secondary"
+          kind="tertiary"
           onClick={() => navigateInTree(navigate, `/reporting-units/${ruId}`)}
-          renderIcon={ArrowLeft}
         >
-          Back
+          Save
+        </Button>
+        <Button kind="primary" onClick={() => navigateInTree(navigate, `/reporting-units/${ruId}`)}>
+          Submit
         </Button>
       </Column>
     </>

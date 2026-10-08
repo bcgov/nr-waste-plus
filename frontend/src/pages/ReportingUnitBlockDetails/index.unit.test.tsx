@@ -88,25 +88,25 @@ describe('ReportingUnitBlockDetailsPage', () => {
     it('shouldRenderTitleAndSubtitle_fromRouteParams', async () => {
       await renderPage();
 
-      expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Reporting Unit No. 468');
-      expect(screen.getByText('View reporting unit details')).toBeTruthy();
+      expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Block ID 12');
+      expect(screen.getByText('View block details')).toBeTruthy();
     });
 
-    it('shouldRenderBreadcrumb_withReportingUnitAndBlocksEntries', async () => {
+    it('shouldRenderBreadcrumb_withReportingUnitAndBlockEntries', async () => {
       await renderPage();
 
-      expect(screen.getByText('Reporting unit')).toBeTruthy();
-      expect(screen.getByText('Blocks')).toBeTruthy();
+      expect(screen.getByText('Reporting unit 468')).toBeTruthy();
+      expect(screen.getByText('Block 12')).toBeTruthy();
     });
 
     it('shouldTriggerNavigation_whenBreadcrumbCrumbIsClicked', async () => {
       const user = userEvent.setup();
       await renderPage();
 
-      await user.click(screen.getByText('Reporting unit'));
+      await user.click(screen.getByText('Reporting unit 468'));
       expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468' });
 
-      await user.click(screen.getByText('Blocks'));
+      await user.click(screen.getByText('Block 12'));
       expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468/12' });
     });
 
@@ -238,12 +238,42 @@ describe('ReportingUnitBlockDetailsPage', () => {
     });
   });
 
+  describe('submission sections', () => {
+    it('shouldRenderProgressSteps', async () => {
+      await renderPage();
+
+      expect(screen.getByText('Step 1')).toBeTruthy();
+      expect(screen.getByText('Step 2')).toBeTruthy();
+      expect(screen.getByText('Step 3')).toBeTruthy();
+    });
+
+    it('shouldRenderTabsWithBlockDetailsSelectedByDefault', async () => {
+      await renderPage();
+
+      expect(screen.getByRole('tab', { name: 'Block details' })).toBeTruthy();
+      expect(screen.getByRole('tab', { name: 'Area calculator' })).toBeTruthy();
+      expect(screen.getByRole('tab', { name: 'Waste volumes' })).toBeTruthy();
+      expect(screen.getByRole('tab', { name: 'Attachments' })).toBeTruthy();
+      expect(screen.getByRole('tab', { name: 'Endorsement' })).toBeTruthy();
+      expect(screen.getByText('Block details content')).toBeTruthy();
+    });
+  });
+
   describe('success actions', () => {
-    it('shouldNavigateToReportingUnit_whenBackIsClicked', async () => {
+    it('shouldNavigateToReportingUnit_whenSaveIsClicked', async () => {
       const user = userEvent.setup();
 
       await renderPage();
-      await user.click(screen.getByRole('button', { name: 'Back' }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
+
+      expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468' });
+    });
+
+    it('shouldNavigateToReportingUnit_whenSubmitIsClicked', async () => {
+      const user = userEvent.setup();
+
+      await renderPage();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
 
       expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468' });
     });
