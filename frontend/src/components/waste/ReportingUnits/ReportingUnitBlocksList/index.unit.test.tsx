@@ -264,6 +264,17 @@ describe('ReportingUnitBlocksList', () => {
     ).toBe(true);
   });
 
+  it('preserves page size while moving between pages', async () => {
+    const multiPageContent = {
+      ...DUMMY_BLOCKS_CONTENT,
+      page: { ...DUMMY_BLOCKS_CONTENT.page, size: 20, totalElements: 40, totalPages: 2 },
+    };
+    await renderBlocksList(<ReportingUnitBlocksList ruId={468} content={multiPageContent} />);
+
+    expect(screen.getByText('Items per page:')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Next page' })).toBeTruthy();
+  });
+
   it('navigates to the selected block details page', async () => {
     mockNavigate.mockClear();
     await renderBlocksList();
