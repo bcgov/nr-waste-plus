@@ -66,6 +66,30 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .andExpect(status().isNotFound());
   }
 
+  @Test
+  @DisplayName("shouldReturnBlockRows_whenReportingUnitHasLegacyBlocks")
+  void shouldReturnBlockRows_whenReportingUnitHasLegacyBlocks() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/reporting-units/{id}/blocks", 879)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$[0].id").value(1905))
+        .andExpect(jsonPath("$[0].licenseNumber").value("R21110"))
+        .andExpect(jsonPath("$[0].cutBlockId").value(""))
+        .andExpect(jsonPath("$[0].status.code").value("DFT"))
+        .andExpect(jsonPath("$[0].status.description").value("Draft"))
+        .andExpect(jsonPath("$[1].id").value(1906))
+        .andExpect(jsonPath("$[1].licenseNumber").value("A74531"))
+        .andExpect(jsonPath("$[1].totalWasteAreaHa").value(27.02))
+        .andExpect(jsonPath("$[1].cuttingPermit").value("9"))
+        .andExpect(jsonPath("$[1].timberMark").value("JY1009"))
+        .andExpect(jsonPath("$[1].cutBlockId").value("CB1"))
+        .andExpect(jsonPath("$[1].totalWasteVolumeM3").doesNotExist())
+        .andExpect(jsonPath("$[1].status.code").value("RTB"));
+  }
+
   // -----------------------------------------------------------------------
   // GET /api/reporting-units/{id} — non-IDIR with matching client
   // -----------------------------------------------------------------------
