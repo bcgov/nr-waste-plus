@@ -3,7 +3,7 @@ import { act, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import * as hooks from '@/config/react-query/hooks.ts';
+import * as hooks from '@/api/speciesCompositions.ts';
 import { renderWithApp, renderWithAppAsync } from '@/config/tests/renderWithApp.tsx';
 import * as inTreePaths from '@/routes/inTreePaths.ts';
 
@@ -13,7 +13,7 @@ import SpeciesCompositionUpload from './index.tsx';
 // Mocks
 // ============================================================================
 
-vi.mock('@/config/react-query/hooks');
+vi.mock('@/api/speciesCompositions');
 
 vi.mock('@carbon/react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@carbon/react')>();

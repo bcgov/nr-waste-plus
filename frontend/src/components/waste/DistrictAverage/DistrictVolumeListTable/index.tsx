@@ -1,12 +1,12 @@
 import { Column } from '@carbon/react';
 import { useState } from 'react';
 
-import TableResource from '@/components/Form/TableResource';
-import ConfigurationDeleteConfirmModal from '@/components/waste/ConfigurationDeleteConfirmModal';
 import {
   useDistrictVolumeListQuery,
   useDistrictVolumeTableDeleteMutation,
-} from '@/config/react-query/hooks.ts';
+} from '@/api/districtVolumes';
+import TableResource from '@/components/Form/TableResource';
+import ConfigurationDeleteConfirmModal from '@/components/waste/ConfigurationDeleteConfirmModal';
 import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
 import { useListTableState } from '@/hooks/useTableRow';
 

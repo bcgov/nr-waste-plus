@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { type ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { useSpeciesCompositionDetailQuery } from '@/config/react-query/hooks';
+import { useSpeciesCompositionDetailQuery } from '@/api/speciesCompositions';
 
 import SpeciesCompositionDetailPage from './index';
 
@@ -19,7 +19,7 @@ vi.mock('@tanstack/react-router', () => ({
   useParams: vi.fn().mockReturnValue({ id: '42' }),
 }));
 
-vi.mock('@/config/react-query/hooks', () => ({
+vi.mock('@/api/speciesCompositions', () => ({
   useSpeciesCompositionDetailQuery: vi.fn(),
 }));
 

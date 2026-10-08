@@ -4,9 +4,9 @@ import { useNavigate } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
 import { useCallback, useState, type FC } from 'react';
 
+import { useSpeciesCompositionCreateMutation } from '@/api/speciesCompositions';
 import FileUploadInput from '@/components/Form/FileUploadInput';
 import UploadFormActions from '@/components/waste/UploadFormActions';
-import { useSpeciesCompositionCreateMutation } from '@/config/react-query/hooks.ts';
 import { SpeciesCompositionProcessor } from '@/domain/speciescomposition/processors/speciesCompositionProcessor.ts';
 import { speciesCompositionValidator } from '@/domain/speciescomposition/validators/speciesCompositionValidator.ts';
 import { navigateInTree } from '@/routes/inTreePaths.ts';

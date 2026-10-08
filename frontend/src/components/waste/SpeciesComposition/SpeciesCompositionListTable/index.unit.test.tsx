@@ -4,8 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { act } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import * as hooks from '@/api/speciesCompositions.ts';
 import { renderCell, resolveTableRowActionValue } from '@/components/Form/TableResource/types.ts';
-import * as hooks from '@/config/react-query/hooks.ts';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp.tsx';
 import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
 
@@ -14,7 +14,7 @@ import SpeciesCompositionListTable from './index.tsx';
 import type { SpeciesCompositionListItem } from '@/api/speciesComposition.types.ts';
 import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
 
-vi.mock('@/config/react-query/hooks');
+vi.mock('@/api/speciesCompositions');
 
 vi.mock('@/hooks/useNotificationEvents/eventHandler', () => ({
   sendEvent: vi.fn(),

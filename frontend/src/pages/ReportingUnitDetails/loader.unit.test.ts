@@ -116,8 +116,8 @@ describe('reportingUnitLoader', () => {
 
       // Let ensureQueryData actually call the queryFn (TanStack passes a
       // QueryFunctionContext; the loader threads its signal through)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockEnsureQueryData.mockImplementation(({ queryFn }) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (queryFn as any)({ signal: undefined }),
       );
 
@@ -185,16 +185,14 @@ describe('reportingUnitLoader', () => {
       const serverError = makeHttpError(500, 'Internal Server Error');
       mockEnsureQueryData.mockRejectedValue(serverError);
 
-      await expect(reportingUnitLoader({ params: { ruId: '999' } })).rejects.toThrow(
-        'Internal Server Error',
-      );
+      await expect(reportingUnitLoader({ params: { ruId: '999' } })).rejects.toBe(serverError);
     });
 
     it('re-throws HttpError as-is when status is 401', async () => {
       const unauthorizedError = makeHttpError(401, 'Unauthorized');
       mockEnsureQueryData.mockRejectedValue(unauthorizedError);
 
-      await expect(reportingUnitLoader({ params: { ruId: '99' } })).rejects.toThrow('Unauthorized');
+      await expect(reportingUnitLoader({ params: { ruId: '99' } })).rejects.toBe(unauthorizedError);
     });
 
     it('re-throws non-HttpError network errors unchanged', async () => {

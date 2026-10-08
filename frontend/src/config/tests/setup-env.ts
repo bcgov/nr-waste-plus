@@ -89,6 +89,30 @@ vi.mock('@/api/resources/reporting-unit-resource', () => ({
   },
 }));
 
+vi.mock('@/api/resources/district-volume-resource', () => ({
+  DistrictVolumeResource: class {
+    getDistrictVolumes = vi.fn().mockResolvedValue({
+      content: [],
+      page: { number: 0, size: 10, totalElements: 0, totalPages: 0 },
+    });
+    createDistrictVolumeTable = vi.fn().mockResolvedValue(1);
+    getDistrictVolumeTableDetail = vi.fn().mockResolvedValue({});
+    deleteDistrictVolume = vi.fn().mockResolvedValue(undefined);
+  },
+}));
+
+vi.mock('@/api/resources/species-composition-resource', () => ({
+  SpeciesCompositionResource: class {
+    listSpeciesCompositions = vi.fn().mockResolvedValue({
+      content: [],
+      page: { number: 0, size: 10, totalElements: 0, totalPages: 0 },
+    });
+    getSpeciesCompositionById = vi.fn().mockResolvedValue({});
+    createSpeciesComposition = vi.fn().mockResolvedValue(1);
+    deleteSpeciesComposition = vi.fn().mockResolvedValue(undefined);
+  },
+}));
+
 // Mock global fetch to prevent real HTTP requests in jsdom tests
 // Uses vi.stubGlobal for automatic cleanup via restoreMocks: true in vite.config.ts
 vi.stubGlobal(

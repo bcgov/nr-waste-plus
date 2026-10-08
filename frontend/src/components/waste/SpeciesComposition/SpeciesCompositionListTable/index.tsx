@@ -1,12 +1,12 @@
 import { Column } from '@carbon/react';
 import { useState } from 'react';
 
-import TableResource from '@/components/Form/TableResource';
-import ConfigurationDeleteConfirmModal from '@/components/waste/ConfigurationDeleteConfirmModal';
 import {
   useSpeciesCompositionDeleteMutation,
   useSpeciesCompositionListQuery,
-} from '@/config/react-query/hooks.ts';
+} from '@/api/speciesCompositions';
+import TableResource from '@/components/Form/TableResource';
+import ConfigurationDeleteConfirmModal from '@/components/waste/ConfigurationDeleteConfirmModal';
 import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
 import { useListTableState } from '@/hooks/useTableRow';
 

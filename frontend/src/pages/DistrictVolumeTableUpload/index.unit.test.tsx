@@ -3,7 +3,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import * as hooks from '@/config/react-query/hooks';
+import * as hooks from '@/api/districtVolumes';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as inTreePaths from '@/routes/inTreePaths';
 
@@ -13,7 +13,7 @@ import DistrictVolumeTableUploadPage from './index';
 // Mocks
 // ============================================================================
 
-vi.mock('@/config/react-query/hooks');
+vi.mock('@/api/districtVolumes');
 
 const mockMutateAsync = vi.fn();
 const mockUseDistrictVolumeTableCreateMutation = vi.mocked(

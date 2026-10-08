@@ -1,21 +1,27 @@
+/**
+ * Unit tests for {@link module:api/districtVolumes} hook module.
+ *
+ * Migrated from config/react-query/hooks.unit.test.ts during the API
+ * connection-layer migration: the data-source boundary is now the
+ * DistrictVolumeResource module (globally mocked in setup-env;
+ * overridden here with programmable hoisted handles).
+ *
+ * @module api/districtVolumes.unit.test
+ */
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
-import API from '@/services/APIs';
 
 import {
   useDistrictVolumeListQuery,
   useDistrictVolumeTableCreateMutation,
   useDistrictVolumeTableDeleteMutation,
   useDistrictVolumeTableDetailQuery,
-  useSpeciesCompositionCreateMutation,
-  useSpeciesCompositionDeleteMutation,
-  useSpeciesCompositionDetailQuery,
-  useSpeciesCompositionListQuery,
-} from './hooks';
+} from './districtVolumes';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
@@ -23,61 +29,28 @@ vi.mock('@/hooks/useNotificationEvents/eventHandler', () => ({
   sendEvent: vi.fn(),
 }));
 
-vi.mock('@/services/APIs', () => ({
-  default: {
-    districtVolume: {
-      getDistrictVolumes: vi.fn().mockResolvedValue({
-        content: [
-          {
-            id: 1,
-            area: 'INTERIOR',
-            startDate: '2026-05-15',
-            endDate: null,
-            uploadedBy: 'IDIR/ABCDEF',
-            dateOfUpload: '2026-03-27T00:00:00Z',
-          },
-        ],
-        page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
-      }),
-      getDistrictVolumeTableDetail: vi.fn().mockResolvedValue({
-        area: 'INTERIOR',
-        id: 42,
-        startDate: '2026-06-01',
-        zones: [],
-      }),
-      createDistrictVolumeTable: vi.fn().mockResolvedValue(444),
-      deleteDistrictVolume: vi.fn().mockResolvedValue(undefined),
-    },
-    speciesComposition: {
-      listSpeciesCompositions: vi.fn().mockResolvedValue({
-        content: [
-          {
-            id: 1,
-            startDate: '2026-05-15',
-            endDate: null,
-            uploadedBy: 'IDIR/ABCDEF',
-            dateOfUpload: '2026-03-27T00:00:00Z',
-          },
-        ],
-        page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
-      }),
-      getSpeciesCompositionById: vi.fn().mockResolvedValue({
-        id: 1,
-        startDate: '2026-05-15',
-        endDate: null,
-        uploadedBy: 'IDIR/ABCDEF',
-        dateOfUpload: '2026-03-27T00:00:00Z',
-        tableData: { rows: [] },
-      }),
-      createSpeciesComposition: vi.fn().mockResolvedValue(555),
-      deleteSpeciesComposition: vi.fn().mockResolvedValue(undefined),
-    },
-  },
-}));
-
 vi.mock('@/api/utils', () => ({
   forestClientAutocompleteResult2CodeDescription: vi.fn((c) => c),
   generateSortArray: vi.fn(() => []),
+  removeEmpty: vi.fn((o) => o),
+}));
+
+const { mockDV } = vi.hoisted(() => ({
+  mockDV: {
+    getDistrictVolumes: vi.fn(),
+    createDistrictVolumeTable: vi.fn(),
+    getDistrictVolumeTableDetail: vi.fn(),
+    deleteDistrictVolume: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/district-volume-resource', () => ({
+  DistrictVolumeResource: class {
+    getDistrictVolumes = mockDV.getDistrictVolumes;
+    createDistrictVolumeTable = mockDV.createDistrictVolumeTable;
+    getDistrictVolumeTableDetail = mockDV.getDistrictVolumeTableDetail;
+    deleteDistrictVolume = mockDV.deleteDistrictVolume;
+  },
 }));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -90,11 +63,31 @@ function createWrapper() {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe('react-query hooks', () => {
+describe('api/districtVolumes hooks', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockDV.getDistrictVolumes.mockResolvedValue({
+      content: [
+        {
+          id: 1,
+          area: 'INTERIOR',
+          startDate: '2026-05-15',
+          endDate: null,
+          uploadedBy: 'IDIR/ABCDEF',
+          dateOfUpload: '2026-03-27T00:00:00Z',
+        },
+      ],
+      page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
+    });
+    mockDV.getDistrictVolumeTableDetail.mockResolvedValue({
+      area: 'INTERIOR',
+      id: 42,
+      startDate: '2026-06-01',
+      zones: [],
+    });
+    mockDV.createDistrictVolumeTable.mockResolvedValue(444);
+    mockDV.deleteDistrictVolume.mockResolvedValue(undefined);
   });
-
 
   describe('useDistrictVolumeListQuery', () => {
     it('should return paginated district volume data', async () => {
@@ -125,11 +118,11 @@ describe('react-query hooks', () => {
       );
 
       await waitFor(() =>
-        expect(API.districtVolume.getDistrictVolumes).toHaveBeenCalledWith(undefined, {
-          page: 0,
-          size: 10,
-          sort: [],
-        }),
+        expect(mockDV.getDistrictVolumes).toHaveBeenCalledWith(
+          undefined,
+          { page: 0, size: 10, sort: [] },
+          { signal: expect.any(AbortSignal) },
+        ),
       );
     });
 
@@ -148,7 +141,7 @@ describe('react-query hooks', () => {
         detail: 'Failed to load district volumes',
         title: 'Server Error',
       };
-      vi.mocked(API.districtVolume.getDistrictVolumes).mockRejectedValueOnce(mockError);
+      vi.mocked(mockDV.getDistrictVolumes).mockRejectedValueOnce(mockError);
 
       const { result } = renderHook(
         () =>
@@ -178,7 +171,9 @@ describe('react-query hooks', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
       expect(result.current.data).toBeDefined();
-      expect(API.districtVolume.getDistrictVolumeTableDetail).toHaveBeenCalledWith(42);
+      expect(mockDV.getDistrictVolumeTableDetail).toHaveBeenCalledWith(42, {
+        signal: expect.any(AbortSignal),
+      });
     });
 
     it('should support query option overrides', async () => {
@@ -196,7 +191,7 @@ describe('react-query hooks', () => {
         detail: 'Volume table not found',
         title: 'Not Found',
       };
-      vi.mocked(API.districtVolume.getDistrictVolumeTableDetail).mockRejectedValueOnce(mockError);
+      vi.mocked(mockDV.getDistrictVolumeTableDetail).mockRejectedValueOnce(mockError);
 
       const { result } = renderHook(
         () => useDistrictVolumeTableDetailQuery(999, { notificationTarget: 'dv-detail-panel' }),
@@ -215,7 +210,7 @@ describe('react-query hooks', () => {
 
     it('should not dispatch notification when notificationTarget is omitted on error', async () => {
       const mockError = new Error('Detail fetch failed');
-      vi.mocked(API.districtVolume.getDistrictVolumeTableDetail).mockRejectedValueOnce(mockError);
+      vi.mocked(mockDV.getDistrictVolumeTableDetail).mockRejectedValueOnce(mockError);
 
       const { result } = renderHook(() => useDistrictVolumeTableDetailQuery(999), {
         wrapper: createWrapper(),
@@ -264,7 +259,7 @@ describe('react-query hooks', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(API.districtVolume.createDistrictVolumeTable).toHaveBeenCalledWith(validCreateRequest);
+      expect(mockDV.createDistrictVolumeTable).toHaveBeenCalledWith(validCreateRequest);
     });
 
     it('should return the created district volume ID', async () => {
@@ -298,7 +293,7 @@ describe('react-query hooks', () => {
 
     it('should handle mutation errors without throwing', async () => {
       const mockError = new Error('Create failed');
-      vi.mocked(API.districtVolume.createDistrictVolumeTable).mockRejectedValueOnce(mockError);
+      vi.mocked(mockDV.createDistrictVolumeTable).mockRejectedValueOnce(mockError);
 
       const { result } = renderHook(() => useDistrictVolumeTableCreateMutation(), {
         wrapper: createWrapper(),
@@ -323,7 +318,7 @@ describe('react-query hooks', () => {
         detail: 'Duplicate volume table',
         title: 'Conflict',
       };
-      vi.mocked(API.districtVolume.createDistrictVolumeTable).mockRejectedValueOnce(mockError);
+      vi.mocked(mockDV.createDistrictVolumeTable).mockRejectedValueOnce(mockError);
 
       const { result } = renderHook(
         () => useDistrictVolumeTableCreateMutation({ notificationTarget: 'dv-create' }),
@@ -368,194 +363,9 @@ describe('react-query hooks', () => {
 
     it('should not dispatch notification when notificationTarget is omitted', async () => {
       const mockError = new Error('Create failed');
-      vi.mocked(API.districtVolume.createDistrictVolumeTable).mockRejectedValueOnce(mockError);
+      vi.mocked(mockDV.createDistrictVolumeTable).mockRejectedValueOnce(mockError);
 
       const { result } = renderHook(() => useDistrictVolumeTableCreateMutation(), {
-        wrapper: createWrapper(),
-      });
-
-      await act(async () => {
-        try {
-          await result.current.mutateAsync(validCreateRequest);
-        } catch (_e) {
-          // expected
-        }
-      });
-
-      await waitFor(() => expect(result.current.isError).toBe(true));
-      expect(sendEvent).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('useSpeciesCompositionListQuery', () => {
-    it('should call listSpeciesCompositions with the correct params', async () => {
-      const { result } = renderHook(
-        () => useSpeciesCompositionListQuery({ page: 0, size: 10, sort: {} }),
-        { wrapper: createWrapper() },
-      );
-
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
-
-      expect(API.speciesComposition.listSpeciesCompositions).toHaveBeenCalledWith({
-        page: 0,
-        size: 10,
-        sort: [],
-      });
-      expect(result.current.data).toBeDefined();
-    });
-
-    it('should accept an options object with staleTime', async () => {
-      const { result } = renderHook(
-        () => useSpeciesCompositionListQuery({ page: 0, size: 10, sort: {} }, { staleTime: 60000 }),
-        { wrapper: createWrapper() },
-      );
-
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    });
-
-    it('should dispatch a notification on error when notificationTarget is supplied', async () => {
-      const mockError = new Error('List failed');
-      vi.mocked(API.speciesComposition.listSpeciesCompositions).mockRejectedValueOnce(mockError);
-
-      const { result } = renderHook(
-        () =>
-          useSpeciesCompositionListQuery(
-            { page: 0, size: 10, sort: {} },
-            { notificationTarget: 'sc-list' },
-          ),
-        { wrapper: createWrapper() },
-      );
-
-      await waitFor(() => expect(result.current.isError).toBe(true));
-      await waitFor(() => expect(sendEvent).toHaveBeenCalled());
-    });
-  });
-
-  describe('useSpeciesCompositionDetailQuery', () => {
-    it('should call getSpeciesCompositionById with the correct ID', async () => {
-      const { result } = renderHook(() => useSpeciesCompositionDetailQuery(42), {
-        wrapper: createWrapper(),
-      });
-
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
-
-      expect(API.speciesComposition.getSpeciesCompositionById).toHaveBeenCalledWith(42);
-    });
-
-    it('should accept an options object with staleTime', async () => {
-      const { result } = renderHook(
-        () => useSpeciesCompositionDetailQuery(42, { staleTime: 60000 }),
-        { wrapper: createWrapper() },
-      );
-
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    });
-
-    it('should dispatch a notification on error when notificationTarget is supplied', async () => {
-      const mockError = new Error('Detail failed');
-      vi.mocked(API.speciesComposition.getSpeciesCompositionById).mockRejectedValueOnce(mockError);
-
-      const { result } = renderHook(
-        () => useSpeciesCompositionDetailQuery(999, { notificationTarget: 'sc-detail-panel' }),
-        { wrapper: createWrapper() },
-      );
-
-      await waitFor(() => expect(result.current.isError).toBe(true));
-      await waitFor(() => expect(sendEvent).toHaveBeenCalled());
-    });
-  });
-
-  describe('useSpeciesCompositionCreateMutation', () => {
-    const validCreateRequest = {
-      area: 'INTERIOR',
-      startDate: '2026-05-15',
-      tableLevelFactor: 1.0,
-      heliMultiplier: null,
-      tableData: {
-        type: 'SPECIES_COMPOSITION' as const,
-        rows: [
-          {
-            district: { code: 'DCC', description: 'Cariboo' },
-            species: {
-              balsam: 0.1,
-              cedar: 0.2,
-              cottonwood: 0,
-              cypress: 0,
-              fir: 0.3,
-              hemlock: 0,
-              larch: 0,
-              maple: 0,
-              pine: 0.1,
-              poplar: 0,
-              redcedar: 0,
-              redwood: 0,
-              spruce: 0,
-              whitebirch: 0,
-              whitepine: 0,
-              yew: 0,
-              other: 0,
-              unknown: 0,
-            },
-          },
-        ],
-      },
-    };
-
-    it('should call createSpeciesComposition and return the new ID', async () => {
-      const { result } = renderHook(() => useSpeciesCompositionCreateMutation(), {
-        wrapper: createWrapper(),
-      });
-
-      await act(async () => {
-        await result.current.mutateAsync(validCreateRequest);
-      });
-
-      expect(API.speciesComposition.createSpeciesComposition).toHaveBeenCalledWith(
-        validCreateRequest,
-      );
-      await waitFor(() => expect(result.current.data).toBe(555));
-    });
-
-    it('should invoke onSuccess with the created ID', async () => {
-      const onSuccessMock = vi.fn();
-      const { result } = renderHook(
-        () => useSpeciesCompositionCreateMutation({ onSuccess: onSuccessMock }),
-        { wrapper: createWrapper() },
-      );
-
-      await act(async () => {
-        await result.current.mutateAsync(validCreateRequest);
-      });
-
-      expect(onSuccessMock).toHaveBeenCalledWith(555);
-    });
-
-    it('should dispatch a notification on error when notificationTarget is supplied', async () => {
-      const mockError = new Error('Create failed');
-      vi.mocked(API.speciesComposition.createSpeciesComposition).mockRejectedValueOnce(mockError);
-
-      const { result } = renderHook(
-        () => useSpeciesCompositionCreateMutation({ notificationTarget: 'sc-create' }),
-        { wrapper: createWrapper() },
-      );
-
-      await act(async () => {
-        try {
-          await result.current.mutateAsync(validCreateRequest);
-        } catch (_e) {
-          // expected
-        }
-      });
-
-      await waitFor(() => expect(result.current.isError).toBe(true));
-      await waitFor(() => expect(sendEvent).toHaveBeenCalled());
-    });
-
-    it('should not dispatch notification when notificationTarget is omitted', async () => {
-      const mockError = new Error('Create failed');
-      vi.mocked(API.speciesComposition.createSpeciesComposition).mockRejectedValueOnce(mockError);
-
-      const { result } = renderHook(() => useSpeciesCompositionCreateMutation(), {
         wrapper: createWrapper(),
       });
 
@@ -583,7 +393,7 @@ describe('react-query hooks', () => {
       });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
-      expect(API.districtVolume.deleteDistrictVolume).toHaveBeenCalledWith(42);
+      expect(mockDV.deleteDistrictVolume).toHaveBeenCalledWith(42);
     });
 
     it('should invoke onSuccess callback after delete completes', async () => {
@@ -602,7 +412,7 @@ describe('react-query hooks', () => {
 
     it('should handle mutation errors without throwing', async () => {
       const mockError = new Error('Delete failed');
-      vi.mocked(API.districtVolume.deleteDistrictVolume).mockRejectedValueOnce(mockError);
+      vi.mocked(mockDV.deleteDistrictVolume).mockRejectedValueOnce(mockError);
 
       const { result } = renderHook(() => useDistrictVolumeTableDeleteMutation(), {
         wrapper: createWrapper(),
@@ -625,7 +435,7 @@ describe('react-query hooks', () => {
         detail: 'Entry is not future-dated',
         title: 'Unprocessable Entity',
       };
-      vi.mocked(API.districtVolume.deleteDistrictVolume).mockRejectedValueOnce(mockError);
+      vi.mocked(mockDV.deleteDistrictVolume).mockRejectedValueOnce(mockError);
 
       const { result } = renderHook(
         () =>
@@ -655,111 +465,9 @@ describe('react-query hooks', () => {
 
     it('should not dispatch notification when notificationTarget is omitted', async () => {
       const mockError = new Error('Delete failed');
-      vi.mocked(API.districtVolume.deleteDistrictVolume).mockRejectedValueOnce(mockError);
+      vi.mocked(mockDV.deleteDistrictVolume).mockRejectedValueOnce(mockError);
 
       const { result } = renderHook(() => useDistrictVolumeTableDeleteMutation(), {
-        wrapper: createWrapper(),
-      });
-
-      await act(async () => {
-        try {
-          await result.current.mutateAsync(42);
-        } catch (_e) {
-          // expected
-        }
-      });
-
-      await waitFor(() => expect(result.current.isError).toBe(true));
-      expect(sendEvent).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('useSpeciesCompositionDeleteMutation', () => {
-    it('should call deleteSpeciesComposition with the id on mutate', async () => {
-      const { result } = renderHook(() => useSpeciesCompositionDeleteMutation(), {
-        wrapper: createWrapper(),
-      });
-
-      await act(async () => {
-        await result.current.mutateAsync(42);
-      });
-
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
-      expect(API.speciesComposition.deleteSpeciesComposition).toHaveBeenCalledWith(42);
-    });
-
-    it('should invoke onSuccess callback after delete completes', async () => {
-      const onSuccessMock = vi.fn();
-      const { result } = renderHook(
-        () => useSpeciesCompositionDeleteMutation({ onSuccess: onSuccessMock }),
-        { wrapper: createWrapper() },
-      );
-
-      await act(async () => {
-        await result.current.mutateAsync(42);
-      });
-
-      expect(onSuccessMock).toHaveBeenCalledTimes(1);
-    });
-
-    it('should handle mutation errors without throwing', async () => {
-      const mockError = new Error('Delete failed');
-      vi.mocked(API.speciesComposition.deleteSpeciesComposition).mockRejectedValueOnce(mockError);
-
-      const { result } = renderHook(() => useSpeciesCompositionDeleteMutation(), {
-        wrapper: createWrapper(),
-      });
-
-      await act(async () => {
-        try {
-          await result.current.mutateAsync(42);
-        } catch (_e) {
-          // Error is expected and caught
-        }
-      });
-
-      await waitFor(() => expect(result.current.isError).toBe(true));
-    });
-
-    it('should support notificationTarget for problem-detail errors', async () => {
-      const mockError = new Error('Delete failed');
-      (mockError as unknown as { body: { detail: string; title: string } }).body = {
-        detail: 'Entry is not future-dated',
-        title: 'Unprocessable Entity',
-      };
-      vi.mocked(API.speciesComposition.deleteSpeciesComposition).mockRejectedValueOnce(mockError);
-
-      const { result } = renderHook(
-        () =>
-          useSpeciesCompositionDeleteMutation({
-            notificationTarget: 'species-composition-list',
-          }),
-        { wrapper: createWrapper() },
-      );
-
-      await act(async () => {
-        try {
-          await result.current.mutateAsync(42);
-        } catch (_e) {
-          // expected
-        }
-      });
-
-      await waitFor(() => expect(sendEvent).toHaveBeenCalled());
-      expect(sendEvent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          eventType: 'error',
-          eventTarget: 'species-composition-list',
-          description: 'Entry is not future-dated',
-        }),
-      );
-    });
-
-    it('should not dispatch notification when notificationTarget is omitted', async () => {
-      const mockError = new Error('Delete failed');
-      vi.mocked(API.speciesComposition.deleteSpeciesComposition).mockRejectedValueOnce(mockError);
-
-      const { result } = renderHook(() => useSpeciesCompositionDeleteMutation(), {
         wrapper: createWrapper(),
       });
 
