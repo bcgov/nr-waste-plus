@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { queryClient } from './config';
 import { queryKeys } from './queryKeys';
 
 describe('block query keys', () => {
@@ -19,5 +20,18 @@ describe('block query keys', () => {
     expect(first[2]).toBe(468);
     expect(second[2]).toBe(469);
     expect(first).not.toBe(second);
+  });
+
+  it('shouldKeepBlockListCacheEntriesSeparateAcrossReportingUnits', () => {
+    const firstKey = queryKeys.block.list(468);
+    const secondKey = queryKeys.block.list(469);
+    queryClient.setQueryData(firstKey, { page: { totalElements: 1 } });
+    queryClient.setQueryData(secondKey, { page: { totalElements: 3 } });
+
+    expect(queryClient.getQueryData(firstKey)).toEqual({ page: { totalElements: 1 } });
+    expect(queryClient.getQueryData(secondKey)).toEqual({ page: { totalElements: 3 } });
+
+    queryClient.removeQueries({ queryKey: firstKey });
+    queryClient.removeQueries({ queryKey: secondKey });
   });
 });
