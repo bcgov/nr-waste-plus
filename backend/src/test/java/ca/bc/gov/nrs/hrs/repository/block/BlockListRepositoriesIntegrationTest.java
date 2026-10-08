@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import ca.bc.gov.nrs.hrs.entity.block.BlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockMarkEntity;
 import ca.bc.gov.nrs.hrs.entity.block.BlockSubmitterEntity;
-import ca.bc.gov.nrs.hrs.entity.block.DistrictAverageBlockEntity;
 import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.entity.block.StatusEventEntity;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
@@ -63,10 +62,9 @@ class BlockListRepositoriesIntegrationTest extends AbstractTestContainerIntegrat
           deletedBlock.setDeleted(true);
           deletedBlock = blockRepository.saveAndFlush(deletedBlock);
 
+          Long reportingUnitId = reportingUnit.getId();
           assertThatThrownBy(
-                  () ->
-                      blockRepository.findByReportingUnitIdAndDeletedFalse(
-                          reportingUnit.getId()))
+                  () -> blockRepository.findByReportingUnitIdAndDeletedFalse(reportingUnitId))
               .isInstanceOf(IncorrectResultSizeDataAccessException.class);
           assertThat(
                   blockRepository.findByIdAndReportingUnitIdAndDeletedFalse(

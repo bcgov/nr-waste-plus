@@ -97,7 +97,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   private FeatureFlagsConfiguration featureFlagsConfiguration;
 
   @BeforeEach
-  void resetStubsAndBreakers() {
+  void setUp() {
     clientApiStub.resetAll();
     legacyApiStub.resetAll();
 
@@ -106,10 +106,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     RetryConfig retry = retryRegistry.retry("apiRetry").getRetryConfig();
     retryRegistry.remove("apiRetry");
     retryRegistry.retry("apiRetry", retry);
-  }
 
-  @BeforeEach
-  void createBlockListDatabaseFixtures() {
     fixtureActor = "test-block-list-" + UUID.randomUUID();
     transactionTemplate.executeWithoutResult(
         transaction -> {

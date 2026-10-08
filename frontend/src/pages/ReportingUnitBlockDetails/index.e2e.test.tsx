@@ -21,6 +21,21 @@ const reportingUnitPayload = {
   createdAt: '2025-05-25',
 };
 
+/**
+ * Block details payload — the page runs a dual query (RU + block) and only
+ * renders the banner when both succeed, so every test expecting the banner
+ * must mock `reporting-units/{ruId}/{blockId}` as well.
+ */
+const blockDetailsPayload = {
+  id: BLOCK_ID,
+  reportingUnitId: RU_ID,
+  blockType: 'DISTRICT_AVERAGE',
+  draft: true,
+  plcDate: null,
+  revision: 1,
+  isLegacy: false,
+};
+
 test.describe('Reporting Unit Block Details', () => {
   test.beforeEach(async ({ page }, testInfo) => {
     await setupAppShellMocks(page, testInfo.project.metadata.userType);
@@ -38,13 +53,20 @@ test.describe('Reporting Unit Block Details', () => {
     await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
       ...reportingUnitPayload,
     });
+    await mockApiResponses(
+      page,
+      `reporting-units/${RU_ID}/${BLOCK_ID}`,
+      200,
+      'application/json',
+      blockDetailsPayload,
+    );
     await page.goto(ROUTE_PATH);
     await page.waitForLoadState('domcontentloaded');
 
     await expect(
-      page.getByRole('heading', { level: 1, name: `Reporting Unit No. ${RU_ID}` }),
+      page.getByRole('heading', { level: 1, name: `Block ID ${BLOCK_ID}` }),
     ).toBeVisible();
-    await expect(page.getByText('View reporting unit details')).toBeVisible();
+    await expect(page.getByText('View block details')).toBeVisible();
 
     await expect(page.getByTestId('block-details-summary')).toBeVisible();
     await expect(page.getByTestId('card-item-content-client-name')).toHaveText(
@@ -74,21 +96,27 @@ test.describe('Reporting Unit Block Details', () => {
     await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
       ...reportingUnitPayload,
     });
+    await mockApiResponses(
+      page,
+      `reporting-units/${RU_ID}/${BLOCK_ID}`,
+      200,
+      'application/json',
+      blockDetailsPayload,
+    );
     await page.goto(ROUTE_PATH);
     await page.waitForLoadState('domcontentloaded');
 
     // Scope to the breadcrumb container to avoid matching side nav links.
     const breadcrumb = page.locator('.page-title-breadcrumb');
-    await expect(breadcrumb.getByText('Reporting unit')).toBeVisible();
-    await expect(breadcrumb.getByText('Blocks')).toBeVisible();
+    await expect(breadcrumb.getByText(`Reporting unit ${RU_ID}`)).toBeVisible();
+    await expect(breadcrumb.getByText(`Block ${BLOCK_ID}`)).toBeVisible();
 
-    // D6: both crumbs are clickable. "Blocks" points at this route (the blocks
-    // list lives on the RU details page, not a separate route), so clicking it
-    // stays on the block details page.
-    await breadcrumb.getByText('Blocks').click();
+    // D6: both crumbs are clickable. "Block {blockId}" points at this route,
+    // so clicking it stays on the block details page.
+    await breadcrumb.getByText(`Block ${BLOCK_ID}`).click();
     await expect(page).toHaveURL(new RegExp(`/reporting-units/${RU_ID}/${BLOCK_ID}$`));
 
-    await breadcrumb.getByText('Reporting unit').click();
+    await breadcrumb.getByText(`Reporting unit ${RU_ID}`).click();
     await expect(page).toHaveURL(new RegExp(`/reporting-units/${RU_ID}$`));
   });
 
@@ -101,9 +129,16 @@ test.describe('Reporting Unit Block Details', () => {
     await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
       ...reportingUnitPayload,
     });
+    await mockApiResponses(
+      page,
+      `reporting-units/${RU_ID}/${BLOCK_ID}`,
+      200,
+      'application/json',
+      blockDetailsPayload,
+    );
     await page.goto(ROUTE_PATH);
 
-    const heading = page.getByRole('heading', { level: 1, name: `Reporting Unit No. ${RU_ID}` });
+    const heading = page.getByRole('heading', { level: 1, name: `Block ID ${BLOCK_ID}` });
     await expect(heading).toBeVisible();
     await expect(heading).toBeFocused();
     await expect(heading).toHaveAttribute('tabindex', '-1');
@@ -113,6 +148,17 @@ test.describe('Reporting Unit Block Details', () => {
     test.skip(
       test.info().project.metadata.userType === 'bceid',
       'This scenario is validated on IDIR to avoid BCeID role-rule redirects.',
+    );
+
+    // The block endpoint always answers 200 so the banner's combined error
+    // gating is driven solely by the RU 500-then-200 sequence below, and the
+    // block query recovers on the retry refetch too.
+    await mockApiResponses(
+      page,
+      `reporting-units/${RU_ID}/${BLOCK_ID}`,
+      200,
+      'application/json',
+      blockDetailsPayload,
     );
 
     let attempts = 0;
@@ -151,7 +197,7 @@ test.describe('Reporting Unit Block Details', () => {
     await page.getByTestId('rublock-retry').click();
 
     await expect(
-      page.getByRole('heading', { level: 1, name: `Reporting Unit No. ${RU_ID}` }),
+      page.getByRole('heading', { level: 1, name: `Block ID ${BLOCK_ID}` }),
     ).toBeVisible();
     await expect(page.getByTestId('block-details-summary')).toBeVisible();
     expect(attempts).toBeGreaterThan(1);

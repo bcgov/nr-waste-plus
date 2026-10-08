@@ -44,6 +44,8 @@ public class LegacyReportingUnitClient {
 
   private static final String PROVIDER = "Legacy API";
 
+  private static final String REPORTING_UNIT_ID = "reportingUnitId";
+
   private final RestClient restClient;
   private final LegacyPagedResponseMapper pageMapper;
 
@@ -154,7 +156,7 @@ public class LegacyReportingUnitClient {
                             + "{reportingUnitId}/{wasteAssessmentAreaId}")
                     .build(
                         Map.of(
-                            "reportingUnitId", ruId,
+                            REPORTING_UNIT_ID, ruId,
                             "wasteAssessmentAreaId", wasteAssessmentAreaId)))
         .retrieve()
         .body(ReportingUnitSearchExpandedDto.class);
@@ -231,7 +233,7 @@ public class LegacyReportingUnitClient {
             uriBuilder ->
                 uriBuilder
                     .path("/api/reporting-units/{reportingUnitId}")
-                    .build(Map.of("reportingUnitId", reportingUnitId)))
+                    .build(Map.of(REPORTING_UNIT_ID, reportingUnitId)))
         .retrieve()
         .onStatus(
             status -> status.value() == 404,
@@ -271,7 +273,7 @@ public class LegacyReportingUnitClient {
             uriBuilder ->
                 uriBuilder
                     .path("/api/reporting-units/{reportingUnitId}/blocks")
-                    .build(Map.of("reportingUnitId", reportingUnitId)))
+                    .build(Map.of(REPORTING_UNIT_ID, reportingUnitId)))
         .retrieve()
         .onStatus(
             status -> status.value() == 404,

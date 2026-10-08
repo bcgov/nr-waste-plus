@@ -23,6 +23,21 @@ const reportingUnitPayload = {
   createdAt: '2025-05-25',
 };
 
+/**
+ * Block details payload — the page runs a dual query (RU + block) and only
+ * renders the banner when both succeed, so the block endpoint must be mocked
+ * alongside the reporting-unit one.
+ */
+const blockDetailsPayload = {
+  id: BLOCK_ID,
+  reportingUnitId: RU_ID,
+  blockType: 'DISTRICT_AVERAGE',
+  draft: true,
+  plcDate: null,
+  revision: 1,
+  isLegacy: false,
+};
+
 test.describe('<ReportingUnitBlockDetailsPage />', () => {
   test.beforeEach(async ({ page }, testInfo) => {
     const idirMetadata = { ...testInfo.project.metadata, userType: 'idir' };
@@ -30,6 +45,13 @@ test.describe('<ReportingUnitBlockDetailsPage />', () => {
     await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
       ...reportingUnitPayload,
     });
+    await mockApiResponses(
+      page,
+      `reporting-units/${RU_ID}/${BLOCK_ID}`,
+      200,
+      'application/json',
+      blockDetailsPayload,
+    );
     // The a11y workflow keeps the block details flag off (matching the other
     // reporting-unit flags there), so inject it at runtime: params.js loads
     // with `defer` before the main bundle, so window.config is set before
@@ -49,14 +71,14 @@ test.describe('<ReportingUnitBlockDetailsPage />', () => {
 
   test('simple accessibility run', async ({ page }) => {
     // Assert the audited page is the block details page, not a redirect target.
-    const heading = page.locator('h1', { hasText: `Reporting Unit No. ${RU_ID}` });
+    const heading = page.locator('h1', { hasText: `Block ID ${BLOCK_ID}` });
     await expect(heading).toBeVisible();
     await runA11yAudit(page, undefined);
   });
 
   test('check a11y for the whole page and axe run options', async ({ page }) => {
     // Assert the audited page is the block details page, not a redirect target.
-    const heading = page.locator('h1', { hasText: `Reporting Unit No. ${RU_ID}` });
+    const heading = page.locator('h1', { hasText: `Block ID ${BLOCK_ID}` });
     await expect(heading).toBeVisible();
     await runA11yAudit(page, undefined);
   });

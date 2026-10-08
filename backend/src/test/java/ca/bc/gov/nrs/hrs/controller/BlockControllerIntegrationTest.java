@@ -151,7 +151,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   private Long districtVolumeId;
 
   @BeforeEach
-  void resetStubsAndBreakers() {
+  void setUp() {
     legacyApiStub.resetAll();
 
     CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("breaker");
@@ -159,10 +159,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
     RetryConfig retry = retryRegistry.retry("apiRetry").getRetryConfig();
     retryRegistry.remove("apiRetry");
     retryRegistry.retry("apiRetry", retry);
-  }
 
-  @BeforeEach
-  void setUp() {
     String unique = UUID.randomUUID().toString().substring(0, 8);
 
     ReportingUnitEntity ru = new ReportingUnitEntity();

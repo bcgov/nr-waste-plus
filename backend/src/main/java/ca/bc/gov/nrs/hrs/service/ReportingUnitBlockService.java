@@ -56,7 +56,7 @@ public class ReportingUnitBlockService {
   /** Descriptions kept aligned with the legacy waste assessment area status code table. */
   private static final Map<String, String> STATUS_DESCRIPTIONS =
       Map.of(
-          "DFT", "Draft",
+          "DFT", FALLBACK_STATUS_NAME,
           "SUB", "Submitted",
           "APP", "Approved",
           "BIS", "Billing Issued",
