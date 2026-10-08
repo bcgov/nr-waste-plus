@@ -10,7 +10,7 @@
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-import { transport } from './transport';
+import { serializeParams, transport } from './transport';
 import { AbortError, HttpError, NetworkError } from './types';
 
 import type { RequestContext } from './types';
@@ -193,6 +193,16 @@ describe('transport', () => {
 
     expect(mockRequest).toHaveBeenCalledWith(
       expect.objectContaining({ signal: controller.signal }),
+    );
+  });
+
+  it('registers serializeParams as the axios paramsSerializer', async () => {
+    mockRequest.mockResolvedValueOnce(makeResponse());
+
+    await transport({ ...baseCtx, config: { ...baseCtx.config, params: { page: 0 } } });
+
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.objectContaining({ paramsSerializer: serializeParams }),
     );
   });
 
@@ -503,6 +513,53 @@ describe('transport', () => {
     const result = await transport(baseCtx);
 
     expect(result.headers).toEqual({});
+  });
+
+  // ── Query-param serialisation (Spring-compatible wire format) ───
+
+  it('repeats array keys without brackets (Spring List binding)', () => {
+    expect(serializeParams({ values: ['00012797', '00012798'] })).toBe(
+      'values=00012797&values=00012798',
+    );
+  });
+
+  it('serialises scalars and skips undefined/null values', () => {
+    expect(serializeParams({ page: 0, size: 10, value: 'acme', q: undefined, r: null })).toBe(
+      'page=0&size=10&value=acme',
+    );
+  });
+
+  it('omits empty arrays entirely', () => {
+    expect(serializeParams({ values: [], page: 1 })).toBe('page=1');
+  });
+
+  it('drops null/undefined/empty-string array elements but keeps the rest', () => {
+    expect(serializeParams({ v: ['a', null, '', undefined, 'b'] })).toBe('v=a&v=&v=b');
+  });
+
+  it('uses bracket notation for nested objects', () => {
+    expect(serializeParams({ pageable: { page: 1, size: 25 } })).toBe(
+      'pageable%5Bpage%5D=1&pageable%5Bsize%5D=25',
+    );
+  });
+
+  it('repeats the key per element for sort arrays (field,direction pairs)', () => {
+    expect(serializeParams({ sort: ['area,ASC', 'startDate,DESC'] })).toBe(
+      'sort=area%2CASC&sort=startDate%2CDESC',
+    );
+  });
+
+  it('URI-encodes keys and values', () => {
+    expect(serializeParams({ 'cli ent': 'a&b=c' })).toBe('cli%20ent=a%26b%3Dc');
+  });
+
+  it('serialises booleans as true/false strings', () => {
+    expect(serializeParams({ active: true, hidden: false })).toBe('active=true&hidden=false');
+  });
+
+  it('returns an empty string when nothing is serialisable', () => {
+    expect(serializeParams({})).toBe('');
+    expect(serializeParams({ a: undefined })).toBe('');
   });
 
   // ── Response context shape ──────────────────────────────────────

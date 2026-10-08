@@ -93,6 +93,62 @@ const mapAxiosError = (error: AxiosError): never => {
   throw new NetworkError(error.message, error.code ?? undefined);
 };
 
+// ── Query-param serialisation ──────────────────────────────────────
+
+/** True when the value is neither `undefined` nor `null`. */
+const isDefined = <T>(value: T | null | undefined): value is Exclude<T, null | undefined> =>
+  value !== undefined && value !== null;
+
+/**
+ * Serialises query parameters into the wire format the backend expects:
+ *
+ * - Arrays repeat the key per element (`values=a&values=b`) — required for
+ *   Spring `@RequestParam List<String>` binding. Axios' default serialiser
+ *   emits `values[]=a&values[]=b`, which Spring does not bind.
+ * - Nested objects use bracket notation (`pageable[page]=1`).
+ * - `undefined` / `null` values and empty arrays are omitted.
+ * - Keys and values are URI-component encoded.
+ *
+ * Matches the legacy `getQueryString` helper byte-for-byte so existing
+ * backend routes and WireMock stubs see identical URLs. Returned without
+ * the leading `?` (axios appends the separator itself).
+ */
+export const serializeParams = (params: Record<string, unknown>): string => {
+  const qs: string[] = [];
+
+  const append = (key: string, value: unknown): void => {
+    qs.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
+  };
+
+  const process = (key: string, value: unknown): void => {
+    if (!isDefined(value)) {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      value.forEach((v) => {
+        process(key, v);
+      });
+      return;
+    }
+
+    if (typeof value === 'object') {
+      Object.entries(value as Record<string, unknown>).forEach(([k, v]) => {
+        process(`${key}[${k}]`, v);
+      });
+      return;
+    }
+
+    append(key, value);
+  };
+
+  Object.entries(params).forEach(([key, value]) => {
+    process(key, value);
+  });
+
+  return qs.join('&');
+};
+
 // ── Transport function ─────────────────────────────────────────────
 
 /**
@@ -111,6 +167,7 @@ export const transport = async (ctx: RequestContext): Promise<ResponseContext> =
     baseURL: config.baseURL,
     headers: config.headers,
     params: config.params,
+    paramsSerializer: serializeParams,
     data: config.data,
     signal: config.signal,
     timeout: config.timeout,
