@@ -13,17 +13,17 @@ import { DateTime } from 'luxon';
 import { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
+  useCreateFormulaSet,
+  useCurrentOpenEndedFormulaSet,
+  useFormulaVariables,
+} from '@/api/formulaConfiguration';
+import {
   FORMULA_KEYS,
   FORMULA_VARIABLES_DISTRICT_CODE,
   getFormulaKeysForArea,
 } from '@/api/formulaConfiguration.constants.ts';
 import FormulaSection from '@/components/waste/Formula/FormulaSection';
 import { ApiError } from '@/config/api/types.ts';
-import {
-  useCreateFormulaSet,
-  useCurrentOpenEndedFormulaSet,
-  useFormulaVariables,
-} from '@/hooks/useFormulaConfiguration';
 
 import FormulaVariableCatalog from '../FormulaVariableCatalog';
 

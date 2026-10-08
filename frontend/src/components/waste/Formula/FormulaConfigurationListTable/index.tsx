@@ -1,11 +1,11 @@
 import { Column } from '@carbon/react';
 import { useState, type FC } from 'react';
 
+import { useFormulaSetList, useDeleteFormulaSet } from '@/api/formulaConfiguration';
 import TableResource from '@/components/Form/TableResource';
 import ConfigurationDeleteConfirmModal from '@/components/waste/ConfigurationDeleteConfirmModal';
 import { useFormulaConfigurationListRowActions } from '@/components/waste/Formula/FormulaConfigurationListTable/actions.tsx';
 import { headers } from '@/components/waste/Formula/FormulaConfigurationListTable/constants.tsx';
-import { useFormulaSetList, useDeleteFormulaSet } from '@/hooks/useFormulaConfiguration';
 import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
 import { useListTableState } from '@/hooks/useTableRow';
 

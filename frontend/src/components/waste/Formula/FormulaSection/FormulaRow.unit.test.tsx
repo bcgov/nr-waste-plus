@@ -69,7 +69,7 @@ vi.mock('@/components/Form/ReadonlyInput', () => ({
   ),
 }));
 
-vi.mock('@/hooks/useFormulaConfiguration', () => ({
+vi.mock('@/api/formulaConfiguration', () => ({
   useFormulaVariables: (...args: unknown[]) => mocks.useFormulaVariables(...args),
 }));
 

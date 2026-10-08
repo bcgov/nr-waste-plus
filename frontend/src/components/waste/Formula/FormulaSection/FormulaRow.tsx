@@ -1,9 +1,9 @@
 import { type FC, useMemo } from 'react';
 
+import { useFormulaVariables } from '@/api/formulaConfiguration';
 import { FORMULA_VARIABLES_DISTRICT_CODE } from '@/api/formulaConfiguration.constants.ts';
 import FormulaInput from '@/components/Form/FormulaInput';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
-import { useFormulaVariables } from '@/hooks/useFormulaConfiguration';
 
 import type { FormulaKeyDefinition } from '@/api/formulaConfiguration.constants.ts';
 import type { FormulaItemDto, FormulaValidationError } from '@/api/formulaConfiguration.types.ts';

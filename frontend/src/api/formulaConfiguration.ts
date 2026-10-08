@@ -1,7 +1,19 @@
+/**
+ * Formula-configuration API — TanStack Query hooks and cache keys for
+ * `/api/configuration/formulas`.
+ *
+ * Moved from hooks/useFormulaConfiguration during the API connection-layer
+ * migration: a module-level {@link FormulaConfigurationResource} singleton
+ * bound to the app client replaces the legacy API registry entry.
+ *
+ * @module api/formulaConfiguration
+ */
+
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { generateSortArray } from '@/api/utils';
-import API from '@/services/APIs';
+import { client } from './client';
+import { FormulaConfigurationResource } from './resources/formula-configuration-resource';
+import { generateSortArray } from './utils';
 
 import type {
   FormulaSetResponse,
@@ -9,10 +21,10 @@ import type {
   FormulaSetEffectiveParams,
   CurrentFormulaSetParams,
   FormulaVariablesParams,
-} from '@/api/formulaConfiguration.types';
-import type { SortDirectionType } from '@/api/types';
+} from './formulaConfiguration.types';
+import type { SortDirectionType } from './types';
 
-const formulaConfiguration = API.formulaConfiguration;
+const formulaConfigurationResource = new FormulaConfigurationResource(client);
 
 export type FormulaConfigurationQueryParams = {
   page: number;
@@ -47,12 +59,15 @@ export function useFormulaSetList(
 ) {
   return useQuery({
     queryKey: formulaConfigurationKeys.list(params),
-    queryFn: () =>
-      formulaConfiguration.getFormulaSets({
-        page: params.page,
-        size: params.size,
-        sort: generateSortArray<FormulaSetResponse>(params.sort),
-      }),
+    queryFn: ({ signal }) =>
+      formulaConfigurationResource.getFormulaSets(
+        {
+          page: params.page,
+          size: params.size,
+          sort: generateSortArray<FormulaSetResponse>(params.sort),
+        },
+        { signal },
+      ),
     placeholderData: keepPreviousData,
     ...options,
   });
@@ -64,7 +79,10 @@ export function useFormulaSetList(
 export function useEffectiveFormulaSet(params: FormulaSetEffectiveParams, enabled = true) {
   return useQuery({
     queryKey: formulaConfigurationKeys.effective(params),
-    queryFn: () => formulaConfiguration.getEffectiveFormulaSet(params),
+    queryFn: ({ signal }) =>
+      formulaConfigurationResource.getEffectiveFormulaSet(params, {
+        signal,
+      }),
     enabled: enabled && !!params.date && !!params.area,
   });
 }
@@ -78,7 +96,7 @@ export function useFormulaSetDetail(id?: number, options?: { notificationTarget?
       typeof id === 'number'
         ? formulaConfigurationKeys.detail(id)
         : ['formulaConfiguration', 'detail', 'disabled'],
-    queryFn: () => formulaConfiguration.getFormulaSet(id!),
+    queryFn: ({ signal }) => formulaConfigurationResource.getFormulaSet(id!, { signal }),
     enabled: typeof id === 'number',
     meta: options?.notificationTarget
       ? { notificationTarget: options.notificationTarget }
@@ -89,7 +107,8 @@ export function useFormulaSetDetail(id?: number, options?: { notificationTarget?
 export function useCurrentOpenEndedFormulaSet(params: CurrentFormulaSetParams, enabled = true) {
   return useQuery({
     queryKey: formulaConfigurationKeys.current(params),
-    queryFn: () => formulaConfiguration.getCurrentOpenEndedFormulaSet(params),
+    queryFn: ({ signal }) =>
+      formulaConfigurationResource.getCurrentOpenEndedFormulaSet(params, { signal }),
     enabled: enabled && !!params.area,
   });
 }
@@ -101,7 +120,7 @@ export function useCurrentOpenEndedFormulaSet(params: CurrentFormulaSetParams, e
 export function useFormulaVariables(params: FormulaVariablesParams, enabled = true) {
   return useQuery({
     queryKey: formulaConfigurationKeys.variables(params),
-    queryFn: () => formulaConfiguration.getVariables(params),
+    queryFn: ({ signal }) => formulaConfigurationResource.getVariables(params, { signal }),
     enabled: enabled && !!params.date && !!params.area && !!params.districtCode,
     staleTime: 5 * 60 * 1000, // 5 minutes — variable values change with date/area
   });
@@ -116,7 +135,7 @@ export function useCreateFormulaSet() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (dto: FormulaSetRequest) => formulaConfiguration.createFormulaSet(dto),
+    mutationFn: (dto: FormulaSetRequest) => formulaConfigurationResource.createFormulaSet(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: formulaConfigurationKeys.lists() });
     },
@@ -131,7 +150,7 @@ export function useUpdateFormulaSet() {
 
   return useMutation({
     mutationFn: ({ id, dto }: { id: number; dto: FormulaSetRequest }) =>
-      formulaConfiguration.updateFormulaSet(id, dto),
+      formulaConfigurationResource.updateFormulaSet(id, dto),
     onSuccess: (updated: FormulaSetResponse) => {
       queryClient.invalidateQueries({ queryKey: formulaConfigurationKeys.lists() });
       queryClient.setQueryData(formulaConfigurationKeys.detail(updated.id), updated);
@@ -146,7 +165,7 @@ export function useDeleteFormulaSet() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => formulaConfiguration.deleteFormulaSet(id),
+    mutationFn: (id: number) => formulaConfigurationResource.deleteFormulaSet(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: formulaConfigurationKeys.lists() });
       queryClient.removeQueries({ queryKey: formulaConfigurationKeys.detail(id) });

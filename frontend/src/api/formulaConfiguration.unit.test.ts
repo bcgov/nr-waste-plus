@@ -12,7 +12,7 @@ import {
   useCreateFormulaSet,
   useUpdateFormulaSet,
   useDeleteFormulaSet,
-} from './index';
+} from './formulaConfiguration';
 
 import type {
   FormulaSetResponse,
@@ -21,24 +21,33 @@ import type {
   FormulaVariablesParams,
 } from '@/api/formulaConfiguration.types';
 
-// Mock the API module
-vi.mock('@/services/APIs', () => {
-  const mockApi = {
-    formulaConfiguration: {
-      getFormulaSets: vi.fn(),
-      getEffectiveFormulaSet: vi.fn(),
-      getFormulaSet: vi.fn(),
-      getCurrentOpenEndedFormulaSet: vi.fn(),
-      getVariables: vi.fn(),
-      createFormulaSet: vi.fn(),
-      updateFormulaSet: vi.fn(),
-      deleteFormulaSet: vi.fn(),
-    },
-  };
-  return {
-    default: mockApi,
-  };
-});
+// Mock the resource module — the hook module's singleton is constructed
+// from this class, so the hoisted handles receive every call.
+const { mockFormula } = vi.hoisted(() => ({
+  mockFormula: {
+    getFormulaSets: vi.fn(),
+    getEffectiveFormulaSet: vi.fn(),
+    getFormulaSet: vi.fn(),
+    getCurrentOpenEndedFormulaSet: vi.fn(),
+    getVariables: vi.fn(),
+    createFormulaSet: vi.fn(),
+    updateFormulaSet: vi.fn(),
+    deleteFormulaSet: vi.fn(),
+  },
+}));
+
+vi.mock('@/api/resources/formula-configuration-resource', () => ({
+  FormulaConfigurationResource: class {
+    getFormulaSets = mockFormula.getFormulaSets;
+    getEffectiveFormulaSet = mockFormula.getEffectiveFormulaSet;
+    getFormulaSet = mockFormula.getFormulaSet;
+    getCurrentOpenEndedFormulaSet = mockFormula.getCurrentOpenEndedFormulaSet;
+    getVariables = mockFormula.getVariables;
+    createFormulaSet = mockFormula.createFormulaSet;
+    updateFormulaSet = mockFormula.updateFormulaSet;
+    deleteFormulaSet = mockFormula.deleteFormulaSet;
+  },
+}));
 
 // Mock react-query
 vi.mock('@tanstack/react-query', async () => {
@@ -55,9 +64,9 @@ vi.mock('@tanstack/react-query', async () => {
   };
 });
 
-import API from '@/services/APIs';
-
-const formulaConfiguration = API.formulaConfiguration;
+// Alias for the mock handles — preserves the original reference name so
+// every assertion below continues to read unchanged.
+const formulaConfiguration = mockFormula;
 
 describe('useFormulaConfiguration hooks', () => {
   beforeEach(() => {
@@ -155,7 +164,7 @@ describe('useFormulaConfiguration hooks', () => {
       };
       (formulaConfiguration.getFormulaSets as ReturnType<typeof vi.fn>).mockResolvedValue(mockData);
       (useQuery as ReturnType<typeof vi.fn>).mockImplementation(({ queryFn }) => ({
-        data: queryFn(),
+        data: queryFn({ signal: undefined }),
         isLoading: false,
         isError: false,
       }));
@@ -163,11 +172,14 @@ describe('useFormulaConfiguration hooks', () => {
       const params = { page: 0, size: 20, sort: { startDate: 'DESC' as const } };
       renderHook(() => useFormulaSetList(params));
 
-      expect(formulaConfiguration.getFormulaSets).toHaveBeenCalledWith({
-        page: 0,
-        size: 20,
-        sort: expect.any(Array),
-      });
+      expect(formulaConfiguration.getFormulaSets).toHaveBeenCalledWith(
+        {
+          page: 0,
+          size: 20,
+          sort: expect.any(Array),
+        },
+        { signal: undefined },
+      );
     });
   });
 
@@ -260,7 +272,7 @@ describe('useFormulaConfiguration hooks', () => {
         mockResponse,
       );
       (useQuery as ReturnType<typeof vi.fn>).mockImplementation(({ queryFn }) => ({
-        data: queryFn(),
+        data: queryFn({ signal: undefined }),
         isLoading: false,
         isError: false,
       }));
@@ -268,7 +280,9 @@ describe('useFormulaConfiguration hooks', () => {
       const params: FormulaSetEffectiveParams = { date: '2026-01-01', area: 'INTERIOR' };
       renderHook(() => useEffectiveFormulaSet(params));
 
-      expect(formulaConfiguration.getEffectiveFormulaSet).toHaveBeenCalledWith(params);
+      expect(formulaConfiguration.getEffectiveFormulaSet).toHaveBeenCalledWith(params, {
+        signal: undefined,
+      });
     });
   });
 
@@ -356,14 +370,14 @@ describe('useFormulaConfiguration hooks', () => {
         mockResponse,
       );
       (useQuery as ReturnType<typeof vi.fn>).mockImplementation(({ queryFn }) => ({
-        data: queryFn(),
+        data: queryFn({ signal: undefined }),
         isLoading: false,
         isError: false,
       }));
 
       renderHook(() => useFormulaSetDetail(42));
 
-      expect(formulaConfiguration.getFormulaSet).toHaveBeenCalledWith(42);
+      expect(formulaConfiguration.getFormulaSet).toHaveBeenCalledWith(42, { signal: undefined });
     });
   });
 
@@ -439,7 +453,7 @@ describe('useFormulaConfiguration hooks', () => {
         formulaConfiguration.getCurrentOpenEndedFormulaSet as ReturnType<typeof vi.fn>
       ).mockResolvedValue(mockResponse);
       (useQuery as ReturnType<typeof vi.fn>).mockImplementation(({ queryFn }) => ({
-        data: queryFn(),
+        data: queryFn({ signal: undefined }),
         isLoading: false,
         isError: false,
       }));
@@ -447,7 +461,9 @@ describe('useFormulaConfiguration hooks', () => {
       const params: CurrentFormulaSetParams = { area: 'INTERIOR' };
       renderHook(() => useCurrentOpenEndedFormulaSet(params));
 
-      expect(formulaConfiguration.getCurrentOpenEndedFormulaSet).toHaveBeenCalledWith(params);
+      expect(formulaConfiguration.getCurrentOpenEndedFormulaSet).toHaveBeenCalledWith(params, {
+        signal: undefined,
+      });
     });
   });
 
@@ -560,7 +576,7 @@ describe('useFormulaConfiguration hooks', () => {
         mockResponse,
       );
       (useQuery as ReturnType<typeof vi.fn>).mockImplementation(({ queryFn }) => ({
-        data: queryFn(),
+        data: queryFn({ signal: undefined }),
         isLoading: false,
         isError: false,
       }));
@@ -572,7 +588,9 @@ describe('useFormulaConfiguration hooks', () => {
       };
       renderHook(() => useFormulaVariables(params));
 
-      expect(formulaConfiguration.getVariables).toHaveBeenCalledWith(params);
+      expect(formulaConfiguration.getVariables).toHaveBeenCalledWith(params, {
+        signal: undefined,
+      });
     });
   });
 

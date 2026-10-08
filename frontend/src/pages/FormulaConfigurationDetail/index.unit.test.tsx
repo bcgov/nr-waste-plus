@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { type ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { useFormulaSetDetail } from '@/hooks/useFormulaConfiguration';
+import { useFormulaSetDetail } from '@/api/formulaConfiguration';
 import { navigateInTree } from '@/routes/inTreePaths';
 
 import FormulaConfigurationDetailPage from './index';
@@ -20,7 +20,7 @@ vi.mock('@tanstack/react-router', () => ({
   useParams: vi.fn().mockReturnValue({ id: '42' }),
 }));
 
-vi.mock('@/hooks/useFormulaConfiguration', () => ({
+vi.mock('@/api/formulaConfiguration', () => ({
   useFormulaSetDetail: vi.fn(),
 }));
 

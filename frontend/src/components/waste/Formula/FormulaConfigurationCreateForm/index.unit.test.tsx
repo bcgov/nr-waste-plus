@@ -33,7 +33,7 @@ vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => mocks.navigate,
 }));
 
-vi.mock('@/hooks/useFormulaConfiguration', () => ({
+vi.mock('@/api/formulaConfiguration', () => ({
   useCreateFormulaSet: () => ({ isPending: false, mutateAsync: mocks.mutateAsync }),
   useCurrentOpenEndedFormulaSet: () => mocks.current,
   useFormulaVariables: (params: { date: string; area: string; districtCode: string }) => {

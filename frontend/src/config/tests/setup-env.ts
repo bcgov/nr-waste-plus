@@ -113,6 +113,22 @@ vi.mock('@/api/resources/species-composition-resource', () => ({
   },
 }));
 
+vi.mock('@/api/resources/formula-configuration-resource', () => ({
+  FormulaConfigurationResource: class {
+    getFormulaSets = vi.fn().mockResolvedValue({
+      content: [],
+      page: { number: 0, size: 10, totalElements: 0, totalPages: 0 },
+    });
+    getEffectiveFormulaSet = vi.fn().mockResolvedValue({});
+    getFormulaSet = vi.fn().mockResolvedValue({});
+    getCurrentOpenEndedFormulaSet = vi.fn().mockResolvedValue({});
+    getVariables = vi.fn().mockResolvedValue({});
+    createFormulaSet = vi.fn().mockResolvedValue({});
+    updateFormulaSet = vi.fn().mockResolvedValue({});
+    deleteFormulaSet = vi.fn().mockResolvedValue(undefined);
+  },
+}));
+
 // Mock global fetch to prevent real HTTP requests in jsdom tests
 // Uses vi.stubGlobal for automatic cleanup via restoreMocks: true in vite.config.ts
 vi.stubGlobal(
