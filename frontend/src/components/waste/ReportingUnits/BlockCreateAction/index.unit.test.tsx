@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useCreateBlock, useReportingUnitBlocksQuery } from '@/config/react-query/hooks';
+import PageNotification from '@/components/core/PageNotification';
 import { renderWithApp } from '@/config/tests/renderWithApp';
 import { Role } from '@/context/auth/types';
 import { useAuth } from '@/context/auth/useAuth';
@@ -128,6 +129,7 @@ async function renderAction(props?: Partial<React.ComponentProps<typeof BlockCre
     <>
       <div data-testid="render-probe" />
       <BlockCreateAction ruId={468} samplingCode="AVG" {...props} />
+      <PageNotification eventTarget="ru-details" />
     </>,
   );
   expect(await screen.findByTestId('render-probe')).not.toBeNull();
@@ -284,9 +286,51 @@ describe('BlockCreateAction', () => {
 
       expect(screen.getByTestId('block-create-add-button')).toHaveProperty('disabled', false);
     });
+
+    it('shouldKeepAddDisabled_whenOnlyOneCriterionIsNonWhitespace [TC-C04]', async () => {
+      const user = userEvent.setup();
+      await renderAction();
+
+      await user.type(screen.getByLabelText('Licence No.'), 'A123');
+      await user.type(screen.getByLabelText('Timber mark'), '   ');
+
+      expect(screen.getByTestId('block-create-add-button')).toHaveProperty('disabled', true);
+    });
   });
 
   describe('create flow', () => {
+    it('shouldShowValidationFeedbackAndNotSubmit_whenCriteriaAreEmpty', async () => {
+      await renderAction();
+
+      const formElement = screen.getByRole('form', { name: 'Add block criteria' });
+      if (!(formElement instanceof globalThis.HTMLFormElement)) {
+        throw new Error('Expected the criteria form element');
+      }
+      act(() => formElement.requestSubmit());
+
+      const mutateAsync = vi.mocked(useCreateBlock).mock.results[0].value.mutateAsync;
+      expect(mutateAsync).not.toHaveBeenCalled();
+      expect(await screen.findByText('Unable to add block')).toBeTruthy();
+      expect(screen.getByText('Enter at least 2 non-empty criteria to add a block.')).toBeTruthy();
+      expect(screen.getByTestId('block-create-action')).toBeTruthy();
+    });
+
+    it('shouldNotSubmit_whenFewerThanTwoCriteriaAreFilled', async () => {
+      const user = userEvent.setup();
+      await renderAction();
+
+      const licenceInput = screen.getByLabelText('Licence No.');
+      await user.type(licenceInput, 'A123');
+      const formElement = screen.getByRole('form', { name: 'Add block criteria' });
+      if (!(formElement instanceof globalThis.HTMLFormElement)) {
+        throw new Error('Expected the criteria form element');
+      }
+      act(() => formElement.requestSubmit());
+
+      const mutateAsync = vi.mocked(useCreateBlock).mock.results[0].value.mutateAsync;
+      expect(mutateAsync).not.toHaveBeenCalled();
+    });
+
     it('shouldMutateWithDistrictAverageBody_whenAddIsClicked [TC-C05]', async () => {
       const user = userEvent.setup();
       await renderAction();
@@ -303,8 +347,8 @@ describe('BlockCreateAction', () => {
           notificationTarget: 'ru-details',
         }),
       );
-      const mutate = vi.mocked(useCreateBlock).mock.results[0].value.mutate;
-      expect(mutate).toHaveBeenCalledWith({ blockType: 'DISTRICT_AVERAGE' });
+      const mutateAsync = vi.mocked(useCreateBlock).mock.results[0].value.mutateAsync;
+      expect(mutateAsync).toHaveBeenCalledWith({ blockType: 'DISTRICT_AVERAGE' });
     });
 
     it.each([

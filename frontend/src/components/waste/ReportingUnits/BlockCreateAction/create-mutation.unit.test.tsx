@@ -128,7 +128,7 @@ async function renderActionWithNotification() {
 async function fillTwoCriteriaAndSubmit(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText('Licence No.'), 'A123');
   await user.type(screen.getByLabelText('Timber mark'), 'X');
-  await user.click(screen.getByTestId('block-create-add-button'));
+  await user.click(screen.getByRole('button', { name: 'Add' }));
 }
 
 /**

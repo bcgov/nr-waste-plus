@@ -1,10 +1,12 @@
 import { Button, Column, TextInput } from '@carbon/react';
-import { useState, type ChangeEvent, type FC } from 'react';
+import { useForm } from '@tanstack/react-form';
+import { useState, type FC } from 'react';
 
 import { useCreateBlock, useReportingUnitBlocksQuery } from '@/config/react-query/hooks';
 import { Role } from '@/context/auth/types';
 import { useAuth } from '@/context/auth/useAuth';
 import { featureFlags } from '@/env';
+import useNotificationEvents from '@/hooks/useNotificationEvents';
 
 import type { BlockCreateRequestDto } from '@/services/reportingUnit.types';
 
@@ -21,6 +23,18 @@ const CREATION_ROLES: readonly Role[] = [Role.ADMIN, Role.DISTRICT, Role.AREA, R
  * action becomes available (helper copy: "Enter at least 2 criteria").
  */
 const MIN_CRITERIA = 2;
+
+interface BlockCreateCriteria {
+  readonly licenceNo: string;
+  readonly cuttingPermit: string;
+  readonly timberMark: string;
+  readonly blockId: string;
+}
+
+const validateMinimumCriteria = ({ value }: { value: BlockCreateCriteria }) =>
+  Object.values(value).filter((criterion) => criterion.trim() !== '').length >= MIN_CRITERIA
+    ? undefined
+    : 'Enter at least 2 criteria';
 
 /**
  * Block-creation rules for one sampling-option type (issue #1254: every
@@ -86,8 +100,8 @@ export interface BlockCreateActionProps {
  * responsible for creating the block — `POST /api/reporting-units/{ruId}/blocks`
  * (issue #1228) with the `blockType` from the sampling-option rules — and the
  * page does NOT navigate away: on success the panel hides in place (the
- * reporting unit now has its block); a `409` conflict shows the backend's
- * problem-details message inline.
+ * reporting unit now has its block); a failed create is reported through the
+ * page-level notification event channel.
  *
  * Visibility (issue #1254 business rule 1 — hidden, never disabled): the panel
  * renders nothing when the `block-creation-enabled` flag is off, the user
@@ -105,13 +119,7 @@ const BlockCreateAction: FC<BlockCreateActionProps> = ({
   isClosed = false,
 }) => {
   const { user } = useAuth();
-
-  const [criteria, setCriteria] = useState({
-    licenceNo: '',
-    cuttingPermit: '',
-    timberMark: '',
-    blockId: '',
-  });
+  const { sendInlineEvent } = useNotificationEvents();
 
   // Set once this session's create succeeds so the panel hides immediately,
   // honouring the single-block rule even before the list refetch lands (#1254).
@@ -123,6 +131,33 @@ const BlockCreateAction: FC<BlockCreateActionProps> = ({
   const createMutation = useCreateBlock(ruId, {
     notificationTarget: 'ru-details',
     onSuccess: () => setCreatedBlock(true),
+  });
+
+  const form = useForm({
+    defaultValues: {
+      licenceNo: '',
+      cuttingPermit: '',
+      timberMark: '',
+      blockId: '',
+    },
+    validators: {
+      onMount: validateMinimumCriteria,
+      onChange: validateMinimumCriteria,
+      onSubmit: validateMinimumCriteria,
+    },
+    onSubmit: async () => {
+      if (rule) {
+        await createMutation.mutateAsync({ blockType: rule.blockType });
+      }
+    },
+    onSubmitInvalid: () => {
+      sendInlineEvent({
+        title: 'Unable to add block',
+        description: 'Enter at least 2 non-empty criteria to add a block.',
+        eventType: 'error',
+        eventTarget: 'ru-details',
+      });
+    },
   });
 
   const hasCreationRole = user?.roles?.some((role) => CREATION_ROLES.includes(role.role)) ?? false;
@@ -154,14 +189,6 @@ const BlockCreateAction: FC<BlockCreateActionProps> = ({
     return null;
   }
 
-  const filledCriteria = Object.values(criteria).filter((value) => value.trim() !== '').length;
-  const canAdd = filledCriteria >= MIN_CRITERIA && !createMutation.isPending;
-
-  const handleCriteriaChange =
-    (key: keyof typeof criteria) => (event: ChangeEvent<HTMLInputElement>) => {
-      setCriteria((previous) => ({ ...previous, [key]: event.target.value }));
-    };
-
   return (
     <Column lg={16} md={8} sm={4} className="block-create-action" data-testid="block-create-action">
       <h2 className="block-create-action__title">Add block</h2>
@@ -169,60 +196,93 @@ const BlockCreateAction: FC<BlockCreateActionProps> = ({
         <p>Enter at least 2 criteria to search and add block(s) to this reporting unit.</p>
         <p>Once you have added a block, click on a row to start adding block details</p>
       </div>
-      <div className="block-create-action__fields">
-        <div className="block-create-action__textinput">
-          <TextInput
-            id="block-create-licence-no"
-            labelText="Licence No."
-            value={criteria.licenceNo}
-            onChange={handleCriteriaChange('licenceNo')}
-            data-testid="block-create-licence-no"
-          />
-        </div>
+      <form
+        aria-label="Add block criteria"
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit().catch(() => undefined);
+        }}
+      >
+        <div className="block-create-action__fields">
+          <div className="block-create-action__textinput">
+            <form.Field name="licenceNo">
+              {(field) => (
+                <TextInput
+                  id="block-create-licence-no"
+                  labelText="Licence No."
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  data-testid="block-create-licence-no"
+                />
+              )}
+            </form.Field>
+          </div>
 
-        <div className="block-create-action__textinput">
-          <TextInput
-            id="block-create-cutting-permit"
-            labelText="Cutting permit"
-            value={criteria.cuttingPermit}
-            onChange={handleCriteriaChange('cuttingPermit')}
-            data-testid="block-create-cutting-permit"
-          />
-        </div>
+          <div className="block-create-action__textinput">
+            <form.Field name="cuttingPermit">
+              {(field) => (
+                <TextInput
+                  id="block-create-cutting-permit"
+                  labelText="Cutting permit"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  data-testid="block-create-cutting-permit"
+                />
+              )}
+            </form.Field>
+          </div>
 
-        <div className="block-create-action__textinput">
-          <TextInput
-            id="block-create-timber-mark"
-            labelText="Timber mark"
-            value={criteria.timberMark}
-            onChange={handleCriteriaChange('timberMark')}
-            data-testid="block-create-timber-mark"
-          />
-        </div>
+          <div className="block-create-action__textinput">
+            <form.Field name="timberMark">
+              {(field) => (
+                <TextInput
+                  id="block-create-timber-mark"
+                  labelText="Timber mark"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  data-testid="block-create-timber-mark"
+                />
+              )}
+            </form.Field>
+          </div>
 
-        <div className="block-create-action__textinput">
-          <TextInput
-            id="block-create-block-id"
-            labelText="Block ID"
-            value={criteria.blockId}
-            onChange={handleCriteriaChange('blockId')}
-            data-testid="block-create-block-id"
-          />
-        </div>
+          <div className="block-create-action__textinput">
+            <form.Field name="blockId">
+              {(field) => (
+                <TextInput
+                  id="block-create-block-id"
+                  labelText="Block ID"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  data-testid="block-create-block-id"
+                />
+              )}
+            </form.Field>
+          </div>
 
-        <div className="block-create-action__button">
-          <Button
-            id="block-create-add-button"
-            kind="tertiary"
-            size="md"
-            disabled={!canAdd}
-            onClick={() => createMutation.mutate({ blockType: rule.blockType })}
-            data-testid="block-create-add-button"
-          >
-            Add
-          </Button>
+          <div className="block-create-action__button">
+            <form.Subscribe selector={(state) => state.canSubmit}>
+              {(canSubmit) => (
+                <Button
+                  id="block-create-add-button"
+                  type="submit"
+                  kind="tertiary"
+                  size="md"
+                  disabled={!canSubmit || createMutation.isPending}
+                  data-testid="block-create-add-button"
+                >
+                  Add
+                </Button>
+              )}
+            </form.Subscribe>
+          </div>
         </div>
-      </div>
+      </form>
     </Column>
   );
 };
