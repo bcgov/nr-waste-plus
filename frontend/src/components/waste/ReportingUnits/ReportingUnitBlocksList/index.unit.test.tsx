@@ -1,16 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { ReactElement } from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 
-import { render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import ReportingUnitBlocksList, { type ReportingUnitBlocksRow } from './index';
 
 import type { CodeDescriptionDto } from '@/services/types';
 import type { PageableResponse } from '@/types/PageableResponse.types';
-
-import ReportingUnitBlocksList, { type ReportingUnitBlocksRow } from './index';
+import type { ReactElement } from 'react';
 
 const { mockNavigate } = vi.hoisted(() => ({ mockNavigate: vi.fn() }));
 
@@ -233,12 +232,9 @@ describe('ReportingUnitBlocksList', () => {
     await renderBlocksList();
 
     // TableResource's renderCell renders null values as a plain dash.
-    const draftRow = screen.getByText('109').closest('tr');
-    expect(draftRow).not.toBeNull();
-    const dashCells = [...draftRow!.querySelectorAll('td')].filter(
-      (cell) => cell.textContent === '-',
-    );
-    expect(dashCells).toHaveLength(6);
+    const draftCells = screen.getByRole('cell', { name: '109' }).parentElement?.textContent;
+    expect(draftCells).toContain('-');
+    expect(draftCells?.match(/-/g)).toHaveLength(6);
   });
 
   it('renders pagination controls', async () => {
@@ -256,6 +252,39 @@ describe('ReportingUnitBlocksList', () => {
     await userEvent.click(screen.getAllByRole('button', { name: 'See details' })[0]);
 
     expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468/1' });
+  });
+
+  it('navigates to the correct details path for each selected block row', async () => {
+    mockNavigate.mockClear();
+    await renderBlocksList();
+
+    const detailsButtons = screen.getAllByRole('button', { name: 'See details' });
+    await userEvent.click(detailsButtons[1]);
+    await userEvent.click(detailsButtons[8]);
+
+    expect(mockNavigate).toHaveBeenNthCalledWith(1, { to: '/reporting-units/468/2' });
+    expect(mockNavigate).toHaveBeenNthCalledWith(2, { to: '/reporting-units/468/9' });
+  });
+
+  it('renders loading and error states from the query props', async () => {
+    await renderBlocksList(
+      <ReportingUnitBlocksList ruId={468} content={DUMMY_BLOCKS_CONTENT} isLoading isError />,
+    );
+
+    expect(screen.getByRole('table')).toBeTruthy();
+    expect(screen.queryByText('No results')).toBeNull();
+  });
+
+  it('keeps delete actions disabled and does not navigate', async () => {
+    mockNavigate.mockClear();
+    await renderBlocksList();
+
+    expect(
+      screen
+        .getAllByRole('button', { name: 'Delete block' })
+        .every((button) => (button as HTMLButtonElement).disabled),
+    ).toBe(true);
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it('shows the delete action as disabled', async () => {
