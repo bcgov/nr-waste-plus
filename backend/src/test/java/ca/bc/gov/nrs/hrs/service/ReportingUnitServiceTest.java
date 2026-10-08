@@ -204,6 +204,93 @@ class ReportingUnitServiceTest {
   }
 
   @Test
+  @DisplayName("shouldLeaveGradeEmpty_whenPostgresDistrictHasNoConfiguredArea")
+  void shouldLeaveGradeEmpty_whenPostgresDistrictHasNoConfiguredArea() {
+    ReportingUnitEntity reportingUnit = postgresReportingUnit();
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+    when(codesService.getDistrictCodes())
+        .thenReturn(List.of(new CodeDescriptionDto("DND", "Nadina Natural Resource District")));
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of());
+
+    var result = reportingUnitService.getReportingUnitDetails(RU_ID);
+
+    assertThat(result.grade()).isEqualTo(new CodeDescriptionDto(null, null));
+    assertThat(result.isLegacy()).isFalse();
+    verify(legacyApiProvider, never()).getReportingUnitDetails(RU_ID);
+  }
+
+  @Test
+  @DisplayName("shouldLeaveGradeEmpty_whenPostgresDistrictHasMultipleConfiguredAreas")
+  void shouldLeaveGradeEmpty_whenPostgresDistrictHasMultipleConfiguredAreas() {
+    ReportingUnitEntity reportingUnit = postgresReportingUnit();
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+    when(codesService.getDistrictCodes())
+        .thenReturn(List.of(new CodeDescriptionDto("DND", "Nadina Natural Resource District")));
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
+    when(districtVolumeService.getAreasForDistrictCode("DND"))
+        .thenReturn(List.of("COASTAL", "INTERIOR"));
+
+    var result = reportingUnitService.getReportingUnitDetails(RU_ID);
+
+    assertThat(result.grade()).isEqualTo(new CodeDescriptionDto(null, null));
+    assertThat(result.sampling()).isEqualTo(new CodeDescriptionDto("AVG", "Average"));
+    assertThat(result.isLegacy()).isFalse();
+  }
+
+  @Test
+  @DisplayName("shouldThrowIllegalState_whenPostgresOrgUnitHasNoDistrictCode")
+  void shouldThrowIllegalState_whenPostgresOrgUnitHasNoDistrictCode() {
+    ReportingUnitEntity reportingUnit = postgresReportingUnit();
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+    when(codesService.getDistrictCodes()).thenReturn(List.of());
+
+    assertThatThrownBy(() -> reportingUnitService.getReportingUnitDetails(RU_ID))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("DND");
+    verify(forestClientApiProvider, never()).fetchClientByNumber(org.mockito.ArgumentMatchers.anyString());
+    verify(legacyApiProvider, never()).getReportingUnitDetails(RU_ID);
+  }
+
+  @Test
+  @DisplayName("shouldThrowForestClientNotFound_whenPostgresClientDoesNotResolve")
+  void shouldThrowForestClientNotFound_whenPostgresClientDoesNotResolve() {
+    ReportingUnitEntity reportingUnit = postgresReportingUnit();
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+    when(codesService.getDistrictCodes())
+        .thenReturn(List.of(new CodeDescriptionDto("DND", "Nadina Natural Resource District")));
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> reportingUnitService.getReportingUnitDetails(RU_ID))
+        .isInstanceOf(ForestClientNotFoundException.class);
+    verify(legacyApiProvider, never()).getReportingUnitDetails(RU_ID);
+    verify(districtVolumeService, never()).getAreasForDistrictCode("DND");
+  }
+
+  @Test
+  @DisplayName("shouldUseLegacyDetails_whenPostgresReportingUnitIsSoftDeleted")
+  void shouldUseLegacyDetails_whenPostgresReportingUnitIsSoftDeleted() {
+    var legacyDetails = buildLegacyDetails(CLIENT_NUMBER);
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID)).thenReturn(Optional.empty());
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyDetails);
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
+
+    var result = reportingUnitService.getReportingUnitDetails(RU_ID);
+
+    assertThat(result.isLegacy()).isTrue();
+    assertThat(result.sampling()).isEqualTo(legacyDetails.sampling());
+    assertThat(result.district()).isEqualTo(legacyDetails.district());
+    verify(legacyApiProvider).getReportingUnitDetails(RU_ID);
+  }
+
+  @Test
   @DisplayName("shouldCreateReportingUnit_whenRequestIsValid")
   void shouldCreateReportingUnit_whenRequestIsValid() {
     // Arrange
@@ -335,5 +422,13 @@ class ReportingUnitServiceTest {
                   .isEqualTo(org.springframework.http.HttpStatus.BAD_REQUEST);
               assertThat(rse.getReason()).contains("Invalid samplingCode");
             });
+  }
+
+  private ReportingUnitEntity postgresReportingUnit() {
+    ReportingUnitEntity reportingUnit = new ReportingUnitEntity();
+    reportingUnit.setClientNumber(CLIENT_NUMBER);
+    reportingUnit.setClientLocnCode("01");
+    reportingUnit.setOrgUnitNo("DND");
+    return reportingUnit;
   }
 }
