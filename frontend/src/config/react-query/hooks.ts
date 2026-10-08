@@ -472,7 +472,7 @@ export const useReportingUnitCreateMutation = (
  * Creates a District Average block under the given reporting unit (issue #1228).
  *
  * On success, invokes `onSuccess` with the created block resource so the caller
- * can navigate to the block wizard shell. On error, dispatches an inline
+ * can navigate to the block details page. On error, dispatches an inline
  * notification to `notificationTarget` (when supplied) using the RFC 7807
  * problem-details payload from the backend when available — including the
  * `409` duplicate-block conflict.
@@ -488,7 +488,7 @@ export const useReportingUnitCreateMutation = (
  * const mutation = useCreateBlock(ruId, {
  *   notificationTarget: 'ru-details',
  *   onSuccess: (block) =>
- *     navigate({ to: '/reporting-units/$ruId/blocks/create', params: { ruId }, search: { blockId: block.id, blockState: block.state } }),
+ *     navigate({ to: '/reporting-units/$ruId/$blockId', params: { ruId, blockId: block.id } }),
  * });
  *
  * mutation.mutate({ blockType: 'DISTRICT_AVERAGE' });

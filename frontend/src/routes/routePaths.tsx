@@ -20,9 +20,6 @@ const ReportingUnitDetailsPage = lazyRouteComponent(() => import('@/pages/Report
 const ReportingUnitBlockDetailsPage = lazyRouteComponent(
   () => import('@/pages/ReportingUnitBlockDetails'),
 );
-const ReportingUnitBlockCreatePage = lazyRouteComponent(
-  () => import('@/pages/ReportingUnitBlockCreate'),
-);
 const ReportingUnitCreatePage = lazyRouteComponent(() => import('@/pages/ReportingUnitCreate'));
 const ConfigurationPage = lazyRouteComponent(() => import('@/pages/ConfigurationPage'));
 const ConfigurationDistrictVolumeListPage = lazyRouteComponent(
@@ -63,22 +60,6 @@ import { withPublicOnly } from '@/routes/guards/withPublicOnly';
 export type RouteGuard = <P extends object>(Component: ComponentType<P>) => ComponentType<P>;
 
 /**
- * Query-string contract for the block-wizard entry route
- * (`/reporting-units/$ruId/blocks/create`).
- *
- * `blockId` identifies the block created by `POST /api/reporting-units/{ruId}/blocks`
- * (issue #1228); `blockState` carries the lifecycle state returned by that call
- * (e.g. `DRAFT`) so the shell can render the status tag and read-only mode
- * before a block-details endpoint exists (issue #1250).
- */
-export type BlockWizardSearch = {
-  /** Numeric ID of the newly created block. */
-  blockId: number;
-  /** Block lifecycle state returned by the create call; defaults to `DRAFT` in the shell. */
-  blockState?: string;
-};
-
-/**
  * Describes a single application route and all of its access/navigation metadata.
  *
  * Used by {@link applyGuards} in `routeTree.tsx` to wrap the `component` with
@@ -98,12 +79,6 @@ export type RouteDescription = {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   loader?: RouteLoaderFn<any>;
-  /**
-   * Optional TanStack Router search validator for the route's query string.
-   * Routes that carry query parameters declare their parsed shape here so
-   * `useSearch()` stays fully typed (e.g. the block wizard entry route).
-   */
-  validateSearch?: (search: Record<string, unknown>) => BlockWizardSearch;
   /** Carbon icon component rendered next to the nav label when `isSideMenu` is true. */
   icon?: ComponentType;
   /** When `true`, the route appears in the left-panel side navigation. */
@@ -192,27 +167,6 @@ export const ROUTES: RouteDescription[] = [
     protected: true,
     roles: [{ role: Role.ADMIN, clients: [] }],
     featureFlag: 'reporting-unit-block-details-enabled',
-  },
-  {
-    path: '/reporting-units/$ruId/blocks/create',
-    id: 'Create reporting unit block',
-    component: withLazyLayout(ReportingUnitBlockCreatePage),
-    isSideMenu: false,
-    protected: true,
-    roles: [
-      { role: Role.ADMIN, clients: [] },
-      { role: Role.DISTRICT, clients: [] },
-      { role: Role.AREA, clients: [] },
-      { role: Role.SUBMITTER, clients: [] },
-    ],
-    featureFlag: 'block-creation-enabled',
-    validateSearch: (search): BlockWizardSearch => {
-      const blockId = Number(search.blockId);
-      return {
-        blockId: Number.isFinite(blockId) ? blockId : Number.NaN,
-        ...(typeof search.blockState === 'string' ? { blockState: search.blockState } : {}),
-      };
-    },
   },
   {
     path: '/reporting-units/create',

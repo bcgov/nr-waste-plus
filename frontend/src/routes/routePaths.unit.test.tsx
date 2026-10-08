@@ -244,45 +244,6 @@ describe('routePaths', () => {
   });
 
   describe('ROUTES', () => {
-    it('shouldRegisterBlockCreationRouteWithAccessAndFeatureFlagRequirements', () => {
-      const blockRoute = routePaths.ROUTES.find(
-        (route) => route.path === '/reporting-units/$ruId/blocks/create',
-      );
-
-      expect(blockRoute).toBeDefined();
-      expect(blockRoute?.protected).toBe(true);
-      expect(blockRoute?.isSideMenu).toBe(false);
-      expect(blockRoute?.featureFlag).toBe('block-creation-enabled');
-      expect(blockRoute?.roles?.map(({ role }) => role)).toEqual([
-        Role.ADMIN,
-        Role.DISTRICT,
-        Role.AREA,
-        Role.SUBMITTER,
-      ]);
-    });
-
-    it('shouldParseBlockWizardSearchValuesAndOmitUnsupportedState', () => {
-      const blockRoute = routePaths.ROUTES.find(
-        (route) => route.path === '/reporting-units/$ruId/blocks/create',
-      );
-
-      expect(blockRoute?.validateSearch?.({ blockId: '42', blockState: 'DRAFT' })).toEqual({
-        blockId: 42,
-        blockState: 'DRAFT',
-      });
-      expect(blockRoute?.validateSearch?.({ blockId: 42, blockState: 4 })).toEqual({ blockId: 42 });
-    });
-
-    it('shouldPreserveAnInvalidBlockIdAsNaNForThePageErrorGuard', () => {
-      const blockRoute = routePaths.ROUTES.find(
-        (route) => route.path === '/reporting-units/$ruId/blocks/create',
-      );
-
-      expect(blockRoute?.validateSearch?.({ blockId: 'not-a-number' })).toEqual({
-        blockId: Number.NaN,
-      });
-    });
-
     it('shouldDefineClientsAndSearchRoutes', () => {
       expect(routePaths.ROUTES.some((r) => r.path === '/clients')).toBe(true);
       expect(routePaths.ROUTES.some((r) => r.path === '/search')).toBe(true);
