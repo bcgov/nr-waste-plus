@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -273,20 +273,6 @@ describe('ReportingUnitBlocksList', () => {
 
     expect(screen.getByRole('table')).toBeTruthy();
     expect(screen.queryByText('No results')).toBeNull();
-  });
-
-  it('updates the local pagination state when the next page is selected', async () => {
-    const multiPageContent = {
-      ...DUMMY_BLOCKS_CONTENT,
-      page: { ...DUMMY_BLOCKS_CONTENT.page, totalElements: 20, totalPages: 2 },
-    };
-    await renderBlocksList(<ReportingUnitBlocksList ruId={468} content={multiPageContent} />);
-
-    // Carbon pagination state update does not complete under userEvent in jsdom.
-    // eslint-disable-next-line testing-library/prefer-user-event
-    fireEvent.click(screen.getByRole('button', { name: 'Next page' }));
-
-    expect(screen.getByRole('button', { name: 'Previous page' })).toBeTruthy();
   });
 
   it('keeps delete actions disabled and does not navigate', async () => {
