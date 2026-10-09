@@ -11,6 +11,14 @@ const TestComponent = () => {
     <div>
       <button onClick={() => announce('Hello screen reader')}>Announce</button>
       <button onClick={() => announce('Hello screen reader')}>Announce again</button>
+      <button
+        onClick={() => {
+          announce('Dark mode enabled');
+          announce('Profile panel closed');
+        }}
+      >
+        Announce both
+      </button>
     </div>
   );
 };
@@ -56,6 +64,23 @@ describe('AnnouncerProvider', () => {
     await user.click(screen.getByText('Announce again'));
     await waitFor(() => expect(getAnnouncer().textContent).toBe(''));
     await waitFor(() => expect(getAnnouncer().textContent).toBe('Hello screen reader'));
+  });
+
+  it('queues synchronous announcements so none are lost', async () => {
+    const user = userEvent.setup();
+    render(
+      <AnnouncerProvider>
+        <TestComponent />
+      </AnnouncerProvider>,
+    );
+    // One interaction can publish twice (e.g. theme toggle + outside-click
+    // closing the profile panel). Both messages must reach the region in
+    // order; last-write-wins would drop the first one.
+    await user.click(screen.getByText('Announce both'));
+    await waitFor(() => expect(getAnnouncer().textContent).toBe('Dark mode enabled'));
+    await waitFor(() => expect(getAnnouncer().textContent).toBe('Profile panel closed'), {
+      timeout: 2000,
+    });
   });
 
   it('throws if useAnnouncer is used outside of an AnnouncerProvider', () => {
