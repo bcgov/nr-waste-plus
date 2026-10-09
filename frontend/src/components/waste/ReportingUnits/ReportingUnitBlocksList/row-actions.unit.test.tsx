@@ -74,6 +74,7 @@ const row: ReportingUnitBlocksRow = {
   totalWasteVolumeM3: null,
   submitter: null,
   status: null as unknown as CodeDescriptionDto,
+  blockType: null,
   lastUpdated: null,
 };
 

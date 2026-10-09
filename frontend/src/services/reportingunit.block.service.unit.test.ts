@@ -91,7 +91,7 @@ describe('ReportingUnitService block endpoints', () => {
     const service = new ReportingUnitService(config);
     const doRequest = vi.fn();
     Object.defineProperty(service, 'doRequest', { value: doRequest });
-    const promise = service.createBlock(468, { blockType: 'DISTRICT_AVERAGE' });
+    const promise = service.createBlock(468, { blockType: 'DISTRICT_AVERAGE', expectedReportingUnitState: 'SUBMISSION' });
 
     const expectedId = Date.now();
     await vi.advanceTimersByTimeAsync(299);
@@ -113,7 +113,7 @@ describe('ReportingUnitService block endpoints', () => {
   it('shouldCancelTheStubbedCreateTimer', async () => {
     vi.useFakeTimers();
     const service = new ReportingUnitService(config);
-    const promise = service.createBlock(468, { blockType: 'DISTRICT_AVERAGE' });
+    const promise = service.createBlock(468, { blockType: 'DISTRICT_AVERAGE', expectedReportingUnitState: 'SUBMISSION' });
     const settledPromise = promise.catch((error: unknown) => error);
     promise.cancel();
     await vi.advanceTimersByTimeAsync(300);

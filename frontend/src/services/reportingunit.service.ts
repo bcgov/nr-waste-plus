@@ -140,7 +140,7 @@ export class ReportingUnitService extends HttpClient {
    * lands — nothing else in the app needs to change.
    *
    * @param ruId - The numeric reporting unit the block belongs to.
-   * @param body - The block-creation payload (`blockType`).
+   * @param body - The block-creation payload (`blockType`, `expectedReportingUnitState`).
    * @returns A promise that resolves to the (stubbed) created block resource.
    */
   createBlock(

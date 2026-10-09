@@ -9,13 +9,24 @@ import {
 
 describe('reporting-unit block contracts', () => {
   it('shouldAcceptDistrictAverageBlockCreateRequest', () => {
-    expect(blockCreateRequestSchema.parse({ blockType: 'DISTRICT_AVERAGE' })).toEqual({
+    expect(
+      blockCreateRequestSchema.parse({
+        blockType: 'DISTRICT_AVERAGE',
+        expectedReportingUnitState: 'SUBMISSION',
+      }),
+    ).toEqual({
       blockType: 'DISTRICT_AVERAGE',
+      expectedReportingUnitState: 'SUBMISSION',
     });
   });
 
   it('shouldRejectUnsupportedBlockCreateType', () => {
-    expect(() => blockCreateRequestSchema.parse({ blockType: 'OTHER' })).toThrow();
+    expect(() =>
+      blockCreateRequestSchema.parse({
+        blockType: 'OTHER',
+        expectedReportingUnitState: 'SUBMISSION',
+      }),
+    ).toThrow();
   });
 
   it('shouldValidateBlockCreateResponseAndAllowFutureFields', () => {

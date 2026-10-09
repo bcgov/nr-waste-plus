@@ -163,7 +163,10 @@ describe('BlockCreateAction — create mutation path (real useCreateBlock)', () 
     await fillTwoCriteriaAndSubmit(user);
 
     await waitFor(() => {
-      expect(state.createBlock).toHaveBeenCalledWith(468, { blockType: 'DISTRICT_AVERAGE' });
+      expect(state.createBlock).toHaveBeenCalledWith(468, {
+        blockType: 'DISTRICT_AVERAGE',
+        expectedReportingUnitState: 'SUBMISSION',
+      });
     });
     // #1254: the Add button creates in place — the panel hides (single-block
     // rule reached) and no navigation to another screen happens.

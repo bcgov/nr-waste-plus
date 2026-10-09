@@ -6,8 +6,9 @@ import java.time.LocalDateTime;
 /**
  * Row contract shared by the backend and legacy block-list endpoints.
  *
- * <p>Exactly ten fields in fixed order. {@code status} is never null and always carries a code and
- * description; {@code cutBlockId} is never null and defaults to an empty string.
+ * <p>Exactly eleven fields in fixed order. {@code status} is never null and always carries a code
+ * and description; {@code cutBlockId} is never null and defaults to an empty string. {@code
+ * blockType} is null for legacy (Oracle) rows, which carry no block type in their payload.
  *
  * @param id the block identifier
  * @param licenseNumber the forest file identifier from the primary mark
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
  * @param submitter the name of the submitter, null when unknown
  * @param status the block lifecycle status; never null
  * @param lastUpdated the last update timestamp of the block, null when unknown
+ * @param blockType the block type (e.g. {@code DISTRICT_AVERAGE}), null for legacy rows
  */
 public record BlockListItemDto(
     Long id,
@@ -30,7 +32,8 @@ public record BlockListItemDto(
     BigDecimal totalWasteVolumeM3,
     String submitter,
     Status status,
-    LocalDateTime lastUpdated) {
+    LocalDateTime lastUpdated,
+    String blockType) {
 
   /**
    * Block lifecycle status as a code and description pair.

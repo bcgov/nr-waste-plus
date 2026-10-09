@@ -134,7 +134,8 @@ class ReportingUnitBlockServiceTest {
                 null,
                 "Alex Example",
                 new BlockListItemDto.Status("APP", "Approved"),
-                LocalDateTime.ofInstant(updatedAt, ZoneId.systemDefault())));
+                LocalDateTime.ofInstant(updatedAt, ZoneId.systemDefault()),
+                "DISTRICT_AVERAGE"));
     assertThat(result.getTotalElements()).isEqualTo(1);
     assertThat(result.getSize()).isEqualTo(10);
     verify(blockRepository).findBlockListItemsByReportingUnitId(REPORTING_UNIT_ID);
@@ -177,7 +178,8 @@ class ReportingUnitBlockServiceTest {
                 null,
                 null,
                 new BlockListItemDto.Status("DFT", "Draft"),
-                null));
+                null,
+                "DISTRICT_AVERAGE"));
   }
 
   @ParameterizedTest(name = "shouldResolveStatusAliasAndKnownCode_whenStatusIs {0}")
@@ -261,6 +263,7 @@ class ReportingUnitBlockServiceTest {
             new BigDecimal("8.1"),
             "Legacy submitter",
             new BlockListItemDto.Status("SUB", "Submitted"),
+            null,
             null);
     when(reportingUnitRepository.findByIdAndDeletedFalse(REPORTING_UNIT_ID))
         .thenReturn(Optional.empty());
@@ -450,6 +453,7 @@ class ReportingUnitBlockServiceTest {
     when(projection.getSubmitter()).thenReturn(submitter);
     when(projection.getRawStatus()).thenReturn(rawStatus);
     when(projection.getUpdatedAt()).thenReturn(updatedAt);
+    when(projection.getBlockType()).thenReturn("DISTRICT_AVERAGE");
     return projection;
   }
 

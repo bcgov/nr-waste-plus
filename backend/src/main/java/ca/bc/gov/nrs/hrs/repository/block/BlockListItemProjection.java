@@ -23,4 +23,6 @@ public interface BlockListItemProjection {
   String getRawStatus();
 
   Instant getUpdatedAt();
+
+  String getBlockType();
 }

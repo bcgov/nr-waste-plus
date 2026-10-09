@@ -147,7 +147,10 @@ const BlockCreateAction: FC<BlockCreateActionProps> = ({
     },
     onSubmit: async () => {
       if (rule) {
-        await createMutation.mutateAsync({ blockType: rule.blockType });
+        await createMutation.mutateAsync({
+          blockType: rule.blockType,
+          expectedReportingUnitState: 'SUBMISSION',
+        });
       }
     },
     onSubmitInvalid: () => {
@@ -162,9 +165,13 @@ const BlockCreateAction: FC<BlockCreateActionProps> = ({
 
   const hasCreationRole = user?.roles?.some((role) => CREATION_ROLES.includes(role.role)) ?? false;
 
-  // Real block count from the shared list query (one request with the table's).
+  // Real block rows from the shared list query (one request with the table's).
   // Disabled unless the panel could possibly be shown; an error yields 0, which
   // optimistically keeps the action available (the backend still validates on submit).
+  // The count filters by the rule's own block type (and live status — the list
+  // endpoint only returns live rows): totalElements counts every block for the
+  // unit, so a block of a different type must not hide District Average
+  // creation (#1254).
   const blocksQuery = useReportingUnitBlocksQuery(ruId, {
     enabled:
       featureFlags['block-creation-enabled'] &&
@@ -173,7 +180,9 @@ const BlockCreateAction: FC<BlockCreateActionProps> = ({
       !isClosed &&
       !createdBlock,
   });
-  const blockCount = blocksQuery.data?.page.totalElements ?? 0;
+  const blockCount = (blocksQuery.data?.content ?? []).filter(
+    (row) => row.blockType === rule?.blockType,
+  ).length;
 
   const existingBlockCount = blockCount + (createdBlock ? 1 : 0);
   const limitReached = rule !== undefined && existingBlockCount >= rule.maxBlocks;

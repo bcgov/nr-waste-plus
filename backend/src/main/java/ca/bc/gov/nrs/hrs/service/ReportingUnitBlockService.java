@@ -157,7 +157,8 @@ public class ReportingUnitBlockService {
         null,
         row.getSubmitter(),
         resolveStatus(row.getRawStatus()),
-        toLocalDateTime(row.getUpdatedAt()));
+        toLocalDateTime(row.getUpdatedAt()),
+        row.getBlockType());
   }
 
   private static BlockListItemDto.Status resolveStatus(String rawStatus) {

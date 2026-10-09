@@ -523,11 +523,15 @@ describe('react-query hooks', () => {
 
       let createdBlock;
       await act(async () => {
-        createdBlock = await result.current.mutateAsync({ blockType: 'DISTRICT_AVERAGE' });
+        createdBlock = await result.current.mutateAsync({
+          blockType: 'DISTRICT_AVERAGE',
+          expectedReportingUnitState: 'SUBMISSION',
+        });
       });
 
       expect(API.reportingUnit.createBlock).toHaveBeenCalledWith(468, {
         blockType: 'DISTRICT_AVERAGE',
+        expectedReportingUnitState: 'SUBMISSION',
       });
       expect(createdBlock).toMatchObject({ id: 12, reportingUnitId: 468, state: 'DRAFT' });
       expect(onSuccess).toHaveBeenCalledWith(createdBlock);
@@ -547,9 +551,12 @@ describe('react-query hooks', () => {
       );
 
       await act(async () => {
-        await expect(result.current.mutateAsync({ blockType: 'DISTRICT_AVERAGE' })).rejects.toBe(
-          error,
-        );
+        await expect(
+          result.current.mutateAsync({
+            blockType: 'DISTRICT_AVERAGE',
+            expectedReportingUnitState: 'SUBMISSION',
+          }),
+        ).rejects.toBe(error);
       });
 
       await waitFor(() => expect(result.current.isError).toBe(true));

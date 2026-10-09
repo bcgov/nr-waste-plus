@@ -32,7 +32,8 @@ public interface BlockRepository extends JpaRepository<BlockEntity, Long> {
                  END AS "totalWasteAreaHa",
                  selected_submitter.submitter_name AS submitter,
                  latest_status.status AS "rawStatus",
-                 b.updated_at AS "updatedAt"
+                 b.updated_at AS "updatedAt",
+                 b.block_type AS "blockType"
           FROM hrs.block b
           LEFT JOIN LATERAL (
             SELECT bm.forest_file_id,

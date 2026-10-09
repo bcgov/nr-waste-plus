@@ -49,6 +49,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 57,
       submitter: 'Jane Lumberjack',
       status: BLOCK_STATUSES.submitted,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-07-01T16:43:00',
     },
     {
@@ -61,6 +62,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 88,
       submitter: 'Jane Lumberjack',
       status: BLOCK_STATUSES.billingIssued,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-07-14T09:05:00',
     },
     {
@@ -73,6 +75,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 21,
       submitter: 'John Forester',
       status: BLOCK_STATUSES.hold,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-07-10T14:22:00',
     },
     {
@@ -85,6 +88,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 102,
       submitter: 'Jane Lumberjack',
       status: BLOCK_STATUSES.officeRejected,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-07-08T11:37:00',
     },
     {
@@ -97,6 +101,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 188,
       submitter: 'Mika Rivers',
       status: BLOCK_STATUSES.approved,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-07-05T08:15:00',
     },
     {
@@ -109,6 +114,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 34,
       submitter: 'Mika Rivers',
       status: BLOCK_STATUSES.billingIssued,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-06-28T17:52:00',
     },
     {
@@ -121,6 +127,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 26,
       submitter: 'Jane Lumberjack',
       status: BLOCK_STATUSES.submitted,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-06-20T13:03:00',
     },
     {
@@ -133,6 +140,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 74,
       submitter: 'John Forester',
       status: BLOCK_STATUSES.hold,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-06-15T10:41:00',
     },
     {
@@ -145,6 +153,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: null,
       submitter: null,
       status: BLOCK_STATUSES.draft,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-08-18T09:32:00',
     },
     {
@@ -157,6 +166,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 143,
       submitter: 'Ed Spruce',
       status: BLOCK_STATUSES.billingIssued,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-08-01T16:12:00',
     },
   ],

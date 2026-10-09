@@ -113,7 +113,7 @@ JOIN hrs.reporting_unit ru ON ru.reporting_unit_id = b.reporting_unit_id
 WHERE dab.district_average_block_id = b.block_id
   AND ru.client_number = '00001271'
   AND ru.client_locn_code = 'TEST-1254-B'
-  AND ru.org_unit_no = 'DCC'
+  AND ru.org_unit_no = 'T02'
   AND ru.created_by IN ('test-seed:reporting-unit-block-list-v1', 'test-data-1254')
   AND b.created_by IN ('test-seed:reporting-unit-block-list-v1', 'test-data-1254')
   AND NOT dab.is_deleted;
@@ -126,7 +126,7 @@ FROM hrs.reporting_unit ru
 WHERE ru.reporting_unit_id = b.reporting_unit_id
   AND ru.client_number = '00001271'
   AND ru.client_locn_code = 'TEST-1254-B'
-  AND ru.org_unit_no = 'DCC'
+  AND ru.org_unit_no = 'T02'
   AND ru.created_by IN ('test-seed:reporting-unit-block-list-v1', 'test-data-1254')
   AND b.created_by IN ('test-seed:reporting-unit-block-list-v1', 'test-data-1254')
   AND NOT b.is_deleted;
@@ -157,7 +157,7 @@ SELECT
 FROM hrs.reporting_unit ru
 WHERE ru.client_number = '00001271'
   AND ru.client_locn_code = 'TEST-1254-B'
-  AND ru.org_unit_no = 'DCC'
+  AND ru.org_unit_no = 'T02'
   AND ru.created_by = 'test-seed:reporting-unit-block-list-v1'
   AND NOT ru.is_deleted;
 
@@ -173,7 +173,7 @@ FROM hrs.block b
 JOIN hrs.reporting_unit ru ON ru.reporting_unit_id = b.reporting_unit_id
 WHERE ru.client_number = '00001271'
   AND ru.client_locn_code = 'TEST-1254-B'
-  AND ru.org_unit_no = 'DCC'
+  AND ru.org_unit_no = 'T02'
   AND ru.created_by = 'test-seed:reporting-unit-block-list-v1'
   AND NOT ru.is_deleted
   AND b.created_by = 'test-seed:reporting-unit-block-list-v1'

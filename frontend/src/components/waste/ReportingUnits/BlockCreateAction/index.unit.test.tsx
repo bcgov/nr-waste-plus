@@ -103,13 +103,31 @@ function mockAuthWithRoles(roles: Role[]) {
  * Query result stub for the block-list hook the component uses to count
  * existing blocks (issue #1254 item 4 — API-driven visibility).
  *
- * @param totalElements - Block count the hook should report.
+ * The component counts matching rows from `content` (filtered by
+ * `rule.blockType`), so the stub synthesizes that many block rows.
+ *
+ * @param totalElements - Number of block rows the hook should return.
+ * @param blockType - Block type stamped on each synthesized row.
  * @returns A minimal `useReportingUnitBlocksQuery` result.
  */
-function createMockBlocksQuery(totalElements = 0) {
+function createMockBlocksQuery(totalElements = 0, blockType = 'DISTRICT_AVERAGE') {
+  const content = Array.from({ length: totalElements }, (_, index) => ({
+    id: 1000 + index,
+    reportingUnitId: 468,
+    cutBlockId: `CUT-${index}`,
+    licenseNumber: 'FILE-1',
+    cuttingPermit: 'CP-1',
+    timberMark: null,
+    totalWasteAreaHa: null,
+    totalWasteVolumeM3: null,
+    submitter: null,
+    status: { code: 'DFT', description: 'Draft' },
+    lastUpdated: '2025-04-03T12:30:00',
+    blockType,
+  }));
   return {
     data: {
-      content: [],
+      content,
       page: { size: 10, number: 0, totalElements, totalPages: totalElements > 0 ? 1 : 0 },
     },
     isPending: false,
@@ -162,14 +180,25 @@ describe('BlockCreateAction', () => {
     });
 
     it('shouldRenderNothing_whenLiveDistrictAverageBlockExists [TC-C02]', async () => {
-      // Issue #1254 item 4: the existing-block count now comes from the
-      // block-list query (totalElements) instead of a hardcoded prop.
+      // Issue #1254 item 4: the existing-block count comes from the block-list
+      // query rows filtered by rule.blockType, not from a hardcoded prop.
       vi.mocked(useReportingUnitBlocksQuery).mockReturnValue(createMockBlocksQuery(1));
       await renderAction();
 
       expect(screen.queryByTestId('block-create-action')).toBeNull();
       expect(screen.queryByRole('button', { name: 'Add' })).toBeNull();
       expect(screen.queryByRole('button', { name: 'Add' })).toBeNull();
+    });
+
+    it('shouldRenderAction_whenExistingBlocksUseADifferentBlockType', async () => {
+      // The count is per rule.blockType — a live block of another type must
+      // not block creation of a DISTRICT_AVERAGE block.
+      vi.mocked(useReportingUnitBlocksQuery).mockReturnValue(
+        createMockBlocksQuery(3, 'SOMETHING_ELSE'),
+      );
+      await renderAction();
+
+      expect(screen.getByTestId('block-create-action')).toBeTruthy();
     });
 
     it('shouldRenderNothing_whenReportingUnitIsClosed [TC-C03]', async () => {
@@ -348,7 +377,10 @@ describe('BlockCreateAction', () => {
         }),
       );
       const mutateAsync = vi.mocked(useCreateBlock).mock.results[0].value.mutateAsync;
-      expect(mutateAsync).toHaveBeenCalledWith({ blockType: 'DISTRICT_AVERAGE' });
+      expect(mutateAsync).toHaveBeenCalledWith({
+        blockType: 'DISTRICT_AVERAGE',
+        expectedReportingUnitState: 'SUBMISSION',
+      });
     });
 
     it.each([

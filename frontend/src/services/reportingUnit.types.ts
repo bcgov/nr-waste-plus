@@ -63,10 +63,13 @@ export type ReportingUnitCreateDto = z.infer<typeof reportingUnitCreateRequestSc
  * Zod schema for the block-creation request body (issue #1228).
  *
  * First release supports only District Average blocks, matching the
- * one-block-per-Reporting-Unit domain constraint.
+ * one-block-per-Reporting-Unit domain constraint. `expectedReportingUnitState`
+ * is the optimistic precondition required by the #1228 contract: the reporting
+ * unit must still be in `SUBMISSION` when the block is created.
  */
 export const blockCreateRequestSchema = z.object({
   blockType: z.literal('DISTRICT_AVERAGE'),
+  expectedReportingUnitState: z.literal('SUBMISSION'),
 });
 
 /** TypeScript representation of a block-creation request. */
