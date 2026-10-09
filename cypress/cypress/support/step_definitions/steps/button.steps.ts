@@ -29,6 +29,18 @@ When("I select the client {string}", (clientNumber: string) => {
     .should("have.class", "selected-district");
 });
 
+When("I select the district {string}", (districtName: string) => {
+  // Scope to the header panel and match the option by its aria-label. An
+  // unscoped `button:contains(...)` would also match the profile action button,
+  // which displays the already-selected district name, toggling the panel shut.
+  cy.get(
+    `[data-testid="header-panel"] li[aria-label="${districtName}"] button`,
+    { timeout: 30_000 },
+  )
+    .should("be.visible")
+    .click();
+});
+
 When("I select no client", () => {
   cy.get(
     '[data-testid="header-panel"] [data-testid="district-select-none"] button',

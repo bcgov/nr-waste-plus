@@ -29,6 +29,6 @@ Feature: Screen reader announcements
   Scenario: District selection is announced
     Given I visit "/search"
     And I click on the "Profile settings" button
-    And I click on the "Campbell River" button
+    And I select the district "Campbell River"
     Then the "app-announcer" live region should announce "Selected district: Campbell River"
     And I close the profile panel
