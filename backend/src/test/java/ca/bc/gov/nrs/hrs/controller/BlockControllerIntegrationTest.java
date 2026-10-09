@@ -281,7 +281,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   @DisplayName("Returns 404 when the legacy block list has no row matching the block id")
   @WithMockJwt
   void returns404WhenLegacyBlockListHasNoMatchingId() throws Exception {
-    Long legacyReportingUnitId = 556L;
+    long legacyReportingUnitId = 556L;
 
     stubLegacyReportingUnit(legacyReportingUnitId, LEGACY_BLOCK_LIST);
 
@@ -294,7 +294,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   @DisplayName("Returns 404 when every legacy block row has a null id")
   @WithMockJwt
   void returns404WhenLegacyBlockRowsHaveNullId() throws Exception {
-    Long legacyReportingUnitId = 557L;
+    long legacyReportingUnitId = 557L;
 
     stubLegacyReportingUnit(legacyReportingUnitId, LEGACY_BLOCK_LIST_NULL_ID);
 
@@ -307,7 +307,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   @DisplayName("Maps a legacy block with a missing status to draft false")
   @WithMockJwt
   void mapsLegacyBlockWithNullStatusToDraftFalse() throws Exception {
-    Long legacyReportingUnitId = 558L;
+    long legacyReportingUnitId = 558L;
 
     stubLegacyReportingUnit(legacyReportingUnitId, LEGACY_BLOCK_LIST_NO_STATUS);
 
@@ -323,7 +323,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   @DisplayName("Maps a legacy block with a non-draft status to draft false")
   @WithMockJwt
   void mapsLegacyBlockWithNonDraftStatusToDraftFalse() throws Exception {
-    Long legacyReportingUnitId = 559L;
+    long legacyReportingUnitId = 559L;
 
     stubLegacyReportingUnit(legacyReportingUnitId, LEGACY_BLOCK_LIST_FINAL_STATUS);
 
@@ -339,7 +339,7 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   @DisplayName("Returns 503 when the legacy block list call fails")
   @WithMockJwt
   void returns503WhenLegacyBlockListFails() throws Exception {
-    Long legacyReportingUnitId = 561L;
+    long legacyReportingUnitId = 561L;
 
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/reporting-units/" + legacyReportingUnitId))
