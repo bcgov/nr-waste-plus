@@ -17,8 +17,8 @@ storage. The local Compose environment provides MinIO for that integration.
 
 The API includes areas such as reporting units and search, block calculations,
 attachments, formula configuration, district-average volumes, and species
-composition. For exact request and response contracts, use the running API's
-OpenAPI documentation rather than treating a wiki endpoint list as exhaustive.
+composition. For exact request and response contracts, consult the current
+controllers and integration tests rather than treating a wiki endpoint list as exhaustive.
 
 ## Technology and layout
 
