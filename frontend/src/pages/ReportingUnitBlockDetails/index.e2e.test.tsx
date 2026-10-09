@@ -144,15 +144,16 @@ test.describe('Reporting Unit Block Details', () => {
     await expect(heading).toHaveAttribute('tabindex', '-1');
   });
 
-  test('shows the alert banner on failure and recovers after retry', async ({ page }) => {
+  test('keeps the block page and flags the summary when only the RU query fails', async ({
+    page,
+  }) => {
     test.skip(
       test.info().project.metadata.userType === 'bceid',
       'This scenario is validated on IDIR to avoid BCeID role-rule redirects.',
     );
 
-    // The block endpoint always answers 200 so the banner's combined error
-    // gating is driven solely by the RU 500-then-200 sequence below, and the
-    // block query recovers on the retry refetch too.
+    // The block endpoint always answers 200, so the page must stay on the
+    // block view: only the summary card degrades, never the not-found state.
     await mockApiResponses(
       page,
       `reporting-units/${RU_ID}/${BLOCK_ID}`,
@@ -161,8 +162,49 @@ test.describe('Reporting Unit Block Details', () => {
       blockDetailsPayload,
     );
 
-    let attempts = 0;
     await mockApi(page, `reporting-units/${RU_ID}`, async (route) => {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/problem+json',
+        body: JSON.stringify({
+          status: 500,
+          title: 'Internal Server Error',
+          detail: 'An unexpected error occurred.',
+        }),
+      });
+    });
+
+    await page.goto(ROUTE_PATH);
+    await page.waitForLoadState('domcontentloaded');
+
+    await expect(
+      page.getByRole('heading', { level: 1, name: `Block ID ${BLOCK_ID}` }),
+    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Reporting Unit Block not found' })).toHaveCount(
+      0,
+    );
+    await expect(page.getByText('Reporting unit summary unavailable')).toBeVisible();
+
+    const alert = page.getByRole('alert');
+    await expect(alert).toBeVisible();
+    await expect(alert).toContainText('Internal Server Error');
+  });
+
+  test('shows the alert banner on failure and recovers after retry', async ({ page }) => {
+    test.skip(
+      test.info().project.metadata.userType === 'bceid',
+      'This scenario is validated on IDIR to avoid BCeID role-rule redirects.',
+    );
+
+    // The block endpoint is the authority on block existence: it answers 500
+    // once, so the not-found state and its alert render, then recovers on the
+    // retry refetch. The RU endpoint stays healthy throughout.
+    await mockApiResponses(page, `reporting-units/${RU_ID}`, 200, 'application/json', {
+      ...reportingUnitPayload,
+    });
+
+    let attempts = 0;
+    await mockApi(page, `reporting-units/${RU_ID}/${BLOCK_ID}`, async (route) => {
       attempts += 1;
       if (attempts === 1) {
         await route.fulfill({
@@ -180,7 +222,7 @@ test.describe('Reporting Unit Block Details', () => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify(reportingUnitPayload),
+        body: JSON.stringify(blockDetailsPayload),
       });
     });
 
