@@ -60,6 +60,7 @@ const ReportingUnitBlockDetailsPage: FC = () => {
   const {
     data,
     isLoading: isRuLoading,
+    isFetching: isRuFetching,
     isError: isRuError,
     refetch: refetchRu,
   } = useReportingUnitDetailsQuery(ruId, {
@@ -191,8 +192,10 @@ const ReportingUnitBlockDetailsPage: FC = () => {
         <PageNotification eventTarget={EVENT_TARGET} />
       </Column>
       <Column lg={16} md={8} sm={4} className="rublock-column__progress">
-        {isLoading && <ProgressIndicatorSkeleton />}
-        {!isLoading && (
+        {/* `isLoading` is always false past the early return above, so the
+            progress section keys off the active fetch/refetch state instead. */}
+        {isRuFetching && <ProgressIndicatorSkeleton />}
+        {!isRuFetching && (
           <ProgressIndicator currentIndex={0}>
             <ProgressStep
               current
@@ -222,7 +225,7 @@ const ReportingUnitBlockDetailsPage: FC = () => {
       </Column>
       <Column lg={16} md={8} sm={4} className="rublock-column__content">
         <Tabs defaultSelectedIndex={0}>
-          <TabList aria-label="aria" contained size="lg">
+          <TabList aria-label="Block details sections" contained size="lg">
             <Tab>Block details</Tab>
             <Tab>Area calculator</Tab>
             <Tab>Waste volumes</Tab>

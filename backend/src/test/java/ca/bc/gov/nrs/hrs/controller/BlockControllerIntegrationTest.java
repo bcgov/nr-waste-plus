@@ -255,8 +255,8 @@ class BlockControllerIntegrationTest extends AbstractTestContainerIntegrationTes
   @DisplayName("Returns legacy block details with isLegacy true")
   @WithMockJwt
   void returnsLegacyBlockDetailsWithIsLegacyTrue() throws Exception {
-    Long legacyReportingUnitId = 555L;
-    Long legacyBlockId = 777L;
+    long legacyReportingUnitId = 555L;
+    long legacyBlockId = 777L;
 
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/reporting-units/" + legacyReportingUnitId))
