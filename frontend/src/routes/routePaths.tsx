@@ -1,5 +1,5 @@
-import { Loading } from '@carbon/react';
 import { DocumentAdd, Group, SearchLocate } from '@carbon/icons-react';
+import { Loading } from '@carbon/react';
 import { lazyRouteComponent, type RouteLoaderFn } from '@tanstack/react-router';
 import { type ComponentType, Suspense } from 'react';
 
@@ -10,6 +10,7 @@ import { featureFlags, type FeatureFlags } from '@/env';
 // ─── Eager imports (entry point + error states — must load instantly) ──────────
 import LandingPage from '@/pages/Landing';
 import NoRolePage from '@/pages/NoRole';
+import { reportingUnitLoader } from '@/pages/ReportingUnitDetails/loader';
 import RoleErrorPage from '@/pages/RoleError';
 
 // ─── Lazy imports (loaded on demand when the route is navigated to) ───────────
@@ -50,7 +51,6 @@ const FormulaConfigurationCreatePage = lazyRouteComponent(
 );
 
 // ─── Shared loader (eager — used by route config at module load time) ──────────
-import { reportingUnitLoader } from '@/pages/ReportingUnitDetails/loader';
 import { withPersistentRedirect } from '@/routes/guards/withPersistentRedirect';
 import { withPublicOnly } from '@/routes/guards/withPublicOnly';
 
@@ -165,7 +165,6 @@ export const ROUTES: RouteDescription[] = [
     component: withLazyLayout(ReportingUnitBlockDetailsPage),
     isSideMenu: false,
     protected: true,
-    roles: [{ role: Role.ADMIN, clients: [] }],
     featureFlag: 'reporting-unit-block-details-enabled',
   },
   {

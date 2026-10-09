@@ -1,6 +1,7 @@
 import { screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
+import { useReportingUnitBlocksQuery } from '@/config/react-query/hooks';
 import { renderWithApp } from '@/config/tests/renderWithApp';
 import { Role } from '@/context/auth/types';
 import * as useAuthModule from '@/context/auth/useAuth';
@@ -40,6 +41,23 @@ vi.mock('@/context/auth/useAuth', () => ({
   useAuth: vi.fn(),
 }));
 
+vi.mock('@/config/react-query/hooks', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/config/react-query/hooks')>();
+  return { ...actual, useReportingUnitBlocksQuery: vi.fn() };
+});
+
+vi.mock('@/components/core/Tags/LegacyDataTag', () => ({
+  default: () => <span data-testid="legacy-data-tag">Legacy data</span>,
+}));
+
+vi.mock('@/components/waste/ReportingUnits/BlockCreateAction', () => ({
+  default: (props: { ruId: number; blockRule?: { maxBlocks: number }; samplingCode?: string }) => (
+    <div data-testid="block-create-props">
+      {`${props.ruId}|${props.blockRule?.maxBlocks ?? 'none'}|${props.samplingCode ?? 'none'}`}
+    </div>
+  ),
+}));
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const defaultData: ReportingUnitDto = {
@@ -61,6 +79,11 @@ function renderPage(data: ReportingUnitDto = defaultData) {
 describe('ReportingUnitDetailsPage', () => {
   beforeEach(() => {
     mockLoaderData = undefined;
+    vi.mocked(useReportingUnitBlocksQuery).mockReturnValue({
+      data: undefined,
+      isPending: false,
+      isError: false,
+    } as ReturnType<typeof useReportingUnitBlocksQuery>);
     vi.mocked(useAuthModule.useAuth).mockReturnValue({
       user: {
         userName: 'testuser',
@@ -82,23 +105,21 @@ describe('ReportingUnitDetailsPage', () => {
     it('renders the reporting unit ID in the page title', async () => {
       renderPage();
       await waitFor(() => {
-        screen.getByText('Reporting Unit no.: 12345');
+        screen.getByText('Reporting Unit No. 12345');
       });
     });
 
     it('renders the page subtitle', async () => {
       renderPage();
       await waitFor(() => {
-        expect(
-          screen.getByText('Start a new waste submission by creating a reporting unit'),
-        ).toBeDefined();
+        expect(screen.getByText('View reporting unit details')).toBeDefined();
       });
     });
 
     it('renders with a different reporting unit ID', async () => {
       renderPage({ ...defaultData, id: 99999 });
       await waitFor(() => {
-        screen.getByText('Reporting Unit no.: 99999');
+        screen.getByText('Reporting Unit No. 99999');
       });
     });
   });
@@ -244,7 +265,7 @@ describe('ReportingUnitDetailsPage', () => {
       });
       renderPage();
       await waitFor(() => {
-        screen.getByText('Reporting Unit no.: 12345');
+        screen.getByText('Reporting Unit No. 12345');
       });
     });
 
@@ -260,7 +281,7 @@ describe('ReportingUnitDetailsPage', () => {
       });
       renderPage();
       await waitFor(() => {
-        screen.getByText('Reporting Unit no.: 12345');
+        screen.getByText('Reporting Unit No. 12345');
       });
     });
   });
@@ -276,7 +297,7 @@ describe('ReportingUnitDetailsPage', () => {
         district: { code: 'DND', description: 'North' },
       });
       await waitFor(() => {
-        screen.getByText('Reporting Unit no.: 1');
+        screen.getByText('Reporting Unit No. 1');
         screen.getByText('A Client');
         screen.getByText('Inactive');
       });
@@ -320,7 +341,7 @@ describe('ReportingUnitDetailsPage', () => {
       envModule.featureFlags['reporting-unit-block-details-enabled'] = false;
       renderPage();
       await waitFor(() => {
-        screen.getByText('Reporting Unit no.: 12345');
+        screen.getByText('Reporting Unit No. 12345');
       });
       expect(screen.queryByRole('table')).toBeNull();
     });
@@ -331,6 +352,46 @@ describe('ReportingUnitDetailsPage', () => {
       await waitFor(() => {
         expect(screen.getByText('No results')).toBeDefined();
       });
+      expect(useReportingUnitBlocksQuery).toHaveBeenCalledWith(12345, { enabled: true });
     });
+
+    it('keeps the blocks query disabled when loader data is missing', async () => {
+      envModule.featureFlags['reporting-unit-block-details-enabled'] = true;
+      mockLoaderData = undefined;
+
+      renderWithApp(<ReportingUnitDetailsPage />);
+
+      expect(await screen.findByText('Reporting Unit not found')).toBeTruthy();
+      expect(useReportingUnitBlocksQuery).toHaveBeenCalledWith(0, { enabled: false });
+    });
+  });
+
+  describe('legacy-source marker', () => {
+    it.each([
+      { isLegacy: false, grade: { code: '', description: '' }, showsLegacy: false },
+      { isLegacy: true, grade: { code: 'IN', description: 'Interior' }, showsLegacy: true },
+      { isLegacy: undefined, grade: { code: '', description: '' }, showsLegacy: true },
+      { isLegacy: undefined, grade: { code: 'IN', description: 'Interior' }, showsLegacy: false },
+    ])(
+      'uses explicit isLegacy before the grade fallback: $isLegacy / $grade.code',
+      async (testCase) => {
+        renderPage({ ...defaultData, isLegacy: testCase.isLegacy, grade: testCase.grade });
+
+        expect(await screen.findByText('Reporting Unit No. 12345')).toBeTruthy();
+        expect(screen.queryByTestId('legacy-data-tag') !== null).toBe(testCase.showsLegacy);
+      },
+    );
+  });
+
+  it('passesSamplingCodeAndServerBlockRuleToCreationAction', async () => {
+    renderPage({
+      ...defaultData,
+      sampling: { code: 'AVG', description: 'District Average' },
+      blockRule: { maxBlocks: 1, blockType: 'DISTRICT_AVERAGE' },
+    });
+
+    await waitFor(() =>
+      expect(screen.getByTestId('block-create-props').textContent).toBe('12345|1|AVG'),
+    );
   });
 });

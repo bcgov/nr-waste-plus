@@ -32,13 +32,11 @@ test.describe('ReportingUnitDetails Page', () => {
     });
 
     test('renders the page title with the reporting unit ID', async ({ page }) => {
-      await expect(page.getByRole('heading', { name: /Reporting Unit no\.: 123/i })).toBeVisible();
+      await expect(page.getByRole('heading', { name: /Reporting Unit No\. 123/i })).toBeVisible();
     });
 
     test('renders the page subtitle', async ({ page }) => {
-      await expect(
-        page.getByText('Start a new waste submission by creating a reporting unit'),
-      ).toBeVisible();
+      await expect(page.getByText('View reporting unit details')).toBeVisible();
     });
 
     test('renders the UnderConstruction tag on every load', async ({ page }) => {
@@ -171,7 +169,7 @@ test.describe('ReportingUnitDetails Page', () => {
       await setupMocks(page, 321, 'details-321.json');
       await page.goto('/reporting-units/321');
 
-      await expect(page.getByRole('heading', { name: /Reporting Unit no\.: 321/i })).toBeVisible();
+      await expect(page.getByRole('heading', { name: /Reporting Unit No\. 321/i })).toBeVisible();
       await expect(page.getByText('JOHN WICK LOGGING LTD.')).toBeVisible();
       await expect(page.getByText('90000002')).toBeVisible();
       await expect(page.getByText('DCC - Cariboo-Chilcotin')).toBeVisible();

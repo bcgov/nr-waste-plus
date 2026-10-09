@@ -7,6 +7,7 @@ import ca.bc.gov.nrs.hrs.dto.base.Role;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
+import ca.bc.gov.nrs.hrs.service.ReportingUnitBlockService;
 import ca.bc.gov.nrs.hrs.service.ReportingUnitService;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
 import io.micrometer.observation.annotation.Observed;
@@ -33,9 +34,9 @@ import org.springframework.web.server.ResponseStatusException;
  * <p>Provides HTTP endpoints for retrieving full details of a reporting unit, aggregating data from
  * both the legacy API and the Forest Client API via {@link ReportingUnitService}.
  *
- * <p>All endpoints in this controller are gated behind {@link
- * FeatureFlag#REPORTING_UNIT_DETAILS_ENABLED}. When the flag is disabled the controller responds
- * with HTTP 404 so the feature remains invisible to callers.
+ * <p>The details endpoint is gated behind {@link FeatureFlag#REPORTING_UNIT_DETAILS_ENABLED}.
+ * When the flag is disabled the controller responds with HTTP 404 so the feature remains invisible
+ * to callers. The create endpoint is not flag-gated.
  *
  * <p>POST /api/reporting-units creates a new Reporting Unit in the legacy system. On success it
  * returns HTTP 201 (Created) with a Location header pointing to the created resource. Per API
@@ -49,6 +50,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class ReportingUnitController {
 
   private final ReportingUnitService reportingUnitService;
+  private final ReportingUnitBlockService reportingUnitBlockService;
   private final FeatureFlagsConfiguration featureFlagsConfiguration;
 
   /**
@@ -98,7 +100,7 @@ public class ReportingUnitController {
       }
     }
 
-    return details;
+    return reportingUnitBlockService.enrichWithBlockMetadata(details);
   }
 
   /**

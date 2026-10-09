@@ -97,6 +97,11 @@ export const queryKeys = {
     details: (ruId: number) => ['reporting-unit', 'details', ruId] as const,
     create: () => ['reporting-unit', 'create'] as const,
   },
+  block: {
+    create: () => ['block', 'create'] as const,
+    list: (ruId: number) => ['block', 'list', ruId] as const,
+    details: (ruId: number, blockId: number) => ['block', 'details', ruId, blockId] as const,
+  },
   table: {
     sorting: (sort: Record<string, SortDirectionType>) => ['table', 'sorting', sort] as const,
   },

@@ -35,6 +35,8 @@ export type ReportingUnitBlocksRow = {
   status: CodeDescriptionDto;
   /** ISO date-time of the last update, split into "Last updated" (date) and "Time" columns. */
   lastUpdated: string | null;
+  /** Block type (e.g. `DISTRICT_AVERAGE`); null for legacy (Oracle) rows. */
+  blockType: string | null;
 };
 
 /**

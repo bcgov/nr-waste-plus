@@ -68,6 +68,7 @@ const featureFlagsSchema = z
     'reporting-unit-details-enabled': z.boolean(),
     'reporting-unit-create-enabled': z.boolean(),
     'reporting-unit-block-details-enabled': z.boolean(),
+    'block-creation-enabled': z.boolean(),
     'configuration-enabled': z.boolean(),
   })
   .partial()
