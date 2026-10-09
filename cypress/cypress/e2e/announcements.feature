@@ -12,6 +12,7 @@ Feature: Screen reader announcements
   @loginAsIDIR
   Scenario: Theme toggle announces the new mode
     Given I visit "/search"
+    And the app is in light mode
     And I click on the theme toggle
     Then the "app-announcer" live region should announce "Dark mode enabled"
     And I click on the theme toggle

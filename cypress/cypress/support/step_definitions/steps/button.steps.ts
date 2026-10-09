@@ -1,4 +1,9 @@
-import { When, Then, Step } from "@badeball/cypress-cucumber-preprocessor";
+import {
+  Given,
+  When,
+  Then,
+  Step,
+} from "@badeball/cypress-cucumber-preprocessor";
 import { findButton } from "../../helpers";
 
 When("I click on the {string} button", (name: string) => {
@@ -68,6 +73,24 @@ Then("the theme toggle should offer {string} mode", (mode: string) => {
   cy.get('[data-testid="theme-toggle"]')
     .should("be.visible")
     .and("have.attr", "aria-label", `Switch to ${mode} mode`);
+});
+
+Given("the app is in light mode", () => {
+  // The toggle's aria-label names the mode it switches TO, so the current
+  // mode is the opposite. Persisted user preferences can start the account in
+  // dark mode; normalize before asserting a specific toggle announcement.
+  cy.get('[data-testid="theme-toggle"]', { timeout: 30_000 })
+    .should("be.visible")
+    .then(($toggle) => {
+      if ($toggle.attr("aria-label") === "Switch to light mode") {
+        cy.wrap($toggle).click();
+      }
+      cy.get('[data-testid="theme-toggle"]').should(
+        "have.attr",
+        "aria-label",
+        "Switch to dark mode",
+      );
+    });
 });
 
 When("I search", function () {
