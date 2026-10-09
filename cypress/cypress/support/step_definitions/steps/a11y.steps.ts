@@ -61,6 +61,41 @@ const tabUntilFocused = (selector: string, maxAttempts: number): void => {
     });
 };
 
+// Carbon's SkipToContent renders href="#main-content"; the target must exist,
+// be unique, and be the <main> landmark so keyboard/screen-reader users can
+// bypass the banner and side nav (issue #1386).
+const SKIP_LINK_SELECTOR = 'a[href="#main-content"]';
+
+Then("the skip link should target an existing main landmark", () => {
+  cy.get(SKIP_LINK_SELECTOR).first().should("exist");
+
+  cy.document().then((doc) => {
+    const matches = doc.querySelectorAll("#main-content");
+    expect(matches, "elements with id main-content").to.have.lengthOf(1);
+
+    const target = matches[0];
+    expect(target?.tagName, "skip link target element").to.equal("MAIN");
+  });
+});
+
+When("I activate the skip link with the keyboard", () => {
+  cy.get("body").then(($body) => {
+    $body.get(0).focus();
+  });
+
+  tabUntilFocused(SKIP_LINK_SELECTOR, 20);
+  cy.realPress("Enter");
+});
+
+Then("focus should be on the main landmark", () => {
+  // Retried assertion: fragment navigation moves focus asynchronously.
+  cy.document().should((doc) => {
+    expect(doc.activeElement, "document.activeElement after skip-link activation").to.equal(
+      doc.querySelector("#main-content")
+    );
+  });
+});
+
 Then("the clients page controls should be keyboard focusable", () => {
   const selectors = [
     '[data-testid="side-nav-link-Waste search"]',

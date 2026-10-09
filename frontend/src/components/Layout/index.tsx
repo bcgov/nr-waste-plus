@@ -21,7 +21,9 @@ interface LayoutProps {
  * - {@link LayoutProvider}: supplies side-nav expansion state to all descendants
  * - {@link HeaderContainer}: manages Carbon's header/side-nav interaction lifecycle
  *   and renders {@link LayoutHeader}
- * - {@link Content}: Carbon's main content region
+ * - {@link Content}: Carbon's main content region, targeted by the header's
+ *   skip link via `id="main-content"`; `tabIndex={-1}` lets fragment navigation
+ *   move focus onto the landmark without adding it to the tab order
  * - {@link Grid}: a no-gutter grid with the `layout-grid` class for page-level spacing
  *
  * @param props - Component props.
@@ -33,7 +35,7 @@ const Layout: FC<LayoutProps> = ({ children }: LayoutProps) => {
     <>
       <LayoutProvider>
         <HeaderContainer render={LayoutHeader} />
-        <Content>
+        <Content id="main-content" tabIndex={-1}>
           <Grid className="layout-grid cds--grid--no-gutter" data-testid="layout-grid">
             {children}
           </Grid>
