@@ -24,9 +24,12 @@ const UnderConstructionTag: FC<UnderConstructionTagProps> = ({ type = 'feature' 
     tooltip={`This ${type} is under development. Features may be incomplete or display incorrect data.`}
     align="bottom"
   >
-    <Tag className="under-construction-tag" type="cyan" size="md" renderIcon={Construction}>
-      Under construction
-    </Tag>
+    {/* A live region wrapper announces the tag when it appears on the page. */}
+    <span role="status" aria-live="polite">
+      <Tag className="under-construction-tag" type="cyan" size="md" renderIcon={Construction}>
+        Under construction
+      </Tag>
+    </span>
   </TooltipTag>
 );
 
