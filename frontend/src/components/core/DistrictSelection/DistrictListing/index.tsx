@@ -1,9 +1,9 @@
 import { type FC } from 'react';
 
-import type { DistrictType } from '@/components/core/DistrictSelection/types';
-
 import DistrictSelection from '@/components/core/DistrictSelection';
 import { useDistrictOptionsQuery } from '@/config/react-query/hooks';
+
+import type { DistrictType } from '@/components/core/DistrictSelection/types';
 
 /**
  * Loads district options and renders the default district preference selector.
@@ -41,6 +41,7 @@ const DistrictListing: FC = () => {
       deselectLabel="Select no district"
       searchLabel="Search by district name or code"
       filterFn={filter}
+      announcementNoun="district"
     />
   );
 };

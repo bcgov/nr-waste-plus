@@ -1,12 +1,12 @@
 import { type FC } from 'react';
 
-import type { DistrictType } from '@/components/core/DistrictSelection/types';
-import type { CodeDescriptionDto } from '@/services/search.types';
-
 import DistrictSelection from '@/components/core/DistrictSelection';
 import { useForestClientsByNumbersQuery } from '@/config/react-query/hooks';
 import { useAuth } from '@/context/auth/useAuth';
 import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils';
+
+import type { DistrictType } from '@/components/core/DistrictSelection/types';
+import type { CodeDescriptionDto } from '@/services/search.types';
 
 /**
  * Loads the current user's clients and renders the default client preference selector.
@@ -50,6 +50,7 @@ const ClientListing: FC = () => {
       filterFn={filter}
       isSelected={(item, userPreferenceValue) => userPreferenceValue?.code === item.id}
       districtTypeConverter={forestClientAutocompleteResult2CodeDescription}
+      announcementNoun="client"
     />
   );
 };
