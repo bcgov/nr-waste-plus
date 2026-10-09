@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 
-import { LayoutContext } from './LayoutContext';
-
+import { useAnnouncer } from '@/context/announcer/useAnnouncer';
 import useBreakpoint from '@/hooks/useBreakpoint';
+
+import { LayoutContext } from './LayoutContext';
 
 /**
  * Provides responsive layout state for the header panel and side navigation.
@@ -13,6 +14,7 @@ import useBreakpoint from '@/hooks/useBreakpoint';
  */
 export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
   const breakpoint = useBreakpoint();
+  const { announce } = useAnnouncer();
 
   // Track if user has manually toggled the side nav (null = no manual override)
   const [userToggled, setUserToggled] = useState<boolean | null>(false);
@@ -31,10 +33,19 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
       isSideNavExpanded: sideNavExpanded,
       toggleSideNav: () => setUserToggled((prev) => !prev),
       isHeaderPanelOpen: headerPanelOpen,
-      toggleHeaderPanel: () => setHeaderPanelOpen((prev) => !prev),
-      closeHeaderPanel: () => setHeaderPanelOpen(false),
+      toggleHeaderPanel: () => {
+        const nextOpen = !headerPanelOpen;
+        setHeaderPanelOpen(nextOpen);
+        announce(nextOpen ? 'Profile panel opened' : 'Profile panel closed');
+      },
+      closeHeaderPanel: () => {
+        if (headerPanelOpen) {
+          setHeaderPanelOpen(false);
+          announce('Profile panel closed');
+        }
+      },
     }),
-    [sideNavExpanded, headerPanelOpen],
+    [sideNavExpanded, headerPanelOpen, announce],
   );
 
   return <LayoutContext.Provider value={contextValue}>{children}</LayoutContext.Provider>;

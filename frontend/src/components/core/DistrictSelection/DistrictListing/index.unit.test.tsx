@@ -2,11 +2,12 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
-import DistrictListing from '.';
-
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
+import AnnouncerProvider from '@/context/announcer/AnnouncerProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import APIs from '@/services/APIs';
+
+import DistrictListing from '.';
 
 let mockedDistrictValues = [
   {
@@ -51,11 +52,13 @@ vi.mock('@/context/preference/usePreference', () => ({
 const renderWithProviders = async () => {
   const qc = makeTestQueryClient();
   render(
-    <QueryClientProvider client={qc}>
-      <PreferenceProvider>
-        <DistrictListing />
-      </PreferenceProvider>
-    </QueryClientProvider>,
+    <AnnouncerProvider>
+      <QueryClientProvider client={qc}>
+        <PreferenceProvider>
+          <DistrictListing />
+        </PreferenceProvider>
+      </QueryClientProvider>
+    </AnnouncerProvider>,
   );
 };
 

@@ -1,10 +1,11 @@
 import { Theme } from '@carbon/react';
 import { useState, useEffect, useRef, type ReactNode, useMemo } from 'react';
 
-import { ThemeContext } from './ThemeContext';
-
+import { useAnnouncer } from '@/context/announcer/useAnnouncer';
 import { type CarbonTheme } from '@/context/preference/types';
 import { usePreference } from '@/context/preference/usePreference';
+
+import { ThemeContext } from './ThemeContext';
 
 /**
  * Synchronizes the active Carbon theme with persisted user preferences.
@@ -16,6 +17,7 @@ import { usePreference } from '@/context/preference/usePreference';
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const preferences = usePreference();
   const { updatePreferences, userPreference } = preferences;
+  const { announce } = useAnnouncer();
   const [theme, setTheme] = useState<CarbonTheme | undefined>(undefined);
 
   // Adopt the persisted preference exactly once, on initial load. After that the
@@ -35,6 +37,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     const toggleTheme = () => {
       const nextTheme = (theme ?? userPreference?.theme ?? 'g10') === 'g10' ? 'g100' : 'g10';
       setTheme(nextTheme);
+      announce(nextTheme === 'g100' ? 'Dark mode enabled' : 'Light mode enabled');
       // Kick off the persistence synchronously so the preference response is
       // already in flight when the e2e test waits for it.
       updatePreferences({ theme: nextTheme });
@@ -45,7 +48,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       setTheme,
       toggleTheme,
     };
-  }, [theme, userPreference, setTheme, updatePreferences]);
+  }, [theme, userPreference, setTheme, updatePreferences, announce]);
 
   // Only render Theme when theme is set.
   return (
