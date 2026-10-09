@@ -1,162 +1,116 @@
-# Harvest Residue System - Waste
+# Waste Plus frontend
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=nr-waste-plus-frontend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=nr-waste-plus-frontend)
 
-Report logging waste and residue data for billing and cut control
+The frontend is the React web application for reporting waste and residue data
+used in billing and cut control. It presents workflows for reporting units,
+search, block details, district-volume data, species composition, and
+configuration, and calls the [backend API](../backend/README.md).
 
-## Development
+## Stack and prerequisites
 
-For more developer information visit the [documentation](https://github.com/bcgov/nr-waste-plus/wiki/Project-Structure) for a broader documentation.
+- Node.js `>=22.19.0`
+- React 19, TypeScript 5.9, and Vite 8
+- Carbon Design System components and Sass styles
+- Vitest for unit/component tests and Playwright for browser tests
 
-### Component Structure
-
-Every component lives in its own folder with an `index.tsx` and an optional `index.scss`:
-
-```
-src/components/MyComponent/
-├── index.tsx
-├── index.scss
-└── index.unit.test.tsx
-```
-
-**`index.tsx`** — the component implementation:
-
-```tsx
-import type { FC } from 'react';
-import './index.scss';
-
-const MyComponent: FC = () => {
-  return <div className="my-component">Hello</div>;
-};
-
-export default MyComponent;
-```
-
-**`index.scss`** — component styles. If you use a Carbon component whose SCSS hasn't been imported yet, add `@use` at the top of this file. Sass deduplicates modules, so it will only be emitted once in the final bundle regardless of how many files import it:
-
-```scss
-@use '@carbon/styles/scss/components/toggle';
-@use '@carbon/react/scss/spacing' as *;
-
-.my-component {
-  padding: $spacing-05;
-}
-```
-
-> The full list of available component SCSS modules lives in
-> `node_modules/@carbon/styles/scss/components/`. The module name matches the
-> folder name (e.g. `toggle`, `data-table`, `ui-shell`). Some components like
-> `data-table` have sub-modules (`action`, `expandable`, `skeleton`, `sort`).
-
-### Image Usage
-
-All images live in `public/img/` and are served as static assets with deterministic URLs (no content hash). This allows `<link rel="preload">` in `index.html` to discover them immediately — before any JS executes.
-
-#### Format guidelines
-
-| Format | Use for |
-|---|---|
-| **SVG** | Logos, icons, illustrations — infinitely scalable at any resolution |
-| **WebP** | Photos, hero images — 25-35% smaller than PNG/JPEG |
-
-#### Converting photos to WebP
-
-Use any tool that supports WebP output. On macOS with Python 3 + Pillow:
+Install dependencies and start the Vite development server from `frontend/`:
 
 ```bash
-pip3 install Pillow
-
-python3 -c "
-from PIL import Image
-img = Image.open('source.png')
-img.save('output.webp', 'WebP', quality=50, method=6)
-"
+npm ci
+npm run dev
 ```
 
-Or use an online converter such as [squoosh.app](https://squoosh.app).
-
-#### Requirements
-
-| Requirement | Guideline |
-|---|---|
-| **Format** | SVG for logos/icons, WebP for photos. Avoid PNG/JPEG. |
-| **Location** | Place images in `public/img/`. Reference via static paths (e.g., `/img/logo.svg`). |
-| **Preload** | Add `<link rel="preload">` in `index.html` for above-the-fold images. |
-| **`width` and `height`** | Always set explicit `width` and `height` on `<img>` to prevent layout shifts (CLS). |
-| **`fetchPriority`** | Add `fetchPriority="high"` to above-the-fold hero/LCP images. |
-| **Quality** | For WebP photos, use `quality=50, method=6` for best compression. |
-
-#### Example
-
-```tsx
-{/* SVG logo — scales to any size */}
-<img
-  src="/img/bc-gov-logo.svg"
-  alt="BCGov Logo"
-  width={160}
-  height={62}
-/>
-
-{/* WebP hero image — preloaded in index.html */}
-<img
-  src="/img/landing.webp"
-  alt="Landing cover"
-  fetchPriority="high"
-/>
-```
-
----
-
-## Running E2E Tests Locally
-
-The E2E suite uses **Playwright** with Vite preview as the test server. All tests run against a production build, not the Vite dev server.
-
-### Quick start (mock auth — no real credentials needed)
+Available everyday checks:
 
 ```bash
-# 1. Install Playwright browsers once
+npm run lint
+npm run test:unit
+npm run build
+```
+
+The build runs TypeScript project checks and produces the Vite production
+bundle. See the [frontend architecture overview](https://github.com/bcgov/nr-waste-plus/wiki/Frontend-Architecture-Overview)
+and [frontend structure](https://github.com/bcgov/nr-waste-plus/wiki/Frontend-Structure)
+for the wider application organization. See the
+[authentication guide](https://github.com/bcgov/nr-waste-plus/wiki/Authentication)
+for login and test-authentication details.
+
+## Application architecture
+
+The frontend is a React and TypeScript single-page application built with Vite
+and Carbon Design System components. It presents the reporting and search
+workflows, then uses client-side services to call the backend API. Authentication
+uses the application's Cognito/FAM integration; local browser tests can use the
+mock-auth flow described below.
+
+The UI is organized around application pages and reusable components. Shared
+services handle API requests, while common hooks and state support data used
+across screens. The
+[frontend architecture overview](https://github.com/bcgov/nr-waste-plus/wiki/Frontend-Architecture-Overview)
+and [frontend structure guide](https://github.com/bcgov/nr-waste-plus/wiki/Frontend-Structure)
+describe the main boundaries.
+
+## Playwright browser tests
+
+The Playwright end-to-end suite runs against a production build served by Vite
+preview, not the Vite development server. The default E2E command enables mock
+authentication; it is useful for local browser coverage but does not verify a
+real BCeID or IDIR login. The separate [`cypress/`](../cypress/README.md) module
+contains Gherkin user-journey scenarios.
+
+### Quick start: mock authentication
+
+From `frontend/`:
+
+```bash
+# Install dependencies
+npm ci
+
+# Install Chromium (the E2E pre-script also installs browser dependencies)
 npx playwright install chromium
 
-# 2. Create a .env file with the mock-auth flag and client ID
-cat > .env <<'EOF'
-VITE_MOCK_AUTH=true
-VITE_USER_POOLS_WEB_CLIENT_ID=fake-client-id
-EOF
-
-# 3. Run the full suite
+# Run the full Playwright suite with mock authentication
 npm run test:e2e
 ```
 
-`VITE_MOCK_AUTH=true` injects a synthetic Cognito JWT cookie instead of navigating through the real login flow. This is the recommended mode for local development.
+The test command sets `VITE_MOCK_AUTH=true`; the mock flow uses a synthetic
+Cognito JWT cookie instead of navigating through real login. Local environment
+configuration can be supplied through an ignored `.env` file:
 
-### Environment variables
-
+<!-- markdownlint-disable MD013 -->
 | Variable | Required | Description |
-|---|---|---|
-| `VITE_MOCK_AUTH` | Yes (local) | Set to `true` to skip real login and inject a JWT cookie |
-| `VITE_USER_POOLS_WEB_CLIENT_ID` | Yes | Cognito User Pool client ID (any non-empty string works with mock auth) |
-| `BCEID_USERNAME` / `BCEID_PASSWORD` | Real auth only | BCeID credentials for the real login flow |
-| `IDIR_USERNAME` / `IDIR_PASSWORD` | Real auth only | IDIR credentials for the real login flow |
-| `RUN_A11Y_TESTS` | Optional | Set to `true` to run the `a11y-chromium` project (`*.a11y.test.*` files) |
+| --- | --- | --- |
+| `VITE_MOCK_AUTH` | For local mock-auth runs | Set to `true` to skip real login and inject the mock JWT cookie. |
+| `VITE_USER_POOLS_WEB_CLIENT_ID` | Yes | Cognito User Pool client ID; mock auth accepts any non-empty value. |
+| `BCEID_USERNAME` / `BCEID_PASSWORD` | Real auth only | BCeID credentials for a real login flow. |
+| `IDIR_USERNAME` / `IDIR_PASSWORD` | Real auth only | IDIR credentials for a real login flow. |
+| `RUN_A11Y_TESTS` | Optional | Set to `true` to include the `a11y-chromium` project (`*.a11y.test.*`). |
+<!-- markdownlint-enable MD013 -->
 
-> **Security note:** Credentials are read lazily at runtime and are never stored in Playwright project metadata or serialized into debug dumps.
+> Credentials are read at runtime and are not stored in Playwright project
+> metadata or debug dumps. Keep them in local environment configuration, not
+> source control.
 
 ### Projects and user types
 
-The suite runs each test twice by default — once as a **BCeID** user and once as an **IDIR** user:
+Standard E2E runs cover each test under BCeID and IDIR Playwright projects:
 
+<!-- markdownlint-disable MD013 -->
 | Project | User type | File pattern |
-|---|---|---|
-| `bceid-chromium` | BCeID business user (submitter + viewer roles) | `*.e2e.test.{ts,tsx}` |
+| --- | --- | --- |
+| `bceid-chromium` | BCeID business user (submitter and viewer roles) | `*.e2e.test.{ts,tsx}` |
 | `idir-chromium` | IDIR admin user | `*.e2e.test.{ts,tsx}` |
-| `a11y-chromium` | BCeID (accessibility audits) | `*.a11y.test.{ts,tsx}` |
+| `a11y-chromium` | BCeID accessibility audits; enabled with `RUN_A11Y_TESTS=true` | `*.a11y.test.{ts,tsx}` |
+<!-- markdownlint-enable MD013 -->
 
-Tests tagged `@idir-only` are skipped in `bceid-chromium`; tests tagged `@bceid-only` are skipped in `idir-chromium`.
+Tests tagged `@idir-only` are excluded from `bceid-chromium`; tests tagged
+`@bceid-only` are excluded from `idir-chromium`.
 
-### Running a subset of tests
+### Run a subset
 
 ```bash
-# Run a single test file
+# Run one test file
 npx playwright test src/pages/WasteSearch/search-results.e2e.test.tsx
 
 # Run only BCeID tests
@@ -165,29 +119,40 @@ npx playwright test --project=bceid-chromium
 # Run only IDIR tests
 npx playwright test --project=idir-chromium
 
-# Run a11y tests (requires RUN_A11Y_TESTS=true)
+# Run accessibility tests (requires RUN_A11Y_TESTS=true)
 RUN_A11Y_TESTS=true npx playwright test --project=a11y-chromium
 
-# Run with the Playwright UI (headed, interactive)
+# Open the Playwright UI
 npx playwright test --ui
 ```
 
 ### Reporters
 
-Locally, only the `list` reporter is active (console output). In CI, HTML and JUnit reports are also generated:
+Local runs use the `list` reporter. CI also creates HTML and JUnit reports:
 
 | Environment | Reporters | Output location |
-|---|---|---|
-| Local | `list` | Console only |
-| CI | `list` + `html` + `junit` | `test-reports/report/`, `test-reports/junit/report.xml` |
+| --- | --- | --- |
+| Local | `list` | Console |
+<!-- markdownlint-disable MD013 -->
+| CI | `list`, `html`, and `junit` | HTML: `test-reports/report/`; JUnit: `test-reports/junit/report.xml` |
+<!-- markdownlint-enable MD013 -->
 
 ### Coverage
 
-To collect JavaScript coverage alongside E2E tests:
+Collect JavaScript coverage with the E2E suite and merge its output:
 
 ```bash
 VITE_COVERAGE=true npm run test:e2e
-# Coverage JSON lands in .nyc_output/; merge with:
+# Coverage JSON is written to .nyc_output/; merge it with:
 npm run posttest:coverage
 ```
 
+## Related documentation
+
+- [Frontend architecture overview](https://github.com/bcgov/nr-waste-plus/wiki/Frontend-Architecture-Overview)
+- [Frontend structure](https://github.com/bcgov/nr-waste-plus/wiki/Frontend-Structure)
+- [Frontend structure guidelines][frontend-guidelines]
+- [Authentication](https://github.com/bcgov/nr-waste-plus/wiki/Authentication)
+- [Repository overview](../README.md)
+
+[frontend-guidelines]: https://github.com/bcgov/nr-waste-plus/wiki/Frontend-Structure-Guidelines
