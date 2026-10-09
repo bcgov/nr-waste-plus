@@ -11,3 +11,10 @@ Feature: Keyboard navigation
   Scenario: Clients page exposes its controls to keyboard users
     Given I visit "/clients"
     Then the clients page controls should be keyboard focusable
+
+  @loginAsBCeID
+  Scenario: Skip to main content link moves keyboard focus to the main landmark
+    Given I visit "/search"
+    Then the skip link should target an existing main landmark
+    When I activate the skip link with the keyboard
+    Then focus should be on the main landmark
