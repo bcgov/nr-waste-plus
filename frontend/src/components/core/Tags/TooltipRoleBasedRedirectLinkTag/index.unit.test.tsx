@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
 import TooltipRoleBasedRedirectLinkTag from './index.tsx';
@@ -15,7 +16,7 @@ describe('TooltipRoleBasedRedirectLinkTag', () => {
     vi.clearAllMocks();
   });
 
-  it('renders tooltip wrapper when user has allowed role', async () => {
+  it('uses the link itself as the tooltip trigger for allowed users', async () => {
     const userRoles: Role[] = [Role.ADMIN];
 
     (useAuthModule.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
@@ -37,11 +38,16 @@ describe('TooltipRoleBasedRedirectLinkTag', () => {
 
     const linkTag = screen.getByRole('link', { name: 'Click here' });
     expect(linkTag).toBeTruthy();
+    expect(linkTag.closest('button')).toBeNull();
 
-    // Check that tooltip is in the DOM (as part of DefinitionTooltip)
-    // The tooltip text should be accessible in the accessibility tree
-    const tooltipElement = screen.getByText('This is a helpful tooltip');
-    expect(tooltipElement).toBeTruthy();
+    const tooltipId = linkTag.getAttribute('aria-describedby');
+    expect(tooltipId).toBeTruthy();
+    expect(document.getElementById(tooltipId ?? '')?.getAttribute('role')).toBe('tooltip');
+
+    const user = userEvent.setup();
+    await user.tab();
+    expect(document.activeElement).toBe(linkTag);
+    expect(document.getElementById(tooltipId ?? '')?.getAttribute('aria-hidden')).toBe('false');
   });
 
   it('does NOT render tooltip wrapper when user does NOT have allowed role', async () => {
@@ -68,7 +74,7 @@ describe('TooltipRoleBasedRedirectLinkTag', () => {
     const restrictedSpan = screen.queryByRole('link', { name: 'Restricted Link' });
     expect(restrictedSpan).toBeFalsy();
 
-    // Should NOT have tooltip wrapper (DefinitionTooltip)
+    // Restricted users receive neither a link nor an interactive tooltip.
     expect(screen.queryByRole('tooltip')).toBeFalsy();
   });
 

@@ -1,5 +1,4 @@
-import { DefinitionTooltip } from '@carbon/react';
-import { type FC, useState } from 'react';
+import { type FC } from 'react';
 
 import type { Role } from '@/context/auth/types.ts';
 
@@ -31,26 +30,14 @@ const TooltipRoleBasedRedirectLinkTag: FC<TooltipRoleBasedRedirectLinkTagProps> 
   allowedRoles,
   sameTab,
 }) => {
-  const [isLinkRendered, setIsLinkRendered] = useState(false);
-
-  const roleBasedLink = (
+  return (
     <RoleBasedRedirectLinkTag
       text={text}
       url={url}
       sameTab={sameTab}
       allowedRoles={allowedRoles}
-      onRenderStateChange={setIsLinkRendered}
+      tooltip={tooltip}
     />
-  );
-
-  if (!isLinkRendered) {
-    return roleBasedLink;
-  }
-
-  return (
-    <DefinitionTooltip definition={tooltip} align="top" openOnHover>
-      {roleBasedLink}
-    </DefinitionTooltip>
   );
 };
 

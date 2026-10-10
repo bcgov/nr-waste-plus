@@ -9,6 +9,7 @@ type RoleBasedRedirectLinkTagProps = {
   text: string;
   url: string;
   allowedRoles: Role[];
+  tooltip?: string;
   sameTab?: boolean;
   onRenderStateChange?: (isLink: boolean) => void;
 };
@@ -20,6 +21,7 @@ type RoleBasedRedirectLinkTagProps = {
  * @param props.text The display text.
  * @param props.url The target URL.
  * @param props.allowedRoles Roles allowed to see the link.
+ * @param props.tooltip Optional tooltip description for authorized users.
  * @param props.sameTab When true, opens the URL in the current tab.
  * @param props.onRenderStateChange Optional callback with the current link visibility state.
  * @returns A link for authorized users or plain text otherwise.
@@ -29,6 +31,7 @@ const RoleBasedRedirectLinkTag: FC<RoleBasedRedirectLinkTagProps> = ({
   url,
   sameTab,
   allowedRoles,
+  tooltip,
   onRenderStateChange,
 }) => {
   const { user } = useAuth();
@@ -42,7 +45,7 @@ const RoleBasedRedirectLinkTag: FC<RoleBasedRedirectLinkTagProps> = ({
   }, [isUserAllowed, onRenderStateChange]);
 
   if (isUserAllowed) {
-    return <RedirectLinkTag text={text} url={url} sameTab={sameTab} />;
+    return <RedirectLinkTag text={text} url={url} sameTab={sameTab} tooltip={tooltip} />;
   }
 
   return <span>{text}</span>;
