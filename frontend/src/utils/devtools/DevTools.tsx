@@ -1,39 +1,53 @@
-/* eslint-disable import-x/order */
 import { TanStackDevtools } from '@tanstack/react-devtools';
-import { FormDevtoolsPanel } from '@tanstack/react-form-devtools';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import { type FC } from 'react';
+import { type FC, useCallback, useMemo, useState } from 'react';
 
-import { router } from '@/routes/routeTree';
+import PanelsPreferencePanel from './PanelsPreferencePanel';
+import { DEVTOOLS_PANELS } from './panels';
+import { readDisabledPanelIds, writeDisabledPanelIds } from './panelPreferences';
 
 /**
- * Development-only devtools panel.
+ * Development-only devtools shell.
  *
  * This module is lazy-loaded from `App` behind an `import.meta.env.DEV`
  * guard — Vite statically eliminates this entire chunk from production
  * builds. It must never be imported directly outside of that guard.
+ *
+ * Content panels come from the {@link ./panels | DEVTOOLS_PANELS} registry and
+ * can be toggled live through the always-on "Panels" preference panel; the
+ * disabled set persists across reloads via {@link ./panelPreferences | panelPreferences}.
  */
-const DevTools: FC = () => (
-  <TanStackDevtools
-    plugins={[
+const DevTools: FC = () => {
+  const [disabledIds, setDisabledIds] = useState<readonly string[]>(readDisabledPanelIds);
+
+  const handleTogglePanel = useCallback((id: string) => {
+    setDisabledIds((previous) => {
+      const next = previous.includes(id)
+        ? previous.filter((disabledId) => disabledId !== id)
+        : [...previous, id];
+      writeDisabledPanelIds(next);
+      return next;
+    });
+  }, []);
+
+  const plugins = useMemo(
+    () => [
+      ...DEVTOOLS_PANELS.filter((panel) => !disabledIds.includes(panel.id)).map((panel) => ({
+        name: panel.name,
+        render: panel.render,
+        defaultOpen: panel.defaultOpen,
+      })),
       {
-        name: 'TanStack Form',
-        render: <FormDevtoolsPanel initialIsOpen={false} />,
+        name: 'Panels',
+        render: (
+          <PanelsPreferencePanel panels={DEVTOOLS_PANELS} disabledIds={disabledIds} onToggle={handleTogglePanel} />
+        ),
         defaultOpen: false,
       },
-      {
-        name: 'TanStack Query',
-        render: <ReactQueryDevtools initialIsOpen={false} />,
-        defaultOpen: false,
-      },
-      {
-        name: 'TanStack Router',
-        render: <TanStackRouterDevtools initialIsOpen={false} router={router} />,
-        defaultOpen: false,
-      },
-    ]}
-  />
-);
+    ],
+    [disabledIds, handleTogglePanel],
+  );
+
+  return <TanStackDevtools plugins={plugins} />;
+};
 
 export default DevTools;
