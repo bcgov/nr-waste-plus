@@ -16,7 +16,12 @@ import './index.scss';
  * Roles allowed to create a District Average block (Figma `163:32230`:
  * Admin, District, Area, Submitter). VIEWER is intentionally excluded.
  */
-const CREATION_ROLES: readonly Role[] = [Role.ADMIN, Role.DISTRICT, Role.AREA, Role.SUBMITTER];
+const CREATION_ROLES: ReadonlySet<Role> = new Set([
+  Role.ADMIN,
+  Role.DISTRICT,
+  Role.AREA,
+  Role.SUBMITTER,
+]);
 
 /**
  * Minimum number of search criteria that must be filled before the `Add`
@@ -163,7 +168,7 @@ const BlockCreateAction: FC<BlockCreateActionProps> = ({
     },
   });
 
-  const hasCreationRole = user?.roles?.some((role) => CREATION_ROLES.includes(role.role)) ?? false;
+  const hasCreationRole = user?.roles?.some((role) => CREATION_ROLES.has(role.role)) ?? false;
 
   // Real block rows from the shared list query (one request with the table's).
   // Disabled unless the panel could possibly be shown; an error yields 0, which

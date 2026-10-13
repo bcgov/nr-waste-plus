@@ -6,7 +6,6 @@ import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 @DisplayName("Integration Test | Reporting unit block native query")
 class ReportingUnitBlockRepositoryIntegrationTest extends AbstractTestContainerIntegrationTest {
@@ -14,7 +13,6 @@ class ReportingUnitBlockRepositoryIntegrationTest extends AbstractTestContainerI
   private static final long SEEDED_REPORTING_UNIT_ID = 879L;
 
   @Autowired private ReportingUnitRepository reportingUnitRepository;
-  @Autowired private JdbcTemplate jdbcTemplate;
 
   @Test
   @DisplayName("shouldReturnNativeBlockProjectionValues_inIdOrder")
