@@ -4,13 +4,14 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, type Mock, beforeEach } from 'vitest';
 
-import { ThemeProvider } from './ThemeProvider';
-import { useTheme } from './useTheme';
-
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
+import AnnouncerProvider from '@/context/announcer/AnnouncerProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import { CARBON_THEMES } from '@/context/preference/types';
 import APIs from '@/services/APIs';
+
+import { ThemeProvider } from './ThemeProvider';
+import { useTheme } from './useTheme';
 
 vi.mock('@/services/APIs', () => {
   return {
@@ -37,13 +38,15 @@ const TestComponent = () => {
 const renderWithProviders = () => {
   const qc = makeTestQueryClient();
   render(
-    <QueryClientProvider client={qc}>
-      <PreferenceProvider>
-        <ThemeProvider>
-          <TestComponent />
-        </ThemeProvider>
-      </PreferenceProvider>
-    </QueryClientProvider>,
+    <AnnouncerProvider>
+      <QueryClientProvider client={qc}>
+        <PreferenceProvider>
+          <ThemeProvider>
+            <TestComponent />
+          </ThemeProvider>
+        </PreferenceProvider>
+      </QueryClientProvider>
+    </AnnouncerProvider>,
   );
 };
 
@@ -86,6 +89,36 @@ describe('ThemeContext', () => {
     await user.click(screen.getByText('Toggle'));
     await waitFor(() => {
       expect(screen.getByTestId('theme-value').textContent).toBe('g10');
+    });
+  });
+
+  it('announces the new mode when the theme is toggled', async () => {
+    const user = userEvent.setup();
+    (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'g10' });
+    (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
+    renderWithProviders();
+
+    await user.click(screen.getByText('Toggle'));
+    await waitFor(() => {
+      expect(screen.getByTestId('app-announcer').textContent).toBe('Dark mode enabled');
+    });
+
+    await user.click(screen.getByText('Toggle'));
+    await waitFor(() => {
+      expect(screen.getByTestId('app-announcer').textContent).toBe('Light mode enabled');
+    });
+  });
+
+  it('does not announce during initial preference hydration', async () => {
+    (APIs.user.getUserPreferences as Mock).mockResolvedValueOnce({ theme: 'g100' });
+    renderWithProviders();
+
+    // Let the preference query settle, then confirm nothing was announced.
+    await waitFor(() => {
+      expect(APIs.user.getUserPreferences).toHaveBeenCalled();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('app-announcer').textContent).toBe('');
     });
   });
 

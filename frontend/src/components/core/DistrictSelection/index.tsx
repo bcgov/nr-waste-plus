@@ -1,12 +1,13 @@
 import { Column, Grid, Search, SkeletonPlaceholder } from '@carbon/react';
 import { useState } from 'react';
 
+import { useAnnouncer } from '@/context/announcer/useAnnouncer';
+import { usePreference } from '@/context/preference/usePreference';
+
 import { DESELECT_CLIENT, MIN_CLIENTS_SHOW_SEARCH } from './constants';
 import DistrictItem from './DistrictItem';
 
 import type { DistrictType } from './types';
-
-import { usePreference } from '@/context/preference/usePreference';
 import './index.scss';
 
 type IsSelected<T = string> = (item: DistrictType, userPreferenceValue: T) => boolean;
@@ -20,6 +21,8 @@ type DistrictSelectionProps<T = string> = {
   filterFn: (item: DistrictType, keyword: string) => boolean;
   isSelected?: IsSelected<T>;
   districtTypeConverter?: DistrictTypeConverter<T>;
+  /** Noun used in screen-reader announcements, e.g. 'district' or 'client'. */
+  announcementNoun?: string;
 };
 
 /**
@@ -34,6 +37,7 @@ type DistrictSelectionProps<T = string> = {
  * @param props.filterFn Predicate used to filter visible items.
  * @param props.isSelected Optional custom selection comparator.
  * @param props.districtTypeConverter Optional converter from item to stored preference value.
+ * @param props.announcementNoun Optional noun used in screen-reader announcements (default 'district').
  * @returns A searchable list of selectable items.
  */
 const DistrictSelection = <T,>({
@@ -44,18 +48,28 @@ const DistrictSelection = <T,>({
   filterFn,
   isSelected: isSelectedRaw,
   districtTypeConverter: districtTypeConverterRaw,
+  announcementNoun = 'district',
 }: DistrictSelectionProps<T>) => {
   const [filterText, setFilterText] = useState<string>('');
   const { userPreference, updatePreferences } = usePreference();
+  const { announce } = useAnnouncer();
   const { data, isLoading } = queryHook();
 
   /**
-   * Persists the current selection to user preferences.
+   * Persists the current selection to user preferences and announces it.
    *
    * @param value The preference value to store.
+   * @param itemName Display name of the selected item; omitted when clearing the selection.
    */
-  const storeSelection = (value: unknown) => {
+  const storeSelection = (value: unknown, itemName?: string) => {
     updatePreferences({ [preferenceKey]: value });
+    if (itemName) {
+      announce(`Selected ${announcementNoun}: ${itemName}`);
+    } else {
+      announce(
+        `${announcementNoun.charAt(0).toUpperCase()}${announcementNoun.slice(1)} selection cleared`,
+      );
+    }
   };
 
   const isSelected: IsSelected<T> =
@@ -116,7 +130,7 @@ const DistrictSelection = <T,>({
                   <button
                     type="button"
                     className={`district-list-item-btn${isItemSelected(item) ? ' selected-district' : ''}`}
-                    onClick={() => storeSelection(districtTypeConverter(item))}
+                    onClick={() => storeSelection(districtTypeConverter(item), item.name)}
                   >
                     <DistrictItem client={item} isSelected={isItemSelected(item)} />
                   </button>

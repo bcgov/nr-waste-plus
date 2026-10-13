@@ -1,6 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
+
+import AnnouncerProvider from '@/context/announcer/AnnouncerProvider';
 
 import { LayoutProvider } from './LayoutProvider';
 import { useLayout } from './useLayout';
@@ -27,9 +29,11 @@ const TestComponent = () => {
 
 const renderWithProvider = () => {
   render(
-    <LayoutProvider>
-      <TestComponent />
-    </LayoutProvider>,
+    <AnnouncerProvider>
+      <LayoutProvider>
+        <TestComponent />
+      </LayoutProvider>
+    </AnnouncerProvider>,
   );
 };
 
@@ -64,6 +68,23 @@ describe('LayoutContext', () => {
     expect(value.textContent).toBe('open');
     await user.click(closeBtn);
     expect(value.textContent).toBe('closed');
+  });
+
+  it('announces the profile panel state on toggle and close', async () => {
+    const user = userEvent.setup();
+    renderWithProvider();
+    const announcer = screen.getByTestId('app-announcer');
+    expect(announcer.textContent).toBe('');
+
+    await user.click(screen.getByText('Toggle HeaderPanel'));
+    await waitFor(() => expect(announcer.textContent).toBe('Profile panel opened'));
+
+    await user.click(screen.getByText('Toggle HeaderPanel'));
+    await waitFor(() => expect(announcer.textContent).toBe('Profile panel closed'));
+
+    // closeHeaderPanel on an already-closed panel must not announce again.
+    await user.click(screen.getByText('Close HeaderPanel'));
+    expect(announcer.textContent).toBe('Profile panel closed');
   });
 
   it('throws if useLayout is used outside of LayoutProvider', () => {

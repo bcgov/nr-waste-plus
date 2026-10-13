@@ -39,6 +39,27 @@ describe('RoleBasedRedirectLinkTag', () => {
     expect(linkTag).toHaveProperty('href', 'https://example.com/');
   });
 
+  it('passes tooltip descriptions to the allowed link', () => {
+    (useAuthModule.useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
+      user: { roles: [{ role: Role.ADMIN }] },
+      isLoggedIn: true,
+      isLoading: false,
+    });
+
+    render(
+      <RoleBasedRedirectLinkTag
+        text="Client number"
+        url="https://example.com/client"
+        allowedRoles={[Role.ADMIN]}
+        tooltip="View client details"
+      />,
+    );
+
+    const linkTag = screen.getByRole('link', { name: 'Client number' });
+    expect(linkTag.getAttribute('aria-describedby')).toBeTruthy();
+    expect(linkTag.closest('button')).toBeNull();
+  });
+
   it('renders RedirectLinkTag when user has one of multiple allowed roles (VIEWER)', () => {
     const userRoles: Role[] = [Role.VIEWER, Role.SUBMITTER];
 

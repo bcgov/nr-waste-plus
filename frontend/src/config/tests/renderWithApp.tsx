@@ -3,13 +3,14 @@ import { RouterProvider } from '@tanstack/react-router';
 import { act, render } from '@testing-library/react';
 import { type ReactElement } from 'react';
 
-import { createTestRouter } from './routerTestHelper';
-
+import AnnouncerProvider from '@/context/announcer/AnnouncerProvider';
 import { AuthProvider } from '@/context/auth/AuthProvider';
 import NotificationProvider from '@/context/notification/NotificationProvider';
 import PageTitleProvider from '@/context/pageTitle/PageTitleProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 import ThemeProvider from '@/context/theme/ThemeProvider';
+
+import { createTestRouter } from './routerTestHelper';
 
 export interface RenderWithAppOptions {
   /** Initial URL path for the in-memory router (default: '/'). */
@@ -35,7 +36,7 @@ export function makeTestQueryClient(overrides?: QueryClient): QueryClient {
 
 /**
  * Renders `ui` wrapped in the full application provider stack:
- * `QueryClientProvider → PreferenceProvider → ThemeProvider →
+ * `AnnouncerProvider → QueryClientProvider → PreferenceProvider → ThemeProvider →
  * RouterProvider → AuthProvider → NotificationProvider → PageTitleProvider`
  *
  * Use this for synchronous renders where the component does not trigger async
@@ -55,24 +56,26 @@ export function makeTestQueryClient(overrides?: QueryClient): QueryClient {
 export function renderWithApp(ui: ReactElement, options?: RenderWithAppOptions) {
   const qc = makeTestQueryClient(options?.queryClient);
   return render(
-    <QueryClientProvider client={qc}>
-      <PreferenceProvider>
-        <ThemeProvider>
-          <RouterProvider
-            router={createTestRouter(
-              () => (
-                <AuthProvider>
-                  <NotificationProvider>
-                    <PageTitleProvider>{ui}</PageTitleProvider>
-                  </NotificationProvider>
-                </AuthProvider>
-              ),
-              options?.route,
-            )}
-          />
-        </ThemeProvider>
-      </PreferenceProvider>
-    </QueryClientProvider>,
+    <AnnouncerProvider>
+      <QueryClientProvider client={qc}>
+        <PreferenceProvider>
+          <ThemeProvider>
+            <RouterProvider
+              router={createTestRouter(
+                () => (
+                  <AuthProvider>
+                    <NotificationProvider>
+                      <PageTitleProvider>{ui}</PageTitleProvider>
+                    </NotificationProvider>
+                  </AuthProvider>
+                ),
+                options?.route,
+              )}
+            />
+          </ThemeProvider>
+        </PreferenceProvider>
+      </QueryClientProvider>
+    </AnnouncerProvider>,
   );
 }
 

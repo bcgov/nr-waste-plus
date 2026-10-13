@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it } from 'vitest';
 
 import UnderConstructionTag from './index';
@@ -9,9 +9,11 @@ const renderTag = (props = {}) => {
 };
 
 describe('UnderConstructionTag (browser)', () => {
-  it('renders the default under construction tag', () => {
+  it('renders the default under construction tag', async () => {
     renderTag();
-    screen.getByText(/under construction/i);
+    // The label is inserted after mount so the live region is registered
+    // before its text (screen readers skip simultaneously-created regions).
+    await waitFor(() => screen.getByText(/under construction/i));
   });
 
   it('shows correct tooltip label for page type', () => {

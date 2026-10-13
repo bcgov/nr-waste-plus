@@ -180,6 +180,12 @@ describe('WasteSearchTable Constants', () => {
         const result = ruHeader.renderAs('RU-001');
         render(result);
         expect(screen.getByText('RU-001')).toBeDefined();
+
+        // The tooltip must be attached to the link itself, not a nested
+        // interactive wrapper (axe `nested-interactive`).
+        const link = screen.getByRole('link', { name: 'RU-001' });
+        expect(link.closest('button')).toBeNull();
+        expect(screen.queryAllByRole('button')).toHaveLength(0);
       }
     });
 
@@ -292,7 +298,12 @@ describe('WasteSearchTable Constants', () => {
         if (ruHeader?.renderAs) {
           const result = ruHeader.renderAs('123');
           render(result, { wrapper: createRouterWrapper('/') });
-          expect(await screen.findByText('123')).toBeDefined();
+          const link = await screen.findByRole('link', { name: '123' });
+          expect(link).toBeDefined();
+          // The tooltip must be attached to the link itself, not a nested
+          // interactive wrapper (axe `nested-interactive`).
+          expect(link.closest('button')).toBeNull();
+          expect(screen.queryAllByRole('button')).toHaveLength(0);
           // The internal-route path should not render a legacy external href.
           const legacyLinks = screen
             .queryAllByRole('link')
