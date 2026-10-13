@@ -71,6 +71,9 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   private MockMvc mockMvc;
 
   @Autowired
+  private ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository reportingUnitRepository;
+
+  @Autowired
   private CircuitBreakerRegistry circuitBreakerRegistry;
 
   @Autowired
@@ -122,6 +125,15 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
         .andExpect(status().isCreated());
+
+    var savedEntity = reportingUnitRepository.findById(333L);
+    org.assertj.core.api.Assertions.assertThat(savedEntity).isPresent();
+    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getClientNumber()).isEqualTo("00012797");
+    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getClientLocnCode()).isEqualTo("00");
+    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getOrgUnitNo()).isEqualTo("DND");
+    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getSamplingCode()).isEqualTo("AVG");
+    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getRevision()).isEqualTo(1L);
+    org.assertj.core.api.Assertions.assertThat(savedEntity.get().isDeleted()).isFalse();
   }
 
   @Test
@@ -278,6 +290,41 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .andExpect(jsonPath("$.client.description").value("MINISTRY OF FORESTS"))
         .andExpect(jsonPath("$.clientStatus.code").value("ACT"))
         .andExpect(jsonPath("$.sampling.code").value("S01"))
+        .andExpect(jsonPath("$.district.code").value("DND"));
+  }
+
+  @Test
+  @WithMockJwt
+  @DisplayName("Should Return Reporting Unit Details with Postgres Sampling when Local Record Exists")
+  void shouldReturnReportingUnitDetails_withPostgresSampling_whenLocalRecordExists() throws Exception {
+    var ru = new ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity();
+    ru.setId(55555L);
+    ru.setClientNumber("00012797");
+    ru.setClientLocnCode("00");
+    ru.setOrgUnitNo("DND");
+    ru.setSamplingCode("AVG");
+    ru.setRevision(1L);
+    ru.setDeleted(false);
+    reportingUnitRepository.saveAndFlush(ru);
+
+    legacyApiStub.stubFor(
+        get(urlPathEqualTo("/api/reporting-units/55555")).willReturn(okJson(LEGACY_RU_DETAILS)));
+
+    clientApiStub.stubFor(
+        get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
+            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/api/reporting-units/{id}", 55555L)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.id").value(55555))
+        .andExpect(jsonPath("$.client.code").value("00012797"))
+        .andExpect(jsonPath("$.sampling.code").value("AVG"))
+        .andExpect(jsonPath("$.sampling.description").value("District Average"))
         .andExpect(jsonPath("$.district.code").value("DND"));
   }
 

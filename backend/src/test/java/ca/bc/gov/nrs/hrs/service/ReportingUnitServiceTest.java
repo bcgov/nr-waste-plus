@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.hrs.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
@@ -11,9 +12,11 @@ import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientDto;
 import ca.bc.gov.nrs.hrs.dto.client.ForestClientStatusEnum;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
+import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.ForestClientNotFoundException;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProvider;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
+import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -43,6 +47,12 @@ class ReportingUnitServiceTest {
 
   @Mock
   private DistrictVolumeService districtVolumeService;
+
+  @Mock
+  private ReportingUnitRepository reportingUnitRepository;
+
+  @Mock
+  private CodesService codesService;
 
   @InjectMocks
   private ReportingUnitService reportingUnitService;
@@ -96,6 +106,61 @@ class ReportingUnitServiceTest {
     assertThat(result.district()).isEqualTo(legacyDetails.district());
     assertThat(result.grade().code()).isNull();
     assertThat(result.grade().description()).isNull();
+  }
+
+  @Test
+  @DisplayName("shouldReturnDetailsWithPostgresSampling_whenLocalReportingUnitExists")
+  void shouldReturnDetailsWithPostgresSampling_whenLocalReportingUnitExists() {
+    // Arrange
+    var legacyDetails = buildLegacyDetails(CLIENT_NUMBER);
+    var clientDto = buildClientDto(CLIENT_NUMBER);
+
+    var localEntity = new ReportingUnitEntity();
+    localEntity.setId(RU_ID);
+    localEntity.setSamplingCode("AVG");
+
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyDetails);
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(clientDto));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(localEntity));
+    when(codesService.getSamplingCodes())
+        .thenReturn(List.of(new CodeDescriptionDto("AVG", "District Average")));
+
+    // Act
+    var result = reportingUnitService.getReportingUnitDetails(RU_ID);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.sampling().code()).isEqualTo("AVG");
+    assertThat(result.sampling().description()).isEqualTo("District Average");
+  }
+
+  @Test
+  @DisplayName("shouldReturnFallbackSampling_whenCodesServiceFailsOrEmpty")
+  void shouldReturnFallbackSampling_whenCodesServiceFailsOrEmpty() {
+    // Arrange
+    var legacyDetails = buildLegacyDetails(CLIENT_NUMBER);
+    var clientDto = buildClientDto(CLIENT_NUMBER);
+
+    var localEntity = new ReportingUnitEntity();
+    localEntity.setId(RU_ID);
+    localEntity.setSamplingCode("AVG");
+
+    when(legacyApiProvider.getReportingUnitDetails(RU_ID)).thenReturn(legacyDetails);
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(clientDto));
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(localEntity));
+    when(codesService.getSamplingCodes()).thenThrow(new RuntimeException("Codes service down"));
+
+    // Act
+    var result = reportingUnitService.getReportingUnitDetails(RU_ID);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.sampling().code()).isEqualTo("AVG");
+    assertThat(result.sampling().description()).isEqualTo("District Average");
   }
 
   @Test
@@ -180,6 +245,43 @@ class ReportingUnitServiceTest {
     // Assert
     assertThat(response).isNotNull();
     assertThat(response).isEqualTo(333L);
+
+    ArgumentCaptor<ReportingUnitEntity> captor = ArgumentCaptor.forClass(ReportingUnitEntity.class);
+    verify(reportingUnitRepository).save(captor.capture());
+    ReportingUnitEntity savedEntity = captor.getValue();
+    assertThat(savedEntity.getId()).isEqualTo(333L);
+    assertThat(savedEntity.getClientNumber()).isEqualTo(CLIENT_NUMBER);
+    assertThat(savedEntity.getClientLocnCode()).isEqualTo("00");
+    assertThat(savedEntity.getOrgUnitNo()).isEqualTo("DND");
+    assertThat(savedEntity.getSamplingCode()).isEqualTo("AVG");
+    assertThat(savedEntity.getRevision()).isEqualTo(1L);
+    assertThat(savedEntity.isDeleted()).isFalse();
+  }
+
+  @Test
+  @DisplayName("shouldThrowAndLogError_whenPostgresPersistenceFails")
+  void shouldThrowAndLogError_whenPostgresPersistenceFails() {
+    // Arrange
+    var request =
+        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
+            CLIENT_NUMBER, "DND", "AVG", null);
+
+    when(legacyApiProvider.searchReportingUnit(
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+        .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 1), 0));
+
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(buildClientDto(CLIENT_NUMBER)));
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of());
+
+    when(legacyApiProvider.createReportingUnit(request)).thenReturn(333L);
+    when(reportingUnitRepository.save(any(ReportingUnitEntity.class)))
+        .thenThrow(new RuntimeException("Database error"));
+
+    // Act & Assert
+    assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage("Database error");
   }
 
   @Test
@@ -229,6 +331,7 @@ class ReportingUnitServiceTest {
 
     // Assert
     assertThat(response).isEqualTo(333L);
+    verify(reportingUnitRepository).save(any(ReportingUnitEntity.class));
   }
 
   @Test
