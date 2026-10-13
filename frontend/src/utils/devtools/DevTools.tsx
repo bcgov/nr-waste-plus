@@ -8,9 +8,11 @@ import { readDisabledPanelIds, writeDisabledPanelIds } from './panelPreferences'
 /**
  * Development-only devtools shell.
  *
- * This module is lazy-loaded from `App` behind an `import.meta.env.DEV`
- * guard — Vite statically eliminates this entire chunk from production
- * builds. It must never be imported directly outside of that guard.
+ * This module is statically imported by `App` and rendered only when
+ * `import.meta.env.DEV && MODE !== 'test'` — Vite folds the condition in
+ * production builds and tree-shakes this entire module graph away. The
+ * panel registry keeps this possible by staying side-effect-free.
+ * It must never be rendered outside of that guard.
  *
  * Content panels come from the {@link ./panels | DEVTOOLS_PANELS} registry and
  * can be toggled live through the always-on "Panels" preference panel; the
@@ -38,7 +40,7 @@ const DevTools: FC = () => {
       })),
       {
         name: 'Panels',
-        render: (
+        render: () => (
           <PanelsPreferencePanel panels={DEVTOOLS_PANELS} disabledIds={disabledIds} onToggle={handleTogglePanel} />
         ),
         defaultOpen: false,
