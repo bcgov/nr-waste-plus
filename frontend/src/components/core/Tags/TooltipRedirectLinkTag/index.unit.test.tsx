@@ -9,17 +9,20 @@ vi.mock('@/components/core/Tags/RedirectLinkTag', () => ({
     url,
     sameTab,
     clearSearch,
+    tooltip,
   }: {
     text: string;
     url: string;
     sameTab?: boolean;
     clearSearch?: boolean;
+    tooltip?: string;
   }) => (
     <a
       href={url}
       target={sameTab ? '_self' : '_blank'}
       data-testid="redirect-link-tag"
       data-clear-search={clearSearch}
+      data-tooltip={tooltip}
     >
       {text}
     </a>
@@ -31,7 +34,7 @@ describe('TooltipRedirectLinkTag', () => {
     vi.clearAllMocks();
   });
 
-  it('renders link with tooltip', () => {
+  it('shouldForwardTooltipToRedirectLinkTag_whenTooltipIsProvided', () => {
     render(
       <TooltipRedirectLinkTag
         tooltip="Click to open link"
@@ -43,13 +46,10 @@ describe('TooltipRedirectLinkTag', () => {
     const linkTag = screen.getByTestId('redirect-link-tag');
     expect(linkTag).toBeTruthy();
     expect(linkTag).toHaveProperty('href', 'https://example.com/');
-
-    // Check that tooltip text is present
-    const tooltipText = screen.getByText('Click to open link');
-    expect(tooltipText).toBeTruthy();
+    expect((linkTag as HTMLAnchorElement).dataset['tooltip']).toBe('Click to open link');
   });
 
-  it('passes text prop to link', () => {
+  it('shouldPassTextPropToRedirectLinkTag', () => {
     render(
       <TooltipRedirectLinkTag
         tooltip="Helpful tooltip"
@@ -62,7 +62,7 @@ describe('TooltipRedirectLinkTag', () => {
     expect(linkTag.textContent).toBe('My Custom Link');
   });
 
-  it('passes url prop to link', () => {
+  it('shouldPassUrlPropToRedirectLinkTag', () => {
     const testUrl = 'https://specific-domain.com/path';
 
     render(<TooltipRedirectLinkTag tooltip="Visit site" text="Link text" url={testUrl} />);
@@ -71,7 +71,7 @@ describe('TooltipRedirectLinkTag', () => {
     expect(linkTag).toHaveProperty('href', testUrl);
   });
 
-  it('respects sameTab prop - opens in new tab by default', () => {
+  it('shouldOpenInNewTabByDefault_whenSameTabIsNotSet', () => {
     render(
       <TooltipRedirectLinkTag
         tooltip="Opens in new tab"
@@ -84,7 +84,7 @@ describe('TooltipRedirectLinkTag', () => {
     expect(linkTag).toHaveProperty('target', '_blank');
   });
 
-  it('respects sameTab prop - opens in same tab when specified', () => {
+  it('shouldOpenInSameTab_whenSameTabIsTrue', () => {
     render(
       <TooltipRedirectLinkTag
         tooltip="Opens in same tab"
@@ -98,21 +98,24 @@ describe('TooltipRedirectLinkTag', () => {
     expect(linkTag).toHaveProperty('target', '_self');
   });
 
-  it('renders tooltip with correct definition text', () => {
+  it('shouldForwardEveryTooltipValue_whenTooltipIsProvided', () => {
     const tooltipText = 'This is a detailed explanation';
 
     render(<TooltipRedirectLinkTag tooltip={tooltipText} text="Link" url="https://example.com" />);
 
-    const tooltip = screen.getByText(tooltipText);
-    expect(tooltip).toBeTruthy();
+    const linkTag = screen.getByTestId('redirect-link-tag');
+    expect((linkTag as HTMLAnchorElement).dataset['tooltip']).toBe(tooltipText);
   });
 
-  it('renders tooltip wrapper around link', () => {
+  it('shouldNotRenderNestedInteractiveWrapper_whenTooltipIsProvided', () => {
     render(
       <TooltipRedirectLinkTag tooltip="Help text" text="Click me" url="https://example.com" />,
     );
 
-    // DefinitionTooltip from Carbon should be in the component tree
+    // The tooltip must be attached to the link itself. Carbon's DefinitionTooltip
+    // renders a `button.cds--definition-term` trigger that nests the anchor and
+    // violates the axe `nested-interactive` rule.
+    expect(screen.queryByRole('button')).toBeNull();
     expect(screen.getByTestId('redirect-link-tag')).toBeTruthy();
   });
 
