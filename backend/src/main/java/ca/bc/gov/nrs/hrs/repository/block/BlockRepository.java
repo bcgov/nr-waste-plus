@@ -25,10 +25,14 @@ public interface BlockRepository extends JpaRepository<BlockEntity, Long> {
                  CASE
                    WHEN da.district_average_block_id IS NULL
                      OR (da.coast_ground_based_area_ha IS NULL
-                         AND da.coast_helicopter_area_ha IS NULL)
+                         AND da.coast_helicopter_area_ha IS NULL
+                         AND da.cable_yarding_area_ha IS NULL
+                         AND da.skyline_logging_area_ha IS NULL)
                      THEN NULL
                    ELSE COALESCE(da.coast_ground_based_area_ha, 0)
                         + COALESCE(da.coast_helicopter_area_ha, 0)
+                        + COALESCE(da.cable_yarding_area_ha, 0)
+                        + COALESCE(da.skyline_logging_area_ha, 0)
                  END AS "totalWasteAreaHa",
                  selected_submitter.submitter_name AS submitter,
                  latest_status.status AS "rawStatus",

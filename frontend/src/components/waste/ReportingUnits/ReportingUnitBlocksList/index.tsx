@@ -123,7 +123,9 @@ const ReportingUnitBlocksList: FC<ReportingUnitBlocksListProps> = ({
             size: pageSize,
             number: page,
             totalElements: (content ?? EMPTY_BLOCKS_CONTENT).page.totalElements,
-            totalPages: (content ?? EMPTY_BLOCKS_CONTENT).page.totalPages,
+            // Derived from the rows actually available, not the backend's
+            // single-page `totalPages`, so the metadata matches the local slice.
+            totalPages: Math.ceil(rows.length / pageSize) || 1,
           },
         }}
         loading={isLoading}

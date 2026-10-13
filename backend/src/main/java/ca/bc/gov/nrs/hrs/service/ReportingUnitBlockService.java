@@ -15,7 +15,7 @@ import ca.bc.gov.nrs.hrs.service.block.BlockService;
 import io.micrometer.observation.annotation.Observed;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -178,6 +178,6 @@ public class ReportingUnitBlockService {
   }
 
   private static LocalDateTime toLocalDateTime(Instant instant) {
-    return instant == null ? null : LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+    return instant == null ? null : LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
   }
 }

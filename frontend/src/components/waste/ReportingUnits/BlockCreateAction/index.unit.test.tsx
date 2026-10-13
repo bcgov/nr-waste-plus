@@ -110,7 +110,7 @@ function mockAuthWithRoles(roles: Role[]) {
  * @param blockType - Block type stamped on each synthesized row.
  * @returns A minimal `useReportingUnitBlocksQuery` result.
  */
-function createMockBlocksQuery(totalElements = 0, blockType = 'DISTRICT_AVERAGE') {
+function createMockBlocksQuery(totalElements = 0, blockType: string | null = 'DISTRICT_AVERAGE') {
   const content = Array.from({ length: totalElements }, (_, index) => ({
     id: 1000 + index,
     reportingUnitId: 468,
@@ -199,6 +199,15 @@ describe('BlockCreateAction', () => {
       await renderAction();
 
       expect(screen.getByTestId('block-create-action')).toBeTruthy();
+    });
+
+    it('shouldRenderNothing_whenExistingLegacyBlockHasNullBlockType', async () => {
+      // Legacy (Oracle) rows carry a null block type; they still count against
+      // the single-block limit, so creation must stay hidden for them too.
+      vi.mocked(useReportingUnitBlocksQuery).mockReturnValue(createMockBlocksQuery(1, null));
+      await renderAction();
+
+      expect(screen.queryByTestId('block-create-action')).toBeNull();
     });
 
     it('shouldRenderNothing_whenReportingUnitIsClosed [TC-C03]', async () => {

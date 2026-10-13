@@ -109,9 +109,10 @@ class BlockListRepositoriesIntegrationTest extends AbstractTestContainerIntegrat
               """
               INSERT INTO hrs.district_average_block
                   (district_average_block_id, coast_ground_based_area_ha,
-                   coast_helicopter_area_ha, has_dispersed_retention, is_heli_logging,
+                   coast_helicopter_area_ha, cable_yarding_area_ha, skyline_logging_area_ha,
+                   has_dispersed_retention, is_heli_logging,
                    created_by, updated_by)
-              VALUES (?, 12.125, 3.375, FALSE, FALSE, ?, ?)
+              VALUES (?, 12.125, 3.375, 2.250, 4.000, FALSE, FALSE, ?, ?)
               """,
               firstBlock.getId(),
               actor,
@@ -164,7 +165,7 @@ class BlockListRepositoriesIntegrationTest extends AbstractTestContainerIntegrat
           assertThat(blockListRows.getFirst().getCutBlockId()).isEqualTo("CUT-PRIMARY");
           assertThat(blockListRows.getFirst().getTimberMark()).isEqualTo("TM-PRIMARY");
           assertThat(blockListRows.getFirst().getTotalWasteAreaHa())
-              .isEqualByComparingTo("15.500");
+              .isEqualByComparingTo("21.750");
           assertThat(blockListRows.getFirst().getSubmitter()).isEqualTo("First");
           assertThat(blockListRows.getFirst().getRawStatus()).isEqualTo("SUBMITTED");
           assertThat(blockListRows.getFirst().getUpdatedAt()).isNotNull();
@@ -173,6 +174,49 @@ class BlockListRepositoriesIntegrationTest extends AbstractTestContainerIntegrat
           assertThat(blockListRows.get(1).getSubmitter()).isNull();
           assertThat(blockListRows.get(1).getRawStatus()).isNull();
 
+        });
+  }
+
+  @Test
+  @DisplayName("shouldSumCableYardingAndSkylineAreas_whenGroundAndHelicopterAreNull")
+  void shouldSumCableYardingAndSkylineAreas_whenGroundAndHelicopterAreNull() {
+    String actor = "test-block-list-cable-" + UUID.randomUUID();
+    fixtureActor = actor;
+
+    transactionTemplate.executeWithoutResult(
+        transaction -> {
+          ReportingUnitEntity reportingUnitToSave = new ReportingUnitEntity();
+          reportingUnitToSave.setClientNumber("00012797");
+          reportingUnitToSave.setClientLocnCode(
+              "TEST-" + UUID.randomUUID().toString().substring(0, 8));
+          reportingUnitToSave.setOrgUnitNo("DND");
+          reportingUnitToSave.setCreatedBy(actor);
+          reportingUnitToSave.setUpdatedBy(actor);
+          ReportingUnitEntity reportingUnit =
+              reportingUnitRepository.saveAndFlush(reportingUnitToSave);
+          fixtureReportingUnitId = reportingUnit.getId();
+
+          BlockEntity block =
+              blockRepository.saveAndFlush(block(reportingUnit.getId(), actor, true));
+
+          // Only cable yarding + skyline logging recorded: the aggregate must not
+          // collapse to NULL when the coast ground/helicopter columns are empty.
+          jdbcTemplate.update(
+              """
+              INSERT INTO hrs.district_average_block
+                  (district_average_block_id, cable_yarding_area_ha, skyline_logging_area_ha,
+                   has_dispersed_retention, is_heli_logging, created_by, updated_by)
+              VALUES (?, 2.750, 5.000, FALSE, FALSE, ?, ?)
+              """,
+              block.getId(),
+              actor,
+              actor);
+
+          List<BlockListItemProjection> blockListRows =
+              blockRepository.findBlockListItemsByReportingUnitId(reportingUnit.getId());
+          assertThat(blockListRows).hasSize(1);
+          assertThat(blockListRows.getFirst().getTotalWasteAreaHa())
+              .isEqualByComparingTo("7.750");
         });
   }
 

@@ -23,7 +23,7 @@ import ca.bc.gov.nrs.hrs.service.block.BlockService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -134,7 +134,7 @@ class ReportingUnitBlockServiceTest {
                 null,
                 "Alex Example",
                 new BlockListItemDto.Status("APP", "Approved"),
-                LocalDateTime.ofInstant(updatedAt, ZoneId.systemDefault()),
+                LocalDateTime.ofInstant(updatedAt, ZoneOffset.UTC),
                 "DISTRICT_AVERAGE"));
     assertThat(result.getTotalElements()).isEqualTo(1);
     assertThat(result.getSize()).isEqualTo(10);

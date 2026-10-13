@@ -171,7 +171,9 @@ const BlockCreateAction: FC<BlockCreateActionProps> = ({
   // The count filters by the rule's own block type (and live status — the list
   // endpoint only returns live rows): totalElements counts every block for the
   // unit, so a block of a different type must not hide District Average
-  // creation (#1254).
+  // creation (#1254). Legacy rows carry a null block type, so they are counted
+  // too — otherwise an existing legacy block would leave the single-block limit
+  // unenforced.
   const blocksQuery = useReportingUnitBlocksQuery(ruId, {
     enabled:
       featureFlags['block-creation-enabled'] &&
@@ -181,7 +183,7 @@ const BlockCreateAction: FC<BlockCreateActionProps> = ({
       !createdBlock,
   });
   const blockCount = (blocksQuery.data?.content ?? []).filter(
-    (row) => row.blockType === rule?.blockType,
+    (row) => row.blockType === null || row.blockType === rule?.blockType,
   ).length;
 
   const existingBlockCount = blockCount + (createdBlock ? 1 : 0);
