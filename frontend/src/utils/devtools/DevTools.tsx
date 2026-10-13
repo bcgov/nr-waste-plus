@@ -8,10 +8,10 @@ import { readDisabledPanelIds, writeDisabledPanelIds } from './panelPreferences'
 /**
  * Development-only devtools shell.
  *
- * This module is statically imported by `App` and rendered only when
- * `import.meta.env.DEV && MODE !== 'test'` — Vite folds the condition in
- * production builds and tree-shakes this entire module graph away. The
- * panel registry keeps this possible by staying side-effect-free.
+ * This module is statically imported by the root layout (`routeTree.tsx`) and
+ * rendered only when `import.meta.env.DEV && MODE !== 'test'` — Vite folds the
+ * condition in production builds and tree-shakes this entire module graph
+ * away. The panel registry keeps this possible by staying side-effect-free.
  * It must never be rendered outside of that guard.
  *
  * Content panels come from the {@link ./panels | DEVTOOLS_PANELS} registry and

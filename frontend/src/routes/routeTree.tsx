@@ -17,6 +17,7 @@ import { useAuth } from '@/context/auth/useAuth';
 import { usePageTitle } from '@/context/pageTitle/usePageTitle';
 import GlobalErrorPage from '@/pages/GlobalError';
 import NotFoundPage from '@/pages/NotFound';
+import DevTools from '@/utils/devtools/DevTools';
 
 /**
  * Auth-aware not-found handler registered as `notFoundComponent` on the root route.
@@ -54,6 +55,11 @@ function NotFoundRedirect() {
  * matched segment's `routeId`. It then looks up that `routeId` against the
  * combined `ROUTES` and `SYSTEM_ROUTES` arrays (matching on `r.path`) and
  * calls `setPageTitle` with the corresponding route `id`.
+ *
+ * Also hosts the development-only devtools so they render inside the router
+ * context (the router panel resolves the router via `useRouter`) — the shell
+ * is a sibling of the outlet, not a child of `AppRouter`, which owns the
+ * `RouterProvider`.
  */
 function RootLayout() {
   const { setPageTitle } = usePageTitle();
@@ -74,7 +80,12 @@ function RootLayout() {
     }
   }, [matches, setPageTitle]);
 
-  return <Outlet />;
+  return (
+    <>
+      <Outlet />
+      {import.meta.env.DEV && import.meta.env.MODE !== 'test' && <DevTools />}
+    </>
+  );
 }
 
 /** The application root route. Hosts {@link RootLayout} and {@link NotFoundRedirect}. */
