@@ -3,6 +3,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { type ReactElement } from 'react';
 
+import NotificationsPanel from './NotificationsPanel';
 import { router } from '@/routes/routeTree';
 
 /**
@@ -48,6 +49,12 @@ export const DEVTOOLS_PANELS: readonly DevtoolsPanelDefinition[] = [
     id: 'router',
     name: 'TanStack Router',
     render: <TanStackRouterDevtools initialIsOpen={false} router={router} />,
+    defaultOpen: false,
+  },
+  {
+    id: 'notifications',
+    name: 'Notifications',
+    render: <NotificationsPanel />,
     defaultOpen: false,
   },
 ];
