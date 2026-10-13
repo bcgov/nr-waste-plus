@@ -35,8 +35,21 @@ const toEventType = (kind: NotificationContent['kind']): EventType => {
   return kind ?? 'info';
 };
 
+/**
+ * Reconstructs the dispatcher event for a queued toast.
+ *
+ * A toast only reaches the queue because `resolveDisplayMode` returned
+ * `toast` at dispatch time. When `scope` is set, the original event
+ * necessarily carried `eventTarget` plus an explicit `displayMode: 'toast'`
+ * (a target without it resolves to inline and never becomes a toast), so both
+ * fields are restored — dropping them would re-dispatch the event unscoped or
+ * inline and change its dedupe signature. Unscoped toasts re-resolve to
+ * `toast` from the omitted fields alone.
+ */
 const toEvent = (content: NotificationContent): GlobalEvent => ({
   description: content.subtitle ?? '',
+  displayMode: content.scope ? 'toast' : undefined,
+  eventTarget: content.scope,
   eventType: toEventType(content.kind),
   timeout: content.timeout,
   title: content.title,

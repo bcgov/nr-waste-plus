@@ -1,19 +1,29 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { act } from 'react';
+import { act, useEffect } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { dispatchNotificationEvent } from '@/context/notification/eventBridge';
 import NotificationProvider from '@/context/notification/NotificationProvider';
+import { useNotification } from '@/context/notification/useNotification';
+import { type GlobalEvent } from '@/hooks/useNotificationEvents/types';
 
 import NotificationsPanel from './NotificationsPanel';
 
-const renderPanel = () =>
-  render(
+const renderPanel = (probe?: (event: GlobalEvent) => void) => {
+  const EventProbe = () => {
+    const { subscribe } = useNotification();
+    useEffect(() => subscribe('info', (event) => probe?.(event)), [subscribe]);
+    return null;
+  };
+
+  return render(
     <NotificationProvider>
+      {probe ? <EventProbe /> : null}
       <NotificationsPanel />
     </NotificationProvider>,
   );
+};
 
 const fireToastEvent = () => {
   act(() => {
@@ -85,6 +95,40 @@ describe('NotificationsPanel', () => {
 
     await waitFor(() => {
       expect(within(logSection).getAllByRole('listitem')).toHaveLength(2);
+    });
+    expect(within(queueSection).getAllByRole('listitem')).toHaveLength(1);
+  });
+
+  it('re-fires a targeted toast preserving its scope and toast display mode', async () => {
+    const user = userEvent.setup();
+    const seen: GlobalEvent[] = [];
+    renderPanel((event) => seen.push(event));
+
+    act(() => {
+      dispatchNotificationEvent({
+        title: 'Targeted Toast',
+        description: 'Scoped toast',
+        eventType: 'info',
+        eventTarget: 'page-scope',
+        displayMode: 'toast',
+      });
+    });
+
+    const queueSection = await screen.findByRole('region', { name: 'Live toast queue' });
+    await user.click(
+      within(queueSection).getByRole('button', { name: 'Re-fire notification Targeted Toast' }),
+    );
+
+    await waitFor(() => {
+      expect(seen).toHaveLength(2);
+    });
+    expect(seen[1]).toEqual({
+      title: 'Targeted Toast',
+      description: 'Scoped toast',
+      eventType: 'info',
+      eventTarget: 'page-scope',
+      displayMode: 'toast',
+      timeout: 5000,
     });
     expect(within(queueSection).getAllByRole('listitem')).toHaveLength(1);
   });
