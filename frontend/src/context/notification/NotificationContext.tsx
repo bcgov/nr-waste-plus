@@ -24,6 +24,11 @@ export type NotificationContent = {
 export type NotificationContextData = {
   clearEvents: (eventTarget?: string) => void;
   display: (content: NotificationContent) => void;
+  /**
+   * Snapshot of the live toast queue, oldest first. Only the first entry is
+   * rendered as a toast by the provider; the rest wait their turn.
+   */
+  notificationQueue: readonly NotificationContent[];
   sendEvent: (event: GlobalEvent) => void;
   subscribe: (eventName: EventType, listener: EventListener) => () => void;
   unsubscribe: (eventName: EventType, listener: EventListener) => void;
