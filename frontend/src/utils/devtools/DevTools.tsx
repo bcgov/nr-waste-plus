@@ -10,8 +10,8 @@ import { router } from '@/routes/routeTree';
 /**
  * Development-only devtools panel.
  *
- * This module is lazy-loaded behind an `import.meta.env.DEV` guard in
- * {@link App} — Vite statically eliminates this entire chunk from production
+ * This module is lazy-loaded from `App` behind an `import.meta.env.DEV`
+ * guard — Vite statically eliminates this entire chunk from production
  * builds. It must never be imported directly outside of that guard.
  */
 const DevTools: FC = () => (
