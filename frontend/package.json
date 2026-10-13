@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b tsconfig.app.json && vite build",
-    "lint": "eslint ./src --ext .ts,.tsx",
+    "lint": "npm run lint:scss && eslint ./src --ext .ts,.tsx",
     "stub": "dotenv -- wiremock --enable-stub-cors --global-response-templating --port 8080 --https-port 8181 --root-dir ./stub --verbose --permitted-system-keys=\"VITE_USER_POOLS_WEB_CLIENT_ID\"",
     "stub:login": "dotenv -- wiremock --enable-stub-cors --global-response-templating --port 8180 --https-port 8181 --root-dir ./stub --verbose --permitted-system-keys=\"VITE_USER_POOLS_WEB_CLIENT_ID\"",
     "preview": "npm run dev & npm run stub",
@@ -32,7 +32,8 @@
     "test:coverage": "npm run test:unit; UNIT=$?; npm run test:e2e; E2E=$?; exit $((UNIT||E2E))",
     "coverage:merge": "node scripts/merge-coverage.cjs",
     "test:scripts": "node --test scripts/*.test.cjs",
-    "posttest:coverage": "npm run coverage:merge"
+    "posttest:coverage": "npm run coverage:merge",
+    "lint:scss": "stylelint \"src/**/*.scss\""
   },
   "dependencies": {
     "@bcgov-nr/nr-theme": "^1.8.9",
@@ -94,6 +95,8 @@
     "playwright": "1.64.0",
     "prettier": "^3.7.4",
     "sass": "^1.104.1",
+    "stylelint": "^17.16.0",
+    "stylelint-config-standard-scss": "^17.0.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.52.0",
     "v8-to-istanbul": "^9.3.0",

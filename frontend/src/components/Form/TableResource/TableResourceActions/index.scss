@@ -7,7 +7,7 @@
   .#{vars.$bcgov-prefix}--popover, .#{vars.$bcgov-prefix}--popover-content {
     max-width: 8.5rem;
     white-space: normal;
-    word-break: break-word;
+    overflow-wrap: break-word;
     z-index: 99999;
   }
 }

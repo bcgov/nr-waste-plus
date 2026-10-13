@@ -15,7 +15,7 @@
   .card-item-content {
     @include type.type-style('body-compact-01');
     width: 100%;
-    word-break: break-word;
+    overflow-wrap: break-word;
 
     .#{vars.$bcgov-prefix}--skeleton {
       width: 100%;
