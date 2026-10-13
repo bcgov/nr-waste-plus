@@ -159,8 +159,8 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   }, [sendEvent]);
 
   const contextValue = useMemo(
-    () => ({ clearEvents, display, sendEvent, subscribe, unsubscribe }),
-    [clearEvents, display, sendEvent, subscribe, unsubscribe],
+    () => ({ clearEvents, display, notificationQueue, sendEvent, subscribe, unsubscribe }),
+    [clearEvents, display, notificationQueue, sendEvent, subscribe, unsubscribe],
   );
 
   return (
