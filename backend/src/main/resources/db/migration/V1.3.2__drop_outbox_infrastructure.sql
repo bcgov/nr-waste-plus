@@ -19,29 +19,39 @@
 -- V1.3.1 lines 180-185.
 -- ============================================================================
 
--- 1. Trigger first: bound to hrs.outbox_event; explicit drop keeps the
---    script convergent even if the table were already gone.
-DROP TRIGGER IF EXISTS trg_outbox_event_shared_audit ON hrs.outbox_event;
+-- The trigger and constraint drops reference the hrs.outbox_event relation,
+-- and PostgreSQL's IF EXISTS suppresses only the named object, not a missing
+-- table — a rerun or partial-state repair with the table already gone would
+-- fail with "relation does not exist". Guarding on to_regclass keeps the
+-- script convergent for both states, as documented above.
 
--- 2. Indexes before the table (belt-and-braces: DROP TABLE would remove
---    them, but explicit drops keep partial states idempotent).
-DROP INDEX IF EXISTS hrs.idx_outbox_actionable;
-DROP INDEX IF EXISTS hrs.idx_outbox_lease;
+DO $$
+BEGIN
+  IF to_regclass('hrs.outbox_event') IS NOT NULL THEN
+    -- 1. Trigger first: bound to hrs.outbox_event.
+    DROP TRIGGER IF EXISTS trg_outbox_event_shared_audit ON hrs.outbox_event;
 
--- 3. Constraints before the table (same rationale as the indexes).
-ALTER TABLE hrs.outbox_event
-    DROP CONSTRAINT IF EXISTS outbox_event_event_uq;
-ALTER TABLE hrs.outbox_event
-    DROP CONSTRAINT IF EXISTS outbox_event_attempt_count_ck;
-ALTER TABLE hrs.outbox_event
-    DROP CONSTRAINT IF EXISTS outbox_event_status_ck;
-ALTER TABLE hrs.outbox_event
-    DROP CONSTRAINT IF EXISTS outbox_event_pk;
+    -- 2. Indexes before the table (belt-and-braces: DROP TABLE would remove
+    --    them, but explicit drops keep partial states idempotent).
+    DROP INDEX IF EXISTS hrs.idx_outbox_actionable;
+    DROP INDEX IF EXISTS hrs.idx_outbox_lease;
 
--- 4. Table: CASCADE is unnecessary — no FK edges reference hrs.outbox_event.
-DROP TABLE IF EXISTS hrs.outbox_event;
+    -- 3. Constraints before the table (same rationale as the indexes).
+    ALTER TABLE hrs.outbox_event
+        DROP CONSTRAINT IF EXISTS outbox_event_event_uq;
+    ALTER TABLE hrs.outbox_event
+        DROP CONSTRAINT IF EXISTS outbox_event_attempt_count_ck;
+    ALTER TABLE hrs.outbox_event
+        DROP CONSTRAINT IF EXISTS outbox_event_status_ck;
+    ALTER TABLE hrs.outbox_event
+        DROP CONSTRAINT IF EXISTS outbox_event_pk;
 
--- 5. Sequence last (OWNED BY hrs.outbox_event.outbox_event_id, so
---    PostgreSQL already dropped it with the table; the explicit IF EXISTS
---    drop documents intent and tolerates either state).
+    -- 4. Table: CASCADE is unnecessary — no FK edges reference hrs.outbox_event.
+    DROP TABLE hrs.outbox_event;
+  END IF;
+END $$;
+
+-- 5. Sequence last: OWNED BY hrs.outbox_event.outbox_event_id, so PostgreSQL
+--    already dropped it with the table in the normal path; the explicit
+--    IF EXISTS drop documents intent and tolerates the orphaned-sequence edge.
 DROP SEQUENCE IF EXISTS hrs.outbox_event_id_seq;
