@@ -127,6 +127,16 @@ describe('queryKeys', () => {
     });
   });
 
+  describe('block', () => {
+    it('shouldBuildCreateKey', () => {
+      expect(queryKeys.block.create()).toEqual(['block', 'create']);
+    });
+
+    it('shouldBuildReportingUnitScopedListKey', () => {
+      expect(queryKeys.block.list(468)).toEqual(['block', 'list', 468]);
+    });
+  });
+
   describe('table', () => {
     it('should build sorting key', () => {
       const sort = { ruNumber: 'ASC' as const };

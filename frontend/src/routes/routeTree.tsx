@@ -9,15 +9,15 @@ import {
 } from '@tanstack/react-router';
 import { useEffect } from 'react';
 
-import { applyGuards } from './applyGuards';
-import { ROUTES, SYSTEM_ROUTES, type RouteDescription } from './routePaths';
-
 import Layout from '@/components/Layout';
 import { useAuth } from '@/context/auth/useAuth';
 import { usePageTitle } from '@/context/pageTitle/usePageTitle';
 import GlobalErrorPage from '@/pages/GlobalError';
 import NotFoundPage from '@/pages/NotFound';
 import DevTools from '@/utils/devtools/DevTools';
+
+import { applyGuards } from './applyGuards';
+import { ROUTES, SYSTEM_ROUTES, type RouteDescription } from './routePaths';
 
 /**
  * Auth-aware not-found handler registered as `notFoundComponent` on the root route.

@@ -5,10 +5,12 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.SYSTEM_OUT;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -27,17 +29,22 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.transaction.support.TransactionTemplate;
+import tools.jackson.databind.json.JsonMapper;
 
 @AutoConfigureMockMvc(print = SYSTEM_OUT)
 @DisplayName("Integrated Test | Reporting Unit Controller")
@@ -71,6 +78,16 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   private MockMvc mockMvc;
 
   @Autowired
+  private JsonMapper jsonMapper;
+
+  @Autowired private JdbcTemplate jdbcTemplate;
+  @Autowired private TransactionTemplate transactionTemplate;
+
+  private String fixtureActor;
+  private Long populatedReportingUnitId;
+  private Long emptyReportingUnitId;
+
+  @Autowired
   private CircuitBreakerRegistry circuitBreakerRegistry;
 
   @Autowired
@@ -80,7 +97,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   private FeatureFlagsConfiguration featureFlagsConfiguration;
 
   @BeforeEach
-  void resetStubsAndBreakers() {
+  void setUp() {
     clientApiStub.resetAll();
     legacyApiStub.resetAll();
 
@@ -89,6 +106,95 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     RetryConfig retry = retryRegistry.retry("apiRetry").getRetryConfig();
     retryRegistry.remove("apiRetry");
     retryRegistry.retry("apiRetry", retry);
+
+    fixtureActor = "test-block-list-" + UUID.randomUUID();
+    transactionTemplate.executeWithoutResult(
+        transaction -> {
+          populatedReportingUnitId = insertReportingUnit("BLOCKED");
+          emptyReportingUnitId = insertReportingUnit("EMPTY");
+          Long blockId =
+              jdbcTemplate.queryForObject(
+                  """
+                  INSERT INTO hrs.block
+                      (reporting_unit_id, block_type, created_by, updated_by)
+                  VALUES (?, 'DISTRICT_AVERAGE', ?, ?)
+                  RETURNING block_id
+                  """,
+                  Long.class,
+                  populatedReportingUnitId,
+                  fixtureActor,
+                  fixtureActor);
+          jdbcTemplate.update(
+              """
+              INSERT INTO hrs.district_average_block
+                  (district_average_block_id, coast_ground_based_area_ha,
+                   coast_helicopter_area_ha, has_dispersed_retention, is_heli_logging,
+                   created_by, updated_by)
+              VALUES (?, 1.250, 0.500, FALSE, FALSE, ?, ?)
+              """,
+              blockId,
+              fixtureActor,
+              fixtureActor);
+          jdbcTemplate.update(
+              """
+              INSERT INTO hrs.block_mark
+                  (block_id, mark_type, sequence_no, mark, forest_file_id,
+                   timber_mark, cutting_permit_id, cut_block_id, created_by, updated_by)
+              VALUES (?, 'PRIMARY', 0, 'TM-TEST', 'FILE-TEST', 'TM-TEST',
+                      'CP-TEST', 'CUT-TEST', ?, ?)
+              """,
+              blockId,
+              fixtureActor,
+              fixtureActor);
+          jdbcTemplate.update(
+              """
+              INSERT INTO hrs.block_submitter
+                  (block_id, submitter_id, submitter_name, first_name, last_name,
+                   created_by, updated_by)
+              VALUES (?, 'test-user', 'Block List Test Submitter', 'Test', 'Submitter', ?, ?)
+              """,
+              blockId,
+              fixtureActor,
+              fixtureActor);
+          jdbcTemplate.update(
+              """
+              INSERT INTO hrs.status_event
+                  (block_id, status, event_type, created_at, updated_at, created_by, updated_by)
+              VALUES (?, 'APP', 'SUBMISSION', NOW() + INTERVAL '1 day',
+                      NOW() + INTERVAL '1 day', ?, ?)
+              """,
+              blockId,
+              fixtureActor,
+              fixtureActor);
+        });
+  }
+
+  @AfterEach
+  void removeBlockListDatabaseFixtures() {
+    transactionTemplate.executeWithoutResult(
+        transaction -> {
+          jdbcTemplate.update("DELETE FROM hrs.status_event WHERE created_by = ?", fixtureActor);
+          jdbcTemplate.update("DELETE FROM hrs.block_submitter WHERE created_by = ?", fixtureActor);
+          jdbcTemplate.update("DELETE FROM hrs.block_mark WHERE created_by = ?", fixtureActor);
+          jdbcTemplate.update(
+              "DELETE FROM hrs.district_average_block WHERE created_by = ?", fixtureActor);
+          jdbcTemplate.update("DELETE FROM hrs.block WHERE created_by = ?", fixtureActor);
+          jdbcTemplate.update("DELETE FROM hrs.reporting_unit WHERE created_by = ?", fixtureActor);
+        });
+  }
+
+  private Long insertReportingUnit(String locationCode) {
+    return jdbcTemplate.queryForObject(
+        """
+        INSERT INTO hrs.reporting_unit
+            (client_number, client_locn_code, org_unit_no, created_by, updated_by)
+        VALUES ('00012797', ?, 'DND', ?, ?)
+        RETURNING reporting_unit_id
+        """,
+        Long.class,
+        locationCode,
+        fixtureActor,
+        fixtureActor);
   }
 
   @DisplayName("Should Return 201 when Create Succeeds")
@@ -257,10 +363,84 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
   @Test
   @WithMockJwt
+  @DisplayName("Should Return 404 for an Unknown Legacy Reporting Unit Block List")
+  void shouldReturn404_whenBlockListReportingUnitDoesNotExist() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/api/reporting-units/{id}/blocks", 999999999L)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound());
+
+    legacyApiStub.verify(1, getRequestedFor(urlPathEqualTo("/api/reporting-units/999999999")));
+    legacyApiStub.verify(
+        0, getRequestedFor(urlPathEqualTo("/api/reporting-units/999999999/blocks")));
+  }
+
+  @Test
+  @WithMockJwt
+  @DisplayName("Should Return Postgres Block Rows with Aggregates and Latest Status")
+  void shouldReturnPostgresBlocks_whenReportingUnitHasBlocks() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get(
+                    "/api/reporting-units/{id}/blocks", populatedReportingUnitId)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andExpect(jsonPath("$.content[0].licenseNumber").value("FILE-TEST"))
+        .andExpect(jsonPath("$.content[0].cuttingPermit").value("CP-TEST"))
+        .andExpect(jsonPath("$.content[0].cutBlockId").value("CUT-TEST"))
+        .andExpect(jsonPath("$.content[0].timberMark").value("TM-TEST"))
+        .andExpect(jsonPath("$.content[0].totalWasteAreaHa").value(1.75))
+        .andExpect(jsonPath("$.content[0].submitter").value("Block List Test Submitter"))
+        .andExpect(jsonPath("$.content[0].status.code").value("APP"))
+        .andExpect(jsonPath("$.content[0].status.description").value("Approved"));
+
+    var response =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get(
+                        "/api/reporting-units/{id}/blocks", populatedReportingUnitId)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    assertThat(jsonMapper.readTree(response).get("content").get(0).get("totalWasteVolumeM3").isNull())
+        .isTrue();
+  }
+
+  @Test
+  @WithMockJwt
+  @DisplayName("Should Return Empty Blocks Page for Postgres Reporting Unit Without Blocks")
+  void shouldReturnEmptyPage_whenPostgresReportingUnitHasNoBlocks() throws Exception {
+    mockMvc
+        .perform(
+                MockMvcRequestBuilders.get(
+                    "/api/reporting-units/{id}/blocks", emptyReportingUnitId)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content").isArray())
+        .andExpect(jsonPath("$.content").isEmpty())
+        .andExpect(jsonPath("$.page.totalElements").value(0))
+        .andExpect(jsonPath("$.page.size").value(10));
+  }
+
+  @Test
+  @WithMockJwt
   @DisplayName("Should Return Reporting Unit Details when Both APIs Succeed")
   void shouldReturnReportingUnitDetails_whenBothApisSucceed() throws Exception {
     legacyApiStub.stubFor(
-        get(urlPathEqualTo("/api/reporting-units/12345")).willReturn(okJson(LEGACY_RU_DETAILS)));
+        get(urlPathEqualTo("/api/reporting-units/12345"))
+            .willReturn(
+                okJson(
+                    """
+                    {
+                      "clientNumber": "00012797",
+                      "clientLocnCode": "00",
+                      "sampling": {"code": "AVG", "description": "Average"},
+                      "district": {"code": "DND", "description": "Nadina Natural Resource District"}
+                    }
+                    """)));
 
     clientApiStub.stubFor(
         get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
@@ -277,8 +457,11 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .andExpect(jsonPath("$.client.code").value("00012797"))
         .andExpect(jsonPath("$.client.description").value("MINISTRY OF FORESTS"))
         .andExpect(jsonPath("$.clientStatus.code").value("ACT"))
-        .andExpect(jsonPath("$.sampling.code").value("S01"))
-        .andExpect(jsonPath("$.district.code").value("DND"));
+        .andExpect(jsonPath("$.sampling.code").value("AVG"))
+        .andExpect(jsonPath("$.district.code").value("DND"))
+        .andExpect(jsonPath("$.blockRule.maxBlocks").value(1))
+        .andExpect(jsonPath("$.blockRule.blockType").value("DISTRICT_AVERAGE"))
+        .andExpect(jsonPath("$.isLegacy").value(true));
   }
 
   @Test
@@ -311,6 +494,34 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
             MockMvcRequestBuilders.get("/api/reporting-units/{id}", 12345L)
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @WithMockJwt
+  @DisplayName("Should Keep Block List Available when Reporting Unit Details Flag Is Disabled")
+  void shouldReturnBlocks_whenReportingUnitDetailsFeatureFlagIsDisabled() throws Exception {
+    doReturn(false)
+        .when(featureFlagsConfiguration)
+        .isEnabled(FeatureFlag.REPORTING_UNIT_DETAILS_ENABLED);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get(
+                    "/api/reporting-units/{id}/blocks", populatedReportingUnitId)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content[0].id").isNumber());
+  }
+
+  @Test
+  @DisplayName("Should Require Authentication for Block List")
+  void shouldRequireAuthentication_whenBlockListRequestedAnonymously() throws Exception {
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get(
+                    "/api/reporting-units/{id}/blocks", populatedReportingUnitId)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isUnauthorized());
   }
 
   @Test

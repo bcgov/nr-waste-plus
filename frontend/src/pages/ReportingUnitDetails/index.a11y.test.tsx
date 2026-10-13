@@ -40,7 +40,7 @@ test.describe('<ReportingUnitDetailsPage /> accessibility', () => {
   });
 
   test('has no nested interactive controls', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: `Reporting Unit no.: ${RU_ID}` })).toBeVisible();
+    await expect(page.getByRole('heading', { name: `Reporting Unit No. ${RU_ID}` })).toBeVisible();
 
     const themeToggle = page.getByRole('button', { name: /Switch to .* mode/ });
     await expect(themeToggle).toHaveCount(1);

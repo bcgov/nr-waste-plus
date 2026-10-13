@@ -34,6 +34,7 @@ describe('inTreePaths', () => {
         '/clients',
         '/no-role',
         '/unauthorized',
+        '/reporting-units/468/12',
         '/configuration/district-volume-tables/123',
       ];
       paths.forEach((path) => {
