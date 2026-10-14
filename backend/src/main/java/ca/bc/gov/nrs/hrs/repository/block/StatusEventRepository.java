@@ -11,4 +11,7 @@ public interface StatusEventRepository
   StatusEventEntity save(StatusEventEntity entity);
 
   java.util.Optional<StatusEventEntity> findById(Long id);
+
+  /** Returns the most recent status event recorded for a block, if any. */
+  java.util.Optional<StatusEventEntity> findFirstByBlockIdOrderByCreatedAtDesc(Long blockId);
 }

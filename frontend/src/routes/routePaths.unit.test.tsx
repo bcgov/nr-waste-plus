@@ -1,9 +1,9 @@
-import { render, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
-import * as routePaths from './routePaths';
-
 import { Role } from '@/context/auth/types';
+
+import * as routePaths from './routePaths';
 
 // ── Mocks for env ──────────────────────────────────────────────────────────────
 vi.mock('@/env', async () => {
@@ -460,12 +460,14 @@ describe('routePaths', () => {
       expect(container).toBeDefined();
     });
 
-    it('shouldMarkBlockDetailsRouteAsProtectedAdmin', () => {
+    it('shouldMarkBlockDetailsRouteAsProtectedWithoutRoleRestriction', () => {
       const blockRoute = routePaths.ROUTES.find(
         (r) => r.path === '/reporting-units/$ruId/$blockId',
       )!;
       expect(blockRoute.protected).toBe(true);
-      expect(blockRoute.roles).toEqual([{ role: Role.ADMIN, clients: [] }]);
+      // Ownership is enforced by the backend for VIEWER/SUBMITTER clients, so the
+      // route must not redirect those users before the API can be called.
+      expect(blockRoute.roles).toBeUndefined();
     });
 
     it('shouldGateBlockDetailsRouteBehindReportingUnitBlockDetailsFlag', () => {
@@ -516,45 +518,35 @@ describe('routePaths', () => {
       const route = routePaths.ROUTES.find((r) => r.path === '/clients')!;
       const Comp = route.component;
       render(<Comp />);
-      await waitFor(() => {
-        expect(document.querySelector('[data-testid="my-client-list"]')).toBeTruthy();
-      });
+      expect(await screen.findByTestId('my-client-list')).toBeTruthy();
     });
 
     it('shouldRenderSearchRouteComponent_afterLazyLoad', async () => {
       const route = routePaths.ROUTES.find((r) => r.path === '/search')!;
       const Comp = route.component;
       render(<Comp />);
-      await waitFor(() => {
-        expect(document.querySelector('[data-testid="waste-search"]')).toBeTruthy();
-      });
+      expect(await screen.findByTestId('waste-search')).toBeTruthy();
     });
 
     it('shouldRenderConfigurationRouteComponent_afterLazyLoad', async () => {
       const route = routePaths.ROUTES.find((r) => r.path === '/configuration')!;
       const Comp = route.component;
       render(<Comp />);
-      await waitFor(() => {
-        expect(document.querySelector('[data-testid="configuration-page"]')).toBeTruthy();
-      });
+      expect(await screen.findByTestId('configuration-page')).toBeTruthy();
     });
 
     it('shouldRenderFormulaConfigurationList_afterLazyLoad', async () => {
       const route = routePaths.ROUTES.find((r) => r.path === '/configuration/formulas')!;
       const Comp = route.component;
       render(<Comp />);
-      await waitFor(() => {
-        expect(document.querySelector('[data-testid="formula-configuration-list"]')).toBeTruthy();
-      });
+      expect(await screen.findByTestId('formula-configuration-list')).toBeTruthy();
     });
 
     it('shouldRenderReportingUnitDetails_afterLazyLoad', async () => {
       const route = routePaths.ROUTES.find((r) => r.path === '/reporting-units/$ruId')!;
       const Comp = route.component;
       render(<Comp />);
-      await waitFor(() => {
-        expect(document.querySelector('[data-testid="reporting-unit-details"]')).toBeTruthy();
-      });
+      expect(await screen.findByTestId('reporting-unit-details')).toBeTruthy();
     });
   });
 

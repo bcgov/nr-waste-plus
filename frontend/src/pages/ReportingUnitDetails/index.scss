@@ -16,3 +16,10 @@
   }
   
 }
+
+.notification-column:has(> *) {
+  margin-bottom: $spacing-08;
+  @include breakpoint-down(md) {
+    margin-bottom: $spacing-04;
+  }
+}

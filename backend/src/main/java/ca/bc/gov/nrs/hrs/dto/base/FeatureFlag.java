@@ -50,7 +50,16 @@ public enum FeatureFlag {
    * details of a reporting unit aggregated from the legacy API and Forest Client API. When
    * disabled, the endpoint returns HTTP 404 so the feature is invisible to callers.
    */
-  REPORTING_UNIT_DETAILS_ENABLED("reporting-unit-details-enabled");
+  REPORTING_UNIT_DETAILS_ENABLED("reporting-unit-details-enabled"),
+
+  /**
+   * Controls whether the block details endpoint is available.
+   *
+   * <p>When enabled, {@code GET /api/reporting-units/{reportingUnitId}/{blockId}} is accessible and
+   * returns the block's details resolved from postgres or the legacy API. When disabled, the
+   * endpoint returns HTTP 404 so the feature is invisible to callers.
+   */
+  REPORTING_UNIT_BLOCK_DETAILS_ENABLED("reporting-unit-block-details-enabled");
 
   private final String key;
 

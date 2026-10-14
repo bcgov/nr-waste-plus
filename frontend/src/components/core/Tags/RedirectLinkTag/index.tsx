@@ -1,3 +1,4 @@
+import { Tooltip } from '@carbon/react';
 import { Link } from '@tanstack/react-router';
 import { type FC } from 'react';
 
@@ -28,6 +29,8 @@ interface RedirectLinkTagProps {
    * Defaults to `false` (new tab, `_blank`).
    */
   readonly sameTab?: boolean;
+  /** Optional tooltip description attached to the rendered link itself. */
+  readonly tooltip?: string;
 }
 
 /**
@@ -62,19 +65,21 @@ const isInternal = (url: string): boolean => {
  *
  * @returns The rendered link element.
  */
-const RedirectLinkTag: FC<RedirectLinkTagProps> = ({ text, url, sameTab, clearSearch }) => {
+const RedirectLinkTag: FC<RedirectLinkTagProps> = ({
+  text,
+  url,
+  sameTab,
+  clearSearch,
+  tooltip,
+}) => {
   const internal = isInternal(url);
+  const hasEmbeddedQuery = url.includes('?');
 
-  if (internal && sameTab) {
-    // If the URL already has embedded query params, pass it as-is to `to` so
-    // TanStack Router parses those params directly from the string — avoiding
-    // any JSON re-encoding of numeric-looking string values that would occur
-    // if we extracted and forwarded them as a JS object via the `search` prop.
-    //
-    // For bare paths (no embedded query), we always pass `search={}` unless
-    // `clearSearch === false` opts in to inheriting the current route's search.
-    const hasEmbeddedQuery = url.includes('?');
-    return (
+  // Passing a URL with embedded query params directly to `to` lets TanStack
+  // Router parse them without re-encoding numeric-looking string values.
+  // For bare paths, clear search by default unless `clearSearch` opts out.
+  const link =
+    internal && sameTab ? (
       <Link
         to={url}
         search={!hasEmbeddedQuery && clearSearch !== false ? {} : undefined}
@@ -82,19 +87,26 @@ const RedirectLinkTag: FC<RedirectLinkTagProps> = ({ text, url, sameTab, clearSe
       >
         <EmptyValueTag value={text} />
       </Link>
+    ) : (
+      <a
+        href={url}
+        target={sameTab ? '_self' : '_blank'}
+        rel={sameTab ? undefined : 'noopener noreferrer'}
+        data-testid={text}
+      >
+        <EmptyValueTag value={text} />
+      </a>
+    );
+
+  if (tooltip) {
+    return (
+      <Tooltip description={tooltip} align="top">
+        {link}
+      </Tooltip>
     );
   }
 
-  return (
-    <a
-      href={url}
-      target={sameTab ? '_self' : '_blank'}
-      rel={sameTab ? undefined : 'noopener noreferrer'}
-      data-testid={text}
-    >
-      <EmptyValueTag value={text} />
-    </a>
-  );
+  return link;
 };
 
 export default RedirectLinkTag;

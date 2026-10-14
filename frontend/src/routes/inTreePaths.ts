@@ -16,6 +16,7 @@ export type InTreePath =
   | '/no-role'
   | '/unauthorized'
   | `/reporting-units/${number}`
+  | `/reporting-units/${number}/${number}`
   | '/reporting-units/create'
   | '/configuration'
   | '/configuration/district-volume-tables'

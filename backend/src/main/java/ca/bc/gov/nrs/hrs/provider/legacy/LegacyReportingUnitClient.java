@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.hrs.provider.legacy;
 
+import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
@@ -18,9 +19,11 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.JsonNode;
 
 /**
@@ -42,6 +45,8 @@ public class LegacyReportingUnitClient {
   static final String FALLBACK_ERROR = "Error occurred while fetching data from {}: {}";
 
   private static final String PROVIDER = "Legacy API";
+
+  private static final String REPORTING_UNIT_ID = "reportingUnitId";
 
   private final RestClient restClient;
   private final LegacyPagedResponseMapper pageMapper;
@@ -153,7 +158,7 @@ public class LegacyReportingUnitClient {
                             + "{reportingUnitId}/{wasteAssessmentAreaId}")
                     .build(
                         Map.of(
-                            "reportingUnitId", ruId,
+                            REPORTING_UNIT_ID, ruId,
                             "wasteAssessmentAreaId", wasteAssessmentAreaId)))
         .retrieve()
         .body(ReportingUnitSearchExpandedDto.class);
@@ -230,7 +235,7 @@ public class LegacyReportingUnitClient {
             uriBuilder ->
                 uriBuilder
                     .path("/api/reporting-units/{reportingUnitId}")
-                    .build(Map.of("reportingUnitId", reportingUnitId)))
+                    .build(Map.of(REPORTING_UNIT_ID, reportingUnitId)))
         .retrieve()
         .onStatus(
             status -> status.value() == 404,
@@ -239,6 +244,74 @@ public class LegacyReportingUnitClient {
               throw new NotFoundGenericException("Reporting unit", String.valueOf(reportingUnitId));
             })
         .body(ReportingUnitLegacyDetailsDto.class);
+  }
+
+  /**
+   * Retrieve the block list for a reporting unit from the legacy API.
+   *
+   * <p>Makes a {@code GET} request to {@code /api/reporting-units/{reportingUnitId}/blocks} and
+   * deserializes the response into a list of {@link BlockListItemDto}. The legacy endpoint returns
+   * a plain JSON array matching the shared block-row contract.
+   *
+   * <p>This method is protected by a circuit breaker that will invoke {@link
+   * #fallbackEmptyBlocks(Long, Throwable)} if the API call fails, so callers receive an empty block
+   * list rather than a page-level error. Callers must verify reporting-unit existence separately
+   * before relying on an empty response.
+   *
+   * @param reportingUnitId the unique identifier of the reporting unit; must not be null
+   * @return the block rows; never null, empty when no blocks exist or the API call fails
+   * @throws org.springframework.web.client.RestClientException if there is an unrecoverable HTTP
+   *     error or the response cannot be deserialized
+   */
+  @CircuitBreaker(name = "breaker", fallbackMethod = "fallbackEmptyBlocks")
+  @NewSpan
+  public List<BlockListItemDto> getReportingUnitBlocks(Long reportingUnitId) {
+
+    log.info("Retrieving blocks for RU {}", reportingUnitId);
+
+    return fetchReportingUnitBlocks(reportingUnitId);
+  }
+
+  /**
+   * Retrieve the block list for a reporting unit without swallowing upstream failures.
+   *
+   * <p>Sends the same {@code GET} as {@link #getReportingUnitBlocks(Long)}, but the
+   * circuit-breaker fallback rethrows instead of substituting an empty list. Authoritative
+   * lookups — such as resolving a single block for the details endpoint — must distinguish a
+   * transient legacy outage from a reporting unit that genuinely has no blocks, so a failed call
+   * surfaces as HTTP 503 rather than being reported as "Block not found".
+   *
+   * @param reportingUnitId the unique identifier of the reporting unit; must not be null
+   * @return the block rows; never null, empty only when the legacy API reports no blocks
+   * @throws NotFoundGenericException with HTTP 404 when the reporting unit does not exist
+   * @throws org.springframework.web.server.ResponseStatusException with HTTP 503 when the legacy
+   *     API cannot be reached or returns an error
+   */
+  @CircuitBreaker(name = "breaker", fallbackMethod = "propagateBlocksFailure")
+  @NewSpan
+  public List<BlockListItemDto> getReportingUnitBlocksStrict(Long reportingUnitId) {
+
+    log.info("Retrieving blocks (strict) for RU {}", reportingUnitId);
+
+    return fetchReportingUnitBlocks(reportingUnitId);
+  }
+
+  private List<BlockListItemDto> fetchReportingUnitBlocks(Long reportingUnitId) {
+    return restClient
+        .get()
+        .uri(
+            uriBuilder ->
+                uriBuilder
+                    .path("/api/reporting-units/{reportingUnitId}/blocks")
+                    .build(Map.of(REPORTING_UNIT_ID, reportingUnitId)))
+        .retrieve()
+        .onStatus(
+            status -> status.value() == 404,
+            (ignoredRequest, ignoredResponse) -> {
+              log.warn("Reporting unit {} not found in legacy API (status 404)", reportingUnitId);
+              throw new NotFoundGenericException("Reporting Unit", String.valueOf(reportingUnitId));
+            })
+        .body(new ParameterizedTypeReference<>() {});
   }
 
   /**
@@ -308,6 +381,34 @@ public class LegacyReportingUnitClient {
     logFallbackError(throwable);
     log.error("Returning empty users list for userId: {}", userId);
     return LegacyApiConstants.EMPTY_STRING_LIST;
+  }
+
+  @SuppressWarnings("unused")
+  private List<BlockListItemDto> fallbackEmptyBlocks(Long reportingUnitId, Throwable throwable) {
+
+    logFallbackError(throwable);
+    if (throwable instanceof NotFoundGenericException notFoundException) {
+      throw notFoundException;
+    }
+
+    log.error("Returning empty block list for RU: {}", reportingUnitId);
+    return List.of();
+  }
+
+  @SuppressWarnings("unused")
+  private List<BlockListItemDto> propagateBlocksFailure(
+      Long reportingUnitId, Throwable throwable) {
+
+    logFallbackError(throwable);
+    if (throwable instanceof NotFoundGenericException notFoundException) {
+      throw notFoundException;
+    }
+
+    log.error("Propagating legacy block list failure for RU: {}", reportingUnitId);
+    throw new ResponseStatusException(
+        HttpStatus.SERVICE_UNAVAILABLE,
+        "Legacy block list unavailable for reporting unit: " + reportingUnitId,
+        throwable);
   }
 
   @SuppressWarnings("unused")

@@ -1,0 +1,54 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+@use '@carbon/type';
+
+.block-create-action {
+  margin-top: $spacing-06;
+  border: solid 1px var(--cds-border-subtle-selected-03, #c6c6c8);
+  padding: $spacing-05;
+  border-radius: $spacing-04;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-05;
+
+  @include breakpoint-down(md) {
+    margin: $spacing-04;
+  }
+
+  &__title {
+    @include type.type-style('heading-02');
+    font-weight: 700;
+  }
+
+  &__description p {
+    @include type.type-style('body-compact-01');
+  }
+
+  &__fields {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: $spacing-05;
+
+    @include breakpoint-down(lg) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    @include breakpoint-down(md) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .cds--form-item {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .block-create-action__textinput {
+      grid-column: span 2;
+    }
+
+    .block-create-action__button {
+      grid-column: span 1;
+      align-self: end;
+    }
+  }
+}

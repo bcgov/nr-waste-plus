@@ -11,8 +11,8 @@ Feature: Reporting Unit Details
   @loginAsBCeID
   Scenario: Page loads and shows the reporting unit number in the title
     Given I visit "/reporting-units/36828"
-    Then I can read "Reporting Unit no.: 36828"
-    And I can read "Start a new waste submission by creating a reporting unit"
+    Then I can read "Reporting Unit No. 36828"
+    And I can read "View reporting unit details"
 
   @loginAsBCeID
   Scenario: Tombstone panel shows the client name and client number
@@ -45,7 +45,7 @@ Feature: Reporting Unit Details
   @loginAsBCeID
   Scenario: Navigating to a non-existent reporting unit shows a not-found page
     Given I visit "/reporting-units/0"
-    Then I cannot see "Reporting Unit no.: 0"
+    Then I cannot see "Reporting Unit No. 0"
 
   # ── Via search page ───────────────────────────────────────────────────────────
 
@@ -56,8 +56,8 @@ Feature: Reporting Unit Details
     Then I search
     And I wait for the text "36828" to appear
     When I click on the "36828" button
-    Then I can read "Reporting Unit no.: 36828"
-    And I can read "Start a new waste submission by creating a reporting unit"
+    Then I can read "Reporting Unit No. 36828"
+    And I can read "View reporting unit details"
 
   @loginAsBCeID
   Scenario: Navigating from search shows the correct client data in the tombstone

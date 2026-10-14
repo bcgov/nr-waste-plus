@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.provider.legacy;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.block.BlockListItemDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
@@ -139,6 +140,37 @@ public class LegacyApiProvider {
    */
   public ReportingUnitLegacyDetailsDto getReportingUnitDetails(Long reportingUnitId) {
     return reportingUnitClient.getReportingUnitDetails(reportingUnitId);
+  }
+
+  /**
+   * Retrieve the block list for a reporting unit from the legacy API.
+   *
+   * <p>Delegates to {@link LegacyReportingUnitClient}; returns an empty list when the legacy API
+   * is unavailable.
+   *
+   * @param reportingUnitId the unique identifier of the reporting unit
+   * @return the block rows; never null, empty when no blocks exist or the API call fails
+   */
+  public List<BlockListItemDto> getReportingUnitBlocks(Long reportingUnitId) {
+    return reportingUnitClient.getReportingUnitBlocks(reportingUnitId);
+  }
+
+  /**
+   * Retrieve the block list for a reporting unit without swallowing upstream failures.
+   *
+   * <p>Delegates to {@link LegacyReportingUnitClient#getReportingUnitBlocksStrict(Long)}: a
+   * transient legacy outage propagates as HTTP 503 instead of being reported as an empty list,
+   * so authoritative lookups never translate a failure into "not found".
+   *
+   * @param reportingUnitId the unique identifier of the reporting unit
+   * @return the block rows; never null, empty only when no blocks exist
+   * @throws ca.bc.gov.nrs.hrs.exception.NotFoundGenericException with HTTP 404 when the reporting
+   *     unit does not exist
+   * @throws org.springframework.web.server.ResponseStatusException with HTTP 503 when the legacy
+   *     API cannot be reached
+   */
+  public List<BlockListItemDto> getReportingUnitBlocksStrict(Long reportingUnitId) {
+    return reportingUnitClient.getReportingUnitBlocksStrict(reportingUnitId);
   }
 
   /**

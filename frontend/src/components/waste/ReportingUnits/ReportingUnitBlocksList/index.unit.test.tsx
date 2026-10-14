@@ -1,15 +1,22 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { ReactElement } from 'react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 
-import { render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import ReportingUnitBlocksList, { type ReportingUnitBlocksRow } from './index';
 
 import type { CodeDescriptionDto } from '@/services/types';
 import type { PageableResponse } from '@/types/PageableResponse.types';
+import type { ReactElement } from 'react';
 
-import ReportingUnitBlocksList, { type ReportingUnitBlocksRow } from './index';
+const { mockNavigate } = vi.hoisted(() => ({ mockNavigate: vi.fn() }));
+
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-router')>();
+  return { ...actual, useNavigate: () => mockNavigate };
+});
 
 /**
  * Status code/description pairs from the Figma design (zInceMk1eEq3X1p0LFwoK8,
@@ -42,6 +49,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 57,
       submitter: 'Jane Lumberjack',
       status: BLOCK_STATUSES.submitted,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-07-01T16:43:00',
     },
     {
@@ -54,6 +62,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 88,
       submitter: 'Jane Lumberjack',
       status: BLOCK_STATUSES.billingIssued,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-07-14T09:05:00',
     },
     {
@@ -66,6 +75,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 21,
       submitter: 'John Forester',
       status: BLOCK_STATUSES.hold,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-07-10T14:22:00',
     },
     {
@@ -78,6 +88,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 102,
       submitter: 'Jane Lumberjack',
       status: BLOCK_STATUSES.officeRejected,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-07-08T11:37:00',
     },
     {
@@ -90,6 +101,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 188,
       submitter: 'Mika Rivers',
       status: BLOCK_STATUSES.approved,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-07-05T08:15:00',
     },
     {
@@ -102,6 +114,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 34,
       submitter: 'Mika Rivers',
       status: BLOCK_STATUSES.billingIssued,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-06-28T17:52:00',
     },
     {
@@ -114,6 +127,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 26,
       submitter: 'Jane Lumberjack',
       status: BLOCK_STATUSES.submitted,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-06-20T13:03:00',
     },
     {
@@ -126,6 +140,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 74,
       submitter: 'John Forester',
       status: BLOCK_STATUSES.hold,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-06-15T10:41:00',
     },
     {
@@ -138,6 +153,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: null,
       submitter: null,
       status: BLOCK_STATUSES.draft,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-08-18T09:32:00',
     },
     {
@@ -150,6 +166,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
       totalWasteVolumeM3: 143,
       submitter: 'Ed Spruce',
       status: BLOCK_STATUSES.billingIssued,
+      blockType: 'DISTRICT_AVERAGE',
       lastUpdated: '2025-08-01T16:12:00',
     },
   ],
@@ -157,7 +174,7 @@ const DUMMY_BLOCKS_CONTENT: PageableResponse<ReportingUnitBlocksRow> = {
 };
 
 const renderBlocksList = async (
-  ui: ReactElement = <ReportingUnitBlocksList content={DUMMY_BLOCKS_CONTENT} />,
+  ui: ReactElement = <ReportingUnitBlocksList ruId={468} content={DUMMY_BLOCKS_CONTENT} />,
 ) => {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
@@ -165,11 +182,12 @@ const renderBlocksList = async (
       <PreferenceProvider>{ui}</PreferenceProvider>
     </QueryClientProvider>,
   );
-  // Wait until the table headers or the empty state have rendered — the empty
-  // state (no content prop) never shows any header text.
+  // Wait until the table headers or an empty/error state has rendered.
   await waitFor(() => {
     const ready =
-      screen.queryByText('Licence No.') !== null || screen.queryByText('No results') !== null;
+      screen.queryByText('Licence No.') !== null ||
+      screen.queryByText('No results') !== null ||
+      screen.queryByText('Something went wrong!') !== null;
     expect(ready).toBe(true);
   });
 };
@@ -191,6 +209,7 @@ describe('ReportingUnitBlocksList', () => {
       'Status',
       'Last updated',
       'Time',
+      'Actions',
     ]);
   });
 
@@ -224,12 +243,9 @@ describe('ReportingUnitBlocksList', () => {
     await renderBlocksList();
 
     // TableResource's renderCell renders null values as a plain dash.
-    const draftRow = screen.getByText('109').closest('tr');
-    expect(draftRow).not.toBeNull();
-    const dashCells = [...draftRow!.querySelectorAll('td')].filter(
-      (cell) => cell.textContent === '-',
-    );
-    expect(dashCells).toHaveLength(6);
+    const draftCells = screen.getByRole('cell', { name: '109' }).parentElement?.textContent;
+    expect(draftCells).toContain('-');
+    expect(draftCells?.match(/-/g)).toHaveLength(6);
   });
 
   it('renders pagination controls', async () => {
@@ -240,8 +256,96 @@ describe('ReportingUnitBlocksList', () => {
     expect(screen.getAllByRole('combobox').length).toBeGreaterThanOrEqual(2);
   });
 
+  it('updates local page state and clears row-action requests when navigating pages', async () => {
+    const multiPageContent = {
+      ...DUMMY_BLOCKS_CONTENT,
+      page: { ...DUMMY_BLOCKS_CONTENT.page, totalElements: 20, totalPages: 2 },
+    };
+    await renderBlocksList(<ReportingUnitBlocksList ruId={468} content={multiPageContent} />);
+
+    // Carbon Pagination's controlled state updates are not reliably driven by userEvent in jsdom.
+    // eslint-disable-next-line testing-library/prefer-user-event
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }));
+
+    expect(screen.getByRole('button', { name: 'Previous page' })).toBeTruthy();
+    // eslint-disable-next-line testing-library/prefer-user-event
+    fireEvent.click(screen.getByRole('button', { name: 'Previous page' }));
+    expect(
+      (screen.getByRole('button', { name: 'Previous page' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+  });
+
+  it('preserves page size while moving between pages', async () => {
+    const multiPageContent = {
+      ...DUMMY_BLOCKS_CONTENT,
+      page: { ...DUMMY_BLOCKS_CONTENT.page, size: 20, totalElements: 40, totalPages: 2 },
+    };
+    await renderBlocksList(<ReportingUnitBlocksList ruId={468} content={multiPageContent} />);
+
+    expect(screen.getByText('Items per page:')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Next page' })).toBeTruthy();
+  });
+
+  it('navigates to the selected block details page', async () => {
+    mockNavigate.mockClear();
+    await renderBlocksList();
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'See details' })[0]);
+
+    expect(mockNavigate).toHaveBeenCalledWith({ to: '/reporting-units/468/1' });
+  });
+
+  it('navigates to the correct details path for each selected block row', async () => {
+    mockNavigate.mockClear();
+    await renderBlocksList();
+
+    const detailsButtons = screen.getAllByRole('button', { name: 'See details' });
+    await userEvent.click(detailsButtons[1]);
+    await userEvent.click(detailsButtons[8]);
+
+    expect(mockNavigate).toHaveBeenNthCalledWith(1, { to: '/reporting-units/468/2' });
+    expect(mockNavigate).toHaveBeenNthCalledWith(2, { to: '/reporting-units/468/9' });
+  });
+
+  it('renders loading and error states from the query props', async () => {
+    await renderBlocksList(
+      <ReportingUnitBlocksList ruId={468} content={DUMMY_BLOCKS_CONTENT} isLoading isError />,
+    );
+
+    expect(screen.getByRole('table')).toBeTruthy();
+    expect(screen.queryByText('No results')).toBeNull();
+  });
+
+  it('shows an error state when the block-list request fails without data', async () => {
+    await renderBlocksList(<ReportingUnitBlocksList ruId={468} isError />);
+
+    expect(screen.getByTestId('empty-section-title').textContent).toBe('Something went wrong!');
+    expect(screen.queryByText('No results')).toBeNull();
+    expect(screen.queryByRole('table')).toBeNull();
+  });
+
+  it('keeps delete actions disabled and does not navigate', async () => {
+    mockNavigate.mockClear();
+    await renderBlocksList();
+
+    expect(
+      screen
+        .getAllByRole('button', { name: 'Delete block' })
+        .every((button) => (button as HTMLButtonElement).disabled),
+    ).toBe(true);
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('shows the delete action as disabled', async () => {
+    await renderBlocksList();
+
+    const deleteButtons = screen.getAllByRole('button', { name: 'Delete block' });
+    expect(deleteButtons).toHaveLength(DUMMY_BLOCKS_CONTENT.content.length);
+    expect(deleteButtons.every((button) => (button as HTMLButtonElement).disabled)).toBe(true);
+  });
+
   it('renders the empty state when no content is provided (API not wired yet)', async () => {
-    await renderBlocksList(<ReportingUnitBlocksList />);
+    await renderBlocksList(<ReportingUnitBlocksList ruId={468} />);
 
     // TableResource shows its "No results" empty section for a provided but
     // empty page — the initial-empty branch needs `content: undefined`, which

@@ -9,4 +9,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BlockMarkRepository extends JpaRepository<BlockMarkEntity, Long> {
   List<BlockMarkEntity> findByBlockIdAndMarkTypeOrderBySequenceNo(Long blockId, String markType);
+
+  /** Returns non-deleted marks of the given type for a block in sequence order. */
+  List<BlockMarkEntity> findByBlockIdAndMarkTypeAndDeletedFalseOrderBySequenceNo(
+      Long blockId, String markType);
 }

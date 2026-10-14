@@ -1,8 +1,11 @@
 package ca.bc.gov.nrs.hrs.service.reportingunit;
 
 import ca.bc.gov.nrs.hrs.LegacyConstants;
+import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto;
+import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitBlockDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
+import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitBlockProjection;
 import ca.bc.gov.nrs.hrs.entity.reportingunit.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.exception.WasteReportingUnitNotFound;
 import ca.bc.gov.nrs.hrs.mappers.reportingunit.ReportingUnitDetailsMapper;
@@ -41,6 +44,12 @@ public class ReportingUnitService {
 
   private static final String DEFAULT_LOCATION_CODE = "00";
 
+  /** Status code used when a block's status cannot be resolved from the code table. */
+  private static final String DEFAULT_BLOCK_STATUS_CODE = "DFT";
+
+  /** Status name used when a block's status cannot be resolved from the code table. */
+  private static final String DEFAULT_BLOCK_STATUS_NAME = "Draft";
+
   /**
    * Retrieves the detail view for the given Reporting Unit, scoped to the provided client numbers.
    *
@@ -64,6 +73,64 @@ public class ReportingUnitService {
         .getReportingUnitDetails(reportingUnitId, searchClients)
         .map(ruDetailsMapper::fromProjection)
         .orElseThrow(() -> new WasteReportingUnitNotFound(reportingUnitId));
+  }
+
+  /**
+   * Retrieves the block rows for the given Reporting Unit.
+   *
+   * <p>Nullable source columns are carried through as {@code null}. Fallbacks required by the
+   * blocks contract are applied while mapping: {@code cutBlockId} defaults to an empty string
+   * and a status whose code or description cannot be resolved from the code table defaults to
+   * {@code DFT} / {@code Draft}.</p>
+   *
+   * @param reportingUnitId the identifier of the reporting unit whose blocks are requested
+   * @return the list of blocks for the reporting unit, empty when none exist
+   */
+  public List<ReportingUnitBlockDto> getReportingUnitBlocks(Long reportingUnitId) {
+    verifyReportingUnitExists(reportingUnitId);
+
+    return ruRepository.getReportingUnitBlocks(reportingUnitId).stream()
+        .map(ReportingUnitService::toBlockDto)
+        .toList();
+  }
+
+  private void verifyReportingUnitExists(Long reportingUnitId) {
+    if (!ruRepository.existsById(reportingUnitId)) {
+      throw new WasteReportingUnitNotFound(reportingUnitId);
+    }
+  }
+
+  /**
+   * Maps a block projection to its response DTO, applying the blocks-contract fallbacks.
+   *
+   * @param projection the block projection returned by the repository
+   * @return the mapped {@link ReportingUnitBlockDto}
+   */
+  private static ReportingUnitBlockDto toBlockDto(ReportingUnitBlockProjection projection) {
+    String statusCode = projection.getStatusCode();
+    String statusName = projection.getStatusName();
+    CodeDescriptionDto status =
+        statusCode == null
+            || statusCode.isBlank()
+            || statusName == null
+            ? new CodeDescriptionDto(DEFAULT_BLOCK_STATUS_CODE, DEFAULT_BLOCK_STATUS_NAME)
+            : new CodeDescriptionDto(statusCode, statusName);
+
+    String cutBlockId = projection.getCutBlockId();
+    String resolvedCutBlockId = cutBlockId == null || cutBlockId.isBlank() ? "" : cutBlockId;
+
+    return new ReportingUnitBlockDto(
+        projection.getId(),
+        projection.getLicenseNumber(),
+        projection.getCuttingPermit(),
+        resolvedCutBlockId,
+        projection.getTimberMark(),
+        projection.getTotalWasteAreaHa(),
+        projection.getTotalWasteVolumeM3(),
+        projection.getSubmitter(),
+        status,
+        projection.getLastUpdated()
+    );
   }
 
   /**
