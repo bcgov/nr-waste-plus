@@ -218,6 +218,21 @@ public class ReportingUnitService {
     var existing = legacyApiProvider.searchReportingUnit(searchFilters, PageRequest.of(0, 1));
 
     if (existing != null && existing.getTotalElements() > 0) {
+      if (existing.hasContent()) {
+        Long existingRuId = existing.getContent().getFirst().ruNumber();
+        if (existingRuId != null) {
+          var localEntity = reportingUnitRepository.findByIdAndDeletedFalse(existingRuId);
+          if (localEntity.isEmpty()) {
+            log.warn(
+                "Reporting unit {} exists in legacy for client {} and district {} but is missing in"
+                    + " PostgreSQL. Reconciling local record.",
+                existingRuId,
+                request.clientNumber(),
+                request.districtCode());
+            return persistLocalReportingUnit(existingRuId, request);
+          }
+        }
+      }
       throw new ResponseStatusException(
           HttpStatus.CONFLICT,
           String.format(
@@ -242,9 +257,14 @@ public class ReportingUnitService {
     Long createdId = legacyApiProvider.createReportingUnit(request);
 
     // Persist reporting unit in PostgreSQL
+    return persistLocalReportingUnit(createdId, request);
+  }
+
+  private Long persistLocalReportingUnit(
+      Long reportingUnitId, CreateReportingUnitRequestDto request) {
     try {
       ReportingUnitEntity entity = new ReportingUnitEntity();
-      entity.setId(createdId);
+      entity.setId(reportingUnitId);
       entity.setClientNumber(request.clientNumber());
       entity.setClientLocnCode("00");
       entity.setOrgUnitNo(request.districtCode());
@@ -253,12 +273,11 @@ public class ReportingUnitService {
       entity.setDeleted(false);
 
       reportingUnitRepository.saveAndFlush(entity);
-      log.info("Persisted local reporting unit {} in PostgreSQL", createdId);
+      log.info("Persisted local reporting unit {} in PostgreSQL", reportingUnitId);
+      return reportingUnitId;
     } catch (Exception e) {
-      log.error("Failed to persist reporting unit {} to PostgreSQL", createdId, e);
+      log.error("Failed to persist reporting unit {} to PostgreSQL", reportingUnitId, e);
       throw e;
     }
-
-    return createdId;
   }
 }

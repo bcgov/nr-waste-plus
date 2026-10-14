@@ -186,7 +186,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
           jdbcTemplate.update("DELETE FROM hrs.block WHERE created_by = ?", fixtureActor);
           jdbcTemplate.update("DELETE FROM hrs.reporting_unit WHERE created_by = ?", fixtureActor);
           jdbcTemplate.update(
-              "DELETE FROM hrs.reporting_unit WHERE (reporting_unit_id >= 333 AND reporting_unit_id <= 400) OR reporting_unit_id = 55555");
+              "DELETE FROM hrs.reporting_unit WHERE (reporting_unit_id >= 333 AND reporting_unit_id <= 400) OR reporting_unit_id IN (36834, 55555)");
         });
   }
 
@@ -366,6 +366,18 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @Test
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void shouldReturn409_whenReportingUnitDuplicate() throws Exception {
+    var ru = new ReportingUnitEntity();
+    ru.setId(36834L);
+    ru.setClientNumber("00012797");
+    ru.setClientLocnCode("00");
+    ru.setOrgUnitNo("DND");
+    ru.setSamplingCode("AVG");
+    ru.setRevision(1L);
+    ru.setDeleted(false);
+    ru.setCreatedBy(fixtureActor);
+    ru.setUpdatedBy(fixtureActor);
+    reportingUnitRepository.saveAndFlush(ru);
+
     // Legacy search: returns an existing RU (totalElements > 0)
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
@@ -384,6 +396,34 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
         .andExpect(status().isConflict());
+  }
+
+  @DisplayName("Should Reconcile Reporting Unit when Exists in Legacy Only")
+  @Test
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
+  void shouldReconcileReportingUnit_whenExistsInLegacyOnly() throws Exception {
+    legacyApiStub.stubFor(
+        get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE)));
+
+    var requestJson =
+        """
+        {"clientNumber":"00012797","districtCode":"DND","samplingCode":"AVG","gradeCode":null}
+        """;
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/api/reporting-units")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+        .andExpect(status().isCreated())
+        .andExpect(header().string("Location", "/api/reporting-units/36834"));
+
+    var saved = reportingUnitRepository.findById(36834L);
+    org.assertj.core.api.Assertions.assertThat(saved).isPresent();
+    org.assertj.core.api.Assertions.assertThat(saved.get().getSamplingCode()).isEqualTo("AVG");
   }
 
   @Test
