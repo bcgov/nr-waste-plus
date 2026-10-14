@@ -185,6 +185,8 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
               "DELETE FROM hrs.district_average_block WHERE created_by = ?", fixtureActor);
           jdbcTemplate.update("DELETE FROM hrs.block WHERE created_by = ?", fixtureActor);
           jdbcTemplate.update("DELETE FROM hrs.reporting_unit WHERE created_by = ?", fixtureActor);
+          jdbcTemplate.update(
+              "DELETE FROM hrs.reporting_unit WHERE (reporting_unit_id >= 333 AND reporting_unit_id <= 400) OR reporting_unit_id = 55555");
         });
   }
 
@@ -298,18 +300,27 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
             .withRequestBody(containing("00012797")));
   }
 
+  private static final java.util.concurrent.atomic.AtomicLong TEST_RU_ID =
+      new java.util.concurrent.atomic.AtomicLong(333L);
+
   private void stubCreateDependencies() {
-    stubCreateDependencies("00012797");
+    stubCreateDependencies("00012797", TEST_RU_ID.incrementAndGet());
   }
 
   private void stubCreateDependencies(String clientNumber) {
+    stubCreateDependencies(clientNumber, TEST_RU_ID.incrementAndGet());
+  }
+
+  private void stubCreateDependencies(String clientNumber, Long id) {
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
+            .willReturn(
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
     clientApiStub.stubFor(
         get(urlPathEqualTo("/clients/findByClientNumber/" + clientNumber))
             .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
-    legacyApiStub.stubFor(post(urlPathEqualTo("/api/reporting-units")).willReturn(okJson("333")));
+    legacyApiStub.stubFor(
+        post(urlPathEqualTo("/api/reporting-units")).willReturn(okJson(String.valueOf(id))));
   }
 
   private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder createReportingUnitRequest() {

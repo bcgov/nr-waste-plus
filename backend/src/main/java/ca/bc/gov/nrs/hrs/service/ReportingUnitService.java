@@ -252,7 +252,7 @@ public class ReportingUnitService {
       entity.setRevision(1L);
       entity.setDeleted(false);
 
-      reportingUnitRepository.save(entity);
+      reportingUnitRepository.saveAndFlush(entity);
       log.info("Persisted local reporting unit {} in PostgreSQL", createdId);
     } catch (Exception e) {
       log.error("Failed to persist reporting unit {} to PostgreSQL", createdId, e);

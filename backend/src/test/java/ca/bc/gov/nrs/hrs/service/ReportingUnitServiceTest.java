@@ -378,7 +378,7 @@ class ReportingUnitServiceTest {
     assertThat(response).isEqualTo(333L);
 
     ArgumentCaptor<ReportingUnitEntity> captor = ArgumentCaptor.forClass(ReportingUnitEntity.class);
-    verify(reportingUnitRepository).save(captor.capture());
+    verify(reportingUnitRepository).saveAndFlush(captor.capture());
     ReportingUnitEntity savedEntity = captor.getValue();
     assertThat(savedEntity.getId()).isEqualTo(333L);
     assertThat(savedEntity.getClientNumber()).isEqualTo(CLIENT_NUMBER);
@@ -406,7 +406,7 @@ class ReportingUnitServiceTest {
     when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of());
 
     when(legacyApiProvider.createReportingUnit(request)).thenReturn(333L);
-    when(reportingUnitRepository.save(any(ReportingUnitEntity.class)))
+    when(reportingUnitRepository.saveAndFlush(any(ReportingUnitEntity.class)))
         .thenThrow(new RuntimeException("Database error"));
 
     // Act & Assert
@@ -462,7 +462,7 @@ class ReportingUnitServiceTest {
 
     // Assert
     assertThat(response).isEqualTo(333L);
-    verify(reportingUnitRepository).save(any(ReportingUnitEntity.class));
+    verify(reportingUnitRepository).saveAndFlush(any(ReportingUnitEntity.class));
   }
 
   @Test
