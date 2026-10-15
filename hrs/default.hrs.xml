@@ -16,7 +16,6 @@
       <sequence increment="1" name="formula_set_row_id_seq" startValue="1"/>
       <sequence increment="1" name="idempotency_record_id_seq" startValue="1"/>
       <sequence increment="1" name="lifecycle_setting_id_seq" startValue="1"/>
-      <sequence increment="1" name="outbox_event_id_seq" startValue="1"/>
       <sequence increment="1" name="reporting_unit_id_seq" startValue="1"/>
       <sequence increment="1" name="status_event_id_seq" startValue="1"/>
    </sequences>
@@ -519,39 +518,6 @@
          <index name="lifecycle_setting_key_uq" unique="true">
             <column ascending="true" name="setting_key"/>
          </index>
-      </table>
-      <table name="outbox_event" remarks="Transactional outbox events pending reliable delivery and reconciliation." schema="hrs" type="TABLE">
-         <column autoUpdated="true" defaultValue="nextval('hrs.outbox_event_id_seq'::regclass)" digits="0" id="0" name="outbox_event_id" nullable="false" remarks="Unique identifier for the outbox event record." size="19" type="bigserial" typeCode="-5"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="event_id" nullable="false" remarks="Stable UUID identifying this event across delivery attempts." size="2147483647" type="uuid" typeCode="1111"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="aggregate_type" nullable="false" remarks="Domain aggregate type, e.g. SUBMISSION." size="64" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="aggregate_id" nullable="false" remarks="Identifier of the owning aggregate." size="19" type="int8" typeCode="-5"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="event_type" nullable="false" remarks="Domain event type name." size="128" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="payload" nullable="false" remarks="Serialized event payload as JSONB." size="2147483647" type="jsonb" typeCode="1111"/>
-         <column autoUpdated="false" defaultValue="'PENDING'::character varying" digits="0" id="6" name="status" nullable="false" remarks="Delivery state: PENDING, IN_FLIGHT, RETRYING, CONFIRMED, etc." size="32" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="0" digits="0" id="7" name="attempt_count" nullable="false" remarks="Number of transmission attempts performed." size="10" type="int4" typeCode="4"/>
-         <column autoUpdated="false" defaultValue="'[]'::jsonb" digits="0" id="8" name="attempt_history" nullable="false" remarks="JSON array of delivery attempts with outcome timestamps." size="2147483647" type="jsonb" typeCode="1111"/>
-         <column autoUpdated="false" defaultValue="now()" digits="6" id="9" name="next_retry_at" nullable="false" remarks="Earliest timestamp for next delivery retry." size="35" type="timestamptz" typeCode="93"/>
-         <column autoUpdated="false" defaultValue="null" digits="6" id="10" name="locked_until" nullable="true" remarks="Lease expiration timestamp for in-flight processing." size="35" type="timestamptz" typeCode="93"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="locked_by" nullable="true" remarks="Worker node identifier holding the lease." size="128" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="now()" digits="6" id="12" name="created_at" nullable="false" remarks="Timestamp when the event was enqueued." size="35" type="timestamptz" typeCode="93"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="created_by" nullable="false" remarks="Actor that enqueued the outbox event." size="128" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="now()" digits="6" id="14" name="updated_at" nullable="false" remarks="Timestamp when the outbox record was last modified." size="35" type="timestamptz" typeCode="93"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="updated_by" nullable="false" remarks="Actor that last updated the outbox event." size="128" type="varchar" typeCode="12"/>
-         <primaryKey column="outbox_event_id" sequenceNumberInPK="1"/>
-         <index name="outbox_event_pk" unique="true">
-            <column ascending="true" name="outbox_event_id"/>
-         </index>
-         <index name="idx_outbox_actionable" unique="false">
-            <column ascending="true" name="next_retry_at"/>
-         </index>
-         <index name="idx_outbox_lease" unique="false">
-            <column ascending="true" name="locked_until"/>
-         </index>
-         <index name="outbox_event_event_uq" unique="true">
-            <column ascending="true" name="event_id"/>
-         </index>
-         <checkConstraint constraint="(attempt_count &gt;= 0)" name="outbox_event_attempt_count_ck"/>
-         <checkConstraint constraint="((status)::text = ANY ((ARRAY['PENDING'::character varying, 'IN_FLIGHT'::character varying, 'RETRYING'::character varying, 'CONFIRMED'::character varying, 'RECONCILIATION_REQUIRED'::character varying, 'PERMANENT_FAILURE'::character varying])::text[]))" name="outbox_event_status_ck"/>
       </table>
       <table name="reporting_unit" remarks="Locally-owned reporting unit for a District Average submission." schema="hrs" type="TABLE">
          <column autoUpdated="true" defaultValue="nextval('hrs.reporting_unit_id_seq'::regclass)" digits="0" id="0" name="reporting_unit_id" nullable="false" remarks="Unique identifier for the reporting unit." size="19" type="bigserial" typeCode="-5">

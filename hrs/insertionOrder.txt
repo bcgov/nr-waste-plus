@@ -18,6 +18,5 @@ block_requirement
 flyway_schema_history
 idempotency_record
 lifecycle_setting
-outbox_event
 user_bookmarks
 user_preferences

@@ -1,6 +1,5 @@
 user_preferences
 user_bookmarks
-outbox_event
 lifecycle_setting
 idempotency_record
 flyway_schema_history
