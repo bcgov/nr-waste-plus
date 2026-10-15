@@ -1,5 +1,5 @@
 import { Add } from '@carbon/icons-react';
-import { Button, Column, ComboBox, RadioButton, RadioButtonGroup } from '@carbon/react';
+import { Button, ComboBox, RadioButton, RadioButtonGroup } from '@carbon/react';
 import { useForm } from '@tanstack/react-form';
 import { useRouter } from '@tanstack/react-router';
 import { type ChangeEvent, type FC } from 'react';
@@ -101,15 +101,7 @@ const ReportingUnitCreate: FC = () => {
   };
 
   return (
-    <Column
-      max={6}
-      xlg={6}
-      lg={6}
-      md={4}
-      sm={4}
-      className="create-ru-column__content"
-      data-testid="create-ru-column-content"
-    >
+    <div className="create-ru-column__content" data-testid="create-ru-column-content">
       <form
         aria-label="Create reporting unit"
         data-testid="create-ru-form"
@@ -303,7 +295,7 @@ const ReportingUnitCreate: FC = () => {
           )}
         </form.Subscribe>
       </form>
-    </Column>
+    </div>
   );
 };
 
