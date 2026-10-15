@@ -9,7 +9,9 @@ import ca.bc.gov.nrs.hrs.dto.search.MyForestClientSearchResultDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchSource;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
+import ca.bc.gov.nrs.hrs.provider.search.PostgresReportingUnitSearchProvider;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import java.util.HashMap;
@@ -39,6 +41,7 @@ import org.springframework.stereotype.Service;
 public class SearchService {
 
   private final LegacyApiProvider legacyApiProvider;
+  private final PostgresReportingUnitSearchProvider postgresSearchProvider;
   private final ForestClientService forestClientService;
   private final UserService userService;
   private final FeatureFlagsConfiguration featureFlagsConfiguration;
@@ -48,6 +51,12 @@ public class SearchService {
    *
    * <p>Results are enriched with client names and client location details by calling the Forest
    * Client service.
+   *
+   * <p>The search source (issue #1238, DEC-011) is resolved from the filters' {@code legacy}
+   * flag: exactly {@code false} selects the PostgreSQL provider, any other value selects the
+   * legacy provider. Exactly one source is used per request; the legacy branch keeps the
+   * original behavior unchanged, and the PostgreSQL branch fails with HTTP 501 without falling
+   * back (DEC-002, DEC-004).
    *
    * @param userId the current user
    * @param filters search filters
@@ -64,8 +73,14 @@ public class SearchService {
       filters.setReportingUnitIds(userService.getUserBookmarksInList(userId, List.of()));
     }
 
-    // Search the legacy API for reporting units
-    var result = legacyApiProvider.searchReportingUnit(filters, pageable);
+    // Exactly one source per request; never merge results and never fall back across sources
+    // (DEC-004).
+    var source = ReportingUnitSearchSource.fromLegacyParam(filters.getLegacy());
+    var result =
+        switch (source) {
+          case LEGACY -> legacyApiProvider.searchReportingUnit(filters, pageable);
+          case POSTGRES -> postgresSearchProvider.searchReportingUnit(filters, pageable);
+        };
 
     // Build a map of clients and load details from Forest Client Service
     var clients =
