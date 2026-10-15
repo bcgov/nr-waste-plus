@@ -10,6 +10,7 @@
 @use '@carbon/type';
 @use './variables' as variables;
 @use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/breakpoint' as *;
 
 /* Toast Notification - Set it to the top-right corner and animate */
 .#{variables.$bcgov-prefix}--toast-notification {
@@ -35,6 +36,21 @@
   .#{variables.$bcgov-prefix}--inline-notification {
     width: 100%;
     max-inline-size: none;
+  }
+}
+
+/*
+ * Results table shared by the search-style page shell (waste search and my clients).
+ * Full-bleed: cancels the grid gutter so the table spans the grid border box.
+ * Defined globally so it loads independently of which page chunk is visited first.
+ */
+.search-table {
+  margin-left: -1.25rem;
+  margin-right: -1.25rem;
+
+  @include breakpoint-down(md) {
+    margin-left: 0;
+    margin-right: 0;
   }
 }
 

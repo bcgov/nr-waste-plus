@@ -19,8 +19,6 @@ import useNotificationEvents from '@/hooks/useNotificationEvents';
 import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
 import { removeEmpty } from '@/services/utils';
 
-import './index.scss';
-
 /**
  * Coordinates waste-search filters, results, pagination, sorting, and row expansion.
  *
