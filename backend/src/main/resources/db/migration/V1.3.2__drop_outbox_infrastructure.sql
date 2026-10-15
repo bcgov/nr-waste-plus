@@ -47,7 +47,9 @@ BEGIN
         DROP CONSTRAINT IF EXISTS outbox_event_pk;
 
     -- 4. Table: CASCADE is unnecessary — no FK edges reference hrs.outbox_event.
-    DROP TABLE hrs.outbox_event;
+    --    IF EXISTS matches the defensive style of steps 1-3 above even though
+    --    the to_regclass guard already ensures the table is present.
+    DROP TABLE IF EXISTS hrs.outbox_event;
   END IF;
 END $$;
 
