@@ -86,7 +86,7 @@ export type ReportingUnitSearchParametersDto = {
   readonly timberMark?: string;
   readonly clientLocationCode?: string;
   readonly clientNumbers?: string[];
-  readonly legacy?: boolean;
+  readonly legacy?: string;
 };
 
 /**

@@ -1,12 +1,15 @@
 import { useEffect, useState, type ComponentProps } from 'react';
 
-import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
-
-import { clientNumbersTransform } from '@/components/waste/WasteSearch/WasteSearchFilters/utils';
+import {
+  clientNumbersTransform,
+  legacyTransform,
+} from '@/components/waste/WasteSearch/WasteSearchFilters/utils';
 import WasteSearchFiltersActive from '@/components/waste/WasteSearch/WasteSearchFiltersActive';
 import useSyncFiltersToSearchParams from '@/hooks/useSyncFiltersToSearchParams';
 import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
 import { removeEmpty } from '@/services/utils';
+
+import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
 
 /** Shape of the object returned by {@link useWasteSearchFilters}. */
 type UseWasteSearchFiltersReturn = {
@@ -48,7 +51,9 @@ export const useWasteSearchFilters = (
   const [filters, setFilters] = useState<ReportingUnitSearchParametersViewDto>(value);
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState<boolean>(false);
 
-  useSyncFiltersToSearchParams(filters, setFilters, { transforms: clientNumbersTransform });
+  useSyncFiltersToSearchParams(filters, setFilters, {
+    transforms: { ...clientNumbersTransform, ...legacyTransform },
+  });
 
   // Synchronously propagate to parent so WasteSearchTable's plainFilters is fresh
   // when the user immediately clicks Search. The existing useEffect still handles

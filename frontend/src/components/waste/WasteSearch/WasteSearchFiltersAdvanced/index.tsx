@@ -299,8 +299,8 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
               data-testid="as-read-from-legacy-toggle"
               labelText="Read from legacy"
               hideLabel
-              toggled={filters.legacy}
-              onToggle={(toggled) => onChange('legacy')(toggled)}
+              toggled={filters.legacy !== 'false'}
+              onToggle={(toggled) => onChange('legacy')(toggled ? undefined : 'false')}
             />
           </Column>
         </Grid>

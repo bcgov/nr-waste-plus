@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { clientNumbersTransform } from './utils';
+import { clientNumbersTransform, legacyTransform } from './utils';
 
 describe('clientNumbersTransform', () => {
   describe('toSearchParam', () => {
@@ -99,5 +99,38 @@ describe('clientNumbersTransform', () => {
       ]);
       // Codes are preserved, descriptions become the code value (fallback behavior)
     });
+  });
+});
+
+describe('legacyTransform', () => {
+  it.each([
+    ['true', undefined],
+    ['FALSE', undefined],
+    ['garbage', undefined],
+    [undefined, undefined],
+    [null, undefined],
+  ])('treats %p as the absent/legacy default (%p)', (input, expected) => {
+    expect(legacyTransform.legacy.fromSearchParam(input)).toBe(expected);
+    expect(legacyTransform.legacy.toSearchParam(input as string | undefined)).toBe(expected);
+  });
+
+  it.each([
+    ['false', false],
+    [false, false],
+    ['"false"', false],
+  ])('maps the corrupted/loose false %p to the URL-safe boolean false', (input, expected) => {
+    expect(legacyTransform.legacy.toSearchParam('false')).toBe(expected);
+    expect(legacyTransform.legacy.fromSearchParam(input)).toBe('false');
+  });
+
+  it('round-trips the postgres selection through the URL', () => {
+    const toUrl = legacyTransform.legacy.toSearchParam('false');
+    expect(toUrl).toBe(false); // boolean primitive -> hook writes a clean unquoted legacy=false
+    expect(legacyTransform.legacy.fromSearchParam(toUrl)).toBe('false');
+  });
+
+  it('round-trips the legacy selection as an absent parameter', () => {
+    expect(legacyTransform.legacy.toSearchParam(undefined)).toBeUndefined();
+    expect(legacyTransform.legacy.fromSearchParam(undefined)).toBeUndefined();
   });
 });
