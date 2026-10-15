@@ -13,7 +13,7 @@
   // Build optional token-name segment
   $token-segment: '';
 
-  @if $token-name != null {
+  @if $token-name {
     $token-segment: '-#{$token-name}';
   }
 
