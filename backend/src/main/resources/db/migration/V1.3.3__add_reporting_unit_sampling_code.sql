@@ -1,5 +1,5 @@
 -- ============================================================================
--- V1.3.2__add_reporting_unit_sampling_code.sql — Issue #1400: add sampling_code
+-- V1.3.3__add_reporting_unit_sampling_code.sql — Issue #1400: add sampling_code
 -- column to hrs.reporting_unit to persist waste sampling options (e.g. AVG).
 -- ============================================================================
 ALTER TABLE hrs.reporting_unit
