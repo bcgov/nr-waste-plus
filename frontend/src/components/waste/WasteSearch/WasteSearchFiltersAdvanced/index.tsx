@@ -10,16 +10,9 @@ import {
   ModalFooter,
   ModalHeader,
   TextInput,
+  Toggle,
 } from '@carbon/react';
 import { type FC } from 'react';
-
-import AdvancedFilterClientInput from './AdvancedFilterClientInput';
-import AdvancedFilterDateRange from './AdvancedFilterDateRange';
-import { useAdvancedFilterHandlers } from './useAdvancedFilterHandlers';
-import { useClientLookup } from './useClientLookup';
-import { MAX_TEXT_INPUT_LEN } from './utils';
-
-import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
 
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import AutoCompleteInput from '@/components/Form/AutoCompleteInput';
@@ -29,6 +22,14 @@ import { useAuth } from '@/context/auth/useAuth';
 import { featureFlags } from '@/env';
 import APIs from '@/services/APIs';
 import { getCodeDescriptionArrayConverter } from '@/services/search.utils';
+
+import AdvancedFilterClientInput from './AdvancedFilterClientInput';
+import AdvancedFilterDateRange from './AdvancedFilterDateRange';
+import { useAdvancedFilterHandlers } from './useAdvancedFilterHandlers';
+import { useClientLookup } from './useClientLookup';
+import { MAX_TEXT_INPUT_LEN } from './utils';
+
+import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
 
 import './index.scss';
 
@@ -263,7 +264,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
           </Column>
 
           {/* Checkboxes */}
-          <Column sm={4} md={8} lg={16}>
+          <Column sm={4} md={6} lg={13}>
             <CheckboxGroup legendText="" orientation="horizontal">
               <Checkbox
                 id="as-created-by-me-checkbox"
@@ -289,6 +290,18 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
                 />
               )}
             </CheckboxGroup>
+          </Column>
+
+          {/* Source toggle (mirrors the filter-bar toggle) */}
+          <Column sm={4} md={2} lg={3}>
+            <Toggle
+              id="as-read-from-legacy-toggle"
+              data-testid="as-read-from-legacy-toggle"
+              labelText="Read from legacy"
+              hideLabel
+              toggled={filters.legacy}
+              onToggle={(toggled) => onChange('legacy')(toggled)}
+            />
           </Column>
         </Grid>
       </ModalBody>

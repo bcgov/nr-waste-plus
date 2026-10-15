@@ -38,8 +38,11 @@ const WasteSearchTable: FC = () => {
   const { sendInlineEvent } = useNotificationEvents();
   const plainFilters = useMemo(() => reportingUnitSearchParametersView2Plain(filters), [filters]);
 
+  // The source-selection flag (`legacy`) is a routing parameter, not a filter: it must not
+  // enable searching on its own, otherwise toggling it alone would allow a search with no
+  // criteria selected (#1238).
   const hasFilters = useMemo(
-    () => Object.keys(removeEmpty(plainFilters)).length > 0,
+    () => Object.keys(removeEmpty(plainFilters)).some((key) => key !== 'legacy'),
     [plainFilters],
   );
 

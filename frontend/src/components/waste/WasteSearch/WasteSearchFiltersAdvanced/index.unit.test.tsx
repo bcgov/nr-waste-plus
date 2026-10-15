@@ -3,13 +3,13 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
+import APIs from '@/services/APIs';
+
 import WasteSearchFiltersAdvanced from './index';
 
 import type { FamLoginUser } from '@/context/auth/types';
 import type { ReportingUnitSearchParametersViewDto } from '@/services/search.types';
-
-import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import APIs from '@/services/APIs';
 
 const mockUser = {
   idpProvider: 'IDIR',
@@ -264,5 +264,32 @@ describe('WasteSearchFiltersActive', () => {
 
     expect(onChange).toHaveBeenCalledWith('updateDateEnd');
     expect(innerFn).toHaveBeenCalledWith('2020-02-10');
+  });
+
+  describe('source toggle (#1238)', () => {
+    it('renders the toggle checked by default (no legacy flag means legacy)', async () => {
+      await renderWithProps({});
+
+      const toggle = screen.getByRole('switch', { name: 'Read from legacy' });
+      expect(toggle.getAttribute('aria-checked')).toBe('true');
+    });
+
+    it('renders the toggle unchecked when legacy=false is set', async () => {
+      await renderWithProps({ filters: { ...defaultFilters, legacy: 'false' } });
+
+      const toggle = screen.getByRole('switch', { name: 'Read from legacy' });
+      expect(toggle.getAttribute('aria-checked')).toBe('false');
+    });
+
+    it('updates the legacy flag when the toggle flips', async () => {
+      const innerFn = vi.fn();
+      const onChange = vi.fn(() => innerFn);
+      await renderWithProps({ onChange });
+
+      await userEvent.click(screen.getByRole('switch', { name: 'Read from legacy' }));
+
+      expect(onChange).toHaveBeenCalledWith('legacy');
+      expect(innerFn).toHaveBeenCalledWith('false');
+    });
   });
 });

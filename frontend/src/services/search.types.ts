@@ -66,6 +66,9 @@ export type ReportingUnitSearchResultDto = {
  * @property timberMark - filter by timber mark
  * @property clientLocationCode - filter by client location code
  * @property clientNumbers - array of client numbers to filter by
+ * @property legacy - source-selection flag for the search (#1238): `legacy=false` requests
+ *   PostgreSQL-sourced results; omitted (or any other value) returns legacy results. Held
+ *   as the string `'false'` rather than a boolean so empty-value cleanup keeps it on the wire.
  */
 export type ReportingUnitSearchParametersDto = {
   readonly mainSearchTerm?: string;
@@ -83,6 +86,7 @@ export type ReportingUnitSearchParametersDto = {
   readonly timberMark?: string;
   readonly clientLocationCode?: string;
   readonly clientNumbers?: string[];
+  readonly legacy?: boolean;
 };
 
 /**
