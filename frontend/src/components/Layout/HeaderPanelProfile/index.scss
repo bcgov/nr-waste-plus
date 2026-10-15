@@ -71,7 +71,8 @@
     }
 
     .logout-button {
-      width: 100%;
+      inline-size: 100%;
+      max-inline-size: none;
       justify-content: flex-start;
       gap: $spacing-03;
       color: var(--#{vars.$bcgov-prefix}-text-secondary);
