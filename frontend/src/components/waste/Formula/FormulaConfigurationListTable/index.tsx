@@ -1,4 +1,3 @@
-import { Column } from '@carbon/react';
 import { useState, type FC } from 'react';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
@@ -28,7 +27,7 @@ const FormulaConfigurationListTable: FC = () => {
   };
 
   return (
-    <Column lg={16} md={8} sm={4} className="formula-set-list-column__content">
+    <div className="formula-set-list-column__content">
       <TableResource
         id="formula-configuration-list"
         headers={headers}
@@ -63,7 +62,7 @@ const FormulaConfigurationListTable: FC = () => {
         }}
         onClose={() => setRowToDelete(null)}
       />
-    </Column>
+    </div>
   );
 };
 
