@@ -3,7 +3,7 @@
 @use '@carbon/react/scss/type' as *;
 @use '@carbon/react/scss/breakpoint' as *;
 @use '@carbon/react/scss/theme' as *;
-@use '@carbon/type/scss/font-family.scss';
+@use '@carbon/type/scss/font-family';
 @use '@carbon/type';
 
 .cds--side-nav__item {
@@ -70,9 +70,21 @@
       }
     }
 
-    a {
-      width: 100%;
+    .logout-button {
+      inline-size: 100%;
+      max-inline-size: none;
+      justify-content: flex-start;
+      gap: $spacing-03;
+      color: var(--#{vars.$bcgov-prefix}-text-secondary);
       @include font-weight(semibold);
+
+      svg {
+        fill: var(--#{vars.$bcgov-prefix}-link-primary);
+      }
+
+      &:hover {
+        color: var(--#{vars.$bcgov-prefix}-text-primary);
+      }
     }
 
     .panel-section,
@@ -97,9 +109,5 @@
       color: var(--#{vars.$bcgov-prefix}-text-secondary);
       user-select: none;
     }
-  }
-
-  .cursor-pointer {
-    cursor: pointer;
   }
 }
