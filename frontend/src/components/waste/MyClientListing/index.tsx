@@ -30,7 +30,7 @@ import './index.scss';
  * - Client codes in the results table are rendered as TanStack Router links to
  *   `/search?clientNumbers={code}`.
  *
- * @returns The client listing view column.
+ * @returns The client listing view content.
  */
 const MyClientListing: FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
@@ -90,7 +90,7 @@ const MyClientListing: FC = () => {
 
   return (
     <>
-      <Column lg={16} md={8} sm={4} className="search-filters">
+      <div className="search-filters">
         <Grid className="table-filters-grid">
           <Column max={14} lg={14} md={6} sm={4} className="filters-column">
             <SearchInput
@@ -131,8 +131,8 @@ const MyClientListing: FC = () => {
             </Button>
           </Column>
         </Grid>
-      </Column>
-      <Column lg={16} md={8} sm={4} className="search-table">
+      </div>
+      <div className="search-table">
         <TableResource
           id="districts-search"
           headers={headers}
@@ -143,7 +143,7 @@ const MyClientListing: FC = () => {
           displayRange
           displayToolbar
         />
-      </Column>
+      </div>
     </>
   );
 };
