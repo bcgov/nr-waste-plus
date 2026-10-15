@@ -1,4 +1,4 @@
-import { Column } from '@carbon/react';
+import { Column, Grid } from '@carbon/react';
 import { type FC } from 'react';
 
 import DateTag from '@/components/core/Tags/DateTag';
@@ -30,7 +30,7 @@ const SpeciesCompositionDetailHeader: FC<SpeciesCompositionDetailHeaderProps> = 
   dateOfUpload,
 }) => {
   return (
-    <>
+    <Grid className="detail-header-grid cds--grid--no-gutter">
       {/* Start date */}
       <Column lg={4} md={4} sm={4} className="species-composition-detail-column__start-date">
         <ReadonlyInput label="Start date">
@@ -53,7 +53,7 @@ const SpeciesCompositionDetailHeader: FC<SpeciesCompositionDetailHeaderProps> = 
           <DateTag date={dateOfUpload} format="MMMM dd, yyyy" />
         </ReadonlyInput>
       </Column>
-    </>
+    </Grid>
   );
 };
 

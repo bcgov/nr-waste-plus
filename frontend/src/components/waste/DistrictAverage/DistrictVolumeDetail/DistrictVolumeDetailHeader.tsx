@@ -1,4 +1,4 @@
-import { Column } from '@carbon/react';
+import { Column, Grid } from '@carbon/react';
 import { type FC } from 'react';
 
 import DateTag from '@/components/core/Tags/DateTag';
@@ -32,7 +32,7 @@ const DistrictVolumeDetailHeader: FC<DistrictVolumeDetailHeaderProps> = ({
   heliMultiplier,
 }) => {
   return (
-    <>
+    <Grid className="detail-header-grid cds--grid--no-gutter">
       <Column lg={4} md={4} sm={4} className="district-volume-detail__start-date">
         <ReadonlyInput label="Start date">
           {startDate && <DateTag date={startDate} format="MMMM dd, yyyy" />}
@@ -57,7 +57,7 @@ const DistrictVolumeDetailHeader: FC<DistrictVolumeDetailHeaderProps> = ({
           )}
         </ReadonlyInput>
       </Column>
-    </>
+    </Grid>
   );
 };
 

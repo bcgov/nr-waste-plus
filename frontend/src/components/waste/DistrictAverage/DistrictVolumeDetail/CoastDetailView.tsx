@@ -1,3 +1,4 @@
+import { Column } from '@carbon/react';
 import { type FC } from 'react';
 
 import DistrictVolumeDetailHeader from './DistrictVolumeDetailHeader.tsx';
@@ -50,12 +51,14 @@ const CoastDetailView: FC<CoastDetailViewProps> = ({ data, districtOptions }) =>
 
   return (
     <>
-      <DistrictVolumeDetailHeader
-        startDate={startDate}
-        endDate={endDate}
-        tableLevelFactor={tableLevelFactor}
-        heliMultiplier={heliMultiplier}
-      />
+      <Column lg={16} md={8} sm={4}>
+        <DistrictVolumeDetailHeader
+          startDate={startDate}
+          endDate={endDate}
+          tableLevelFactor={tableLevelFactor}
+          heliMultiplier={heliMultiplier}
+        />
+      </Column>
       <DistrictVolumeDetailTabs ariaLabel="Coast sections" items={sections} headers={headers} />
     </>
   );

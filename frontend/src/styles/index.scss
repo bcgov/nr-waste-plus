@@ -54,6 +54,23 @@
   }
 }
 
+/*
+ * Self-contained sub-grid used by the detail-view header field rows.
+ * Neutralises Carbon's nested-subgrid spacing (padding, inner margins and gaps)
+ * so the header's columns tile the parent column's content box exactly like the
+ * page layout grid does. Keeps the header independent of which grid it lands in.
+ */
+.detail-header-grid {
+  padding: 0;
+  margin-inline: 0;
+  column-gap: 0;
+  row-gap: 0;
+
+  > .cds--css-grid-column {
+    margin-inline: 0;
+  }
+}
+
 @keyframes slide-in-right {
   from {
     transform: translateX(100%);
