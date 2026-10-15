@@ -23,5 +23,12 @@ class ReportingUnitIdGeneratorTest {
 
     assertThat(generatedId).isEqualTo(12345L);
   }
+
+  @Test
+  @DisplayName("allowAssignedIdentifiers returns true")
+  void allowAssignedIdentifiers_returnsTrue() {
+    var generator = new ReportingUnitIdGenerator();
+    assertThat(generator.allowAssignedIdentifiers()).isTrue();
+  }
 }
 

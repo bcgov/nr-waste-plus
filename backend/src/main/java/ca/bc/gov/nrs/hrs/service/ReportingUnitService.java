@@ -269,7 +269,6 @@ public class ReportingUnitService {
       entity.setClientLocnCode("00");
       entity.setOrgUnitNo(request.districtCode());
       entity.setSamplingCode(request.samplingCode());
-      entity.setRevision(1L);
       entity.setDeleted(false);
 
       reportingUnitRepository.saveAndFlush(entity);

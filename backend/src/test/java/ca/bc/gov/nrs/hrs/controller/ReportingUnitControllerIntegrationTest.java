@@ -372,7 +372,6 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     ru.setClientLocnCode("00");
     ru.setOrgUnitNo("DND");
     ru.setSamplingCode("AVG");
-    ru.setRevision(1L);
     ru.setDeleted(false);
     ru.setCreatedBy(fixtureActor);
     ru.setUpdatedBy(fixtureActor);
@@ -539,7 +538,6 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     ru.setClientLocnCode("00");
     ru.setOrgUnitNo("DND");
     ru.setSamplingCode("AVG");
-    ru.setRevision(1L);
     ru.setDeleted(false);
     ru.setCreatedBy(fixtureActor);
     ru.setUpdatedBy(fixtureActor);

@@ -20,5 +20,10 @@ public class ReportingUnitIdGenerator extends SequenceStyleGenerator {
     }
     return super.generate(session, object);
   }
+
+  @Override
+  public boolean allowAssignedIdentifiers() {
+    return true;
+  }
 }
 
