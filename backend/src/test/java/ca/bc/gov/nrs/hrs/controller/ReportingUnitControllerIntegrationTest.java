@@ -242,7 +242,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     org.assertj.core.api.Assertions.assertThat(savedEntity.get().getClientLocnCode()).isEqualTo("00");
     org.assertj.core.api.Assertions.assertThat(savedEntity.get().getOrgUnitNo()).isEqualTo("DND");
     org.assertj.core.api.Assertions.assertThat(savedEntity.get().getSamplingCode()).isEqualTo("AVG");
-    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getRevision()).isEqualTo(1L);
+    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getRevision()).isEqualTo(0L);
     org.assertj.core.api.Assertions.assertThat(savedEntity.get().isDeleted()).isFalse();
   }
 
@@ -418,7 +418,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
         .andExpect(status().isCreated())
-        .andExpect(header().string("Location", "/api/reporting-units/36834"));
+        .andExpect(header().string("Location", "/reporting-units/36834"));
 
     var saved = reportingUnitRepository.findById(36834L);
     org.assertj.core.api.Assertions.assertThat(saved).isPresent();
