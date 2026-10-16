@@ -1,0 +1,11 @@
+[
+  {
+    "id": "GHSA-vfj7-8cjw-p6xm",
+    "url": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm",
+    "package": "braces",
+    "owner": "Team Alliance",
+    "reviewBy": "2026-12-01",
+    "trackingIssue": "https://github.com/micromatch/braces/issues/70",
+    "notes": "Uncontrolled recursion stack overflow in braces <= 3.0.3 AST walkers. Transitive devDependency via stylelint. No upstream fix available yet."
+  }
+]

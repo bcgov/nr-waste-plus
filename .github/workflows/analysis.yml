@@ -142,66 +142,14 @@ jobs:
           node-version: "24"
           cache: npm
           cache-dependency-path: ${{ matrix.folder }}/package-lock.json
+      - name: Test audit allowlist script
+        run: node --test .github/scripts/*.test.cjs
       - name: Run npm audit (${{ matrix.folder }})
         working-directory: ${{ matrix.folder }}
         run: |
-          npm audit --package-lock-only --audit-level=high || {
-            echo "::warning::npm audit found high/critical vulnerabilities. Verifying if they are limited to known unpatched advisories..."
-            node -e "
-              const { execSync } = require('child_process');
-              let auditOutput;
-              try {
-                auditOutput = execSync('npm audit --package-lock-only --json', { encoding: 'utf8' });
-              } catch (err) {
-                auditOutput = err.stdout;
-              }
-              let report;
-              try {
-                report = JSON.parse(auditOutput);
-              } catch (e) {
-                console.error('Failed to parse npm audit JSON output:', e.message);
-                process.exit(1);
-              }
-              if (!report || report.error || typeof report.vulnerabilities !== 'object') {
-                console.error('npm audit returned an error or malformed response:', report ? report.error : auditOutput);
-                process.exit(1);
-              }
-              const vulns = report.vulnerabilities;
-              if (Object.keys(vulns).length === 0) {
-                console.error('npm audit failed without reporting vulnerabilities. Check registry or network connectivity.');
-                process.exit(1);
-              }
-              const knownAdvisoryUrls = new Set([
-                'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm'
-              ]);
-              function getAdvisoryUrls(name, visited = new Set()) {
-                if (visited.has(name)) return [];
-                visited.add(name);
-                const v = vulns[name];
-                if (!v) return [];
-                const urls = [];
-                for (const item of (v.via || [])) {
-                  if (typeof item === 'object' && item.url) {
-                    urls.push(item.url);
-                  } else if (typeof item === 'string') {
-                    urls.push(...getAdvisoryUrls(item, visited));
-                  }
-                }
-                return urls;
-              }
-              const unhandled = Object.entries(vulns).filter(([name, v]) => {
-                if (v.severity !== 'high' && v.severity !== 'critical') return false;
-                const urls = getAdvisoryUrls(name);
-                return urls.length === 0 || !urls.every(u => knownAdvisoryUrls.has(u));
-              });
-              if (unhandled.length > 0) {
-                console.error('Audit failed with unhandled high/critical vulnerabilities:');
-                unhandled.forEach(([name, v]) => console.error(' - ' + name + ' (' + v.severity + ')'));
-                process.exit(1);
-              }
-              console.log('Ignored known unpatched dev advisory GHSA-vfj7-8cjw-p6xm (braces <= 3.0.3). No other high/critical vulnerabilities found.');
-            "
-          }
+          npm audit --package-lock-only --audit-level=high || \
+          node "${{ github.workspace }}/.github/scripts/npm-audit-allowlist.cjs" \
+            --allowlist "${{ github.workspace }}/.github/scripts/audit-allowlist.json"
 
   # ==========================================================================
   # WARNING: This job acts as the required merge gate for this workflow.
