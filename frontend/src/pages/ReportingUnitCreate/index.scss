@@ -7,12 +7,12 @@
 .create-ru {
 
   &-column__banner {
-    @include shell.md-inset($spacing-05 $spacing-07);
+    @include shell.md-inset;
   }
 
   &-column__notification:not(:empty) {
     margin-top: $spacing-08;
-    @include shell.md-inset($spacing-05 $spacing-07);
+    @include shell.md-inset;
   }
 
   &-column__spacer {

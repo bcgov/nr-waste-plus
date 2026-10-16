@@ -8,7 +8,7 @@
 
   &-column__content {
     form {
-      @include shell.form-shell($spacing-05 $spacing-07, $spacing-01);
+      @include shell.form-shell($spacing-02 $spacing-04, $spacing-01);
     }
   }
 
