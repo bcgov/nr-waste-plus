@@ -24,6 +24,8 @@ import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants;
+import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
+import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -76,6 +78,9 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
   @Autowired
   private MockMvc mockMvc;
+
+  @Autowired
+  private ReportingUnitRepository reportingUnitRepository;
 
   @Autowired
   private JsonMapper jsonMapper;
@@ -180,6 +185,8 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
               "DELETE FROM hrs.district_average_block WHERE created_by = ?", fixtureActor);
           jdbcTemplate.update("DELETE FROM hrs.block WHERE created_by = ?", fixtureActor);
           jdbcTemplate.update("DELETE FROM hrs.reporting_unit WHERE created_by = ?", fixtureActor);
+          jdbcTemplate.update(
+              "DELETE FROM hrs.reporting_unit WHERE (reporting_unit_id >= 333 AND reporting_unit_id <= 400) OR reporting_unit_id IN (36834, 55555)");
         });
   }
 
@@ -228,6 +235,15 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
         .andExpect(status().isCreated());
+
+    var savedEntity = reportingUnitRepository.findById(333L);
+    org.assertj.core.api.Assertions.assertThat(savedEntity).isPresent();
+    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getClientNumber()).isEqualTo("00012797");
+    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getClientLocnCode()).isEqualTo("00");
+    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getOrgUnitNo()).isEqualTo("DND");
+    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getSamplingCode()).isEqualTo("AVG");
+    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getRevision()).isEqualTo(0L);
+    org.assertj.core.api.Assertions.assertThat(savedEntity.get().isDeleted()).isFalse();
   }
 
   @Test
@@ -284,18 +300,27 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
             .withRequestBody(containing("00012797")));
   }
 
+  private static final java.util.concurrent.atomic.AtomicLong TEST_RU_ID =
+      new java.util.concurrent.atomic.AtomicLong(333L);
+
   private void stubCreateDependencies() {
-    stubCreateDependencies("00012797");
+    stubCreateDependencies("00012797", TEST_RU_ID.incrementAndGet());
   }
 
   private void stubCreateDependencies(String clientNumber) {
+    stubCreateDependencies(clientNumber, TEST_RU_ID.incrementAndGet());
+  }
+
+  private void stubCreateDependencies(String clientNumber, Long id) {
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
+            .willReturn(
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
     clientApiStub.stubFor(
         get(urlPathEqualTo("/clients/findByClientNumber/" + clientNumber))
             .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
-    legacyApiStub.stubFor(post(urlPathEqualTo("/api/reporting-units")).willReturn(okJson("333")));
+    legacyApiStub.stubFor(
+        post(urlPathEqualTo("/api/reporting-units")).willReturn(okJson(String.valueOf(id))));
   }
 
   private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder createReportingUnitRequest() {
@@ -341,6 +366,17 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @Test
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void shouldReturn409_whenReportingUnitDuplicate() throws Exception {
+    var ru = new ReportingUnitEntity();
+    ru.setId(36834L);
+    ru.setClientNumber("00012797");
+    ru.setClientLocnCode("00");
+    ru.setOrgUnitNo("DND");
+    ru.setSamplingCode("AVG");
+    ru.setDeleted(false);
+    ru.setCreatedBy(fixtureActor);
+    ru.setUpdatedBy(fixtureActor);
+    reportingUnitRepository.saveAndFlush(ru);
+
     // Legacy search: returns an existing RU (totalElements > 0)
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
@@ -359,6 +395,34 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
         .andExpect(status().isConflict());
+  }
+
+  @DisplayName("Should Reconcile Reporting Unit when Exists in Legacy Only")
+  @Test
+  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
+  void shouldReconcileReportingUnit_whenExistsInLegacyOnly() throws Exception {
+    legacyApiStub.stubFor(
+        get(urlPathEqualTo("/api/search/reporting-units"))
+            .willReturn(
+                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE)));
+
+    var requestJson =
+        """
+        {"clientNumber":"00012797","districtCode":"DND","samplingCode":"AVG","gradeCode":null}
+        """;
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/api/reporting-units")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+        .andExpect(status().isCreated())
+        .andExpect(header().string("Location", "/reporting-units/36834"));
+
+    var saved = reportingUnitRepository.findById(36834L);
+    org.assertj.core.api.Assertions.assertThat(saved).isPresent();
+    org.assertj.core.api.Assertions.assertThat(saved.get().getSamplingCode()).isEqualTo("AVG");
   }
 
   @Test
@@ -462,6 +526,54 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .andExpect(jsonPath("$.blockRule.maxBlocks").value(1))
         .andExpect(jsonPath("$.blockRule.blockType").value("DISTRICT_AVERAGE"))
         .andExpect(jsonPath("$.isLegacy").value(true));
+  }
+
+  @Test
+  @WithMockJwt
+  @DisplayName("Should Return Reporting Unit Details with Postgres Sampling when Local Record Exists")
+  void shouldReturnReportingUnitDetails_withPostgresSampling_whenLocalRecordExists() throws Exception {
+    var ru = new ReportingUnitEntity();
+    ru.setId(55555L);
+    ru.setClientNumber("00012797");
+    ru.setClientLocnCode("00");
+    ru.setOrgUnitNo("DND");
+    ru.setSamplingCode("AVG");
+    ru.setDeleted(false);
+    ru.setCreatedBy(fixtureActor);
+    ru.setUpdatedBy(fixtureActor);
+    reportingUnitRepository.saveAndFlush(ru);
+
+    try {
+      legacyApiStub.stubFor(
+          get(urlPathEqualTo("/api/codes/districts"))
+              .willReturn(
+                  okJson(
+                      """
+                      [{"code": "DND", "description": "Nadina Natural Resource District"}]
+                      """)));
+
+      clientApiStub.stubFor(
+          get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
+              .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
+
+      mockMvc
+          .perform(
+              MockMvcRequestBuilders.get("/api/reporting-units/{id}", 55555L)
+                  .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                  .accept(MediaType.APPLICATION_JSON))
+          .andExpect(status().isOk())
+          .andExpect(content().contentType("application/json;charset=UTF-8"))
+          .andExpect(jsonPath("$.id").value(55555))
+          .andExpect(jsonPath("$.client.code").value("00012797"))
+          .andExpect(jsonPath("$.sampling.code").value("AVG"))
+          .andExpect(jsonPath("$.sampling.description").value("Average"))
+          .andExpect(jsonPath("$.district.code").value("DND"))
+          .andExpect(jsonPath("$.blockRule.maxBlocks").value(1))
+          .andExpect(jsonPath("$.blockRule.blockType").value("DISTRICT_AVERAGE"))
+          .andExpect(jsonPath("$.isLegacy").value(false));
+    } finally {
+      reportingUnitRepository.deleteById(55555L);
+    }
   }
 
   @Test

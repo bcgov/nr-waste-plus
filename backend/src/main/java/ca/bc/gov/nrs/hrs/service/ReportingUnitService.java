@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
@@ -27,7 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
  *
  * <p>Fetches raw data from the legacy API and enriches it with client information from the Forest
  * Client API, combining both into a unified {@link ReportingUnitDetailsDto} response. Handles
- * creation of new reporting units with comprehensive validation.
+ * creation of new reporting units with comprehensive validation and persists them locally to PostgreSQL.
  */
 @Slf4j
 @Service
@@ -52,8 +53,8 @@ public class ReportingUnitService {
    *
    * @param reportingUnitId the unique identifier of the reporting unit to retrieve (must not be
    *     null)
-   * @return a fully populated {@link ReportingUnitDetailsDto} combining legacy and Forest Client
-   *     API data; never null
+   * @return a fully populated {@link ReportingUnitDetailsDto} combining legacy, Forest Client API,
+   *     and local PostgreSQL data; never null
    * @throws ForestClientNotFoundException if no Forest Client record can be found for the client
    *     number returned by the legacy API
    */
@@ -94,13 +95,18 @@ public class ReportingUnitService {
             ? new CodeDescriptionDto(districtAreas.getFirst(), districtAreas.getFirst())
             : new CodeDescriptionDto(null, null);
 
+    var sampling =
+        reportingUnit.getSamplingCode() != null
+            ? resolveSampling(reportingUnit.getSamplingCode())
+            : DISTRICT_AVERAGE_SAMPLING;
+
     return new ReportingUnitDetailsDto(
         reportingUnitId,
         new CodeDescriptionDto(clientInformation.clientNumber(), clientInformation.name()),
         new CodeDescriptionDto(
             clientInformation.clientStatusCode().getCode(),
             clientInformation.clientStatusCode().getDescription()),
-        DISTRICT_AVERAGE_SAMPLING,
+        sampling,
         new CodeDescriptionDto(district.code(), district.description()),
         grade);
   }
@@ -133,6 +139,40 @@ public class ReportingUnitService {
   }
 
   /**
+   * Resolves the sampling method description for a given sampling code.
+   *
+   * @param samplingCode the sampling option code to resolve
+   * @return a populated {@link CodeDescriptionDto}
+   */
+  private CodeDescriptionDto resolveSampling(String samplingCode) {
+    if (StringUtils.isBlank(samplingCode)) {
+      return DISTRICT_AVERAGE_SAMPLING;
+    }
+    try {
+      if (codesService != null) {
+        List<CodeDescriptionDto> samplingCodes = codesService.getSamplingCodes();
+        if (samplingCodes != null) {
+          return samplingCodes.stream()
+              .filter(code -> samplingCode.equalsIgnoreCase(code.code()))
+              .findFirst()
+              .orElseGet(() -> defaultSamplingDto(samplingCode));
+        }
+      }
+    } catch (Exception e) {
+      log.warn(
+          "Failed to resolve sampling code {} via CodesService: {}", samplingCode, e.getMessage());
+    }
+    return defaultSamplingDto(samplingCode);
+  }
+
+  private CodeDescriptionDto defaultSamplingDto(String samplingCode) {
+    if ("AVG".equalsIgnoreCase(samplingCode)) {
+      return DISTRICT_AVERAGE_SAMPLING;
+    }
+    return new CodeDescriptionDto(samplingCode, samplingCode);
+  }
+
+  /**
    * Creates a new reporting unit.
    *
    * <p>Performs the following validations and actions:
@@ -144,6 +184,7 @@ public class ReportingUnitService {
    *   <li>Validates that a grade code is provided when the district has multiple configured areas.
    *   <li>Verifies that the client exists in the Forest Client API.
    *   <li>Creates the reporting unit through the legacy API.
+   *   <li>Persists the reporting unit in PostgreSQL with matching identifier and sampling code.
    * </ul>
    *
    * @param request the validated create request containing client, district, sampling, and optional
@@ -156,6 +197,7 @@ public class ReportingUnitService {
    *     the same client number and district
    */
   @NewSpan
+  @Transactional
   public Long createReportingUnit(@Valid CreateReportingUnitRequestDto request) {
 
     log.info("Creating reporting unit for client {}", request.clientNumber());
@@ -176,6 +218,21 @@ public class ReportingUnitService {
     var existing = legacyApiProvider.searchReportingUnit(searchFilters, PageRequest.of(0, 1));
 
     if (existing != null && existing.getTotalElements() > 0) {
+      if (existing.hasContent()) {
+        Long existingRuId = existing.getContent().getFirst().ruNumber();
+        if (existingRuId != null) {
+          var localEntity = reportingUnitRepository.findByIdAndDeletedFalse(existingRuId);
+          if (localEntity.isEmpty()) {
+            log.warn(
+                "Reporting unit {} exists in legacy for client {} and district {} but is missing in"
+                    + " PostgreSQL. Reconciling local record.",
+                existingRuId,
+                request.clientNumber(),
+                request.districtCode());
+            return persistLocalReportingUnit(existingRuId, request);
+          }
+        }
+      }
       throw new ResponseStatusException(
           HttpStatus.CONFLICT,
           String.format(
@@ -199,6 +256,27 @@ public class ReportingUnitService {
     // Create reporting unit via legacy API
     Long createdId = legacyApiProvider.createReportingUnit(request);
 
-    return createdId;
+    // Persist reporting unit in PostgreSQL
+    return persistLocalReportingUnit(createdId, request);
+  }
+
+  private Long persistLocalReportingUnit(
+      Long reportingUnitId, CreateReportingUnitRequestDto request) {
+    try {
+      ReportingUnitEntity entity = new ReportingUnitEntity();
+      entity.setId(reportingUnitId);
+      entity.setClientNumber(request.clientNumber());
+      entity.setClientLocnCode("00");
+      entity.setOrgUnitNo(request.districtCode());
+      entity.setSamplingCode(request.samplingCode());
+      entity.setDeleted(false);
+
+      reportingUnitRepository.saveAndFlush(entity);
+      log.info("Persisted local reporting unit {} in PostgreSQL", reportingUnitId);
+      return reportingUnitId;
+    } catch (Exception e) {
+      log.error("Failed to persist reporting unit {} to PostgreSQL", reportingUnitId, e);
+      throw e;
+    }
   }
 }
