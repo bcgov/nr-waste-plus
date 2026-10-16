@@ -258,7 +258,8 @@ test('evaluateAudit rejects mixed advisories on a single package (must be ALL, n
   assert.equal(result.ok, false);
   assert.equal(result.unhandled.length, 1);
   assert.equal(result.unhandled[0].name, 'braces');
-  assert.ok(result.unhandled[0].unlistedKeys.includes('https://github.com/advisories/GHSA-unlisted-secondary'));
+  assert.equal(result.unhandled[0].unlistedKeys[0], 'https://github.com/advisories/GHSA-unlisted-secondary');
+  assert.equal(result.unhandled[0].unlistedKeys[1], 'GHSA-unlisted-secondary');
 });
 
 test('evaluateAudit respects folder scoping', () => {
