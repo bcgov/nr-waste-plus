@@ -55,8 +55,14 @@ function validateAllowlistSchema(allowlist) {
     if (!entry.reviewBy || !dateRegex.test(entry.reviewBy) || Number.isNaN(Date.parse(entry.reviewBy))) {
       throw new Error(`${prefix} (${entry.id}) missing or invalid "reviewBy" date (must be YYYY-MM-DD).`);
     }
-    if (entry.folders && !Array.isArray(entry.folders)) {
-      throw new Error(`${prefix} (${entry.id}) "folders" must be an array of strings.`);
+    if (entry.folders !== undefined) {
+      if (
+        !Array.isArray(entry.folders) ||
+        entry.folders.length === 0 ||
+        !entry.folders.every(f => typeof f === 'string' && f.trim().length > 0)
+      ) {
+        throw new Error(`${prefix} (${entry.id}) "folders" must be a non-empty array of strings.`);
+      }
     }
   }
 }
@@ -193,26 +199,29 @@ function evaluateAudit(report, allowlist, currentFolder = null) {
   };
 }
 
-function run() {
-  const options = parseArgs();
-  console.log(`Loading audit allowlist from: ${options.allowlistPath} (folder: ${options.folder})`);
-  const allowlist = loadAllowlist(options.allowlistPath);
+function run(overrides = {}) {
+  const options = overrides.args ? parseArgs(overrides.args) : parseArgs();
+  const exec = overrides.execSync || execSync;
+  const allowlist = overrides.allowlist || loadAllowlist(options.allowlistPath);
+  const logger = overrides.logger || console;
+
+  logger.log(`Loading audit allowlist from: ${options.allowlistPath} (folder: ${options.folder})`);
 
   // 1. Check if any allowlisted entry has expired
-  checkAllowlistExpirations(allowlist, new Date(), options.folder);
+  checkAllowlistExpirations(allowlist, overrides.currentDate || new Date(), options.folder);
 
   // 2. Run npm audit for all dependencies
-  console.log('Running npm audit --package-lock-only --json...');
+  logger.log('Running npm audit --package-lock-only --json...');
   let rawAuditOutput = '';
   try {
-    rawAuditOutput = execSync('npm audit --package-lock-only --json', {
+    rawAuditOutput = exec('npm audit --package-lock-only --json', {
       encoding: 'utf8',
       maxBuffer: MAX_BUFFER,
     });
   } catch (err) {
     rawAuditOutput = err.stdout || '';
     if (!rawAuditOutput && err.stderr) {
-      console.error(err.stderr);
+      logger.error(err.stderr);
     }
   }
 
@@ -226,10 +235,10 @@ function run() {
   validateAuditReport(fullReport, rawAuditOutput);
 
   // 3. Confirm production dependencies are 100% clean of high/critical vulnerabilities (fails closed)
-  console.log('Checking production dependencies with npm audit --package-lock-only --omit=dev --json...');
+  logger.log('Checking production dependencies with npm audit --package-lock-only --omit=dev --json...');
   let rawProdOutput = '';
   try {
-    rawProdOutput = execSync('npm audit --package-lock-only --omit=dev --json', {
+    rawProdOutput = exec('npm audit --package-lock-only --omit=dev --json', {
       encoding: 'utf8',
       maxBuffer: MAX_BUFFER,
     });
@@ -257,22 +266,29 @@ function run() {
   const { ok, unhandled, matchedEntries } = evaluateAudit(fullReport, allowlist, options.folder);
 
   if (!ok || unhandled.length > 0) {
-    console.error('\n✖ Audit failed with unhandled high/critical vulnerabilities:');
+    logger.error('\n✖ Audit failed with unhandled high/critical vulnerabilities:');
     for (const u of unhandled) {
       const keysInfo = u.unlistedKeys ? ` [Unlisted advisories: ${u.unlistedKeys.join(', ')}]` : '';
-      console.error(`  - ${u.name} (${u.severity})${keysInfo}`);
+      logger.error(`  - ${u.name} (${u.severity})${keysInfo}`);
+    }
+    if (overrides.onExit) {
+      overrides.onExit(1);
+      return;
     }
     process.exit(1);
   }
 
   // 5. Emit GitHub Actions warnings so allowlisted items remain visible on every CI run
-  console.log('\n✔ All reported high/critical vulnerabilities matched the active allowlist:');
+  logger.log('\n✔ All reported high/critical vulnerabilities matched the active allowlist:');
   for (const entry of matchedEntries) {
     const warningMsg = `Active audit allowlist entry matched: ${entry.id} (${entry.package}). Review by: ${entry.reviewBy}. Tracking: ${entry.trackingIssue}`;
-    console.log(`::warning::${warningMsg}`);
-    console.log(`  - [${entry.id}] ${entry.package}: ${entry.url} (Review by: ${entry.reviewBy})`);
+    logger.log(`::warning::${warningMsg}`);
+    logger.log(`  - [${entry.id}] ${entry.package}: ${entry.url} (Review by: ${entry.reviewBy})`);
   }
-  console.log('\nProduction dependencies verified clean. Audit passed with allowlist.');
+  logger.log('\nProduction dependencies verified clean. Audit passed with allowlist.');
+  if (overrides.onExit) {
+    overrides.onExit(0);
+  }
 }
 
 if (require.main === module) {
@@ -291,4 +307,5 @@ module.exports = {
   validateProdAuditReport,
   checkAllowlistExpirations,
   evaluateAudit,
+  run,
 };

@@ -6,6 +6,7 @@ const {
   validateProdAuditReport,
   checkAllowlistExpirations,
   evaluateAudit,
+  run,
 } = require('./npm-audit-allowlist.cjs');
 
 test('validateAllowlistSchema enforces required fields and format', () => {
@@ -61,7 +62,49 @@ test('validateAllowlistSchema enforces required fields and format', () => {
           folders: 'not-an-array',
         },
       ]),
-    /"folders" must be an array/
+    /"folders" must be a non-empty array/
+  );
+  assert.throws(
+    () =>
+      validateAllowlistSchema([
+        {
+          id: 'GHSA-vfj7-8cjw-p6xm',
+          url: 'https://example.com',
+          package: 'braces',
+          owner: 'Team',
+          reviewBy: '2026-12-01',
+          folders: [],
+        },
+      ]),
+    /"folders" must be a non-empty array/
+  );
+  assert.throws(
+    () =>
+      validateAllowlistSchema([
+        {
+          id: 'GHSA-vfj7-8cjw-p6xm',
+          url: 'https://example.com',
+          package: 'braces',
+          owner: 'Team',
+          reviewBy: '2026-12-01',
+          folders: [''],
+        },
+      ]),
+    /"folders" must be a non-empty array/
+  );
+  assert.throws(
+    () =>
+      validateAllowlistSchema([
+        {
+          id: 'GHSA-vfj7-8cjw-p6xm',
+          url: 'https://example.com',
+          package: 'braces',
+          owner: 'Team',
+          reviewBy: '2026-12-01',
+          folders: [123],
+        },
+      ]),
+    /"folders" must be a non-empty array/
   );
 
   // Valid schema passes without error
@@ -251,4 +294,159 @@ test('evaluateAudit respects folder scoping', () => {
   const cyResult = evaluateAudit(report, allowlist, 'cypress');
   assert.equal(cyResult.ok, false);
   assert.equal(cyResult.unhandled.length, 1);
+});
+
+test('evaluateAudit flags completely unlisted packages', () => {
+  const allowlist = [
+    {
+      id: 'GHSA-vfj7-8cjw-p6xm',
+      url: 'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm',
+      package: 'braces',
+    },
+  ];
+
+  const report = {
+    vulnerabilities: {
+      otherVuln: {
+        name: 'otherVuln',
+        severity: 'critical',
+        via: [
+          {
+            url: 'https://github.com/advisories/GHSA-unrelated-package',
+            name: 'otherVuln',
+          },
+        ],
+      },
+    },
+  };
+
+  const result = evaluateAudit(report, allowlist);
+  assert.equal(result.ok, false);
+  assert.equal(result.unhandled.length, 1);
+  assert.equal(result.unhandled[0].name, 'otherVuln');
+});
+
+test('run() successfully passes when audit matches allowlist and prod is clean', () => {
+  const mockAllowlist = [
+    {
+      id: 'GHSA-vfj7-8cjw-p6xm',
+      url: 'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm',
+      package: 'braces',
+      owner: 'Team',
+      reviewBy: '2099-01-01',
+    },
+  ];
+
+  const fullAuditJson = JSON.stringify({
+    vulnerabilities: {
+      braces: {
+        name: 'braces',
+        severity: 'high',
+        via: [{ url: 'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm', name: 'braces' }],
+      },
+    },
+  });
+
+  const prodAuditJson = JSON.stringify({ vulnerabilities: {} });
+
+  let exitCode = null;
+  const logs = [];
+
+  run({
+    allowlist: mockAllowlist,
+    execSync: (cmd) => {
+      if (cmd.includes('--omit=dev')) return prodAuditJson;
+      return fullAuditJson;
+    },
+    logger: {
+      log: (msg) => logs.push(msg),
+      error: (msg) => logs.push(`ERR: ${msg}`),
+    },
+    onExit: (code) => {
+      exitCode = code;
+    },
+  });
+
+  assert.equal(exitCode, 0);
+  assert.ok(logs.some((l) => l.includes('Audit passed with allowlist')));
+});
+
+test('run() fails when production audit detects high/critical vulnerabilities', () => {
+  const mockAllowlist = [
+    {
+      id: 'GHSA-vfj7-8cjw-p6xm',
+      url: 'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm',
+      package: 'braces',
+      owner: 'Team',
+      reviewBy: '2099-01-01',
+    },
+  ];
+
+  const fullAuditJson = JSON.stringify({
+    vulnerabilities: {
+      braces: {
+        name: 'braces',
+        severity: 'high',
+        via: [{ url: 'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm', name: 'braces' }],
+      },
+    },
+  });
+
+  const prodAuditWithVuln = JSON.stringify({
+    vulnerabilities: {
+      braces: { name: 'braces', severity: 'high' },
+    },
+  });
+
+  assert.throws(
+    () =>
+      run({
+        allowlist: mockAllowlist,
+        execSync: (cmd) => {
+          if (cmd.includes('--omit=dev')) return prodAuditWithVuln;
+          return fullAuditJson;
+        },
+        logger: { log: () => {}, error: () => {} },
+      }),
+    /Allowlist only applies to devDependencies/
+  );
+});
+
+test('run() exits with 1 when unhandled vulnerability exists in full audit', () => {
+  const mockAllowlist = [
+    {
+      id: 'GHSA-vfj7-8cjw-p6xm',
+      url: 'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm',
+      package: 'braces',
+      owner: 'Team',
+      reviewBy: '2099-01-01',
+    },
+  ];
+
+  const fullAuditWithUnlisted = JSON.stringify({
+    vulnerabilities: {
+      otherPkg: {
+        name: 'otherPkg',
+        severity: 'high',
+        via: [{ url: 'https://github.com/advisories/GHSA-unlisted', name: 'otherPkg' }],
+      },
+    },
+  });
+
+  const prodAuditClean = JSON.stringify({ vulnerabilities: {} });
+
+  let exitCode = null;
+  run({
+    allowlist: mockAllowlist,
+    execSync: (cmd) => {
+      if (cmd.includes('--omit=dev')) return prodAuditClean;
+      return fullAuditWithUnlisted;
+    },
+    logger: { log: () => {}, error: () => {} },
+    onExit: (code) => {
+      exitCode = code;
+    },
+  });
+
+  assert.equal(exitCode, 1);
 });
