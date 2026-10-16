@@ -84,3 +84,32 @@ $page-grid-gutter-half: 1.25rem;
     margin-inline: 0;
   }
 }
+
+// Mobile-only inset (base primitive). Desktop: nothing.
+@mixin md-inset($padding: $spacing-02 $spacing-04) {
+  @include breakpoint-down(md) {
+    padding: $padding;
+    flex-shrink: 0;
+  }
+}
+
+// Page-level form shell (composite of md-inset).
+@mixin form-shell($md-padding: $spacing-02 $spacing-02, $md-margin-top: $spacing-04) {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-08;
+  margin-top: $spacing-08;
+
+  @include breakpoint-down(md) {
+    margin-top: $md-margin-top;
+  }
+
+  @include md-inset($md-padding);
+}
+
+// Notification block (flex column + top offset) — distinct from `notification`.
+@mixin notification-block {
+  display: flex;
+  flex-direction: column;
+  margin-top: $spacing-08;
+}

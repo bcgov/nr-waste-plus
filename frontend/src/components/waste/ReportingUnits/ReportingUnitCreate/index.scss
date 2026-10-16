@@ -2,21 +2,13 @@
 @use '@carbon/react/scss/theme' as *;
 @use '@carbon/react/scss/breakpoint' as *;
 @use '@carbon/react/scss/colors' as *;
+@use '../../../../styles/page-shell' as shell;
 
 .create-ru {
 
   &-column__content {
     form {
-      display: flex;
-      flex-direction: column;
-      margin-top: $spacing-08;
-      gap: $spacing-08;
-
-      @include breakpoint-down(md) {      
-        margin-top: $spacing-01;
-        padding: $spacing-05 $spacing-07;
-        flex-shrink: 0;      
-      }
+      @include shell.form-shell($spacing-05 $spacing-07, $spacing-01);
     }
   }
 

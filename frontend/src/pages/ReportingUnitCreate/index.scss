@@ -2,22 +2,17 @@
 @use '@carbon/react/scss/theme' as *;
 @use '@carbon/react/scss/breakpoint' as *;
 @use '@carbon/react/scss/colors' as *;
+@use '../../styles/page-shell' as shell;
 
 .create-ru {
 
   &-column__banner {
-    @include breakpoint-down(md) {
-      padding: $spacing-05 $spacing-07;
-      flex-shrink: 0;
-    }
+    @include shell.md-inset($spacing-05 $spacing-07);
   }
 
   &-column__notification:not(:empty) {
     margin-top: $spacing-08;
-    @include breakpoint-down(md) {
-      padding: $spacing-05 $spacing-07;
-      flex-shrink: 0;
-    }
+    @include shell.md-inset($spacing-05 $spacing-07);
   }
 
   &-column__spacer {

@@ -6,8 +6,7 @@
 @use '../../styles/page-shell' as shell;
 
 .district-volume-detail {
-  &-column__banner,
-  &-column__actions {
+  &-column__banner {
     @include shell.banner-shell;
   }
   
@@ -19,15 +18,15 @@
     flex-direction: column;
   }
 
-  &-column__notification,
-  &-column__actions {
-    display: flex;
-    flex-direction: column;
-    margin-top: $spacing-08;
+  &-column__notification {
+    @include shell.notification-block;
   }
-  &-column__actions {  
+
+  &-column__actions {
     @include shell.actions;
-  }  
+    gap: $spacing-08;
+    @include shell.md-inset($spacing-05 $spacing-07);
+  }
 
   &-column__banner {
     margin-top: 0;

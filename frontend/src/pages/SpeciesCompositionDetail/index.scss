@@ -16,9 +16,7 @@
   }
 
   &__notification {
-    display: flex;
-    flex-direction: column;
-    margin-top: $spacing-08; /* added for spacing similar to district volume */
+    @include shell.notification-block;
   }
 
   &__matrix {
