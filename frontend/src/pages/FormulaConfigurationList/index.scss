@@ -4,11 +4,6 @@
 @use '../../styles/page-shell' as shell;
 
 .formula-set-list-column__header {
-  margin-bottom: $spacing-08;
-  @include breakpoint-down(md) {
-    margin: $spacing-04;
-  }
-
   @include shell.banner-header;
 
   .page-title-col .page-title-container .title-container {

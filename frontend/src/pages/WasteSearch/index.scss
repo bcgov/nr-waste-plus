@@ -7,18 +7,5 @@
 @use '../../styles/page-shell' as shell;
 
 .search-column__banner {
-  padding-top: $spacing-05;
-  padding-left: $spacing-05;
-  padding-bottom: $spacing-09;
-
-  @include shell.banner-search;
-}
-
-.search-column__banner {
-  @include breakpoint-down(md) {
-    margin-left: 0;
-    margin-right: 0;
-  }
-
   @include shell.banner-search;
 }

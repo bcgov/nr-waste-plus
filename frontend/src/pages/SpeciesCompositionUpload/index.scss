@@ -4,15 +4,5 @@
 
 .species-composition-upload-column__banner,
 .species-composition-upload-column__notification {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-08;
-
-  @include breakpoint-down(md) {
-    margin-top: $spacing-01;
-    padding: $spacing-05 $spacing-07;
-    flex-shrink: 0;
-  }
-
   @include shell.banner-shell;
 }

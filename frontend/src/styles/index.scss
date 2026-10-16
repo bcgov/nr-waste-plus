@@ -31,14 +31,6 @@
 }
 
 .notification-column {
-  padding-left: $spacing-05;
-  padding-right: $spacing-03;
-
-  .#{variables.$bcgov-prefix}--inline-notification {
-    width: 100%;
-    max-inline-size: none;
-  }
-
   @include shell.notification;
 }
 
@@ -48,14 +40,6 @@
  * Defined globally so it loads independently of which page chunk is visited first.
  */
 .search-table {
-  margin-left: -1.25rem;
-  margin-right: -1.25rem;
-
-  @include breakpoint-down(md) {
-    margin-left: 0;
-    margin-right: 0;
-  }
-
   @include shell.full-bleed;
 }
 
@@ -66,15 +50,6 @@
  * page layout grid does. Keeps the header independent of which grid it lands in.
  */
 .detail-header-grid {
-  padding: 0;
-  margin-inline: 0;
-  column-gap: 0;
-  row-gap: 0;
-
-  > .cds--css-grid-column {
-    margin-inline: 0;
-  }
-
   @include shell.header-field-grid;
 }
 

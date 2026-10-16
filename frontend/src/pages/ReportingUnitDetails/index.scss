@@ -4,11 +4,6 @@
 @use '../../styles/page-shell' as shell;
 
 .rudetail-column__banner {
-  margin-bottom: $spacing-08;
-  @include breakpoint-down(md) {
-    margin: $spacing-04;
-  }
-
   @include shell.banner-header;
 }
 
