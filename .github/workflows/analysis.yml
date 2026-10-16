@@ -141,6 +141,7 @@ jobs:
         with:
           node-version: "24"
           cache: npm
+          cache-dependency-path: ${{ matrix.folder }}/package-lock.json
       - name: Test audit allowlist script
         run: node --test .github/scripts/*.test.cjs
       - name: Run npm audit (${{ matrix.folder }})
