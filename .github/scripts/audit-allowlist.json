@@ -1,0 +1,12 @@
+[
+  {
+    "id": "GHSA-vfj7-8cjw-p6xm",
+    "url": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm",
+    "package": "braces",
+    "owner": "Team Alliance",
+    "reviewBy": "2026-12-01",
+    "folders": ["frontend"],
+    "trackingIssue": "https://github.com/micromatch/braces/issues/70",
+    "notes": "CVE-2026-93687: Uncontrolled recursion stack overflow in braces <= 3.0.3 AST walkers. Upstream issue micromatch/braces#70 tracks the vulnerability. Transitive devDependency via stylelint in frontend. No upstream fix available yet."
+  }
+]
