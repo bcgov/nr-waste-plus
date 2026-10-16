@@ -155,8 +155,22 @@ jobs:
               } catch (err) {
                 auditOutput = err.stdout;
               }
-              const report = JSON.parse(auditOutput);
-              const vulns = report.vulnerabilities || {};
+              let report;
+              try {
+                report = JSON.parse(auditOutput);
+              } catch (e) {
+                console.error('Failed to parse npm audit JSON output:', e.message);
+                process.exit(1);
+              }
+              if (!report || report.error || typeof report.vulnerabilities !== 'object') {
+                console.error('npm audit returned an error or malformed response:', report ? report.error : auditOutput);
+                process.exit(1);
+              }
+              const vulns = report.vulnerabilities;
+              if (Object.keys(vulns).length === 0) {
+                console.error('npm audit failed without reporting vulnerabilities. Check registry or network connectivity.');
+                process.exit(1);
+              }
               const knownAdvisoryUrls = new Set([
                 'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm'
               ]);
