@@ -40,6 +40,13 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class SearchService {
 
+  /**
+   * Substring the legacy search mapper strips from district descriptions for compact display
+   * (legacy {@code MapperConstants.DISTRICT_AS_DTO}) — mirrored so PostgreSQL-sourced rows
+   * present identically to legacy-sourced rows.
+   */
+  private static final String DISTRICT_NAME_SUFFIX = "Natural Resource District";
+
   private final LegacyApiProvider legacyApiProvider;
   private final PostgresReportingUnitSearchProvider postgresSearchProvider;
   private final ForestClientService forestClientService;
@@ -81,6 +88,14 @@ public class SearchService {
           case LEGACY -> legacyApiProvider.searchReportingUnit(filters, pageable);
           case POSTGRES -> postgresSearchProvider.searchReportingUnit(filters, pageable);
         };
+
+    // PostgreSQL rows ship NULL district descriptions (DEC-016); legacy rows arrive with them
+    // populated by the legacy SQL joins. Enrichment is therefore PostgreSQL-gated so legacy-row
+    // output is provably unchanged (issue #1238, D5; DEC-009 — lookup is enrichment, never a
+    // row-source fallback).
+    if (source == ReportingUnitSearchSource.POSTGRES) {
+      result = enrichDistrictDescriptions(result);
+    }
 
     // Build a map of clients and load details from Forest Client Service
     var clients =
@@ -203,6 +218,66 @@ public class SearchService {
 
     return page.map(
         entry -> entry.withClient(response.getOrDefault(entry.client().code(), entry.client())));
+  }
+
+  /**
+   * Fill NULL district descriptions on PostgreSQL-sourced rows from the legacy district code
+   * list (OQ-004: one bounded full-list call per page, no caching, no batch endpoint needed).
+   *
+   * <p>The lookup is ENRICHMENT only (DEC-009): it never filters rows, never switches source,
+   * and never fails the request — the circuit-breaker fallback (default districts) supplies
+   * whatever it can and unknown codes simply keep their NULL description. Descriptions get the
+   * legacy mapper's stripping rule applied so both sources present identically. Rows whose
+   * description is already populated are left untouched, and the lookup is skipped entirely when
+   * there is nothing to fill.
+   *
+   * @param result the PostgreSQL-sourced page
+   * @return the page with district descriptions filled where possible
+   */
+  private Page<ReportingUnitSearchResultDto> enrichDistrictDescriptions(
+      Page<ReportingUnitSearchResultDto> result) {
+
+    List<String> codes =
+        result.stream()
+            .filter(entry -> entry.district() != null && entry.district().description() == null)
+            .map(entry -> entry.district().code())
+            .filter(StringUtils::isNotBlank)
+            .distinct()
+            .toList();
+
+    if (codes.isEmpty()) {
+      return result;
+    }
+
+    try {
+      Map<String, String> descriptions = new HashMap<>();
+      legacyApiProvider
+          .getDistrictCodes()
+          .forEach(
+              code ->
+                  descriptions.putIfAbsent(
+                      code.code(),
+                      code.description() == null
+                          ? null
+                          : code.description()
+                              .replaceAll(DISTRICT_NAME_SUFFIX, "")
+                              .trim()));
+
+      return result.map(
+          entry -> {
+            if (entry.district() == null || entry.district().description() != null) {
+              return entry;
+            }
+            String description = descriptions.get(entry.district().code());
+            return description == null
+                ? entry
+                : entry.withDistrict(
+                    new CodeDescriptionDto(entry.district().code(), description));
+          });
+    } catch (RuntimeException e) {
+      log.warn("District description enrichment skipped: {}", e.getMessage());
+      return result;
+    }
   }
 
   private Map<String, CodeDescriptionDto> mapClients(List<String> clients, String value) {

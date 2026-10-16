@@ -608,8 +608,8 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
 
   @Test
   @DisplayName(
-      "Search Reporting Unit | legacy=false routes to PostgreSQL stub (501, legacy not called)")
-  void searchReportingUnit_legacyFalse_shouldReturn501_withoutLegacyCall() throws Exception {
+      "Search Reporting Unit | legacy=false routes to PostgreSQL (real query, legacy not called)")
+  void searchReportingUnit_legacyFalse_shouldQueryPostgres_withoutLegacyCall() throws Exception {
     legacyApiStub.stubFor(
         WireMock.get(urlPathEqualTo("/api/search/reporting-units"))
             .willReturn(
@@ -624,10 +624,13 @@ class SearchControllerIntegrationTest extends AbstractTestContainerIntegrationTe
                 .queryParam("page", "0")
                 .queryParam("size", "10")
                 .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isNotImplemented())
-        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
-        .andExpect(jsonPath("$.status").value(501))
-        .andExpect(jsonPath("$.detail", containsString("not implemented")))
+        // D3b: the PostgreSQL source executes the real list query. No seeded RU matches the
+        // digits-only term, so the honest result is an empty page — not an error and not a
+        // cross-source fallback.
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json;charset=UTF-8"))
+        .andExpect(jsonPath("$.content.length()").value(0))
+        .andExpect(jsonPath("$.page.totalElements").value(0))
         .andReturn();
 
     legacyApiStub.verify(

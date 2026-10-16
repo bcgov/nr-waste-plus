@@ -1,47 +1,226 @@
 package ca.bc.gov.nrs.hrs.provider.search;
 
+import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
+import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
-import ca.bc.gov.nrs.hrs.provider.search.ReportingUnitSearchProvider;
-import lombok.extern.slf4j.Slf4j;
+import ca.bc.gov.nrs.hrs.exception.InvalidSortingFieldException;
+import ca.bc.gov.nrs.hrs.repository.PostgresReportingUnitSearchFilter;
+import ca.bc.gov.nrs.hrs.repository.ReportingUnitSearchQueryConstants;
+import ca.bc.gov.nrs.hrs.repository.ReportingUnitSearchRepository;
+import ca.bc.gov.nrs.hrs.repository.ReportingUnitSearchRow;
+import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
+import io.micrometer.observation.annotation.Observed;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.JpaSort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * PostgreSQL reporting-unit search provider — explicit V0 stub (issue #1238).
+ * PostgreSQL reporting-unit search provider (issue #1238, D3b) — the {@link
+ * ReportingUnitSearchProvider} implementation for the {@code POSTGRES} source.
  *
- * <p>The PostgreSQL search implementation is deferred pending the product contract for
- * unsupported filters, expanded fields, and result row/cardinality (OQ-001, OQ-002, OQ-003; see
- * the #1238 plan). When this source is selected the stub fails honestly with HTTP 501 Not
- * Implemented instead of returning an empty page, because an empty page would misrepresent "no
- * PostgreSQL data" (DEC-002).
+ * <p>Mirrors the legacy search flow: resolve the client scope from the principal (DEC-008,
+ * legacy {@code enrichFilters} parity), build the normalized {@link
+ * PostgresReportingUnitSearchFilter}, resolve the sort through the {@code SORT_EXPRESSIONS}
+ * allowlist (rejecting unknown and degenerate keys, HTTP 428), then make ONE repository call
+ * with the legacy two-parameter shape {@code (filter, page)}. Rows map to the shared {@link
+ * ReportingUnitSearchResultDto} per DEC-014 and DEC-016; {@code id} and {@code bookmarked} stay
+ * service-level ({@code SearchService} generates them for both sources).
  *
- * <p>The stub never falls back to the legacy source (DEC-004); the failure propagates to the
- * caller as an RFC 9457 problem detail.
+ * <p>Results come exclusively from the PostgreSQL statements — never merged with, and never a
+ * fallback for, the legacy source (DEC-004). The resolved sort travels inside the Pageable as
+ * {@code JpaSort.unsafe} fragments from the constants-file allowlist — never raw user input —
+ * the legacy {@code PaginationUtil} mechanism.
  */
-@Slf4j
 @Component
+@Observed
+@RequiredArgsConstructor
 public class PostgresReportingUnitSearchProvider implements ReportingUnitSearchProvider {
 
+  private final ReportingUnitSearchRepository searchRepository;
+
   /**
-   * Fails the request with HTTP 501 because PostgreSQL reporting-unit search is not implemented
-   * yet (issue #1238, deferred pending OQ-001/OQ-002/OQ-003).
+   * Search reporting units in the PostgreSQL source using the provided filters and pageable.
    *
-   * @param filters search filters to apply; unused by the stub
-   * @param pageable pagination information; unused by the stub
-   * @return never; always throws
-   * @throws ResponseStatusException always, with HTTP 501 Not Implemented
+   * @param filters search filters to apply (binding contract applied via the filter object)
+   * @param pageable pagination information with a {@code PageableDefault}-backed sort
+   * @return a page of {@link ReportingUnitSearchResultDto} from the PostgreSQL source only
+   * @throws InvalidSortingFieldException when the requested sort key is outside the PostgreSQL
+   *     allowlist (unknown or degenerate keys, legacy reject parity, HTTP 428)
+   * @throws ResponseStatusException with HTTP 400 when a digits-only {@code mainSearchTerm}
+   *     cannot be represented as a reporting-unit id (documented robustness deviation from
+   *     legacy's ORA-01722 500)
    */
   @Override
   public Page<ReportingUnitSearchResultDto> searchReportingUnit(
       ReportingUnitSearchParametersDto filters, Pageable pageable) {
-    log.warn("PostgreSQL reporting-unit search requested but not implemented (issue #1238)");
-    throw new ResponseStatusException(
-        HttpStatus.NOT_IMPLEMENTED,
-        "PostgreSQL reporting-unit search is not implemented yet (issue #1238); "
-            + "deferred pending product contract OQ-001/OQ-002/OQ-003");
+
+    List<String> clientNumbers = resolveClientScope(filters.getClientNumbers());
+    PostgresReportingUnitSearchFilter filter =
+        PostgresReportingUnitSearchFilter.from(filters, clientNumbers);
+
+    Page<ReportingUnitSearchRow> rows =
+        searchRepository.searchReportingUnits(filter, resolvePage(pageable));
+
+    return rows.map(this::toDto);
+  }
+
+  /**
+   * Map one query row to the shared search DTO (spec §6 mapping matrix).
+   *
+   * @param row the projected PostgreSQL row (quoted camelCase aliases)
+   * @return the DTO with service-level fields ({@code id}, {@code bookmarked}) left for
+   *     {@code SearchService}
+   */
+  private ReportingUnitSearchResultDto toDto(ReportingUnitSearchRow row) {
+    return new ReportingUnitSearchResultDto(
+        null,
+        row.getWasteAssessmentAreaId(),
+        row.getCutBlockId(),
+        row.getRuNumber(),
+        new CodeDescriptionDto(row.getClientCode(), row.getClientName()),
+        row.getLicenseNumber(),
+        row.getCuttingPermit(),
+        row.getTimberMark(),
+        Boolean.TRUE.equals(row.getMultiMark()),
+        Boolean.TRUE.equals(row.getSecondaryEntry()),
+        new CodeDescriptionDto(row.getSamplingCode(), row.getSamplingName()),
+        new CodeDescriptionDto(row.getDistrictCode(), row.getDistrictName()),
+        new CodeDescriptionDto(row.getStatusCode(), row.getStatusName()),
+        toLocalDateTime(row.getLastUpdated()),
+        false);
+  }
+
+  /**
+   * Pin the {@code timestamptz} → {@code LocalDateTime} conversion to UTC, matching the
+   * codebase convention for RU timestamps ({@code ReportingUnitBlockService}). Regional
+   * interpretation is the OQ-005/V1 (GAP-014) domain.
+   *
+   * @param instant the instant read from {@code ru.updated_at}
+   * @return the UTC-pinned local date-time, or {@code null} when absent
+   */
+  private LocalDateTime toLocalDateTime(Instant instant) {
+    return instant == null ? null : LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
+  }
+
+  /**
+   * Resolve the client scope for the PostgreSQL source (DEC-008, legacy {@code enrichFilters}
+   * parity). An absent, empty, or single-{@code 'NOVALUE'} list is replaced with the
+   * principal-derived list; an explicit non-empty list binds verbatim (a list that merely
+   * CONTAINS the sentinel still binds verbatim — the SQL sentinel disjunct then neutralizes the
+   * client filter, which is filter neutralization, never an authorization grant).
+   *
+   * @param requested the raw {@code clientNumbers} filter
+   * @return the effective client-number list; never null or empty
+   */
+  private List<String> resolveClientScope(List<String> requested) {
+    if (!isUnscoped(requested)) {
+      return List.copyOf(requested);
+    }
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (!(authentication instanceof JwtAuthenticationToken jwtAuth)) {
+      throw new IllegalStateException("JWT not available");
+    }
+    boolean idir =
+        IdentityProvider.IDIR.equals(JwtPrincipalUtil.getIdentityProvider(jwtAuth.getToken()));
+    return deriveClientScope(idir, JwtPrincipalUtil.getClientFromRoles(jwtAuth.getToken()));
+  }
+
+  /**
+   * Whether the requested client list carries no scope and must be derived from the principal.
+   *
+   * @param requested the raw {@code clientNumbers} filter; may be null
+   * @return true when absent, empty, or exactly the single {@code 'NOVALUE'} sentinel
+   */
+  static boolean isUnscoped(List<String> requested) {
+    return CollectionUtils.isEmpty(requested)
+        || (requested.size() == 1
+            && ReportingUnitSearchQueryConstants.SENTINEL_NOVALUE.equals(requested.getFirst()));
+  }
+
+  /**
+   * Principal-derived client scope (DEC-008): IDIR derives an empty list (re-normalized to the
+   * sentinel ⇒ unrestricted, the DEC-008 baseline; roles never grant scope); non-IDIR derives
+   * the role client numbers; a zero-role non-IDIR principal re-normalizes to the sentinel
+   * exactly like the legacy endpoint.
+   *
+   * @param idir whether the principal authenticates via IDIR
+   * @param roleClients the client numbers mapped from the principal's roles
+   * @return the derived client list to bind; never null or empty
+   */
+  static List<String> deriveClientScope(boolean idir, List<String> roleClients) {
+    List<String> derived = idir ? List.of() : roleClients;
+    return derived.isEmpty()
+        ? List.of(ReportingUnitSearchQueryConstants.SENTINEL_NOVALUE)
+        : List.copyOf(derived);
+  }
+
+  /**
+   * Resolve the Pageable sort through the {@code SORT_EXPRESSIONS} allowlist and always append
+   * the deterministic tie-breakers (spec §4), as {@code JpaSort.unsafe} fragments inside the
+   * Pageable — the legacy {@code PaginationUtil.resolveSort} mechanism. Unknown or degenerate
+   * keys (not in the map) are rejected with {@link InvalidSortingFieldException} (legacy reject
+   * parity, HTTP 428). An unsorted request falls back to the default {@code lastUpdated DESC}.
+   * Every fragment is a fixed constant from the query-constants file — never user-controlled
+   * text.
+   *
+   * @param pageable the incoming pagination with sort
+   * @return the page request with the mapped, tie-breaker-completed sort
+   */
+  Pageable resolvePage(Pageable pageable) {
+    return PageRequest.of(
+        pageable.getPageNumber(), pageable.getPageSize(), resolveSort(pageable.getSort()));
+  }
+
+  /**
+   * Map a sort to the allowlisted {@code JpaSort.unsafe} fragments plus tie-breakers.
+   *
+   * <p>Each fragment is wrapped in parentheses — the legacy {@code SORT_FIELDS} trick ("parentheses
+   * required so JpaSort.unsafe sorts using the SELECT alias"): Spring Data's native-query sort
+   * rendering leaves only function-like (parenthesized) expressions, selection aliases, and
+   * join-alias-prefixed properties untouched, and otherwise prefixes them with the entity alias
+   * detected from the query text (observed live: {@code ru.updated_at} became {@code
+   * ru.ru.updated_at}). Parenthesized fragments take the raw-expression path and reach
+   * PostgreSQL byte-identical.
+   *
+   * @param sort the incoming sort
+   * @return the mapped, tie-breaker-completed unsafe sort
+   */
+  JpaSort resolveSort(Sort sort) {
+    JpaSort resolved = null;
+    for (Sort.Order order : sort) {
+      String fragment = ReportingUnitSearchQueryConstants.SORT_EXPRESSIONS.get(order.getProperty());
+      if (fragment == null) {
+        throw new InvalidSortingFieldException(order.getProperty());
+      }
+      resolved = resolved == null
+          ? JpaSort.unsafe(order.getDirection(), "(" + fragment + ")")
+          : resolved.andUnsafe(order.getDirection(), "(" + fragment + ")");
+    }
+    if (resolved == null) {
+      resolved = JpaSort.unsafe(
+          Sort.Direction.DESC,
+          "(" + ReportingUnitSearchQueryConstants.DEFAULT_SORT_EXPRESSION + ")");
+    }
+    return resolved
+        .andUnsafe(
+            Sort.Direction.ASC,
+            "(" + ReportingUnitSearchQueryConstants.TIE_BREAKER_RU_NUMBER + ")")
+        .andUnsafe(
+            Sort.Direction.ASC,
+            "(" + ReportingUnitSearchQueryConstants.TIE_BREAKER_BLOCK_ID + ")");
   }
 }

@@ -33,8 +33,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Unit Test | Search Service")
@@ -243,24 +241,175 @@ class SearchServiceTest {
   }
 
   @Test
-  @DisplayName("Search with PostgreSQL source should fail with 501 and not call legacy (issue #1238)")
-  void search_sourcePostgres_shouldFailNotImplemented_withoutCallingLegacy() {
+  @DisplayName("Search with PostgreSQL source should dispatch to the PG provider only (issue #1238)")
+  void search_sourcePostgres_shouldDispatchToPostgres_withoutCallingLegacy() {
     var filters = ReportingUnitSearchParametersDto.builder().mainSearchTerm("36834").build();
     // legacy=false selects the PostgreSQL source (issue #1238, DEC-011)
     filters.setLegacy("false");
 
-    when(postgresSearchProvider.searchReportingUnit(filters, PAGEABLE))
-        .thenThrow(
-            new ResponseStatusException(
-                HttpStatus.NOT_IMPLEMENTED,
-                "PostgreSQL reporting-unit search is not implemented yet (issue #1238)"));
+    var result = createResult(36834L, "00010002");
+    Page<ReportingUnitSearchResultDto> page = new PageImpl<>(List.of(result), PAGEABLE, 1);
 
-    assertThatThrownBy(() -> searchService.search(USER_ID, filters, PAGEABLE))
-        .isInstanceOfSatisfying(
-            ResponseStatusException.class,
-            ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.NOT_IMPLEMENTED));
+    when(postgresSearchProvider.searchReportingUnit(filters, PAGEABLE)).thenReturn(page);
+    when(forestClientService.getClientByNumber("00010002"))
+        .thenReturn(
+            Optional.of(
+                new ForestClientDto("00010002", "WEST FRASER", null, null, null, null, null)));
+    when(userService.getUserBookmarksInList(eq(USER_ID), any())).thenReturn(List.of());
 
+    Page<ReportingUnitSearchResultDto> results =
+        searchService.search(USER_ID, filters, PAGEABLE);
+
+    assertThat(results.getContent()).hasSize(1);
+    assertThat(results.getContent().getFirst().bookmarked()).isFalse();
+    verify(postgresSearchProvider, times(1)).searchReportingUnit(filters, PAGEABLE);
     verify(legacyApiProvider, never()).searchReportingUnit(any(), any());
+  }
+
+  @Test
+  @DisplayName("PostgreSQL rows get district descriptions filled with the legacy stripping rule")
+  void search_sourcePostgres_shouldEnrichDistrictDescriptions() {
+    var filters = ReportingUnitSearchParametersDto.builder().mainSearchTerm("36834").build();
+    filters.setLegacy("false");
+
+    // PG rows ship NULL descriptions (DEC-016); the district description carries the suffix the
+    // legacy mapper strips.
+    var result =
+        new ReportingUnitSearchResultDto(
+            null,
+            null,
+            "BLK-A",
+            3L,
+            new CodeDescriptionDto("00010002", null),
+            "tfl01",
+            "12",
+            "ab12",
+            false,
+            false,
+            new CodeDescriptionDto("AVG", "Average"),
+            new CodeDescriptionDto("P00", null),
+            new CodeDescriptionDto("DRAFT", null),
+            java.time.LocalDateTime.of(2026, 1, 1, 0, 0),
+            false);
+    when(postgresSearchProvider.searchReportingUnit(filters, PAGEABLE))
+        .thenReturn(new PageImpl<>(List.of(result), PAGEABLE, 1));
+    when(legacyApiProvider.getDistrictCodes())
+        .thenReturn(
+            List.of(
+                new CodeDescriptionDto("P00", "P00 Natural Resource District"),
+                new CodeDescriptionDto("DND", "Nadina Natural Resource District")));
+    when(forestClientService.getClientByNumber("00010002")).thenReturn(Optional.empty());
+    when(userService.getUserBookmarksInList(eq(USER_ID), any())).thenReturn(List.of());
+
+    Page<ReportingUnitSearchResultDto> results =
+        searchService.search(USER_ID, filters, PAGEABLE);
+
+    assertThat(results.getContent()).hasSize(1);
+    // Stripped exactly like the legacy mapper (MapperConstants.DISTRICT_AS_DTO).
+    assertThat(results.getContent().getFirst().district().description()).isEqualTo("P00");
+    verify(legacyApiProvider, times(1)).getDistrictCodes();
+    verify(legacyApiProvider, never()).searchReportingUnit(any(), any());
+  }
+
+  @Test
+  @DisplayName("District enrichment: lookup miss keeps the NULL description; rows intact")
+  void search_sourcePostgres_districtMiss_shouldKeepNull() {
+    var filters = ReportingUnitSearchParametersDto.builder().mainSearchTerm("36834").build();
+    filters.setLegacy("false");
+
+    var result =
+        new ReportingUnitSearchResultDto(
+            null,
+            null,
+            null,
+            4L,
+            new CodeDescriptionDto("00010003", null),
+            null,
+            null,
+            null,
+            false,
+            false,
+            new CodeDescriptionDto("AVG", "Average"),
+            new CodeDescriptionDto("ZZZ", null),
+            null,
+            java.time.LocalDateTime.of(2026, 1, 1, 0, 0),
+            false);
+    when(postgresSearchProvider.searchReportingUnit(filters, PAGEABLE))
+        .thenReturn(new PageImpl<>(List.of(result), PAGEABLE, 1));
+    // Circuit-breaker fallback shape: a partial list without the requested code.
+    when(legacyApiProvider.getDistrictCodes())
+        .thenReturn(List.of(new CodeDescriptionDto("DCC", "Cariboo-Chilcotin")));
+    when(forestClientService.getClientByNumber("00010003")).thenReturn(Optional.empty());
+    when(userService.getUserBookmarksInList(eq(USER_ID), any())).thenReturn(List.of());
+
+    Page<ReportingUnitSearchResultDto> results =
+        searchService.search(USER_ID, filters, PAGEABLE);
+
+    assertThat(results.getContent()).hasSize(1);
+    assertThat(results.getContent().getFirst().district().code()).isEqualTo("ZZZ");
+    assertThat(results.getContent().getFirst().district().description()).isNull();
+  }
+
+  @Test
+  @DisplayName("District enrichment failure never fails the request (rows intact)")
+  void search_sourcePostgres_enrichmentFailure_shouldKeepRows() {
+    var filters = ReportingUnitSearchParametersDto.builder().mainSearchTerm("36834").build();
+    filters.setLegacy("false");
+
+    var result =
+        new ReportingUnitSearchResultDto(
+            null,
+            null,
+            null,
+            5L,
+            new CodeDescriptionDto("00010002", null),
+            null,
+            null,
+            null,
+            false,
+            false,
+            new CodeDescriptionDto("AVG", "Average"),
+            new CodeDescriptionDto("P00", null),
+            null,
+            java.time.LocalDateTime.of(2026, 1, 1, 0, 0),
+            false);
+    when(postgresSearchProvider.searchReportingUnit(filters, PAGEABLE))
+        .thenReturn(new PageImpl<>(List.of(result), PAGEABLE, 1));
+    when(legacyApiProvider.getDistrictCodes()).thenThrow(new RuntimeException("legacy down"));
+    when(forestClientService.getClientByNumber("00010002")).thenReturn(Optional.empty());
+    when(userService.getUserBookmarksInList(eq(USER_ID), any())).thenReturn(List.of());
+
+    Page<ReportingUnitSearchResultDto> results =
+        searchService.search(USER_ID, filters, PAGEABLE);
+
+    assertThat(results.getContent()).hasSize(1);
+    assertThat(results.getContent().getFirst().district().description()).isNull();
+    assertThat(results.getContent().getFirst().ruNumber()).isEqualTo(5L);
+  }
+
+  @Test
+  @DisplayName("Legacy rows are not district-enriched (no lookup call, output unchanged)")
+  void search_sourceLegacy_shouldNotEnrichDistrictDescriptions() {
+    var filters = ReportingUnitSearchParametersDto.builder().mainSearchTerm("36834").build();
+
+    var result = createResult(36834L, "00010002");
+    Page<ReportingUnitSearchResultDto> page = new PageImpl<>(List.of(result), PAGEABLE, 1);
+
+    when(legacyApiProvider.searchReportingUnit(filters, PAGEABLE)).thenReturn(page);
+    when(forestClientService.getClientByNumber("00010002"))
+        .thenReturn(
+            Optional.of(
+                new ForestClientDto("00010002", "WEST FRASER", null, null, null, null, null)));
+    when(userService.getUserBookmarksInList(eq(USER_ID), any())).thenReturn(List.of());
+
+    Page<ReportingUnitSearchResultDto> results =
+        searchService.search(USER_ID, filters, PAGEABLE);
+
+    assertThat(results.getContent()).hasSize(1);
+    // Legacy rows arrive with descriptions from the legacy SQL joins — untouched.
+    assertThat(results.getContent().getFirst().district().description())
+        .isEqualTo("Nadina Natural Resource District");
+    verify(legacyApiProvider, never()).getDistrictCodes();
   }
 
   @Test
