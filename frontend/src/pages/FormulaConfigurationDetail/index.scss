@@ -1,4 +1,5 @@
 @use '@carbon/react/scss/spacing' as *;
+@use '../../styles/page-shell' as shell;
 
 .formula {
   &-config-sections {
@@ -16,6 +17,8 @@
         display: flex;
         flex-direction: column;
         margin-top: $spacing-06;
+
+        @include shell.actions;
       }
     }
 

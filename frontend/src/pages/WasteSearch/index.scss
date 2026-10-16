@@ -4,26 +4,14 @@
 @use '@carbon/react/scss/type' as *;
 @use '@carbon/react/scss/breakpoint' as *;
 @use '@carbon/react/scss/theme' as *;
+@use '../../styles/page-shell' as shell;
 
 .search-column__banner {
   padding-top: $spacing-05;
   padding-left: $spacing-05;
   padding-bottom: $spacing-09;
-}
 
-.search-column__content {
-  padding-top: $spacing-09;
-  padding-bottom: $spacing-09;
-}
-
-.search-column__content {
-  margin-left: -1.25rem;
-  margin-right: -1.25rem;
-
-  @include breakpoint-down(md) {
-    margin-left: 0;
-    margin-right: 0;
-  }
+  @include shell.banner-search;
 }
 
 .search-column__banner {
@@ -31,4 +19,6 @@
     margin-left: 0;
     margin-right: 0;
   }
+
+  @include shell.banner-search;
 }

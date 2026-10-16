@@ -3,6 +3,7 @@
 @use '@carbon/react/scss/breakpoint' as *;
 @use '@carbon/react/scss/colors' as *;
 @use '@carbon/styles/scss/components/tabs';
+@use '../../styles/page-shell' as shell;
 
 .district-volume-detail {
   &-column__banner,
@@ -16,6 +17,8 @@
       padding: $spacing-05 $spacing-07;
       flex-shrink: 0;
     }
+
+    @include shell.banner-shell;
   }
   
   &__start-date,
@@ -34,6 +37,8 @@
   }
   &-column__actions {  
     margin-top: $spacing-06;
+
+    @include shell.actions;
   }  
 
   &-column__banner {

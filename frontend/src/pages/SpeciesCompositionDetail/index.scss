@@ -1,5 +1,6 @@
 @use '@carbon/react/scss/spacing' as *;
 @use '@carbon/react/scss/breakpoint' as *;
+@use '../../styles/page-shell' as shell;
 
 .species-composition-detail-column {
   &__banner {
@@ -12,6 +13,8 @@
       padding: $spacing-05 $spacing-07;
       flex-shrink: 0;
     }
+
+    @include shell.banner-shell;
   }
 
   &__start-date,
@@ -38,5 +41,7 @@
     display: flex;
     flex-direction: column;
     margin-top: $spacing-06;
+
+    @include shell.actions;
   }
 }

@@ -1,6 +1,7 @@
 @use '../../../../styles/variables' as vars;
 @use '@carbon/react/scss/spacing' as *;
 @use '@carbon/react/scss/breakpoint' as *;
+@use '../../../../styles/page-shell' as shell;
 
 .formula-set-list-column__content {
   margin-left: -1.25rem;
@@ -11,4 +12,6 @@
     margin-left: 0;
     margin-right: 0;
   }
+
+  @include shell.content;
 }

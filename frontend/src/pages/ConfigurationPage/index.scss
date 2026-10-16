@@ -2,6 +2,7 @@
 @use '@carbon/react/scss/spacing' as *;
 @use '@carbon/react/scss/breakpoint' as *;
 @use '@carbon/type' as *;
+@use '../../styles/page-shell' as shell;
 
 .configuration-column__header {
   margin-bottom: $spacing-08;
@@ -9,6 +10,8 @@
   @include breakpoint-down(md) {
     margin: $spacing-04;
   }
+
+  @include shell.banner-header;
 }
 
 .configuration-section {

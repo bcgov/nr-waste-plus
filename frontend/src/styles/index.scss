@@ -11,6 +11,7 @@
 @use './variables' as variables;
 @use '@carbon/react/scss/spacing' as *;
 @use '@carbon/react/scss/breakpoint' as *;
+@use './page-shell' as shell;
 
 /* Toast Notification - Set it to the top-right corner and animate */
 .#{variables.$bcgov-prefix}--toast-notification {
@@ -37,6 +38,8 @@
     width: 100%;
     max-inline-size: none;
   }
+
+  @include shell.notification;
 }
 
 /*
@@ -52,6 +55,8 @@
     margin-left: 0;
     margin-right: 0;
   }
+
+  @include shell.full-bleed;
 }
 
 /*
@@ -69,6 +74,8 @@
   > .cds--css-grid-column {
     margin-inline: 0;
   }
+
+  @include shell.header-field-grid;
 }
 
 @keyframes slide-in-right {

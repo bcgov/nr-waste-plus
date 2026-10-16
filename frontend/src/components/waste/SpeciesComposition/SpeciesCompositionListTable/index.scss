@@ -1,5 +1,6 @@
 @use '@carbon/react/scss/spacing' as *;
 @use '@carbon/react/scss/breakpoint' as *;
+@use '../../../../styles/page-shell' as shell;
 
 .species-composition-column__content {
   margin-left: -1.25rem;
@@ -10,4 +11,6 @@
     margin-left: 0;
     margin-right: 0;
   }
+
+  @include shell.content;
 }
