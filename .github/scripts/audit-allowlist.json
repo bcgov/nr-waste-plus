@@ -5,7 +5,8 @@
     "package": "braces",
     "owner": "Team Alliance",
     "reviewBy": "2026-12-01",
+    "folders": ["frontend"],
     "trackingIssue": "https://github.com/micromatch/braces/issues/70",
-    "notes": "Uncontrolled recursion stack overflow in braces <= 3.0.3 AST walkers. Transitive devDependency via stylelint. No upstream fix available yet."
+    "notes": "Uncontrolled recursion stack overflow in braces <= 3.0.3 AST walkers. Transitive devDependency via stylelint in frontend. No upstream fix available yet."
   }
 ]

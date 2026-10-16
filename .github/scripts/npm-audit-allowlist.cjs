@@ -1,8 +1,8 @@
 /**
  * npm-audit-allowlist.cjs
  *
- * Verifies npm audit failures against a reviewed, time-bound allowlist of known
- * unpatched devDependency advisories.
+ * Verifies npm audit failures against a reviewed, time-bound, folder-scoped allowlist
+ * of known unpatched devDependency advisories.
  */
 const { execSync } = require('node:child_process');
 const fs = require('node:fs');
@@ -13,14 +13,52 @@ const MAX_BUFFER = 50 * 1024 * 1024; // 50MB
 function parseArgs(args = process.argv.slice(2)) {
   const options = {
     allowlistPath: path.resolve(__dirname, 'audit-allowlist.json'),
+    folder: path.basename(process.cwd()),
   };
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--allowlist' && args[i + 1]) {
       options.allowlistPath = path.resolve(process.cwd(), args[i + 1]);
       i++;
+    } else if (args[i] === '--folder' && args[i + 1]) {
+      options.folder = args[i + 1];
+      i++;
     }
   }
   return options;
+}
+
+function validateAllowlistSchema(allowlist) {
+  if (!Array.isArray(allowlist)) {
+    throw new Error('Allowlist must be a JSON array of advisory objects.');
+  }
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  const idRegex = /^GHSA-[\w-]+$/;
+
+  for (let i = 0; i < allowlist.length; i++) {
+    const entry = allowlist[i];
+    const prefix = `Allowlist entry at index ${i}`;
+    if (!entry || typeof entry !== 'object') {
+      throw new Error(`${prefix} must be an object.`);
+    }
+    if (!entry.id || !idRegex.test(entry.id)) {
+      throw new Error(`${prefix} missing or invalid "id" (must match GHSA format).`);
+    }
+    if (!entry.url || typeof entry.url !== 'string') {
+      throw new Error(`${prefix} missing or invalid "url".`);
+    }
+    if (!entry.package || typeof entry.package !== 'string') {
+      throw new Error(`${prefix} missing or invalid "package" name.`);
+    }
+    if (!entry.owner || typeof entry.owner !== 'string') {
+      throw new Error(`${prefix} missing or invalid "owner".`);
+    }
+    if (!entry.reviewBy || !dateRegex.test(entry.reviewBy) || Number.isNaN(Date.parse(entry.reviewBy))) {
+      throw new Error(`${prefix} (${entry.id}) missing or invalid "reviewBy" date (must be YYYY-MM-DD).`);
+    }
+    if (entry.folders && !Array.isArray(entry.folders)) {
+      throw new Error(`${prefix} (${entry.id}) "folders" must be an array of strings.`);
+    }
+  }
 }
 
 function loadAllowlist(filePath) {
@@ -28,7 +66,9 @@ function loadAllowlist(filePath) {
     throw new Error(`Allowlist file not found at ${filePath}`);
   }
   const content = fs.readFileSync(filePath, 'utf8');
-  return JSON.parse(content);
+  const allowlist = JSON.parse(content);
+  validateAllowlistSchema(allowlist);
+  return allowlist;
 }
 
 function validateAuditReport(report, rawOutput) {
@@ -47,10 +87,18 @@ function validateAuditReport(report, rawOutput) {
   }
 }
 
-function verifyProductionCleanliness(prodReport) {
-  if (!prodReport || typeof prodReport !== 'object' || !prodReport.vulnerabilities) {
-    return;
+function validateProdAuditReport(prodReport, rawProdOutput) {
+  if (!prodReport || typeof prodReport !== 'object') {
+    throw new Error(`npm audit (prod) returned non-object response: ${String(rawProdOutput).slice(0, 500)}`);
   }
+  if (prodReport.error) {
+    const errorDetails = typeof prodReport.error === 'object' ? JSON.stringify(prodReport.error) : prodReport.error;
+    throw new Error(`npm audit (prod) failed with registry/network error: ${errorDetails}`);
+  }
+  if (!prodReport.vulnerabilities || typeof prodReport.vulnerabilities !== 'object') {
+    throw new Error('npm audit (prod) returned malformed report missing "vulnerabilities" object.');
+  }
+
   const prodVulns = Object.entries(prodReport.vulnerabilities).filter(([_, v]) => {
     return v.severity === 'high' || v.severity === 'critical';
   });
@@ -60,11 +108,14 @@ function verifyProductionCleanliness(prodReport) {
   }
 }
 
-function checkAllowlistExpirations(allowlist, currentDate = new Date()) {
+function checkAllowlistExpirations(allowlist, currentDate = new Date(), currentFolder = null) {
   const todayStr = currentDate.toISOString().split('T')[0];
   const expired = [];
   for (const entry of allowlist) {
-    if (entry.reviewBy && entry.reviewBy < todayStr) {
+    if (entry.folders && currentFolder && !entry.folders.includes(currentFolder)) {
+      continue;
+    }
+    if (entry.reviewBy < todayStr) {
       expired.push(entry);
     }
   }
@@ -76,10 +127,13 @@ function checkAllowlistExpirations(allowlist, currentDate = new Date()) {
   }
 }
 
-function evaluateAudit(report, allowlist) {
+function evaluateAudit(report, allowlist, currentFolder = null) {
   const vulns = report.vulnerabilities || {};
   const allowlistMap = new Map();
   for (const entry of allowlist) {
+    if (entry.folders && currentFolder && !entry.folders.includes(currentFolder)) {
+      continue;
+    }
     allowlistMap.set(entry.url, entry);
     if (entry.id) {
       allowlistMap.set(entry.id, entry);
@@ -94,8 +148,11 @@ function evaluateAudit(report, allowlist) {
     const keys = [];
     for (const item of (v.via || [])) {
       if (typeof item === 'object') {
-        if (item.url) keys.push(item.url);
-        if (item.name) keys.push(item.name);
+        if (item.url) {
+          keys.push(item.url);
+          const ghsaMatch = item.url.match(/GHSA-[\w-]+/);
+          if (ghsaMatch) keys.push(ghsaMatch[0]);
+        }
       } else if (typeof item === 'string') {
         keys.push(...getAdvisoryKeys(item, visited));
       }
@@ -116,17 +173,16 @@ function evaluateAudit(report, allowlist) {
       continue;
     }
 
-    const matchedForVuln = [];
-    for (const key of keys) {
-      if (allowlistMap.has(key)) {
+    // Every single advisory key must be present in the active allowlist map
+    const allAllowlisted = keys.every(key => allowlistMap.has(key));
+    if (!allAllowlisted) {
+      const unlisted = keys.filter(key => !allowlistMap.has(key));
+      unhandled.push({ name, severity: v.severity, unlistedKeys: unlisted });
+    } else {
+      for (const key of keys) {
         const entry = allowlistMap.get(key);
-        matchedForVuln.push(entry);
         matchedEntries.set(entry.id || entry.url, entry);
       }
-    }
-
-    if (matchedForVuln.length === 0) {
-      unhandled.push({ name, severity: v.severity, keys });
     }
   }
 
@@ -139,11 +195,11 @@ function evaluateAudit(report, allowlist) {
 
 function run() {
   const options = parseArgs();
-  console.log(`Loading audit allowlist from: ${options.allowlistPath}`);
+  console.log(`Loading audit allowlist from: ${options.allowlistPath} (folder: ${options.folder})`);
   const allowlist = loadAllowlist(options.allowlistPath);
 
   // 1. Check if any allowlisted entry has expired
-  checkAllowlistExpirations(allowlist);
+  checkAllowlistExpirations(allowlist, new Date(), options.folder);
 
   // 2. Run npm audit for all dependencies
   console.log('Running npm audit --package-lock-only --json...');
@@ -169,7 +225,7 @@ function run() {
 
   validateAuditReport(fullReport, rawAuditOutput);
 
-  // 3. Confirm production dependencies are 100% clean of high/critical vulnerabilities
+  // 3. Confirm production dependencies are 100% clean of high/critical vulnerabilities (fails closed)
   console.log('Checking production dependencies with npm audit --package-lock-only --omit=dev --json...');
   let rawProdOutput = '';
   try {
@@ -179,27 +235,32 @@ function run() {
     });
   } catch (err) {
     rawProdOutput = err.stdout || '';
-  }
-
-  if (rawProdOutput) {
-    try {
-      const prodReport = JSON.parse(rawProdOutput);
-      verifyProductionCleanliness(prodReport);
-    } catch (e) {
-      // If parsing fails here, verifyProductionCleanliness throws if error
-      if (e.message.includes('Allowlist only applies to devDependencies')) {
-        throw e;
-      }
+    if (!rawProdOutput && err.stderr) {
+      throw new Error(`npm audit (prod) command execution failed: ${err.stderr}`);
     }
   }
 
+  if (!rawProdOutput || !rawProdOutput.trim()) {
+    throw new Error('npm audit (prod) produced empty output. Cannot verify production cleanliness.');
+  }
+
+  let prodReport;
+  try {
+    prodReport = JSON.parse(rawProdOutput);
+  } catch (e) {
+    throw new Error(`Failed to parse npm audit (prod) JSON output: ${e.message}\nRaw output: ${rawProdOutput.slice(0, 500)}`);
+  }
+
+  validateProdAuditReport(prodReport, rawProdOutput);
+
   // 4. Evaluate against allowlist
-  const { ok, unhandled, matchedEntries } = evaluateAudit(fullReport, allowlist);
+  const { ok, unhandled, matchedEntries } = evaluateAudit(fullReport, allowlist, options.folder);
 
   if (!ok || unhandled.length > 0) {
     console.error('\n✖ Audit failed with unhandled high/critical vulnerabilities:');
     for (const u of unhandled) {
-      console.error(`  - ${u.name} (${u.severity})`);
+      const keysInfo = u.unlistedKeys ? ` [Unlisted advisories: ${u.unlistedKeys.join(', ')}]` : '';
+      console.error(`  - ${u.name} (${u.severity})${keysInfo}`);
     }
     process.exit(1);
   }
@@ -225,8 +286,9 @@ if (require.main === module) {
 
 module.exports = {
   loadAllowlist,
+  validateAllowlistSchema,
   validateAuditReport,
-  verifyProductionCleanliness,
+  validateProdAuditReport,
   checkAllowlistExpirations,
   evaluateAudit,
 };
