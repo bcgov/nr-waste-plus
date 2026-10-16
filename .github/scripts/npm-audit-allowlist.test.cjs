@@ -451,3 +451,124 @@ test('run() exits with 1 when unhandled vulnerability exists in full audit', () 
 
   assert.equal(exitCode, 1);
 });
+
+test('run() throws when allowlist entry is expired', () => {
+  const expiredAllowlist = [
+    {
+      id: 'GHSA-vfj7-8cjw-p6xm',
+      url: 'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm',
+      package: 'braces',
+      owner: 'Team',
+      reviewBy: '2026-01-01',
+    },
+  ];
+
+  assert.throws(
+    () =>
+      run({
+        allowlist: expiredAllowlist,
+        currentDate: new Date('2026-10-16'),
+        execSync: () => '',
+        logger: { log: () => {}, error: () => {} },
+      }),
+    /expired and require re-evaluation/
+  );
+});
+
+test('run() throws when audit output is empty or unparseable', () => {
+  const validAllowlist = [
+    {
+      id: 'GHSA-vfj7-8cjw-p6xm',
+      url: 'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm',
+      package: 'braces',
+      owner: 'Team',
+      reviewBy: '2099-01-01',
+    },
+  ];
+
+  // Empty output
+  assert.throws(
+    () =>
+      run({
+        allowlist: validAllowlist,
+        execSync: () => '',
+        logger: { log: () => {}, error: () => {} },
+      }),
+    /Failed to parse npm audit JSON output/
+  );
+
+  // Unparseable JSON
+  assert.throws(
+    () =>
+      run({
+        allowlist: validAllowlist,
+        execSync: () => '{ broken-json',
+        logger: { log: () => {}, error: () => {} },
+      }),
+    /Failed to parse npm audit JSON output/
+  );
+});
+
+test('run() throws when full audit returns an error object', () => {
+  const validAllowlist = [
+    {
+      id: 'GHSA-vfj7-8cjw-p6xm',
+      url: 'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm',
+      package: 'braces',
+      owner: 'Team',
+      reviewBy: '2099-01-01',
+    },
+  ];
+
+  assert.throws(
+    () =>
+      run({
+        allowlist: validAllowlist,
+        execSync: () => JSON.stringify({ error: { code: 'ENOTFOUND', summary: 'getaddrinfo ENOTFOUND' } }),
+        logger: { log: () => {}, error: () => {} },
+      }),
+    /failed with registry\/network error/
+  );
+});
+
+test('run() respects --folder scoping and fails when folder is not in allowed folders', () => {
+  const scopedAllowlist = [
+    {
+      id: 'GHSA-vfj7-8cjw-p6xm',
+      url: 'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm',
+      package: 'braces',
+      owner: 'Team',
+      reviewBy: '2099-01-01',
+      folders: ['frontend'],
+    },
+  ];
+
+  const fullAuditJson = JSON.stringify({
+    vulnerabilities: {
+      braces: {
+        name: 'braces',
+        severity: 'high',
+        via: [{ url: 'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm', name: 'braces' }],
+      },
+    },
+  });
+
+  const prodAuditJson = JSON.stringify({ vulnerabilities: {} });
+
+  let exitCode = null;
+  // Run with folder set to 'cypress', which is not in ['frontend']
+  run({
+    allowlist: scopedAllowlist,
+    args: ['--folder', 'cypress'],
+    execSync: (cmd) => {
+      if (cmd.includes('--omit=dev')) return prodAuditJson;
+      return fullAuditJson;
+    },
+    logger: { log: () => {}, error: () => {} },
+    onExit: (code) => {
+      exitCode = code;
+    },
+  });
+
+  assert.equal(exitCode, 1);
+});

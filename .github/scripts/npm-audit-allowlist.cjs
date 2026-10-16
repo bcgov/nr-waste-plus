@@ -199,10 +199,14 @@ function evaluateAudit(report, allowlist, currentFolder = null) {
   };
 }
 
+/**
+ * Main execution entry point.
+ * @param {object} [overrides] - Test-only dependency injection hooks (execSync, allowlist, logger, currentDate, onExit, args).
+ */
 function run(overrides = {}) {
   const options = overrides.args ? parseArgs(overrides.args) : parseArgs();
   const exec = overrides.execSync || execSync;
-  const allowlist = overrides.allowlist || loadAllowlist(options.allowlistPath);
+  const allowlist = overrides.allowlist ? (validateAllowlistSchema(overrides.allowlist), overrides.allowlist) : loadAllowlist(options.allowlistPath);
   const logger = overrides.logger || console;
 
   logger.log(`Loading audit allowlist from: ${options.allowlistPath} (folder: ${options.folder})`);
