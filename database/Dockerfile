@@ -4,3 +4,4 @@ HEALTHCHECK --interval=35s --timeout=4s CMD pg_isready -U "${POSTGRES_USER}" -d 
  
 # Non-privileged user
 USER postgres
+
