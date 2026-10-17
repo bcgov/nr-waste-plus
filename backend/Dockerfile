@@ -28,4 +28,3 @@ ENV SPRING_PROFILES_ACTIVE=container,prod
 
 # Startup
 ENTRYPOINT ["/app/nr-waste-plus-backend"]
-
