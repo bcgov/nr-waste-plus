@@ -10,6 +10,8 @@
 @use '@carbon/type';
 @use './variables' as variables;
 @use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+@use './page-shell' as shell;
 
 /* Toast Notification - Set it to the top-right corner and animate */
 .#{variables.$bcgov-prefix}--toast-notification {
@@ -29,13 +31,26 @@
 }
 
 .notification-column {
-  padding-left: $spacing-05;
-  padding-right: $spacing-03;
+  @include shell.notification;
+}
 
-  .#{variables.$bcgov-prefix}--inline-notification {
-    width: 100%;
-    max-inline-size: none;
-  }
+/*
+ * Results table shared by the search-style page shell (waste search and my clients).
+ * Full-bleed: cancels the grid gutter so the table spans the grid border box.
+ * Defined globally so it loads independently of which page chunk is visited first.
+ */
+.search-table {
+  @include shell.full-bleed;
+}
+
+/*
+ * Self-contained sub-grid used by the detail-view header field rows.
+ * Neutralises Carbon's nested-subgrid spacing (padding, inner margins and gaps)
+ * so the header's columns tile the parent column's content box exactly like the
+ * page layout grid does. Keeps the header independent of which grid it lands in.
+ */
+.detail-header-grid {
+  @include shell.header-field-grid;
 }
 
 @keyframes slide-in-right {

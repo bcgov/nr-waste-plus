@@ -132,12 +132,7 @@ const SpeciesCompositionUpload: FC = () => {
 
   return (
     <>
-      <Column
-        max={16}
-        xlg={16}
-        lg={16}
-        md={8}
-        sm={4}
+      <div
         className="species-composition-upload__content"
         data-testid="species-composition-upload-column"
       >
@@ -218,7 +213,7 @@ const SpeciesCompositionUpload: FC = () => {
             onCancel={handleCancel}
           />
         </form>
-      </Column>
+      </div>
 
       {submitError && (
         <div className="form-field--error" role="alert" data-testid="submit-error">

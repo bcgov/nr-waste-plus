@@ -309,12 +309,7 @@ const DistrictVolumeTableUpload: FC = () => {
 
   return (
     <>
-      <Column
-        max={16}
-        xlg={16}
-        lg={16}
-        md={8}
-        sm={4}
+      <div
         className="district-volume-upload-column__content"
         data-testid="district-volume-upload-column"
       >
@@ -502,7 +497,7 @@ const DistrictVolumeTableUpload: FC = () => {
             uploadReady={hasUploadedData ? 'true' : 'false'}
           />
         </form>
-      </Column>
+      </div>
 
       {submitError && (
         <div className="form-field--error" role="alert" data-testid="submit-error">

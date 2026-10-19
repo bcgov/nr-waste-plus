@@ -32,7 +32,9 @@ const FormulaConfigurationCreatePage: FC = () => {
         <PageNotification eventTarget="upload-table" />
       </Column>
 
-      <FormulaConfigurationCreateForm />
+      <Column max={16} xlg={16} lg={16} md={8} sm={4}>
+        <FormulaConfigurationCreateForm />
+      </Column>
     </>
   );
 };

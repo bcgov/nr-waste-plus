@@ -1,3 +1,4 @@
+import { Column } from '@carbon/react';
 import { type FC } from 'react';
 
 import SpeciesCompositionDetailHeader from './SpeciesCompositionDetailHeader.tsx';
@@ -32,12 +33,14 @@ const SpeciesCompositionDetailView: FC<SpeciesCompositionDetailViewProps> = ({ d
   return (
     <>
       {/* Metadata header */}
-      <SpeciesCompositionDetailHeader
-        startDate={data.startDate}
-        endDate={data.endDate}
-        uploadedBy={data.uploadedBy}
-        dateOfUpload={data.dateOfUpload}
-      />
+      <Column lg={16} md={8} sm={4}>
+        <SpeciesCompositionDetailHeader
+          startDate={data.startDate}
+          endDate={data.endDate}
+          uploadedBy={data.uploadedBy}
+          dateOfUpload={data.dateOfUpload}
+        />
+      </Column>
 
       {/* Notification area */}
       <div className="species-composition-detail-column__notification">

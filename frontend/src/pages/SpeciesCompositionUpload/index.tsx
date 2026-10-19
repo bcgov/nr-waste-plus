@@ -34,7 +34,9 @@ const SpeciesCompositionUploadPage: FC = () => {
         <PageNotification eventTarget="species-composition-upload" />
       </Column>
 
-      <SpeciesCompositionUpload />
+      <Column max={16} xlg={16} lg={16} md={8} sm={4}>
+        <SpeciesCompositionUpload />
+      </Column>
     </>
   );
 };

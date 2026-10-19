@@ -30,7 +30,9 @@ const FormulaConfigurationListPage: FC = () => {
           </Button>
         </PageTitle>
       </Column>
-      <FormulaConfigurationListTable />
+      <Column lg={16} md={8} sm={4}>
+        <FormulaConfigurationListTable />
+      </Column>
     </>
   );
 };

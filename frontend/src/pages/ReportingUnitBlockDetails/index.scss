@@ -2,14 +2,12 @@
 @use '@carbon/react/scss/breakpoint' as *;
 @use '@carbon/styles/scss/components/tabs';
 @use '@carbon/styles/scss/components/progress-indicator';
+@use '../../styles/page-shell' as shell;
 
 // Page layout for /reporting-units/$ruId/$blockId (Figma 161:29613).
 .rublock-column {
   &__banner {
-    display: flex;
-    flex-direction: column;
-    // Title block → summary card gap.
-    margin-bottom: $spacing-08;
+    @include shell.banner-header;
   }
 
   &__summary,

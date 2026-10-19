@@ -1,17 +1,10 @@
 @use '@carbon/react/scss/spacing' as *;
 @use '@carbon/react/scss/breakpoint' as *;
+@use '../../styles/page-shell' as shell;
 
 .species-composition-detail-column {
   &__banner {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-08;
-
-    @include breakpoint-down(md) {
-      margin-top: $spacing-01;
-      padding: $spacing-05 $spacing-07;
-      flex-shrink: 0;
-    }
+    @include shell.banner-shell;
   }
 
   &__start-date,
@@ -23,9 +16,7 @@
   }
 
   &__notification {
-    display: flex;
-    flex-direction: column;
-    margin-top: $spacing-08; /* added for spacing similar to district volume */
+    @include shell.notification-block;
   }
 
   &__matrix {
@@ -35,8 +26,6 @@
   }
 
   &__actions {
-    display: flex;
-    flex-direction: column;
-    margin-top: $spacing-06;
+    @include shell.actions;
   }
 }
