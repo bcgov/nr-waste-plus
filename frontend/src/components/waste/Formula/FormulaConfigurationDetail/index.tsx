@@ -32,7 +32,9 @@ const FormulaConfigurationDetail: FC<FormulaConfigurationDetailProps> = ({ data 
 
   return (
     <>
-      <FormulaConfigurationDetailHeader startDate={data.startDate} endDate={data.endDate} />
+      <Column lg={16} md={8} sm={4}>
+        <FormulaConfigurationDetailHeader startDate={data.startDate} endDate={data.endDate} />
+      </Column>
       <Column lg={16} md={8} sm={4} className="formula-config-sections">
         <div className="formula-sections">
           {sections.map(([sectionName, keys]) => (

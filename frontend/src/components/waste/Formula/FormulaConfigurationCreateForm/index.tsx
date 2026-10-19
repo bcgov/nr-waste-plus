@@ -354,14 +354,7 @@ const FormulaConfigurationCreateForm: FC = () => {
     : undefined;
 
   return (
-    <Column
-      max={16}
-      xlg={16}
-      lg={16}
-      md={8}
-      sm={4}
-      className="formula-config-create-column__content"
-    >
+    <div className="formula-config-create-column__content">
       <form
         data-testid="formula-config-create-form"
         // Carbon's DatePickerInput injects a default pattern (d/M/yyyy) that the
@@ -469,7 +462,7 @@ const FormulaConfigurationCreateForm: FC = () => {
           </Button>
         </div>
       </form>
-    </Column>
+    </div>
   );
 };
 

@@ -1,4 +1,3 @@
-import { Column } from '@carbon/react';
 import { useEffect, useState, useMemo, type FC, type ReactNode } from 'react';
 
 import { headers } from './constants';
@@ -19,8 +18,6 @@ import { featureFlags } from '@/env';
 import useNotificationEvents from '@/hooks/useNotificationEvents';
 import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
 import { removeEmpty } from '@/services/utils';
-
-import './index.scss';
 
 /**
  * Coordinates waste-search filters, results, pagination, sorting, and row expansion.
@@ -96,11 +93,11 @@ const WasteSearchTable: FC = () => {
 
   return (
     <>
-      <Column lg={16} md={8} sm={4} className="search-filters">
+      <div className="search-filters">
         <WasteSearchFilters value={filters} onChange={setFilters} onSearch={executeNewSearch} />
-      </Column>
+      </div>
 
-      <Column lg={16} md={8} sm={4} className="search-table">
+      <div className="search-table">
         <TableResource
           id="waste-search"
           headers={headers}
@@ -114,7 +111,7 @@ const WasteSearchTable: FC = () => {
           onRowExpanded={onRowExpanded}
           getRowActions={featureFlags['bookmark-ru-enabled'] ? getRowActions : undefined}
         />
-      </Column>
+      </div>
     </>
   );
 };

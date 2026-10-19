@@ -3,19 +3,11 @@
 @use '@carbon/react/scss/breakpoint' as *;
 @use '@carbon/react/scss/colors' as *;
 @use '@carbon/styles/scss/components/tabs';
+@use '../../styles/page-shell' as shell;
 
 .district-volume-detail {
-  &-column__banner,
-  &-column__actions {
-    display: flex;
-    flex-direction: column;   
-    gap: $spacing-08;
-
-    @include breakpoint-down(md) {
-      margin-top: $spacing-01;
-      padding: $spacing-05 $spacing-07;
-      flex-shrink: 0;
-    }
+  &-column__banner {
+    @include shell.banner-shell;
   }
   
   &__start-date,
@@ -26,15 +18,15 @@
     flex-direction: column;
   }
 
-  &-column__notification,
-  &-column__actions {
-    display: flex;
-    flex-direction: column;
-    margin-top: $spacing-08;
+  &-column__notification {
+    @include shell.notification-block;
   }
-  &-column__actions {  
-    margin-top: $spacing-06;
-  }  
+
+  &-column__actions {
+    @include shell.actions;
+    gap: $spacing-08;
+    @include shell.md-inset($spacing-05 $spacing-07);
+  }
 
   &-column__banner {
     margin-top: 0;

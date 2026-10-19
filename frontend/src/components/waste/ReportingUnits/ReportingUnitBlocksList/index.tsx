@@ -1,5 +1,4 @@
 import { TableShortcut, TrashCan } from '@carbon/icons-react';
-import { Column } from '@carbon/react';
 import { useNavigate } from '@tanstack/react-router';
 import { useState, type FC } from 'react';
 
@@ -96,13 +95,13 @@ const ReportingUnitBlocksList: FC<ReportingUnitBlocksListProps> = ({
 
   if (isError && !isLoading && !content) {
     return (
-      <Column sm={4} md={8} lg={16} className="rublocks-column">
+      <div className="rublocks-column">
         <EmptySection
           className="initial-empty-section"
           title="Something went wrong!"
           description="Error occurred while searching for results."
         />
-      </Column>
+      </div>
     );
   }
 
@@ -112,7 +111,7 @@ const ReportingUnitBlocksList: FC<ReportingUnitBlocksListProps> = ({
   const pageRows = rows.slice(page * pageSize, page * pageSize + pageSize);
 
   return (
-    <Column sm={4} md={8} lg={16} className="rublocks-column">
+    <div className="rublocks-column">
       <TableResource
         id="reporting-unit-blocks-list"
         headers={BLOCKS_TABLE_HEADERS}
@@ -134,7 +133,7 @@ const ReportingUnitBlocksList: FC<ReportingUnitBlocksListProps> = ({
         onPageChange={handlePageChange}
         getRowActions={getRowActions}
       />
-    </Column>
+    </div>
   );
 };
 

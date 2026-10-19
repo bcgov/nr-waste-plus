@@ -1,0 +1,115 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/breakpoint' as *;
+
+// Grid geometry, not a spacing token — half of the 2.5rem page grid gutter.
+$page-grid-gutter-half: 1.25rem;
+
+// Cancels the page grid gutter so content spans the grid border box.
+@mixin full-bleed {
+  margin-left: -$page-grid-gutter-half;
+  margin-right: -$page-grid-gutter-half;
+
+  @include breakpoint-down(md) {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+// Page-shell content block: grid top offset plus full-bleed width.
+@mixin content {
+  margin-top: $spacing-08;
+  @include full-bleed;
+}
+
+// Search banner padding, with the md gutter reset.
+@mixin banner-search {
+  padding-top: $spacing-05;
+  padding-left: $spacing-05;
+  padding-bottom: $spacing-09;
+
+  @include breakpoint-down(md) {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+// List/detail header offset. md intentionally uses the shorthand margin.
+@mixin banner-header {
+  margin-bottom: $spacing-08;
+
+  @include breakpoint-down(md) {
+    margin: $spacing-04;
+  }
+}
+
+// Vertical flex shell shared by the detail banners.
+@mixin banner-shell {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-08;
+
+  @include breakpoint-down(md) {
+    margin-top: $spacing-01;
+    padding: $spacing-05 $spacing-07;
+    flex-shrink: 0;
+  }
+}
+
+// Notification column padding plus a full-width inline notification.
+@mixin notification {
+  padding-left: $spacing-05;
+  padding-right: $spacing-03;
+
+  & .cds--inline-notification {
+    width: 100%;
+    max-inline-size: none;
+  }
+}
+
+// Action row shell: a column of buttons with its section offset.
+@mixin actions {
+  display: flex;
+  flex-direction: column;
+  margin-top: $spacing-06;
+}
+
+// Self-contained detail-header sub-grid: neutralises nested-subgrid spacing.
+@mixin header-field-grid {
+  padding: 0;
+  margin-inline: 0;
+  column-gap: 0;
+  row-gap: 0;
+
+  & > .cds--css-grid-column {
+    margin-inline: 0;
+  }
+}
+
+// Mobile-only inset (base primitive). Desktop: nothing.
+@mixin md-inset($padding: $spacing-02 $spacing-04) {
+  @include breakpoint-down(md) {
+    padding: $padding;
+    flex-shrink: 0;
+  }
+}
+
+// Page-level form shell (composite of md-inset).
+@mixin form-shell($md-padding: $spacing-02 $spacing-02, $md-margin-top: $spacing-04) {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-08;
+  margin-top: $spacing-08;
+
+  @include breakpoint-down(md) {
+    margin-top: $md-margin-top;
+  }
+
+  @include md-inset($md-padding);
+}
+
+// Notification block (flex column + top offset) — distinct from `notification`.
+@mixin notification-block {
+  display: flex;
+  flex-direction: column;
+  margin-top: $spacing-08;
+}

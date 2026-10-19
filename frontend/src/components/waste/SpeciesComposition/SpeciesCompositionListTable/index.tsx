@@ -1,4 +1,3 @@
-import { Column } from '@carbon/react';
 import { useState } from 'react';
 
 import { useListTableState } from '@/hooks/useTableRow';
@@ -55,7 +54,7 @@ const SpeciesCompositionListTable: FC = () => {
   const getRowActions = useSpeciesCompositionListRowActions(setRowToDelete);
 
   return (
-    <Column lg={16} md={8} sm={4} className="species-composition-column__content">
+    <div className="species-composition-column__content">
       <TableResource
         id="species-composition-list"
         headers={headers}
@@ -85,7 +84,7 @@ const SpeciesCompositionListTable: FC = () => {
         }}
         onClose={() => setRowToDelete(null)}
       />
-    </Column>
+    </div>
   );
 };
 

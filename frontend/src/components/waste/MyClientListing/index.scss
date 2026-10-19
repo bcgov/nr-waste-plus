@@ -5,7 +5,7 @@
 @use '@carbon/react/scss/theme' as *;
 @use '@carbon/type';
 
-.cds--subgrid--wide {
+.table-filters-grid.cds--subgrid--wide {
   margin-inline: 0;
   margin-inline-end: 0.25rem; //To avoid scrollbar on wide screens
   row-gap: 1rem;

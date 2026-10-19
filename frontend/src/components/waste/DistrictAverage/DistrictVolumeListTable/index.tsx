@@ -1,4 +1,3 @@
-import { Column } from '@carbon/react';
 import { useState } from 'react';
 
 import { useListTableState } from '@/hooks/useTableRow';
@@ -54,7 +53,7 @@ const DistrictVolumeListTable: FC = () => {
   const getRowActions = useDistrictVolumeListRowActions(setRowToDelete);
 
   return (
-    <Column lg={16} md={8} sm={4} className="configuration-column__content">
+    <div className="configuration-column__content">
       <TableResource
         id="district-volume-list"
         headers={headers}
@@ -79,7 +78,7 @@ const DistrictVolumeListTable: FC = () => {
         }}
         onClose={() => setRowToDelete(null)}
       />
-    </Column>
+    </div>
   );
 };
 

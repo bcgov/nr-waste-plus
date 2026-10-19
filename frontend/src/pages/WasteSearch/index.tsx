@@ -29,7 +29,9 @@ const WasteSearchPage: FC = () => {
       <Column lg={16} md={8} sm={4} className="notification-column">
         <PageNotification eventTarget="waste-search" />
       </Column>
-      <WasteSearch />
+      <Column lg={16} md={8} sm={4}>
+        <WasteSearch />
+      </Column>
     </>
   );
 };

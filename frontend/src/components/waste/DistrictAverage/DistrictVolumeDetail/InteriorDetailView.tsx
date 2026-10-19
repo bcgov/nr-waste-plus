@@ -1,3 +1,4 @@
+import { Column } from '@carbon/react';
 import { type FC } from 'react';
 
 import DistrictVolumeDetailHeader from './DistrictVolumeDetailHeader.tsx';
@@ -53,11 +54,13 @@ const InteriorDetailView: FC<InteriorDetailViewProps> = ({ data, districtOptions
 
   return (
     <>
-      <DistrictVolumeDetailHeader
-        startDate={startDate}
-        endDate={endDate}
-        tableLevelFactor={tableLevelFactor}
-      />
+      <Column lg={16} md={8} sm={4}>
+        <DistrictVolumeDetailHeader
+          startDate={startDate}
+          endDate={endDate}
+          tableLevelFactor={tableLevelFactor}
+        />
+      </Column>
       <DistrictVolumeDetailTabs ariaLabel="District zones" items={zones} headers={headers} />
     </>
   );

@@ -1,24 +1,12 @@
 @use '@carbon/react/scss/spacing' as *;
 @use '@carbon/react/scss/breakpoint' as *;
+@use '../../../../styles/page-shell' as shell;
 
 .formula-config-create {
 
   &-column__content {
-    margin-top: $spacing-08;
-
-    @include breakpoint-down(md) {
-      margin-top: $spacing-04;
-    }
-
     form {
-      display: flex;
-      flex-direction: column;
-      gap: $spacing-08;
-
-      @include breakpoint-down(md) {
-        padding: $spacing-02 $spacing-02;
-        flex-shrink: 0;
-      }
+      @include shell.form-shell;
 
       div.cds--subgrid {
         gap: $spacing-05;
