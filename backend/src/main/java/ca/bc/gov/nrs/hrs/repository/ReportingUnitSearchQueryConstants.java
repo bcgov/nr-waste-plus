@@ -58,6 +58,12 @@ public final class ReportingUnitSearchQueryConstants {
    * identical: the PRIMARY mark is the live {@code PRIMARY} mark with the lowest {@code
    * (sequence_no, block_mark_id)}; the status is the event with the latest {@code (created_at,
    * status_event_id)}. Both ride the same partial indexes the laterals used.
+   *
+   * <p>Status-source caveat (A-14, product decision 2026-10-19): the {@code se.status} selection
+   * reads {@code hrs.status_event}, which is presently an unpopulated append-only audit/history
+   * table (no writer in {@code src/main}; explicitly not the lifecycle status source), so the
+   * selected status is NULL in practice. A-14 is a deliberate no-op until a status column is
+   * added to block/RU (tracked via the #1400 issue track).
    */
   private static final String SEARCH_ROWS_FRAGMENT =
       """
@@ -188,7 +194,10 @@ public final class ReportingUnitSearchQueryConstants {
    * {@code status_event.status} (RU-scoped, {@code status_event.reporting_unit_id = ru.
    * reporting_unit_id}) — deliberately the same source as the list-row badge so the row and its
    * expanded panel can never disagree (block-scoped {@code status_event.block_id} events are
-   * ignored, matching the list-row badge — DEC-018); {@code attachmentId/attachmentName} are the latest live {@code
+   * ignored, matching the list-row badge — DEC-018). Note (A-14): {@code hrs.status_event} is
+   * presently an unpopulated append-only audit/history table (no writer), so this status is NULL
+   * in practice; a block/RU status column is the real source (the #1400 issue track);
+   * {@code attachmentId/attachmentName} are the latest live {@code
    * block_attachment} narrowed to the finalized survey map ({@code document_type = 'FINAL_MAP' AND
    * status = 'FINALIZED'}, the HRS analog of the legacy {@code WASTE_ASSESSMENT_SURVEY_MAP}
    * attachment); {@code comments} is the latest live {@code block_comment.comment}; {@code
