@@ -6,7 +6,7 @@ import { useAuth } from '@/context/auth/useAuth';
 import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils';
 
 import type { DistrictType } from '@/components/core/DistrictSelection/types';
-import type { CodeDescriptionDto } from '@/services/search.types';
+import type { CodeDescriptionDto } from '@/types/search.types';
 
 /**
  * Loads the current user's clients and renders the default client preference selector.

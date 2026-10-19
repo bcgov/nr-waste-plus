@@ -1,4 +1,4 @@
-import type { CodeDescriptionDto } from './search.types';
+import type { CodeDescriptionDto } from '@/types/search.types';
 
 export enum YesNoEnum {
   Y = 'Y',

@@ -2,12 +2,12 @@ import { Column } from '@carbon/react';
 import { type FC } from 'react';
 
 import DistrictVolumeDetailHeader from './DistrictVolumeDetailHeader.tsx';
-import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs.tsx';
 import { buildDistrictVolumeDetailHeaders } from './districtVolumeDetailHeaders.tsx';
+import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs.tsx';
 import { useDistrictCodeColumn } from './useDistrictCodeColumn.tsx';
 
 import type { CoastDistrictRow, DistrictVolumeDetail } from '@/services/districtvolumes.types.ts';
-import type { CodeDescriptionDto } from '@/services/search.types.ts';
+import type { CodeDescriptionDto } from '@/types/search.types.ts';
 
 /**
  * Props for the {@link CoastDetailView} component.

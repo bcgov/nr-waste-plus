@@ -3,7 +3,7 @@ import type {
   ReportingUnitSearchParametersDto,
   ReportingUnitSearchParametersViewDto,
   ReportingUnitSearchParametersViewSpecific,
-} from './search.types';
+} from '@/types/search.types';
 
 type ReportingUnitSearchParametersConverter<
   K extends keyof ReportingUnitSearchParametersViewSpecific,

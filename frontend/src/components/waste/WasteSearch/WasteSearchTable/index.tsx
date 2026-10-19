@@ -1,5 +1,15 @@
 import { useEffect, useState, useMemo, type FC, type ReactNode } from 'react';
 
+import TableResource from '@/components/Form/TableResource';
+import WasteSearchFilters from '@/components/waste/WasteSearch/WasteSearchFilters';
+import WasteSearchTableExpandContent from '@/components/waste/WasteSearch/WasteSearchTableExpandContent';
+import { useSearchReportingUnitsQuery } from '@/config/react-query/hooks';
+import { featureFlags } from '@/env';
+import useNotificationEvents from '@/hooks/useNotificationEvents';
+import { useListTablePagination } from '@/hooks/useTableRow';
+import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
+import { removeEmpty } from '@/services/utils';
+
 import { headers } from './constants';
 import { useWasteSearchRowActions } from './rowActions.tsx';
 
@@ -7,17 +17,7 @@ import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type {
   ReportingUnitSearchParametersViewDto,
   ReportingUnitSearchResultDto,
-} from '@/services/search.types';
-
-import TableResource from '@/components/Form/TableResource';
-import WasteSearchFilters from '@/components/waste/WasteSearch/WasteSearchFilters';
-import WasteSearchTableExpandContent from '@/components/waste/WasteSearch/WasteSearchTableExpandContent';
-import { useSearchReportingUnitsQuery } from '@/config/react-query/hooks';
-import { useListTablePagination } from '@/hooks/useTableRow';
-import { featureFlags } from '@/env';
-import useNotificationEvents from '@/hooks/useNotificationEvents';
-import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
-import { removeEmpty } from '@/services/utils';
+} from '@/types/search.types';
 
 /**
  * Coordinates waste-search filters, results, pagination, sorting, and row expansion.

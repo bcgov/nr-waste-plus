@@ -3,13 +3,13 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { renderWithAppAsync } from '@/config/tests/renderWithApp';
+import APIs from '@/services/APIs';
+
 import WasteSearchFiltersAdvanced from './index';
 
 import type { FamLoginUser } from '@/context/auth/types';
-import type { ReportingUnitSearchParametersViewDto } from '@/services/search.types';
-
-import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import APIs from '@/services/APIs';
+import type { ReportingUnitSearchParametersViewDto } from '@/types/search.types';
 
 const mockUser = {
   idpProvider: 'IDIR',

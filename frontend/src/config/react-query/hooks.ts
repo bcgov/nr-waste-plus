@@ -23,14 +23,13 @@ import {
 } from './queryKeys';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { ProblemDetails } from '@/config/api/types';
 import type { ReportingUnitBlocksRow } from '@/components/waste/ReportingUnits/ReportingUnitBlocksList/constants';
+import type { ProblemDetails } from '@/config/api/types';
 import type {
   DistrictVolumeCreate,
   DistrictVolumeDetail,
   DistrictVolumeListItem,
 } from '@/services/districtvolumes.types';
-import type { CodeDescriptionDto, ReportingUnitSearchExpandedDto } from '@/services/search.types';
 import type {
   SpeciesCompositionCreate,
   SpeciesCompositionDetail,
@@ -46,6 +45,7 @@ import type {
   ReportingUnitDto,
   ReportingUnitSearchResultDto,
 } from '@/services/types';
+import type { CodeDescriptionDto, ReportingUnitSearchExpandedDto } from '@/types/search.types';
 
 /**
  * Shared TanStack Query options for reference-data requests.

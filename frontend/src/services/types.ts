@@ -5,7 +5,7 @@
  * `*.types.ts` modules so that consumers can import from a single path.
  */
 export type * from '@/types/pagination.types';
-export type * from '@/services/search.types';
+export type * from '@/types/search.types';
 export * from '@/services/forestclient.types';
 export * from '@/services/reportingUnit.types';
 export * from '@/services/districtvolumes.types';
