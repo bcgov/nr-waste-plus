@@ -144,7 +144,8 @@ class ReportingUnitServiceTest {
         .thenReturn(Optional.of(reportingUnit));
     when(codesService.getDistrictCodes())
         .thenReturn(List.of(new CodeDescriptionDto("DND", "Nadina Natural Resource District")));
-    when(codesService.getSamplingCodes()).thenThrow(new RuntimeException("Codes service down"));
+    when(codesService.getSamplingCodes())
+        .thenThrow(new org.springframework.web.client.RestClientException("Codes service down"));
     when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
         .thenReturn(Optional.of(clientDto));
     when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
@@ -247,6 +248,32 @@ class ReportingUnitServiceTest {
     assertThat(result.grade()).isEqualTo(new CodeDescriptionDto("COASTAL", "COASTAL"));
     assertThat(result.isLegacy()).isFalse();
     verify(legacyApiProvider, never()).getReportingUnitDetails(RU_ID);
+  }
+
+  @Test
+  @DisplayName("shouldFallbackToDefaultSampling_whenCodesServiceThrowsRestClientException")
+  void shouldFallbackToDefaultSampling_whenCodesServiceThrowsRestClientException() {
+    var reportingUnit = new ReportingUnitEntity();
+    reportingUnit.setClientNumber(CLIENT_NUMBER);
+    reportingUnit.setClientLocnCode("01");
+    reportingUnit.setOrgUnitNo("DND");
+    reportingUnit.setSamplingCode("CUSTOM");
+    var clientDto = buildClientDto(CLIENT_NUMBER);
+
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+    when(codesService.getDistrictCodes())
+        .thenReturn(
+            List.of(new CodeDescriptionDto("DND", "Nadina Natural Resource District")));
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(clientDto));
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
+    when(codesService.getSamplingCodes())
+        .thenThrow(new org.springframework.web.client.RestClientException("API down"));
+
+    var result = reportingUnitService.getReportingUnitDetails(RU_ID);
+
+    assertThat(result.sampling()).isEqualTo(new CodeDescriptionDto("CUSTOM", "CUSTOM"));
   }
 
   @Test

@@ -21,6 +21,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
@@ -156,9 +157,8 @@ public class ReportingUnitService {
             .findFirst()
             .orElseGet(() -> defaultSamplingDto(samplingCode));
       }
-    } catch (Exception e) {
-      log.warn(
-          "Failed to resolve sampling code {} via CodesService: {}", samplingCode, e.getMessage());
+    } catch (RestClientException e) {
+      log.warn("Failed to resolve sampling code {} via CodesService", samplingCode, e);
     }
     return defaultSamplingDto(samplingCode);
   }
