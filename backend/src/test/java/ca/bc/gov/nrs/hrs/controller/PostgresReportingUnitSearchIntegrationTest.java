@@ -117,7 +117,7 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
 
   /** Seeded scenario: RU A (client A) with one live block + PRIMARY mark + DRAFT event, and RU B (client B) blockless and event-less. */
   private record Seed(
-      Long ruA, Long ruB, String clientA, String clientB, String district,
+      Long ruA, Long ruB, Long blockA, String clientA, String clientB, String district,
       Instant ruATime, Instant ruBTime) {}
 
   @BeforeEach
@@ -165,9 +165,10 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(jsonPath("$.page.totalElements").value(2))
-        // Block row (RU A): block/mark fields populated, WAA id null, fixed sampling, placeholders.
+        // Block row (RU A): block/mark fields populated, WAA id = block id, fixed sampling,
+        // placeholders.
         .andExpect(jsonPath("$.content[0].ruNumber").value(seed.ruA().intValue()))
-        .andExpect(jsonPath("$.content[0].wasteAssessmentAreaId").value(nullValue()))
+        .andExpect(jsonPath("$.content[0].wasteAssessmentAreaId").value(seed.blockA().intValue()))
         .andExpect(jsonPath("$.content[0].cutBlockId").value("BLK-A"))
         .andExpect(jsonPath("$.content[0].client.code").value(seed.clientA()))
         .andExpect(jsonPath("$.content[0].client.description").value("TEST CLIENT A"))
@@ -185,7 +186,7 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
         .andExpect(jsonPath("$.content[0].status.description").value(nullValue()))
         .andExpect(jsonPath("$.content[0].bookmarked").value(false))
         .andExpect(jsonPath("$.content[0].id").value(
-            org.hamcrest.Matchers.startsWith("RU-" + seed.ruA() + "-Block-N/A-")))
+            org.hamcrest.Matchers.startsWith("RU-" + seed.ruA() + "-Block-" + seed.blockA() + "-")))
         // RU-only row (RU B): block/mark fields NULL, status NULL (no events), still one row.
         .andExpect(jsonPath("$.content[1].ruNumber").value(seed.ruB().intValue()))
         .andExpect(jsonPath("$.content[1].wasteAssessmentAreaId").value(nullValue()))
@@ -671,7 +672,8 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
     stubForestClient(clientA);
     stubForestClient(clientB);
     stubForestDistricts(district);
-    return new Seed(ruA.getId(), ruB.getId(), clientA, clientB, district, ruATime, ruBTime);
+    return new Seed(ruA.getId(), ruB.getId(), block.getId(), clientA, clientB, district, ruATime,
+        ruBTime);
   }
 
   private void stubForestDistricts(String district) {

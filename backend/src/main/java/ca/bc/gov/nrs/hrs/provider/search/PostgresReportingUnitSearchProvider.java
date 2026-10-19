@@ -2,20 +2,29 @@ package ca.bc.gov.nrs.hrs.provider.search;
 
 import ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto;
 import ca.bc.gov.nrs.hrs.dto.base.IdentityProvider;
+import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import ca.bc.gov.nrs.hrs.dto.search.SearchExpandedSecondaryDto;
 import ca.bc.gov.nrs.hrs.exception.InvalidSortingFieldException;
 import ca.bc.gov.nrs.hrs.repository.PostgresReportingUnitSearchFilter;
+import ca.bc.gov.nrs.hrs.repository.ReportingUnitSearchExpandedRow;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitSearchQueryConstants;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitSearchRepository;
 import ca.bc.gov.nrs.hrs.repository.ReportingUnitSearchRow;
 import ca.bc.gov.nrs.hrs.util.JwtPrincipalUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.observation.annotation.Observed;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -47,8 +56,15 @@ import org.springframework.web.server.ResponseStatusException;
  */
 @Component
 @Observed
+@Slf4j
 @RequiredArgsConstructor
 public class PostgresReportingUnitSearchProvider implements ReportingUnitSearchProvider {
+
+  /** Reused JSON parser for the expanded row's {@code secondary} text (legacy mapper parity). */
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+  private static final TypeReference<List<SearchExpandedSecondaryDto>> SECONDARY_TYPE_REF =
+      new TypeReference<>() {};
 
   private final ReportingUnitSearchRepository searchRepository;
 
@@ -102,6 +118,83 @@ public class PostgresReportingUnitSearchProvider implements ReportingUnitSearchP
         new CodeDescriptionDto(row.getStatusCode(), row.getStatusName()),
         toLocalDateTime(row.getLastUpdated()),
         false);
+  }
+
+  /**
+   * Execute the PostgreSQL expanded-search query for one {@code (reportingUnitId, blockId)} (issue
+   * #1238, expanded search; DEC-018/DEC-019). The legacy WAA identity maps 1:1 onto {@code
+   * hrs.block.block_id}, so the path's {@code wasteAssessmentAreaId} is the block id on PostgreSQL
+   * rows.
+   *
+   * @param reportingUnitId the reporting unit id
+   * @param blockId the block id (the {@code wasteAssessmentAreaId} path value)
+   * @return the expanded DTO, or empty when no live block matches (the caller decides routing)
+   */
+  @Observed
+  public Optional<ReportingUnitSearchExpandedDto> getSearchExpanded(
+      Long reportingUnitId, Long blockId) {
+    return searchRepository.findExpanded(reportingUnitId, blockId)
+        .map(this::toExpandedDto);
+  }
+
+  /**
+   * Map one expanded query row to {@link ReportingUnitSearchExpandedDto}, mirroring the legacy
+   * {@code ReportingUnitSearchExpandedMapper}: {@code status} and {@code attachment} become {@link
+   * CodeDescriptionDto} (attachment always constructed, code stringified — legacy parity),
+   * {@code secondary} JSON text is parsed into {@code secondaryMarks}, and the no-source fields
+   * ({@code markArea}, {@code statusName}, per-mark status/area) stay NULL (DEC-016/DEC-018).
+   *
+   * @param row the projected expanded PostgreSQL row (quoted camelCase aliases)
+   * @return the expanded DTO
+   */
+  private ReportingUnitSearchExpandedDto toExpandedDto(ReportingUnitSearchExpandedRow row) {
+    return new ReportingUnitSearchExpandedDto(
+        row.getId(),
+        row.getLicenseNo(),
+        row.getCuttingPermit(),
+        row.getTimberMark(),
+        Boolean.TRUE.equals(row.getExempted()),
+        Boolean.TRUE.equals(row.getMultiMark()),
+        new CodeDescriptionDto(row.getStatusCode(), row.getStatusName()),
+        parseSecondaryJson(row.getSecondary()),
+        toDouble(row.getNetArea()),
+        toDouble(row.getMarkArea()),
+        row.getSubmitter(),
+        new CodeDescriptionDto(Objects.toString(row.getAttachmentId(), null),
+            row.getAttachmentName()),
+        row.getComments(),
+        row.getTotalBlockCount(),
+        row.getTotalChildCount());
+  }
+
+  /**
+   * Null-safe {@code BigDecimal} → {@code Double} for the area fields.
+   *
+   * @param value the numeric area (may be null)
+   * @return the double value, or {@code null} when absent
+   */
+  private Double toDouble(BigDecimal value) {
+    return value == null ? null : value.doubleValue();
+  }
+
+  /**
+   * Parse the expanded row's {@code secondary} JSON text into a list of {@link
+   * SearchExpandedSecondaryDto} — the legacy {@code ReportingUnitSearchExpandedMapper.
+   * parseSecondaryJson} parity: null/blank or unparseable input yields an empty list.
+   *
+   * @param json the JSON-array text of the block's SECONDARY marks (may be null)
+   * @return the parsed secondary marks; never null, empty when absent/unparseable
+   */
+  private List<SearchExpandedSecondaryDto> parseSecondaryJson(String json) {
+    if (json == null || json.isBlank()) {
+      return List.of();
+    }
+    try {
+      return OBJECT_MAPPER.readValue(json, SECONDARY_TYPE_REF);
+    } catch (Exception e) {
+      log.error("Failed to parse secondary marks JSON: {}", json, e);
+      return List.of();
+    }
   }
 
   /**

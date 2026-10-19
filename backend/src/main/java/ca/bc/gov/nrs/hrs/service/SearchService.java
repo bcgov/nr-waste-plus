@@ -10,8 +10,10 @@ import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchExpandedDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchSource;
+import ca.bc.gov.nrs.hrs.exception.NotFoundGenericException;
 import ca.bc.gov.nrs.hrs.provider.legacy.LegacyApiProvider;
 import ca.bc.gov.nrs.hrs.provider.search.PostgresReportingUnitSearchProvider;
+import ca.bc.gov.nrs.hrs.repository.ReportingUnitSearchRepository;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.annotation.NewSpan;
 import java.util.HashMap;
@@ -49,6 +51,7 @@ public class SearchService {
 
   private final LegacyApiProvider legacyApiProvider;
   private final PostgresReportingUnitSearchProvider postgresSearchProvider;
+  private final ReportingUnitSearchRepository reportingUnitSearchRepository;
   private final ForestClientService forestClientService;
   private final UserService userService;
   private final FeatureFlagsConfiguration featureFlagsConfiguration;
@@ -132,10 +135,18 @@ public class SearchService {
   }
 
   /**
-   * Get expanded search details for a specific reporting unit and block.
+   * Get expanded search details for a specific reporting unit and block, routed to the correct
+   * source (DEC-019).
+   *
+   * <p>The source is decided by a BLOCK-ID-scoped existence test in PostgreSQL ({@code
+   * (reportingUnitId, blockId)} live block) — never by numeric id alone, because the legacy WAA id
+   * space and the PostgreSQL block id space overlap. A match selects the PostgreSQL expanded query;
+   * otherwise the request belongs to the legacy source. The legacy WAA identity maps 1:1 onto
+   * {@code hrs.block.block_id}, so the path's {@code wasteAssessmentAreaId} is the block id on
+   * PostgreSQL rows. Sources are never merged and never fall back across each other (DEC-004).
    *
    * @param ruId the reporting unit id
-   * @param wasteAssessmentAreaId the waste assessment area ID
+   * @param wasteAssessmentAreaId the waste assessment area id (the block id on PostgreSQL rows)
    * @return the expanded reporting unit search details
    */
   @NewSpan
@@ -144,23 +155,50 @@ public class SearchService {
         "Loading expanded search for ruId: {}, wasteAssessmentAreaId: {}",
         ruId,
         wasteAssessmentAreaId);
+    if (isPostgresRow(ruId, wasteAssessmentAreaId)) {
+      return postgresSearchProvider.getSearchExpanded(ruId, wasteAssessmentAreaId)
+          .orElseThrow(() -> new NotFoundGenericException("Reporting unit block"));
+    }
     return legacyApiProvider.getSearchExpanded(ruId, wasteAssessmentAreaId);
   }
 
   /**
-   * Look up the client number associated with a reporting unit.
-   *
-   * <p>The client number is obtained from the legacy API and can be used for authorization checks
-   * (e.g. verifying that a BCeID caller is allowed to access the reporting unit that belongs to
-   * that client).
+   * Whether the given {@code (reportingUnitId, blockId)} resolves to the PostgreSQL source — the
+   * block-id-scoped existence test that both the expanded query and its authorization must share
+   * (DEC-019).
    *
    * @param reportingUnitId the reporting unit id
+   * @param blockId the block id (the {@code wasteAssessmentAreaId} path value)
+   * @return true when a live block matches in PostgreSQL
+   */
+  private boolean isPostgresRow(Long reportingUnitId, Long blockId) {
+    return blockId != null
+        && reportingUnitSearchRepository.existsLiveBlock(reportingUnitId, blockId);
+  }
+
+  /**
+   * Look up the client number associated with a reporting unit, routed to the correct source
+   * (DEC-019).
+   *
+   * <p>Authorization must read the same source the expanded query will read, otherwise a
+   * PostgreSQL-only reporting unit would be authorized against a legacy table that has no row. The
+   * source is decided by the same block-id-scoped PostgreSQL existence test as the expanded query;
+   * a match reads the client number from {@code hrs.reporting_unit}, otherwise the legacy API is
+   * consulted. Never a cross-source merge (DEC-004).
+   *
+   * @param reportingUnitId the reporting unit id
+   * @param wasteAssessmentAreaId the waste assessment area id (the block id on PostgreSQL rows)
    * @return the client number associated with the reporting unit
    * @throws ca.bc.gov.nrs.hrs.exception.NotFoundGenericException if the reporting unit is not found
-   *     in the legacy system
+   *     in either source
    */
   @NewSpan
-  public String getClientNumberForReportingUnit(Long reportingUnitId) {
+  public String getClientNumberForReportingUnit(
+      Long reportingUnitId, Long wasteAssessmentAreaId) {
+    if (isPostgresRow(reportingUnitId, wasteAssessmentAreaId)) {
+      return reportingUnitSearchRepository.findLiveClientNumber(reportingUnitId)
+          .orElseThrow(() -> new NotFoundGenericException("Reporting unit"));
+    }
     return legacyApiProvider.getReportingUnitDetails(reportingUnitId).clientNumber();
   }
 

@@ -115,8 +115,11 @@ public class SearchController {
         reportingUnitId,
         JwtPrincipalUtil.getUserId(jwt));
 
-    // Look up the reporting unit's client number to enforce client-scoped authorization
-    String clientNumber = service.getClientNumberForReportingUnit(reportingUnitId);
+    // Look up the reporting unit's client number to enforce client-scoped authorization.
+    // Source-aware (DEC-019): the lookup reads the same source the expanded query will read, so a
+    // PostgreSQL-only reporting unit authorizes against PostgreSQL rather than a legacy miss.
+    String clientNumber =
+        service.getClientNumberForReportingUnit(reportingUnitId, wasteAssessmentAreaId);
 
     // For BCeID callers, verify the reporting unit belongs to one of their clients
     if (IdentityProvider.BUSINESS_BCEID.equals(JwtPrincipalUtil.getIdentityProvider(jwt))) {

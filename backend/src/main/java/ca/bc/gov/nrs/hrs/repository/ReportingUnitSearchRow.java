@@ -18,7 +18,10 @@ public interface ReportingUnitSearchRow {
   /** Surrogate block id; service-level row identity and paging tie-breaker input. */
   Long getBlockId();
 
-  /** Always NULL on PostgreSQL rows (DEC-014 — no WAA concept). */
+  /**
+   * The block id: the legacy WAA identity maps 1:1 to {@code hrs.block.block_id} (so this equals
+   * {@link #getBlockId()} on block rows); NULL on RU-only rows where the block is null-extended.
+   */
   Long getWasteAssessmentAreaId();
 
   /** Business cut-block id from the PRIMARY mark; NULL on RU-only rows. */
