@@ -38,7 +38,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class ReportingUnitService {
 
   private static final CodeDescriptionDto DISTRICT_AVERAGE_SAMPLING =
-      new CodeDescriptionDto("AVG", "Average");
+      new CodeDescriptionDto("AVG", "District Average");
 
   private final LegacyApiProvider legacyApiProvider;
   private final ForestClientApiProvider forestClientApiProvider;

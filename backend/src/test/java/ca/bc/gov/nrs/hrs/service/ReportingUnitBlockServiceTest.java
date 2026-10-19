@@ -317,7 +317,7 @@ class ReportingUnitBlockServiceTest {
             REPORTING_UNIT_ID,
             null,
             null,
-            new CodeDescriptionDto("AVG", "Average"),
+            new CodeDescriptionDto("AVG", "District Average"),
             null,
             null);
     when(blockRulesProperties.getSampling())
@@ -390,7 +390,7 @@ class ReportingUnitBlockServiceTest {
 
     assertThat(
             service
-                .enrichWithBlockMetadata(details(new CodeDescriptionDto("AVG", "Average")))
+                .enrichWithBlockMetadata(details(new CodeDescriptionDto("AVG", "District Average")))
                 .blockRule())
         .isNull();
   }
@@ -403,7 +403,7 @@ class ReportingUnitBlockServiceTest {
     assertThat(
             service
                 .enrichWithBlockMetadata(
-                    details(new CodeDescriptionDto("AVG", "Average")).withLegacy(true)))
+                    details(new CodeDescriptionDto("AVG", "District Average")).withLegacy(true)))
         .satisfies(
             enriched -> {
               assertThat(enriched.blockRule()).isNull();

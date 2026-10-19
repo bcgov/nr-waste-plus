@@ -152,7 +152,7 @@ class ReportingUnitServiceTest {
 
     var result = reportingUnitService.getReportingUnitDetails(RU_ID);
 
-    assertThat(result.sampling()).isEqualTo(new CodeDescriptionDto("AVG", "Average"));
+    assertThat(result.sampling()).isEqualTo(new CodeDescriptionDto("AVG", "District Average"));
     assertThat(result.isLegacy()).isFalse();
   }
 
@@ -242,7 +242,7 @@ class ReportingUnitServiceTest {
     assertThat(result.client()).isEqualTo(new CodeDescriptionDto(CLIENT_NUMBER, "MINISTRY OF FORESTS"));
     assertThat(result.clientStatus())
         .isEqualTo(new CodeDescriptionDto("ACT", "Active"));
-    assertThat(result.sampling()).isEqualTo(new CodeDescriptionDto("AVG", "Average"));
+    assertThat(result.sampling()).isEqualTo(new CodeDescriptionDto("AVG", "District Average"));
     assertThat(result.district())
         .isEqualTo(new CodeDescriptionDto("DND", "Nadina Natural Resource District"));
     assertThat(result.grade()).isEqualTo(new CodeDescriptionDto("COASTAL", "COASTAL"));
@@ -311,7 +311,7 @@ class ReportingUnitServiceTest {
     var result = reportingUnitService.getReportingUnitDetails(RU_ID);
 
     assertThat(result.grade()).isEqualTo(new CodeDescriptionDto(null, null));
-    assertThat(result.sampling()).isEqualTo(new CodeDescriptionDto("AVG", "Average"));
+    assertThat(result.sampling()).isEqualTo(new CodeDescriptionDto("AVG", "District Average"));
     assertThat(result.isLegacy()).isFalse();
   }
 

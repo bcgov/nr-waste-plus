@@ -566,7 +566,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
           .andExpect(jsonPath("$.id").value(55555))
           .andExpect(jsonPath("$.client.code").value("00012797"))
           .andExpect(jsonPath("$.sampling.code").value("AVG"))
-          .andExpect(jsonPath("$.sampling.description").value("Average"))
+          .andExpect(jsonPath("$.sampling.description").value("District Average"))
           .andExpect(jsonPath("$.district.code").value("DND"))
           .andExpect(jsonPath("$.blockRule.maxBlocks").value(1))
           .andExpect(jsonPath("$.blockRule.blockType").value("DISTRICT_AVERAGE"))
