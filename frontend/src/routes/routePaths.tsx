@@ -1,7 +1,7 @@
 import { DocumentAdd, Group, SearchLocate } from '@carbon/icons-react';
 import { Loading } from '@carbon/react';
-import { lazyRouteComponent, type RouteLoaderFn } from '@tanstack/react-router';
-import { type ComponentType, Suspense } from 'react';
+import { type RouteLoaderFn } from '@tanstack/react-router';
+import { lazy, type ComponentType, Suspense } from 'react';
 
 import Layout from '@/components/Layout';
 import { Role, type FamRole } from '@/context/auth/types';
@@ -14,41 +14,37 @@ import { reportingUnitLoader } from '@/pages/ReportingUnitDetails/loader';
 import RoleErrorPage from '@/pages/RoleError';
 
 // ─── Lazy imports (loaded on demand when the route is navigated to) ───────────
-const MyClientListPage = lazyRouteComponent(() => import('@/pages/MyClientList'));
-const WasteSearchPage = lazyRouteComponent(() => import('@/pages/WasteSearch'));
-const ReportingUnitDetailsPage = lazyRouteComponent(() => import('@/pages/ReportingUnitDetails'));
-const ReportingUnitBlockDetailsPage = lazyRouteComponent(
-  () => import('@/pages/ReportingUnitBlockDetails'),
-);
-const ReportingUnitCreatePage = lazyRouteComponent(() => import('@/pages/ReportingUnitCreate'));
-const ConfigurationPage = lazyRouteComponent(() => import('@/pages/ConfigurationPage'));
-const ConfigurationDistrictVolumeListPage = lazyRouteComponent(
+
+/**
+ * Lazily loads a page's default export, resolved under the Suspense boundary
+ * added by {@link withLazyLayout}.
+ *
+ * Uses `React.lazy` instead of TanStack Router's `lazyRouteComponent`, which
+ * only calls `use()` while the chunk is still loading — flagged by React 19.2's
+ * `conditional-use-of-use` dev check. Chunk splitting is unchanged: both wrap
+ * the same dynamic `import()`.
+ */
+function lazyPage(importer: () => Promise<{ default: ComponentType }>): ComponentType {
+  return lazy(importer);
+}
+
+const MyClientListPage = lazyPage(() => import('@/pages/MyClientList'));
+const WasteSearchPage = lazyPage(() => import('@/pages/WasteSearch'));
+const ReportingUnitDetailsPage = lazyPage(() => import('@/pages/ReportingUnitDetails'));
+const ReportingUnitBlockDetailsPage = lazyPage(() => import('@/pages/ReportingUnitBlockDetails'));
+const ReportingUnitCreatePage = lazyPage(() => import('@/pages/ReportingUnitCreate'));
+const ConfigurationPage = lazyPage(() => import('@/pages/ConfigurationPage'));
+const ConfigurationDistrictVolumeListPage = lazyPage(
   () => import('@/pages/ConfigurationDistrictVolumeList'),
 );
-const DistrictVolumeTableDetailPage = lazyRouteComponent(
-  () => import('@/pages/DistrictVolumeTableDetail'),
-);
-const DistrictVolumeTableUploadPage = lazyRouteComponent(
-  () => import('@/pages/DistrictVolumeTableUpload'),
-);
-const SpeciesCompositionListPage = lazyRouteComponent(
-  () => import('@/pages/SpeciesCompositionList'),
-);
-const SpeciesCompositionUploadPage = lazyRouteComponent(
-  () => import('@/pages/SpeciesCompositionUpload'),
-);
-const SpeciesCompositionDetailPage = lazyRouteComponent(
-  () => import('@/pages/SpeciesCompositionDetail'),
-);
-const FormulaConfigurationListPage = lazyRouteComponent(
-  () => import('@/pages/FormulaConfigurationList'),
-);
-const FormulaConfigurationDetailPage = lazyRouteComponent(
-  () => import('@/pages/FormulaConfigurationDetail'),
-);
-const FormulaConfigurationCreatePage = lazyRouteComponent(
-  () => import('@/pages/FormulaConfigurationCreate'),
-);
+const DistrictVolumeTableDetailPage = lazyPage(() => import('@/pages/DistrictVolumeTableDetail'));
+const DistrictVolumeTableUploadPage = lazyPage(() => import('@/pages/DistrictVolumeTableUpload'));
+const SpeciesCompositionListPage = lazyPage(() => import('@/pages/SpeciesCompositionList'));
+const SpeciesCompositionUploadPage = lazyPage(() => import('@/pages/SpeciesCompositionUpload'));
+const SpeciesCompositionDetailPage = lazyPage(() => import('@/pages/SpeciesCompositionDetail'));
+const FormulaConfigurationListPage = lazyPage(() => import('@/pages/FormulaConfigurationList'));
+const FormulaConfigurationDetailPage = lazyPage(() => import('@/pages/FormulaConfigurationDetail'));
+const FormulaConfigurationCreatePage = lazyPage(() => import('@/pages/FormulaConfigurationCreate'));
 
 // ─── Shared loader (eager — used by route config at module load time) ──────────
 import { withPersistentRedirect } from '@/routes/guards/withPersistentRedirect';
