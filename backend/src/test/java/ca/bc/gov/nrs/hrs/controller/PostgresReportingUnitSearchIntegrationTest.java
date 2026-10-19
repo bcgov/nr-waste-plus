@@ -207,6 +207,52 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
   }
 
   @Test
+  @DisplayName("Postgres secondaryEntry derives from a live SECONDARY mark, same as multiMark")
+  void searchReportingUnit_postgresSecondaryEntry_shouldDeriveFromSecondaryMark()
+      throws Exception {
+    Seed seed = seedScenario(uniqueClient(), uniqueClient());
+    seedSecondaryMark(seed.blockA(), true);
+
+    // A soft-deleted SECONDARY mark is not live — both derived flags stay false.
+    mockMvc
+        .perform(get("/api/search/reporting-units")
+            .queryParam("legacy", "false")
+            .queryParam("district", seed.district())
+            .queryParam("page", "0")
+            .queryParam("size", "10")
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.page.totalElements").value(2))
+        .andExpect(jsonPath("$.content[0].ruNumber").value(seed.ruA().intValue()))
+        .andExpect(jsonPath("$.content[0].multiMark").value(false))
+        .andExpect(jsonPath("$.content[0].secondaryEntry").value(false));
+
+    seedSecondaryMark(seed.blockA(), false);
+
+    // A live SECONDARY mark flips BOTH derived flags together (A-09 product decision: HRS
+    // secondaryEntry = existence of a live SECONDARY mark, same derivation as multiMark).
+    mockMvc
+        .perform(get("/api/search/reporting-units")
+            .queryParam("legacy", "false")
+            .queryParam("district", seed.district())
+            .queryParam("page", "0")
+            .queryParam("size", "10")
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.page.totalElements").value(2))
+        .andExpect(jsonPath("$.content[0].ruNumber").value(seed.ruA().intValue()))
+        .andExpect(jsonPath("$.content[0].multiMark").value(true))
+        .andExpect(jsonPath("$.content[0].secondaryEntry").value(true))
+        // RU-only row: no block, so neither exists-derivation matches.
+        .andExpect(jsonPath("$.content[1].ruNumber").value(seed.ruB().intValue()))
+        .andExpect(jsonPath("$.content[1].multiMark").value(false))
+        .andExpect(jsonPath("$.content[1].secondaryEntry").value(false));
+
+    legacyApiStub.verify(0, WireMock.getRequestedFor(
+        urlPathEqualTo("/api/search/reporting-units")));
+  }
+
+  @Test
   @DisplayName("Postgres enrichment: one bounded districts lookup per page, no other legacy call")
   void searchReportingUnit_postgresEnrichment_shouldStayWithinCallBudget() throws Exception {
     Seed seed = seedScenario(uniqueClient(), uniqueClient());
@@ -733,6 +779,20 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
     mark.setCuttingPermitId(" 12 ");
     mark.setTimberMark("ab12");
     mark.setCutBlockId("BLK-A");
+    mark.setCreatedBy(ACTOR);
+    mark.setUpdatedBy(ACTOR);
+    mark.setCreatedAt(BASE_TIME);
+    mark.setUpdatedAt(BASE_TIME);
+    seededMarks.add(blockMarkRepository.saveAndFlush(mark));
+  }
+
+  private void seedSecondaryMark(Long blockId, boolean deleted) {
+    BlockMarkEntity mark = new BlockMarkEntity();
+    mark.setBlockId(blockId);
+    mark.setMarkType("SECONDARY");
+    mark.setSequenceNo(1);
+    mark.setMark("S1");
+    mark.setDeleted(deleted);
     mark.setCreatedBy(ACTOR);
     mark.setUpdatedBy(ACTOR);
     mark.setCreatedAt(BASE_TIME);

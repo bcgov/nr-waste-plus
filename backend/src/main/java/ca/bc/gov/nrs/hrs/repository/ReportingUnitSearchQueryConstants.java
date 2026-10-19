@@ -114,11 +114,12 @@ public final class ReportingUnitSearchQueryConstants {
    * blocks (DEC-014). {@code wasteAssessmentAreaId} is the legacy WAA identity, which maps 1:1 to
    * the exploded {@code hrs.block.block_id} — so it equals {@code blockId} on block rows and is
    * NULL on RU-only rows (the faithful analog of the legacy no-WAA left-join row). Sampling is the
-   * fixed {@code AVG/Average} constant; {@code multiMark} is DERIVED (existence of a live
-   * {@code SECONDARY} mark — there is no stored multi-mark flag in HRS) while {@code
-   * secondaryEntry} remains a no-source {@code false} placeholder (Oracle {@code secondary_entry}
-   * is the child-block concept with no HRS analog); descriptions are NULL until D5 lookup
-   * enrichment.
+   * fixed {@code AVG/Average} constant; {@code multiMark} AND {@code secondaryEntry} are DERIVED
+   * the same way (existence of a live {@code SECONDARY} mark — HRS has no stored multi-mark flag
+   * and no parent/child block hierarchy, so the product decision redefined HRS {@code
+   * secondaryEntry} as a {@code SECONDARY} mark; both flags therefore carry the same value on
+   * PostgreSQL rows, and the former DEC-016 no-source {@code false} placeholder no longer
+   * applies); descriptions are NULL until D5 lookup enrichment.
    * No ORDER BY here — the provider supplies the mapped sort plus tie-breakers.
    */
   public static final String SEARCH_REPORTING_UNIT_QUERY =
@@ -140,7 +141,13 @@ public final class ReportingUnitSearchQueryConstants {
                         and bm.mark_type = 'SECONDARY'
                         and bm.is_deleted = false
                   )                                         as "multiMark",
-              false                                         as "secondaryEntry",
+              exists (
+                      select 1
+                      from hrs.block_mark bm
+                      where bm.block_id = b.block_id
+                        and bm.mark_type = 'SECONDARY'
+                        and bm.is_deleted = false
+                  )                                         as "secondaryEntry",
               'AVG'                                         as "samplingCode",
               'Average'                                     as "samplingName",
               ru.org_unit_no                                as "districtCode",
