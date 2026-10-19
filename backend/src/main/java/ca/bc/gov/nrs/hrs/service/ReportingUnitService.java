@@ -149,14 +149,12 @@ public class ReportingUnitService {
       return DISTRICT_AVERAGE_SAMPLING;
     }
     try {
-      if (codesService != null) {
-        List<CodeDescriptionDto> samplingCodes = codesService.getSamplingCodes();
-        if (samplingCodes != null) {
-          return samplingCodes.stream()
-              .filter(code -> samplingCode.equalsIgnoreCase(code.code()))
-              .findFirst()
-              .orElseGet(() -> defaultSamplingDto(samplingCode));
-        }
+      List<CodeDescriptionDto> samplingCodes = codesService.getSamplingCodes();
+      if (samplingCodes != null) {
+        return samplingCodes.stream()
+            .filter(code -> samplingCode.equalsIgnoreCase(code.code()))
+            .findFirst()
+            .orElseGet(() -> defaultSamplingDto(samplingCode));
       }
     } catch (Exception e) {
       log.warn(
