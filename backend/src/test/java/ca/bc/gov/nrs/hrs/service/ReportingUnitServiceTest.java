@@ -134,8 +134,8 @@ class ReportingUnitServiceTest {
   }
 
   @Test
-  @DisplayName("shouldFallbackToDefaultSampling_whenCodesServiceFailsOrEmpty")
-  void shouldFallbackToDefaultSampling_whenCodesServiceFailsOrEmpty() {
+  @DisplayName("shouldFallbackToDistrictAverage_whenCodesServiceThrowsRestClientException")
+  void shouldFallbackToDistrictAverage_whenCodesServiceThrowsRestClientException() {
     var reportingUnit = postgresReportingUnit();
     reportingUnit.setSamplingCode("AVG");
     var clientDto = buildClientDto(CLIENT_NUMBER);
@@ -154,6 +154,96 @@ class ReportingUnitServiceTest {
 
     assertThat(result.sampling()).isEqualTo(new CodeDescriptionDto("AVG", "District Average"));
     assertThat(result.isLegacy()).isFalse();
+  }
+
+  @Test
+  @DisplayName("shouldFallbackToDistrictAverage_whenSamplingCodesIsEmpty")
+  void shouldFallbackToDistrictAverage_whenSamplingCodesIsEmpty() {
+    var reportingUnit = postgresReportingUnit();
+    reportingUnit.setSamplingCode("AVG");
+    var clientDto = buildClientDto(CLIENT_NUMBER);
+
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+    when(codesService.getDistrictCodes())
+        .thenReturn(List.of(new CodeDescriptionDto("DND", "Nadina Natural Resource District")));
+    when(codesService.getSamplingCodes()).thenReturn(List.of());
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(clientDto));
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
+
+    var result = reportingUnitService.getReportingUnitDetails(RU_ID);
+
+    assertThat(result.sampling()).isEqualTo(new CodeDescriptionDto("AVG", "District Average"));
+    assertThat(result.isLegacy()).isFalse();
+  }
+
+  @Test
+  @DisplayName("shouldFallbackToDefaultSampling_whenSamplingCodeAbsentFromNonEmptyCodesList")
+  void shouldFallbackToDefaultSampling_whenSamplingCodeAbsentFromNonEmptyCodesList() {
+    var reportingUnit = postgresReportingUnit();
+    reportingUnit.setSamplingCode("CUSTOM");
+    var clientDto = buildClientDto(CLIENT_NUMBER);
+
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+    when(codesService.getDistrictCodes())
+        .thenReturn(List.of(new CodeDescriptionDto("DND", "Nadina Natural Resource District")));
+    when(codesService.getSamplingCodes())
+        .thenReturn(List.of(new CodeDescriptionDto("BLK", "Cutblock")));
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(clientDto));
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
+
+    var result = reportingUnitService.getReportingUnitDetails(RU_ID);
+
+    assertThat(result.sampling()).isEqualTo(new CodeDescriptionDto("CUSTOM", "CUSTOM"));
+    assertThat(result.isLegacy()).isFalse();
+  }
+
+  @Test
+  @DisplayName("shouldFallbackToDistrictAverage_whenAvgSamplingCodeAbsentFromNonEmptyCodesList")
+  void shouldFallbackToDistrictAverage_whenAvgSamplingCodeAbsentFromNonEmptyCodesList() {
+    var reportingUnit = postgresReportingUnit();
+    reportingUnit.setSamplingCode("AVG");
+    var clientDto = buildClientDto(CLIENT_NUMBER);
+
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+    when(codesService.getDistrictCodes())
+        .thenReturn(List.of(new CodeDescriptionDto("DND", "Nadina Natural Resource District")));
+    when(codesService.getSamplingCodes())
+        .thenReturn(List.of(new CodeDescriptionDto("BLK", "Cutblock")));
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(clientDto));
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
+
+    var result = reportingUnitService.getReportingUnitDetails(RU_ID);
+
+    assertThat(result.sampling()).isEqualTo(new CodeDescriptionDto("AVG", "District Average"));
+    assertThat(result.isLegacy()).isFalse();
+  }
+
+  @Test
+  @DisplayName("shouldFallbackToDistrictAverage_whenSamplingCodeIsBlank")
+  void shouldFallbackToDistrictAverage_whenSamplingCodeIsBlank() {
+    var reportingUnit = postgresReportingUnit();
+    reportingUnit.setSamplingCode("   ");
+    var clientDto = buildClientDto(CLIENT_NUMBER);
+
+    when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
+        .thenReturn(Optional.of(reportingUnit));
+    when(codesService.getDistrictCodes())
+        .thenReturn(List.of(new CodeDescriptionDto("DND", "Nadina Natural Resource District")));
+    when(forestClientApiProvider.fetchClientByNumber(CLIENT_NUMBER))
+        .thenReturn(Optional.of(clientDto));
+    when(districtVolumeService.getAreasForDistrictCode("DND")).thenReturn(List.of("COASTAL"));
+
+    var result = reportingUnitService.getReportingUnitDetails(RU_ID);
+
+    assertThat(result.sampling()).isEqualTo(new CodeDescriptionDto("AVG", "District Average"));
+    assertThat(result.isLegacy()).isFalse();
+    verify(codesService, never()).getSamplingCodes();
   }
 
   @Test
