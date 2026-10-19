@@ -31,6 +31,8 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -185,8 +187,12 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
               "DELETE FROM hrs.district_average_block WHERE created_by = ?", fixtureActor);
           jdbcTemplate.update("DELETE FROM hrs.block WHERE created_by = ?", fixtureActor);
           jdbcTemplate.update("DELETE FROM hrs.reporting_unit WHERE created_by = ?", fixtureActor);
-          jdbcTemplate.update(
-              "DELETE FROM hrs.reporting_unit WHERE (reporting_unit_id >= 333 AND reporting_unit_id <= 400) OR reporting_unit_id IN (36834, 55555)");
+          for (Long id : createdReportingUnitIds) {
+            jdbcTemplate.update("DELETE FROM hrs.status_event WHERE reporting_unit_id = ?", id);
+            jdbcTemplate.update("DELETE FROM hrs.block WHERE reporting_unit_id = ?", id);
+            jdbcTemplate.update("DELETE FROM hrs.reporting_unit WHERE reporting_unit_id = ?", id);
+          }
+          createdReportingUnitIds.clear();
         });
   }
 
@@ -208,20 +214,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @Test
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void shouldReturn201_whenCreateSucceeds() throws Exception {
-    // Legacy search: no existing reporting units
-    legacyApiStub.stubFor(
-        get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(
-                okJson(
-                    ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
-
-    // Forest client exists
-    clientApiStub.stubFor(
-        get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
-
-    // Legacy create returns new id as numeric JSON
-    legacyApiStub.stubFor(post(urlPathEqualTo("/api/reporting-units")).willReturn(okJson("333")));
+    Long testRuId = stubCreateDependencies();
 
     var requestJson =
         """
@@ -236,7 +229,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                 .content(requestJson))
         .andExpect(status().isCreated());
 
-    var savedEntity = reportingUnitRepository.findById(333L);
+    var savedEntity = reportingUnitRepository.findById(testRuId);
     org.assertj.core.api.Assertions.assertThat(savedEntity).isPresent();
     org.assertj.core.api.Assertions.assertThat(savedEntity.get().getClientNumber()).isEqualTo("00012797");
     org.assertj.core.api.Assertions.assertThat(savedEntity.get().getClientLocnCode()).isEqualTo("00");
@@ -303,15 +296,23 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   private static final java.util.concurrent.atomic.AtomicLong TEST_RU_ID =
       new java.util.concurrent.atomic.AtomicLong(333L);
 
-  private void stubCreateDependencies() {
-    stubCreateDependencies("00012797", TEST_RU_ID.incrementAndGet());
+  private final Set<Long> createdReportingUnitIds = new HashSet<>();
+
+  private Long trackCreatedReportingUnit(Long id) {
+    createdReportingUnitIds.add(id);
+    return id;
   }
 
-  private void stubCreateDependencies(String clientNumber) {
-    stubCreateDependencies(clientNumber, TEST_RU_ID.incrementAndGet());
+  private Long stubCreateDependencies() {
+    return stubCreateDependencies("00012797", TEST_RU_ID.incrementAndGet());
   }
 
-  private void stubCreateDependencies(String clientNumber, Long id) {
+  private Long stubCreateDependencies(String clientNumber) {
+    return stubCreateDependencies(clientNumber, TEST_RU_ID.incrementAndGet());
+  }
+
+  private Long stubCreateDependencies(String clientNumber, Long id) {
+    trackCreatedReportingUnit(id);
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
             .willReturn(
@@ -321,6 +322,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
             .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
     legacyApiStub.stubFor(
         post(urlPathEqualTo("/api/reporting-units")).willReturn(okJson(String.valueOf(id))));
+    return id;
   }
 
   private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder createReportingUnitRequest() {
@@ -366,6 +368,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @Test
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void shouldReturn409_whenReportingUnitDuplicate() throws Exception {
+    trackCreatedReportingUnit(36834L);
     var ru = new ReportingUnitEntity();
     ru.setId(36834L);
     ru.setClientNumber("00012797");
@@ -401,6 +404,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @Test
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void shouldReconcileReportingUnit_whenExistsInLegacyOnly() throws Exception {
+    trackCreatedReportingUnit(36834L);
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
             .willReturn(
@@ -532,6 +536,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @WithMockJwt
   @DisplayName("Should Return Reporting Unit Details with Postgres Sampling when Local Record Exists")
   void shouldReturnReportingUnitDetails_withPostgresSampling_whenLocalRecordExists() throws Exception {
+    trackCreatedReportingUnit(55555L);
     var ru = new ReportingUnitEntity();
     ru.setId(55555L);
     ru.setClientNumber("00012797");
