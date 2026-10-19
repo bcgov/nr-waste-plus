@@ -8,11 +8,11 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
+import { usePreference } from '@/context/preference/usePreference';
+
 import { useTableToolbar } from './useTableToolbar';
 
-import type { TableHeaderType } from './types';
-
-import { usePreference } from '@/context/preference/usePreference';
+import type { TableHeaderType } from '@/types/tableResource.types';
 
 vi.mock('@/services/APIs', () => {
   return {

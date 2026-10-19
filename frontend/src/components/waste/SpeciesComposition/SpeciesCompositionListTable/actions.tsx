@@ -1,7 +1,7 @@
 import { useListTableRowActions } from '@/hooks/useTableRow';
 
-import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types.ts';
 import type { SpeciesCompositionListItem } from '@/types/speciesComposition.types.ts';
+import type { PageableResponse, TableRowAction } from '@/types/tableResource.types.ts';
 
 type SpeciesCompositionRow = PageableResponse<SpeciesCompositionListItem>['content'][number];
 

@@ -1,8 +1,7 @@
-import type { ReactNode } from 'react';
-
-import type { TableHeaderType } from '@/components/Form/TableResource/types.ts';
-
 import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
+
+import type { TableHeaderType } from '@/types/tableResource.types.ts';
+import type { ReactNode } from 'react';
 
 type DistrictColumnDefinition = {
   key: string;

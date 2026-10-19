@@ -12,8 +12,8 @@ import {
   type ReportingUnitBlocksRow,
 } from './constants';
 
-import type { PaginationOnChangeType, TableRowAction } from '@/components/Form/TableResource/types';
-import type { PageableResponse } from '@/types/PageableResponse.types';
+import type { PaginationOnChangeType, TableRowAction } from '@/types/tableResource.types';
+import type { PageableResponse } from '@/types/tableResource.types';
 
 import './index.scss';
 

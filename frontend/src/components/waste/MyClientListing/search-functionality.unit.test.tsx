@@ -3,14 +3,14 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import MyClientListing from './index';
-
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { MyForestClientDto } from '@/services/types';
-
-import { renderCell } from '@/components/Form/TableResource/types';
+import { renderCell } from '@/components/Form/TableResource/utils';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
+
+import MyClientListing from './index';
+
+import type { MyForestClientDto } from '@/services/types';
+import type { PageableResponse } from '@/types/tableResource.types';
 
 vi.mock('@/services/APIs');
 vi.mock('@/hooks/useNotificationEvents', () => ({

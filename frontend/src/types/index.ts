@@ -10,9 +10,9 @@
  * via `z.infer`; internal type utilities stay plain types.
  */
 export type * from './pagination.types';
-export type * from './PageableResponse.types';
 export type * from './audit.types';
 export type * from './search.types';
 export type * from './utils.types';
 export type * from './forestclient.types';
 export type * from './speciesComposition.types';
+export type * from './tableResource.types';

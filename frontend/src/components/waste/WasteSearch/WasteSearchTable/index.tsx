@@ -13,11 +13,11 @@ import { removeEmpty } from '@/services/utils';
 import { headers } from './constants';
 import { useWasteSearchRowActions } from './rowActions.tsx';
 
-import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type {
   ReportingUnitSearchParametersViewDto,
   ReportingUnitSearchResultDto,
 } from '@/types/search.types';
+import type { PageableResponse } from '@/types/tableResource.types';
 
 /**
  * Coordinates waste-search filters, results, pagination, sorting, and row expansion.

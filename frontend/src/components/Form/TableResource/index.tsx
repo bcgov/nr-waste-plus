@@ -14,23 +14,22 @@ import {
 } from '@carbon/react';
 import { Children, useEffect, useRef, useState, type ReactNode } from 'react';
 
+import EmptySection from '@/components/core/EmptySection';
+import TooltipTag from '@/components/core/Tags/TooltipTag';
+
 import ColumnCustomizationMenu from './ColumnCustomizationMenu';
 import TableResourceActions from './TableResourceActions';
 import TableResourceExpandRow from './TableResourceExpandRow';
 import TableResourceRow from './TableResourceRow';
-import {
-  type TableHeaderType,
-  type PageableResponse,
-  type TableRowAction,
-  renderCell,
-  getHeaderId,
-} from './types';
 import { useTableToolbar } from './useTableToolbar';
+import { renderCell, getHeaderId } from './utils';
 
 import type { NestedKeyOf, SortDirectionType } from '@/services/types';
-
-import EmptySection from '@/components/core/EmptySection';
-import TooltipTag from '@/components/core/Tags/TooltipTag';
+import type {
+  TableHeaderType,
+  PageableResponse,
+  TableRowAction,
+} from '@/types/tableResource.types';
 
 import './index.scss';
 

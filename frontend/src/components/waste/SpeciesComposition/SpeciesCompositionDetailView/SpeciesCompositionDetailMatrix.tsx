@@ -6,14 +6,14 @@ import TableResource from '@/components/Form/TableResource';
 import { useDistrictOptionsQuery } from '@/config/react-query/hooks.ts';
 import { SPECIES_DESCRIPTIONS, SPECIES_LABELS } from '@/types/speciesComposition.types.ts';
 
+import type { NestedKeyOf } from '@/types/pagination.types.ts';
+import type { CodeDescriptionDto } from '@/types/search.types.ts';
+import type { SpeciesCompositionRow, SpeciesKey } from '@/types/speciesComposition.types.ts';
 import type {
   TableHeaderType,
   PageableResponse,
   IdentifiableContent,
-} from '@/components/Form/TableResource/types.ts';
-import type { NestedKeyOf } from '@/types/pagination.types.ts';
-import type { CodeDescriptionDto } from '@/types/search.types.ts';
-import type { SpeciesCompositionRow, SpeciesKey } from '@/types/speciesComposition.types.ts';
+} from '@/types/tableResource.types.ts';
 
 /**
  * Props for the {@link SpeciesCompositionDetailMatrix} component.

@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 
-import { type TableHeaderType, getHeaderId } from './types';
+import { usePreference } from '@/context/preference/usePreference';
+
+import { getHeaderId } from './utils';
 
 import type { NestedKeyOf } from '@/services/types';
-
-import { usePreference } from '@/context/preference/usePreference';
+import type { TableHeaderType } from '@/types/tableResource.types';
 
 /**
  * Custom hook for managing table column visibility and persistence.

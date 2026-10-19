@@ -8,8 +8,8 @@ import APIs from '@/services/APIs';
 
 import { useWasteSearchRowActions } from './rowActions';
 
-import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { ReportingUnitSearchResultDto } from '@/types/search.types';
+import type { PageableResponse } from '@/types/tableResource.types';
 import type { ReactNode } from 'react';
 
 vi.mock('@/services/APIs', () => ({

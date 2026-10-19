@@ -4,8 +4,8 @@ import { useState } from 'react';
 
 import API from '@/services/APIs';
 
-import type { PageableResponse, TableRowAction } from '@/components/Form/TableResource/types';
 import type { ReportingUnitSearchResultDto } from '@/types/search.types';
+import type { PageableResponse, TableRowAction } from '@/types/tableResource.types';
 
 type WasteSearchRow = PageableResponse<ReportingUnitSearchResultDto>['content'][number];
 

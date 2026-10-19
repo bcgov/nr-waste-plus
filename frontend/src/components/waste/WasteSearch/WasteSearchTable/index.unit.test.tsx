@@ -10,8 +10,8 @@ import APIs from '@/services/APIs';
 
 import WasteSearchTable from './index';
 
-import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { ReportingUnitSearchResultDto } from '@/types/search.types';
+import type { PageableResponse } from '@/types/tableResource.types';
 
 // Mock WasteSearchFilters to avoid slow typing interactions
 vi.mock('@/components/waste/WasteSearch/WasteSearchFilters', () => ({

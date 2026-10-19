@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { pageableResponseSchema } from '@/components/Form/TableResource/schemas';
+import { pageableResponseSchema } from '@/types/pagination.types';
 
 // ─── INTERIOR SUB-SCHEMAS ────────────────────────────────────────────────────
 export const interiorDistrictRowSchema = z.object({

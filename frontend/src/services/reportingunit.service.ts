@@ -1,9 +1,6 @@
 import { CancelablePromise } from '@/config/api/CancelablePromise';
 import { HttpClient, type APIConfig } from '@/config/api/types';
 
-import type { ReportingUnitBlocksRow } from '@/components/waste/ReportingUnits/ReportingUnitBlocksList/constants';
-import type { PageableResponse } from '@/types/PageableResponse.types';
-
 import type {
   BlockCreateRequestDto,
   BlockCreateResponseDto,
@@ -11,6 +8,8 @@ import type {
   ReportingUnitCreateDto,
   ReportingUnitDto,
 } from './types';
+import type { ReportingUnitBlocksRow } from '@/components/waste/ReportingUnits/ReportingUnitBlocksList/constants';
+import type { PageableResponse } from '@/types/tableResource.types';
 
 /**
  * Backend client for Reporting Unit data.

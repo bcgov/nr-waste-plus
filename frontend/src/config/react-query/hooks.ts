@@ -8,7 +8,6 @@ import {
 import { useEffect, useRef } from 'react';
 import { z } from 'zod';
 
-import { pageableResponseSchema } from '@/components/Form/TableResource/types';
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 import API from '@/services/APIs';
 import {
@@ -20,6 +19,7 @@ import {
   forestClientSchema,
   myForestClientSchema,
 } from '@/types/forestclient.types';
+import { pageableResponseSchema } from '@/types/pagination.types';
 import {
   reportingUnitSearchExpandedSchema,
   reportingUnitSearchResultSchema,
@@ -37,7 +37,6 @@ import {
   type SpeciesCompositionQueryParams,
 } from './queryKeys';
 
-import type { PageableResponse } from '@/components/Form/TableResource/types';
 import type { ReportingUnitBlocksRow } from '@/components/waste/ReportingUnits/ReportingUnitBlocksList/constants';
 import type { ProblemDetails } from '@/config/api/types';
 import type {
@@ -61,6 +60,7 @@ import type {
   SpeciesCompositionDetail,
   SpeciesCompositionListItem,
 } from '@/types/speciesComposition.types';
+import type { PageableResponse } from '@/types/tableResource.types';
 
 /**
  * Shared TanStack Query options for reference-data requests.
