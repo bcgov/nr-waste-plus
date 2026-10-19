@@ -1,14 +1,6 @@
 import { Column } from '@carbon/react';
 import { type FC, useMemo } from 'react';
 
-import type {
-  TableHeaderType,
-  PageableResponse,
-  IdentifiableContent,
-} from '@/components/Form/TableResource/types.ts';
-import type { NestedKeyOf } from '@/services/pagination.types.ts';
-import type { SpeciesCompositionRow, SpeciesKey } from '@/services/speciesComposition.types.ts';
-
 import TooltipTag from '@/components/core/Tags/TooltipTag';
 import TableResource from '@/components/Form/TableResource';
 import { useDistrictOptionsQuery } from '@/config/react-query/hooks.ts';
@@ -17,6 +9,14 @@ import {
   SPECIES_LABELS,
   speciesCompositionRowSchema,
 } from '@/services/speciesComposition.types.ts';
+
+import type {
+  TableHeaderType,
+  PageableResponse,
+  IdentifiableContent,
+} from '@/components/Form/TableResource/types.ts';
+import type { SpeciesCompositionRow, SpeciesKey } from '@/services/speciesComposition.types.ts';
+import type { NestedKeyOf } from '@/types/pagination.types.ts';
 
 /**
  * Props for the {@link SpeciesCompositionDetailMatrix} component.
