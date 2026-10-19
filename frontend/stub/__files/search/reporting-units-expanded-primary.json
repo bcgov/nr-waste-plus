@@ -1,18 +1,1 @@
-{
-    "id": 1907,
-    "licenseNo": "A16824",
-    "cuttingPermit": null,
-    "timberMark": "EM30R1",
-    "exempted": false,
-    "multiMark": false,
-    "netArea": 27.02,
-    "submitter": "IDIR\\BMO",
-    "attachment": {
-        "code": null,
-        "description": null
-    },
-    "comments": null,
-    "totalBlocks": 4,
-    "secondaryTimberMarks": null,
-    "primaryMark": "JY1009"
-}
+{"id": 1907, "licenseNo": "A16824", "cuttingPermit": null, "timberMark": "EM30R1", "exempted": false, "multiMark": false, "status": {"code": "APP", "description": "Approved"}, "secondaryMarks": [], "netArea": 27.02, "markArea": 12.4, "submitter": "IDIR\\BMO", "attachment": {"code": null, "description": null}, "comments": null, "totalBlocks": 4, "totalChildren": 0}

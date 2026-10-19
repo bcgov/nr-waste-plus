@@ -26,8 +26,8 @@ export type CarbonColors =
  * Props for the ColorTag component.
  */
 type ColorTagProps = {
-  /** The value object containing code and description */
-  value: { code: string; description: string } | null;
+  /** The value object containing code and description (both nullable per the backend contract) */
+  value: { code: string | null; description: string | null } | null;
   /** Mapping of codes to Carbon color types */
   colorMap: Record<string, CarbonColors>;
   /** Whether to show the tooltip when code and description are available (default: true) */
@@ -73,14 +73,14 @@ const ColorTag: FC<ColorTagProps> = ({ value, colorMap, showTooltip = true }) =>
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   };
 
-  const displayText = finalHasDescription ? sentenceCase(actualValue.description) : '-';
+  const displayText = finalHasDescription ? sentenceCase(actualValue.description ?? '') : '-';
 
   // Determine tooltip: show if we have both code and description
   const tooltipLabel =
     finalHasCode && finalHasDescription ? `${actualValue.code} - ${actualValue.description}` : '';
 
   const tag = (
-    <Tag type={colorMap[actualValue.code] ?? 'gray'} size="md">
+    <Tag type={colorMap[actualValue.code ?? ''] ?? 'gray'} size="md">
       {displayText}
     </Tag>
   );

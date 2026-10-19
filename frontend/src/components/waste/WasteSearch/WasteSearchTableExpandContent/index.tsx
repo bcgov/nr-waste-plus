@@ -103,7 +103,9 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
           showSkeleton={isLoading}
         >
           {secondaryMarks?.map((mark, index) => (
-            <p key={`${rowId}-secondary-mark-area${idSuffix}-${index}`}>{mark.area} ha</p>
+            <p key={`${rowId}-secondary-mark-area${idSuffix}-${index}`}>
+              {mark.area == null ? '-' : `${mark.area} ha`}
+            </p>
           ))}
         </ReadonlyInput>
       </Column>
@@ -117,7 +119,7 @@ const WasteSearchTableExpandContent: FC<WasteSearchTableExpandContentProps> = ({
         >
           {secondaryMarks?.map((mark, index) => (
             <p key={`${rowId}-secondary-mark-status${idSuffix}-${index}`}>
-              {mark.status.description}
+              {mark.status.description ?? '-'}
             </p>
           ))}
         </ReadonlyInput>

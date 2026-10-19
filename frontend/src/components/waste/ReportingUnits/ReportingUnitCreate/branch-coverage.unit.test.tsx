@@ -144,7 +144,7 @@ vi.mock('@carbon/react', async () => {
         >
           <option value="">Select</option>
           {items.map((item) => (
-            <option key={item.code} value={item.code}>
+            <option key={item.code} value={item.code ?? ''}>
               {item.description}
             </option>
           ))}

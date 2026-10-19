@@ -77,7 +77,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
             itemToString={activeMSItemToString}
             onChange={handleActiveMultiSelectChange('district')}
             selectedItems={districtOptions.filter((option) =>
-              (filters.district || []).includes(option.code),
+              (filters.district || []).includes(option.code ?? ''),
             )}
           />
         </Column>
@@ -92,7 +92,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
             itemToString={activeMSItemToString}
             onChange={handleActiveMultiSelectChange('sampling')}
             selectedItems={samplingOptions.filter((option) =>
-              (filters.sampling || []).includes(option.code),
+              (filters.sampling || []).includes(option.code ?? ''),
             )}
           />
         </Column>
@@ -106,7 +106,7 @@ const WasteSearchFilters: FC<WasteSearchFiltersProps> = ({ value, onChange, onSe
             itemToString={activeMSItemToString}
             onChange={handleActiveMultiSelectChange('status')}
             selectedItems={statusOptions.filter((option) =>
-              (filters.status || []).includes(option.code),
+              (filters.status || []).includes(option.code ?? ''),
             )}
           />
         </Column>

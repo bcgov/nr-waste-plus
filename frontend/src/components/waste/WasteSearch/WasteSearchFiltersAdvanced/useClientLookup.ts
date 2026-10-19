@@ -48,7 +48,7 @@ export const useClientLookup = (
 
   // Query to resolve the full client details from the API.
   const { data: resolvedClient } = useClientLookupQuery(
-    clientNumberEntry?.code,
+    clientNumberEntry?.code ?? undefined,
     isModalOpen && hasClientCodeOnly && auth.user?.idpProvider === 'IDIR',
   );
 
@@ -61,7 +61,7 @@ export const useClientLookup = (
 
     const first = resolvedClient?.[0];
     if (first && first.code !== appliedClientCode.current) {
-      appliedClientCode.current = first.code;
+      appliedClientCode.current = first.code ?? undefined;
       onChange('clientNumbers')([first]);
     }
   }, [isModalOpen, resolvedClient, onChange]);

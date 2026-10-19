@@ -28,8 +28,8 @@ const DistrictListing: FC = () => {
   const { data, isLoading } = useDistrictOptionsQuery({
     select: (data) =>
       data.map((district) => ({
-        id: district.code,
-        name: district.description,
+        id: district.code ?? '',
+        name: district.description ?? '',
         kind: 'D',
       })),
   });

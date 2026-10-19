@@ -6,29 +6,22 @@ import type { Override } from '@/types/utils.types';
  * Code/description pair as serialized by the backend `CodeDescriptionDto`
  * record (`String code, String description, List<String> areas`).
  *
- * `code`/`description` are typed non-null to match the app's current
- * contract, although the Java record allows nulls and real payloads carry
- * `null` for unresolved lookups (e.g. row status codes). Aligning this with
- * the nullable shape already used by `reportingUnitSchema` is a pending
- * decision blocking `.parse()` wiring on the endpoints that carry it.
- *
- * `areas` has no `@JsonInclude` on the backend, so the key is always
- * serialized (null when unset); `.nullish()` also tolerates the older
- * payloads where the key was absent.
+ * All three fields are nullable on the backend (no `@JsonInclude`), and real
+ * payloads carry `null` for unresolved lookups — e.g. row status codes. The
+ * older hand-written contract claimed non-null strings and drifted from the
+ * wire; this schema is the aligned source of truth.
  */
 const codeDescriptionSchema = z.object({
-  code: z.string(),
-  description: z.string(),
+  code: z.string().nullable(),
+  description: z.string().nullable(),
   areas: z.array(z.string()).nullish(),
 });
 
 const searchExpandedSecondarySchema = z.object({
   mark: z.string(),
   status: codeDescriptionSchema,
-  // Backend field is a nullable `Double` and the PostgreSQL source can send
-  // null; typed non-null to match the current UI contract (alignment pending
-  // with the code/description nullability decision).
-  area: z.number(),
+  // Backend field is a nullable `Double`; the PostgreSQL source sends null.
+  area: z.number().nullable(),
 });
 
 /**
@@ -40,8 +33,7 @@ const searchExpandedSecondarySchema = z.object({
  *   representing UTC, hence `{ local: true }` rather than the default
  *   `z.iso.datetime()` (which demands a `Z`).
  *
- * Boundary `.parse()` wiring is pending the `codeDescriptionSchema`
- * nullability decision above.
+ * Parsed at the boundary in `useSearchReportingUnitsQuery`.
  */
 export const reportingUnitSearchResultSchema = z.object({
   id: z.string(),
@@ -62,10 +54,8 @@ export const reportingUnitSearchResultSchema = z.object({
 });
 
 /**
- * Expanded reporting-unit detail for a search row. Boundary `.parse()`
- * wiring is pending the `codeDescriptionSchema` nullability decision; the
- * Cypress expanded fixtures are also stale (they predate
- * `status`/`secondaryMarks`/`markArea`/`totalChildren`).
+ * Expanded reporting-unit detail for a search row. Parsed at the boundary in
+ * `useReportingUnitExpandQuery`.
  */
 export const reportingUnitSearchExpandedSchema = z.object({
   id: z.int(),

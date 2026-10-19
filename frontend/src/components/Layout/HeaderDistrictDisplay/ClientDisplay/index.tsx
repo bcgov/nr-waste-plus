@@ -23,7 +23,7 @@ const ClientDisplay: FC<ClientDisplayProps> = ({ isActive }) => {
           id: client.clientNumber,
           name: client.name ?? client.clientName,
           acronym: client.acronym,
-          kind: client.clientTypeCode?.code,
+          kind: client.clientTypeCode?.code ?? '',
         }))
         .find((client) => client.id === selectedClient?.code),
   });

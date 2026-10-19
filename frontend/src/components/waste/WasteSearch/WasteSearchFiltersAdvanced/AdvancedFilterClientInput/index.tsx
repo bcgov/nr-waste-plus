@@ -72,7 +72,7 @@ const AdvancedFilterClientInput: FC<AdvancedFilterClientInputProps> = ({
               forestClientAutocompleteResult2CodeDescription,
             )
           }
-          itemToString={(item) => item!.description}
+          itemToString={(item) => item!.description ?? ''}
           onBlur={onBlur ? (e: React.FocusEvent) => onBlur(e.nativeEvent) : undefined}
           onSelect={(rawData) => {
             const data = rawData ? [rawData as CodeDescriptionDto] : [];

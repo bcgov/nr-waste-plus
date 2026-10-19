@@ -23,6 +23,11 @@ import {
 } from './queryKeys';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
+import { pageableResponseSchema } from '@/components/Form/TableResource/types';
+import {
+  reportingUnitSearchExpandedSchema,
+  reportingUnitSearchResultSchema,
+} from '@/types/search.types';
 import type { ReportingUnitBlocksRow } from '@/components/waste/ReportingUnits/ReportingUnitBlocksList/constants';
 import type { ProblemDetails } from '@/config/api/types';
 import type {
@@ -386,17 +391,19 @@ export const useSearchReportingUnitsQuery = <
 
   const query = useQuery({
     queryKey: queryKeys.search.reportingUnits(input, notificationTarget),
-    queryFn: () =>
-      API.search.searchReportingUnit(
-        input.filters,
-        {
-          page: input.page,
-          size: input.size,
-          sort: generateSortArray<ReportingUnitSearchResultDto>(input.sort),
-        },
-        {
-          notificationTarget,
-        },
+    queryFn: async () =>
+      pageableResponseSchema(reportingUnitSearchResultSchema).parse(
+        await API.search.searchReportingUnit(
+          input.filters,
+          {
+            page: input.page,
+            size: input.size,
+            sort: generateSortArray<ReportingUnitSearchResultDto>(input.sort),
+          },
+          {
+            notificationTarget,
+          },
+        ),
       ),
     ...queryOptions,
   });
@@ -757,11 +764,13 @@ export const useReportingUnitExpandQuery = <TData = ReportingUnitSearchExpandedD
 ) => {
   return useQuery({
     queryKey: queryKeys.search.reportingUnitExpand(rowId, ruId, wasteAssessmentAreaId),
-    queryFn: () => {
+    queryFn: async () => {
       if (ruId === null || wasteAssessmentAreaId === null) {
         throw new Error('Reporting unit expand query requires both IDs.');
       }
-      return API.search.getReportingUnitSearchExpand(ruId, wasteAssessmentAreaId);
+      return reportingUnitSearchExpandedSchema.parse(
+        await API.search.getReportingUnitSearchExpand(ruId, wasteAssessmentAreaId),
+      );
     },
     enabled: ruId !== null && wasteAssessmentAreaId !== null,
     staleTime: Infinity,
