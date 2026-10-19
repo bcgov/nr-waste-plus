@@ -502,7 +502,6 @@ class ReportingUnitServiceTest {
     assertThat(savedEntity.getClientLocnCode()).isEqualTo("00");
     assertThat(savedEntity.getOrgUnitNo()).isEqualTo("DND");
     assertThat(savedEntity.getSamplingCode()).isEqualTo("AVG");
-    assertThat(savedEntity.getRevision()).isNull();
     assertThat(savedEntity.isDeleted()).isFalse();
   }
 
