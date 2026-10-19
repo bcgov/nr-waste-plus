@@ -11,3 +11,4 @@
  */
 export type * from './pagination.types';
 export type * from './PageableResponse.types';
+export type * from './utils.types';

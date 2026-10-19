@@ -1,4 +1,4 @@
-import type { Override } from './utils.types';
+import type { Override } from '@/types/utils.types';
 
 /**
  * Represents a code-description pair with optional area classifications.
