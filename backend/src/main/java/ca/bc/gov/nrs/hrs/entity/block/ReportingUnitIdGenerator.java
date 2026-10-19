@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.hrs.entity.block;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 
 /**
@@ -14,11 +15,15 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 public class ReportingUnitIdGenerator extends SequenceStyleGenerator {
 
   @Override
-  public Object generate(SharedSessionContractImplementor session, Object object) {
-    if (object instanceof ReportingUnitEntity entity && entity.getId() != null) {
-      return entity.getId();
+  public Object generate(
+      SharedSessionContractImplementor session,
+      Object owner,
+      Object currentValue,
+      EventType eventType) {
+    if (currentValue != null) {
+      return currentValue;
     }
-    return super.generate(session, object);
+    return super.generate(session, owner, currentValue, eventType);
   }
 
   @Override
