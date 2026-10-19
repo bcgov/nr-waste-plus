@@ -21,7 +21,7 @@ const ClientDisplay: FC<ClientDisplayProps> = ({ isActive }) => {
       data
         .map((client) => ({
           id: client.clientNumber,
-          name: client.name ?? client.clientName,
+          name: client.name,
           acronym: client.acronym,
           kind: client.clientTypeCode?.code ?? '',
         }))

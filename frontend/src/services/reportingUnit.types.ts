@@ -1,15 +1,12 @@
 import { z } from 'zod';
 
 /**
- * Zod schema for a code/description pair returned by the backend.
- *
- * Both `code` and `description` can be `null` when the backend returns an
- * unresolved reference. Use loose-object parsing to tolerate extra backend fields.
+ * Code/description pair schema shared with `@/types/search.types` (single
+ * source of truth; previously a duplicate `z.looseObject` lived here).
  */
-export const codeDescriptionSchema = z.looseObject({
-  code: z.nullable(z.string()),
-  description: z.nullable(z.string()),
-});
+export { codeDescriptionSchema } from '@/types/search.types';
+
+import { codeDescriptionSchema } from '@/types/search.types';
 
 /**
  * Zod schema for the full reporting-unit details response.

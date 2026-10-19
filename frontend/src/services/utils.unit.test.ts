@@ -157,6 +157,7 @@ describe('forestClientAutocompleteResult2CodeDescription', () => {
     const data: ForestClientAutocompleteResultDto = {
       id: '1234',
       name: 'ACME Corporation',
+      acronym: null,
     };
     const result = forestClientAutocompleteResult2CodeDescription(data);
 

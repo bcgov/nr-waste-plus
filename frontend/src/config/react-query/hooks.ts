@@ -6,13 +6,24 @@ import {
   type UseMutationOptions,
 } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
+import { z } from 'zod';
 
+import { pageableResponseSchema } from '@/components/Form/TableResource/types';
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 import API from '@/services/APIs';
 import {
   forestClientAutocompleteResult2CodeDescription,
   generateSortArray,
 } from '@/services/utils';
+import {
+  forestClientAutocompleteResultSchema,
+  forestClientSchema,
+  myForestClientSchema,
+} from '@/types/forestclient.types';
+import {
+  reportingUnitSearchExpandedSchema,
+  reportingUnitSearchResultSchema,
+} from '@/types/search.types';
 
 import { queryClient } from './config';
 import {
@@ -23,11 +34,6 @@ import {
 } from './queryKeys';
 
 import type { PageableResponse } from '@/components/Form/TableResource/types';
-import { pageableResponseSchema } from '@/components/Form/TableResource/types';
-import {
-  reportingUnitSearchExpandedSchema,
-  reportingUnitSearchResultSchema,
-} from '@/types/search.types';
 import type { ReportingUnitBlocksRow } from '@/components/waste/ReportingUnits/ReportingUnitBlocksList/constants';
 import type { ProblemDetails } from '@/config/api/types';
 import type {
@@ -309,8 +315,12 @@ export const useForestClientsByNumbersQuery = <TData = ForestClientDto[]>(
 ) => {
   return useQuery({
     queryKey: queryKeys.forestClient.byClientNumbers(clientNumbers),
-    queryFn: () =>
-      API.forestclient.searchByClientNumbers([...clientNumbers], 0, clientNumbers.length),
+    queryFn: async () =>
+      z
+        .array(forestClientSchema)
+        .parse(
+          await API.forestclient.searchByClientNumbers([...clientNumbers], 0, clientNumbers.length),
+        ),
     enabled: clientNumbers.length > 0,
     ...options,
   });
@@ -344,10 +354,20 @@ export const useMyForestClientsQuery = <TData = PageableResponse<MyForestClientD
 
   const query = useQuery({
     queryKey: queryKeys.forestClient.myForestClients(filter, page, size, notificationTarget),
-    queryFn: () =>
-      API.forestclient.searchMyForestClients(filter, page, size, {
-        notificationTarget,
-      }),
+    queryFn: async () =>
+      pageableResponseSchema(myForestClientSchema)
+        // Wire rows carry no `id`; derive the stable row identity from the
+        // client code so the app-facing `PageableResponse` (whose rows are
+        // `IdentifiableContent`) holds true without a cast.
+        .transform((page) => ({
+          ...page,
+          content: page.content.map((row) => ({ ...row, id: row.client.code ?? '' })),
+        }))
+        .parse(
+          await API.forestclient.searchMyForestClients(filter, page, size, {
+            notificationTarget,
+          }),
+        ),
     ...queryOptions,
   });
 
@@ -817,9 +837,10 @@ export const useClientLookupQuery = <TData = CodeDescriptionDto[]>(
         return [];
       }
 
-      return (await API.forestclient.searchForestClients(clientCode, 0, 1)).map(
-        forestClientAutocompleteResult2CodeDescription,
-      );
+      return z
+        .array(forestClientAutocompleteResultSchema)
+        .parse(await API.forestclient.searchForestClients(clientCode, 0, 1))
+        .map(forestClientAutocompleteResult2CodeDescription);
     },
     enabled: enabled && Boolean(clientCode),
     staleTime: Infinity,

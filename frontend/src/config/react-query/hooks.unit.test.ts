@@ -70,7 +70,17 @@ vi.mock('@/services/APIs', () => ({
     },
     forestclient: {
       searchByClientNumbers: vi.fn().mockResolvedValue([]),
-      searchMyForestClients: vi.fn().mockResolvedValue({ items: [], total: 0 }),
+      searchMyForestClients: vi.fn().mockResolvedValue({
+        content: [
+          {
+            client: { code: '00000001', description: 'COMPANY ONE' },
+            submissionsCount: 1,
+            blocksCount: 0,
+            lastUpdate: '2007-03-30T11:08:20',
+          },
+        ],
+        page: { size: 10, number: 0, totalElements: 1, totalPages: 1 },
+      }),
       searchForestClients: vi.fn().mockResolvedValue([]),
     },
     reportingUnit: {

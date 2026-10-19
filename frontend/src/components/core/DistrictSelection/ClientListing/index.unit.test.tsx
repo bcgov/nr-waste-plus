@@ -231,27 +231,6 @@ describe('ClientListing', () => {
     expect(clientElement).toBeDefined();
   });
 
-  it('should use clientName when name is not available', async () => {
-    mockedClientValues = [
-      {
-        clientNumber: '00000001',
-        clientName: 'FALLBACK NAME',
-        name: undefined as unknown as string,
-        legalFirstName: null,
-        legalMiddleName: null,
-        clientStatusCode: { code: 'ACT', description: 'Active' },
-        clientTypeCode: { code: 'C', description: 'Corporation' },
-        acronym: 'TEST',
-      },
-    ];
-    (APIs.forestclient.searchByClientNumbers as Mock).mockResolvedValue(mockedClientValues);
-
-    await renderWithProviders();
-
-    const clientElement = await screen.findByTitle('FALLBACK NAME');
-    expect(clientElement).toBeDefined();
-  });
-
   it('should display deselect option', async () => {
     await renderWithProviders();
 

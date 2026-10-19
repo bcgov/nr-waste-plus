@@ -50,10 +50,9 @@ describe('filterClientByKeyword', () => {
     expect(filterClientByKeyword(client, 'FORESTRY')).toBe(true);
   });
 
-  it('handles missing optional fields gracefully', () => {
-    const client: ForestClientDto = { ...baseClient, name: undefined };
-    expect(filterClientByKeyword(client, 'acme')).toBe(true); // matches clientName
-    expect(filterClientByKeyword(client, 'xyz')).toBe(false);
+  it('matches against the computed name field', () => {
+    const client: ForestClientDto = { ...baseClient, name: 'Acme Holdings' };
+    expect(filterClientByKeyword(client, 'holdings')).toBe(true);
   });
 
   it('returns false if all fields are empty', () => {
@@ -65,7 +64,7 @@ describe('filterClientByKeyword', () => {
       clientStatusCode: { code: '', description: '' },
       clientTypeCode: { code: '', description: '' },
       acronym: '',
-      name: undefined,
+      name: '',
     };
     expect(filterClientByKeyword(emptyClient, 'anything')).toBe(false);
   });

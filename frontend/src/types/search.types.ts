@@ -9,9 +9,10 @@ import type { Override } from '@/types/utils.types';
  * All three fields are nullable on the backend (no `@JsonInclude`), and real
  * payloads carry `null` for unresolved lookups — e.g. row status codes. The
  * older hand-written contract claimed non-null strings and drifted from the
- * wire; this schema is the aligned source of truth.
+ * wire; this schema is the aligned source of truth. Shared building block:
+ * forest-client and future feature schemas compose it.
  */
-const codeDescriptionSchema = z.object({
+export const codeDescriptionSchema = z.object({
   code: z.string().nullable(),
   description: z.string().nullable(),
   areas: z.array(z.string()).nullish(),
