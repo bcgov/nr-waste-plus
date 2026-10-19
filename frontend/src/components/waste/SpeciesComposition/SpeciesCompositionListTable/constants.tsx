@@ -1,7 +1,7 @@
-import type { TableHeaderType } from '@/components/Form/TableResource/types.ts';
-import type { SpeciesCompositionListItem } from '@/services/speciesComposition.types.ts';
-
 import DateTag from '@/components/core/Tags/DateTag';
+
+import type { TableHeaderType } from '@/components/Form/TableResource/types.ts';
+import type { SpeciesCompositionListItem } from '@/types/speciesComposition.types.ts';
 
 export const headers: TableHeaderType<SpeciesCompositionListItem>[] = [
   {

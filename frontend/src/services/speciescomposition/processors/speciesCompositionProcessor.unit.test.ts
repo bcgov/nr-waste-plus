@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest';
 
-import { SpeciesCompositionProcessor } from './speciesCompositionProcessor';
-
-import type { SpeciesCompositionData } from '@/services/speciesComposition.types';
-
 import {
   DISTRICT_COL,
   SPECIES_START_COL,
@@ -15,6 +11,10 @@ import {
   sampleValues,
   wrapInSpreadsheetLayout,
 } from '@/services/speciescomposition/validators/testHelper';
+
+import { SpeciesCompositionProcessor } from './speciesCompositionProcessor';
+
+import type { SpeciesCompositionData } from '@/types/speciesComposition.types';
 
 async function makeFile(dataRows: unknown[][]) {
   return buildSpeciesCompositionFile(wrapInSpreadsheetLayout(headerRow(), dataRows));
@@ -35,13 +35,14 @@ describe('SpeciesCompositionProcessor', () => {
     if (!result.success) return;
 
     const data = (result.data as SpeciesCompositionData[])[0];
-    expect(data.rows).toHaveLength(1);
+    const parsedRows = data.rows ?? [];
+    expect(parsedRows).toHaveLength(1);
 
-    const row = data.rows[0];
-    expect(row.district.code).toBe('DCC');
-    expect(row.district.description).toBe('');
-    expect(row.species.AL).toBe(sampleValues(1)[0]);
-    expect(row.species.YE).toBe(sampleValues(1)[18]);
+    const row = parsedRows[0];
+    expect(row.district?.code).toBe('DCC');
+    expect(row.district?.description).toBe('');
+    expect(row.species?.AL).toBe(sampleValues(1)[0]);
+    expect(row.species?.YE).toBe(sampleValues(1)[18]);
   });
 
   it('processes a spreadsheet with multiple districts', async () => {
@@ -54,10 +55,11 @@ describe('SpeciesCompositionProcessor', () => {
     if (!result.success) return;
 
     const data = (result.data as SpeciesCompositionData[])[0];
-    expect(data.rows).toHaveLength(3);
-    expect(data.rows[0].district.code).toBe('DCC');
-    expect(data.rows[1].district.code).toBe('DCK');
-    expect(data.rows[2].district.code).toBe('DCR');
+    const parsedRows = data.rows ?? [];
+    expect(parsedRows).toHaveLength(3);
+    expect(parsedRows[0]?.district?.code).toBe('DCC');
+    expect(parsedRows[1]?.district?.code).toBe('DCK');
+    expect(parsedRows[2]?.district?.code).toBe('DCR');
   });
 
   it('processes a district code with description suffix (e.g. "DCC - Cariboo")', async () => {
@@ -68,7 +70,7 @@ describe('SpeciesCompositionProcessor', () => {
     if (!result.success) return;
 
     const data = (result.data as SpeciesCompositionData[])[0];
-    expect(data.rows[0].district.code).toBe('DCC');
+    expect(data.rows?.[0]?.district?.code).toBe('DCC');
   });
 
   it('skips summary rows containing "Weighted Average"', async () => {
@@ -83,7 +85,7 @@ describe('SpeciesCompositionProcessor', () => {
 
     const data = (result.data as SpeciesCompositionData[])[0];
     expect(data.rows).toHaveLength(1);
-    expect(data.rows[0].district.code).toBe('DCC');
+    expect(data.rows?.[0]?.district?.code).toBe('DCC');
   });
 
   it('skips empty rows', async () => {
@@ -111,7 +113,7 @@ describe('SpeciesCompositionProcessor', () => {
     if (!result.success) return;
 
     const data = (result.data as SpeciesCompositionData[])[0];
-    expect(data.rows[0].species.AL).toBe(0);
+    expect(data.rows?.[0]?.species?.AL).toBe(0);
   });
 
   it('returns failure for corrupt file', async () => {

@@ -24,6 +24,10 @@ import {
   reportingUnitSearchExpandedSchema,
   reportingUnitSearchResultSchema,
 } from '@/types/search.types';
+import {
+  speciesCompositionDetailSchema,
+  speciesCompositionListItemSchema,
+} from '@/types/speciesComposition.types';
 
 import { queryClient } from './config';
 import {
@@ -42,11 +46,6 @@ import type {
   DistrictVolumeListItem,
 } from '@/services/districtvolumes.types';
 import type {
-  SpeciesCompositionCreate,
-  SpeciesCompositionDetail,
-  SpeciesCompositionListItem,
-} from '@/services/speciesComposition.types';
-import type {
   BlockCreateRequestDto,
   BlockCreateResponseDto,
   BlockDetailsDto,
@@ -57,6 +56,11 @@ import type {
   ReportingUnitSearchResultDto,
 } from '@/services/types';
 import type { CodeDescriptionDto, ReportingUnitSearchExpandedDto } from '@/types/search.types';
+import type {
+  SpeciesCompositionCreate,
+  SpeciesCompositionDetail,
+  SpeciesCompositionListItem,
+} from '@/types/speciesComposition.types';
 
 /**
  * Shared TanStack Query options for reference-data requests.
@@ -1028,7 +1032,12 @@ export const useDistrictVolumeTableDeleteMutation = (
 export const useSpeciesCompositionDetailQuery = <TData = SpeciesCompositionDetail>(
   id: number,
   options?: Omit<
-    UseQueryOptions<TData, Error, TData, ReturnType<typeof queryKeys.speciesComposition.detail>>,
+    UseQueryOptions<
+      SpeciesCompositionDetail,
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.speciesComposition.detail>
+    >,
     'queryKey' | 'queryFn'
   > &
     QueryNotificationOptions,
@@ -1037,8 +1046,10 @@ export const useSpeciesCompositionDetailQuery = <TData = SpeciesCompositionDetai
 
   const query = useQuery({
     queryKey: queryKeys.speciesComposition.detail(id),
-    queryFn: () =>
-      API.speciesComposition.getSpeciesCompositionById(id) as unknown as Promise<TData>,
+    queryFn: async () =>
+      speciesCompositionDetailSchema.parse(
+        await API.speciesComposition.getSpeciesCompositionById(id),
+      ),
     ...queryOptions,
   });
 
@@ -1088,12 +1099,14 @@ export const useSpeciesCompositionListQuery = <
 
   const query = useQuery({
     queryKey: queryKeys.speciesComposition.list(input, notificationTarget),
-    queryFn: () =>
-      API.speciesComposition.listSpeciesCompositions({
-        page: input.page,
-        size: input.size,
-        sort: generateSortArray<SpeciesCompositionListItem>(input.sort),
-      }),
+    queryFn: async () =>
+      pageableResponseSchema(speciesCompositionListItemSchema).parse(
+        await API.speciesComposition.listSpeciesCompositions({
+          page: input.page,
+          size: input.size,
+          sort: generateSortArray<SpeciesCompositionListItem>(input.sort),
+        }),
+      ),
     ...queryOptions,
   });
 

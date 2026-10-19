@@ -114,7 +114,7 @@ vi.mock('@/services/APIs', () => ({
         content: [
           {
             id: 1,
-            area: 'INTERIOR',
+            area: 'INTERIOR' as const,
             startDate: '2026-05-15',
             endDate: null,
             uploadedBy: 'IDIR/ABCDEF',
@@ -124,7 +124,7 @@ vi.mock('@/services/APIs', () => ({
         page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
       }),
       getDistrictVolumeTableDetail: vi.fn().mockResolvedValue({
-        area: 'INTERIOR',
+        area: 'INTERIOR' as const,
         id: 42,
         startDate: '2026-06-01',
         zones: [],
@@ -137,6 +137,7 @@ vi.mock('@/services/APIs', () => ({
         content: [
           {
             id: 1,
+            area: 'INTERIOR',
             startDate: '2026-05-15',
             endDate: null,
             uploadedBy: 'IDIR/ABCDEF',
@@ -147,11 +148,13 @@ vi.mock('@/services/APIs', () => ({
       }),
       getSpeciesCompositionById: vi.fn().mockResolvedValue({
         id: 1,
+        area: 'INTERIOR',
         startDate: '2026-05-15',
         endDate: null,
         uploadedBy: 'IDIR/ABCDEF',
         dateOfUpload: '2026-03-27T00:00:00Z',
-        tableData: { rows: [] },
+        tableLevelFactor: 1.0,
+        tableData: { type: 'SPECIES_COMPOSITION', rows: [] },
       }),
       createSpeciesComposition: vi.fn().mockResolvedValue(555),
       deleteSpeciesComposition: vi.fn().mockResolvedValue(undefined),
@@ -1453,7 +1456,7 @@ describe('react-query hooks', () => {
 
   describe('useSpeciesCompositionCreateMutation', () => {
     const validCreateRequest = {
-      area: 'INTERIOR',
+      area: 'INTERIOR' as const,
       startDate: '2026-05-15',
       tableLevelFactor: 1.0,
       heliMultiplier: null,
