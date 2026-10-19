@@ -43,20 +43,28 @@ class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @Autowired
   private BlockAreaSegmentMapper blockAreaSegmentMapper;
+
   @Autowired
   private BlockAttachmentMapper blockAttachmentMapper;
+
   @Autowired
   private BlockCommentMapper blockCommentMapper;
+
   @Autowired
   private BlockMarkMapper blockMarkMapper;
+
   @Autowired
   private BlockRequirementMapper blockRequirementMapper;
+
   @Autowired
   private BlockSponsorMapper blockSponsorMapper;
+
   @Autowired
   private BlockSubmitterMapper blockSubmitterMapper;
+
   @Autowired
   private DistrictAverageBlockMapper districtAverageBlockMapper;
+
   @Autowired
   private StatusEventMapper statusEventMapper;
 

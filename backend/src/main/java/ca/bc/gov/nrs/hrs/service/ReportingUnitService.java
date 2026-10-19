@@ -29,7 +29,8 @@ import org.springframework.web.server.ResponseStatusException;
  *
  * <p>Fetches raw data from the legacy API and enriches it with client information from the Forest
  * Client API, combining both into a unified {@link ReportingUnitDetailsDto} response. Handles
- * creation of new reporting units with comprehensive validation and persists them locally to PostgreSQL.
+ * creation of new reporting units with comprehensive validation and persists them locally to
+ * PostgreSQL.
  */
 @Slf4j
 @Service

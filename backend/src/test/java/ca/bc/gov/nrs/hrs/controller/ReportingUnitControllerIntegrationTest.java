@@ -1,11 +1,11 @@
 package ca.bc.gov.nrs.hrs.controller;
 
 import static ca.bc.gov.nrs.hrs.TestConstants.LEGACY_RU_DETAILS;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
@@ -20,11 +20,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
+import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants;
-import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -34,8 +34,8 @@ import io.github.resilience4j.retry.RetryRegistry;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -46,6 +46,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.json.JsonMapper;
@@ -87,8 +88,11 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @Autowired
   private JsonMapper jsonMapper;
 
-  @Autowired private JdbcTemplate jdbcTemplate;
-  @Autowired private TransactionTemplate transactionTemplate;
+  @Autowired
+  private JdbcTemplate jdbcTemplate;
+
+  @Autowired
+  private TransactionTemplate transactionTemplate;
 
   private String fixtureActor;
   private Long populatedReportingUnitId;
@@ -230,13 +234,13 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .andExpect(status().isCreated());
 
     var savedEntity = reportingUnitRepository.findById(testRuId);
-    org.assertj.core.api.Assertions.assertThat(savedEntity).isPresent();
-    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getClientNumber()).isEqualTo("00012797");
-    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getClientLocnCode()).isEqualTo("00");
-    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getOrgUnitNo()).isEqualTo("DND");
-    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getSamplingCode()).isEqualTo("AVG");
-    org.assertj.core.api.Assertions.assertThat(savedEntity.get().getRevision()).isEqualTo(0L);
-    org.assertj.core.api.Assertions.assertThat(savedEntity.get().isDeleted()).isFalse();
+    assertThat(savedEntity).isPresent();
+    assertThat(savedEntity.get().getClientNumber()).isEqualTo("00012797");
+    assertThat(savedEntity.get().getClientLocnCode()).isEqualTo("00");
+    assertThat(savedEntity.get().getOrgUnitNo()).isEqualTo("DND");
+    assertThat(savedEntity.get().getSamplingCode()).isEqualTo("AVG");
+    assertThat(savedEntity.get().getRevision()).isEqualTo(0L);
+    assertThat(savedEntity.get().isDeleted()).isFalse();
   }
 
   @Test
@@ -316,7 +320,9 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
             .willReturn(
-                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
+                okJson(
+                    ForestClientApiProviderTestConstants
+                        .REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
     clientApiStub.stubFor(
         get(urlPathEqualTo("/clients/findByClientNumber/" + clientNumber))
             .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
@@ -325,12 +331,11 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     return id;
   }
 
-  private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder createReportingUnitRequest() {
+  private MockHttpServletRequestBuilder createReportingUnitRequest() {
     return createReportingUnitRequest("00012797");
   }
 
-  private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder createReportingUnitRequest(
-      String clientNumber) {
+  private MockHttpServletRequestBuilder createReportingUnitRequest(String clientNumber) {
     return MockMvcRequestBuilders.post("/api/reporting-units")
         .with(SecurityMockMvcRequestPostProcessors.csrf())
         .contentType(MediaType.APPLICATION_JSON)
@@ -425,8 +430,8 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .andExpect(header().string("Location", "/reporting-units/36834"));
 
     var saved = reportingUnitRepository.findById(36834L);
-    org.assertj.core.api.Assertions.assertThat(saved).isPresent();
-    org.assertj.core.api.Assertions.assertThat(saved.get().getSamplingCode()).isEqualTo("AVG");
+    assertThat(saved).isPresent();
+    assertThat(saved.get().getSamplingCode()).isEqualTo("AVG");
   }
 
   @Test
@@ -473,7 +478,8 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
             .andReturn()
             .getResponse()
             .getContentAsString();
-    assertThat(jsonMapper.readTree(response).get("content").get(0).get("totalWasteVolumeM3").isNull())
+    assertThat(
+            jsonMapper.readTree(response).get("content").get(0).get("totalWasteVolumeM3").isNull())
         .isTrue();
   }
 
@@ -534,8 +540,9 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
   @Test
   @WithMockJwt
-  @DisplayName("Should Return Reporting Unit Details with Postgres Sampling when Local Record Exists")
-  void shouldReturnReportingUnitDetails_withPostgresSampling_whenLocalRecordExists() throws Exception {
+  @DisplayName("Should Return Details with Postgres Sampling when Local Record Exists")
+  void shouldReturnReportingUnitDetails_withPostgresSampling_whenLocalRecordExists()
+      throws Exception {
     trackCreatedReportingUnit(55555L);
     var ru = new ReportingUnitEntity();
     ru.setId(55555L);

@@ -54,6 +54,7 @@ class ReportingUnitServiceTest {
 
   @Mock
   private ReportingUnitRepository reportingUnitRepository;
+
   @InjectMocks
   private ReportingUnitService reportingUnitService;
 
@@ -329,7 +330,8 @@ class ReportingUnitServiceTest {
     var result = reportingUnitService.getReportingUnitDetails(RU_ID);
 
     assertThat(result.id()).isEqualTo(RU_ID);
-    assertThat(result.client()).isEqualTo(new CodeDescriptionDto(CLIENT_NUMBER, "MINISTRY OF FORESTS"));
+    assertThat(result.client())
+        .isEqualTo(new CodeDescriptionDto(CLIENT_NUMBER, "MINISTRY OF FORESTS"));
     assertThat(result.clientStatus())
         .isEqualTo(new CodeDescriptionDto("ACT", "Active"));
     assertThat(result.sampling()).isEqualTo(new CodeDescriptionDto("AVG", "District Average"));
@@ -416,7 +418,7 @@ class ReportingUnitServiceTest {
     assertThatThrownBy(() -> reportingUnitService.getReportingUnitDetails(RU_ID))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("DND");
-    verify(forestClientApiProvider, never()).fetchClientByNumber(org.mockito.ArgumentMatchers.anyString());
+    verify(forestClientApiProvider, never()).fetchClientByNumber(anyString());
     verify(legacyApiProvider, never()).getReportingUnitDetails(RU_ID);
   }
 
