@@ -315,7 +315,7 @@ class ReportingUnitServiceTest {
     var reportingUnit = new ReportingUnitEntity();
     reportingUnit.setClientNumber(CLIENT_NUMBER);
     reportingUnit.setClientLocnCode("01");
-    reportingUnit.setOrgUnitNo("DND");
+    reportingUnit.setGeographicCode("DND");
     var clientDto = buildClientDto(CLIENT_NUMBER);
 
     when(reportingUnitRepository.findByIdAndDeletedFalse(RU_ID))
@@ -726,7 +726,7 @@ class ReportingUnitServiceTest {
     ReportingUnitEntity reportingUnit = new ReportingUnitEntity();
     reportingUnit.setClientNumber(CLIENT_NUMBER);
     reportingUnit.setClientLocnCode("01");
-    reportingUnit.setOrgUnitNo("DND");
+    reportingUnit.setGeographicCode("DND");
     return reportingUnit;
   }
 }

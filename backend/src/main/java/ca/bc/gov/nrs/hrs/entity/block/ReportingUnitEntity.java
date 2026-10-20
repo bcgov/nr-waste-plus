@@ -56,8 +56,8 @@ public class ReportingUnitEntity extends SoftDeletableAuditableEntity implements
   @Column(name = "client_locn_code", nullable = false, length = 32)
   private String clientLocnCode;
 
-  @Column(name = "org_unit_no", nullable = false, length = 3)
-  private String orgUnitNo;
+  @Column(name = "geographic_code", nullable = false, length = 3)
+  private String geographicCode;
 
   @Column(name = "sampling_code", nullable = false, length = 10)
   private String samplingCode = "AVG";

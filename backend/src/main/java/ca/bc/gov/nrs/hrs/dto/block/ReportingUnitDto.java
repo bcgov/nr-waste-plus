@@ -5,6 +5,6 @@ public record ReportingUnitDto(
     Long id,
     String clientNumber,
     String clientLocnCode,
-    String orgUnitNo,
+    String geographicCode,
     String samplingCode,
     Long revision) {}

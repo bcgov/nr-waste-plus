@@ -177,7 +177,7 @@ class MinioObjectStorageIntegrationTest extends AbstractTestContainerIntegration
     ReportingUnitEntity ru = new ReportingUnitEntity();
     ru.setClientNumber(uniqueId);
     ru.setClientLocnCode("LOC-" + uniqueId.substring(0, 4));
-    ru.setOrgUnitNo("DCC");
+    ru.setGeographicCode("DCC");
     ru.setRevision(1L);
     ru.setCreatedBy("test");
     ru.setCreatedAt(Instant.now());
