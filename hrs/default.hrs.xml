@@ -95,12 +95,18 @@
          <column autoUpdated="false" defaultValue="now()" digits="6" id="8" name="created_at" nullable="false" remarks="Timestamp when this block was created." size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="now()" digits="6" id="9" name="updated_at" nullable="false" remarks="Timestamp when this block was last updated." size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="false" digits="0" id="10" name="is_deleted" nullable="false" remarks="Soft-delete flag; live uniqueness indexes exclude deleted rows." size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="status_code" nullable="true" remarks="Nullable block status; references approved WAA codes, not status_event history." size="2147483647" type="text" typeCode="12">
+            <parent column="code" foreignKey="fk_block_waa_status_code" implied="false" onDeleteCascade="false" schema="hrs" table="waa_status_code"/>
+         </column>
          <primaryKey column="block_id" sequenceNumberInPK="1"/>
          <index name="block_pk" unique="true">
             <column ascending="true" name="block_id"/>
          </index>
          <index name="idx_block_reporting_unit_id" unique="false">
             <column ascending="true" name="reporting_unit_id"/>
+         </index>
+         <index name="idx_block_status_code" unique="false">
+            <column ascending="true" name="status_code"/>
          </index>
          <index name="uq_block_one_da_per_ru" unique="true">
             <column ascending="true" name="reporting_unit_id"/>
@@ -483,6 +489,25 @@
          </index>
          <checkConstraint constraint="(sort_order &gt;= 0)" name="formula_set_row_order_ck"/>
       </table>
+      <table name="geographic_code" remarks="Typed geographic codes for HRS; the historical seed contains districts only, not a current authoritative extract." schema="hrs" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="Stable source identifier retained from ORG_UNIT_NO for seeded districts." size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="code" nullable="false" remarks="Geographic business code stored by hrs.reporting_unit.geographic_code." size="2147483647" type="text" typeCode="12">
+            <child column="geographic_code" foreignKey="fk_reporting_unit_geographic_code" implied="false" onDeleteCascade="false" schema="hrs" table="reporting_unit"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="description" nullable="false" remarks="Human-readable geographic description." size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="geo_type" nullable="false" remarks="Geographic taxonomy: REGION, DISTRICT, or AREA. Historical seed records are DISTRICT only; region and area require authoritative source data." size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="effective_date" nullable="false" remarks="Source effective timestamp, preserving the time component of Oracle DATE." size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="5" name="expiry_date" nullable="false" remarks="Source expiry timestamp, preserving the time component of Oracle DATE." size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="6" name="update_timestamp" nullable="true" remarks="Nullable source update timestamp; Oracle DATE time is preserved." size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="geographic_code_pk" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="uq_geographic_code_code" unique="true">
+            <column ascending="true" name="code"/>
+         </index>
+         <checkConstraint constraint="(geo_type = ANY (ARRAY['REGION'::text, 'DISTRICT'::text, 'AREA'::text]))" name="geographic_code_geo_type_ck"/>
+      </table>
       <table name="idempotency_record" remarks="Request fingerprints and completed responses used to make retried commands idempotent." schema="hrs" type="TABLE">
          <column autoUpdated="true" defaultValue="nextval('hrs.idempotency_record_id_seq'::regclass)" digits="0" id="0" name="idempotency_record_id" nullable="false" remarks="Unique identifier for the idempotency record." size="19" type="bigserial" typeCode="-5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="idempotency_key" nullable="false" remarks="Unique idempotency key supplied by the client." size="256" type="varchar" typeCode="12"/>
@@ -526,22 +551,47 @@
          </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="client_number" nullable="false" remarks="Forest client number." size="8" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="client_locn_code" nullable="false" remarks="Forest client location code." size="32" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="org_unit_no" nullable="false" remarks="Ministry organizational unit number." size="3" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="geographic_code" nullable="false" remarks="Three-character district code; references geographic_code.code." size="3" type="varchar" typeCode="12">
+            <parent column="code" foreignKey="fk_reporting_unit_geographic_code" implied="false" onDeleteCascade="false" schema="hrs" table="geographic_code"/>
+         </column>
          <column autoUpdated="false" defaultValue="1" digits="0" id="4" name="revision" nullable="false" remarks="Optimistic locking revision counter." size="19" type="int8" typeCode="-5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="created_by" nullable="false" remarks="Audit actor that created this reporting unit." size="128" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="updated_by" nullable="false" remarks="Audit actor that last updated this reporting unit." size="128" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="now()" digits="6" id="7" name="created_at" nullable="false" remarks="Timestamp when this reporting unit was created." size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="now()" digits="6" id="8" name="updated_at" nullable="false" remarks="Timestamp when this reporting unit was last updated." size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="false" digits="0" id="9" name="is_deleted" nullable="false" remarks="Soft-delete flag; live uniqueness indexes exclude deleted rows." size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="sampling_code" nullable="true" remarks="Nullable sampling business code; references sampling_option_code.code." size="2147483647" type="text" typeCode="12">
+            <parent column="code" foreignKey="fk_reporting_unit_sampling_code" implied="false" onDeleteCascade="false" schema="hrs" table="sampling_option_code"/>
+         </column>
          <primaryKey column="reporting_unit_id" sequenceNumberInPK="1"/>
          <index name="reporting_unit_pk" unique="true">
             <column ascending="true" name="reporting_unit_id"/>
          </index>
+         <index name="idx_reporting_unit_geographic_code" unique="false">
+            <column ascending="true" name="geographic_code"/>
+         </index>
+         <index name="idx_reporting_unit_sampling_code" unique="false">
+            <column ascending="true" name="sampling_code"/>
+         </index>
          <index name="uq_reporting_unit_client_district" unique="true">
             <column ascending="true" name="client_number"/>
             <column ascending="true" name="client_locn_code"/>
-            <column ascending="true" name="org_unit_no"/>
+            <column ascending="true" name="geographic_code"/>
          </index>
+      </table>
+      <table name="sampling_option_code" remarks="Historical Oracle sampling options plus HRS District Average." schema="hrs" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="code" nullable="false" remarks="Sampling option business code." size="2147483647" type="text" typeCode="12">
+            <child column="sampling_code" foreignKey="fk_reporting_unit_sampling_code" implied="false" onDeleteCascade="false" schema="hrs" table="reporting_unit"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="description" nullable="false" remarks="Sampling option description." size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="effective_date" nullable="false" remarks="Source effective value including time; apply active-date rules." size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="3" name="expiry_date" nullable="false" remarks="Source expiry value including time; apply active-date rules." size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="update_timestamp" nullable="false" remarks="Oracle UPDATE_TIMESTAMP DATE including time." size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="code" sequenceNumberInPK="1"/>
+         <index name="sampling_option_code_pk" unique="true">
+            <column ascending="true" name="code"/>
+         </index>
+         <checkConstraint constraint="((char_length(code) &lt;= 3) AND (char_length(description) &lt;= 120))" name="sampling_option_code_lengths_ck"/>
       </table>
       <table name="status_event" remarks="Append-only lifecycle events for reporting units and blocks." schema="hrs" type="TABLE">
          <column autoUpdated="true" defaultValue="nextval('hrs.status_event_id_seq'::regclass)" digits="0" id="0" name="status_event_id" nullable="false" remarks="Unique identifier for the status event." size="19" type="bigserial" typeCode="-5">
@@ -598,6 +648,20 @@
          <index name="user_preferences_pk" unique="true">
             <column ascending="true" name="user_id"/>
          </index>
+      </table>
+      <table name="waa_status_code" remarks="Oracle WAA codes approved for HRS block status; seed is historical, not current authority." schema="hrs" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="code" nullable="false" remarks="Oracle WASTE_ASSESS_AREA_STS_CODE business code." size="2147483647" type="text" typeCode="12">
+            <child column="status_code" foreignKey="fk_block_waa_status_code" implied="false" onDeleteCascade="false" schema="hrs" table="block"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="description" nullable="false" remarks="Historical Oracle WAA status description." size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="effective_date" nullable="false" remarks="Source effective value including time; apply active-date rules." size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="3" name="expiry_date" nullable="false" remarks="Source expiry value including time; apply active-date rules." size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="update_timestamp" nullable="false" remarks="Oracle UPDATE_TIMESTAMP DATE including time." size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="code" sequenceNumberInPK="1"/>
+         <index name="waa_status_code_pk" unique="true">
+            <column ascending="true" name="code"/>
+         </index>
+         <checkConstraint constraint="((char_length(code) &lt;= 4) AND (char_length(description) &lt;= 120))" name="waa_status_code_lengths_ck"/>
       </table>
    </tables>
    <routines>

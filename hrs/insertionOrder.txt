@@ -1,7 +1,10 @@
-reporting_unit
 audit_event
 district_volume
 formula_set
+geographic_code
+sampling_option_code
+waa_status_code
+reporting_unit
 block
 block_attachment
 block_mark

@@ -78,7 +78,7 @@
                         <div class="col-md-12">
                             <div class="callout callout-info">
                                 <h4>SchemaSpy Analysis of default.hrs</h4>
-                                <p>Generated on Sat Oct 17 11:12 GMT 2026</p>
+                                <p>Generated on Tue Oct 20 17:48 GMT 2026</p>
                             </div>
                         </div>
                     </div>
@@ -94,7 +94,7 @@
                                 <span class="info-box-icon bg-aqua"><i class="fa fa-table"></i></span>
                                 <div class="info-box-content">
                                     <span class="info-box-text">TABLES</span>
-                                    <span class="info-box-number">22</span>
+                                    <span class="info-box-number">25</span>
                                 </div>
                                 <!-- /.info-box-content -->
                             </div>
@@ -118,7 +118,7 @@
                                 <span class="info-box-icon bg-green"><span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span></span>
                                 <div class="info-box-content">
                                     <span class="info-box-text">COLUMNS</span>
-                                    <span class="info-box-number">242</span>
+                                    <span class="info-box-number">261</span>
                                 </div>
                                 <!-- /.info-box-content -->
                             </div>
@@ -130,7 +130,7 @@
                                 <span class="info-box-icon bg-yellow"><i class="ion ion-key"></i></span>
                                 <div class="info-box-content">
                                     <span class="info-box-text">Constraints</span>
-                                    <span class="info-box-number">18</span>
+                                    <span class="info-box-number">21</span>
                                 </div>
                                 <!-- /.info-box-content -->
                             </div>
@@ -217,8 +217,8 @@
                                     <tr class="tbl even" valign="top">
                                         <td class="detail"><a href="tables/reporting_unit.html">reporting_unit</a></td>
                                         <td class="detail" align="right">2</td>
-                                        <td class="detail" align="right">0</td>
-                                        <td class="detail" align="right">10</td>
+                                        <td class="detail" align="right">2</td>
+                                        <td class="detail" align="right">11</td>
                                         <td class="detail" align="right">-1</td>
                                         <td class="detail" align="right">Table</td>
                                         <td class="comment detail" style="display: table-cell;"><p>Locally-owned reporting unit for a District Average submission.</p></td>
@@ -233,22 +233,13 @@
                                         <td class="comment detail" style="display: table-cell;"><p>Typed forest and road marks associated with a submission block. &ldquo;Block mark&rdquo; is equivalent to &ldquo;timber mark&rdquo; in legacy/FTA terminology — renamed for consistency with app-wide usage.</p></td>
                                     </tr>
                                     <tr class="tbl even" valign="top">
-                                        <td class="detail"><a href="tables/block_area_segment.html">block_area_segment</a></td>
-                                        <td class="detail" align="right">0</td>
-                                        <td class="detail" align="right">2</td>
-                                        <td class="detail" align="right">14</td>
-                                        <td class="detail" align="right">-1</td>
-                                        <td class="detail" align="right">Table</td>
-                                        <td class="comment detail" style="display: table-cell;"><p>Area and road segments used by a submission block.</p></td>
-                                    </tr>
-                                    <tr class="tbl even" valign="top">
-                                        <td class="detail"><a href="tables/block.html">block</a></td>
-                                        <td class="detail" align="right">10</td>
+                                        <td class="detail"><a href="tables/sampling_option_code.html">sampling_option_code</a></td>
                                         <td class="detail" align="right">1</td>
-                                        <td class="detail" align="right">11</td>
+                                        <td class="detail" align="right">0</td>
+                                        <td class="detail" align="right">5</td>
                                         <td class="detail" align="right">-1</td>
                                         <td class="detail" align="right">Table</td>
-                                        <td class="comment detail" style="display: table-cell;"><p>Submission block belonging to a reporting unit. Equivalent to a &ldquo;cut block&rdquo; in legacy/FTA terminology — renamed for consistency with app-wide usage.</p></td>
+                                        <td class="comment detail" style="display: table-cell;"><p>Historical Oracle sampling options plus HRS District Average.</p></td>
                                     </tr>
                                     <tr class="tbl even" valign="top">
                                         <td class="detail"><a href="tables/user_preferences.html">user_preferences</a></td>
@@ -269,6 +260,69 @@
                                         <td class="comment detail" style="display: table-cell;"></td>
                                     </tr>
                                     <tr class="tbl even" valign="top">
+                                        <td class="detail"><a href="tables/idempotency_record.html">idempotency_record</a></td>
+                                        <td class="detail" align="right">0</td>
+                                        <td class="detail" align="right">0</td>
+                                        <td class="detail" align="right">10</td>
+                                        <td class="detail" align="right">-1</td>
+                                        <td class="detail" align="right">Table</td>
+                                        <td class="comment detail" style="display: table-cell;"><p>Request fingerprints and completed responses used to make retried commands idempotent.</p></td>
+                                    </tr>
+                                    <tr class="tbl even" valign="top">
+                                        <td class="detail"><a href="tables/waa_status_code.html">waa_status_code</a></td>
+                                        <td class="detail" align="right">1</td>
+                                        <td class="detail" align="right">0</td>
+                                        <td class="detail" align="right">5</td>
+                                        <td class="detail" align="right">-1</td>
+                                        <td class="detail" align="right">Table</td>
+                                        <td class="comment detail" style="display: table-cell;"><p>Oracle WAA codes approved for HRS block status; seed is historical, not current authority.</p></td>
+                                    </tr>
+                                    <tr class="tbl even" valign="top">
+                                        <td class="detail"><a href="tables/district_volume.html">district_volume</a></td>
+                                        <td class="detail" align="right">1</td>
+                                        <td class="detail" align="right">0</td>
+                                        <td class="detail" align="right">14</td>
+                                        <td class="detail" align="right">-1</td>
+                                        <td class="detail" align="right">Table</td>
+                                        <td class="comment detail" style="display: table-cell;"><p>Stores district waste volume and species composition data used to estimate waste volume on blocks.</p></td>
+                                    </tr>
+                                    <tr class="tbl even" valign="top">
+                                        <td class="detail"><a href="tables/lifecycle_setting.html">lifecycle_setting</a></td>
+                                        <td class="detail" align="right">0</td>
+                                        <td class="detail" align="right">0</td>
+                                        <td class="detail" align="right">7</td>
+                                        <td class="detail" align="right">-1</td>
+                                        <td class="detail" align="right">Table</td>
+                                        <td class="comment detail" style="display: table-cell;"><p>Configurable lifecycle timing values stored as key/value settings.</p></td>
+                                    </tr>
+                                    <tr class="tbl even" valign="top">
+                                        <td class="detail"><a href="tables/status_event.html">status_event</a></td>
+                                        <td class="detail" align="right">1</td>
+                                        <td class="detail" align="right">2</td>
+                                        <td class="detail" align="right">10</td>
+                                        <td class="detail" align="right">-1</td>
+                                        <td class="detail" align="right">Table</td>
+                                        <td class="comment detail" style="display: table-cell;"><p>Append-only lifecycle events for reporting units and blocks.</p></td>
+                                    </tr>
+                                    <tr class="tbl even" valign="top">
+                                        <td class="detail"><a href="tables/block.html">block</a></td>
+                                        <td class="detail" align="right">10</td>
+                                        <td class="detail" align="right">2</td>
+                                        <td class="detail" align="right">12</td>
+                                        <td class="detail" align="right">-1</td>
+                                        <td class="detail" align="right">Table</td>
+                                        <td class="comment detail" style="display: table-cell;"><p>Submission block belonging to a reporting unit. Equivalent to a &ldquo;cut block&rdquo; in legacy/FTA terminology — renamed for consistency with app-wide usage.</p></td>
+                                    </tr>
+                                    <tr class="tbl even" valign="top">
+                                        <td class="detail"><a href="tables/block_area_segment.html">block_area_segment</a></td>
+                                        <td class="detail" align="right">0</td>
+                                        <td class="detail" align="right">2</td>
+                                        <td class="detail" align="right">14</td>
+                                        <td class="detail" align="right">-1</td>
+                                        <td class="detail" align="right">Table</td>
+                                        <td class="comment detail" style="display: table-cell;"><p>Area and road segments used by a submission block.</p></td>
+                                    </tr>
+                                    <tr class="tbl even" valign="top">
                                         <td class="detail"><a href="tables/user_bookmarks.html">user_bookmarks</a></td>
                                         <td class="detail" align="right">0</td>
                                         <td class="detail" align="right">0</td>
@@ -285,15 +339,6 @@
                                         <td class="detail" align="right">-1</td>
                                         <td class="detail" align="right">Table</td>
                                         <td class="comment detail" style="display: table-cell;"><p>Submitter endorsement details for a block.</p></td>
-                                    </tr>
-                                    <tr class="tbl even" valign="top">
-                                        <td class="detail"><a href="tables/idempotency_record.html">idempotency_record</a></td>
-                                        <td class="detail" align="right">0</td>
-                                        <td class="detail" align="right">0</td>
-                                        <td class="detail" align="right">10</td>
-                                        <td class="detail" align="right">-1</td>
-                                        <td class="detail" align="right">Table</td>
-                                        <td class="comment detail" style="display: table-cell;"><p>Request fingerprints and completed responses used to make retried commands idempotent.</p></td>
                                     </tr>
                                     <tr class="tbl even" valign="top">
                                         <td class="detail"><a href="tables/block_attachment.html">block_attachment</a></td>
@@ -332,24 +377,6 @@
                                         <td class="comment detail" style="display: table-cell;"><p>District Average-specific block extension.</p></td>
                                     </tr>
                                     <tr class="tbl even" valign="top">
-                                        <td class="detail"><a href="tables/district_volume.html">district_volume</a></td>
-                                        <td class="detail" align="right">1</td>
-                                        <td class="detail" align="right">0</td>
-                                        <td class="detail" align="right">14</td>
-                                        <td class="detail" align="right">-1</td>
-                                        <td class="detail" align="right">Table</td>
-                                        <td class="comment detail" style="display: table-cell;"><p>Stores district waste volume and species composition data used to estimate waste volume on blocks.</p></td>
-                                    </tr>
-                                    <tr class="tbl even" valign="top">
-                                        <td class="detail"><a href="tables/lifecycle_setting.html">lifecycle_setting</a></td>
-                                        <td class="detail" align="right">0</td>
-                                        <td class="detail" align="right">0</td>
-                                        <td class="detail" align="right">7</td>
-                                        <td class="detail" align="right">-1</td>
-                                        <td class="detail" align="right">Table</td>
-                                        <td class="comment detail" style="display: table-cell;"><p>Configurable lifecycle timing values stored as key/value settings.</p></td>
-                                    </tr>
-                                    <tr class="tbl even" valign="top">
                                         <td class="detail"><a href="tables/block_requirement.html">block_requirement</a></td>
                                         <td class="detail" align="right">0</td>
                                         <td class="detail" align="right">2</td>
@@ -377,15 +404,6 @@
                                         <td class="comment detail" style="display: table-cell;"><p>Append-only per-row audit change with JSONB snapshot. No FK on entity_id (polymorphic audit).</p></td>
                                     </tr>
                                     <tr class="tbl even" valign="top">
-                                        <td class="detail"><a href="tables/status_event.html">status_event</a></td>
-                                        <td class="detail" align="right">1</td>
-                                        <td class="detail" align="right">2</td>
-                                        <td class="detail" align="right">10</td>
-                                        <td class="detail" align="right">-1</td>
-                                        <td class="detail" align="right">Table</td>
-                                        <td class="comment detail" style="display: table-cell;"><p>Append-only lifecycle events for reporting units and blocks.</p></td>
-                                    </tr>
-                                    <tr class="tbl even" valign="top">
                                         <td class="detail"><a href="tables/block_sponsor.html">block_sponsor</a></td>
                                         <td class="detail" align="right">0</td>
                                         <td class="detail" align="right">1</td>
@@ -393,6 +411,15 @@
                                         <td class="detail" align="right">-1</td>
                                         <td class="detail" align="right">Table</td>
                                         <td class="comment detail" style="display: table-cell;"><p>Sponsor endorsement details for a block.</p></td>
+                                    </tr>
+                                    <tr class="tbl even" valign="top">
+                                        <td class="detail"><a href="tables/geographic_code.html">geographic_code</a></td>
+                                        <td class="detail" align="right">1</td>
+                                        <td class="detail" align="right">0</td>
+                                        <td class="detail" align="right">7</td>
+                                        <td class="detail" align="right">-1</td>
+                                        <td class="detail" align="right">Table</td>
+                                        <td class="comment detail" style="display: table-cell;"><p>Typed geographic codes for HRS; the historical seed contains districts only, not a current authoritative extract.</p></td>
                                     </tr>
                             </table>
                         </div>
