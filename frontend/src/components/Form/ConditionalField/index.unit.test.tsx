@@ -7,7 +7,7 @@ import { evaluateAll, evaluateCondition, getIn } from './useConditionalField';
 
 import ConditionalField from './index';
 
-import type { Condition, FormInstance } from './types';
+import type { Condition, FormInstance } from '@/types/conditionalField.types';
 
 // ---------------------------------------------------------------------------
 // Helpers

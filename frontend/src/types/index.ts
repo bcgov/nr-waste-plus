@@ -18,3 +18,4 @@ export type * from './speciesComposition.types';
 export type * from './tableResource.types';
 export type * from './districtSelection.types';
 export type * from './districtvolumes.types';
+export type * from './conditionalField.types';
