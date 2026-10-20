@@ -612,10 +612,6 @@ class ReportingUnitServiceTest {
     when(legacyApiProvider.searchReportingUnit(
             org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
         .thenReturn(new PageImpl<>(List.of(existingResult), PageRequest.of(0, 1), 1));
-    var liveEntity = new ReportingUnitEntity();
-    liveEntity.setDeleted(false);
-    when(reportingUnitRepository.findById(36834L))
-        .thenReturn(Optional.of(liveEntity));
 
     // Act & Assert
     assertThatThrownBy(() -> reportingUnitService.createReportingUnit(request))
@@ -624,93 +620,8 @@ class ReportingUnitServiceTest {
             e ->
                 assertThat(((ResponseStatusException) e).getStatusCode())
                     .isEqualTo(org.springframework.http.HttpStatus.CONFLICT));
-  }
-
-  @Test
-  @DisplayName("shouldReconcileLocalReportingUnit_whenLegacyExistsButLocalIsMissing")
-  void shouldReconcileLocalReportingUnit_whenLegacyExistsButLocalIsMissing() {
-    // Arrange
-    var request =
-        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-            CLIENT_NUMBER, "DND", "AVG", null);
-
-    var existingResult =
-        new ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto(
-            "1",
-            26L,
-            "",
-            36834L,
-            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(CLIENT_NUMBER, null),
-            null,
-            null,
-            null,
-            false,
-            false,
-            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("S01", "Sample"),
-            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DND", "Nadina"),
-            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DFT", "Draft"),
-            LocalDateTime.now(),
-            false);
-
-    when(legacyApiProvider.searchReportingUnit(
-            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
-        .thenReturn(new PageImpl<>(List.of(existingResult), PageRequest.of(0, 1), 1));
-    when(reportingUnitRepository.findById(36834L))
-        .thenReturn(Optional.empty());
-
-    // Act
-    Long result = reportingUnitService.createReportingUnit(request);
-
-    // Assert
-    assertThat(result).isEqualTo(36834L);
-    verify(reportingUnitRepository).saveAndFlush(any(ReportingUnitEntity.class));
-    verify(legacyApiProvider, org.mockito.Mockito.never()).createReportingUnit(any());
-  }
-
-  @Test
-  @DisplayName("shouldReconcileLocalReportingUnit_whenLegacyExistsAndLocalIsSoftDeleted")
-  void shouldReconcileLocalReportingUnit_whenLegacyExistsAndLocalIsSoftDeleted() {
-    // Arrange
-    var request =
-        new ca.bc.gov.nrs.hrs.dto.reportingunit.CreateReportingUnitRequestDto(
-            CLIENT_NUMBER, "DND", "AVG", null);
-
-    var existingResult =
-        new ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto(
-            "1",
-            26L,
-            "",
-            36834L,
-            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto(CLIENT_NUMBER, null),
-            null,
-            null,
-            null,
-            false,
-            false,
-            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("S01", "Sample"),
-            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DND", "Nadina"),
-            new ca.bc.gov.nrs.hrs.dto.base.CodeDescriptionDto("DFT", "Draft"),
-            LocalDateTime.now(),
-            false);
-
-    when(legacyApiProvider.searchReportingUnit(
-            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
-        .thenReturn(new PageImpl<>(List.of(existingResult), PageRequest.of(0, 1), 1));
-
-    var softDeletedEntity = new ReportingUnitEntity();
-    softDeletedEntity.setId(36834L);
-    softDeletedEntity.setDeleted(true);
-    when(reportingUnitRepository.findById(36834L))
-        .thenReturn(Optional.of(softDeletedEntity));
-
-    // Act
-    Long result = reportingUnitService.createReportingUnit(request);
-
-    // Assert
-    assertThat(result).isEqualTo(36834L);
-    assertThat(softDeletedEntity.isDeleted()).isFalse();
-    verify(reportingUnitRepository).saveAndFlush(softDeletedEntity);
-    verify(legacyApiProvider, org.mockito.Mockito.never()).createReportingUnit(any());
+    verify(reportingUnitRepository, never()).saveAndFlush(any());
+    verify(legacyApiProvider, never()).createReportingUnit(any());
   }
 
   @Test

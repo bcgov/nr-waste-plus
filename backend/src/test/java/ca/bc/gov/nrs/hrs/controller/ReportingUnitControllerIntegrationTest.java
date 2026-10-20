@@ -373,18 +373,6 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @Test
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void shouldReturn409_whenReportingUnitDuplicate() throws Exception {
-    trackCreatedReportingUnit(36834L);
-    var ru = new ReportingUnitEntity();
-    ru.setId(36834L);
-    ru.setClientNumber("00012797");
-    ru.setClientLocnCode("00");
-    ru.setOrgUnitNo("DND");
-    ru.setSamplingCode("AVG");
-    ru.setDeleted(false);
-    ru.setCreatedBy(fixtureActor);
-    ru.setUpdatedBy(fixtureActor);
-    reportingUnitRepository.saveAndFlush(ru);
-
     // Legacy search: returns an existing RU (totalElements > 0)
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
@@ -403,78 +391,6 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
         .andExpect(status().isConflict());
-  }
-
-  @DisplayName("Should Reconcile Reporting Unit when Exists in Legacy Only")
-  @Test
-  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
-  void shouldReconcileReportingUnit_whenExistsInLegacyOnly() throws Exception {
-    trackCreatedReportingUnit(36834L);
-    legacyApiStub.stubFor(
-        get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(
-                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE)));
-
-    var requestJson =
-        """
-        {"clientNumber":"00012797","districtCode":"DND","samplingCode":"AVG","gradeCode":null}
-        """;
-
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/api/reporting-units")
-                .with(SecurityMockMvcRequestPostProcessors.csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson))
-        .andExpect(status().isCreated())
-        .andExpect(header().string("Location", "/reporting-units/36834"));
-
-    var saved = reportingUnitRepository.findById(36834L);
-    assertThat(saved).isPresent();
-    assertThat(saved.get().getSamplingCode()).isEqualTo("AVG");
-  }
-
-  @Test
-  @DisplayName("Should Reconcile and Un-delete Reporting Unit when Soft-deleted in Postgres")
-  @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
-  void shouldReconcileReportingUnit_whenExistsInLegacyAndSoftDeletedInPostgres() throws Exception {
-    trackCreatedReportingUnit(36834L);
-    transactionTemplate.executeWithoutResult(
-        status ->
-            jdbcTemplate.update(
-                """
-                INSERT INTO hrs.reporting_unit
-                    (reporting_unit_id, client_number, client_locn_code, org_unit_no,
-                     sampling_code, is_deleted, created_by, updated_by)
-                VALUES (36834, '00012797', '00', 'DND', 'AVG', true, ?, ?)
-                ON CONFLICT (reporting_unit_id) DO UPDATE SET is_deleted = true
-                """,
-                fixtureActor,
-                fixtureActor));
-
-    legacyApiStub.stubFor(
-        get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(
-                okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_SEARCH_RESPONSE)));
-
-    var requestJson =
-        """
-        {"clientNumber":"00012797","districtCode":"DND","samplingCode":"AVG","gradeCode":null}
-        """;
-
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/api/reporting-units")
-                .with(SecurityMockMvcRequestPostProcessors.csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson))
-        .andExpect(status().isCreated())
-        .andExpect(header().string("Location", "/reporting-units/36834"));
-
-    var saved = reportingUnitRepository.findById(36834L);
-    assertThat(saved).isPresent();
-    assertThat(saved.get().isDeleted()).isFalse();
-    assertThat(saved.get().getSamplingCode()).isEqualTo("AVG");
   }
 
   @Test

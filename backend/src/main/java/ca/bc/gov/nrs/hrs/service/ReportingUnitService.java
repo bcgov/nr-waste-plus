@@ -215,22 +215,6 @@ public class ReportingUnitService {
     var existing = legacyApiProvider.searchReportingUnit(searchFilters, PageRequest.of(0, 1));
 
     if (existing != null && existing.getTotalElements() > 0) {
-      if (existing.hasContent()) {
-        Long existingRuId = existing.getContent().getFirst().ruNumber();
-        if (existingRuId != null) {
-          var localEntity = reportingUnitRepository.findById(existingRuId);
-          if (localEntity.isEmpty() || localEntity.get().isDeleted()) {
-            log.warn(
-                "Reporting unit {} exists in legacy for client {} and district {} but is {} in"
-                    + " PostgreSQL. Reconciling local record.",
-                existingRuId,
-                request.clientNumber(),
-                request.districtCode(),
-                localEntity.isEmpty() ? "missing" : "soft-deleted");
-            return persistLocalReportingUnit(existingRuId, request);
-          }
-        }
-      }
       throw new ResponseStatusException(
           HttpStatus.CONFLICT,
           String.format(
