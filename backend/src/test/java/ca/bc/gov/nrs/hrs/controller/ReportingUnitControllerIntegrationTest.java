@@ -112,17 +112,15 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     fixtureActor = "test-block-list-" + UUID.randomUUID();
     transactionTemplate.executeWithoutResult(
         transaction -> {
-          populatedReportingUnitId = insertReportingUnit("BLOCKED");
-          emptyReportingUnitId = insertReportingUnit("EMPTY");
-          populatedBlockId =
-              jdbcTemplate.queryForObject(
+          populatedReportingUnitId = insertReportingUnit(987000001L, "BLOCKED");
+          emptyReportingUnitId = insertReportingUnit(987000002L, "EMPTY");
+          populatedBlockId = 987000003L;
+          jdbcTemplate.update(
                   """
                   INSERT INTO hrs.block
-                      (reporting_unit_id, block_type, created_by, updated_by)
-                  VALUES (?, 'DISTRICT_AVERAGE', ?, ?)
-                  RETURNING block_id
+                      (block_id, reporting_unit_id, block_type, created_by, updated_by)
+                  VALUES (987000003, ?, 'DISTRICT_AVERAGE', ?, ?)
                   """,
-                  Long.class,
                   populatedReportingUnitId,
                   fixtureActor,
                   fixtureActor);
@@ -185,18 +183,18 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         });
   }
 
-  private Long insertReportingUnit(String locationCode) {
-    return jdbcTemplate.queryForObject(
+  private Long insertReportingUnit(Long reportingUnitId, String locationCode) {
+    jdbcTemplate.update(
         """
         INSERT INTO hrs.reporting_unit
-            (client_number, client_locn_code, org_unit_no, created_by, updated_by)
-        VALUES ('00012797', ?, 'DND', ?, ?)
-        RETURNING reporting_unit_id
+            (reporting_unit_id, client_number, client_locn_code, org_unit_no, created_by, updated_by)
+        VALUES (?, '00012797', ?, 'DND', ?, ?)
         """,
-        Long.class,
+        reportingUnitId,
         locationCode,
         fixtureActor,
         fixtureActor);
+    return reportingUnitId;
   }
 
   @DisplayName("Should Return 201 when Create Succeeds")
@@ -428,11 +426,9 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
             .getResponse()
             .getContentAsString();
 
-    // Mask non-deterministic fields: the block id comes from a sequence and
-    // lastUpdated from now() at query time. Listed in the golden-file report.
+    // lastUpdated is now()-derived at query time and lastUpdated/created_at are
+    // auditable columns — see the contract report's masked-fields note.
     var tree = jsonMapper.readTree(body);
-    ((tools.jackson.databind.node.ObjectNode) tree.get("content").get(0))
-        .putNull("id");
     ((tools.jackson.databind.node.ObjectNode) tree.get("content").get(0))
         .putNull("lastUpdated");
 
@@ -456,12 +452,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
             .getResponse()
             .getContentAsString();
 
-    // Mask non-deterministic fields: id/reportingUnitId come from sequences.
-    var tree = jsonMapper.readTree(body);
-    ((tools.jackson.databind.node.ObjectNode) tree).putNull("id");
-    ((tools.jackson.databind.node.ObjectNode) tree).putNull("reportingUnitId");
-
-    GoldenFiles.assertMatches("reporting-units/block-details.json", jsonMapper.writeValueAsString(tree));
+    GoldenFiles.assertMatches("reporting-units/block-details.json", body);
   }
 
   @Test

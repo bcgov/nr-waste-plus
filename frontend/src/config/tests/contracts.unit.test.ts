@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { pageableResponseSchema } from '@/types/pagination.types';
+import { blockDetailsSchema } from '@/types/reportingUnit.types';
 
 const contractsDir = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -18,6 +19,7 @@ const contractsDir = path.resolve(
 // entry (or the reverse) fails the completeness test below.
 const registry: ReadonlyArray<readonly [string, z.ZodType]> = [
   ['pagination/paged-model.json', pageableResponseSchema(z.unknown())],
+  ['reporting-units/block-details.json', blockDetailsSchema],
 ];
 
 describe('shared/contracts golden files', () => {

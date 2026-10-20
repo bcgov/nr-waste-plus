@@ -1,6 +1,6 @@
 {
-  "id" : null,
-  "reportingUnitId" : null,
+  "id" : 987000003,
+  "reportingUnitId" : 987000001,
   "blockType" : "DISTRICT_AVERAGE",
   "draft" : true,
   "plcDate" : null,
