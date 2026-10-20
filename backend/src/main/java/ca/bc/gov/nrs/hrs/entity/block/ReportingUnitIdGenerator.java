@@ -8,7 +8,7 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
  * Identifier generator for {@link ReportingUnitEntity} that uses the assigned identifier if
  * present, or falls back to the database sequence if no identifier was provided.
  *
- * <p>The database sequence {@code hrs.reporting_unit_id_seq} is partitioned
+ * <p>The database sequence {@code hrs.reporting_unit_id_seq} is offset
  * (starts at 1,000,000,000) to guarantee that locally generated identifiers never collide with
  * legacy Oracle-assigned identifiers (which reside below 1,000,000,000).
  */
