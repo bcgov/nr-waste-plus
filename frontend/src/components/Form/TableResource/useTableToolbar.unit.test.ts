@@ -174,6 +174,99 @@ describe('useTableToolbar', () => {
     expect(result.current.tableHeaders[1]).toEqual(initialName);
   });
 
+  it('loads saved preferences from userPreference.tableHeaders', () => {
+    mockUsePreference.mockReturnValue({
+      userPreference: { tableHeaders: { 'test-table': ['col-name'] } },
+      updatePreferences: vi.fn(),
+      isLoaded: true,
+    });
+
+    const { result } = renderHook(() => useTableToolbar('test-table', headers));
+    expect(result.current.tableHeaders.find((h) => h.id === 'col-name')?.selected).toBe(true);
+    expect(result.current.tableHeaders.find((h) => h.id === 'col-id')?.selected).toBe(false);
+  });
+
+  it('uses default selected headers when saved list is empty', () => {
+    mockUsePreference.mockReturnValue({
+      userPreference: { tableHeaders: { 'test-table': [] } },
+      updatePreferences: vi.fn(),
+      isLoaded: true,
+    });
+
+    const { result } = renderHook(() => useTableToolbar('test-table', headers));
+    expect(result.current.tableHeaders[0].selected).toBe(true);
+    expect(result.current.tableHeaders[1].selected).toBe(true);
+    expect(result.current.tableHeaders[2].selected).toBe(false);
+  });
+
+  it('adds header when toggling off-selected header', () => {
+    const updatePreferences = vi.fn();
+    mockUsePreference.mockReturnValue({
+      userPreference: { tableHeaders: {} },
+      updatePreferences,
+      isLoaded: true,
+    });
+
+    const { result } = renderHook(() => useTableToolbar('test-table', headers));
+
+    act(() => {
+      result.current.onToggleHeader('col-email');
+    });
+
+    expect(updatePreferences).toHaveBeenCalled();
+  });
+
+  it('removes header when toggling on-selected header', () => {
+    const updatePreferences = vi.fn();
+    mockUsePreference.mockReturnValue({
+      userPreference: { tableHeaders: {} },
+      updatePreferences,
+      isLoaded: true,
+    });
+
+    const { result } = renderHook(() => useTableToolbar('test-table', headers));
+
+    act(() => {
+      result.current.onToggleHeader('col-id');
+    });
+
+    expect(updatePreferences).toHaveBeenCalled();
+  });
+
+  it('does nothing when toggling unknown header', () => {
+    const updatePreferences = vi.fn();
+    mockUsePreference.mockReturnValue({
+      userPreference: { tableHeaders: {} },
+      updatePreferences,
+      isLoaded: true,
+    });
+
+    const { result } = renderHook(() => useTableToolbar('test-table', headers));
+
+    act(() => {
+      result.current.onToggleHeader('unknown');
+    });
+
+    expect(updatePreferences).not.toHaveBeenCalled();
+  });
+
+  it('does not update preferences when nextIds becomes empty', () => {
+    const updatePreferences = vi.fn();
+    mockUsePreference.mockReturnValue({
+      userPreference: { tableHeaders: { 'test-table': ['col-id'] } },
+      updatePreferences,
+      isLoaded: true,
+    });
+
+    const { result } = renderHook(() => useTableToolbar('test-table', headers));
+
+    act(() => {
+      result.current.onToggleHeader('col-id');
+    });
+
+    expect(updatePreferences).not.toHaveBeenCalled();
+  });
+
   /**
    * NOTE: Complex preference loading and preference merging tests are covered by:
    * - TableResource integration tests (13 tests validate full column management)
