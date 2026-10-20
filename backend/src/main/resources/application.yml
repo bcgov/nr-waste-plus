@@ -176,6 +176,7 @@ ca:
           address: ${LEGACY_URL:http://127.0.0.1:9090}
         object-storage:
           endpoint: ${OBJECT_STORAGE_ENDPOINT:}
+          presigner-endpoint: ${OBJECT_STORAGE_PRESIGNER_ENDPOINT:${OBJECT_STORAGE_ENDPOINT:}}
           region: ${OBJECT_STORAGE_REGION:ca-central-1}
           access-key: ${OBJECT_STORAGE_ACCESS_KEY:${MINIO_ROOT_USER:}}
           secret-key: ${OBJECT_STORAGE_SECRET_KEY:${MINIO_ROOT_PASSWORD:}}

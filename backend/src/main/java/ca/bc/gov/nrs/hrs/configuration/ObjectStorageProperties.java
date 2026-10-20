@@ -27,6 +27,23 @@ public class ObjectStorageProperties {
   /** Optional custom endpoint (for example {@code http://localhost:9000} for MinIO). */
   private String endpoint;
 
+  /**
+   * Optional client-facing endpoint for presigned URLs (for example a public HTTPS MinIO route).
+   * Defaults to {@code endpoint} if not specified.
+   */
+  private String presignerEndpoint;
+
+  /**
+   * Resolves the endpoint to use for presigning URLs.
+   *
+   * @return the presigner endpoint if configured, otherwise the primary endpoint
+   */
+  public String getPresignerEndpoint() {
+    return org.apache.commons.lang3.StringUtils.isNotBlank(presignerEndpoint)
+        ? presignerEndpoint
+        : endpoint;
+  }
+
   /** AWS region used for signing; MinIO deployments ignore the exact value. */
   private String region;
 

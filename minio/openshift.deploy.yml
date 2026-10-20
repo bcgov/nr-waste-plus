@@ -230,6 +230,23 @@ objects:
       tls:
         termination: edge
         insecureEdgeTerminationPolicy: Redirect
+  - kind: Route
+    apiVersion: route.openshift.io/v1
+    metadata:
+      name: ${NAME}-${ZONE}-${COMPONENT}-api
+      labels:
+        app: ${NAME}-${ZONE}
+    spec:
+      host: ${NAME}-${ZONE}-${COMPONENT}-api.${DOMAIN}
+      port:
+        targetPort: s3-api
+      to:
+        kind: Service
+        name: ${NAME}-${ZONE}-${COMPONENT}
+        weight: 100
+      tls:
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
   - kind: NetworkPolicy
     apiVersion: networking.k8s.io/v1
     metadata:

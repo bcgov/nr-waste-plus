@@ -81,9 +81,10 @@ credentials. The backend container uses the Compose-network endpoint
 
 In pre-production OpenShift environments (`cffaf3-tools` and `cffaf3-dev`), an S3-compatible MinIO workload runs alongside the Oracle database in the `tools` namespace:
 
-- **Workload template**: [`minio/openshift.deploy.yml`](../minio/openshift.deploy.yml) provisions the MinIO server, persistent storage (PVC `nr-waste-plus-tools-minio-data`), an automated bucket seeding sidecar container, ClusterIP Service, NetworkPolicies, and a console Route.
+- **Workload template**: [`minio/openshift.deploy.yml`](../minio/openshift.deploy.yml) provisions the MinIO server, persistent storage (PVC `nr-waste-plus-tools-minio-data`), an automated bucket seeding sidecar container, ClusterIP Service, NetworkPolicies, an S3 API Route (`https://nr-waste-plus-tools-minio-api.apps.silver.devops.gov.bc.ca`), and a console Route (`https://nr-waste-plus-tools-minio.apps.silver.devops.gov.bc.ca`).
 - **Workflow**: Automated deployment is managed by [`.tools-deploy.yml`](../.github/workflows/.tools-deploy.yml).
-- **In-cluster endpoint**: Backend deployments in `dev` / PR environments connect to `http://nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000`.
+- **In-cluster endpoint**: Backend deployments in `dev` / PR environments use `http://nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000` for internal S3 client communication.
+- **Client presigner endpoint**: The backend issues presigned upload/download URLs using the public HTTPS S3 API Route (`OBJECT_STORAGE_PRESIGNER_ENDPOINT`), allowing browser clients outside the cluster to securely upload attachments without Mixed Content or DNS resolution issues.
 - **Bucket seeding**: The default `nr-waste` bucket is seeded automatically on startup by the `minio-init` container and verified during deployment init.
 - **Secrets & credentials**: Credentials (`MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `OBJECT_STORAGE_*`) are managed strictly through OpenShift secrets and CI secrets; no default or plaintext credentials are committed to version control.
 - **Production separation**: Deployed test and production environments use AWS S3; MinIO is scoped strictly to local Docker Compose, CI integration tests, and pre-production dev/tools environments.

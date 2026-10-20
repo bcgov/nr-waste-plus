@@ -163,6 +163,12 @@ objects:
                       name: ${NAME}-${ZONE}
                       key: object-storage-endpoint
                       optional: true
+                - name: OBJECT_STORAGE_PRESIGNER_ENDPOINT
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: object-storage-presigner-endpoint
+                      optional: true
                 - name: OBJECT_STORAGE_ACCESS_KEY
                   valueFrom:
                     secretKeyRef:

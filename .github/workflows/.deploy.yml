@@ -51,6 +51,11 @@ on:
         required: false
         type: string
         default: ''
+      object-storage-presigner-endpoint:
+        description: Object storage / MinIO client-facing presigner endpoint
+        required: false
+        type: string
+        default: ''
       object-storage-access-key:
         description: Object storage access key
         required: false
@@ -124,6 +129,7 @@ jobs:
             -p VITE_BCEID_HELP=${{ secrets.VITE_BCEID_HELP }}
             -p VITE_IDIR_HELP=${{ secrets.VITE_IDIR_HELP }}
             -p OBJECT_STORAGE_ENDPOINT=${{ inputs.object-storage-endpoint || secrets.OBJECT_STORAGE_ENDPOINT }}
+            -p OBJECT_STORAGE_PRESIGNER_ENDPOINT=${{ inputs.object-storage-presigner-endpoint || secrets.OBJECT_STORAGE_PRESIGNER_ENDPOINT }}
             -p OBJECT_STORAGE_ACCESS_KEY=${{ inputs.object-storage-access-key || secrets.OBJECT_STORAGE_ACCESS_KEY }}
             -p OBJECT_STORAGE_SECRET_KEY=${{ inputs.object-storage-secret-key || secrets.OBJECT_STORAGE_SECRET_KEY }}
             -p OBJECT_STORAGE_BUCKET=${{ inputs.object-storage-bucket || secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}

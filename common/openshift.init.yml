@@ -77,6 +77,9 @@ parameters:
   - name: OBJECT_STORAGE_ENDPOINT
     description: S3 or MinIO endpoint URL
     value: ""
+  - name: OBJECT_STORAGE_PRESIGNER_ENDPOINT
+    description: S3 or MinIO presigner endpoint URL for client access
+    value: ""
   - name: OBJECT_STORAGE_ACCESS_KEY
     description: S3 or MinIO access key
     value: ""
@@ -117,6 +120,7 @@ objects:
       client-base-key: ${CLIENT_BASE_KEY}
       fam-domain: ${VITE_FAM_DOMAIN}
       object-storage-endpoint: ${OBJECT_STORAGE_ENDPOINT}
+      object-storage-presigner-endpoint: ${OBJECT_STORAGE_PRESIGNER_ENDPOINT}
       object-storage-access-key: ${OBJECT_STORAGE_ACCESS_KEY}
       object-storage-secret-key: ${OBJECT_STORAGE_SECRET_KEY}
       object-storage-bucket: ${OBJECT_STORAGE_BUCKET}
