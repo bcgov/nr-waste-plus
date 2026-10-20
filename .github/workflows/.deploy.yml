@@ -46,6 +46,21 @@ on:
         default: ${{ github.event.repository.name }}-$((${{ github.event.number }} % 50))-frontend.apps.silver.devops.gov.bc.ca
         required: false
         type: string
+      object-storage-endpoint:
+        description: Object storage / MinIO endpoint
+        required: false
+        type: string
+        default: ''
+      object-storage-bucket:
+        description: Object storage bucket
+        required: false
+        type: string
+        default: 'nr-waste'
+      object-storage-force-path-style:
+        description: Force path style for S3 requests
+        required: false
+        type: string
+        default: 'false'
 
 permissions: {}
 
@@ -98,6 +113,12 @@ jobs:
             -p VITE_FAM_DOMAIN=${{ secrets.FAM_DOMAIN }}
             -p VITE_BCEID_HELP=${{ secrets.VITE_BCEID_HELP }}
             -p VITE_IDIR_HELP=${{ secrets.VITE_IDIR_HELP }}
+            -p OBJECT_STORAGE_ENDPOINT=${{ inputs.object-storage-endpoint || secrets.OBJECT_STORAGE_ENDPOINT }}
+            -p OBJECT_STORAGE_ACCESS_KEY=${{ secrets.OBJECT_STORAGE_ACCESS_KEY || secrets.MINIO_ROOT_USER }}
+            -p OBJECT_STORAGE_SECRET_KEY=${{ secrets.OBJECT_STORAGE_SECRET_KEY || secrets.MINIO_ROOT_PASSWORD }}
+            -p OBJECT_STORAGE_BUCKET=${{ inputs.object-storage-bucket || secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}
+            -p OBJECT_STORAGE_REGION=${{ secrets.OBJECT_STORAGE_REGION || 'ca-central-1' }}
+            -p OBJECT_STORAGE_FORCE_PATH_STYLE=${{ inputs.object-storage-force-path-style || secrets.OBJECT_STORAGE_FORCE_PATH_STYLE || 'false' }}
 
   deploy:
     name: Deploy

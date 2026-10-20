@@ -53,6 +53,8 @@ jobs:
       oracledb-port: 1521
       oracledb-servicename: PR_${{ github.event.number }}
       oracledb-username: THE
+      object-storage-endpoint: http://nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000
+      object-storage-force-path-style: 'true'
       configmap-backend: |-
         info:
           app:
