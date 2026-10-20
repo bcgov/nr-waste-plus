@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { Role } from '@/context/auth/types';
 import * as useAuthModule from '@/context/auth/useAuth';
+import { Role } from '@/types/auth.types';
 
 import ReportingUnitDetailsTombstone from './index';
 

@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import { Role, type FamLoginUser } from '@/context/auth/types';
 import APIs from '@/services/APIs';
+import { Role, type FamLoginUser } from '@/types/auth.types';
 
 import HeaderPanelProfile from './index';
 

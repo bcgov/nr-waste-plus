@@ -5,8 +5,8 @@ import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 import TooltipRedirectLinkTag from '@/components/core/Tags/TooltipRedirectLinkTag';
 import TooltipRoleBasedRedirectLinkTag from '@/components/core/Tags/TooltipRoleBasedRedirectLinkTag';
 import YesNoTag from '@/components/core/Tags/YesNoTag';
-import { Role } from '@/context/auth/types';
 import { env, featureFlags } from '@/env';
+import { Role } from '@/types/auth.types';
 
 import type { CodeDescriptionDto, ReportingUnitSearchResultDto } from '@/services/types';
 import type { TableHeaderType } from '@/types/tableResource.types';

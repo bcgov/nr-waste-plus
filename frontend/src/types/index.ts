@@ -23,4 +23,5 @@ export type * from './formulaInput.types';
 export type * from './formulaConfiguration.types';
 export type * from './reportingUnit.types';
 export type * from './spreadsheet.types';
+export type * from './auth.types';
 export type * from './formulaConfiguration.types';

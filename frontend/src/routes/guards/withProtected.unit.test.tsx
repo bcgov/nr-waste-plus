@@ -1,11 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { Role } from '@/types/auth.types';
+
 import { withProtected } from './withProtected';
 
-import type { FamLoginUser } from '@/context/auth/types';
-
-import { Role } from '@/context/auth/types';
+import type { FamLoginUser } from '@/types/auth.types';
 
 // ── Mutable state controlled by each test ────────────────────────────────────
 let mockUser: FamLoginUser | undefined;

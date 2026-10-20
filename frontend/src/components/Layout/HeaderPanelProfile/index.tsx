@@ -5,8 +5,8 @@ import { type FC } from 'react';
 import ClientListing from '@/components/core/DistrictSelection/ClientListing';
 import DistrictListing from '@/components/core/DistrictSelection/DistrictListing';
 import AvatarImage from '@/components/Layout/AvatarImage';
-import { Role } from '@/context/auth/types';
 import { useAuth } from '@/context/auth/useAuth';
+import { Role } from '@/types/auth.types';
 
 import './index.scss';
 

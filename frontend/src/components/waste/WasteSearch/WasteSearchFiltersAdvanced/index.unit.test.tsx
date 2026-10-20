@@ -8,7 +8,7 @@ import APIs from '@/services/APIs';
 
 import WasteSearchFiltersAdvanced from './index';
 
-import type { FamLoginUser } from '@/context/auth/types';
+import type { FamLoginUser } from '@/types/auth.types';
 import type { ReportingUnitSearchParametersViewDto } from '@/types/search.types';
 
 const mockUser = {

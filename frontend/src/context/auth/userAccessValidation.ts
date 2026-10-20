@@ -1,4 +1,4 @@
-import { Role, RoleType, roleTypeMap, type FamLoginUser, type FamRole } from './types';
+import { Role, RoleType, roleTypeMap, type FamLoginUser, type FamRole } from '@/types/auth.types';
 
 /**
  * Route for authenticated users that have no assigned business roles.
