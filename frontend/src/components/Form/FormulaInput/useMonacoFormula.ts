@@ -24,8 +24,8 @@ import { useEffect, useRef, useCallback } from 'react';
 import { isMathBuiltin } from './math.config';
 import { tokenizeFormula } from './tokenizer';
 
-import type { FormulaError } from './types';
 import type { CarbonTheme } from '@/context/preference/types';
+import type { FormulaError } from '@/types/formulaInput.types';
 import type { Monaco } from '@monaco-editor/react';
 import type { editor as MonacoEditorNS, IDisposable, Position } from 'monaco-editor';
 
