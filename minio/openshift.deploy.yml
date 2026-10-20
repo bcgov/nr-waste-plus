@@ -162,7 +162,10 @@ objects:
                     sleep 2
                   done
                   echo "Ensuring bucket '${OBJECT_STORAGE_BUCKET}' exists..."
-                  mc mb --ignore-existing local/${OBJECT_STORAGE_BUCKET}
+                  until mc mb --ignore-existing local/"$OBJECT_STORAGE_BUCKET"; do
+                    echo "Bucket creation failed; retrying in 2 seconds..."
+                    sleep 2
+                  done
                   echo "Bucket '${OBJECT_STORAGE_BUCKET}' is ready."
                   while true; do
                     sleep 86400

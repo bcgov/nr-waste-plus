@@ -181,8 +181,13 @@ jobs:
               POD_NAME=$(oc get pods -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-minio -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
               if [ -n "$POD_NAME" ]; then
                 echo "MinIO pod found: $POD_NAME"
-                oc exec $POD_NAME -c minio-init -- mc mb --ignore-existing local/"$OBJECT_STORAGE_BUCKET" || true
-                break
+                if oc exec $POD_NAME -c minio-init -- mc mb --ignore-existing local/"$OBJECT_STORAGE_BUCKET"; then
+                  echo "Bucket $OBJECT_STORAGE_BUCKET confirmed ready."
+                  break
+                else
+                  echo "Bucket creation failed, retrying in 10 seconds... ($i/5)"
+                  sleep 10
+                fi
               else
                 echo "MinIO pod not found, retrying in 10 seconds... ($i/5)"
                 sleep 10
