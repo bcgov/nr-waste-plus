@@ -1,7 +1,7 @@
 import DateTag from '@/components/core/Tags/DateTag';
 import RedirectLinkTag from '@/components/core/Tags/RedirectLinkTag';
 
-import type { MyForestClientDto } from '@/services/types';
+import type { MyForestClientDto } from '@/types/forestclient.types';
 import type { TableHeaderType } from '@/types/tableResource.types';
 
 /**

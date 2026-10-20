@@ -44,20 +44,19 @@ import {
 import type { ReportingUnitBlocksRow } from '@/components/waste/ReportingUnits/ReportingUnitBlocksList/constants';
 import type { ProblemDetails } from '@/config/api/types';
 import type {
-  BlockCreateRequestDto,
-  BlockCreateResponseDto,
-  BlockDetailsDto,
-  ForestClientDto,
-  MyForestClientDto,
-  ReportingUnitCreateDto,
-  ReportingUnitDto,
-  ReportingUnitSearchResultDto,
-} from '@/services/types';
-import type {
   DistrictVolumeCreate,
   DistrictVolumeDetail,
   DistrictVolumeListItem,
 } from '@/types/districtvolumes.types';
+import type { ForestClientDto, MyForestClientDto } from '@/types/forestclient.types';
+import type {
+  BlockCreateRequestDto,
+  BlockCreateResponseDto,
+  BlockDetailsDto,
+  ReportingUnitCreateDto,
+  ReportingUnitDto,
+} from '@/types/reportingUnit.types';
+import type { ReportingUnitSearchResultDto } from '@/types/search.types';
 import type { CodeDescriptionDto, ReportingUnitSearchExpandedDto } from '@/types/search.types';
 import type {
   SpeciesCompositionCreate,

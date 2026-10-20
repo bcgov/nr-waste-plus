@@ -4,7 +4,7 @@ import { type FC } from 'react';
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
 
-import type { ReportingUnitDto } from '@/services/types';
+import type { ReportingUnitDto } from '@/types/reportingUnit.types';
 
 import './index.scss';
 

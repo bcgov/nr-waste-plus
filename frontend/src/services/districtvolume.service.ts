@@ -8,7 +8,7 @@ import type {
   DistrictVolumeDetail,
   DistrictVolumeListItem,
 } from '@/types/districtvolumes.types';
-import type { PageableRequest } from '@/services/types';
+import type { PageableRequest } from '@/types/pagination.types';
 import type { PageableResponse } from '@/types/tableResource.types';
 
 /**

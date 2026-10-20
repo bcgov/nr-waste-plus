@@ -3,7 +3,6 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { FormulaConfigurationService } from './formulaConfiguration.service';
 
 import type { APIConfig } from '@/config/api/types';
-import type { PageableRequest } from '@/services/types';
 import type {
   FormulaSetRequest,
   FormulaSetResponse,
@@ -13,6 +12,7 @@ import type {
   FormulaVariablesResponse,
   FormulaVariablesParams,
 } from '@/types/formulaConfiguration.types';
+import type { PageableRequest } from '@/types/pagination.types';
 import type { PageableResponse } from '@/types/tableResource.types';
 
 describe('FormulaConfigurationService', () => {

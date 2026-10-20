@@ -2,8 +2,8 @@ import ColorTag, { type CarbonColors } from '@/components/core/Tags/ColorTag';
 import DateTag from '@/components/core/Tags/DateTag';
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 
-import type { CodeDescriptionDto } from '@/services/types';
 import type { NestedKeyOf } from '@/types/pagination.types';
+import type { CodeDescriptionDto } from '@/types/search.types';
 import type { PageableResponse } from '@/types/tableResource.types';
 import type { TableHeaderType } from '@/types/tableResource.types';
 

@@ -9,7 +9,7 @@ import APIs from '@/services/APIs';
 
 import MyClientListing from './index';
 
-import type { MyForestClientDto } from '@/services/types';
+import type { MyForestClientDto } from '@/types/forestclient.types';
 import type { PageableResponse } from '@/types/tableResource.types';
 
 vi.mock('@/services/APIs');

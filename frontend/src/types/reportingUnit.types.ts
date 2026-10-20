@@ -2,8 +2,6 @@ import { z } from 'zod';
 
 import { codeDescriptionSchema } from '@/types/search.types';
 
-export { codeDescriptionSchema };
-
 /**
  * Reporting-unit details response as serialized by
  * `ReportingUnitDetailsDto` (`id` is a `Long`; every field except `id` is

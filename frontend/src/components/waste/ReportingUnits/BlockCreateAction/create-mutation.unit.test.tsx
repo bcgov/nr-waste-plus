@@ -9,7 +9,7 @@ import { Role } from '@/types/auth.types';
 
 import BlockCreateAction from './index';
 
-import type { BlockCreateResponseDto } from '@/services/types';
+import type { BlockCreateResponseDto } from '@/types/reportingUnit.types';
 
 /**
  * End-to-end mutation-path tests for {@link BlockCreateAction} (TC-C05/C06/C07).

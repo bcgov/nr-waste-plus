@@ -9,7 +9,7 @@ import { Role } from '@/types/auth.types';
 
 import { headers } from './constants';
 
-import type { CodeDescriptionDto } from '@/services/types';
+import type { CodeDescriptionDto } from '@/types/search.types';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 

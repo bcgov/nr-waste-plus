@@ -9,7 +9,6 @@ import {
 } from '@/types/formulaConfiguration.types';
 import { pageableResponseSchema } from '@/types/pagination.types';
 
-import type { SortDirectionType } from '@/services/types';
 import type {
   FormulaSetResponse,
   FormulaSetListItem,
@@ -18,6 +17,7 @@ import type {
   CurrentFormulaSetParams,
   FormulaVariablesParams,
 } from '@/types/formulaConfiguration.types';
+import type { SortDirectionType } from '@/types/pagination.types';
 
 const formulaConfiguration = API.formulaConfiguration;
 

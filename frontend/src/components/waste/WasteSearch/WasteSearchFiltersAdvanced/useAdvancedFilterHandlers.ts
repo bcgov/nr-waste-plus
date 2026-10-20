@@ -2,7 +2,10 @@ import { DateTime } from 'luxon';
 
 import { API_DATE_FORMAT } from './utils';
 
-import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
+import type {
+  CodeDescriptionDto,
+  ReportingUnitSearchParametersViewDto,
+} from '@/types/search.types';
 
 type FilterKey = keyof ReportingUnitSearchParametersViewDto;
 type OnChangeByKey = <K extends FilterKey>(

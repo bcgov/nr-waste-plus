@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import ReportingUnitBlocksList from './index';
 
 import type { ReportingUnitBlocksRow } from './constants';
-import type { CodeDescriptionDto } from '@/services/types';
+import type { CodeDescriptionDto } from '@/types/search.types';
 import type { TableRowAction } from '@/types/tableResource.types';
 
 const mockNavigate = vi.hoisted(() => vi.fn());

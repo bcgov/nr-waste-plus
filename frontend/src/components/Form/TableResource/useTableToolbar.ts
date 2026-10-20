@@ -4,7 +4,7 @@ import { usePreference } from '@/context/preference/usePreference';
 
 import { getHeaderId } from './utils';
 
-import type { NestedKeyOf } from '@/services/types';
+import type { NestedKeyOf } from '@/types/pagination.types';
 import type { TableHeaderType } from '@/types/tableResource.types';
 
 /**

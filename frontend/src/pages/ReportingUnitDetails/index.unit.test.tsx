@@ -9,7 +9,7 @@ import { Role } from '@/types/auth.types';
 
 import ReportingUnitDetailsPage from './index';
 
-import type { ReportingUnitDto } from '@/services/types';
+import type { ReportingUnitDto } from '@/types/reportingUnit.types';
 
 // ── Mutable state ─────────────────────────────────────────────────────────────
 

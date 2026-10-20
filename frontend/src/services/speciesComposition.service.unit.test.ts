@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { SpeciesCompositionService } from './speciesComposition.service';
 
-import type { PageableRequest } from '@/services/types';
+import type { PageableRequest } from '@/types/pagination.types';
 import type {
   SpeciesCompositionDetail,
   SpeciesCompositionListItem,

@@ -9,7 +9,7 @@ import useNotificationEvents from '@/hooks/useNotificationEvents';
 
 import { headers } from './constants';
 
-import type { MyForestClientDto } from '@/services/types';
+import type { MyForestClientDto } from '@/types/forestclient.types';
 import type { PageableResponse } from '@/types/tableResource.types';
 
 import './index.scss';

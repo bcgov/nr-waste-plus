@@ -9,7 +9,7 @@ import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 
 import ReportingUnitBlockDetailsPage from './index';
 
-import type { BlockDetailsDto, ReportingUnitDto } from '@/services/types';
+import type { BlockDetailsDto, ReportingUnitDto } from '@/types/reportingUnit.types';
 
 // ── Mutable state used by the module mocks ─────────────────────────────────────
 

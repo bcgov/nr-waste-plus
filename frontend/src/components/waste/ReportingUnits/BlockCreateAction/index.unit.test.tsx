@@ -10,7 +10,7 @@ import { Role } from '@/types/auth.types';
 
 import BlockCreateAction from './index';
 
-import type { BlockCreateRequestDto, BlockCreateResponseDto } from '@/services/types';
+import type { BlockCreateRequestDto, BlockCreateResponseDto } from '@/types/reportingUnit.types';
 import type { UseMutationResult } from '@tanstack/react-query';
 
 // ── Mutable state shared with the module mocks ─────────────────────────────────

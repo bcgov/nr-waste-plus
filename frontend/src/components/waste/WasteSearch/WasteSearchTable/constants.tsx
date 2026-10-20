@@ -8,7 +8,7 @@ import YesNoTag from '@/components/core/Tags/YesNoTag';
 import { env, featureFlags } from '@/env';
 import { Role } from '@/types/auth.types';
 
-import type { CodeDescriptionDto, ReportingUnitSearchResultDto } from '@/services/types';
+import type { CodeDescriptionDto, ReportingUnitSearchResultDto } from '@/types/search.types';
 import type { TableHeaderType } from '@/types/tableResource.types';
 
 /**

@@ -8,7 +8,8 @@ import {
   removeEmpty,
 } from './utils';
 
-import type { ForestClientAutocompleteResultDto, SortDirectionType } from './types';
+import type { ForestClientAutocompleteResultDto } from '@/types/forestclient.types';
+import type { SortDirectionType } from '@/types/pagination.types';
 
 type TestObject = {
   user: {

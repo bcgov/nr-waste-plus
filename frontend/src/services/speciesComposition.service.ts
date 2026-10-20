@@ -3,12 +3,12 @@ import { HttpClient, type APIConfig } from '@/config/api/types';
 
 import { removeEmpty } from './utils';
 
+import type { PageableRequest } from '@/types/pagination.types';
 import type {
   SpeciesCompositionCreate,
   SpeciesCompositionDetail,
   SpeciesCompositionListItem,
-  PageableRequest,
-} from '@/services/types';
+} from '@/types/speciesComposition.types';
 import type { PageableResponse } from '@/types/tableResource.types';
 
 /**

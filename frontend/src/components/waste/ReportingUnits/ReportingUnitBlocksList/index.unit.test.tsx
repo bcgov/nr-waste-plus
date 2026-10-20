@@ -7,7 +7,7 @@ import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
 
 import ReportingUnitBlocksList, { type ReportingUnitBlocksRow } from './index';
 
-import type { CodeDescriptionDto } from '@/services/types';
+import type { CodeDescriptionDto } from '@/types/search.types';
 import type { PageableResponse } from '@/types/tableResource.types';
 import type { ReactElement } from 'react';
 

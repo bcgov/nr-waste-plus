@@ -1,11 +1,11 @@
 import { HttpClient, type APIConfig } from '@/config/api/types';
 
+import type { CancelablePromise } from '@/config/api/CancelablePromise';
 import type {
   ForestClientAutocompleteResultDto,
-  MyForestClientDto,
   ForestClientDto,
-} from './types';
-import type { CancelablePromise } from '@/config/api/CancelablePromise';
+  MyForestClientDto,
+} from '@/types/forestclient.types';
 import type { PageableResponse } from '@/types/tableResource.types';
 
 /**

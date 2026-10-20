@@ -14,8 +14,9 @@ import { useAuth } from '@/context/auth/useAuth';
 
 import ReportingUnitCreate from './index';
 
-import type { CodeDescriptionDto, ReportingUnitCreateDto } from '@/services/types';
 import type { FamLoginUser } from '@/types/auth.types';
+import type { ReportingUnitCreateDto } from '@/types/reportingUnit.types';
+import type { CodeDescriptionDto } from '@/types/search.types';
 import type { ChangeEvent, ReactElement, ReactNode } from 'react';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────

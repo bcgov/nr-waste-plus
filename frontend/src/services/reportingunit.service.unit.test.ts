@@ -2,7 +2,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ZodError } from 'zod';
 
-import { reportingUnitSchema, codeDescriptionSchema } from '@/types/reportingUnit.types';
+import { reportingUnitSchema } from '@/types/reportingUnit.types';
+import { codeDescriptionSchema } from '@/types/search.types';
 
 import { ReportingUnitService } from './reportingunit.service';
 

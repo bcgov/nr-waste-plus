@@ -24,7 +24,7 @@ import TableResourceRow from './TableResourceRow';
 import { useTableToolbar } from './useTableToolbar';
 import { renderCell, getHeaderId } from './utils';
 
-import type { NestedKeyOf, SortDirectionType } from '@/services/types';
+import type { NestedKeyOf, SortDirectionType } from '@/types/pagination.types';
 import type {
   TableHeaderType,
   PageableResponse,

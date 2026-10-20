@@ -1,4 +1,5 @@
-import type { CodeDescriptionDto, NestedKeyOf, SortDirectionType, ValueByPath } from './types';
+import type { NestedKeyOf, SortDirectionType, ValueByPath } from '@/types/pagination.types';
+import type { CodeDescriptionDto } from '@/types/search.types';
 
 /**
  * Removes non-meaningful values from an object recursively.
