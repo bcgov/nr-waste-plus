@@ -24,4 +24,5 @@ export type * from './search.types';
 export type * from './speciesComposition.types';
 export type * from './spreadsheet.types';
 export type * from './tableResource.types';
+export type * from './useBreakpoint.types';
 export type * from './utils.types';

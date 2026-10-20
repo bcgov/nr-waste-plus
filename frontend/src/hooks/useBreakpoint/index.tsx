@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { type BreakpointType } from './types';
+import { type BreakpointType } from '@/types/useBreakpoint.types';
 
 const getBreakpoint = (width: number): BreakpointType => {
   if (width >= 1584) return 'max';
