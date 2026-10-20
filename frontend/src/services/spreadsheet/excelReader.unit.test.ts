@@ -2,7 +2,7 @@ import ExcelJS from 'exceljs';
 import { describe, it, expect, beforeEach } from 'vitest';
 
 import { ExcelReader } from './excelReader';
-import { ExcelReadError } from './types';
+import { ExcelReadError } from './excelReader';
 
 async function buildWorkbookBuffer(
   sheets: { name: string; rows: unknown[][] }[],
