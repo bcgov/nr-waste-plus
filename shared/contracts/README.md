@@ -27,6 +27,10 @@ cd frontend && npx vitest run src/config/tests/
 
 # regenerate golden files after an intentional contract change
 GOLDEN_UPDATE=true ./mvnw verify -P all-tests
+
+# regenerate just one endpoint's golden (faster iteration)
+GOLDEN_UPDATE=true ./mvnw verify -P all-tests \
+  -Dit.test=ReportingUnitControllerIntegrationTest
 ```
 
 `GOLDEN_UPDATE` (env) or `-Dgolden.update=true` (system property) enables
