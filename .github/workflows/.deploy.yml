@@ -70,12 +70,12 @@ on:
         description: Object storage bucket
         required: false
         type: string
-        default: 'nr-waste'
+        default: ''
       object-storage-force-path-style:
         description: Force path style for S3 requests
         required: false
         type: string
-        default: 'false'
+        default: ''
 
 permissions: {}
 
