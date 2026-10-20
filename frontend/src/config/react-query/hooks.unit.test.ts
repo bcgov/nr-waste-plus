@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ZodError } from 'zod';
 
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 import API from '@/services/APIs';
@@ -1399,6 +1400,26 @@ describe('react-query hooks', () => {
         sort: [],
       });
       expect(result.current.data).toBeDefined();
+    });
+
+    // CONTRACT BOUNDARY: a malformed payload must surface as a query error
+    // carrying the Zod issues (path + message) — never a silent undefined.
+    it('should fail with a Zod error naming the drifted field when the payload is malformed', async () => {
+      vi.mocked(API.speciesComposition.listSpeciesCompositions).mockResolvedValueOnce({
+        content: [{ id: 'not-a-number', area: 'INTERIOR' }],
+        page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
+      } as never);
+
+      const { result } = renderHook(
+        () => useSpeciesCompositionListQuery({ page: 0, size: 10, sort: {} }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+
+      expect(result.current.error).toBeInstanceOf(ZodError);
+      const issues = (result.current.error as ZodError).issues;
+      expect(issues.some((issue) => issue.path.join('.') === 'content.0.id')).toBe(true);
     });
 
     it('should accept an options object with staleTime', async () => {
