@@ -20,13 +20,12 @@ export function renderCell<T>(row: T, header: TableHeaderType<T, NestedKeyOf<T>>
   if (header.renderAs) {
     return header.renderAs(value);
   }
-  if (value) {
-    const displayValue =
-      typeof value === 'string' || typeof value === 'number' ? value : JSON.stringify(value);
-    return displayValue;
-  } else {
-    return '-';
+  // Primitives render as-is so falsy-but-meaningful values (0, false) do not
+  // fall through to the dash fallback; everything else is JSON-serialized.
+  if (typeof value === 'string' || typeof value === 'number') {
+    return value;
   }
+  return JSON.stringify(value);
 }
 
 export function resolveTableRowActionValue<T, R>(

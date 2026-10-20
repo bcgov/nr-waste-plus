@@ -89,10 +89,22 @@ describe('TableResource utils', () => {
       expect(renderCell(row, header)).toBe(JSON.stringify({ a: 1 }));
     });
 
-    it('returns dash for falsy primitive values', () => {
+    it('renders a zero value instead of the dash fallback', () => {
+      const row: TestRow = { id: 0, name: 'test' };
+      const header: TableHeaderType<TestRow> = { key: 'id', header: 'ID' };
+      expect(renderCell(row, header)).toBe(0);
+    });
+
+    it('renders an empty string as an empty cell', () => {
       const row: TestRow = { id: 1, name: '' };
       const header: TableHeaderType<TestRow> = { key: 'name', header: 'Name' };
-      expect(renderCell(row, header)).toBe('-');
+      expect(renderCell(row, header)).toBe('');
+    });
+
+    it('stringifies a false value instead of the dash fallback', () => {
+      const row = { id: 1, name: false } as unknown as TestRow;
+      const header: TableHeaderType<TestRow> = { key: 'name', header: 'Name' };
+      expect(renderCell(row, header)).toBe('false');
     });
   });
 
