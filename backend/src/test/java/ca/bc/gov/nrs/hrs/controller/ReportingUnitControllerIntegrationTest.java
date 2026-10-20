@@ -23,6 +23,7 @@ import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
+import ca.bc.gov.nrs.hrs.util.GoldenFiles;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -407,6 +408,34 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
             .getContentAsString();
     assertThat(jsonMapper.readTree(response).get("content").get(0).get("totalWasteVolumeM3").isNull())
         .isTrue();
+  }
+
+  @Test
+  @WithMockJwt
+  @DisplayName("Golden | Blocks list pins the VIA_DTO page envelope")
+  void golden_blocksList_pinsViaDtoPageEnvelope() throws Exception {
+    String body =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get(
+                        "/api/reporting-units/{id}/blocks", populatedReportingUnitId)
+                    .queryParam("page", "0")
+                    .queryParam("size", "10")
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    // Mask non-deterministic fields: the block id comes from a sequence and
+    // lastUpdated from now() at query time. Listed in the golden-file report.
+    var tree = jsonMapper.readTree(body);
+    ((tools.jackson.databind.node.ObjectNode) tree.get("content").get(0))
+        .putNull("id");
+    ((tools.jackson.databind.node.ObjectNode) tree.get("content").get(0))
+        .putNull("lastUpdated");
+
+    GoldenFiles.assertMatches("pagination/paged-model.json", jsonMapper.writeValueAsString(tree));
   }
 
   @Test
