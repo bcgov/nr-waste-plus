@@ -1,11 +1,11 @@
 package ca.bc.gov.nrs.hrs.controller;
 
 import static ca.bc.gov.nrs.hrs.TestConstants.LEGACY_RU_DETAILS;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
@@ -20,19 +20,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import ca.bc.gov.nrs.hrs.configuration.FeatureFlagsConfiguration;
 import ca.bc.gov.nrs.hrs.dto.base.FeatureFlag;
+import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
 import ca.bc.gov.nrs.hrs.util.GoldenFiles;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants;
+import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -43,6 +47,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.json.JsonMapper;
@@ -79,10 +84,16 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   private MockMvc mockMvc;
 
   @Autowired
+  private ReportingUnitRepository reportingUnitRepository;
+
+  @Autowired
   private JsonMapper jsonMapper;
 
-  @Autowired private JdbcTemplate jdbcTemplate;
-  @Autowired private TransactionTemplate transactionTemplate;
+  @Autowired
+  private JdbcTemplate jdbcTemplate;
+
+  @Autowired
+  private TransactionTemplate transactionTemplate;
 
   private String fixtureActor;
   private Long populatedReportingUnitId;
@@ -180,6 +191,12 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
               "DELETE FROM hrs.district_average_block WHERE created_by = ?", fixtureActor);
           jdbcTemplate.update("DELETE FROM hrs.block WHERE created_by = ?", fixtureActor);
           jdbcTemplate.update("DELETE FROM hrs.reporting_unit WHERE created_by = ?", fixtureActor);
+          for (Long id : createdReportingUnitIds) {
+            jdbcTemplate.update("DELETE FROM hrs.status_event WHERE reporting_unit_id = ?", id);
+            jdbcTemplate.update("DELETE FROM hrs.block WHERE reporting_unit_id = ?", id);
+            jdbcTemplate.update("DELETE FROM hrs.reporting_unit WHERE reporting_unit_id = ?", id);
+          }
+          createdReportingUnitIds.clear();
         });
   }
 
@@ -201,20 +218,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
   @Test
   @WithMockJwt(cognitoGroups = {"WASTE_PLUS_ADMIN"})
   void shouldReturn201_whenCreateSucceeds() throws Exception {
-    // Legacy search: no existing reporting units
-    legacyApiStub.stubFor(
-        get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(
-                okJson(
-                    ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
-
-    // Forest client exists
-    clientApiStub.stubFor(
-        get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
-
-    // Legacy create returns new id as numeric JSON
-    legacyApiStub.stubFor(post(urlPathEqualTo("/api/reporting-units")).willReturn(okJson("333")));
+    Long testRuId = stubCreateDependencies();
 
     var requestJson =
         """
@@ -228,6 +232,15 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
         .andExpect(status().isCreated());
+
+    var savedEntity = reportingUnitRepository.findById(testRuId);
+    assertThat(savedEntity).isPresent();
+    assertThat(savedEntity.get().getClientNumber()).isEqualTo("00012797");
+    assertThat(savedEntity.get().getClientLocnCode()).isEqualTo("00");
+    assertThat(savedEntity.get().getGeographicCode()).isEqualTo("DND");
+    assertThat(savedEntity.get().getSamplingCode()).isEqualTo("AVG");
+    assertThat(savedEntity.get().getRevision()).isEqualTo(0L);
+    assertThat(savedEntity.get().isDeleted()).isFalse();
   }
 
   @Test
@@ -284,26 +297,45 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
             .withRequestBody(containing("00012797")));
   }
 
-  private void stubCreateDependencies() {
-    stubCreateDependencies("00012797");
+  private static final java.util.concurrent.atomic.AtomicLong TEST_RU_ID =
+      new java.util.concurrent.atomic.AtomicLong(333L);
+
+  private final Set<Long> createdReportingUnitIds = new HashSet<>();
+
+  private Long trackCreatedReportingUnit(Long id) {
+    createdReportingUnitIds.add(id);
+    return id;
   }
 
-  private void stubCreateDependencies(String clientNumber) {
+  private Long stubCreateDependencies() {
+    return stubCreateDependencies("00012797", TEST_RU_ID.incrementAndGet());
+  }
+
+  private Long stubCreateDependencies(String clientNumber) {
+    return stubCreateDependencies(clientNumber, TEST_RU_ID.incrementAndGet());
+  }
+
+  private Long stubCreateDependencies(String clientNumber, Long id) {
+    trackCreatedReportingUnit(id);
     legacyApiStub.stubFor(
         get(urlPathEqualTo("/api/search/reporting-units"))
-            .willReturn(okJson(ForestClientApiProviderTestConstants.REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
+            .willReturn(
+                okJson(
+                    ForestClientApiProviderTestConstants
+                        .REPORTING_UNITS_EMPTY_SEARCH_RESPONSE)));
     clientApiStub.stubFor(
         get(urlPathEqualTo("/clients/findByClientNumber/" + clientNumber))
             .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
-    legacyApiStub.stubFor(post(urlPathEqualTo("/api/reporting-units")).willReturn(okJson("333")));
+    legacyApiStub.stubFor(
+        post(urlPathEqualTo("/api/reporting-units")).willReturn(okJson(String.valueOf(id))));
+    return id;
   }
 
-  private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder createReportingUnitRequest() {
+  private MockHttpServletRequestBuilder createReportingUnitRequest() {
     return createReportingUnitRequest("00012797");
   }
 
-  private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder createReportingUnitRequest(
-      String clientNumber) {
+  private MockHttpServletRequestBuilder createReportingUnitRequest(String clientNumber) {
     return MockMvcRequestBuilders.post("/api/reporting-units")
         .with(SecurityMockMvcRequestPostProcessors.csrf())
         .contentType(MediaType.APPLICATION_JSON)
@@ -405,7 +437,8 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
             .andReturn()
             .getResponse()
             .getContentAsString();
-    assertThat(jsonMapper.readTree(response).get("content").get(0).get("totalWasteVolumeM3").isNull())
+    assertThat(
+            jsonMapper.readTree(response).get("content").get(0).get("totalWasteVolumeM3").isNull())
         .isTrue();
   }
 
@@ -508,6 +541,56 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .andExpect(jsonPath("$.blockRule.maxBlocks").value(1))
         .andExpect(jsonPath("$.blockRule.blockType").value("DISTRICT_AVERAGE"))
         .andExpect(jsonPath("$.isLegacy").value(true));
+  }
+
+  @Test
+  @WithMockJwt
+  @DisplayName("Should Return Details with Postgres Sampling when Local Record Exists")
+  void shouldReturnReportingUnitDetails_withPostgresSampling_whenLocalRecordExists()
+      throws Exception {
+    trackCreatedReportingUnit(55555L);
+    var ru = new ReportingUnitEntity();
+    ru.setId(55555L);
+    ru.setClientNumber("00012797");
+    ru.setClientLocnCode("00");
+    ru.setGeographicCode("DND");
+    ru.setSamplingCode("AVG");
+    ru.setDeleted(false);
+    ru.setCreatedBy(fixtureActor);
+    ru.setUpdatedBy(fixtureActor);
+    reportingUnitRepository.saveAndFlush(ru);
+
+    try {
+      legacyApiStub.stubFor(
+          get(urlPathEqualTo("/api/codes/districts"))
+              .willReturn(
+                  okJson(
+                      """
+                      [{"code": "DND", "description": "Nadina Natural Resource District"}]
+                      """)));
+
+      clientApiStub.stubFor(
+          get(urlPathEqualTo("/clients/findByClientNumber/00012797"))
+              .willReturn(okJson(ForestClientApiProviderTestConstants.CLIENTNUMBER_RESPONSE)));
+
+      mockMvc
+          .perform(
+              MockMvcRequestBuilders.get("/api/reporting-units/{id}", 55555L)
+                  .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                  .accept(MediaType.APPLICATION_JSON))
+          .andExpect(status().isOk())
+          .andExpect(content().contentType("application/json;charset=UTF-8"))
+          .andExpect(jsonPath("$.id").value(55555))
+          .andExpect(jsonPath("$.client.code").value("00012797"))
+          .andExpect(jsonPath("$.sampling.code").value("AVG"))
+          .andExpect(jsonPath("$.sampling.description").value("District Average"))
+          .andExpect(jsonPath("$.district.code").value("DND"))
+          .andExpect(jsonPath("$.blockRule.maxBlocks").value(1))
+          .andExpect(jsonPath("$.blockRule.blockType").value("DISTRICT_AVERAGE"))
+          .andExpect(jsonPath("$.isLegacy").value(false));
+    } finally {
+      reportingUnitRepository.deleteById(55555L);
+    }
   }
 
   @Test

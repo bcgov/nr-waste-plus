@@ -34,7 +34,13 @@
           ]
         }
       ]
+    },
+    {
+      "type": "ca.bc.gov.nrs.hrs.entity.block.ReportingUnitIdGenerator",
+      "allDeclaredConstructors": true,
+      "allPublicConstructors": true,
+      "allDeclaredMethods": true,
+      "allPublicMethods": true
     }
-
   ]
 }
