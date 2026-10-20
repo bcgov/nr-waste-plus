@@ -1,7 +1,6 @@
 import { Column, Grid, Tile } from '@carbon/react';
 import { type FC } from 'react';
 
-import DateTag from '@/components/core/Tags/DateTag';
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
 
@@ -61,7 +60,7 @@ const BlockDetailsSummary: FC<BlockDetailsSummaryProps> = ({ data }) => (
       </Column>
       <Column max={3} xlg={3} lg={3} md={4} sm={4}>
         <ReadonlyInput label="Created on">
-          {data.createdAt ? <DateTag date={data.createdAt} format="MMMM dd, yyyy" /> : null}
+          <EmptyValueTag value={null} />
         </ReadonlyInput>
       </Column>
     </Grid>

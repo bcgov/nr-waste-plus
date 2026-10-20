@@ -1,14 +1,19 @@
 import { CancelablePromise } from '@/config/api/CancelablePromise';
 import { HttpClient, type APIConfig } from '@/config/api/types';
+import {
+  blockCreateResponseSchema,
+  blockDetailsSchema,
+  reportingUnitSchema,
+} from '@/types/reportingUnit.types';
 
+import type { ReportingUnitBlocksRow } from '@/components/waste/ReportingUnits/ReportingUnitBlocksList/constants';
 import type {
   BlockCreateRequestDto,
   BlockCreateResponseDto,
   BlockDetailsDto,
   ReportingUnitCreateDto,
   ReportingUnitDto,
-} from './types';
-import type { ReportingUnitBlocksRow } from '@/components/waste/ReportingUnits/ReportingUnitBlocksList/constants';
+} from '@/types/reportingUnit.types';
 import type { PageableResponse } from '@/types/tableResource.types';
 
 /**
@@ -38,15 +43,14 @@ export class ReportingUnitService extends HttpClient {
    * @throws {Error} When the API response does not match the expected schema.
    * @throws {ApiError} When the HTTP request fails.
    */
-  getReportingUnit(
-    id: number,
-    meta?: Record<string, unknown>,
-  ): CancelablePromise<ReportingUnitDto> {
-    return this.doRequest<ReportingUnitDto>(this.config, {
-      method: 'GET',
-      url: `/api/reporting-units/${id}`,
-      ...(meta === undefined ? {} : { meta }),
-    });
+  async getReportingUnit(id: number, meta?: Record<string, unknown>): Promise<ReportingUnitDto> {
+    return reportingUnitSchema.parse(
+      await this.doRequest<ReportingUnitDto>(this.config, {
+        method: 'GET',
+        url: `/api/reporting-units/${id}`,
+        ...(meta === undefined ? {} : { meta }),
+      }),
+    );
   }
 
   /**
@@ -101,7 +105,7 @@ export class ReportingUnitService extends HttpClient {
    * `GET /api/reporting-units/{ruId}/{blockId}` returns the simple block
    * fields typed by {@link BlockDetailsDto}: id, reporting unit, type, draft
    * flag, PLC date, revision, and the `isLegacy` source marker. The response
-   * is typed (not zod-parsed) to match the sibling `getBlocks` convention.
+   * is validated against {@link blockDetailsSchema} at the boundary.
    *
    * @param ruId - The numeric reporting unit the block belongs to.
    * @param blockId - The numeric block ID from the route.
@@ -110,16 +114,18 @@ export class ReportingUnitService extends HttpClient {
    * @throws {ApiError} When the HTTP request fails (404 when the feature flag
    *   is off, the reporting unit is unknown, or the block does not exist).
    */
-  getBlockDetails(
+  async getBlockDetails(
     ruId: number,
     blockId: number,
     meta?: Record<string, unknown>,
-  ): CancelablePromise<BlockDetailsDto> {
-    return this.doRequest<BlockDetailsDto>(this.config, {
-      method: 'GET',
-      url: `/api/reporting-units/${ruId}/${blockId}`,
-      ...(meta === undefined ? {} : { meta }),
-    });
+  ): Promise<BlockDetailsDto> {
+    return blockDetailsSchema.parse(
+      await this.doRequest<BlockDetailsDto>(this.config, {
+        method: 'GET',
+        url: `/api/reporting-units/${ruId}/${blockId}`,
+        ...(meta === undefined ? {} : { meta }),
+      }),
+    );
   }
 
   /**
@@ -158,7 +164,7 @@ export class ReportingUnitService extends HttpClient {
     };
 
     return new CancelablePromise<BlockCreateResponseDto>((resolve, _reject, onCancel) => {
-      const timer = setTimeout(() => resolve(stubBody), 300);
+      const timer = setTimeout(() => resolve(blockCreateResponseSchema.parse(stubBody)), 300);
       onCancel(() => clearTimeout(timer));
     });
 

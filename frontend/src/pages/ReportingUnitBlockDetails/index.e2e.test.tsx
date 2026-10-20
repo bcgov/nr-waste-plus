@@ -10,7 +10,7 @@ const RU_ID = 468;
 const BLOCK_ID = 12;
 const ROUTE_PATH = `/reporting-units/${RU_ID}/${BLOCK_ID}`;
 
-/** Reporting-unit payload used by every happy-path test (includes createdAt). */
+/** Reporting-unit payload used by every happy-path test. */
 const reportingUnitPayload = {
   id: RU_ID,
   client: { code: '00002022', description: 'Canadian Forest Products Ltd.' },
@@ -18,7 +18,6 @@ const reportingUnitPayload = {
   grade: { code: 'IN', description: 'Interior' },
   sampling: { code: 'DA', description: 'District Average' },
   district: { code: 'DKM', description: 'Coast Mountains District' },
-  createdAt: '2025-05-25',
 };
 
 /**
@@ -80,7 +79,7 @@ test.describe('Reporting Unit Block Details', () => {
     await expect(page.getByTestId('card-item-content-sampling-option')).toHaveText(
       'DA - District Average',
     );
-    await expect(page.getByTestId('card-item-content-created-on')).toHaveText('May 25, 2025');
+    await expect(page.getByTestId('card-item-content-created-on')).toHaveText('-');
 
     // No edit controls in the read-only design.
     await expect(page.getByRole('button', { name: /edit/i })).toHaveCount(0);

@@ -1,38 +1,37 @@
 import { z } from 'zod';
 
-/**
- * Code/description pair schema shared with `@/types/search.types` (single
- * source of truth; previously a duplicate `z.looseObject` lived here).
- */
-export { codeDescriptionSchema } from '@/types/search.types';
-
 import { codeDescriptionSchema } from '@/types/search.types';
 
+export { codeDescriptionSchema };
+
 /**
- * Zod schema for the full reporting-unit details response.
+ * Reporting-unit details response as serialized by
+ * `ReportingUnitDetailsDto` (`id` is a `Long`; every field except `id` is
+ * `@JsonInclude(NON_NULL)`, so `blockRule`/`isLegacy` keys are absent until
+ * the backend ships them). The record carries no creation timestamp.
  *
- * Used in {@link ReportingUnitService.getReportingUnit} to validate the API
- * response at runtime and surface unexpected shape changes early.
+ * Parsed at the boundary in `ReportingUnitService.getReportingUnit`.
  */
 export const reportingUnitSchema = z.looseObject({
-  id: z.number(),
+  id: z.int(),
   client: codeDescriptionSchema,
   clientStatus: codeDescriptionSchema,
   grade: codeDescriptionSchema,
   sampling: codeDescriptionSchema,
   district: codeDescriptionSchema,
-  // Creation timestamp; optional because older payloads (and the read-only
-  // block details view) may omit it, in which case the UI falls back to a placeholder.
-  createdAt: z.optional(z.nullable(z.string())),
   /**
    * Block-creation rule for this reporting unit, derived server-side from the
    * per-sampling-type configuration. `undefined` (absent) means the backend has
    * not shipped the rule yet — the UI falls back to its temporary client-side
-   * rule table; once present, this value replaces all client-side rules.
+   * rule table; once present, this value replaces all client-side rules. The
+   * backend `blockType` is a `String` field, but the #1228 first-release
+   * contract only ever produces `DISTRICT_AVERAGE` — the literal is what the
+   * block-creation POST requires, and a boundary-parse failure on anything
+   * else is the wanted early warning.
    */
   blockRule: z.optional(
     z.object({
-      maxBlocks: z.number(),
+      maxBlocks: z.int(),
       blockType: z.literal('DISTRICT_AVERAGE'),
     }),
   ),
@@ -47,6 +46,10 @@ export const reportingUnitSchema = z.looseObject({
 /** TypeScript representation of a reporting unit, inferred from {@link reportingUnitSchema}. */
 export type ReportingUnitDto = z.infer<typeof reportingUnitSchema>;
 
+/**
+ * Reporting-unit creation request body (outgoing, form-validated — the
+ * 8-digit/3-letter regexes mirror the backend `@Pattern` constraints).
+ */
 export const reportingUnitCreateRequestSchema = z.object({
   clientNumber: z.string().regex(/^\d{8}$/, 'Client number must be exactly 8 numeric digits'),
   districtCode: z.string().regex(/^[A-Z]{3}$/, 'District code must be exactly 3 uppercase letters'),
@@ -57,7 +60,7 @@ export const reportingUnitCreateRequestSchema = z.object({
 export type ReportingUnitCreateDto = z.infer<typeof reportingUnitCreateRequestSchema>;
 
 /**
- * Zod schema for the block-creation request body (issue #1228).
+ * Block-creation request body (issue #1228).
  *
  * First release supports only District Average blocks, matching the
  * one-block-per-Reporting-Unit domain constraint. `expectedReportingUnitState`
@@ -73,41 +76,46 @@ export const blockCreateRequestSchema = z.object({
 export type BlockCreateRequestDto = z.infer<typeof blockCreateRequestSchema>;
 
 /**
- * Zod schema for the block-creation response body (issue #1228 contract).
+ * Block-creation response body (issue #1228 contract).
  *
  * The backend responds with the full block resource: a newly created block
- * starts in the `DRAFT` state. Use loose-object parsing so future backend
- * fields do not break validation.
+ * starts in the `DRAFT` state. Until the endpoint ships, the service returns
+ * a frontend stub shaped by this schema — parsing it at the boundary keeps
+ * the stub contract-honest. Loose-object parsing tolerates future backend
+ * fields.
  */
 export const blockCreateResponseSchema = z.looseObject({
-  id: z.number(),
-  reportingUnitId: z.number(),
+  id: z.int(),
+  reportingUnitId: z.int(),
   blockType: z.string(),
   state: z.string(),
-  version: z.number(),
-  createdAt: z.nullable(z.string()),
-  updatedAt: z.nullable(z.string()),
+  version: z.int(),
+  createdAt: z.iso.datetime().nullable(),
+  updatedAt: z.iso.datetime().nullable(),
 });
 
 /** TypeScript representation of a block-creation response. */
 export type BlockCreateResponseDto = z.infer<typeof blockCreateResponseSchema>;
 
 /**
- * Zod schema for the block-details response
- * (`GET /api/reporting-units/{reportingUnitId}/{blockId}`).
+ * Block-details response
+ * (`GET /api/reporting-units/{reportingUnitId}/{blockId}`, Java
+ * `BlockDetailDto`).
  *
  * `blockType`, `plcDate`, and `revision` are nullable because the backend
- * cannot resolve them for every block. `isLegacy` marks blocks served from
- * the legacy system. Use loose-object parsing so future backend fields do
- * not break validation.
+ * cannot resolve them for every block (`plcDate` is a `LocalDate`).
+ * `isLegacy` marks blocks served from the legacy system. Loose-object
+ * parsing tolerates future backend fields.
+ *
+ * Parsed at the boundary in `ReportingUnitService.getBlockDetails`.
  */
 export const blockDetailsSchema = z.looseObject({
-  id: z.number(),
-  reportingUnitId: z.number(),
+  id: z.int(),
+  reportingUnitId: z.int(),
   blockType: z.nullable(z.string()),
   draft: z.boolean(),
-  plcDate: z.nullable(z.string()),
-  revision: z.nullable(z.number()),
+  plcDate: z.iso.date().nullable(),
+  revision: z.nullable(z.int()),
   isLegacy: z.boolean(),
 });
 

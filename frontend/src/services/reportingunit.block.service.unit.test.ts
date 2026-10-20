@@ -63,7 +63,7 @@ describe('ReportingUnitService block endpoints', () => {
     Object.defineProperty(service, 'doRequest', { value: doRequest });
     const meta = { notificationTarget: 'reporting-unit-block-details' };
 
-    await expect(service.getBlockDetails(468, 12, meta)).resolves.toBe(response);
+    await expect(service.getBlockDetails(468, 12, meta)).resolves.toStrictEqual(response);
 
     expect(doRequest).toHaveBeenCalledWith(config, {
       method: 'GET',
@@ -74,10 +74,19 @@ describe('ReportingUnitService block endpoints', () => {
 
   it('shouldOmitMetadataWhenNoBlockDetailsRequestMetadataIsProvided', async () => {
     const service = new ReportingUnitService(config);
-    const doRequest = vi.fn().mockResolvedValue({});
+    const response = {
+      id: 7,
+      reportingUnitId: 469,
+      blockType: null,
+      draft: true,
+      plcDate: null,
+      revision: null,
+      isLegacy: false,
+    };
+    const doRequest = vi.fn().mockResolvedValue(response);
     Object.defineProperty(service, 'doRequest', { value: doRequest });
 
-    await service.getBlockDetails(469, 7);
+    await expect(service.getBlockDetails(469, 7)).resolves.toStrictEqual(response);
 
     expect(doRequest).toHaveBeenCalledWith(config, {
       method: 'GET',
@@ -91,7 +100,10 @@ describe('ReportingUnitService block endpoints', () => {
     const service = new ReportingUnitService(config);
     const doRequest = vi.fn();
     Object.defineProperty(service, 'doRequest', { value: doRequest });
-    const promise = service.createBlock(468, { blockType: 'DISTRICT_AVERAGE', expectedReportingUnitState: 'SUBMISSION' });
+    const promise = service.createBlock(468, {
+      blockType: 'DISTRICT_AVERAGE',
+      expectedReportingUnitState: 'SUBMISSION',
+    });
 
     const expectedId = Date.now();
     await vi.advanceTimersByTimeAsync(299);
@@ -113,7 +125,10 @@ describe('ReportingUnitService block endpoints', () => {
   it('shouldCancelTheStubbedCreateTimer', async () => {
     vi.useFakeTimers();
     const service = new ReportingUnitService(config);
-    const promise = service.createBlock(468, { blockType: 'DISTRICT_AVERAGE', expectedReportingUnitState: 'SUBMISSION' });
+    const promise = service.createBlock(468, {
+      blockType: 'DISTRICT_AVERAGE',
+      expectedReportingUnitState: 'SUBMISSION',
+    });
     const settledPromise = promise.catch((error: unknown) => error);
     promise.cancel();
     await vi.advanceTimersByTimeAsync(300);

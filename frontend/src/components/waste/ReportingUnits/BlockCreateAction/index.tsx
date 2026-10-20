@@ -8,7 +8,7 @@ import { useAuth } from '@/context/auth/useAuth';
 import { featureFlags } from '@/env';
 import useNotificationEvents from '@/hooks/useNotificationEvents';
 
-import type { BlockCreateRequestDto } from '@/services/reportingUnit.types';
+import type { BlockCreateRequestDto } from '@/types/reportingUnit.types';
 
 import './index.scss';
 

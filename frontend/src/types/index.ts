@@ -21,3 +21,5 @@ export type * from './districtvolumes.types';
 export type * from './conditionalField.types';
 export type * from './formulaInput.types';
 export type * from './formulaConfiguration.types';
+export type * from './reportingUnit.types';
+export type * from './formulaConfiguration.types';
