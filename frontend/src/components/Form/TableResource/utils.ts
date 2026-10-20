@@ -22,11 +22,7 @@ export function renderCell<T>(row: T, header: TableHeaderType<T, NestedKeyOf<T>>
   }
   if (value) {
     const displayValue =
-      typeof value === 'string' || typeof value === 'number'
-        ? value
-        : value == null
-          ? undefined
-          : JSON.stringify(value);
+      typeof value === 'string' || typeof value === 'number' ? value : JSON.stringify(value);
     return displayValue;
   } else {
     return '-';

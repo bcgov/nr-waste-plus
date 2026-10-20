@@ -9,8 +9,11 @@ import { navigateInTree } from '@/routes/inTreePaths';
 import { BLOCKS_TABLE_HEADERS, EMPTY_BLOCKS_CONTENT } from './constants';
 
 import type { ReportingUnitBlocksRow } from '@/types/reportingUnit.types';
-import type { PaginationOnChangeType, TableRowAction } from '@/types/tableResource.types';
-import type { PageableResponse } from '@/types/tableResource.types';
+import type {
+  PageableResponse,
+  PaginationOnChangeType,
+  TableRowAction,
+} from '@/types/tableResource.types';
 
 import './index.scss';
 
