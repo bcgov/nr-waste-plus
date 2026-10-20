@@ -2,8 +2,8 @@ package ca.bc.gov.nrs.hrs.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,14 +44,26 @@ class ReportingUnitBlockServiceTest {
 
   private static final Long REPORTING_UNIT_ID = 123L;
 
-  @Mock private ReportingUnitRepository reportingUnitRepository;
-  @Mock private BlockRepository blockRepository;
-  @Mock private LegacyApiProvider legacyApiProvider;
-  @Mock private BlockRulesProperties blockRulesProperties;
-  @Mock private BlockService blockService;
-  @Mock private Jwt jwt;
+  @Mock
+  private ReportingUnitRepository reportingUnitRepository;
 
-  @InjectMocks private ReportingUnitBlockService service;
+  @Mock
+  private BlockRepository blockRepository;
+
+  @Mock
+  private LegacyApiProvider legacyApiProvider;
+
+  @Mock
+  private BlockRulesProperties blockRulesProperties;
+
+  @Mock
+  private BlockService blockService;
+
+  @Mock
+  private Jwt jwt;
+
+  @InjectMocks
+  private ReportingUnitBlockService service;
 
   @Test
   @DisplayName("shouldReadPostgresBlocks_whenReportingUnitExistsInPostgres")
@@ -317,7 +329,7 @@ class ReportingUnitBlockServiceTest {
             REPORTING_UNIT_ID,
             null,
             null,
-            new CodeDescriptionDto("AVG", "Average"),
+            new CodeDescriptionDto("AVG", "District Average"),
             null,
             null);
     when(blockRulesProperties.getSampling())
@@ -390,7 +402,7 @@ class ReportingUnitBlockServiceTest {
 
     assertThat(
             service
-                .enrichWithBlockMetadata(details(new CodeDescriptionDto("AVG", "Average")))
+                .enrichWithBlockMetadata(details(new CodeDescriptionDto("AVG", "District Average")))
                 .blockRule())
         .isNull();
   }
@@ -403,7 +415,7 @@ class ReportingUnitBlockServiceTest {
     assertThat(
             service
                 .enrichWithBlockMetadata(
-                    details(new CodeDescriptionDto("AVG", "Average")).withLegacy(true)))
+                    details(new CodeDescriptionDto("AVG", "District Average")).withLegacy(true)))
         .satisfies(
             enriched -> {
               assertThat(enriched.blockRule()).isNull();
