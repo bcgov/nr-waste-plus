@@ -65,7 +65,7 @@ class SubmissionPersistenceIntegrationTest extends AbstractTestContainerIntegrat
     ReportingUnitEntity reportingUnit = new ReportingUnitEntity();
     reportingUnit.setClientNumber("00001234");
     reportingUnit.setClientLocnCode("LOC-1");
-    reportingUnit.setOrgUnitNo("DCC");
+    reportingUnit.setGeographicCode("DCC");
     audit(reportingUnit);
     ReportingUnitEntity savedUnit = reportingUnitRepository.saveAndFlush(reportingUnit);
 

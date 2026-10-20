@@ -76,13 +76,13 @@ public class ReportingUnitService {
       Long reportingUnitId, ReportingUnitEntity reportingUnit) {
     var district =
         codesService.getDistrictCodes().stream()
-            .filter(code -> reportingUnit.getOrgUnitNo().equals(code.code()))
+            .filter(code -> reportingUnit.getGeographicCode().equals(code.code()))
             .findFirst()
             .orElseThrow(
                 () ->
                     new IllegalStateException(
-                        "No district code found for reporting unit organizational unit "
-                            + reportingUnit.getOrgUnitNo()));
+                        "No district code found for reporting unit geographic code "
+                            + reportingUnit.getGeographicCode()));
     var clientInformation =
         forestClientApiProvider
             .fetchClientByNumber(reportingUnit.getClientNumber())

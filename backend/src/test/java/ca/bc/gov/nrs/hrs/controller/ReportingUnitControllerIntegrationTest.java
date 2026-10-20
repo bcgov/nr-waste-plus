@@ -187,7 +187,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     jdbcTemplate.update(
         """
         INSERT INTO hrs.reporting_unit
-            (reporting_unit_id, client_number, client_locn_code, org_unit_no, created_by, updated_by)
+            (reporting_unit_id, client_number, client_locn_code, geographic_code, created_by, updated_by)
         VALUES (?, '00012797', ?, 'DND', ?, ?)
         """,
         reportingUnitId,
