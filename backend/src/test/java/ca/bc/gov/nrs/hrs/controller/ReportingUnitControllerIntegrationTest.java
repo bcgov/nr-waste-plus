@@ -86,6 +86,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
   private String fixtureActor;
   private Long populatedReportingUnitId;
+  private Long populatedBlockId;
   private Long emptyReportingUnitId;
 
   @Autowired
@@ -113,7 +114,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         transaction -> {
           populatedReportingUnitId = insertReportingUnit("BLOCKED");
           emptyReportingUnitId = insertReportingUnit("EMPTY");
-          Long blockId =
+          populatedBlockId =
               jdbcTemplate.queryForObject(
                   """
                   INSERT INTO hrs.block
@@ -133,7 +134,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                    created_by, updated_by)
               VALUES (?, 1.250, 0.500, FALSE, FALSE, ?, ?)
               """,
-              blockId,
+              populatedBlockId,
               fixtureActor,
               fixtureActor);
           jdbcTemplate.update(
@@ -144,7 +145,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
               VALUES (?, 'PRIMARY', 0, 'TM-TEST', 'FILE-TEST', 'TM-TEST',
                       'CP-TEST', 'CUT-TEST', ?, ?)
               """,
-              blockId,
+              populatedBlockId,
               fixtureActor,
               fixtureActor);
           jdbcTemplate.update(
@@ -154,7 +155,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                    created_by, updated_by)
               VALUES (?, 'test-user', 'Block List Test Submitter', 'Test', 'Submitter', ?, ?)
               """,
-              blockId,
+              populatedBlockId,
               fixtureActor,
               fixtureActor);
           jdbcTemplate.update(
@@ -164,7 +165,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
               VALUES (?, 'APP', 'SUBMISSION', NOW() + INTERVAL '1 day',
                       NOW() + INTERVAL '1 day', ?, ?)
               """,
-              blockId,
+              populatedBlockId,
               fixtureActor,
               fixtureActor);
         });
@@ -436,6 +437,31 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         .putNull("lastUpdated");
 
     GoldenFiles.assertMatches("pagination/paged-model.json", jsonMapper.writeValueAsString(tree));
+  }
+
+  @Test
+  @WithMockJwt
+  @DisplayName("Golden | Block details pins the BlockDetailDto shape")
+  void golden_blockDetails_pinsBlockDetailShape() throws Exception {
+    String body =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get(
+                        "/api/reporting-units/{ruId}/{blockId}",
+                        populatedReportingUnitId,
+                        populatedBlockId)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    // Mask non-deterministic fields: id/reportingUnitId come from sequences.
+    var tree = jsonMapper.readTree(body);
+    ((tools.jackson.databind.node.ObjectNode) tree).putNull("id");
+    ((tools.jackson.databind.node.ObjectNode) tree).putNull("reportingUnitId");
+
+    GoldenFiles.assertMatches("reporting-units/block-details.json", jsonMapper.writeValueAsString(tree));
   }
 
   @Test
