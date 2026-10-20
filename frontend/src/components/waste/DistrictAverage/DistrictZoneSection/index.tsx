@@ -1,6 +1,6 @@
 import TableResource from '@/components/Form/TableResource';
 
-import type { CoastDistrictRow, InteriorDistrictRow } from '@/services/districtvolumes.types.ts';
+import type { CoastDistrictRow, InteriorDistrictRow } from '@/types/districtvolumes.types.ts';
 import type { PageableResponse, TableHeaderType } from '@/types/tableResource.types.ts';
 
 /**

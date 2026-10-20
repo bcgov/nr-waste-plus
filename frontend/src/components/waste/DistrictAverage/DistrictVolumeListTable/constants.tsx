@@ -1,6 +1,6 @@
 import DateTag from '@/components/core/Tags/DateTag';
 
-import type { DistrictVolumeListItem } from '@/services/districtvolumes.types.ts';
+import type { DistrictVolumeListItem } from '@/types/districtvolumes.types.ts';
 import type { TableHeaderType } from '@/types/tableResource.types.ts';
 
 const areaDisplayMap: Record<string, string> = {

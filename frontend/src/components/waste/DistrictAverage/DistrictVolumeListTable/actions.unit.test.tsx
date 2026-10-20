@@ -8,7 +8,7 @@ import { isFutureDated } from '@/utils/businessDate.ts';
 
 import { useDistrictVolumeListRowActions } from './actions.tsx';
 
-import type { DistrictVolumeListItem } from '@/services/districtvolumes.types.ts';
+import type { DistrictVolumeListItem } from '@/types/districtvolumes.types.ts';
 import type { PageableResponse } from '@/types/tableResource.types.ts';
 
 vi.mock('@tanstack/react-router', () => ({

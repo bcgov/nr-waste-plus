@@ -6,10 +6,7 @@ import { buildDistrictVolumeDetailHeaders } from './districtVolumeDetailHeaders.
 import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs.tsx';
 import { useDistrictCodeColumn } from './useDistrictCodeColumn.tsx';
 
-import type {
-  DistrictVolumeDetail,
-  InteriorDistrictRow,
-} from '@/services/districtvolumes.types.ts';
+import type { DistrictVolumeDetail, InteriorDistrictRow } from '@/types/districtvolumes.types.ts';
 import type { CodeDescriptionDto } from '@/types/search.types.ts';
 
 /**

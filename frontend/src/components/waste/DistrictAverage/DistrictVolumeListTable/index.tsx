@@ -12,7 +12,7 @@ import { useListTableState } from '@/hooks/useTableRow';
 import { useDistrictVolumeListRowActions } from './actions.tsx';
 import { headers } from './constants.tsx';
 
-import type { DistrictVolumeListItem } from '@/services/districtvolumes.types.ts';
+import type { DistrictVolumeListItem } from '@/types/districtvolumes.types.ts';
 import type { PageableResponse } from '@/types/tableResource.types.ts';
 import type { FC } from 'react';
 

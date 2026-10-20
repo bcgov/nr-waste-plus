@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
-import { uploadAuditSchema } from '@/types/audit.types';
+import {
+  districtVolumeDetailBaseSchema,
+  districtVolumeListItemSchema,
+} from '@/types/districtvolumes.types';
 import { codeDescriptionSchema } from '@/types/search.types';
 
 /** The species codes used in the spreadsheet and API. */
@@ -107,32 +110,21 @@ const speciesCompositionTableDataSchema = speciesCompositionDataSchema.extend({
 });
 
 /**
- * List item as serialized by the shared `DistrictVolumeListItemDto` record:
- * `area` is the Java `Area` enum name, `startDate`/`endDate` are
- * `LocalDate` values. Exported for page-envelope composition at the query
- * boundary.
+ * List item as serialized by the shared `DistrictVolumeListItemDto` record —
+ * the species composition endpoints reuse the district volume DTOs verbatim,
+ * so the schema is the district volume one. Exported for page-envelope
+ * composition at the query boundary.
  */
-export const speciesCompositionListItemSchema = uploadAuditSchema.extend({
-  id: z.int(),
-  area: z.enum(['INTERIOR', 'COASTAL']),
-  startDate: z.iso.date(),
-  endDate: z.iso.date().nullable(),
-});
+export const speciesCompositionListItemSchema = districtVolumeListItemSchema;
 
 /**
  * Detail as serialized by the shared `DistrictVolumeDetailDto` record:
- * `tableLevelFactor` is always present, `heliMultiplier` is COASTAL-only and
- * omitted (`NON_NULL`) for INTERIOR rows, and `tableData` carries the
- * `SPECIES_COMPOSITION` discriminator.
+ * `heliMultiplier` is COASTAL-only and omitted (`NON_NULL`) for INTERIOR
+ * rows, and `tableData` carries the `SPECIES_COMPOSITION` discriminator.
  *
  * Parsed at the boundary in `useSpeciesCompositionDetailQuery`.
  */
-export const speciesCompositionDetailSchema = uploadAuditSchema.extend({
-  id: z.int(),
-  area: z.enum(['INTERIOR', 'COASTAL']),
-  startDate: z.iso.date(),
-  endDate: z.iso.date().nullable(),
-  tableLevelFactor: z.number(),
+export const speciesCompositionDetailSchema = districtVolumeDetailBaseSchema.extend({
   heliMultiplier: z.number().optional(),
   tableData: speciesCompositionTableDataSchema,
 });

@@ -2,7 +2,7 @@ import { Column, Tab, TabList, TabPanel, TabPanels, Tabs } from '@carbon/react';
 
 import DistrictZoneSection from '@/components/waste/DistrictAverage/DistrictZoneSection';
 
-import type { CoastDistrictRow, InteriorDistrictRow } from '@/services/districtvolumes.types.ts';
+import type { CoastDistrictRow, InteriorDistrictRow } from '@/types/districtvolumes.types.ts';
 import type { TableHeaderType } from '@/types/tableResource.types.ts';
 
 /**

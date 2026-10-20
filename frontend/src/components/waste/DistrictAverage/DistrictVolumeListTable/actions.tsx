@@ -1,6 +1,6 @@
 import { useListTableRowActions } from '@/hooks/useTableRow';
 
-import type { DistrictVolumeListItem } from '@/services/districtvolumes.types.ts';
+import type { DistrictVolumeListItem } from '@/types/districtvolumes.types.ts';
 import type { PageableResponse, TableRowAction } from '@/types/tableResource.types.ts';
 
 type DistrictVolumeRow = PageableResponse<DistrictVolumeListItem>['content'][number];

@@ -15,6 +15,10 @@ import {
   generateSortArray,
 } from '@/services/utils';
 import {
+  districtVolumeDetailSchema,
+  districtVolumeListItemSchema,
+} from '@/types/districtvolumes.types';
+import {
   forestClientAutocompleteResultSchema,
   forestClientSchema,
   myForestClientSchema,
@@ -40,11 +44,6 @@ import {
 import type { ReportingUnitBlocksRow } from '@/components/waste/ReportingUnits/ReportingUnitBlocksList/constants';
 import type { ProblemDetails } from '@/config/api/types';
 import type {
-  DistrictVolumeCreate,
-  DistrictVolumeDetail,
-  DistrictVolumeListItem,
-} from '@/services/districtvolumes.types';
-import type {
   BlockCreateRequestDto,
   BlockCreateResponseDto,
   BlockDetailsDto,
@@ -54,6 +53,11 @@ import type {
   ReportingUnitDto,
   ReportingUnitSearchResultDto,
 } from '@/services/types';
+import type {
+  DistrictVolumeCreate,
+  DistrictVolumeDetail,
+  DistrictVolumeListItem,
+} from '@/types/districtvolumes.types';
 import type { CodeDescriptionDto, ReportingUnitSearchExpandedDto } from '@/types/search.types';
 import type {
   SpeciesCompositionCreate,
@@ -728,7 +732,12 @@ export const useBlockDetailsQuery = <TData = BlockDetailsDto>(
 export const useDistrictVolumeTableDetailQuery = <TData = DistrictVolumeDetail>(
   id: number,
   options?: Omit<
-    UseQueryOptions<TData, Error, TData, ReturnType<typeof queryKeys.districtVolume.detail>>,
+    UseQueryOptions<
+      DistrictVolumeDetail,
+      Error,
+      TData,
+      ReturnType<typeof queryKeys.districtVolume.detail>
+    >,
     'queryKey' | 'queryFn'
   > &
     QueryNotificationOptions,
@@ -737,7 +746,8 @@ export const useDistrictVolumeTableDetailQuery = <TData = DistrictVolumeDetail>(
 
   const query = useQuery({
     queryKey: queryKeys.districtVolume.detail(id),
-    queryFn: () => API.districtVolume.getDistrictVolumeTableDetail(id) as unknown as Promise<TData>,
+    queryFn: async () =>
+      districtVolumeDetailSchema.parse(await API.districtVolume.getDistrictVolumeTableDetail(id)),
     ...queryOptions,
   });
 
@@ -885,12 +895,14 @@ export const useDistrictVolumeListQuery = <TData = PageableResponse<DistrictVolu
 
   const query = useQuery({
     queryKey: queryKeys.districtVolume.list(input, notificationTarget),
-    queryFn: () =>
-      API.districtVolume.getDistrictVolumes(undefined, {
-        page: input.page,
-        size: input.size,
-        sort: generateSortArray<DistrictVolumeListItem>(input.sort),
-      }),
+    queryFn: async () =>
+      pageableResponseSchema(districtVolumeListItemSchema).parse(
+        await API.districtVolume.getDistrictVolumes(undefined, {
+          page: input.page,
+          size: input.size,
+          sort: generateSortArray<DistrictVolumeListItem>(input.sort),
+        }),
+      ),
     ...queryOptions,
   });
 

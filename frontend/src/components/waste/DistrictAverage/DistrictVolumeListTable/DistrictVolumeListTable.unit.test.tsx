@@ -11,7 +11,7 @@ import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
 
 import DistrictVolumeListTable from './index.tsx';
 
-import type { DistrictVolumeListItem } from '@/services/districtvolumes.types.ts';
+import type { DistrictVolumeListItem } from '@/types/districtvolumes.types.ts';
 import type { PageableResponse } from '@/types/tableResource.types.ts';
 
 vi.mock('@/config/react-query/hooks');

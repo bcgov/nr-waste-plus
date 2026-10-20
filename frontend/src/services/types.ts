@@ -8,5 +8,5 @@ export type * from '@/types/pagination.types';
 export type * from '@/types/search.types';
 export * from '@/types/forestclient.types';
 export * from '@/services/reportingUnit.types';
-export * from '@/services/districtvolumes.types';
+export * from '@/types/districtvolumes.types';
 export * from '@/types/speciesComposition.types';
