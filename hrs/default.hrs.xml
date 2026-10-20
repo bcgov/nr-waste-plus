@@ -16,7 +16,7 @@
       <sequence increment="1" name="formula_set_row_id_seq" startValue="1"/>
       <sequence increment="1" name="idempotency_record_id_seq" startValue="1"/>
       <sequence increment="1" name="lifecycle_setting_id_seq" startValue="1"/>
-      <sequence increment="1" name="reporting_unit_id_seq" startValue="1"/>
+      <sequence increment="1" name="reporting_unit_id_seq" startValue="1000000000"/>
       <sequence increment="1" name="status_event_id_seq" startValue="1"/>
    </sequences>
    <tables>
@@ -560,7 +560,7 @@
          <column autoUpdated="false" defaultValue="now()" digits="6" id="7" name="created_at" nullable="false" remarks="Timestamp when this reporting unit was created." size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="now()" digits="6" id="8" name="updated_at" nullable="false" remarks="Timestamp when this reporting unit was last updated." size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="false" digits="0" id="9" name="is_deleted" nullable="false" remarks="Soft-delete flag; live uniqueness indexes exclude deleted rows." size="1" type="bool" typeCode="-7"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="sampling_code" nullable="true" remarks="Nullable sampling business code; references sampling_option_code.code." size="2147483647" type="text" typeCode="12">
+         <column autoUpdated="false" defaultValue="'AVG'::text" digits="0" id="10" name="sampling_code" nullable="false" remarks="Waste sampling option code, e.g. AVG." size="2147483647" type="text" typeCode="12">
             <parent column="code" foreignKey="fk_reporting_unit_sampling_code" implied="false" onDeleteCascade="false" schema="hrs" table="sampling_option_code"/>
          </column>
          <primaryKey column="reporting_unit_id" sequenceNumberInPK="1"/>
