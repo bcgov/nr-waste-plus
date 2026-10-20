@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-import type { CarbonTheme } from '@/context/preference/types';
+import type { CarbonTheme } from '@/types/preference.types';
 
 /**
  * Shape of the theme context shared across the app.

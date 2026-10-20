@@ -7,8 +7,8 @@ import { describe, it, expect, vi, type Mock, beforeEach } from 'vitest';
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import AnnouncerProvider from '@/context/announcer/AnnouncerProvider';
 import { PreferenceProvider } from '@/context/preference/PreferenceProvider';
-import { CARBON_THEMES } from '@/context/preference/types';
 import APIs from '@/services/APIs';
+import { CARBON_THEMES } from '@/types/preference.types';
 
 import { ThemeProvider } from './ThemeProvider';
 import { useTheme } from './useTheme';
