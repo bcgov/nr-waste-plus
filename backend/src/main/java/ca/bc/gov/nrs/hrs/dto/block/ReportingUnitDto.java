@@ -2,4 +2,4 @@ package ca.bc.gov.nrs.hrs.dto.block;
 
 /** Reporting-unit persistence projection. */
 public record ReportingUnitDto(
-    Long id, String clientNumber, String clientLocnCode, String orgUnitNo, Long revision) {}
+    Long id, String clientNumber, String clientLocnCode, String geographicCode, Long revision) {}

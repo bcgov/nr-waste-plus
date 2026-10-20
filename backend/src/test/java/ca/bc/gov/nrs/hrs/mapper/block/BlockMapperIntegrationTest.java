@@ -88,7 +88,7 @@ class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {
     entity.setId(7L);
     entity.setClientNumber("00001234");
     entity.setClientLocnCode("LOC-1");
-    entity.setOrgUnitNo("DCK");
+    entity.setGeographicCode("DCK");
     entity.setRevision(3L);
 
     ReportingUnitDto dto = reportingUnitMapper.toDto(entity);

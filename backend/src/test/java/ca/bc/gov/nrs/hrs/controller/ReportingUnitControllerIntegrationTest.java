@@ -187,7 +187,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     return jdbcTemplate.queryForObject(
         """
         INSERT INTO hrs.reporting_unit
-            (client_number, client_locn_code, org_unit_no, created_by, updated_by)
+            (client_number, client_locn_code, geographic_code, created_by, updated_by)
         VALUES ('00012797', ?, 'DND', ?, ?)
         RETURNING reporting_unit_id
         """,
