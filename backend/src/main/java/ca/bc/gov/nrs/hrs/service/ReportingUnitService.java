@@ -20,7 +20,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -196,7 +195,6 @@ public class ReportingUnitService {
    *     the same client number and district
    */
   @NewSpan
-  @Transactional
   public Long createReportingUnit(@Valid CreateReportingUnitRequestDto request) {
 
     log.info("Creating reporting unit for client {}", request.clientNumber());
