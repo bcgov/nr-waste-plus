@@ -44,7 +44,7 @@ class BlockCalculationSnapshotIntegrationTest extends AbstractTestContainerInteg
     ReportingUnitEntity ru = new ReportingUnitEntity();
     ru.setClientNumber("0000" + unique.substring(0, 4));
     ru.setClientLocnCode("SNAP-" + unique);
-    ru.setOrgUnitNo("DCC");
+    ru.setGeographicCode("DCC");
     audit(ru);
     ReportingUnitEntity savedRu = reportingUnitRepository.saveAndFlush(ru);
 
