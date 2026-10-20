@@ -69,6 +69,14 @@ A new or changed backend response consumed by the frontend needs all three of:
 Missing any one fails CI: the backend test, the frontend completeness test,
 or both.
 
+## CI
+
+CI always runs in strict compare mode: both the backend and frontend test
+jobs pin `GOLDEN_UPDATE=false`, and the backend job fails if the test run
+modifies anything under `shared/contracts/`. Regenerated files reach CI only
+as committed, reviewed diffs — a PR whose golden files were regenerated must
+also carry the backend DTO change that justifies them.
+
 ## Non-determinism
 
 Golden files must be deterministic. Avoid `now()` timestamps and

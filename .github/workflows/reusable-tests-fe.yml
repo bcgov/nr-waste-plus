@@ -54,6 +54,9 @@ jobs:
         env:
           VITE_MOCK_AUTH: true
           VITE_COVERAGE: true
+          # Contract tests parse shared/contracts/ goldens in compare mode only —
+          # generation is developer-local (see shared/contracts/README.md).
+          GOLDEN_UPDATE: 'false'
         with:
           node_version: 24
           dep_scan: off
