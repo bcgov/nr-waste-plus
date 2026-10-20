@@ -3,7 +3,7 @@
 -- column to hrs.reporting_unit to persist waste sampling options (e.g. AVG).
 -- ============================================================================
 ALTER TABLE hrs.reporting_unit
-    ADD COLUMN sampling_code character varying(10) DEFAULT 'AVG' NOT NULL;
+    ADD COLUMN IF NOT EXISTS sampling_code character varying(10) DEFAULT 'AVG' NOT NULL;
 
 COMMENT ON COLUMN hrs.reporting_unit.sampling_code IS 'Waste sampling option code, e.g. AVG.';
 
