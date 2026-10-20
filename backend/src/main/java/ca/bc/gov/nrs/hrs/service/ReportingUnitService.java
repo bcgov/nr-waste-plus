@@ -255,7 +255,7 @@ public class ReportingUnitService {
                 });
     entity.setClientNumber(request.clientNumber());
     entity.setClientLocnCode("00");
-    entity.setOrgUnitNo(request.districtCode());
+    entity.setGeographicCode(request.districtCode());
     entity.setSamplingCode(request.samplingCode());
     entity.setDeleted(false);
 

@@ -237,7 +237,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     assertThat(savedEntity).isPresent();
     assertThat(savedEntity.get().getClientNumber()).isEqualTo("00012797");
     assertThat(savedEntity.get().getClientLocnCode()).isEqualTo("00");
-    assertThat(savedEntity.get().getOrgUnitNo()).isEqualTo("DND");
+    assertThat(savedEntity.get().getGeographicCode()).isEqualTo("DND");
     assertThat(savedEntity.get().getSamplingCode()).isEqualTo("AVG");
     assertThat(savedEntity.get().getRevision()).isEqualTo(0L);
     assertThat(savedEntity.get().isDeleted()).isFalse();
@@ -507,7 +507,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     ru.setId(55555L);
     ru.setClientNumber("00012797");
     ru.setClientLocnCode("00");
-    ru.setOrgUnitNo("DND");
+    ru.setGeographicCode("DND");
     ru.setSamplingCode("AVG");
     ru.setDeleted(false);
     ru.setCreatedBy(fixtureActor);

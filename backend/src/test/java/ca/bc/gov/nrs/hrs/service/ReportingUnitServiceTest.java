@@ -348,7 +348,7 @@ class ReportingUnitServiceTest {
     var reportingUnit = new ReportingUnitEntity();
     reportingUnit.setClientNumber(CLIENT_NUMBER);
     reportingUnit.setClientLocnCode("01");
-    reportingUnit.setOrgUnitNo("DND");
+    reportingUnit.setGeographicCode("DND");
     reportingUnit.setSamplingCode("CUSTOM");
     var clientDto = buildClientDto(CLIENT_NUMBER);
 
@@ -502,7 +502,7 @@ class ReportingUnitServiceTest {
     assertThat(savedEntity.getId()).isEqualTo(333L);
     assertThat(savedEntity.getClientNumber()).isEqualTo(CLIENT_NUMBER);
     assertThat(savedEntity.getClientLocnCode()).isEqualTo("00");
-    assertThat(savedEntity.getOrgUnitNo()).isEqualTo("DND");
+    assertThat(savedEntity.getGeographicCode()).isEqualTo("DND");
     assertThat(savedEntity.getSamplingCode()).isEqualTo("AVG");
     assertThat(savedEntity.isDeleted()).isFalse();
   }
