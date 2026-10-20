@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
-import { codeDescriptionSchema } from '@/types/search.types';
-import type { CodeDescriptionDto } from '@/types/search.types';
+import { codeDescriptionSchema, type CodeDescriptionDto } from '@/types/search.types';
 
 /**
  * Reporting-unit details response as serialized by

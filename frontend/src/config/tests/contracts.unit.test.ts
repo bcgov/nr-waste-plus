@@ -17,7 +17,7 @@ const contractsDir = path.resolve(
 // [file relative to shared/contracts/, schema]
 // Grows alongside backend golden tests: a new golden file without a registry
 // entry (or the reverse) fails the completeness test below.
-const registry: ReadonlyArray<readonly [string, z.ZodType]> = [
+const registry: ReadonlyArray<readonly [string, z.ZodType<unknown>]> = [
   ['pagination/paged-model.json', pageableResponseSchema(z.unknown())],
   ['reporting-units/block-details.json', blockDetailsSchema],
 ];

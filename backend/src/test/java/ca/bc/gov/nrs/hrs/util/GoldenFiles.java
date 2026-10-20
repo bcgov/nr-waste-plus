@@ -104,8 +104,8 @@ public final class GoldenFiles {
   }
 
   private static String diffMessage(String relativePath, JsonNode expected, JsonNode actual) {
-    String expectedPretty = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(expected);
-    String actualPretty = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(actual);
+    String expectedPretty = truncate(MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(expected));
+    String actualPretty = truncate(MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(actual));
 
     StringBuilder message = new StringBuilder();
     message
@@ -121,6 +121,18 @@ public final class GoldenFiles {
         .append(actualPretty)
         .append('\n');
     return message.toString();
+  }
+
+  /** Caps an embedded JSON dump so a large payload does not flood the failure log. */
+  private static String truncate(String pretty) {
+    String[] lines = pretty.split("\n", -1);
+    if (lines.length <= 40) {
+      return pretty;
+    }
+    return String.join("\n", java.util.Arrays.copyOfRange(lines, 0, 40))
+        + "\n... ("
+        + (lines.length - 40)
+        + " more lines — full file under shared/contracts/)";
   }
 
   /** Lists the JSON pointers whose values differ, up to ten entries. */
