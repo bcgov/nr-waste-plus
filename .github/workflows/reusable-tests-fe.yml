@@ -34,7 +34,7 @@ jobs:
         id: diff
         uses: bcgov/action-diff-triggers@a80e4b3cf77b7e05f84e74030e3bfa08b717a574 # v1.2.1
         with:
-          triggers: ('frontend/')
+          triggers: ('frontend/', 'shared/contracts/')
 
   unit:
     environment: test
