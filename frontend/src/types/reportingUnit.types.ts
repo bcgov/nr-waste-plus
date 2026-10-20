@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { codeDescriptionSchema } from '@/types/search.types';
+import type { CodeDescriptionDto } from '@/types/search.types';
 
 /**
  * Reporting-unit details response as serialized by
@@ -119,3 +120,33 @@ export const blockDetailsSchema = z.looseObject({
 
 /** TypeScript representation of a block-details response. */
 export type BlockDetailsDto = z.infer<typeof blockDetailsSchema>;
+
+/**
+ * One row of the reporting-unit blocks list
+ * (`GET /api/reporting-units/{reportingUnitId}/blocks`). Typed (not
+ * zod-parsed) per the service's getBlocks convention.
+ */
+export type ReportingUnitBlocksRow = {
+  /** Row key required by {@link TableResource}. */
+  id: number;
+  /** Forest licence number, e.g. `A00123`. */
+  licenseNumber: string | null;
+  /** Cutting permit number, e.g. `75`. */
+  cuttingPermit: string | null;
+  /** Cut block identifier, e.g. `101` — labelled "Block ID" in the design. */
+  cutBlockId: string;
+  /** Timber mark, e.g. `75/1AD`. */
+  timberMark: string | null;
+  /** Total waste area in hectares, rendered as `x.xx ha`. */
+  totalWasteAreaHa: number | null;
+  /** Total waste volume in cubic metres, rendered as `x m3`. */
+  totalWasteVolumeM3: number | null;
+  /** Name of the submitter or sponsor, e.g. `Jane Lumberjack`. */
+  submitter: string | null;
+  /** Submission status, shown as a {@link ColorTag} using {@link BLOCK_STATUS_COLOR_MAP}. */
+  status: CodeDescriptionDto;
+  /** ISO date-time of the last update, split into "Last updated" (date) and "Time" columns. */
+  lastUpdated: string | null;
+  /** Block type (e.g. `DISTRICT_AVERAGE`); null for legacy (Oracle) rows. */
+  blockType: string | null;
+};

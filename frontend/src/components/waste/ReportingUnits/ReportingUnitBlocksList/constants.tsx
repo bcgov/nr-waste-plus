@@ -3,6 +3,7 @@ import DateTag from '@/components/core/Tags/DateTag';
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 
 import type { NestedKeyOf } from '@/types/pagination.types';
+import type { ReportingUnitBlocksRow } from '@/types/reportingUnit.types';
 import type { CodeDescriptionDto } from '@/types/search.types';
 import type { PageableResponse } from '@/types/tableResource.types';
 import type { TableHeaderType } from '@/types/tableResource.types';
@@ -15,30 +16,6 @@ import type { TableHeaderType } from '@/types/tableResource.types';
  * table columns; replace it with the real response DTO once issue #1250 delivers
  * the block-details endpoint.
  */
-export type ReportingUnitBlocksRow = {
-  /** Row key required by {@link TableResource}. */
-  id: number;
-  /** Forest licence number, e.g. `A00123`. */
-  licenseNumber: string | null;
-  /** Cutting permit number, e.g. `75`. */
-  cuttingPermit: string | null;
-  /** Cut block identifier, e.g. `101` — labelled "Block ID" in the design. */
-  cutBlockId: string;
-  /** Timber mark, e.g. `75/1AD`. */
-  timberMark: string | null;
-  /** Total waste area in hectares, rendered as `x.xx ha`. */
-  totalWasteAreaHa: number | null;
-  /** Total waste volume in cubic metres, rendered as `x m3`. */
-  totalWasteVolumeM3: number | null;
-  /** Name of the submitter or sponsor, e.g. `Jane Lumberjack`. */
-  submitter: string | null;
-  /** Submission status, shown as a {@link ColorTag} using {@link BLOCK_STATUS_COLOR_MAP}. */
-  status: CodeDescriptionDto;
-  /** ISO date-time of the last update, split into "Last updated" (date) and "Time" columns. */
-  lastUpdated: string | null;
-  /** Block type (e.g. `DISTRICT_AVERAGE`); null for legacy (Oracle) rows. */
-  blockType: string | null;
-};
 
 /**
  * Maps the block submission status codes rendered in the table to their Carbon tag

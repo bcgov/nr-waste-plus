@@ -6,7 +6,7 @@ import {
   reportingUnitSchema,
 } from '@/types/reportingUnit.types';
 
-import type { ReportingUnitBlocksRow } from '@/components/waste/ReportingUnits/ReportingUnitBlocksList/constants';
+import type { ReportingUnitBlocksRow } from '@/types/reportingUnit.types';
 import type {
   BlockCreateRequestDto,
   BlockCreateResponseDto,

@@ -6,18 +6,15 @@ import EmptySection from '@/components/core/EmptySection';
 import TableResource from '@/components/Form/TableResource';
 import { navigateInTree } from '@/routes/inTreePaths';
 
-import {
-  BLOCKS_TABLE_HEADERS,
-  EMPTY_BLOCKS_CONTENT,
-  type ReportingUnitBlocksRow,
-} from './constants';
+import { BLOCKS_TABLE_HEADERS, EMPTY_BLOCKS_CONTENT } from './constants';
 
 import type { PaginationOnChangeType, TableRowAction } from '@/types/tableResource.types';
+import type { ReportingUnitBlocksRow } from '@/types/reportingUnit.types';
 import type { PageableResponse } from '@/types/tableResource.types';
 
 import './index.scss';
 
-export type { ReportingUnitBlocksRow } from './constants';
+export type { ReportingUnitBlocksRow } from '@/types/reportingUnit.types';
 
 /**
  * Component props for the Reporting Unit blocks table.

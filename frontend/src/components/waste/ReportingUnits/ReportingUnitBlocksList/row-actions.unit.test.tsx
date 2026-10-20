@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import ReportingUnitBlocksList from './index';
 
-import type { ReportingUnitBlocksRow } from './constants';
+import type { ReportingUnitBlocksRow } from '@/types/reportingUnit.types';
 import type { CodeDescriptionDto } from '@/types/search.types';
 import type { TableRowAction } from '@/types/tableResource.types';
 

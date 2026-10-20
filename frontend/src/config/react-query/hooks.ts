@@ -41,7 +41,6 @@ import {
   type SpeciesCompositionQueryParams,
 } from './queryKeys';
 
-import type { ReportingUnitBlocksRow } from '@/components/waste/ReportingUnits/ReportingUnitBlocksList/constants';
 import type { ProblemDetails } from '@/config/api/types';
 import type {
   DistrictVolumeCreate,
@@ -49,6 +48,7 @@ import type {
   DistrictVolumeListItem,
 } from '@/types/districtvolumes.types';
 import type { ForestClientDto, MyForestClientDto } from '@/types/forestclient.types';
+import type { ReportingUnitBlocksRow } from '@/types/reportingUnit.types';
 import type {
   BlockCreateRequestDto,
   BlockCreateResponseDto,
