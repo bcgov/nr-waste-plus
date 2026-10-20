@@ -15,10 +15,11 @@ parameters:
     required: true
   - name: MINIO_ROOT_USER
     description: MinIO root user / S3 access key
-    required: true
+    value: minioadmin
   - name: MINIO_ROOT_PASSWORD
     description: MinIO root password / S3 secret key
-    required: true
+    from: "[a-zA-Z0-9]{32}"
+    generate: expression
   - name: OBJECT_STORAGE_BUCKET
     description: Default bucket name to seed
     value: nr-waste

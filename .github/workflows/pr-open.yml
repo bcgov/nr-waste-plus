@@ -55,8 +55,8 @@ jobs:
       oracledb-username: THE
       object-storage-endpoint: http://nr-waste-plus-tools-minio.cffaf3-tools.svc.cluster.local:9000
       object-storage-presigner-endpoint: https://nr-waste-plus-tools-minio-api.apps.silver.devops.gov.bc.ca
-      object-storage-access-key: ${{ secrets.OBJECT_STORAGE_ACCESS_KEY || secrets.MINIO_ROOT_USER }}
-      object-storage-secret-key: ${{ secrets.OBJECT_STORAGE_SECRET_KEY || secrets.MINIO_ROOT_PASSWORD }}
+      object-storage-access-key: ${{ secrets.OBJECT_STORAGE_ACCESS_KEY || secrets.MINIO_ROOT_USER || 'minioadmin' }}
+      object-storage-secret-key: ${{ secrets.OBJECT_STORAGE_SECRET_KEY || secrets.MINIO_ROOT_PASSWORD || secrets.DB_PASSWORD }}
       object-storage-force-path-style: 'true'
       configmap-backend: |-
         info:
