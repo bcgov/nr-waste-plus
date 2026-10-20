@@ -53,7 +53,6 @@ const coastDataSchema = z.object({
  * `TableDataDto` wire envelope (the SPECIES_COMPOSITION variant is owned by
  * the species composition schemas).
  */
-const tableDataSchema = z.discriminatedUnion('type', [interiorDataSchema, coastDataSchema]);
 
 /**
  * List item as serialized by the shared `DistrictVolumeListItemDto` record
@@ -105,24 +104,24 @@ export const districtVolumeDetailSchema = z.discriminatedUnion('area', [
 
 /**
  * Create request body as accepted by the shared `DistrictVolumeCreateDto`
- * record (outgoing, client-constructed — never parsed). `startDate` must be
- * strictly after today, validated server-side.
+ * record (outgoing, client-constructed from validated form state — never
+ * parsed, hence a plain type). `startDate` must be strictly after today,
+ * validated server-side.
  */
-const districtVolumeCreateSchema = z.discriminatedUnion('area', [
-  z.object({
-    area: z.literal('INTERIOR'),
-    startDate: z.iso.date(),
-    tableLevelFactor: z.number(),
-    tableData: interiorDataSchema,
-  }),
-  z.object({
-    area: z.literal('COASTAL'),
-    startDate: z.iso.date(),
-    tableLevelFactor: z.number(),
-    heliMultiplier: z.number().positive(),
-    tableData: coastDataSchema,
-  }),
-]);
+export type DistrictVolumeCreate =
+  | {
+      area: 'INTERIOR';
+      startDate: string;
+      tableLevelFactor: number;
+      tableData: InteriorData;
+    }
+  | {
+      area: 'COASTAL';
+      startDate: string;
+      tableLevelFactor: number;
+      heliMultiplier: number;
+      tableData: CoastData;
+    };
 
 export type InteriorDistrictRow = z.infer<typeof interiorDistrictRowSchema>;
 export type InteriorZone = z.infer<typeof interiorZoneSchema>;
@@ -130,7 +129,6 @@ export type InteriorData = z.infer<typeof interiorDataSchema>;
 export type CoastDistrictRow = z.infer<typeof coastDistrictRowSchema>;
 export type CoastSection = z.infer<typeof coastSectionSchema>;
 export type CoastData = z.infer<typeof coastDataSchema>;
-export type TableData = z.infer<typeof tableDataSchema>;
+export type TableData = InteriorData | CoastData;
 export type DistrictVolumeListItem = z.infer<typeof districtVolumeListItemSchema>;
 export type DistrictVolumeDetail = z.infer<typeof districtVolumeDetailSchema>;
-export type DistrictVolumeCreate = z.infer<typeof districtVolumeCreateSchema>;

@@ -1,13 +1,13 @@
 import { test, expect } from '@playwright/test';
 
-import type {
-  FormulaSetResponse,
-  FormulaVariablesResponse,
-} from '@/services/formulaConfiguration.types';
-
 import { setupAppShellMocks } from '@/config/tests/app.setup';
 import { mockJwt } from '@/config/tests/auth.helper';
 import { mockApiResponses } from '@/config/tests/e2e.helper';
+
+import type {
+  FormulaSetResponse,
+  FormulaVariablesResponse,
+} from '@/types/formulaConfiguration.types';
 
 const canOverrideClaims = (): boolean => process.env.VITE_MOCK_AUTH?.toLowerCase() === 'true';
 
@@ -37,8 +37,6 @@ const currentSetResponse: FormulaSetResponse = {
   endDate: null,
   deleted: false,
   formulas: [],
-  createdAt: '2026-01-01T00:00:00Z',
-  updatedAt: '2026-01-01T00:00:00Z',
 };
 
 const createdSetResponse: FormulaSetResponse = {
@@ -48,8 +46,6 @@ const createdSetResponse: FormulaSetResponse = {
   endDate: null,
   deleted: false,
   formulas: [],
-  createdAt: '2026-09-25T10:00:00Z',
-  updatedAt: '2026-09-25T10:00:00Z',
 };
 
 const problem422 = {

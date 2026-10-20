@@ -133,19 +133,18 @@ export const speciesCompositionDetailSchema = districtVolumeDetailBaseSchema.ext
  * Create request body as accepted by the shared `DistrictVolumeCreateDto`
  * record (outgoing, client-constructed — never parsed).
  */
-const speciesCompositionCreateSchema = z.object({
-  area: z.enum(['INTERIOR', 'COASTAL']),
-  startDate: z.iso.date(),
-  tableLevelFactor: z.number(),
-  heliMultiplier: z.number().nullable(),
-  tableData: z.object({
-    type: z.literal('SPECIES_COMPOSITION'),
-    rows: z.array(speciesCompositionRowSchema),
-  }),
-});
+export interface SpeciesCompositionCreate {
+  area: 'INTERIOR' | 'COASTAL';
+  startDate: string;
+  tableLevelFactor: number;
+  heliMultiplier: number | null;
+  tableData: {
+    type: 'SPECIES_COMPOSITION';
+    rows: SpeciesCompositionRow[];
+  };
+}
 
 export type SpeciesCompositionData = z.infer<typeof speciesCompositionDataSchema>;
 export type SpeciesCompositionRow = NonNullable<SpeciesCompositionData['rows']>[number];
 export type SpeciesCompositionListItem = z.infer<typeof speciesCompositionListItemSchema>;
 export type SpeciesCompositionDetail = z.infer<typeof speciesCompositionDetailSchema>;
-export type SpeciesCompositionCreate = z.infer<typeof speciesCompositionCreateSchema>;

@@ -1,9 +1,9 @@
 import { useListTableRowActions } from '@/hooks/useTableRow';
 
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
+import type { FormulaSetListItem } from '@/types/formulaConfiguration.types.ts';
 import type { PageableResponse, TableRowAction } from '@/types/tableResource.types.ts';
 
-type FormulaSetRow = PageableResponse<FormulaSetResponse>['content'][number];
+type FormulaSetRow = PageableResponse<FormulaSetListItem>['content'][number];
 
 /**
  * Row action hook for the formula configuration list table.
@@ -19,7 +19,7 @@ type FormulaSetRow = PageableResponse<FormulaSetResponse>['content'][number];
  */
 export const useFormulaConfigurationListRowActions = (
   onDeleteClick: (row: FormulaSetRow) => void,
-): ((row: FormulaSetRow) => TableRowAction<FormulaSetResponse>[]) => {
+): ((row: FormulaSetRow) => TableRowAction<FormulaSetListItem>[]) => {
   return useListTableRowActions<FormulaSetRow>({
     configType: 'formula configuration',
     routePath: '/configuration/formulas/{id}',

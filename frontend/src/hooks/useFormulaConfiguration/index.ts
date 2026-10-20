@@ -1,16 +1,23 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import API from '@/services/APIs';
+import { generateSortArray } from '@/services/utils';
+import {
+  formulaSetListItemSchema,
+  formulaSetSchema,
+  formulaVariablesSchema,
+} from '@/types/formulaConfiguration.types';
+import { pageableResponseSchema } from '@/types/pagination.types';
+
+import type { SortDirectionType } from '@/services/types';
 import type {
   FormulaSetResponse,
+  FormulaSetListItem,
   FormulaSetRequest,
   FormulaSetEffectiveParams,
   CurrentFormulaSetParams,
   FormulaVariablesParams,
-} from '@/services/formulaConfiguration.types';
-import type { SortDirectionType } from '@/services/types';
-
-import API from '@/services/APIs';
-import { generateSortArray } from '@/services/utils';
+} from '@/types/formulaConfiguration.types';
 
 const formulaConfiguration = API.formulaConfiguration;
 
@@ -47,12 +54,14 @@ export function useFormulaSetList(
 ) {
   return useQuery({
     queryKey: formulaConfigurationKeys.list(params),
-    queryFn: () =>
-      formulaConfiguration.getFormulaSets({
-        page: params.page,
-        size: params.size,
-        sort: generateSortArray<FormulaSetResponse>(params.sort),
-      }),
+    queryFn: async () =>
+      pageableResponseSchema(formulaSetListItemSchema).parse(
+        await formulaConfiguration.getFormulaSets({
+          page: params.page,
+          size: params.size,
+          sort: generateSortArray<FormulaSetListItem>(params.sort),
+        }),
+      ),
     placeholderData: keepPreviousData,
     ...options,
   });
@@ -64,7 +73,8 @@ export function useFormulaSetList(
 export function useEffectiveFormulaSet(params: FormulaSetEffectiveParams, enabled = true) {
   return useQuery({
     queryKey: formulaConfigurationKeys.effective(params),
-    queryFn: () => formulaConfiguration.getEffectiveFormulaSet(params),
+    queryFn: async () =>
+      formulaSetSchema.parse(await formulaConfiguration.getEffectiveFormulaSet(params)),
     enabled: enabled && !!params.date && !!params.area,
   });
 }
@@ -78,7 +88,7 @@ export function useFormulaSetDetail(id?: number, options?: { notificationTarget?
       typeof id === 'number'
         ? formulaConfigurationKeys.detail(id)
         : ['formulaConfiguration', 'detail', 'disabled'],
-    queryFn: () => formulaConfiguration.getFormulaSet(id!),
+    queryFn: async () => formulaSetSchema.parse(await formulaConfiguration.getFormulaSet(id!)),
     enabled: typeof id === 'number',
     meta: options?.notificationTarget
       ? { notificationTarget: options.notificationTarget }
@@ -89,7 +99,8 @@ export function useFormulaSetDetail(id?: number, options?: { notificationTarget?
 export function useCurrentOpenEndedFormulaSet(params: CurrentFormulaSetParams, enabled = true) {
   return useQuery({
     queryKey: formulaConfigurationKeys.current(params),
-    queryFn: () => formulaConfiguration.getCurrentOpenEndedFormulaSet(params),
+    queryFn: async () =>
+      formulaSetSchema.parse(await formulaConfiguration.getCurrentOpenEndedFormulaSet(params)),
     enabled: enabled && !!params.area,
   });
 }
@@ -101,7 +112,8 @@ export function useCurrentOpenEndedFormulaSet(params: CurrentFormulaSetParams, e
 export function useFormulaVariables(params: FormulaVariablesParams, enabled = true) {
   return useQuery({
     queryKey: formulaConfigurationKeys.variables(params),
-    queryFn: () => formulaConfiguration.getVariables(params),
+    queryFn: async () =>
+      formulaVariablesSchema.parse(await formulaConfiguration.getVariables(params)),
     enabled: enabled && !!params.date && !!params.area && !!params.districtCode,
     staleTime: 5 * 60 * 1000, // 5 minutes — variable values change with date/area
   });

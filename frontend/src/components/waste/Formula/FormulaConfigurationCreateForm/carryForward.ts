@@ -1,7 +1,4 @@
-import type {
-  FormulaItemDto,
-  FormulaValidationError,
-} from '@/services/formulaConfiguration.types.ts';
+import type { FormulaItemDto, FormulaValidationError } from '@/types/formulaConfiguration.types.ts';
 
 /** A single formula's client-side draft state in the create form. */
 export interface FormulaDraftValue {

@@ -1,9 +1,4 @@
-import type {
-  CodeDescriptionDto,
-  NestedKeyOf,
-  SortDirectionType,
-  ValueByPath,
-} from './types';
+import type { CodeDescriptionDto, NestedKeyOf, SortDirectionType, ValueByPath } from './types';
 
 /**
  * Removes non-meaningful values from an object recursively.

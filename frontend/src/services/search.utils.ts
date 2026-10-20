@@ -51,8 +51,7 @@ type CodeDescriptionArrayConverterMap = {
  */
 const defaultCodeDescriptionArrayConverter: CodeDescriptionArrayConverter<
   keyof ReportingUnitSearchParametersViewDto
-> = (value) =>
-  value?.map((item) => item.code).filter((code): code is string => code != null);
+> = (value) => value?.map((item) => item.code).filter((code): code is string => code != null);
 
 /**
  * Key-mapped custom converters from CodeDescriptionDto[] to the corresponding property type.

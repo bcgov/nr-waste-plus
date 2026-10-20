@@ -2,17 +2,18 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import { FormulaConfigurationService } from './formulaConfiguration.service';
 
+import type { APIConfig } from '@/config/api/types';
+import type { PageableRequest } from '@/services/types';
 import type {
   FormulaSetRequest,
   FormulaSetResponse,
-  FormulaSetListResponse,
+  FormulaSetListItem,
   FormulaSetEffectiveParams,
   CurrentFormulaSetParams,
   FormulaVariablesResponse,
   FormulaVariablesParams,
-} from './formulaConfiguration.types';
-import type { APIConfig } from '@/config/api/types';
-import type { PageableRequest } from '@/services/types';
+} from '@/types/formulaConfiguration.types';
+import type { PageableResponse } from '@/types/tableResource.types';
 
 describe('FormulaConfigurationService', () => {
   let service: FormulaConfigurationService;
@@ -36,13 +37,13 @@ describe('FormulaConfigurationService', () => {
 
   describe('getFormulaSets', () => {
     it('should call doRequest with correct parameters for list', async () => {
-      const mockResponse: FormulaSetListResponse = {
+      const mockResponse: PageableResponse<FormulaSetListItem> = {
         content: [],
         page: { number: 0, size: 20, totalElements: 0, totalPages: 0 },
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
-      const pageable: PageableRequest<FormulaSetResponse> = {
+      const pageable: PageableRequest<FormulaSetListItem> = {
         page: 0,
         size: 20,
         sort: ['startDate,DESC'],
@@ -58,13 +59,13 @@ describe('FormulaConfigurationService', () => {
     });
 
     it('should handle empty pageable params', async () => {
-      const mockResponse: FormulaSetListResponse = {
+      const mockResponse: PageableResponse<FormulaSetListItem> = {
         content: [],
         page: { number: 0, size: 20, totalElements: 0, totalPages: 0 },
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
-      const pageable: PageableRequest<FormulaSetResponse> = { page: 0, size: 20 };
+      const pageable: PageableRequest<FormulaSetListItem> = { page: 0, size: 20 };
       await service.getFormulaSets(pageable);
 
       expect(mockDoRequest).toHaveBeenCalledWith(mockConfig, {
@@ -75,13 +76,13 @@ describe('FormulaConfigurationService', () => {
     });
 
     it('should pass through meta when provided', async () => {
-      const mockResponse: FormulaSetListResponse = {
+      const mockResponse: PageableResponse<FormulaSetListItem> = {
         content: [],
         page: { number: 0, size: 20, totalElements: 0, totalPages: 0 },
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
-      const pageable: PageableRequest<FormulaSetResponse> = {
+      const pageable: PageableRequest<FormulaSetListItem> = {
         page: 0,
         size: 20,
         sort: ['startDate,DESC'],
@@ -106,8 +107,6 @@ describe('FormulaConfigurationService', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '2026-05-15T14:23:00Z',
-        updatedAt: '2026-06-01T10:00:00Z',
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
@@ -131,15 +130,12 @@ describe('FormulaConfigurationService', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '2026-09-10T10:00:00Z',
-        updatedAt: '2026-09-10T10:00:00Z',
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
       const dto: FormulaSetRequest = {
         area: 'INTERIOR',
         startDate: '2026-09-11',
-        endDate: null,
         formulas: [],
       };
       const result = await service.createFormulaSet(dto);
@@ -162,8 +158,6 @@ describe('FormulaConfigurationService', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '2026-05-15T14:23:00Z',
-        updatedAt: '2026-06-01T10:00:00Z',
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
@@ -184,8 +178,6 @@ describe('FormulaConfigurationService', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '2026-05-15T14:23:00Z',
-        updatedAt: '2026-06-01T10:00:00Z',
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
@@ -208,8 +200,6 @@ describe('FormulaConfigurationService', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '2026-05-15T14:23:00Z',
-        updatedAt: '2026-06-01T10:00:00Z',
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
@@ -233,15 +223,12 @@ describe('FormulaConfigurationService', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '2026-09-10T10:00:00Z',
-        updatedAt: '2026-09-10T10:00:00Z',
       };
       mockDoRequest.mockResolvedValue(mockResponse);
 
       const dto: FormulaSetRequest = {
         area: 'INTERIOR',
         startDate: '2026-09-11',
-        endDate: null,
         formulas: [],
       };
       const result = await service.updateFormulaSet(5, dto);

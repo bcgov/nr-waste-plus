@@ -1,18 +1,19 @@
+import { CancelablePromise } from '@/config/api/CancelablePromise';
+import { HttpClient, type APIConfig } from '@/config/api/types';
+
 import { removeEmpty } from './utils';
 
+import type { PageableRequest } from '@/services/types';
 import type {
   FormulaSetRequest,
   FormulaSetResponse,
-  FormulaSetListResponse,
+  FormulaSetListItem,
   FormulaSetEffectiveParams,
   CurrentFormulaSetParams,
   FormulaVariablesResponse,
   FormulaVariablesParams,
-} from './formulaConfiguration.types';
-import type { PageableRequest } from '@/services/types';
-
-import { CancelablePromise } from '@/config/api/CancelablePromise';
-import { HttpClient, type APIConfig } from '@/config/api/types';
+} from '@/types/formulaConfiguration.types';
+import type { PageableResponse } from '@/types/tableResource.types';
 
 /**
  * Backend client for formula configuration endpoints.
@@ -36,10 +37,10 @@ export class FormulaConfigurationService extends HttpClient {
    * @returns A paged list of formula set items.
    */
   getFormulaSets(
-    pageable: PageableRequest<FormulaSetResponse>,
+    pageable: PageableRequest<FormulaSetListItem>,
     meta?: Record<string, unknown>,
-  ): CancelablePromise<FormulaSetListResponse> {
-    return this.doRequest<FormulaSetListResponse>(this.config, {
+  ): CancelablePromise<PageableResponse<FormulaSetListItem>> {
+    return this.doRequest<PageableResponse<FormulaSetListItem>>(this.config, {
       method: 'GET',
       url: '/api/configuration/formulas',
       query: removeEmpty(pageable),

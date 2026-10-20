@@ -8,20 +8,20 @@ import { useFormulaSetList, useDeleteFormulaSet } from '@/hooks/useFormulaConfig
 import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
 import { useListTableState } from '@/hooks/useTableRow';
 
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
+import type { FormulaSetListItem } from '@/types/formulaConfiguration.types.ts';
 import type { PageableResponse } from '@/types/tableResource.types.ts';
 
 import './index.scss';
 
 /** Paginated formula-set table backed by the shared TableResource component. */
 const FormulaConfigurationListTable: FC = () => {
-  const [rowToDelete, setRowToDelete] = useState<FormulaSetResponse | null>(null);
+  const [rowToDelete, setRowToDelete] = useState<FormulaSetListItem | null>(null);
   const { data, isLoading, isFetching, isError, refetch, handlePageChange, handleSort, pageSize } =
     useListTableState({ queryHook: useFormulaSetList });
   const deleteMutation = useDeleteFormulaSet();
   const getRowActions = useFormulaConfigurationListRowActions(setRowToDelete);
 
-  const content = (data as PageableResponse<FormulaSetResponse> | undefined) ?? {
+  const content = (data as PageableResponse<FormulaSetListItem> | undefined) ?? {
     content: [],
     page: { number: 0, size: pageSize, totalElements: 0, totalPages: 0 },
   };
