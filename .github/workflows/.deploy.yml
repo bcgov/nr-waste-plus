@@ -98,6 +98,9 @@ jobs:
     steps:
       - name: Deployment Init
         uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
+        env:
+          OBJECT_STORAGE_ACCESS_KEY: ${{ inputs.object-storage-access-key || secrets.OBJECT_STORAGE_ACCESS_KEY }}
+          OBJECT_STORAGE_SECRET_KEY: ${{ inputs.object-storage-secret-key || secrets.OBJECT_STORAGE_SECRET_KEY }}
         with:
           file: common/openshift.init.yml
           oc_namespace: ${{ secrets.OC_NAMESPACE }}
@@ -130,8 +133,8 @@ jobs:
             -p VITE_IDIR_HELP=${{ secrets.VITE_IDIR_HELP }}
             -p OBJECT_STORAGE_ENDPOINT=${{ inputs.object-storage-endpoint || secrets.OBJECT_STORAGE_ENDPOINT }}
             -p OBJECT_STORAGE_PRESIGNER_ENDPOINT=${{ inputs.object-storage-presigner-endpoint || secrets.OBJECT_STORAGE_PRESIGNER_ENDPOINT }}
-            -p OBJECT_STORAGE_ACCESS_KEY=${{ inputs.object-storage-access-key || secrets.OBJECT_STORAGE_ACCESS_KEY }}
-            -p OBJECT_STORAGE_SECRET_KEY=${{ inputs.object-storage-secret-key || secrets.OBJECT_STORAGE_SECRET_KEY }}
+            -p OBJECT_STORAGE_ACCESS_KEY="$OBJECT_STORAGE_ACCESS_KEY"
+            -p OBJECT_STORAGE_SECRET_KEY="$OBJECT_STORAGE_SECRET_KEY"
             -p OBJECT_STORAGE_BUCKET=${{ inputs.object-storage-bucket || secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}
             -p OBJECT_STORAGE_REGION=${{ secrets.OBJECT_STORAGE_REGION || 'ca-central-1' }}
             -p OBJECT_STORAGE_FORCE_PATH_STYLE=${{ inputs.object-storage-force-path-style || secrets.OBJECT_STORAGE_FORCE_PATH_STYLE || 'false' }}

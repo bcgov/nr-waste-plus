@@ -77,6 +77,9 @@ jobs:
     steps:
       - name: Initializing MinIO Deployment
         uses: bcgov/action-deployer-openshift@e2d60eb9cacceb89c3b97d8dcf0a2c460eea5eab # v4.2.3
+        env:
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
         with:
           file: minio/openshift.deploy.yml
           oc_namespace: cffaf3-tools
@@ -86,8 +89,8 @@ jobs:
           overwrite: true
           parameters:
             -p ZONE=tools
-            -p MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}
-            -p MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}
+            -p MINIO_ROOT_USER="$MINIO_ROOT_USER"
+            -p MINIO_ROOT_PASSWORD="$MINIO_ROOT_PASSWORD"
             -p OBJECT_STORAGE_BUCKET=${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}
 
   remove-tools:
@@ -166,6 +169,8 @@ jobs:
       - name: Seed MinIO bucket
         continue-on-error: true
         uses: bcgov/action-oc-runner@111868d1fc50db0a40417ba321d865ef5c931bbd # v1.7.0
+        env:
+          OBJECT_STORAGE_BUCKET: ${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }}
         with:
           oc_namespace: cffaf3-tools
           oc_server: ${{ secrets.oc_server }}
@@ -176,7 +181,7 @@ jobs:
               POD_NAME=$(oc get pods -l app=nr-waste-plus-tools -l deployment=nr-waste-plus-tools-minio -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
               if [ -n "$POD_NAME" ]; then
                 echo "MinIO pod found: $POD_NAME"
-                oc exec $POD_NAME -c minio-init -- mc mb --ignore-existing local/${{ secrets.OBJECT_STORAGE_BUCKET || 'nr-waste' }} || true
+                oc exec $POD_NAME -c minio-init -- mc mb --ignore-existing local/"$OBJECT_STORAGE_BUCKET" || true
                 break
               else
                 echo "MinIO pod not found, retrying in 10 seconds... ($i/5)"
