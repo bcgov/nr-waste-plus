@@ -13,7 +13,7 @@ import {
   UserAvatar,
 } from '@carbon/icons-react';
 
-import type { DistrictType } from './types';
+import type { DistrictType } from '@/types/districtSelection.types';
 import type { ComponentType } from 'react';
 
 type IconProps = { 'className'?: string; 'data-testid'?: string };

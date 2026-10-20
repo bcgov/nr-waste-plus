@@ -7,7 +7,7 @@ import { usePreference } from '@/context/preference/usePreference';
 import { DESELECT_CLIENT, MIN_CLIENTS_SHOW_SEARCH } from './constants';
 import DistrictItem from './DistrictItem';
 
-import type { DistrictType } from './types';
+import type { DistrictType } from '@/types/districtSelection.types';
 import './index.scss';
 
 type IsSelected<T = string> = (item: DistrictType, userPreferenceValue: T) => boolean;
