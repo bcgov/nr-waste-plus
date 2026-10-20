@@ -9,7 +9,7 @@ import type {
   EventType,
   GlobalEvent,
   NotificationDisplayMode,
-} from '@/hooks/useNotificationEvents/types';
+} from '@/types/notification.types';
 
 const DEFAULT_TIMEOUT = 5000;
 const CLEAR_EVENTS_TITLE = 'clear-events';

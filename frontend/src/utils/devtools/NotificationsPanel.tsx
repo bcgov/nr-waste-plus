@@ -3,7 +3,7 @@ import { type FC, useEffect, useState } from 'react';
 import { dispatchNotificationEvent } from '@/context/notification/eventBridge';
 import { type NotificationContent } from '@/context/notification/NotificationContext';
 import { useNotification } from '@/context/notification/useNotification';
-import { type EventType, type GlobalEvent } from '@/hooks/useNotificationEvents/types';
+import { type EventType, type GlobalEvent } from '@/types/notification.types';
 
 const EVENT_TYPES: readonly EventType[] = ['error', 'info', 'success', 'warning'];
 const MAX_LOG_ENTRIES = 50;
@@ -18,7 +18,14 @@ const entryStyle = {
   justifyContent: 'space-between',
   padding: '4px 8px',
 } as const;
-const listStyle = { display: 'flex', flexDirection: 'column', gap: 4, listStyle: 'none', margin: 0, padding: 0 } as const;
+const listStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 4,
+  listStyle: 'none',
+  margin: 0,
+  padding: 0,
+} as const;
 
 /**
  * Maps a toast kind back to the event severity that can travel the
@@ -62,7 +69,12 @@ interface NotificationsEntryProps {
   readonly title: string;
 }
 
-const NotificationsEntry: FC<NotificationsEntryProps> = ({ description, label, onRefire, title }) => (
+const NotificationsEntry: FC<NotificationsEntryProps> = ({
+  description,
+  label,
+  onRefire,
+  title,
+}) => (
   <li style={entryStyle}>
     <span>
       <strong>{title}</strong>
