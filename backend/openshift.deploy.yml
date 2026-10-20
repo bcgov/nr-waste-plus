@@ -157,6 +157,42 @@ objects:
                     secretKeyRef:
                       name: ${NAME}-${ZONE}
                       key: client-base-key
+                - name: OBJECT_STORAGE_ENDPOINT
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: object-storage-endpoint
+                      optional: true
+                - name: OBJECT_STORAGE_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: object-storage-access-key
+                      optional: true
+                - name: OBJECT_STORAGE_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: object-storage-secret-key
+                      optional: true
+                - name: OBJECT_STORAGE_BUCKET
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: object-storage-bucket
+                      optional: true
+                - name: OBJECT_STORAGE_REGION
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: object-storage-region
+                      optional: true
+                - name: OBJECT_STORAGE_FORCE_PATH_STYLE
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}
+                      key: object-storage-force-path-style
+                      optional: true
               ports:
                 - containerPort: 8080
                   protocol: TCP

@@ -1,0 +1,283 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  app: ${NAME}-${ZONE}
+  app.kubernetes.io/part-of: ${NAME}-${ZONE}
+parameters:
+  - name: NAME
+    description: Product name
+    value: nr-waste-plus
+  - name: COMPONENT
+    description: Component name
+    value: minio
+  - name: ZONE
+    description: Deployment zone, e.g. tools or dev
+    required: true
+  - name: MINIO_ROOT_USER
+    description: MinIO root user / S3 access key
+    required: true
+  - name: MINIO_ROOT_PASSWORD
+    description: MinIO root password / S3 secret key
+    required: true
+  - name: OBJECT_STORAGE_BUCKET
+    description: Default bucket name to seed
+    value: nr-waste
+  - name: MINIO_IMAGE
+    description: Container image for MinIO server
+    value: cgr.dev/chainguard/minio:latest
+  - name: MINIO_CLIENT_IMAGE
+    description: Container image for MinIO client (bucket seeding)
+    value: cgr.dev/chainguard/minio-client:latest-dev
+  - name: MINIO_PVC_SIZE
+    description: Persistent volume capacity for MinIO data
+    value: 2Gi
+  - name: CPU_REQUEST
+    value: 50m
+  - name: MEMORY_REQUEST
+    value: 128Mi
+  - name: CPU_LIMIT
+    value: 250m
+  - name: MEMORY_LIMIT
+    value: 512Mi
+  - name: DOMAIN
+    value: apps.silver.devops.gov.bc.ca
+  - name: RANDOM_EXPRESSION
+    description: Random expression to ensure deployments update
+    from: "[a-zA-Z0-9]{32}"
+    generate: expression
+objects:
+  - kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+      name: ${NAME}-${ZONE}-${COMPONENT}-data
+      labels:
+        app: ${NAME}-${ZONE}
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: ${MINIO_PVC_SIZE}
+      storageClassName: netapp-file-standard
+  - kind: Secret
+    apiVersion: v1
+    metadata:
+      name: ${NAME}-${ZONE}-${COMPONENT}
+      labels:
+        app: ${NAME}-${ZONE}
+    stringData:
+      root-user: ${MINIO_ROOT_USER}
+      root-password: ${MINIO_ROOT_PASSWORD}
+      bucket: ${OBJECT_STORAGE_BUCKET}
+  - kind: Deployment
+    apiVersion: apps/v1
+    metadata:
+      name: ${NAME}-${ZONE}-${COMPONENT}
+      labels:
+        app: ${NAME}-${ZONE}
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          deployment: ${NAME}-${ZONE}-${COMPONENT}
+      strategy:
+        type: Recreate
+      template:
+        metadata:
+          name: ${NAME}-${ZONE}-${COMPONENT}
+          labels:
+            app: ${NAME}-${ZONE}
+            deployment: ${NAME}-${ZONE}-${COMPONENT}
+        spec:
+          volumes:
+            - name: minio-data
+              persistentVolumeClaim:
+                claimName: ${NAME}-${ZONE}-${COMPONENT}-data
+          containers:
+            - name: minio
+              image: ${MINIO_IMAGE}
+              imagePullPolicy: IfNotPresent
+              command:
+                - minio
+                - server
+                - /data
+                - --console-address
+                - :9001
+              ports:
+                - name: s3-api
+                  containerPort: 9000
+                  protocol: TCP
+                - name: console
+                  containerPort: 9001
+                  protocol: TCP
+              env:
+                - name: MINIO_ROOT_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}-${COMPONENT}
+                      key: root-user
+                - name: MINIO_ROOT_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}-${COMPONENT}
+                      key: root-password
+                - name: RANDOM_EXPRESSION
+                  value: ${RANDOM_EXPRESSION}
+              volumeMounts:
+                - name: minio-data
+                  mountPath: /data
+              resources:
+                requests:
+                  cpu: ${CPU_REQUEST}
+                  memory: ${MEMORY_REQUEST}
+                limits:
+                  cpu: ${CPU_LIMIT}
+                  memory: ${MEMORY_LIMIT}
+              readinessProbe:
+                httpGet:
+                  path: /minio/health/ready
+                  port: 9000
+                initialDelaySeconds: 5
+                periodSeconds: 10
+                timeoutSeconds: 5
+                failureThreshold: 3
+              livenessProbe:
+                httpGet:
+                  path: /minio/health/live
+                  port: 9000
+                initialDelaySeconds: 15
+                periodSeconds: 20
+                timeoutSeconds: 5
+                failureThreshold: 3
+            - name: minio-init
+              image: ${MINIO_CLIENT_IMAGE}
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -c
+              args:
+                - |
+                  echo "Waiting for MinIO server on localhost:9000..."
+                  until mc alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; do
+                    sleep 2
+                  done
+                  echo "Ensuring bucket '${OBJECT_STORAGE_BUCKET}' exists..."
+                  mc mb --ignore-existing local/${OBJECT_STORAGE_BUCKET}
+                  echo "Bucket '${OBJECT_STORAGE_BUCKET}' is ready."
+                  while true; do
+                    sleep 86400
+                  done
+              env:
+                - name: MINIO_ROOT_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}-${COMPONENT}
+                      key: root-user
+                - name: MINIO_ROOT_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}-${COMPONENT}
+                      key: root-password
+                - name: OBJECT_STORAGE_BUCKET
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-${ZONE}-${COMPONENT}
+                      key: bucket
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 50m
+                  memory: 64Mi
+          restartPolicy: Always
+          terminationGracePeriodSeconds: 30
+          dnsPolicy: ClusterFirst
+          schedulerName: default-scheduler
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: ${NAME}-${ZONE}-${COMPONENT}
+      labels:
+        app: ${NAME}-${ZONE}
+    spec:
+      ports:
+        - name: s3-api
+          port: 9000
+          targetPort: 9000
+          protocol: TCP
+        - name: console
+          port: 9001
+          targetPort: 9001
+          protocol: TCP
+      selector:
+        deployment: ${NAME}-${ZONE}-${COMPONENT}
+      type: ClusterIP
+  - kind: Route
+    apiVersion: route.openshift.io/v1
+    metadata:
+      name: ${NAME}-${ZONE}-${COMPONENT}
+      labels:
+        app: ${NAME}-${ZONE}
+    spec:
+      host: ${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}
+      port:
+        targetPort: console
+      to:
+        kind: Service
+        name: ${NAME}-${ZONE}-${COMPONENT}
+        weight: 100
+      tls:
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
+  - kind: NetworkPolicy
+    apiVersion: networking.k8s.io/v1
+    metadata:
+      name: allow-from-openshift-ingress-minio
+      labels:
+        app: ${NAME}-${ZONE}
+    spec:
+      podSelector:
+        matchLabels:
+          deployment: ${NAME}-${ZONE}-${COMPONENT}
+      policyTypes:
+        - Ingress
+      ingress:
+        - from:
+            - namespaceSelector:
+                matchLabels:
+                  network.openshift.io/policy-group: ingress
+  - kind: NetworkPolicy
+    apiVersion: networking.k8s.io/v1
+    metadata:
+      name: allow-cffaf3-dev-minio-access
+      labels:
+        app: ${NAME}-${ZONE}
+    spec:
+      podSelector:
+        matchLabels:
+          deployment: ${NAME}-${ZONE}-${COMPONENT}
+      policyTypes:
+        - Ingress
+      ingress:
+        - from:
+            - namespaceSelector:
+                matchLabels:
+                  environment: dev
+                  name: cffaf3
+  - kind: NetworkPolicy
+    apiVersion: networking.k8s.io/v1
+    metadata:
+      name: allow-same-namespace-minio
+      labels:
+        app: ${NAME}-${ZONE}
+    spec:
+      podSelector:
+        matchLabels:
+          deployment: ${NAME}-${ZONE}-${COMPONENT}
+      policyTypes:
+        - Ingress
+      ingress:
+        - from:
+            - podSelector: {}
+

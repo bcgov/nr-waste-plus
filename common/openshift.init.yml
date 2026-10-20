@@ -74,6 +74,24 @@ parameters:
     required: true
   - name: VITE_IDIR_HELP
     required: true
+  - name: OBJECT_STORAGE_ENDPOINT
+    description: S3 or MinIO endpoint URL
+    value: ""
+  - name: OBJECT_STORAGE_ACCESS_KEY
+    description: S3 or MinIO access key
+    value: ""
+  - name: OBJECT_STORAGE_SECRET_KEY
+    description: S3 or MinIO secret key
+    value: ""
+  - name: OBJECT_STORAGE_BUCKET
+    description: S3 or MinIO bucket name
+    value: "nr-waste"
+  - name: OBJECT_STORAGE_REGION
+    description: S3 or MinIO region
+    value: "ca-central-1"
+  - name: OBJECT_STORAGE_FORCE_PATH_STYLE
+    description: Force path style for S3 requests
+    value: "false"
 objects:
   - apiVersion: v1
     kind: Secret
@@ -98,6 +116,12 @@ objects:
       client-base-url: ${CLIENT_BASE_URL}
       client-base-key: ${CLIENT_BASE_KEY}
       fam-domain: ${VITE_FAM_DOMAIN}
+      object-storage-endpoint: ${OBJECT_STORAGE_ENDPOINT}
+      object-storage-access-key: ${OBJECT_STORAGE_ACCESS_KEY}
+      object-storage-secret-key: ${OBJECT_STORAGE_SECRET_KEY}
+      object-storage-bucket: ${OBJECT_STORAGE_BUCKET}
+      object-storage-region: ${OBJECT_STORAGE_REGION}
+      object-storage-force-path-style: ${OBJECT_STORAGE_FORCE_PATH_STYLE}
   - apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
     metadata:
