@@ -51,7 +51,9 @@ function listGoldenFiles(dir: string): string[] {
   for (const entry of readdirSync(dir)) {
     const full = path.join(dir, entry);
     if (statSync(full).isDirectory()) {
-      out.push(...listGoldenFiles(full).map((p) => path.join(entry, p)));
+      // POSIX separators everywhere: path.join would emit backslashes on
+      // Windows while the registry below is hardcoded with forward slashes.
+      out.push(...listGoldenFiles(full).map((p) => `${entry}/${p}`));
     } else if (entry.endsWith('.json')) {
       out.push(entry);
     }

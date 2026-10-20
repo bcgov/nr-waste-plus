@@ -98,7 +98,11 @@ public final class GoldenFiles {
 
   private static void writeGolden(Path golden, String actualJson) throws IOException {
     JsonNode tree = MAPPER.readTree(actualJson);
-    String pretty = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(tree) + "\n";
+    // Jackson's pretty printer emits the platform line separator, so on Windows
+    // the golden would be written with CRLF and churn git diff on Linux CI.
+    String pretty =
+        (MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(tree) + "\n")
+            .replace("\r\n", "\n");
     Files.createDirectories(golden.getParent());
     Files.writeString(golden, pretty, UTF_8);
   }
