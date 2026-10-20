@@ -20,7 +20,9 @@ export const forestClientSchema = z.object({
   legalMiddleName: z.string().nullable(),
   clientStatusCode: codeDescriptionSchema,
   clientTypeCode: codeDescriptionSchema,
-  acronym: z.string(),
+  // Backend `String acronym` without NON_NULL — legacy data carries null
+  // (proven by the searchByNumbers stub: client 90000002).
+  acronym: z.string().nullable(),
   name: z.string(),
 });
 

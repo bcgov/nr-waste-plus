@@ -36,7 +36,7 @@ const ClientListing: FC = () => {
       data.map((client) => ({
         id: client.clientNumber,
         name: client.name,
-        acronym: client.acronym,
+        acronym: client.acronym ?? undefined,
         kind: client.clientTypeCode?.code ?? '',
       })),
   });

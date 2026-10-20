@@ -152,7 +152,8 @@ test.describe('Formula Configuration Create Page', () => {
       const postRequest = await postRequestPromise;
       const requestBody = postRequest.postDataJSON();
       expect(requestBody.area).toBe('INTERIOR');
-      expect(requestBody.endDate).toBeNull();
+      // Backend FormulaSetRequest has no endDate field — the request must not send one.
+      expect(requestBody).not.toHaveProperty('endDate');
 
       await expect(page).toHaveURL(/\/configuration\/formulas\/10/);
       await expect(page.getByRole('heading', { name: 'Formula set: Interior' })).toBeVisible();
