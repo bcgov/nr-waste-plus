@@ -218,14 +218,15 @@ public class ReportingUnitService {
       if (existing.hasContent()) {
         Long existingRuId = existing.getContent().getFirst().ruNumber();
         if (existingRuId != null) {
-          var localEntity = reportingUnitRepository.findByIdAndDeletedFalse(existingRuId);
-          if (localEntity.isEmpty()) {
+          var localEntity = reportingUnitRepository.findById(existingRuId);
+          if (localEntity.isEmpty() || localEntity.get().isDeleted()) {
             log.warn(
-                "Reporting unit {} exists in legacy for client {} and district {} but is missing in"
+                "Reporting unit {} exists in legacy for client {} and district {} but is {} in"
                     + " PostgreSQL. Reconciling local record.",
                 existingRuId,
                 request.clientNumber(),
-                request.districtCode());
+                request.districtCode(),
+                localEntity.isEmpty() ? "missing" : "soft-deleted");
             return persistLocalReportingUnit(existingRuId, request);
           }
         }
@@ -260,8 +261,15 @@ public class ReportingUnitService {
   private Long persistLocalReportingUnit(
       Long reportingUnitId, CreateReportingUnitRequestDto request) {
     try {
-      ReportingUnitEntity entity = new ReportingUnitEntity();
-      entity.setId(reportingUnitId);
+      ReportingUnitEntity entity =
+          reportingUnitRepository
+              .findById(reportingUnitId)
+              .orElseGet(
+                  () -> {
+                    ReportingUnitEntity newEntity = new ReportingUnitEntity();
+                    newEntity.setId(reportingUnitId);
+                    return newEntity;
+                  });
       entity.setClientNumber(request.clientNumber());
       entity.setClientLocnCode("00");
       entity.setOrgUnitNo(request.districtCode());
