@@ -244,28 +244,23 @@ public class ReportingUnitService {
 
   private Long persistLocalReportingUnit(
       Long reportingUnitId, CreateReportingUnitRequestDto request) {
-    try {
-      ReportingUnitEntity entity =
-          reportingUnitRepository
-              .findById(reportingUnitId)
-              .orElseGet(
-                  () -> {
-                    ReportingUnitEntity newEntity = new ReportingUnitEntity();
-                    newEntity.setId(reportingUnitId);
-                    return newEntity;
-                  });
-      entity.setClientNumber(request.clientNumber());
-      entity.setClientLocnCode("00");
-      entity.setOrgUnitNo(request.districtCode());
-      entity.setSamplingCode(request.samplingCode());
-      entity.setDeleted(false);
+    ReportingUnitEntity entity =
+        reportingUnitRepository
+            .findById(reportingUnitId)
+            .orElseGet(
+                () -> {
+                  ReportingUnitEntity newEntity = new ReportingUnitEntity();
+                  newEntity.setId(reportingUnitId);
+                  return newEntity;
+                });
+    entity.setClientNumber(request.clientNumber());
+    entity.setClientLocnCode("00");
+    entity.setOrgUnitNo(request.districtCode());
+    entity.setSamplingCode(request.samplingCode());
+    entity.setDeleted(false);
 
-      reportingUnitRepository.saveAndFlush(entity);
-      log.info("Persisted local reporting unit {} in PostgreSQL", reportingUnitId);
-      return reportingUnitId;
-    } catch (Exception e) {
-      log.error("Failed to persist reporting unit {} to PostgreSQL", reportingUnitId, e);
-      throw e;
-    }
+    reportingUnitRepository.saveAndFlush(entity);
+    log.info("Persisted local reporting unit {} in PostgreSQL", reportingUnitId);
+    return reportingUnitId;
   }
 }
