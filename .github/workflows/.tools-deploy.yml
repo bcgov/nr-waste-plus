@@ -83,7 +83,7 @@ jobs:
           oc_server: ${{ secrets.oc_server }}
           oc_token: ${{ secrets.oc_token_tools }}
           oc_version: "4.13"
-          overwrite: false
+          overwrite: true
           parameters:
             -p ZONE=tools
             -p MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}
