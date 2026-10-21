@@ -379,8 +379,14 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <executions>
+                    <!-- Execution id MUST stay 'default': spring-boot-starter-parent's pluginManagement
+                         already declares a failsafe 'default' execution (integration-test + verify).
+                         Under any other id BOTH executions run; the default one matches no
+                         *IntegrationTest classes but marks the build in-progress, so the real execution
+                         MERGES its summary with the stale failsafe-summary.xml left by a previous build
+                         and failsafe:verify then fails on those aggregated stale errors. -->
                     <execution>
-                        <id>integration-tests</id>
+                        <id>default</id>
                         <goals>
                             <goal>integration-test</goal>
                             <goal>verify</goal>
