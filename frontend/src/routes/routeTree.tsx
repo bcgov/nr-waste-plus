@@ -18,6 +18,7 @@ import DevTools from '@/utils/devtools/DevTools';
 
 import { applyGuards } from './applyGuards';
 import { ROUTES, SYSTEM_ROUTES, type RouteDescription } from './routePaths';
+import { searchParamCodec } from './searchParams';
 
 /**
  * Auth-aware not-found handler registered as `notFoundComponent` on the root route.
@@ -106,6 +107,7 @@ function toRoute(desc: RouteDescription) {
     getParentRoute: () => rootRoute,
     path: desc.path,
     loader: desc.loader,
+    validateSearch: desc.validateSearch,
     // HOC guards return ComponentType which may include ComponentClass; cast to satisfy RouteComponent.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     component: applyGuards(desc) as any,
@@ -122,6 +124,11 @@ const routeTree = rootRoute.addChildren([...SYSTEM_ROUTES.map(toRoute), ...ROUTE
  * Bound to the React tree via `AppRouter` and registered in the module augmentation below
  * for fully type-safe navigation hooks (`useNavigate`, `Link`, etc.) throughout the app.
  *
+ * Search-param encoding is a plain, human-readable format (see `searchParams.ts`): strings
+ * unquoted, arrays comma-joined, booleans `true`/`false`. The Router's default JSON-based
+ * serializer is what double-quote-wraps string values (`mainSearchTerm=%2212345%22`); the
+ * custom one replaces it globally while still JSON-decoding legacy quoted/encoded URLs.
+ *
  * @see {@link AppRouter} for the `RouterProvider` wrapper.
  * @see the module augmentation block below for TypeScript integration.
  */
@@ -134,6 +141,7 @@ export const router = createRouter({
     </Layout>
   ),
   defaultPreload: 'intent',
+  ...searchParamCodec,
 });
 
 // Module augmentation: registers the router type with TanStack Router so that

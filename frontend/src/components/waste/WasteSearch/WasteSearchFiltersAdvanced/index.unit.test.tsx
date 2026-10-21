@@ -336,7 +336,7 @@ describe('WasteSearchFiltersActive', () => {
     });
 
     it('renders the toggle unchecked when legacy=false is set', async () => {
-      await renderWithProps({ filters: { ...defaultFilters, legacy: 'false' } });
+      await renderWithProps({ filters: { ...defaultFilters, legacy: false } });
 
       const toggle = screen.getByRole('switch', { name: 'Read from legacy' });
       expect(toggle.getAttribute('aria-checked')).toBe('false');
@@ -350,7 +350,7 @@ describe('WasteSearchFiltersActive', () => {
       await userEvent.click(screen.getByRole('switch', { name: 'Read from legacy' }));
 
       expect(onChange).toHaveBeenCalledWith('legacy');
-      expect(innerFn).toHaveBeenCalledWith('false');
+      expect(innerFn).toHaveBeenCalledWith(false);
     });
   });
 });

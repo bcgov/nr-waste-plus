@@ -27,6 +27,10 @@ export class SearchService extends HttpClient {
   /**
    * Searches reporting units using filter and pagination inputs.
    *
+   * The `legacy` source-selection flag (#1238) is exempt from empty-value cleanup:
+   * `legacy=false` (PostgreSQL source) must reach the backend, while every other
+   * `false`/empty value is stripped as usual.
+   *
    * @param filters Search filters to send to the backend.
    * @param pageable Pagination and sorting options.
    * @returns A paged reporting-unit search result.
@@ -36,10 +40,15 @@ export class SearchService extends HttpClient {
     pageable: PageableRequest<ReportingUnitSearchResultDto>,
     meta?: Record<string, unknown>,
   ): CancelablePromise<PageableResponse<ReportingUnitSearchResultDto>> {
+    const { legacy, ...restFilters } = filters;
     return this.doRequest<PageableResponse<ReportingUnitSearchResultDto>>(this.config, {
       method: 'GET',
       url: '/api/search/reporting-units',
-      query: { ...removeEmpty(filters), ...removeEmpty(pageable) },
+      query: {
+        ...removeEmpty(restFilters),
+        ...(legacy === undefined ? {} : { legacy }),
+        ...removeEmpty(pageable),
+      },
       ...(meta !== undefined ? { meta } : {}),
     });
   }

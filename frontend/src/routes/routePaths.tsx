@@ -50,6 +50,8 @@ import { withPersistentRedirect } from '@/routes/guards/withPersistentRedirect';
 import { withPublicOnly } from '@/routes/guards/withPublicOnly';
 import { Role, type FamRole } from '@/types/auth.types';
 
+import { validateWasteSearch } from './searchParams';
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 /** A HOC that wraps a route component with additional behaviour (e.g. auth, connectivity). */
@@ -97,6 +99,12 @@ export type RouteDescription = {
    * current value of this feature flag. Throws `notFound()` when disabled.
    */
   featureFlag?: keyof FeatureFlags;
+  /**
+   * Optional TanStack Router search-param validator. When present, the URL search
+   * string becomes the route's typed state (see `searchParams.ts` for the `/search`
+   * schema and the router-level plain encoding in `routeTree.tsx`).
+   */
+  validateSearch?: (search: unknown) => unknown;
 };
 
 /** A leaf navigation item derived from a {@link RouteDescription} for rendering in the side-nav. */
@@ -144,6 +152,7 @@ export const ROUTES: RouteDescription[] = [
     id: 'Waste search',
     icon: SearchLocate,
     component: withLazyLayout(WasteSearchPage),
+    validateSearch: validateWasteSearch,
     isSideMenu: true,
     protected: true,
   },

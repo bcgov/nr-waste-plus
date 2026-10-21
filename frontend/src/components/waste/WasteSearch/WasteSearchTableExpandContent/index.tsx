@@ -3,9 +3,9 @@ import { type FC } from 'react';
 import './index.scss';
 
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
+import RedirectLinkTag from '@/components/core/Tags/RedirectLinkTag';
 import YesNoTag from '@/components/core/Tags/YesNoTag';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
-import RedirectLinkTag from '@/components/core/Tags/RedirectLinkTag';
 import { useReportingUnitExpandQuery } from '@/config/react-query/hooks';
 import { env } from '@/env';
 

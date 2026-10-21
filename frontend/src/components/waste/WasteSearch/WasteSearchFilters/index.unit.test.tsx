@@ -2,18 +2,10 @@ import { screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 
-import WasteSearchFilters from './index';
-
-import type { ComponentProps } from 'react';
-
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import APIs from '@/services/APIs';
 
-vi.mock('@/hooks/useSyncFiltersToSearchParams', () => ({
-  default: vi.fn(() => {
-    // Mock implementation: does nothing, actual hook logic is tested separately
-  }),
-}));
+import WasteSearchFilters from './index';
 
 vi.mock('@/services/APIs', () => ({
   default: {
@@ -34,26 +26,12 @@ vi.mock('@/services/APIs', () => ({
   },
 }));
 
-const defaultFilters = {
-  mainSearchTerm: '',
-  sampling: [],
-  district: [],
-  status: [],
-};
-
-const renderWithProps = (props: Partial<ComponentProps<typeof WasteSearchFilters>>) =>
-  renderWithAppAsync(
-    <WasteSearchFilters
-      value={defaultFilters}
-      onChange={props.onChange || vi.fn()}
-      onSearch={props.onSearch || vi.fn()}
-      {...props}
-    />,
-  );
+const renderAt = (path: string, onSearch: () => void = vi.fn()) =>
+  renderWithAppAsync(<WasteSearchFilters onSearch={onSearch} />, { route: path });
 
 describe('WasteSearchFilters', () => {
   it('shouldRenderSearchInputAndFilterColumns_whenRendered', async () => {
-    await renderWithProps({});
+    await renderAt('/search');
     screen.getAllByPlaceholderText('Search by RU No. or Block ID');
     screen.getByPlaceholderText(/Sampling/i);
     screen.getByPlaceholderText(/District/i);
@@ -61,14 +39,14 @@ describe('WasteSearchFilters', () => {
   });
 
   it('shouldRenderAdvancedSearchAndSearchButtons_whenDesktop', async () => {
-    await renderWithProps({});
+    await renderAt('/search');
     expect(screen.getAllByText('Advanced Search').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Search').length).toBeGreaterThan(0);
   });
 
   it('shouldCallOnSearch_whenSearchButtonIsClicked', async () => {
     const onSearch = vi.fn();
-    await renderWithProps({ onSearch });
+    await renderAt('/search', onSearch);
     const searchButton = screen.getByTestId('search-button-most');
     expect(searchButton).toBeDefined();
     await userEvent.click(searchButton);
@@ -76,7 +54,7 @@ describe('WasteSearchFilters', () => {
   });
 
   it('shouldShowAndCloseAdvancedSearchModal_whenAdvancedSearchButtonClicked', async () => {
-    await renderWithProps({});
+    await renderAt('/search');
     //Open modal
     userEvent.click(screen.getByTestId('advanced-search-button-most'));
 
@@ -93,7 +71,7 @@ describe('WasteSearchFilters', () => {
   });
 
   it('shouldRenderFilterTagsAndShowOptions_whenFiltersDropdownsOpened', async () => {
-    await renderWithProps({});
+    await renderAt('/search');
     expect(APIs.codes.getAssessAreaStatuses).toHaveBeenCalled();
 
     const samplingBox = screen.getByPlaceholderText(/Sampling/i);
@@ -124,45 +102,45 @@ describe('WasteSearchFilters', () => {
     screen.getByText('A - Assess area status: A');
   });
 
-  it('shouldRenderActiveFilterTagsArea_whenFiltersHaveValue', async () => {
-    await renderWithProps({
-      value: {
-        sampling: ['A'],
-      },
-    });
+  it('shouldRenderActiveFilterTagsArea_whenUrlCarriesFilters', async () => {
+    await renderAt('/search?sampling=A');
     screen.getByTestId('active-filters');
 
     screen.getByTestId('dt-sampling-A');
   });
 
-  it('shouldCallOnChange_whenSearchInputChanges', async () => {
-    const onChange = vi.fn();
-    await renderWithProps({ onChange });
+  it('shouldWriteToUrl_whenSearchInputChanges', async () => {
+    await renderAt('/search');
 
     const searchBox = screen.getAllByPlaceholderText('Search by RU No. or Block ID')[0];
     expect(searchBox).toBeDefined();
 
+    // Typing routes the value through the /search search params; the input is
+    // controlled from the URL-derived state, so the typed text round-trips.
     await userEvent.type(searchBox, 'supertest');
-    await waitFor(() => expect(onChange).toHaveBeenCalled());
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('supertest')).toBeDefined();
+    });
   });
 
-  it('shouldCallOnChange_whenDropdownSelectionChanges', async () => {
-    const onChange = vi.fn();
-    await renderWithProps({ onChange });
+  it('shouldWriteToUrl_whenDropdownSelectionChanges', async () => {
+    await renderAt('/search');
 
     const samplingBox = screen.getByPlaceholderText(/Sampling/i);
     // eslint-disable-next-line testing-library/no-node-access
     const samplingButton = within(samplingBox.parentElement!).getByRole('button');
-    expect(samplingBox).toBeDefined();
-    expect(samplingButton).toBeDefined();
-    expect(samplingButton).toBeInstanceOf(HTMLButtonElement);
     await userEvent.click(samplingButton as HTMLButtonElement);
     await userEvent.click(screen.getByText('A - Sampling option: A'));
-    await waitFor(() => expect(onChange).toHaveBeenCalled());
+
+    // The selection is routed through the /search search params and the active
+    // tag renders from the URL-derived state.
+    await waitFor(() => {
+      expect(screen.getByTestId('dt-sampling-A')).toBeDefined();
+    });
   });
 
   it('shouldOpenAdvancedSearchFromSmallScreenButton_whenClicked', async () => {
-    await renderWithProps({});
+    await renderAt('/search');
     const smAdvanced = screen.getByTestId('advanced-search-button-sm');
     await userEvent.click(smAdvanced);
 
@@ -172,7 +150,7 @@ describe('WasteSearchFilters', () => {
 
   it('shouldCallOnSearchFromSmallScreenSearchButton_whenClicked', async () => {
     const onSearch = vi.fn();
-    await renderWithProps({ onSearch });
+    await renderAt('/search', onSearch);
     const smSearch = screen.getByTestId('search-button-sm');
     await userEvent.click(smSearch);
     expect(onSearch).toHaveBeenCalled();
@@ -180,7 +158,7 @@ describe('WasteSearchFilters', () => {
 
   it('shouldCallOnSearchFromAdvancedModalSearchButton_whenClicked', async () => {
     const onSearch = vi.fn();
-    await renderWithProps({ onSearch });
+    await renderAt('/search', onSearch);
 
     await userEvent.click(screen.getByTestId('advanced-search-button-most'));
     const modal = await screen.findByRole('dialog');
@@ -195,13 +173,7 @@ describe('WasteSearchFilters', () => {
   });
 
   it('shouldRenderWithPreselectedFilterValues_coveringSelectedItemsBranches', async () => {
-    const value = {
-      mainSearchTerm: '',
-      sampling: ['A'],
-      district: ['B'],
-      status: ['A'],
-    };
-    await renderWithProps({ value });
+    await renderAt('/search?sampling=A&district=B&status=A');
 
     // Cover selectedItems filter branches for all three dropdowns.
     await waitFor(() => {
