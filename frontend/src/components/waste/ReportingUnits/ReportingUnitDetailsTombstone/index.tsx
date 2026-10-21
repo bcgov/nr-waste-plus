@@ -4,10 +4,10 @@ import { type FC } from 'react';
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 import TooltipRoleBasedRedirectLinkTag from '@/components/core/Tags/TooltipRoleBasedRedirectLinkTag';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
-import { Role } from '@/context/auth/types';
 import { env } from '@/env';
+import { Role } from '@/types/auth.types';
 
-import type { ReportingUnitDto } from '@/services/types';
+import type { ReportingUnitDto } from '@/types/reportingUnit.types';
 
 import './index.scss';
 

@@ -1,15 +1,15 @@
-import type {
-  FileProcessor,
-  ProcessorResult,
-} from '@/components/Form/FileUploadInput/fileProcessor';
-import type { TableData } from '@/services/districtvolumes.types';
-
 import { mapCoastSpreadsheet } from '@/services/districtvolumes/coast/coastMapper';
 import { coastMatrixConfig } from '@/services/districtvolumes/config/coastMatrixConfig';
 import { interiorMatrixConfig } from '@/services/districtvolumes/config/interiorMatrixConfig';
 import { mapInteriorSpreadsheet } from '@/services/districtvolumes/interior/interiorMapper';
 import { ExcelReader } from '@/services/spreadsheet/excelReader';
 import { MatrixParser } from '@/services/spreadsheet/matrixParser';
+
+import type {
+  FileProcessor,
+  ProcessorResult,
+} from '@/components/Form/FileUploadInput/fileProcessor';
+import type { TableData } from '@/types/districtvolumes.types';
 
 enum SpreadsheetVariant {
   INTERIOR = 'INTERIOR',

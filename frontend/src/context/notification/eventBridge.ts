@@ -1,4 +1,4 @@
-import type { GlobalEvent } from '@/hooks/useNotificationEvents/types';
+import type { GlobalEvent } from '@/types/notification.types';
 
 type EventDispatcher = (event: GlobalEvent) => void;
 

@@ -1,8 +1,8 @@
 import { type FC } from 'react';
 
-import type { Role } from '@/context/auth/types.ts';
-
 import RoleBasedRedirectLinkTag from '@/components/core/Tags/RoleBasedRedirectLinkTag';
+
+import type { Role } from '@/types/auth.types.ts';
 
 type TooltipRoleBasedRedirectLinkTagProps = {
   tooltip: string;

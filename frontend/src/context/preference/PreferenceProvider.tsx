@@ -5,9 +5,9 @@ import { type FC, useCallback, useContext, useEffect, useMemo, useRef, useState 
 
 import { queryKeys } from '@/config/react-query/queryKeys';
 import { AuthContext } from '@/context/auth/AuthContext';
+import { type UserPreference } from '@/types/preference.types';
 
 import { PreferenceContext, type PreferenceProviderProps } from './PreferenceContext';
-import { type UserPreference } from './types';
 import { initialValue, loadUserPreference, saveUserPreference } from './utils';
 
 export const PreferenceProvider: FC<PreferenceProviderProps> = ({ children }) => {

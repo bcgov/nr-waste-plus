@@ -66,8 +66,65 @@ describe('WasteSearchFiltersActive', () => {
 
     screen.getByTestId('dt-district-A');
     const removeButton = screen.getByRole('button', { name: 'Dismiss' });
-    // removeButton is defined; getBy* throws if not found
     await userEvent.click(removeButton);
     expect(onRemoveFilter).toHaveBeenCalled();
+  });
+
+  it('renders boolean filter tag and removes it', async () => {
+    const filters = {
+      requestByMe: true,
+    };
+    const onRemoveFilter = vi.fn();
+    renderWithProps({ filters, onRemoveFilter });
+
+    screen.getByTestId('dt-requestByMe-true');
+    const removeButton = screen.getByRole('button', { name: 'Dismiss' });
+    await userEvent.click(removeButton);
+    expect(onRemoveFilter).toHaveBeenCalledWith('requestByMe');
+  });
+
+  it('renders non-boolean scalar filter tag and removes it', async () => {
+    const filters = {
+      timberMark: 'mark',
+    };
+    const onRemoveFilter = vi.fn();
+    renderWithProps({ filters, onRemoveFilter });
+
+    screen.getByTestId('dt-timberMark-mark');
+    const removeButtons = screen.getAllByRole('button', { name: 'Dismiss' });
+    await userEvent.click(removeButtons[0]);
+    expect(onRemoveFilter).toHaveBeenCalledWith('timberMark');
+  });
+
+  it('clears all filters including array filters', async () => {
+    const filters = {
+      district: ['A', 'B'],
+      timberMark: 'mark',
+    };
+    const onRemoveFilter = vi.fn();
+    renderWithProps({ filters, onRemoveFilter });
+
+    const clearButton = screen.getByRole('button', { name: /Clear filters/i });
+    await userEvent.click(clearButton);
+
+    // clearFilters should remove array values (district A, B) and then the scalar.
+    expect(onRemoveFilter).toHaveBeenCalled();
+    expect(onRemoveFilter).toHaveBeenCalledWith('district', 'A');
+    expect(onRemoveFilter).toHaveBeenCalledWith('district', 'B');
+    expect(onRemoveFilter).toHaveBeenCalledWith('timberMark');
+  });
+
+  it('renders multiple array subvalues and allows removing one', async () => {
+    const filters = {
+      district: ['A', 'B'],
+    };
+    const onRemoveFilter = vi.fn();
+    renderWithProps({ filters, onRemoveFilter });
+
+    screen.getByTestId('dt-district-A');
+    screen.getByTestId('dt-district-B');
+    const removeButtons = screen.getAllByRole('button', { name: 'Dismiss' });
+    await userEvent.click(removeButtons[0]);
+    expect(onRemoveFilter).toHaveBeenCalledWith('district', 'A');
   });
 });

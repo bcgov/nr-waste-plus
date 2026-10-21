@@ -12,13 +12,12 @@ import {
   useReportingUnitCreateMutation,
 } from '@/config/react-query/hooks';
 import { useAuth } from '@/context/auth/useAuth';
-import {
-  type CodeDescriptionDto,
-  type ReportingUnitCreateDto,
-  reportingUnitCreateRequestSchema,
-} from '@/services/types';
+import { reportingUnitCreateRequestSchema } from '@/types/reportingUnit.types';
 import { runValidators } from '@/utils/runValidators';
 import { required } from '@/utils/validators';
+
+import type { ReportingUnitCreateDto } from '@/types/reportingUnit.types';
+import type { CodeDescriptionDto } from '@/types/search.types';
 
 import './index.scss';
 

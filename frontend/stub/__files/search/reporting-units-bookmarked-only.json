@@ -12,6 +12,7 @@
       "cuttingPermit": null,
       "timberMark": null,
       "multiMark": false,
+      "secondaryEntry": false,
       "sampling": {
         "code": "OCU",
         "description": "Ocular"

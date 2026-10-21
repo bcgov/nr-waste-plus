@@ -1,7 +1,9 @@
-import type { MouseEvent } from 'react';
 import { IconButton, OverflowMenu, OverflowMenuItem, TableCell } from '@carbon/react';
 
-import { type TableResourceActionsProps, resolveTableRowActionValue } from '../types';
+import { resolveTableRowActionValue } from '../utils';
+
+import type { TableResourceActionsProps } from '@/types/tableResource.types';
+import type { MouseEvent } from 'react';
 
 import './index.scss';
 

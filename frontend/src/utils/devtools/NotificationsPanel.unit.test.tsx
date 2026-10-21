@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { dispatchNotificationEvent } from '@/context/notification/eventBridge';
 import NotificationProvider from '@/context/notification/NotificationProvider';
 import { useNotification } from '@/context/notification/useNotification';
-import { type GlobalEvent } from '@/hooks/useNotificationEvents/types';
+import { type GlobalEvent } from '@/types/notification.types';
 
 import NotificationsPanel from './NotificationsPanel';
 
@@ -76,7 +76,9 @@ describe('NotificationsPanel', () => {
     fireInlineEvent();
 
     const logSection = screen.getByRole('region', { name: 'Notification event log' });
-    await user.click(within(logSection).getByRole('button', { name: 'Re-fire event Inline Event' }));
+    await user.click(
+      within(logSection).getByRole('button', { name: 'Re-fire event Inline Event' }),
+    );
 
     await waitFor(() => {
       expect(within(logSection).getAllByRole('listitem')).toHaveLength(2);
@@ -91,7 +93,9 @@ describe('NotificationsPanel', () => {
     const queueSection = await screen.findByRole('region', { name: 'Live toast queue' });
     const logSection = screen.getByRole('region', { name: 'Notification event log' });
 
-    await user.click(within(queueSection).getByRole('button', { name: 'Re-fire notification Toast Event' }));
+    await user.click(
+      within(queueSection).getByRole('button', { name: 'Re-fire notification Toast Event' }),
+    );
 
     await waitFor(() => {
       expect(within(logSection).getAllByRole('listitem')).toHaveLength(2);

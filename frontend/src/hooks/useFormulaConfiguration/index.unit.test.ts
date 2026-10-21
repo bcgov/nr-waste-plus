@@ -19,7 +19,7 @@ import type {
   FormulaSetEffectiveParams,
   CurrentFormulaSetParams,
   FormulaVariablesParams,
-} from '@/services/formulaConfiguration.types';
+} from '@/types/formulaConfiguration.types';
 
 // Mock the API module
 vi.mock('@/services/APIs', () => {
@@ -180,8 +180,6 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
       (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
         data: mockData,
@@ -253,8 +251,6 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
       (formulaConfiguration.getEffectiveFormulaSet as ReturnType<typeof vi.fn>).mockResolvedValue(
         mockResponse,
@@ -281,8 +277,6 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
       (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
         data: mockData,
@@ -349,8 +343,6 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
       (formulaConfiguration.getFormulaSet as ReturnType<typeof vi.fn>).mockResolvedValue(
         mockResponse,
@@ -376,8 +368,6 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
       (useQuery as ReturnType<typeof vi.fn>).mockReturnValue({
         data: mockData,
@@ -432,8 +422,6 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
       (
         formulaConfiguration.getCurrentOpenEndedFormulaSet as ReturnType<typeof vi.fn>
@@ -613,8 +601,6 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
       (formulaConfiguration.createFormulaSet as ReturnType<typeof vi.fn>).mockResolvedValue(
         mockResponse,
@@ -647,8 +633,6 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
       (formulaConfiguration.createFormulaSet as ReturnType<typeof vi.fn>).mockResolvedValue(
         mockResponse,
@@ -711,8 +695,6 @@ describe('useFormulaConfiguration hooks', () => {
         endDate: null,
         deleted: false,
         formulas: [],
-        createdAt: '',
-        updatedAt: '',
       };
 
       let capturedOnSuccess: ((data: FormulaSetResponse) => void) | undefined;

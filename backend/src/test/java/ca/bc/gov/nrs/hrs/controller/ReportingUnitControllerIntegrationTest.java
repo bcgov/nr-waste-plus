@@ -24,6 +24,7 @@ import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitEntity;
 import ca.bc.gov.nrs.hrs.extensions.AbstractTestContainerIntegrationTest;
 import ca.bc.gov.nrs.hrs.extensions.WiremockLogNotifier;
 import ca.bc.gov.nrs.hrs.extensions.WithMockJwt;
+import ca.bc.gov.nrs.hrs.util.GoldenFiles;
 import ca.bc.gov.nrs.hrs.provider.forestclient.ForestClientApiProviderTestConstants;
 import ca.bc.gov.nrs.hrs.repository.block.ReportingUnitRepository;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
@@ -96,6 +97,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
 
   private String fixtureActor;
   private Long populatedReportingUnitId;
+  private Long populatedBlockId;
   private Long emptyReportingUnitId;
 
   @Autowired
@@ -121,17 +123,15 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     fixtureActor = "test-block-list-" + UUID.randomUUID();
     transactionTemplate.executeWithoutResult(
         transaction -> {
-          populatedReportingUnitId = insertReportingUnit("BLOCKED");
-          emptyReportingUnitId = insertReportingUnit("EMPTY");
-          Long blockId =
-              jdbcTemplate.queryForObject(
+          populatedReportingUnitId = insertReportingUnit(987000001L, "BLOCKED");
+          emptyReportingUnitId = insertReportingUnit(987000002L, "EMPTY");
+          populatedBlockId = 987000003L;
+          jdbcTemplate.update(
                   """
                   INSERT INTO hrs.block
-                      (reporting_unit_id, block_type, created_by, updated_by)
-                  VALUES (?, 'DISTRICT_AVERAGE', ?, ?)
-                  RETURNING block_id
+                      (block_id, reporting_unit_id, block_type, created_by, updated_by)
+                  VALUES (987000003, ?, 'DISTRICT_AVERAGE', ?, ?)
                   """,
-                  Long.class,
                   populatedReportingUnitId,
                   fixtureActor,
                   fixtureActor);
@@ -143,7 +143,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                    created_by, updated_by)
               VALUES (?, 1.250, 0.500, FALSE, FALSE, ?, ?)
               """,
-              blockId,
+              populatedBlockId,
               fixtureActor,
               fixtureActor);
           jdbcTemplate.update(
@@ -154,7 +154,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
               VALUES (?, 'PRIMARY', 0, 'TM-TEST', 'FILE-TEST', 'TM-TEST',
                       'CP-TEST', 'CUT-TEST', ?, ?)
               """,
-              blockId,
+              populatedBlockId,
               fixtureActor,
               fixtureActor);
           jdbcTemplate.update(
@@ -164,7 +164,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
                    created_by, updated_by)
               VALUES (?, 'test-user', 'Block List Test Submitter', 'Test', 'Submitter', ?, ?)
               """,
-              blockId,
+              populatedBlockId,
               fixtureActor,
               fixtureActor);
           jdbcTemplate.update(
@@ -174,7 +174,7 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
               VALUES (?, 'APP', 'SUBMISSION', NOW() + INTERVAL '1 day',
                       NOW() + INTERVAL '1 day', ?, ?)
               """,
-              blockId,
+              populatedBlockId,
               fixtureActor,
               fixtureActor);
         });
@@ -200,18 +200,18 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
         });
   }
 
-  private Long insertReportingUnit(String locationCode) {
-    return jdbcTemplate.queryForObject(
+  private Long insertReportingUnit(Long reportingUnitId, String locationCode) {
+    jdbcTemplate.update(
         """
         INSERT INTO hrs.reporting_unit
-            (client_number, client_locn_code, geographic_code, created_by, updated_by)
-        VALUES ('00012797', ?, 'DND', ?, ?)
-        RETURNING reporting_unit_id
+            (reporting_unit_id, client_number, client_locn_code, geographic_code, created_by, updated_by)
+        VALUES (?, '00012797', ?, 'DND', ?, ?)
         """,
-        Long.class,
+        reportingUnitId,
         locationCode,
         fixtureActor,
         fixtureActor);
+    return reportingUnitId;
   }
 
   @DisplayName("Should Return 201 when Create Succeeds")
@@ -440,6 +440,52 @@ class ReportingUnitControllerIntegrationTest extends AbstractTestContainerIntegr
     assertThat(
             jsonMapper.readTree(response).get("content").get(0).get("totalWasteVolumeM3").isNull())
         .isTrue();
+  }
+
+  @Test
+  @WithMockJwt
+  @DisplayName("Golden | Blocks list pins the VIA_DTO page envelope")
+  void golden_blocksList_pinsViaDtoPageEnvelope() throws Exception {
+    String body =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get(
+                        "/api/reporting-units/{id}/blocks", populatedReportingUnitId)
+                    .queryParam("page", "0")
+                    .queryParam("size", "10")
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    // lastUpdated is now()-derived at query time and lastUpdated/created_at are
+    // auditable columns — see the contract report's masked-fields note.
+    var tree = jsonMapper.readTree(body);
+    ((tools.jackson.databind.node.ObjectNode) tree.get("content").get(0))
+        .putNull("lastUpdated");
+
+    GoldenFiles.assertMatches("pagination/paged-model.json", jsonMapper.writeValueAsString(tree));
+  }
+
+  @Test
+  @WithMockJwt
+  @DisplayName("Golden | Block details pins the BlockDetailDto shape")
+  void golden_blockDetails_pinsBlockDetailShape() throws Exception {
+    String body =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get(
+                        "/api/reporting-units/{ruId}/{blockId}",
+                        populatedReportingUnitId,
+                        populatedBlockId)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    GoldenFiles.assertMatches("reporting-units/block-details.json", body);
   }
 
   @Test

@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import useSyncPreferencesToFilters from './index';
 
-import type { UserPreference } from '@/context/preference/types';
+import type { UserPreference } from '@/types/preference.types';
 
 type Filters = {
   clientNumbers?: string[];

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import { tokenizeFormula } from './tokenizer';
 
-import type { TokenType } from './types';
+import type { TokenType } from '@/types/formulaInput.types';
 
 describe('tokenizeFormula', () => {
   describe('identifier tokenization', () => {
@@ -486,7 +486,10 @@ describe('tokenizeFormula', () => {
     });
 
     it('should tokenize multiple dotted variables', () => {
-      const tokens = tokenizeFormula('da.mature.total + sc.AL', new Set(['da.mature.total', 'sc.AL']));
+      const tokens = tokenizeFormula(
+        'da.mature.total + sc.AL',
+        new Set(['da.mature.total', 'sc.AL']),
+      );
       const variables = tokens.filter((t) => t.type === 'variable');
       expect(variables).toHaveLength(2);
       expect(variables[0].value).toBe('da.mature.total');

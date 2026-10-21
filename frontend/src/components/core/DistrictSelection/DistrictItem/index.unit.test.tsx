@@ -5,7 +5,7 @@ import { DESELECT_CLIENT } from '../constants';
 
 import DistrictItem from './index';
 
-import type { DistrictType } from '../types';
+import type { DistrictType } from '@/types/districtSelection.types';
 
 const mockClient = {
   id: '00000001',

@@ -1,10 +1,8 @@
-export class ExcelReadError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ExcelReadError';
-  }
-}
-
+/**
+ * Column-group and matrix-layout contracts shared by the spreadsheet
+ * parsing pipeline (ExcelReader → MatrixParser → domain processors/
+ * validators). Purely internal — nothing here crosses a network boundary.
+ */
 export interface SubColumnDef {
   header?: string;
   key: string;

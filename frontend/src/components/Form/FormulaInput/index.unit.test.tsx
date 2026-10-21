@@ -19,16 +19,16 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useTheme } from '@/context/theme/useTheme';
+
 import { useFormulaEngine } from './useFormulaEngine';
 import { useMonacoFormula } from './useMonacoFormula';
 
 import { FormulaInput } from './index';
 
-import type { EvaluationResult, FormulaError } from './types';
 import type { FormulaEngineState } from './useFormulaEngine';
+import type { EvaluationResult, FormulaError } from '@/types/formulaInput.types';
 import type { ReactElement, ReactNode } from 'react';
-
-import { useTheme } from '@/context/theme/useTheme';
 
 // ── Monaco mock ───────────────────────────────────────────────────────────────
 //

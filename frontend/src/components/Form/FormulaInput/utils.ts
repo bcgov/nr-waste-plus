@@ -13,7 +13,7 @@
 
 import { math, isMathBuiltin } from './math.config';
 
-import type { FormulaError, EvaluationResult, DependencyGraph } from './types';
+import type { FormulaError, EvaluationResult, DependencyGraph } from '@/types/formulaInput.types';
 import type { MathNode, BigNumber } from 'mathjs';
 
 // Re-export everything so existing consumers of './utils' continue to work
@@ -25,7 +25,7 @@ export type {
   PositionedToken,
   EvaluationResult,
   DependencyGraph,
-} from './types';
+} from '@/types/formulaInput.types';
 export { tokenizeFormula } from './tokenizer';
 
 // ─── Parsing ─────────────────────────────────────────────────────────────────

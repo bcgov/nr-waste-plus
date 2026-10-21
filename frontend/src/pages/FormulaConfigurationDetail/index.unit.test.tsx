@@ -4,12 +4,12 @@ import userEvent from '@testing-library/user-event';
 import { type ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import FormulaConfigurationDetailPage from './index';
-
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types';
-
 import { useFormulaSetDetail } from '@/hooks/useFormulaConfiguration';
 import { navigateInTree } from '@/routes/inTreePaths';
+
+import FormulaConfigurationDetailPage from './index';
+
+import type { FormulaSetResponse } from '@/types/formulaConfiguration.types';
 
 // ============================================================================
 // Mocks
@@ -85,8 +85,6 @@ const createData = (id = 42): FormulaSetResponse => ({
   endDate: null,
   deleted: false,
   formulas: [],
-  createdAt: '2026-05-15T14:23:00Z',
-  updatedAt: '2026-06-01T10:00:00Z',
 });
 
 // ============================================================================

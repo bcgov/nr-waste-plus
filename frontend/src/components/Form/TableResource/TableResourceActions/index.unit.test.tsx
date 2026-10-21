@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import TableResourceActions from './index';
 
-import type { TableRowAction } from '../types';
+import type { TableRowAction } from '@/types/tableResource.types';
 
 type TestRow = {
   id: number;

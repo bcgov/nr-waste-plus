@@ -3,12 +3,12 @@ import { SideNav, SideNavItems, SideNavLink, SideNavMenu, SideNavMenuItem } from
 import { Link, useRouterState } from '@tanstack/react-router';
 import { type FC, type ReactElement } from 'react';
 
-import { Role } from '@/context/auth/types';
 import { useAuth } from '@/context/auth/useAuth';
 import { useLayout } from '@/context/layout/useLayout';
 import { env } from '@/env';
 import useOfflineMode from '@/hooks/useOfflineMode';
 import { getMenuEntries, isRouteAccessible, type MenuItem } from '@/routes/routePaths';
+import { Role } from '@/types/auth.types';
 
 import './index.scss';
 

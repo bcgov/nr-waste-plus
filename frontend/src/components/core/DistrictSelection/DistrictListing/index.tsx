@@ -3,7 +3,7 @@ import { type FC } from 'react';
 import DistrictSelection from '@/components/core/DistrictSelection';
 import { useDistrictOptionsQuery } from '@/config/react-query/hooks';
 
-import type { DistrictType } from '@/components/core/DistrictSelection/types';
+import type { DistrictType } from '@/types/districtSelection.types';
 
 /**
  * Loads district options and renders the default district preference selector.
@@ -28,8 +28,8 @@ const DistrictListing: FC = () => {
   const { data, isLoading } = useDistrictOptionsQuery({
     select: (data) =>
       data.map((district) => ({
-        id: district.code,
-        name: district.description,
+        id: district.code ?? '',
+        name: district.description ?? '',
         kind: 'D',
       })),
   });

@@ -1,22 +1,19 @@
 import { Column } from '@carbon/react';
 import { type FC, useMemo } from 'react';
 
+import TooltipTag from '@/components/core/Tags/TooltipTag';
+import TableResource from '@/components/Form/TableResource';
+import { useDistrictOptionsQuery } from '@/config/react-query/hooks.ts';
+import { SPECIES_DESCRIPTIONS, SPECIES_LABELS } from '@/types/speciesComposition.types.ts';
+
+import type { NestedKeyOf } from '@/types/pagination.types.ts';
+import type { CodeDescriptionDto } from '@/types/search.types.ts';
+import type { SpeciesCompositionRow, SpeciesKey } from '@/types/speciesComposition.types.ts';
 import type {
   TableHeaderType,
   PageableResponse,
   IdentifiableContent,
-} from '@/components/Form/TableResource/types.ts';
-import type { NestedKeyOf } from '@/services/pagination.types.ts';
-import type { SpeciesCompositionRow, SpeciesKey } from '@/services/speciesComposition.types.ts';
-
-import TooltipTag from '@/components/core/Tags/TooltipTag';
-import TableResource from '@/components/Form/TableResource';
-import { useDistrictOptionsQuery } from '@/config/react-query/hooks.ts';
-import {
-  SPECIES_DESCRIPTIONS,
-  SPECIES_LABELS,
-  speciesCompositionRowSchema,
-} from '@/services/speciesComposition.types.ts';
+} from '@/types/tableResource.types.ts';
 
 /**
  * Props for the {@link SpeciesCompositionDetailMatrix} component.
@@ -49,17 +46,14 @@ const SpeciesCompositionDetailMatrix: FC<SpeciesCompositionDetailMatrixProps> = 
   );
 
   const content: PageableResponse<SpeciesCompositionRow> = useMemo(() => {
-    // API responses are untrusted at this boundary. Drop malformed rows rather
-    // than allowing one bad district/species value to crash the whole table.
-    const validRows = rows.flatMap((row) => {
-      const result = speciesCompositionRowSchema.safeParse(row);
-      return result.success ? [result.data] : [];
-    });
+    // Rows arrive validated from the query boundary; drop rows without a
+    // resolvable district rather than rendering an unusable matrix row.
+    const validRows = rows.filter((row) => row.district != null);
 
     return {
-      content: validRows.map((row) => ({
+      content: validRows.map((row, index) => ({
         ...row,
-        id: row.district.code ?? `unknown-${validRows.indexOf(row)}`,
+        id: row.district?.code ?? `unknown-${index}`,
       })) as IdentifiableContent<SpeciesCompositionRow>[],
       page: {
         size: validRows.length,
@@ -86,17 +80,12 @@ const SpeciesCompositionDetailMatrix: FC<SpeciesCompositionDetailMatrixProps> = 
         header: 'District',
         selected: true,
         renderAs: (value) => {
-          const result = speciesCompositionRowSchema.shape.district.safeParse(value);
-          if (
-            !result.success ||
-            typeof result.data.code !== 'string' ||
-            result.data.code.length === 0
-          ) {
+          const district = value as CodeDescriptionDto | null | undefined;
+          if (!district?.code) {
             return <span>-</span>;
           }
 
-          const district = result.data;
-          const code = district.code as string;
+          const code = district.code;
           const description = districtMap.get(code) ?? district.description ?? code;
           return (
             <TooltipTag tooltip={description} align="right">

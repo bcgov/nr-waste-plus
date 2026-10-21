@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import SpeciesCompositionDetailView from './index.tsx';
 
-import type { SpeciesCompositionDetail } from '@/services/speciesComposition.types.ts';
+import type { SpeciesCompositionDetail } from '@/types/speciesComposition.types.ts';
 
 // ============================================================================
 // Mocks
@@ -141,9 +141,11 @@ describe('SpeciesCompositionDetailView', () => {
     expect(matrix.getAttribute('data-rows-count')).toBe('1');
   });
 
-  it('should render an empty matrix when table data is malformed', () => {
+  it('should render an empty matrix when tableData.rows is absent', () => {
+    // The backend omits `rows` (NON_NULL) when the stored table has none —
+    // a schema-valid state the boundary lets through.
     const data = createDetailData({
-      tableData: null,
+      tableData: { type: 'SPECIES_COMPOSITION', rows: null },
     } as unknown as Partial<SpeciesCompositionDetail>);
 
     render(<SpeciesCompositionDetailView data={data} />);

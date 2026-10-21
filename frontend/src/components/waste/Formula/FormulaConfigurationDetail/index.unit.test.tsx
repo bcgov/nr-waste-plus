@@ -7,7 +7,7 @@ vi.mock('@/hooks/useFormulaConfiguration', () => ({
 
 import FormulaConfigurationDetail from '.';
 
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
+import type { FormulaSetResponse } from '@/types/formulaConfiguration.types.ts';
 
 const fixture: FormulaSetResponse = {
   id: 42,
@@ -20,7 +20,9 @@ const fixture: FormulaSetResponse = {
       formulaKey: 'block.waste.avoidable_sawlog',
       expression: '1.5',
       declaredVariables: [],
-      validationErrors: [{ code: 'UNKNOWN_VARIABLE', message: 'Variable is not defined', startOffset: 2 }],
+      validationErrors: [
+        { code: 'UNKNOWN_VARIABLE', message: 'Variable is not defined', startOffset: 2 },
+      ],
       sortOrder: 1,
     },
     {
@@ -31,8 +33,6 @@ const fixture: FormulaSetResponse = {
       sortOrder: 2,
     },
   ],
-  createdAt: '2026-05-15T14:23:00Z',
-  updatedAt: '2026-06-01T10:00:00Z',
 };
 
 describe('FormulaConfigurationDetailView', () => {

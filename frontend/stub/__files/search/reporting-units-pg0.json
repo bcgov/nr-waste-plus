@@ -12,6 +12,7 @@
       "cuttingPermit": "R02",
       "timberMark": "HK4R02",
       "multiMark": false,
+      "secondaryEntry": false,
       "sampling": {
         "code": "AGR",
         "description": "Aggregate"
@@ -40,6 +41,7 @@
       "cuttingPermit": "B09",
       "timberMark": "DW9B09",
       "multiMark": true,
+      "secondaryEntry": false,
       "sampling": {
         "code": "AGR",
         "description": "Aggregate"
@@ -68,6 +70,7 @@
       "cuttingPermit": "R02",
       "timberMark": "HK4R02",
       "multiMark": true,
+      "secondaryEntry": false,
       "sampling": {
         "code": "AGR",
         "description": "Aggregate"
@@ -96,6 +99,7 @@
       "cuttingPermit": "R02",
       "timberMark": "HK4R02",
       "multiMark": true,
+      "secondaryEntry": false,
       "sampling": {
         "code": "AGR",
         "description": "Aggregate"
@@ -124,6 +128,7 @@
       "cuttingPermit": "R02",
       "timberMark": "HK4R02",
       "multiMark": true,
+      "secondaryEntry": false,
       "sampling": {
         "code": "AGR",
         "description": "Aggregate"
@@ -152,6 +157,7 @@
       "cuttingPermit": "R02",
       "timberMark": "HK4R02",
       "multiMark": true,
+      "secondaryEntry": false,
       "sampling": {
         "code": "AGR",
         "description": "Aggregate"
@@ -180,6 +186,7 @@
       "cuttingPermit": "R02",
       "timberMark": "HK4R02",
       "multiMark": true,
+      "secondaryEntry": false,
       "sampling": {
         "code": "AGR",
         "description": "Aggregate"
@@ -208,6 +215,7 @@
       "cuttingPermit": "R02",
       "timberMark": "HK4R02",
       "multiMark": true,
+      "secondaryEntry": false,
       "sampling": {
         "code": "AGR",
         "description": "Aggregate"

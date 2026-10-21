@@ -1,16 +1,13 @@
 import { type FC, useMemo } from 'react';
 
-import type { FormulaError } from '@/components/Form/FormulaInput/types.ts';
-import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants.ts';
-import type {
-  FormulaItemDto,
-  FormulaValidationError,
-} from '@/services/formulaConfiguration.types.ts';
-
 import FormulaInput from '@/components/Form/FormulaInput';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
 import { useFormulaVariables } from '@/hooks/useFormulaConfiguration';
 import { FORMULA_VARIABLES_DISTRICT_CODE } from '@/services/formulaConfiguration.constants.ts';
+
+import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants.ts';
+import type { FormulaItemDto, FormulaValidationError } from '@/types/formulaConfiguration.types.ts';
+import type { FormulaError } from '@/types/formulaInput.types.ts';
 
 interface FormulaRowProps {
   area: 'INTERIOR' | 'COASTAL';

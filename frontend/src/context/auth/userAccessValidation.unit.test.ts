@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { Role, type FamLoginUser } from './types';
+import { Role, type FamLoginUser } from '@/types/auth.types';
+
 import {
   getAccessViolationMessage,
   getAssignedRoles,

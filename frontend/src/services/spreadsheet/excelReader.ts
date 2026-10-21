@@ -1,6 +1,12 @@
 import ExcelJS from 'exceljs';
 
-import { ExcelReadError } from './types';
+/** Thrown when a spreadsheet file cannot be read or parsed as a workbook. */
+export class ExcelReadError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ExcelReadError';
+  }
+}
 
 export class ExcelReader {
   async loadWorkbook(file: File): Promise<ExcelJS.Workbook> {

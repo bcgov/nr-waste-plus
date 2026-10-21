@@ -13,14 +13,6 @@ import {
 } from '@carbon/react';
 import { type FC } from 'react';
 
-import AdvancedFilterClientInput from './AdvancedFilterClientInput';
-import AdvancedFilterDateRange from './AdvancedFilterDateRange';
-import { useAdvancedFilterHandlers } from './useAdvancedFilterHandlers';
-import { useClientLookup } from './useClientLookup';
-import { MAX_TEXT_INPUT_LEN } from './utils';
-
-import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
-
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import AutoCompleteInput from '@/components/Form/AutoCompleteInput';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
@@ -29,6 +21,17 @@ import { useAuth } from '@/context/auth/useAuth';
 import { featureFlags } from '@/env';
 import APIs from '@/services/APIs';
 import { getCodeDescriptionArrayConverter } from '@/services/search.utils';
+
+import AdvancedFilterClientInput from './AdvancedFilterClientInput';
+import AdvancedFilterDateRange from './AdvancedFilterDateRange';
+import { useAdvancedFilterHandlers } from './useAdvancedFilterHandlers';
+import { useClientLookup } from './useClientLookup';
+import { MAX_TEXT_INPUT_LEN } from './utils';
+
+import type {
+  CodeDescriptionDto,
+  ReportingUnitSearchParametersViewDto,
+} from '@/types/search.types';
 
 import './index.scss';
 
@@ -140,7 +143,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
               itemToString={activeMSItemToString}
               onChange={onActiveMultiSelectChange('district')}
               selectedItems={(districtOptions ?? []).filter((option) =>
-                (filters.district || []).includes(option.code),
+                (filters.district || []).includes(option.code ?? ''),
               )}
             />
           </Column>
@@ -155,7 +158,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
               itemToString={activeMSItemToString}
               onChange={onActiveMultiSelectChange('sampling')}
               selectedItems={(samplingOptions ?? []).filter((option) =>
-                (filters.sampling || []).includes(option.code),
+                (filters.sampling || []).includes(option.code ?? ''),
               )}
             />
           </Column>
@@ -170,7 +173,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
               itemToString={activeMSItemToString}
               onChange={onActiveMultiSelectChange('status')}
               selectedItems={(statusOptions ?? []).filter((option) =>
-                (filters.status || []).includes(option.code),
+                (filters.status || []).includes(option.code ?? ''),
               )}
             />
           </Column>

@@ -1,9 +1,10 @@
 import { Checkbox, TableToolbarMenu } from '@carbon/react';
 import { Column as ColumnIcon } from '@carbon/react/icons';
 
-import { type TableHeaderType, getHeaderId } from '../types';
+import { getHeaderId } from '../utils';
 
-import type { NestedKeyOf } from '@/services/types';
+import type { NestedKeyOf } from '@/types/pagination.types';
+import type { TableHeaderType } from '@/types/tableResource.types';
 
 type ColumnCustomizationMenuProps<T> = {
   headers: TableHeaderType<T, NestedKeyOf<T>>[];

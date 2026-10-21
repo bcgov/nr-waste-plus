@@ -1,4 +1,4 @@
-import type { MatrixConfig, ParseResult } from './types';
+import type { MatrixConfig, ParseResult } from '@/types/spreadsheet.types';
 import type ExcelJS from 'exceljs';
 
 function getCellValue(worksheet: ExcelJS.Worksheet, row: number, col: number): unknown {

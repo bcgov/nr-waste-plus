@@ -11,14 +11,6 @@ import { useNavigate } from '@tanstack/react-router';
 import { DateTime } from 'luxon';
 import { useCallback, useState, type FC, type ReactNode } from 'react';
 
-import type {
-  CoastData,
-  CoastDistrictRow,
-  InteriorData,
-  InteriorDistrictRow,
-  TableData,
-} from '@/services/districtvolumes.types.ts';
-
 import PrecisionNumberTag from '@/components/core/Tags/PrecisionNumberTag';
 import FileUploadInput from '@/components/Form/FileUploadInput';
 import DistrictVolumeDetailTabs from '@/components/waste/DistrictAverage/DistrictVolumeDetail/DistrictVolumeDetailTabs.tsx';
@@ -34,6 +26,14 @@ import { interiorValidator } from '@/services/districtvolumes/validators/interio
 import { ExcelReader } from '@/services/spreadsheet/excelReader.ts';
 import { runValidators } from '@/utils/runValidators.ts';
 import { required } from '@/utils/validators.ts';
+
+import type {
+  CoastData,
+  CoastDistrictRow,
+  InteriorData,
+  InteriorDistrictRow,
+  TableData,
+} from '@/types/districtvolumes.types.ts';
 
 import './index.scss';
 

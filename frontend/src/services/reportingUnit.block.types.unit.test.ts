@@ -5,7 +5,7 @@ import {
   blockCreateResponseSchema,
   blockDetailsSchema,
   reportingUnitSchema,
-} from './reportingUnit.types';
+} from '@/types/reportingUnit.types';
 
 describe('reporting-unit block contracts', () => {
   it('shouldAcceptDistrictAverageBlockCreateRequest', () => {
