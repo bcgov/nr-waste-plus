@@ -1,13 +1,13 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
+import NotificationProvider from '@/context/notification/NotificationProvider';
+
 import { eventHandler } from './eventHandler';
 
 import useNotificationEvents from './index';
 
-import type { GlobalEvent, EventType } from './types';
-
-import NotificationProvider from '@/context/notification/NotificationProvider';
+import type { GlobalEvent, EventType } from '@/types/notification.types';
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <NotificationProvider>{children}</NotificationProvider>
@@ -314,5 +314,102 @@ describe('useNotificationEvents', () => {
         }),
       );
     });
+  });
+});
+
+describe('eventHandler', () => {
+  it('should dispatch when eventName matches payload.eventType and is valid', async () => {
+    const eventBridge = await import('@/context/notification/eventBridge');
+    const dispatchSpy = vi.spyOn(eventBridge, 'dispatchNotificationEvent');
+    eventHandler.dispatch('info', makeEvent('info', 'target'));
+    expect(dispatchSpy).toHaveBeenCalled();
+    dispatchSpy.mockRestore();
+  });
+
+  it('should not dispatch when eventName does not match payload.eventType', async () => {
+    const eventBridge = await import('@/context/notification/eventBridge');
+    const dispatchSpy = vi.spyOn(eventBridge, 'dispatchNotificationEvent');
+    eventHandler.dispatch('error', makeEvent('info', 'target'));
+    expect(dispatchSpy).not.toHaveBeenCalled();
+    dispatchSpy.mockRestore();
+  });
+
+  it('should not dispatch for invalid eventType', async () => {
+    const eventBridge = await import('@/context/notification/eventBridge');
+    const dispatchSpy = vi.spyOn(eventBridge, 'dispatchNotificationEvent');
+    const invalidEvent = makeEvent('info');
+    (invalidEvent as unknown as { eventType: EventType }).eventType = 'unknown' as EventType;
+    eventHandler.dispatch('unknown' as EventType, invalidEvent as unknown as GlobalEvent);
+    expect(dispatchSpy).not.toHaveBeenCalled();
+    dispatchSpy.mockRestore();
+  });
+});
+
+describe('eventIconDescription', () => {
+  it('returns Error icon for error', async () => {
+    const { eventIconDescription } = await import('./eventHandler');
+    expect(eventIconDescription(makeEvent('error'))).toBe('Error icon');
+  });
+
+  it('returns Warning icon for warning', async () => {
+    const { eventIconDescription } = await import('./eventHandler');
+    expect(eventIconDescription(makeEvent('warning'))).toBe('Warning icon');
+  });
+
+  it('returns Info icon for info', async () => {
+    const { eventIconDescription } = await import('./eventHandler');
+    expect(eventIconDescription(makeEvent('info'))).toBe('Info icon');
+  });
+
+  it('returns Notification icon as default', async () => {
+    const { eventIconDescription } = await import('./eventHandler');
+    const evt = makeEvent('success');
+    expect(eventIconDescription(evt)).toBe('Notification icon');
+  });
+});
+
+describe('sendEvent helpers', () => {
+  it('sendToastEvent sets displayMode toast', async () => {
+    const { sendToastEvent } = await import('./eventHandler');
+    const eventBridge = await import('@/context/notification/eventBridge');
+    const dispatchSpy = vi.spyOn(eventBridge, 'dispatchNotificationEvent');
+    sendToastEvent(makeEvent('info'));
+    expect(dispatchSpy).toHaveBeenCalledWith(expect.objectContaining({ displayMode: 'toast' }));
+    dispatchSpy.mockRestore();
+  });
+
+  it('sendInlineEvent sets displayMode inline', async () => {
+    const { sendInlineEvent } = await import('./eventHandler');
+    const eventBridge = await import('@/context/notification/eventBridge');
+    const dispatchSpy = vi.spyOn(eventBridge, 'dispatchNotificationEvent');
+    sendInlineEvent(makeEvent('error'));
+    expect(dispatchSpy).toHaveBeenCalledWith(expect.objectContaining({ displayMode: 'inline' }));
+    dispatchSpy.mockRestore();
+  });
+
+  it('clearEvents sends inline clear-events with provided eventTarget', async () => {
+    const { clearEvents } = await import('./eventHandler');
+    const eventBridge = await import('@/context/notification/eventBridge');
+    const dispatchSpy = vi.spyOn(eventBridge, 'dispatchNotificationEvent');
+    clearEvents('my-target');
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'clear-events',
+        eventTarget: 'my-target',
+        description: 'my-target',
+      }),
+    );
+    dispatchSpy.mockRestore();
+  });
+
+  it('clearEvents uses empty string when eventTarget undefined', async () => {
+    const { clearEvents } = await import('./eventHandler');
+    const eventBridge = await import('@/context/notification/eventBridge');
+    const dispatchSpy = vi.spyOn(eventBridge, 'dispatchNotificationEvent');
+    clearEvents(undefined);
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'clear-events', description: '', eventTarget: undefined }),
+    );
+    dispatchSpy.mockRestore();
   });
 });

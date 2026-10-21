@@ -1,12 +1,13 @@
+import { Column } from '@carbon/react';
 import { type FC } from 'react';
 
 import DistrictVolumeDetailHeader from './DistrictVolumeDetailHeader.tsx';
-import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs.tsx';
 import { buildDistrictVolumeDetailHeaders } from './districtVolumeDetailHeaders.tsx';
+import DistrictVolumeDetailTabs from './DistrictVolumeDetailTabs.tsx';
 import { useDistrictCodeColumn } from './useDistrictCodeColumn.tsx';
 
-import type { CoastDistrictRow, DistrictVolumeDetail } from '@/services/districtvolumes.types.ts';
-import type { CodeDescriptionDto } from '@/services/search.types.ts';
+import type { CoastDistrictRow, DistrictVolumeDetail } from '@/types/districtvolumes.types.ts';
+import type { CodeDescriptionDto } from '@/types/search.types.ts';
 
 /**
  * Props for the {@link CoastDetailView} component.
@@ -50,12 +51,14 @@ const CoastDetailView: FC<CoastDetailViewProps> = ({ data, districtOptions }) =>
 
   return (
     <>
-      <DistrictVolumeDetailHeader
-        startDate={startDate}
-        endDate={endDate}
-        tableLevelFactor={tableLevelFactor}
-        heliMultiplier={heliMultiplier}
-      />
+      <Column lg={16} md={8} sm={4}>
+        <DistrictVolumeDetailHeader
+          startDate={startDate}
+          endDate={endDate}
+          tableLevelFactor={tableLevelFactor}
+          heliMultiplier={heliMultiplier}
+        />
+      </Column>
       <DistrictVolumeDetailTabs ariaLabel="Coast sections" items={sections} headers={headers} />
     </>
   );

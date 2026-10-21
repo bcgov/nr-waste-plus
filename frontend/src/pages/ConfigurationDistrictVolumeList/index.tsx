@@ -37,7 +37,9 @@ const ConfigurationDistrictVolumeListPage: FC = () => {
           </Button>
         </PageTitle>
       </Column>
-      <DistrictVolumeListTable />
+      <Column lg={16} md={8} sm={4}>
+        <DistrictVolumeListTable />
+      </Column>
     </>
   );
 };

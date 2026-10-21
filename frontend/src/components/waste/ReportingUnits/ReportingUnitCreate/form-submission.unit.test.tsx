@@ -3,11 +3,6 @@ import { RouterProvider } from '@tanstack/react-router';
 import { act, render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import ReportingUnitCreate from './index';
-
-import type { FamLoginUser } from '@/context/auth/types';
-import type { CodeDescriptionDto, ReportingUnitCreateDto } from '@/services/types';
-
 import { useWasteSearchFilterOptions } from '@/components/waste/WasteSearch/WasteSearchFilters/useWasteSearchFilterOptions';
 import {
   useReportingUnitCreateMutation,
@@ -15,6 +10,12 @@ import {
 } from '@/config/react-query/hooks';
 import { createTestRouter } from '@/config/tests/routerTestHelper';
 import { useAuth } from '@/context/auth/useAuth';
+
+import ReportingUnitCreate from './index';
+
+import type { FamLoginUser } from '@/types/auth.types';
+import type { ReportingUnitCreateDto } from '@/types/reportingUnit.types';
+import type { CodeDescriptionDto } from '@/types/search.types';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 

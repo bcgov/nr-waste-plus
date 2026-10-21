@@ -1,4 +1,4 @@
-import { Breadcrumb, BreadcrumbItem, Column } from '@carbon/react';
+import { Breadcrumb, BreadcrumbItem } from '@carbon/react';
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo, type FC } from 'react';
 
@@ -43,7 +43,7 @@ interface PageTitleProps {
  * @param props.experimental - Shows the "Under Construction" tag when `true`.
  * @param props.children - Optional action elements rendered beside the heading.
  * @param props.breadCrumbs - Ordered breadcrumb entries; each entry is a `{ name, path }` pair.
- * @returns The rendered page title column.
+ * @returns The rendered page title block.
  */
 const PageTitle: FC<PageTitleProps> = ({
   title,
@@ -65,7 +65,7 @@ const PageTitle: FC<PageTitleProps> = ({
   }, [title, setPageTitle, breadcrumbTitle]);
 
   return (
-    <Column className="page-title-col" sm={4} md={8} lg={16}>
+    <div className="page-title-col">
       {breadCrumbs?.length ? (
         <Breadcrumb className="page-title-breadcrumb">
           {breadCrumbs.map((crumb) => (
@@ -87,7 +87,7 @@ const PageTitle: FC<PageTitleProps> = ({
         </div>
         {subtitle ? <Subtitle text={subtitle} /> : null}
       </div>
-    </Column>
+    </div>
   );
 };
 

@@ -1,7 +1,7 @@
-import type { CodeDescriptionDto } from './types';
-import type { CancelablePromise } from '@/config/api/CancelablePromise';
-
 import { HttpClient, type APIConfig } from '@/config/api/types';
+
+import type { CancelablePromise } from '@/config/api/CancelablePromise';
+import type { CodeDescriptionDto } from '@/types/search.types';
 
 /**
  * Backend client for reference data and code table endpoints.

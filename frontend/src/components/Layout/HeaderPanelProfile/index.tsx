@@ -1,12 +1,12 @@
 import { Exit, Help } from '@carbon/icons-react';
-import { SideNavDivider, SideNavLink, Tooltip } from '@carbon/react';
+import { Button, SideNavDivider, Tooltip } from '@carbon/react';
 import { type FC } from 'react';
 
 import ClientListing from '@/components/core/DistrictSelection/ClientListing';
 import DistrictListing from '@/components/core/DistrictSelection/DistrictListing';
 import AvatarImage from '@/components/Layout/AvatarImage';
-import { Role } from '@/context/auth/types';
 import { useAuth } from '@/context/auth/useAuth';
+import { Role } from '@/types/auth.types';
 
 import './index.scss';
 
@@ -37,7 +37,7 @@ const HeaderPanelProfile: FC = () => {
             className="user-name"
             data-testid="user-fullname"
           >{`${user?.firstName} ${user?.lastName}`}</p>
-          <p>{`${user?.idpProvider ? user?.idpProvider + '\\' : null}${user?.userName}`}</p>
+          <p>{`${user?.idpProvider ? user?.idpProvider + '\\' : ''}${user?.userName}`}</p>
           <p>{`Role: ${user?.roles?.map((r) => r.role)?.join(', ') ?? ''}`}</p>
           <p>{`Email: ${user?.email}`}</p>
         </div>
@@ -59,9 +59,15 @@ const HeaderPanelProfile: FC = () => {
 
           <SideNavDivider />
 
-          <SideNavLink className="cursor-pointer" renderIcon={Exit} onClick={logout}>
-            Log out
-          </SideNavLink>
+          <li className="cds--side-nav__item">
+            {/* #1389: Log out must be a real button — the former SideNavLink
+                rendered an anchor without href and tabindex="-1", which was
+                unreachable by keyboard and had no button/link role. */}
+            <Button className="logout-button" kind="ghost" onClick={logout}>
+              <Exit aria-hidden="true" />
+              Log out
+            </Button>
+          </li>
         </ul>
       </nav>
     </div>

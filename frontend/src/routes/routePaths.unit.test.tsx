@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
-import { Role } from '@/context/auth/types';
+import { Role } from '@/types/auth.types';
 
 import * as routePaths from './routePaths';
 

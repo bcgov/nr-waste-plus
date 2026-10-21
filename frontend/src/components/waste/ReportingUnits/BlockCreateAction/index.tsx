@@ -1,14 +1,14 @@
-import { Button, Column, TextInput } from '@carbon/react';
+import { Button, TextInput } from '@carbon/react';
 import { useForm } from '@tanstack/react-form';
 import { useState, type FC } from 'react';
 
 import { useCreateBlock, useReportingUnitBlocksQuery } from '@/config/react-query/hooks';
-import { Role } from '@/context/auth/types';
 import { useAuth } from '@/context/auth/useAuth';
 import { featureFlags } from '@/env';
 import useNotificationEvents from '@/hooks/useNotificationEvents';
+import { Role } from '@/types/auth.types';
 
-import type { BlockCreateRequestDto } from '@/services/reportingUnit.types';
+import type { BlockCreateRequestDto } from '@/types/reportingUnit.types';
 
 import './index.scss';
 
@@ -206,7 +206,7 @@ const BlockCreateAction: FC<BlockCreateActionProps> = ({
   }
 
   return (
-    <Column lg={16} md={8} sm={4} className="block-create-action" data-testid="block-create-action">
+    <div className="block-create-action" data-testid="block-create-action">
       <h2 className="block-create-action__title">Add block</h2>
       <div className="block-create-action__description" data-testid="block-create-helper">
         <p>Enter at least 2 criteria to search and add block(s) to this reporting unit.</p>
@@ -299,7 +299,7 @@ const BlockCreateAction: FC<BlockCreateActionProps> = ({
           </div>
         </div>
       </form>
-    </Column>
+    </div>
   );
 };
 

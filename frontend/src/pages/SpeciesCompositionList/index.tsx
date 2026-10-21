@@ -37,7 +37,9 @@ const SpeciesCompositionListPage: FC = () => {
           </Button>
         </PageTitle>
       </Column>
-      <SpeciesCompositionListTable />
+      <Column lg={16} md={8} sm={4}>
+        <SpeciesCompositionListTable />
+      </Column>
     </>
   );
 };

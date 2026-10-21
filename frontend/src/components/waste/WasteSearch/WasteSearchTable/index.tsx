@@ -1,26 +1,23 @@
-import { Column } from '@carbon/react';
 import { useEffect, useState, useMemo, type FC, type ReactNode } from 'react';
-
-import { headers } from './constants';
-import { useWasteSearchRowActions } from './rowActions.tsx';
-
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type {
-  ReportingUnitSearchParametersViewDto,
-  ReportingUnitSearchResultDto,
-} from '@/services/search.types';
 
 import TableResource from '@/components/Form/TableResource';
 import WasteSearchFilters from '@/components/waste/WasteSearch/WasteSearchFilters';
 import WasteSearchTableExpandContent from '@/components/waste/WasteSearch/WasteSearchTableExpandContent';
 import { useSearchReportingUnitsQuery } from '@/config/react-query/hooks';
-import { useListTablePagination } from '@/hooks/useTableRow';
 import { featureFlags } from '@/env';
 import useNotificationEvents from '@/hooks/useNotificationEvents';
+import { useListTablePagination } from '@/hooks/useTableRow';
 import { reportingUnitSearchParametersView2Plain } from '@/services/search.utils';
 import { removeEmpty } from '@/services/utils';
 
-import './index.scss';
+import { headers } from './constants';
+import { useWasteSearchRowActions } from './rowActions.tsx';
+
+import type {
+  ReportingUnitSearchParametersViewDto,
+  ReportingUnitSearchResultDto,
+} from '@/types/search.types';
+import type { PageableResponse } from '@/types/tableResource.types';
 
 /**
  * Coordinates waste-search filters, results, pagination, sorting, and row expansion.
@@ -99,11 +96,11 @@ const WasteSearchTable: FC = () => {
 
   return (
     <>
-      <Column lg={16} md={8} sm={4} className="search-filters">
+      <div className="search-filters">
         <WasteSearchFilters value={filters} onChange={setFilters} onSearch={executeNewSearch} />
-      </Column>
+      </div>
 
-      <Column lg={16} md={8} sm={4} className="search-table">
+      <div className="search-table">
         <TableResource
           id="waste-search"
           headers={headers}
@@ -117,7 +114,7 @@ const WasteSearchTable: FC = () => {
           onRowExpanded={onRowExpanded}
           getRowActions={featureFlags['bookmark-ru-enabled'] ? getRowActions : undefined}
         />
-      </Column>
+      </div>
     </>
   );
 };

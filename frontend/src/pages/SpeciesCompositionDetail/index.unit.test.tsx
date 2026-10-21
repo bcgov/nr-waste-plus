@@ -4,11 +4,11 @@ import userEvent from '@testing-library/user-event';
 import { type ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { useSpeciesCompositionDetailQuery } from '@/config/react-query/hooks';
+
 import SpeciesCompositionDetailPage from './index';
 
-import type { SpeciesCompositionDetail } from '@/services/speciesComposition.types';
-
-import { useSpeciesCompositionDetailQuery } from '@/config/react-query/hooks';
+import type { SpeciesCompositionDetail } from '@/types/speciesComposition.types';
 
 // ============================================================================
 // Mocks
@@ -76,11 +76,14 @@ vi.mock('@/components/core/PageNotification', () => ({
 const createData = (id = 42): SpeciesCompositionDetail =>
   ({
     id,
+    area: 'INTERIOR',
     startDate: '2026-06-01',
     endDate: null,
+    tableLevelFactor: 1.0,
     uploadedBy: 'jsmith@gov.bc.ca',
     dateOfUpload: '2026-05-15T14:23:00Z',
     tableData: {
+      type: 'SPECIES_COMPOSITION',
       rows: [
         {
           district: { code: 'DCC', description: 'Cariboo-Chilcotin' },

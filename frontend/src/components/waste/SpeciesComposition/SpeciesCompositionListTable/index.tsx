@@ -1,13 +1,4 @@
-import { Column } from '@carbon/react';
 import { useState } from 'react';
-
-import { useListTableState } from '@/hooks/useTableRow';
-
-import { useSpeciesCompositionListRowActions } from './actions.tsx';
-import { headers } from './constants.tsx';
-
-import type { SpeciesCompositionListItem } from '@/services/speciesComposition.types.ts';
-import type { FC } from 'react';
 
 import TableResource from '@/components/Form/TableResource';
 import ConfigurationDeleteConfirmModal from '@/components/waste/ConfigurationDeleteConfirmModal';
@@ -16,6 +7,13 @@ import {
   useSpeciesCompositionListQuery,
 } from '@/config/react-query/hooks.ts';
 import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
+import { useListTableState } from '@/hooks/useTableRow';
+
+import { useSpeciesCompositionListRowActions } from './actions.tsx';
+import { headers } from './constants.tsx';
+
+import type { SpeciesCompositionListItem } from '@/types/speciesComposition.types.ts';
+import type { FC } from 'react';
 
 import './index.scss';
 
@@ -55,7 +53,7 @@ const SpeciesCompositionListTable: FC = () => {
   const getRowActions = useSpeciesCompositionListRowActions(setRowToDelete);
 
   return (
-    <Column lg={16} md={8} sm={4} className="species-composition-column__content">
+    <div className="species-composition-column__content">
       <TableResource
         id="species-composition-list"
         headers={headers}
@@ -85,7 +83,7 @@ const SpeciesCompositionListTable: FC = () => {
         }}
         onClose={() => setRowToDelete(null)}
       />
-    </Column>
+    </div>
   );
 };
 

@@ -1,14 +1,4 @@
-import { Column } from '@carbon/react';
 import { useState } from 'react';
-
-import { useListTableState } from '@/hooks/useTableRow';
-
-import { useDistrictVolumeListRowActions } from './actions.tsx';
-import { headers } from './constants.tsx';
-
-import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
-import type { DistrictVolumeListItem } from '@/services/districtvolumes.types.ts';
-import type { FC } from 'react';
 
 import TableResource from '@/components/Form/TableResource';
 import ConfigurationDeleteConfirmModal from '@/components/waste/ConfigurationDeleteConfirmModal';
@@ -17,6 +7,14 @@ import {
   useDistrictVolumeTableDeleteMutation,
 } from '@/config/react-query/hooks.ts';
 import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
+import { useListTableState } from '@/hooks/useTableRow';
+
+import { useDistrictVolumeListRowActions } from './actions.tsx';
+import { headers } from './constants.tsx';
+
+import type { DistrictVolumeListItem } from '@/types/districtvolumes.types.ts';
+import type { PageableResponse } from '@/types/tableResource.types.ts';
+import type { FC } from 'react';
 
 import './index.scss';
 
@@ -54,7 +52,7 @@ const DistrictVolumeListTable: FC = () => {
   const getRowActions = useDistrictVolumeListRowActions(setRowToDelete);
 
   return (
-    <Column lg={16} md={8} sm={4} className="configuration-column__content">
+    <div className="configuration-column__content">
       <TableResource
         id="district-volume-list"
         headers={headers}
@@ -79,7 +77,7 @@ const DistrictVolumeListTable: FC = () => {
         }}
         onClose={() => setRowToDelete(null)}
       />
-    </Column>
+    </div>
   );
 };
 

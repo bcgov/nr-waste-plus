@@ -1,4 +1,5 @@
-import type { ReportingUnitSearchParametersDto, SortDirectionType } from '@/services/types';
+import type { SortDirectionType } from '@/types/pagination.types';
+import type { ReportingUnitSearchParametersDto } from '@/types/search.types';
 
 /**
  * Parameters used to build the district-volume list query key and query function.

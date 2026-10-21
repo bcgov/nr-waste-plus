@@ -3,13 +3,13 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import AdvancedFilterClientInput from './index';
-
-import type { FamLoginUser } from '@/context/auth/types';
-
 import { makeTestQueryClient } from '@/config/tests/renderWithApp';
 import { useAuth } from '@/context/auth/useAuth';
 import APIs from '@/services/APIs';
+
+import AdvancedFilterClientInput from './index';
+
+import type { FamLoginUser } from '@/types/auth.types';
 
 const mockUser = {
   idpProvider: 'IDIR',

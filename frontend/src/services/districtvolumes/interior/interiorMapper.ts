@@ -2,7 +2,7 @@ import type {
   InteriorDistrictRow,
   InteriorZone,
   InteriorData,
-} from '@/services/districtvolumes.types';
+} from '@/types/districtvolumes.types';
 
 function extractDistrictCode(raw: string): string {
   const trimmed = raw.trim();

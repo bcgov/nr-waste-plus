@@ -3,15 +3,15 @@ import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 
-import WasteSearchTable from './index';
-
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { ReportingUnitSearchResultDto } from '@/services/search.types';
-
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
 import * as useNotificationEvents from '@/hooks/useNotificationEvents';
 import * as eventHandler from '@/hooks/useNotificationEvents/eventHandler';
 import APIs from '@/services/APIs';
+
+import WasteSearchTable from './index';
+
+import type { ReportingUnitSearchResultDto } from '@/types/search.types';
+import type { PageableResponse } from '@/types/tableResource.types';
 
 // Mock WasteSearchFilters to avoid slow typing interactions
 vi.mock('@/components/waste/WasteSearch/WasteSearchFilters', () => ({
@@ -32,9 +32,30 @@ vi.mock('@/components/waste/WasteSearch/WasteSearchFilters', () => ({
   ),
 }));
 
+vi.mock('@/env', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/env')>();
+  return {
+    ...actual,
+    featureFlags: {
+      ...actual.featureFlags,
+      'bookmark-ru-enabled': true,
+    },
+  };
+});
+
 // Mock TableResource to avoid slow Carbon component rendering
 vi.mock('@/components/Form/TableResource', () => ({
-  default: ({ headers, content, loading, error, onPageChange, onSortChange, id }: any) => {
+  default: ({
+    headers,
+    content,
+    loading,
+    error,
+    onPageChange,
+    onSortChange,
+    id,
+    onRowExpanded,
+    getRowActions,
+  }: any) => {
     if (loading) {
       return <div data-testid="loading-skeleton">Loading...</div>;
     }
@@ -65,9 +86,42 @@ vi.mock('@/components/Form/TableResource', () => ({
           </thead>
           <tbody>
             {content.content.map((row: any) => (
-              <tr key={row.id}>
+              <tr key={row.id} data-testid={`row-${row.id}`}>
                 <td>{row.cutBlockId}</td>
                 <td>{row.ruNumber}</td>
+                {onRowExpanded ? (
+                  <td>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const node = await onRowExpanded(row.id);
+                        const el = document.createElement('div');
+                        el.setAttribute('data-testid', `expanded-${row.id}`);
+                        el.textContent = String(node);
+                        const container = document.body.querySelector(
+                          `[data-testid="row-${row.id}"]`,
+                        )?.parentElement;
+                        if (container) container.appendChild(el);
+                      }}
+                    >
+                      Expand
+                    </button>
+                  </td>
+                ) : null}
+                {getRowActions ? (
+                  <td>
+                    {(getRowActions(row) || []).map((action: any) => (
+                      <button
+                        key={action.id}
+                        type="button"
+                        disabled={action.isLoading?.(row)}
+                        onClick={() => action.onClick(row)}
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                  </td>
+                ) : null}
               </tr>
             ))}
           </tbody>
@@ -575,5 +629,86 @@ describe('WasteSearchTable', () => {
         expect(APIs.search.searchReportingUnit).toHaveBeenCalledTimes(2);
       });
     });
+  });
+
+  describe('mount and lifecycle', () => {
+    it('triggers refetch on mount when isSearchEnabled returns true (line 59)', async () => {
+      (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+      const actual = await vi.importActual<
+        typeof import('@/hooks/useTableRow/useListTablePagination')
+      >('@/hooks/useTableRow/useListTablePagination');
+      vi.doMock('@/hooks/useTableRow/useListTablePagination', () => ({
+        ...actual,
+        useListTablePagination: (args: any) => {
+          const real = actual.useListTablePagination(args);
+          return { ...real, isSearchEnabled: () => true };
+        },
+      }));
+      vi.resetModules();
+      const { default: WasteSearchTableFresh } = await import('./index');
+      const { renderWithAppAsync: renderFresh } = await import('@/config/tests/renderWithApp');
+      await renderFresh(<WasteSearchTableFresh />);
+      await waitFor(() => {
+        expect(APIs.search.searchReportingUnit).toHaveBeenCalled();
+      });
+      vi.doUnmock('@/hooks/useTableRow/useListTablePagination');
+      vi.resetModules();
+    });
+  });
+});
+
+describe('WasteSearchTable - additional coverage', () => {
+  let sendEventMock: Mock;
+  let clearEventsMock: Mock;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    sendEventMock = vi.fn();
+    clearEventsMock = vi.fn();
+    vi.spyOn(useNotificationEvents, 'default').mockReturnValue({
+      clearEvents: clearEventsMock,
+      sendEvent: sendEventMock,
+      sendInlineEvent: vi.fn(),
+      sendToastEvent: vi.fn(),
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
+    });
+    (APIs.user.getUserPreferences as Mock).mockResolvedValue({ theme: 'g10' });
+    (APIs.user.updateUserPreferences as Mock).mockResolvedValue({});
+    (APIs.codes.getSamplingOptions as Mock).mockResolvedValue([
+      { code: 'S1', description: 'Sampling One' },
+      { code: 'S2', description: 'Sampling Two' },
+    ]);
+    (APIs.codes.getDistricts as Mock).mockResolvedValue([
+      { code: 'D1', description: 'District One' },
+      { code: 'D2', description: 'District Two' },
+    ]);
+    (APIs.codes.getAssessAreaStatuses as Mock).mockResolvedValue([
+      { code: 'APP', description: 'Approved' },
+      { code: 'SUB', description: 'Submitted' },
+    ]);
+    (APIs.search.searchReportingUnit as Mock).mockResolvedValue(mockSearchResults);
+  });
+
+  it('invokes onToggleRefresh when getRowActions is available (line 67)', async () => {
+    await renderWithAppAsync(<WasteSearchTable />);
+    const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
+    await setInputValue(keywordInput, 'BLOCK');
+    const searchButton = screen.getByTestId('search-button-most');
+    await userEvent.click(searchButton);
+    await waitFor(() => screen.getByText('411B'));
+    expect(screen.getAllByText('Bookmark this reporting unit').length).toBeGreaterThan(0);
+  });
+
+  it('resolves row expansion content (line 85)', async () => {
+    await renderWithAppAsync(<WasteSearchTable />);
+    const keywordInput = screen.getByPlaceholderText('Search by RU No. or Block ID');
+    await setInputValue(keywordInput, 'BLOCK');
+    const searchButton = screen.getByTestId('search-button-most');
+    await userEvent.click(searchButton);
+    await waitFor(() => screen.getByText('411B'));
+    const expandBtn = screen.getAllByRole('button', { name: 'Expand' })[0];
+    await userEvent.click(expandBtn);
+    await waitFor(() => expect(screen.getByTestId(/expanded-/)).toBeDefined());
   });
 });

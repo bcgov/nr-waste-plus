@@ -13,7 +13,11 @@ const DistrictDisplay: FC<DistrictDisplayProps> = ({ isActive }) => {
   const { data, isLoading } = useDistrictOptionsQuery({
     select: (data) =>
       data
-        .map((district) => ({ id: district.code, name: district.description, kind: 'D' }))
+        .map((district) => ({
+          id: district.code ?? '',
+          name: district.description ?? '',
+          kind: 'D',
+        }))
         .find((client) => client.id === userPreference.selectedDistrict),
   });
 

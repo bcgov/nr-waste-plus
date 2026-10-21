@@ -4,10 +4,10 @@ import { type FC } from 'react';
 import EmptyValueTag from '@/components/core/Tags/EmptyValueTag';
 import TooltipRoleBasedRedirectLinkTag from '@/components/core/Tags/TooltipRoleBasedRedirectLinkTag';
 import ReadonlyInput from '@/components/Form/ReadonlyInput';
-import { Role } from '@/context/auth/types';
 import { env } from '@/env';
+import { Role } from '@/types/auth.types';
 
-import type { ReportingUnitDto } from '@/services/types';
+import type { ReportingUnitDto } from '@/types/reportingUnit.types';
 
 import './index.scss';
 
@@ -25,7 +25,7 @@ type ReportingUnitDetailsTombstoneProps = {
  * @returns A read-only tombstone panel for the reporting unit.
  */
 const ReportingUnitDetailsTombstone: FC<ReportingUnitDetailsTombstoneProps> = ({ data }) => (
-  <Column lg={16} md={8} sm={4} className="rudetail-column__body">
+  <div className="rudetail-column__body">
     <Grid>
       <Column max={4} xlg={8} lg={8} md={4} sm={4}>
         <ReadonlyInput label="Client name">
@@ -67,7 +67,7 @@ const ReportingUnitDetailsTombstone: FC<ReportingUnitDetailsTombstoneProps> = ({
         </ReadonlyInput>
       </Column>
     </Grid>
-  </Column>
+  </div>
 );
 
 export default ReportingUnitDetailsTombstone;

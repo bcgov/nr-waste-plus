@@ -1,10 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants.ts';
-import type { FormulaValidationError } from '@/services/formulaConfiguration.types.ts';
-
 import FormulaSection from './index.tsx';
+
+import type { FormulaKeyDefinition } from '@/services/formulaConfiguration.constants.ts';
+import type { FormulaValidationError } from '@/types/formulaConfiguration.types.ts';
 
 // ─── Mocks ─────────────────────────────────────────────────────────────────────
 

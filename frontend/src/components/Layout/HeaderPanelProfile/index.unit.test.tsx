@@ -2,11 +2,11 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
-import HeaderPanelProfile from './index';
-
 import { renderWithAppAsync } from '@/config/tests/renderWithApp';
-import { Role, type FamLoginUser } from '@/context/auth/types';
 import APIs from '@/services/APIs';
+import { Role, type FamLoginUser } from '@/types/auth.types';
+
+import HeaderPanelProfile from './index';
 
 vi.mock('@/components/Layout/AvatarImage', () => ({
   __esModule: true,
@@ -71,10 +71,26 @@ describe('HeaderPanelProfile', () => {
     expect(screen.getByTestId('user-fullname').textContent).toBe('Jane Doe');
   });
 
+  it('renders gracefully when user lacks roles or idp provider', async () => {
+    mockUser = {
+      firstName: 'No',
+      lastName: 'Roles',
+      userName: 'nroles',
+      email: 'no@example.com',
+    } as FamLoginUser;
+    await renderWithProviders();
+    screen.getByText('No Roles');
+    screen.getByText('nroles');
+    screen.getByText('Role:');
+    screen.getByText('Email: no@example.com');
+    // Without client roles the panel falls back to district selection.
+    screen.getByText('Select organization');
+  });
+
   it('calls logout when Log out is clicked', async () => {
     const user = userEvent.setup();
     await renderWithProviders();
-    await user.click(screen.getByText('Log out'));
+    await user.click(screen.getByRole('button', { name: 'Log out' }));
     expect(mockLogout).toHaveBeenCalled();
   });
 
@@ -103,9 +119,25 @@ describe('HeaderPanelProfile', () => {
     expect(screen.getAllByRole('separator').length).toBeGreaterThan(0);
   });
 
-  it('SideNavLink Log out has correct accessibility', async () => {
+  it('Log out is a focusable, keyboard-activatable button (#1389)', async () => {
+    const user = userEvent.setup();
+    mockLogout.mockClear();
     await renderWithProviders();
-    screen.getByText('Log out');
+
+    // Resolvable by role, rendered as a real <button>, removed from the DOM
+    // default tab order only in the sense that it participates naturally.
+    const logoutButton = screen.getByRole('button', { name: 'Log out' });
+    expect(logoutButton.tagName).toBe('BUTTON');
+    expect(logoutButton.getAttribute('tabindex')).toBeNull();
+
+    // Keyboard-focusable and activated by both Enter and Space.
+    logoutButton.focus();
+    // eslint-disable-next-line testing-library/no-node-access
+    expect(document.activeElement).toBe(logoutButton);
+    await user.keyboard('{Enter}');
+    expect(mockLogout).toHaveBeenCalledTimes(1);
+    await user.keyboard(' ');
+    expect(mockLogout).toHaveBeenCalledTimes(2);
   });
 
   it('renders ClientListing and client entity text for user with Viewer role', async () => {

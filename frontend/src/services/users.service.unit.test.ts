@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { UserService } from './users.service';
 
-import type { UserPreference } from '@/context/preference/types';
+import type { UserPreference } from '@/types/preference.types';
 
 vi.mock('axios');
 

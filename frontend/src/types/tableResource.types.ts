@@ -1,7 +1,5 @@
-import { type NestedKeyOf, type ValueByPath } from '@/services/types';
-import { getValueByPath } from '@/services/utils';
-
-export { pageTypeSchema, pageableResponseSchema } from './schemas';
+import type { NestedKeyOf, PageType, ValueByPath } from './pagination.types';
+import type { ReactNode } from 'react';
 
 type TableRowActionValue<T, R> = R | ((row: IdentifiableContent<T>) => R);
 
@@ -18,12 +16,12 @@ export type TableHeaderType<T, K extends NestedKeyOf<T> = NestedKeyOf<T>> = {
   // Useful for providing descriptions or additional context for abbreviated headers.
   headerTooltip?: string;
   // renderAs function should expect as argument the value of the key in T
-  // and return a React node to be rendered in the table cell
+  // and return a React node for the table cell
   // This is useful for custom rendering, like in the StatusTag component
   // where it receives a value of type { code: string; name: string }
   // Example: renderAs: (value) => <StatusTag value={value} />
   // If not provided, the default rendering will be used (value.toString())
-  renderAs?: (value: ValueByPath<T, K>) => React.ReactNode;
+  renderAs?: (value: ValueByPath<T, K>) => ReactNode;
 };
 
 export type PaginationOnChangeType = {
@@ -49,53 +47,12 @@ export type TableResourceActionsProps<T> = {
   maxInlineRowActions: number;
 };
 
-export function resolveTableRowActionValue<T, R>(
-  value: TableRowActionValue<T, R>,
-  row: IdentifiableContent<T>,
-): R {
-  if (typeof value === 'function') {
-    return (value as (row: IdentifiableContent<T>) => R)(row);
-  }
-  return value;
-}
-
-export type PageType = {
-  size: number;
-  number: number;
-  totalElements: number;
-  totalPages: number;
-};
-
+/**
+ * App-facing page envelope. Rows must carry a stable `id` (the backend
+ * composes one for search rows; list endpoints derive it at the query
+ * boundary) so the table layer can address rows uniformly.
+ */
 export type PageableResponse<T> = {
   content: IdentifiableContent<T>[];
   page: PageType;
 };
-
-/**
- * Get the effective unique identifier for a header.
- * Returns the id if provided, otherwise returns the key as string.
- */
-export function getHeaderId<T>(header: TableHeaderType<T>): string {
-  return header.id ?? String(header.key);
-}
-
-export function renderCell<T>(row: T, header: TableHeaderType<T, NestedKeyOf<T>>): React.ReactNode {
-  const value = getValueByPath(row, header.key);
-  if (value == null) {
-    return '-';
-  }
-  if (header.renderAs) {
-    return header.renderAs(value);
-  }
-  if (value) {
-    const displayValue =
-      typeof value === 'string' || typeof value === 'number'
-        ? value
-        : value == null
-          ? undefined
-          : JSON.stringify(value);
-    return displayValue;
-  } else {
-    return '-';
-  }
-}

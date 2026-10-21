@@ -1,16 +1,1 @@
-{
-  "id": 184113,
-  "licenseNo": "W1940",
-  "cuttingPermit": "EA",
-  "timberMark": "WBMJEC",
-  "exempted": true,
-  "multiMark": true,
-  "netArea": 3.07,
-  "submitter": "BCEID\\\\BMO",
-  "attachment": {
-    "code": null,
-    "description": null
-  },
-  "comments": null,
-  "totalBlocks": 2
-}
+{"id": 184113, "licenseNo": "W1940", "cuttingPermit": "EA", "timberMark": "WBMJEC", "exempted": true, "multiMark": true, "status": {"code": "SUB", "description": "Submitted"}, "secondaryMarks": [], "netArea": 3.07, "markArea": 1.25, "submitter": "BCEID\\\\BMO", "attachment": {"code": null, "description": null}, "comments": null, "totalBlocks": 2, "totalChildren": 0}

@@ -8,7 +8,8 @@ import {
   removeEmpty,
 } from './utils';
 
-import type { ForestClientAutocompleteResultDto, SortDirectionType } from './types';
+import type { ForestClientAutocompleteResultDto } from '@/types/forestclient.types';
+import type { SortDirectionType } from '@/types/pagination.types';
 
 type TestObject = {
   user: {
@@ -157,6 +158,7 @@ describe('forestClientAutocompleteResult2CodeDescription', () => {
     const data: ForestClientAutocompleteResultDto = {
       id: '1234',
       name: 'ACME Corporation',
+      acronym: null,
     };
     const result = forestClientAutocompleteResult2CodeDescription(data);
 

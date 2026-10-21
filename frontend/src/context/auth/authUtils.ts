@@ -1,3 +1,4 @@
+import { env } from '@/env';
 import {
   AVAILABLE_ROLES,
   Role,
@@ -8,9 +9,7 @@ import {
   type JWT,
   type ROLE_TYPE,
   type USER_PRIVILEGE_TYPE,
-} from './types';
-
-import { env } from '@/env';
+} from '@/types/auth.types';
 
 /**
  * Retrieves the value of a cookie by name.

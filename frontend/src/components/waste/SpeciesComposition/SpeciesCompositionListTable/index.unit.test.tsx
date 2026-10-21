@@ -4,15 +4,15 @@ import userEvent from '@testing-library/user-event';
 import { act } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import SpeciesCompositionListTable from './index.tsx';
-
-import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
-import type { SpeciesCompositionListItem } from '@/services/speciesComposition.types.ts';
-
-import { renderCell, resolveTableRowActionValue } from '@/components/Form/TableResource/types.ts';
+import { renderCell, resolveTableRowActionValue } from '@/components/Form/TableResource/utils.ts';
 import * as hooks from '@/config/react-query/hooks.ts';
 import { renderWithAppAsync } from '@/config/tests/renderWithApp.tsx';
 import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
+
+import SpeciesCompositionListTable from './index.tsx';
+
+import type { SpeciesCompositionListItem } from '@/types/speciesComposition.types.ts';
+import type { PageableResponse } from '@/types/tableResource.types.ts';
 
 vi.mock('@/config/react-query/hooks');
 
@@ -173,17 +173,19 @@ const mockData: PageableResponse<SpeciesCompositionListItem> = {
   content: [
     {
       id: 1,
+      area: 'INTERIOR',
       startDate: '2025-01-01',
       endDate: null,
       uploadedBy: 'admin@gov.bc.ca',
-      dateOfUpload: '2025-01-15T10:30:00',
+      dateOfUpload: '2025-01-15T10:30:00Z',
     },
     {
       id: 2,
+      area: 'COASTAL',
       startDate: '2024-06-01',
       endDate: '2024-12-31',
       uploadedBy: 'user@gov.bc.ca',
-      dateOfUpload: '2024-05-20T14:00:00',
+      dateOfUpload: '2024-05-20T14:00:00Z',
     },
   ],
   page: { number: 0, size: 10, totalElements: 2, totalPages: 1 },
@@ -198,10 +200,11 @@ const mockMultiPageData: PageableResponse<SpeciesCompositionListItem> = {
   content: [
     {
       id: 1,
+      area: 'INTERIOR',
       startDate: '2025-01-01',
       endDate: null,
       uploadedBy: 'admin@gov.bc.ca',
-      dateOfUpload: '2025-01-15T10:30:00',
+      dateOfUpload: '2025-01-15T10:30:00Z',
     },
   ],
   page: { number: 0, size: 10, totalElements: 25, totalPages: 3 },
@@ -211,6 +214,7 @@ const mockFutureData: PageableResponse<SpeciesCompositionListItem> = {
   content: [
     {
       id: 3,
+      area: 'INTERIOR',
       startDate: '2099-01-01',
       endDate: null,
       uploadedBy: 'admin@gov.bc.ca',

@@ -1,16 +1,16 @@
 import { Column } from '@carbon/react';
 import { type FC } from 'react';
 
-import FormulaConfigurationDetailHeader from './FormulaConfigurationDetailHeader.tsx';
-
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
-
 import FormulaSection from '@/components/waste/Formula/FormulaSection/index.tsx';
 import {
   FORMULA_KEYS,
   getFormulaLabel,
   type FormulaKeyDefinition,
 } from '@/services/formulaConfiguration.constants.ts';
+
+import FormulaConfigurationDetailHeader from './FormulaConfigurationDetailHeader.tsx';
+
+import type { FormulaSetResponse } from '@/types/formulaConfiguration.types.ts';
 
 interface FormulaConfigurationDetailProps {
   data: FormulaSetResponse;
@@ -32,7 +32,9 @@ const FormulaConfigurationDetail: FC<FormulaConfigurationDetailProps> = ({ data 
 
   return (
     <>
-      <FormulaConfigurationDetailHeader startDate={data.startDate} endDate={data.endDate} />
+      <Column lg={16} md={8} sm={4}>
+        <FormulaConfigurationDetailHeader startDate={data.startDate} endDate={data.endDate} />
+      </Column>
       <Column lg={16} md={8} sm={4} className="formula-config-sections">
         <div className="formula-sections">
           {sections.map(([sectionName, keys]) => (

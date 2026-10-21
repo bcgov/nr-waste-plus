@@ -9,7 +9,7 @@ import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 
 import ReportingUnitBlockDetailsPage from './index';
 
-import type { BlockDetailsDto, ReportingUnitDto } from '@/services/types';
+import type { BlockDetailsDto, ReportingUnitDto } from '@/types/reportingUnit.types';
 
 // ── Mutable state used by the module mocks ─────────────────────────────────────
 
@@ -48,7 +48,6 @@ const defaultData: ReportingUnitDto = {
   grade: { code: 'IN', description: 'Interior' },
   sampling: { code: 'DA', description: 'District Average' },
   district: { code: 'DKM', description: 'Coast Mountains District' },
-  createdAt: '2025-05-25',
 };
 
 const defaultBlockData: BlockDetailsDto = {
@@ -169,7 +168,9 @@ describe('ReportingUnitBlockDetailsPage', () => {
       expect(screen.getByTestId('card-item-content-sampling-option').textContent).toBe(
         'DA - District Average',
       );
-      expect(screen.getByTestId('card-item-content-created-on').textContent).toBe('May 25, 2025');
+      // `ReportingUnitDetailsDto` carries no creation timestamp — the summary
+      // renders the established empty-state dash.
+      expect(screen.getByTestId('card-item-content-created-on').textContent).toBe('-');
     });
 
     it('shouldRenderNoEditableInputs', async () => {
@@ -178,14 +179,6 @@ describe('ReportingUnitBlockDetailsPage', () => {
       expect(screen.queryAllByRole('textbox')).toHaveLength(0);
       expect(screen.queryByRole('button', { name: /edit/i })).toBeNull();
       expect(screen.queryByRole('button', { name: /delete/i })).toBeNull();
-    });
-
-    it('shouldRenderPlaceholder_whenCreatedAtIsMissing', async () => {
-      mockQuery({ data: { ...defaultData, createdAt: undefined } });
-
-      await renderPage();
-
-      expect(screen.getByTestId('card-item-content-created-on').textContent).toBe('--');
     });
   });
 

@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 
 import { MatrixParser } from './matrixParser';
 
-import type { MatrixConfig } from './types';
+import type { MatrixConfig } from '@/types/spreadsheet.types';
 
 function buildWorksheet(rows: unknown[][], mergeCells?: string[]): ExcelJS.Worksheet {
   const wb = new ExcelJS.Workbook();

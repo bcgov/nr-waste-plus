@@ -1,6 +1,9 @@
 import { IconButton, OverflowMenu, OverflowMenuItem, TableCell } from '@carbon/react';
 
-import { type TableResourceActionsProps, resolveTableRowActionValue } from '../types';
+import { resolveTableRowActionValue } from '../utils';
+
+import type { TableResourceActionsProps } from '@/types/tableResource.types';
+import type { MouseEvent } from 'react';
 
 import './index.scss';
 
@@ -47,7 +50,7 @@ const TableResourceActions = <T,>({
             size="sm"
             align="top-start"
             flipped
-            onClick={(event) => event.stopPropagation()}
+            onClick={(event: MouseEvent) => event.stopPropagation()}
           >
             {overflowActions.map((action) => {
               const label = resolveTableRowActionValue(action.label, row);

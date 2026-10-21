@@ -95,7 +95,7 @@ public final class ReportingUnitSearchQueryConstants {
                     )
           where ru.is_deleted = false
             and ('NOVALUE' in (:#{#filter.district})
-                 or ru.org_unit_no in (:#{#filter.district}))
+                 or ru.geographic_code in (:#{#filter.district}))
             and ('NOVALUE' in (:#{#filter.clientNumbers})
                  or ru.client_number in (:#{#filter.clientNumbers}))
             and (-1 in (:#{#filter.reportingUnitIds})
@@ -156,7 +156,7 @@ public final class ReportingUnitSearchQueryConstants {
                   )                                         as "secondaryEntry",
               'AVG'                                         as "samplingCode",
               'Average'                                     as "samplingName",
-              ru.org_unit_no                                as "districtCode",
+              ru.geographic_code                            as "districtCode",
               cast(null as text)                            as "districtName",
               se.status                                     as "statusCode",
               cast(null as text)                            as "statusName",
@@ -379,9 +379,9 @@ public final class ReportingUnitSearchQueryConstants {
           Map.entry("ruNumber", "ru.reporting_unit_id"),
           Map.entry("cutBlockId", "pm.cut_block_id"),
           Map.entry("client.code", "ru.client_number"),
-          Map.entry("district", "ru.org_unit_no"),
-          Map.entry("district.code", "ru.org_unit_no"),
-          Map.entry("district.description", "ru.org_unit_no"),
+          Map.entry("district", "ru.geographic_code"),
+          Map.entry("district.code", "ru.geographic_code"),
+          Map.entry("district.description", "ru.geographic_code"),
           Map.entry("status", "se.status"),
           Map.entry("status.code", "se.status"),
           Map.entry("status.description", "se.status"),

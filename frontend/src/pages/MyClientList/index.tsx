@@ -27,7 +27,9 @@ const MyClientListPage: FC = () => {
       <Column lg={16} md={8} sm={4} className="notification-column">
         <PageNotification eventTarget="my-client-list" />
       </Column>
-      <MyClientListing />
+      <Column lg={16} md={8} sm={4}>
+        <MyClientListing />
+      </Column>
     </>
   );
 };

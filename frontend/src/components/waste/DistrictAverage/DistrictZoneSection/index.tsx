@@ -1,7 +1,7 @@
-import type { PageableResponse, TableHeaderType } from '@/components/Form/TableResource/types.ts';
-import type { CoastDistrictRow, InteriorDistrictRow } from '@/services/districtvolumes.types.ts';
-
 import TableResource from '@/components/Form/TableResource';
+
+import type { CoastDistrictRow, InteriorDistrictRow } from '@/types/districtvolumes.types.ts';
+import type { PageableResponse, TableHeaderType } from '@/types/tableResource.types.ts';
 
 /**
  * Props for the {@link DistrictZoneSection} component.

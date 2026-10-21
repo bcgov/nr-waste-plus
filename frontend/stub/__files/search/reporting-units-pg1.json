@@ -12,6 +12,7 @@
       "cuttingPermit": "22",
       "timberMark": "26/22",
       "multiMark": true,
+      "secondaryEntry": false,
       "sampling": {
         "code": "BLK",
         "description": "Cutblock"
@@ -40,6 +41,7 @@
       "cuttingPermit": null,
       "timberMark": "58209",
       "multiMark": false,
+      "secondaryEntry": false,
       "sampling": {
         "code": "BLK",
         "description": "Cutblock"

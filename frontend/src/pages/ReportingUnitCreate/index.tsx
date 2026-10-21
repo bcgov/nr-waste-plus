@@ -22,7 +22,9 @@ const ReportingUnitCreatePage: FC = () => {
         <PageNotification eventTarget="create-ru" />
       </Column>
 
-      <ReportingUnitCreate />
+      <Column max={6} xlg={6} lg={6} md={4} sm={4}>
+        <ReportingUnitCreate />
+      </Column>
       <Column max={10} xlg={10} lg={10} md={4} sm={0} className="create-ru-column__spacer"></Column>
     </>
   );

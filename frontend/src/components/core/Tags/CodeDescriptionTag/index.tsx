@@ -1,6 +1,6 @@
 import { type FC } from 'react';
 
-import type { CodeDescriptionDto } from '@/services/search.types.ts';
+import type { CodeDescriptionDto } from '@/types/search.types.ts';
 
 /**
  * Displays a code-description pair in a compact inline format.
@@ -10,11 +10,14 @@ import type { CodeDescriptionDto } from '@/services/search.types.ts';
  * @returns The combined code and description.
  */
 const CodeDescriptionTag: FC<{ value: CodeDescriptionDto }> = ({ value }) => {
-  return (
-    <span>
-      {value.code === value.description ? value.code : `${value.code} - ${value.description}`}
-    </span>
-  );
+  // Backend `CodeDescriptionDto` fields are nullable; unresolved lookups
+  // arrive with null code/description, so render the parts that exist and
+  // fall back to a dash when nothing is resolvable.
+  const label =
+    value.code != null && value.code === value.description
+      ? value.code
+      : [value.code, value.description].filter((part): part is string => part != null).join(' - ');
+  return <span>{label || '-'}</span>;
 };
 
 export default CodeDescriptionTag;

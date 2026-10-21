@@ -1,5 +1,4 @@
 import { TableShortcut, TrashCan } from '@carbon/icons-react';
-import { Column } from '@carbon/react';
 import { useNavigate } from '@tanstack/react-router';
 import { useState, type FC } from 'react';
 
@@ -7,18 +6,18 @@ import EmptySection from '@/components/core/EmptySection';
 import TableResource from '@/components/Form/TableResource';
 import { navigateInTree } from '@/routes/inTreePaths';
 
-import {
-  BLOCKS_TABLE_HEADERS,
-  EMPTY_BLOCKS_CONTENT,
-  type ReportingUnitBlocksRow,
-} from './constants';
+import { BLOCKS_TABLE_HEADERS, EMPTY_BLOCKS_CONTENT } from './constants';
 
-import type { PaginationOnChangeType, TableRowAction } from '@/components/Form/TableResource/types';
-import type { PageableResponse } from '@/types/PageableResponse.types';
+import type { ReportingUnitBlocksRow } from '@/types/reportingUnit.types';
+import type {
+  PageableResponse,
+  PaginationOnChangeType,
+  TableRowAction,
+} from '@/types/tableResource.types';
 
 import './index.scss';
 
-export type { ReportingUnitBlocksRow } from './constants';
+export type { ReportingUnitBlocksRow };
 
 /**
  * Component props for the Reporting Unit blocks table.
@@ -96,13 +95,13 @@ const ReportingUnitBlocksList: FC<ReportingUnitBlocksListProps> = ({
 
   if (isError && !isLoading && !content) {
     return (
-      <Column sm={4} md={8} lg={16} className="rublocks-column">
+      <div className="rublocks-column">
         <EmptySection
           className="initial-empty-section"
           title="Something went wrong!"
           description="Error occurred while searching for results."
         />
-      </Column>
+      </div>
     );
   }
 
@@ -112,7 +111,7 @@ const ReportingUnitBlocksList: FC<ReportingUnitBlocksListProps> = ({
   const pageRows = rows.slice(page * pageSize, page * pageSize + pageSize);
 
   return (
-    <Column sm={4} md={8} lg={16} className="rublocks-column">
+    <div className="rublocks-column">
       <TableResource
         id="reporting-unit-blocks-list"
         headers={BLOCKS_TABLE_HEADERS}
@@ -134,7 +133,7 @@ const ReportingUnitBlocksList: FC<ReportingUnitBlocksListProps> = ({
         onPageChange={handlePageChange}
         getRowActions={getRowActions}
       />
-    </Column>
+    </div>
   );
 };
 

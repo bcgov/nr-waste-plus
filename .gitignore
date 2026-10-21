@@ -480,3 +480,5 @@ graphify-out
 copilot-instructions.md
 .graphifyignore
 backend/.factorypath
+
+test-results/

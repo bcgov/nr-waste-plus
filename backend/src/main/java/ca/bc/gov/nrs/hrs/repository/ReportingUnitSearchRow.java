@@ -54,7 +54,7 @@ public interface ReportingUnitSearchRow {
   /** Fixed {@code Average} sampling description. */
   String getSamplingName();
 
-  /** District code ({@code org_unit_no}); description is NULL until D5 lookup. */
+  /** District code ({@code geographic_code}); description is NULL until D5 lookup. */
   String getDistrictCode();
 
   /** Always NULL from SQL; D5/legacy-lookup enrichment. */

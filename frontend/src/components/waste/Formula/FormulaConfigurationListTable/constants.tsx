@@ -1,7 +1,7 @@
-import type { TableHeaderType } from '@/components/Form/TableResource/types.ts';
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
-
 import DateTag from '@/components/core/Tags/DateTag';
+
+import type { FormulaSetListItem } from '@/types/formulaConfiguration.types.ts';
+import type { TableHeaderType } from '@/types/tableResource.types.ts';
 
 const areaDisplayMap: Record<string, string> = {
   INTERIOR: 'Interior',
@@ -12,7 +12,7 @@ const areaDisplayMap: Record<string, string> = {
  * Table headers for the formula configuration list table.
  * Area and start date are sortable.
  */
-export const headers: TableHeaderType<FormulaSetResponse>[] = [
+export const headers: TableHeaderType<FormulaSetListItem>[] = [
   {
     key: 'area',
     header: 'Area',
@@ -36,14 +36,11 @@ export const headers: TableHeaderType<FormulaSetResponse>[] = [
       value ? <DateTag date={value as string} format="MMMM dd, yyyy" /> : <span>—</span>,
   },
   {
-    key: 'formulas',
+    key: 'formulaCount',
     header: 'Formulas',
     sortable: false,
     selected: true,
-    renderAs: (value) => {
-      const count = Array.isArray(value) ? value.length : 0;
-      return <span>{count}</span>;
-    },
+    renderAs: (value) => <span>{value as number}</span>,
   },
   {
     key: 'createdAt',

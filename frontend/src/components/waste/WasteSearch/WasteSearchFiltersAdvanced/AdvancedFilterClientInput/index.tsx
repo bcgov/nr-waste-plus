@@ -1,14 +1,14 @@
 import { type FilterableMultiSelectProps } from '@carbon/react';
 import { type FC } from 'react';
 
-import type { CodeDescriptionDto } from '@/services/types';
-
 import ActiveMultiSelect from '@/components/Form/ActiveMultiSelect';
 import AutoCompleteInput from '@/components/Form/AutoCompleteInput';
 import { activeMSItemToString } from '@/components/waste/WasteSearch/WasteSearchFiltersActive/utils';
 import { useAuth } from '@/context/auth/useAuth';
 import APIs from '@/services/APIs';
 import { forestClientAutocompleteResult2CodeDescription } from '@/services/utils';
+
+import type { CodeDescriptionDto } from '@/types/search.types';
 
 /**
  * Shared Carbon field props supported by both ComboBox and FilterableMultiSelect.
@@ -72,7 +72,7 @@ const AdvancedFilterClientInput: FC<AdvancedFilterClientInputProps> = ({
               forestClientAutocompleteResult2CodeDescription,
             )
           }
-          itemToString={(item) => item!.description}
+          itemToString={(item) => item!.description ?? ''}
           onBlur={onBlur ? (e: React.FocusEvent) => onBlur(e.nativeEvent) : undefined}
           onSelect={(rawData) => {
             const data = rawData ? [rawData as CodeDescriptionDto] : [];

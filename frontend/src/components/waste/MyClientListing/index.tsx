@@ -2,15 +2,15 @@ import { Search } from '@carbon/icons-react';
 import { Button, Column, Grid } from '@carbon/react';
 import { useEffect, useState, type FC } from 'react';
 
-import { headers } from './constants';
-
-import type { PageableResponse } from '@/components/Form/TableResource/types';
-import type { MyForestClientDto } from '@/services/types';
-
 import SearchInput from '@/components/Form/SearchInput';
 import TableResource from '@/components/Form/TableResource';
 import { useMyForestClientsQuery } from '@/config/react-query/hooks';
 import useNotificationEvents from '@/hooks/useNotificationEvents';
+
+import { headers } from './constants';
+
+import type { MyForestClientDto } from '@/types/forestclient.types';
+import type { PageableResponse } from '@/types/tableResource.types';
 
 import './index.scss';
 
@@ -30,7 +30,7 @@ import './index.scss';
  * - Client codes in the results table are rendered as TanStack Router links to
  *   `/search?clientNumbers={code}`.
  *
- * @returns The client listing view column.
+ * @returns The client listing view content.
  */
 const MyClientListing: FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
@@ -90,7 +90,7 @@ const MyClientListing: FC = () => {
 
   return (
     <>
-      <Column lg={16} md={8} sm={4} className="search-filters">
+      <div className="search-filters">
         <Grid className="table-filters-grid">
           <Column max={14} lg={14} md={6} sm={4} className="filters-column">
             <SearchInput
@@ -131,8 +131,8 @@ const MyClientListing: FC = () => {
             </Button>
           </Column>
         </Grid>
-      </Column>
-      <Column lg={16} md={8} sm={4} className="search-table">
+      </div>
+      <div className="search-table">
         <TableResource
           id="districts-search"
           headers={headers}
@@ -143,7 +143,7 @@ const MyClientListing: FC = () => {
           displayRange
           displayToolbar
         />
-      </Column>
+      </div>
     </>
   );
 };

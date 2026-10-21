@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ZodError } from 'zod';
 
 import { sendEvent } from '@/hooks/useNotificationEvents/eventHandler';
 import API from '@/services/APIs';
@@ -46,12 +47,41 @@ vi.mock('@/services/APIs', () => ({
       getAssessAreaStatuses: vi.fn().mockResolvedValue([{ code: 'APP', description: 'Approved' }]),
     },
     search: {
-      searchReportingUnit: vi.fn().mockResolvedValue({ items: [], total: 0 }),
-      getReportingUnitSearchExpand: vi.fn().mockResolvedValue({ id: 1 }),
+      searchReportingUnit: vi.fn().mockResolvedValue({
+        content: [],
+        page: { size: 10, number: 0, totalElements: 0, totalPages: 0 },
+      }),
+      getReportingUnitSearchExpand: vi.fn().mockResolvedValue({
+        id: 1,
+        licenseNo: null,
+        cuttingPermit: null,
+        timberMark: null,
+        exempted: false,
+        multiMark: false,
+        status: { code: null, description: null },
+        secondaryMarks: [],
+        netArea: 0,
+        markArea: 0,
+        submitter: null,
+        attachment: { code: null, description: null },
+        comments: null,
+        totalBlocks: 0,
+        totalChildren: 0,
+      }),
     },
     forestclient: {
       searchByClientNumbers: vi.fn().mockResolvedValue([]),
-      searchMyForestClients: vi.fn().mockResolvedValue({ items: [], total: 0 }),
+      searchMyForestClients: vi.fn().mockResolvedValue({
+        content: [
+          {
+            client: { code: '00000001', description: 'COMPANY ONE' },
+            submissionsCount: 1,
+            blocksCount: 0,
+            lastUpdate: '2007-03-30T11:08:20',
+          },
+        ],
+        page: { size: 10, number: 0, totalElements: 1, totalPages: 1 },
+      }),
       searchForestClients: vi.fn().mockResolvedValue([]),
     },
     reportingUnit: {
@@ -85,7 +115,7 @@ vi.mock('@/services/APIs', () => ({
         content: [
           {
             id: 1,
-            area: 'INTERIOR',
+            area: 'INTERIOR' as const,
             startDate: '2026-05-15',
             endDate: null,
             uploadedBy: 'IDIR/ABCDEF',
@@ -95,10 +125,18 @@ vi.mock('@/services/APIs', () => ({
         page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
       }),
       getDistrictVolumeTableDetail: vi.fn().mockResolvedValue({
-        area: 'INTERIOR',
         id: 42,
+        area: 'INTERIOR' as const,
         startDate: '2026-06-01',
-        zones: [],
+        endDate: null,
+        uploadedBy: 'IDIR/ABCDEF',
+        dateOfUpload: '2026-05-15T14:50:00Z',
+        tableLevelFactor: 1.0,
+        tableData: {
+          type: 'INTERIOR' as const,
+          zones: [],
+          formulas: {},
+        },
       }),
       createDistrictVolumeTable: vi.fn().mockResolvedValue(444),
       deleteDistrictVolume: vi.fn().mockResolvedValue(undefined),
@@ -108,6 +146,7 @@ vi.mock('@/services/APIs', () => ({
         content: [
           {
             id: 1,
+            area: 'INTERIOR',
             startDate: '2026-05-15',
             endDate: null,
             uploadedBy: 'IDIR/ABCDEF',
@@ -118,11 +157,13 @@ vi.mock('@/services/APIs', () => ({
       }),
       getSpeciesCompositionById: vi.fn().mockResolvedValue({
         id: 1,
+        area: 'INTERIOR',
         startDate: '2026-05-15',
         endDate: null,
         uploadedBy: 'IDIR/ABCDEF',
         dateOfUpload: '2026-03-27T00:00:00Z',
-        tableData: { rows: [] },
+        tableLevelFactor: 1.0,
+        tableData: { type: 'SPECIES_COMPOSITION', rows: [] },
       }),
       createSpeciesComposition: vi.fn().mockResolvedValue(555),
       deleteSpeciesComposition: vi.fn().mockResolvedValue(undefined),
@@ -1361,6 +1402,26 @@ describe('react-query hooks', () => {
       expect(result.current.data).toBeDefined();
     });
 
+    // CONTRACT BOUNDARY: a malformed payload must surface as a query error
+    // carrying the Zod issues (path + message) — never a silent undefined.
+    it('should fail with a Zod error naming the drifted field when the payload is malformed', async () => {
+      vi.mocked(API.speciesComposition.listSpeciesCompositions).mockResolvedValueOnce({
+        content: [{ id: 'not-a-number', area: 'INTERIOR' }],
+        page: { number: 0, size: 10, totalElements: 1, totalPages: 1 },
+      } as never);
+
+      const { result } = renderHook(
+        () => useSpeciesCompositionListQuery({ page: 0, size: 10, sort: {} }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+
+      expect(result.current.error).toBeInstanceOf(ZodError);
+      const issues = (result.current.error as ZodError).issues;
+      expect(issues.some((issue) => issue.path.join('.') === 'content.0.id')).toBe(true);
+    });
+
     it('should accept an options object with staleTime', async () => {
       const { result } = renderHook(
         () => useSpeciesCompositionListQuery({ page: 0, size: 10, sort: {} }, { staleTime: 60000 }),
@@ -1424,7 +1485,7 @@ describe('react-query hooks', () => {
 
   describe('useSpeciesCompositionCreateMutation', () => {
     const validCreateRequest = {
-      area: 'INTERIOR',
+      area: 'INTERIOR' as const,
       startDate: '2026-05-15',
       tableLevelFactor: 1.0,
       heliMultiplier: null,

@@ -1,34 +1,33 @@
-import { Column } from '@carbon/react';
 import { useState, type FC } from 'react';
-
-import type { PageableResponse } from '@/components/Form/TableResource/types.ts';
-import type { FormulaSetResponse } from '@/services/formulaConfiguration.types.ts';
 
 import TableResource from '@/components/Form/TableResource';
 import ConfigurationDeleteConfirmModal from '@/components/waste/ConfigurationDeleteConfirmModal';
 import { useFormulaConfigurationListRowActions } from '@/components/waste/Formula/FormulaConfigurationListTable/actions.tsx';
 import { headers } from '@/components/waste/Formula/FormulaConfigurationListTable/constants.tsx';
-import { useListTableState } from '@/hooks/useTableRow';
 import { useFormulaSetList, useDeleteFormulaSet } from '@/hooks/useFormulaConfiguration';
 import { sendToastEvent } from '@/hooks/useNotificationEvents/eventHandler.ts';
+import { useListTableState } from '@/hooks/useTableRow';
+
+import type { FormulaSetListItem } from '@/types/formulaConfiguration.types.ts';
+import type { PageableResponse } from '@/types/tableResource.types.ts';
 
 import './index.scss';
 
 /** Paginated formula-set table backed by the shared TableResource component. */
 const FormulaConfigurationListTable: FC = () => {
-  const [rowToDelete, setRowToDelete] = useState<FormulaSetResponse | null>(null);
+  const [rowToDelete, setRowToDelete] = useState<FormulaSetListItem | null>(null);
   const { data, isLoading, isFetching, isError, refetch, handlePageChange, handleSort, pageSize } =
     useListTableState({ queryHook: useFormulaSetList });
   const deleteMutation = useDeleteFormulaSet();
   const getRowActions = useFormulaConfigurationListRowActions(setRowToDelete);
 
-  const content = (data as PageableResponse<FormulaSetResponse> | undefined) ?? {
+  const content = (data as PageableResponse<FormulaSetListItem> | undefined) ?? {
     content: [],
     page: { number: 0, size: pageSize, totalElements: 0, totalPages: 0 },
   };
 
   return (
-    <Column lg={16} md={8} sm={4} className="formula-set-list-column__content">
+    <div className="formula-set-list-column__content">
       <TableResource
         id="formula-configuration-list"
         headers={headers}
@@ -63,7 +62,7 @@ const FormulaConfigurationListTable: FC = () => {
         }}
         onClose={() => setRowToDelete(null)}
       />
-    </Column>
+    </div>
   );
 };
 

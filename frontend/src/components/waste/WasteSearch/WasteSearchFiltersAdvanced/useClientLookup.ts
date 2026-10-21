@@ -1,9 +1,12 @@
 import { useEffect, useRef } from 'react';
 
-import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
-
 import { useClientLookupQuery } from '@/config/react-query/hooks';
 import { useAuth } from '@/context/auth/useAuth';
+
+import type {
+  CodeDescriptionDto,
+  ReportingUnitSearchParametersViewDto,
+} from '@/types/search.types';
 
 type OnChangeByKey = <K extends keyof ReportingUnitSearchParametersViewDto>(
   key: K,
@@ -48,7 +51,7 @@ export const useClientLookup = (
 
   // Query to resolve the full client details from the API.
   const { data: resolvedClient } = useClientLookupQuery(
-    clientNumberEntry?.code,
+    clientNumberEntry?.code ?? undefined,
     isModalOpen && hasClientCodeOnly && auth.user?.idpProvider === 'IDIR',
   );
 
@@ -61,7 +64,7 @@ export const useClientLookup = (
 
     const first = resolvedClient?.[0];
     if (first && first.code !== appliedClientCode.current) {
-      appliedClientCode.current = first.code;
+      appliedClientCode.current = first.code ?? undefined;
       onChange('clientNumbers')([first]);
     }
   }, [isModalOpen, resolvedClient, onChange]);

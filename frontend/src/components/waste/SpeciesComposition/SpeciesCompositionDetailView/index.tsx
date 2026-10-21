@@ -1,13 +1,12 @@
+import { Column } from '@carbon/react';
 import { type FC } from 'react';
+
+import PageNotification from '@/components/core/PageNotification';
 
 import SpeciesCompositionDetailHeader from './SpeciesCompositionDetailHeader.tsx';
 import SpeciesCompositionDetailMatrix from './SpeciesCompositionDetailMatrix.tsx';
 
-import PageNotification from '@/components/core/PageNotification';
-import {
-  speciesCompositionDataSchema,
-  type SpeciesCompositionDetail,
-} from '@/services/speciesComposition.types.ts';
+import type { SpeciesCompositionDetail } from '@/types/speciesComposition.types.ts';
 
 /**
  * Props for the {@link SpeciesCompositionDetailView} component.
@@ -27,17 +26,17 @@ interface SpeciesCompositionDetailViewProps {
  */
 
 const SpeciesCompositionDetailView: FC<SpeciesCompositionDetailViewProps> = ({ data }) => {
-  const tableData = speciesCompositionDataSchema.safeParse(data?.tableData);
-
   return (
     <>
       {/* Metadata header */}
-      <SpeciesCompositionDetailHeader
-        startDate={data.startDate}
-        endDate={data.endDate}
-        uploadedBy={data.uploadedBy}
-        dateOfUpload={data.dateOfUpload}
-      />
+      <Column lg={16} md={8} sm={4}>
+        <SpeciesCompositionDetailHeader
+          startDate={data.startDate}
+          endDate={data.endDate}
+          uploadedBy={data.uploadedBy}
+          dateOfUpload={data.dateOfUpload}
+        />
+      </Column>
 
       {/* Notification area */}
       <div className="species-composition-detail-column__notification">
@@ -45,7 +44,7 @@ const SpeciesCompositionDetailView: FC<SpeciesCompositionDetailViewProps> = ({ d
       </div>
 
       {/* Matrix table */}
-      <SpeciesCompositionDetailMatrix rows={tableData.success ? tableData.data.rows : []} />
+      <SpeciesCompositionDetailMatrix rows={data.tableData.rows ?? []} />
     </>
   );
 };

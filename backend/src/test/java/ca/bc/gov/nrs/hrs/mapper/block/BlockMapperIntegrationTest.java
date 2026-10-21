@@ -43,20 +43,28 @@ class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {
 
   @Autowired
   private BlockAreaSegmentMapper blockAreaSegmentMapper;
+
   @Autowired
   private BlockAttachmentMapper blockAttachmentMapper;
+
   @Autowired
   private BlockCommentMapper blockCommentMapper;
+
   @Autowired
   private BlockMarkMapper blockMarkMapper;
+
   @Autowired
   private BlockRequirementMapper blockRequirementMapper;
+
   @Autowired
   private BlockSponsorMapper blockSponsorMapper;
+
   @Autowired
   private BlockSubmitterMapper blockSubmitterMapper;
+
   @Autowired
   private DistrictAverageBlockMapper districtAverageBlockMapper;
+
   @Autowired
   private StatusEventMapper statusEventMapper;
 
@@ -88,12 +96,13 @@ class BlockMapperIntegrationTest extends AbstractTestContainerIntegrationTest {
     entity.setId(7L);
     entity.setClientNumber("00001234");
     entity.setClientLocnCode("LOC-1");
-    entity.setOrgUnitNo("DCK");
+    entity.setGeographicCode("DCK");
+    entity.setSamplingCode("AVG");
     entity.setRevision(3L);
 
     ReportingUnitDto dto = reportingUnitMapper.toDto(entity);
 
-    assertThat(dto).isEqualTo(new ReportingUnitDto(7L, "00001234", "LOC-1", "DCK", 3L));
+    assertThat(dto).isEqualTo(new ReportingUnitDto(7L, "00001234", "LOC-1", "DCK", "AVG", 3L));
   }
 
   @DisplayName("Submission Mappers should Map Dto Values And Ignore Generated Status Id")

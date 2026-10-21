@@ -13,7 +13,7 @@ import ReportingUnitDetailsTombstone from '@/components/waste/ReportingUnits/Rep
 import { useReportingUnitBlocksQuery } from '@/config/react-query/hooks';
 import { featureFlags } from '@/env';
 
-import type { ReportingUnitDto } from '@/services/types';
+import type { ReportingUnitDto } from '@/types/reportingUnit.types';
 
 import './index.scss';
 
@@ -87,19 +87,25 @@ const ReportingUnitDetailsPage: FC = () => {
       <Column lg={16} md={8} sm={4} className="notification-column">
         <PageNotification eventTarget="ru-details" />
       </Column>
-      <ReportingUnitDetailsTombstone data={data} />
-      <BlockCreateAction
-        ruId={data.id}
-        blockRule={data.blockRule}
-        samplingCode={data.sampling?.code}
-      />
-      {blocksListEnabled && (
-        <ReportingUnitBlocksList
+      <Column lg={16} md={8} sm={4}>
+        <ReportingUnitDetailsTombstone data={data} />
+      </Column>
+      <Column lg={16} md={8} sm={4}>
+        <BlockCreateAction
           ruId={data.id}
-          content={blocksQuery.data}
-          isLoading={blocksQuery.isPending}
-          isError={blocksQuery.isError}
+          blockRule={data.blockRule}
+          samplingCode={data.sampling?.code}
         />
+      </Column>
+      {blocksListEnabled && (
+        <Column lg={16} md={8} sm={4}>
+          <ReportingUnitBlocksList
+            ruId={data.id}
+            content={blocksQuery.data}
+            isLoading={blocksQuery.isPending}
+            isError={blocksQuery.isError}
+          />
+        </Column>
       )}
     </>
   );

@@ -1,6 +1,6 @@
 import { createContext, type ReactNode } from 'react';
 
-import type { FamLoginUser, IdpProviderType } from './types';
+import type { FamLoginUser, IdpProviderType } from '@/types/auth.types';
 
 /**
  * Shape of the authentication context exposed to consumers.

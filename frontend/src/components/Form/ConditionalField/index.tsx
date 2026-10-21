@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 
 import { useConditionalField } from './useConditionalField';
 
-import type { ConditionalFieldProps } from './types';
+import type { ConditionalFieldProps } from '@/types/conditionalField.types';
 
 import './index.scss';
 

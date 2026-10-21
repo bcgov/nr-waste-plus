@@ -145,24 +145,23 @@ describe('SpeciesCompositionDetailMatrix', () => {
     expect(getMockCallArgs().content.content).toHaveLength(2);
   });
 
-  it('should omit malformed rows while preserving valid rows', () => {
+  it('should omit rows without a resolvable district while preserving valid rows', () => {
     const validRow = createTableData().rows[0];
-    const malformedRows = [
+    // Rows arrive schema-validated from the query boundary; the only display
+    // concern left is a row whose district the backend omitted (NON_NULL).
+    const rows = [
       validRow,
       { district: null, species: validRow.species },
-      { district: validRow.district, species: { AL: 'not-a-number' } },
       { district: validRow.district, species: null },
     ];
 
     render(
       <SpeciesCompositionDetailMatrix
-        rows={
-          malformedRows as unknown as Parameters<typeof SpeciesCompositionDetailMatrix>[0]['rows']
-        }
+        rows={rows as unknown as Parameters<typeof SpeciesCompositionDetailMatrix>[0]['rows']}
       />,
     );
 
-    expect(getMockCallArgs().content.content).toHaveLength(1);
+    expect(getMockCallArgs().content.content).toHaveLength(2);
     expect(getMockCallArgs().content.content[0]).toMatchObject({ id: 'DCC' });
   });
 

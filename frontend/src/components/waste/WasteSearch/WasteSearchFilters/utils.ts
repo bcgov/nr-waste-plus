@@ -1,4 +1,4 @@
-import type { CodeDescriptionDto } from '@/services/types';
+import type { CodeDescriptionDto } from '@/types/search.types';
 
 const toCodeDescriptionDtos = (values: string[]): CodeDescriptionDto[] =>
   values.map((code) => ({ code, description: code }));

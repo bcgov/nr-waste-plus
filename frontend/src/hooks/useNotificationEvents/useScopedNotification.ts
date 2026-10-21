@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import useNotificationEvents from './index';
 
-import type { EventType, GlobalEvent } from './types';
+import type { EventType, GlobalEvent } from '@/types/notification.types';
 
 const PAGE_EVENT_TYPES: EventType[] = ['error', 'warning', 'info'];
 const CLEAR_EVENTS_TITLE = 'clear-events';

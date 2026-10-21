@@ -5,21 +5,24 @@
       "startDate": "2026-06-01",
       "endDate": null,
       "uploadedBy": "jsmith@gov.bc.ca",
-      "dateOfUpload": "2026-05-15T14:23:00Z"
+      "dateOfUpload": "2026-05-15T14:23:00Z",
+      "area": "INTERIOR"
     },
     {
       "id": 2,
       "startDate": "2025-06-01",
       "endDate": "2026-06-01",
       "uploadedBy": "alopez@gov.bc.ca",
-      "dateOfUpload": "2025-05-10T09:00:00Z"
+      "dateOfUpload": "2025-05-10T09:00:00Z",
+      "area": "COASTAL"
     },
     {
       "id": 3,
       "startDate": "2026-09-01",
       "endDate": null,
       "uploadedBy": "jsmith@gov.bc.ca",
-      "dateOfUpload": "2026-08-10T09:00:00Z"
+      "dateOfUpload": "2026-08-10T09:00:00Z",
+      "area": "INTERIOR"
     }
   ],
   "page": {

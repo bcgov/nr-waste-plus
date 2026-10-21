@@ -29,6 +29,7 @@ import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.reportingunit.ReportingUnitLegacyDetailsDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchParametersDto;
 import ca.bc.gov.nrs.hrs.dto.search.ReportingUnitSearchResultDto;
+import ca.bc.gov.nrs.hrs.entity.block.ReportingUnitIdGenerator;
 import ca.bc.gov.nrs.hrs.entity.speciescomposition.SpeciesCompositionRow;
 import ca.bc.gov.nrs.hrs.entity.users.UserPreferenceEntity;
 import ca.bc.gov.nrs.hrs.exception.AttachmentConflictException;
@@ -107,6 +108,7 @@ import tools.jackson.databind.json.JsonMapper.Builder;
   ReportingUnitSearchParametersDto.class,
   HttpSecurity.class,
   ReportingUnitDetailsDto.class,
+  ReportingUnitIdGenerator.class,
   ReportingUnitLegacyDetailsDto.class,
   DistrictVolumeCreateDto.class,
   DistrictVolumeDetailDto.class,

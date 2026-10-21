@@ -9,7 +9,10 @@ import useSyncFiltersToSearchParams from '@/hooks/useSyncFiltersToSearchParams';
 import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
 import { removeEmpty } from '@/services/utils';
 
-import type { CodeDescriptionDto, ReportingUnitSearchParametersViewDto } from '@/services/types';
+import type {
+  CodeDescriptionDto,
+  ReportingUnitSearchParametersViewDto,
+} from '@/types/search.types';
 
 /** Shape of the object returned by {@link useWasteSearchFilters}. */
 type UseWasteSearchFiltersReturn = {

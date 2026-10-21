@@ -99,11 +99,13 @@ VALUES
     );
 
 -- Reporting-unit block-list test data. For this test path, PostgreSQL reporting
--- units are treated as District Average; hrs.reporting_unit has no sampling column.
+-- units are treated as District Average; the fixture persists the corresponding
+-- sampling code as well as the district code required by the current schema.
 -- Soft-delete prior rows owned by this fixture so repeatable migration reruns do
 -- not violate the live reporting-unit/block uniqueness constraints. Preserve rows
 -- rather than deleting them because audit and other test data may reference them.
 -- The test-data-1254 predicate also retires rows created by the initial manual seed.
+-- Legacy values are remapped while retiring them to satisfy the geographic FK.
 UPDATE hrs.district_average_block dab
 SET is_deleted = TRUE,
     updated_at = NOW(),
@@ -113,7 +115,7 @@ JOIN hrs.reporting_unit ru ON ru.reporting_unit_id = b.reporting_unit_id
 WHERE dab.district_average_block_id = b.block_id
   AND ru.client_number = '00001271'
   AND ru.client_locn_code = 'TEST-1254-B'
-  AND ru.org_unit_no = 'T02'
+  AND ru.geographic_code IN ('T02', 'DKM')
   AND ru.created_by IN ('test-seed:reporting-unit-block-list-v1', 'test-data-1254')
   AND b.created_by IN ('test-seed:reporting-unit-block-list-v1', 'test-data-1254')
   AND NOT dab.is_deleted;
@@ -126,25 +128,34 @@ FROM hrs.reporting_unit ru
 WHERE ru.reporting_unit_id = b.reporting_unit_id
   AND ru.client_number = '00001271'
   AND ru.client_locn_code = 'TEST-1254-B'
-  AND ru.org_unit_no = 'T02'
+  AND ru.geographic_code IN ('T02', 'DKM')
   AND ru.created_by IN ('test-seed:reporting-unit-block-list-v1', 'test-data-1254')
   AND b.created_by IN ('test-seed:reporting-unit-block-list-v1', 'test-data-1254')
   AND NOT b.is_deleted;
 
 UPDATE hrs.reporting_unit
-SET is_deleted = TRUE,
+SET geographic_code = CASE geographic_code
+        WHEN 'T01' THEN 'DND'
+        WHEN 'T02' THEN 'DKM'
+        ELSE geographic_code
+    END,
+    sampling_code = 'AVG',
+    is_deleted = TRUE,
     updated_at = NOW(),
     updated_by = 'test-seed:reporting-unit-block-list-v1'
 WHERE client_number = '00001271'
-  AND (client_locn_code, org_unit_no) IN (('TEST-1254-A', 'T01'), ('TEST-1254-B', 'T02'))
+  AND (client_locn_code, geographic_code) IN (
+        ('TEST-1254-A', 'T01'), ('TEST-1254-A', 'DND'),
+        ('TEST-1254-B', 'T02'), ('TEST-1254-B', 'DKM')
+  )
   AND created_by IN ('test-seed:reporting-unit-block-list-v1', 'test-data-1254')
   AND NOT is_deleted;
 
-INSERT INTO hrs.reporting_unit
-    (client_number, client_locn_code, org_unit_no, created_by, updated_by)
+INSERT INTO hrs.reporting_unit (
+    client_number, client_locn_code, geographic_code, sampling_code, created_by, updated_by)
 VALUES
-    ('00001271', 'TEST-1254-A', 'T01', 'test-seed:reporting-unit-block-list-v1', 'test-seed:reporting-unit-block-list-v1'),
-    ('00001271', 'TEST-1254-B', 'T02', 'test-seed:reporting-unit-block-list-v1', 'test-seed:reporting-unit-block-list-v1');
+    ('00001271', 'TEST-1254-A', 'DND', 'AVG', 'test-seed:reporting-unit-block-list-v1', 'test-seed:reporting-unit-block-list-v1'),
+    ('00001271', 'TEST-1254-B', 'DKM', 'AVG', 'test-seed:reporting-unit-block-list-v1', 'test-seed:reporting-unit-block-list-v1');
 
 INSERT INTO hrs.block
     (reporting_unit_id, block_type, is_draft, created_by, updated_by)
@@ -157,7 +168,7 @@ SELECT
 FROM hrs.reporting_unit ru
 WHERE ru.client_number = '00001271'
   AND ru.client_locn_code = 'TEST-1254-B'
-  AND ru.org_unit_no = 'T02'
+  AND ru.geographic_code = 'DKM'
   AND ru.created_by = 'test-seed:reporting-unit-block-list-v1'
   AND NOT ru.is_deleted;
 
@@ -173,7 +184,7 @@ FROM hrs.block b
 JOIN hrs.reporting_unit ru ON ru.reporting_unit_id = b.reporting_unit_id
 WHERE ru.client_number = '00001271'
   AND ru.client_locn_code = 'TEST-1254-B'
-  AND ru.org_unit_no = 'T02'
+  AND ru.geographic_code = 'DKM'
   AND ru.created_by = 'test-seed:reporting-unit-block-list-v1'
   AND NOT ru.is_deleted
   AND b.created_by = 'test-seed:reporting-unit-block-list-v1'

@@ -90,6 +90,8 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
 
   private static final AtomicLong DISTRICT_SEQ = new AtomicLong();
   private static final AtomicLong CLIENT_SEQ = new AtomicLong();
+  /** Synthetic {@code hrs.geographic_code} ids; starts above the migration seed range. */
+  private static final AtomicLong GEO_CODE_ID_SEQ = new AtomicLong(990_000);
 
   @Autowired
   private MockMvc mockMvc;
@@ -737,10 +739,23 @@ class PostgresReportingUnitSearchIntegrationTest extends AbstractTestContainerIn
   }
 
   private ReportingUnitEntity seedUnit(String clientNumber, String district, Instant updatedAt) {
+    // fk_reporting_unit_geographic_code (#1432) requires the district code to exist in
+    // hrs.geographic_code; synthetic per-test districts must be seeded first.
+    jdbcTemplate.update(
+        """
+        INSERT INTO hrs.geographic_code
+            (id, code, description, geo_type, effective_date, expiry_date)
+        VALUES (?, ?, ?, 'DISTRICT',
+                TIMESTAMP '2003-04-01 00:00:00', TIMESTAMP '9999-12-31 00:00:00')
+        ON CONFLICT (code) DO NOTHING
+        """,
+        GEO_CODE_ID_SEQ.incrementAndGet(),
+        district,
+        district + " Natural Resource District");
     ReportingUnitEntity unit = new ReportingUnitEntity();
     unit.setClientNumber(clientNumber);
     unit.setClientLocnCode("00");
-    unit.setOrgUnitNo(district);
+    unit.setGeographicCode(district);
     unit.setCreatedBy(ACTOR);
     unit.setUpdatedBy(ACTOR);
     unit.setCreatedAt(BASE_TIME);

@@ -1,13 +1,3 @@
-import type {
-  FileProcessor,
-  ProcessorResult,
-} from '@/components/Form/FileUploadInput/fileProcessor';
-import type {
-  SpeciesCompositionData,
-  SpeciesCompositionRow,
-  SpeciesKey,
-} from '@/services/speciesComposition.types';
-
 import {
   HEADER_TO_SPECIES_KEY,
   EXPECTED_SPECIES_HEADERS,
@@ -18,6 +8,16 @@ import {
   SPECIES_START_COL,
 } from '@/services/speciescomposition/config/speciesCompositionConfig';
 import { ExcelReader } from '@/services/spreadsheet/excelReader';
+
+import type {
+  FileProcessor,
+  ProcessorResult,
+} from '@/components/Form/FileUploadInput/fileProcessor';
+import type {
+  SpeciesCompositionData,
+  SpeciesCompositionRow,
+  SpeciesKey,
+} from '@/types/speciesComposition.types';
 
 interface ColumnMapping {
   colIndex: number;
