@@ -27,9 +27,10 @@ export class SearchService extends HttpClient {
   /**
    * Searches reporting units using filter and pagination inputs.
    *
-   * The `legacy` source-selection flag (#1238) is exempt from empty-value cleanup:
-   * `legacy=false` (PostgreSQL source) must reach the backend, while every other
-   * `false`/empty value is stripped as usual.
+   * Only `legacy=false` (PostgreSQL source) reaches the wire: it must survive
+   * empty-value cleanup, while `legacy=true`/absent are equivalent for the backend
+   * (lenient source resolution) and are omitted to keep legacy-source requests
+   * byte-identical to the pre-#1238 shape.
    *
    * @param filters Search filters to send to the backend.
    * @param pageable Pagination and sorting options.
@@ -46,7 +47,7 @@ export class SearchService extends HttpClient {
       url: '/api/search/reporting-units',
       query: {
         ...removeEmpty(restFilters),
-        ...(legacy === undefined ? {} : { legacy }),
+        ...(legacy === false ? { legacy } : {}),
         ...removeEmpty(pageable),
       },
       ...(meta !== undefined ? { meta } : {}),

@@ -303,7 +303,7 @@ const WasteSearchFiltersAdvanced: FC<WasteSearchFiltersAdvancedProps> = ({
               labelText="Read from legacy"
               hideLabel
               toggled={filters.legacy !== false}
-              onToggle={(toggled) => onChange('legacy')(toggled ? undefined : false)}
+              onToggle={(toggled) => onChange('legacy')(toggled)}
             />
           </Column>
         </Grid>

@@ -1,5 +1,5 @@
 import { useNavigate, useSearch } from '@tanstack/react-router';
-import { useCallback, useMemo, useState, type ComponentProps } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
 
 import WasteSearchFiltersActive from '@/components/waste/WasteSearch/WasteSearchFiltersActive';
 import useSyncPreferencesToFilters from '@/hooks/useSyncPreferencesToFilters';
@@ -87,11 +87,22 @@ export const useWasteSearchFilters = (): UseWasteSearchFiltersReturn => {
     [navigate],
   );
 
+  // The source-selection flag is always explicit in the URL: the toggle defaults to
+  // ON (legacy), so a `/search` entry without the param writes `legacy=true`. Once
+  // present the URL carries the flag verbatim (`true`/`false`) — #1238.
+  const legacySeededRef = useRef(false);
+  useEffect(() => {
+    if (legacySeededRef.current || search.legacy !== undefined) return;
+    legacySeededRef.current = true;
+    applyFilters((prev) => ({ ...prev, legacy: true }));
+    // Mount-only: seed the default source flag once per page mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleStringChange =
     (key: keyof ReportingUnitSearchParametersViewDto) => (value: string) => {
       applyFilters((prev) => ({ ...prev, [key]: value }));
     };
-
   const handleActiveMultiSelectChange =
     (key: keyof ReportingUnitSearchParametersViewDto) =>
     (changes: { selectedItems: CodeDescriptionDto[] }): void => {

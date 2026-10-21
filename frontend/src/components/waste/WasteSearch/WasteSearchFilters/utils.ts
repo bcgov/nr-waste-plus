@@ -27,8 +27,9 @@ export const searchToViewDto = (
 /**
  * Maps the view DTO to the URL search-param shape: client items collapse back to
  * code strings, and empty values (empty arrays, empty strings, `undefined`) are
- * dropped so the URL only ever carries real selections. `legacy: false` is a real
- * value and is kept.
+ * dropped so the URL only ever carries real selections. `false` is dropped for
+ * the checkbox filters (unchecked = absent) but kept for `legacy` — the source
+ * flag is always explicit in the URL (`legacy=true` / `legacy=false`).
  *
  * @param view The view-shaped filter object.
  * @returns The URL search-param object to hand to the router.
@@ -46,8 +47,11 @@ export const viewDtoToSearch = (view: ReportingUnitSearchParametersViewDto): Was
 
   return Object.fromEntries(
     Object.entries(candidate).filter(
-      ([, value]) =>
-        value !== undefined && value !== '' && !(Array.isArray(value) && value.length === 0),
+      ([key, value]) =>
+        value !== undefined &&
+        value !== '' &&
+        !(Array.isArray(value) && value.length === 0) &&
+        !(value === false && key !== 'legacy'),
     ),
   ) as WasteSearchFilters;
 };

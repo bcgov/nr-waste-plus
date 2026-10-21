@@ -75,11 +75,19 @@ describe('useWasteSearchFilters', () => {
       expect(result.current.filters.legacy).toBe(false);
     });
 
-    it('shouldLeaveAbsentKeysUndefined_whenMountedOnBareSearch', async () => {
+    it('shouldSeedLegacyTrue_whenMountedOnBareSearch', async () => {
       const { result } = await mountHook('/search');
 
-      expect(result.current.filters).toEqual({});
-      expect(result.current.filters.legacy).toBeUndefined();
+      // The source flag is always explicit in the URL: the toggle defaults to ON.
+      await waitFor(() => {
+        expect(result.current.filters).toEqual({ legacy: true });
+      });
+    });
+
+    it('shouldNotReseedLegacy_whenUrlAlreadyCarriesTheFlag', async () => {
+      const { result } = await mountHook('/search?legacy=false');
+
+      expect(result.current.filters.legacy).toBe(false);
     });
 
     it('shouldDegradeMalformedValuesToUndefined_whenUrlCarriesGarbage', async () => {
@@ -186,12 +194,29 @@ describe('useWasteSearchFilters', () => {
       });
 
       act(() => {
-        result.current.handleChange('legacy')(undefined);
+        result.current.handleChange('legacy')(true);
       });
 
       await waitFor(() => {
-        expect(result.current.filters.legacy).toBeUndefined();
+        expect(result.current.filters.legacy).toBe(true);
       });
+    });
+
+    it('shouldDropUncheckedCheckboxesFromTheUrl_whenSetToFalse', async () => {
+      const { result } = await mountHook('/search?requestByMe=true&multiMark=true');
+
+      expect(result.current.filters.requestByMe).toBe(true);
+
+      act(() => {
+        result.current.handleChange('requestByMe')(false);
+      });
+
+      await waitFor(() => {
+        expect(result.current.filters.requestByMe).toBeUndefined();
+      });
+
+      // The untouched sibling checkbox stays put.
+      expect(result.current.filters.multiMark).toBe(true);
     });
 
     it('shouldRemoveKey_whenOnRemoveFilterCalledWithoutValue', async () => {

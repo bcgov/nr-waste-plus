@@ -60,6 +60,11 @@ describe('viewDtoToSearch', () => {
     expect(viewDtoToSearch(view)).toEqual({ legacy: false });
   });
 
+  it('drops false for checkbox filters — unchecked means absent', () => {
+    const view = { requestByMe: false, multiMark: true };
+    expect(viewDtoToSearch(view)).toEqual({ multiMark: true });
+  });
+
   it('round-trips through validateWasteSearch preserving codes and the false flag', () => {
     const view = {
       mainSearchTerm: 'X01',
